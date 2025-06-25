@@ -1,0 +1,5 @@
+PROJECT_NAME=CIV.IQ Official MVP - Civic Intel Hub
+PROJECT_VERSION=2025-MVP
+PROJECT_ID=civic-intel-hub-main
+CREATED_DATE=2025-06-25
+DESCRIPTION=This is the official CIV.IQ MVP implementation using approved APIs only
