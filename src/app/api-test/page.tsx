@@ -2,8 +2,21 @@
 
 import { useState } from 'react';
 
+interface TestResult {
+  status: 'success' | 'error';
+  statusCode?: number;
+  data?: any;
+  error?: string;
+}
+
+interface Test {
+  name: string;
+  url: string;
+  description: string;
+}
+
 export default function APITestPage() {
-  const [results, setResults] = useState<any>({});
+  const [results, setResults] = useState<Record<string, TestResult>>({});
   const [loading, setLoading] = useState<string | null>(null);
 
   const testAPI = async (name: string, url: string) => {
@@ -20,11 +33,12 @@ export default function APITestPage() {
         }
       }));
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setResults(prev => ({
         ...prev,
         [name]: {
           status: 'error',
-          error: error.message
+          error: errorMessage
         }
       }));
     } finally {
@@ -32,7 +46,7 @@ export default function APITestPage() {
     }
   };
 
-  const tests = [
+  const tests: Test[] = [
     {
       name: 'Environment Check',
       url: '/api/env-check',
@@ -87,7 +101,7 @@ export default function APITestPage() {
                 <button
                   onClick={() => testAPI(test.name, test.url)}
                   disabled={loading === test.name}
-                  className="px-4 py-2 bg-civiq-blue text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                 >
                   {loading === test.name ? 'Testing...' : 'Test'}
                 </button>
@@ -131,7 +145,7 @@ export default function APITestPage() {
         </div>
         
         <div className="mt-4 text-center">
-          <a href="/" className="text-civiq-blue hover:underline">← Back to Home</a>
+          <a href="/" className="text-blue-600 hover:underline">← Back to Home</a>
         </div>
       </div>
     </div>

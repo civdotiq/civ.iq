@@ -14,6 +14,10 @@ export default {
           green: "#0a9338",
           blue: "#3ea0d2",
         },
+        // Add the specific blue for consistency
+        'civiq-red': '#e11d09',
+        'civiq-green': '#0a9338',
+        'civiq-blue': '#3ea0d2',
       },
     },
   },
