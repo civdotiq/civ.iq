@@ -196,78 +196,63 @@ export async function getRepresentativesByLocation(
 ): Promise<Representative[]> {
   const representatives: Representative[] = [];
   
-  try {
-    // Get all current members for the state
-    const members = await getCurrentMembersByState(state, apiKey);
-    
-    console.log(`Processing ${members.length} members for ${state} - v2`);
-    
-    // Process the members
-    for (const member of members) {
-      const formattedMember = formatCongressMember(member);
-      
-      console.log(`Processing member: ${formattedMember.name} - Chamber: ${formattedMember.chamber} - District: ${formattedMember.district}`);
-      
-      // For House members, only include if district matches (when specified)
-      if (formattedMember.chamber === 'House') {
-        if (district) {
-          // Compare as numbers to handle any formatting differences
-          const memberDistrictNum = parseInt(formattedMember.district || '0', 10);
-          const targetDistrictNum = parseInt(district, 10);
-          console.log(`Comparing districts as numbers: member=${memberDistrictNum}, target=${targetDistrictNum}`);
-          if (memberDistrictNum === targetDistrictNum) {
-            console.log(`Match found! Adding ${formattedMember.name}`);
-            representatives.push(formattedMember);
-          }
-        } else {
-          representatives.push(formattedMember);
-        }
-      } else if (formattedMember.chamber === 'Senate') {
-        // Always include Senators
-        console.log(`Adding Senator: ${formattedMember.name}`);
-        representatives.push(formattedMember);
-      }
-    }
-    
-    // Add senators for all states where API coverage is incomplete
-    // Complete U.S. Senate mappings for 119th Congress (2025-2027)
-    console.log(`Checking for senators. Current representatives: ${representatives.length}`);
-    const existingSenators = representatives.filter(rep => rep.chamber === 'Senate').length;
-    console.log(`Found ${existingSenators} existing senators in Congress API results`);
-    
-    if (existingSenators === 0) {
-      console.log(`No existing senators found for ${state}, checking senator mappings...`);
-      const stateSenators = getStateSenators(state);
-      console.log(`getStateSenators(${state}) returned ${stateSenators.length} senators`);
-      if (stateSenators.length > 0) {
-        console.log(`Adding ${stateSenators.length} senators for ${state}. Current reps: ${representatives.length}`);
-        representatives.push(...stateSenators);
-      }
-    }
-    
-    console.log(`Returning ${representatives.length} representatives (real data)`);
-    
-    // Always return what we found (House + Senators from mapping)
-    if (representatives.length > 0) {
-      return representatives;
-    }
-    
-    // If no representatives found but we have senators from mapping, try adding them to empty list
-    if (representatives.length === 0 && state) {
-      const stateSenators = getStateSenators(state);
-      if (stateSenators.length > 0) {
-        console.log(`No Congress API results for ${state}, adding ${stateSenators.length} senators from mapping`);
-        representatives.push(...stateSenators);
-        return representatives;
-      }
-    }
-    
-  } catch (error) {
-    console.error('Error getting representatives:', error);
+  // For 119th Congress (2025-2027), use our hardcoded senator data
+  // The Congress API is returning historical members, not current ones
+  
+  // Always add senators from our mapping
+  const stateSenators = getStateSenators(state);
+  if (stateSenators.length > 0) {
+    console.log(`Adding ${stateSenators.length} senators for ${state} from hardcoded data`);
+    representatives.push(...stateSenators);
   }
   
-  // Fallback to mock data if no results or error
-  return getMockRepresentatives(state, district);
+  // For House members, try the API but filter carefully
+  if (district) {
+    try {
+      // Try to get specific member data if we can
+      const members = await getCurrentMembersByState(state, apiKey);
+      
+      console.log(`Processing ${members.length} members for ${state}`);
+      
+      // Process the members - but be very strict about filtering
+      for (const member of members) {
+        const formattedMember = formatCongressMember(member);
+        
+        // Only include House members from the correct district
+        if (formattedMember.chamber === 'House' && formattedMember.district === district) {
+          // Additional check: make sure they're recent
+          const latestTerm = member.terms?.item?.[0];
+          if (latestTerm && (!latestTerm.endYear || latestTerm.endYear >= 2024)) {
+            console.log(`Adding House member: ${formattedMember.name}`);
+            representatives.push(formattedMember);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error getting House members:', error);
+    }
+    
+    // If no House member found, add a placeholder
+    if (!representatives.find(r => r.chamber === 'House')) {
+      console.log(`No House member found for ${state}-${district}, using placeholder`);
+      representatives.push({
+        bioguideId: `${state}H${district}`,
+        name: `Representative for ${state}-${district}`,
+        party: 'Contact your local election office',
+        state: state,
+        district: district,
+        chamber: 'House',
+        phone: '(202) 225-0000',
+        website: `https://www.house.gov`,
+        yearsInOffice: 0,
+        nextElection: '2026',
+        imageUrl: undefined
+      });
+    }
+  }
+  
+  console.log(`Returning ${representatives.length} representatives for ${state}${district ? `-${district}` : ''}`);
+  return representatives;
 }
 
 /**

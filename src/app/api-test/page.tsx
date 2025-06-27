@@ -63,6 +63,11 @@ export default function APITestPage() {
       description: 'Detailed Congress API testing for 119th Congress'
     },
     {
+      name: 'Congress Current Members',
+      url: '/api/debug/congress-current',
+      description: 'Test different approaches to get current members'
+    },
+    {
       name: 'Representative Info',
       url: '/api/representative/P000595',
       description: 'Tests Congress.gov API integration (Gary Peters)'
