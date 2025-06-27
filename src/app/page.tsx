@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { SearchHistory, SearchHistoryItem } from '@/lib/searchHistory';
 
 function CiviqLogo({ className = "w-10 h-15" }: { className?: string }) {
@@ -115,12 +116,12 @@ export default function Home() {
             <span className="text-2xl font-bold tracking-tight">CIV.IQ</span>
           </a>
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#representatives" className="font-medium hover:text-civiq-blue transition-colors">Representatives</a>
-            <a href="#districts" className="font-medium hover:text-civiq-blue transition-colors">Districts</a>
-            <a href="#states" className="font-medium hover:text-civiq-blue transition-colors">States</a>
-            <a href="#local" className="font-medium hover:text-civiq-blue transition-colors">Local</a>
-            <a href="#legislation" className="font-medium hover:text-civiq-blue transition-colors">Legislation</a>
-            <a href="#about" className="font-medium hover:text-civiq-blue transition-colors">About</a>
+            <Link href="/representatives" className="font-medium hover:text-civiq-blue transition-colors">Representatives</Link>
+            <Link href="/districts" className="font-medium hover:text-civiq-blue transition-colors">Districts</Link>
+            <Link href="/states" className="font-medium hover:text-civiq-blue transition-colors">States</Link>
+            <Link href="/local" className="font-medium hover:text-civiq-blue transition-colors">Local</Link>
+            <Link href="/legislation" className="font-medium hover:text-civiq-blue transition-colors">Legislation</Link>
+            <Link href="/about" className="font-medium hover:text-civiq-blue transition-colors">About</Link>
           </nav>
         </div>
       </header>
@@ -339,19 +340,19 @@ export default function Home() {
             <div>
               <h3 className="text-xl font-semibold mb-4">Data Sources</h3>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Congress.gov</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">FEC.gov</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Census.gov</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">OpenStates.org</a></li>
+                <li><a href="https://www.congress.gov" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Congress.gov</a></li>
+                <li><a href="https://www.fec.gov" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">FEC.gov</a></li>
+                <li><a href="https://www.census.gov" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Census.gov</a></li>
+                <li><a href="https://openstates.org" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">OpenStates.org</a></li>
               </ul>
             </div>
             <div>
               <h3 className="text-xl font-semibold mb-4">Resources</h3>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">API Documentation</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Open Source</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact</a></li>
+                <li><Link href="/api-test" className="text-gray-400 hover:text-white transition-colors">API Status</Link></li>
+                <li><a href="https://github.com/Sandford28/civiq" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Open Source</a></li>
+                <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors">About</Link></li>
+                <li><a href="https://github.com/Sandford28/civiq/issues" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
           </div>

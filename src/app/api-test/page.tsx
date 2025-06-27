@@ -34,6 +34,11 @@ export default function APITestPage() {
 
   const tests = [
     {
+      name: 'Debug All APIs',
+      url: '/api/debug',
+      description: 'Comprehensive test of all API connections and configurations'
+    },
+    {
       name: 'Representative Info',
       url: '/api/representative/P000595',
       description: 'Tests Congress.gov API integration (Gary Peters)'
