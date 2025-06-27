@@ -34,9 +34,19 @@ export default function APITestPage() {
 
   const tests = [
     {
+      name: 'Environment Check',
+      url: '/api/env-check',
+      description: 'Verify API keys are loaded from .env.local'
+    },
+    {
       name: 'Debug All APIs',
       url: '/api/debug',
       description: 'Comprehensive test of all API connections and configurations'
+    },
+    {
+      name: 'Congress API Deep Dive',
+      url: '/api/debug/congress',
+      description: 'Detailed Congress API testing for 119th Congress'
     },
     {
       name: 'Representative Info',
@@ -111,6 +121,7 @@ export default function APITestPage() {
         <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <h3 className="font-semibold mb-2">Troubleshooting Tips:</h3>
           <ul className="list-disc list-inside text-sm space-y-1">
+            <li className="font-semibold text-yellow-800">If Environment Check shows "NOT FOUND": Restart your dev server after updating .env.local</li>
             <li>If APIs return 401/403: Check your API keys in .env.local</li>
             <li>If GDELT returns empty: The search terms might not match any recent news</li>
             <li>If FEC returns null: The representative might not have recent campaign data</li>

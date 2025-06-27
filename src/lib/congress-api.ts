@@ -361,7 +361,7 @@ function getStateSenators(state: string): Representative[] {
       { bioguideId: 'M000133', name: 'Markey, Edward J.', party: 'Democratic', state: 'MA', chamber: 'Senate', phone: '(202) 224-2742', website: 'https://www.markey.senate.gov', yearsInOffice: 47, nextElection: '2026' }
     ],
     'MI': [
-      { bioguideId: 'P000595', name: 'Peters, Gary', party: 'Democratic', state: 'MI', chamber: 'Senate', phone: '(202) 224-6221', website: 'https://www.peters.senate.gov', yearsInOffice: 11, nextElection: '2030' },
+      { bioguideId: 'P000595', name: 'Peters, Gary', party: 'Democratic', state: 'MI', chamber: 'Senate', phone: '(202) 224-6221', website: 'https://www.peters.senate.gov', yearsInOffice: 11, nextElection: '2026' },
       { bioguideId: 'S001222', name: 'Slotkin, Elissa', party: 'Democratic', state: 'MI', chamber: 'Senate', phone: '(202) 224-4822', website: 'https://www.slotkin.senate.gov', yearsInOffice: 1, nextElection: '2030' }
     ],
     'MN': [
