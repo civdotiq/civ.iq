@@ -5,6 +5,33 @@ export interface CongressionalDistrict {
   stateCode: string;
   district: string;
   districtName: string;
+  population?: number;
+  demographics?: {
+    white_percent: number;
+    black_percent: number;
+    hispanic_percent: number;
+    asian_percent: number;
+    median_income: number;
+    poverty_rate: number;
+    bachelor_degree_percent: number;
+  };
+  geography?: {
+    coordinates: { latitude: number; longitude: number };
+    area_sqmi: number;
+  };
+}
+
+interface CensusAPIResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+  source: 'api' | 'fallback';
+}
+
+interface RateLimiter {
+  requests: number[];
+  maxRequestsPerSecond: number;
+  waitIfNeeded(): Promise<void>;
 }
 
 // ZIP to Congressional District mapping for major cities (fallback data)
@@ -46,11 +73,195 @@ const STATE_NAMES: Record<string, string> = {
   'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
 };
 
+// Rate limiter for Census API calls
+const createRateLimiter = (): RateLimiter => ({
+  requests: [],
+  maxRequestsPerSecond: 5, // Census API allows 500 calls per day
+  async waitIfNeeded() {
+    const now = Date.now();
+    const oneSecondAgo = now - 1000;
+    
+    // Remove requests older than 1 second
+    this.requests = this.requests.filter(time => time > oneSecondAgo);
+    
+    if (this.requests.length >= this.maxRequestsPerSecond) {
+      const waitTime = 1000 - (now - this.requests[0]);
+      if (waitTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+    }
+    
+    this.requests.push(now);
+  }
+});
+
+const rateLimiter = createRateLimiter();
+
 /**
- * Get congressional district from ZIP code
- * Uses hardcoded mapping for MVP, will integrate with Census API later
+ * Fetch congressional district data from live Census API
+ */
+async function fetchFromCensusAPI(zipCode: string): Promise<CensusAPIResponse> {
+  try {
+    await rateLimiter.waitIfNeeded();
+
+    const apiKey = process.env.CENSUS_API_KEY;
+    if (!apiKey) {
+      return { success: false, error: 'Census API key not configured', source: 'fallback' };
+    }
+
+    // Use Census Geocoding Services API to get congressional district
+    const geocodeUrl = `https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress`;
+    const params = new URLSearchParams({
+      address: zipCode,
+      benchmark: 'Public_AR_Current',
+      vintage: 'Current_Current',
+      layers: '54', // Congressional Districts layer
+      format: 'json'
+    });
+
+    const response = await fetch(`${geocodeUrl}?${params}`, {
+      headers: {
+        'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.result?.addressMatches?.length > 0) {
+      const match = data.result.addressMatches[0];
+      const coordinates = match.coordinates;
+      const geographies = match.geographies;
+      
+      // Extract congressional district info
+      const congressionalDistricts = geographies['118th Congressional Districts'] || 
+                                   geographies['Congressional Districts'] || 
+                                   [];
+      
+      if (congressionalDistricts.length > 0) {
+        const district = congressionalDistricts[0];
+        const stateCode = district.STATE || '';
+        const districtCode = district.CD || district.DISTRICT || '';
+        const stateName = STATE_NAMES[stateCode] || stateCode;
+        
+        // Get additional demographic data from ACS API
+        const demographics = await fetchDemographics(stateCode, districtCode, apiKey);
+        
+        const result: CongressionalDistrict = {
+          state: stateCode,
+          stateCode: stateCode,
+          district: districtCode,
+          districtName: `${stateName} ${districtCode === '00' ? 'At-Large' : `District ${parseInt(districtCode, 10)}`}`,
+          geography: {
+            coordinates: {
+              latitude: coordinates.y,
+              longitude: coordinates.x
+            },
+            area_sqmi: parseFloat(district.AREALAND) / 2589988.11 || 0 // Convert sq meters to sq miles
+          },
+          demographics
+        };
+        
+        return { success: true, data: result, source: 'api' };
+      }
+    }
+
+    return { success: false, error: 'No congressional district found', source: 'fallback' };
+
+  } catch (error) {
+    console.error('Census API error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error', 
+      source: 'fallback' 
+    };
+  }
+}
+
+/**
+ * Fetch demographic data from American Community Survey API
+ */
+async function fetchDemographics(state: string, district: string, apiKey: string): Promise<CongressionalDistrict['demographics']> {
+  try {
+    await rateLimiter.waitIfNeeded();
+
+    // Get basic demographic data from 5-Year ACS
+    const acsUrl = 'https://api.census.gov/data/2022/acs/acs5';
+    const variables = [
+      'B01003_001E', // Total population
+      'B02001_002E', // White alone
+      'B02001_003E', // Black alone  
+      'B02001_005E', // Asian alone
+      'B03003_003E', // Hispanic
+      'B19013_001E', // Median household income
+      'B17001_002E', // Below poverty level
+      'B15003_022E'  // Bachelor's degree
+    ].join(',');
+
+    const params = new URLSearchParams({
+      get: variables,
+      for: `congressional district:${district.padStart(2, '0')}`,
+      in: `state:${state}`,
+      key: apiKey
+    });
+
+    const response = await fetch(`${acsUrl}?${params}`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.length > 1) {
+        const [headers, values] = data;
+        const totalPop = parseInt(values[0]) || 0;
+        const white = parseInt(values[1]) || 0;
+        const black = parseInt(values[2]) || 0;
+        const asian = parseInt(values[3]) || 0;
+        const hispanic = parseInt(values[4]) || 0;
+        const medianIncome = parseInt(values[5]) || 0;
+        const belowPoverty = parseInt(values[6]) || 0;
+        const bachelors = parseInt(values[7]) || 0;
+
+        return {
+          white_percent: totalPop > 0 ? (white / totalPop) * 100 : 0,
+          black_percent: totalPop > 0 ? (black / totalPop) * 100 : 0,
+          hispanic_percent: totalPop > 0 ? (hispanic / totalPop) * 100 : 0,
+          asian_percent: totalPop > 0 ? (asian / totalPop) * 100 : 0,
+          median_income: medianIncome,
+          poverty_rate: totalPop > 0 ? (belowPoverty / totalPop) * 100 : 0,
+          bachelor_degree_percent: totalPop > 0 ? (bachelors / totalPop) * 100 : 0
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching demographics:', error);
+  }
+
+  // Return default values if API fails
+  return {
+    white_percent: 0,
+    black_percent: 0,
+    hispanic_percent: 0,
+    asian_percent: 0,
+    median_income: 0,
+    poverty_rate: 0,
+    bachelor_degree_percent: 0
+  };
+}
+
+/**
+ * Get congressional district from ZIP code using live Census API
+ * Falls back to hardcoded mapping if API fails
  */
 export const getCongressionalDistrictFromZip = cache(async (zipCode: string): Promise<CongressionalDistrict | null> => {
+  // First try the live Census API
+  const liveResult = await fetchFromCensusAPI(zipCode);
+  if (liveResult.success && liveResult.data) {
+    return liveResult.data;
+  }
+
+  // Fall back to our hardcoded mapping
   // Check our hardcoded mapping first
   const mapping = ZIP_TO_DISTRICT[zipCode];
   if (mapping) {

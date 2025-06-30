@@ -51,7 +51,9 @@ interface CampaignFinanceVisualizerProps {
 
 export function CampaignFinanceVisualizer({ financeData, representative }: CampaignFinanceVisualizerProps) {
   const [selectedCycle, setSelectedCycle] = useState<number | 'all'>('all');
-  const [activeTab, setActiveTab] = useState<'overview' | 'contributions' | 'expenditures' | 'trends'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'contributions' | 'expenditures' | 'trends' | 'analysis'>('overview');
+  const [contributorFilter, setContributorFilter] = useState<'all' | 'individual' | 'pac' | 'party'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -111,22 +113,61 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
 
   const cycles = financeData.financial_summary.map(cycle => cycle.cycle).sort((a, b) => b - a);
 
+  const filteredContributions = useMemo(() => {
+    let filtered = financeData.recent_contributions;
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(contribution => 
+        contribution.contributor_name.toLowerCase().includes(query) ||
+        (contribution.contributor_employer && contribution.contributor_employer.toLowerCase().includes(query)) ||
+        (contribution.contributor_occupation && contribution.contributor_occupation.toLowerCase().includes(query))
+      );
+    }
+
+    return filtered;
+  }, [financeData.recent_contributions, searchQuery]);
+
+  const filteredExpenditures = useMemo(() => {
+    let filtered = financeData.recent_expenditures;
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(expenditure => 
+        expenditure.disbursement_description.toLowerCase().includes(query) ||
+        expenditure.recipient_name.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }, [financeData.recent_expenditures, searchQuery]);
+
   return (
     <div className="space-y-6">
-      {/* Header with Cycle Selector */}
+      {/* Header with Enhanced Controls */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Campaign Finance Analysis</h3>
-          <select 
-            value={selectedCycle}
-            onChange={(e) => setSelectedCycle(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
-            className="text-sm border border-gray-300 rounded px-3 py-1"
-          >
-            <option value="all">Latest Cycle</option>
-            {cycles.map(cycle => (
-              <option key={cycle} value={cycle}>{cycle} Election Cycle</option>
-            ))}
-          </select>
+          <div className="flex items-center gap-3">
+            <input
+              type="text"
+              placeholder="Search contributions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="text-sm border border-gray-300 rounded px-3 py-2 w-48"
+            />
+            <select 
+              value={selectedCycle}
+              onChange={(e) => setSelectedCycle(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+              className="text-sm border border-gray-300 rounded px-3 py-2"
+            >
+              <option value="all">Latest Cycle</option>
+              {cycles.map(cycle => (
+                <option key={cycle} value={cycle}>{cycle} Election Cycle</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Key Metrics */}
@@ -168,7 +209,8 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
               { id: 'overview', name: 'Overview' },
               { id: 'contributions', name: 'Contributions' },
               { id: 'expenditures', name: 'Expenditures' },
-              { id: 'trends', name: 'Trends' }
+              { id: 'trends', name: 'Trends' },
+              { id: 'analysis', name: 'Analysis' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -312,9 +354,12 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
               </div>
 
               <div>
-                <h4 className="text-md font-medium text-gray-900 mb-4">Recent Contributions</h4>
+                <h4 className="text-md font-medium text-gray-900 mb-4">
+                  Recent Contributions 
+                  {searchQuery && <span className="text-sm text-gray-500 ml-2">({filteredContributions.length} found)</span>}
+                </h4>
                 <div className="space-y-2">
-                  {financeData.recent_contributions.slice(0, 10).map((contribution, index) => (
+                  {filteredContributions.slice(0, 10).map((contribution, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border border-gray-100 rounded">
                       <div className="flex-1">
                         <div className="font-medium text-gray-900">{contribution.contributor_name}</div>
@@ -366,9 +411,12 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
               </div>
 
               <div>
-                <h4 className="text-md font-medium text-gray-900 mb-4">Recent Expenditures</h4>
+                <h4 className="text-md font-medium text-gray-900 mb-4">
+                  Recent Expenditures
+                  {searchQuery && <span className="text-sm text-gray-500 ml-2">({filteredExpenditures.length} found)</span>}
+                </h4>
                 <div className="space-y-2">
-                  {financeData.recent_expenditures.slice(0, 10).map((expenditure, index) => (
+                  {filteredExpenditures.slice(0, 10).map((expenditure, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border border-gray-100 rounded">
                       <div className="flex-1">
                         <div className="font-medium text-gray-900">{expenditure.disbursement_description}</div>
@@ -430,6 +478,120 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
                     More data needed to show trends. Multiple election cycles required.
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Analysis Tab */}
+          {activeTab === 'analysis' && currentCycleData && (
+            <div className="space-y-6">
+              <div>
+                <h4 className="text-md font-medium text-gray-900 mb-4">Financial Health Assessment</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h5 className="font-medium text-gray-900 mb-3">Fundraising Efficiency</h5>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Total Raised</span>
+                        <span className="font-medium text-green-600">
+                          {formatCurrency(currentCycleData.total_receipts)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Burn Rate</span>
+                        <span className={`font-medium ${
+                          (currentCycleData.total_disbursements / currentCycleData.total_receipts) < 0.8 
+                            ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {Math.round((currentCycleData.total_disbursements / currentCycleData.total_receipts) * 100)}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Individual vs PAC Ratio</span>
+                        <span className="font-medium text-civiq-blue">
+                          {Math.round((currentCycleData.individual_contributions / currentCycleData.pac_contributions) * 100) / 100 || 'N/A'}:1
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h5 className="font-medium text-gray-900 mb-3">Contribution Analysis</h5>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Avg. Contribution</span>
+                        <span className="font-medium text-gray-900">
+                          {formatCurrency(
+                            financeData.recent_contributions.length > 0 
+                              ? financeData.recent_contributions.reduce((sum, c) => sum + c.contribution_receipt_amount, 0) / financeData.recent_contributions.length
+                              : 0
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Total Contributors</span>
+                        <span className="font-medium text-gray-900">
+                          {financeData.top_contributors.reduce((sum, c) => sum + c.count, 0)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Repeat Contributors</span>
+                        <span className="font-medium text-gray-900">
+                          {financeData.top_contributors.filter(c => c.count > 1).length}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-md font-medium text-gray-900 mb-4">Spending Patterns</h4>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-civiq-blue">
+                        {Math.round((currentCycleData.total_disbursements / currentCycleData.total_receipts) * 100)}%
+                      </div>
+                      <div className="text-sm text-gray-600">Funds Spent</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-green-600">
+                        {financeData.top_expenditure_categories.length}
+                      </div>
+                      <div className="text-sm text-gray-600">Spending Categories</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-purple-600">
+                        {formatShortCurrency(
+                          financeData.top_expenditure_categories.length > 0 
+                            ? financeData.top_expenditure_categories[0].total_amount
+                            : 0
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-600">Largest Category</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-md font-medium text-gray-900 mb-4">Compliance & Transparency</h4>
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="text-blue-600 text-xl">ℹ️</div>
+                    <div>
+                      <p className="text-sm text-gray-700 mb-2">
+                        This analysis is based on data reported to the Federal Election Commission (FEC). 
+                        All contributions and expenditures are subject to federal campaign finance laws and disclosure requirements.
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Data is updated regularly but may have reporting delays. For the most current information, 
+                        visit the official FEC database.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

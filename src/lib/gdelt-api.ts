@@ -302,3 +302,427 @@ function normalizeDate(dateString: string): string {
   // Fallback to current time if parsing fails
   return new Date().toISOString();
 }
+
+/**
+ * Enhanced GDELT Real-time News Monitoring
+ */
+
+interface GDELTEvent {
+  globalEventId: string;
+  dateAdded: string;
+  sourceUrl: string;
+  actor1Name: string;
+  actor1CountryCode: string;
+  actor2Name: string;
+  actor2CountryCode: string;
+  eventCode: string;
+  eventBaseCode: string;
+  eventRootCode: string;
+  quadClass: number;
+  goldsteinScale: number;
+  numMentions: number;
+  numSources: number;
+  avgTone: number;
+  actionGeoCountryCode: string;
+  actionGeoStateName: string;
+  actionGeoCityName: string;
+  actionGeoLat: number;
+  actionGeoLong: number;
+}
+
+interface GDELTTrend {
+  term: string;
+  count: number;
+  trend: 'rising' | 'falling' | 'stable';
+  percentChange: number;
+  timeframe: string;
+}
+
+interface GDELTRealTimeStream {
+  lastUpdate: string;
+  articles: GDELTArticle[];
+  events: GDELTEvent[];
+  trends: GDELTTrend[];
+  alerts: Array<{
+    type: 'breaking' | 'trending' | 'crisis';
+    message: string;
+    timestamp: string;
+    urgency: 'low' | 'medium' | 'high';
+  }>;
+}
+
+/**
+ * Fetch real-time GDELT event stream
+ */
+export async function fetchGDELTRealTimeEvents(
+  keywords: string[],
+  timeframe: '15min' | '1hour' | '6hour' | '24hour' = '1hour'
+): Promise<GDELTEvent[]> {
+  if (!rateLimiter.canMakeCall()) {
+    const waitTime = rateLimiter.getWaitTime();
+    if (waitTime > 0) {
+      await sleep(waitTime);
+    }
+  }
+
+  return retryWithBackoff(async () => {
+    const queryTerms = keywords.map(k => encodeURIComponent(k)).join(' OR ');
+    
+    // Use GDELT GEO 2.0 API for real-time events
+    const url = `https://api.gdeltproject.org/api/v2/geo/geo?query=${queryTerms}&mode=pointdata&format=json&timespan=${timeframe}&output=json`;
+    
+    console.log(`Fetching GDELT real-time events for: ${keywords.join(', ')}`);
+    
+    rateLimiter.recordCall();
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'CivicIntelHub/1.0 (https://civic-intel-hub.vercel.app)',
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache'
+      },
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new GDELTAPIError(
+        `GDELT GEO API error: ${response.status} ${response.statusText}`,
+        response.status,
+        response.status >= 500
+      );
+    }
+
+    const data = await response.json();
+    return data.events || [];
+  });
+}
+
+/**
+ * Fetch trending political topics from GDELT
+ */
+export async function fetchGDELTTrends(
+  category: 'politics' | 'government' | 'congress' | 'elections' = 'politics',
+  timeframe: '1hour' | '6hour' | '24hour' = '6hour'
+): Promise<GDELTTrend[]> {
+  if (!rateLimiter.canMakeCall()) {
+    const waitTime = rateLimiter.getWaitTime();
+    if (waitTime > 0) {
+      await sleep(waitTime);
+    }
+  }
+
+  return retryWithBackoff(async () => {
+    const categoryQueries = {
+      politics: 'politics OR political OR politician OR campaign',
+      government: 'government OR federal OR agency OR department',
+      congress: 'congress OR senate OR house OR representative OR senator',
+      elections: 'election OR voting OR ballot OR candidate'
+    };
+
+    const query = encodeURIComponent(categoryQueries[category]);
+    
+    // Use GDELT TV 2.0 API for trending analysis
+    const url = `https://api.gdeltproject.org/api/v2/tv/tv?query=${query}&mode=timelinevol&format=json&timespan=${timeframe}`;
+    
+    console.log(`Fetching GDELT trends for: ${category}`);
+    
+    rateLimiter.recordCall();
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'CivicIntelHub/1.0 (https://civic-intel-hub.vercel.app)',
+        'Accept': 'application/json'
+      },
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new GDELTAPIError(
+        `GDELT TV API error: ${response.status} ${response.statusText}`,
+        response.status,
+        response.status >= 500
+      );
+    }
+
+    const data = await response.json();
+    
+    // Process timeline data into trends
+    const timeline = data.timeline || [];
+    return processTrendData(timeline, category);
+  });
+}
+
+/**
+ * Get comprehensive real-time GDELT data stream
+ */
+export async function getGDELTRealTimeStream(
+  representativeName: string,
+  state: string,
+  district?: string
+): Promise<GDELTRealTimeStream> {
+  const searchTerms = generateOptimizedSearchTerms(representativeName, state, district);
+  const keywords = [representativeName, state];
+  
+  try {
+    // Fetch all data in parallel
+    const [articles, events, trends] = await Promise.all([
+      // Recent articles
+      Promise.all(searchTerms.map(term => fetchGDELTNews(term, 5)))
+        .then(results => results.flat().slice(0, 10)),
+      
+      // Real-time events
+      fetchGDELTRealTimeEvents(keywords, '6hour'),
+      
+      // Trending topics
+      fetchGDELTTrends('politics', '6hour')
+    ]);
+
+    // Generate alerts based on data
+    const alerts = generateAlerts(articles, events, trends, representativeName);
+
+    return {
+      lastUpdate: new Date().toISOString(),
+      articles: articles.map(normalizeGDELTArticle),
+      events: events.slice(0, 20),
+      trends: trends.slice(0, 10),
+      alerts
+    };
+
+  } catch (error) {
+    console.error('Error fetching GDELT real-time stream:', error);
+    
+    // Return empty stream on error
+    return {
+      lastUpdate: new Date().toISOString(),
+      articles: [],
+      events: [],
+      trends: [],
+      alerts: [{
+        type: 'crisis',
+        message: 'News data temporarily unavailable',
+        timestamp: new Date().toISOString(),
+        urgency: 'low'
+      }]
+    };
+  }
+}
+
+/**
+ * Monitor for breaking news about a representative
+ */
+export async function monitorBreakingNews(
+  representativeName: string,
+  state: string,
+  lastCheckTime: string
+): Promise<Array<{
+  article: any;
+  urgency: 'low' | 'medium' | 'high';
+  category: 'legislation' | 'scandal' | 'election' | 'policy' | 'other';
+}>> {
+  const searchTerms = generateOptimizedSearchTerms(representativeName, state);
+  const breakingNews: any[] = [];
+
+  try {
+    for (const term of searchTerms) {
+      const articles = await fetchGDELTNews(term, 5);
+      
+      // Filter for articles since last check
+      const recentArticles = articles.filter(article => 
+        new Date(normalizeDate(article.seendate)) > new Date(lastCheckTime)
+      );
+
+      for (const article of recentArticles) {
+        const normalized = normalizeGDELTArticle(article);
+        const analysis = analyzeNewsUrgency(normalized.title, normalized.source);
+        
+        if (analysis.urgency !== 'low') {
+          breakingNews.push({
+            article: normalized,
+            urgency: analysis.urgency,
+            category: analysis.category
+          });
+        }
+      }
+    }
+
+    // Sort by urgency and recency
+    return breakingNews
+      .sort((a, b) => {
+        const urgencyWeight = { high: 3, medium: 2, low: 1 };
+        return urgencyWeight[b.urgency] - urgencyWeight[a.urgency];
+      })
+      .slice(0, 10);
+
+  } catch (error) {
+    console.error('Error monitoring breaking news:', error);
+    return [];
+  }
+}
+
+/**
+ * Process trend data from GDELT timeline
+ */
+function processTrendData(timeline: any[], category: string): GDELTTrend[] {
+  if (!timeline || timeline.length === 0) return [];
+
+  const trends: GDELTTrend[] = [];
+  const termCounts = new Map<string, number[]>();
+
+  // Aggregate mentions over time
+  timeline.forEach((entry: any) => {
+    const terms = entry.terms || [];
+    terms.forEach((term: any) => {
+      if (!termCounts.has(term.term)) {
+        termCounts.set(term.term, []);
+      }
+      termCounts.get(term.term)!.push(term.count || 0);
+    });
+  });
+
+  // Calculate trends
+  termCounts.forEach((counts, term) => {
+    if (counts.length < 2) return;
+
+    const recent = counts.slice(-3).reduce((a, b) => a + b, 0) / 3;
+    const previous = counts.slice(-6, -3).reduce((a, b) => a + b, 0) / 3;
+    
+    const percentChange = previous > 0 ? ((recent - previous) / previous) * 100 : 0;
+    
+    let trend: 'rising' | 'falling' | 'stable' = 'stable';
+    if (percentChange > 20) trend = 'rising';
+    else if (percentChange < -20) trend = 'falling';
+
+    trends.push({
+      term,
+      count: Math.round(recent),
+      trend,
+      percentChange: Math.round(percentChange * 100) / 100,
+      timeframe: '6 hours'
+    });
+  });
+
+  return trends
+    .filter(trend => trend.count > 5) // Filter low-volume terms
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 20);
+}
+
+/**
+ * Generate alerts based on GDELT data
+ */
+function generateAlerts(
+  articles: any[],
+  events: GDELTEvent[],
+  trends: GDELTTrend[],
+  representativeName: string
+): Array<{
+  type: 'breaking' | 'trending' | 'crisis';
+  message: string;
+  timestamp: string;
+  urgency: 'low' | 'medium' | 'high';
+}> {
+  const alerts: any[] = [];
+  const now = new Date().toISOString();
+
+  // Check for breaking news
+  const recentArticles = articles.filter(article => {
+    const articleTime = new Date(article.publishedDate);
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    return articleTime > hourAgo;
+  });
+
+  if (recentArticles.length > 3) {
+    alerts.push({
+      type: 'breaking',
+      message: `${recentArticles.length} recent news articles about ${representativeName}`,
+      timestamp: now,
+      urgency: 'medium'
+    });
+  }
+
+  // Check for trending topics
+  const risingTrends = trends.filter(trend => trend.trend === 'rising' && trend.percentChange > 50);
+  if (risingTrends.length > 0) {
+    alerts.push({
+      type: 'trending',
+      message: `Trending: ${risingTrends[0].term} (+${risingTrends[0].percentChange}%)`,
+      timestamp: now,
+      urgency: 'low'
+    });
+  }
+
+  // Check for high-volume events
+  const significantEvents = events.filter(event => 
+    event.numMentions > 10 && Math.abs(event.goldsteinScale) > 5
+  );
+
+  if (significantEvents.length > 0) {
+    alerts.push({
+      type: 'crisis',
+      message: `${significantEvents.length} significant political events detected`,
+      timestamp: now,
+      urgency: 'high'
+    });
+  }
+
+  return alerts.slice(0, 5);
+}
+
+/**
+ * Analyze news urgency and categorization
+ */
+function analyzeNewsUrgency(title: string, source: string): {
+  urgency: 'low' | 'medium' | 'high';
+  category: 'legislation' | 'scandal' | 'election' | 'policy' | 'other';
+} {
+  const titleLower = title.toLowerCase();
+  
+  // High urgency keywords
+  const highUrgencyTerms = [
+    'breaking', 'urgent', 'resign', 'scandal', 'investigation', 
+    'indicted', 'arrested', 'charged', 'impeach', 'emergency'
+  ];
+  
+  // Medium urgency keywords
+  const mediumUrgencyTerms = [
+    'announces', 'proposes', 'introduces', 'votes', 'passes',
+    'opposes', 'supports', 'committee', 'hearing', 'debate'
+  ];
+
+  // Category keywords
+  const categoryKeywords = {
+    legislation: ['bill', 'vote', 'law', 'legislation', 'amendment', 'act'],
+    scandal: ['scandal', 'investigation', 'ethics', 'corruption', 'fraud'],
+    election: ['election', 'campaign', 'candidate', 'primary', 'ballot'],
+    policy: ['policy', 'budget', 'healthcare', 'immigration', 'climate']
+  };
+
+  let urgency: 'low' | 'medium' | 'high' = 'low';
+  let category: 'legislation' | 'scandal' | 'election' | 'policy' | 'other' = 'other';
+
+  // Determine urgency
+  if (highUrgencyTerms.some(term => titleLower.includes(term))) {
+    urgency = 'high';
+  } else if (mediumUrgencyTerms.some(term => titleLower.includes(term))) {
+    urgency = 'medium';
+  }
+
+  // Determine category
+  for (const [cat, keywords] of Object.entries(categoryKeywords)) {
+    if (keywords.some(keyword => titleLower.includes(keyword))) {
+      category = cat as any;
+      break;
+    }
+  }
+
+  // Boost urgency for trusted sources
+  const trustedSources = ['Reuters', 'Associated Press', 'NPR', 'Congress.gov'];
+  if (trustedSources.includes(source) && urgency === 'low') {
+    urgency = 'medium';
+  }
+
+  return { urgency, category };
+}
+
+// Export new functions
+export type { GDELTEvent, GDELTTrend, GDELTRealTimeStream };

@@ -17,6 +17,7 @@ interface SponsoredBill {
   status: string;
   policyArea?: string;
   cosponsors?: number;
+  sponsorshipType?: 'sponsored' | 'cosponsored';
 }
 
 interface BillsTrackerProps {
@@ -31,17 +32,61 @@ export function BillsTracker({ bills, representative }: BillsTrackerProps) {
   const [selectedCategory, setSelectedCategory] = useState<'all' | string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'cosponsors' | 'status'>('date');
   const [selectedBill, setSelectedBill] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | string>('all');
+  const [sponsorshipFilter, setSponsorshipFilter] = useState<'all' | 'sponsored' | 'cosponsored'>('all');
+  const [showTimelineView, setShowTimelineView] = useState(false);
 
   const categories = useMemo(() => {
     const areas = bills.map(bill => bill.policyArea).filter(Boolean) as string[];
     return ['all', ...Array.from(new Set(areas))];
   }, [bills]);
 
+  const statuses = useMemo(() => {
+    const statusList = bills.map(bill => {
+      const status = bill.latestAction.text;
+      if (status.toLowerCase().includes('introduced')) return 'Introduced';
+      if (status.toLowerCase().includes('committee')) return 'In Committee';
+      if (status.toLowerCase().includes('passed')) return 'Passed Chamber';
+      if (status.toLowerCase().includes('enacted') || status.toLowerCase().includes('signed')) return 'Enacted';
+      return 'Other';
+    });
+    return ['all', ...Array.from(new Set(statusList))];
+  }, [bills]);
+
   const filteredAndSortedBills = useMemo(() => {
     let filtered = bills;
     
+    // Category filter
     if (selectedCategory !== 'all') {
-      filtered = bills.filter(bill => bill.policyArea === selectedCategory);
+      filtered = filtered.filter(bill => bill.policyArea === selectedCategory);
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(bill => {
+        const status = bill.latestAction.text;
+        if (statusFilter === 'Introduced') return status.toLowerCase().includes('introduced');
+        if (statusFilter === 'In Committee') return status.toLowerCase().includes('committee');
+        if (statusFilter === 'Passed Chamber') return status.toLowerCase().includes('passed');
+        if (statusFilter === 'Enacted') return status.toLowerCase().includes('enacted') || status.toLowerCase().includes('signed');
+        return statusFilter === 'Other';
+      });
+    }
+
+    // Sponsorship type filter
+    if (sponsorshipFilter !== 'all') {
+      filtered = filtered.filter(bill => bill.sponsorshipType === sponsorshipFilter);
+    }
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(bill => 
+        bill.title.toLowerCase().includes(query) ||
+        bill.number.toLowerCase().includes(query) ||
+        (bill.policyArea && bill.policyArea.toLowerCase().includes(query))
+      );
     }
 
     return filtered.sort((a, b) => {
@@ -56,7 +101,7 @@ export function BillsTracker({ bills, representative }: BillsTrackerProps) {
           return 0;
       }
     });
-  }, [bills, selectedCategory, sortBy]);
+  }, [bills, selectedCategory, statusFilter, searchQuery, sortBy]);
 
   const getProgressStage = (status: string, latestAction: string) => {
     const statusLower = status.toLowerCase();
@@ -118,28 +163,110 @@ export function BillsTracker({ bills, representative }: BillsTrackerProps) {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Legislative Tracker</h3>
-          <div className="flex gap-2">
-            <select 
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="text-sm border border-gray-300 rounded px-3 py-1"
-            >
-              {categories.map(category => (
-                <option key={category} value={category}>
-                  {category === 'all' ? 'All Categories' : category}
-                </option>
-              ))}
-            </select>
-            <select 
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="text-sm border border-gray-300 rounded px-3 py-1"
-            >
-              <option value="date">Sort by Date</option>
-              <option value="cosponsors">Sort by Cosponsors</option>
-              <option value="status">Sort by Status</option>
-            </select>
+          <button
+            onClick={() => setShowTimelineView(!showTimelineView)}
+            className="px-3 py-1 text-sm bg-civiq-blue text-white rounded hover:bg-civiq-blue/90 transition-colors"
+          >
+            {showTimelineView ? 'List View' : 'Timeline View'}
+          </button>
+        </div>
+
+        {/* Enhanced Filter Controls */}
+        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select 
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+              >
+                {categories.map(category => (
+                  <option key={category} value={category}>
+                    {category === 'all' ? 'All Categories' : category}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select 
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+              >
+                {statuses.map(status => (
+                  <option key={status} value={status}>
+                    {status === 'all' ? 'All Statuses' : status}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+              <select 
+                value={sponsorshipFilter}
+                onChange={(e) => setSponsorshipFilter(e.target.value as any)}
+                className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+              >
+                <option value="all">All Types</option>
+                <option value="sponsored">Sponsored</option>
+                <option value="cosponsored">Co-sponsored</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+              <select 
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+              >
+                <option value="date">Date Introduced</option>
+                <option value="cosponsors">Number of Cosponsors</option>
+                <option value="status">Current Status</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+              <input
+                type="text"
+                placeholder="Search bills..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full text-sm border border-gray-300 rounded px-3 py-2"
+              />
+            </div>
           </div>
+          
+          {/* Active Filters */}
+          {(selectedCategory !== 'all' || statusFilter !== 'all' || sponsorshipFilter !== 'all' || searchQuery) && (
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm text-gray-600">Active filters:</span>
+              {selectedCategory !== 'all' && (
+                <span className="px-2 py-1 bg-civiq-blue text-white text-xs rounded">Category: {selectedCategory}</span>
+              )}
+              {statusFilter !== 'all' && (
+                <span className="px-2 py-1 bg-civiq-blue text-white text-xs rounded">Status: {statusFilter}</span>
+              )}
+              {sponsorshipFilter !== 'all' && (
+                <span className="px-2 py-1 bg-civiq-blue text-white text-xs rounded">Type: {sponsorshipFilter}</span>
+              )}
+              {searchQuery && (
+                <span className="px-2 py-1 bg-civiq-blue text-white text-xs rounded">Search: "{searchQuery}"</span>
+              )}
+              <button
+                onClick={() => {
+                  setSelectedCategory('all');
+                  setStatusFilter('all');
+                  setSponsorshipFilter('all');
+                  setSearchQuery('');
+                }}
+                className="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 transition-colors"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Statistics Dashboard */}
@@ -163,8 +290,86 @@ export function BillsTracker({ bills, representative }: BillsTrackerProps) {
         </div>
       </div>
 
+      {/* Timeline View */}
+      {showTimelineView && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h4 className="text-lg font-semibold text-gray-900 mb-6">Legislative Timeline</h4>
+          <div className="relative">
+            {/* Timeline line */}
+            <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-300"></div>
+            
+            <div className="space-y-8">
+              {filteredAndSortedBills.map((bill, index) => {
+                const { stage, progress } = getProgressStage(bill.status, bill.latestAction.text);
+                return (
+                  <div key={bill.billId} className="relative flex items-start">
+                    {/* Timeline dot */}
+                    <div className={`absolute left-6 w-4 h-4 rounded-full border-2 bg-white ${getStatusColor(stage).replace('bg-', 'border-')}`}></div>
+                    
+                    {/* Content */}
+                    <div className="ml-16 flex-1">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-lg">{getBillTypeIcon(bill.type)}</span>
+                              <h5 className="font-semibold text-gray-900">{bill.number}</h5>
+                              {bill.sponsorshipType && (
+                                <span className={`px-2 py-1 text-xs rounded ${
+                                  bill.sponsorshipType === 'sponsored' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {bill.sponsorshipType === 'sponsored' ? 'Sponsored' : 'Co-sponsored'}
+                                </span>
+                              )}
+                              {bill.policyArea && (
+                                <span className="px-2 py-1 bg-white text-gray-700 text-xs rounded border">
+                                  {bill.policyArea}
+                                </span>
+                              )}
+                            </div>
+                            <h6 className="text-gray-800 mb-2">{bill.title}</h6>
+                          </div>
+                          <div className="text-right ml-4">
+                            <div className="text-sm text-gray-600 mb-1">
+                              {bill.cosponsors || 0} cosponsors
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(bill.introducedDate).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Mini progress bar */}
+                        <div className="mb-2">
+                          <div className="w-full bg-gray-200 rounded-full h-1.5">
+                            <div 
+                              className={`h-1.5 rounded-full transition-all duration-500 ${getStatusColor(stage)}`}
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="text-sm text-gray-600">
+                          <span className="font-medium">Latest:</span> {bill.latestAction.text}
+                          <span className="text-gray-500 ml-2">
+                            ({new Date(bill.latestAction.date).toLocaleDateString()})
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Bills List with Progress Visualization */}
-      <div className="space-y-4">
+      {!showTimelineView && (
+        <div className="space-y-4">
         {filteredAndSortedBills.map((bill) => {
           const { stage, progress } = getProgressStage(bill.status, bill.latestAction.text);
           const isSelected = selectedBill === bill.billId;
@@ -183,6 +388,15 @@ export function BillsTracker({ bills, representative }: BillsTrackerProps) {
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-lg">{getBillTypeIcon(bill.type)}</span>
                       <h4 className="font-semibold text-gray-900">{bill.number}</h4>
+                      {bill.sponsorshipType && (
+                        <span className={`px-2 py-1 text-xs rounded ${
+                          bill.sponsorshipType === 'sponsored' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {bill.sponsorshipType === 'sponsored' ? 'Sponsored' : 'Co-sponsored'}
+                        </span>
+                      )}
                       {bill.policyArea && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
                           {bill.policyArea}
@@ -268,11 +482,20 @@ export function BillsTracker({ bills, representative }: BillsTrackerProps) {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {filteredAndSortedBills.length === 0 && (
         <div className="text-center py-8 text-gray-500">
-          No bills found matching the selected criteria.
+          <div className="text-lg mb-2">📋</div>
+          <div>No bills found matching the selected criteria.</div>
+          <div className="text-sm mt-2">Try adjusting your filters or search terms.</div>
+        </div>
+      )}
+
+      {filteredAndSortedBills.length > 0 && (
+        <div className="text-center text-sm text-gray-500">
+          Showing {filteredAndSortedBills.length} of {bills.length} sponsored bills
         </div>
       )}
 

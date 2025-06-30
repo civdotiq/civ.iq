@@ -67,42 +67,112 @@ export interface Representative {
   nextElection?: string;
 }
 
-// Congress.gov doesn't require API key for public data
-// But if you have one, it provides higher rate limits
+// Congress.gov API configuration
 const CONGRESS_API_BASE = 'https://api.congress.gov/v3';
+
+// Rate limiter for Congress API calls
+class CongressRateLimiter {
+  private requests: number[] = [];
+  private readonly maxRequestsPerHour = 5000; // Congress API limit
+
+  async waitIfNeeded(): Promise<void> {
+    const now = Date.now();
+    const oneHourAgo = now - 3600000;
+    
+    // Remove requests older than 1 hour
+    this.requests = this.requests.filter(time => time > oneHourAgo);
+    
+    if (this.requests.length >= this.maxRequestsPerHour) {
+      const waitTime = 3600000 - (now - this.requests[0]);
+      if (waitTime > 0) {
+        console.log(`Rate limit reached, waiting ${Math.round(waitTime / 1000)} seconds`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+    }
+    
+    this.requests.push(now);
+  }
+}
+
+const congressRateLimiter = new CongressRateLimiter();
 
 /**
  * Get current members of Congress for a specific state
- * This uses the public Congress.gov API
+ * Enhanced with live Congress.gov API integration
  */
 export const getCurrentMembersByState = cache(async (state: string, apiKey?: string): Promise<CongressMember[]> => {
   try {
-    const url = new URL(`${CONGRESS_API_BASE}/member`);
-    url.searchParams.append('format', 'json');
-    // Note: Removing currentMember=true for 119th Congress as API may not have updated all current flags yet
-    // url.searchParams.append('currentMember', 'true');
-    url.searchParams.append('congress', '119'); // 119th Congress (2025-2027)
-    url.searchParams.append('limit', '500'); // Increase limit to get more members
+    await congressRateLimiter.waitIfNeeded();
     
-    if (apiKey) {
-      url.searchParams.append('api_key', apiKey);
-    }
+    const congressApiKey = apiKey || process.env.CONGRESS_API_KEY;
     
-    console.log('Fetching Congress members from:', url.toString());
-    
-    const response = await fetch(url.toString(), {
-      headers: {
-        'Accept': 'application/json',
+    // Try multiple API approaches for better data coverage
+    const endpoints = [
+      // Current members endpoint
+      {
+        url: `${CONGRESS_API_BASE}/member`,
+        params: new URLSearchParams({
+          format: 'json',
+          currentMember: 'true',
+          limit: '250'
+        })
       },
-      next: { revalidate: 3600 } // Cache for 1 hour
-    });
-    
-    if (!response.ok) {
-      console.error('Congress API error:', response.status, response.statusText);
+      // 119th Congress members endpoint (fallback)
+      {
+        url: `${CONGRESS_API_BASE}/member`,
+        params: new URLSearchParams({
+          format: 'json',
+          congress: '119',
+          limit: '250'
+        })
+      }
+    ];
+
+    if (congressApiKey) {
+      endpoints.forEach(endpoint => endpoint.params.append('api_key', congressApiKey));
+    }
+
+    let allMembers: any[] = [];
+    let apiSuccess = false;
+
+    for (const endpoint of endpoints) {
+      try {
+        const url = `${endpoint.url}?${endpoint.params.toString()}`;
+        console.log('Fetching Congress members from:', url);
+        
+        const response = await fetch(url, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
+          },
+          next: { revalidate: 3600 } // Cache for 1 hour
+        });
+        
+        if (!response.ok) {
+          console.error(`Congress API error (${endpoint.url}):`, response.status, response.statusText);
+          continue;
+        }
+        
+        const data = await response.json();
+        
+        if (data.members && Array.isArray(data.members)) {
+          allMembers = [...allMembers, ...data.members];
+          apiSuccess = true;
+          console.log(`Successfully fetched ${data.members.length} members from ${endpoint.url}`);
+          break; // Use first successful endpoint
+        }
+      } catch (error) {
+        console.error(`Error with endpoint ${endpoint.url}:`, error);
+        continue;
+      }
+    }
+
+    if (!apiSuccess || allMembers.length === 0) {
+      console.warn('Congress API failed, using fallback data');
       return [];
     }
-    
-    const data = await response.json();
+
+    const data = { members: allMembers };
     
     // Debug: log first few members to see state format
     console.log('Sample members:', data.members?.slice(0, 3).map((m: any) => ({
@@ -253,6 +323,217 @@ export async function getRepresentativesByLocation(
   
   console.log(`Returning ${representatives.length} representatives for ${state}${district ? `-${district}` : ''}`);
   return representatives;
+}
+
+/**
+ * Get bills sponsored by a specific member
+ */
+export async function getBillsByMember(bioguideId: string, apiKey?: string): Promise<any[]> {
+  try {
+    await congressRateLimiter.waitIfNeeded();
+    
+    const congressApiKey = apiKey || process.env.CONGRESS_API_KEY;
+    const url = new URL(`${CONGRESS_API_BASE}/member/${bioguideId}/sponsored-legislation`);
+    
+    url.searchParams.append('format', 'json');
+    url.searchParams.append('limit', '50');
+    
+    if (congressApiKey) {
+      url.searchParams.append('api_key', congressApiKey);
+    }
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
+      },
+      next: { revalidate: 1800 } // Cache for 30 minutes
+    });
+
+    if (!response.ok) {
+      console.error('Congress bills API error:', response.status, response.statusText);
+      return [];
+    }
+
+    const data = await response.json();
+    return data.sponsoredLegislation || [];
+
+  } catch (error) {
+    console.error('Error fetching member bills:', error);
+    return [];
+  }
+}
+
+/**
+ * Get voting record for a specific member
+ */
+export async function getVotesByMember(bioguideId: string, apiKey?: string): Promise<any[]> {
+  try {
+    await congressRateLimiter.waitIfNeeded();
+    
+    const congressApiKey = apiKey || process.env.CONGRESS_API_KEY;
+    
+    // Get recent votes from current congress
+    const url = new URL(`${CONGRESS_API_BASE}/member/${bioguideId}/votes`);
+    
+    url.searchParams.append('format', 'json');
+    url.searchParams.append('limit', '100');
+    
+    if (congressApiKey) {
+      url.searchParams.append('api_key', congressApiKey);
+    }
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
+      },
+      next: { revalidate: 900 } // Cache for 15 minutes
+    });
+
+    if (!response.ok) {
+      console.error('Congress votes API error:', response.status, response.statusText);
+      return [];
+    }
+
+    const data = await response.json();
+    return data.votes || [];
+
+  } catch (error) {
+    console.error('Error fetching member votes:', error);
+    return [];
+  }
+}
+
+/**
+ * Get committee memberships for a specific member
+ */
+export async function getCommitteesByMember(bioguideId: string, apiKey?: string): Promise<any[]> {
+  try {
+    await congressRateLimiter.waitIfNeeded();
+    
+    const congressApiKey = apiKey || process.env.CONGRESS_API_KEY;
+    const url = new URL(`${CONGRESS_API_BASE}/member/${bioguideId}/committee-memberships`);
+    
+    url.searchParams.append('format', 'json');
+    url.searchParams.append('congress', '119'); // Current congress
+    
+    if (congressApiKey) {
+      url.searchParams.append('api_key', congressApiKey);
+    }
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
+      },
+      next: { revalidate: 3600 } // Cache for 1 hour
+    });
+
+    if (!response.ok) {
+      console.error('Congress committees API error:', response.status, response.statusText);
+      return [];
+    }
+
+    const data = await response.json();
+    return data.memberships || [];
+
+  } catch (error) {
+    console.error('Error fetching member committees:', error);
+    return [];
+  }
+}
+
+/**
+ * Get recent bills from Congress
+ */
+export async function getRecentBills(limit = 20, apiKey?: string): Promise<any[]> {
+  try {
+    await congressRateLimiter.waitIfNeeded();
+    
+    const congressApiKey = apiKey || process.env.CONGRESS_API_KEY;
+    const url = new URL(`${CONGRESS_API_BASE}/bill`);
+    
+    url.searchParams.append('format', 'json');
+    url.searchParams.append('congress', '119');
+    url.searchParams.append('limit', limit.toString());
+    url.searchParams.append('sort', 'latestAction.actionDate+desc');
+    
+    if (congressApiKey) {
+      url.searchParams.append('api_key', congressApiKey);
+    }
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
+      },
+      next: { revalidate: 1800 } // Cache for 30 minutes
+    });
+
+    if (!response.ok) {
+      console.error('Congress recent bills API error:', response.status, response.statusText);
+      return [];
+    }
+
+    const data = await response.json();
+    return data.bills || [];
+
+  } catch (error) {
+    console.error('Error fetching recent bills:', error);
+    return [];
+  }
+}
+
+/**
+ * Search bills by topic or keyword
+ */
+export async function searchBills(query: string, limit = 20, apiKey?: string): Promise<any[]> {
+  try {
+    await congressRateLimiter.waitIfNeeded();
+    
+    const congressApiKey = apiKey || process.env.CONGRESS_API_KEY;
+    const url = new URL(`${CONGRESS_API_BASE}/bill`);
+    
+    url.searchParams.append('format', 'json');
+    url.searchParams.append('congress', '119');
+    url.searchParams.append('limit', limit.toString());
+    
+    // Note: Congress API doesn't support direct text search in the current version
+    // This would need to be implemented with a different approach or enhanced API access
+    
+    if (congressApiKey) {
+      url.searchParams.append('api_key', congressApiKey);
+    }
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
+      },
+      next: { revalidate: 1800 } // Cache for 30 minutes
+    });
+
+    if (!response.ok) {
+      console.error('Congress search bills API error:', response.status, response.statusText);
+      return [];
+    }
+
+    const data = await response.json();
+    
+    // Client-side filtering for now (not ideal for large datasets)
+    const bills = data.bills || [];
+    const filtered = bills.filter((bill: any) => 
+      bill.title?.toLowerCase().includes(query.toLowerCase()) ||
+      bill.summary?.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    return filtered.slice(0, limit);
+
+  } catch (error) {
+    console.error('Error searching bills:', error);
+    return [];
+  }
 }
 
 /**

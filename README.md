@@ -1,52 +1,81 @@
 # CIV.IQ - Civic Intelligence Hub
 
-A modern, transparent civic engagement platform that connects citizens with their government representatives through official data sources.
+A comprehensive civic engagement platform that connects citizens with their government representatives through live, validated data from official sources.
 
 ![CIV.IQ Logo](https://img.shields.io/badge/CIV.IQ-Civic%20Intelligence-blue?style=for-the-badge)
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![API Integration](https://img.shields.io/badge/APIs-Live%20Data-success)
+![Coverage](https://img.shields.io/badge/coverage-federal%20%7C%20state%20%7C%20local-blue)
 
 ## 🎯 Mission
 
-CIV.IQ empowers citizens with transparent access to government data, making it easy to:
-- Find all representatives from federal to local levels
-- Track voting records and legislative activity
-- Monitor campaign finance data
-- Compare representatives' effectiveness and positions
+CIV.IQ empowers citizens with transparent, real-time access to government data, making it easy to:
+- Find representatives from federal to local levels using live APIs
+- Track voting records and legislative activity in real-time
+- Monitor campaign finance with FEC integration
+- Access breaking news and policy trends via GDELT
+- Compare representatives with validated, cross-referenced data
 
 ## ✨ Features
 
-### Current (Phase 1 - MVP)
-- **Representative Search**: Find your federal representatives by ZIP code
-- **Enhanced Representative Profiles**: Comprehensive representative details with:
-  - Contact information and office locations
-  - Committee assignments and legislative stats
-  - Biography and background information
-  - Professional timeline and relationships
-- **Advanced Voting Records**: Interactive voting analysis featuring:
-  - Multi-dimensional filtering (time, type, position, search)
-  - Detailed vote list with bill information
-  - Visual voting pattern timeline
-  - Party alignment and attendance statistics
-- **Comprehensive Bill Tracking**: Legislative monitoring with:
-  - Timeline view showing bill progress through Congress
-  - Advanced filtering by category, status, and search
-  - Progress visualization with status indicators
-  - Sponsor and co-sponsor information
-- **Campaign Finance Analysis**: FEC data integration including:
-  - Financial health assessment and trends
-  - Searchable contribution and expenditure records
-  - Spending pattern analysis
-  - Compliance and transparency information
-- **Clean, Modern UI**: Minimalist design focused on data clarity
-- **Real-time Data**: Fresh information from official government APIs
+### ✅ **Phase 4 Complete: Live Data Integration (2025)**
+- **🏛️ Real-time Government APIs**: Live data from Census, Congress.gov, FEC, GDELT
+- **📊 Advanced Search & Visualization**: Multi-criteria filtering and D3.js visualizations
+- **🏛️ State & Local Government**: Complete state legislature and local officials database
+- **💰 Campaign Finance**: Live FEC data with contribution analysis and spending patterns
+- **📰 Breaking News Integration**: Real-time political news and trending topics via GDELT
+- **🔍 Data Validation**: Multi-source cross-validation with quality metrics
+- **📡 Government RSS Feeds**: Official announcements from White House, Congress, agencies
 
-### Planned Features
-- **Address-based Search**: Full address geocoding for precise district matching
-- **State & Local Representatives**: Expand beyond federal officials  
-- **District Maps**: Interactive congressional district boundaries
-- **Enhanced Comparison Tools**: Side-by-side representative analysis
-- **Historical Data**: Extended voting patterns and trends over time
-- **Notification System**: Alerts for new bills and voting activity
-- **Export Features**: Data export for research and analysis
+### **Current Features (All Phases)**
+
+#### **Federal Government Coverage**
+- **Representative Search**: Find federal representatives by ZIP code with live Census geocoding
+- **Enhanced Profiles**: Comprehensive details with real Congress.gov data:
+  - Live voting records and bill sponsorship
+  - Committee assignments and leadership roles
+  - Campaign finance integration with FEC data
+  - Real-time news mentions via GDELT
+- **Advanced Voting Analysis**: Interactive voting visualization with:
+  - Multi-dimensional filtering and timeline views
+  - Party alignment and crossover voting patterns
+  - Bill impact analysis and vote correlation
+- **Legislative Tracking**: Real-time bill monitoring featuring:
+  - Live status updates from Congress.gov
+  - Sponsor and co-sponsor networks
+  - Amendment tracking and procedural history
+- **Campaign Finance**: Live FEC integration including:
+  - Real-time contribution tracking
+  - Top donor analysis and spending categories
+  - Financial health assessment and trends
+
+#### **State & Local Government**
+- **State Legislature**: Complete state-level coverage with:
+  - Upper and lower chamber composition
+  - State bill tracking and committee assignments
+  - Governor and state executive profiles
+- **Local Officials**: Multi-jurisdiction support for:
+  - City mayors, council members, and managers
+  - County executives, commissioners, and sheriffs
+  - School board members and superintendents
+  - Special district officials
+
+#### **Real-time News & Analysis**
+- **Breaking News Monitoring**: GDELT-powered alerts for:
+  - Legislative developments and policy changes
+  - Political events and crisis monitoring
+  - Trending topics with sentiment analysis
+- **Government Communications**: RSS feed integration from:
+  - White House press releases
+  - Congressional announcements
+  - Federal agency updates
+  - Supreme Court decisions
+
+#### **Data Quality & Validation**
+- **Multi-source Validation**: Cross-reference data from multiple APIs
+- **Quality Metrics**: Completeness, accuracy, timeliness scoring
+- **Source Attribution**: Full transparency with reliability ratings
+- **Error Detection**: Automated consistency checks and conflict resolution
 
 ## 🛠️ Tech Stack
 
@@ -65,11 +94,20 @@ CIV.IQ empowers citizens with transparent access to government data, making it e
 - **Caching**: In-memory caching (Redis planned)
 - **Rate Limiting**: Built-in request throttling
 
-### Data Sources
-- **Congress.gov API**: Legislative data, member information, bills
-- **FEC.gov API**: Campaign finance data
-- **Census.gov API**: District demographics (planned)
-- **OpenStates.org**: State legislature data (planned)
+### Live Data Sources & APIs
+- **Congress.gov API**: Real-time legislative data, member info, bills, votes
+- **FEC.gov API**: Live campaign finance data, contributions, expenditures
+- **Census.gov API**: Congressional districts, demographics, geocoding
+- **GDELT Project**: Real-time news, events, political trends
+- **OpenStates.org**: State legislature and bill data
+- **Government RSS Feeds**: Official announcements and press releases
+
+### API Integration Features
+- **Rate Limiting**: Intelligent request throttling across all APIs
+- **Caching Strategy**: Optimized TTL based on data volatility
+- **Error Recovery**: Graceful fallbacks and retry mechanisms
+- **Data Validation**: Multi-source cross-validation and quality scoring
+- **Source Attribution**: Full transparency and reliability tracking
 
 ## 🚀 Getting Started
 
@@ -98,14 +136,20 @@ cp .env.example .env.local
 
 Edit `.env.local` with your API keys:
 ```env
-# Congress.gov API
+# Congress.gov API (required for federal data)
 CONGRESS_API_KEY=your_key_here
 
-# FEC API
+# FEC API (required for campaign finance)
 FEC_API_KEY=your_key_here
 
-# Census API (if needed)
+# Census API (required for demographics and geocoding)
 CENSUS_API_KEY=your_key_here
+
+# OpenStates API (optional, for enhanced state data)
+OPENSTATES_API_KEY=your_key_here
+
+# GDELT is public (no key required)
+# RSS feeds are public (no key required)
 ```
 
 4. Run the development server:
@@ -177,37 +221,50 @@ civic-intel-hub/
 
 ### Internal API Endpoints
 
-#### Get Representatives by ZIP
+#### Federal Government
 ```
-GET /api/representatives?zip=48221
-```
-
-#### Get Representative Details
-```
-GET /api/representative/[bioguideId]
-```
-
-#### Get Representative Votes
-```
-GET /api/representative/[bioguideId]/votes
+GET /api/representatives?zip=48221         # Find reps by ZIP
+GET /api/representative/[bioguideId]       # Representative details
+GET /api/representative/[bioguideId]/votes # Voting records
+GET /api/representative/[bioguideId]/bills # Sponsored bills
+GET /api/representative/[bioguideId]/finance # Campaign finance
+GET /api/representative/[bioguideId]/news  # Recent news mentions
 ```
 
-#### Get Representative Bills
+#### State & Local Government
 ```
-GET /api/representative/[bioguideId]/bills
-```
-
-#### Get Campaign Finance Data
-```
-GET /api/representative/[bioguideId]/finance
+GET /api/state-legislature/[state]         # State legislators
+GET /api/state-bills/[state]              # State bills
+GET /api/state-executives/[state]         # Governor & state officials
+GET /api/local-government/[location]      # Local officials
 ```
 
-### External API Integration
+#### Real-time Data
+```
+GET /api/gdelt/trends                     # Political trends
+GET /api/rss/government                   # Government announcements
+GET /api/census/district/[zip]            # District demographics
+```
 
-The project integrates with official government APIs:
-- **Congress.gov**: Member data, bills, votes
-- **FEC.gov**: Campaign finance records
-- **Census.gov**: Demographics and geographic data
+### Live API Integration
+
+The platform integrates with multiple government and research APIs:
+
+#### Government Sources (High Reliability)
+- **Congress.gov API**: Real-time legislative data with 5000 req/hour limit
+- **FEC.gov API**: Campaign finance with 1000 req/hour limit  
+- **Census.gov API**: Demographics and geocoding with 500 req/day limit
+- **Government RSS**: White House, Congress, Federal agencies
+
+#### Research Sources (Medium-High Reliability)
+- **GDELT Project**: Real-time news and events with 30 req/minute limit
+- **OpenStates.org**: State legislature data (API key required)
+
+#### Data Quality Features
+- **Cross-validation**: Multiple source verification
+- **Source Attribution**: Full transparency and reliability scoring
+- **Cache Optimization**: 15min-24hr TTL based on data volatility
+- **Error Recovery**: Intelligent fallbacks and retry logic
 
 ## 🎨 Design System
 

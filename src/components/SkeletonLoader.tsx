@@ -4,13 +4,13 @@ interface SkeletonProps {
 
 export function Skeleton({ className = '' }: SkeletonProps) {
   return (
-    <div className={`animate-pulse bg-gray-200 rounded ${className}`} />
+    <div className={`shimmer bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] rounded ${className}`} />
   );
 }
 
 export function RepresentativeCardSkeleton() {
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in-up">
       {/* Header Section */}
       <div className="p-6 pb-4">
         <div className="flex items-start gap-4">
@@ -65,7 +65,7 @@ export function RepresentativeCardSkeleton() {
 
 export function ProfileHeaderSkeleton() {
   return (
-    <div className="bg-white rounded-lg shadow-md p-8 mb-8">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8 animate-fade-in-up">
       <div className="flex items-start gap-6">
         <Skeleton className="w-24 h-24 rounded-full" />
         <div className="flex-1">
@@ -80,9 +80,9 @@ export function ProfileHeaderSkeleton() {
 
 export function TabContentSkeleton() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {[1, 2, 3].map((item) => (
-        <div key={item} className="bg-white rounded-lg border border-gray-200 p-6">
+        <div key={item} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm animate-fade-in-up" style={{animationDelay: `${item * 100}ms`}}>
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
               <Skeleton className="h-5 w-3/4 mb-2" />
@@ -103,7 +103,7 @@ export function TabContentSkeleton() {
 export function ContactTabSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm animate-fade-in-up">
         <Skeleton className="h-5 w-32 mb-4" />
         <div className="space-y-4">
           <div className="flex items-center gap-3">
@@ -121,7 +121,7 @@ export function ContactTabSkeleton() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm animate-fade-in-up" style={{animationDelay: '200ms'}}>
         <Skeleton className="h-5 w-24 mb-4" />
         <div className="space-y-2">
           <div className="flex items-center gap-3">
@@ -135,7 +135,7 @@ export function ContactTabSkeleton() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm animate-fade-in-up" style={{animationDelay: '400ms'}}>
         <Skeleton className="h-5 w-32 mb-4" />
         <div className="space-y-2">
           <Skeleton className="h-4 w-64" />

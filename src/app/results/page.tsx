@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { SearchHistory } from '@/lib/searchHistory';
 import { RepresentativeCardSkeleton } from '@/components/SkeletonLoader';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -492,7 +492,7 @@ function StateRepresentativesTab({ zipCode }: { zipCode: string }) {
   );
 }
 
-export default function Results() {
+function ResultsContent() {
   const searchParams = useSearchParams();
   const zipCode = searchParams.get('zip');
   const [data, setData] = useState<ApiResponse | null>(null);
@@ -728,5 +728,20 @@ export default function Results() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function Results() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-civiq-blue"></div>
+          <p className="mt-4 text-gray-600">Loading results...</p>
+        </div>
+      </div>
+    }>
+      <ResultsContent />
+    </Suspense>
   );
 }
