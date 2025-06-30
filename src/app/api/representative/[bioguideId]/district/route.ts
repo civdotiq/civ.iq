@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cachedFetch } from '@/lib/cache';
 
 interface DemographicData {
   population: {
@@ -229,22 +230,33 @@ export async function GET(
   }
 
   try {
-    // First, get representative info to get state and district
-    const repResponse = await fetch(
-      `${request.nextUrl.origin}/api/representative/${bioguideId}`
-    );
-    
-    if (!repResponse.ok) {
-      throw new Error('Failed to fetch representative info');
-    }
+    // Use cached fetch for better performance
+    const districtData = await cachedFetch(
+      `district-demographics-${bioguideId}`,
+      async () => {
+        // First, get representative info to get state and district
+        const repResponse = await fetch(
+          `${request.nextUrl.origin}/api/representative/${bioguideId}`
+        );
+        
+        if (!repResponse.ok) {
+          throw new Error('Failed to fetch representative info');
+        }
 
-    const representative = await repResponse.json();
-    
-    // Fetch demographic data from Census API
-    const demographics = await fetchCensusData(representative.state, representative.district || '00');
-    
-    // Generate election data (in a real implementation, this would come from election databases)
-    const elections = generateMockElectionData(representative.state, representative.district || '00');
+        const representative = await repResponse.json();
+        
+        // Fetch demographic data from Census API
+        const demographics = await fetchCensusData(representative.state, representative.district || '00');
+        
+        // Generate election data (in a real implementation, this would come from election databases)
+        const elections = generateMockElectionData(representative.state, representative.district || '00');
+
+        return { representative, demographics, elections };
+      },
+      2 * 60 * 60 * 1000 // 2 hours cache for demographics (changes infrequently)
+    );
+
+    const { representative, demographics, elections } = districtData;
 
     const districtInfo: DistrictInfo = {
       district_number: representative.district || 'At-Large',

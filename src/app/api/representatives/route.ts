@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCongressionalDistrictFromZip, getCongressionalDistrictFromAddress } from '@/lib/census-api';
 import { getRepresentativesByLocation } from '@/lib/congress-api';
+import { validateZipCode, validateRepresentativeData, createRateLimitValidator } from '@/lib/validation';
+
+// Rate limiting: 100 requests per minute per IP
+const rateLimitValidator = createRateLimitValidator(100, 60 * 1000);
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const zipCode = searchParams.get('zip');
+  
+  // Rate limiting
+  const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+  if (!rateLimitValidator(clientIP)) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429 }
+    );
+  }
   
   if (!zipCode) {
     return NextResponse.json(
@@ -13,25 +26,30 @@ export async function GET(request: NextRequest) {
     );
   }
   
-  // Validate ZIP code format
-  const zipRegex = /^\d{5}(-\d{4})?$/;
-  if (!zipRegex.test(zipCode)) {
+  // Validate and sanitize ZIP code
+  const zipValidation = validateZipCode(zipCode);
+  if (!zipValidation.isValid) {
     return NextResponse.json(
-      { error: 'Invalid ZIP code format' },
+      { 
+        error: 'Invalid ZIP code',
+        details: zipValidation.errors.map(e => e.message)
+      },
       { status: 400 }
     );
   }
   
+  const sanitizedZip = zipValidation.data;
+  
   try {
-    console.log(`Looking up representatives for ZIP: ${zipCode}`);
+    console.log(`Looking up representatives for ZIP: ${sanitizedZip}`);
     
     // Step 1: Get congressional district from Census API
-    let districtInfo = await getCongressionalDistrictFromZip(zipCode);
+    let districtInfo = await getCongressionalDistrictFromZip(sanitizedZip);
     
     // If the first method fails, try the one-line address method
     if (!districtInfo) {
       console.log('Trying alternative method with ZIP as address...');
-      districtInfo = await getCongressionalDistrictFromAddress(zipCode);
+      districtInfo = await getCongressionalDistrictFromAddress(sanitizedZip);
     }
     
     if (!districtInfo) {
@@ -54,14 +72,25 @@ export async function GET(request: NextRequest) {
       process.env.CONGRESS_API_KEY
     );
     
+    // Validate and sanitize representative data
+    const validatedReps = representatives
+      .map(rep => {
+        const validation = validateRepresentativeData(rep);
+        if (validation.hasWarnings) {
+          console.warn('Representative data warnings:', validation.warnings);
+        }
+        return validation.isValid ? validation.data : null;
+      })
+      .filter(rep => rep !== null);
+
     // Format the response
     const response = {
-      zipCode,
+      zipCode: sanitizedZip,
       state: districtInfo.stateCode,
       stateName: districtInfo.districtName.split(' ')[0], // Extract state name
       district: districtInfo.district,
       districtName: districtInfo.districtName,
-      representatives: representatives.map(rep => ({
+      representatives: validatedReps.map(rep => ({
         ...rep,
         title: rep.chamber === 'Senate' ? 'U.S. Senator' : 'U.S. Representative',
         dataComplete: rep.imageUrl ? 95 : 75 // Higher completeness if we have an image

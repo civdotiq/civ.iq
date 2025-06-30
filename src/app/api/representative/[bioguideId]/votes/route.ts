@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cachedFetch } from '@/lib/cache';
 
 interface Vote {
   voteId: string;
@@ -11,6 +12,19 @@ interface Vote {
   result: string;
   date: string;
   position: 'Yea' | 'Nay' | 'Not Voting' | 'Present';
+  chamber: 'House' | 'Senate';
+}
+
+interface LegislativeActivity {
+  activityId: string;
+  bill: {
+    number: string;
+    title: string;
+    congress: string;
+  };
+  type: 'Sponsored' | 'Cosponsored';
+  date: string;
+  status: string;
   chamber: 'House' | 'Senate';
 }
 
@@ -30,33 +44,100 @@ export async function GET(
   }
 
   try {
-    // Attempt to fetch from Congress.gov API
-    if (process.env.CONGRESS_API_KEY) {
-      const response = await fetch(
-        `https://api.congress.gov/v3/member/${bioguideId}/votes?format=json&limit=${limit}&api_key=${process.env.CONGRESS_API_KEY}`
-      );
+    // Use cached fetch for better performance
+    const legislativeData = await cachedFetch(
+      `legislative-activity-${bioguideId}`,
+      async () => {
+        if (!process.env.CONGRESS_API_KEY) {
+          throw new Error('Congress API key not configured');
+        }
 
-      if (response.ok) {
-        const data = await response.json();
-        const votes: Vote[] = data.votes?.map((vote: any) => ({
-          voteId: vote.voteId,
+        // Fetch sponsored and cosponsored legislation
+        const [sponsoredResponse, cosponsoredResponse] = await Promise.all([
+          fetch(
+            `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?format=json&limit=50&api_key=${process.env.CONGRESS_API_KEY}`
+          ),
+          fetch(
+            `https://api.congress.gov/v3/member/${bioguideId}/cosponsored-legislation?format=json&limit=50&api_key=${process.env.CONGRESS_API_KEY}`
+          )
+        ]);
+
+        const sponsoredData = sponsoredResponse.ok ? await sponsoredResponse.json() : { sponsoredLegislation: [] };
+        const cosponsoredData = cosponsoredResponse.ok ? await cosponsoredResponse.json() : { cosponsoredLegislation: [] };
+
+        return { sponsoredData, cosponsoredData };
+      },
+      30 * 60 * 1000 // 30 minutes cache
+    );
+
+    // Convert legislative activity to voting-like records
+    const activities: LegislativeActivity[] = [];
+
+    // Add sponsored legislation
+    if (legislativeData.sponsoredData.sponsoredLegislation) {
+      legislativeData.sponsoredData.sponsoredLegislation.forEach((bill: any) => {
+        activities.push({
+          activityId: `sponsored-${bill.congress}-${bill.type}-${bill.number}`,
           bill: {
-            number: vote.bill?.number || 'N/A',
-            title: vote.bill?.title || vote.question,
-            congress: vote.congress
+            number: `${bill.type.toUpperCase()}. ${bill.number}`,
+            title: bill.title,
+            congress: bill.congress.toString()
           },
-          question: vote.question,
-          result: vote.result,
-          date: vote.date,
-          position: vote.position,
-          chamber: vote.chamber
-        })) || [];
-
-        return NextResponse.json({ votes });
-      }
+          type: 'Sponsored',
+          date: bill.introducedDate,
+          status: bill.latestAction?.text || 'Introduced',
+          chamber: bill.type.toLowerCase().includes('h') ? 'House' : 'Senate'
+        });
+      });
     }
 
-    // Fallback mock voting data
+    // Add cosponsored legislation (limited to recent ones)
+    if (legislativeData.cosponsoredData.cosponsoredLegislation) {
+      legislativeData.cosponsoredData.cosponsoredLegislation.slice(0, 20).forEach((bill: any) => {
+        activities.push({
+          activityId: `cosponsored-${bill.congress}-${bill.type}-${bill.number}`,
+          bill: {
+            number: `${bill.type.toUpperCase()}. ${bill.number}`,
+            title: bill.title,
+            congress: bill.congress.toString()
+          },
+          type: 'Cosponsored',
+          date: bill.introducedDate,
+          status: bill.latestAction?.text || 'Introduced',
+          chamber: bill.type.toLowerCase().includes('h') ? 'House' : 'Senate'
+        });
+      });
+    }
+
+    // Sort by date (most recent first) and limit
+    activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const limitedActivities = activities.slice(0, limit);
+
+    // Convert to Vote format for compatibility with existing UI
+    const votes: Vote[] = limitedActivities.map(activity => ({
+      voteId: activity.activityId,
+      bill: activity.bill,
+      question: activity.type === 'Sponsored' ? 'On Sponsorship' : 'On Cosponsorship',
+      result: 'Active',
+      date: activity.date,
+      position: 'Yea', // Sponsoring/cosponsoring implies support
+      chamber: activity.chamber
+    }));
+
+    return NextResponse.json({ 
+      votes,
+      metadata: {
+        totalSponsored: legislativeData.sponsoredData.sponsoredLegislation?.length || 0,
+        totalCosponsored: legislativeData.cosponsoredData.cosponsoredLegislation?.length || 0,
+        dataSource: 'congress.gov',
+        note: 'Showing legislative activity (sponsored/cosponsored bills) as voting records. Actual floor votes require different API access.'
+      }
+    });
+
+  } catch (error) {
+    console.error('API Error:', error);
+    
+    // Enhanced fallback mock voting data with realistic activity
     const mockVotes: Vote[] = [
       {
         voteId: '1',
@@ -125,13 +206,12 @@ export async function GET(
       }
     ];
 
-    return NextResponse.json({ votes: mockVotes.slice(0, limit) });
-
-  } catch (error) {
-    console.error('API Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ 
+      votes: mockVotes.slice(0, limit),
+      metadata: {
+        dataSource: 'mock',
+        note: 'Fallback data - API temporarily unavailable'
+      }
+    });
   }
 }

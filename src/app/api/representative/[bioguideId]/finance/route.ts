@@ -1,4 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cachedFetch } from '@/lib/cache';
+
+// State name to abbreviation mapping
+const STATE_ABBR: Record<string, string> = {
+  'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR',
+  'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE',
+  'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID',
+  'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS',
+  'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+  'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS',
+  'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV',
+  'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY',
+  'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK',
+  'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+  'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT',
+  'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV',
+  'Wisconsin': 'WI', 'Wyoming': 'WY', 'District of Columbia': 'DC'
+};
+
+function getStateAbbreviation(state: string): string {
+  // If it's already an abbreviation, return as is
+  if (state.length === 2) return state;
+  // Otherwise look up the abbreviation
+  return STATE_ABBR[state] || state;
+}
 
 interface FECCandidate {
   candidate_id: string;
@@ -60,78 +85,130 @@ interface CampaignFinanceData {
 
 // Helper function to find FEC candidate by name and state
 async function findFECCandidate(representativeName: string, state: string, district?: string): Promise<FECCandidate | null> {
-  try {
-    const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
-    const searchName = representativeName.replace(/^(Rep\.|Senator|Sen\.)\s+/, '').trim();
-    
-    const response = await fetch(
-      `https://api.open.fec.gov/v1/candidates/search/?api_key=${process.env.FEC_API_KEY}&q=${encodeURIComponent(searchName)}&state=${state}&cycle=${currentCycle}&sort=-election_years`
-    );
-
-    if (!response.ok) {
-      throw new Error('FEC candidate search failed');
-    }
-
-    const data = await response.json();
-    
-    if (data.results && data.results.length > 0) {
-      // Try to find exact match based on office and district
-      const candidate = data.results.find((c: any) => {
-        const isHouse = c.office === 'H' && district;
-        const isSenate = c.office === 'S' && !district;
-        const matchesDistrict = !district || c.district === district.padStart(2, '0');
+  return cachedFetch(
+    `fec-candidate-${representativeName}-${state}-${district || 'senate'}`,
+    async () => {
+      try {
+        const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
         
-        return (isHouse || isSenate) && matchesDistrict && c.state === state;
-      });
+        // Clean up the name for search
+        let searchName = representativeName
+          .replace(/^(Rep\.|Representative|Senator|Sen\.)\s+/, '')
+          .replace(/,.*$/, '') // Remove everything after comma (like "Last, First")
+          .trim();
+        
+        // Try different name formats if needed
+        const nameVariants = [searchName];
+        
+        // If name is in "Last, First" format, also try "First Last"
+        if (searchName.includes(',')) {
+          const parts = searchName.split(',').map(p => p.trim());
+          if (parts.length === 2) {
+            nameVariants.push(`${parts[1]} ${parts[0]}`);
+          }
+        }
+        
+        console.log(`Searching FEC for candidate: ${searchName} in ${state}${district ? `-${district}` : ''}`);
+        
+        for (const name of nameVariants) {
+          const response = await fetch(
+            `https://api.open.fec.gov/v1/candidates/search/?api_key=${process.env.FEC_API_KEY}&q=${encodeURIComponent(name)}&state=${state}&cycle=${currentCycle}&sort=-election_years`
+          );
 
-      if (candidate) {
-        return {
-          candidate_id: candidate.candidate_id,
-          name: candidate.name,
-          party: candidate.party,
-          office: candidate.office,
-          state: candidate.state,
-          district: candidate.district,
-          election_years: candidate.election_years || [],
-          cycles: candidate.cycles || []
-        };
+          if (!response.ok) {
+            console.error(`FEC search failed for ${name}:`, response.status);
+            continue;
+          }
+
+          const data = await response.json();
+          console.log(`Found ${data.results?.length || 0} FEC candidates for ${name}`);
+          
+          if (data.results && data.results.length > 0) {
+            // Try to find exact match based on office and district
+            const candidate = data.results.find((c: any) => {
+              const isHouse = c.office === 'H' && district;
+              const isSenate = c.office === 'S' && !district;
+              const matchesDistrict = !district || c.district === district.padStart(2, '0');
+              
+              return (isHouse || isSenate) && matchesDistrict && c.state === state;
+            });
+
+            if (candidate) {
+              console.log(`Found matching FEC candidate: ${candidate.name} (${candidate.candidate_id})`);
+              return {
+                candidate_id: candidate.candidate_id,
+                name: candidate.name,
+                party: candidate.party,
+                office: candidate.office,
+                state: candidate.state,
+                district: candidate.district,
+                election_years: candidate.election_years || [],
+                cycles: candidate.cycles || []
+              };
+            }
+            
+            // If no exact match, try the first result that matches state and current cycle
+            const fallbackCandidate = data.results.find((c: any) => c.state === state && c.cycles?.includes(currentCycle));
+            if (fallbackCandidate) {
+              console.log(`Using fallback FEC candidate: ${fallbackCandidate.name} (${fallbackCandidate.candidate_id})`);
+              return {
+                candidate_id: fallbackCandidate.candidate_id,
+                name: fallbackCandidate.name,
+                party: fallbackCandidate.party,
+                office: fallbackCandidate.office,
+                state: fallbackCandidate.state,
+                district: fallbackCandidate.district,
+                election_years: fallbackCandidate.election_years || [],
+                cycles: fallbackCandidate.cycles || []
+              };
+            }
+          }
+        }
+
+        console.log(`No FEC candidate found for ${searchName} in ${state}`);
+        return null;
+      } catch (error) {
+        console.error('Error finding FEC candidate:', error);
+        return null;
       }
-    }
-
-    return null;
-  } catch (error) {
-    console.error('Error finding FEC candidate:', error);
-    return null;
-  }
+    },
+    60 * 60 * 1000 // 1 hour cache
+  );
 }
 
 async function getFinancialSummary(candidateId: string): Promise<FinancialSummary[]> {
-  try {
-    const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
-    const response = await fetch(
-      `https://api.open.fec.gov/v1/candidate/${candidateId}/totals/?api_key=${process.env.FEC_API_KEY}&cycle=${currentCycle}&cycle=${currentCycle - 2}&sort=-cycle`
-    );
+  return cachedFetch(
+    `fec-summary-${candidateId}`,
+    async () => {
+      try {
+        const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
+        const response = await fetch(
+          `https://api.open.fec.gov/v1/candidate/${candidateId}/totals/?api_key=${process.env.FEC_API_KEY}&cycle=${currentCycle}&cycle=${currentCycle - 2}&sort=-cycle`
+        );
 
-    if (!response.ok) {
-      throw new Error('FEC financial summary failed');
-    }
+        if (!response.ok) {
+          throw new Error('FEC financial summary failed');
+        }
 
-    const data = await response.json();
-    
-    return data.results?.map((total: any) => ({
-      cycle: total.cycle,
-      total_receipts: total.receipts || 0,
-      total_disbursements: total.disbursements || 0,
-      cash_on_hand_end_period: total.cash_on_hand_end_period || 0,
-      individual_contributions: total.individual_contributions || 0,
-      pac_contributions: total.other_political_committee_contributions || 0,
-      party_contributions: total.political_party_committee_contributions || 0,
-      candidate_contributions: total.candidate_contribution || 0
-    })) || [];
-  } catch (error) {
-    console.error('Error fetching financial summary:', error);
-    return [];
-  }
+        const data = await response.json();
+        
+        return data.results?.map((total: any) => ({
+          cycle: total.cycle,
+          total_receipts: total.receipts || 0,
+          total_disbursements: total.disbursements || 0,
+          cash_on_hand_end_period: total.cash_on_hand_end_period || 0,
+          individual_contributions: total.individual_contributions || 0,
+          pac_contributions: total.other_political_committee_contributions || 0,
+          party_contributions: total.political_party_committee_contributions || 0,
+          candidate_contributions: total.candidate_contribution || 0
+        })) || [];
+      } catch (error) {
+        console.error('Error fetching financial summary:', error);
+        return [];
+      }
+    },
+    30 * 60 * 1000 // 30 minutes cache
+  );
 }
 
 async function getContributions(candidateId: string): Promise<ContributionData[]> {
@@ -231,10 +308,11 @@ export async function GET(
     }
 
     if (process.env.FEC_API_KEY) {
-      // Find FEC candidate
+      // Find FEC candidate (convert state to abbreviation)
+      const stateAbbr = getStateAbbreviation(representative.state);
       const fecCandidate = await findFECCandidate(
         representative.name,
-        representative.state,
+        stateAbbr,
         representative.district
       );
 

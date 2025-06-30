@@ -10,33 +10,78 @@ This is the ONLY active CIV.IQ project. Ignore any other folders with similar na
 - **Version**: 2025 MVP Implementation
 - **Status**: ACTIVE DEVELOPMENT
 
-## Critical Rules
+## Quick Reference
+
+### Brand Colors
+```css
+--civiq-red: #e11d07;    /* Logo circle, errors */
+--civiq-green: #0a9338;  /* Logo rectangle, success */
+--civiq-blue: #3ea2d4;   /* Links, accents */
+```
+
+### Key Files
+- `src/app/page.tsx` - Landing page (clean design)
+- `src/app/representatives/page.tsx` - Representatives list
+- `src/app/representative/[bioguideId]/page.tsx` - Profile pages
+- `src/lib/api/` - API client functions
+- `src/types/` - TypeScript definitions
+
+### API Endpoints
+```
+GET /api/representatives?zip=48221
+GET /api/representative/[bioguideId]
+GET /api/representative/[bioguideId]/votes
+GET /api/representative/[bioguideId]/bills
+GET /api/representative/[bioguideId]/finance
+```
+
+### Development Commands
+```bash
+npm run dev      # Start development server
+npm run build    # Production build
+npm run lint     # Run linter
+npm test         # Run tests
+```
+
+### Critical Rules
 1. ONLY use approved APIs (Census, Congress, FEC, OpenStates, GDELT)
 2. NEVER use Google Civic or ProPublica APIs
-3. This is a fresh start - ignore patterns from other civiq folders
+3. Keep the clean, minimalist design
+4. TypeScript for all new code
+5. Cache API responses
 
-## If Confused About Location
-Always run: pwd and confirm you see /mnt/d/civic-intel-hub
+### Current Phase: MVP (Phase 1)
+- ✅ Federal representatives only
+- ✅ ZIP code lookup
+- ✅ Basic profiles
+- ⏳ Voting records
+- ⏳ Campaign finance
+- ❌ State/local (Phase 2+)
 
-## Brand Colors
-- Red: #e11d07 (logo circle)
-- Green: #0b983c (logo rectangle)
-- Blue: #3ea2d4 (accents)
+### Environment Variables
+```env
+CONGRESS_API_KEY=
+FEC_API_KEY=
+CENSUS_API_KEY=
+```
 
-## Phase 1 MVP Scope
-- Federal representatives ONLY
-- ZIP code lookup (no full address yet)
-- Basic profile pages
-- No state/local data in Phase 1
+### Design Principles
+- Clean, minimalist interface
+- Data clarity over decoration
+- Fast, responsive performance
+- Accessible to all users
+- Mobile-first approach
 
-## Tech Stack
-- Frontend: Next.js 14 (App Router), TypeScript, Tailwind CSS, shadcn/ui
-- Backend: Node.js with Express
-- Database: PostgreSQL + Redis caching
-- Testing: Jest, React Testing Library, Playwright
+### Git Workflow
+1. Feature branch from `main`
+2. Clear commit messages (feat/fix/docs)
+3. Test before pushing
+4. PR with description
 
-## Key Features from Mockups
-- Landing: 'Know Your Representatives' hero with ZIP input
-- Representative cards with photo, party, contact info
-- Profile pages with voting records, bills, campaign finance
-- Data completeness indicator (e.g., 93% complete)
+## If Confused
+- Check `README.md` for full documentation
+- Run `pwd` to verify location
+- Check `git status` for current branch
+- Review mockups in project root
+
+Remember: This is a civic utility, not a commercial product. Keep it clean, fast, and focused on serving citizens.
