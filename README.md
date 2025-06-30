@@ -352,8 +352,8 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ## 📞 Contact
 
-- **Project Lead**: [Your Name]
-- **Email**: contact@civiq.org
+- **Project Lead**: Mark Sandford
+- **Email**: mark@marksandford.dev
 - **Issues**: [GitHub Issues](https://github.com/yourusername/civic-intel-hub/issues)
 
 ---
