@@ -1,55 +1,134 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { 
+  generateOptimizedSearchTerms, 
+  fetchGDELTNews, 
+  normalizeGDELTArticle 
+} from '@/lib/gdelt-api';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q') || 'Gary Peters Michigan Senator';
+  const testType = searchParams.get('type') || 'basic'; // basic, optimized, or comprehensive
   
   try {
-    const encodedQuery = encodeURIComponent(query);
-    const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodedQuery}&mode=artlist&maxrecords=10&format=json&sort=datedesc`;
+    console.log(`Testing GDELT API with query: "${query}" (type: ${testType})`);
     
-    console.log('Testing GDELT with URL:', url);
-    
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'application/json'
-      },
-      cache: 'no-store'
-    });
-    
-    console.log('GDELT Response status:', response.status);
-    console.log('GDELT Response headers:', Object.fromEntries(response.headers.entries()));
-    
-    const text = await response.text();
-    console.log('GDELT Response text (first 500 chars):', text.substring(0, 500));
-    
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
+    if (testType === 'basic') {
+      // Basic direct test
+      const articles = await fetchGDELTNews(query, 5);
+      
       return NextResponse.json({
-        error: 'Failed to parse GDELT response',
-        responseText: text.substring(0, 1000),
-        status: response.status
+        success: true,
+        testType: 'basic',
+        query,
+        articlesFound: articles.length,
+        articles: articles.map(normalizeGDELTArticle),
+        message: 'Direct GDELT API test completed'
       });
+      
+    } else if (testType === 'optimized') {
+      // Test optimized search terms
+      const searchTerms = generateOptimizedSearchTerms(query, 'Michigan', null);
+      const allArticles = [];
+      
+      for (const term of searchTerms) {
+        try {
+          const articles = await fetchGDELTNews(term, 3);
+          allArticles.push(...articles.map(normalizeGDELTArticle));
+        } catch (error) {
+          console.error(`Failed to fetch for term: ${term}`, error.message);
+        }
+      }
+      
+      // Remove duplicates
+      const seenUrls = new Set();
+      const uniqueArticles = allArticles.filter(article => {
+        if (seenUrls.has(article.url)) return false;
+        seenUrls.add(article.url);
+        return true;
+      });
+      
+      return NextResponse.json({
+        success: true,
+        testType: 'optimized',
+        query,
+        searchTerms,
+        articlesFound: uniqueArticles.length,
+        articles: uniqueArticles.slice(0, 10),
+        message: 'Optimized search terms test completed'
+      });
+      
+    } else {
+      // Comprehensive test with error handling
+      const startTime = Date.now();
+      const results = {
+        searchTerms: [],
+        articles: [],
+        errors: [],
+        timing: {}
+      };
+      
+      try {
+        // Generate search terms
+        const searchTerms = generateOptimizedSearchTerms(query, 'Michigan', null);
+        results.searchTerms = searchTerms;
+        
+        // Test each search term
+        for (const term of searchTerms) {
+          const termStart = Date.now();
+          try {
+            const articles = await fetchGDELTNews(term, 2);
+            results.articles.push(...articles.map(normalizeGDELTArticle));
+            results.timing[term] = Date.now() - termStart;
+          } catch (error) {
+            results.errors.push({
+              term,
+              error: error.message,
+              timing: Date.now() - termStart
+            });
+          }
+        }
+        
+        // Remove duplicates
+        const seenUrls = new Set();
+        results.articles = results.articles.filter(article => {
+          if (seenUrls.has(article.url)) return false;
+          seenUrls.add(article.url);
+          return true;
+        });
+        
+        return NextResponse.json({
+          success: true,
+          testType: 'comprehensive',
+          query,
+          totalTime: Date.now() - startTime,
+          articlesFound: results.articles.length,
+          errorsCount: results.errors.length,
+          results,
+          message: 'Comprehensive GDELT test completed'
+        });
+        
+      } catch (error) {
+        return NextResponse.json({
+          success: false,
+          testType: 'comprehensive',
+          query,
+          error: error.message,
+          partialResults: results,
+          message: 'Comprehensive test failed with partial results'
+        });
+      }
     }
-    
-    return NextResponse.json({
-      success: true,
-      query,
-      url,
-      articlesFound: data.articles?.length || 0,
-      articles: data.articles?.slice(0, 5) || [],
-      rawResponse: data
-    });
     
   } catch (error) {
     console.error('GDELT Test Error:', error);
     return NextResponse.json({
-      error: error.message,
+      success: false,
       query,
-      stack: error.stack
+      testType,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      message: 'GDELT test failed completely'
     });
   }
 }

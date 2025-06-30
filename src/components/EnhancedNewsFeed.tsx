@@ -8,7 +8,6 @@ interface NewsArticle {
   source: string;
   publishedDate: string;
   language: string;
-  tone?: number;
   summary?: string;
   imageUrl?: string;
   domain: string;
@@ -18,6 +17,8 @@ interface NewsResponse {
   articles: NewsArticle[];
   totalResults: number;
   searchTerms: string[];
+  dataSource?: 'gdelt' | 'cached' | 'fallback';
+  cacheStatus?: string;
 }
 
 interface EnhancedNewsFeedProps {
@@ -34,7 +35,6 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
   const [loading, setLoading] = useState(true);
   const [selectedSource, setSelectedSource] = useState<'all' | string>('all');
   const [selectedTimeframe, setSelectedTimeframe] = useState<'all' | '7days' | '30days'>('all');
-  const [selectedSentiment, setSelectedSentiment] = useState<'all' | 'positive' | 'negative' | 'neutral'>('all');
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchNewsData = async (showLoading = true) => {
@@ -90,31 +90,9 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
       filtered = filtered.filter(article => new Date(article.publishedDate) >= cutoffDate);
     }
 
-    // Sentiment filter
-    if (selectedSentiment !== 'all' && filtered.some(a => a.tone !== undefined)) {
-      filtered = filtered.filter(article => {
-        if (!article.tone) return selectedSentiment === 'neutral';
-        if (selectedSentiment === 'positive') return article.tone > 0;
-        if (selectedSentiment === 'negative') return article.tone < 0;
-        return article.tone === 0;
-      });
-    }
 
     return filtered.sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime());
-  }, [newsData, selectedSource, selectedTimeframe, selectedSentiment]);
-
-  const sentimentStats = useMemo(() => {
-    if (!newsData) return { positive: 0, negative: 0, neutral: 0 };
-    
-    const articlesWithTone = newsData.articles.filter(a => a.tone !== undefined);
-    if (articlesWithTone.length === 0) return { positive: 0, negative: 0, neutral: 0 };
-    
-    return {
-      positive: articlesWithTone.filter(a => a.tone! > 0).length,
-      negative: articlesWithTone.filter(a => a.tone! < 0).length,
-      neutral: articlesWithTone.filter(a => a.tone === 0).length
-    };
-  }, [newsData]);
+  }, [newsData, selectedSource, selectedTimeframe]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -135,19 +113,6 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
     });
   };
 
-  const getSentimentIcon = (tone?: number) => {
-    if (tone === undefined) return '😐';
-    if (tone > 0) return '😊';
-    if (tone < 0) return '😞';
-    return '😐';
-  };
-
-  const getSentimentColor = (tone?: number) => {
-    if (tone === undefined) return 'text-gray-500';
-    if (tone > 0) return 'text-green-500';
-    if (tone < 0) return 'text-red-500';
-    return 'text-yellow-500';
-  };
 
   if (loading) {
     return (
@@ -214,36 +179,23 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
             <option value="7days">Past 7 Days</option>
             <option value="30days">Past 30 Days</option>
           </select>
-
-          <select 
-            value={selectedSentiment}
-            onChange={(e) => setSelectedSentiment(e.target.value as any)}
-            className="text-sm border border-gray-300 rounded px-3 py-1"
-          >
-            <option value="all">All Sentiment</option>
-            <option value="positive">Positive</option>
-            <option value="neutral">Neutral</option>
-            <option value="negative">Negative</option>
-          </select>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-civiq-blue">{filteredArticles.length}</div>
             <div className="text-sm text-gray-600">Articles</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{sentimentStats.positive}</div>
-            <div className="text-sm text-gray-600">Positive</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-red-600">{sentimentStats.negative}</div>
-            <div className="text-sm text-gray-600">Negative</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-yellow-600">{sources.length - 1}</div>
+            <div className="text-2xl font-bold text-green-600">{sources.length - 1}</div>
             <div className="text-sm text-gray-600">Sources</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-purple-600">
+              {newsData?.dataSource === 'gdelt' ? 'Live' : newsData?.dataSource === 'cached' ? 'Cached' : 'Sample'}
+            </div>
+            <div className="text-sm text-gray-600">Data Status</div>
           </div>
         </div>
 
@@ -300,16 +252,6 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
                           {article.title}
                         </a>
                       </h4>
-                      <div className="flex items-center gap-2 ml-4">
-                        {article.tone !== undefined && (
-                          <span 
-                            className={`text-lg ${getSentimentColor(article.tone)}`}
-                            title={`Sentiment: ${article.tone > 0 ? 'Positive' : article.tone < 0 ? 'Negative' : 'Neutral'}`}
-                          >
-                            {getSentimentIcon(article.tone)}
-                          </span>
-                        )}
-                      </div>
                     </div>
                     
                     <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
@@ -341,9 +283,8 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
                       
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <span>{article.language}</span>
-                        {article.tone !== undefined && (
-                          <span>Tone: {article.tone.toFixed(1)}</span>
-                        )}
+                        <span>•</span>
+                        <span>{article.domain}</span>
                       </div>
                     </div>
                   </div>
