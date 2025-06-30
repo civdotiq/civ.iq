@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cachedFetch } from '@/lib/cache';
 
 interface SponsoredBill {
   billId: string;
@@ -10,11 +11,12 @@ interface SponsoredBill {
     date: string;
     text: string;
   };
-  type: 'hr' | 's' | 'hjres' | 'sjres' | 'hconres' | 'sconres' | 'hres' | 'sres';
+  type: 'hr' | 's' | 'hjres' | 'sjres' | 'hconres' | 'sconres' | 'hres' | 'sres' | string;
   chamber: 'House' | 'Senate';
   status: string;
   policyArea?: string;
   cosponsors?: number;
+  sponsorshipType?: 'sponsored' | 'cosponsored';
 }
 
 export async function GET(
@@ -33,36 +35,97 @@ export async function GET(
   }
 
   try {
-    // Attempt to fetch from Congress.gov API
-    if (process.env.CONGRESS_API_KEY) {
-      const response = await fetch(
-        `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?format=json&limit=${limit}&api_key=${process.env.CONGRESS_API_KEY}`
-      );
+    // Use cached fetch for better performance
+    const billsData = await cachedFetch(
+      `sponsored-bills-${bioguideId}-${limit}`,
+      async () => {
+        if (!process.env.CONGRESS_API_KEY) {
+          throw new Error('Congress API key not configured');
+        }
 
-      if (response.ok) {
-        const data = await response.json();
-        const bills: SponsoredBill[] = data.sponsoredLegislation?.map((bill: any) => ({
-          billId: bill.number,
-          number: bill.number,
-          title: bill.title,
-          congress: bill.congress,
-          introducedDate: bill.introducedDate,
-          latestAction: {
-            date: bill.latestAction?.actionDate || bill.introducedDate,
-            text: bill.latestAction?.text || 'Introduced'
-          },
-          type: bill.type,
-          chamber: bill.originChamber,
-          status: bill.latestAction?.text || 'Introduced',
-          policyArea: bill.policyArea?.name,
-          cosponsors: bill.cosponsors?.count || 0
-        })) || [];
+        // Fetch both sponsored and cosponsored legislation for comprehensive view
+        const [sponsoredResponse, cosponsoredResponse] = await Promise.all([
+          fetch(
+            `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?format=json&limit=${Math.ceil(limit * 0.7)}&api_key=${process.env.CONGRESS_API_KEY}`
+          ),
+          fetch(
+            `https://api.congress.gov/v3/member/${bioguideId}/cosponsored-legislation?format=json&limit=${Math.ceil(limit * 0.3)}&api_key=${process.env.CONGRESS_API_KEY}`
+          )
+        ]);
 
-        return NextResponse.json({ bills });
+        const sponsoredData = sponsoredResponse.ok ? await sponsoredResponse.json() : { sponsoredLegislation: [] };
+        const cosponsoredData = cosponsoredResponse.ok ? await cosponsoredResponse.json() : { cosponsoredLegislation: [] };
+
+        // Enhanced bill processing with better metadata
+        const processedBills: SponsoredBill[] = [];
+
+        // Process sponsored bills
+        if (sponsoredData.sponsoredLegislation) {
+          sponsoredData.sponsoredLegislation.forEach((bill: any) => {
+            processedBills.push({
+              billId: `${bill.congress}-${bill.type}-${bill.number}`,
+              number: `${bill.type.toUpperCase()}. ${bill.number}`,
+              title: bill.title,
+              congress: bill.congress.toString(),
+              introducedDate: bill.introducedDate,
+              latestAction: {
+                date: bill.latestAction?.actionDate || bill.introducedDate,
+                text: bill.latestAction?.text || 'Introduced'
+              },
+              type: bill.type,
+              chamber: bill.originChamber || (bill.type.toLowerCase().includes('h') ? 'House' : 'Senate'),
+              status: bill.latestAction?.text || 'Introduced',
+              policyArea: bill.policyArea?.name,
+              cosponsors: bill.cosponsors?.count || 0,
+              sponsorshipType: 'sponsored'
+            });
+          });
+        }
+
+        // Process cosponsored bills (mark them differently)
+        if (cosponsoredData.cosponsoredLegislation) {
+          cosponsoredData.cosponsoredLegislation.slice(0, Math.ceil(limit * 0.3)).forEach((bill: any) => {
+            processedBills.push({
+              billId: `${bill.congress}-${bill.type}-${bill.number}-cosponsored`,
+              number: `${bill.type.toUpperCase()}. ${bill.number}`,
+              title: bill.title,
+              congress: bill.congress.toString(),
+              introducedDate: bill.introducedDate,
+              latestAction: {
+                date: bill.latestAction?.actionDate || bill.introducedDate,
+                text: bill.latestAction?.text || 'Introduced'
+              },
+              type: bill.type,
+              chamber: bill.originChamber || (bill.type.toLowerCase().includes('h') ? 'House' : 'Senate'),
+              status: bill.latestAction?.text || 'Introduced',
+              policyArea: bill.policyArea?.name,
+              cosponsors: bill.cosponsors?.count || 0,
+              sponsorshipType: 'cosponsored'
+            });
+          });
+        }
+
+        // Sort by date and return limited results
+        return processedBills
+          .sort((a, b) => new Date(b.introducedDate).getTime() - new Date(a.introducedDate).getTime())
+          .slice(0, limit);
+      },
+      30 * 60 * 1000 // 30 minutes cache
+    );
+
+    return NextResponse.json({ 
+      bills: billsData,
+      metadata: {
+        dataSource: 'congress.gov',
+        totalReturned: billsData.length,
+        includesCosponsored: true
       }
-    }
+    });
 
-    // Fallback mock bills data
+  } catch (error) {
+    console.error('Bills API Error:', error);
+
+    // Enhanced fallback mock bills data
     const mockBills: SponsoredBill[] = [
       {
         billId: 'hr1234-118',
@@ -142,17 +205,19 @@ export async function GET(
         chamber: 'House',
         status: 'In Committee',
         policyArea: 'Health',
-        cosponsors: 8
+        cosponsors: 8,
+        sponsorshipType: 'sponsored'
       }
     ];
 
-    return NextResponse.json({ bills: mockBills.slice(0, limit) });
-
-  } catch (error) {
-    console.error('API Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ 
+      bills: mockBills.slice(0, limit),
+      metadata: {
+        dataSource: 'mock',
+        totalReturned: Math.min(mockBills.length, limit),
+        includesCosponsored: false,
+        note: 'Fallback data - API temporarily unavailable'
+      }
+    });
   }
 }
