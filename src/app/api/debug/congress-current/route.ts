@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { structuredLogger } from '@/lib/logging/logger';
 
 export async function GET(request: NextRequest) {
   const apiKey = process.env.CONGRESS_API_KEY;
@@ -21,7 +22,10 @@ export async function GET(request: NextRequest) {
   try {
     // Try using currentMember=true more explicitly
     const currentUrl = `https://api.congress.gov/v3/member?format=json&limit=20&currentMember=true&api_key=${apiKey}`;
-    console.log('Testing current members only...');
+    structuredLogger.info('Testing current members only', {
+      operation: 'debug_congress_current_members',
+      url: currentUrl.replace(apiKey, 'API_KEY_HIDDEN')
+    }, request);
     
     const response = await fetch(currentUrl);
     const data = await response.json();
@@ -58,7 +62,11 @@ export async function GET(request: NextRequest) {
   // Test 2: Specific member lookup (Gary Peters)
   try {
     const petersUrl = `https://api.congress.gov/v3/member/P000595?format=json&api_key=${apiKey}`;
-    console.log('Testing specific member: Gary Peters...');
+    structuredLogger.info('Testing specific member: Gary Peters', {
+      operation: 'debug_congress_specific_member',
+      bioguideId: 'P000595',
+      url: petersUrl.replace(apiKey, 'API_KEY_HIDDEN')
+    }, request);
     
     const response = await fetch(petersUrl);
     const data = await response.json();
@@ -87,7 +95,10 @@ export async function GET(request: NextRequest) {
   // Test 3: Try state-specific endpoint
   try {
     const michiganUrl = `https://api.congress.gov/v3/member?format=json&fromDateTime=2025-01-01T00:00:00Z&toDateTime=2025-12-31T23:59:59Z&limit=50&api_key=${apiKey}`;
-    console.log('Testing with date range for current members...');
+    structuredLogger.info('Testing with date range for current members', {
+      operation: 'debug_congress_date_filtered',
+      url: michiganUrl.replace(apiKey, 'API_KEY_HIDDEN')
+    }, request);
     
     const response = await fetch(michiganUrl);
     const data = await response.json();
@@ -119,7 +130,12 @@ export async function GET(request: NextRequest) {
   // Test 4: Try members/current endpoint if it exists
   try {
     const currentMembersUrl = `https://api.congress.gov/v3/member/congress/119/senate/MI?format=json&api_key=${apiKey}`;
-    console.log('Testing congress/state specific endpoint...');
+    structuredLogger.info('Testing congress/state specific endpoint', {
+      operation: 'debug_congress_state_specific',
+      congress: '119',
+      state: 'MI',
+      url: currentMembersUrl.replace(apiKey, 'API_KEY_HIDDEN')
+    }, request);
     
     const response = await fetch(currentMembersUrl);
     const text = await response.text();

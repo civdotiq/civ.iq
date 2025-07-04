@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import { 
   generateOptimizedSearchTerms, 
-  fetchGDELTNews, 
+  fetchGDELTNewsWithDeduplication, 
   normalizeGDELTArticle 
 } from '@/lib/gdelt-api';
+import { structuredLogger } from '@/lib/logging/logger';
 
 interface NewsArticle {
   title: string;
@@ -61,7 +62,10 @@ export async function GET(
             throw new Error('Representative not found');
           }
         } catch (error) {
-          console.log('Could not fetch representative info, using fallback');
+          structuredLogger.warn('Could not fetch representative info, using fallback', {
+            bioguideId,
+            operation: 'representative_info_fallback'
+          }, request);
           representative = {
             name: `Representative ${bioguideId}`,
             state: 'Unknown',
@@ -70,7 +74,12 @@ export async function GET(
           };
         }
 
-        console.log(`Fetching news for: ${representative.name} (${representative.state})`);
+        structuredLogger.info('Fetching news for representative', {
+          bioguideId,
+          representativeName: representative.name,
+          state: representative.state,
+          operation: 'news_fetch'
+        }, request);
 
         // Generate optimized search terms for civic/political news
         const searchTerms = generateOptimizedSearchTerms(
@@ -79,56 +88,110 @@ export async function GET(
           representative.district
         );
         
-        console.log('Optimized search terms:', searchTerms);
+        structuredLogger.debug('Generated optimized search terms', {
+          bioguideId,
+          searchTerms,
+          searchTermsCount: searchTerms.length,
+          operation: 'news_search_terms_generation'
+        }, request);
 
-        // Fetch news from GDELT with comprehensive error handling
+        // Fetch news from GDELT with intelligent deduplication
         const allArticles: any[] = [];
-        const articlesPerTerm = Math.ceil(limit / searchTerms.length);
+        const articlesPerTerm = Math.ceil(limit * 1.5 / searchTerms.length); // Fetch more to account for deduplication
+        let totalDuplicatesRemoved = 0;
         
-        for (const searchTerm of searchTerms) {
+        const fetchPromises = searchTerms.map(async (searchTerm) => {
           try {
-            const gdeltArticles = await fetchGDELTNews(searchTerm, articlesPerTerm);
+            const { articles: gdeltArticles, stats } = await fetchGDELTNewsWithDeduplication(
+              searchTerm, 
+              articlesPerTerm,
+              {
+                titleSimilarityThreshold: 0.85,
+                maxArticlesPerDomain: 2,
+                enableDomainClustering: true
+              }
+            );
             
-            // Normalize and add articles
-            for (const article of gdeltArticles) {
-              const normalizedArticle = normalizeGDELTArticle(article);
-              allArticles.push(normalizedArticle);
-            }
+            totalDuplicatesRemoved += stats.duplicatesRemoved;
+            
+            // Normalize articles
+            return gdeltArticles.map(article => normalizeGDELTArticle(article));
           } catch (error) {
-            console.error(`Error fetching GDELT news for term "${searchTerm}":`, error.message);
-            // Continue with other search terms instead of failing completely
+            structuredLogger.error(`Error fetching GDELT news for term: ${searchTerm}`, error, {
+              bioguideId,
+              searchTerm,
+              operation: 'gdelt_news_fetch_error'
+            }, request);
+            return [];
           }
-        }
+        });
 
-        // Remove duplicates based on URL and apply quality filters
-        const seenUrls = new Set<string>();
-        const uniqueArticles: NewsArticle[] = [];
+        const results = await Promise.all(fetchPromises);
+        const flattenedArticles = results.flat();
+
+        // Apply quality filters and final deduplication
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-        for (const article of allArticles) {
+        
+        const qualityFilteredArticles = flattenedArticles.filter(article => {
           const articleDate = new Date(article.publishedDate);
           
-          // Quality and relevance filters
-          if (!seenUrls.has(article.url) && 
-              article.language === 'English' &&
-              article.title.length > 15 &&
-              article.title.length < 300 &&
-              articleDate >= thirtyDaysAgo &&
-              !article.title.toLowerCase().includes('404') &&
-              !article.title.toLowerCase().includes('error') &&
-              !article.domain.includes('facebook.com') &&
-              !article.domain.includes('twitter.com')) {
-            
-            seenUrls.add(article.url);
-            uniqueArticles.push(article);
-          }
-        }
+          return (
+            article.language === 'English' &&
+            article.title.length > 15 &&
+            article.title.length < 300 &&
+            articleDate >= thirtyDaysAgo &&
+            !article.title.toLowerCase().includes('404') &&
+            !article.title.toLowerCase().includes('error') &&
+            !article.domain.includes('facebook.com') &&
+            !article.domain.includes('twitter.com')
+          );
+        });
 
-        // Sort by date (most recent first) and limit results
+        // Final cross-term deduplication
+        const { deduplicateNews } = await import('@/lib/news-deduplication');
+        const { articles: finalDeduplicatedArticles, stats: finalStats } = deduplicateNews(
+          qualityFilteredArticles.map(article => ({
+            url: article.url,
+            title: article.title,
+            seendate: article.publishedDate,
+            domain: article.domain,
+            socialimage: article.imageUrl,
+            language: article.language
+          })),
+          {
+            titleSimilarityThreshold: 0.9,
+            maxArticlesPerDomain: 1,
+            preserveNewestArticles: true
+          }
+        );
+
+        totalDuplicatesRemoved += finalStats.duplicatesRemoved;
+
+        // Convert back and sort by date (most recent first)
+        const uniqueArticles = finalDeduplicatedArticles.map(article => ({
+          title: article.title,
+          url: article.url,
+          publishedDate: article.seendate,
+          domain: article.domain,
+          imageUrl: article.socialimage,
+          language: article.language || 'English',
+          source: qualityFilteredArticles.find(orig => orig.url === article.url)?.source || article.domain
+        }));
+
         const sortedArticles = uniqueArticles
           .sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime())
           .slice(0, limit);
+
+        // Log deduplication statistics
+        structuredLogger.info('News deduplication completed', {
+          bioguideId,
+          originalCount: flattenedArticles.length,
+          afterQualityFilter: qualityFilteredArticles.length,
+          totalDuplicatesRemoved,
+          finalCount: sortedArticles.length,
+          operation: 'news_deduplication_complete'
+        }, request);
 
         return {
           articles: sortedArticles,
@@ -196,7 +259,10 @@ export async function GET(
     return NextResponse.json(response);
 
   } catch (error) {
-    console.error('News API Error:', error);
+    structuredLogger.error('News API Error', error, {
+      bioguideId,
+      operation: 'news_api_error'
+    }, request);
     
     // Comprehensive error response with fallback
     const errorResponse: NewsResponse = {

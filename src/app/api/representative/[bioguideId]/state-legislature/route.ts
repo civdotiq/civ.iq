@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { structuredLogger } from '@/lib/logging/logger';
 
 interface StateLegislator {
   id: string;
@@ -99,6 +100,7 @@ function getStateDistrictsForArea(state: string, congressionalDistrict?: string)
 }
 
 async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
+  const startTime = Date.now();
   try {
     const response = await fetch(
       `https://v3.openstates.org/jurisdictions/${stateAbbrev}`,
@@ -108,6 +110,14 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
         }
       }
     );
+    
+    const duration = Date.now() - startTime;
+    
+    // Log external API call
+    structuredLogger.externalApi('OpenStates', 'fetchJurisdiction', duration, response.ok, {
+      stateAbbrev,
+      statusCode: response.status
+    });
 
     if (!response.ok) {
       throw new Error(`OpenStates jurisdiction API error: ${response.status}`);
@@ -115,7 +125,18 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
 
     return await response.json();
   } catch (error) {
-    console.error('Error fetching state jurisdiction:', error);
+    const duration = Date.now() - startTime;
+    
+    // Log failed external API call
+    structuredLogger.externalApi('OpenStates', 'fetchJurisdiction', duration, false, {
+      stateAbbrev,
+      error: error instanceof Error ? error.message : String(error)
+    });
+    
+    structuredLogger.error('Error fetching state jurisdiction', error, {
+      stateAbbrev,
+      operation: 'state_jurisdiction_fetch'
+    });
     return null;
   }
 }
@@ -125,8 +146,17 @@ async function fetchStateLegislators(stateAbbrev: string, state: string, congres
     const districts = getStateDistrictsForArea(state, congressionalDistrict);
     const legislators: StateLegislator[] = [];
     
-    console.log(`Fetching state legislators for ${state} congressional district ${congressionalDistrict}`);
-    console.log(`Target state districts:`, districts);
+    structuredLogger.info('Fetching state legislators', {
+      state,
+      congressionalDistrict,
+      operation: 'state_legislators_fetch'
+    });
+    structuredLogger.debug('Target state districts', {
+      state,
+      congressionalDistrict,
+      districts,
+      operation: 'state_districts_mapping'
+    });
     
     // If we have specific districts to target, fetch them individually
     if (districts.senate.length > 0 || districts.house.length > 0) {
@@ -139,12 +169,27 @@ async function fetchStateLegislators(stateAbbrev: string, state: string, congres
       for (const { district, chamber } of allDistrictsToFetch.slice(0, 10)) { // Limit to avoid too many requests
         const url = `https://v3.openstates.org/people?jurisdiction=${stateAbbrev}&current_role=true&district=${district}`;
         
-        console.log(`Fetching legislators from district ${district} (${chamber}):`, url);
+        structuredLogger.debug('Fetching legislators from district', {
+          district,
+          chamber,
+          url: url.replace(process.env.OPENSTATES_API_KEY || '', 'API_KEY_HIDDEN'),
+          operation: 'district_legislators_fetch'
+        });
         
+        const fetchStartTime = Date.now();
         const response = await fetch(url, {
           headers: {
             'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
           }
+        });
+        
+        const fetchDuration = Date.now() - fetchStartTime;
+        
+        // Log external API call
+        structuredLogger.externalApi('OpenStates', 'fetchLegislators', fetchDuration, response.ok, {
+          district,
+          chamber,
+          statusCode: response.status
         });
 
         if (response.ok) {
@@ -168,19 +213,36 @@ async function fetchStateLegislators(stateAbbrev: string, state: string, congres
           })) || [];
           
           legislators.push(...districtLegislators);
-          console.log(`Found ${districtLegislators.length} legislators in district ${district}`);
+          structuredLogger.info('Found legislators in district', {
+            district,
+            legislatorCount: districtLegislators.length,
+            operation: 'district_legislators_found'
+          });
         }
       }
     } else {
       // Fallback: fetch all current legislators for the state
       const url = `https://v3.openstates.org/people?jurisdiction=${stateAbbrev}&current_role=true&per_page=20`;
       
-      console.log(`Fetching all current legislators for ${stateAbbrev}:`, url);
+      structuredLogger.info('Fetching all current legislators', {
+        stateAbbrev,
+        url: url.replace(process.env.OPENSTATES_API_KEY || '', 'API_KEY_HIDDEN'),
+        operation: 'all_legislators_fetch'
+      });
       
+      const fetchStartTime = Date.now();
       const response = await fetch(url, {
         headers: {
           'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
         }
+      });
+      
+      const fetchDuration = Date.now() - fetchStartTime;
+      
+      // Log external API call
+      structuredLogger.externalApi('OpenStates', 'fetchAllLegislators', fetchDuration, response.ok, {
+        stateAbbrev,
+        statusCode: response.status
       });
 
       if (response.ok) {
@@ -207,16 +269,27 @@ async function fetchStateLegislators(stateAbbrev: string, state: string, congres
       }
     }
     
-    console.log(`Total legislators found: ${legislators.length}`);
+    structuredLogger.info('Total legislators found', {
+      state,
+      congressionalDistrict,
+      legislatorCount: legislators.length,
+      operation: 'legislators_fetch_complete'
+    });
     return legislators;
     
   } catch (error) {
-    console.error('Error fetching state legislators:', error);
+    structuredLogger.error('Error fetching state legislators', error, {
+      stateAbbrev,
+      state,
+      congressionalDistrict,
+      operation: 'state_legislators_fetch_error'
+    });
     return [];
   }
 }
 
 async function fetchRecentStateBills(stateAbbrev: string): Promise<StateBill[]> {
+  const startTime = Date.now();
   try {
     const response = await fetch(
       `https://v3.openstates.org/bills?jurisdiction=${stateAbbrev}&sort=updated_desc&per_page=15`,
@@ -226,6 +299,14 @@ async function fetchRecentStateBills(stateAbbrev: string): Promise<StateBill[]> 
         }
       }
     );
+    
+    const duration = Date.now() - startTime;
+    
+    // Log external API call
+    structuredLogger.externalApi('OpenStates', 'fetchBills', duration, response.ok, {
+      stateAbbrev,
+      statusCode: response.status
+    });
 
     if (!response.ok) {
       throw new Error(`OpenStates bills API error: ${response.status}`);
@@ -251,7 +332,18 @@ async function fetchRecentStateBills(stateAbbrev: string): Promise<StateBill[]> 
       updated_at: bill.updated_at
     })) || [];
   } catch (error) {
-    console.error('Error fetching state bills:', error);
+    const duration = Date.now() - startTime;
+    
+    // Log failed external API call
+    structuredLogger.externalApi('OpenStates', 'fetchBills', duration, false, {
+      stateAbbrev,
+      error: error instanceof Error ? error.message : String(error)
+    });
+    
+    structuredLogger.error('Error fetching state bills', error, {
+      stateAbbrev,
+      operation: 'state_bills_fetch_error'
+    });
     return [];
   }
 }
@@ -417,7 +509,10 @@ export async function GET(
     return NextResponse.json(mockData);
 
   } catch (error) {
-    console.error('API Error:', error);
+    structuredLogger.error('State Legislature API Error', error, {
+      bioguideId,
+      operation: 'state_legislature_api_error'
+    });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

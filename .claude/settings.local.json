@@ -20,7 +20,17 @@
       "Bash(git remote get-url:*)",
       "Bash(node:*)",
       "Bash(rm:*)",
-      "WebFetch(domain:api.gdeltproject.org)"
+      "WebFetch(domain:api.gdeltproject.org)",
+      "Bash(gh auth:*)",
+      "Bash(git config:*)",
+      "Bash(npm test)",
+      "WebFetch(domain:api.congress.gov)",
+      "WebFetch(domain:github.com)",
+      "Bash(mkdir:*)",
+      "WebFetch(domain:www.senate.gov)",
+      "WebFetch(domain:clerk.house.gov)",
+      "WebFetch(domain:tigerweb.geo.census.gov)",
+      "Bash(npm test:*)"
     ],
     "deny": []
   }

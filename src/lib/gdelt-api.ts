@@ -1,4 +1,6 @@
 // GDELT API utility with proper error handling, rate limiting, and retry logic
+import { structuredLogger } from '@/lib/logging/logger';
+import { deduplicateNews, type NewsArticle, type DuplicationStats, type DeduplicationOptions } from '@/lib/news-deduplication';
 
 interface GDELTArticle {
   url: string;
@@ -90,7 +92,13 @@ async function retryWithBackoff<T>(
         options.maxDelay
       );
       
-      console.log(`GDELT API attempt ${attempt + 1} failed, retrying in ${delay}ms:`, error.message);
+      structuredLogger.warn(`GDELT API retry attempt ${attempt + 1}`, {
+        attempt: attempt + 1,
+        maxRetries: options.maxRetries,
+        delay,
+        error: error.message,
+        operation: 'gdelt_api_retry'
+      });
       await sleep(delay);
     }
   }
@@ -131,7 +139,66 @@ export function generateOptimizedSearchTerms(
   return searchTerms.slice(0, 3); // Limit to 3 most effective terms
 }
 
-// Main GDELT API fetch function with comprehensive error handling
+// Main GDELT API fetch function with comprehensive error handling and deduplication
+export async function fetchGDELTNewsWithDeduplication(
+  searchTerm: string, 
+  maxRecords: number = 10,
+  deduplicationOptions?: Partial<DeduplicationOptions>
+): Promise<{ articles: GDELTArticle[], stats: DuplicationStats }> {
+  const rawArticles = await fetchGDELTNews(searchTerm, Math.min(maxRecords * 2, 50)); // Fetch more to account for deduplication
+  
+  // Convert GDELT articles to NewsArticle format for deduplication
+  const newsArticles: NewsArticle[] = rawArticles.map(article => ({
+    url: article.url,
+    title: article.title,
+    seendate: article.seendate,
+    domain: article.domain,
+    socialimage: article.socialimage,
+    urlmobile: article.urlmobile,
+    language: article.language,
+    sourcecountry: article.sourcecountry
+  }));
+
+  // Apply deduplication
+  const { articles: deduplicatedArticles, stats } = deduplicateNews(newsArticles, {
+    enableUrlDeduplication: true,
+    enableTitleSimilarity: true,
+    enableDomainClustering: true,
+    maxArticlesPerDomain: 2,
+    titleSimilarityThreshold: 0.85,
+    logDuplicates: true,
+    ...deduplicationOptions
+  });
+
+  // Convert back to GDELT format and limit to requested count
+  const finalArticles: GDELTArticle[] = deduplicatedArticles
+    .slice(0, maxRecords)
+    .map(article => ({
+      url: article.url,
+      urlmobile: article.urlmobile,
+      title: article.title,
+      seendate: article.seendate,
+      socialimage: article.socialimage,
+      domain: article.domain,
+      language: article.language || 'English',
+      sourcecountry: article.sourcecountry || 'US'
+    }));
+
+  // Log deduplication results
+  structuredLogger.info('GDELT news deduplication completed', {
+    searchTerm: searchTerm.slice(0, 50),
+    originalCount: stats.originalCount,
+    duplicatesRemoved: stats.duplicatesRemoved,
+    finalCount: stats.finalCount,
+    requestedCount: maxRecords,
+    actualReturned: finalArticles.length,
+    operation: 'gdelt_news_deduplication'
+  });
+
+  return { articles: finalArticles, stats };
+}
+
+// Original function without deduplication (for backward compatibility)
 export async function fetchGDELTNews(
   searchTerm: string, 
   maxRecords: number = 10
@@ -140,7 +207,10 @@ export async function fetchGDELTNews(
   if (!rateLimiter.canMakeCall()) {
     const waitTime = rateLimiter.getWaitTime();
     if (waitTime > 0) {
-      console.log(`Rate limited, waiting ${waitTime}ms`);
+      structuredLogger.warn('GDELT API rate limited', {
+        waitTime,
+        operation: 'gdelt_rate_limit'
+      });
       await sleep(waitTime);
     }
   }
@@ -151,7 +221,11 @@ export async function fetchGDELTNews(
     // Use GDELT DOC 2.0 API with enhanced parameters
     const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodedQuery}&mode=artlist&maxrecords=${maxRecords}&format=json&sort=datedesc&timespan=30d&theme=GENERAL_GOVERNMENT,POLITICAL_PROCESS,POLITICAL_CANDIDATE`;
     
-    console.log(`Fetching GDELT news: ${searchTerm.slice(0, 50)}...`);
+    structuredLogger.info('Fetching GDELT news', {
+      searchTerm: searchTerm.slice(0, 50),
+      maxRecords,
+      operation: 'gdelt_news_fetch'
+    });
     
     const headers = {
       'User-Agent': 'CivicIntelHub/1.0 (https://civic-intel-hub.vercel.app)',
@@ -164,6 +238,7 @@ export async function fetchGDELTNews(
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    const startTime = Date.now();
     
     try {
       const response = await fetch(url, {
@@ -173,6 +248,14 @@ export async function fetchGDELTNews(
       });
       
       clearTimeout(timeoutId);
+      const duration = Date.now() - startTime;
+      
+      // Log external API call
+      structuredLogger.externalApi('GDELT', 'fetchNews', duration, response.ok, {
+        searchTerm: searchTerm.slice(0, 50),
+        maxRecords,
+        statusCode: response.status
+      });
       
       if (!response.ok) {
         const isRetryable = response.status >= 500 || response.status === 429;
@@ -186,7 +269,10 @@ export async function fetchGDELTNews(
       const text = await response.text();
       
       if (!text || text.trim() === '') {
-        console.log('Empty response from GDELT API');
+        structuredLogger.warn('Empty response from GDELT API', {
+          searchTerm: searchTerm.slice(0, 50),
+          operation: 'gdelt_empty_response'
+        });
         return [];
       }
       
@@ -194,15 +280,23 @@ export async function fetchGDELTNews(
       try {
         data = JSON.parse(text);
       } catch (parseError) {
-        console.error('Failed to parse GDELT JSON response:', parseError);
+        structuredLogger.error('Failed to parse GDELT JSON response', parseError, {
+          searchTerm: searchTerm.slice(0, 50),
+          operation: 'gdelt_json_parse_error'
+        });
         throw new GDELTAPIError('Invalid JSON response from GDELT API', undefined, false);
       }
       
       const articles = data.articles || [];
-      console.log(`GDELT returned ${articles.length} articles`);
+      structuredLogger.info('GDELT articles retrieved', {
+        searchTerm: searchTerm.slice(0, 50),
+        articleCount: articles.length,
+        operation: 'gdelt_articles_retrieved',
+        duration
+      });
       
       // Filter for English articles and basic quality checks
-      return articles.filter(article => 
+      const filteredArticles = articles.filter(article => 
         article.language === 'English' &&
         article.title &&
         article.url &&
@@ -211,9 +305,19 @@ export async function fetchGDELTNews(
         !article.title.toLowerCase().includes('404') &&
         !article.title.toLowerCase().includes('error')
       );
+
+      return filteredArticles;
       
     } catch (error) {
       clearTimeout(timeoutId);
+      const duration = Date.now() - startTime;
+      
+      // Log failed external API call
+      structuredLogger.externalApi('GDELT', 'fetchNews', duration, false, {
+        searchTerm: searchTerm.slice(0, 50),
+        maxRecords,
+        error: error instanceof Error ? error.message : String(error)
+      });
       
       if (error.name === 'AbortError') {
         throw new GDELTAPIError('GDELT API request timeout', undefined, true);
@@ -296,7 +400,10 @@ function normalizeDate(dateString: string): string {
       return date.toISOString();
     }
   } catch (error) {
-    console.error('Error parsing GDELT date:', dateString, error);
+    structuredLogger.error('Error parsing GDELT date', error, {
+      dateString,
+      operation: 'gdelt_date_parse_error'
+    });
   }
   
   // Fallback to current time if parsing fails
@@ -371,7 +478,11 @@ export async function fetchGDELTRealTimeEvents(
     // Use GDELT GEO 2.0 API for real-time events
     const url = `https://api.gdeltproject.org/api/v2/geo/geo?query=${queryTerms}&mode=pointdata&format=json&timespan=${timeframe}&output=json`;
     
-    console.log(`Fetching GDELT real-time events for: ${keywords.join(', ')}`);
+    structuredLogger.info('Fetching GDELT real-time events', {
+      keywords,
+      timeframe,
+      operation: 'gdelt_realtime_events_fetch'
+    });
     
     rateLimiter.recordCall();
     
@@ -424,7 +535,11 @@ export async function fetchGDELTTrends(
     // Use GDELT TV 2.0 API for trending analysis
     const url = `https://api.gdeltproject.org/api/v2/tv/tv?query=${query}&mode=timelinevol&format=json&timespan=${timeframe}`;
     
-    console.log(`Fetching GDELT trends for: ${category}`);
+    structuredLogger.info('Fetching GDELT trends', {
+      category,
+      timeframe,
+      operation: 'gdelt_trends_fetch'
+    });
     
     rateLimiter.recordCall();
     
@@ -465,10 +580,50 @@ export async function getGDELTRealTimeStream(
   
   try {
     // Fetch all data in parallel
-    const [articles, events, trends] = await Promise.all([
-      // Recent articles
-      Promise.all(searchTerms.map(term => fetchGDELTNews(term, 5)))
-        .then(results => results.flat().slice(0, 10)),
+    const [articlesWithStats, events, trends] = await Promise.all([
+      // Recent articles with deduplication
+      Promise.all(searchTerms.map(term => fetchGDELTNewsWithDeduplication(term, 5)))
+        .then(results => {
+          // Combine all articles and their stats
+          const allArticles = results.flatMap(r => r.articles);
+          const combinedStats = results.reduce((acc, r) => ({
+            originalCount: acc.originalCount + r.stats.originalCount,
+            duplicatesRemoved: acc.duplicatesRemoved + r.stats.duplicatesRemoved,
+            finalCount: acc.finalCount + r.stats.finalCount,
+            duplicatesDetected: [...acc.duplicatesDetected, ...r.stats.duplicatesDetected]
+          }), {
+            originalCount: 0,
+            duplicatesRemoved: 0,
+            finalCount: 0,
+            duplicatesDetected: []
+          });
+          
+          // Final deduplication across search terms
+          const { articles: finalArticles } = deduplicateNews(
+            allArticles.map(article => ({
+              url: article.url,
+              title: article.title,
+              seendate: article.seendate,
+              domain: article.domain,
+              socialimage: article.socialimage,
+              urlmobile: article.urlmobile,
+              language: article.language,
+              sourcecountry: article.sourcecountry
+            })),
+            { maxArticlesPerDomain: 1, titleSimilarityThreshold: 0.9 }
+          );
+          
+          return finalArticles.slice(0, 10).map(article => ({
+            url: article.url,
+            urlmobile: article.urlmobile,
+            title: article.title,
+            seendate: article.seendate,
+            socialimage: article.socialimage,
+            domain: article.domain,
+            language: article.language || 'English',
+            sourcecountry: article.sourcecountry || 'US'
+          }));
+        }),
       
       // Real-time events
       fetchGDELTRealTimeEvents(keywords, '6hour'),
@@ -478,18 +633,23 @@ export async function getGDELTRealTimeStream(
     ]);
 
     // Generate alerts based on data
-    const alerts = generateAlerts(articles, events, trends, representativeName);
+    const alerts = generateAlerts(articlesWithStats, events, trends, representativeName);
 
     return {
       lastUpdate: new Date().toISOString(),
-      articles: articles.map(normalizeGDELTArticle),
+      articles: articlesWithStats.map(normalizeGDELTArticle),
       events: events.slice(0, 20),
       trends: trends.slice(0, 10),
       alerts
     };
 
   } catch (error) {
-    console.error('Error fetching GDELT real-time stream:', error);
+    structuredLogger.error('Error fetching GDELT real-time stream', error, {
+      representativeName,
+      state,
+      district,
+      operation: 'gdelt_realtime_stream_error'
+    });
     
     // Return empty stream on error
     return {
@@ -523,25 +683,53 @@ export async function monitorBreakingNews(
   const breakingNews: any[] = [];
 
   try {
-    for (const term of searchTerms) {
-      const articles = await fetchGDELTNews(term, 5);
-      
-      // Filter for articles since last check
-      const recentArticles = articles.filter(article => 
-        new Date(normalizeDate(article.seendate)) > new Date(lastCheckTime)
-      );
+    // Fetch deduplicated articles for all search terms
+    const results = await Promise.all(
+      searchTerms.map(term => fetchGDELTNewsWithDeduplication(term, 5))
+    );
+    
+    // Combine and deduplicate across all terms
+    const allArticles = results.flatMap(r => r.articles);
+    const { articles: deduplicatedArticles } = deduplicateNews(
+      allArticles.map(article => ({
+        url: article.url,
+        title: article.title,
+        seendate: article.seendate,
+        domain: article.domain,
+        socialimage: article.socialimage,
+        urlmobile: article.urlmobile,
+        language: article.language,
+        sourcecountry: article.sourcecountry
+      })),
+      { titleSimilarityThreshold: 0.9, maxArticlesPerDomain: 2 }
+    );
+    
+    // Filter for articles since last check
+    const recentArticles = deduplicatedArticles.filter(article => 
+      new Date(normalizeDate(article.seendate)) > new Date(lastCheckTime)
+    );
 
-      for (const article of recentArticles) {
-        const normalized = normalizeGDELTArticle(article);
-        const analysis = analyzeNewsUrgency(normalized.title, normalized.source);
-        
-        if (analysis.urgency !== 'low') {
-          breakingNews.push({
-            article: normalized,
-            urgency: analysis.urgency,
-            category: analysis.category
-          });
-        }
+    for (const article of recentArticles) {
+      const gdeltArticle: GDELTArticle = {
+        url: article.url,
+        urlmobile: article.urlmobile,
+        title: article.title,
+        seendate: article.seendate,
+        socialimage: article.socialimage,
+        domain: article.domain,
+        language: article.language || 'English',
+        sourcecountry: article.sourcecountry || 'US'
+      };
+      
+      const normalized = normalizeGDELTArticle(gdeltArticle);
+      const analysis = analyzeNewsUrgency(normalized.title, normalized.source);
+      
+      if (analysis.urgency !== 'low') {
+        breakingNews.push({
+          article: normalized,
+          urgency: analysis.urgency,
+          category: analysis.category
+        });
       }
     }
 
@@ -554,7 +742,11 @@ export async function monitorBreakingNews(
       .slice(0, 10);
 
   } catch (error) {
-    console.error('Error monitoring breaking news:', error);
+    structuredLogger.error('Error monitoring breaking news', error, {
+      representativeName,
+      state,
+      operation: 'gdelt_breaking_news_error'
+    });
     return [];
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
+import { RollCallParser } from '@/lib/rollcall-parser';
 
 interface Vote {
   voteId: string;
@@ -13,20 +14,47 @@ interface Vote {
   date: string;
   position: 'Yea' | 'Nay' | 'Not Voting' | 'Present';
   chamber: 'House' | 'Senate';
+  rollNumber?: number;
+  isKeyVote?: boolean;
 }
 
-interface LegislativeActivity {
-  activityId: string;
-  bill: {
-    number: string;
-    title: string;
-    congress: string;
-  };
-  type: 'Sponsored' | 'Cosponsored';
-  date: string;
-  status: string;
-  chamber: 'House' | 'Senate';
-  isKeyVote?: boolean;
+interface BillWithVotes {
+  congress: number;
+  type: string;
+  number: number;
+  title: string;
+  actions: Array<{
+    actionDate: string;
+    text: string;
+    recordedVotes?: Array<{
+      chamber: string;
+      congress: number;
+      date: string;
+      rollNumber: number;
+      url: string;
+    }>;
+  }>;
+}
+
+// Fetch actual member voting position from roll call data
+async function getMemberVoteFromRollCall(
+  rollCallUrl: string,
+  bioguideId: string,
+  memberName: string,
+  parser: RollCallParser
+): Promise<'Yea' | 'Nay' | 'Not Voting' | 'Present'> {
+  try {
+    const rollCallData = await parser.fetchAndParseRollCall(rollCallUrl);
+    if (!rollCallData) {
+      return 'Not Voting'; // Default if we can't fetch roll call data
+    }
+
+    const memberVote = parser.findMemberVote(rollCallData, bioguideId, memberName);
+    return memberVote ? memberVote.vote : 'Not Voting';
+  } catch (error) {
+    console.error(`Error fetching roll call data from ${rollCallUrl}:`, error);
+    return 'Not Voting';
+  }
 }
 
 export async function GET(
@@ -45,204 +73,261 @@ export async function GET(
   }
 
   try {
-    // First try to fetch actual voting records, fallback to legislative activity
+    // Fetch member details to determine chamber
+    const memberData = await cachedFetch(
+      `member-${bioguideId}`,
+      async () => {
+        if (!process.env.CONGRESS_API_KEY) {
+          throw new Error('Congress API key not configured');
+        }
+        
+        const response = await fetch(
+          `https://api.congress.gov/v3/member/${bioguideId}?api_key=${process.env.CONGRESS_API_KEY}`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch member data');
+        }
+        
+        return response.json();
+      },
+      60 * 60 * 1000 // 1 hour cache
+    );
+
+    const memberChamber = memberData.member?.terms?.[0]?.chamber || 'House';
+
+    // Fetch recent bills with recorded votes
     const votingData = await cachedFetch(
-      `voting-records-${bioguideId}`,
+      `voting-records-${memberChamber.toLowerCase()}-recent`,
       async () => {
         if (!process.env.CONGRESS_API_KEY) {
           throw new Error('Congress API key not configured');
         }
 
-        // Try to fetch member voting records (this endpoint may not be available publicly)
-        // For now, we'll fetch legislative activity and recent bills to create voting-like records
-        const [sponsoredResponse, cosponsoredResponse, recentBillsResponse] = await Promise.all([
-          fetch(
-            `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?format=json&limit=30&api_key=${process.env.CONGRESS_API_KEY}`
-          ),
-          fetch(
-            `https://api.congress.gov/v3/member/${bioguideId}/cosponsored-legislation?format=json&limit=30&api_key=${process.env.CONGRESS_API_KEY}`
-          ),
-          // Also fetch recent bills to see what they might have voted on
-          fetch(
-            `https://api.congress.gov/v3/bill?format=json&limit=20&api_key=${process.env.CONGRESS_API_KEY}`
-          )
-        ]);
+        // Fetch recent bills
+        const billsResponse = await fetch(
+          `https://api.congress.gov/v3/bill?api_key=${process.env.CONGRESS_API_KEY}&limit=250&format=json`
+        );
 
-        const sponsoredData = sponsoredResponse.ok ? await sponsoredResponse.json() : { sponsoredLegislation: [] };
-        const cosponsoredData = cosponsoredResponse.ok ? await cosponsoredResponse.json() : { cosponsoredLegislation: [] };
-        const recentBills = recentBillsResponse.ok ? await recentBillsResponse.json() : { bills: [] };
+        if (!billsResponse.ok) {
+          throw new Error('Failed to fetch bills');
+        }
 
-        return { sponsoredData, cosponsoredData, recentBills };
+        const billsData = await billsResponse.json();
+        const billsWithVotes: BillWithVotes[] = [];
+
+        // Check each bill for voting actions
+        // In production, we'd batch these requests more efficiently
+        for (const bill of billsData.bills.slice(0, 50)) {
+          try {
+            const actionsUrl = `https://api.congress.gov/v3/bill/${bill.congress}/${bill.type.toLowerCase()}/${bill.number}/actions?api_key=${process.env.CONGRESS_API_KEY}&format=json`;
+            const actionsResponse = await fetch(actionsUrl);
+            
+            if (actionsResponse.ok) {
+              const actionsData = await actionsResponse.json();
+              
+              const voteActions = actionsData.actions.filter((action: any) => 
+                action.recordedVotes && action.recordedVotes.length > 0
+              );
+              
+              if (voteActions.length > 0) {
+                billsWithVotes.push({
+                  congress: bill.congress,
+                  type: bill.type,
+                  number: bill.number,
+                  title: bill.title,
+                  actions: voteActions
+                });
+              }
+            }
+          } catch (error) {
+            // Skip individual bill errors
+            console.error(`Error fetching actions for ${bill.type} ${bill.number}:`, error);
+          }
+        }
+
+        return billsWithVotes;
       },
-      15 * 60 * 1000 // 15 minutes cache
+      30 * 60 * 1000 // 30 minutes cache
     );
 
-    // Create enhanced voting records from multiple sources
-    const activities: LegislativeActivity[] = [];
+    // Convert bills with votes to Vote format and fetch real voting data
+    const votes: Vote[] = [];
+    const parser = new RollCallParser();
+    
+    for (const billData of votingData) {
+      for (const action of billData.actions) {
+        if (action.recordedVotes && action.recordedVotes.length > 0) {
+          for (const recordedVote of action.recordedVotes) {
+            // Only include votes from the member's chamber
+            if (recordedVote.chamber.toLowerCase() === memberChamber.toLowerCase()) {
+              const voteId = `${billData.congress}-${billData.type}-${billData.number}-${recordedVote.rollNumber}`;
+              
+              // Parse the action text to determine the result
+              let result = 'Pending';
+              const actionText = action.text.toLowerCase();
+              if (actionText.includes('passed') || actionText.includes('agreed to')) {
+                result = 'Passed';
+              } else if (actionText.includes('failed') || actionText.includes('rejected')) {
+                result = 'Failed';
+              }
 
-    // Add sponsored legislation as "votes"
-    if (votingData.sponsoredData.sponsoredLegislation) {
-      votingData.sponsoredData.sponsoredLegislation.forEach((bill: any) => {
-        const isKeyVote = bill.title?.toLowerCase().includes('infrastructure') ||
-                         bill.title?.toLowerCase().includes('budget') ||
-                         bill.title?.toLowerCase().includes('healthcare') ||
-                         bill.title?.toLowerCase().includes('climate') ||
-                         bill.title?.toLowerCase().includes('security');
+              // Extract the question from the action text
+              let question = 'On Passage';
+              if (actionText.includes('motion to')) {
+                const motionMatch = actionText.match(/motion to ([^.]+)/);
+                if (motionMatch) {
+                  question = `On ${motionMatch[1]}`;
+                }
+              } else if (actionText.includes('amendment')) {
+                question = 'On Amendment';
+              } else if (actionText.includes('cloture')) {
+                question = 'On Cloture';
+              }
 
-        activities.push({
-          activityId: `sponsored-${bill.congress}-${bill.type}-${bill.number}`,
-          bill: {
-            number: `${bill.type.toUpperCase()}. ${bill.number}`,
-            title: bill.title,
-            congress: bill.congress.toString()
-          },
-          type: 'Sponsored',
-          date: bill.introducedDate,
-          status: bill.latestAction?.text || 'Introduced',
-          chamber: bill.type.toLowerCase().includes('h') ? 'House' : 'Senate',
-          isKeyVote
-        });
-      });
-    }
+              // Determine if this is a key vote based on various factors
+              const isKeyVote = 
+                billData.title.toLowerCase().includes('appropriations') ||
+                billData.title.toLowerCase().includes('authorization') ||
+                billData.title.toLowerCase().includes('budget') ||
+                billData.title.toLowerCase().includes('healthcare') ||
+                billData.title.toLowerCase().includes('infrastructure') ||
+                billData.title.toLowerCase().includes('climate') ||
+                billData.title.toLowerCase().includes('immigration') ||
+                billData.title.toLowerCase().includes('defense') ||
+                actionText.includes('final passage');
 
-    // Add cosponsored legislation as "votes"
-    if (votingData.cosponsoredData.cosponsoredLegislation) {
-      votingData.cosponsoredData.cosponsoredLegislation.slice(0, 25).forEach((bill: any) => {
-        const isKeyVote = bill.title?.toLowerCase().includes('infrastructure') ||
-                         bill.title?.toLowerCase().includes('budget') ||
-                         bill.title?.toLowerCase().includes('healthcare') ||
-                         bill.title?.toLowerCase().includes('climate') ||
-                         bill.title?.toLowerCase().includes('security');
+              // Fetch actual voting position from roll call data
+              let memberVotePosition: 'Yea' | 'Nay' | 'Not Voting' | 'Present' = 'Not Voting';
+              
+              if (recordedVote.url) {
+                memberVotePosition = await getMemberVoteFromRollCall(
+                  recordedVote.url,
+                  bioguideId,
+                  memberData.member?.directOrderName || '',
+                  parser
+                );
+              }
 
-        activities.push({
-          activityId: `cosponsored-${bill.congress}-${bill.type}-${bill.number}`,
-          bill: {
-            number: `${bill.type.toUpperCase()}. ${bill.number}`,
-            title: bill.title,
-            congress: bill.congress.toString()
-          },
-          type: 'Cosponsored',
-          date: bill.introducedDate,
-          status: bill.latestAction?.text || 'Introduced',
-          chamber: bill.type.toLowerCase().includes('h') ? 'House' : 'Senate',
-          isKeyVote
-        });
-      });
-    }
-
-    // Simulate some voting positions based on party and bill type
-    const simulateVotingPosition = (activity: LegislativeActivity, index: number): 'Yea' | 'Nay' | 'Present' | 'Not Voting' => {
-      // Sponsored/cosponsored bills are always "Yea"
-      if (activity.type === 'Sponsored' || activity.type === 'Cosponsored') {
-        return 'Yea';
+              votes.push({
+                voteId,
+                bill: {
+                  number: `${billData.type.toUpperCase()} ${billData.number}`,
+                  title: billData.title,
+                  congress: billData.congress.toString()
+                },
+                question,
+                result,
+                date: recordedVote.date,
+                position: memberVotePosition,
+                chamber: recordedVote.chamber as 'House' | 'Senate',
+                rollNumber: recordedVote.rollNumber,
+                isKeyVote
+              });
+            }
+          }
+        }
       }
-      
-      // Otherwise simulate realistic voting patterns
-      const rand = (index * 17 + activity.activityId.length) % 100;
-      if (rand < 5) return 'Not Voting';
-      if (rand < 8) return 'Present';
-      if (rand < 25) return 'Nay';
-      return 'Yea';
-    };
+    }
 
     // Sort by date (most recent first) and limit
-    activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    const limitedActivities = activities.slice(0, limit);
-
-    // Convert to Vote format for compatibility with existing UI
-    const votes: Vote[] = limitedActivities.map((activity, index) => ({
-      voteId: activity.activityId,
-      bill: activity.bill,
-      question: activity.type === 'Sponsored' ? 'On Sponsorship' : 
-                activity.type === 'Cosponsored' ? 'On Cosponsorship' : 'On Passage',
-      result: activity.status.toLowerCase().includes('passed') ? 'Passed' :
-              activity.status.toLowerCase().includes('failed') ? 'Failed' :
-              activity.status.toLowerCase().includes('enacted') ? 'Enacted' : 'Active',
-      date: activity.date,
-      position: simulateVotingPosition(activity, index),
-      chamber: activity.chamber,
-      isKeyVote: activity.isKeyVote
-    }));
+    votes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const limitedVotes = votes.slice(0, limit);
 
     return NextResponse.json({ 
-      votes,
+      votes: limitedVotes,
       metadata: {
-        totalSponsored: votingData.sponsoredData.sponsoredLegislation?.length || 0,
-        totalCosponsored: votingData.cosponsoredData.cosponsoredLegislation?.length || 0,
-        dataSource: 'congress.gov-enhanced',
-        note: 'Enhanced voting records including sponsorship activity and legislative positions. Actual floor vote records require additional API access.'
+        totalVotes: votes.length,
+        chamber: memberChamber,
+        dataSource: 'congress.gov',
+        note: 'Voting positions fetched from actual Senate and House roll call data. Some votes may show "Not Voting" if roll call data is unavailable or member name matching fails.',
+        rollCallUrls: votes.slice(0, 3).map(v => ({
+          bill: v.bill.number,
+          rollNumber: v.rollNumber,
+          chamber: v.chamber,
+          url: v.chamber === 'Senate' 
+            ? `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${v.bill.congress}2/vote_${v.bill.congress}_2_${String(v.rollNumber).padStart(5, '0')}.xml`
+            : `https://clerk.house.gov/Votes/${v.bill.congress}${v.rollNumber}`
+        }))
       }
     });
 
   } catch (error) {
     console.error('API Error:', error);
     
-    // Enhanced fallback mock voting data with realistic activity
+    // Fallback mock voting data
     const mockVotes: Vote[] = [
       {
-        voteId: '1',
+        voteId: '119-hr-1-28',
         bill: {
-          number: 'H.R. 1234',
-          title: 'Infrastructure Investment and Jobs Act',
+          number: 'HR 1',
+          title: 'One Big Beautiful Bill Act',
+          congress: '119'
+        },
+        question: 'On Passage',
+        result: 'Passed',
+        date: '2025-07-03',
+        position: 'Yea',
+        chamber: 'House',
+        rollNumber: 190,
+        isKeyVote: true
+      },
+      {
+        voteId: '119-hr-43-28',
+        bill: {
+          number: 'HR 43',
+          title: 'Alaska Native Village Municipal Lands Restoration Act',
+          congress: '119'
+        },
+        question: 'On Motion to Suspend the Rules and Pass',
+        result: 'Passed',
+        date: '2025-02-04',
+        position: 'Yea',
+        chamber: 'House',
+        rollNumber: 28
+      },
+      {
+        voteId: '118-s-2226-245',
+        bill: {
+          number: 'S 2226',
+          title: 'Building Chips in America Act',
           congress: '118'
         },
         question: 'On Passage',
         result: 'Passed',
-        date: '2024-01-15',
+        date: '2024-07-25',
         position: 'Yea',
-        chamber: 'House'
+        chamber: 'Senate',
+        rollNumber: 245,
+        isKeyVote: true
       },
       {
-        voteId: '2',
+        voteId: '118-hr-3935-305',
         bill: {
-          number: 'S. 567',
-          title: 'Climate Action and Clean Energy Act',
+          number: 'HR 3935',
+          title: 'Securing Growth and Robust Leadership in American Aviation Act',
           congress: '118'
         },
         question: 'On Passage',
         result: 'Passed',
-        date: '2024-01-10',
-        position: 'Yea',
-        chamber: 'House'
+        date: '2024-05-15',
+        position: 'Nay',
+        chamber: 'House',
+        rollNumber: 305
       },
       {
-        voteId: '3',
+        voteId: '118-hr-5376-234',
         bill: {
-          number: 'H.R. 890',
-          title: 'Healthcare Affordability Act',
+          number: 'HR 5376',
+          title: 'Inflation Reduction Act',
           congress: '118'
         },
         question: 'On Amendment',
         result: 'Failed',
-        date: '2024-01-05',
-        position: 'Nay',
-        chamber: 'House'
-      },
-      {
-        voteId: '4',
-        bill: {
-          number: 'H.R. 2345',
-          title: 'Education Funding Enhancement Act',
-          congress: '118'
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: '2023-12-20',
-        position: 'Yea',
-        chamber: 'House'
-      },
-      {
-        voteId: '5',
-        bill: {
-          number: 'S. 789',
-          title: 'Border Security Modernization Act',
-          congress: '118'
-        },
-        question: 'On Cloture',
-        result: 'Agreed to',
-        date: '2023-12-15',
+        date: '2024-04-10',
         position: 'Not Voting',
-        chamber: 'House'
+        chamber: 'House',
+        rollNumber: 234
       }
     ];
 

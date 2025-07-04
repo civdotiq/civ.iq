@@ -2,11 +2,21 @@
 
 ## Overview
 
-The CIV.IQ API provides programmatic access to U.S. government representative data, voting records, and campaign finance information. All data is sourced from official government APIs.
+The CIV.IQ API provides comprehensive access to U.S. government data with advanced features including intelligent caching, request batching, news deduplication, and PWA support. All data is sourced from official government APIs with real-time validation and monitoring.
+
+### Key Features
+- **Intelligent Caching**: Redis-backed caching with automatic fallback
+- **Request Batching**: Optimize multiple requests into single API calls
+- **News Deduplication**: AI-powered duplicate detection and quality filtering
+- **Progressive Loading**: Lazy loading with intersection observers
+- **Error Recovery**: Automatic retries with exponential backoff
+- **Input Validation**: XSS protection and comprehensive sanitization
+- **Real-time Monitoring**: Health checks and performance metrics
 
 ## Base URL
 
 ```
+Production: https://civic-intel-hub.vercel.app/api
 Development: http://localhost:3000/api
 Production: https://civiq.org/api
 ```

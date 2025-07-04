@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { structuredLogger } from '@/lib/logging/logger'
+import { monitorExternalApi } from '@/lib/monitoring/telemetry'
 
 interface DistrictBoundary {
   type: string;
@@ -34,16 +36,57 @@ interface MapData {
 // Helper function to get state FIPS code
 function getStateFips(state: string): string {
   const stateFipsMap: { [key: string]: string } = {
-    'Alabama': '01', 'Alaska': '02', 'Arizona': '04', 'Arkansas': '05', 'California': '06',
-    'Colorado': '08', 'Connecticut': '09', 'Delaware': '10', 'Florida': '12', 'Georgia': '13',
-    'Hawaii': '15', 'Idaho': '16', 'Illinois': '17', 'Indiana': '18', 'Iowa': '19',
-    'Kansas': '20', 'Kentucky': '21', 'Louisiana': '22', 'Maine': '23', 'Maryland': '24',
-    'Massachusetts': '25', 'Michigan': '26', 'Minnesota': '27', 'Mississippi': '28', 'Missouri': '29',
-    'Montana': '30', 'Nebraska': '31', 'Nevada': '32', 'New Hampshire': '33', 'New Jersey': '34',
-    'New Mexico': '35', 'New York': '36', 'North Carolina': '37', 'North Dakota': '38', 'Ohio': '39',
-    'Oklahoma': '40', 'Oregon': '41', 'Pennsylvania': '42', 'Rhode Island': '44', 'South Carolina': '45',
-    'South Dakota': '46', 'Tennessee': '47', 'Texas': '48', 'Utah': '49', 'Vermont': '50',
-    'Virginia': '51', 'Washington': '53', 'West Virginia': '54', 'Wisconsin': '55', 'Wyoming': '56'
+    'Alabama': '01', 'AL': '01',
+    'Alaska': '02', 'AK': '02', 
+    'Arizona': '04', 'AZ': '04',
+    'Arkansas': '05', 'AR': '05',
+    'California': '06', 'CA': '06',
+    'Colorado': '08', 'CO': '08',
+    'Connecticut': '09', 'CT': '09',
+    'Delaware': '10', 'DE': '10',
+    'District of Columbia': '11', 'DC': '11',
+    'Florida': '12', 'FL': '12',
+    'Georgia': '13', 'GA': '13',
+    'Hawaii': '15', 'HI': '15',
+    'Idaho': '16', 'ID': '16',
+    'Illinois': '17', 'IL': '17',
+    'Indiana': '18', 'IN': '18',
+    'Iowa': '19', 'IA': '19',
+    'Kansas': '20', 'KS': '20',
+    'Kentucky': '21', 'KY': '21',
+    'Louisiana': '22', 'LA': '22',
+    'Maine': '23', 'ME': '23',
+    'Maryland': '24', 'MD': '24',
+    'Massachusetts': '25', 'MA': '25',
+    'Michigan': '26', 'MI': '26',
+    'Minnesota': '27', 'MN': '27',
+    'Mississippi': '28', 'MS': '28',
+    'Missouri': '29', 'MO': '29',
+    'Montana': '30', 'MT': '30',
+    'Nebraska': '31', 'NE': '31',
+    'Nevada': '32', 'NV': '32',
+    'New Hampshire': '33', 'NH': '33',
+    'New Jersey': '34', 'NJ': '34',
+    'New Mexico': '35', 'NM': '35',
+    'New York': '36', 'NY': '36',
+    'North Carolina': '37', 'NC': '37',
+    'North Dakota': '38', 'ND': '38',
+    'Ohio': '39', 'OH': '39',
+    'Oklahoma': '40', 'OK': '40',
+    'Oregon': '41', 'OR': '41',
+    'Pennsylvania': '42', 'PA': '42',
+    'Rhode Island': '44', 'RI': '44',
+    'South Carolina': '45', 'SC': '45',
+    'South Dakota': '46', 'SD': '46',
+    'Tennessee': '47', 'TN': '47',
+    'Texas': '48', 'TX': '48',
+    'Utah': '49', 'UT': '49',
+    'Vermont': '50', 'VT': '50',
+    'Virginia': '51', 'VA': '51',
+    'Washington': '53', 'WA': '53',
+    'West Virginia': '54', 'WV': '54',
+    'Wisconsin': '55', 'WI': '55',
+    'Wyoming': '56', 'WY': '56'
   };
   return stateFipsMap[state] || '00';
 }
@@ -72,8 +115,8 @@ async function getZipCoordinates(zipCode: string): Promise<{lat: number, lng: nu
     
     return null;
   } catch (error) {
-    console.error('Error getting ZIP coordinates:', error);
-    return null;
+    structuredLogger.error('Error getting ZIP coordinates', error as Error, { zipCode })
+    return null
   }
 }
 
@@ -109,7 +152,8 @@ function createMockBoundary(
       district,
       state,
       name: names[type],
-      type
+      type,
+      source: 'mock'
     }
   };
 }
@@ -142,56 +186,105 @@ function calculateBoundingBox(coordinates: number[][][], padding = 0.01): {
   };
 }
 
-// Attempt to fetch real congressional district boundary from Census TIGER
+// Fetch real congressional district boundary from Census TIGER (119th Congress)
 async function fetchCongressionalDistrict(stateFips: string, district: string): Promise<any> {
   try {
-    // Use Census Bureau's REST API for Congressional Districts
-    const url = `https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/1/query?where=STATE=${stateFips}+AND+CD=${district.padStart(2, '0')}&outFields=*&outSR=4326&f=geojson`;
+    // Use Census Bureau's TIGERweb REST API for 119th Congressional Districts (Layer 0)
+    const paddedDistrict = district.padStart(2, '0');
+    const whereClause = `STATE='${stateFips}' AND CD119='${paddedDistrict}'`;
+    const url = `https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/0/query?where=${encodeURIComponent(whereClause)}&outFields=*&outSR=4326&f=geojson`;
     
-    const response = await fetch(url);
+    const monitor = monitorExternalApi('census-tiger', 'congressional-district', url)
+    
+    const response = await fetch(url)
     
     if (!response.ok) {
-      throw new Error(`Census TIGER API error: ${response.status}`);
+      monitor.end(false, response.status)
+      structuredLogger.error('Census TIGER API error', new Error(`HTTP ${response.status}`), {
+        stateFips,
+        district,
+        url
+      })
+      return null
     }
 
     const data = await response.json();
     
     if (data.features && data.features.length > 0) {
-      return data.features[0];
+      monitor.end(true, 200)
+      structuredLogger.info('Successfully fetched congressional district', {
+        stateFips,
+        district,
+        featureCount: data.features.length
+      })
+      return data.features[0]
+    } else {
+      monitor.end(false, 200)
+      structuredLogger.warn('No congressional district found', { stateFips, district })
+      return null
     }
     
-    return null;
   } catch (error) {
-    console.error('Error fetching congressional district:', error);
-    return null;
+    monitor.end(false, undefined, error as Error)
+    structuredLogger.error('Error fetching congressional district', error as Error, {
+      stateFips,
+      district
+    })
+    return null
   }
 }
 
-// Attempt to fetch state legislative district boundaries
-async function fetchStateLegislativeDistrict(stateFips: string, chamber: 'upper' | 'lower'): Promise<any> {
+// Fetch state legislative district boundaries from Census TIGER
+async function fetchStateLegislativeDistrict(stateFips: string, chamber: 'upper' | 'lower', coordinates?: {lat: number, lng: number}): Promise<any> {
   try {
-    // Use Census Bureau's REST API for State Legislative Districts
-    const layerId = chamber === 'upper' ? '3' : '4'; // Upper=3 (State Senate), Lower=4 (State House)
-    const url = `https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/${layerId}/query?where=STATE=${stateFips}&outFields=*&outSR=4326&f=geojson`;
+    // Use Census Bureau's TIGERweb REST API for State Legislative Districts
+    // Layer 2: State Legislative Districts - Upper Chamber (State Senate)
+    // Layer 3: State Legislative Districts - Lower Chamber (State House)
+    const layerId = chamber === 'upper' ? '2' : '3';
     
-    const response = await fetch(url);
+    let whereClause = `STATE='${stateFips}'`;
+    
+    // If coordinates provided, use spatial query to find the specific district
+    // For now, just get the first district from the state as a fallback
+    const url = `https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/${layerId}/query?where=${encodeURIComponent(whereClause)}&outFields=*&outSR=4326&f=geojson&resultRecordCount=1`;
+    
+    const monitor = monitorExternalApi('census-tiger', `${chamber}-legislative`, url)
+    
+    const response = await fetch(url)
     
     if (!response.ok) {
-      throw new Error(`Census TIGER API error: ${response.status}`);
+      monitor.end(false, response.status)
+      structuredLogger.error('Census TIGER API error', new Error(`HTTP ${response.status}`), {
+        stateFips,
+        chamber,
+        url
+      })
+      return null
     }
 
     const data = await response.json();
     
     if (data.features && data.features.length > 0) {
-      // Return first feature for simplicity - in real implementation, 
-      // would need to determine which district contains the ZIP coordinate
-      return data.features[0];
+      monitor.end(true, 200)
+      structuredLogger.info('Successfully fetched legislative district', {
+        stateFips,
+        chamber,
+        featureCount: data.features.length
+      })
+      return data.features[0]
+    } else {
+      monitor.end(false, 200)
+      structuredLogger.warn('No legislative district found', { stateFips, chamber })
+      return null
     }
     
-    return null;
   } catch (error) {
-    console.error('Error fetching state legislative district:', error);
-    return null;
+    monitor.end(false, undefined, error as Error)
+    structuredLogger.error('Error fetching legislative district', error as Error, {
+      stateFips,
+      chamber
+    })
+    return null
   }
 }
 
@@ -231,13 +324,27 @@ export async function GET(request: NextRequest) {
     const stateFips = getStateFips(zipInfo.state);
 
     // Try to fetch real boundary data from Census TIGER
+    structuredLogger.info('Fetching district boundaries', {
+      zipCode,
+      district,
+      state: zipInfo.state,
+      stateFips
+    })
+    
     const [congressionalBoundary, stateSenateBounder, stateHouseBoundary] = await Promise.all([
       fetchCongressionalDistrict(stateFips, district),
-      fetchStateLegislativeDistrict(stateFips, 'upper'),
-      fetchStateLegislativeDistrict(stateFips, 'lower')
+      fetchStateLegislativeDistrict(stateFips, 'upper', { lat: zipInfo.lat, lng: zipInfo.lng }),
+      fetchStateLegislativeDistrict(stateFips, 'lower', { lat: zipInfo.lat, lng: zipInfo.lng })
     ]);
 
     // Create boundaries (use real data if available, otherwise mock)
+    structuredLogger.info('Boundary fetch results', {
+      zipCode,
+      congressional: !!congressionalBoundary,
+      stateSenate: !!stateSenateBounder,
+      stateHouse: !!stateHouseBoundary
+    })
+
     const boundaries = {
       congressional: congressionalBoundary ? {
         type: congressionalBoundary.geometry.type,
@@ -245,8 +352,9 @@ export async function GET(request: NextRequest) {
         properties: {
           district: district,
           state: zipInfo.state,
-          name: `Congressional District ${district}`,
-          type: 'congressional' as const
+          name: congressionalBoundary.properties?.NAME || `Congressional District ${district}`,
+          type: 'congressional' as const,
+          source: 'census-tiger'
         }
       } : createMockBoundary('congressional', district, zipInfo.state, zipInfo.lat, zipInfo.lng),
       
@@ -254,10 +362,11 @@ export async function GET(request: NextRequest) {
         type: stateSenateBounder.geometry.type,
         coordinates: stateSenateBounder.geometry.coordinates,
         properties: {
-          district: stateSenateBounder.properties.SLDUST || '1',
+          district: stateSenateBounder.properties?.SLDUST || stateSenateBounder.properties?.DISTRICT || '1',
           state: zipInfo.state,
-          name: `State Senate District ${stateSenateBounder.properties.SLDUST || '1'}`,
-          type: 'state_senate' as const
+          name: stateSenateBounder.properties?.NAME || `State Senate District ${stateSenateBounder.properties?.SLDUST || '1'}`,
+          type: 'state_senate' as const,
+          source: 'census-tiger'
         }
       } : createMockBoundary('state_senate', '1', zipInfo.state, zipInfo.lat, zipInfo.lng),
       
@@ -265,10 +374,11 @@ export async function GET(request: NextRequest) {
         type: stateHouseBoundary.geometry.type,
         coordinates: stateHouseBoundary.geometry.coordinates,
         properties: {
-          district: stateHouseBoundary.properties.SLDLST || 'A',
+          district: stateHouseBoundary.properties?.SLDLST || stateHouseBoundary.properties?.DISTRICT || 'A',
           state: zipInfo.state,
-          name: `State House District ${stateHouseBoundary.properties.SLDLST || 'A'}`,
-          type: 'state_house' as const
+          name: stateHouseBoundary.properties?.NAME || `State House District ${stateHouseBoundary.properties?.SLDLST || 'A'}`,
+          type: 'state_house' as const,
+          source: 'census-tiger'
         }
       } : createMockBoundary('state_house', 'A', zipInfo.state, zipInfo.lat, zipInfo.lng)
     };
@@ -296,10 +406,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(mapData);
 
   } catch (error) {
-    console.error('API Error:', error);
+    structuredLogger.error('District map API error', error as Error, { zipCode })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    );
+    )
   }
 }

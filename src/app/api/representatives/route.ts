@@ -1,135 +1,245 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getCongressionalDistrictFromZip, getCongressionalDistrictFromAddress } from '@/lib/census-api';
-import { getRepresentativesByLocation } from '@/lib/congress-api';
-import { validateZipCode, validateRepresentativeData, createRateLimitValidator } from '@/lib/validation';
+import { NextRequest, NextResponse } from 'next/server'
+import { cachedFetch } from '@/lib/cache'
+import { withRateLimit, publicApiRateLimiter } from '@/lib/middleware/rate-limiter'
+import { withValidationAndSecurity, ValidatedRequest } from '@/lib/validation/middleware'
+import { ZipCodeValidator, StateValidator } from '@/lib/validation/schemas'
+import { withErrorHandling, ExternalApiError, healthChecker } from '@/lib/error-handling/error-handler'
 
-// Rate limiting: 100 requests per minute per IP
-const rateLimitValidator = createRateLimitValidator(100, 60 * 1000);
+interface Representative {
+  bioguideId: string
+  name: string
+  firstName: string
+  lastName: string
+  state: string
+  district: string | null
+  party: string
+  chamber: 'House' | 'Senate'
+  imageUrl: string
+  contactInfo: {
+    phone: string
+    website: string
+    office: string
+  }
+  committees: Array<{
+    name: string
+    role?: string
+  }>
+  social: {
+    twitter?: string
+    facebook?: string
+  }
+}
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const zipCode = searchParams.get('zip');
-  
-  // Rate limiting
-  const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
-  if (!rateLimitValidator(clientIP)) {
-    return NextResponse.json(
-      { error: 'Too many requests. Please try again later.' },
-      { status: 429 }
-    );
+interface ApiResponse {
+  representatives: Representative[]
+  metadata: {
+    dataSource: string
+    timestamp: string
+    zipCode: string
+    totalFound: number
+    note?: string
   }
-  
-  if (!zipCode) {
-    return NextResponse.json(
-      { error: 'ZIP code is required' },
-      { status: 400 }
-    );
-  }
-  
-  // Validate and sanitize ZIP code
-  const zipValidation = validateZipCode(zipCode);
-  if (!zipValidation.isValid) {
-    return NextResponse.json(
-      { 
-        error: 'Invalid ZIP code',
-        details: zipValidation.errors.map(e => e.message)
+}
+
+// Fallback data generator
+async function generateFallbackData(zipCode: string): Promise<ApiResponse> {
+  // In a real application, this might come from a local database or cache
+  const mockRepresentatives: Representative[] = [
+    {
+      bioguideId: 'S000148',
+      name: 'Charles E. Schumer',
+      firstName: 'Charles',
+      lastName: 'Schumer',
+      state: 'NY',
+      district: null,
+      party: 'Democratic',
+      chamber: 'Senate',
+      imageUrl: '/images/representatives/default-senator.jpg',
+      contactInfo: {
+        phone: '(202) 224-6542',
+        website: 'https://www.schumer.senate.gov',
+        office: '322 Hart Senate Office Building'
       },
-      { status: 400 }
-    );
-  }
-  
-  const sanitizedZip = zipValidation.data;
-  
-  try {
-    console.log(`Looking up representatives for ZIP: ${sanitizedZip}`);
-    
-    // Step 1: Get congressional district from Census API
-    let districtInfo = await getCongressionalDistrictFromZip(sanitizedZip);
-    
-    // If the first method fails, try the one-line address method
-    if (!districtInfo) {
-      console.log('Trying alternative method with ZIP as address...');
-      districtInfo = await getCongressionalDistrictFromAddress(sanitizedZip);
-    }
-    
-    if (!districtInfo) {
-      return NextResponse.json(
-        { 
-          error: 'Could not find congressional district for this ZIP code',
-          zipCode,
-          message: 'The Census geocoding service could not locate this ZIP code. Please verify it is a valid US ZIP code.'
-        },
-        { status: 404 }
-      );
-    }
-    
-    console.log(`Found district: ${districtInfo.districtName} (${districtInfo.stateCode}-${districtInfo.district})`);
-    
-    // Step 2: Get representatives from Congress.gov API
-    const representatives = await getRepresentativesByLocation(
-      districtInfo.stateCode,
-      districtInfo.district,
-      process.env.CONGRESS_API_KEY
-    );
-    
-    // Validate and sanitize representative data
-    const validatedReps = representatives
-      .map(rep => {
-        const validation = validateRepresentativeData(rep);
-        if (validation.hasWarnings) {
-          console.warn('Representative data warnings:', validation.warnings);
-        }
-        return validation.isValid ? validation.data : null;
-      })
-      .filter(rep => rep !== null);
-
-    // Format the response
-    const response = {
-      zipCode: sanitizedZip,
-      state: districtInfo.stateCode,
-      stateName: districtInfo.districtName.split(' ')[0], // Extract state name
-      district: districtInfo.district,
-      districtName: districtInfo.districtName,
-      representatives: validatedReps.map(rep => ({
-        ...rep,
-        title: rep.chamber === 'Senate' ? 'U.S. Senator' : 'U.S. Representative',
-        dataComplete: rep.imageUrl ? 95 : 75 // Higher completeness if we have an image
-      }))
-    };
-    
-    // Add CORS headers for development
-    const headers = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
-    };
-    
-    return NextResponse.json(response, { headers });
-    
-  } catch (error) {
-    console.error('API Error:', error);
-    
-    // Return a more detailed error in development
-    const errorResponse = {
-      error: 'Internal server error',
-      message: process.env.NODE_ENV === 'development' 
-        ? error instanceof Error ? error.message : 'Unknown error'
-        : 'An error occurred while fetching representative data'
-    };
-    
-    return NextResponse.json(errorResponse, { status: 500 });
-  }
-}
-
-// Handle OPTIONS request for CORS
-export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      committees: [
+        { name: 'Committee on Rules and Administration', role: 'Chair' }
+      ],
+      social: {
+        twitter: '@SenSchumer'
+      }
     },
-  });
+    {
+      bioguideId: 'G000555',
+      name: 'Kirsten E. Gillibrand',
+      firstName: 'Kirsten',
+      lastName: 'Gillibrand',
+      state: 'NY',
+      district: null,
+      party: 'Democratic',
+      chamber: 'Senate',
+      imageUrl: '/images/representatives/default-senator.jpg',
+      contactInfo: {
+        phone: '(202) 224-4451',
+        website: 'https://www.gillibrand.senate.gov',
+        office: '478 Russell Senate Office Building'
+      },
+      committees: [
+        { name: 'Committee on Armed Services' }
+      ],
+      social: {
+        twitter: '@SenGillibrand'
+      }
+    }
+  ]
+
+  return {
+    representatives: mockRepresentatives,
+    metadata: {
+      dataSource: 'fallback',
+      timestamp: new Date().toISOString(),
+      zipCode,
+      totalFound: mockRepresentatives.length,
+      note: 'Fallback data provided due to external API unavailability'
+    }
+  }
 }
+
+// Define validation interface
+interface RepresentativesQuery {
+  zip: string;
+}
+
+// Main handler function with validation
+async function handleRepresentativesRequest(request: ValidatedRequest<RepresentativesQuery>): Promise<NextResponse> {
+  // Get validated and sanitized input
+  const { zip: zipCode } = request.validatedQuery!
+
+  try {
+    // Fetch representatives data with caching
+    const representatives = await cachedFetch(
+      `representatives-${zipCode}`,
+      async () => {
+        // Health check for Congress API
+        await healthChecker.checkService('congress-api', async () => {
+          const testResponse = await fetch(
+            `https://api.congress.gov/v3/member?api_key=${process.env.CONGRESS_API_KEY}&limit=1`
+          )
+          if (!testResponse.ok) {
+            throw new Error(`Health check failed: ${testResponse.status}`)
+          }
+        })
+
+        if (!process.env.CONGRESS_API_KEY) {
+          throw new ExternalApiError(
+            'Congress API key not configured',
+            'congress-api'
+          )
+        }
+
+        // First, get district from Census geocoding
+        const geoResponse = await fetch(
+          `https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?address=${encodeURIComponent(zipCode)}&benchmark=2020&vintage=2020&format=json`
+        )
+
+        if (!geoResponse.ok) {
+          throw new ExternalApiError(
+            'Census geocoding service unavailable',
+            'census-geocoding'
+          )
+        }
+
+        const geoData = await geoResponse.json()
+        const congressionalDistrict = geoData.result?.addressMatches?.[0]?.geographies?.['Congressional Districts']?.[0]?.DISTRICT
+
+        if (!congressionalDistrict) {
+          throw new Error('Could not determine congressional district for ZIP code')
+        }
+
+        // Fetch representatives from Congress API
+        const congressResponse = await fetch(
+          `https://api.congress.gov/v3/member?api_key=${process.env.CONGRESS_API_KEY}&currentMember=true&state=${geoData.result.addressMatches[0].addressComponents.state}&district=${congressionalDistrict}&format=json`
+        )
+
+        if (!congressResponse.ok) {
+          throw new ExternalApiError(
+            'Congress API service unavailable',
+            'congress-api'
+          )
+        }
+
+        const congressData = await congressResponse.json()
+        
+        // Transform data to our format
+        const representatives: Representative[] = congressData.members?.map((member: any) => ({
+          bioguideId: member.bioguideId,
+          name: member.directOrderName || `${member.firstName} ${member.lastName}`,
+          firstName: member.firstName,
+          lastName: member.lastName,
+          state: member.state,
+          district: member.district || null,
+          party: member.partyName,
+          chamber: member.chamber as 'House' | 'Senate',
+          imageUrl: member.depiction?.imageUrl || `/images/representatives/default-${member.chamber.toLowerCase()}.jpg`,
+          contactInfo: {
+            phone: member.phone || '',
+            website: member.officialWebsiteUrl || '',
+            office: member.office || ''
+          },
+          committees: [], // Would need separate API call to get committee info
+          social: {
+            twitter: member.twitterId ? `@${member.twitterId}` : undefined,
+            facebook: member.facebookId
+          }
+        })) || []
+
+        return {
+          representatives,
+          metadata: {
+            dataSource: 'congress.gov',
+            timestamp: new Date().toISOString(),
+            zipCode,
+            totalFound: representatives.length
+          }
+        }
+      },
+      15 * 60 * 1000 // 15 minutes cache
+    )
+
+    return NextResponse.json(representatives)
+
+  } catch (error) {
+    // Generate fallback data
+    const fallbackData = await generateFallbackData(zipCode)
+    
+    // Log the error but return fallback data
+    console.error('Representatives API error:', error)
+    
+    return NextResponse.json({
+      ...fallbackData,
+      metadata: {
+        ...fallbackData.metadata,
+        originalError: (error as Error).message,
+        fallbackReason: error instanceof ExternalApiError ? 
+          `${error.service} is currently unavailable` : 
+          'Unexpected error occurred'
+      }
+    })
+  }
+}
+
+// Export the main GET handler with validation, security, and rate limiting
+export const GET = withValidationAndSecurity<RepresentativesQuery>(
+  {
+    query: {
+      zip: ZipCodeValidator.validateZipCode
+    },
+    sanitizeResponse: true,
+    logValidationErrors: true
+  },
+  async (request: ValidatedRequest<RepresentativesQuery>) => {
+    return withRateLimit(
+      request,
+      () => withErrorHandling(handleRepresentativesRequest)(request),
+      publicApiRateLimiter
+    )
+  }
+)

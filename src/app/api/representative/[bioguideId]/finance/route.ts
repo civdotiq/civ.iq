@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { cachedFetch } from '@/lib/cache';
+import { NextRequest, NextResponse } from 'next/server'
+import { cachedFetch } from '@/lib/cache'
+import { getFECIdFromBioguide, hasFECMapping } from '@/lib/data/bioguide-fec-mapping'
+import { structuredLogger } from '@/lib/logging/logger'
+import { monitorExternalApi } from '@/lib/monitoring/telemetry'
 
 // State name to abbreviation mapping
 const STATE_ABBR: Record<string, string> = {
@@ -90,14 +93,16 @@ async function findFECCandidate(representativeName: string, state: string, distr
     async () => {
       try {
         const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
+        const previousCycle = currentCycle - 2;
         
         // Clean up the name for search
         let searchName = representativeName
           .replace(/^(Rep\.|Representative|Senator|Sen\.)\s+/, '')
+          .replace(/\s+(Jr\.|Sr\.|III|II|IV)$/, '') // Remove suffixes
           .replace(/,.*$/, '') // Remove everything after comma (like "Last, First")
           .trim();
         
-        // Try different name formats if needed
+        // Try different name formats
         const nameVariants = [searchName];
         
         // If name is in "Last, First" format, also try "First Last"
@@ -105,71 +110,142 @@ async function findFECCandidate(representativeName: string, state: string, distr
           const parts = searchName.split(',').map(p => p.trim());
           if (parts.length === 2) {
             nameVariants.push(`${parts[1]} ${parts[0]}`);
+            // Also try just last name
+            nameVariants.push(parts[0]);
+          }
+        } else {
+          // Try just last name
+          const nameParts = searchName.split(' ');
+          if (nameParts.length > 1) {
+            nameVariants.push(nameParts[nameParts.length - 1]);
           }
         }
         
-        console.log(`Searching FEC for candidate: ${searchName} in ${state}${district ? `-${district}` : ''}`);
+        structuredLogger.info('Searching FEC for candidate', {
+          searchName,
+          state,
+          district,
+          bioguideId: representativeName
+        })
         
         for (const name of nameVariants) {
-          const response = await fetch(
-            `https://api.open.fec.gov/v1/candidates/search/?api_key=${process.env.FEC_API_KEY}&q=${encodeURIComponent(name)}&state=${state}&cycle=${currentCycle}&sort=-election_years`
-          );
-
-          if (!response.ok) {
-            console.error(`FEC search failed for ${name}:`, response.status);
-            continue;
-          }
-
-          const data = await response.json();
-          console.log(`Found ${data.results?.length || 0} FEC candidates for ${name}`);
-          
-          if (data.results && data.results.length > 0) {
-            // Try to find exact match based on office and district
-            const candidate = data.results.find((c: any) => {
-              const isHouse = c.office === 'H' && district;
-              const isSenate = c.office === 'S' && !district;
-              const matchesDistrict = !district || c.district === district.padStart(2, '0');
-              
-              return (isHouse || isSenate) && matchesDistrict && c.state === state;
+          // Try current cycle first, then previous cycle
+          for (const cycle of [currentCycle, previousCycle]) {
+            const searchParams = new URLSearchParams({
+              api_key: process.env.FEC_API_KEY!,
+              q: name,
+              state: state,
+              cycle: cycle.toString(),
+              sort: '-election_years',
+              per_page: '20'
             });
-
-            if (candidate) {
-              console.log(`Found matching FEC candidate: ${candidate.name} (${candidate.candidate_id})`);
-              return {
-                candidate_id: candidate.candidate_id,
-                name: candidate.name,
-                party: candidate.party,
-                office: candidate.office,
-                state: candidate.state,
-                district: candidate.district,
-                election_years: candidate.election_years || [],
-                cycles: candidate.cycles || []
-              };
+            
+            // Add office filter if we know it
+            if (district) {
+              searchParams.append('office', 'H');
+            } else {
+              searchParams.append('office', 'S');
             }
             
-            // If no exact match, try the first result that matches state and current cycle
-            const fallbackCandidate = data.results.find((c: any) => c.state === state && c.cycles?.includes(currentCycle));
-            if (fallbackCandidate) {
-              console.log(`Using fallback FEC candidate: ${fallbackCandidate.name} (${fallbackCandidate.candidate_id})`);
-              return {
-                candidate_id: fallbackCandidate.candidate_id,
-                name: fallbackCandidate.name,
-                party: fallbackCandidate.party,
-                office: fallbackCandidate.office,
-                state: fallbackCandidate.state,
-                district: fallbackCandidate.district,
-                election_years: fallbackCandidate.election_years || [],
-                cycles: fallbackCandidate.cycles || []
-              };
+            const response = await fetch(
+              `https://api.open.fec.gov/v1/candidates/search/?${searchParams}`
+            );
+
+            const monitor = monitorExternalApi('fec', 'candidate-search', response.url)
+            
+            if (!response.ok) {
+              monitor.end(false, response.status)
+              structuredLogger.warn('FEC search failed', {
+                name,
+                cycle,
+                status: response.status
+              })
+              continue
+            }
+
+            const data = await response.json()
+            monitor.end(true, 200)
+            structuredLogger.info('FEC candidate search results', {
+              name,
+              cycle,
+              resultsCount: data.results?.length || 0
+            })
+            
+            if (data.results && data.results.length > 0) {
+              // Try to find exact match based on office and district
+              const candidate = data.results.find((c: any) => {
+                const isHouse = c.office === 'H';
+                const isSenate = c.office === 'S';
+                
+                // For House members, check district match
+                if (isHouse && district) {
+                  const candidateDistrict = c.district?.padStart(2, '0');
+                  const searchDistrict = district.padStart(2, '0');
+                  return candidateDistrict === searchDistrict && c.state === state;
+                }
+                
+                // For Senate members, just check state
+                if (isSenate && !district) {
+                  return c.state === state;
+                }
+                
+                return false;
+              });
+
+              if (candidate) {
+                structuredLogger.info('Found matching FEC candidate', {
+                  candidateName: candidate.name,
+                  candidateId: candidate.candidate_id,
+                  searchName,
+                  cycle
+                })
+                return {
+                  candidate_id: candidate.candidate_id,
+                  name: candidate.name,
+                  party: candidate.party,
+                  office: candidate.office,
+                  state: candidate.state,
+                  district: candidate.district,
+                  election_years: candidate.election_years || [],
+                  cycles: candidate.cycles || []
+                };
+              }
+              
+              // If no exact match but we have results for the right state and office type
+              const fallbackCandidate = data.results.find((c: any) => {
+                return c.state === state && 
+                       ((district && c.office === 'H') || (!district && c.office === 'S'));
+              });
+              
+              if (fallbackCandidate) {
+                structuredLogger.info('Using fallback FEC candidate', {
+                  candidateName: fallbackCandidate.name,
+                  candidateId: fallbackCandidate.candidate_id,
+                  searchName
+                })
+                return {
+                  candidate_id: fallbackCandidate.candidate_id,
+                  name: fallbackCandidate.name,
+                  party: fallbackCandidate.party,
+                  office: fallbackCandidate.office,
+                  state: fallbackCandidate.state,
+                  district: fallbackCandidate.district,
+                  election_years: fallbackCandidate.election_years || [],
+                  cycles: fallbackCandidate.cycles || []
+                };
+              }
             }
           }
         }
 
-        console.log(`No FEC candidate found for ${searchName} in ${state}`);
-        return null;
+        structuredLogger.warn('No FEC candidate found', { searchName, state })
+        return null
       } catch (error) {
-        console.error('Error finding FEC candidate:', error);
-        return null;
+        structuredLogger.error('Error finding FEC candidate', error as Error, {
+          searchName,
+          state
+        })
+        return null
       }
     },
     60 * 60 * 1000 // 1 hour cache
@@ -203,8 +279,10 @@ async function getFinancialSummary(candidateId: string): Promise<FinancialSummar
           candidate_contributions: total.candidate_contribution || 0
         })) || [];
       } catch (error) {
-        console.error('Error fetching financial summary:', error);
-        return [];
+        structuredLogger.error('Error fetching financial summary', error as Error, {
+          candidateId
+        })
+        return []
       }
     },
     30 * 60 * 1000 // 30 minutes cache
@@ -232,8 +310,10 @@ async function getContributions(candidateId: string): Promise<ContributionData[]
       committee_name: contrib.committee_name || 'Unknown'
     })) || [];
   } catch (error) {
-    console.error('Error fetching contributions:', error);
-    return [];
+    structuredLogger.error('Error fetching contributions', error as Error, {
+      candidateId
+    })
+    return []
   }
 }
 
@@ -259,8 +339,10 @@ async function getExpenditures(candidateId: string): Promise<ExpenditureData[]> 
       category_code_full: exp.category_code_full
     })) || [];
   } catch (error) {
-    console.error('Error fetching expenditures:', error);
-    return [];
+    structuredLogger.error('Error fetching expenditures', error as Error, {
+      candidateId
+    })
+    return []
   }
 }
 
@@ -297,7 +379,10 @@ export async function GET(
         };
       }
     } catch (error) {
-      console.log('Could not fetch representative info, using fallback');
+      structuredLogger.warn('Could not fetch representative info, using fallback', {
+        bioguideId,
+        error: (error as Error).message
+      })
       // Fallback representative data
       representative = {
         name: `Representative ${bioguideId}`,
@@ -308,13 +393,56 @@ export async function GET(
     }
 
     if (process.env.FEC_API_KEY) {
-      // Find FEC candidate (convert state to abbreviation)
-      const stateAbbr = getStateAbbreviation(representative.state);
-      const fecCandidate = await findFECCandidate(
-        representative.name,
-        stateAbbr,
-        representative.district
-      );
+      let fecCandidate: FECCandidate | null = null;
+      
+      // First, check if we have a direct mapping
+      const mappedFECId = getFECIdFromBioguide(bioguideId);
+      
+      if (mappedFECId) {
+        structuredLogger.info('Found direct FEC mapping', {
+          bioguideId,
+          fecId: mappedFECId
+        })
+        
+        // Fetch candidate details using the mapped FEC ID
+        try {
+          const candidateResponse = await fetch(
+            `https://api.open.fec.gov/v1/candidate/${mappedFECId}/?api_key=${process.env.FEC_API_KEY}`
+          );
+          
+          if (candidateResponse.ok) {
+            const data = await candidateResponse.json();
+            if (data.results && data.results.length > 0) {
+              const candidate = data.results[0];
+              fecCandidate = {
+                candidate_id: candidate.candidate_id,
+                name: candidate.name,
+                party: candidate.party,
+                office: candidate.office,
+                state: candidate.state,
+                district: candidate.district,
+                election_years: candidate.election_years || [],
+                cycles: candidate.cycles || []
+              };
+            }
+          }
+        } catch (error) {
+          structuredLogger.error('Error fetching mapped FEC candidate', error as Error, {
+            bioguideId,
+            fecId: mappedFECId
+          })
+        }
+      }
+      
+      // If no mapping or mapping failed, fall back to search
+      if (!fecCandidate) {
+        const stateAbbr = getStateAbbreviation(representative.state);
+        fecCandidate = await findFECCandidate(
+          representative.name,
+          stateAbbr,
+          representative.district
+        );
+      }
 
       if (fecCandidate) {
         // Fetch financial data
@@ -363,7 +491,14 @@ export async function GET(
           top_expenditure_categories: topCategories as any
         };
 
-        return NextResponse.json(financeData);
+        return NextResponse.json({
+          ...financeData,
+          metadata: {
+            dataSource: 'fec.gov',
+            mappingUsed: hasFECMapping(bioguideId),
+            lastUpdated: new Date().toISOString()
+          }
+        });
       }
     }
 
@@ -456,10 +591,10 @@ export async function GET(
     return NextResponse.json(mockFinanceData);
 
   } catch (error) {
-    console.error('API Error:', error);
+    structuredLogger.error('Finance API error', error as Error, { bioguideId })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    );
+    )
   }
 }

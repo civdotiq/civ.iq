@@ -254,21 +254,21 @@ function TimelineComparison({ rep1, rep2 }: { rep1: Representative; rep2: Repres
       .data(data)
       .enter().append('rect')
       .attr('class', 'bar')
-      .attr('x', d => xScale(d.start))
-      .attr('y', d => yScale(d.name))
-      .attr('width', d => xScale(d.end) - xScale(d.start))
+      .attr('x', (d: any) => xScale(d.start))
+      .attr('y', (d: any) => yScale(d.name))
+      .attr('width', (d: any) => xScale(d.end) - xScale(d.start))
       .attr('height', yScale.bandwidth())
-      .attr('fill', d => d.color)
+      .attr('fill', (d: any) => d.color)
       .attr('opacity', 0.8);
 
     // Add labels
     svg.selectAll('.label')
       .data(data)
       .enter().append('text')
-      .attr('x', d => xScale(d.start) + 5)
-      .attr('y', d => yScale(d.name) + yScale.bandwidth() / 2)
+      .attr('x', (d: any) => xScale(d.start) + 5)
+      .attr('y', (d: any) => yScale(d.name) + yScale.bandwidth() / 2)
       .attr('dy', '.35em')
-      .text(d => `${d.end - d.start} years`)
+      .text((d: any) => `${d.end - d.start} years`)
       .attr('fill', 'white')
       .attr('font-size', '12px');
   }, [rep1, rep2]);
@@ -395,19 +395,19 @@ function NewsSentimentComparison({ rep1, rep2 }: { rep1: Representative; rep2: R
       .data(data)
       .enter().append('g')
       .attr('class', 'category')
-      .attr('transform', d => `translate(${x0(d.category)},0)`);
+      .attr('transform', (d: any) => `translate(${x0(d.category)},0)`);
 
     categoryGroups.selectAll('rect')
-      .data(d => [
+      .data((d: any) => [
         { key: 'rep1', value: d.rep1 },
         { key: 'rep2', value: d.rep2 }
       ])
       .enter().append('rect')
-      .attr('x', d => x1(d.key))
-      .attr('y', d => y(d.value))
+      .attr('x', (d: any) => x1(d.key))
+      .attr('y', (d: any) => y(d.value))
       .attr('width', x1.bandwidth())
-      .attr('height', d => height - y(d.value))
-      .attr('fill', d => color(d.key));
+      .attr('height', (d: any) => height - y(d.value))
+      .attr('fill', (d: any) => color(d.key));
 
     // Add legend
     const legend = svg.append('g')

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
+import { structuredLogger } from '@/lib/logging/logger';
+import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
 interface StateLegislator {
   id: string;
@@ -62,6 +64,161 @@ interface StateLegislatureData {
   legislators: StateLegislator[];
 }
 
+// Helper function to get state abbreviation mapping
+function getStateAbbreviation(state: string): string {
+  const stateMap: { [key: string]: string } = {
+    'AL': 'al', 'AK': 'ak', 'AZ': 'az', 'AR': 'ar', 'CA': 'ca',
+    'CO': 'co', 'CT': 'ct', 'DE': 'de', 'FL': 'fl', 'GA': 'ga',
+    'HI': 'hi', 'ID': 'id', 'IL': 'il', 'IN': 'in', 'IA': 'ia',
+    'KS': 'ks', 'KY': 'ky', 'LA': 'la', 'ME': 'me', 'MD': 'md',
+    'MA': 'ma', 'MI': 'mi', 'MN': 'mn', 'MS': 'ms', 'MO': 'mo',
+    'MT': 'mt', 'NE': 'ne', 'NV': 'nv', 'NH': 'nh', 'NJ': 'nj',
+    'NM': 'nm', 'NY': 'ny', 'NC': 'nc', 'ND': 'nd', 'OH': 'oh',
+    'OK': 'ok', 'OR': 'or', 'PA': 'pa', 'RI': 'ri', 'SC': 'sc',
+    'SD': 'sd', 'TN': 'tn', 'TX': 'tx', 'UT': 'ut', 'VT': 'vt',
+    'VA': 'va', 'WA': 'wa', 'WV': 'wv', 'WI': 'wi', 'WY': 'wy'
+  };
+
+  return stateMap[state.toUpperCase()] || state.toLowerCase();
+}
+
+// Fetch state jurisdiction info from OpenStates API
+async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
+  const monitor = monitorExternalApi('openstates', 'jurisdiction', `https://v3.openstates.org/jurisdictions/${stateAbbrev}`);
+  
+  try {
+    const response = await fetch(
+      `https://v3.openstates.org/jurisdictions/${stateAbbrev}`,
+      {
+        headers: {
+          'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
+        }
+      }
+    );
+
+    if (!response.ok) {
+      monitor.end(false, response.status);
+      structuredLogger.error('OpenStates jurisdiction API error', new Error(`HTTP ${response.status}`), {
+        stateAbbrev,
+        statusCode: response.status
+      });
+      return null;
+    }
+
+    monitor.end(true, 200);
+    const data = await response.json();
+    structuredLogger.info('Successfully fetched state jurisdiction', {
+      stateAbbrev,
+      jurisdictionName: data.name
+    });
+    
+    return data;
+  } catch (error) {
+    monitor.end(false, undefined, error as Error);
+    structuredLogger.error('Error fetching state jurisdiction', error as Error, {
+      stateAbbrev
+    });
+    return null;
+  }
+}
+
+// Fetch state legislators from OpenStates API
+async function fetchStateLegislators(stateAbbrev: string, chamber?: string): Promise<StateLegislator[]> {
+  const monitor = monitorExternalApi('openstates', 'legislators', `https://v3.openstates.org/people`);
+  
+  try {
+    const url = new URL('https://v3.openstates.org/people');
+    url.searchParams.set('jurisdiction', stateAbbrev);
+    url.searchParams.set('current_role', 'true');
+    url.searchParams.set('per_page', '200'); // Get more results
+    
+    if (chamber) {
+      url.searchParams.set('chamber', chamber);
+    }
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
+      }
+    });
+
+    if (!response.ok) {
+      monitor.end(false, response.status);
+      structuredLogger.error('OpenStates legislators API error', new Error(`HTTP ${response.status}`), {
+        stateAbbrev,
+        chamber,
+        statusCode: response.status
+      });
+      return [];
+    }
+
+    monitor.end(true, 200);
+    const data = await response.json();
+    
+    structuredLogger.info('Successfully fetched state legislators', {
+      stateAbbrev,
+      chamber,
+      count: data.results?.length || 0
+    });
+
+    return data.results?.map((person: any) => transformLegislator(person, stateAbbrev)) || [];
+  } catch (error) {
+    monitor.end(false, undefined, error as Error);
+    structuredLogger.error('Error fetching state legislators', error as Error, {
+      stateAbbrev,
+      chamber
+    });
+    return [];
+  }
+}
+
+// Transform OpenStates legislator data to our format
+function transformLegislator(person: any, stateAbbrev: string): StateLegislator {
+  const currentRole = person.current_role;
+  const contactDetails = person.contact_details || [];
+  
+  const email = contactDetails.find((c: any) => c.type === 'email')?.value;
+  const phone = contactDetails.find((c: any) => c.type === 'voice')?.value;
+  
+  return {
+    id: person.id || `${stateAbbrev}-${currentRole?.chamber}-${currentRole?.district}`,
+    name: person.name || 'Unknown',
+    party: normalizeParty(person.party) || 'Other',
+    chamber: currentRole?.chamber === 'upper' ? 'upper' : 'lower',
+    district: currentRole?.district || 'Unknown',
+    email,
+    phone,
+    office: contactDetails.find((c: any) => c.type === 'address')?.value,
+    photoUrl: person.image,
+    committees: [], // Would need separate API call to get committee memberships
+    terms: [{
+      startYear: currentRole?.start_date ? new Date(currentRole.start_date).getFullYear() : 2023,
+      endYear: currentRole?.end_date ? new Date(currentRole.end_date).getFullYear() : (currentRole?.chamber === 'upper' ? 2027 : 2025),
+      chamber: currentRole?.chamber === 'upper' ? 'upper' : 'lower'
+    }],
+    bills: {
+      sponsored: 0, // Would need separate API call to get bill counts
+      cosponsored: 0
+    },
+    votingRecord: {
+      totalVotes: 0, // Would need separate API call to get voting records
+      partyLineVotes: 0,
+      crossoverVotes: 0
+    }
+  };
+}
+
+// Normalize party names
+function normalizeParty(party: string): StateLegislator['party'] {
+  if (!party) return 'Other';
+  
+  const normalized = party.toLowerCase();
+  if (normalized.includes('democrat')) return 'Democratic';
+  if (normalized.includes('republican')) return 'Republican';
+  if (normalized.includes('independent')) return 'Independent';
+  return 'Other';
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ state: string }> }
@@ -81,51 +238,84 @@ export async function GET(
   try {
     // Use cached fetch with 60-minute TTL for state legislature data
     const cacheKey = `state-legislature-${state.toUpperCase()}-${chamber || 'all'}-${party || 'all'}`;
-    const TTL_60_MINUTES = 60 * 60 * 1000;
+    const TTL_60_MINUTES = 60 * 60;
 
     const legislatureData = await cachedFetch(
       cacheKey,
       async (): Promise<StateLegislatureData> => {
-        // In production, this would integrate with OpenStates.org API or state-specific APIs
-        console.log(`Fetching state legislature data for: ${state.toUpperCase()}`);
+        structuredLogger.info('Fetching state legislature data from OpenStates', {
+          state: state.toUpperCase(),
+          chamber: chamber || 'all',
+          party: party || 'all',
+          operation: 'state_legislature_fetch'
+        }, request);
 
-        // Mock data generation based on state
-        const stateInfo = getStateInfo(state.toUpperCase());
+        const stateAbbrev = getStateAbbreviation(state);
         
-        // Generate mock legislators
-        const legislators: StateLegislator[] = [];
-        
-        // Generate upper chamber legislators
-        for (let i = 1; i <= stateInfo.chambers.upper.totalSeats; i++) {
-          legislators.push(generateMockLegislator(
-            state.toUpperCase(),
-            'upper',
-            i.toString(),
-            stateInfo.chambers.upper.title
-          ));
+        // Fetch jurisdiction info and legislators from OpenStates API
+        const [jurisdiction, legislators] = await Promise.all([
+          fetchStateJurisdiction(stateAbbrev),
+          fetchStateLegislators(stateAbbrev, chamber || undefined)
+        ]);
+
+        // If OpenStates API fails, fall back to mock data
+        if (!jurisdiction || legislators.length === 0) {
+          structuredLogger.warn('OpenStates API failed, falling back to mock data', {
+            state: state.toUpperCase(),
+            hasJurisdiction: !!jurisdiction,
+            legislatorCount: legislators.length
+          });
+          
+          return await generateFallbackData(state.toUpperCase());
         }
-        
-        // Generate lower chamber legislators
-        for (let i = 1; i <= stateInfo.chambers.lower.totalSeats; i++) {
-          legislators.push(generateMockLegislator(
-            state.toUpperCase(),
-            'lower',
-            i.toString(),
-            stateInfo.chambers.lower.title
-          ));
-        }
+
+        // Calculate party distribution
+        const partyCount = legislators.reduce((acc: any, leg) => {
+          acc[leg.party] = (acc[leg.party] || 0) + 1;
+          return acc;
+        }, {});
+
+        const upperLegislators = legislators.filter(leg => leg.chamber === 'upper');
+        const lowerLegislators = legislators.filter(leg => leg.chamber === 'lower');
+
+        const upperPartyCount = upperLegislators.reduce((acc: any, leg) => {
+          acc[leg.party] = (acc[leg.party] || 0) + 1;
+          return acc;
+        }, {});
+
+        const lowerPartyCount = lowerLegislators.reduce((acc: any, leg) => {
+          acc[leg.party] = (acc[leg.party] || 0) + 1;
+          return acc;
+        }, {});
 
         return {
           state: state.toUpperCase(),
-          stateName: stateInfo.name,
+          stateName: jurisdiction.name,
           lastUpdated: new Date().toISOString(),
           session: {
-            name: '2024 Regular Session',
-            startDate: '2024-01-08',
-            endDate: '2024-08-31',
+            name: jurisdiction.latest_session?.name || '2024 Session',
+            startDate: jurisdiction.latest_session?.start_date || '2024-01-01',
+            endDate: jurisdiction.latest_session?.end_date || '2024-12-31',
             type: 'regular'
           },
-          chambers: stateInfo.chambers,
+          chambers: {
+            upper: {
+              name: jurisdiction.chambers?.find((c: any) => c.chamber === 'upper')?.name || 'State Senate',
+              title: 'Senator',
+              totalSeats: upperLegislators.length,
+              democraticSeats: upperPartyCount['Democratic'] || 0,
+              republicanSeats: upperPartyCount['Republican'] || 0,
+              otherSeats: upperPartyCount['Independent'] + upperPartyCount['Other'] || 0
+            },
+            lower: {
+              name: jurisdiction.chambers?.find((c: any) => c.chamber === 'lower')?.name || 'House of Representatives',
+              title: 'Representative',
+              totalSeats: lowerLegislators.length,
+              democraticSeats: lowerPartyCount['Democratic'] || 0,
+              republicanSeats: lowerPartyCount['Republican'] || 0,
+              otherSeats: lowerPartyCount['Independent'] + lowerPartyCount['Other'] || 0
+            }
+          },
           legislators
         };
       },
@@ -164,7 +354,12 @@ export async function GET(
     return NextResponse.json(response);
 
   } catch (error) {
-    console.error('State Legislature API Error:', error);
+    structuredLogger.error('State Legislature API Error', error, {
+      state: state.toUpperCase(),
+      chamber: chamber || 'all',
+      party: party || 'all',
+      operation: 'state_legislature_api_error'
+    }, request);
     
     // Return empty but valid response structure on error
     const errorResponse = {
@@ -190,108 +385,49 @@ export async function GET(
   }
 }
 
-function getStateInfo(state: string) {
-  // State-specific chamber information
-  const stateData: Record<string, any> = {
-    'CA': {
-      name: 'California',
-      chambers: {
-        upper: { name: 'State Senate', title: 'Senator', totalSeats: 40, democraticSeats: 32, republicanSeats: 8, otherSeats: 0 },
-        lower: { name: 'State Assembly', title: 'Assembly Member', totalSeats: 80, democraticSeats: 62, republicanSeats: 18, otherSeats: 0 }
-      }
+// Fallback function for when OpenStates API is unavailable
+async function generateFallbackData(state: string): Promise<StateLegislatureData> {
+  const stateInfo = getBasicStateInfo(state);
+  
+  structuredLogger.info('Generating fallback mock data', {
+    state,
+    operation: 'fallback_data_generation'
+  });
+  
+  return {
+    state,
+    stateName: stateInfo.name,
+    lastUpdated: new Date().toISOString(),
+    session: {
+      name: '2024 Regular Session',
+      startDate: '2024-01-08',
+      endDate: '2024-08-31',
+      type: 'regular'
     },
-    'TX': {
-      name: 'Texas',
-      chambers: {
-        upper: { name: 'State Senate', title: 'Senator', totalSeats: 31, democraticSeats: 12, republicanSeats: 19, otherSeats: 0 },
-        lower: { name: 'House of Representatives', title: 'Representative', totalSeats: 150, democraticSeats: 64, republicanSeats: 86, otherSeats: 0 }
-      }
-    },
-    'NY': {
-      name: 'New York',
-      chambers: {
-        upper: { name: 'State Senate', title: 'Senator', totalSeats: 63, democraticSeats: 42, republicanSeats: 21, otherSeats: 0 },
-        lower: { name: 'State Assembly', title: 'Assembly Member', totalSeats: 150, democraticSeats: 106, republicanSeats: 44, otherSeats: 0 }
-      }
-    },
-    'FL': {
-      name: 'Florida',
-      chambers: {
-        upper: { name: 'State Senate', title: 'Senator', totalSeats: 40, democraticSeats: 12, republicanSeats: 28, otherSeats: 0 },
-        lower: { name: 'House of Representatives', title: 'Representative', totalSeats: 120, democraticSeats: 35, republicanSeats: 85, otherSeats: 0 }
-      }
-    },
-    'MI': {
-      name: 'Michigan',
-      chambers: {
-        upper: { name: 'State Senate', title: 'Senator', totalSeats: 38, democraticSeats: 20, republicanSeats: 18, otherSeats: 0 },
-        lower: { name: 'House of Representatives', title: 'Representative', totalSeats: 110, democraticSeats: 56, republicanSeats: 54, otherSeats: 0 }
-      }
-    }
-  };
-
-  return stateData[state] || {
-    name: 'Generic State',
-    chambers: {
-      upper: { name: 'State Senate', title: 'Senator', totalSeats: 40, democraticSeats: 20, republicanSeats: 20, otherSeats: 0 },
-      lower: { name: 'House of Representatives', title: 'Representative', totalSeats: 100, democraticSeats: 50, republicanSeats: 50, otherSeats: 0 }
-    }
+    chambers: stateInfo.chambers,
+    legislators: [] // Return empty array when API is unavailable
   };
 }
 
-function generateMockLegislator(
-  state: string,
-  chamber: 'upper' | 'lower',
-  district: string,
-  title: string
-): StateLegislator {
-  const firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Lisa', 'Robert', 'Maria', 'James', 'Jennifer'];
-  const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
-  
-  const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-  const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-  const name = `${firstName} ${lastName}`;
-  
-  // Realistic party distribution based on state and chamber
-  const parties: StateLegislator['party'][] = ['Democratic', 'Republican'];
-  const party = parties[Math.floor(Math.random() * parties.length)];
-  
-  const committees = [
-    'Appropriations', 'Education', 'Health', 'Transportation', 'Environment',
-    'Judiciary', 'Public Safety', 'Labor', 'Agriculture', 'Veterans Affairs'
-  ];
-  
-  const memberCommittees = committees
-    .sort(() => 0.5 - Math.random())
-    .slice(0, Math.floor(Math.random() * 3) + 1)
-    .map((committeeName, index) => ({
-      name: committeeName,
-      role: index === 0 && Math.random() > 0.8 ? 'chair' as const : 'member' as const
-    }));
+function getBasicStateInfo(state: string) {
+  const stateNames: Record<string, string> = {
+    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+    'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+    'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+    'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+    'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+    'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+    'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+    'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+    'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+    'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
+  };
 
   return {
-    id: `${state}-${chamber}-${district}`,
-    name,
-    party,
-    chamber,
-    district,
-    email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${state.toLowerCase()}legislature.gov`,
-    phone: `(${Math.floor(Math.random() * 900) + 100}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
-    office: `Room ${Math.floor(Math.random() * 500) + 100}, State Capitol`,
-    committees: memberCommittees,
-    terms: [{
-      startYear: 2023,
-      endYear: chamber === 'upper' ? 2027 : 2025, // Typical terms: Senate 4 years, House 2 years
-      chamber
-    }],
-    bills: {
-      sponsored: Math.floor(Math.random() * 20) + 1,
-      cosponsored: Math.floor(Math.random() * 50) + 10
-    },
-    votingRecord: {
-      totalVotes: Math.floor(Math.random() * 500) + 200,
-      partyLineVotes: Math.floor(Math.random() * 400) + 150,
-      crossoverVotes: Math.floor(Math.random() * 20) + 5
+    name: stateNames[state] || 'Unknown State',
+    chambers: {
+      upper: { name: 'State Senate', title: 'Senator', totalSeats: 0, democraticSeats: 0, republicanSeats: 0, otherSeats: 0 },
+      lower: { name: 'House of Representatives', title: 'Representative', totalSeats: 0, democraticSeats: 0, republicanSeats: 0, otherSeats: 0 }
     }
   };
 }

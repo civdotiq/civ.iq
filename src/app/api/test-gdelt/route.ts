@@ -4,6 +4,7 @@ import {
   fetchGDELTNews, 
   normalizeGDELTArticle 
 } from '@/lib/gdelt-api';
+import { structuredLogger } from '@/lib/logging/logger';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -11,7 +12,11 @@ export async function GET(request: NextRequest) {
   const testType = searchParams.get('type') || 'basic'; // basic, optimized, or comprehensive
   
   try {
-    console.log(`Testing GDELT API with query: "${query}" (type: ${testType})`);
+    structuredLogger.info('Testing GDELT API', { 
+      query,
+      testType,
+      operation: 'gdelt_test'
+    }, request);
     
     if (testType === 'basic') {
       // Basic direct test
@@ -28,7 +33,7 @@ export async function GET(request: NextRequest) {
       
     } else if (testType === 'optimized') {
       // Test optimized search terms
-      const searchTerms = generateOptimizedSearchTerms(query, 'Michigan', null);
+      const searchTerms = generateOptimizedSearchTerms(query, 'Michigan', undefined);
       const allArticles = [];
       
       for (const term of searchTerms) {
@@ -36,7 +41,10 @@ export async function GET(request: NextRequest) {
           const articles = await fetchGDELTNews(term, 3);
           allArticles.push(...articles.map(normalizeGDELTArticle));
         } catch (error) {
-          console.error(`Failed to fetch for term: ${term}`, error.message);
+          structuredLogger.error(`Failed to fetch GDELT data for term: ${term}`, error, {
+            searchTerm: term,
+            operation: 'gdelt_fetch_optimized'
+          }, request);
         }
       }
       
@@ -70,20 +78,20 @@ export async function GET(request: NextRequest) {
       
       try {
         // Generate search terms
-        const searchTerms = generateOptimizedSearchTerms(query, 'Michigan', null);
-        results.searchTerms = searchTerms;
+        const searchTerms = generateOptimizedSearchTerms(query, 'Michigan', undefined);
+        (results as any).searchTerms = searchTerms;
         
         // Test each search term
         for (const term of searchTerms) {
           const termStart = Date.now();
           try {
             const articles = await fetchGDELTNews(term, 2);
-            results.articles.push(...articles.map(normalizeGDELTArticle));
-            results.timing[term] = Date.now() - termStart;
+            (results as any).articles.push(...articles.map(normalizeGDELTArticle));
+            (results as any).timing[term] = Date.now() - termStart;
           } catch (error) {
-            results.errors.push({
+            (results as any).errors.push({
               term,
-              error: error.message,
+              error: error instanceof Error ? error.message : String(error),
               timing: Date.now() - termStart
             });
           }
@@ -121,7 +129,11 @@ export async function GET(request: NextRequest) {
     }
     
   } catch (error) {
-    console.error('GDELT Test Error:', error);
+    structuredLogger.error('GDELT Test Error', error, {
+      query,
+      testType,
+      operation: 'gdelt_test_complete_failure'
+    }, request);
     return NextResponse.json({
       success: false,
       query,

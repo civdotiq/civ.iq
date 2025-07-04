@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
+import { structuredLogger } from '@/lib/logging/logger';
 
 interface StateExecutive {
   id: string;
@@ -65,7 +66,10 @@ export async function GET(
     const executivesData = await cachedFetch(
       cacheKey,
       async (): Promise<StateExecutivesData> => {
-        console.log(`Fetching state executives for: ${state.toUpperCase()}`);
+        structuredLogger.info('Fetching state executives', {
+          state: state.toUpperCase(),
+          operation: 'state_executives_fetch'
+        }, request);
 
         // In production, this would integrate with official state sources
         const stateInfo = getStateInfo(state.toUpperCase());
@@ -102,7 +106,10 @@ export async function GET(
     return NextResponse.json(executivesData);
 
   } catch (error) {
-    console.error('State Executives API Error:', error);
+    structuredLogger.error('State Executives API Error', error, {
+      state: state.toUpperCase(),
+      operation: 'state_executives_api_error'
+    }, request);
     
     const errorResponse = {
       state: state.toUpperCase(),
@@ -245,7 +252,7 @@ function generateMockExecutives(state: string, stateInfo: any): StateExecutive[]
         startYear: currentYear - 8,
         endYear: currentYear - 1
       }] : [],
-      keyInitiatives: initiatives[position] || [],
+      keyInitiatives: (position in initiatives) ? initiatives[position as keyof typeof initiatives] : [],
       socialMedia: {
         twitter: `@${firstName}${lastName}${state}`,
         website: `https://www.${state.toLowerCase()}.gov/${position.replace('_', '-')}`

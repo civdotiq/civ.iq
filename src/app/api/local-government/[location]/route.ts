@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
+import { structuredLogger } from '@/lib/logging/logger';
 
 interface LocalOfficial {
   id: string;
@@ -78,7 +79,11 @@ export async function GET(
     const localData = await cachedFetch(
       cacheKey,
       async (): Promise<LocalGovernmentData> => {
-        console.log(`Fetching local government data for: ${location}`);
+        structuredLogger.info('Fetching local government data', {
+          location,
+          jurisdiction: jurisdiction || 'all',
+          operation: 'local_government_fetch'
+        }, request);
 
         // In production, this would integrate with various local government APIs
         const locationInfo = parseLocation(location);
@@ -127,7 +132,11 @@ export async function GET(
     return NextResponse.json(response);
 
   } catch (error) {
-    console.error('Local Government API Error:', error);
+    structuredLogger.error('Local Government API Error', error, {
+      location,
+      jurisdiction: jurisdiction || 'all',
+      operation: 'local_government_api_error'
+    }, request);
     
     const errorResponse = {
       location,

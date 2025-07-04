@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { structuredLogger } from '@/lib/logging/logger';
 
 export async function GET(request: NextRequest) {
   const apiKey = process.env.CONGRESS_API_KEY;
@@ -20,7 +21,10 @@ export async function GET(request: NextRequest) {
   // Test 1: Basic API connection
   try {
     const basicUrl = `https://api.congress.gov/v3/member?format=json&limit=1&api_key=${apiKey}`;
-    console.log('Testing basic Congress API connection...');
+    structuredLogger.info('Testing basic Congress API connection', {
+      operation: 'debug_congress_basic_connection',
+      url: basicUrl.replace(apiKey, 'API_KEY_HIDDEN')
+    }, request);
     
     const response = await fetch(basicUrl);
     const text = await response.text();
@@ -50,7 +54,11 @@ export async function GET(request: NextRequest) {
   // Test 2: 119th Congress members
   try {
     const congress119Url = `https://api.congress.gov/v3/member?format=json&limit=10&congress=119&api_key=${apiKey}`;
-    console.log('Testing 119th Congress members...');
+    structuredLogger.info('Testing 119th Congress members', {
+      operation: 'debug_congress_119th_members',
+      congress: '119',
+      url: congress119Url.replace(apiKey, 'API_KEY_HIDDEN')
+    }, request);
     
     const response = await fetch(congress119Url);
     const data = await response.json();
@@ -79,7 +87,11 @@ export async function GET(request: NextRequest) {
   // Test 3: 118th Congress members (for comparison)
   try {
     const congress118Url = `https://api.congress.gov/v3/member?format=json&limit=10&congress=118&api_key=${apiKey}`;
-    console.log('Testing 118th Congress members for comparison...');
+    structuredLogger.info('Testing 118th Congress members for comparison', {
+      operation: 'debug_congress_118th_members',
+      congress: '118',
+      url: congress118Url.replace(apiKey, 'API_KEY_HIDDEN')
+    }, request);
     
     const response = await fetch(congress118Url);
     const data = await response.json();
@@ -109,7 +121,11 @@ export async function GET(request: NextRequest) {
   try {
     // First get all members, then filter by Michigan
     const allMembersUrl = `https://api.congress.gov/v3/member?format=json&limit=250&congress=119&api_key=${apiKey}`;
-    console.log('Fetching members to find Michigan representatives...');
+    structuredLogger.info('Fetching members to find Michigan representatives', {
+      operation: 'debug_congress_michigan_filter',
+      state: 'Michigan',
+      url: allMembersUrl.replace(apiKey, 'API_KEY_HIDDEN')
+    }, request);
     
     const response = await fetch(allMembersUrl);
     const data = await response.json();
@@ -142,7 +158,10 @@ export async function GET(request: NextRequest) {
   // Test 5: Current members endpoint
   try {
     const currentUrl = `https://api.congress.gov/v3/member?format=json&limit=10&currentMember=true&api_key=${apiKey}`;
-    console.log('Testing current members endpoint...');
+    structuredLogger.info('Testing current members endpoint', {
+      operation: 'debug_congress_current_members',
+      url: currentUrl.replace(apiKey, 'API_KEY_HIDDEN')
+    }, request);
     
     const response = await fetch(currentUrl);
     const data = await response.json();

@@ -1,64 +1,97 @@
-// Simple in-memory cache with TTL
-interface CacheEntry {
-  data: any;
-  timestamp: number;
-  ttl: number;
-}
+import { getRedisCache } from '@/lib/cache/redis-client'
+import { structuredLogger } from '@/lib/logging/logger'
+import { monitorCache } from '@/lib/monitoring/telemetry'
 
-class SimpleCache {
-  private cache = new Map<string, CacheEntry>();
-  private defaultTTL = 3600 * 1000; // 1 hour in milliseconds
-
-  set(key: string, data: any, ttl?: number): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-      ttl: ttl || this.defaultTTL
-    });
-  }
-
-  get(key: string): any | null {
-    const entry = this.cache.get(key);
-    if (!entry) return null;
-
-    const now = Date.now();
-    if (now - entry.timestamp > entry.ttl) {
-      this.cache.delete(key);
-      return null;
-    }
-
-    return entry.data;
-  }
-
-  clear(): void {
-    this.cache.clear();
-  }
-
-  delete(key: string): void {
-    this.cache.delete(key);
-  }
-
-  size(): number {
-    return this.cache.size;
-  }
-}
-
-export const cache = new SimpleCache();
+// Get the Redis cache instance
+const redisCache = getRedisCache()
 
 // Cache helper function with automatic key generation
 export async function cachedFetch<T>(
   key: string,
   fetchFn: () => Promise<T>,
-  ttl?: number
+  ttlSeconds: number = 3600
 ): Promise<T> {
-  const cached = cache.get(key);
-  if (cached) {
-    console.log(`Cache hit for key: ${key}`);
-    return cached;
-  }
+  const monitor = monitorCache('get', key)
+  
+  try {
+    const cached = await redisCache.get<T>(key)
+    if (cached) {
+      monitor.end(true)
+      structuredLogger.info('Cache hit', { key, ttl: ttlSeconds })
+      return cached
+    }
 
-  console.log(`Cache miss for key: ${key}`);
-  const data = await fetchFn();
-  cache.set(key, data, ttl);
-  return data;
+    monitor.end(false)
+    structuredLogger.info('Cache miss, fetching data', { key })
+    const data = await fetchFn()
+    
+    // Set in cache with monitoring
+    const setMonitor = monitorCache('set', key)
+    const setSuccess = await redisCache.set(key, data, ttlSeconds)
+    setMonitor.end()
+    
+    if (setSuccess) {
+      structuredLogger.info('Data cached successfully', { key, ttl: ttlSeconds })
+    } else {
+      structuredLogger.warn('Failed to cache data', { key })
+    }
+    
+    return data
+  } catch (error) {
+    monitor.end(false, error as Error)
+    structuredLogger.error('Cache operation failed', error as Error, { key })
+    
+    // Fall back to direct fetch on cache error
+    return await fetchFn()
+  }
+}
+
+// Export Redis cache methods for direct use
+export const cache = {
+  get: async <T>(key: string): Promise<T | null> => {
+    try {
+      return await redisCache.get<T>(key)
+    } catch (error) {
+      structuredLogger.error('Cache get failed', error as Error, { key })
+      return null
+    }
+  },
+  
+  set: async <T>(key: string, data: T, ttlSeconds: number = 3600): Promise<boolean> => {
+    try {
+      return await redisCache.set(key, data, ttlSeconds)
+    } catch (error) {
+      structuredLogger.error('Cache set failed', error as Error, { key })
+      return false
+    }
+  },
+  
+  delete: async (key: string): Promise<boolean> => {
+    try {
+      return await redisCache.delete(key)
+    } catch (error) {
+      structuredLogger.error('Cache delete failed', error as Error, { key })
+      return false
+    }
+  },
+  
+  clear: async (): Promise<boolean> => {
+    try {
+      return await redisCache.flush()
+    } catch (error) {
+      structuredLogger.error('Cache clear failed', error as Error)
+      return false
+    }
+  },
+  
+  exists: async (key: string): Promise<boolean> => {
+    try {
+      return await redisCache.exists(key)
+    } catch (error) {
+      structuredLogger.error('Cache exists check failed', error as Error, { key })
+      return false
+    }
+  },
+  
+  getStatus: () => redisCache.getStatus()
 }

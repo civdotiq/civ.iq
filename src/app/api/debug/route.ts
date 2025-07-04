@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { structuredLogger } from '@/lib/logging/logger';
 
 export async function GET(request: NextRequest) {
   const debugInfo: any = {
@@ -18,8 +19,20 @@ export async function GET(request: NextRequest) {
   // Test 1: Census.gov API (no key required)
   try {
     const censusUrl = 'https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?address=48221&benchmark=Public_AR_Current&vintage=Current_Current&layers=116&format=json';
-    console.log('Testing Census API:', censusUrl);
+    structuredLogger.info('Testing Census API', {
+      operation: 'debug_census_api',
+      url: censusUrl
+    }, request);
+    
+    const startTime = Date.now();
     const censusResponse = await fetch(censusUrl);
+    const duration = Date.now() - startTime;
+    
+    // Log external API call
+    structuredLogger.externalApi('Census', 'geocoding', duration, censusResponse.ok, {
+      statusCode: censusResponse.status
+    });
+    
     const censusData = await censusResponse.json();
     
     debugInfo.tests.census = {
@@ -40,12 +53,23 @@ export async function GET(request: NextRequest) {
   if (process.env.CONGRESS_API_KEY) {
     try {
       const congressUrl = `https://api.congress.gov/v3/member?format=json&limit=2&api_key=${process.env.CONGRESS_API_KEY}`;
-      console.log('Testing Congress API with key');
+      structuredLogger.info('Testing Congress API with key', {
+        operation: 'debug_congress_api',
+        url: congressUrl.replace(process.env.CONGRESS_API_KEY!, 'API_KEY_HIDDEN')
+      }, request);
+      
+      const startTime = Date.now();
       const congressResponse = await fetch(congressUrl, {
         headers: {
           'Accept': 'application/json',
           'X-API-Key': process.env.CONGRESS_API_KEY
         }
+      });
+      const duration = Date.now() - startTime;
+      
+      // Log external API call
+      structuredLogger.externalApi('Congress', 'memberList', duration, congressResponse.ok, {
+        statusCode: congressResponse.status
       });
       
       let congressData;
@@ -83,8 +107,20 @@ export async function GET(request: NextRequest) {
   if (process.env.FEC_API_KEY) {
     try {
       const fecUrl = `https://api.open.fec.gov/v1/candidates/?api_key=${process.env.FEC_API_KEY}&per_page=2`;
-      console.log('Testing FEC API with key');
+      structuredLogger.info('Testing FEC API with key', {
+        operation: 'debug_fec_api',
+        url: fecUrl.replace(process.env.FEC_API_KEY!, 'API_KEY_HIDDEN')
+      }, request);
+      
+      const startTime = Date.now();
       const fecResponse = await fetch(fecUrl);
+      const duration = Date.now() - startTime;
+      
+      // Log external API call
+      structuredLogger.externalApi('FEC', 'candidates', duration, fecResponse.ok, {
+        statusCode: fecResponse.status
+      });
+      
       const fecData = await fecResponse.json();
       
       debugInfo.tests.fec = {
@@ -111,12 +147,24 @@ export async function GET(request: NextRequest) {
   if (process.env.OPENSTATES_API_KEY) {
     try {
       const openStatesUrl = 'https://v3.openstates.org/people?jurisdiction=Michigan&per_page=2';
-      console.log('Testing OpenStates API with key');
+      structuredLogger.info('Testing OpenStates API with key', {
+        operation: 'debug_openstates_api',
+        url: openStatesUrl
+      }, request);
+      
+      const startTime = Date.now();
       const openStatesResponse = await fetch(openStatesUrl, {
         headers: {
           'X-API-KEY': process.env.OPENSTATES_API_KEY
         }
       });
+      const duration = Date.now() - startTime;
+      
+      // Log external API call
+      structuredLogger.externalApi('OpenStates', 'people', duration, openStatesResponse.ok, {
+        statusCode: openStatesResponse.status
+      });
+      
       const openStatesData = await openStatesResponse.json();
       
       debugInfo.tests.openStates = {
@@ -142,8 +190,20 @@ export async function GET(request: NextRequest) {
   // Test 5: GDELT API (no key required)
   try {
     const gdeltUrl = 'https://api.gdeltproject.org/api/v2/doc/doc?query=Congress&mode=artlist&maxrecords=2&format=json';
-    console.log('Testing GDELT API:', gdeltUrl);
+    structuredLogger.info('Testing GDELT API', {
+      operation: 'debug_gdelt_api',
+      url: gdeltUrl
+    }, request);
+    
+    const startTime = Date.now();
     const gdeltResponse = await fetch(gdeltUrl);
+    const duration = Date.now() - startTime;
+    
+    // Log external API call
+    structuredLogger.externalApi('GDELT', 'docSearch', duration, gdeltResponse.ok, {
+      statusCode: gdeltResponse.status
+    });
+    
     const gdeltText = await gdeltResponse.text();
     
     let gdeltData;
