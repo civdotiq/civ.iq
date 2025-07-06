@@ -71,7 +71,7 @@ export async function GET(
           sponsoredData.sponsoredLegislation.forEach((bill: any) => {
             processedBills.push({
               billId: `${bill.congress}-${bill.type}-${bill.number}`,
-              number: `${bill.type.toUpperCase()}. ${bill.number}`,
+              number: `${bill.type?.toUpperCase() || 'BILL'}. ${bill.number}`,
               title: bill.title,
               congress: bill.congress.toString(),
               introducedDate: bill.introducedDate,
@@ -80,7 +80,7 @@ export async function GET(
                 text: bill.latestAction?.text || 'Introduced'
               },
               type: bill.type,
-              chamber: bill.originChamber || (bill.type.toLowerCase().includes('h') ? 'House' : 'Senate'),
+              chamber: bill.originChamber || (bill.type?.toLowerCase().includes('h') ? 'House' : 'Senate'),
               status: bill.latestAction?.text || 'Introduced',
               policyArea: bill.policyArea?.name,
               cosponsors: bill.cosponsors?.count || 0,
@@ -94,7 +94,7 @@ export async function GET(
           cosponsoredData.cosponsoredLegislation.slice(0, Math.ceil(limit * 0.3)).forEach((bill: any) => {
             processedBills.push({
               billId: `${bill.congress}-${bill.type}-${bill.number}-cosponsored`,
-              number: `${bill.type.toUpperCase()}. ${bill.number}`,
+              number: `${bill.type?.toUpperCase() || 'BILL'}. ${bill.number}`,
               title: bill.title,
               congress: bill.congress.toString(),
               introducedDate: bill.introducedDate,
@@ -103,7 +103,7 @@ export async function GET(
                 text: bill.latestAction?.text || 'Introduced'
               },
               type: bill.type,
-              chamber: bill.originChamber || (bill.type.toLowerCase().includes('h') ? 'House' : 'Senate'),
+              chamber: bill.originChamber || (bill.type?.toLowerCase().includes('h') ? 'House' : 'Senate'),
               status: bill.latestAction?.text || 'Introduced',
               policyArea: bill.policyArea?.name,
               cosponsors: bill.cosponsors?.count || 0,
@@ -143,85 +143,106 @@ export async function GET(
     // Enhanced fallback mock bills data
     const mockBills: SponsoredBill[] = [
       {
-        billId: 'hr1234-118',
-        number: 'H.R. 1234',
-        title: 'Affordable Housing Development Act of 2024',
+        billId: 'hr1000-118',
+        number: 'H.R. 1000',
+        title: 'American Infrastructure Investment Act',
         congress: '118',
-        introducedDate: '2024-01-20',
+        introducedDate: '2024-01-15',
         latestAction: {
-          date: '2024-02-15',
-          text: 'Referred to the Committee on Financial Services'
-        },
-        type: 'hr',
-        chamber: 'House',
-        status: 'In Committee',
-        policyArea: 'Housing and Community Development',
-        cosponsors: 23
-      },
-      {
-        billId: 'hr5678-118',
-        number: 'H.R. 5678',
-        title: 'Clean Energy Job Creation Act',
-        congress: '118',
-        introducedDate: '2024-01-10',
-        latestAction: {
-          date: '2024-03-01',
-          text: 'Passed House by voice vote'
+          date: '2024-03-20',
+          text: 'Passed House by roll call vote: 245-180'
         },
         type: 'hr',
         chamber: 'House',
         status: 'Passed House',
-        policyArea: 'Energy',
-        cosponsors: 45
+        policyArea: 'Transportation and Public Works',
+        cosponsors: 89,
+        sponsorshipType: 'sponsored'
       },
       {
-        billId: 'hr9012-118',
-        number: 'H.R. 9012',
-        title: 'Student Loan Interest Relief Act',
+        billId: 'hr1001-118',
+        number: 'H.R. 1001',
+        title: 'Clean Energy Transition and Jobs Act',
         congress: '118',
-        introducedDate: '2023-12-05',
+        introducedDate: '2024-02-01',
         latestAction: {
-          date: '2024-01-30',
-          text: 'Subcommittee Consideration and Mark-up Session Held'
-        },
-        type: 'hr',
-        chamber: 'House',
-        status: 'In Subcommittee',
-        policyArea: 'Education',
-        cosponsors: 12
-      },
-      {
-        billId: 'hr3456-118',
-        number: 'H.R. 3456',
-        title: 'Small Business Tax Relief Act of 2024',
-        congress: '118',
-        introducedDate: '2023-11-15',
-        latestAction: {
-          date: '2024-02-20',
-          text: 'Ordered to be Reported by the Committee on Ways and Means'
+          date: '2024-04-15',
+          text: 'Ordered to be Reported by the Committee on Energy and Commerce'
         },
         type: 'hr',
         chamber: 'House',
         status: 'Reported by Committee',
-        policyArea: 'Taxation',
-        cosponsors: 67
+        policyArea: 'Energy',
+        cosponsors: 67,
+        sponsorshipType: 'sponsored'
       },
       {
-        billId: 'hr7890-118',
-        number: 'H.R. 7890',
-        title: 'Rural Healthcare Access Enhancement Act',
+        billId: 'hr1002-118',
+        number: 'H.R. 1002',
+        title: 'Affordable Healthcare Access Act',
         congress: '118',
-        introducedDate: '2023-10-30',
+        introducedDate: '2024-01-30',
         latestAction: {
-          date: '2023-11-15',
-          text: 'Referred to the Committee on Energy and Commerce'
+          date: '2024-02-28',
+          text: 'Referred to the Subcommittee on Health'
         },
         type: 'hr',
         chamber: 'House',
         status: 'In Committee',
         policyArea: 'Health',
-        cosponsors: 8,
+        cosponsors: 34,
         sponsorshipType: 'sponsored'
+      },
+      {
+        billId: 'hr1003-118',
+        number: 'H.R. 1003',
+        title: 'Education Modernization and Technology Act',
+        congress: '118',
+        introducedDate: '2023-12-10',
+        latestAction: {
+          date: '2024-01-25',
+          text: 'Committee on Education and Labor discharged. Passed House'
+        },
+        type: 'hr',
+        chamber: 'House',
+        status: 'Passed House',
+        policyArea: 'Education',
+        cosponsors: 52,
+        sponsorshipType: 'sponsored'
+      },
+      {
+        billId: 'hr1004-118',
+        number: 'H.R. 1004',
+        title: 'Small Business Innovation Support Act',
+        congress: '118',
+        introducedDate: '2023-11-20',
+        latestAction: {
+          date: '2024-06-10',
+          text: 'Became Public Law No: 118-45'
+        },
+        type: 'hr',
+        chamber: 'House',
+        status: 'Enacted',
+        policyArea: 'Commerce',
+        cosponsors: 78,
+        sponsorshipType: 'sponsored'
+      },
+      {
+        billId: 'hr1005-118',
+        number: 'H.R. 1005',
+        title: 'Cybersecurity Enhancement and Privacy Act',
+        congress: '118',
+        introducedDate: '2024-03-05',
+        latestAction: {
+          date: '2024-03-20',
+          text: 'Referred to the Committee on Homeland Security'
+        },
+        type: 'hr',
+        chamber: 'House',
+        status: 'In Committee',
+        policyArea: 'Science, Technology, Communications',
+        cosponsors: 28,
+        sponsorshipType: 'cosponsored'
       }
     ];
 

@@ -588,7 +588,7 @@ function BillsTab({ bioguideId, representative }: { bioguideId: string; represen
   useEffect(() => {
     const fetchBills = async () => {
       try {
-        const response = await fetch(`/api/representative/${bioguideId}/bills?limit=20`);
+        const response = await fetch(`/api/representative/${bioguideId}/bills?limit=50&includeSummaries=false`);
         if (response.ok) {
           const data = await response.json();
           setBills(data.bills || []);

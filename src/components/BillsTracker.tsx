@@ -18,6 +18,9 @@ interface SponsoredBill {
   policyArea?: string;
   cosponsors?: number;
   sponsorshipType?: 'sponsored' | 'cosponsored';
+  committees?: string[];
+  subjects?: string[];
+  url?: string;
 }
 
 interface BillsTrackerProps {
@@ -104,23 +107,25 @@ export function BillsTracker({ bills, representative }: BillsTrackerProps) {
   }, [bills, selectedCategory, statusFilter, searchQuery, sortBy]);
 
   const getProgressStage = (status: string, latestAction: string) => {
-    const statusLower = status.toLowerCase();
     const actionLower = latestAction.toLowerCase();
 
-    if (actionLower.includes('introduced') || actionLower.includes('referred to committee')) {
-      return { stage: 'introduced', progress: 20 };
-    } else if (actionLower.includes('committee') || actionLower.includes('markup') || actionLower.includes('subcommittee')) {
-      return { stage: 'committee', progress: 40 };
-    } else if (actionLower.includes('passed') && actionLower.includes('house')) {
-      return { stage: 'house-passed', progress: 60 };
-    } else if (actionLower.includes('passed') && actionLower.includes('senate')) {
-      return { stage: 'senate-passed', progress: 80 };
-    } else if (actionLower.includes('signed') || actionLower.includes('enacted')) {
-      return { stage: 'enacted', progress: 100 };
+    // More comprehensive status detection
+    if (actionLower.includes('became public law') || actionLower.includes('signed by president')) {
+      return { stage: 'enacted', progress: 100, label: 'Enacted' };
+    } else if (actionLower.includes('passed senate') || actionLower.includes('senate passed')) {
+      return { stage: 'senate-passed', progress: 80, label: 'Passed Senate' };
+    } else if (actionLower.includes('passed house') || actionLower.includes('house passed')) {
+      return { stage: 'house-passed', progress: 60, label: 'Passed House' };
+    } else if (actionLower.includes('ordered to be reported') || actionLower.includes('reported by committee')) {
+      return { stage: 'committee-reported', progress: 50, label: 'Reported by Committee' };
+    } else if (actionLower.includes('committee') || actionLower.includes('markup') || actionLower.includes('subcommittee') || actionLower.includes('referred to')) {
+      return { stage: 'committee', progress: 30, label: 'In Committee' };
+    } else if (actionLower.includes('introduced')) {
+      return { stage: 'introduced', progress: 20, label: 'Introduced' };
     } else if (actionLower.includes('failed') || actionLower.includes('died')) {
-      return { stage: 'failed', progress: 0 };
+      return { stage: 'failed', progress: 0, label: 'Failed' };
     }
-    return { stage: 'committee', progress: 30 };
+    return { stage: 'committee', progress: 30, label: 'In Committee' };
   };
 
   const getStatusColor = (stage: string) => {
@@ -371,7 +376,7 @@ export function BillsTracker({ bills, representative }: BillsTrackerProps) {
       {!showTimelineView && (
         <div className="space-y-4">
         {filteredAndSortedBills.map((bill) => {
-          const { stage, progress } = getProgressStage(bill.status, bill.latestAction.text);
+          const { stage, progress, label } = getProgressStage(bill.status, bill.latestAction.text);
           const isSelected = selectedBill === bill.billId;
           
           return (
@@ -383,27 +388,41 @@ export function BillsTracker({ bills, representative }: BillsTrackerProps) {
               onClick={() => setSelectedBill(isSelected ? null : bill.billId)}
             >
               <div className="p-6">
-                <div className="flex items-start justify-between mb-3">
+                <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-lg">{getBillTypeIcon(bill.type)}</span>
-                      <h4 className="font-semibold text-gray-900">{bill.number}</h4>
+                      <h4 className="font-semibold text-lg text-civiq-blue">{bill.number}</h4>
                       {bill.sponsorshipType && (
-                        <span className={`px-2 py-1 text-xs rounded ${
+                        <span className={`px-2 py-1 text-xs font-medium rounded ${
                           bill.sponsorshipType === 'sponsored' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-blue-100 text-blue-800'
+                            ? 'bg-civiq-green text-white' 
+                            : 'bg-civiq-blue text-white'
                         }`}>
                           {bill.sponsorshipType === 'sponsored' ? 'Sponsored' : 'Co-sponsored'}
                         </span>
                       )}
+                    </div>
+                    <h5 className="text-gray-900 font-medium mb-3 line-clamp-2">{bill.title}</h5>
+                    
+                    {/* Committee and Topic Tags */}
+                    <div className="flex flex-wrap gap-2 mb-3">
                       {bill.policyArea && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                        <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
                           {bill.policyArea}
                         </span>
                       )}
+                      {bill.committees && bill.committees.slice(0, 2).map((committee, idx) => (
+                        <span key={idx} className="px-3 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
+                          {committee}
+                        </span>
+                      ))}
+                      {bill.subjects && bill.subjects.slice(0, 3).map((subject, idx) => (
+                        <span key={idx} className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                          {subject}
+                        </span>
+                      ))}
                     </div>
-                    <h5 className="text-gray-800 line-clamp-2">{bill.title}</h5>
                   </div>
                   <div className="text-right ml-4">
                     <div className="text-sm text-gray-600 mb-1">
@@ -415,30 +434,59 @@ export function BillsTracker({ bills, representative }: BillsTrackerProps) {
                   </div>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="mb-3">
-                  <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                    <span>Introduced</span>
-                    <span>Committee</span>
-                    <span>Passed Chamber</span>
-                    <span>Enacted</span>
+                {/* Enhanced Progress Bar */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between text-xs font-medium text-gray-600 mb-2">
+                    <span className={progress >= 20 ? 'text-civiq-green' : ''}>Introduced</span>
+                    <span className={progress >= 30 ? 'text-civiq-green' : ''}>Committee</span>
+                    <span className={progress >= 60 ? 'text-civiq-green' : ''}>House</span>
+                    <span className={progress >= 80 ? 'text-civiq-green' : ''}>Senate</span>
+                    <span className={progress >= 100 ? 'text-civiq-green' : ''}>Law</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div 
-                      className={`h-2 rounded-full transition-all duration-500 ${getStatusColor(stage)}`}
-                      style={{ width: `${progress}%` }}
+                      className={`h-3 rounded-full transition-all duration-500 ${
+                        stage === 'failed' ? 'bg-civiq-red' : 
+                        progress >= 60 ? 'bg-civiq-green' : 'bg-civiq-blue'
+                      }`}
+                      style={{ width: `${Math.max(progress, 5)}%` }}
                     />
                   </div>
-                  <div className="text-xs text-gray-600 mt-1 capitalize">
-                    Current Status: {stage.replace('-', ' ')}
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="text-xs font-medium text-gray-700">
+                      Status: {label}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Progress: {progress}%
+                    </div>
                   </div>
                 </div>
 
                 {/* Latest Action */}
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 mb-3">
                   <span className="font-medium">Latest Action:</span> {bill.latestAction.text}
                   <span className="text-gray-500 ml-2">
                     ({new Date(bill.latestAction.date).toLocaleDateString()})
+                  </span>
+                </div>
+                
+                {/* Read More Link */}
+                <div className="flex items-center justify-between">
+                  <button 
+                    className="text-civiq-blue hover:text-civiq-blue/80 text-sm font-medium"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (bill.url) {
+                        window.open(bill.url, '_blank');
+                      } else {
+                        window.open(`https://congress.gov/bill/${bill.congress}th-congress/${bill.type}/${bill.number.split('.')[1]}`, '_blank');
+                      }
+                    }}
+                  >
+                    Read more →
+                  </button>
+                  <span className="text-xs text-gray-400">
+                    Congress {bill.congress}
                   </span>
                 </div>
 
@@ -485,9 +533,23 @@ export function BillsTracker({ bills, representative }: BillsTrackerProps) {
         </div>
       )}
 
-      {filteredAndSortedBills.length === 0 && (
+      {filteredAndSortedBills.length === 0 && bills.length === 0 && (
+        <div className="text-center py-12 text-gray-500">
+          <div className="text-4xl mb-4">📋</div>
+          <div className="text-lg font-medium mb-2">No Bills Available</div>
+          <div className="text-sm text-gray-400 max-w-md mx-auto">
+            This representative may not have sponsored any bills recently, or the data may still be loading. 
+            Legislative activity varies by representative and session.
+          </div>
+          <div className="mt-4 text-xs text-gray-400">
+            Data sourced from Congress.gov
+          </div>
+        </div>
+      )}
+
+      {filteredAndSortedBills.length === 0 && bills.length > 0 && (
         <div className="text-center py-8 text-gray-500">
-          <div className="text-lg mb-2">📋</div>
+          <div className="text-lg mb-2">🔍</div>
           <div>No bills found matching the selected criteria.</div>
           <div className="text-sm mt-2">Try adjusting your filters or search terms.</div>
         </div>
