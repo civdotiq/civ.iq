@@ -10,6 +10,8 @@ export interface SearchHistoryItem {
 export class SearchHistory {
   static getHistory(): SearchHistoryItem[] {
     try {
+      if (typeof window === 'undefined') return [];
+      
       const stored = sessionStorage.getItem(SEARCH_HISTORY_KEY);
       if (!stored) return [];
       

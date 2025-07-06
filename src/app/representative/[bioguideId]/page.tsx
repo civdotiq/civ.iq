@@ -15,6 +15,8 @@ import { CampaignFinanceVisualizer } from '@/components/CampaignFinanceVisualize
 import { EnhancedNewsFeed } from '@/components/EnhancedNewsFeed';
 import { ErrorBoundary, APIErrorBoundary, LoadingErrorBoundary } from '@/components/ErrorBoundary';
 import PartyAlignmentAnalysis from '@/components/PartyAlignmentAnalysis';
+import { VotingRecordsTable } from '@/components/VotingRecordsTable';
+import { VotingPatternAnalysis } from '@/components/VotingPatternAnalysis';
 
 function CiviqLogo() {
   return (
@@ -530,187 +532,51 @@ function RelationshipsTab({ representative }: { representative: RepresentativeDe
 }
 
 function VotingTab({ bioguideId, representative }: { bioguideId: string; representative: RepresentativeDetails | null }) {
-  const [votes, setVotes] = useState<Vote[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchVotes = async () => {
-      try {
-        const response = await fetch(`/api/representative/${bioguideId}/votes?limit=20`);
-        if (response.ok) {
-          const data = await response.json();
-          setVotes(data.votes || []);
-        }
-      } catch (error) {
-        console.error('Error fetching votes:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVotes();
+    // Simple loading state management
+    const timer = setTimeout(() => setLoading(false), 100);
+    return () => clearTimeout(timer);
   }, [bioguideId]);
-
-  const getPositionColor = (position: string) => {
-    switch (position) {
-      case 'Yea': return 'text-green-600 bg-green-50';
-      case 'Nay': return 'text-red-600 bg-red-50';
-      case 'Not Voting': return 'text-gray-600 bg-gray-50';
-      case 'Present': return 'text-blue-600 bg-blue-50';
-      default: return 'text-gray-600 bg-gray-50';
-    }
-  };
-
-  // Calculate party alignment statistics
-  const calculatePartyAlignment = () => {
-    if (!representative || votes.length === 0) return null;
-    
-    // For this example, we'll simulate party alignment based on vote patterns
-    // In a real implementation, this would compare against actual party line votes
-    const yeaVotes = votes.filter(vote => vote.position === 'Yea').length;
-    const nayVotes = votes.filter(vote => vote.position === 'Nay').length;
-    const totalSubstantiveVotes = yeaVotes + nayVotes;
-    
-    // Simulate party alignment - Republicans tend to vote more conservatively, Democrats more liberally
-    let partyAlignment: number;
-    if (representative.party === 'Republican') {
-      // Simulate: Republicans align with party 85-95% typically
-      partyAlignment = Math.min(95, 85 + (nayVotes / totalSubstantiveVotes) * 10);
-    } else if (representative.party === 'Democratic') {
-      // Simulate: Democrats align with party 80-90% typically
-      partyAlignment = Math.min(90, 80 + (yeaVotes / totalSubstantiveVotes) * 10);
-    } else {
-      // Independents have lower party alignment
-      partyAlignment = 45 + Math.random() * 20;
-    }
-    
-    const withPartyVotes = Math.round((partyAlignment / 100) * totalSubstantiveVotes);
-    
-    return {
-      partyAlignment: partyAlignment,
-      totalVotes: totalSubstantiveVotes,
-      withPartyVotes: withPartyVotes
-    };
-  };
-
-  // Mark key votes (simulate based on bill importance)
-  const processVotesForDisplay = () => {
-    return votes.map(vote => ({
-      bill: vote.bill.number,
-      title: vote.bill.title,
-      date: vote.date,
-      position: vote.position,
-      result: vote.result,
-      isKeyVote: vote.bill.title.toLowerCase().includes('infrastructure') || 
-                vote.bill.title.toLowerCase().includes('budget') ||
-                vote.bill.title.toLowerCase().includes('healthcare') ||
-                vote.bill.title.toLowerCase().includes('climate') ||
-                vote.bill.title.toLowerCase().includes('security')
-    }));
-  };
 
   if (loading) {
     return <TabContentSkeleton />;
   }
 
-  if (votes.length === 0) {
+  if (!representative) {
     return (
       <div className="text-center py-8 text-gray-600">
-        No voting records available at this time.
+        Representative information not available.
       </div>
     );
   }
 
-  const alignmentStats = calculatePartyAlignment();
-  const processedVotes = processVotesForDisplay();
-
   return (
     <div className="space-y-6">
-      {/* Enhanced Interactive Voting Chart */}
-      {representative && (
-        <EnhancedVotingChart
-          votes={processedVotes}
-          party={representative.party}
-        />
-      )}
-
-      {/* Party Alignment Visualization */}
-      {alignmentStats && representative && (
-        <PartyAlignmentChart
-          partyAlignment={alignmentStats.partyAlignment}
-          party={representative.party}
-          totalVotes={alignmentStats.totalVotes}
-          withPartyVotes={alignmentStats.withPartyVotes}
-        />
-      )}
-
-      {/* Vote Position Distribution */}
-      <DonutChart
-        data={[
-          {
-            label: 'Yea Votes',
-            value: votes.filter(v => v.position === 'Yea').length,
-            color: '#0b983c' // civiq-green
-          },
-          {
-            label: 'Nay Votes', 
-            value: votes.filter(v => v.position === 'Nay').length,
-            color: '#e11d07' // civiq-red
-          },
-          {
-            label: 'Present',
-            value: votes.filter(v => v.position === 'Present').length,
-            color: '#3ea2d4' // civiq-blue
-          },
-          {
-            label: 'Not Voting',
-            value: votes.filter(v => v.position === 'Not Voting').length,
-            color: '#94a3b8' // gray
-          }
-        ].filter(item => item.value > 0)}
-        title="Vote Position Distribution"
-        centerText={votes.length.toString()}
-        formatValue={(value) => value.toString()}
+      {/* Voting Pattern Analysis Component */}
+      <VotingPatternAnalysis
+        bioguideId={bioguideId}
+        party={representative.party}
+        chamber={representative.chamber}
       />
 
-      {/* Enhanced Party Alignment Analysis */}
-      {representative && (
-        <PartyAlignmentAnalysis
-          bioguideId={bioguideId}
-          representative={{
-            name: representative.name,
-            party: representative.party,
-            state: representative.state,
-            chamber: representative.chamber
-          }}
-        />
-      )}
+      {/* Voting Records Table Component */}
+      <VotingRecordsTable
+        bioguideId={bioguideId}
+        chamber={representative.chamber}
+      />
 
-      {/* Traditional vote list */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Voting Record</h3>
-        <div className="space-y-4">
-          {votes.slice(0, 5).map((vote) => (
-            <div key={vote.voteId} className="border border-gray-100 rounded-lg p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900">{vote.bill.title}</h4>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {vote.bill.number} • {vote.question}
-                  </p>
-                </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPositionColor(vote.position)}`}>
-                  {vote.position}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-sm text-gray-500">
-                <span>Result: {vote.result}</span>
-                <span>{new Date(vote.date).toLocaleDateString()}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Enhanced Party Alignment Analysis (existing component) */}
+      <PartyAlignmentAnalysis
+        bioguideId={bioguideId}
+        representative={{
+          name: representative.name,
+          party: representative.party,
+          state: representative.state,
+          chamber: representative.chamber
+        }}
+      />
     </div>
   );
 }

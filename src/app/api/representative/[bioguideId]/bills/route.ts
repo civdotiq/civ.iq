@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
+import { BillSummaryCache } from '@/lib/ai/bill-summary-cache';
+import { structuredLogger } from '@/lib/logging/logger';
+import type { BillSummary } from '@/lib/ai/bill-summarizer';
 
 interface SponsoredBill {
   billId: string;
@@ -17,6 +20,8 @@ interface SponsoredBill {
   policyArea?: string;
   cosponsors?: number;
   sponsorshipType?: 'sponsored' | 'cosponsored';
+  aiSummary?: BillSummary;
+  hasAISummary?: boolean;
 }
 
 export async function GET(
@@ -26,6 +31,8 @@ export async function GET(
   const { bioguideId } = await params;
   const { searchParams } = new URL(request.url);
   const limit = parseInt(searchParams.get('limit') || '20');
+  const includeSummaries = searchParams.get('includeSummaries') === 'true';
+  const summaryFormat = searchParams.get('summaryFormat') || 'brief';
 
   if (!bioguideId) {
     return NextResponse.json(
@@ -113,12 +120,20 @@ export async function GET(
       30 * 60 * 1000 // 30 minutes cache
     );
 
+    // Add AI summaries if requested
+    let enhancedBills = billsData;
+    if (includeSummaries && billsData.length > 0) {
+      enhancedBills = await addAISummariesToBills(billsData, summaryFormat);
+    }
+
     return NextResponse.json({ 
-      bills: billsData,
+      bills: enhancedBills,
       metadata: {
         dataSource: 'congress.gov',
-        totalReturned: billsData.length,
-        includesCosponsored: true
+        totalReturned: enhancedBills.length,
+        includesCosponsored: true,
+        aiSummariesIncluded: includeSummaries,
+        summaryFormat: includeSummaries ? summaryFormat : null
       }
     });
 
@@ -219,5 +234,79 @@ export async function GET(
         note: 'Fallback data - API temporarily unavailable'
       }
     });
+  }
+}
+
+/**
+ * Add AI summaries to bills from cache
+ */
+async function addAISummariesToBills(
+  bills: SponsoredBill[], 
+  format: string = 'brief'
+): Promise<SponsoredBill[]> {
+  try {
+    // Extract bill IDs for batch retrieval
+    const billIds = bills.map(bill => 
+      bill.billId.replace('-cosponsored', '') // Remove cosponsored suffix for cache key
+    );
+
+    // Get cached summaries in batch
+    const summaries = await BillSummaryCache.getBatchSummaries(billIds);
+
+    structuredLogger.info('Retrieved AI summaries for bills', {
+      totalBills: bills.length,
+      summariesFound: summaries.size,
+      format,
+      operation: 'bills_ai_summary_integration'
+    });
+
+    // Enhance bills with summaries
+    const enhancedBills = bills.map(bill => {
+      const billIdForCache = bill.billId.replace('-cosponsored', '');
+      const summary = summaries.get(billIdForCache);
+      
+      const enhanced: SponsoredBill = {
+        ...bill,
+        hasAISummary: !!summary
+      };
+
+      if (summary) {
+        // Format summary based on requested format
+        if (format === 'brief') {
+          enhanced.aiSummary = {
+            billId: summary.billId,
+            title: summary.title,
+            summary: summary.whatItDoes || summary.summary.substring(0, 150) + '...',
+            whatItDoes: summary.whatItDoes,
+            readingLevel: summary.readingLevel,
+            confidence: summary.confidence,
+            lastUpdated: summary.lastUpdated,
+            source: summary.source,
+            keyPoints: [],
+            whoItAffects: [],
+            whyItMatters: ''
+          };
+        } else {
+          enhanced.aiSummary = summary;
+        }
+      }
+
+      return enhanced;
+    });
+
+    return enhancedBills;
+
+  } catch (error) {
+    structuredLogger.error('Failed to add AI summaries to bills', error, {
+      billCount: bills.length,
+      format,
+      operation: 'bills_ai_summary_integration'
+    });
+
+    // Return bills without summaries on error
+    return bills.map(bill => ({
+      ...bill,
+      hasAISummary: false
+    }));
   }
 }

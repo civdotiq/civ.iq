@@ -4,6 +4,8 @@ import { withRateLimit, publicApiRateLimiter } from '@/lib/middleware/rate-limit
 import { withValidationAndSecurity, ValidatedRequest } from '@/lib/validation/middleware'
 import { ZipCodeValidator, StateValidator } from '@/lib/validation/schemas'
 import { withErrorHandling, ExternalApiError, healthChecker } from '@/lib/error-handling/error-handler'
+import { getCongressionalDistrictFromZip } from '@/lib/census-api'
+import { getRepresentativesByLocation, formatCongressMember } from '@/lib/congress-api'
 
 interface Representative {
   bioguideId: string
@@ -135,69 +137,55 @@ async function handleRepresentativesRequest(request: ValidatedRequest<Representa
           )
         }
 
-        // First, get district from Census geocoding
-        const geoResponse = await fetch(
-          `https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?address=${encodeURIComponent(zipCode)}&benchmark=2020&vintage=2020&format=json`
-        )
-
-        if (!geoResponse.ok) {
-          throw new ExternalApiError(
-            'Census geocoding service unavailable',
-            'census-geocoding'
-          )
-        }
-
-        const geoData = await geoResponse.json()
-        const congressionalDistrict = geoData.result?.addressMatches?.[0]?.geographies?.['Congressional Districts']?.[0]?.DISTRICT
-
-        if (!congressionalDistrict) {
+        // Get district from our improved Census API implementation
+        const districtInfo = await getCongressionalDistrictFromZip(zipCode)
+        
+        if (!districtInfo) {
           throw new Error('Could not determine congressional district for ZIP code')
         }
 
-        // Fetch representatives from Congress API
-        const congressResponse = await fetch(
-          `https://api.congress.gov/v3/member?api_key=${process.env.CONGRESS_API_KEY}&currentMember=true&state=${geoData.result.addressMatches[0].addressComponents.state}&district=${congressionalDistrict}&format=json`
+        console.log('District info found:', districtInfo)
+
+        // Fetch representatives using our improved Congress API
+        const congressMembers = await getRepresentativesByLocation(
+          districtInfo.state,
+          districtInfo.district,
+          process.env.CONGRESS_API_KEY
         )
 
-        if (!congressResponse.ok) {
-          throw new ExternalApiError(
-            'Congress API service unavailable',
-            'congress-api'
-          )
-        }
+        console.log('Congress members found:', congressMembers.length)
 
-        const congressData = await congressResponse.json()
-        
-        // Transform data to our format
-        const representatives: Representative[] = congressData.members?.map((member: any) => ({
+        // Transform to our API format
+        const representatives: Representative[] = congressMembers.map(member => ({
           bioguideId: member.bioguideId,
-          name: member.directOrderName || `${member.firstName} ${member.lastName}`,
-          firstName: member.firstName,
-          lastName: member.lastName,
+          name: member.name,
+          firstName: member.name.split(' ')[0] || '',
+          lastName: member.name.split(' ').slice(1).join(' ') || '',
           state: member.state,
           district: member.district || null,
-          party: member.partyName,
-          chamber: member.chamber as 'House' | 'Senate',
-          imageUrl: member.depiction?.imageUrl || `/images/representatives/default-${member.chamber.toLowerCase()}.jpg`,
+          party: member.party,
+          chamber: member.chamber,
+          imageUrl: member.imageUrl || `/images/representatives/default-${member.chamber.toLowerCase()}.jpg`,
           contactInfo: {
             phone: member.phone || '',
-            website: member.officialWebsiteUrl || '',
-            office: member.office || ''
+            website: member.website || '',
+            office: ''
           },
-          committees: [], // Would need separate API call to get committee info
+          committees: member.committees || [],
           social: {
-            twitter: member.twitterId ? `@${member.twitterId}` : undefined,
-            facebook: member.facebookId
+            twitter: undefined,
+            facebook: undefined
           }
-        })) || []
+        }))
 
         return {
           representatives,
           metadata: {
-            dataSource: 'congress.gov',
+            dataSource: 'congress.gov + census',
             timestamp: new Date().toISOString(),
             zipCode,
-            totalFound: representatives.length
+            totalFound: representatives.length,
+            district: districtInfo.districtName
           }
         }
       },
@@ -230,7 +218,7 @@ async function handleRepresentativesRequest(request: ValidatedRequest<Representa
 export const GET = withValidationAndSecurity<RepresentativesQuery>(
   {
     query: {
-      zip: ZipCodeValidator.validateZipCode
+      zip: (value: any) => ZipCodeValidator.validateZipCode(value)
     },
     sanitizeResponse: true,
     logValidationErrors: true

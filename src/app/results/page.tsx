@@ -523,8 +523,10 @@ function ResultsContent() {
         setError(null);
         
         // Update search history with location info
-        const displayName = `${apiData.state}${apiData.district && apiData.district !== '00' ? ` District ${apiData.district}` : ''}`;
-        SearchHistory.updateSearchDisplayName(zipCode, displayName);
+        if (typeof window !== 'undefined') {
+          const displayName = `${apiData.state}${apiData.district && apiData.district !== '00' ? ` District ${apiData.district}` : ''}`;
+          SearchHistory.updateSearchDisplayName(zipCode, displayName);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
         setData(null);
@@ -547,7 +549,7 @@ function ResultsContent() {
             <div className="flex items-center gap-4">
               {/* Quick search history in header */}
               <div className="hidden md:flex items-center gap-2">
-                {SearchHistory.getHistory().slice(0, 3).map((item, index) => (
+                {typeof window !== 'undefined' && SearchHistory.getHistory().slice(0, 3).map((item, index) => (
                   <Link
                     key={`header-${item.zipCode}-${index}`}
                     href={`/results?zip=${encodeURIComponent(item.zipCode)}`}
@@ -663,7 +665,7 @@ function ResultsContent() {
                   {data && data.representatives && (
                     <>
                       <div className="space-y-6">
-                        {data.representatives.map((rep, index) => (
+                        {(Array.isArray(data?.representatives) ? data.representatives : Object.values(data?.representatives || {})).map((rep, index) => (
                           <RepresentativeCard key={`${rep.name}-${index}`} representative={rep} />
                         ))}
                       </div>

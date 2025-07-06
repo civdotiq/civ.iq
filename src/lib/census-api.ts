@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { ZIP_TO_DISTRICT_MAP, getStateFromZip } from './data/zip-district-mapping';
 
 export interface CongressionalDistrict {
   state: string;
@@ -104,18 +105,16 @@ async function fetchFromCensusAPI(zipCode: string): Promise<CensusAPIResponse> {
   try {
     await rateLimiter.waitIfNeeded();
 
-    const apiKey = process.env.CENSUS_API_KEY;
-    if (!apiKey) {
-      return { success: false, error: 'Census API key not configured', source: 'fallback' };
-    }
-
+    // Census Geocoding Services API doesn't require an API key
+    // Only the ACS demographic data requires an API key
+    
     // Use Census Geocoding Services API to get congressional district
     const geocodeUrl = `https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress`;
     const params = new URLSearchParams({
       address: zipCode,
       benchmark: 'Public_AR_Current',
       vintage: 'Current_Current',
-      layers: '54', // Congressional Districts layer
+      layers: '54', // Congressional Districts layer (119th Congress)
       format: 'json'
     });
 
@@ -137,7 +136,8 @@ async function fetchFromCensusAPI(zipCode: string): Promise<CensusAPIResponse> {
       const geographies = match.geographies;
       
       // Extract congressional district info
-      const congressionalDistricts = geographies['118th Congressional Districts'] || 
+      const congressionalDistricts = geographies['119th Congressional Districts'] || 
+                                   geographies['118th Congressional Districts'] || 
                                    geographies['Congressional Districts'] || 
                                    [];
       
@@ -147,8 +147,9 @@ async function fetchFromCensusAPI(zipCode: string): Promise<CensusAPIResponse> {
         const districtCode = district.CD || district.DISTRICT || '';
         const stateName = STATE_NAMES[stateCode] || stateCode;
         
-        // Get additional demographic data from ACS API
-        const demographics = await fetchDemographics(stateCode, districtCode, apiKey);
+        // Get additional demographic data from ACS API if API key is available
+        const apiKey = process.env.CENSUS_API_KEY;
+        const demographics = apiKey ? await fetchDemographics(stateCode, districtCode, apiKey) : undefined;
         
         const result: CongressionalDistrict = {
           state: stateCode,
@@ -255,15 +256,8 @@ async function fetchDemographics(state: string, district: string, apiKey: string
  * Falls back to hardcoded mapping if API fails
  */
 export const getCongressionalDistrictFromZip = cache(async (zipCode: string): Promise<CongressionalDistrict | null> => {
-  // First try the live Census API
-  const liveResult = await fetchFromCensusAPI(zipCode);
-  if (liveResult.success && liveResult.data) {
-    return liveResult.data;
-  }
-
-  // Fall back to our hardcoded mapping
-  // Check our hardcoded mapping first
-  const mapping = ZIP_TO_DISTRICT[zipCode];
+  // First try our comprehensive mapping
+  const mapping = ZIP_TO_DISTRICT_MAP[zipCode];
   if (mapping) {
     const stateName = STATE_NAMES[mapping.state] || mapping.state;
     const districtNumber = mapping.district === '00' ? 'At-Large' : parseInt(mapping.district, 10).toString();
@@ -275,120 +269,33 @@ export const getCongressionalDistrictFromZip = cache(async (zipCode: string): Pr
       districtName: `${stateName} ${districtNumber === 'At-Large' ? 'At-Large' : `District ${districtNumber}`}`
     };
   }
-  
-  // For MVP, if ZIP not in our mapping, try to extract state from ZIP ranges
-  // This is a simplified approach for demo purposes
-  const zipNum = parseInt(zipCode, 10);
-  
-  // Basic ZIP code range to state mapping (simplified)
-  let state = '';
-  let stateName = '';
-  
-  if (zipNum >= 35000 && zipNum <= 36999) {
-    state = 'AL'; stateName = 'Alabama';
-  } else if (zipNum >= 99500 && zipNum <= 99999) {
-    state = 'AK'; stateName = 'Alaska';
-  } else if (zipNum >= 85000 && zipNum <= 86999) {
-    state = 'AZ'; stateName = 'Arizona';
-  } else if (zipNum >= 71600 && zipNum <= 72999) {
-    state = 'AR'; stateName = 'Arkansas';
-  } else if (zipNum >= 90000 && zipNum <= 96699) {
-    state = 'CA'; stateName = 'California';
-  } else if (zipNum >= 80000 && zipNum <= 81999) {
-    state = 'CO'; stateName = 'Colorado';
-  } else if (zipNum >= 6000 && zipNum <= 6999) {
-    state = 'CT'; stateName = 'Connecticut';
-  } else if (zipNum >= 19700 && zipNum <= 19999) {
-    state = 'DE'; stateName = 'Delaware';
-  } else if (zipNum >= 32000 && zipNum <= 34999) {
-    state = 'FL'; stateName = 'Florida';
-  } else if (zipNum >= 30000 && zipNum <= 31999) {
-    state = 'GA'; stateName = 'Georgia';
-  } else if (zipNum >= 96700 && zipNum <= 96899) {
-    state = 'HI'; stateName = 'Hawaii';
-  } else if (zipNum >= 83200 && zipNum <= 83999) {
-    state = 'ID'; stateName = 'Idaho';
-  } else if (zipNum >= 60000 && zipNum <= 62999) {
-    state = 'IL'; stateName = 'Illinois';
-  } else if (zipNum >= 46000 && zipNum <= 47999) {
-    state = 'IN'; stateName = 'Indiana';
-  } else if (zipNum >= 50000 && zipNum <= 52999) {
-    state = 'IA'; stateName = 'Iowa';
-  } else if (zipNum >= 66000 && zipNum <= 67999) {
-    state = 'KS'; stateName = 'Kansas';
-  } else if (zipNum >= 40000 && zipNum <= 42999) {
-    state = 'KY'; stateName = 'Kentucky';
-  } else if (zipNum >= 70000 && zipNum <= 71599) {
-    state = 'LA'; stateName = 'Louisiana';
-  } else if (zipNum >= 3900 && zipNum <= 4999) {
-    state = 'ME'; stateName = 'Maine';
-  } else if (zipNum >= 20600 && zipNum <= 21999) {
-    state = 'MD'; stateName = 'Maryland';
-  } else if (zipNum >= 1000 && zipNum <= 2799) {
-    state = 'MA'; stateName = 'Massachusetts';
-  } else if (zipNum >= 48000 && zipNum <= 49999) {
-    state = 'MI'; stateName = 'Michigan';
-  } else if (zipNum >= 55000 && zipNum <= 56799) {
-    state = 'MN'; stateName = 'Minnesota';
-  } else if (zipNum >= 38600 && zipNum <= 39999) {
-    state = 'MS'; stateName = 'Mississippi';
-  } else if (zipNum >= 63000 && zipNum <= 65999) {
-    state = 'MO'; stateName = 'Missouri';
-  } else if (zipNum >= 59000 && zipNum <= 59999) {
-    state = 'MT'; stateName = 'Montana';
-  } else if (zipNum >= 68000 && zipNum <= 69999) {
-    state = 'NE'; stateName = 'Nebraska';
-  } else if (zipNum >= 88900 && zipNum <= 89999) {
-    state = 'NV'; stateName = 'Nevada';
-  } else if (zipNum >= 3000 && zipNum <= 3899) {
-    state = 'NH'; stateName = 'New Hampshire';
-  } else if (zipNum >= 7000 && zipNum <= 8999) {
-    state = 'NJ'; stateName = 'New Jersey';
-  } else if (zipNum >= 87000 && zipNum <= 88499) {
-    state = 'NM'; stateName = 'New Mexico';
-  } else if (zipNum >= 10000 && zipNum <= 14999) {
-    state = 'NY'; stateName = 'New York';
-  } else if (zipNum >= 27000 && zipNum <= 28999) {
-    state = 'NC'; stateName = 'North Carolina';
-  } else if (zipNum >= 58000 && zipNum <= 58999) {
-    state = 'ND'; stateName = 'North Dakota';
-  } else if (zipNum >= 43000 && zipNum <= 45999) {
-    state = 'OH'; stateName = 'Ohio';
-  } else if (zipNum >= 73000 && zipNum <= 74999) {
-    state = 'OK'; stateName = 'Oklahoma';
-  } else if (zipNum >= 97000 && zipNum <= 97999) {
-    state = 'OR'; stateName = 'Oregon';
-  } else if (zipNum >= 15000 && zipNum <= 19699) {
-    state = 'PA'; stateName = 'Pennsylvania';
-  } else if (zipNum >= 2800 && zipNum <= 2999) {
-    state = 'RI'; stateName = 'Rhode Island';
-  } else if (zipNum >= 29000 && zipNum <= 29999) {
-    state = 'SC'; stateName = 'South Carolina';
-  } else if (zipNum >= 57000 && zipNum <= 57999) {
-    state = 'SD'; stateName = 'South Dakota';
-  } else if (zipNum >= 37000 && zipNum <= 38599) {
-    state = 'TN'; stateName = 'Tennessee';
-  } else if (zipNum >= 75000 && zipNum <= 79999) {
-    state = 'TX'; stateName = 'Texas';
-  } else if (zipNum >= 84000 && zipNum <= 84999) {
-    state = 'UT'; stateName = 'Utah';
-  } else if (zipNum >= 5000 && zipNum <= 5999) {
-    state = 'VT'; stateName = 'Vermont';
-  } else if (zipNum >= 22000 && zipNum <= 24699) {
-    state = 'VA'; stateName = 'Virginia';
-  } else if (zipNum >= 98000 && zipNum <= 99499) {
-    state = 'WA'; stateName = 'Washington';
-  } else if (zipNum >= 24700 && zipNum <= 26999) {
-    state = 'WV'; stateName = 'West Virginia';
-  } else if (zipNum >= 53000 && zipNum <= 54999) {
-    state = 'WI'; stateName = 'Wisconsin';
-  } else if (zipNum >= 82000 && zipNum <= 83199) {
-    state = 'WY'; stateName = 'Wyoming';
+
+  // Try the live Census API as fallback (may not work for ZIP-only queries)
+  const liveResult = await fetchFromCensusAPI(zipCode);
+  if (liveResult.success && liveResult.data) {
+    return liveResult.data;
+  }
+
+  // Fall back to legacy hardcoded mapping
+  const legacyMapping = ZIP_TO_DISTRICT[zipCode];
+  if (legacyMapping) {
+    const stateName = STATE_NAMES[legacyMapping.state] || legacyMapping.state;
+    const districtNumber = legacyMapping.district === '00' ? 'At-Large' : parseInt(legacyMapping.district, 10).toString();
+    
+    return {
+      state: legacyMapping.state,
+      stateCode: legacyMapping.state,
+      district: legacyMapping.district,
+      districtName: `${stateName} ${districtNumber === 'At-Large' ? 'At-Large' : `District ${districtNumber}`}`
+    };
   }
   
+  // For MVP, if ZIP not in our mapping, try to extract state from ZIP ranges
+  const state = getStateFromZip(zipCode);
   if (state) {
-    // For demo purposes, assign a random district (would need real data)
-    const district = '01'; // Default to district 1
+    const stateName = STATE_NAMES[state] || state;
+    // For unknown districts, default to district 1 - this is a fallback only
+    const district = '01';
     
     return {
       state: state,

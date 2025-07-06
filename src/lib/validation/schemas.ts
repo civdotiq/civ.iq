@@ -364,11 +364,25 @@ export class XSSProtection {
   }
 
   static sanitizeObject<T extends Record<string, any>>(obj: T): T {
+    // Handle arrays separately to preserve their structure
+    if (Array.isArray(obj)) {
+      return obj.map(item => {
+        if (typeof item === 'string') {
+          return this.sanitizeHtml(item);
+        } else if (typeof item === 'object' && item !== null) {
+          return this.sanitizeObject(item);
+        }
+        return item;
+      }) as T;
+    }
+    
     const sanitized = {} as T;
     
     for (const [key, value] of Object.entries(obj)) {
       if (typeof value === 'string') {
         sanitized[key as keyof T] = this.sanitizeHtml(value) as T[keyof T];
+      } else if (Array.isArray(value)) {
+        sanitized[key as keyof T] = this.sanitizeObject(value) as T[keyof T];
       } else if (typeof value === 'object' && value !== null) {
         sanitized[key as keyof T] = this.sanitizeObject(value) as T[keyof T];
       } else {
