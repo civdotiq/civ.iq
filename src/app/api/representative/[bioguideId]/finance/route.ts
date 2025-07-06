@@ -597,13 +597,36 @@ export async function GET(
       let dataSource = 'fallback';
       
       try {
-        // Strategy 1: Direct bioguide-FEC mapping (highest priority)
-        const mappedFECId = getFECIdFromBioguide(bioguideId);
+        // Strategy 1: Enhanced direct mapping using congress-legislators data
+        let mappedFECId = getFECIdFromBioguide(bioguideId);
+        
+        // Try to get enhanced representative data for better FEC matching
+        let enhancedRep: any = null;
+        try {
+          const { getEnhancedRepresentative } = await import('@/lib/congress-legislators');
+          enhancedRep = await getEnhancedRepresentative(bioguideId);
+          
+          // Use FEC IDs from congress-legislators if available
+          if (enhancedRep?.ids?.fec && enhancedRep.ids.fec.length > 0) {
+            mappedFECId = enhancedRep.ids.fec[0]; // Use the first FEC ID
+            structuredLogger.info('Found enhanced FEC ID from congress-legislators', {
+              bioguideId,
+              fecId: mappedFECId,
+              totalFECIds: enhancedRep.ids.fec.length
+            });
+          }
+        } catch (enhancedError) {
+          structuredLogger.warn('Could not get enhanced representative data', {
+            bioguideId,
+            error: (enhancedError as Error).message
+          });
+        }
         
         if (mappedFECId) {
           structuredLogger.info('Found direct FEC mapping', {
             bioguideId,
-            fecId: mappedFECId
+            fecId: mappedFECId,
+            source: enhancedRep ? 'congress-legislators' : 'bioguide-mapping'
           })
           
           try {
@@ -625,10 +648,11 @@ export async function GET(
                   election_years: candidate.election_years || [],
                   cycles: candidate.cycles || []
                 };
-                dataSource = 'direct-mapping';
+                dataSource = enhancedRep ? 'congress-legislators-mapping' : 'direct-mapping';
                 structuredLogger.info('Successfully retrieved FEC data via direct mapping', {
                   bioguideId,
-                  candidateId: fecCandidate.candidate_id
+                  candidateId: fecCandidate.candidate_id,
+                  mappingSource: dataSource
                 });
               }
             }
@@ -641,21 +665,29 @@ export async function GET(
           }
         }
         
-        // Strategy 2: Enhanced name-based search (fallback)
+        // Strategy 2: Enhanced name-based search using congress-legislators data (fallback)
         if (!fecCandidate) {
           const stateAbbr = getStateAbbreviation(representative.state);
+          
+          // Use enhanced name data if available
+          const searchName = enhancedRep?.fullName?.official || 
+                           enhancedRep?.name || 
+                           representative.name;
+          
           fecCandidate = await findFECCandidate(
-            representative.name,
+            searchName,
             stateAbbr,
             representative.district
           );
           
           if (fecCandidate) {
-            dataSource = 'name-search';
-            structuredLogger.info('Found FEC candidate via name search', {
+            dataSource = 'enhanced-name-search';
+            structuredLogger.info('Found FEC candidate via enhanced name search', {
               bioguideId,
               candidateId: fecCandidate.candidate_id,
-              searchName: representative.name
+              searchName,
+              originalName: representative.name,
+              usedEnhancedData: !!enhancedRep
             });
           }
         }
@@ -786,6 +818,7 @@ export async function GET(
             dataSource: 'fec.gov',
             retrievalMethod: dataSource,
             mappingUsed: hasFECMapping(bioguideId),
+            enhancedDataUsed: !!enhancedRep,
             candidateInfo: {
               fecId: fecCandidate.candidate_id,
               name: fecCandidate.name,
@@ -801,7 +834,8 @@ export async function GET(
               topCategories: topCategories.length
             },
             lastUpdated: new Date().toISOString(),
-            cacheInfo: 'Real FEC data with 30min cache'
+            cacheInfo: 'Real FEC data with enhanced congress-legislators matching',
+            dataSources: ['fec.gov', ...(enhancedRep ? ['congress-legislators'] : [])]
           }
         });
       }

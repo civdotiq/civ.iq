@@ -1,29 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getEnhancedRepresentative } from '@/lib/congress-legislators';
+import { structuredLogger } from '@/lib/logging/logger';
+import type { EnhancedRepresentative, BaseRepresentative } from '@/types/representative';
 
-interface RepresentativeDetails {
-  bioguideId: string;
-  name: string;
-  firstName: string;
-  lastName: string;
-  party: string;
-  state: string;
-  district?: string;
-  chamber: 'House' | 'Senate';
-  title: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  imageUrl?: string;
-  terms: Array<{
-    congress: string;
-    startYear: string;
-    endYear: string;
-  }>;
-  committees?: Array<{
-    name: string;
-    role?: string;
-  }>;
-}
+interface RepresentativeDetails extends BaseRepresentative {}
 
 export async function GET(
   request: NextRequest,
@@ -39,18 +19,85 @@ export async function GET(
   }
 
   try {
-    // Check if we have an API key
+    structuredLogger.info('Fetching representative data', { bioguideId });
+
+    // First, try to get enhanced data from congress-legislators
+    let enhancedData: EnhancedRepresentative | null = null;
+    try {
+      enhancedData = await getEnhancedRepresentative(bioguideId);
+      if (enhancedData) {
+        structuredLogger.info('Successfully retrieved enhanced representative data', { 
+          bioguideId,
+          hasIds: !!enhancedData.ids,
+          hasSocialMedia: !!enhancedData.socialMedia,
+          hasCurrentTerm: !!enhancedData.currentTerm
+        });
+      }
+    } catch (error) {
+      structuredLogger.warn('Failed to get enhanced representative data', { 
+        bioguideId, 
+        error: (error as Error).message 
+      });
+    }
+
+    // If we have enhanced data, create a comprehensive response
+    if (enhancedData) {
+      const representative: EnhancedRepresentative = {
+        ...enhancedData,
+        // Ensure we have the basic required fields
+        firstName: enhancedData.fullName?.first || enhancedData.name.split(' ')[0] || 'Unknown',
+        lastName: enhancedData.fullName?.last || enhancedData.name.split(' ').pop() || 'Unknown',
+        title: enhancedData.chamber === 'Senate' ? 'U.S. Senator' : 'U.S. Representative',
+        phone: enhancedData.currentTerm?.phone || enhancedData.phone,
+        website: enhancedData.currentTerm?.website || enhancedData.website,
+        terms: [{
+          congress: '118', // Current congress
+          startYear: enhancedData.currentTerm?.start.split('-')[0] || '2023',
+          endYear: enhancedData.currentTerm?.end.split('-')[0] || '2025'
+        }],
+        committees: enhancedData.committees || [],
+        metadata: {
+          lastUpdated: new Date().toISOString(),
+          dataSources: ['congress-legislators'],
+          completeness: {
+            basicInfo: true,
+            socialMedia: !!enhancedData.socialMedia,
+            contact: !!enhancedData.currentTerm,
+            committees: !!enhancedData.committees && enhancedData.committees.length > 0,
+            finance: !!enhancedData.ids?.opensecrets || !!enhancedData.ids?.fec
+          }
+        }
+      };
+
+      return NextResponse.json({
+        representative,
+        success: true,
+        metadata: {
+          dataSource: 'congress-legislators',
+          cacheHit: false,
+          responseTime: Date.now()
+        }
+      });
+    }
+
+    // Fallback: Check if we have Congress.gov API key
     if (process.env.CONGRESS_API_KEY) {
-      // Fetch from Congress.gov API
+      structuredLogger.info('Fetching from Congress.gov API', { bioguideId });
+      
       const response = await fetch(
-        `https://api.congress.gov/v3/member/${bioguideId}?format=json&api_key=${process.env.CONGRESS_API_KEY}`
+        `https://api.congress.gov/v3/member/${bioguideId}?format=json&api_key=${process.env.CONGRESS_API_KEY}`,
+        { 
+          headers: {
+            'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
+          }
+        }
       );
 
       if (response.ok) {
         const data = await response.json();
         const member = data.member;
 
-        const representative: RepresentativeDetails = {
+        const representative: EnhancedRepresentative = {
           bioguideId: member.bioguideId,
           name: `${member.firstName} ${member.lastName}`,
           firstName: member.firstName,
@@ -72,15 +119,42 @@ export async function GET(
           committees: member.leadership?.map((role: any) => ({
             name: role.name,
             role: role.type
-          })) || []
+          })) || [],
+          metadata: {
+            lastUpdated: new Date().toISOString(),
+            dataSources: ['congress.gov'],
+            completeness: {
+              basicInfo: true,
+              socialMedia: false,
+              contact: !!member.phone || !!member.email,
+              committees: !!member.leadership && member.leadership.length > 0,
+              finance: false
+            }
+          }
         };
 
-        return NextResponse.json(representative);
+        structuredLogger.info('Successfully retrieved Congress.gov data', { bioguideId });
+        return NextResponse.json({
+          representative,
+          success: true,
+          metadata: {
+            dataSource: 'congress.gov',
+            cacheHit: false,
+            responseTime: Date.now()
+          }
+        });
+      } else {
+        structuredLogger.warn('Congress.gov API request failed', { 
+          bioguideId, 
+          status: response.status 
+        });
       }
     }
 
-    // Common representatives data for testing
-    const commonReps: { [key: string]: Partial<RepresentativeDetails> } = {
+    // Final fallback: Enhanced mock data
+    structuredLogger.info('Using mock representative data', { bioguideId });
+    
+    const commonReps: { [key: string]: Partial<EnhancedRepresentative> } = {
       'P000595': {
         name: 'Gary Peters',
         firstName: 'Gary',
@@ -88,7 +162,12 @@ export async function GET(
         party: 'Democratic',
         state: 'MI',
         chamber: 'Senate',
-        title: 'U.S. Senator'
+        title: 'U.S. Senator',
+        bio: { gender: 'M' },
+        socialMedia: {
+          twitter: 'SenGaryPeters',
+          facebook: 'SenatorGaryPeters'
+        }
       },
       'S000770': {
         name: 'Debbie Stabenow',
@@ -97,23 +176,14 @@ export async function GET(
         party: 'Democratic',
         state: 'MI',
         chamber: 'Senate',
-        title: 'U.S. Senator'
-      },
-      'A000360': {
-        name: 'Ted Cruz',
-        firstName: 'Ted',
-        lastName: 'Cruz',
-        party: 'Republican',
-        state: 'TX',
-        chamber: 'Senate',
-        title: 'U.S. Senator'
+        title: 'U.S. Senator',
+        bio: { gender: 'F' }
       }
     };
 
-    // Use common rep data if available
     const commonRep = commonReps[bioguideId];
     
-    const mockRepresentative: RepresentativeDetails = {
+    const mockRepresentative: EnhancedRepresentative = {
       bioguideId,
       name: commonRep?.name || `Representative ${bioguideId}`,
       firstName: commonRep?.firstName || 'John',
@@ -138,15 +208,47 @@ export async function GET(
           name: 'Committee on Energy and Commerce',
           role: 'Member'
         }
-      ]
+      ],
+      fullName: {
+        first: commonRep?.firstName || 'John',
+        last: commonRep?.lastName || bioguideId
+      },
+      bio: commonRep?.bio || { gender: 'M' },
+      socialMedia: commonRep?.socialMedia,
+      metadata: {
+        lastUpdated: new Date().toISOString(),
+        dataSources: ['mock'],
+        completeness: {
+          basicInfo: true,
+          socialMedia: !!commonRep?.socialMedia,
+          contact: true,
+          committees: true,
+          finance: false
+        }
+      }
     };
 
-    return NextResponse.json(mockRepresentative);
+    return NextResponse.json({
+      representative: mockRepresentative,
+      success: true,
+      metadata: {
+        dataSource: 'mock',
+        cacheHit: false,
+        responseTime: Date.now()
+      }
+    });
 
   } catch (error) {
-    console.error('API Error:', error);
+    structuredLogger.error('Representative API error', error as Error, { bioguideId });
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        success: false,
+        metadata: {
+          dataSource: 'error',
+          responseTime: Date.now()
+        }
+      },
       { status: 500 }
     );
   }

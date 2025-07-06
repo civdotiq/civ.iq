@@ -1,0 +1,279 @@
+/**
+ * Enhanced Representative Types
+ * 
+ * This file defines comprehensive types for representative data,
+ * combining our existing structure with congress-legislators enhancements.
+ */
+
+// Base representative interface (existing structure)
+export interface BaseRepresentative {
+  bioguideId: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  party: string;
+  state: string;
+  district?: string;
+  chamber: 'House' | 'Senate';
+  title: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  imageUrl?: string;
+  terms: Array<{
+    congress: string;
+    startYear: string;
+    endYear: string;
+  }>;
+  committees?: Array<{
+    name: string;
+    role?: string;
+  }>;
+}
+
+// Enhanced representative with congress-legislators data
+export interface EnhancedRepresentative extends BaseRepresentative {
+  // Enhanced name information
+  fullName?: {
+    first: string;
+    middle?: string;
+    last: string;
+    suffix?: string;
+    nickname?: string;
+    official?: string;
+  };
+  
+  // Biographical information
+  bio?: {
+    birthday?: string;
+    gender?: 'M' | 'F';
+    religion?: string;
+  };
+  
+  // Current term details
+  currentTerm?: {
+    start: string;
+    end: string;
+    office?: string;
+    phone?: string;
+    address?: string;
+    website?: string;
+    contactForm?: string;
+    rssUrl?: string;
+    stateRank?: 'junior' | 'senior';
+    class?: number; // Senate class
+  };
+  
+  // Social media presence
+  socialMedia?: {
+    twitter?: string;
+    facebook?: string;
+    youtube?: string;
+    instagram?: string;
+    mastodon?: string;
+  };
+  
+  // Cross-platform IDs
+  ids?: {
+    govtrack?: number;
+    opensecrets?: string;
+    votesmart?: number;
+    fec?: string[];
+    cspan?: number;
+    wikipedia?: string;
+    wikidata?: string;
+    ballotpedia?: string;
+  };
+  
+  // Leadership roles
+  leadershipRoles?: Array<{
+    title: string;
+    start: string;
+    end?: string;
+  }>;
+  
+  // Enhanced contact information
+  contact?: {
+    dcOffice?: {
+      address?: string;
+      phone?: string;
+      fax?: string;
+      hours?: string;
+    };
+    districtOffices?: Array<{
+      address: string;
+      phone?: string;
+      fax?: string;
+      hours?: string;
+    }>;
+    contactForm?: string;
+    schedulingUrl?: string;
+  };
+  
+  // Data source metadata
+  metadata?: {
+    lastUpdated: string;
+    dataSources: Array<'congress.gov' | 'congress-legislators' | 'fec' | 'openstates'>;
+    completeness?: {
+      basicInfo: boolean;
+      socialMedia: boolean;
+      contact: boolean;
+      committees: boolean;
+      finance: boolean;
+    };
+  };
+}
+
+// Representative summary for list views
+export interface RepresentativeSummary {
+  bioguideId: string;
+  name: string;
+  party: string;
+  state: string;
+  district?: string;
+  chamber: 'House' | 'Senate';
+  title: string;
+  imageUrl?: string;
+  website?: string;
+  phone?: string;
+}
+
+// Representative search result
+export interface RepresentativeSearchResult extends RepresentativeSummary {
+  relevanceScore?: number;
+  matchedFields?: string[];
+}
+
+// Committee information
+export interface CommitteeMembership {
+  committeeId: string;
+  name: string;
+  fullName: string;
+  role: 'Chair' | 'Vice Chair' | 'Ranking Member' | 'Member';
+  subcommittees?: Array<{
+    name: string;
+    role: string;
+  }>;
+  startDate?: string;
+  endDate?: string;
+}
+
+// Enhanced committee data
+export interface EnhancedCommitteeInfo {
+  current: CommitteeMembership[];
+  historical: CommitteeMembership[];
+  leadership: Array<{
+    committee: string;
+    role: string;
+    startDate: string;
+    endDate?: string;
+  }>;
+}
+
+// Representative analytics data
+export interface RepresentativeAnalytics {
+  effectiveness?: {
+    billsSponsored: number;
+    billsPassed: number;
+    amendmentsOffered: number;
+    successRate: number;
+  };
+  engagement?: {
+    townHalls: number;
+    pressReleases: number;
+    socialMediaActivity: number;
+    lastUpdate: string;
+  };
+  voting?: {
+    totalVotes: number;
+    partyLineVotes: number;
+    bipartisanVotes: number;
+    absences: number;
+    votingScore: number;
+  };
+}
+
+// Contact attempt tracking
+export interface ContactAttempt {
+  id: string;
+  bioguideId: string;
+  userId?: string;
+  method: 'email' | 'phone' | 'contact_form' | 'office_visit';
+  timestamp: string;
+  subject?: string;
+  status: 'sent' | 'delivered' | 'responded' | 'failed';
+  response?: {
+    receivedAt: string;
+    type: 'automated' | 'personal';
+    content?: string;
+  };
+}
+
+// ZIP code to representative mapping
+export interface ZipCodeRepresentatives {
+  zipCode: string;
+  state: string;
+  representatives: {
+    house?: RepresentativeSummary;
+    senate: RepresentativeSummary[];
+  };
+  district?: string;
+  lastUpdated: string;
+}
+
+// Type guards
+export function isEnhancedRepresentative(rep: any): rep is EnhancedRepresentative {
+  return rep && typeof rep.bioguideId === 'string' && typeof rep.name === 'string';
+}
+
+export function isRepresentativeSummary(rep: any): rep is RepresentativeSummary {
+  return rep && typeof rep.bioguideId === 'string' && typeof rep.name === 'string' && typeof rep.party === 'string';
+}
+
+// Utility types
+export type RepresentativeField = keyof EnhancedRepresentative;
+export type SocialMediaPlatform = keyof NonNullable<EnhancedRepresentative['socialMedia']>;
+export type RepresentativeId = keyof NonNullable<EnhancedRepresentative['ids']>;
+
+// API response types
+export interface RepresentativeApiResponse {
+  representative: EnhancedRepresentative;
+  success: boolean;
+  error?: string;
+  metadata?: {
+    cacheHit?: boolean;
+    responseTime?: number;
+    dataSource?: string;
+  };
+}
+
+export interface RepresentativesListResponse {
+  representatives: RepresentativeSummary[];
+  total: number;
+  page?: number;
+  perPage?: number;
+  hasMore?: boolean;
+  success: boolean;
+  error?: string;
+}
+
+// Filter and search options
+export interface RepresentativeFilters {
+  state?: string;
+  party?: string;
+  chamber?: 'House' | 'Senate';
+  committee?: string;
+  leadership?: boolean;
+  hasTwitter?: boolean;
+  hasFacebook?: boolean;
+  hasWebsite?: boolean;
+}
+
+export interface RepresentativeSearchOptions {
+  query?: string;
+  filters?: RepresentativeFilters;
+  sortBy?: 'name' | 'state' | 'party' | 'seniority';
+  sortOrder?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+}
