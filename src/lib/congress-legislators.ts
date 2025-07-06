@@ -242,9 +242,19 @@ export async function getEnhancedRepresentative(bioguideId: string): Promise<Enh
     const enhanced: EnhancedRepresentative = {
       bioguideId: legislator.id.bioguide,
       name: `${legislator.name.first} ${legislator.name.last}`,
+      firstName: legislator.name.first,
+      lastName: legislator.name.last,
       party: currentTerm.party,
       state: currentTerm.state,
-      district: currentTerm.district,
+      district: currentTerm.district?.toString(),
+      chamber: (currentTerm.type === 'sen' ? 'Senate' : 'House') as 'House' | 'Senate',
+      title: currentTerm.type === 'sen' ? 'U.S. Senator' : 'U.S. Representative',
+      terms: [{
+        congress: '119', // Current congress
+        startYear: currentTerm.start.split('-')[0],
+        endYear: currentTerm.end.split('-')[0]
+      }],
+      committees: [],
       
       fullName: {
         first: legislator.name.first,
@@ -320,17 +330,27 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
       fetchSocialMediaData()
     ])
     
-    const enhanced = legislators.map(legislator => {
+    const enhanced: EnhancedRepresentative[] = legislators.map(legislator => {
       const bioguideId = legislator.id.bioguide
       const social = socialMedia.find(s => s.bioguide === bioguideId)
       const currentTerm = legislator.terms[legislator.terms.length - 1]
       
-      return {
+      return ({
         bioguideId: legislator.id.bioguide,
         name: `${legislator.name.first} ${legislator.name.last}`,
+        firstName: legislator.name.first,
+        lastName: legislator.name.last,
         party: currentTerm.party,
         state: currentTerm.state,
-        district: currentTerm.district,
+        district: currentTerm.district?.toString(),
+        chamber: currentTerm.type === 'sen' ? 'Senate' : 'House',
+        title: currentTerm.type === 'sen' ? 'U.S. Senator' : 'U.S. Representative',
+        terms: [{
+          congress: '119', // Current congress
+          startYear: currentTerm.start.split('-')[0],
+          endYear: currentTerm.end.split('-')[0]
+        }],
+        committees: [],
         
         fullName: {
           first: legislator.name.first,
@@ -380,7 +400,7 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
         },
         
         leadershipRoles: legislator.leadership_roles
-      }
+      }) as EnhancedRepresentative
     })
     
     structuredLogger.info('Successfully got all enhanced representatives', {

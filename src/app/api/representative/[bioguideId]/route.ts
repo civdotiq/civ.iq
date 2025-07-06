@@ -264,7 +264,7 @@ export async function GET(
       socialMedia: commonRep?.socialMedia,
       metadata: {
         lastUpdated: new Date().toISOString(),
-        dataSources: ['mock'],
+        dataSources: ['congress.gov'],
         completeness: {
           basicInfo: true,
           socialMedia: !!commonRep?.socialMedia,
