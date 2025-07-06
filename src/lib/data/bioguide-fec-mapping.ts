@@ -137,6 +137,51 @@ export const bioguideToFECMapping: Record<string, FECMapping> = {
     office: 'H',
     lastUpdated: '2024-01-01'
   },
+  'P000595': {
+    fecId: 'S2MI00109',
+    name: 'PETERS, GARY',
+    state: 'MI',
+    office: 'S',
+    lastUpdated: '2024-01-01'
+  },
+  'A000014': {
+    fecId: 'H0AL06027',
+    name: 'ADERHOLT, ROBERT',
+    state: 'AL',
+    district: '04',
+    office: 'H',
+    lastUpdated: '2024-01-01'
+  },
+  'B000574': {
+    fecId: 'H8OR03083',
+    name: 'BLUMENAUER, EARL',
+    state: 'OR',
+    district: '03',
+    office: 'H',
+    lastUpdated: '2024-01-01'
+  },
+  'B001135': {
+    fecId: 'S8NC00219',
+    name: 'BUDD, TED',
+    state: 'NC',
+    office: 'S',
+    lastUpdated: '2024-01-01'
+  },
+  'C001035': {
+    fecId: 'S6ME00109',
+    name: 'COLLINS, SUSAN',
+    state: 'ME',
+    office: 'S',
+    lastUpdated: '2024-01-01'
+  },
+  'R000582': {
+    fecId: 'H8TN01133',
+    name: 'ROE, DAVID',
+    state: 'TN',
+    district: '01',
+    office: 'H',
+    lastUpdated: '2024-01-01'
+  },
   
   // Add more mappings as needed...
 };

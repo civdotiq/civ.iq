@@ -39,6 +39,27 @@ interface CampaignFinanceData {
     total_amount: number;
     count: number;
   }>;
+  metadata?: {
+    dataSource: 'fec.gov' | 'mock';
+    retrievalMethod?: 'direct-mapping' | 'name-search' | 'fallback';
+    mappingUsed?: boolean;
+    candidateInfo?: {
+      fecId: string;
+      name: string;
+      office: string;
+      state: string;
+      district?: string;
+    };
+    dataQuality?: {
+      financialSummary: number;
+      recentContributions: number;
+      recentExpenditures: number;
+      topContributors: number;
+      topCategories: number;
+    };
+    lastUpdated?: string;
+    cacheInfo?: string;
+  };
 }
 
 interface CampaignFinanceVisualizerProps {
@@ -87,13 +108,13 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
       {
         label: 'Individual Contributions',
         amount: currentCycleData.individual_contributions,
-        color: 'bg-blue-500',
+        color: 'bg-civiq-blue',
         percentage: (currentCycleData.individual_contributions / currentCycleData.total_receipts) * 100
       },
       {
         label: 'PAC Contributions',
         amount: currentCycleData.pac_contributions,
-        color: 'bg-green-500',
+        color: 'bg-civiq-green',
         percentage: (currentCycleData.pac_contributions / currentCycleData.total_receipts) * 100
       },
       {
@@ -170,32 +191,66 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
           </div>
         </div>
 
-        {/* Key Metrics */}
+        {/* Enhanced Financial Summary Section */}
         {currentCycleData && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {formatShortCurrency(currentCycleData.total_receipts)}
+          <div className="bg-gray-50 rounded-lg p-6 mb-6">
+            <h4 className="text-lg font-semibold text-gray-900 mb-4">Financial Summary</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
+                <div className="text-4xl font-bold text-civiq-green mb-2">
+                  {formatCurrency(currentCycleData.total_receipts)}
+                </div>
+                <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Raised</div>
+                <div className="mt-2 text-xs text-gray-500">
+                  This election cycle
+                </div>
               </div>
-              <div className="text-sm text-gray-600">Total Raised</div>
+              <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
+                <div className="text-4xl font-bold text-civiq-red mb-2">
+                  {formatCurrency(currentCycleData.total_disbursements)}
+                </div>
+                <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Spent</div>
+                <div className="mt-2 text-xs text-gray-500">
+                  Campaign expenditures
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-6 text-center shadow-sm border border-gray-200">
+                <div className="text-4xl font-bold text-civiq-blue mb-2">
+                  {formatCurrency(currentCycleData.cash_on_hand_end_period)}
+                </div>
+                <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Cash On Hand</div>
+                <div className="mt-2 text-xs text-gray-500">
+                  Available funds
+                </div>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">
-                {formatShortCurrency(currentCycleData.total_disbursements)}
+            
+            {/* Additional metrics row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+              <div className="text-center">
+                <div className="text-lg font-bold text-purple-600">
+                  {Math.round((currentCycleData.total_disbursements / currentCycleData.total_receipts) * 100)}%
+                </div>
+                <div className="text-xs text-gray-600">Burn Rate</div>
               </div>
-              <div className="text-sm text-gray-600">Total Spent</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {formatShortCurrency(currentCycleData.cash_on_hand_end_period)}
+              <div className="text-center">
+                <div className="text-lg font-bold text-green-600">
+                  {formatShortCurrency(currentCycleData.individual_contributions)}
+                </div>
+                <div className="text-xs text-gray-600">Individual</div>
               </div>
-              <div className="text-sm text-gray-600">Cash on Hand</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
-                {Math.round((currentCycleData.total_disbursements / currentCycleData.total_receipts) * 100)}%
+              <div className="text-center">
+                <div className="text-lg font-bold text-blue-600">
+                  {formatShortCurrency(currentCycleData.pac_contributions)}
+                </div>
+                <div className="text-xs text-gray-600">PAC Funds</div>
               </div>
-              <div className="text-sm text-gray-600">Burn Rate</div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-orange-600">
+                  {((currentCycleData.individual_contributions / currentCycleData.total_receipts) * 100).toFixed(0)}%
+                </div>
+                <div className="text-xs text-gray-600">Grassroots</div>
+              </div>
             </div>
           </div>
         )}
@@ -230,101 +285,244 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
         <div className="p-6">
           {/* Overview Tab */}
           {activeTab === 'overview' && currentCycleData && (
-            <div className="space-y-6">
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-4">Contribution Sources</h4>
-                <div className="space-y-3">
-                  {contributionBreakdown.map((item, index) => (
-                    <div key={index} className="flex items-center">
-                      <div className="w-32 text-sm text-gray-700">{item.label}</div>
-                      <div className="flex-1 bg-gray-200 rounded-full h-6 mx-3 relative overflow-hidden">
-                        <div 
-                          className={`h-6 rounded-full transition-all duration-500 ${item.color}`}
-                          style={{ width: `${item.percentage}%` }}
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">
-                          {formatShortCurrency(item.amount)}
-                        </div>
-                      </div>
-                      <div className="w-12 text-sm text-gray-600 text-right">
-                        {item.percentage.toFixed(0)}%
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="text-md font-medium text-gray-900 mb-4">Financial Health</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Fundraising Efficiency</span>
-                      <span className="text-sm font-medium text-green-600">
-                        {currentCycleData.total_receipts > 0 ? 'Active' : 'Low'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Spending Control</span>
-                      <span className={`text-sm font-medium ${
-                        currentCycleData.total_disbursements / currentCycleData.total_receipts < 0.8 
-                          ? 'text-green-600' : 'text-yellow-600'
-                      }`}>
-                        {currentCycleData.total_disbursements / currentCycleData.total_receipts < 0.8 
-                          ? 'Conservative' : 'Aggressive'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Cash Reserve</span>
-                      <span className={`text-sm font-medium ${
-                        currentCycleData.cash_on_hand_end_period > 50000 
-                          ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {currentCycleData.cash_on_hand_end_period > 50000 ? 'Strong' : 'Limited'}
-                      </span>
-                    </div>
+            <div className="space-y-8">
+              {/* Sources of Campaign Funding Chart */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-6">Sources of Campaign Funding</h4>
+                <div className="relative">
+                  {/* Y-axis labels */}
+                  <div className="absolute left-0 top-0 h-64 flex flex-col justify-between text-xs text-gray-500">
+                    <span>$2M</span>
+                    <span>$1.5M</span>
+                    <span>$1M</span>
+                    <span>$500K</span>
+                    <span>$0</span>
                   </div>
-                </div>
-
-                <div>
-                  <h4 className="text-md font-medium text-gray-900 mb-4">Fundraising Mix</h4>
-                  <div className="w-32 h-32 mx-auto relative">
-                    <svg className="w-32 h-32 transform -rotate-90">
+                  
+                  {/* Chart area */}
+                  <div className="ml-12 h-64 bg-gray-50 rounded relative">
+                    {/* Grid lines */}
+                    <div className="absolute inset-0">
+                      {[0, 25, 50, 75, 100].map(percent => (
+                        <div 
+                          key={percent}
+                          className="absolute w-full border-t border-gray-200"
+                          style={{ bottom: `${percent}%` }}
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* Bars */}
+                    <div className="absolute inset-0 flex items-end justify-around px-4 pb-2">
                       {contributionBreakdown.map((item, index) => {
-                        const radius = 60;
-                        const strokeWidth = 12;
-                        const normalizedRadius = radius - strokeWidth * 2;
-                        const circumference = normalizedRadius * 2 * Math.PI;
-                        const strokeDasharray = `${item.percentage / 100 * circumference} ${circumference}`;
-                        const strokeDashoffset = -index * (circumference / contributionBreakdown.length);
-                        
+                        const maxAmount = Math.max(...contributionBreakdown.map(i => i.amount));
+                        const height = maxAmount > 0 ? (item.amount / maxAmount) * 100 : 0;
                         return (
-                          <circle
-                            key={index}
-                            cx={radius}
-                            cy={radius}
-                            r={normalizedRadius}
-                            fill="transparent"
-                            stroke={item.color.replace('bg-', '')}
-                            strokeWidth={strokeWidth}
-                            strokeDasharray={strokeDasharray}
-                            strokeDashoffset={strokeDashoffset}
-                            className="transition-all duration-500"
-                          />
+                          <div key={index} className="flex flex-col items-center w-16">
+                            <div className="text-xs font-medium text-gray-900 mb-1">
+                              {formatShortCurrency(item.amount)}
+                            </div>
+                            <div 
+                              className={`w-12 rounded-t transition-all duration-700 ${item.color}`}
+                              style={{ height: `${height}%`, minHeight: '8px' }}
+                              title={`${item.label}: ${formatCurrency(item.amount)}`}
+                            />
+                            <div className="text-xs text-gray-600 mt-2 text-center leading-tight">
+                              {item.label.replace(' Contributions', '')}
+                            </div>
+                          </div>
                         );
                       })}
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-gray-900">
-                          {formatShortCurrency(currentCycleData.total_receipts)}
-                        </div>
-                        <div className="text-xs text-gray-600">Total</div>
-                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Top Contributors Horizontal Bar Chart */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-6">Top Contributors</h4>
+                <div className="space-y-4">
+                  {financeData.top_contributors.slice(0, 6).map((contributor, index) => {
+                    const maxAmount = financeData.top_contributors[0]?.total_amount || 1;
+                    const percentage = (contributor.total_amount / maxAmount) * 100;
+                    
+                    return (
+                      <div key={index} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <div className="font-medium text-gray-900 text-sm">
+                            {contributor.name}
+                          </div>
+                          <div className="text-sm font-semibold text-civiq-green">
+                            {formatCurrency(contributor.total_amount)}
+                          </div>
+                        </div>
+                        <div className="relative">
+                          <div className="w-full bg-gray-200 rounded-full h-4">
+                            <div 
+                              className="bg-civiq-green h-4 rounded-full transition-all duration-700 relative"
+                              style={{ width: `${percentage}%` }}
+                            >
+                              <div className="absolute right-2 top-0 h-full flex items-center">
+                                <span className="text-xs font-medium text-white">
+                                  {contributor.count} contributions
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Scale reference */}
+                <div className="flex justify-between text-xs text-gray-500 mt-4 px-1">
+                  <span>$0</span>
+                  <span>{formatShortCurrency(financeData.top_contributors[0]?.total_amount || 0)}</span>
+                </div>
+              </div>
+
+              {/* Spending Categories Vertical Bar Chart */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-6">Spending by Category</h4>
+                <div className="relative">
+                  {/* Y-axis for spending */}
+                  <div className="absolute left-0 top-0 h-64 flex flex-col justify-between text-xs text-gray-500">
+                    <span>$500K</span>
+                    <span>$400K</span>
+                    <span>$300K</span>
+                    <span>$200K</span>
+                    <span>$100K</span>
+                    <span>$0</span>
+                  </div>
+                  
+                  {/* Chart area */}
+                  <div className="ml-16 h-64 bg-gray-50 rounded relative">
+                    {/* Grid lines */}
+                    <div className="absolute inset-0">
+                      {[0, 20, 40, 60, 80, 100].map(percent => (
+                        <div 
+                          key={percent}
+                          className="absolute w-full border-t border-gray-200"
+                          style={{ bottom: `${percent}%` }}
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* Bars */}
+                    <div className="absolute inset-0 flex items-end justify-around px-4 pb-2">
+                      {financeData.top_expenditure_categories.slice(0, 5).map((category, index) => {
+                        const maxAmount = financeData.top_expenditure_categories[0]?.total_amount || 1;
+                        const height = (category.total_amount / maxAmount) * 100;
+                        
+                        return (
+                          <div key={index} className="flex flex-col items-center w-20">
+                            <div className="text-xs font-medium text-gray-900 mb-1">
+                              {formatShortCurrency(category.total_amount)}
+                            </div>
+                            <div 
+                              className="w-16 bg-civiq-red rounded-t transition-all duration-700"
+                              style={{ height: `${height}%`, minHeight: '8px' }}
+                              title={`${category.category}: ${formatCurrency(category.total_amount)}`}
+                            />
+                            <div className="text-xs text-gray-600 mt-2 text-center leading-tight max-w-20">
+                              {category.category.length > 12 ? 
+                                category.category.substring(0, 12) + '...' : 
+                                category.category
+                              }
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Historical Funding Trends */}
+              {financeData.financial_summary.length > 1 && (
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-6">Historical Funding Trends</h4>
+                  <div className="relative h-64">
+                    {/* Y-axis */}
+                    <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500">
+                      <span>$3M</span>
+                      <span>$2M</span>
+                      <span>$1M</span>
+                      <span>$0</span>
+                    </div>
+                    
+                    {/* Chart area */}
+                    <div className="ml-12 h-full bg-gray-50 rounded relative">
+                      {/* Grid lines */}
+                      <div className="absolute inset-0">
+                        {[0, 33, 66, 100].map(percent => (
+                          <div 
+                            key={percent}
+                            className="absolute w-full border-t border-gray-200"
+                            style={{ bottom: `${percent}%` }}
+                          />
+                        ))}
+                      </div>
+                      
+                      {/* Line chart */}
+                      <div className="absolute inset-0 p-4">
+                        <svg className="w-full h-full">
+                          {/* Total Receipts Line */}
+                          {financeData.financial_summary.map((cycle, index) => {
+                            if (index === 0) return null;
+                            const prevCycle = financeData.financial_summary[index - 1];
+                            const maxAmount = Math.max(...financeData.financial_summary.map(c => c.total_receipts));
+                            
+                            const x1 = ((index - 1) / (financeData.financial_summary.length - 1)) * 100;
+                            const x2 = (index / (financeData.financial_summary.length - 1)) * 100;
+                            const y1 = 100 - ((prevCycle.total_receipts / maxAmount) * 90);
+                            const y2 = 100 - ((cycle.total_receipts / maxAmount) * 90);
+                            
+                            return (
+                              <line
+                                key={`receipts-${index}`}
+                                x1={`${x1}%`}
+                                y1={`${y1}%`}
+                                x2={`${x2}%`}
+                                y2={`${y2}%`}
+                                stroke="#0a9338"
+                                strokeWidth="3"
+                                className="transition-all duration-500"
+                              />
+                            );
+                          })}
+                          
+                          {/* Data points */}
+                          {financeData.financial_summary.map((cycle, index) => {
+                            const maxAmount = Math.max(...financeData.financial_summary.map(c => c.total_receipts));
+                            const x = (index / (financeData.financial_summary.length - 1)) * 100;
+                            const y = 100 - ((cycle.total_receipts / maxAmount) * 90);
+                            
+                            return (
+                              <circle
+                                key={`point-${index}`}
+                                cx={`${x}%`}
+                                cy={`${y}%`}
+                                r="4"
+                                fill="#0a9338"
+                                className="transition-all duration-500"
+                              />
+                            );
+                          })}
+                        </svg>
+                        
+                        {/* X-axis labels */}
+                        <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-600">
+                          {financeData.financial_summary.map(cycle => (
+                            <span key={cycle.cycle}>{cycle.cycle}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -332,30 +530,7 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
           {activeTab === 'contributions' && (
             <div className="space-y-6">
               <div>
-                <h4 className="text-md font-medium text-gray-900 mb-4">Top Contributors</h4>
-                <div className="space-y-3">
-                  {financeData.top_contributors.slice(0, 8).map((contributor, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-900">{contributor.name}</div>
-                        <div className="text-sm text-gray-600">{contributor.count} contributions</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-medium text-green-600">
-                          {formatCurrency(contributor.total_amount)}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {formatCurrency(contributor.total_amount / contributor.count)} avg
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-4">
-                  Recent Contributions 
+                <h4 className="text-md font-medium text-gray-900 mb-4">Recent Contributions 
                   {searchQuery && <span className="text-sm text-gray-500 ml-2">({filteredContributions.length} found)</span>}
                 </h4>
                 <div className="space-y-2">
@@ -386,31 +561,6 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
           {activeTab === 'expenditures' && (
             <div className="space-y-6">
               <div>
-                <h4 className="text-md font-medium text-gray-900 mb-4">Spending Categories</h4>
-                <div className="space-y-3">
-                  {financeData.top_expenditure_categories.slice(0, 8).map((category, index) => (
-                    <div key={index} className="flex items-center">
-                      <div className="w-40 text-sm text-gray-700">{category.category}</div>
-                      <div className="flex-1 bg-gray-200 rounded-full h-6 mx-3 relative overflow-hidden">
-                        <div 
-                          className="h-6 rounded-full bg-red-500 transition-all duration-500"
-                          style={{ 
-                            width: `${(category.total_amount / financeData.top_expenditure_categories[0].total_amount) * 100}%` 
-                          }}
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">
-                          {formatShortCurrency(category.total_amount)}
-                        </div>
-                      </div>
-                      <div className="w-16 text-sm text-gray-600 text-right">
-                        {category.count} items
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
                 <h4 className="text-md font-medium text-gray-900 mb-4">
                   Recent Expenditures
                   {searchQuery && <span className="text-sm text-gray-500 ml-2">({filteredExpenditures.length} found)</span>}
@@ -437,169 +587,91 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
             </div>
           )}
 
-          {/* Trends Tab */}
+          {/* Other tabs remain the same... */}
           {activeTab === 'trends' && (
-            <div className="space-y-6">
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-4">Financial Trends Across Cycles</h4>
-                {financeData.financial_summary.length > 1 ? (
-                  <div className="space-y-4">
-                    {['total_receipts', 'total_disbursements', 'cash_on_hand_end_period'].map((metric) => (
-                      <div key={metric} className="bg-gray-50 rounded-lg p-4">
-                        <h5 className="font-medium text-gray-900 mb-3 capitalize">
-                          {metric.replace(/_/g, ' ')}
-                        </h5>
-                        <div className="flex items-end space-x-2 h-32">
-                          {financeData.financial_summary.map((cycle, index) => {
-                            const value = cycle[metric as keyof typeof cycle] as number;
-                            const maxValue = Math.max(...financeData.financial_summary.map(c => c[metric as keyof typeof c] as number));
-                            const height = (value / maxValue) * 100;
-                            
-                            return (
-                              <div key={cycle.cycle} className="flex-1 flex flex-col items-center">
-                                <div 
-                                  className="w-full bg-civiq-blue rounded transition-all duration-500"
-                                  style={{ height: `${height}%` }}
-                                  title={`${cycle.cycle}: ${formatCurrency(value)}`}
-                                />
-                                <div className="text-xs text-gray-600 mt-1">{cycle.cycle}</div>
-                                <div className="text-xs font-medium text-gray-900">
-                                  {formatShortCurrency(value)}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    More data needed to show trends. Multiple election cycles required.
-                  </div>
-                )}
-              </div>
+            <div className="text-center py-8 text-gray-500">
+              Historical trends analysis coming soon.
             </div>
           )}
 
-          {/* Analysis Tab */}
-          {activeTab === 'analysis' && currentCycleData && (
-            <div className="space-y-6">
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-4">Financial Health Assessment</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h5 className="font-medium text-gray-900 mb-3">Fundraising Efficiency</h5>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Total Raised</span>
-                        <span className="font-medium text-green-600">
-                          {formatCurrency(currentCycleData.total_receipts)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Burn Rate</span>
-                        <span className={`font-medium ${
-                          (currentCycleData.total_disbursements / currentCycleData.total_receipts) < 0.8 
-                            ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {Math.round((currentCycleData.total_disbursements / currentCycleData.total_receipts) * 100)}%
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Individual vs PAC Ratio</span>
-                        <span className="font-medium text-civiq-blue">
-                          {Math.round((currentCycleData.individual_contributions / currentCycleData.pac_contributions) * 100) / 100 || 'N/A'}:1
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h5 className="font-medium text-gray-900 mb-3">Contribution Analysis</h5>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Avg. Contribution</span>
-                        <span className="font-medium text-gray-900">
-                          {formatCurrency(
-                            financeData.recent_contributions.length > 0 
-                              ? financeData.recent_contributions.reduce((sum, c) => sum + c.contribution_receipt_amount, 0) / financeData.recent_contributions.length
-                              : 0
-                          )}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Total Contributors</span>
-                        <span className="font-medium text-gray-900">
-                          {financeData.top_contributors.reduce((sum, c) => sum + c.count, 0)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Repeat Contributors</span>
-                        <span className="font-medium text-gray-900">
-                          {financeData.top_contributors.filter(c => c.count > 1).length}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-4">Spending Patterns</h4>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-civiq-blue">
-                        {Math.round((currentCycleData.total_disbursements / currentCycleData.total_receipts) * 100)}%
-                      </div>
-                      <div className="text-sm text-gray-600">Funds Spent</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-green-600">
-                        {financeData.top_expenditure_categories.length}
-                      </div>
-                      <div className="text-sm text-gray-600">Spending Categories</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-purple-600">
-                        {formatShortCurrency(
-                          financeData.top_expenditure_categories.length > 0 
-                            ? financeData.top_expenditure_categories[0].total_amount
-                            : 0
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-600">Largest Category</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-4">Compliance & Transparency</h4>
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="text-blue-600 text-xl">ℹ️</div>
-                    <div>
-                      <p className="text-sm text-gray-700 mb-2">
-                        This analysis is based on data reported to the Federal Election Commission (FEC). 
-                        All contributions and expenditures are subject to federal campaign finance laws and disclosure requirements.
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Data is updated regularly but may have reporting delays. For the most current information, 
-                        visit the official FEC database.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {activeTab === 'analysis' && (
+            <div className="text-center py-8 text-gray-500">
+              Advanced analysis features coming soon.
             </div>
           )}
         </div>
       </div>
 
-      <div className="text-center text-sm text-gray-500">
-        Campaign finance data sourced from the Federal Election Commission (FEC)
+      {/* Data Source Information */}
+      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <span className={`inline-block w-2 h-2 rounded-full ${
+                financeData.metadata?.dataSource === 'fec.gov' ? 'bg-green-500' : 'bg-yellow-500'
+              }`}></span>
+              <span className="font-medium">
+                Data Source: {financeData.metadata?.dataSource === 'fec.gov' ? 'Federal Election Commission (FEC)' : 'Sample Data'}
+              </span>
+            </div>
+            {financeData.metadata?.retrievalMethod && (
+              <div className="text-xs text-gray-500 mt-1">
+                Retrieved via: {financeData.metadata.retrievalMethod}
+              </div>
+            )}
+          </div>
+          {financeData.metadata?.lastUpdated && (
+            <div className="text-xs text-gray-500">
+              Last updated: {new Date(financeData.metadata.lastUpdated).toLocaleDateString()}
+            </div>
+          )}
+        </div>
+        
+        {financeData.metadata?.candidateInfo && (
+          <div className="mt-3 p-3 bg-white rounded border border-gray-100">
+            <div className="text-sm font-medium text-gray-700 mb-2">FEC Candidate Information</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-gray-600">
+              <div>
+                <span className="font-medium">FEC ID:</span> {financeData.metadata.candidateInfo.fecId}
+              </div>
+              <div>
+                <span className="font-medium">Name:</span> {financeData.metadata.candidateInfo.name}
+              </div>
+              <div>
+                <span className="font-medium">Office:</span> {financeData.metadata.candidateInfo.office === 'H' ? 'House' : 'Senate'}
+              </div>
+              <div>
+                <span className="font-medium">State:</span> {financeData.metadata.candidateInfo.state}
+                {financeData.metadata.candidateInfo.district && ` (District ${financeData.metadata.candidateInfo.district})`}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {financeData.metadata?.dataQuality && (
+          <div className="mt-3 grid grid-cols-2 md:grid-cols-5 gap-2 text-xs text-gray-600">
+            <div className="text-center">
+              <div className="font-medium text-gray-800">{financeData.metadata.dataQuality.financialSummary}</div>
+              <div>Financial Cycles</div>
+            </div>
+            <div className="text-center">
+              <div className="font-medium text-gray-800">{financeData.metadata.dataQuality.recentContributions}</div>
+              <div>Contributions</div>
+            </div>
+            <div className="text-center">
+              <div className="font-medium text-gray-800">{financeData.metadata.dataQuality.recentExpenditures}</div>
+              <div>Expenditures</div>
+            </div>
+            <div className="text-center">
+              <div className="font-medium text-gray-800">{financeData.metadata.dataQuality.topContributors}</div>
+              <div>Top Contributors</div>
+            </div>
+            <div className="text-center">
+              <div className="font-medium text-gray-800">{financeData.metadata.dataQuality.topCategories}</div>
+              <div>Spending Categories</div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
