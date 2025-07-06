@@ -32,7 +32,8 @@
       "WebFetch(domain:tigerweb.geo.census.gov)",
       "Bash(npm test:*)",
       "Bash(git remote set-url:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "deny": []
   }

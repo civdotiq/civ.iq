@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import { BillSummaryCache } from '@/lib/ai/bill-summary-cache';
 import { structuredLogger } from '@/lib/logging/logger';
+import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import type { BillSummary } from '@/lib/ai/bill-summarizer';
 
 interface SponsoredBill {
@@ -13,15 +14,101 @@ interface SponsoredBill {
   latestAction: {
     date: string;
     text: string;
+    actionCode?: string;
   };
   type: 'hr' | 's' | 'hjres' | 'sjres' | 'hconres' | 'sconres' | 'hres' | 'sres' | string;
   chamber: 'House' | 'Senate';
   status: string;
+  statusCategory: 'introduced' | 'committee' | 'floor' | 'passed_chamber' | 'other_chamber' | 'enacted' | 'failed';
   policyArea?: string;
+  policyCategory?: 'Budget' | 'Healthcare' | 'Defense' | 'Infrastructure' | 'Immigration' | 'Environment' | 'Education' | 'Other';
   cosponsors?: number;
   sponsorshipType?: 'sponsored' | 'cosponsored';
+  committees?: Array<{
+    name: string;
+    code: string;
+    chamber: string;
+  }>;
+  subjects?: string[];
+  isKeyLegislation?: boolean;
+  congressionalSession?: string;
+  url?: string;
   aiSummary?: BillSummary;
   hasAISummary?: boolean;
+}
+
+// Helper function to categorize bills by policy area
+function categorizeBillPolicy(title: string, policyArea?: string): SponsoredBill['policyCategory'] {
+  const lowerTitle = title.toLowerCase();
+  const lowerPolicy = policyArea?.toLowerCase() || '';
+  
+  if (lowerTitle.includes('budget') || lowerTitle.includes('appropriation') || lowerTitle.includes('spending') || 
+      lowerTitle.includes('tax') || lowerPolicy.includes('budget') || lowerPolicy.includes('finance')) {
+    return 'Budget';
+  } else if (lowerTitle.includes('health') || lowerTitle.includes('medicare') || lowerTitle.includes('medicaid') ||
+             lowerPolicy.includes('health')) {
+    return 'Healthcare';
+  } else if (lowerTitle.includes('defense') || lowerTitle.includes('military') || lowerTitle.includes('armed forces') ||
+             lowerPolicy.includes('defense') || lowerPolicy.includes('military')) {
+    return 'Defense';
+  } else if (lowerTitle.includes('infrastructure') || lowerTitle.includes('transportation') || lowerTitle.includes('highway') ||
+             lowerPolicy.includes('transportation') || lowerPolicy.includes('infrastructure')) {
+    return 'Infrastructure';
+  } else if (lowerTitle.includes('immigration') || lowerTitle.includes('border') || lowerTitle.includes('visa') ||
+             lowerPolicy.includes('immigration')) {
+    return 'Immigration';
+  } else if (lowerTitle.includes('environment') || lowerTitle.includes('climate') || lowerTitle.includes('energy') ||
+             lowerPolicy.includes('environment') || lowerPolicy.includes('energy')) {
+    return 'Environment';
+  } else if (lowerTitle.includes('education') || lowerTitle.includes('school') || lowerTitle.includes('student') ||
+             lowerPolicy.includes('education')) {
+    return 'Education';
+  }
+  return 'Other';
+}
+
+// Helper function to determine bill status category
+function determineBillStatusCategory(latestAction: string): SponsoredBill['statusCategory'] {
+  const action = latestAction.toLowerCase();
+  
+  if (action.includes('became public law') || action.includes('enacted') || action.includes('signed by president')) {
+    return 'enacted';
+  } else if (action.includes('failed') || action.includes('rejected') || action.includes('not agreed to')) {
+    return 'failed';
+  } else if (action.includes('passed house') || action.includes('passed senate')) {
+    return 'passed_chamber';
+  } else if (action.includes('received in') || action.includes('referred to') && (action.includes('house') || action.includes('senate'))) {
+    return 'other_chamber';
+  } else if (action.includes('passed') || action.includes('agreed to') || action.includes('floor')) {
+    return 'floor';
+  } else if (action.includes('committee') || action.includes('subcommittee') || action.includes('ordered to be reported')) {
+    return 'committee';
+  } else if (action.includes('introduced') || action.includes('referred to')) {
+    return 'introduced';
+  }
+  return 'introduced';
+}
+
+// Helper function to determine if bill is key legislation
+function isKeyLegislation(title: string, policyArea?: string, cosponsors: number = 0): boolean {
+  const lowerTitle = title.toLowerCase();
+  const lowerPolicy = policyArea?.toLowerCase() || '';
+  
+  // High cosponsor count indicates significance
+  if (cosponsors >= 100) return true;
+  
+  // Major policy areas often indicate key legislation
+  const keyAreas = ['budget', 'appropriation', 'defense authorization', 'infrastructure', 'healthcare', 'climate'];
+  if (keyAreas.some(area => lowerTitle.includes(area) || lowerPolicy.includes(area))) {
+    return true;
+  }
+  
+  // Comprehensive or omnibus bills are typically key
+  if (lowerTitle.includes('comprehensive') || lowerTitle.includes('omnibus') || lowerTitle.includes('act of')) {
+    return true;
+  }
+  
+  return false;
 }
 
 export async function GET(
@@ -50,25 +137,54 @@ export async function GET(
           throw new Error('Congress API key not configured');
         }
 
+        structuredLogger.info('Fetching comprehensive bills data', { bioguideId, limit });
+
         // Fetch both sponsored and cosponsored legislation for comprehensive view
         const [sponsoredResponse, cosponsoredResponse] = await Promise.all([
           fetch(
-            `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?format=json&limit=${Math.ceil(limit * 0.7)}&api_key=${process.env.CONGRESS_API_KEY}`
+            `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?format=json&limit=${Math.ceil(limit * 0.7)}&api_key=${process.env.CONGRESS_API_KEY}`,
+            {
+              headers: {
+                'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
+              }
+            }
           ),
           fetch(
-            `https://api.congress.gov/v3/member/${bioguideId}/cosponsored-legislation?format=json&limit=${Math.ceil(limit * 0.3)}&api_key=${process.env.CONGRESS_API_KEY}`
+            `https://api.congress.gov/v3/member/${bioguideId}/cosponsored-legislation?format=json&limit=${Math.ceil(limit * 0.3)}&api_key=${process.env.CONGRESS_API_KEY}`,
+            {
+              headers: {
+                'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
+              }
+            }
           )
         ]);
+
+        const sponsoredMonitor = monitorExternalApi('congress', 'sponsored-legislation', sponsoredResponse.url);
+        const cosponsoredMonitor = monitorExternalApi('congress', 'cosponsored-legislation', cosponsoredResponse.url);
+
+        sponsoredMonitor.end(sponsoredResponse.ok, sponsoredResponse.status);
+        cosponsoredMonitor.end(cosponsoredResponse.ok, cosponsoredResponse.status);
 
         const sponsoredData = sponsoredResponse.ok ? await sponsoredResponse.json() : { sponsoredLegislation: [] };
         const cosponsoredData = cosponsoredResponse.ok ? await cosponsoredResponse.json() : { cosponsoredLegislation: [] };
 
+        structuredLogger.info('Bills data retrieved', {
+          bioguideId,
+          sponsoredCount: sponsoredData.sponsoredLegislation?.length || 0,
+          cosponsoredCount: cosponsoredData.cosponsoredLegislation?.length || 0
+        });
+
         // Enhanced bill processing with better metadata
         const processedBills: SponsoredBill[] = [];
 
-        // Process sponsored bills
+        // Process sponsored bills with enhanced metadata
         if (sponsoredData.sponsoredLegislation) {
           sponsoredData.sponsoredLegislation.forEach((bill: any) => {
+            const cosponsorCount = bill.cosponsors?.count || 0;
+            const policyCategory = categorizeBillPolicy(bill.title, bill.policyArea?.name);
+            const statusCategory = determineBillStatusCategory(bill.latestAction?.text || 'Introduced');
+            const isKey = isKeyLegislation(bill.title, bill.policyArea?.name, cosponsorCount);
+
             processedBills.push({
               billId: `${bill.congress}-${bill.type}-${bill.number}`,
               number: `${bill.type?.toUpperCase() || 'BILL'}. ${bill.number}`,
@@ -77,21 +193,38 @@ export async function GET(
               introducedDate: bill.introducedDate,
               latestAction: {
                 date: bill.latestAction?.actionDate || bill.introducedDate,
-                text: bill.latestAction?.text || 'Introduced'
+                text: bill.latestAction?.text || 'Introduced',
+                actionCode: bill.latestAction?.actionCode
               },
               type: bill.type,
               chamber: bill.originChamber || (bill.type?.toLowerCase().includes('h') ? 'House' : 'Senate'),
               status: bill.latestAction?.text || 'Introduced',
+              statusCategory,
               policyArea: bill.policyArea?.name,
-              cosponsors: bill.cosponsors?.count || 0,
-              sponsorshipType: 'sponsored'
+              policyCategory,
+              cosponsors: cosponsorCount,
+              sponsorshipType: 'sponsored',
+              committees: bill.committees ? bill.committees.map((committee: any) => ({
+                name: committee.name,
+                code: committee.systemCode,
+                chamber: committee.chamber
+              })) : [],
+              subjects: bill.subjects?.legislativeSubjects || [],
+              isKeyLegislation: isKey,
+              congressionalSession: `${bill.congress}th Congress`,
+              url: bill.url
             });
           });
         }
 
-        // Process cosponsored bills (mark them differently)
+        // Process cosponsored bills with enhanced metadata
         if (cosponsoredData.cosponsoredLegislation) {
           cosponsoredData.cosponsoredLegislation.slice(0, Math.ceil(limit * 0.3)).forEach((bill: any) => {
+            const cosponsorCount = bill.cosponsors?.count || 0;
+            const policyCategory = categorizeBillPolicy(bill.title, bill.policyArea?.name);
+            const statusCategory = determineBillStatusCategory(bill.latestAction?.text || 'Introduced');
+            const isKey = isKeyLegislation(bill.title, bill.policyArea?.name, cosponsorCount);
+
             processedBills.push({
               billId: `${bill.congress}-${bill.type}-${bill.number}-cosponsored`,
               number: `${bill.type?.toUpperCase() || 'BILL'}. ${bill.number}`,
@@ -100,14 +233,26 @@ export async function GET(
               introducedDate: bill.introducedDate,
               latestAction: {
                 date: bill.latestAction?.actionDate || bill.introducedDate,
-                text: bill.latestAction?.text || 'Introduced'
+                text: bill.latestAction?.text || 'Introduced',
+                actionCode: bill.latestAction?.actionCode
               },
               type: bill.type,
               chamber: bill.originChamber || (bill.type?.toLowerCase().includes('h') ? 'House' : 'Senate'),
               status: bill.latestAction?.text || 'Introduced',
+              statusCategory,
               policyArea: bill.policyArea?.name,
-              cosponsors: bill.cosponsors?.count || 0,
-              sponsorshipType: 'cosponsored'
+              policyCategory,
+              cosponsors: cosponsorCount,
+              sponsorshipType: 'cosponsored',
+              committees: bill.committees ? bill.committees.map((committee: any) => ({
+                name: committee.name,
+                code: committee.systemCode,
+                chamber: committee.chamber
+              })) : [],
+              subjects: bill.subjects?.legislativeSubjects || [],
+              isKeyLegislation: isKey,
+              congressionalSession: `${bill.congress}th Congress`,
+              url: bill.url
             });
           });
         }
@@ -126,6 +271,34 @@ export async function GET(
       enhancedBills = await addAISummariesToBills(billsData, summaryFormat);
     }
 
+    // Generate analytics about the bills
+    const analytics = {
+      totalBills: enhancedBills.length,
+      sponsored: enhancedBills.filter(b => b.sponsorshipType === 'sponsored').length,
+      cosponsored: enhancedBills.filter(b => b.sponsorshipType === 'cosponsored').length,
+      keyLegislation: enhancedBills.filter(b => b.isKeyLegislation).length,
+      statusBreakdown: enhancedBills.reduce((acc: Record<string, number>, bill) => {
+        acc[bill.statusCategory] = (acc[bill.statusCategory] || 0) + 1;
+        return acc;
+      }, {}),
+      policyBreakdown: enhancedBills.reduce((acc: Record<string, number>, bill) => {
+        const category = bill.policyCategory || 'Other';
+        acc[category] = (acc[category] || 0) + 1;
+        return acc;
+      }, {}),
+      enacted: enhancedBills.filter(b => b.statusCategory === 'enacted').length,
+      averageCosponsors: enhancedBills.length > 0 
+        ? Math.round(enhancedBills.reduce((sum, bill) => sum + (bill.cosponsors || 0), 0) / enhancedBills.length)
+        : 0
+    };
+
+    structuredLogger.info('Bills data processed and enhanced', {
+      bioguideId,
+      analytics,
+      includeSummaries,
+      summaryFormat
+    });
+
     return NextResponse.json({ 
       bills: enhancedBills,
       metadata: {
@@ -133,12 +306,15 @@ export async function GET(
         totalReturned: enhancedBills.length,
         includesCosponsored: true,
         aiSummariesIncluded: includeSummaries,
-        summaryFormat: includeSummaries ? summaryFormat : null
+        summaryFormat: includeSummaries ? summaryFormat : null,
+        analytics,
+        enhancedDataUsed: true,
+        note: 'Comprehensive bill tracking with enhanced categorization and metadata'
       }
     });
 
   } catch (error) {
-    console.error('Bills API Error:', error);
+    structuredLogger.error('Bills API error', error as Error, { bioguideId, limit, includeSummaries });
 
     // Enhanced fallback mock bills data
     const mockBills: SponsoredBill[] = [
@@ -150,14 +326,24 @@ export async function GET(
         introducedDate: '2024-01-15',
         latestAction: {
           date: '2024-03-20',
-          text: 'Passed House by roll call vote: 245-180'
+          text: 'Passed House by roll call vote: 245-180',
+          actionCode: 'H37300'
         },
         type: 'hr',
         chamber: 'House',
         status: 'Passed House',
+        statusCategory: 'passed_chamber',
         policyArea: 'Transportation and Public Works',
+        policyCategory: 'Infrastructure',
         cosponsors: 89,
-        sponsorshipType: 'sponsored'
+        sponsorshipType: 'sponsored',
+        committees: [
+          { name: 'Transportation and Infrastructure', code: 'HSPW', chamber: 'House' }
+        ],
+        subjects: ['Infrastructure', 'Transportation', 'Public Works'],
+        isKeyLegislation: true,
+        congressionalSession: '118th Congress',
+        url: 'https://congress.gov/bill/118th-congress/house-bill/1000'
       },
       {
         billId: 'hr1001-118',
@@ -167,18 +353,25 @@ export async function GET(
         introducedDate: '2024-02-01',
         latestAction: {
           date: '2024-04-15',
-          text: 'Ordered to be Reported by the Committee on Energy and Commerce'
+          text: 'Ordered to be Reported by the Committee on Energy and Commerce',
+          actionCode: 'H19000'
         },
         type: 'hr',
         chamber: 'House',
         status: 'Reported by Committee',
+        statusCategory: 'committee',
         policyArea: 'Energy',
+        policyCategory: 'Environment',
         cosponsors: 67,
-        sponsorshipType: 'sponsored'
+        sponsorshipType: 'sponsored',
+        committees: [{ name: 'Energy and Commerce', code: 'HSIF', chamber: 'House' }],
+        subjects: ['Energy', 'Climate Change', 'Jobs'],
+        isKeyLegislation: true,
+        congressionalSession: '118th Congress'
       },
       {
         billId: 'hr1002-118',
-        number: 'H.R. 1002',
+        number: 'H.R. 1002', 
         title: 'Affordable Healthcare Access Act',
         congress: '118',
         introducedDate: '2024-01-30',
@@ -189,60 +382,15 @@ export async function GET(
         type: 'hr',
         chamber: 'House',
         status: 'In Committee',
+        statusCategory: 'committee',
         policyArea: 'Health',
+        policyCategory: 'Healthcare',
         cosponsors: 34,
-        sponsorshipType: 'sponsored'
-      },
-      {
-        billId: 'hr1003-118',
-        number: 'H.R. 1003',
-        title: 'Education Modernization and Technology Act',
-        congress: '118',
-        introducedDate: '2023-12-10',
-        latestAction: {
-          date: '2024-01-25',
-          text: 'Committee on Education and Labor discharged. Passed House'
-        },
-        type: 'hr',
-        chamber: 'House',
-        status: 'Passed House',
-        policyArea: 'Education',
-        cosponsors: 52,
-        sponsorshipType: 'sponsored'
-      },
-      {
-        billId: 'hr1004-118',
-        number: 'H.R. 1004',
-        title: 'Small Business Innovation Support Act',
-        congress: '118',
-        introducedDate: '2023-11-20',
-        latestAction: {
-          date: '2024-06-10',
-          text: 'Became Public Law No: 118-45'
-        },
-        type: 'hr',
-        chamber: 'House',
-        status: 'Enacted',
-        policyArea: 'Commerce',
-        cosponsors: 78,
-        sponsorshipType: 'sponsored'
-      },
-      {
-        billId: 'hr1005-118',
-        number: 'H.R. 1005',
-        title: 'Cybersecurity Enhancement and Privacy Act',
-        congress: '118',
-        introducedDate: '2024-03-05',
-        latestAction: {
-          date: '2024-03-20',
-          text: 'Referred to the Committee on Homeland Security'
-        },
-        type: 'hr',
-        chamber: 'House',
-        status: 'In Committee',
-        policyArea: 'Science, Technology, Communications',
-        cosponsors: 28,
-        sponsorshipType: 'cosponsored'
+        sponsorshipType: 'sponsored',
+        committees: [{ name: 'Energy and Commerce', code: 'HSIF', chamber: 'House' }],
+        subjects: ['Healthcare', 'Insurance', 'Access'],
+        isKeyLegislation: false,
+        congressionalSession: '118th Congress'
       }
     ];
 
@@ -252,7 +400,8 @@ export async function GET(
         dataSource: 'mock',
         totalReturned: Math.min(mockBills.length, limit),
         includesCosponsored: false,
-        note: 'Fallback data - API temporarily unavailable'
+        note: 'Fallback data - API temporarily unavailable',
+        error: (error as Error).message
       }
     });
   }

@@ -10,6 +10,10 @@ export async function GET(
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const { bioguideId } = await params;
+  const { searchParams } = new URL(request.url);
+  const includeCommittees = searchParams.get('includeCommittees') === 'true';
+  const includeLeadership = searchParams.get('includeLeadership') === 'true';
+  const includeAll = searchParams.get('includeAll') === 'true';
 
   if (!bioguideId) {
     return NextResponse.json(
@@ -51,7 +55,7 @@ export async function GET(
         phone: enhancedData.currentTerm?.phone || enhancedData.phone,
         website: enhancedData.currentTerm?.website || enhancedData.website,
         terms: [{
-          congress: '118', // Current congress
+          congress: '119', // Current congress
           startYear: enhancedData.currentTerm?.start.split('-')[0] || '2023',
           endYear: enhancedData.currentTerm?.end.split('-')[0] || '2025'
         }],
@@ -69,13 +73,56 @@ export async function GET(
         }
       };
 
+      // Optionally fetch additional data
+      const additionalData: any = {};
+      
+      if (includeCommittees || includeAll) {
+        try {
+          const committeeResponse = await fetch(
+            `${request.url.split('/api/')[0]}/api/representative/${bioguideId}/committees`
+          );
+          if (committeeResponse.ok) {
+            additionalData.committees = await committeeResponse.json();
+            representative.metadata!.dataSources.push('congress.gov');
+          }
+        } catch (error) {
+          structuredLogger.warn('Failed to fetch committee data', { bioguideId, error: (error as Error).message });
+        }
+      }
+
+      if (includeLeadership || includeAll) {
+        try {
+          const leadershipResponse = await fetch(
+            `${request.url.split('/api/')[0]}/api/representative/${bioguideId}/leadership`
+          );
+          if (leadershipResponse.ok) {
+            additionalData.leadership = await leadershipResponse.json();
+            if (!representative.metadata!.dataSources.includes('congress.gov')) {
+              representative.metadata!.dataSources.push('congress.gov');
+            }
+          }
+        } catch (error) {
+          structuredLogger.warn('Failed to fetch leadership data', { bioguideId, error: (error as Error).message });
+        }
+      }
+
+      structuredLogger.info('Successfully processed representative data', {
+        bioguideId,
+        includeCommittees,
+        includeLeadership,
+        hasAdditionalData: Object.keys(additionalData).length > 0
+      });
+
       return NextResponse.json({
         representative,
+        ...additionalData,
         success: true,
         metadata: {
           dataSource: 'congress-legislators',
           cacheHit: false,
-          responseTime: Date.now()
+          responseTime: Date.now(),
+          includeCommittees,
+          includeLeadership
         }
       });
     }
