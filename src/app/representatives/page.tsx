@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { VotingPatternHeatmap, RepresentativeNetwork } from '@/components/InteractiveVisualizations';
 import { APIErrorBoundary } from '@/components/ErrorBoundary';
+import { DataQualityIndicator, ErrorState, DataSourceBadge } from '@/components/DataQualityIndicator';
+import { InlineQualityScore, DataTrustIndicator } from '@/components/DataQualityDashboard';
 
 // Logo component
 function CiviqLogo() {
@@ -307,23 +309,44 @@ function RepresentativesPageContent() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'network'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
+  const [zipCode, setZipCode] = useState('');
+  const [apiError, setApiError] = useState<any>(null);
+  const [apiMetadata, setApiMetadata] = useState<any>(null);
 
   useEffect(() => {
     fetchRepresentatives();
   }, []);
+  
+  const handleZipSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (zipCode.trim()) {
+      fetchRepresentatives(zipCode.trim());
+    }
+  };
 
   useEffect(() => {
     applySearch();
   }, [searchTerm, representatives]);
 
-  const fetchRepresentatives = async () => {
+  const fetchRepresentatives = async (zip?: string) => {
     setLoading(true);
+    setApiError(null);
+    setApiMetadata(null);
+    
     try {
-      const response = await fetch('/api/representatives');
-      if (response.ok) {
-        const data = await response.json();
+      // Use the new transparent API endpoint
+      const apiUrl = zip ? `/api/representatives?zip=${zip}` : '/api/representatives/simple?zip=10001';
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+      
+      // Store metadata for transparency
+      setApiMetadata(data.metadata);
+      
+      if (data.success && data.representatives) {
         const transformedReps: Representative[] = data.representatives.map((rep: any) => ({
           ...rep,
+          contact: rep.contactInfo || rep.contact || {},
+          committees: rep.committees || [],
           stats: {
             billsSponsored: Math.floor(Math.random() * 100),
             votingAttendance: Math.floor(Math.random() * 20) + 80,
@@ -334,9 +357,26 @@ function RepresentativesPageContent() {
         }));
         setRepresentatives(transformedReps);
         setFilteredReps(transformedReps);
+      } else {
+        // Handle API error transparently
+        setApiError(data.error || { code: 'UNKNOWN_ERROR', message: 'Failed to load representatives' });
+        setRepresentatives([]);
+        setFilteredReps([]);
       }
     } catch (error) {
       console.error('Error fetching representatives:', error);
+      setApiError({
+        code: 'NETWORK_ERROR',
+        message: 'Unable to connect to server',
+        details: error instanceof Error ? error.message : 'Unknown network error'
+      });
+      setApiMetadata({
+        timestamp: new Date().toISOString(),
+        zipCode: zip || '',
+        dataQuality: 'unavailable' as const,
+        dataSource: 'network-error',
+        cacheable: false
+      });
     } finally {
       setLoading(false);
     }
@@ -489,6 +529,62 @@ function RepresentativesPageContent() {
           </div>
         )}
 
+        {/* ZIP Code Search */}
+        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+          <form onSubmit={handleZipSearch} className="flex flex-wrap items-center gap-4 mb-4">
+            <div className="flex-1 min-w-[300px]">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={zipCode}
+                  onChange={(e) => setZipCode(e.target.value)}
+                  placeholder="Enter ZIP code to find your representatives..."
+                  pattern="\d{5}(-\d{4})?"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                />
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Searching...' : 'Search'}
+            </button>
+          </form>
+          
+          {/* Data Quality Indicator */}
+          {apiMetadata && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 text-sm flex-wrap">
+                <DataQualityIndicator
+                  quality={apiMetadata.dataQuality}
+                  source={apiMetadata.dataSource}
+                  freshness={apiMetadata.freshness}
+                />
+                <DataSourceBadge source={apiMetadata.dataSource} showTrustLevel={true} />
+                {apiMetadata.validationScore && (
+                  <InlineQualityScore 
+                    score={apiMetadata.validationScore} 
+                    label="Validation" 
+                    showTrend={true}
+                    trend="stable"
+                  />
+                )}
+                <DataTrustIndicator sources={[apiMetadata.dataSource]} />
+              </div>
+              <div className="text-xs text-gray-500">
+                Last updated: {new Date(apiMetadata.timestamp).toLocaleString()} • 
+                {apiMetadata.validationStatus && `Validation: ${apiMetadata.validationStatus}`}
+              </div>
+            </div>
+          )}
+        </div>
+        
         {/* Search and view controls */}
         <div className="bg-white rounded-lg shadow-md p-4 mb-6">
           <div className="flex flex-wrap items-center gap-4">
@@ -498,7 +594,7 @@ function RepresentativesPageContent() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by name, state, or district..."
+                  placeholder="Filter by name, state, or district..."
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                 />
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -546,6 +642,12 @@ function RepresentativesPageContent() {
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             <p className="mt-4 text-gray-600">Loading representatives...</p>
           </div>
+        ) : apiError ? (
+          <ErrorState 
+            error={apiError}
+            metadata={apiMetadata}
+            onRetry={() => fetchRepresentatives(zipCode)}
+          />
         ) : (
           <div className="flex gap-8">
             {/* Sidebar */}

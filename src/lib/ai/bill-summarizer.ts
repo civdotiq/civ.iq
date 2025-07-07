@@ -6,7 +6,7 @@
  */
 
 import { structuredLogger } from '@/lib/logging/logger';
-import { cache } from '@/lib/cache/redis-client';
+import { getRedisCache } from '@/lib/cache/redis-client';
 import { BillSummaryFallbacks } from './bill-summary-fallbacks';
 
 export interface BillSummary {
@@ -61,7 +61,7 @@ export class BillSummarizer {
     try {
       // Check cache first
       if (opts.useCache) {
-        const cached = await cache.get<BillSummary>(cacheKey);
+        const cached = await getRedisCache().get<BillSummary>(cacheKey);
         if (cached) {
           structuredLogger.info('Bill summary cache hit', {
             billNumber: billMetadata.number,
@@ -104,7 +104,7 @@ export class BillSummarizer {
 
       // Cache the result
       if (opts.useCache) {
-        await cache.set(cacheKey, summary, 24 * 60 * 60); // Cache for 24 hours
+        await getRedisCache().set(cacheKey, summary, 24 * 60 * 60); // Cache for 24 hours
       }
 
       structuredLogger.info('Bill summary generated successfully', {

@@ -8,6 +8,8 @@ import { RepresentativeCardSkeleton } from '@/components/SkeletonLoader';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { DistrictMap } from '@/components/DistrictMap';
 import { InteractiveDistrictMap } from '@/components/InteractiveDistrictMap';
+import { DataQualityIndicator, ErrorState, DataSourceBadge } from '@/components/DataQualityIndicator';
+import { InlineQualityScore, DataTrustIndicator } from '@/components/DataQualityDashboard';
 
 function CiviqLogo() {
   return (
@@ -53,10 +55,21 @@ interface Representative {
 }
 
 interface ApiResponse {
-  zipCode: string;
-  state: string;
-  district: string;
-  representatives: Representative[];
+  success: boolean;
+  representatives?: Representative[];
+  error?: {
+    code: string;
+    message: string;
+    details?: any;
+  };
+  metadata: {
+    timestamp: string;
+    zipCode: string;
+    dataQuality: 'high' | 'medium' | 'low' | 'unavailable';
+    dataSource: string;
+    cacheable: boolean;
+    freshness?: string;
+  };
 }
 
 interface StateLegislator {
@@ -500,6 +513,7 @@ function ResultsContent() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'federal' | 'state' | 'map'>('federal');
   const [useInteractiveMap, setUseInteractiveMap] = useState(true);
+  const [districtInfo, setDistrictInfo] = useState<{state: string; district: string} | null>(null);
 
   useEffect(() => {
     if (!zipCode) {
@@ -512,24 +526,47 @@ function ResultsContent() {
       try {
         setLoading(true);
         const response = await fetch(`/api/representatives?zip=${encodeURIComponent(zipCode)}`);
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch representatives');
-        }
-        
         const apiData: ApiResponse = await response.json();
-        setData(apiData);
-        setError(null);
         
-        // Update search history with location info
-        if (typeof window !== 'undefined') {
-          const displayName = `${apiData.state}${apiData.district && apiData.district !== '00' ? ` District ${apiData.district}` : ''}`;
-          SearchHistory.updateSearchDisplayName(zipCode, displayName);
+        setData(apiData);
+        
+        if (apiData.success && apiData.representatives) {
+          setError(null);
+          
+          // Extract district info from first representative
+          const firstRep = apiData.representatives[0];
+          if (firstRep) {
+            setDistrictInfo({
+              state: firstRep.state,
+              district: firstRep.district || '00'
+            });
+            
+            // Update search history with location info
+            if (typeof window !== 'undefined') {
+              const displayName = `${firstRep.state}${firstRep.district && firstRep.district !== '00' ? ` District ${firstRep.district}` : ''}`;
+              SearchHistory.updateSearchDisplayName(zipCode, displayName);
+            }
+          }
+        } else {
+          // Handle API error transparently
+          setError(apiData.error?.message || 'Failed to fetch representatives');
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-        setData(null);
+        setError(err instanceof Error ? err.message : 'Network error occurred');
+        setData({
+          success: false,
+          error: {
+            code: 'NETWORK_ERROR',
+            message: 'Unable to connect to server'
+          },
+          metadata: {
+            timestamp: new Date().toISOString(),
+            zipCode: zipCode,
+            dataQuality: 'unavailable' as const,
+            dataSource: 'network-error',
+            cacheable: false
+          }
+        });
       } finally {
         setLoading(false);
       }
@@ -585,12 +622,40 @@ function ResultsContent() {
           </h1>
           <p className="text-gray-600">
             Representatives for ZIP code <span className="font-semibold">{zipCode}</span>
-            {data && (
+            {districtInfo && (
               <span className="ml-2">
-                • {data.state} {data.district && data.district !== '00' && `District ${data.district}`}
+                • {districtInfo.state} {districtInfo.district && districtInfo.district !== '00' && `District ${districtInfo.district}`}
               </span>
             )}
           </p>
+          
+          {/* Data Quality Indicator */}
+          {data?.metadata && (
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center gap-3 text-sm flex-wrap">
+                <DataQualityIndicator
+                  quality={data.metadata.dataQuality}
+                  source={data.metadata.dataSource}
+                  freshness={data.metadata.freshness}
+                />
+                <DataSourceBadge source={data.metadata.dataSource} showTrustLevel={true} />
+                {data.metadata.validationScore && (
+                  <InlineQualityScore 
+                    score={data.metadata.validationScore} 
+                    label="Data Quality" 
+                    showTrend={true}
+                    trend="stable"
+                  />
+                )}
+                <DataTrustIndicator sources={[data.metadata.dataSource]} />
+              </div>
+              <div className="text-xs text-gray-500">
+                Retrieved: {new Date(data.metadata.timestamp).toLocaleString()} • 
+                Status: {data.metadata.validationStatus || 'validated'} • 
+                Cacheable: {data.metadata.cacheable ? 'yes' : 'no'}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Tab Navigation */}
@@ -649,7 +714,15 @@ function ResultsContent() {
                     </>
                   )}
 
-                  {error && (
+                  {error && data?.error && data?.metadata && (
+                    <ErrorState 
+                      error={data.error}
+                      metadata={data.metadata}
+                      onRetry={() => fetchRepresentatives()}
+                    />
+                  )}
+                  
+                  {error && !data?.error && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
                       <p className="text-red-800 font-medium">Error</p>
                       <p className="text-red-600 mt-1">{error}</p>
@@ -662,18 +735,19 @@ function ResultsContent() {
                     </div>
                   )}
 
-                  {data && data.representatives && (
+                  {data?.success && data.representatives && (
                     <>
                       <div className="space-y-6">
-                        {(Array.isArray(data?.representatives) ? data.representatives : Object.values(data?.representatives || {})).map((rep, index) => (
+                        {data.representatives.map((rep, index) => (
                           <RepresentativeCard key={`${rep.name}-${index}`} representative={rep} />
                         ))}
                       </div>
 
                       <div className="mt-8 text-center">
-                        <p className="text-sm text-gray-500">
-                          Data sourced from official government APIs including Congress.gov and Census Bureau
-                        </p>
+                        <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                          <span>Data sourced from:</span>
+                          <DataSourceBadge source={data.metadata.dataSource} />
+                        </div>
                       </div>
                     </>
                   )}

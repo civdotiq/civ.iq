@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCongressionalDistrictFromZip } from '@/lib/census-api'
 import { getAllEnhancedRepresentatives } from '@/lib/congress-legislators'
-import { validateDistrictResponse, validateRepresentativeResponse, generateDataQualityReport, validateApiResponse } from '@/lib/validation/response-schemas'
 
 // Simplified response interfaces
 interface RepresentativeResponse {
@@ -36,8 +35,6 @@ interface ApiResponse {
     dataSource: string
     cacheable: boolean
     freshness?: string
-    validationScore?: number
-    validationStatus?: 'excellent' | 'good' | 'fair' | 'poor'
   }
 }
 
@@ -155,12 +152,6 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
         }
       }
     }
-    
-    // Validate district data
-    const districtValidation = validateDistrictResponse(districtInfo)
-    if (!districtValidation.isValid) {
-      console.warn('District data validation failed:', districtValidation.errors)
-    }
 
     console.log(`District found: ${districtInfo.state}-${districtInfo.district}`)
 
@@ -221,56 +212,29 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       }
     }
 
-    // Step 4: Convert to response format with validation
-    const representatives: RepresentativeResponse[] = []
-    const validationResults: any[] = []
-    
-    for (const rep of districtRepresentatives) {
-      // Validate each representative's data
-      const repValidation = validateRepresentativeResponse(rep)
-      validationResults.push(validateApiResponse(rep, validateRepresentativeResponse, `congress-legislators-${rep.bioguideId}`))
-      
-      if (repValidation.warnings.length > 0) {
-        console.warn(`Data quality warnings for ${rep.name}:`, repValidation.warnings)
+    // Step 4: Convert to response format
+    const representatives: RepresentativeResponse[] = districtRepresentatives.map(rep => ({
+      bioguideId: rep.bioguideId,
+      name: rep.name,
+      party: rep.party,
+      state: rep.state,
+      district: rep.district,
+      chamber: rep.chamber,
+      title: rep.title,
+      phone: rep.currentTerm?.phone || rep.phone,
+      website: rep.currentTerm?.website || rep.website,
+      contactInfo: {
+        phone: rep.currentTerm?.phone || rep.phone || '',
+        website: rep.currentTerm?.website || rep.website || '',
+        office: rep.currentTerm?.office || rep.currentTerm?.address || ''
       }
-      
-      representatives.push({
-        bioguideId: rep.bioguideId,
-        name: rep.name,
-        party: rep.party,
-        state: rep.state,
-        district: rep.district,
-        chamber: rep.chamber,
-        title: rep.title,
-        phone: rep.currentTerm?.phone || rep.phone,
-        website: rep.currentTerm?.website || rep.website,
-        contactInfo: {
-          phone: rep.currentTerm?.phone || rep.phone || '',
-          website: rep.currentTerm?.website || rep.website || '',
-          office: rep.currentTerm?.office || rep.currentTerm?.address || ''
-        }
-      })
-    }
-    
-    // Generate data quality report
-    const qualityReport = generateDataQualityReport([
-      validateApiResponse(districtInfo, validateDistrictResponse, 'census-api'),
-      ...validationResults
-    ])
+    }))
 
-    // Determine data quality based on validation results
+    // Determine data quality based on completeness
     let dataQuality: 'high' | 'medium' | 'low' = 'high'
-    if (qualityReport.overall.score >= 90) {
-      dataQuality = 'high'
-    } else if (qualityReport.overall.score >= 70) {
-      dataQuality = 'medium'
-    } else {
-      dataQuality = 'low'
-    }
-    
-    // Log quality issues for monitoring
-    if (qualityReport.overall.issues.length > 0) {
-      console.log(`Data quality issues for ZIP ${zipCode}:`, qualityReport.overall.issues)
+    const missingData = representatives.filter(rep => !rep.phone || !rep.website)
+    if (missingData.length > 0) {
+      dataQuality = representatives.length >= 3 ? 'medium' : 'low'
     }
 
     return {
@@ -281,9 +245,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
         dataQuality,
         dataSource: 'congress-legislators + census',
         cacheable: true,
-        freshness: `Retrieved in ${Date.now() - startTime}ms`,
-        validationScore: qualityReport.overall.score,
-        validationStatus: qualityReport.overall.status
+        freshness: `Retrieved in ${Date.now() - startTime}ms`
       }
     }
 

@@ -36,7 +36,8 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(pkill:*)",
       "Bash(true)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(ss:*)"
     ],
     "deny": []
   }
