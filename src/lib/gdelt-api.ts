@@ -112,6 +112,16 @@ export function generateOptimizedSearchTerms(
   state: string, 
   district?: string
 ): string[] {
+  // Ensure representativeName is defined and is a string
+  if (!representativeName || typeof representativeName !== 'string') {
+    representativeName = 'Representative';
+  }
+  
+  // Ensure state is defined and is a string
+  if (!state || typeof state !== 'string') {
+    state = 'US';
+  }
+  
   // Clean the representative name
   const cleanName = representativeName
     .replace(/^(Rep\.|Representative|Senator|Sen\.)\s+/, '')

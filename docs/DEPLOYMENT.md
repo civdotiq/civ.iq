@@ -1,6 +1,6 @@
-# Deployment Guide
+# CIV.IQ Deployment Guide
 
-Complete guide for deploying the Civic Intel Hub to production environments, including platform-specific configurations, environment setup, and monitoring.
+Complete guide for deploying the CIV.IQ Advanced Civic Intelligence Platform (Phase 6) to production environments, including batch API optimization, interactive maps, and real-time data integration.
 
 ## Table of Contents
 

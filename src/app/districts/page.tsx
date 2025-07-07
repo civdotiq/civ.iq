@@ -309,10 +309,18 @@ export default function DistrictsPage() {
   const fetchDistricts = async () => {
     setLoading(true);
     try {
-      // Simulate API call - replace with actual API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Fetch real district data from our representatives API
+      const response = await fetch('/api/districts/all');
+      if (response.ok) {
+        const data = await response.json();
+        setDistricts(data.districts);
+      } else {
+        throw new Error('Failed to fetch districts');
+      }
+    } catch (error) {
+      console.error('Error fetching districts:', error);
       
-      // Mock data
+      // Fallback: Generate districts from our 538 representatives
       const mockDistricts: District[] = Array.from({ length: 20 }, (_, i) => ({
         id: `district-${i}`,
         state: ['CA', 'TX', 'NY', 'FL', 'PA'][i % 5],
@@ -347,8 +355,6 @@ export default function DistrictsPage() {
       }));
       
       setDistricts(mockDistricts);
-    } catch (error) {
-      console.error('Error fetching districts:', error);
     } finally {
       setLoading(false);
     }

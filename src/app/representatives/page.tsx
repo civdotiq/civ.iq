@@ -28,7 +28,7 @@ function CiviqLogo() {
 interface Representative {
   bioguideId: string;
   name: string;
-  party: string;
+  party?: string;
   state: string;
   district?: string;
   chamber: 'House' | 'Senate';
@@ -56,10 +56,13 @@ interface Representative {
 function RepresentativeCard({ rep }: { rep: Representative }) {
   const router = useRouter();
   
-  const getPartyColor = (party: string) => {
+  const getPartyColor = (party: string | undefined) => {
+    if (!party) return 'bg-gray-600';
+    
     switch (party) {
       case 'D':
       case 'Democratic':
+      case 'Democrat':
         return 'bg-blue-600';
       case 'R':
       case 'Republican':
@@ -69,10 +72,13 @@ function RepresentativeCard({ rep }: { rep: Representative }) {
     }
   };
 
-  const getPartyBgColor = (party: string) => {
+  const getPartyBgColor = (party: string | undefined) => {
+    if (!party) return 'bg-gray-100 text-gray-700';
+    
     switch (party) {
       case 'D':
       case 'Democratic':
+      case 'Democrat':
         return 'bg-blue-100 text-blue-700';
       case 'R':
       case 'Republican':
@@ -102,8 +108,8 @@ function RepresentativeCard({ rep }: { rep: Representative }) {
               <h3 className="text-lg font-bold text-gray-900">{rep.name}</h3>
               <p className="text-sm text-gray-600">{rep.title}</p>
               <div className="flex items-center gap-2 mt-1">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPartyBgColor(rep.party)}`}>
-                  {rep.party}
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPartyBgColor(rep?.party)}`}>
+                  {rep?.party || 'Unknown'}
                 </span>
                 <span className="text-xs text-gray-500">
                   {rep.state}{rep.district && `-${rep.district}`}

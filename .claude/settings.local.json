@@ -33,7 +33,10 @@
       "Bash(npm test:*)",
       "Bash(git remote set-url:*)",
       "Bash(git pull:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(pkill:*)",
+      "Bash(true)",
+      "Bash(chmod:*)"
     ],
     "deny": []
   }

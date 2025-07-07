@@ -112,62 +112,43 @@ export function AdvancedSearch() {
   const handleSearch = async () => {
     setLoading(true);
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Filter mock results based on criteria
-    let filteredResults = mockResults.filter(rep => {
-      // Text search
-      if (filters.query && !rep.name.toLowerCase().includes(filters.query.toLowerCase()) &&
-          !rep.state.toLowerCase().includes(filters.query.toLowerCase())) {
-        return false;
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      
+      if (filters.query) params.append('query', filters.query);
+      if (filters.party !== 'all') params.append('party', filters.party);
+      if (filters.chamber !== 'all') params.append('chamber', filters.chamber);
+      if (filters.state) params.append('state', filters.state);
+      if (filters.committee) params.append('committee', filters.committee);
+      if (filters.votingPattern !== 'all') params.append('votingPattern', filters.votingPattern);
+      
+      params.append('experienceYearsMin', filters.experienceYears[0].toString());
+      params.append('experienceYearsMax', filters.experienceYears[1].toString());
+      params.append('campaignFinanceMin', filters.campaignFinance[0].toString());
+      params.append('campaignFinanceMax', filters.campaignFinance[1].toString());
+      params.append('billsSponsoredMin', filters.billsSponsoredRange[0].toString());
+      params.append('billsSponsoredMax', filters.billsSponsoredRange[1].toString());
+      
+      // Fetch from API
+      const response = await fetch(`/api/search?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error('Search failed');
       }
       
-      // Party filter
-      if (filters.party !== 'all' && rep.party !== filters.party) {
-        return false;
-      }
+      const data = await response.json();
       
-      // Chamber filter
-      if (filters.chamber !== 'all' && rep.chamber !== filters.chamber) {
-        return false;
-      }
+      setResults(data.results || []);
+      setResultCount(data.totalResults || 0);
       
-      // State filter
-      if (filters.state && rep.state !== filters.state) {
-        return false;
-      }
-      
-      // Committee filter
-      if (filters.committee && !rep.committees.some(c => 
-        c.toLowerCase().includes(filters.committee.toLowerCase()))) {
-        return false;
-      }
-      
-      // Experience range
-      if (rep.yearsInOffice < filters.experienceYears[0] || 
-          rep.yearsInOffice > filters.experienceYears[1]) {
-        return false;
-      }
-      
-      // Campaign finance range
-      if (rep.fundraisingTotal < filters.campaignFinance[0] || 
-          rep.fundraisingTotal > filters.campaignFinance[1]) {
-        return false;
-      }
-      
-      // Bills sponsored range
-      if (rep.billsSponsored < filters.billsSponsoredRange[0] || 
-          rep.billsSponsored > filters.billsSponsoredRange[1]) {
-        return false;
-      }
-      
-      return true;
-    });
-
-    setResults(filteredResults);
-    setResultCount(filteredResults.length);
-    setLoading(false);
+    } catch (error) {
+      console.error('Search error:', error);
+      setResults([]);
+      setResultCount(0);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateFilter = (key: keyof SearchFilters, value: any) => {

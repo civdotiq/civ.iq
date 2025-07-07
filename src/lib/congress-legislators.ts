@@ -249,6 +249,8 @@ export async function getEnhancedRepresentative(bioguideId: string): Promise<Enh
       district: currentTerm.district?.toString(),
       chamber: (currentTerm.type === 'sen' ? 'Senate' : 'House') as 'House' | 'Senate',
       title: currentTerm.type === 'sen' ? 'U.S. Senator' : 'U.S. Representative',
+      phone: currentTerm.phone,
+      website: currentTerm.url,
       terms: [{
         congress: '119', // Current congress
         startYear: currentTerm.start.split('-')[0],

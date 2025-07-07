@@ -357,7 +357,15 @@ async function handleRepresentativesRequest(request: ValidatedRequest<Representa
     return NextResponse.json(representatives)
 
   } catch (error) {
-    structuredLogger.error('Representatives API error', error as Error, { zipCode })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorType = error instanceof ExternalApiError ? error.service : 'internal'
+    
+    structuredLogger.error('Representatives API error', error as Error, { 
+      zipCode,
+      errorType,
+      errorMessage,
+      timestamp: new Date().toISOString()
+    })
     
     // Generate fallback data
     const fallbackData = await generateFallbackData(zipCode)

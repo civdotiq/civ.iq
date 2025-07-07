@@ -11,7 +11,7 @@ import { BillSummaryCache } from '@/lib/ai/bill-summary-cache';
 import { BillTextProcessor } from '@/lib/ai/bill-text-processor';
 import { ReadingLevelValidator } from '@/lib/ai/reading-level-validator';
 import { structuredLogger } from '@/lib/logging/logger';
-import { validateInput } from '@/lib/validation/input-validator';
+import { InputValidator } from '@/lib/validation/input-validator';
 
 interface BillSummaryRequest {
   includeFull?: boolean;
@@ -22,27 +22,27 @@ interface BillSummaryRequest {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { billId: string } }
+  { params }: { params: Promise<{ billId: string }> }
 ): Promise<NextResponse> {
   const startTime = Date.now();
   
   try {
-    const { billId } = params;
+    const { billId } = await params;
     const { searchParams } = new URL(request.url);
     
     // Validate billId
-    const billIdValidation = validateInput(billId, 'billId', {
+    const billIdErrors = InputValidator.validateValue(billId, {
       required: true,
       minLength: 5,
       maxLength: 20,
       pattern: /^[A-Z0-9\-\.]+$/i
     });
     
-    if (!billIdValidation.isValid) {
+    if (billIdErrors.length > 0) {
       return NextResponse.json(
         { 
           error: 'Invalid bill ID',
-          details: billIdValidation.errors 
+          details: billIdErrors 
         },
         { status: 400 }
       );
@@ -218,9 +218,10 @@ export async function GET(
 
   } catch (error) {
     const responseTime = Date.now() - startTime;
+    const { billId: errorBillId } = await params;
     
     structuredLogger.error('Bill summary generation failed', error, {
-      billId: params.billId,
+      billId: errorBillId,
       responseTime,
       operation: 'bill_summary_api'
     });
@@ -241,10 +242,10 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { billId: string } }
+  { params }: { params: Promise<{ billId: string }> }
 ): Promise<NextResponse> {
   try {
-    const { billId } = params;
+    const { billId } = await params;
     const body = await request.json();
     
     const { 
@@ -272,8 +273,9 @@ export async function POST(
     return response;
 
   } catch (error) {
+    const { billId: errorBillId } = await params;
     structuredLogger.error('Bill summary update failed', error, {
-      billId: params.billId,
+      billId: errorBillId,
       operation: 'bill_summary_api'
     });
 
@@ -292,10 +294,10 @@ export async function POST(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { billId: string } }
+  { params }: { params: Promise<{ billId: string }> }
 ): Promise<NextResponse> {
   try {
-    const { billId } = params;
+    const { billId } = await params;
     
     await BillSummaryCache.invalidateSummary(billId);
     
@@ -310,8 +312,9 @@ export async function DELETE(
     });
 
   } catch (error) {
+    const { billId: errorBillId } = await params;
     structuredLogger.error('Bill summary deletion failed', error, {
-      billId: params.billId,
+      billId: errorBillId,
       operation: 'bill_summary_api'
     });
 

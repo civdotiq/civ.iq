@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { structuredLogger } from '@/lib/logging/logger';
-import { redisCache } from '@/lib/cache/redis-client';
+import { getRedisCache } from '@/lib/cache/redis-client';
 import { performanceMonitor, estimateMemoryUsage } from '@/utils/performance';
 
 interface HealthCheck {
@@ -171,6 +171,7 @@ async function checkDatabase(): Promise<void> {
 }
 
 async function checkCache(): Promise<void> {
+  const redisCache = getRedisCache();
   const testKey = 'health-check-test';
   const testValue = { timestamp: Date.now() };
   
@@ -213,6 +214,7 @@ export async function GET(request: NextRequest) {
       checkServiceHealth('gdelt', checkGDELTAPI)
     ]);
 
+    const redisCache = getRedisCache();
     const cacheStatus = redisCache.getStatus();
     const memory = estimateMemoryUsage();
     const uptime = Date.now() - startTime;
@@ -340,6 +342,7 @@ export async function GET(request: NextRequest) {
 export async function HEAD(request: NextRequest) {
   try {
     // Quick cache check only
+    const redisCache = getRedisCache();
     const cacheStatus = redisCache.getStatus();
     
     if (cacheStatus.isConnected) {

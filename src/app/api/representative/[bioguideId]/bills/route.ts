@@ -38,8 +38,8 @@ interface SponsoredBill {
 }
 
 // Helper function to categorize bills by policy area
-function categorizeBillPolicy(title: string, policyArea?: string): SponsoredBill['policyCategory'] {
-  const lowerTitle = title.toLowerCase();
+function categorizeBillPolicy(title: string | undefined, policyArea?: string): SponsoredBill['policyCategory'] {
+  const lowerTitle = title?.toLowerCase() || '';
   const lowerPolicy = policyArea?.toLowerCase() || '';
   
   if (lowerTitle.includes('budget') || lowerTitle.includes('appropriation') || lowerTitle.includes('spending') || 
