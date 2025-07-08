@@ -592,6 +592,7 @@ export async function GET(
     }
 
     // Enhanced FEC data retrieval with better error handling
+    let enhancedRep: any = null;
     if (process.env.FEC_API_KEY) {
       let fecCandidate: FECCandidate | null = null;
       let dataSource = 'fallback';
@@ -601,7 +602,6 @@ export async function GET(
         let mappedFECId = getFECIdFromBioguide(bioguideId);
         
         // Try to get enhanced representative data for better FEC matching
-        let enhancedRep: any = null;
         try {
           const { getEnhancedRepresentative } = await import('@/lib/congress-legislators');
           enhancedRep = await getEnhancedRepresentative(bioguideId);

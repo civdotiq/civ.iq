@@ -89,7 +89,7 @@ export class BillTextProcessor {
       return result;
 
     } catch (error) {
-      structuredLogger.error('Bill text processing failed', error, {
+      structuredLogger.error('Bill text processing failed', error as Error, {
         billNumber: billMetadata?.number,
         operation: 'bill_text_processing'
       });

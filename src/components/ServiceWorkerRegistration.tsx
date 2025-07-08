@@ -85,8 +85,8 @@ export function ServiceWorkerRegistration() {
       // Register for background sync if supported
       if ('sync' in registration) {
         try {
-          await registration.sync.register('background-sync-representatives');
-          await registration.sync.register('background-sync-news');
+          await (registration as any).sync.register('background-sync-representatives');
+          await (registration as any).sync.register('background-sync-news');
           console.log('[PWA] Background sync registered');
         } catch (error) {
           console.log('[PWA] Background sync registration failed:', error);
@@ -309,7 +309,7 @@ export const serviceWorkerUtils = {
           resolve(event.data);
         };
 
-        navigator.serviceWorker.controller.postMessage({
+        navigator.serviceWorker.controller?.postMessage({
           type: 'GET_CACHE_STATUS'
         }, [messageChannel.port2]);
       });
@@ -326,7 +326,7 @@ export const serviceWorkerUtils = {
           resolve(event.data);
         };
 
-        navigator.serviceWorker.controller.postMessage({
+        navigator.serviceWorker.controller?.postMessage({
           type: 'CLEAR_CACHE'
         }, [messageChannel.port2]);
       });

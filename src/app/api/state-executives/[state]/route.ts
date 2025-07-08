@@ -106,7 +106,7 @@ export async function GET(
     return NextResponse.json(executivesData);
 
   } catch (error) {
-    structuredLogger.error('State Executives API Error', error, {
+    structuredLogger.error('State Executives API Error', error as Error, {
       state: state.toUpperCase(),
       operation: 'state_executives_api_error'
     }, request);

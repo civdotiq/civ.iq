@@ -304,7 +304,7 @@ export function VotingTrendsChart({ bioguideId, years = 5, className = '' }: Vot
         {/* Chart */}
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            {renderChart()}
+            {renderChart() || <div />}
           </ResponsiveContainer>
         </div>
 

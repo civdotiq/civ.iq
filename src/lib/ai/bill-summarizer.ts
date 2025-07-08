@@ -117,7 +117,7 @@ export class BillSummarizer {
       return summary;
 
     } catch (error) {
-      structuredLogger.error('Bill summarization failed, attempting fallbacks', error, {
+      structuredLogger.error('Bill summarization failed, attempting fallbacks', error as Error, {
         billNumber: billMetadata.number,
         operation: 'bill_summarization'
       });
@@ -214,8 +214,8 @@ export class BillSummarizer {
     billMetadata: { number: string; title: string; congress: number; chamber: string },
     options: Required<BillSummarizationOptions>
   ): string {
-    const readingLevelInstructions = this.READING_LEVEL_PROMPTS[options.targetReadingLevel] || 
-      this.READING_LEVEL_PROMPTS[8];
+    const readingLevelInstructions = (this.READING_LEVEL_PROMPTS as any)[options.targetReadingLevel] || 
+      (this.READING_LEVEL_PROMPTS as any)[8];
 
     return `
 You are an expert at explaining complex government legislation in simple terms.

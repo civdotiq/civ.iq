@@ -224,10 +224,11 @@ export async function GET(request: NextRequest) {
                         return acc;
                       }, {});
 
+                      const partyCounts = Object.values(partyBreakdown) as number[];
                       committeeInfo.memberCount = {
                         total: members.length,
-                        majority: Math.max(...Object.values(partyBreakdown)),
-                        minority: Math.min(...Object.values(partyBreakdown))
+                        majority: partyCounts.length > 0 ? Math.max(...partyCounts) : 0,
+                        minority: partyCounts.length > 0 ? Math.min(...partyCounts) : 0
                       };
                     }
                   } catch (error) {

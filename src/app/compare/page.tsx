@@ -255,7 +255,7 @@ function TimelineComparison({ rep1, rep2 }: { rep1: Representative; rep2: Repres
       .enter().append('rect')
       .attr('class', 'bar')
       .attr('x', (d: any) => xScale(d.start))
-      .attr('y', (d: any) => yScale(d.name))
+      .attr('y', (d: any) => yScale(d.name) || 0)
       .attr('width', (d: any) => xScale(d.end) - xScale(d.start))
       .attr('height', yScale.bandwidth())
       .attr('fill', (d: any) => d.color)
@@ -266,7 +266,7 @@ function TimelineComparison({ rep1, rep2 }: { rep1: Representative; rep2: Repres
       .data(data)
       .enter().append('text')
       .attr('x', (d: any) => xScale(d.start) + 5)
-      .attr('y', (d: any) => yScale(d.name) + yScale.bandwidth() / 2)
+      .attr('y', (d: any) => (yScale(d.name) || 0) + yScale.bandwidth() / 2)
       .attr('dy', '.35em')
       .text((d: any) => `${d.end - d.start} years`)
       .attr('fill', 'white')
@@ -403,11 +403,11 @@ function NewsSentimentComparison({ rep1, rep2 }: { rep1: Representative; rep2: R
         { key: 'rep2', value: d.rep2 }
       ])
       .enter().append('rect')
-      .attr('x', (d: any) => x1(d.key))
+      .attr('x', (d: any) => x1(d.key) || 0)
       .attr('y', (d: any) => y(d.value))
       .attr('width', x1.bandwidth())
       .attr('height', (d: any) => height - y(d.value))
-      .attr('fill', (d: any) => color(d.key));
+      .attr('fill', (d: any) => String(color(d.key) || '#ccc'));
 
     // Add legend
     const legend = svg.append('g')
@@ -425,7 +425,7 @@ function NewsSentimentComparison({ rep1, rep2 }: { rep1: Representative; rep2: R
       .attr('y', 9)
       .attr('dy', '.35em')
       .style('text-anchor', 'start')
-      .text(rep1.name.split(' ').pop());
+      .text(rep1.name?.split(' ').pop() || rep1.name || 'Unknown');
 
     legend.append('rect')
       .attr('x', 0)
@@ -439,7 +439,7 @@ function NewsSentimentComparison({ rep1, rep2 }: { rep1: Representative; rep2: R
       .attr('y', 34)
       .attr('dy', '.35em')
       .style('text-anchor', 'start')
-      .text(rep2.name.split(' ').pop());
+      .text(rep2.name?.split(' ').pop() || rep2.name || 'Unknown');
   }, [rep1, rep2]);
 
   return (
@@ -681,7 +681,7 @@ function LegislativeEffectivenessChart({ rep1, rep2 }: { rep1: Representative; r
       .range([height, 0]);
 
     const line = d3.line<number>()
-      .x((d, i) => x(stages[i]))
+      .x((d, i) => x(stages[i]) || 0)
       .y(d => y(d))
       .curve(d3.curveMonotoneX);
 
@@ -711,7 +711,7 @@ function LegislativeEffectivenessChart({ rep1, rep2 }: { rep1: Representative; r
         .data(rep.values)
         .enter().append('circle')
         .attr('class', `dot-${index}`)
-        .attr('cx', (d, i) => x(stages[i]))
+        .attr('cx', (d, i) => x(stages[i]) || 0)
         .attr('cy', d => y(d))
         .attr('r', 5)
         .attr('fill', colors[index]);
@@ -739,7 +739,7 @@ function LegislativeEffectivenessChart({ rep1, rep2 }: { rep1: Representative; r
         .attr('dy', '.35em')
         .style('text-anchor', 'start')
         .style('font-size', '12px')
-        .text(rep.name.split(' ').pop());
+        .text(rep.name?.split(' ').pop() || rep.name || 'Unknown');
     });
   }, [rep1, rep2]);
 

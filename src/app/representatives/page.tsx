@@ -122,7 +122,7 @@ function RepresentativeCard({ rep }: { rep: Representative }) {
         </div>
 
         <div className="space-y-3 mb-4">
-          {rep.contact.phone && (
+          {rep.contact?.phone && (
             <div className="flex items-center gap-2 text-sm">
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -150,15 +150,15 @@ function RepresentativeCard({ rep }: { rep: Representative }) {
 
         <div className="grid grid-cols-3 gap-2 mb-4 text-center">
           <div className="bg-gray-50 rounded p-2">
-            <p className="text-lg font-bold text-gray-900">{rep.stats.billsSponsored}</p>
+            <p className="text-lg font-bold text-gray-900">{rep.stats?.billsSponsored || 0}</p>
             <p className="text-xs text-gray-600">Bills</p>
           </div>
           <div className="bg-gray-50 rounded p-2">
-            <p className="text-lg font-bold text-gray-900">{rep.stats.votingAttendance}%</p>
+            <p className="text-lg font-bold text-gray-900">{rep.stats?.votingAttendance || 0}%</p>
             <p className="text-xs text-gray-600">Attendance</p>
           </div>
           <div className="bg-gray-50 rounded p-2">
-            <p className="text-lg font-bold text-gray-900">{rep.stats.partyLineVoting}%</p>
+            <p className="text-lg font-bold text-gray-900">{rep.stats?.partyLineVoting || 0}%</p>
             <p className="text-xs text-gray-600">Party Line</p>
           </div>
         </div>

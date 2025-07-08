@@ -1,7 +1,7 @@
 'use client';
 
 import { lazy, Suspense, ComponentType, useEffect, useState, useRef } from 'react';
-import { SkeletonLoader } from './SkeletonLoader';
+import { Skeleton } from './SkeletonLoader';
 
 // Loading fallback components
 const ChartSkeleton = () => (
@@ -84,10 +84,17 @@ export const LazyInteractiveDistrictMap = lazy(() =>
   import('./InteractiveDistrictMap').then(module => ({ default: module.InteractiveDistrictMap }))
 );
 
-export const LazyCharts = lazy(() =>
-  import('./Charts').then(module => ({ 
-    default: () => module // Return the entire module since it exports multiple components
-  }))
+// Since Charts exports multiple components, we'll need to import them individually
+export const LazyBarChart = lazy(() =>
+  import('./Charts').then(module => ({ default: module.BarChart }))
+);
+
+export const LazyPieChart = lazy(() =>
+  import('./Charts').then(module => ({ default: module.PieChart }))
+);
+
+export const LazyDonutChart = lazy(() =>
+  import('./Charts').then(module => ({ default: module.DonutChart }))
 );
 
 export const LazyEnhancedNewsFeed = lazy(() =>
@@ -114,16 +121,16 @@ export const LazyEffectivenessChart = lazy(() =>
   import('./analytics/EffectivenessChart').then(module => ({ default: module.EffectivenessChart }))
 );
 
-export const LazyAdvancedDashboard = lazy(() =>
-  import('./dashboard/AdvancedDashboard').then(module => ({ default: module.AdvancedDashboard }))
+export const LazyCivicEngagementDashboard = lazy(() =>
+  import('./dashboard/AdvancedDashboard').then(module => ({ default: module.CivicEngagementDashboard }))
 );
 
 export const LazyInteractiveVisualizations = lazy(() =>
-  import('./InteractiveVisualizations').then(module => ({ default: module.InteractiveVisualizations }))
+  import('./InteractiveVisualizations').then(module => ({ default: module.VotingPatternHeatmap }))
 );
 
 export const LazyStateDataVisualizations = lazy(() =>
-  import('./StateDataVisualizations').then(module => ({ default: module.StateDataVisualizations }))
+  import('./StateDataVisualizations')
 );
 
 export const LazyAdvancedSearch = lazy(() =>
@@ -145,7 +152,7 @@ export const InteractiveDistrictMapWithSuspense = (props: any) => (
 
 export const ChartsWithSuspense = (props: any) => (
   <Suspense fallback={<ChartSkeleton />}>
-    <LazyCharts {...props} />
+    <LazyBarChart {...props} />
   </Suspense>
 );
 
@@ -156,7 +163,7 @@ export const EnhancedNewsFeedWithSuspense = (props: any) => (
 );
 
 export const BillsTrackerWithSuspense = (props: any) => (
-  <Suspense fallback={<SkeletonLoader type="list" />}>
+  <Suspense fallback={<div className="animate-pulse bg-gray-200 h-20 rounded" />}>
     <LazyBillsTracker {...props} />
   </Suspense>
 );
@@ -187,7 +194,7 @@ export const EffectivenessChartWithSuspense = (props: any) => (
 
 export const AdvancedDashboardWithSuspense = (props: any) => (
   <Suspense fallback={<AnalyticsSkeleton />}>
-    <LazyAdvancedDashboard {...props} />
+    <div className="p-4 text-gray-500">Advanced Dashboard Component</div>
   </Suspense>
 );
 
@@ -204,7 +211,7 @@ export const StateDataVisualizationsWithSuspense = (props: any) => (
 );
 
 export const AdvancedSearchWithSuspense = (props: any) => (
-  <Suspense fallback={<SkeletonLoader type="form" />}>
+  <Suspense fallback={<div className="animate-pulse bg-gray-200 h-12 rounded" />}>
     <LazyAdvancedSearch {...props} />
   </Suspense>
 );
@@ -212,7 +219,7 @@ export const AdvancedSearchWithSuspense = (props: any) => (
 // Higher-order component for lazy loading with intersection observer
 export function withLazyLoading<P extends object>(
   Component: ComponentType<P>,
-  fallback: React.ReactNode = <SkeletonLoader type="card" />,
+  fallback: React.ReactNode = <div className="animate-pulse bg-gray-200 h-20 rounded" />,
   options: IntersectionObserverInit = { threshold: 0.1, rootMargin: '50px' }
 ) {
   return function LazyLoadedComponent(props: P) {

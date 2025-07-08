@@ -132,7 +132,7 @@ export async function GET(
     return NextResponse.json(response);
 
   } catch (error) {
-    structuredLogger.error('Local Government API Error', error, {
+    structuredLogger.error('Local Government API Error', error as Error, {
       location,
       jurisdiction: jurisdiction || 'all',
       operation: 'local_government_api_error'

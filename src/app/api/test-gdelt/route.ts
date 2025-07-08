@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
           const articles = await fetchGDELTNews(term, 3);
           allArticles.push(...articles.map(normalizeGDELTArticle));
         } catch (error) {
-          structuredLogger.error(`Failed to fetch GDELT data for term: ${term}`, error, {
+          structuredLogger.error(`Failed to fetch GDELT data for term: ${term}`, error as Error, {
             searchTerm: term,
             operation: 'gdelt_fetch_optimized'
           }, request);
@@ -98,8 +98,8 @@ export async function GET(request: NextRequest) {
         }
         
         // Remove duplicates
-        const seenUrls = new Set();
-        results.articles = results.articles.filter(article => {
+        const seenUrls = new Set<string>();
+        results.articles = results.articles.filter((article: any) => {
           if (seenUrls.has(article.url)) return false;
           seenUrls.add(article.url);
           return true;
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
           success: false,
           testType: 'comprehensive',
           query,
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
           partialResults: results,
           message: 'Comprehensive test failed with partial results'
         });
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
     }
     
   } catch (error) {
-    structuredLogger.error('GDELT Test Error', error, {
+    structuredLogger.error('GDELT Test Error', error as Error, {
       query,
       testType,
       operation: 'gdelt_test_complete_failure'

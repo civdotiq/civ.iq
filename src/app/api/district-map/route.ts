@@ -153,7 +153,6 @@ function createMockBoundary(
       state,
       name: names[type],
       type,
-      source: 'mock'
     }
   };
 }
@@ -188,13 +187,13 @@ function calculateBoundingBox(coordinates: number[][][], padding = 0.01): {
 
 // Fetch real congressional district boundary from Census TIGER (119th Congress)
 async function fetchCongressionalDistrict(stateFips: string, district: string): Promise<any> {
+  const monitor = monitorExternalApi('census-tiger', 'congressional-district', '')
+  
   try {
     // Use Census Bureau's TIGERweb REST API for 119th Congressional Districts (Layer 0)
     const paddedDistrict = district.padStart(2, '0');
     const whereClause = `STATE='${stateFips}' AND CD119='${paddedDistrict}'`;
     const url = `https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/0/query?where=${encodeURIComponent(whereClause)}&outFields=*&outSR=4326&f=geojson`;
-    
-    const monitor = monitorExternalApi('census-tiger', 'congressional-district', url)
     
     const response = await fetch(url)
     
@@ -236,6 +235,8 @@ async function fetchCongressionalDistrict(stateFips: string, district: string): 
 
 // Fetch state legislative district boundaries from Census TIGER
 async function fetchStateLegislativeDistrict(stateFips: string, chamber: 'upper' | 'lower', coordinates?: {lat: number, lng: number}): Promise<any> {
+  const monitor = monitorExternalApi('census-tiger', `${chamber}-legislative`, '')
+  
   try {
     // Use Census Bureau's TIGERweb REST API for State Legislative Districts
     // Layer 2: State Legislative Districts - Upper Chamber (State Senate)
@@ -247,8 +248,6 @@ async function fetchStateLegislativeDistrict(stateFips: string, chamber: 'upper'
     // If coordinates provided, use spatial query to find the specific district
     // For now, just get the first district from the state as a fallback
     const url = `https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/${layerId}/query?where=${encodeURIComponent(whereClause)}&outFields=*&outSR=4326&f=geojson&resultRecordCount=1`;
-    
-    const monitor = monitorExternalApi('census-tiger', `${chamber}-legislative`, url)
     
     const response = await fetch(url)
     

@@ -114,7 +114,7 @@ export class ErrorHandler {
   }
 
   static logError(error: Error, context?: ErrorContext): void {
-    const logData = {
+    const logData: any = {
       name: error.name,
       message: error.message,
       stack: error.stack,
@@ -123,12 +123,12 @@ export class ErrorHandler {
     }
 
     if (error instanceof ApiError) {
-      logData['statusCode'] = error.statusCode
-      logData['isOperational'] = error.isOperational
+      logData.statusCode = error.statusCode
+      logData.isOperational = error.isOperational
       
       if (error instanceof ExternalApiError) {
-        logData['service'] = error.service
-        logData['originalError'] = error.originalError?.message
+        logData.service = error.service
+        logData.originalError = error.originalError?.message
       }
     }
 

@@ -332,8 +332,7 @@ export function EffectivenessChart({ bioguideId, years = 8, className = '' }: Ef
         <div className="h-80 w-full">
           {view !== 'specializations' && (
             <ResponsiveContainer width="100%" height="100%">
-              {view === 'trends' && renderTrendsChart()}
-              {view === 'activity' && renderActivityChart()}
+              {view === 'trends' ? (renderTrendsChart() || <div />) : (renderActivityChart() || <div />)}
             </ResponsiveContainer>
           )}
           {view === 'specializations' && renderSpecializationsChart()}

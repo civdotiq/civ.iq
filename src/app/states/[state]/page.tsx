@@ -135,7 +135,7 @@ function StateMap({ stateAbbr }: { stateAbbr: string }) {
           .attr('cx', d.x)
           .attr('cy', d.y)
           .attr('r', 30)
-          .attr('fill', i => i % 2 === 0 ? '#3b82f6' : '#ef4444')
+          .attr('fill', (d, i) => (i as number) % 2 === 0 ? '#3b82f6' : '#ef4444')
           .attr('opacity', 0.3)
           .on('mouseover', function() {
             d3.select(this).attr('opacity', 0.6);
@@ -280,7 +280,7 @@ function PresidentialHistory({ history }: { history: StateData['presidentialHist
       .call(d3.axisBottom(x));
 
     svg.append('g')
-      .call(d3.axisLeft(y).tickFormat(d => `${Math.abs(d)}%`));
+      .call(d3.axisLeft(y).tickFormat(d => `${Math.abs(d.valueOf())}%`));
 
     // Add zero line
     svg.append('line')
@@ -296,7 +296,7 @@ function PresidentialHistory({ history }: { history: StateData['presidentialHist
       .data(history)
       .enter().append('rect')
       .attr('class', 'bar')
-      .attr('x', d => x(d.year.toString()))
+      .attr('x', d => x(d.year.toString()) || 0)
       .attr('width', x.bandwidth())
       .attr('y', d => d.margin > 0 ? y(d.margin) : y(0))
       .attr('height', d => Math.abs(y(d.margin) - y(0)))
@@ -306,7 +306,7 @@ function PresidentialHistory({ history }: { history: StateData['presidentialHist
     svg.selectAll('.label')
       .data(history)
       .enter().append('text')
-      .attr('x', d => x(d.year.toString()) + x.bandwidth() / 2)
+      .attr('x', d => (x(d.year.toString()) || 0) + x.bandwidth() / 2)
       .attr('y', d => y(d.margin) + (d.margin > 0 ? -5 : 15))
       .attr('text-anchor', 'middle')
       .attr('font-size', '12px')

@@ -96,7 +96,7 @@ async function retryWithBackoff<T>(
         attempt: attempt + 1,
         maxRetries: options.maxRetries,
         delay,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         operation: 'gdelt_api_retry'
       });
       await sleep(delay);
@@ -290,7 +290,7 @@ export async function fetchGDELTNews(
       try {
         data = JSON.parse(text);
       } catch (parseError) {
-        structuredLogger.error('Failed to parse GDELT JSON response', parseError, {
+        structuredLogger.error('Failed to parse GDELT JSON response', parseError as Error, {
           searchTerm: searchTerm.slice(0, 50),
           operation: 'gdelt_json_parse_error'
         });
@@ -329,7 +329,7 @@ export async function fetchGDELTNews(
         error: error instanceof Error ? error.message : String(error)
       });
       
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         throw new GDELTAPIError('GDELT API request timeout', undefined, true);
       }
       
@@ -410,7 +410,7 @@ function normalizeDate(dateString: string): string {
       return date.toISOString();
     }
   } catch (error) {
-    structuredLogger.error('Error parsing GDELT date', error, {
+    structuredLogger.error('Error parsing GDELT date', error as Error, {
       dateString,
       operation: 'gdelt_date_parse_error'
     });
@@ -605,7 +605,7 @@ export async function getGDELTRealTimeStream(
             originalCount: 0,
             duplicatesRemoved: 0,
             finalCount: 0,
-            duplicatesDetected: []
+            duplicatesDetected: [] as { method: string; originalIndex: number; duplicateIndex: number; similarity: number; }[]
           });
           
           // Final deduplication across search terms
@@ -654,7 +654,7 @@ export async function getGDELTRealTimeStream(
     };
 
   } catch (error) {
-    structuredLogger.error('Error fetching GDELT real-time stream', error, {
+    structuredLogger.error('Error fetching GDELT real-time stream', error as Error, {
       representativeName,
       state,
       district,
@@ -746,13 +746,13 @@ export async function monitorBreakingNews(
     // Sort by urgency and recency
     return breakingNews
       .sort((a, b) => {
-        const urgencyWeight = { high: 3, medium: 2, low: 1 };
+        const urgencyWeight: { [key: string]: number } = { high: 3, medium: 2, low: 1 };
         return urgencyWeight[b.urgency] - urgencyWeight[a.urgency];
       })
       .slice(0, 10);
 
   } catch (error) {
-    structuredLogger.error('Error monitoring breaking news', error, {
+    structuredLogger.error('Error monitoring breaking news', error as Error, {
       representativeName,
       state,
       operation: 'gdelt_breaking_news_error'

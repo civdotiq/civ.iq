@@ -180,7 +180,7 @@ function EngagementChart({ timeRange }: { timeRange: 'week' | 'month' | 'year' }
 
     svg.append('g')
       .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x).tickFormat(d3.timeFormat('%b %d')));
+      .call(d3.axisBottom(x).tickFormat(d3.timeFormat('%b %d') as any));
 
     svg.append('g')
       .call(d3.axisLeft(y));

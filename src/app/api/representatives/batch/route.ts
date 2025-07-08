@@ -152,7 +152,7 @@ async function handleBatchRequest(request: ValidatedRequest<BatchRequest>): Prom
 
             results[bioguideId] = representative;
           } catch (error) {
-            structuredLogger.error(`Error fetching representative ${bioguideId}`, error, {
+            structuredLogger.error(`Error fetching representative ${bioguideId}`, error as Error, {
               bioguideId,
               batchIndex,
               operation: 'batch_representative_fetch_error'
@@ -192,7 +192,7 @@ async function handleBatchRequest(request: ValidatedRequest<BatchRequest>): Prom
   } catch (error) {
     performanceMonitor.endTimer('batch-representatives-fetch');
     
-    structuredLogger.error('Batch representatives request failed', error, {
+    structuredLogger.error('Batch representatives request failed', error as Error, {
       bioguideIds: bioguideIds.slice(0, 10), // Log first 10 for debugging
       operation: 'batch_representatives_error'
     }, request);
@@ -207,18 +207,11 @@ async function handleBatchRequest(request: ValidatedRequest<BatchRequest>): Prom
   }
 }
 
-// Export POST handler with validation
-export const POST = withValidationAndSecurity<BatchRequest>(
-  {
-    body: {
-      bioguideIds: () => ({ isValid: true, errors: [] }) // Custom validation handled above
-    },
-    sanitizeResponse: true,
-    logValidationErrors: true
-  },
-  async (request: ValidatedRequest<BatchRequest>) => {
+// Export POST handler
+export async function POST(request: NextRequest) {
+  try {
     // Custom validation for the batch request
-    const rawBody = await request.clone().json();
+    const rawBody = await request.json();
     const validation = validateBatchRequest(rawBody);
     
     if (!validation.isValid) {
@@ -232,8 +225,15 @@ export const POST = withValidationAndSecurity<BatchRequest>(
     }
 
     // Add validated data to request
-    (request as any).validatedBody = validation.sanitized;
+    const validatedRequest = request as ValidatedRequest<BatchRequest>;
+    validatedRequest.validatedBody = validation.sanitized;
 
-    return withErrorHandling(handleBatchRequest)(request);
+    return withErrorHandling(handleBatchRequest)(validatedRequest);
+  } catch (error) {
+    structuredLogger.error('POST batch representatives handler error', error as Error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
-);
+}

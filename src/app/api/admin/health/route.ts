@@ -108,7 +108,13 @@ async function getSystemHealth(): Promise<SystemHealth> {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     version: process.env.npm_package_version || '0.1.0',
-    services: serviceHealth,
+    services: serviceHealth.map(sh => ({
+      name: sh.service,
+      status: sh.status,
+      responseTime: sh.responseTime,
+      lastChecked: sh.lastChecked,
+      error: sh.error
+    })),
     system: {
       nodeVersion: process.version,
       memory: {

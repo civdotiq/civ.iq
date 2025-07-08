@@ -292,7 +292,7 @@ class GovernmentRSSFetcher {
 
       // Extract categories
       const categoryElements = Array.from(item.querySelectorAll('category'));
-      const categories = categoryElements.map(cat => cat.textContent?.trim()).filter(Boolean);
+      const categories = categoryElements.map(cat => cat.textContent?.trim()).filter(Boolean) as string[];
 
       return {
         title: this.cleanText(title),

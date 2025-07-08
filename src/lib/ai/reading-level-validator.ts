@@ -80,7 +80,7 @@ export class ReadingLevelValidator {
    */
   static analyzeReadingLevel(
     text: string, 
-    options: ReadingLevelOptions = {}
+    options: ReadingLevelOptions = { targetGrade: 8 }
   ): ReadingLevelAnalysis {
     const {
       targetGrade = this.DEFAULT_TARGET_GRADE,
@@ -134,7 +134,7 @@ export class ReadingLevelValidator {
       return analysis;
 
     } catch (error) {
-      structuredLogger.error('Reading level analysis failed', error, {
+      structuredLogger.error('Reading level analysis failed', error as Error, {
         targetGrade,
         textLength: text.length,
         operation: 'reading_level_validation'
@@ -381,7 +381,7 @@ export class ReadingLevelValidator {
    */
   static validateBatch(
     texts: { id: string; content: string }[],
-    options: ReadingLevelOptions = {}
+    options: ReadingLevelOptions = { targetGrade: 8 }
   ): Map<string, ReadingLevelAnalysis> {
     const results = new Map<string, ReadingLevelAnalysis>();
 
@@ -390,7 +390,7 @@ export class ReadingLevelValidator {
         const analysis = this.analyzeReadingLevel(content, options);
         results.set(id, analysis);
       } catch (error) {
-        structuredLogger.error('Batch reading level validation failed for item', error, {
+        structuredLogger.error('Batch reading level validation failed for item', error as Error, {
           itemId: id,
           operation: 'reading_level_validation'
         });

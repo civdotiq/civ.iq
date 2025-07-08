@@ -178,7 +178,7 @@ function CompetitivenessChart({ districts }: { districts: District[] }) {
     // Add x axis
     svg.append('g')
       .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x).tickFormat(d => d === 0 ? 'EVEN' : `${Math.abs(d)}`));
+      .call(d3.axisBottom(x).tickFormat(d => d.valueOf() === 0 ? 'EVEN' : `${Math.abs(d.valueOf())}`));
 
     // Add y axis
     svg.append('g')
@@ -199,7 +199,7 @@ function CompetitivenessChart({ districts }: { districts: District[] }) {
       .enter().append('rect')
       .attr('class', 'bar')
       .attr('x', d => d.value < 0 ? x(d.value) : x(0))
-      .attr('y', d => y(d.district))
+      .attr('y', d => y(d.district) || 0)
       .attr('width', d => Math.abs(x(d.value) - x(0)))
       .attr('height', y.bandwidth())
       .attr('fill', d => d.value < 0 ? '#3b82f6' : '#ef4444')

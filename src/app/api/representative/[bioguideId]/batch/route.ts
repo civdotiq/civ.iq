@@ -135,7 +135,7 @@ export async function POST(
         responseData[result.endpoint] = result.data;
         successfulEndpoints.push(result.endpoint);
       } else {
-        errors[result.endpoint] = result.error;
+        errors[result.endpoint] = result.error || 'Unknown error';
         failedEndpoints.push(result.endpoint);
       }
     });

@@ -248,10 +248,10 @@ export async function GET(
   const { state } = await params;
   const { searchParams } = new URL(request.url);
   
-  const status = searchParams.get('status');
-  const chamber = searchParams.get('chamber');
-  const subject = searchParams.get('subject');
-  const sponsor = searchParams.get('sponsor');
+  const status = searchParams.get('status') || undefined;
+  const chamber = searchParams.get('chamber') || undefined;
+  const subject = searchParams.get('subject') || undefined;
+  const sponsor = searchParams.get('sponsor') || undefined;
   const limit = parseInt(searchParams.get('limit') || '50');
   const page = parseInt(searchParams.get('page') || '1');
 
@@ -387,7 +387,7 @@ export async function GET(
     return NextResponse.json(response);
 
   } catch (error) {
-    structuredLogger.error('State Bills API Error', error, {
+    structuredLogger.error('State Bills API Error', error as Error, {
       state: state.toUpperCase(),
       operation: 'state_bills_api_error',
       filters: { status, chamber, subject, sponsor }

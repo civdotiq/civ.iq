@@ -343,7 +343,7 @@ interface DistrictInfo {
 }
 
 // Statistics calculation functions
-function calculateStats(representative: RepresentativeDetails, votes: Vote[], bills: SponsoredBill[]) {
+function calculateStats(representative: RepresentativeDetails | null, votes: Vote[], bills: SponsoredBill[]) {
   // Defensive checks
   if (!representative || !votes || !bills) {
     return {
@@ -354,19 +354,19 @@ function calculateStats(representative: RepresentativeDetails, votes: Vote[], bi
     };
   }
   
-  // Calculate committees count
-  const committeesCount = representative.committees?.length || 0;
+  // Calculate committees count with proper null safety
+  const committeesCount = Array.isArray(representative.committees) ? representative.committees.length : 0;
 
   // Calculate bills sponsored count
-  const billsSponsoredCount = bills?.length || 0;
+  const billsSponsoredCount = Array.isArray(bills) ? bills.length : 0;
 
   // Calculate party voting percentage
   let partyVotingPercentage = 0;
-  if (votes?.length > 0) {
+  if (Array.isArray(votes) && votes.length > 0) {
     // In a real app, this would compare against actual party line votes
     // For now, we'll simulate based on party and voting patterns
-    const substantiveVotes = (votes || []).filter(v => v.position === 'Yea' || v.position === 'Nay');
-    if (substantiveVotes?.length > 0) {
+    const substantiveVotes = votes.filter(v => v.position === 'Yea' || v.position === 'Nay');
+    if (substantiveVotes.length > 0) {
       const party = representative.party || '';
       if (party.includes('Democrat')) {
         partyVotingPercentage = 85 + Math.random() * 10; // 85-95%
@@ -380,9 +380,9 @@ function calculateStats(representative: RepresentativeDetails, votes: Vote[], bi
 
   // Calculate attendance percentage
   let attendancePercentage = 0;
-  if (votes?.length > 0) {
-    const presentVotes = (votes || []).filter(v => v.position !== 'Not Voting');
-    attendancePercentage = (presentVotes?.length || 0) / (votes?.length || 1) * 100;
+  if (Array.isArray(votes) && votes.length > 0) {
+    const presentVotes = votes.filter(v => v.position !== 'Not Voting');
+    attendancePercentage = presentVotes.length / votes.length * 100;
   }
 
   return {
@@ -396,8 +396,8 @@ function calculateStats(representative: RepresentativeDetails, votes: Vote[], bi
 // Generate mock biography based on available data
 function generateBiography(representative: RepresentativeDetails): string {
   const currentYear = new Date().getFullYear();
-  const firstTerm = representative.terms && representative.terms?.length > 0 
-    ? representative.terms[representative.terms?.length - 1] 
+  const firstTerm = Array.isArray(representative.terms) && representative.terms.length > 0 
+    ? representative.terms[representative.terms.length - 1] 
     : { startYear: currentYear.toString(), endYear: (currentYear + 2).toString() };
   const yearsInOffice = currentYear - parseInt(firstTerm.startYear);
   
@@ -416,12 +416,21 @@ function getOrdinalSuffix(num: string): string {
 
 // Profile Tab Component
 function ProfileTab({ representative, votes, bills }: { 
-  representative: RepresentativeDetails; 
+  representative: RepresentativeDetails | null; 
   votes: Vote[];
   bills: SponsoredBill[];
 }) {
+  if (!representative) {
+    return (
+      <div className="text-center py-8 text-gray-600">
+        Representative information not available.
+      </div>
+    );
+  }
+
   const stats = calculateStats(representative, votes, bills);
   const biography = representative.biography || generateBiography(representative);
+  const billsSponsoredCount = Array.isArray(bills) ? bills.length : 0;
 
   return (
     <div className="space-y-6">
@@ -436,12 +445,12 @@ function ProfileTab({ representative, votes, bills }: {
         <h3 className="text-xl font-semibold text-gray-900 mb-4">Legislative Activity</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
           <div>
-            <div className="text-3xl font-bold text-gray-900">{bills?.length || 0}</div>
+            <div className="text-3xl font-bold text-gray-900">{billsSponsoredCount}</div>
             <div className="text-sm text-gray-600">Bills Sponsored</div>
           </div>
           <div>
             <div className="text-3xl font-bold text-gray-900">
-              {bills.reduce((sum, bill) => sum + (bill.cosponsors || 0), 0)}
+              {Array.isArray(bills) ? bills.reduce((sum, bill) => sum + (bill.cosponsors || 0), 0) : 0}
             </div>
             <div className="text-sm text-gray-600">Bills Co-Sponsored</div>
           </div>
@@ -480,15 +489,15 @@ function ProfileTab({ representative, votes, bills }: {
       )}
 
       {/* Leadership Roles */}
-      {representative.leadershipRoles && representative.leadershipRoles?.length > 0 && (
+      {Array.isArray(representative.leadershipRoles) && representative.leadershipRoles.length > 0 && (
         <div>
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Leadership Roles</h3>
           <div className="space-y-2">
-            {(representative.leadershipRoles || []).map((role, index) => (
+            {representative.leadershipRoles.map((role, index) => (
               <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="font-medium">{role.title}</span>
+                <span className="font-medium">{role?.title || 'Unknown Role'}</span>
                 <span className="text-sm text-gray-600">
-                  {role.start} {role.end ? `- ${role.end}` : '- Present'}
+                  {role?.start || 'Unknown'} {role?.end ? `- ${role.end}` : '- Present'}
                 </span>
               </div>
             ))}
@@ -642,6 +651,7 @@ function ProfileTab({ representative, votes, bills }: {
 // Relationships Tab Component  
 function RelationshipsTab({ representative }: { representative: RepresentativeDetails }) {
   const committees = representative.committees || [];
+  const committeesCount = committees.length;
   
   // Calculate committee distribution for pie chart
   const committeeTypes = committees.reduce((acc, committee) => {
@@ -681,7 +691,7 @@ function RelationshipsTab({ representative }: { representative: RepresentativeDe
               <DonutChart
                 data={committeeData}
                 title=""
-                centerText={(committees?.length || 0).toString()}
+                centerText={committeesCount.toString()}
                 formatValue={(value) => value.toString()}
               />
             </div>
@@ -691,22 +701,22 @@ function RelationshipsTab({ representative }: { representative: RepresentativeDe
           <div>
             <h5 className="font-semibold text-gray-900 mb-3">Committee Involvement</h5>
             <p className="text-gray-600 mb-4">
-              {representative.name} serves on {committees?.length || 0} committee{(committees?.length || 0) !== 1 ? 's' : ''}.
+              {representative.name} serves on {committeesCount} committee{committeesCount !== 1 ? 's' : ''}.
             </p>
             <ul className="space-y-2">
-              {(committees || []).map((committee, index) => (
+              {Array.isArray(committees) ? committees.map((committee, index) => (
                 <li key={index} className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full" style={{
-                    backgroundColor: (committeeData || []).find(d => 
+                    backgroundColor: Array.isArray(committeeData) ? committeeData.find(d => 
                       committee.name?.includes(d.label?.split(' ')[0])
-                    )?.color || '#6b7280'
+                    )?.color || '#6b7280' : '#6b7280'
                   }} />
                   <span className="text-gray-700">{committee.name}</span>
                   {committee.role && (
                     <span className="text-sm text-gray-500">({committee.role})</span>
                   )}
                 </li>
-              ))}
+              )) : null}
             </ul>
           </div>
         </div>
@@ -1022,7 +1032,7 @@ function ContactTab({ representative }: { representative: RepresentativeDetails 
               </div>
             </a>
           )}
-          {(!representative.socialMedia || Object.keys(representative.socialMedia || {})?.length === 0) && (
+          {(!representative.socialMedia || Object.keys(representative.socialMedia || {}).length === 0) && (
             <p className="text-sm text-gray-500">No social media information available</p>
           )}
         </div>
@@ -1030,11 +1040,11 @@ function ContactTab({ representative }: { representative: RepresentativeDetails 
       </div>
       
       {/* District Offices */}
-      {representative.contact?.districtOffices && representative.contact.districtOffices?.length > 0 && (
+      {Array.isArray(representative.contact?.districtOffices) && representative.contact.districtOffices.length > 0 && (
         <div>
           <h4 className="font-semibold text-gray-900 mb-4">District Offices</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(representative.contact?.districtOffices || []).map((office, index) => (
+            {representative.contact.districtOffices.map((office, index) => (
               <div key={index} className="bg-gray-50 rounded-lg p-4">
                 <div className="space-y-2">
                   <div className="flex items-start gap-2">
@@ -1076,22 +1086,72 @@ export default function RepresentativeProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'profile' | 'voting' | 'bills' | 'finance' | 'news' | 'contact' | 'relationships'>('profile');
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
   
   // Additional state for enhanced features
   const [votes, setVotes] = useState<Vote[]>([]);
   const [bills, setBills] = useState<SponsoredBill[]>([]);
   const [news, setNews] = useState<NewsArticle[]>([]);
 
+  const handleRetry = async () => {
+    if (retryCount >= 4) { // Max 5 attempts (0-4)
+      setError('Maximum retry attempts reached. Please try again later.');
+      return;
+    }
+    
+    setIsRetrying(true);
+    setError(null);
+    setRetryCount(prev => prev + 1);
+    
+    // Add exponential backoff delay
+    const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+    await new Promise(resolve => setTimeout(resolve, delay));
+    
+    try {
+      const response = await fetch(`/api/representative/${bioguideId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch representative details: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const representative = data.representative || data;
+      
+      if (!representative || !representative.bioguideId) {
+        throw new Error('Invalid representative data received');
+      }
+      
+      setRepresentative(representative);
+      setError(null);
+    } catch (err) {
+      console.error('Retry error fetching representative:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred during retry');
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
   useEffect(() => {
     const fetchRepresentative = async () => {
       try {
         const response = await fetch(`/api/representative/${bioguideId}`);
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch representative details');
+          throw new Error(`Failed to fetch representative details: ${response.status}`);
         }
+        
         const data = await response.json();
-        setRepresentative(data.representative || data);
+        const representative = data.representative || data;
+        
+        if (!representative || !representative.bioguideId) {
+          throw new Error('Invalid representative data received');
+        }
+        
+        setRepresentative(representative);
+        setError(null); // Clear any previous errors
       } catch (err) {
+        console.error('Error fetching representative:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
@@ -1108,21 +1168,45 @@ export default function RepresentativeProfile() {
     if (bioguideId) {
       // Fetch votes
       fetch(`/api/representative/${bioguideId}/votes?limit=100`)
-        .then(res => res.json())
-        .then(data => setVotes(data.votes || []))
-        .catch(console.error);
+        .then(res => {
+          if (res.ok) {
+            return res.json();
+          }
+          throw new Error('Failed to fetch votes');
+        })
+        .then(data => setVotes(Array.isArray(data?.votes) ? data.votes : []))
+        .catch(error => {
+          console.error('Error fetching votes:', error);
+          setVotes([]);
+        });
 
       // Fetch bills
       fetch(`/api/representative/${bioguideId}/bills?limit=100`)
-        .then(res => res.json())
-        .then(data => setBills(data.bills || []))
-        .catch(console.error);
+        .then(res => {
+          if (res.ok) {
+            return res.json();
+          }
+          throw new Error('Failed to fetch bills');
+        })
+        .then(data => setBills(Array.isArray(data?.bills) ? data.bills : []))
+        .catch(error => {
+          console.error('Error fetching bills:', error);
+          setBills([]);
+        });
 
       // Fetch news
       fetch(`/api/representative/${bioguideId}/news`)
-        .then(res => res.json())
-        .then(data => setNews(data.articles || []))
-        .catch(console.error);
+        .then(res => {
+          if (res.ok) {
+            return res.json();
+          }
+          throw new Error('Failed to fetch news');
+        })
+        .then(data => setNews(Array.isArray(data?.articles) ? data.articles : []))
+        .catch(error => {
+          console.error('Error fetching news:', error);
+          setNews([]);
+        });
     }
   }, [bioguideId]);
 
@@ -1171,12 +1255,50 @@ export default function RepresentativeProfile() {
   if (error || !representative) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 font-medium">Error</p>
-          <p className="text-gray-600 mt-1">{error || 'Representative not found'}</p>
-          <Link href="/" className="inline-block mt-4 text-civiq-blue hover:underline">
-            ← Back to Search
-          </Link>
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <div className="text-red-600 text-5xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h2>
+            <p className="text-gray-600 mb-6">
+              {error || 'Representative data could not be loaded'}
+            </p>
+            
+            <div className="space-y-3">
+              <button
+                onClick={handleRetry}
+                disabled={isRetrying || retryCount >= 4}
+                className={`w-full px-4 py-2 rounded-md font-medium transition-colors ${
+                  isRetrying || retryCount >= 4
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                    : 'bg-civiq-blue text-white hover:bg-civiq-blue/90'
+                }`}
+              >
+                {isRetrying ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Retrying...
+                  </div>
+                ) : retryCount >= 4 ? (
+                  'Max attempts reached'
+                ) : (
+                  `Try Again${retryCount > 0 ? ` (${retryCount + 1})` : ''}`
+                )}
+              </button>
+              
+              <Link 
+                href="/" 
+                className="block w-full px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                ← Back to Search
+              </Link>
+            </div>
+            
+            {retryCount > 0 && (
+              <div className="mt-4 text-sm text-gray-500">
+                Retry attempt {retryCount} of 5
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -1255,7 +1377,7 @@ export default function RepresentativeProfile() {
                         <span className="text-sm text-gray-500 ml-1">(Class {representative.currentTerm.class})</span>
                       )}
                     </span>
-                    {representative.leadershipRoles && representative.leadershipRoles?.length > 0 && (
+                    {Array.isArray(representative.leadershipRoles) && representative.leadershipRoles.length > 0 && (
                       <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-medium">
                         {representative.leadershipRoles[0].title}
                       </span>
@@ -1271,11 +1393,11 @@ export default function RepresentativeProfile() {
                     </>
                   ) : (
                     <>
-                      In office since: {representative.terms && representative.terms?.length > 0 
-                        ? representative.terms[representative.terms?.length - 1]?.startYear 
+                      In office since: {Array.isArray(representative.terms) && representative.terms.length > 0 
+                        ? representative.terms[representative.terms.length - 1]?.startYear 
                         : 'Unknown'}
                       <br />
-                      Term ends: {representative.terms && representative.terms?.length > 0 
+                      Term ends: {Array.isArray(representative.terms) && representative.terms.length > 0 
                         ? representative.terms[0]?.endYear 
                         : 'Unknown'}
                     </>
@@ -1499,14 +1621,14 @@ export default function RepresentativeProfile() {
                 <h3 className="text-lg font-semibold text-gray-900">
                   Recent News
                 </h3>
-                {news?.length > 0 && (
-                  <span className="text-xs text-gray-500">{news?.length || 0} articles</span>
+                {Array.isArray(news) && news.length > 0 && (
+                  <span className="text-xs text-gray-500">{news.length} articles</span>
                 )}
               </div>
-              {news?.length > 0 ? (
+              {Array.isArray(news) && news.length > 0 ? (
                 <>
                   <div className="space-y-4 mb-4">
-                    {(news || []).slice(0, 3).map((article, index) => (
+                    {news.slice(0, 3).map((article, index) => (
                       <div key={index} className="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                         <a 
                           href={article.url} 
@@ -1724,7 +1846,7 @@ function PartyAlignmentSection({ representative }: { representative: Representat
       </div>
       
       {/* Key Departures */}
-      {alignmentData.key_departures && alignmentData.key_departures.length > 0 && (
+      {Array.isArray(alignmentData.key_departures) && alignmentData.key_departures.length > 0 && (
         <div className="bg-yellow-50 rounded-lg p-6">
           <h5 className="font-semibold text-gray-900 mb-4">Notable Party Departures</h5>
           <div className="space-y-3">
@@ -1950,7 +2072,7 @@ function LegislativePartnersSection({ representative }: { representative: Repres
       </div>
 
       {/* Committee Network */}
-      {partnersData.committeePeers.length > 0 && (
+      {Array.isArray(partnersData.committeePeers) && partnersData.committeePeers.length > 0 && (
         <div>
           <h5 className="font-semibold text-gray-900 mb-4">Committee Network</h5>
           <div className="bg-blue-50 rounded-lg p-4">
@@ -1958,14 +2080,14 @@ function LegislativePartnersSection({ representative }: { representative: Repres
               {representative.name} works with these colleagues on shared committees:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {representative.committees?.slice(0, 4).map((committee, index) => (
+              {Array.isArray(representative.committees) ? representative.committees.slice(0, 4).map((committee, index) => (
                 <div key={index} className="bg-white rounded p-3">
                   <div className="font-medium text-gray-900 text-sm">{committee.name}</div>
                   <div className="text-xs text-gray-600 mt-1">
                     {Math.floor(Math.random() * 15) + 10} members
                   </div>
                 </div>
-              ))}
+              )) : null}
             </div>
           </div>
         </div>

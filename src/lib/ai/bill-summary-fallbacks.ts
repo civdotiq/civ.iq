@@ -147,9 +147,9 @@ export class BillSummaryFallbacks {
     try {
       // Look for official congressional summary sections
       const summaryPatterns = [
-        /SUMMARY[:\s]+(.*?)(?=\n\s*[A-Z][A-Z\s]+:|\n\s*SEC\.|$)/is,
-        /CONGRESSIONAL SUMMARY[:\s]+(.*?)(?=\n\s*[A-Z][A-Z\s]+:|\n\s*SEC\.|$)/is,
-        /BILL SUMMARY[:\s]+(.*?)(?=\n\s*[A-Z][A-Z\s]+:|\n\s*SEC\.|$)/is
+        /SUMMARY[:\s]+(.*?)(?=\n\s*[A-Z][A-Z\s]+:|\n\s*SEC\.|$)/gi,
+        /CONGRESSIONAL SUMMARY[:\s]+(.*?)(?=\n\s*[A-Z][A-Z\s]+:|\n\s*SEC\.|$)/gi,
+        /BILL SUMMARY[:\s]+(.*?)(?=\n\s*[A-Z][A-Z\s]+:|\n\s*SEC\.|$)/gi
       ];
 
       let extractedSummary = '';
@@ -183,7 +183,7 @@ export class BillSummaryFallbacks {
       };
 
     } catch (error) {
-      structuredLogger.error('Congressional summary extraction failed', error, {
+      structuredLogger.error('Congressional summary extraction failed', error as Error, {
         billNumber: billMetadata.number,
         operation: 'bill_summary_fallback'
       });
@@ -243,7 +243,7 @@ export class BillSummaryFallbacks {
       };
 
     } catch (error) {
-      structuredLogger.error('Keyword-based summary creation failed', error, {
+      structuredLogger.error('Keyword-based summary creation failed', error as Error, {
         billNumber: billMetadata.number,
         operation: 'bill_summary_fallback'
       });
@@ -294,7 +294,7 @@ export class BillSummaryFallbacks {
       };
 
     } catch (error) {
-      structuredLogger.error('Simple extraction summary creation failed', error, {
+      structuredLogger.error('Simple extraction summary creation failed', error as Error, {
         billNumber: billMetadata.number,
         operation: 'bill_summary_fallback'
       });

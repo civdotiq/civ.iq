@@ -95,7 +95,11 @@ export const mockFinanceData = {
 
 // Helper to create mock NextRequest
 export function createMockRequest(url: string, options: RequestInit = {}): NextRequest {
-  const request = new NextRequest(url, options)
+  const requestOptions = {
+    ...options,
+    signal: options.signal || undefined
+  }
+  const request = new NextRequest(url, requestOptions)
   return request
 }
 

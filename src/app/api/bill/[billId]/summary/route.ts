@@ -220,7 +220,7 @@ export async function GET(
     const responseTime = Date.now() - startTime;
     const { billId: errorBillId } = await params;
     
-    structuredLogger.error('Bill summary generation failed', error, {
+    structuredLogger.error('Bill summary generation failed', error as Error, {
       billId: errorBillId,
       responseTime,
       operation: 'bill_summary_api'
@@ -274,7 +274,7 @@ export async function POST(
 
   } catch (error) {
     const { billId: errorBillId } = await params;
-    structuredLogger.error('Bill summary update failed', error, {
+    structuredLogger.error('Bill summary update failed', error as Error, {
       billId: errorBillId,
       operation: 'bill_summary_api'
     });
@@ -313,7 +313,7 @@ export async function DELETE(
 
   } catch (error) {
     const { billId: errorBillId } = await params;
-    structuredLogger.error('Bill summary deletion failed', error, {
+    structuredLogger.error('Bill summary deletion failed', error as Error, {
       billId: errorBillId,
       operation: 'bill_summary_api'
     });
@@ -395,7 +395,7 @@ async function fetchBillText(billId: string): Promise<{
     };
 
   } catch (error) {
-    structuredLogger.error('Failed to fetch bill text', error, {
+    structuredLogger.error('Failed to fetch bill text', error as Error, {
       billId,
       operation: 'bill_text_fetch'
     });

@@ -50,6 +50,7 @@ async function performSearch(filters: SearchFilters): Promise<{
 }> {
   try {
     const startTime = Date.now();
+    const currentYear = new Date().getFullYear();
     structuredLogger.info('Performing representative search', { filters });
     
     // Get all representatives
@@ -69,8 +70,7 @@ async function performSearch(filters: SearchFilters): Promise<{
           rep.state,
           rep.party,
           rep.district,
-          ...(rep.committees || []),
-          ...(rep.leadership || [])
+          ...(rep.committees || [])
         ].filter(Boolean).join(' ').toLowerCase();
         
         if (!searchableText.includes(searchTerm)) {
@@ -98,9 +98,10 @@ async function performSearch(filters: SearchFilters): Promise<{
       
       // Committee filter
       if (filters.committee && rep.committees) {
-        const hasCommittee = rep.committees.some(c => 
-          c.toLowerCase().includes(filters.committee!.toLowerCase())
-        );
+        const hasCommittee = rep.committees.some(c => {
+          const committeeName = typeof c === 'string' ? c : c.name;
+          return committeeName.toLowerCase().includes(filters.committee!.toLowerCase());
+        });
         if (!hasCommittee) {
           return false;
         }
@@ -189,7 +190,7 @@ async function performSearch(filters: SearchFilters): Promise<{
         district: rep.district,
         chamber: rep.chamber as 'House' | 'Senate',
         yearsInOffice,
-        committees: rep.committees || [],
+        committees: (rep.committees || []).map(c => typeof c === 'string' ? c : c.name),
         billsSponsored: Math.floor(Math.random() * 300), // Placeholder
         votingScore: Math.random() * 100, // Placeholder
         fundraisingTotal: Math.floor(Math.random() * 10000000), // Placeholder

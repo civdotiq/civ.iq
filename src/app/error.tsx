@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+
 export default function Error({
   error,
   reset,
@@ -7,6 +9,16 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    // Log error details for debugging
+    console.error('Route Error:', {
+      message: error.message,
+      stack: error.stack,
+      digest: error.digest,
+      component: 'app/error.tsx'
+    });
+  }, [error]);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">

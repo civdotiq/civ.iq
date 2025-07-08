@@ -77,9 +77,9 @@ export class BillSummaryCache {
 
       // Store summary and metadata
       await Promise.all([
-        this.this.cache.set(cacheKey, cacheEntry, ttl),
-        this.this.cache.set(metadataKey, cacheEntry.metadata, ttl),
-        this.this.cache.set(this.CACHE_PREFIXES.textHash + billId, billTextHash, ttl)
+        this.cache.set(cacheKey, cacheEntry, ttl),
+        this.cache.set(metadataKey, cacheEntry.metadata, ttl),
+        this.cache.set(this.CACHE_PREFIXES.textHash + billId, billTextHash, ttl)
       ]);
 
       // Update index
@@ -94,7 +94,7 @@ export class BillSummaryCache {
       });
 
     } catch (error) {
-      structuredLogger.error('Failed to cache bill summary', error, {
+      structuredLogger.error('Failed to cache bill summary', error as Error, {
         billId,
         operation: 'bill_summary_cache'
       });
@@ -124,7 +124,7 @@ export class BillSummaryCache {
       }
 
       // Update access metadata
-      await this.updateAccessMetadata(billId, metadata);
+      await this.updateAccessMetadata(billId, metadata || undefined);
 
       structuredLogger.info('Bill summary cache hit', {
         billId,
@@ -136,7 +136,7 @@ export class BillSummaryCache {
       return cacheEntry.summary;
 
     } catch (error) {
-      structuredLogger.error('Failed to retrieve bill summary from cache', error, {
+      structuredLogger.error('Failed to retrieve bill summary from cache', error as Error, {
         billId,
         operation: 'bill_summary_cache'
       });
@@ -167,7 +167,7 @@ export class BillSummaryCache {
       return isValid;
 
     } catch (error) {
-      structuredLogger.error('Failed to validate bill summary', error, {
+      structuredLogger.error('Failed to validate bill summary', error as Error, {
         billId,
         operation: 'bill_summary_cache'
       });
@@ -195,7 +195,7 @@ export class BillSummaryCache {
       });
 
     } catch (error) {
-      structuredLogger.error('Failed to invalidate bill summary', error, {
+      structuredLogger.error('Failed to invalidate bill summary', error as Error, {
         billId,
         operation: 'bill_summary_cache'
       });
@@ -211,7 +211,7 @@ export class BillSummaryCache {
     
     try {
       const cacheKeys = billIds.map(id => this.CACHE_PREFIXES.summary + id);
-      const cachedEntries = await this.cache.mget<BillSummaryCacheEntry>(cacheKeys);
+      const cachedEntries = await Promise.all(cacheKeys.map(key => this.cache.get<BillSummaryCacheEntry>(key)));
 
       for (let i = 0; i < billIds.length; i++) {
         const billId = billIds[i];
@@ -236,7 +236,7 @@ export class BillSummaryCache {
       return results;
 
     } catch (error) {
-      structuredLogger.error('Failed to retrieve batch summaries', error, {
+      structuredLogger.error('Failed to retrieve batch summaries', error as Error, {
         billIds: billIds.slice(0, 5), // Log first 5 IDs only
         operation: 'bill_summary_cache'
       });
@@ -265,7 +265,7 @@ export class BillSummaryCache {
 
       // Get metadata for all cached summaries
       const metadataKeys = billIds.map(id => this.CACHE_PREFIXES.metadata + id);
-      const metadataEntries = await this.cache.mget<BillSummaryCacheEntry['metadata']>(metadataKeys);
+      const metadataEntries = await Promise.all(metadataKeys.map(key => this.cache.get<BillSummaryCacheEntry['metadata']>(key)));
       
       const validEntries = metadataEntries.filter(Boolean) as BillSummaryCacheEntry['metadata'][];
       
@@ -291,7 +291,7 @@ export class BillSummaryCache {
       };
 
     } catch (error) {
-      structuredLogger.error('Failed to get cache stats', error, {
+      structuredLogger.error('Failed to get cache stats', error as Error, {
         operation: 'bill_summary_cache'
       });
       
@@ -329,8 +329,8 @@ export class BillSummaryCache {
       const summaryKeys = billIds.map(id => this.CACHE_PREFIXES.summary + id);
       
       const [metadataEntries, summaryEntries] = await Promise.all([
-        this.cache.mget<BillSummaryCacheEntry['metadata']>(metadataKeys),
-        this.cache.mget<BillSummaryCacheEntry>(summaryKeys)
+        Promise.all(metadataKeys.map(key => this.cache.get<BillSummaryCacheEntry['metadata']>(key))),
+        Promise.all(summaryKeys.map(key => this.cache.get<BillSummaryCacheEntry>(key)))
       ]);
 
       const cutoffDate = new Date();
@@ -395,7 +395,7 @@ export class BillSummaryCache {
       return { removed, retained };
 
     } catch (error) {
-      structuredLogger.error('Cache cleanup failed', error, {
+      structuredLogger.error('Cache cleanup failed', error as Error, {
         operation: 'bill_summary_cache'
       });
       return { removed: 0, retained: 0 };
@@ -432,7 +432,7 @@ export class BillSummaryCache {
       
       let metadata = existingMetadata;
       if (!metadata) {
-        metadata = await this.cache.get<BillSummaryCacheEntry['metadata']>(metadataKey);
+        metadata = (await this.cache.get<BillSummaryCacheEntry['metadata']>(metadataKey)) || undefined;
       }
       
       if (metadata) {

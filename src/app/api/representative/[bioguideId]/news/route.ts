@@ -117,7 +117,7 @@ export async function GET(
             // Normalize articles
             return gdeltArticles.map(article => normalizeGDELTArticle(article));
           } catch (error) {
-            structuredLogger.error(`Error fetching GDELT news for term: ${searchTerm}`, error, {
+            structuredLogger.error(`Error fetching GDELT news for term: ${searchTerm}`, error as Error, {
               bioguideId,
               searchTerm,
               operation: 'gdelt_news_fetch_error'
@@ -259,7 +259,7 @@ export async function GET(
     return NextResponse.json(response);
 
   } catch (error) {
-    structuredLogger.error('News API Error', error, {
+    structuredLogger.error('News API Error', error as Error, {
       bioguideId,
       operation: 'news_api_error'
     }, request);

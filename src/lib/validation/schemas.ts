@@ -366,14 +366,14 @@ export class XSSProtection {
   static sanitizeObject<T extends Record<string, any>>(obj: T): T {
     // Handle arrays separately to preserve their structure
     if (Array.isArray(obj)) {
-      return obj.map(item => {
+      return (obj as any[]).map(item => {
         if (typeof item === 'string') {
           return this.sanitizeHtml(item);
         } else if (typeof item === 'object' && item !== null) {
           return this.sanitizeObject(item);
         }
         return item;
-      }) as T;
+      }) as unknown as T;
     }
     
     const sanitized = {} as T;
@@ -404,7 +404,7 @@ export function validateApiInput<T>(
   const data = {} as T;
 
   for (const [field, validator] of Object.entries(validators)) {
-    const result = validator(input[field]);
+    const result = (validator as any)(input[field]);
     
     if (!result.isValid) {
       errors.push(...result.errors);

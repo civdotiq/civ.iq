@@ -7,7 +7,6 @@ interface CacheConfig {
   port: number
   password?: string
   db?: number
-  retryDelayOnFailover?: number
   maxRetriesPerRequest?: number
   lazyConnect?: boolean
   keyPrefix?: string
@@ -35,7 +34,6 @@ export class RedisCache {
       port: parseInt(process.env.REDIS_PORT || '6379'),
       password: process.env.REDIS_PASSWORD,
       db: parseInt(process.env.REDIS_DB || '0'),
-      retryDelayOnFailover: 100,
       maxRetriesPerRequest: 3,
       lazyConnect: true,
       keyPrefix: this.keyPrefix
@@ -49,7 +47,6 @@ export class RedisCache {
       port: finalConfig.port,
       password: finalConfig.password,
       db: finalConfig.db,
-      retryDelayOnFailover: finalConfig.retryDelayOnFailover,
       maxRetriesPerRequest: finalConfig.maxRetriesPerRequest,
       lazyConnect: finalConfig.lazyConnect,
       keyPrefix: finalConfig.keyPrefix,

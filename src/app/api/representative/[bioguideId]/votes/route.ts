@@ -289,7 +289,8 @@ export async function GET(
         bill: {
           number: 'HR 1',
           title: 'One Big Beautiful Bill Act',
-          congress: '119'
+          congress: '119',
+          type: 'hr'
         },
         question: 'On Passage',
         result: 'Passed',
@@ -304,7 +305,8 @@ export async function GET(
         bill: {
           number: 'HR 43',
           title: 'Alaska Native Village Municipal Lands Restoration Act',
-          congress: '119'
+          congress: '119',
+          type: 'hr'
         },
         question: 'On Motion to Suspend the Rules and Pass',
         result: 'Passed',
@@ -318,7 +320,8 @@ export async function GET(
         bill: {
           number: 'S 2226',
           title: 'Building Chips in America Act',
-          congress: '118'
+          congress: '118',
+          type: 's'
         },
         question: 'On Passage',
         result: 'Passed',
@@ -333,7 +336,8 @@ export async function GET(
         bill: {
           number: 'HR 3935',
           title: 'Securing Growth and Robust Leadership in American Aviation Act',
-          congress: '118'
+          congress: '118',
+          type: 'hr'
         },
         question: 'On Passage',
         result: 'Passed',
@@ -347,7 +351,8 @@ export async function GET(
         bill: {
           number: 'HR 5376',
           title: 'Inflation Reduction Act',
-          congress: '118'
+          congress: '118',
+          type: 'hr'
         },
         question: 'On Amendment',
         result: 'Failed',

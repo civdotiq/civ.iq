@@ -166,7 +166,7 @@ async function fetchNewsForRepresentative(
               domain: article.domain
             }));
           } catch (error) {
-            structuredLogger.error(`Error fetching news for term: ${searchTerm}`, error, {
+            structuredLogger.error(`Error fetching news for term: ${searchTerm}`, error as Error, {
               bioguideId,
               searchTerm
             });
@@ -225,7 +225,7 @@ async function fetchNewsForRepresentative(
     return result;
 
   } catch (error) {
-    structuredLogger.error(`Error fetching news for representative ${bioguideId}`, error, {
+    structuredLogger.error(`Error fetching news for representative ${bioguideId}`, error as Error, {
       bioguideId,
       operation: 'batch_news_fetch_error'
     });
@@ -314,7 +314,7 @@ async function handleBatchNewsRequest(request: ValidatedRequest<BatchNewsRequest
   } catch (error) {
     performanceMonitor.endTimer('batch-news-fetch');
     
-    structuredLogger.error('Batch news request failed', error, {
+    structuredLogger.error('Batch news request failed', error as Error, {
       bioguideIds: bioguideIds.slice(0, 5), // Log first 5 for debugging
       operation: 'batch_news_error'
     }, request);
@@ -329,18 +329,11 @@ async function handleBatchNewsRequest(request: ValidatedRequest<BatchNewsRequest
   }
 }
 
-// Export POST handler with validation
-export const POST = withValidationAndSecurity<BatchNewsRequest>(
-  {
-    body: {
-      bioguideIds: () => ({ isValid: true, errors: [] }) // Custom validation handled below
-    },
-    sanitizeResponse: true,
-    logValidationErrors: true
-  },
-  async (request: ValidatedRequest<BatchNewsRequest>) => {
+// Export POST handler
+export async function POST(request: NextRequest) {
+  try {
     // Custom validation for the batch request
-    const rawBody = await request.clone().json();
+    const rawBody = await request.json();
     const validation = validateBatchNewsRequest(rawBody);
     
     if (!validation.isValid) {
@@ -354,8 +347,15 @@ export const POST = withValidationAndSecurity<BatchNewsRequest>(
     }
 
     // Add validated data to request
-    (request as any).validatedBody = validation.sanitized;
+    const validatedRequest = request as ValidatedRequest<BatchNewsRequest>;
+    validatedRequest.validatedBody = validation.sanitized;
 
-    return withErrorHandling(handleBatchNewsRequest)(request);
+    return withErrorHandling(handleBatchNewsRequest)(validatedRequest);
+  } catch (error) {
+    structuredLogger.error('POST batch news handler error', error as Error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
-);
+}

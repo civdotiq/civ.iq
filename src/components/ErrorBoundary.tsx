@@ -28,16 +28,30 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error Boundary caught an error:', error, errorInfo);
+    // Prevent infinite loops by checking if we're already in error state
+    if (this.state.hasError) {
+      return;
+    }
+
+    console.error('Error Boundary caught an error:', {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      errorBoundary: this.constructor.name
+    });
     
     this.setState({
       error,
       errorInfo
     });
 
-    // Call optional error handler
+    // Call optional error handler with error catching to prevent cascading errors
     if (this.props.onError) {
-      this.props.onError(error, errorInfo);
+      try {
+        this.props.onError(error, errorInfo);
+      } catch (handlerError) {
+        console.error('Error in onError handler:', handlerError);
+      }
     }
   }
 

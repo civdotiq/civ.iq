@@ -180,7 +180,7 @@ export function CampaignFinanceChart({ bioguideId, years = 6, className = '' }: 
                 cy="50%"
                 outerRadius={80}
                 dataKey="value"
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
               >
                 {sourceData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
@@ -201,7 +201,7 @@ export function CampaignFinanceChart({ bioguideId, years = 6, className = '' }: 
                 cy="50%"
                 outerRadius={80}
                 dataKey="value"
-                label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${((percent || 0) * 100).toFixed(0)}%`}
               >
                 {smallVsLargeData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
@@ -325,10 +325,16 @@ export function CampaignFinanceChart({ bioguideId, years = 6, className = '' }: 
 
         {/* Chart */}
         <div className="h-80 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            {view === 'trends' && renderTrendsChart()}
-            {view === 'spending' && renderSpendingChart()}
-          </ResponsiveContainer>
+          {view === 'trends' && (
+            <ResponsiveContainer width="100%" height="100%">
+              {renderTrendsChart() || <div />}
+            </ResponsiveContainer>
+          )}
+          {view === 'spending' && (
+            <ResponsiveContainer width="100%" height="100%">
+              {renderSpendingChart() || <div />}
+            </ResponsiveContainer>
+          )}
           {view === 'sources' && renderSourcesChart()}
         </div>
 

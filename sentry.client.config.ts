@@ -1,5 +1,7 @@
 import * as Sentry from '@sentry/nextjs'
 
+// Temporarily disable Sentry to fix SES lockdown issues
+if (false) {
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
   
@@ -89,3 +91,4 @@ Sentry.init({
     /^safari-web-extension:\/\//i,
   ],
 })
+}

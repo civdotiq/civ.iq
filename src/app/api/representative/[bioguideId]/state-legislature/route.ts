@@ -133,7 +133,7 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
       error: error instanceof Error ? error.message : String(error)
     });
     
-    structuredLogger.error('Error fetching state jurisdiction', error, {
+    structuredLogger.error('Error fetching state jurisdiction', error as Error, {
       stateAbbrev,
       operation: 'state_jurisdiction_fetch'
     });
@@ -278,7 +278,7 @@ async function fetchStateLegislators(stateAbbrev: string, state: string, congres
     return legislators;
     
   } catch (error) {
-    structuredLogger.error('Error fetching state legislators', error, {
+    structuredLogger.error('Error fetching state legislators', error as Error, {
       stateAbbrev,
       state,
       congressionalDistrict,
@@ -340,7 +340,7 @@ async function fetchRecentStateBills(stateAbbrev: string): Promise<StateBill[]> 
       error: error instanceof Error ? error.message : String(error)
     });
     
-    structuredLogger.error('Error fetching state bills', error, {
+    structuredLogger.error('Error fetching state bills', error as Error, {
       stateAbbrev,
       operation: 'state_bills_fetch_error'
     });
@@ -509,7 +509,7 @@ export async function GET(
     return NextResponse.json(mockData);
 
   } catch (error) {
-    structuredLogger.error('State Legislature API Error', error, {
+    structuredLogger.error('State Legislature API Error', error as Error, {
       bioguideId,
       operation: 'state_legislature_api_error'
     });

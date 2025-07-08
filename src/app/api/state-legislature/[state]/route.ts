@@ -354,7 +354,7 @@ export async function GET(
     return NextResponse.json(response);
 
   } catch (error) {
-    structuredLogger.error('State Legislature API Error', error, {
+    structuredLogger.error('State Legislature API Error', error as Error, {
       state: state.toUpperCase(),
       chamber: chamber || 'all',
       party: party || 'all',

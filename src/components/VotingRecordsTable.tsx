@@ -223,7 +223,7 @@ export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTablePr
                 >
                   Date
                   {sortField === 'date' && (
-                    sortDirection === 'desc' ? <ChevronDownIcon className="w-3 h-3" /> : <ChevronUpIcon className="w-3 h-3" />
+                    sortDirection === 'desc' ? <span className="text-xs">▼</span> : <span className="text-xs">▲</span>
                   )}
                 </button>
               </th>
@@ -234,7 +234,7 @@ export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTablePr
                 >
                   Bill
                   {sortField === 'bill' && (
-                    sortDirection === 'desc' ? <ChevronDownIcon className="w-3 h-3" /> : <ChevronUpIcon className="w-3 h-3" />
+                    sortDirection === 'desc' ? <span className="text-xs">▼</span> : <span className="text-xs">▲</span>
                   )}
                 </button>
               </th>
@@ -255,7 +255,7 @@ export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTablePr
                 >
                   Result
                   {sortField === 'result' && (
-                    sortDirection === 'desc' ? <ChevronDownIcon className="w-3 h-3" /> : <ChevronUpIcon className="w-3 h-3" />
+                    sortDirection === 'desc' ? <span className="text-xs">▼</span> : <span className="text-xs">▲</span>
                   )}
                 </button>
               </th>

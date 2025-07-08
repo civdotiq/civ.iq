@@ -1,5 +1,7 @@
 import * as Sentry from '@sentry/nextjs'
 
+// Temporarily disable Sentry to fix SES lockdown issues
+if (false) {
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
 
@@ -65,20 +67,10 @@ Sentry.init({
   // Integration configuration
   integrations: [
     // Add HTTP integration for tracing
-    Sentry.httpIntegration({
-      tracing: {
-        ignoreIncomingRequests: (url) => {
-          // Don't trace health checks
-          return url.includes('/health') || url.includes('/api/health')
-        },
-        ignoreOutgoingRequests: (url) => {
-          // Don't trace internal requests
-          return url.includes('localhost') || url.includes('127.0.0.1')
-        }
-      }
-    }),
+    Sentry.httpIntegration({}),
   ],
 
   // Performance monitoring
   profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
 })
+}

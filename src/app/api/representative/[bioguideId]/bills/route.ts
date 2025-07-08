@@ -467,7 +467,7 @@ async function addAISummariesToBills(
     return enhancedBills;
 
   } catch (error) {
-    structuredLogger.error('Failed to add AI summaries to bills', error, {
+    structuredLogger.error('Failed to add AI summaries to bills', error as Error, {
       billCount: bills.length,
       format,
       operation: 'bills_ai_summary_integration'
