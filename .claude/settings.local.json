@@ -41,7 +41,9 @@
       "Bash(npx next dev:*)",
       "Bash(timeout:*)",
       "Bash(npx next:*)",
-      "Bash(npm cache clean:*)"
+      "Bash(npm cache clean:*)",
+      "Bash(mv:*)",
+      "Bash(tree:*)"
     ],
     "deny": []
   }

@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Next.js App Router Refactoring**: Comprehensive directory structure reorganization using route groups
+- **Route Group Organization**: Clean separation of public and civic routes with (public) and (civic) groups
+- **Enhanced Loading States**: Context-specific loading components using appropriate skeleton states
+- **Improved Error Boundaries**: Route-specific error handling with custom error pages
 - **Error-Free Frontend Rendering**: Comprehensive error handling and null safety patterns throughout the application
 - **TypeScript Excellence**: Zero TypeScript compilation errors with full type coverage
 - **Enhanced Error Boundaries**: Robust error boundary implementation for better user experience
@@ -36,12 +40,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Representative Profiles**: Enhanced layout, relationship mapping, comprehensive statistics
 
 ### Changed
+- **Project Structure**: Reorganized app directory with route groups (public) and (civic) for better organization
+- **Loading Components**: Updated all loading.tsx files to use correct Skeleton component with contextual layouts
+- **Error Handling**: Enhanced error boundaries with route-specific error pages throughout the application
+- **Component Imports**: Fixed SkeletonLoader imports across all 15 loading components
 - Simplified landing page design for better usability
 - Improved error handling for API calls with proper TypeScript typing
 - Enhanced TypeScript type definitions across all components
 - Upgraded to Next.js 15 with improved build configuration
 
 ### Fixed
+- **Route Group Architecture**: Successfully implemented Next.js 15 App Router route groups without breaking URLs
+- **Component Import Issues**: Fixed SkeletonLoader import errors across all 15 loading.tsx files
+- **TypeScript Build Errors**: Resolved all TypeScript compilation issues after directory restructuring
+- **Cache Cleanup**: Removed stale .next cache to resolve outdated type definitions
 - **TypeScript Compilation**: Fixed all TypeScript compilation errors (125+ errors resolved)
 - **Error Type Safety**: Enhanced error type casting in all catch blocks and error handlers
 - **Null Safety**: Comprehensive null/undefined checking throughout components

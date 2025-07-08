@@ -29,6 +29,7 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 - **⚡ Batch API**: Optimized multi-endpoint requests reducing round-trips by 80%
 - **🛡️ Error-Free Frontend**: Comprehensive error handling and null safety throughout
 - **🔧 TypeScript Excellence**: 100% type safety with zero compilation errors
+- **🗂️ Organized Architecture**: Clean Next.js 15 App Router with route groups for optimal organization
 
 ### ✅ **Phase 4: Live Data Integration**
 - **🏛️ Real-time Government APIs**: Live data from Census, Congress.gov, FEC, GDELT
@@ -50,6 +51,7 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 - **⚡ Performance Optimization**: Lazy loading, code splitting, and request batching
 - **🛡️ Robust Error Handling**: Comprehensive error boundaries and null safety patterns
 - **🔧 Type Safety**: Zero TypeScript compilation errors with full type coverage
+- **🗂️ Route Organization**: Clean Next.js 15 App Router with logical route groups
 
 #### **Federal Government Coverage**
 - **Representative Search**: Find federal representatives by ZIP code with live Census geocoding
@@ -284,12 +286,22 @@ Visit [http://localhost:3000/api/health](http://localhost:3000/api/health) to ve
 ```
 civic-intel-hub/
 ├── src/
-│   ├── app/                    # Next.js app router pages
-│   │   ├── page.tsx           # Landing page
-│   │   ├── representatives/   # Representatives list
-│   │   ├── representative/   # Individual profiles (enhanced)
-│   │   ├── districts/        # District information
-│   │   ├── states/           # State overviews
+│   ├── app/                    # Next.js app router with route groups
+│   │   ├── (public)/          # Public route group
+│   │   │   ├── page.tsx       # Landing page
+│   │   │   ├── about/         # About page
+│   │   │   ├── search/        # Search functionality
+│   │   │   ├── results/       # Search results
+│   │   │   └── loading.tsx & error.tsx # Loading states & error boundaries
+│   │   ├── (civic)/           # Civic data route group
+│   │   │   ├── representatives/   # Representatives list
+│   │   │   ├── representative/   # Individual profiles (enhanced)
+│   │   │   ├── districts/        # District information
+│   │   │   ├── states/           # State overviews
+│   │   │   ├── compare/          # Representative comparison
+│   │   │   ├── legislation/      # Legislative tracking
+│   │   │   ├── analytics/        # Data analytics
+│   │   │   └── loading.tsx & error.tsx # Context-specific loading & errors
 │   │   ├── api/              # API routes with validation & batching
 │   │   │   ├── health/       # Health check endpoint
 │   │   │   ├── representatives/batch/ # Batch API endpoints
