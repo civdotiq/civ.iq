@@ -1,4 +1,11 @@
 /**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
+/**
  * Validation middleware for API routes
  * Provides automatic input validation, sanitization, and XSS protection
  */

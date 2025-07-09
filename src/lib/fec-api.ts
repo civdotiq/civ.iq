@@ -1,4 +1,11 @@
 /**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
+/**
  * Federal Election Commission (FEC) API Integration
  * 
  * This module provides utilities for integrating with the FEC API

@@ -1,8 +1,16 @@
 /**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
+/**
  * Enhanced Representative Types
  * 
  * This file defines comprehensive types for representative data,
  * combining our existing structure with congress-legislators enhancements.
+ * Includes error handling and batch API response types.
  */
 
 // Base representative interface (existing structure)
@@ -276,4 +284,60 @@ export interface RepresentativeSearchOptions {
   sortOrder?: 'asc' | 'desc';
   limit?: number;
   offset?: number;
+}
+
+// Enhanced error handling types
+export interface APIError {
+  message: string;
+  statusCode: number;
+  endpoint?: string;
+  timestamp: string;
+  requestId?: string;
+}
+
+// Batch API response types
+export interface BatchApiResponse {
+  success: boolean;
+  data: Record<string, any>;
+  errors: Record<string, string>;
+  metadata: {
+    timestamp: string;
+    requestedEndpoints: string[];
+    successfulEndpoints: string[];
+    failedEndpoints: string[];
+    totalTime: number;
+  };
+  executionTime: number;
+}
+
+// Enhanced type for batch API hook
+export interface BatchApiHookResult {
+  data: Record<string, any>;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+  metadata?: BatchApiResponse['metadata'];
+  partialErrors?: Record<string, string>;
+}
+
+// Profile data structure for batch response
+export interface RepresentativeProfile {
+  profile: EnhancedRepresentative;
+  votes?: any[];
+  bills?: any[];
+  finance?: any;
+  news?: any[];
+  'party-alignment'?: any;
+  committees?: any[];
+  leadership?: any;
+  district?: any;
+}
+
+// Individual endpoint response wrapper
+export interface EndpointResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  cached?: boolean;
+  executionTime?: number;
 }

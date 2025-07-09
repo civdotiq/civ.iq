@@ -1,3 +1,10 @@
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 import { GET } from '@/app/api/district-map/route'
 import { createMockRequest, mockFetchResponse, mockDistrictBoundary } from '../utils/test-helpers'
 

@@ -1,3 +1,10 @@
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 import { getRedisCache } from '@/lib/cache/redis-client'
 import { structuredLogger } from '@/lib/logging/logger'
 import { monitorCache } from '@/lib/monitoring/telemetry'

@@ -1,3 +1,10 @@
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 // Bioguide ID to FEC Candidate ID mapping
 // This mapping helps match Congressional representatives to their FEC campaign finance records
 // Format: bioguideId -> { fecId, name, state, district?, office, lastUpdated }

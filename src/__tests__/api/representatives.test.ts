@@ -1,3 +1,10 @@
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 import { NextRequest } from 'next/server'
 import { GET } from '@/app/api/representatives/route'
 import { createMockRequest, mockFetchResponse, mockRepresentative } from '../utils/test-helpers'

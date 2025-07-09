@@ -1,5 +1,13 @@
 'use client';
 
+
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 import { useState, useEffect } from 'react';
 import * as d3 from 'd3';
 import { 

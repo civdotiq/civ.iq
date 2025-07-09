@@ -1,4 +1,11 @@
 /**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
+/**
  * Data Validation and Source Attribution System
  * 
  * This module provides utilities for validating data quality,

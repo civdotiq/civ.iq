@@ -1,3 +1,10 @@
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 import { RollCallParser } from '@/lib/rollcall-parser'
 import { mockFetchResponse } from './test-helpers'
 

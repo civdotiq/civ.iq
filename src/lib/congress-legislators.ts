@@ -1,4 +1,11 @@
 /**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
+/**
  * Congress Legislators Data Integration
  * 
  * This module integrates with the unitedstates/congress-legislators repository

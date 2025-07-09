@@ -1,4 +1,11 @@
 /**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
+/**
  * Validation schemas and sanitization functions for API inputs
  * Provides comprehensive input validation, XSS protection, and data consistency checks
  */

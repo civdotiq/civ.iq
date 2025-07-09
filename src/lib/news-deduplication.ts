@@ -1,4 +1,11 @@
 /**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
+/**
  * Intelligent news deduplication system for GDELT and other news sources
  * Uses multiple algorithms to detect and remove duplicate articles
  */

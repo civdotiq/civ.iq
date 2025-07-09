@@ -1,3 +1,10 @@
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 import { InputHTMLAttributes, forwardRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';

@@ -1,4 +1,11 @@
 /**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
+/**
  * Tests for Reading Level Validator
  * 
  * Validates that AI-generated summaries meet 8th grade reading level requirements

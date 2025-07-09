@@ -1,3 +1,10 @@
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 // Response validation schemas for ensuring API data integrity
 // This is complementary to the input validation in schemas.ts
 

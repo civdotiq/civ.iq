@@ -1,3 +1,10 @@
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 import { cache } from 'react';
 import { ZIP_TO_DISTRICT_MAP, getStateFromZip } from './data/zip-district-mapping';
 

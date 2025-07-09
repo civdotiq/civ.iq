@@ -1,5 +1,13 @@
 'use client';
 
+
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 import Link from 'next/link';
 import { AdvancedSearch } from '@/components/AdvancedSearch';
 

@@ -1,3 +1,10 @@
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 // Roll call XML parser for Senate and House voting data
 import { XMLParser } from 'fast-xml-parser';
 

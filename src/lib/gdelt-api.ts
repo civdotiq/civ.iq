@@ -1,3 +1,10 @@
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 // GDELT API utility with proper error handling, rate limiting, and retry logic
 import { structuredLogger } from '@/lib/logging/logger';
 import { deduplicateNews, type NewsArticle, type DuplicationStats, type DeduplicationOptions } from '@/lib/news-deduplication';

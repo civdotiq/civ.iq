@@ -1,3 +1,10 @@
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import { structuredLogger } from '@/lib/logging/logger';
@@ -18,6 +25,7 @@ interface BatchResponse {
     failedEndpoints: string[];
     totalTime: number;
   };
+  executionTime: number; // Added for better performance monitoring
 }
 
 /**
@@ -152,7 +160,8 @@ export async function POST(
         successfulEndpoints,
         failedEndpoints,
         totalTime
-      }
+      },
+      executionTime: totalTime // Added for API client compatibility
     };
     
     structuredLogger.info('Batch API completed', {

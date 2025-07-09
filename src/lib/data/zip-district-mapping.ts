@@ -1,3 +1,10 @@
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 // Comprehensive ZIP to Congressional District mapping
 // Source: US Census Bureau ZIP Code Tabulation Areas (ZCTAs) to Congressional Districts
 // 119th Congress (2025-2027)

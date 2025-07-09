@@ -1,3 +1,10 @@
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getAllEnhancedRepresentatives } from '@/lib/congress-legislators'
 import { getCongressionalDistrictFromZip } from '@/lib/census-api'

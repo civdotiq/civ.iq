@@ -1,6 +1,15 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
+import { useState, useEffect, useMemo, useTransition } from 'react';
+import { representativeApi } from '@/lib/api/representatives';
+
 // Using simple Unicode arrows instead of heroicons
 const ChevronDownIcon = () => <span>▼</span>;
 const ChevronUpIcon = () => <span>▲</span>;
@@ -35,17 +44,18 @@ export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTablePr
   const [filterCategory, setFilterCategory] = useState<'all' | 'key' | 'passed' | 'failed'>('all');
   const [page, setPage] = useState(1);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [isPending, startTransition] = useTransition();
 
   const votesPerPage = 10;
 
   useEffect(() => {
     const fetchVotes = async () => {
       try {
-        const response = await fetch(`/api/representative/${bioguideId}/votes?limit=100`);
-        if (response.ok) {
-          const data = await response.json();
-          setVotes(data.votes || []);
-        }
+        console.log(`[CIV.IQ-DEBUG] VotingRecordsTable fetching votes for ${bioguideId}`);
+        
+        // Use the optimized API client with caching
+        const data = await representativeApi.getVotes(bioguideId);
+        setVotes(data.votes || []);
       } catch (error) {
         console.error('Error fetching votes:', error);
       } finally {
@@ -98,12 +108,23 @@ export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTablePr
   const totalPages = Math.ceil(filteredAndSortedVotes.length / votesPerPage);
 
   const handleSort = (field: 'date' | 'bill' | 'result') => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
+    // Use transition for non-urgent sorting updates
+    startTransition(() => {
+      if (sortField === field) {
+        setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      } else {
+        setSortField(field);
+        setSortDirection('desc');
+      }
+    });
+  };
+
+  const handleFilterChange = (category: 'all' | 'key' | 'passed' | 'failed') => {
+    // Use transition for non-urgent filter updates
+    startTransition(() => {
+      setFilterCategory(category);
+      setPage(1); // Reset to first page when filtering
+    });
   };
 
   const toggleRowExpansion = (voteId: string) => {
@@ -168,7 +189,7 @@ export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTablePr
           <div className="flex flex-wrap gap-2">
             <span className="text-sm text-gray-600">Filter by Category:</span>
             <button
-              onClick={() => setFilterCategory('all')}
+              onClick={() => handleFilterChange('all')}
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
                 filterCategory === 'all' 
                   ? 'bg-blue-600 text-white' 
@@ -178,7 +199,7 @@ export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTablePr
               All Categories
             </button>
             <button
-              onClick={() => setFilterCategory('key')}
+              onClick={() => handleFilterChange('key')}
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
                 filterCategory === 'key' 
                   ? 'bg-blue-600 text-white' 
@@ -188,7 +209,7 @@ export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTablePr
               Key Votes
             </button>
             <button
-              onClick={() => setFilterCategory('passed')}
+              onClick={() => handleFilterChange('passed')}
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
                 filterCategory === 'passed' 
                   ? 'bg-blue-600 text-white' 
@@ -198,7 +219,7 @@ export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTablePr
               Passed
             </button>
             <button
-              onClick={() => setFilterCategory('failed')}
+              onClick={() => handleFilterChange('failed')}
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
                 filterCategory === 'failed' 
                   ? 'bg-blue-600 text-white' 
@@ -213,6 +234,15 @@ export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTablePr
 
       {/* Table */}
       <div className="overflow-x-auto">
+        {/* Show pending indicator during transitions */}
+        {isPending && (
+          <div className="absolute top-0 left-0 right-0 bg-blue-50 border-b border-blue-200 py-2 px-4 z-10">
+            <div className="flex items-center gap-2 text-sm text-blue-700">
+              <div className="animate-spin w-4 h-4 border-2 border-blue-700 border-t-transparent rounded-full"></div>
+              Updating results...
+            </div>
+          </div>
+        )}
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>

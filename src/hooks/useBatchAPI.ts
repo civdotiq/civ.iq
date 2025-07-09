@@ -1,4 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { representativeApi, RepresentativeApiError } from '@/lib/api/representatives';
 
 interface BatchAPIResult {
   data: Record<string, any>;
@@ -12,6 +20,7 @@ interface BatchAPIResult {
     failedEndpoints: string[];
     totalTime: number;
   };
+  partialErrors?: Record<string, string>; // Added for better error handling
 }
 
 /**
@@ -32,51 +41,83 @@ export function useBatchAPI(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<BatchAPIResult['metadata']>();
+  const [partialErrors, setPartialErrors] = useState<Record<string, string>>({});
+  
+  // Use ref to track mounted state to prevent memory leaks
+  const mountedRef = useRef(true);
 
   const fetchBatchData = useCallback(async () => {
     if (!bioguideId || endpoints.length === 0 || !enabled) {
+      console.log('[CIV.IQ-DEBUG] useBatchAPI: Skipping fetch - invalid params', {
+        bioguideId: !!bioguideId,
+        endpointsLength: endpoints.length,
+        enabled
+      });
       return;
     }
 
     try {
+      console.log('[CIV.IQ-DEBUG] useBatchAPI: Starting batch fetch', {
+        bioguideId,
+        endpoints,
+        endpointCount: endpoints.length
+      });
+      
       setLoading(true);
       setError(null);
+      setPartialErrors({});
 
-      const response = await fetch(`/api/representative/${bioguideId}/batch`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          endpoints,
-          bioguideId
-        })
+      // Use the API client instead of direct fetch
+      const result = await representativeApi.getProfileBatch(bioguideId, {
+        includeVotes: endpoints.includes('votes'),
+        includeBills: endpoints.includes('bills'),
+        includeFinance: endpoints.includes('finance'),
+        includeNews: endpoints.includes('news'),
+        includePartyAlignment: endpoints.includes('party-alignment'),
+        includeCommittees: endpoints.includes('committees'),
+        includeLeadership: endpoints.includes('leadership'),
+        includeDistrict: endpoints.includes('district'),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP ${response.status}`);
+      // Only update state if component is still mounted
+      if (!mountedRef.current) {
+        console.log('[CIV.IQ-DEBUG] useBatchAPI: Component unmounted, skipping state update');
+        return;
       }
 
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error('Batch API request failed');
-      }
+      console.log('[CIV.IQ-DEBUG] useBatchAPI: Batch fetch completed', {
+        success: result.success,
+        dataEndpoints: Object.keys(result.data || {}),
+        errorEndpoints: Object.keys(result.errors || {}),
+        executionTime: result.executionTime
+      });
 
-      setData(result.data);
+      setData(result.data || {});
       setMetadata(result.metadata);
+      setPartialErrors(result.errors || {});
       
-      // Log any individual endpoint errors
-      if (Object.keys(result.errors).length > 0) {
-        console.warn('Some endpoints failed:', result.errors);
+      // Log partial errors for debugging
+      if (result.errors && Object.keys(result.errors).length > 0) {
+        console.warn('[CIV.IQ-DEBUG] useBatchAPI: Some endpoints failed:', result.errors);
       }
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      console.error('Batch API error:', err);
+      console.error('[CIV.IQ-DEBUG] useBatchAPI: Batch fetch error:', err);
+      
+      // Only update state if component is still mounted
+      if (!mountedRef.current) {
+        return;
+      }
+
+      if (err instanceof RepresentativeApiError) {
+        setError(`${err.message} (${err.statusCode})`);
+      } else {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [bioguideId, endpoints, enabled]);
 
@@ -86,12 +127,20 @@ export function useBatchAPI(
     }
   }, [fetchBatchData, refetchOnMount]);
 
+  // Cleanup on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   return {
     data,
     loading,
     error,
     refetch: fetchBatchData,
-    metadata
+    metadata,
+    partialErrors
   };
 }
 

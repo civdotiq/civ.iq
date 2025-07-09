@@ -1,4 +1,11 @@
 /**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
+/**
  * AI-Powered Bill Summarization Service
  * 
  * Provides automatic summarization of complex legislation at an 8th grade reading level.

@@ -1,3 +1,10 @@
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 const SEARCH_HISTORY_KEY = 'civiq-zip-search-history';
 const MAX_HISTORY_ITEMS = 5;
 

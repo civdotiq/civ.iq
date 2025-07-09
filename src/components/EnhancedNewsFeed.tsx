@@ -1,6 +1,15 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { representativeApi } from '@/lib/api/representatives';
 
 interface NewsArticle {
   title: string;
@@ -37,34 +46,59 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
   const [selectedTimeframe, setSelectedTimeframe] = useState<'all' | '7days' | '30days'>('all');
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchNewsData = async (showLoading = true) => {
+  const fetchNewsData = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
     setRefreshing(!showLoading);
     
     try {
-      const response = await fetch(`/api/representative/${bioguideId}/news?limit=20`);
-      if (response.ok) {
-        const data = await response.json();
-        setNewsData(data);
-      }
+      console.log(`[CIV.IQ-DEBUG] EnhancedNewsFeed fetching news for ${bioguideId}`);
+      
+      // Use the optimized API client with caching
+      const data = await representativeApi.getNews(bioguideId);
+      setNewsData(data);
+      
+      console.log(`[CIV.IQ-DEBUG] EnhancedNewsFeed fetched ${data.articles?.length || 0} articles`);
     } catch (error) {
       console.error('Error fetching news data:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [bioguideId]);
 
+  // Auto-refresh optimization using Page Visibility API
   useEffect(() => {
     fetchNewsData();
     
-    // Auto-refresh every 10 minutes
-    const interval = setInterval(() => {
-      fetchNewsData(false);
-    }, 10 * 60 * 1000);
+    let interval: NodeJS.Timeout;
     
-    return () => clearInterval(interval);
-  }, [bioguideId]);
+    const startAutoRefresh = () => {
+      // Only auto-refresh when page is visible
+      if (!document.hidden) {
+        interval = setInterval(() => {
+          fetchNewsData(false);
+        }, 5 * 60 * 1000); // 5 minutes for more frequent news updates
+      }
+    };
+    
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        clearInterval(interval);
+      } else {
+        // Refresh immediately when page becomes visible
+        fetchNewsData(false);
+        startAutoRefresh();
+      }
+    };
+    
+    startAutoRefresh();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [bioguideId, fetchNewsData]);
 
   const sources = useMemo(() => {
     if (!newsData) return ['all'];

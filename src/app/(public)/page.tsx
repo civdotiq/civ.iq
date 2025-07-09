@@ -1,5 +1,13 @@
 'use client';
 
+
+/**
+ * CIV.IQ - Civic Information  
+ * Copyright (c) 2025 CIV.IQ 
+ * Licensed under MIT License
+ * Built with public government data
+ */
+
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, ArrowRight } from 'lucide-react';
@@ -382,12 +390,12 @@ export default function Home() {
               </div>
               
               <div className="animate-fade-in-up" style={{animationDelay: '200ms'}}>
-                <h3 className="text-xl font-semibold mb-6 text-[#3ea2d4]">Data Sources</h3>
+                <h3 className="text-xl font-semibold mb-6 text-[#3ea2d4]">Information</h3>
                 <ul className="space-y-3">
-                  <li><a href="#" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">Congress.gov</a></li>
-                  <li><a href="#" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">FEC.gov</a></li>
-                  <li><a href="#" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">Census.gov</a></li>
-                  <li><a href="#" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">OpenStates.org</a></li>
+                  <li><a href="/data-sources" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">Data Sources</a></li>
+                  <li><a href="/about" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">About CIV.IQ</a></li>
+                  <li><a href="/privacy" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">Privacy Policy</a></li>
+                  <li><a href="/terms" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">Terms of Service</a></li>
                 </ul>
               </div>
               
@@ -396,14 +404,16 @@ export default function Home() {
                 <ul className="space-y-3">
                   <li><a href="/docs/api" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">API Documentation</a></li>
                   <li><a href="https://github.com/civiq" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">Open Source</a></li>
-                  <li><a href="/privacy" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">Privacy Policy</a></li>
                   <li><a href="/contact" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">Contact</a></li>
+                  <li><a href="/changelog" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">Changelog</a></li>
                 </ul>
               </div>
             </div>
             
-            <div className="text-center pt-8 border-t border-gray-700">
-              <p className="text-gray-400 text-lg font-medium">Public utility. No rights reserved.</p>
+            <div className="text-center pt-8 border-t border-gray-700 space-y-2">
+              <p className="text-gray-400 text-lg font-medium">© 2025 CIV.IQ | Code: MIT License | Docs: CC BY-SA 4.0</p>
+              <p className="text-gray-500 text-sm">Built exclusively with public government data</p>
+              <p className="text-gray-500 text-sm">Original code and design protected • Government data remains public domain</p>
             </div>
           </div>
         </div>
