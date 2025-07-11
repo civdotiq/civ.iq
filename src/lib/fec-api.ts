@@ -198,7 +198,16 @@ class FECAPI {
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          // Try to get error details from response body
+          let errorDetails = '';
+          try {
+            const errorBody = await response.text();
+            errorDetails = errorBody.substring(0, 500); // Limit error message length
+          } catch (e) {
+            errorDetails = 'Could not read error response body';
+          }
+          
+          throw new Error(`HTTP ${response.status}: ${response.statusText}. Details: ${errorDetails}`);
         }
 
         const data = await response.json();
@@ -237,7 +246,6 @@ class FECAPI {
     try {
       const params: Record<string, string> = {
         name: name,
-        sort: '-total_receipts',
         per_page: '20'
       };
 
@@ -259,7 +267,20 @@ class FECAPI {
    */
   async getCandidateById(candidateId: string): Promise<FECCandidate | null> {
     try {
-      const response = await this.makeRequest<FECCandidate>(`/candidate/${candidateId}/`);
+      // Normalize and validate candidate ID
+      const normalizedId = FECUtils.normalizeCandidateId(candidateId);
+      const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
+      
+      if (!validationInfo.isValid) {
+        console.error('Invalid FEC candidate ID format:', {
+          candidateId,
+          normalizedId,
+          errors: validationInfo.errors
+        });
+        return null;
+      }
+      
+      const response = await this.makeRequest<FECCandidate>(`/candidate/${normalizedId}/`);
       return response?.results?.[0] || null;
 
     } catch (error) {
@@ -298,7 +319,7 @@ class FECAPI {
     try {
       const params: Record<string, string> = {
         candidate_id: candidateId,
-        sort: '-total_receipts',
+        sort: '-receipts',
         per_page: '20'
       };
 
@@ -542,6 +563,88 @@ export const FECUtils = {
    */
   isConfigured(): boolean {
     return !!process.env.FEC_API_KEY;
+  },
+
+  /**
+   * Validate FEC candidate ID format
+   * Expected format: [H|S|P][0-9][STATE][00000]
+   * Examples: H8MI09068, S2MA00170, P80003338
+   */
+  validateCandidateId(candidateId: string): boolean {
+    if (!candidateId || typeof candidateId !== 'string') {
+      return false;
+    }
+    
+    // Standard FEC candidate ID format
+    const fecIdPattern = /^[HSP]\d[A-Z]{2}\d{5}$/;
+    return fecIdPattern.test(candidateId);
+  },
+
+  /**
+   * Get detailed validation info for a candidate ID
+   */
+  getCandidateIdValidationInfo(candidateId: string): {
+    isValid: boolean;
+    office?: string;
+    state?: string;
+    sequence?: string;
+    errors: string[];
+  } {
+    const errors: string[] = [];
+    
+    if (!candidateId || typeof candidateId !== 'string') {
+      errors.push('Candidate ID is required and must be a string');
+      return { isValid: false, errors };
+    }
+    
+    if (candidateId.length !== 9) {
+      errors.push(`Expected length 9, got ${candidateId.length}`);
+    }
+    
+    // Check office code
+    const officeCode = candidateId.charAt(0);
+    if (!['H', 'S', 'P'].includes(officeCode)) {
+      errors.push(`Invalid office code '${officeCode}', expected H, S, or P`);
+    }
+    
+    // Check cycle digit
+    const cycleDigit = candidateId.charAt(1);
+    if (!/^\d$/.test(cycleDigit)) {
+      errors.push(`Invalid cycle digit '${cycleDigit}', expected a number`);
+    }
+    
+    // Check state code
+    const stateCode = candidateId.substring(2, 4);
+    if (!/^[A-Z]{2}$/.test(stateCode)) {
+      errors.push(`Invalid state code '${stateCode}', expected 2 uppercase letters`);
+    }
+    
+    // Check sequence number
+    const sequenceNumber = candidateId.substring(4, 9);
+    if (!/^\d{5}$/.test(sequenceNumber)) {
+      errors.push(`Invalid sequence number '${sequenceNumber}', expected 5 digits`);
+    }
+    
+    const isValid = errors.length === 0;
+    
+    return {
+      isValid,
+      office: isValid ? this.getOfficeDescription(officeCode) : undefined,
+      state: isValid ? stateCode : undefined,
+      sequence: isValid ? sequenceNumber : undefined,
+      errors
+    };
+  },
+
+  /**
+   * Normalize candidate ID (uppercase, trim whitespace)
+   */
+  normalizeCandidateId(candidateId: string): string {
+    if (!candidateId || typeof candidateId !== 'string') {
+      return '';
+    }
+    
+    return candidateId.trim().toUpperCase();
   },
 
   /**

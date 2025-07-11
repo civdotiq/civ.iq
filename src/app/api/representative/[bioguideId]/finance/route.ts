@@ -10,6 +10,7 @@ import { cachedFetch } from '@/lib/cache'
 import { getFECIdFromBioguide, hasFECMapping } from '@/lib/data/bioguide-fec-mapping'
 import { structuredLogger } from '@/lib/logging/logger'
 import { monitorExternalApi } from '@/lib/monitoring/telemetry'
+import { FECUtils } from '@/lib/fec-api'
 
 // State name to abbreviation mapping
 const STATE_ABBR: Record<string, string> = {
@@ -161,7 +162,6 @@ async function findFECCandidate(representativeName: string, state: string, distr
               name: name, // Use 'name' parameter for better matching
               state: state,
               cycle: cycle.toString(),
-              sort: '-total_receipts', // Sort by fundraising to get active candidates first
               per_page: '50' // Increased to catch more potential matches
             });
             
@@ -390,6 +390,19 @@ async function getFinancialSummary(candidateId: string): Promise<FinancialSummar
   const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
   const cacheKey = `fec-summary-${candidateId}-${currentCycle}`;
   
+  // Validate candidate ID format
+  const normalizedId = FECUtils.normalizeCandidateId(candidateId);
+  const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
+  
+  if (!validationInfo.isValid) {
+    structuredLogger.warn('Invalid FEC candidate ID format for financial summary', {
+      candidateId,
+      normalizedId,
+      errors: validationInfo.errors
+    });
+    return [];
+  }
+  
   return cachedFetch(
     cacheKey,
     async () => {
@@ -397,7 +410,7 @@ async function getFinancialSummary(candidateId: string): Promise<FinancialSummar
         structuredLogger.info('Fetching financial summary from FEC', { candidateId, currentCycle });
         
         const response = await fetch(
-          `https://api.open.fec.gov/v1/candidate/${candidateId}/totals/?api_key=${process.env.FEC_API_KEY}&cycle=${currentCycle}&cycle=${currentCycle - 2}&sort=-cycle`,
+          `https://api.open.fec.gov/v1/candidate/${normalizedId}/totals/?api_key=${process.env.FEC_API_KEY}&cycle=${currentCycle}&cycle=${currentCycle - 2}&sort=-cycle`,
           { 
             headers: {
               'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
@@ -410,7 +423,25 @@ async function getFinancialSummary(candidateId: string): Promise<FinancialSummar
 
         if (!response.ok) {
           monitor.end(false, response.status);
-          throw new Error(`FEC financial summary failed: ${response.status} ${response.statusText}`);
+          
+          // Log detailed error information for debugging
+          let errorDetails = '';
+          try {
+            const errorBody = await response.text();
+            errorDetails = errorBody.substring(0, 500); // Limit error message length
+          } catch (e) {
+            errorDetails = 'Could not read error response body';
+          }
+          
+          structuredLogger.error('FEC financial summary API error', new Error(`HTTP ${response.status}`), {
+            candidateId,
+            status: response.status,
+            statusText: response.statusText,
+            errorDetails,
+            url: response.url.replace(process.env.FEC_API_KEY!, '[REDACTED]')
+          });
+          
+          return [];
         }
 
         const data = await response.json();
@@ -446,6 +477,19 @@ async function getFinancialSummary(candidateId: string): Promise<FinancialSummar
 async function getContributions(candidateId: string): Promise<ContributionData[]> {
   const cacheKey = `fec-contributions-${candidateId}-${new Date().toISOString().split('T')[0]}`; // Daily cache
   
+  // Validate candidate ID format
+  const normalizedId = FECUtils.normalizeCandidateId(candidateId);
+  const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
+  
+  if (!validationInfo.isValid) {
+    structuredLogger.warn('Invalid FEC candidate ID format for contributions', {
+      candidateId,
+      normalizedId,
+      errors: validationInfo.errors
+    });
+    return [];
+  }
+  
   return cachedFetch(
     cacheKey,
     async () => {
@@ -453,7 +497,7 @@ async function getContributions(candidateId: string): Promise<ContributionData[]
         structuredLogger.info('Fetching contributions from FEC', { candidateId });
         
         const response = await fetch(
-          `https://api.open.fec.gov/v1/schedules/schedule_a/?api_key=${process.env.FEC_API_KEY}&candidate_id=${candidateId}&sort=-contribution_receipt_date&per_page=20`,
+          `https://api.open.fec.gov/v1/schedules/schedule_a/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&sort=-contribution_receipt_date&per_page=20`,
           {
             headers: {
               'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
@@ -466,7 +510,25 @@ async function getContributions(candidateId: string): Promise<ContributionData[]
 
         if (!response.ok) {
           monitor.end(false, response.status);
-          throw new Error(`FEC contributions failed: ${response.status} ${response.statusText}`);
+          
+          // Log detailed error information for debugging
+          let errorDetails = '';
+          try {
+            const errorBody = await response.text();
+            errorDetails = errorBody.substring(0, 500); // Limit error message length
+          } catch (e) {
+            errorDetails = 'Could not read error response body';
+          }
+          
+          structuredLogger.error('FEC contributions API error', new Error(`HTTP ${response.status}`), {
+            candidateId,
+            status: response.status,
+            statusText: response.statusText,
+            errorDetails,
+            url: response.url.replace(process.env.FEC_API_KEY!, '[REDACTED]')
+          });
+          
+          return [];
         }
 
         const data = await response.json();
@@ -500,6 +562,19 @@ async function getContributions(candidateId: string): Promise<ContributionData[]
 async function getExpenditures(candidateId: string): Promise<ExpenditureData[]> {
   const cacheKey = `fec-expenditures-${candidateId}-${new Date().toISOString().split('T')[0]}`; // Daily cache
   
+  // Validate candidate ID format
+  const normalizedId = FECUtils.normalizeCandidateId(candidateId);
+  const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
+  
+  if (!validationInfo.isValid) {
+    structuredLogger.warn('Invalid FEC candidate ID format for expenditures', {
+      candidateId,
+      normalizedId,
+      errors: validationInfo.errors
+    });
+    return [];
+  }
+  
   return cachedFetch(
     cacheKey,
     async () => {
@@ -507,7 +582,7 @@ async function getExpenditures(candidateId: string): Promise<ExpenditureData[]> 
         structuredLogger.info('Fetching expenditures from FEC', { candidateId });
         
         const response = await fetch(
-          `https://api.open.fec.gov/v1/schedules/schedule_b/?api_key=${process.env.FEC_API_KEY}&candidate_id=${candidateId}&sort=-disbursement_date&per_page=20`,
+          `https://api.open.fec.gov/v1/schedules/schedule_b/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&sort=-disbursement_date&per_page=20`,
           {
             headers: {
               'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
@@ -520,7 +595,25 @@ async function getExpenditures(candidateId: string): Promise<ExpenditureData[]> 
 
         if (!response.ok) {
           monitor.end(false, response.status);
-          throw new Error(`FEC expenditures failed: ${response.status} ${response.statusText}`);
+          
+          // Log detailed error information for debugging
+          let errorDetails = '';
+          try {
+            const errorBody = await response.text();
+            errorDetails = errorBody.substring(0, 500); // Limit error message length
+          } catch (e) {
+            errorDetails = 'Could not read error response body';
+          }
+          
+          structuredLogger.error('FEC expenditures API error', new Error(`HTTP ${response.status}`), {
+            candidateId,
+            status: response.status,
+            statusText: response.statusText,
+            errorDetails,
+            url: response.url.replace(process.env.FEC_API_KEY!, '[REDACTED]')
+          });
+          
+          return [];
         }
 
         const data = await response.json();
@@ -637,29 +730,50 @@ export async function GET(
           })
           
           try {
-            const candidateResponse = await fetch(
-              `https://api.open.fec.gov/v1/candidate/${mappedFECId}/?api_key=${process.env.FEC_API_KEY}`
-            );
+            // Validate and normalize FEC candidate ID format
+            const normalizedFECId = FECUtils.normalizeCandidateId(mappedFECId);
+            const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedFECId);
             
-            if (candidateResponse.ok) {
-              const data = await candidateResponse.json();
-              if (data.results && data.results.length > 0) {
-                const candidate = data.results[0];
-                fecCandidate = {
-                  candidate_id: candidate.candidate_id,
-                  name: candidate.name,
-                  party: candidate.party,
-                  office: candidate.office,
-                  state: candidate.state,
-                  district: candidate.district,
-                  election_years: candidate.election_years || [],
-                  cycles: candidate.cycles || []
-                };
-                dataSource = enhancedRep ? 'congress-legislators-mapping' : 'direct-mapping';
-                structuredLogger.info('Successfully retrieved FEC data via direct mapping', {
+            if (!validationInfo.isValid) {
+              structuredLogger.warn('Invalid FEC candidate ID format', {
+                bioguideId,
+                fecId: mappedFECId,
+                normalizedId: normalizedFECId,
+                errors: validationInfo.errors
+              });
+              // Don't throw, just skip to name-based search
+            } else {
+              const candidateResponse = await fetch(
+                `https://api.open.fec.gov/v1/candidate/${normalizedFECId}/?api_key=${process.env.FEC_API_KEY}`
+              );
+              
+              if (candidateResponse.ok) {
+                const data = await candidateResponse.json();
+                if (data.results && data.results.length > 0) {
+                  const candidate = data.results[0];
+                  fecCandidate = {
+                    candidate_id: candidate.candidate_id,
+                    name: candidate.name,
+                    party: candidate.party,
+                    office: candidate.office,
+                    state: candidate.state,
+                    district: candidate.district,
+                    election_years: candidate.election_years || [],
+                    cycles: candidate.cycles || []
+                  };
+                  dataSource = enhancedRep ? 'congress-legislators-mapping' : 'direct-mapping';
+                  structuredLogger.info('Successfully retrieved FEC data via direct mapping', {
+                    bioguideId,
+                    candidateId: fecCandidate.candidate_id,
+                    mappingSource: dataSource
+                  });
+                }
+              } else {
+                structuredLogger.warn('FEC candidate lookup returned non-OK status', {
                   bioguideId,
-                  candidateId: fecCandidate.candidate_id,
-                  mappingSource: dataSource
+                  fecId: mappedFECId,
+                  status: candidateResponse.status,
+                  statusText: candidateResponse.statusText
                 });
               }
             }

@@ -131,7 +131,7 @@ npm test         # Run tests
 - ✅ ZIP code lookup with real Census API
 - ✅ Enhanced profiles with social media and biographical data
 - ✅ Real voting records from Congress.gov
-- ✅ Campaign finance with real FEC data
+- ✅ **Campaign finance with real FEC data (Fixed Jan 2025)**
 - ✅ GDELT news integration with AI deduplication
 - ✅ AI-powered bill summarization
 - ✅ **Real party line voting analysis with peer comparisons**
