@@ -107,6 +107,33 @@ export interface CongressLegislatorSocialMedia {
   }
 }
 
+export interface CongressCommitteeMembership {
+  bioguide: string
+  thomas?: string
+  committees: Array<{
+    thomas_id: string
+    house_committee_id?: string
+    senate_committee_id?: string
+    rank?: number
+    party?: string
+    title?: string
+    chamber?: 'house' | 'senate'
+  }>
+}
+
+export interface CongressCommittee {
+  thomas_id: string
+  house_committee_id?: string
+  senate_committee_id?: string
+  type: 'house' | 'senate' | 'joint'
+  name: string
+  chamber?: 'house' | 'senate'
+  jurisdiction?: string
+  subcommittees?: Array<{
+    thomas_id: string
+    name: string
+  }>
+}
 
 /**
  * Fetch current legislators data
@@ -223,13 +250,113 @@ function parseSocialMediaYAML(yamlText: string): CongressLegislatorSocialMedia[]
 }
 
 /**
+ * Fetch committee membership data
+ */
+async function fetchCommitteeMemberships(): Promise<CongressCommitteeMembership[]> {
+  return cachedFetch(
+    'congress-committee-memberships',
+    async () => {
+      try {
+        structuredLogger.info('Fetching committee memberships from congress-legislators')
+        
+        const response = await fetch(`${CONGRESS_LEGISLATORS_BASE_URL}/committee-membership-current.yaml`)
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch committee memberships: ${response.status} ${response.statusText}`)
+        }
+        
+        const yamlText = await response.text()
+        const data = yaml.load(yamlText) as any
+        
+        // Transform the committee membership data which is organized by committee ID
+        const memberships: CongressCommitteeMembership[] = []
+        const membershipsByBioguide = new Map<string, any[]>()
+        
+        // Parse committee-based structure where each key is a committee and values are member arrays
+        for (const [committeeId, memberList] of Object.entries(data)) {
+          if (Array.isArray(memberList)) {
+            memberList.forEach((member: any) => {
+              if (member.bioguide) {
+                if (!membershipsByBioguide.has(member.bioguide)) {
+                  membershipsByBioguide.set(member.bioguide, [])
+                }
+                membershipsByBioguide.get(member.bioguide)!.push({
+                  thomas_id: committeeId,
+                  rank: member.rank,
+                  party: member.party,
+                  title: member.title,
+                  chamber: committeeId.startsWith('H') ? 'house' : 'senate'
+                })
+              }
+            })
+          }
+        }
+        
+        // Convert map to array format
+        for (const [bioguideId, committees] of membershipsByBioguide.entries()) {
+          memberships.push({
+            bioguide: bioguideId,
+            committees: committees
+          })
+        }
+        
+        structuredLogger.info('Successfully fetched committee memberships', {
+          count: memberships.length
+        })
+        
+        return memberships
+      } catch (error) {
+        structuredLogger.error('Error fetching committee memberships', error as Error)
+        return []
+      }
+    },
+    6 * 60 * 60 * 1000 // 6 hours cache
+  )
+}
+
+/**
+ * Fetch committee data
+ */
+async function fetchCommittees(): Promise<CongressCommittee[]> {
+  return cachedFetch(
+    'congress-committees-current',
+    async () => {
+      try {
+        structuredLogger.info('Fetching committees from congress-legislators')
+        
+        const response = await fetch(`${CONGRESS_LEGISLATORS_BASE_URL}/committees-current.yaml`)
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch committees: ${response.status} ${response.statusText}`)
+        }
+        
+        const yamlText = await response.text()
+        const committees = yaml.load(yamlText) as CongressCommittee[]
+        
+        structuredLogger.info('Successfully fetched committees', {
+          count: committees.length
+        })
+        
+        return committees
+      } catch (error) {
+        structuredLogger.error('Error fetching committees', error as Error)
+        return []
+      }
+    },
+    6 * 60 * 60 * 1000 // 6 hours cache
+  )
+}
+
+/**
  * Get enhanced representative data by bioguide ID
  */
 export async function getEnhancedRepresentative(bioguideId: string): Promise<EnhancedRepresentative | null> {
   try {
-    const [legislators, socialMedia] = await Promise.all([
+    const [legislators, socialMedia, committeeMemberships, committees] = await Promise.all([
       fetchCurrentLegislators(),
-      fetchSocialMediaData()
+      fetchSocialMediaData(),
+      fetchCommitteeMemberships(),
+      fetchCommittees()
     ])
     
     // Find the legislator by bioguide ID
@@ -241,6 +368,18 @@ export async function getEnhancedRepresentative(bioguideId: string): Promise<Enh
     
     // Find social media data
     const social = socialMedia.find(s => s.bioguide === bioguideId)
+    
+    // Find committee memberships
+    const memberCommittees = committeeMemberships.find(m => m.bioguide === bioguideId)
+    
+    // Build committee array with names
+    const representativeCommittees = memberCommittees?.committees?.map(membership => {
+      const committee = committees.find(c => c.thomas_id === membership.thomas_id)
+      return {
+        name: committee?.name || membership.thomas_id,
+        role: membership.title || 'Member'
+      }
+    }).filter(c => c.name) || []
     
     // Get current term (most recent)
     const currentTerm = legislator.terms[legislator.terms.length - 1]
@@ -263,7 +402,7 @@ export async function getEnhancedRepresentative(bioguideId: string): Promise<Enh
         startYear: currentTerm.start.split('-')[0],
         endYear: currentTerm.end.split('-')[0]
       }],
-      committees: [],
+      committees: representativeCommittees,
       
       fullName: {
         first: legislator.name.first,

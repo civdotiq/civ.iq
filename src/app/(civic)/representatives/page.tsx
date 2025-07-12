@@ -15,6 +15,7 @@ import { VotingPatternHeatmap, RepresentativeNetwork } from '@/components/Intera
 import { APIErrorBoundary } from '@/components/ErrorBoundary';
 import { DataQualityIndicator, ErrorState, DataSourceBadge } from '@/components/DataQualityIndicator';
 import { InlineQualityScore, DataTrustIndicator } from '@/components/DataQualityDashboard';
+import RepresentativePhoto from '@/components/RepresentativePhoto';
 
 // Logo component
 function CiviqLogo() {
@@ -103,17 +104,11 @@ function RepresentativeCard({ rep }: { rep: Representative }) {
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
-              {rep.imageUrl ? (
-                <img 
-                  src={rep.imageUrl} 
-                  alt={rep.name}
-                  className="w-16 h-16 object-cover"
-                />
-              ) : (
-                <span className="text-xs text-gray-600">Photo</span>
-              )}
-            </div>
+            <RepresentativePhoto 
+              bioguideId={rep.bioguideId}
+              name={rep.name}
+              size="md"
+            />
             <div>
               <h3 className="text-lg font-bold text-gray-900">{rep.name}</h3>
               <p className="text-sm text-gray-600">{rep.title}</p>
@@ -710,17 +705,12 @@ function RepresentativesPageContent() {
                           <tr key={rep.bioguideId} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
-                                <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden mr-3">
-                                  {rep.imageUrl ? (
-                                    <img 
-                                      src={rep.imageUrl} 
-                                      alt={rep.name}
-                                      className="w-10 h-10 object-cover"
-                                    />
-                                  ) : (
-                                    <span className="text-xs text-gray-600">Photo</span>
-                                  )}
-                                </div>
+                                <RepresentativePhoto 
+                                  bioguideId={rep.bioguideId}
+                                  name={rep.name}
+                                  size="sm"
+                                  className="mr-3"
+                                />
                                 <div>
                                   <div className="text-sm font-medium text-gray-900">{rep.name}</div>
                                   <div className="text-sm text-gray-500">{rep.title}</div>

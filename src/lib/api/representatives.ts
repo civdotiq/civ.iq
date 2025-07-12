@@ -6,7 +6,7 @@
  */
 
 import { cache } from '@/lib/cache';
-import { Representative, RepresentativeProfile, BatchApiResponse } from '@/types/representative';
+import { RepresentativeProfile, BatchApiResponse } from '@/types/representative';
 
 // Base API configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
@@ -151,8 +151,8 @@ export const representativeApi = {
   /**
    * Get individual representative profile (fallback method)
    */
-  async getProfile(bioguideId: string): Promise<Representative> {
-    return apiRequest<Representative>(`/api/representative/${bioguideId}`, {
+  async getProfile(bioguideId: string): Promise<RepresentativeProfile> {
+    return apiRequest<RepresentativeProfile>(`/api/representative/${bioguideId}`, {
       cacheTime: 600, // 10 minutes - profile data changes infrequently
       tags: [`representative-${bioguideId}`, 'representative-profile']
     });
@@ -248,7 +248,7 @@ export const representativeApi = {
     party?: string;
     chamber?: string;
     query?: string;
-  }): Promise<Representative[]> {
+  }): Promise<RepresentativeProfile[]> {
     const searchParams = new URLSearchParams();
     
     Object.entries(params).forEach(([key, value]) => {
@@ -256,7 +256,7 @@ export const representativeApi = {
     });
 
     const queryString = searchParams.toString();
-    return apiRequest<Representative[]>(`/api/representatives${queryString ? `?${queryString}` : ''}`, {
+    return apiRequest<RepresentativeProfile[]>(`/api/representatives${queryString ? `?${queryString}` : ''}`, {
       cacheTime: 300, // 5 minutes for search results
       tags: ['representatives-search', `search-${queryString}`]
     });
@@ -265,14 +265,13 @@ export const representativeApi = {
   /**
    * Get representatives by ZIP code - highly cached due to frequent access
    */
-  async getByZip(zipCode: string): Promise<Representative[]> {
-    return apiRequest<Representative[]>(`/api/representatives?zip=${zipCode}`, {
+  async getByZip(zipCode: string): Promise<RepresentativeProfile[]> {
+    return apiRequest<RepresentativeProfile[]>(`/api/representatives?zip=${zipCode}`, {
       cacheTime: 600, // 10 minutes - ZIP lookups are expensive
       tags: ['representatives-zip', `zip-${zipCode}`]
     });
   },
 };
 
-// Export error type for use in components
-export { RepresentativeApiError };
+// RepresentativeApiError is already exported above with the class declaration
 export type { BatchApiResponse };

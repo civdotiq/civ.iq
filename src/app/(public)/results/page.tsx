@@ -18,6 +18,7 @@ import { DistrictMap } from '@/components/DistrictMap';
 import { InteractiveDistrictMap } from '@/components/InteractiveDistrictMap';
 import { DataQualityIndicator, ErrorState, DataSourceBadge } from '@/components/DataQualityIndicator';
 import { InlineQualityScore, DataTrustIndicator } from '@/components/DataQualityDashboard';
+import RepresentativePhoto from '@/components/RepresentativePhoto';
 
 function CiviqLogo() {
   return (
@@ -140,17 +141,11 @@ function RepresentativeCard({ representative }: { representative: Representative
       {/* Header Section */}
       <div className="p-6 pb-4">
         <div className="flex items-start gap-4">
-          <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-            {representative.imageUrl ? (
-              <img 
-                src={representative.imageUrl} 
-                alt={representative.name}
-                className="w-20 h-20 rounded-full object-cover"
-              />
-            ) : (
-              <span className="text-gray-600 text-sm">Photo</span>
-            )}
-          </div>
+          <RepresentativePhoto 
+            bioguideId={representative.bioguideId}
+            name={representative.name}
+            size="lg"
+          />
           <div className="flex-1 min-w-0">
             <h3 className="text-xl font-semibold text-gray-900 mb-1">{representative.name}</h3>
             <p className="text-gray-600 mb-2">{representative.title}</p>
@@ -283,17 +278,11 @@ function StateLegislatorCard({ legislator }: { legislator: StateLegislator }) {
       {/* Header Section */}
       <div className="p-6 pb-4">
         <div className="flex items-start gap-4">
-          <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-            {legislator.image ? (
-              <img 
-                src={legislator.image} 
-                alt={legislator.name}
-                className="w-16 h-16 rounded-full object-cover"
-              />
-            ) : (
-              <span className="text-gray-600 text-xs">Photo</span>
-            )}
-          </div>
+          <RepresentativePhoto 
+            bioguideId={legislator.id}
+            name={legislator.name}
+            size="md"
+          />
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-semibold text-gray-900 mb-1">{legislator.name}</h3>
             <p className="text-gray-600 mb-2">

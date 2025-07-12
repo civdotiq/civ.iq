@@ -9,6 +9,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { ChunkErrorHandler } from "@/components/ChunkErrorHandler";
 
 export const metadata: Metadata = {
   title: "CIV.IQ - Civic Intelligence Hub",
@@ -95,6 +96,7 @@ export default function RootLayout({
       <body className="antialiased">
         <ServiceWorkerRegistration />
         <InstallPrompt />
+        <ChunkErrorHandler />
         {children}
       </body>
     </html>

@@ -46,6 +46,7 @@ export default function Home() {
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [showInputFeedback, setShowInputFeedback] = useState(false);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -64,20 +65,42 @@ export default function Home() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+
   const handleSearch = () => {
-    if (searchInput.trim() && !isSearching) {
-      setIsSearching(true);
-      SearchHistory.addSearch(searchInput.trim());
-      setSearchHistory(SearchHistory.getHistory());
-      setShowHistory(false);
-      
-      const isZipCode = /^\d{5}$/.test(searchInput.trim());
+    if (isSearching) return; // Prevent double-clicking during search
+    
+    if (!searchInput.trim()) {
+      // Focus the input and show feedback if empty
+      inputRef.current?.focus();
+      setShowInputFeedback(true);
+      setTimeout(() => setShowInputFeedback(false), 3000);
+      return;
+    }
+    
+    setIsSearching(true);
+    SearchHistory.addSearch(searchInput.trim());
+    setSearchHistory(SearchHistory.getHistory());
+    setShowHistory(false);
+    
+    const isZipCode = /^\d{5}$/.test(searchInput.trim());
+    
+    
+    // Use router.push for more reliable navigation
+    try {
       if (isZipCode) {
         router.push(`/results?zip=${encodeURIComponent(searchInput.trim())}`);
       } else {
         router.push(`/representatives?search=${encodeURIComponent(searchInput.trim())}`);
       }
+    } catch (error) {
+      console.error('Navigation failed:', error);
+      setIsSearching(false);
     }
+    
+    // Failsafe reset after 5 seconds
+    setTimeout(() => {
+      setIsSearching(false);
+    }, 5000);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -103,11 +126,23 @@ export default function Home() {
       setSearchHistory(SearchHistory.getHistory());
       
       const isZipCode = /^\d{5}$/.test(historyValue);
-      if (isZipCode) {
-        router.push(`/results?zip=${encodeURIComponent(historyValue)}`);
-      } else {
-        router.push(`/representatives?search=${encodeURIComponent(historyValue)}`);
+      
+      
+      try {
+        if (isZipCode) {
+          router.push(`/results?zip=${encodeURIComponent(historyValue)}`);
+        } else {
+          router.push(`/representatives?search=${encodeURIComponent(historyValue)}`);
+        }
+      } catch (error) {
+        console.error('Navigation failed:', error);
+        setIsSearching(false);
       }
+      
+      // Failsafe reset after 5 seconds
+      setTimeout(() => {
+        setIsSearching(false);
+      }, 5000);
     }
   };
 
@@ -174,17 +209,29 @@ export default function Home() {
                     type="text"
                     placeholder="Enter ZIP code (e.g., 10001)"
                     value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
+                    onChange={(e) => {
+                      setSearchInput(e.target.value);
+                      setShowInputFeedback(false); // Hide feedback when user starts typing
+                    }}
                     onKeyPress={handleKeyPress}
                     onFocus={handleInputFocus}
                     onBlur={() => setTimeout(() => setShowHistory(false), 200)}
-                    className="w-full pl-16 pr-6 py-6 text-lg focus:outline-none focus:bg-gray-50/50 transition-all duration-300 placeholder:text-gray-400"
+                    className={`w-full pl-16 pr-6 py-6 text-lg focus:outline-none focus:bg-gray-50/50 transition-all duration-300 placeholder:text-gray-400 ${
+                      showInputFeedback ? 'ring-2 ring-[#e11d07] ring-opacity-50' : ''
+                    }`}
                   />
                 </div>
                 <button 
                   onClick={handleSearch}
-                  disabled={isSearching || !searchInput.trim()}
-                  className="bg-[#3ea2d4] hover:bg-[#3ea2d4]/90 disabled:bg-gray-300 text-white px-8 py-6 font-semibold text-lg transition-all duration-300 flex items-center gap-3 group/btn"
+                  disabled={isSearching}
+                  className={`${
+                    isSearching 
+                      ? 'bg-gray-300 cursor-not-allowed' 
+                      : searchInput.trim() 
+                        ? 'bg-[#3ea2d4] hover:bg-[#3ea2d4]/90' 
+                        : 'bg-[#3ea2d4]/60 hover:bg-[#3ea2d4]/80'
+                  } text-white px-8 py-6 font-semibold text-lg transition-all duration-300 flex items-center gap-3 group/btn`}
+                  title={isSearching ? "Search in progress..." : !searchInput.trim() ? "Enter a ZIP code to search" : "Click to find representatives"}
                 >
                   {isSearching ? (
                     <>
@@ -204,6 +251,14 @@ export default function Home() {
                 </button>
               </div>
             </div>
+            
+            {showInputFeedback && (
+              <div className="absolute top-full left-0 right-0 mt-2 text-center">
+                <div className="inline-block px-4 py-2 bg-[#e11d07] text-white text-sm rounded-lg shadow-lg animate-fade-in-down">
+                  Please enter a ZIP code to search for representatives
+                </div>
+              </div>
+            )}
             
             {showHistory && searchHistory.length > 0 && (
               <div 
@@ -389,7 +444,7 @@ export default function Home() {
                 </p>
               </div>
               
-              <div className="animate-fade-in-up" style={{animationDelay: '200ms'}}>
+              <div>
                 <h3 className="text-xl font-semibold mb-6 text-[#3ea2d4]">Information</h3>
                 <ul className="space-y-3">
                   <li><a href="/data-sources" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">Data Sources</a></li>
@@ -399,7 +454,7 @@ export default function Home() {
                 </ul>
               </div>
               
-              <div className="animate-fade-in-up" style={{animationDelay: '400ms'}}>
+              <div>
                 <h3 className="text-xl font-semibold mb-6 text-[#0a9338]">Resources</h3>
                 <ul className="space-y-3">
                   <li><a href="/docs/api" className="text-gray-300 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block">API Documentation</a></li>

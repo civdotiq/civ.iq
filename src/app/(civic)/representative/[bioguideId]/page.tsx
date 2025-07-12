@@ -5,62 +5,14 @@
  * Built with public government data
  */
 
-import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import { ProfileHeaderSkeleton, TabContentSkeleton } from '@/components/SkeletonLoader';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { ErrorBoundary, APIErrorBoundary, LoadingErrorBoundary } from '@/components/ErrorBoundary';
-import PartyAlignmentAnalysis from '@/components/PartyAlignmentAnalysis';
-import { BillsTracker } from '@/components/BillsTracker';
-import { EnhancedVotingChart } from '@/components/EnhancedVotingChart';
-import { VotingPatternAnalysis } from '@/components/VotingPatternAnalysis';
 import { RepresentativeProfileClient } from './client-wrapper';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { RepresentativePageSidebar } from '@/components/RepresentativePageSidebar';
+import RepresentativePhoto from '@/components/RepresentativePhoto';
 
-// Lazy load heavy components to reduce initial bundle size
-const CampaignFinanceVisualizer = dynamic(
-  () => import('@/components/CampaignFinanceVisualizer').then(mod => ({ default: mod.CampaignFinanceVisualizer })),
-  {
-    loading: () => (
-      <div className="animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-        <div className="h-64 bg-gray-200 rounded"></div>
-      </div>
-    ),
-    ssr: false // Heavy chart library - only load on client
-  }
-);
-
-const VotingRecordsTable = dynamic(
-  () => import('@/components/VotingRecordsTable').then(mod => ({ default: mod.VotingRecordsTable })),
-  {
-    loading: () => (
-      <div className="animate-pulse space-y-3">
-        <div className="h-12 bg-gray-200 rounded"></div>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-16 bg-gray-100 rounded"></div>
-        ))}
-      </div>
-    )
-  }
-);
-
-const EnhancedNewsFeed = dynamic(
-  () => import('@/components/EnhancedNewsFeed').then(mod => ({ default: mod.EnhancedNewsFeed })),
-  {
-    loading: () => (
-      <div className="animate-pulse space-y-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="border rounded-lg p-4">
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-            <div className="h-3 bg-gray-100 rounded w-1/2"></div>
-          </div>
-        ))}
-      </div>
-    )
-  }
-);
+// Client-side components will be dynamically imported in the client wrapper
 
 function CiviqLogo() {
   return (
@@ -141,8 +93,16 @@ async function getRepresentativeData(bioguideId: string) {
   try {
     console.log(`[CIV.IQ-DEBUG] Server-side fetch for ${bioguideId}`);
     
+    if (!bioguideId || typeof bioguideId !== 'string') {
+      throw new Error('Invalid bioguideId provided');
+    }
+    
+    // Construct full URL for server-side fetch
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 
+                   (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '');
+    
     // Use Next.js 15 fetch with built-in caching and revalidation
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/representative/${bioguideId}/batch`, {
+    const response = await fetch(`${baseUrl}/api/representative/${bioguideId}/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -157,25 +117,53 @@ async function getRepresentativeData(bioguideId: string) {
       }
     });
 
+    if (!response) {
+      throw new Error('No response received from API');
+    }
+
     if (!response.ok) {
       console.error(`[CIV.IQ-DEBUG] Server fetch failed: ${response.status}`);
       if (response.status === 404) {
         notFound();
       }
-      throw new Error(`Failed to fetch representative data: ${response.status}`);
+      throw new Error(`Failed to fetch representative data: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error(`[CIV.IQ-DEBUG] JSON parsing error:`, jsonError);
+      throw new Error('Invalid JSON response from API');
+    }
+
+    if (!data) {
+      throw new Error('No data received from API');
+    }
+
     console.log(`[CIV.IQ-DEBUG] Server fetch completed:`, {
       success: data.success,
       dataKeys: Object.keys(data.data || {}),
       executionTime: data.executionTime
     });
 
-    return data;
+    // Return structured data with safe defaults
+    return {
+      success: data.success !== false, // Consider success unless explicitly false
+      data: data.data || {},
+      errors: data.errors || {},
+      executionTime: data.executionTime || 0
+    };
   } catch (error) {
     console.error(`[CIV.IQ-DEBUG] Server fetch error:`, error);
-    throw error;
+    
+    // Return a safe error structure instead of throwing
+    return {
+      success: false,
+      data: {},
+      errors: { fetch: error instanceof Error ? error.message : 'Unknown error occurred' },
+      executionTime: 0
+    };
   }
 }
 
@@ -185,23 +173,80 @@ export default async function RepresentativeProfilePage({
 }: {
   params: Promise<{ bioguideId: string }>
 }) {
-  const { bioguideId } = await params;
+  let bioguideId: string;
+  
+  try {
+    const resolvedParams = await params;
+    bioguideId = resolvedParams.bioguideId;
+    
+    if (!bioguideId || typeof bioguideId !== 'string') {
+      console.error('[CIV.IQ-DEBUG] Invalid bioguideId in params');
+      notFound();
+    }
+  } catch (error) {
+    console.error('[CIV.IQ-DEBUG] Error resolving params:', error);
+    notFound();
+  }
   
   // Server-side data fetching - this runs on the server and streams HTML
   const batchData = await getRepresentativeData(bioguideId);
   
-  if (!batchData.success || !batchData.data.profile) {
+  // Handle fetch errors gracefully - allow partial failures
+  if (!batchData || !batchData.data?.profile?.representative) {
+    console.error('[CIV.IQ-DEBUG] No valid data received:', {
+      success: batchData?.success,
+      hasData: !!batchData?.data,
+      hasProfile: !!batchData?.data?.profile,
+      hasRepresentative: !!batchData?.data?.profile?.representative,
+      errors: batchData?.errors
+    });
     notFound();
   }
+  
+  // Log partial failures but don't crash
+  if (!batchData.success) {
+    console.warn('[CIV.IQ-DEBUG] Batch request had partial failures:', batchData.errors);
+  }
 
-  // Extract data from server response
-  const representative = batchData.data.profile as RepresentativeDetails;
+  // Extract data from server response with safe defaults
+  const representative = batchData.data.profile.representative as RepresentativeDetails;
   const votingData = batchData.data.votes || [];
   const billsData = batchData.data.bills || [];
   const financeData = batchData.data.finance || {};
   const newsData = batchData.data.news || [];
   const partyAlignmentData = batchData.data['party-alignment'] || {};
   const partialErrors = batchData.errors || {};
+  
+  // Debug: Log the extracted data arrays
+  console.log('[CIV.IQ-DEBUG] Extracted data:', {
+    votingDataLength: Array.isArray(votingData) ? votingData.length : 'not array',
+    votingDataType: typeof votingData,
+    votingDataSample: Array.isArray(votingData) ? votingData[0] : votingData,
+    billsDataLength: Array.isArray(billsData) ? billsData.length : 'not array', 
+    billsDataType: typeof billsData,
+    billsDataSample: Array.isArray(billsData) ? billsData[0] : billsData
+  });
+  
+  // Debug: Log the representative data structure
+  console.log('[CIV.IQ-DEBUG] Representative data structure:', {
+    hasRepresentative: !!representative,
+    name: representative?.name,
+    firstName: representative?.firstName,
+    lastName: representative?.lastName,
+    bioguideId: representative?.bioguideId,
+    keys: representative ? Object.keys(representative) : []
+  });
+  
+  // Validate essential representative data - be more lenient
+  if (!representative || (!representative.name && !representative.firstName && !representative.lastName)) {
+    console.error('[CIV.IQ-DEBUG] Invalid representative data:', representative);
+    notFound();
+  }
+  
+  // Set display name if needed
+  if (!representative.name && representative.firstName && representative.lastName) {
+    representative.name = `${representative.firstName} ${representative.lastName}`;
+  }
 
   console.log(`[CIV.IQ-DEBUG] Server component rendered for ${representative.name}`);
 
@@ -236,25 +281,15 @@ export default async function RepresentativeProfilePage({
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex items-center space-x-6">
               <div className="flex-shrink-0">
-                {representative.imageUrl ? (
-                  <img 
-                    src={representative.imageUrl} 
-                    alt={representative.name}
-                    className="w-24 h-24 rounded-full object-cover"
-                    // Prioritize loading the representative's image
-                    loading="eager"
-                  />
-                ) : (
-                  <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center">
-                    <span className="text-gray-600 text-2xl font-bold">
-                      {representative.firstName?.[0]}{representative.lastName?.[0]}
-                    </span>
-                  </div>
-                )}
+                <RepresentativePhoto 
+                  bioguideId={representative.bioguideId}
+                  name={representative.name}
+                  size="xl"
+                />
               </div>
               
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900">{representative.name}</h1>
+                <h1 className="text-3xl font-bold text-gray-900">{representative.name || 'Representative'}</h1>
                 <div className="flex items-center space-x-4 text-gray-600 mt-2">
                   <span className={`px-2 py-1 rounded text-sm font-medium ${
                     representative.party === 'Republican' ? 'bg-red-100 text-red-800' :
@@ -263,8 +298,8 @@ export default async function RepresentativeProfilePage({
                   }`}>
                     {representative.party || 'Independent'}
                   </span>
-                  <span>{representative.title}</span>
-                  <span>{representative.state}{representative.district ? `-${representative.district}` : ''}</span>
+                  <span>{representative.title || 'Representative'}</span>
+                  <span>{representative.state || 'Unknown'}{representative.district ? `-${representative.district}` : ''}</span>
                 </div>
               </div>
               
@@ -295,82 +330,65 @@ export default async function RepresentativeProfilePage({
             </div>
           </div>
 
-          {/* Overview Section - Critical content rendered immediately */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-3">Basic Information</h3>
-                  <dl className="space-y-2">
-                    <div className="flex">
-                      <dt className="w-24 text-sm font-medium text-gray-500">Chamber:</dt>
-                      <dd className="text-sm text-gray-900">{representative.chamber}</dd>
-                    </div>
-                    <div className="flex">
-                      <dt className="w-24 text-sm font-medium text-gray-500">State:</dt>
-                      <dd className="text-sm text-gray-900">{representative.state}</dd>
-                    </div>
-                    {representative.district && (
-                      <div className="flex">
-                        <dt className="w-24 text-sm font-medium text-gray-500">District:</dt>
-                        <dd className="text-sm text-gray-900">{representative.district}</dd>
-                      </div>
-                    )}
-                    {representative.bio?.birthday && (
-                      <div className="flex">
-                        <dt className="w-24 text-sm font-medium text-gray-500">Born:</dt>
-                        <dd className="text-sm text-gray-900">{representative.bio.birthday}</dd>
-                      </div>
-                    )}
-                  </dl>
+          {/* Error Display for Partial Failures */}
+          {Object.keys(partialErrors).length > 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
                 </div>
-                
-                {representative.committees && representative.committees.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-3">Committees</h3>
-                    <ul className="space-y-1">
-                      {representative.committees.map((committee, idx) => (
-                        <li key={idx} className="text-sm text-gray-900">
-                          {committee.name}
-                          {committee.role && (
-                            <span className="text-gray-500 ml-2">({committee.role})</span>
-                          )}
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800">
+                    Some data could not be loaded
+                  </h3>
+                  <div className="mt-2 text-sm text-yellow-700">
+                    <p>The following information may be incomplete:</p>
+                    <ul className="list-disc list-inside mt-1">
+                      {Object.entries(partialErrors).map(([key, error]) => (
+                        <li key={key} className="capitalize">
+                          {key.replace('-', ' ')}: {typeof error === 'string' ? error : 'Failed to load'}
                         </li>
                       ))}
                     </ul>
                   </div>
-                )}
+                </div>
               </div>
-              
-              {/* Party Alignment Analysis - Pre-rendered on server */}
-              {Object.keys(partyAlignmentData).length > 0 && (
-                <APIErrorBoundary>
-                  <PartyAlignmentAnalysis 
-                    data={partyAlignmentData}
-                    representative={representative}
-                  />
-                </APIErrorBoundary>
-              )}
+            </div>
+          )}
+
+          {/* Two-Column Layout: Main Content + Sidebar */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Main Content Area */}
+            <div className="lg:col-span-3">
+              <RepresentativeProfileClient
+                representative={representative}
+                initialData={{
+                  votes: votingData,
+                  bills: billsData,
+                  finance: financeData,
+                  news: newsData,
+                  partyAlignment: partyAlignmentData
+                }}
+                partialErrors={partialErrors}
+                bioguideId={bioguideId}
+              />
+            </div>
+
+            {/* Sidebar */}
+            <div className="lg:col-span-1">
+              <RepresentativePageSidebar
+                representative={{
+                  name: representative.name || 'Representative',
+                  state: representative.state || 'Unknown',
+                  district: representative.district,
+                  chamber: representative.chamber || 'House',
+                  bioguideId: bioguideId
+                }}
+              />
             </div>
           </div>
-
-          {/* Pass data to client wrapper for interactive tabs */}
-          <RepresentativeProfileClient
-            representative={representative}
-            initialData={{
-              votes: votingData,
-              bills: billsData,
-              finance: financeData,
-              news: newsData,
-              partyAlignment: partyAlignmentData
-            }}
-            partialErrors={partialErrors}
-            bioguideId={bioguideId}
-            // Pass lazy-loaded components as props to avoid bundling them unnecessarily
-            VotingRecordsTable={VotingRecordsTable}
-            CampaignFinanceVisualizer={CampaignFinanceVisualizer}
-            EnhancedNewsFeed={EnhancedNewsFeed}
-          />
         </div>
       </div>
     </ErrorBoundary>

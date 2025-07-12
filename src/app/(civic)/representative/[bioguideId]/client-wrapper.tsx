@@ -11,6 +11,24 @@ import { useState, Suspense, ComponentType } from 'react';
 import { ErrorBoundary, LoadingErrorBoundary } from '@/components/ErrorBoundary';
 import { BillsTracker } from '@/components/BillsTracker';
 import { EnhancedVotingChart } from '@/components/EnhancedVotingChart';
+import PartyAlignmentAnalysis from '@/components/PartyAlignmentAnalysis';
+import dynamic from 'next/dynamic';
+
+// Dynamic imports for lazy loading
+const LazyVotingRecordsTable = dynamic(() => import('@/components/VotingRecordsTable').then(mod => ({ default: mod.VotingRecordsTable })), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>
+});
+
+const LazyCampaignFinanceVisualizer = dynamic(() => import('@/components/CampaignFinanceVisualizer').then(mod => ({ default: mod.CampaignFinanceVisualizer })), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>
+});
+
+const LazyEnhancedNewsFeed = dynamic(() => import('@/components/EnhancedNewsFeed').then(mod => ({ default: mod.EnhancedNewsFeed })), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>
+});
 
 interface RepresentativeDetails {
   bioguideId: string;
@@ -33,6 +51,10 @@ interface RepresentativeDetails {
     facebook?: string;
     youtube?: string;
   };
+  committees?: Array<{
+    name: string;
+    role?: string;
+  }>;
 }
 
 interface RepresentativeProfileClientProps {
@@ -47,9 +69,9 @@ interface RepresentativeProfileClientProps {
   partialErrors: Record<string, string>;
   bioguideId: string;
   // Lazy-loaded components passed as props to prevent unnecessary bundling
-  VotingRecordsTable: ComponentType<any>;
-  CampaignFinanceVisualizer: ComponentType<any>;
-  EnhancedNewsFeed: ComponentType<any>;
+  VotingRecordsTable?: ComponentType<any>;
+  CampaignFinanceVisualizer?: ComponentType<any>;
+  EnhancedNewsFeed?: ComponentType<any>;
 }
 
 // Partial error display component
@@ -92,11 +114,11 @@ export function RepresentativeProfileClient({
   initialData,
   partialErrors,
   bioguideId,
-  VotingRecordsTable,
-  CampaignFinanceVisualizer,
-  EnhancedNewsFeed
+  VotingRecordsTable = LazyVotingRecordsTable,
+  CampaignFinanceVisualizer = LazyCampaignFinanceVisualizer,
+  EnhancedNewsFeed = LazyEnhancedNewsFeed
 }: RepresentativeProfileClientProps) {
-  const [activeTab, setActiveTab] = useState('voting');
+  const [activeTab, setActiveTab] = useState('profile');
 
   console.log('[CIV.IQ-DEBUG] Client wrapper rendered:', {
     activeTab,
@@ -116,11 +138,11 @@ export function RepresentativeProfileClient({
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8 px-6">
             {[
+              { id: 'profile', label: 'Profile', disabled: false },
               { id: 'voting', label: 'Voting Record', disabled: initialData.votes.length === 0 },
               { id: 'bills', label: 'Legislation', disabled: initialData.bills.length === 0 },
               { id: 'finance', label: 'Campaign Finance', disabled: Object.keys(initialData.finance).length === 0 },
-              { id: 'news', label: 'News', disabled: initialData.news.length === 0 },
-              { id: 'contact', label: 'Contact', disabled: false }
+              { id: 'news', label: 'News', disabled: initialData.news.length === 0 }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -146,6 +168,167 @@ export function RepresentativeProfileClient({
 
       {/* Tab Content with Suspense boundaries for optimal loading */}
       <div className="bg-white rounded-lg shadow-sm p-6">
+        {activeTab === 'profile' && (
+          <LoadingErrorBoundary>
+            <div className="space-y-6">
+              {/* Biography Section */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Biography</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <dl className="space-y-3">
+                      <div className="flex">
+                        <dt className="w-24 text-sm font-medium text-gray-500">Chamber:</dt>
+                        <dd className="text-sm text-gray-900">{representative.chamber || 'Unknown'}</dd>
+                      </div>
+                      <div className="flex">
+                        <dt className="w-24 text-sm font-medium text-gray-500">State:</dt>
+                        <dd className="text-sm text-gray-900">{representative.state || 'Unknown'}</dd>
+                      </div>
+                      {representative.district && (
+                        <div className="flex">
+                          <dt className="w-24 text-sm font-medium text-gray-500">District:</dt>
+                          <dd className="text-sm text-gray-900">{representative.district}</dd>
+                        </div>
+                      )}
+                      <div className="flex">
+                        <dt className="w-24 text-sm font-medium text-gray-500">Party:</dt>
+                        <dd className="text-sm text-gray-900">{representative.party || 'Unknown'}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                  
+                  {/* Contact Information */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">Contact Information</h4>
+                    <dl className="space-y-2">
+                      {representative.currentTerm?.phone && (
+                        <div className="flex">
+                          <dt className="w-16 text-sm font-medium text-gray-500">Phone:</dt>
+                          <dd className="text-sm text-gray-900">{representative.currentTerm.phone}</dd>
+                        </div>
+                      )}
+                      {representative.currentTerm?.website && (
+                        <div className="flex">
+                          <dt className="w-16 text-sm font-medium text-gray-500">Website:</dt>
+                          <dd className="text-sm">
+                            <a 
+                              href={representative.currentTerm.website} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              Official Website
+                            </a>
+                          </dd>
+                        </div>
+                      )}
+                      {representative.currentTerm?.contactForm && (
+                        <div className="flex">
+                          <dt className="w-16 text-sm font-medium text-gray-500">Contact:</dt>
+                          <dd className="text-sm">
+                            <a 
+                              href={representative.currentTerm.contactForm} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              Send Message
+                            </a>
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+                  </div>
+                </div>
+              </div>
+
+              {/* Legislative Activity Stats */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Legislative Activity</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">Bills Sponsored</h4>
+                    <div className="text-2xl font-bold text-civiq-blue">
+                      {initialData.bills.length}
+                    </div>
+                    <p className="text-sm text-gray-600">Total sponsored bills</p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">Committee Memberships</h4>
+                    <div className="text-2xl font-bold text-civiq-green">
+                      {Array.isArray(representative.committees) ? representative.committees.length : 0}
+                    </div>
+                    <p className="text-sm text-gray-600">Active committees</p>
+                  </div>
+                </div>
+
+                {/* Committee Details */}
+                {Array.isArray(representative.committees) && representative.committees.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">Committee Assignments</h4>
+                    <div className="space-y-2">
+                      {representative.committees.map((committee: any, idx: number) => (
+                        <div key={idx} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded">
+                          <span className="text-sm text-gray-900">{committee.name || 'Unknown Committee'}</span>
+                          {committee.role && (
+                            <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
+                              {committee.role}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Social Media */}
+              {representative.socialMedia && (
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Social Media</h3>
+                  <div className="space-y-2">
+                    {representative.socialMedia.twitter && (
+                      <a 
+                        href={`https://twitter.com/${representative.socialMedia.twitter}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        <span className="mr-2">Twitter:</span>
+                        @{representative.socialMedia.twitter}
+                      </a>
+                    )}
+                    {representative.socialMedia.facebook && (
+                      <a 
+                        href={`https://facebook.com/${representative.socialMedia.facebook}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        <span className="mr-2">Facebook:</span>
+                        {representative.socialMedia.facebook}
+                      </a>
+                    )}
+                    {representative.socialMedia.youtube && (
+                      <a 
+                        href={`https://youtube.com/${representative.socialMedia.youtube}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        <span className="mr-2">YouTube:</span>
+                        {representative.socialMedia.youtube}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </LoadingErrorBoundary>
+        )}
+
         {activeTab === 'voting' && (
           <LoadingErrorBoundary>
             {partialErrors.votes ? (
@@ -155,10 +338,23 @@ export function RepresentativeProfileClient({
               </div>
             ) : initialData.votes.length > 0 ? (
               <div className="space-y-6">
+                {/* Party Alignment Analysis - Moved from Profile section */}
+                {Object.keys(initialData.partyAlignment).length > 0 && representative.party && (
+                  <PartyAlignmentAnalysis 
+                    bioguideId={bioguideId}
+                    representative={{
+                      name: representative.name || 'Representative',
+                      party: representative.party,
+                      state: representative.state || 'Unknown',
+                      chamber: representative.chamber || 'Unknown'
+                    }}
+                  />
+                )}
+
                 {/* Pre-rendered voting chart with server data */}
                 <EnhancedVotingChart 
-                  votingData={initialData.votes}
-                  representative={representative}
+                  votes={initialData.votes}
+                  party={representative.party || 'Unknown'}
                 />
                 
                 {/* Lazy-loaded interactive voting table with Suspense */}
@@ -196,7 +392,7 @@ export function RepresentativeProfileClient({
             ) : initialData.bills.length > 0 ? (
               // Pre-rendered bills tracker with server data - no additional loading needed
               <BillsTracker 
-                billsData={initialData.bills}
+                bills={initialData.bills}
                 representative={representative}
               />
             ) : (
@@ -273,100 +469,6 @@ export function RepresentativeProfileClient({
           </LoadingErrorBoundary>
         )}
 
-        {activeTab === 'contact' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Contact Information</h3>
-                <dl className="space-y-3">
-                  {representative.currentTerm?.phone && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Phone:</dt>
-                      <dd className="text-sm text-gray-900">{representative.currentTerm.phone}</dd>
-                    </div>
-                  )}
-                  {representative.currentTerm?.address && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Address:</dt>
-                      <dd className="text-sm text-gray-900">{representative.currentTerm.address}</dd>
-                    </div>
-                  )}
-                  {representative.currentTerm?.website && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Website:</dt>
-                      <dd className="text-sm">
-                        <a 
-                          href={representative.currentTerm.website} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          {representative.currentTerm.website}
-                        </a>
-                      </dd>
-                    </div>
-                  )}
-                  {representative.currentTerm?.contactForm && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Contact Form:</dt>
-                      <dd className="text-sm">
-                        <a 
-                          href={representative.currentTerm.contactForm} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          Send Message
-                        </a>
-                      </dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
-              
-              {representative.socialMedia && (
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-3">Social Media</h3>
-                  <div className="space-y-2">
-                    {representative.socialMedia.twitter && (
-                      <a 
-                        href={`https://twitter.com/${representative.socialMedia.twitter}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <span className="mr-2">Twitter:</span>
-                        @{representative.socialMedia.twitter}
-                      </a>
-                    )}
-                    {representative.socialMedia.facebook && (
-                      <a 
-                        href={`https://facebook.com/${representative.socialMedia.facebook}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <span className="mr-2">Facebook:</span>
-                        {representative.socialMedia.facebook}
-                      </a>
-                    )}
-                    {representative.socialMedia.youtube && (
-                      <a 
-                        href={`https://youtube.com/${representative.socialMedia.youtube}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <span className="mr-2">YouTube:</span>
-                        {representative.socialMedia.youtube}
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </>
   );

@@ -98,6 +98,8 @@ function determineBillStatusCategory(latestAction: string): SponsoredBill['statu
 
 // Helper function to determine if bill is key legislation
 function isKeyLegislation(title: string, policyArea?: string, cosponsors: number = 0): boolean {
+  if (!title) return false;
+  
   const lowerTitle = title.toLowerCase();
   const lowerPolicy = policyArea?.toLowerCase() || '';
   
@@ -123,6 +125,7 @@ export async function GET(
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const { bioguideId } = await params;
+  console.log('BILLS API CALLED:', bioguideId);
   const { searchParams } = new URL(request.url);
   const limit = parseInt(searchParams.get('limit') || '20');
   const includeSummaries = searchParams.get('includeSummaries') === 'true';
@@ -146,24 +149,25 @@ export async function GET(
 
         structuredLogger.info('Fetching comprehensive bills data', { bioguideId, limit });
 
+        const sponsoredUrl = `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?format=json&limit=${Math.ceil(limit * 0.7)}&api_key=${process.env.CONGRESS_API_KEY}`;
+        const cosponsoredUrl = `https://api.congress.gov/v3/member/${bioguideId}/cosponsored-legislation?format=json&limit=${Math.ceil(limit * 0.3)}&api_key=${process.env.CONGRESS_API_KEY}`;
+        
+        console.log('Congress.gov URLs being attempted:');
+        console.log('Sponsored:', sponsoredUrl);
+        console.log('Cosponsored:', cosponsoredUrl);
+
         // Fetch both sponsored and cosponsored legislation for comprehensive view
         const [sponsoredResponse, cosponsoredResponse] = await Promise.all([
-          fetch(
-            `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?format=json&limit=${Math.ceil(limit * 0.7)}&api_key=${process.env.CONGRESS_API_KEY}`,
-            {
-              headers: {
-                'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
-              }
+          fetch(sponsoredUrl, {
+            headers: {
+              'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
             }
-          ),
-          fetch(
-            `https://api.congress.gov/v3/member/${bioguideId}/cosponsored-legislation?format=json&limit=${Math.ceil(limit * 0.3)}&api_key=${process.env.CONGRESS_API_KEY}`,
-            {
-              headers: {
-                'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
-              }
+          }),
+          fetch(cosponsoredUrl, {
+            headers: {
+              'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
             }
-          )
+          })
         ]);
 
         const sponsoredMonitor = monitorExternalApi('congress', 'sponsored-legislation', sponsoredResponse.url);
@@ -187,6 +191,11 @@ export async function GET(
         // Process sponsored bills with enhanced metadata
         if (sponsoredData.sponsoredLegislation) {
           sponsoredData.sponsoredLegislation.forEach((bill: any) => {
+            // Skip amendments and null/undefined entries that aren't actual bills
+            if (!bill.type || !bill.number || !bill.title) {
+              return;
+            }
+            
             const cosponsorCount = bill.cosponsors?.count || 0;
             const policyCategory = categorizeBillPolicy(bill.title, bill.policyArea?.name);
             const statusCategory = determineBillStatusCategory(bill.latestAction?.text || 'Introduced');
@@ -227,6 +236,11 @@ export async function GET(
         // Process cosponsored bills with enhanced metadata
         if (cosponsoredData.cosponsoredLegislation) {
           cosponsoredData.cosponsoredLegislation.slice(0, Math.ceil(limit * 0.3)).forEach((bill: any) => {
+            // Skip amendments and null/undefined entries that aren't actual bills
+            if (!bill.type || !bill.number || !bill.title) {
+              return;
+            }
+            
             const cosponsorCount = bill.cosponsors?.count || 0;
             const policyCategory = categorizeBillPolicy(bill.title, bill.policyArea?.name);
             const statusCategory = determineBillStatusCategory(bill.latestAction?.text || 'Introduced');

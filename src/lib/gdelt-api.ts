@@ -283,6 +283,10 @@ export async function fetchGDELTNews(
         );
       }
       
+      // Check content type before parsing
+      const contentType = response.headers.get('content-type');
+      const isJSON = contentType && contentType.includes('application/json');
+      
       const text = await response.text();
       
       if (!text || text.trim() === '') {
@@ -293,12 +297,29 @@ export async function fetchGDELTNews(
         return [];
       }
       
+      // Log non-JSON responses for debugging
+      if (!isJSON) {
+        structuredLogger.warn('GDELT API returned non-JSON response', {
+          searchTerm: searchTerm.slice(0, 50),
+          contentType,
+          responseStart: text.slice(0, 200),
+          operation: 'gdelt_non_json_response'
+        });
+        
+        // Check if it's an HTML error page
+        if (text.trim().startsWith('<')) {
+          throw new GDELTAPIError('GDELT API returned HTML error page', undefined, false);
+        }
+      }
+      
       let data: GDELTResponse;
       try {
         data = JSON.parse(text);
       } catch (parseError) {
         structuredLogger.error('Failed to parse GDELT JSON response', parseError as Error, {
           searchTerm: searchTerm.slice(0, 50),
+          contentType,
+          responseStart: text.slice(0, 200),
           operation: 'gdelt_json_parse_error'
         });
         throw new GDELTAPIError('Invalid JSON response from GDELT API', undefined, false);
@@ -404,21 +425,78 @@ function extractSourceName(domain: string): string {
 
 // Normalize date format from GDELT
 function normalizeDate(dateString: string): string {
+  if (!dateString || typeof dateString !== 'string') {
+    return new Date().toISOString();
+  }
+  
   try {
-    // GDELT dates are in format: YYYYMMDDHHMMSS
-    if (dateString.length >= 8) {
+    // Handle different GDELT date formats
+    if (dateString.includes('T') && dateString.includes('Z')) {
+      // Format: 20250709T193000Z
+      const cleanDate = dateString.replace(/T(\d{6})Z/, 'T$1:00:00Z');
+      // Insert colons: 20250709T193000Z -> 2025-07-09T19:30:00Z
+      const year = cleanDate.slice(0, 4);
+      const month = cleanDate.slice(4, 6);
+      const day = cleanDate.slice(6, 8);
+      const time = cleanDate.slice(9, 15); // HHMMSS
+      const hour = time.slice(0, 2) || '00';
+      const minute = time.slice(2, 4) || '00';
+      const second = time.slice(4, 6) || '00';
+      
+      const isoString = `${year}-${month}-${day}T${hour}:${minute}:${second}Z`;
+      const date = new Date(isoString);
+      
+      if (isNaN(date.getTime())) {
+        throw new Error(`Invalid date components: ${isoString}`);
+      }
+      
+      return date.toISOString();
+    } else if (dateString.length >= 8) {
+      // Traditional format: YYYYMMDDHHMMSS
       const year = dateString.slice(0, 4);
       const month = dateString.slice(4, 6);
       const day = dateString.slice(6, 8);
       const hour = dateString.slice(8, 10) || '00';
       const minute = dateString.slice(10, 12) || '00';
+      const second = dateString.slice(12, 14) || '00';
       
-      const date = new Date(`${year}-${month}-${day}T${hour}:${minute}:00Z`);
+      // Validate components
+      if (parseInt(month) < 1 || parseInt(month) > 12) {
+        throw new Error(`Invalid month: ${month}`);
+      }
+      if (parseInt(day) < 1 || parseInt(day) > 31) {
+        throw new Error(`Invalid day: ${day}`);
+      }
+      if (parseInt(hour) > 23) {
+        throw new Error(`Invalid hour: ${hour}`);
+      }
+      if (parseInt(minute) > 59) {
+        throw new Error(`Invalid minute: ${minute}`);
+      }
+      if (parseInt(second) > 59) {
+        throw new Error(`Invalid second: ${second}`);
+      }
+      
+      const isoString = `${year}-${month}-${day}T${hour}:${minute}:${second}Z`;
+      const date = new Date(isoString);
+      
+      if (isNaN(date.getTime())) {
+        throw new Error(`Invalid date: ${isoString}`);
+      }
+      
+      return date.toISOString();
+    } else {
+      // Try direct parsing for other formats
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        throw new Error(`Unable to parse date: ${dateString}`);
+      }
       return date.toISOString();
     }
   } catch (error) {
     structuredLogger.error('Error parsing GDELT date', error as Error, {
       dateString,
+      dateStringLength: dateString.length,
       operation: 'gdelt_date_parse_error'
     });
   }

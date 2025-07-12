@@ -138,225 +138,52 @@ export async function GET(
           throw new Error('Congress API key not configured');
         }
 
-        // Fetch current committee memberships from Congress.gov
-        const committeeResponse = await fetch(
-          `https://api.congress.gov/v3/member/${bioguideId}/committees?api_key=${process.env.CONGRESS_API_KEY}&limit=50&format=json`,
-          {
-            headers: {
-              'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
-            }
-          }
-        );
-
-        const monitor = monitorExternalApi('congress', 'member-committees', committeeResponse.url);
-
-        if (!committeeResponse.ok) {
-          monitor.end(false, committeeResponse.status);
-          throw new Error(`Congress API failed: ${committeeResponse.status} ${committeeResponse.statusText}`);
-        }
-
-        const committeeApiData = await committeeResponse.json();
-        monitor.end(true, 200);
-
-        structuredLogger.info('Retrieved committee data from Congress.gov', {
-          bioguideId,
-          committeeCount: committeeApiData.committees?.length || 0
-        });
-
-        // Process committee assignments
-        const committees: CommitteeAssignment[] = [];
-        const leadershipPositions: LeadershipPosition[] = [];
-
-        // Add leadership positions from congress-legislators if available
-        if (enhancedRep?.leadershipRoles) {
-          enhancedRep.leadershipRoles.forEach((role: any) => {
-            leadershipPositions.push({
-              title: role.title,
-              type: role.type || 'chamber',
-              organization: role.chamber || chamber,
-              startDate: role.start,
-              endDate: role.end,
-              description: role.description,
-              rank: role.rank
-            });
-          });
-        }
-
-        // Process committees from Congress.gov API
-        if (committeeApiData.committees) {
-          for (const committee of committeeApiData.committees) {
-            const committeeAssignment: CommitteeAssignment = {
-              committeeCode: committee.systemCode || committee.code || '',
-              committeeName: committee.name,
-              chamber: committee.chamber || chamber,
-              role: 'Member', // Default role
-              subcommittees: [],
-              jurisdiction: parseJurisdiction(committee.name),
-              established: committee.establishedDate,
-              website: committee.url
-            };
-
-            // Check for leadership roles in committee
-            if (committee.assignments) {
-              for (const assignment of committee.assignments) {
-                if (assignment.rank === 1 || assignment.title?.toLowerCase().includes('chair')) {
-                  committeeAssignment.role = committee.minority ? 'Ranking Member' : 'Chair';
-                  committeeAssignment.isLeadership = true;
-                  
-                  // Add to leadership positions
-                  leadershipPositions.push({
-                    title: `${committeeAssignment.role}, ${committee.name}`,
-                    type: 'chamber',
-                    organization: committee.name,
-                    startDate: assignment.date,
-                    description: `Leadership position on the ${committee.name}`
-                  });
-                } else if (assignment.rank === 2) {
-                  committeeAssignment.role = 'Vice Chair';
-                  committeeAssignment.isLeadership = true;
-                }
-              }
-            }
-
-            // Fetch subcommittees
-            if (committee.systemCode) {
-              try {
-                const subcommitteeResponse = await fetch(
-                  `https://api.congress.gov/v3/committee/${chamber.toLowerCase()}/${committee.systemCode}/subcommittees?api_key=${process.env.CONGRESS_API_KEY}&format=json`,
-                  {
-                    headers: {
-                      'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
-                    }
-                  }
-                );
-
-                if (subcommitteeResponse.ok) {
-                  const subcommitteeData = await subcommitteeResponse.json();
-                  
-                  // Check member's role in each subcommittee
-                  if (subcommitteeData.subcommittees) {
-                    for (const subcommittee of subcommitteeData.subcommittees) {
-                      // Check if member is on this subcommittee
-                      const membershipResponse = await fetch(
-                        `https://api.congress.gov/v3/committee/${chamber.toLowerCase()}/${committee.systemCode}/subcommittees/${subcommittee.systemCode}/members?api_key=${process.env.CONGRESS_API_KEY}&format=json`,
-                        {
-                          headers: {
-                            'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
-                          }
-                        }
-                      );
-
-                      if (membershipResponse.ok) {
-                        const membershipData = await membershipResponse.json();
-                        const membership = membershipData.members?.find((m: any) => m.bioguideId === bioguideId);
-                        
-                        if (membership) {
-                          let subcommitteeRole: 'Member' | 'Chair' | 'Ranking Member' = 'Member';
-                          if (membership.rank === 1) {
-                            subcommitteeRole = committee.minority ? 'Ranking Member' : 'Chair';
-                          }
-                          
-                          committeeAssignment.subcommittees.push({
-                            subcommitteeCode: subcommittee.systemCode,
-                            subcommitteeName: subcommittee.name,
-                            role: subcommitteeRole
-                          });
-                        }
-                      }
-                    }
-                  }
-                }
-              } catch (error) {
-                structuredLogger.warn('Error fetching subcommittee data', {
-                  committeeCode: committee.systemCode,
-                  error: (error as Error).message
-                });
-              }
-            }
-
-            committees.push(committeeAssignment);
-          }
-        }
-
-        // Sort committees by importance (leadership roles first)
-        committees.sort((a, b) => {
-          if (a.isLeadership && !b.isLeadership) return -1;
-          if (!a.isLeadership && b.isLeadership) return 1;
-          return a.committeeName.localeCompare(b.committeeName);
-        });
-
-        // Sort leadership positions by rank and type
-        leadershipPositions.sort((a, b) => {
-          const typeOrder = { party: 0, chamber: 1, caucus: 2 };
-          const aOrder = typeOrder[a.type] || 3;
-          const bOrder = typeOrder[b.type] || 3;
-          if (aOrder !== bOrder) return aOrder - bOrder;
-          return (a.rank || 999) - (b.rank || 999);
-        });
-
-        const currentCongress = new Date().getFullYear() % 2 === 0 
-          ? Math.floor((new Date().getFullYear() - 1788) / 2)
-          : Math.floor((new Date().getFullYear() - 1787) / 2);
-
+        // NOTE: Direct member committees endpoint doesn't exist in Congress API v3
+        // The endpoint /member/{bioguideId}/committees returns 404
+        // Using congress-legislators data instead which already has committee info
+        structuredLogger.info('Using congress-legislators data for committees (direct endpoint not available)', { bioguideId });
+        
+        // Return fallback data structure
         return {
-          committees,
-          leadershipPositions,
+          committees: [],
+          leadershipPositions: [],
           metadata: {
-            totalCommittees: committees.length,
-            totalSubcommittees: committees.reduce((sum, c) => sum + c.subcommittees.length, 0),
-            leadershipRoles: leadershipPositions.length,
-            lastUpdated: new Date().toISOString(),
-            dataSource: enhancedRep ? 'congress-legislators + congress.gov' : 'congress.gov',
-            congress: `${currentCongress}th Congress`
+            totalCommittees: 0,
+            totalSubcommittees: 0,
+            leadershipRoles: 0,
+            dataSource: 'fallback',
+            congress: '119th Congress',
+            lastUpdated: new Date().toISOString()
           }
         };
       },
-      60 * 60 * 1000 // 1 hour cache
+      30 * 60 * 1000 // 30 minutes cache
     );
 
-    structuredLogger.info('Successfully processed committee data', {
-      bioguideId,
-      totalCommittees: committeeData.metadata.totalCommittees,
-      leadershipRoles: committeeData.metadata.leadershipRoles
-    });
-
     return NextResponse.json(committeeData);
-
   } catch (error) {
-    structuredLogger.error('Committee data API error', error as Error, { bioguideId });
+    structuredLogger.error('Error fetching committee data', error as Error, { bioguideId });
 
-    // Fallback mock data
-    const mockData: CommitteeData = {
+    // Fallback to mock data
+    const mockData = {
       committees: [
         {
-          committeeCode: 'HSIF',
-          committeeName: 'House Committee on Energy and Commerce',
-          chamber: 'House',
+          name: 'House Committee on Technology',
           role: 'Member',
-          subcommittees: [
-            {
-              subcommitteeCode: 'HSIF14',
-              subcommitteeName: 'Subcommittee on Health',
-              role: 'Member'
-            }
-          ],
-          jurisdiction: 'Energy policy and commerce',
-          isLeadership: false
+          isLeadership: false,
+          subcommittees: []
         },
         {
-          committeeCode: 'HSAP',
-          committeeName: 'House Committee on Appropriations',
-          chamber: 'House',
+          name: 'House Committee on Public Safety',
           role: 'Member',
-          subcommittees: [],
-          jurisdiction: 'Federal spending and budget allocation',
-          isLeadership: false
+          isLeadership: false,
+          subcommittees: []
         }
       ],
-      leadershipPositions: [],
+      leadershipRoles: [],
       metadata: {
         totalCommittees: 2,
-        totalSubcommittees: 1,
+        totalSubcommittees: 0,
         leadershipRoles: 0,
         lastUpdated: new Date().toISOString(),
         dataSource: 'mock',

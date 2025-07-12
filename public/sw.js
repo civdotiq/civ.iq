@@ -3,9 +3,19 @@
  * Provides offline functionality, caching, and progressive web app features
  */
 
-const CACHE_NAME = 'civic-intel-hub-v1';
-const OFFLINE_CACHE = 'civic-intel-hub-offline-v1';
-const API_CACHE = 'civic-intel-hub-api-v1';
+// Add cache versioning with build timestamp to prevent chunk errors
+const CACHE_VERSION = '2025-01-09-' + Math.floor(Date.now() / 1000);
+const CACHE_NAME = `civic-intel-hub-${CACHE_VERSION}`;
+const OFFLINE_CACHE = `civic-intel-hub-offline-${CACHE_VERSION}`;
+const API_CACHE = `civic-intel-hub-api-${CACHE_VERSION}`;
+
+// Webpack chunk patterns to clear on update
+const WEBPACK_CHUNK_PATTERNS = [
+  /_next\/static\/chunks\//,
+  /_next\/static\/webpack\//,
+  /\.js$/,
+  /\.css$/
+];
 
 // Static assets to cache immediately
 const STATIC_ASSETS = [
@@ -62,26 +72,34 @@ self.addEventListener('install', event => {
 });
 
 /**
- * Activate event - clean up old caches
+ * Activate event - clean up old caches and clear webpack chunks
  */
 self.addEventListener('activate', event => {
   console.log('[SW] Activating service worker');
   
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          // Delete old caches
-          if (cacheName !== CACHE_NAME && 
-              cacheName !== OFFLINE_CACHE && 
-              cacheName !== API_CACHE) {
-            console.log('[SW] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      console.log('[SW] Activation complete');
+    Promise.all([
+      // Clean up old version caches
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            // Delete all old caches (different version)
+            if (!cacheName.includes(CACHE_VERSION)) {
+              console.log('[SW] Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      
+      // Clear webpack chunks to prevent ChunkLoadErrors
+      clearWebpackChunks(),
+      
+      // Notify clients about cache clearing
+      notifyClientsOfUpdate()
+      
+    ]).then(() => {
+      console.log('[SW] Activation complete, old caches cleared');
       // Take control of all pages immediately
       return self.clients.claim();
     })
@@ -270,7 +288,7 @@ async function handleStaticRequest(request) {
 }
 
 /**
- * Message handling for cache management
+ * Message handling for cache management and chunk error recovery
  */
 self.addEventListener('message', event => {
   const { type, payload } = event.data;
@@ -282,6 +300,18 @@ self.addEventListener('message', event => {
       
     case 'CLEAR_CACHE':
       clearCaches(payload?.cacheNames).then(() => {
+        event.ports[0].postMessage({ success: true });
+      });
+      break;
+      
+    case 'CLEAR_WEBPACK_CHUNKS':
+      clearWebpackChunks().then(() => {
+        event.ports[0].postMessage({ success: true });
+      });
+      break;
+      
+    case 'HANDLE_CHUNK_ERROR':
+      handleChunkErrorRecovery().then(() => {
         event.ports[0].postMessage({ success: true });
       });
       break;
@@ -440,6 +470,88 @@ async function syncNewsData() {
     // Implementation would depend on specific requirements
   } catch (error) {
     console.log('[SW] News sync failed:', error);
+  }
+}
+
+/**
+ * Clear webpack chunks from all caches to prevent ChunkLoadErrors
+ */
+async function clearWebpackChunks() {
+  console.log('[SW] Clearing webpack chunks to prevent ChunkLoadErrors');
+  
+  try {
+    const cacheNames = await caches.keys();
+    
+    for (const cacheName of cacheNames) {
+      const cache = await caches.open(cacheName);
+      const requests = await cache.keys();
+      
+      // Delete webpack chunks and Next.js static files
+      for (const request of requests) {
+        const url = request.url;
+        const shouldDelete = WEBPACK_CHUNK_PATTERNS.some(pattern => {
+          if (pattern instanceof RegExp) {
+            return pattern.test(url);
+          }
+          return url.includes(pattern);
+        });
+        
+        if (shouldDelete) {
+          await cache.delete(request);
+          console.log('[SW] Deleted webpack chunk:', url);
+        }
+      }
+    }
+    
+    console.log('[SW] Webpack chunk cleanup complete');
+  } catch (error) {
+    console.error('[SW] Error clearing webpack chunks:', error);
+  }
+}
+
+/**
+ * Handle chunk error recovery by clearing all caches and notifying clients
+ */
+async function handleChunkErrorRecovery() {
+  console.log('[SW] Handling chunk error recovery');
+  
+  try {
+    // Clear all caches
+    await clearCaches();
+    
+    // Clear webpack chunks specifically
+    await clearWebpackChunks();
+    
+    // Notify all clients to reload
+    const clients = await self.clients.matchAll();
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'CHUNK_ERROR_RECOVERY',
+        action: 'reload'
+      });
+    });
+    
+    console.log('[SW] Chunk error recovery complete');
+  } catch (error) {
+    console.error('[SW] Error during chunk error recovery:', error);
+  }
+}
+
+/**
+ * Notify clients about cache updates
+ */
+async function notifyClientsOfUpdate() {
+  try {
+    const clients = await self.clients.matchAll();
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'CACHE_UPDATED',
+        version: CACHE_VERSION
+      });
+    });
+    console.log('[SW] Notified clients of cache update');
+  } catch (error) {
+    console.error('[SW] Error notifying clients:', error);
   }
 }
 

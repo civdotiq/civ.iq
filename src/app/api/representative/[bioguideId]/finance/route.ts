@@ -475,6 +475,7 @@ async function getFinancialSummary(candidateId: string): Promise<FinancialSummar
 }
 
 async function getContributions(candidateId: string): Promise<ContributionData[]> {
+  const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
   const cacheKey = `fec-contributions-${candidateId}-${new Date().toISOString().split('T')[0]}`; // Daily cache
   
   // Validate candidate ID format
@@ -494,10 +495,10 @@ async function getContributions(candidateId: string): Promise<ContributionData[]
     cacheKey,
     async () => {
       try {
-        structuredLogger.info('Fetching contributions from FEC', { candidateId });
+        structuredLogger.info('Fetching contributions from FEC', { candidateId, currentCycle });
         
         const response = await fetch(
-          `https://api.open.fec.gov/v1/schedules/schedule_a/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&sort=-contribution_receipt_date&per_page=20`,
+          `https://api.open.fec.gov/v1/schedules/schedule_a/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&two_year_transaction_period=${currentCycle}&sort=-contribution_receipt_date&per_page=20`,
           {
             headers: {
               'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
@@ -560,6 +561,7 @@ async function getContributions(candidateId: string): Promise<ContributionData[]
 }
 
 async function getExpenditures(candidateId: string): Promise<ExpenditureData[]> {
+  const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
   const cacheKey = `fec-expenditures-${candidateId}-${new Date().toISOString().split('T')[0]}`; // Daily cache
   
   // Validate candidate ID format
@@ -579,10 +581,10 @@ async function getExpenditures(candidateId: string): Promise<ExpenditureData[]> 
     cacheKey,
     async () => {
       try {
-        structuredLogger.info('Fetching expenditures from FEC', { candidateId });
+        structuredLogger.info('Fetching expenditures from FEC', { candidateId, currentCycle });
         
         const response = await fetch(
-          `https://api.open.fec.gov/v1/schedules/schedule_b/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&sort=-disbursement_date&per_page=20`,
+          `https://api.open.fec.gov/v1/schedules/schedule_b/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&two_year_transaction_period=${currentCycle}&sort=-disbursement_date&per_page=20`,
           {
             headers: {
               'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',

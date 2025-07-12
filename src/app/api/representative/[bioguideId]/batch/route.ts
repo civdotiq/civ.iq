@@ -140,7 +140,21 @@ export async function POST(
     
     results.forEach(result => {
       if (result.success) {
-        responseData[result.endpoint] = result.data;
+        // Normalize the response data to extract just the arrays we need
+        let normalizedData = result.data;
+        
+        // Extract the actual data arrays from the endpoint responses
+        if (result.endpoint === 'votes' && result.data.votes) {
+          normalizedData = result.data.votes; // Extract votes array
+        } else if (result.endpoint === 'bills' && result.data.bills) {
+          normalizedData = result.data.bills; // Extract bills array
+        } else if (result.endpoint === 'news' && result.data.news) {
+          normalizedData = result.data.news; // Extract news array
+        } else if (result.endpoint === 'finance' && result.data.finance) {
+          normalizedData = result.data.finance; // Extract finance object
+        }
+        
+        responseData[result.endpoint] = normalizedData;
         successfulEndpoints.push(result.endpoint);
       } else {
         errors[result.endpoint] = result.error || 'Unknown error';
