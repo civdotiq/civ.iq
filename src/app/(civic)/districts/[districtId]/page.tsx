@@ -80,10 +80,18 @@ export default function DistrictDetailPage() {
 
   useEffect(() => {
     const fetchDistrict = async () => {
+      setLoading(true);
+      setError(null);
+      setDistrict(null);
+      
       try {
         const response = await fetch(`/api/districts/${districtId}`);
         if (!response.ok) {
-          throw new Error('District not found');
+          if (response.status === 404) {
+            throw new Error('District not found');
+          } else {
+            throw new Error(`Failed to load district: ${response.status}`);
+          }
         }
         const data = await response.json();
         setDistrict(data.district);
