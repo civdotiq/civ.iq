@@ -1,110 +1,21 @@
-CIV.IQ - Civic Intelligence Hub
-Copyright (c) 2025 CIV.IQ
+CIV.IQ - Civic Information Hub
+Copyright (C) 2025 Mark Sandford
 
-This product includes software developed by CIV.IQ.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-LICENSES AND ATTRIBUTION
-========================
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
 
-Code License: MIT License
-Documentation License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-THIRD-PARTY COMPONENTS
-======================
+For commercial licensing inquiries, please contact: mark@marksandford.dev
 
-This project uses the following open-source libraries:
-
-Next.js - https://nextjs.org/
-Copyright (c) 2024 Vercel, Inc.
-Licensed under the MIT License
-
-React - https://reactjs.org/
-Copyright (c) Meta Platforms, Inc. and affiliates
-Licensed under the MIT License
-
-Tailwind CSS - https://tailwindcss.com/
-Copyright (c) Tailwind Labs, Inc.
-Licensed under the MIT License
-
-Lucide Icons - https://lucide.dev/
-Licensed under the ISC License
-
-Recharts - https://recharts.org/
-Copyright (c) 2015-2023 recharts
-Licensed under the MIT License
-
-OpenAI SDK - https://github.com/openai/openai-node
-Copyright (c) 2020 OpenAI
-Licensed under the MIT License
-
-DATA SOURCES
-============
-
-This application aggregates data from the following public sources:
-
-1. Congress-Legislators Dataset
-   Source: https://github.com/unitedstates/congress-legislators
-   License: CC0 1.0 Universal (Public Domain)
-   Maintained by: unitedstates project contributors
-
-2. Congress.gov API
-   Source: https://api.congress.gov/
-   Provider: Library of Congress
-   Terms: https://www.congress.gov/about/policies
-
-3. Federal Election Commission (FEC) API
-   Source: https://api.open.fec.gov/
-   Provider: Federal Election Commission
-   Terms: https://www.fec.gov/data/legal/requirements/
-
-4. U.S. Census Bureau API
-   Source: https://www.census.gov/data/developers.html
-   Provider: U.S. Census Bureau
-   Terms: https://www.census.gov/data/developers/about/terms-of-service.html
-
-5. GDELT Project
-   Source: https://www.gdeltproject.org/
-   Provider: GDELT
-   License: Data is provided free for research and non-commercial use
-
-6. OpenStates API (Planned for Phase 2)
-   Source: https://openstates.org/
-   Provider: OpenStates
-   License: Data under Open Database License (ODbL)
-
-GOVERNMENT DATA DISCLAIMER
-==========================
-
-All government data used in this application remains in the public domain.
-This application does not claim any ownership over government data.
-Original government data sources should be consulted for authoritative information.
-
-DESIGN AND ORIGINAL CONTENT
-===========================
-
-The following elements are original creations of CIV.IQ:
-
-- User interface design and layout
-- CIV.IQ logo and branding elements
-- Custom visualizations and data presentations
-- Application architecture and implementation
-- Original documentation and help content
-
-These original elements are protected under applicable copyright laws.
-
-NO WARRANTY
-===========
-
-THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-CONTACT
-=======
-
-For questions about licensing or attribution, please contact:
-https://civ.iq/contact
+ATTRIBUTION REQUIREMENT:
+Any use, modification, or distribution of this software must include 
+prominent attribution to Mark Sandford and the CIV.IQ project.

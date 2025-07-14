@@ -1,10 +1,23 @@
 'use client';
 
-/**
- * CIV.IQ - Civic Information  
- * Copyright (c) 2025 CIV.IQ 
- * Licensed under MIT License
- * Built with public government data
+/*
+ * CIV.IQ - Civic Information Hub
+ * Copyright (C) 2025 Mark Sandford
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * For commercial licensing inquiries: mark@marksandford.dev
  */
 
 import Link from 'next/link';
@@ -97,17 +110,19 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
           </div>
         </div>
         
-        <div className="mt-4 pt-4 border-t border-gray-100">
-          <Link 
-            href={`/districts/${representative.state}${representative.district ? `-${representative.district}` : ''}`}
-            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium"
-          >
-            View district details
-            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
+        {representative.chamber === 'House' && representative.district && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <Link 
+              href={`/districts/${representative.state}-${representative.district}`}
+              className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+            >
+              View district details
+              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Compare Representatives Card */}

@@ -1,8 +1,9 @@
-# CIV.IQ - Civic Intelligence Hub
+# CIV.IQ - Civic Information Hub
 
 A comprehensive Progressive Web Application (PWA) that connects citizens with their government representatives through live, validated data from official sources. Features offline functionality, intelligent caching, and real-time news deduplication.
 
-![CIV.IQ Logo](https://img.shields.io/badge/CIV.IQ-Civic%20Intelligence-blue?style=for-the-badge)
+![CIV.IQ Logo](https://img.shields.io/badge/CIV.IQ-Civic%20Information-blue?style=for-the-badge)
+![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 ![API Integration](https://img.shields.io/badge/APIs-Live%20Data-success)
 ![PWA Ready](https://img.shields.io/badge/PWA-Ready-purple)
@@ -19,7 +20,7 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 
 ## ✨ Features
 
-### ✅ **Phase 6 Complete: Advanced Civic Intelligence (2025)**
+### ✅ **Phase 6 Complete: Advanced Civic Information (2025)**
 - **📱 Progressive Web App**: Full offline support with service worker caching
 - **🚀 Performance Optimized**: Hybrid SSR + lazy loading architecture
 - **⚡ Exceptional Performance**: 68% faster TTI, 83% faster FCP, 60% smaller bundles
@@ -586,7 +587,31 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## 📄 License
 
-This project is open source and available under the [MIT License](LICENSE).
+CIV.IQ is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+
+### What this means:
+
+**✅ You CAN:**
+- Use CIV.IQ for civic engagement, education, research, or nonprofit purposes
+- Modify and distribute the software
+- Deploy your own instance for public use
+- Contribute improvements back to the project
+
+**📋 You MUST:**
+- Provide attribution to Mark Sandford and the CIV.IQ project
+- Release any modifications under the same AGPL-3.0 license
+- Provide source code access if you deploy a modified version publicly
+- Include copyright notices in any distributed copies
+
+**❌ You CANNOT:**
+- Use this software in proprietary applications without a commercial license
+- Remove attribution or copyright notices
+- Distribute under different license terms
+
+### Commercial Licensing
+For-profit organizations requiring proprietary use or integration may purchase a commercial license. Contact: mark@marksandford.dev
+
+See [LICENSE](LICENSE) for full terms.
 
 ## 🙏 Acknowledgments
 
@@ -614,4 +639,4 @@ This project is open source and available under the [MIT License](LICENSE).
 - **[Performance Guide](docs/PERFORMANCE.md)**: Optimization strategies and benchmarks
 - **[Security Guide](docs/SECURITY.md)**: Security best practices and configurations
 
-**Note**: This is the advanced civic intelligence implementation (Phase 6 Complete) with real-time data integration, interactive mapping, and performance optimization. For development roadmap and future features, see [ROADMAP.md](ROADMAP.md).
+**Note**: This is the advanced civic information implementation (Phase 6 Complete) with real-time data integration, interactive mapping, and performance optimization. For development roadmap and future features, see [ROADMAP.md](ROADMAP.md).
