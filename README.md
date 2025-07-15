@@ -260,6 +260,42 @@ brew install redis && brew services start redis
 
 Visit [http://localhost:3000/api/health](http://localhost:3000/api/health) to verify all services are running correctly.
 
+## 🔒 Security
+
+CIV.IQ implements comprehensive security measures to protect against supply chain attacks and vulnerabilities.
+
+### Supply Chain Protection
+
+The project includes automated security scanning to protect against npm supply chain attacks:
+
+- **Pre-install auditing**: Automatically scans packages before installation
+- **Git hooks**: Security checks on every commit and push
+- **Moderate audit level**: Blocks high and critical vulnerabilities
+- **Exact version locking**: Prevents unexpected package updates
+
+### Security Commands
+
+```bash
+# Run security audit
+npm run security:audit
+
+# Run full security scan
+npm run security:full
+
+# Emergency fix (use with caution)
+npm run security:emergency
+```
+
+### Security Configuration
+
+The `.npmrc` file enforces:
+- Moderate audit level for all operations
+- Package lock requirement
+- Exact version saving
+- Strict engine checking
+
+For detailed security policies and vulnerability reporting, see [SECURITY.md](SECURITY.md).
+
 ## 🎛️ Enhanced Components & Features
 
 ### Progressive Web App Components
