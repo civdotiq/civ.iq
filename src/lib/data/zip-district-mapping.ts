@@ -23,21 +23,23 @@
 // Source: OpenSourceActivismTech/us-zipcodes-congress (processed in Phase 2)
 // Coverage: 39,363 ZIP codes (upgraded from 270 hardcoded entries)
 
-// Re-export from integrated mapping to maintain API compatibility
+// Re-export from optimized mapping for maximum performance
 export {
-  ZIP_TO_DISTRICT_MAP,
   getCongressionalDistrictForZip,
   getPrimaryCongressionalDistrictForZip,
   getAllCongressionalDistrictsForZip,
   isZipMultiDistrict,
   getZipLookupMetrics,
-  getZipCoverageStats,
   resetZipLookupMetrics,
-  ZIP_DISTRICT_STATS,
   zipLookupService,
   getStateFromZip,
+  getCacheStats,
+  warmUpCache,
   type PerformanceMetrics
-} from './zip-district-mapping-integrated';
+} from './zip-district-mapping-optimized';
+
+// Import legacy exports for backward compatibility
+export { ZIP_TO_DISTRICT_MAP, getZipCoverageStats, ZIP_DISTRICT_STATS } from './zip-district-mapping-integrated';
 
 // Re-export types with legacy compatibility
 export type { ZipDistrictMapping, LegacyZipDistrictMapping } from './zip-district-mapping-integrated';

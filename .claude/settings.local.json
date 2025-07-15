@@ -45,7 +45,21 @@
       "Bash(mv:*)",
       "Bash(tree:*)",
       "Bash(hostname:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "WebFetch(domain:www.gnu.org)",
+      "Bash(touch:*)",
+      "Bash(./scripts/add-license-headers.sh:*)",
+      "Bash(bash:*)",
+      "Bash(./scripts/replace-license-headers.sh:*)",
+      "Bash(python3:*)",
+      "Bash(npm search:*)",
+      "Bash(npx husky:*)",
+      "Bash(npm run prepare:*)",
+      "Bash(npm run security:full:*)",
+      "Bash(npm audit:*)",
+      "Bash(cut:*)",
+      "Bash(tsx scripts/validate-119th-congress-data.ts:*)",
+      "Bash(npx tsx:*)"
     ],
     "deny": []
   }
