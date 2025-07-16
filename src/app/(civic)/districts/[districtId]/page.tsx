@@ -1,32 +1,30 @@
 'use client';
 
 
-/*
- * CIV.IQ - Civic Information Hub
- * Copyright (C) 2025 Mark Sandford
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
- *
- * For commercial licensing inquiries: mark@marksandford.dev
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { DemographicStats, ElectionResults, PopulationPyramid } from '@/components/Charts';
-import DistrictBoundaryMap from '@/components/DistrictBoundaryMap';
 import { DistrictCharts } from '@/components/DistrictCharts';
+
+// Dynamic import of the map component to avoid SSR issues
+const DistrictBoundaryMap = dynamic(() => import('@/components/DistrictBoundaryMap'), { 
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+        <p className="text-sm text-gray-600">Loading district map...</p>
+      </div>
+    </div>
+  )
+});
 
 function CiviqLogo() {
   return (
@@ -504,7 +502,7 @@ export default function DistrictDetailPage() {
             Data sourced from Census.gov and official government sources
           </p>
           <p className="text-gray-500 text-sm mt-2">
-            © 2024 CIV.IQ - Empowering civic engagement through transparency
+            © 2019-2025 Mark Sandford. CIV.IQ™ - The Original Civic Information Platform
           </p>
         </div>
       </footer>

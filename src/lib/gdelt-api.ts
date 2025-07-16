@@ -1,21 +1,6 @@
-/*
- * CIV.IQ - Civic Information Hub
- * Copyright (C) 2025 Mark Sandford
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
- *
- * For commercial licensing inquiries: mark@marksandford.dev
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 // GDELT API utility with proper error handling, rate limiting, and retry logic
@@ -132,41 +117,70 @@ export function generateOptimizedSearchTerms(
   state: string, 
   district?: string
 ): string[] {
-  // Ensure representativeName is defined and is a string
-  if (!representativeName || typeof representativeName !== 'string') {
-    representativeName = 'Representative';
+  // Validate inputs - if no name provided, return empty array to avoid generic searches
+  if (!representativeName || typeof representativeName !== 'string' || representativeName.trim() === '') {
+    console.warn('[GDELT] No representative name provided for search');
+    return [];
   }
   
-  // Ensure state is defined and is a string
-  if (!state || typeof state !== 'string') {
-    state = 'US';
+  if (!state || typeof state !== 'string' || state.trim() === '') {
+    console.warn('[GDELT] No state provided for search');
+    state = ''; // Will still search but without state context
   }
   
-  // Clean the representative name
-  const cleanName = representativeName
+  // Clean the representative name - extract just the name part
+  const fullName = representativeName.trim();
+  const cleanName = fullName
     .replace(/^(Rep\.|Representative|Senator|Sen\.)\s+/, '')
     .replace(/,.*$/, '')
+    .replace(/\s*\([^)]*\)\s*/g, '') // Remove party affiliation like (D) or (R)
     .trim();
 
   const searchTerms: string[] = [];
   
-  // Primary exact name searches with civic context
-  searchTerms.push(`"${cleanName}" AND (Congress OR Senate OR House OR Representative OR legislation)`);
+  // For more specific searches, also extract last name only
+  const nameParts = cleanName.split(' ');
+  const lastName = nameParts[nameParts.length - 1];
   
   if (district) {
-    // House representative specific terms
-    searchTerms.push(`"${cleanName}" AND "${state}" AND "district" AND (bill OR vote OR committee)`);
-    searchTerms.push(`"Representative ${cleanName}" AND "${state}"`);
+    // House Representative specific searches
+    // Most specific: Full name with district and state
+    searchTerms.push(`"${cleanName}" AND "${state}" AND ("${district} district" OR "district ${district}")`);
+    
+    // Name with Congress/House context
+    searchTerms.push(`"${cleanName}" AND (Congress OR House) AND "${state}"`);
+    
+    // Representative title with name
+    searchTerms.push(`"Representative ${cleanName}" OR "Rep. ${cleanName}" OR "Congressman ${cleanName}" OR "Congresswoman ${cleanName}"`);
+    
+    // Last name with strong political context
+    if (lastName !== cleanName) {
+      searchTerms.push(`"${lastName}" AND "${state}" AND (Representative OR Congress OR House) AND (bill OR vote OR committee)`);
+    }
   } else {
-    // Senate specific terms
-    searchTerms.push(`"Senator ${cleanName}" AND "${state}" AND (bill OR amendment OR hearing)`);
-    searchTerms.push(`"${cleanName}" AND "Senate" AND "${state}"`);
+    // Senator specific searches
+    // Most specific: Full name with Senate and state
+    searchTerms.push(`"${cleanName}" AND Senate AND "${state}"`);
+    
+    // Senator title with name
+    searchTerms.push(`"Senator ${cleanName}" OR "Sen. ${cleanName}"`);
+    
+    // Name with strong Senate context
+    searchTerms.push(`"${cleanName}" AND "${state}" AND (Senate OR Senator) AND (bill OR amendment OR committee OR hearing)`);
+    
+    // Last name with Senate context
+    if (lastName !== cleanName) {
+      searchTerms.push(`"${lastName}" AND "${state}" AND Senate AND (legislation OR vote OR filibuster)`);
+    }
   }
 
-  // Add broader civic terms (limit to most relevant)
-  searchTerms.push(`"${cleanName}" AND (politics OR government OR policy)`);
+  // Add one broader search with full name and political context
+  searchTerms.push(`"${cleanName}" AND (politics OR government OR election OR campaign OR legislation)`);
 
-  return searchTerms.slice(0, 3); // Limit to 3 most effective terms
+  console.log(`[GDELT] Generated search terms for ${fullName}:`, searchTerms);
+  
+  // Return top 4 most relevant search terms
+  return searchTerms.slice(0, 4);
 }
 
 // Main GDELT API fetch function with comprehensive error handling and deduplication
@@ -252,9 +266,10 @@ export async function fetchGDELTNews(
     const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodedQuery}&mode=artlist&maxrecords=${maxRecords}&format=json&sort=datedesc&timespan=30d&theme=GENERAL_GOVERNMENT,POLITICAL_PROCESS,POLITICAL_CANDIDATE`;
     
     structuredLogger.info('Fetching GDELT news', {
-      searchTerm: searchTerm.slice(0, 50),
+      searchTerm: searchTerm.slice(0, 100), // Show more of the search term for debugging
       maxRecords,
-      operation: 'gdelt_news_fetch'
+      operation: 'gdelt_news_fetch',
+      url: url.slice(0, 200) // Log part of the URL for debugging
     });
     
     const headers = {

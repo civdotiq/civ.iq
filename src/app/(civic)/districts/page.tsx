@@ -1,30 +1,30 @@
 'use client';
 
 
-/*
- * CIV.IQ - Civic Information Hub
- * Copyright (C) 2025 Mark Sandford
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
- *
- * For commercial licensing inquiries: mark@marksandford.dev
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { InteractiveDistrictMap } from '@/components/InteractiveVisualizations';
+import dynamic from 'next/dynamic';
 import * as d3 from 'd3';
+import NationalStatsCards from '@/components/NationalStatsCards';
+import StateInfoPanel from '@/components/StateInfoPanel';
+
+// Dynamic import of the map component to avoid SSR issues
+const DistrictMapContainer = dynamic(() => import('@/components/DistrictMapContainer'), { 
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+        <p className="text-sm text-gray-600">Loading district map...</p>
+      </div>
+    </div>
+  )
+});
 
 // Logo component
 function CiviqLogo() {
@@ -153,15 +153,22 @@ function DistrictCard({ district }: { district: District }) {
   );
 }
 
-// Competitiveness chart
+// Enhanced Competitiveness Distribution Chart
 function CompetitivenessChart({ districts }: { districts: District[] }) {
+  const [tooltip, setTooltip] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    content: string;
+  }>({ visible: false, x: 0, y: 0, content: '' });
+
   useEffect(() => {
     const container = d3.select('#competitiveness-chart');
     container.selectAll('*').remove();
 
-    const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+    const margin = { top: 40, right: 40, bottom: 80, left: 80 };
     const width = 800 - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
+    const height = 450 - margin.top - margin.bottom;
 
     const svg = container
       .append('svg')
@@ -170,84 +177,226 @@ function CompetitivenessChart({ districts }: { districts: District[] }) {
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Process data
+    // Process data into competitiveness categories
     const processedData = districts.map(d => {
       const pvi = d.political.cookPVI;
-      let value = 0;
+      let pviValue = 0;
+      let category = 'Toss-up';
+      
       if (pvi !== 'EVEN') {
         const match = pvi.match(/([DR])\+(\d+)/);
         if (match) {
-          value = parseInt(match[2]) * (match[1] === 'D' ? -1 : 1);
+          pviValue = parseInt(match[2]) * (match[1] === 'D' ? -1 : 1);
+          
+          // Categorize based on standard political science definitions
+          if (pviValue <= -10) category = 'Safe D';
+          else if (pviValue <= -5) category = 'Likely D';
+          else if (pviValue <= -2) category = 'Lean D';
+          else if (pviValue < 2) category = 'Toss-up';
+          else if (pviValue < 5) category = 'Lean R';
+          else if (pviValue < 10) category = 'Likely R';
+          else category = 'Safe R';
         }
       }
+      
       return {
         district: `${d.state}-${d.number}`,
-        value,
-        party: d.representative.party
+        pviValue,
+        category,
+        party: d.representative.party,
+        population: d.demographics.population,
+        name: d.name
       };
-    }).sort((a, b) => a.value - b.value);
+    });
 
-    const x = d3.scaleLinear()
-      .domain([-20, 20])
-      .range([0, width]);
+    // Group data by category
+    const categories = ['Safe D', 'Likely D', 'Lean D', 'Toss-up', 'Lean R', 'Likely R', 'Safe R'];
+    const categoryData = categories.map(cat => ({
+      category: cat,
+      count: processedData.filter(d => d.category === cat).length,
+      districts: processedData.filter(d => d.category === cat)
+    }));
 
-    const y = d3.scaleBand()
-      .domain(processedData.map(d => d.district))
-      .range([0, height])
-      .padding(0.1);
+    // Color scheme for categories
+    const colorScale = d3.scaleOrdinal<string>()
+      .domain(categories)
+      .range(['#1e40af', '#3b82f6', '#60a5fa', '#9ca3af', '#f87171', '#ef4444', '#dc2626']);
 
-    // Add x axis
+    // Create scales
+    const x = d3.scaleBand()
+      .domain(categories)
+      .range([0, width])
+      .padding(0.2);
+
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(categoryData, d => d.count) || 0])
+      .range([height, 0]);
+
+    // Add title
+    svg.append('text')
+      .attr('x', width / 2)
+      .attr('y', -15)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '16px')
+      .style('font-weight', 'bold')
+      .text('Distribution of Districts by Partisan Lean (Cook PVI)');
+
+    // Add x-axis
     svg.append('g')
       .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x).tickFormat(d => d.valueOf() === 0 ? 'EVEN' : `${Math.abs(d.valueOf())}`));
+      .call(d3.axisBottom(x))
+      .selectAll('text')
+      .style('font-size', '12px')
+      .attr('transform', 'rotate(-45)')
+      .style('text-anchor', 'end')
+      .attr('dx', '-.8em')
+      .attr('dy', '.15em');
 
-    // Add y axis
+    // Add y-axis
     svg.append('g')
-      .call(d3.axisLeft(y));
+      .call(d3.axisLeft(y).tickFormat(d3.format('d')))
+      .selectAll('text')
+      .style('font-size', '12px');
 
-    // Add center line
-    svg.append('line')
-      .attr('x1', x(0))
-      .attr('x2', x(0))
-      .attr('y1', 0)
-      .attr('y2', height)
-      .attr('stroke', '#9ca3af')
-      .attr('stroke-width', 2);
+    // Add y-axis label
+    svg.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', 0 - margin.left)
+      .attr('x', 0 - (height / 2))
+      .attr('dy', '1em')
+      .style('text-anchor', 'middle')
+      .style('font-size', '14px')
+      .style('font-weight', '500')
+      .text('Number of Districts');
 
-    // Add bars
-    svg.selectAll('.bar')
-      .data(processedData)
+    // Add x-axis label
+    svg.append('text')
+      .attr('transform', `translate(${width / 2}, ${height + margin.bottom - 10})`)
+      .style('text-anchor', 'middle')
+      .style('font-size', '14px')
+      .style('font-weight', '500')
+      .text('Competitiveness Category');
+
+    // Add bars with animation
+    const bars = svg.selectAll('.bar')
+      .data(categoryData)
       .enter().append('rect')
       .attr('class', 'bar')
-      .attr('x', d => d.value < 0 ? x(d.value) : x(0))
-      .attr('y', d => y(d.district) || 0)
-      .attr('width', d => Math.abs(x(d.value) - x(0)))
-      .attr('height', y.bandwidth())
-      .attr('fill', d => d.value < 0 ? '#3b82f6' : '#ef4444')
-      .attr('opacity', 0.7);
+      .attr('x', d => x(d.category) || 0)
+      .attr('width', x.bandwidth())
+      .attr('y', height)
+      .attr('height', 0)
+      .attr('fill', d => colorScale(d.category))
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 1)
+      .style('cursor', 'pointer');
 
-    // Add labels
-    svg.append('text')
-      .attr('x', x(-10))
-      .attr('y', -10)
-      .attr('text-anchor', 'middle')
-      .text('← More Democratic')
-      .style('font-size', '12px')
-      .style('fill', '#3b82f6');
+    // Animate bars
+    bars.transition()
+      .duration(800)
+      .ease(d3.easeBackOut)
+      .attr('y', d => y(d.count))
+      .attr('height', d => height - y(d.count));
 
-    svg.append('text')
-      .attr('x', x(10))
-      .attr('y', -10)
+    // Add count labels on bars
+    svg.selectAll('.count-label')
+      .data(categoryData)
+      .enter().append('text')
+      .attr('class', 'count-label')
+      .attr('x', d => (x(d.category) || 0) + x.bandwidth() / 2)
+      .attr('y', height)
       .attr('text-anchor', 'middle')
-      .text('More Republican →')
+      .style('font-size', '14px')
+      .style('font-weight', 'bold')
+      .style('fill', '#fff')
+      .text(d => d.count)
+      .transition()
+      .duration(800)
+      .delay(400)
+      .attr('y', d => y(d.count) + 20);
+
+    // Add interactivity
+    bars.on('mouseover', function(event, d) {
+      d3.select(this)
+        .attr('opacity', 0.8)
+        .attr('stroke', '#000')
+        .attr('stroke-width', 2);
+
+      const [mouseX, mouseY] = d3.pointer(event, svg.node());
+      setTooltip({
+        visible: true,
+        x: mouseX + margin.left,
+        y: mouseY + margin.top,
+        content: `${d.category}: ${d.count} districts\n${d.districts.slice(0, 5).map(dist => dist.district).join(', ')}${d.count > 5 ? `\n+${d.count - 5} more...` : ''}`
+      });
+    })
+    .on('mouseout', function() {
+      d3.select(this)
+        .attr('opacity', 1)
+        .attr('stroke', '#fff')
+        .attr('stroke-width', 1);
+      
+      setTooltip({ visible: false, x: 0, y: 0, content: '' });
+    });
+
+    // Add center line for even districts
+    const evenPosition = x('Toss-up');
+    if (evenPosition !== undefined) {
+      svg.append('line')
+        .attr('x1', evenPosition + x.bandwidth() / 2)
+        .attr('x2', evenPosition + x.bandwidth() / 2)
+        .attr('y1', 0)
+        .attr('y2', height)
+        .attr('stroke', '#374151')
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '5,5')
+        .attr('opacity', 0.5);
+    }
+
+    // Add explanatory text
+    svg.append('text')
+      .attr('x', width / 2)
+      .attr('y', height + 60)
+      .attr('text-anchor', 'middle')
       .style('font-size', '12px')
-      .style('fill', '#ef4444');
+      .style('fill', '#6b7280')
+      .text('Cook Partisan Voting Index (PVI): Measures how much a district leans compared to national average');
+
   }, [districts]);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">District Competitiveness Analysis</h2>
+    <div className="bg-white rounded-lg shadow-lg p-6 relative">
+      <div className="mb-4">
+        <h2 className="text-xl font-bold text-gray-900 mb-2">District Competitiveness Distribution</h2>
+        <p className="text-sm text-gray-600">
+          Shows how districts are distributed across the competitive spectrum using Cook PVI ratings.
+        </p>
+      </div>
+      
       <div id="competitiveness-chart"></div>
+      
+      {/* Legend */}
+      <div className="mt-4 pt-4 border-t border-gray-200">
+        <h3 className="text-sm font-semibold text-gray-700 mb-2">Category Definitions:</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-gray-600">
+          <div><strong>Safe:</strong> PVI ±10+</div>
+          <div><strong>Likely:</strong> PVI ±5 to ±9</div>
+          <div><strong>Lean:</strong> PVI ±2 to ±4</div>
+          <div><strong>Toss-up:</strong> PVI ±1 or Even</div>
+        </div>
+      </div>
+
+      {/* Tooltip */}
+      {tooltip.visible && (
+        <div
+          className="absolute bg-gray-900 text-white px-3 py-2 rounded text-sm pointer-events-none z-10 max-w-xs"
+          style={{ left: tooltip.x, top: tooltip.y }}
+        >
+          {tooltip.content.split('\n').map((line, i) => (
+            <div key={i}>{line}</div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -319,6 +468,7 @@ function DemographicsComparison({ districts }: { districts: District[] }) {
 export default function DistrictsPage() {
   const [districts, setDistricts] = useState<District[]>([]);
   const [selectedDistrict, setSelectedDistrict] = useState<string>('');
+  const [selectedState, setSelectedState] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'competitive' | 'safe-d' | 'safe-r'>('all');
   const [stateFilter, setStateFilter] = useState<string>('all');
@@ -452,6 +602,9 @@ export default function DistrictsPage() {
           </div>
         ) : (
           <>
+            {/* National Statistics Cards */}
+            <NationalStatsCards districts={districts} />
+
             {/* Filters */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-8">
               <div className="flex flex-wrap gap-4">
@@ -485,18 +638,27 @@ export default function DistrictsPage() {
             </div>
 
             {/* Interactive map */}
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Interactive District Map</h2>
+            <div className="bg-white rounded-lg shadow-lg p-6 mb-8 relative">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">National Congressional Overview</h2>
               <p className="text-sm text-gray-600 mb-4">
-                Click on a district to view details. Color intensity shows competitiveness.
+                View the United States with state boundaries and congressional districts. 
+                Click on states to see senators and district information.
               </p>
-              <InteractiveDistrictMap 
-                districts={districtMapData}
-                selectedDistrict={selectedDistrict}
-                onDistrictClick={setSelectedDistrict}
-                width={900}
-                height={500}
-              />
+              <div className="relative">
+                <DistrictMapContainer 
+                  districts={districtMapData}
+                  selectedDistrict={selectedDistrict}
+                  onDistrictClick={setSelectedDistrict}
+                  onStateClick={setSelectedState}
+                  width={900}
+                  height={500}
+                />
+                {/* State Info Panel */}
+                <StateInfoPanel 
+                  state={selectedState}
+                  onClose={() => setSelectedState(null)}
+                />
+              </div>
             </div>
 
             {/* Summary statistics */}
@@ -527,7 +689,7 @@ export default function DistrictsPage() {
             Data sourced from Census.gov and official government sources
           </p>
           <p className="text-gray-500 text-sm mt-2">
-            © 2024 CIV.IQ - Empowering civic engagement through transparency
+            © 2019-2025 Mark Sandford. CIV.IQ™ - The Original Civic Information Platform
           </p>
         </div>
       </footer>

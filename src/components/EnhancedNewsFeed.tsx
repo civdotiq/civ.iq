@@ -1,24 +1,9 @@
 'use client';
 
 
-/*
- * CIV.IQ - Civic Information Hub
- * Copyright (C) 2025 Mark Sandford
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
- *
- * For commercial licensing inquiries: mark@marksandford.dev
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
@@ -246,15 +231,31 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
           </div>
         </div>
 
-        {/* Search Terms */}
+        {/* Search Terms - More readable display */}
         {newsData?.searchTerms && newsData.searchTerms.length > 0 && (
-          <div className="mt-4 text-sm text-gray-600">
-            <span>Search terms: </span>
-            {newsData.searchTerms.map((term, index) => (
-              <span key={index} className="inline-block bg-gray-100 px-2 py-1 rounded mr-2">
-                {term.replace(/"/g, '')}
-              </span>
-            ))}
+          <div className="mt-4">
+            <details className="text-sm text-gray-600">
+              <summary className="cursor-pointer hover:text-gray-800">
+                Searching for news about {representative.name}
+              </summary>
+              <div className="mt-2 space-y-1">
+                {newsData.searchTerms.map((term, index) => {
+                  // Make search terms more readable
+                  const readableTerm = term
+                    .replace(/AND/g, '&')
+                    .replace(/OR/g, 'or')
+                    .replace(/"/g, '')
+                    .replace(/\(/g, '(')
+                    .replace(/\)/g, ')');
+                  
+                  return (
+                    <div key={index} className="text-xs bg-gray-50 px-2 py-1 rounded font-mono">
+                      {readableTerm}
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
           </div>
         )}
       </div>

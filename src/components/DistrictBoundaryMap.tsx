@@ -1,34 +1,26 @@
 'use client';
 
-/*
- * CIV.IQ - Civic Information Hub
- * Copyright (C) 2025 Mark Sandford
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
- *
- * For commercial licensing inquiries: mark@marksandford.dev
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Loader2, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 
-// Dynamic import to avoid SSR issues with Leaflet
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
-const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
-const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
+// Dynamic import with proper SSR handling
+const MapComponent = dynamic(() => import('./MapComponent'), { 
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full bg-gray-100">
+      <div className="text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
+        <p className="text-sm text-gray-600">Loading map...</p>
+      </div>
+    </div>
+  )
+});
 
 interface DistrictBoundaryMapProps {
   districtId: string;
@@ -241,43 +233,22 @@ export default function DistrictBoundaryMap({
         </button>
       </div>
 
-      {/* Map Container */}
-      <div style={{ width: isFullscreen ? '100vw' : width, height: isFullscreen ? '100vh' : height }}>
-        {typeof window !== 'undefined' && (
-          <MapContainer
+      {/* Map Container with explicit dimensions */}
+      <div 
+        style={{ 
+          width: isFullscreen ? '100vw' : `${width}px`, 
+          height: isFullscreen ? '100vh' : `${height}px`,
+          minHeight: '400px'
+        }}
+      >
+        {typeof window !== 'undefined' && boundaryData && (
+          <MapComponent
             center={mapCenter}
             zoom={mapZoom}
-            style={{ height: '100%', width: '100%' }}
-            scrollWheelZoom={true}
-            zoomControl={true}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {boundaryData && (
-              <GeoJSON
-                data={boundaryData}
-                style={{
-                  fillColor: '#3b82f6',
-                  weight: 3,
-                  opacity: 1,
-                  color: '#1e40af',
-                  dashArray: '',
-                  fillOpacity: 0.2
-                }}
-                onEachFeature={(feature, layer) => {
-                  layer.bindPopup(`
-                    <div>
-                      <h3 class="font-semibold">${feature.properties.NAME}</h3>
-                      <p class="text-sm text-gray-600">Congressional District</p>
-                      <p class="text-sm">GEOID: ${feature.properties.GEOID}</p>
-                    </div>
-                  `);
-                }}
-              />
-            )}
-          </MapContainer>
+            boundaryData={boundaryData}
+            width={isFullscreen ? '100vw' : width}
+            height={isFullscreen ? '100vh' : height}
+          />
         )}
       </div>
 

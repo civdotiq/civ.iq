@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Leaflet CSS for maps */
+@import '../styles/leaflet.css';
+
 /* Base layer customizations */
 @layer base {
   /* Improved typography */

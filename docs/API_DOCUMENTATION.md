@@ -584,4 +584,4 @@ const testZipCodes = {
 
 ## License
 
-This API is part of the CIV.IQ Civic Information Hub, licensed under AGPL-3.0. See LICENSE for details.
+This API is part of the CIV.IQ Civic Information Hub, licensed under MIT License. See LICENSE for details.

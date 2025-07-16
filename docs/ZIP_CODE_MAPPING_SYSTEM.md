@@ -306,7 +306,7 @@ For questions about data accuracy or coverage, reference the official sources or
 
 ## License and Attribution
 
-This system is part of the CIV.IQ Civic Information Hub, licensed under AGPL-3.0.
+This system is part of the CIV.IQ Civic Information Hub, licensed under MIT License.
 
 ### Data Sources Attribution
 - OpenSourceActivismTech/us-zipcodes-congress for ZIP code mapping

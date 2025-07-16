@@ -1,0 +1,61 @@
+/* 
+ * Leaflet Map Styles
+ * Ensures proper styling for Leaflet maps in Next.js
+ */
+
+/* Ensure the map container has proper dimensions */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  z-index: 0;
+}
+
+/* Fix for Leaflet marker icons */
+.leaflet-default-icon-path {
+  background-image: url('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png');
+}
+
+/* Prevent map from interfering with other elements */
+.leaflet-control-container {
+  z-index: 1000 !important;
+}
+
+/* Ensure popup content is properly styled */
+.leaflet-popup-content {
+  margin: 8px 12px;
+  line-height: 1.4;
+}
+
+.leaflet-popup-content h3 {
+  margin: 0 0 8px 0;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.leaflet-popup-content p {
+  margin: 4px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Fix for attribution position */
+.leaflet-bottom.leaflet-right {
+  z-index: 999;
+}
+
+/* Ensure proper loading state */
+.map-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+}
+
+/* Responsive map container */
+@media (max-width: 768px) {
+  .leaflet-control-zoom {
+    margin-left: 10px !important;
+    margin-top: 10px !important;
+  }
+}

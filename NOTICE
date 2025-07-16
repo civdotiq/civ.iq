@@ -1,21 +1,16 @@
-CIV.IQ - Civic Information Hub
-Copyright (C) 2025 Mark Sandford
+CIV.IQ - Civic Information Platform
+Copyright (c) 2019-2025 Mark Sandford
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+This product includes software developed by Mark Sandford for the CIV.IQ project.
+First developed: March 2019
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-For commercial licensing inquiries, please contact: mark@marksandford.dev
+TRADEMARK NOTICE:
+"CIV.IQ" is a trademark of Mark Sandford. The use of this trademark is subject to 
+separate trademark guidelines and requires written permission.
 
 ATTRIBUTION REQUIREMENT:
-Any use, modification, or distribution of this software must include 
-prominent attribution to Mark Sandford and the CIV.IQ project.
+If you use this software in your own projects, you must include the following 
+attribution in your user interface or documentation:
+"Powered by CIV.IQ (civ-iq.com)"
+
+For more information, visit: https://civ-iq.com

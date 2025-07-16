@@ -1,21 +1,6 @@
-/*
- * CIV.IQ - Civic Information Hub
- * Copyright (C) 2025 Mark Sandford
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
- *
- * For commercial licensing inquiries: mark@marksandford.dev
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -77,20 +62,44 @@ export async function GET(
           );
           
           if (repResponse.ok) {
-            representative = await repResponse.json();
+            const repData = await repResponse.json();
+            
+            // Extract the correct fields from the API response
+            // Handle both BaseRepresentative and EnhancedRepresentative structures
+            const fullName = repData.fullName ? 
+              `${repData.fullName.first} ${repData.fullName.last}` : 
+              repData.name;
+              
+            representative = {
+              name: fullName || `${repData.firstName} ${repData.lastName}`,
+              state: repData.state,
+              district: repData.district,
+              party: repData.party,
+              bioguideId: repData.bioguideId || bioguideId,
+              chamber: repData.chamber
+            };
+            
+            // Validate we have the minimum required data
+            if (!representative.name || representative.name.includes('undefined')) {
+              throw new Error('Invalid representative data - missing name');
+            }
           } else {
             throw new Error('Representative not found');
           }
         } catch (error) {
           structuredLogger.warn('Could not fetch representative info, using fallback', {
             bioguideId,
+            error: error instanceof Error ? error.message : 'Unknown error',
             operation: 'representative_info_fallback'
           }, request);
-          representative = {
-            name: `Representative ${bioguideId}`,
-            state: 'Unknown',
-            district: null,
-            bioguideId
+          
+          // Don't use generic fallback - return empty results instead
+          return {
+            articles: [],
+            totalResults: 0,
+            searchTerms: [],
+            dataSource: 'fallback',
+            cacheStatus: 'Unable to fetch representative information'
           };
         }
 

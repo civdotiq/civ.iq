@@ -3,7 +3,7 @@
 A comprehensive Progressive Web Application (PWA) that connects citizens with their government representatives through live, validated data from official sources. Features offline functionality, intelligent caching, and real-time news deduplication.
 
 ![CIV.IQ Logo](https://img.shields.io/badge/CIV.IQ-Civic%20Information-blue?style=for-the-badge)
-![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 ![API Integration](https://img.shields.io/badge/APIs-Live%20Data-success)
 ![PWA Ready](https://img.shields.io/badge/PWA-Ready-purple)
@@ -732,31 +732,15 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## 📄 License
 
-CIV.IQ is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+CIV.IQ is licensed under the MIT License with additional attribution requirements.
 
-### What this means:
+✅ **You CAN**: Use, modify, distribute, sublicense, and use commercially
+📋 **You MUST**: Include copyright notice and "Powered by CIV.IQ" attribution  
+❌ **You CANNOT**: Use the CIV.IQ™ trademark without permission
 
-**✅ You CAN:**
-- Use CIV.IQ for civic engagement, education, research, or nonprofit purposes
-- Modify and distribute the software
-- Deploy your own instance for public use
-- Contribute improvements back to the project
+Copyright (c) 2019-2025 Mark Sandford. CIV.IQ™ is a trademark first used March 2019.
 
-**📋 You MUST:**
-- Provide attribution to Mark Sandford and the CIV.IQ project
-- Release any modifications under the same AGPL-3.0 license
-- Provide source code access if you deploy a modified version publicly
-- Include copyright notices in any distributed copies
-
-**❌ You CANNOT:**
-- Use this software in proprietary applications without a commercial license
-- Remove attribution or copyright notices
-- Distribute under different license terms
-
-### Commercial Licensing
-For-profit organizations requiring proprietary use or integration may purchase a commercial license. Contact: mark@marksandford.dev
-
-See [LICENSE](LICENSE) for full terms.
+See [LICENSE](LICENSE) and [NOTICE](NOTICE) for full terms.
 
 ## 🙏 Acknowledgments
 
