@@ -52,6 +52,15 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 
 #### **🏛️ Representative Intelligence & Tracking**
 - **Smart Representative Search**: Find federal representatives by ZIP code with live Census geocoding
+- **🎴 Interactive Trading Cards**: Gamified civic engagement with customizable representative cards:
+  - **5-Phase Implementation**: Complete card creation, customization, and sharing system
+  - **16 Statistics Categories**: Legislative, Political, Demographic, and Engagement metrics
+  - **6 Professional Themes**: Default, Patriotic, Minimal, Dark Mode, Retro, and Professional
+  - **Advanced Customization**: Theme selection, layout options, font sizes, and QR codes
+  - **Detail Drill-Down**: Interactive exploration of bills, votes, news, and committee data
+  - **Social Sharing**: Platform-specific sharing for Twitter/X, Facebook, LinkedIn, and Email
+  - **High-Quality Generation**: 640x1000px cards with 2x scaling for retina displays
+  - **Open Graph Integration**: Rich previews when shared on social media platforms
 - **Comprehensive Profiles**: Enhanced details with congress-legislators and Congress.gov data:
   - Social media profiles (Twitter, Facebook, YouTube, Instagram, Mastodon)
   - Complete biographical information and term history
@@ -175,6 +184,10 @@ GET /api/representatives-multi-district?zip={zipCode}
   - **Recharts 3.0**: Interactive charts and data visualization
   - **React Leaflet 4.2**: Interactive maps and geospatial data
   - **Leaflet 1.9**: Core mapping engine with dynamic imports
+- **Trading Cards**: 
+  - **html2canvas 1.4**: High-quality image generation with 2x scaling
+  - **Browser APIs**: Navigator.share, Clipboard API, Web Storage
+  - **Theme System**: Dynamic color schemes with real-time preview
 - **State Management**: React hooks with optimized filtering and search
 - **Data Fetching**: Intelligent request batching and lazy loading
 

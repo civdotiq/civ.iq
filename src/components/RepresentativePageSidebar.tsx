@@ -6,6 +6,10 @@
  */
 
 import Link from 'next/link';
+import { TradingCardPreview } from './TradingCardPreview';
+import { TradingCardModal } from './TradingCardModal';
+import { EnhancedRepresentative } from '@/types/representative';
+import { useState } from 'react';
 
 interface RepresentativePageSidebarProps {
   representative: {
@@ -15,9 +19,18 @@ interface RepresentativePageSidebarProps {
     chamber: 'House' | 'Senate';
     bioguideId: string;
   };
+  additionalData?: {
+    votes?: any[];
+    bills?: any[];
+    finance?: any;
+    news?: any[];
+    partyAlignment?: any;
+  };
 }
 
-export function RepresentativePageSidebar({ representative }: RepresentativePageSidebarProps) {
+export function RepresentativePageSidebar({ representative, additionalData }: RepresentativePageSidebarProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [generatedStats, setGeneratedStats] = useState<any[]>([]);
   const getDistrictDisplay = () => {
     if (representative.chamber === 'Senate') {
       return `${representative.state} (Statewide)`;
@@ -144,6 +157,48 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
         </div>
       </div>
 
+      {/* Trading Card Preview Card */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center mb-3">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m0 0V1a1 1 0 011-1h2a1 1 0 011 1v18a1 1 0 01-1 1h-2a1 1 0 01-1-1V4M7 4H5a1 1 0 00-1 1v16a1 1 0 001 1h2a1 1 0 001-1V5a1 1 0 00-1-1z" />
+              </svg>
+            </div>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 ml-3">Trading Card</h3>
+        </div>
+        
+        <p className="text-sm text-gray-600 mb-4">
+          Create a shareable trading card with key stats about {representative.name}. Perfect for social media!
+        </p>
+        
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="block w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-800 px-4 py-2 rounded-md text-sm font-medium text-center transition-colors duration-200"
+        >
+          🎴 Create Trading Card
+        </button>
+        
+        {/* Hidden Trading Card Preview - this will be visible to inspect element */}
+        <TradingCardPreview 
+          representative={{
+            bioguideId: representative.bioguideId,
+            name: representative.name,
+            firstName: representative.name.split(' ')[0],
+            lastName: representative.name.split(' ').slice(1).join(' '),
+            party: 'Republican', // This will be dynamic later
+            state: representative.state,
+            district: representative.district,
+            chamber: representative.chamber,
+            title: representative.chamber === 'Senate' ? 'U.S. Senator' : 'U.S. Representative',
+            terms: []
+          }}
+          visible={false}
+        />
+      </div>
+
       {/* Additional Resources Card */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center mb-3">
@@ -178,6 +233,30 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
           </Link>
         </div>
       </div>
+
+      {/* Trading Card Modal */}
+      <TradingCardModal
+        representative={{
+          bioguideId: representative.bioguideId,
+          name: representative.name,
+          firstName: representative.name.split(' ')[0],
+          lastName: representative.name.split(' ').slice(1).join(' '),
+          party: 'Republican', // This will be dynamic later
+          state: representative.state,
+          district: representative.district,
+          chamber: representative.chamber,
+          title: representative.chamber === 'Senate' ? 'U.S. Senator' : 'U.S. Representative',
+          terms: []
+        }}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onGenerate={(stats) => {
+          setGeneratedStats(stats);
+          // This will be expanded in Phase 3 for actual generation
+          console.log('Generated stats:', stats);
+        }}
+        additionalData={additionalData}
+      />
     </div>
   );
 }
