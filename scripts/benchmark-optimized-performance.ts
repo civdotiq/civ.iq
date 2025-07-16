@@ -1,9 +1,8 @@
+#!/usr/bin/env tsx
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
-
-#!/usr/bin/env tsx
 
 /*
  * CIV.IQ - Civic Information Hub

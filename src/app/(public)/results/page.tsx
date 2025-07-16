@@ -503,23 +503,35 @@ function StateRepresentativesTab({ zipCode }: { zipCode: string }) {
 function ResultsContent() {
   const searchParams = useSearchParams();
   const zipCode = searchParams.get('zip');
+  const address = searchParams.get('address');
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'federal' | 'state' | 'map'>('federal');
   const [useInteractiveMap, setUseInteractiveMap] = useState(true);
   const [districtInfo, setDistrictInfo] = useState<{state: string; district: string} | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchType, setSearchType] = useState<'zip' | 'address' | 'unknown'>('unknown');
 
   const fetchRepresentatives = async () => {
-    if (!zipCode) {
-      setError('No ZIP code provided');
+    const query = zipCode || address;
+    if (!query) {
+      setError('No search query provided');
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      const response = await fetch(`/api/representatives?zip=${encodeURIComponent(zipCode)}`);
+      setSearchQuery(query);
+      
+      // Determine search type
+      const isZipCode = /^\d{5}$/.test(query);
+      const currentSearchType = isZipCode ? 'zip' : 'address';
+      setSearchType(currentSearchType);
+      
+      // Use enhanced search endpoint
+      const response = await fetch(`/api/representatives-search?q=${encodeURIComponent(query)}`);
       const apiData: ApiResponse = await response.json();
       
       setData(apiData);
@@ -538,7 +550,7 @@ function ResultsContent() {
           // Update search history with location info
           if (typeof window !== 'undefined') {
             const displayName = `${firstRep.state}${firstRep.district && firstRep.district !== '00' ? ` District ${firstRep.district}` : ''}`;
-            SearchHistory.updateSearchDisplayName(zipCode, displayName);
+            SearchHistory.updateSearchDisplayName(query, displayName);
           }
         }
       } else {
@@ -618,7 +630,7 @@ function ResultsContent() {
             Your Representatives
           </h1>
           <p className="text-gray-600">
-            Representatives for ZIP code <span className="font-semibold">{zipCode}</span>
+            Representatives for {searchType === 'zip' ? 'ZIP code' : 'address'} <span className="font-semibold">{searchQuery}</span>
             {districtInfo && (
               <span className="ml-2">
                 • {districtInfo.state} {districtInfo.district && districtInfo.district !== '00' && `District ${districtInfo.district}`}

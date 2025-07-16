@@ -75,6 +75,7 @@
     "@types/supertest": "^6.0.3",
     "audit-ci": "^7.1.0",
     "bcryptjs": "^3.0.2",
+    "dotenv": "17.2.0",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",
     "glob": "^8.1.0",

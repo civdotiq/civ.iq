@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -20,6 +25,24 @@ const nextConfig: NextConfig = {
         pathname: '/img/member/**',
       },
     ],
+  },
+  // Configure webpack to handle dynamic imports and Leaflet properly
+  webpack: (config, { isServer }) => {
+    // Handle Leaflet on the client side only
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    
+    return config;
+  },
+  // Enable experimental features for better dynamic imports
+  experimental: {
+    optimizePackageImports: ['leaflet', 'react-leaflet'],
   },
   async headers() {
     return [

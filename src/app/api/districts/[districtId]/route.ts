@@ -67,6 +67,107 @@ interface DistrictDetails {
 }
 
 /**
+ * Calculate economic health index based on multiple factors
+ */
+function calculateEconomicHealthIndex(medianIncome: number, povertyRate: number, unemploymentRate: number): number {
+  // Normalize income score (0-100, with 100k+ = 100)
+  const incomeScore = Math.min((medianIncome / 100000) * 100, 100);
+  
+  // Normalize poverty score (inverted - lower poverty = higher score)
+  const povertyScore = Math.max(0, 100 - (povertyRate * 5));
+  
+  // Normalize unemployment score (inverted - lower unemployment = higher score)
+  const unemploymentScore = Math.max(0, 100 - (unemploymentRate * 10));
+  
+  // Weighted average: income 40%, poverty 30%, unemployment 30%
+  return (incomeScore * 0.4 + povertyScore * 0.3 + unemploymentScore * 0.3);
+}
+
+/**
+ * Calculate industry diversity index based on state and district characteristics
+ */
+function calculateIndustryDiversityIndex(state: string, district: string): number {
+  // State-specific industry diversity patterns
+  const stateIndustryProfile: Record<string, number> = {
+    'CA': 85, // High tech diversity
+    'NY': 90, // Financial services diversity
+    'TX': 80, // Oil, tech, agriculture
+    'FL': 75, // Tourism, aerospace, agriculture
+    'IL': 85, // Manufacturing, finance, agriculture
+    'PA': 80, // Manufacturing, healthcare, education
+    'OH': 75, // Manufacturing, healthcare
+    'MI': 70, // Auto manufacturing concentrated
+    'WA': 85, // Tech, aerospace
+    'MA': 90, // Biotech, finance, education
+    'NC': 80, // Finance, tech, textiles
+    'GA': 75, // Agriculture, manufacturing, services
+    'NJ': 85, // Pharmaceuticals, finance
+    'VA': 80, // Government, tech, defense
+    'TN': 70, // Manufacturing, agriculture, music
+    'IN': 75, // Manufacturing, agriculture
+    'AZ': 75, // Tech, mining, tourism
+    'MO': 75, // Agriculture, manufacturing, services
+    'WI': 70, // Manufacturing, agriculture
+    'MN': 80, // Finance, manufacturing, agriculture
+    'CO': 85, // Tech, energy, tourism
+    'AL': 65, // Manufacturing, agriculture
+    'LA': 60, // Oil, agriculture, tourism
+    'SC': 65, // Manufacturing, agriculture, tourism
+    'KY': 65, // Coal, agriculture, manufacturing
+    'OR': 80, // Tech, forestry, agriculture
+    'OK': 60, // Energy, agriculture
+    'CT': 85, // Finance, manufacturing, insurance
+    'IA': 70, // Agriculture, manufacturing
+    'MS': 60, // Agriculture, manufacturing
+    'AR': 65, // Agriculture, manufacturing
+    'KS': 70, // Agriculture, manufacturing, aerospace
+    'UT': 80, // Tech, mining, finance
+    'NV': 70, // Tourism, mining
+    'NM': 65, // Energy, technology, tourism
+    'WV': 50, // Coal, limited diversity
+    'NE': 70, // Agriculture, manufacturing
+    'ID': 65, // Agriculture, manufacturing, technology
+    'HI': 60, // Tourism, military, agriculture
+    'NH': 80, // Manufacturing, tourism, technology
+    'ME': 70, // Manufacturing, fishing, tourism
+    'RI': 75, // Manufacturing, services
+    'MT': 60, // Agriculture, mining, tourism
+    'DE': 80, // Finance, chemicals
+    'SD': 65, // Agriculture, manufacturing, services
+    'ND': 60, // Energy, agriculture
+    'AK': 55, // Oil, fishing, tourism
+    'VT': 70, // Manufacturing, tourism, agriculture
+    'WY': 50, // Energy, mining, agriculture
+    'DC': 95  // Government, services, extremely diverse
+  };
+  
+  const baseScore = stateIndustryProfile[state] || 70;
+  
+  // Adjust based on district number (urban districts tend to be more diverse)
+  const districtNum = parseInt(district);
+  const districtAdjustment = districtNum <= 5 ? 5 : districtNum <= 10 ? 0 : -5;
+  
+  return Math.max(0, Math.min(100, baseScore + districtAdjustment));
+}
+
+/**
+ * Calculate job growth potential based on education, demographics, and remote work
+ */
+function calculateJobGrowthPotential(educationLevel: number, medianAge: number, remoteWorkPercent: number): number {
+  // Education score (higher education = better job growth potential)
+  const educationScore = Math.min(educationLevel * 2, 100);
+  
+  // Age score (younger workforce = better growth potential)
+  const ageScore = Math.max(0, 100 - ((medianAge - 25) * 2));
+  
+  // Remote work score (higher remote work = more modern economy)
+  const remoteScore = Math.min(remoteWorkPercent * 5, 100);
+  
+  // Weighted average: education 50%, age 30%, remote work 20%
+  return (educationScore * 0.5 + ageScore * 0.3 + remoteScore * 0.2);
+}
+
+/**
  * Fetch demographic data from Census API for a specific district
  */
 async function getDistrictDemographics(state: string, district: string): Promise<DistrictDetails['demographics']> {
@@ -78,22 +179,64 @@ async function getDistrictDemographics(state: string, district: string): Promise
       return generatePlaceholderDemographics(state, district);
     }
     
-    // Get data from Census American Community Survey 5-Year estimates
+    // Get comprehensive data from Census American Community Survey 5-Year estimates
     const acsUrl = 'https://api.census.gov/data/2022/acs/acs5';
     const variables = [
+      // Demographics
       'B01003_001E', // Total population
       'B02001_002E', // White alone
       'B02001_003E', // Black alone  
       'B02001_005E', // Asian alone
       'B03003_003E', // Hispanic or Latino
+      'B01002_001E', // Median age
+      'B08301_001E', // Total workers 16+
+      
+      // Economics
       'B19013_001E', // Median household income
       'B17001_002E', // Below poverty level
+      'B17001_001E', // Total for poverty determination
+      'B25077_001E', // Median home value
+      'B25064_001E', // Median gross rent
+      'B23025_002E', // Labor force
+      'B23025_005E', // Unemployed
+      
+      // Education
       'B15003_022E', // Bachelor's degree
+      'B15003_023E', // Master's degree
+      'B15003_024E', // Professional degree
+      'B15003_025E', // Doctorate degree
+      'B15003_001E', // Total education universe
+      
+      // Housing
       'B25003_001E', // Total housing units
       'B25003_002E', // Owner-occupied housing
+      'B25003_003E', // Renter-occupied housing
+      'B25002_001E', // Total housing units (occupied + vacant)
+      'B25002_003E', // Vacant housing units
+      
+      // Transportation
       'B08301_010E', // Public transportation to work
-      'B08301_001E', // Total workers 16+
-      'B01002_001E'  // Median age
+      'B08301_021E', // Worked at home
+      'B08303_001E', // Total travel time to work
+      
+      // Additional Demographics
+      'B25010_001E', // Average household size
+      'B08013_001E', // Aggregate travel time to work
+      'B25058_001E', // Median contract rent
+      'B25026_001E', // Total population in housing units
+      
+      // Veterans
+      'B21001_002E', // Veterans
+      'B21001_001E', // Total civilian population 18+
+      
+      // Disability
+      'B18101_001E', // Total civilian noninstitutionalized population
+      'B18101_002E', // With a disability
+      
+      // Language
+      'B16001_001E', // Total 5 years and over
+      'B16001_002E', // Speak only English
+      'B16001_003E'  // Speak language other than English
     ].join(',');
 
     const params = new URLSearchParams({
@@ -109,19 +252,62 @@ async function getDistrictDemographics(state: string, district: string): Promise
       const data = await response.json();
       if (data.length > 1) {
         const [headers, values] = data;
+        
+        // Parse all the demographic values
         const totalPop = parseInt(values[0]) || 0;
         const white = parseInt(values[1]) || 0;
         const black = parseInt(values[2]) || 0;
         const asian = parseInt(values[3]) || 0;
         const hispanic = parseInt(values[4]) || 0;
-        const medianIncome = parseInt(values[5]) || 0;
-        const belowPoverty = parseInt(values[6]) || 0;
-        const bachelors = parseInt(values[7]) || 0;
-        const totalHousing = parseInt(values[8]) || 0;
-        const ownerOccupied = parseInt(values[9]) || 0;
-        const publicTransport = parseInt(values[10]) || 0;
-        const totalWorkers = parseInt(values[11]) || 0;
-        const medianAge = parseFloat(values[12]) || 0;
+        const medianAge = parseFloat(values[5]) || 0;
+        const totalWorkers = parseInt(values[6]) || 0;
+        
+        // Economic indicators
+        const medianIncome = parseInt(values[7]) || 0;
+        const belowPoverty = parseInt(values[8]) || 0;
+        const totalPovertyUniverse = parseInt(values[9]) || 0;
+        const medianHomeValue = parseInt(values[10]) || 0;
+        const medianGrossRent = parseInt(values[11]) || 0;
+        const laborForce = parseInt(values[12]) || 0;
+        const unemployed = parseInt(values[13]) || 0;
+        
+        // Education
+        const bachelors = parseInt(values[14]) || 0;
+        const masters = parseInt(values[15]) || 0;
+        const professional = parseInt(values[16]) || 0;
+        const doctorate = parseInt(values[17]) || 0;
+        const totalEducationUniverse = parseInt(values[18]) || 0;
+        
+        // Housing
+        const totalHousing = parseInt(values[19]) || 0;
+        const ownerOccupied = parseInt(values[20]) || 0;
+        const renterOccupied = parseInt(values[21]) || 0;
+        const totalHousingUnits = parseInt(values[22]) || 0;
+        const vacantHousing = parseInt(values[23]) || 0;
+        
+        // Transportation
+        const publicTransport = parseInt(values[24]) || 0;
+        const workedAtHome = parseInt(values[25]) || 0;
+        const totalTravelTime = parseInt(values[26]) || 0;
+        
+        // Additional demographics
+        const avgHouseholdSize = parseFloat(values[27]) || 0;
+        const aggregateTravelTime = parseInt(values[28]) || 0;
+        const medianContractRent = parseInt(values[29]) || 0;
+        const totalPopInHousing = parseInt(values[30]) || 0;
+        
+        // Veterans
+        const veterans = parseInt(values[31]) || 0;
+        const totalCivilianAdults = parseInt(values[32]) || 0;
+        
+        // Disability
+        const totalCivilianPop = parseInt(values[33]) || 0;
+        const withDisability = parseInt(values[34]) || 0;
+        
+        // Language
+        const totalLanguageUniverse = parseInt(values[35]) || 0;
+        const speakOnlyEnglish = parseInt(values[36]) || 0;
+        const speakOtherLanguage = parseInt(values[37]) || 0;
 
         // Calculate diversity index (1 - sum of squares of racial percentages)
         const whitePercent = totalPop > 0 ? white / totalPop : 0;
@@ -138,8 +324,10 @@ async function getDistrictDemographics(state: string, district: string): Promise
           Math.pow(otherPercent, 2)
         )) * 100;
 
-        // Estimate urban percentage based on public transportation usage
-        const urbanPercentage = totalWorkers > 0 ? Math.min((publicTransport / totalWorkers) * 100 * 10, 100) : 50;
+        // Enhanced urban percentage calculation
+        const urbanPercentage = totalWorkers > 0 ? 
+          Math.min((publicTransport / totalWorkers) * 100 * 8 + 
+                   (totalPopInHousing / totalPop) * 100 * 0.5, 100) : 50;
 
         return {
           population: totalPop,
@@ -151,8 +339,56 @@ async function getDistrictDemographics(state: string, district: string): Promise
           black_percent: blackPercent * 100,
           hispanic_percent: hispanicPercent * 100,
           asian_percent: asianPercent * 100,
-          poverty_rate: totalPop > 0 ? (belowPoverty / totalPop) * 100 : 0,
-          bachelor_degree_percent: totalPop > 0 ? (bachelors / totalPop) * 100 : 0
+          poverty_rate: totalPovertyUniverse > 0 ? (belowPoverty / totalPovertyUniverse) * 100 : 0,
+          bachelor_degree_percent: totalEducationUniverse > 0 ? (bachelors / totalEducationUniverse) * 100 : 0,
+          
+          // Additional comprehensive demographics
+          economic: {
+            medianHomeValue,
+            medianGrossRent,
+            medianContractRent,
+            unemploymentRate: laborForce > 0 ? (unemployed / laborForce) * 100 : 0,
+            laborForceParticipation: totalCivilianAdults > 0 ? (laborForce / totalCivilianAdults) * 100 : 0,
+            // Economic health indicators
+            economicHealthIndex: calculateEconomicHealthIndex(medianIncome, totalPovertyUniverse > 0 ? (belowPoverty / totalPovertyUniverse) * 100 : 0, laborForce > 0 ? (unemployed / laborForce) * 100 : 0),
+            housingAffordabilityRatio: medianIncome > 0 ? (medianHomeValue / medianIncome) : 0,
+            rentBurdenRatio: medianIncome > 0 ? (medianGrossRent * 12 / medianIncome) : 0,
+            // Industry diversity metrics
+            industryDiversityIndex: calculateIndustryDiversityIndex(state, district),
+            // Economic opportunity metrics
+            jobGrowthPotential: calculateJobGrowthPotential(totalEducationUniverse > 0 ? (bachelors / totalEducationUniverse) * 100 : 0, medianAge, totalWorkers > 0 ? (workedAtHome / totalWorkers) * 100 : 0)
+          },
+          
+          education: {
+            highSchoolGraduatePercent: totalEducationUniverse > 0 ? 
+              ((totalEducationUniverse - bachelors - masters - professional - doctorate) / totalEducationUniverse) * 100 : 0,
+            mastersDegreePercent: totalEducationUniverse > 0 ? (masters / totalEducationUniverse) * 100 : 0,
+            professionalDegreePercent: totalEducationUniverse > 0 ? (professional / totalEducationUniverse) * 100 : 0,
+            doctoratePercent: totalEducationUniverse > 0 ? (doctorate / totalEducationUniverse) * 100 : 0,
+            advancedDegreePercent: totalEducationUniverse > 0 ? 
+              ((masters + professional + doctorate) / totalEducationUniverse) * 100 : 0
+          },
+          
+          housing: {
+            homeOwnershipRate: totalHousing > 0 ? (ownerOccupied / totalHousing) * 100 : 0,
+            rentalRate: totalHousing > 0 ? (renterOccupied / totalHousing) * 100 : 0,
+            vacancyRate: totalHousingUnits > 0 ? (vacantHousing / totalHousingUnits) * 100 : 0,
+            avgHouseholdSize,
+            housingUnitDensity: totalHousingUnits
+          },
+          
+          transportation: {
+            publicTransportPercent: totalWorkers > 0 ? (publicTransport / totalWorkers) * 100 : 0,
+            workFromHomePercent: totalWorkers > 0 ? (workedAtHome / totalWorkers) * 100 : 0,
+            avgCommuteTime: totalWorkers > 0 ? (aggregateTravelTime / totalWorkers) : 0
+          },
+          
+          social: {
+            veteransPercent: totalCivilianAdults > 0 ? (veterans / totalCivilianAdults) * 100 : 0,
+            disabilityPercent: totalCivilianPop > 0 ? (withDisability / totalCivilianPop) * 100 : 0,
+            englishOnlyPercent: totalLanguageUniverse > 0 ? (speakOnlyEnglish / totalLanguageUniverse) * 100 : 0,
+            otherLanguagePercent: totalLanguageUniverse > 0 ? (speakOtherLanguage / totalLanguageUniverse) * 100 : 0
+          }
         };
       }
     }

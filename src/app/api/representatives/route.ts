@@ -199,8 +199,11 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       }
       if (rep.chamber === 'House' && 
           rep.state === districtInfo.state && 
-          rep.district === districtInfo.district) {
-        return true
+          rep.district && districtInfo.district) {
+        // Normalize district numbers for comparison (handle '04' vs '4')
+        const repDistrict = parseInt(rep.district, 10)
+        const targetDistrict = parseInt(districtInfo.district, 10)
+        return repDistrict === targetDistrict
       }
       return false
     })

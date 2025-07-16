@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Search, ArrowRight } from 'lucide-react';
 import { SearchHistory, SearchHistoryItem } from '@/lib/searchHistory';
 
@@ -81,12 +82,14 @@ export default function Home() {
     setShowHistory(false);
     
     const isZipCode = /^\d{5}$/.test(searchInput.trim());
-    
+    const isAddress = !isZipCode && searchInput.trim().length > 5;
     
     // Use router.push for more reliable navigation
     try {
       if (isZipCode) {
         router.push(`/results?zip=${encodeURIComponent(searchInput.trim())}`);
+      } else if (isAddress) {
+        router.push(`/results?address=${encodeURIComponent(searchInput.trim())}`);
       } else {
         router.push(`/representatives?search=${encodeURIComponent(searchInput.trim())}`);
       }
@@ -124,11 +127,13 @@ export default function Home() {
       setSearchHistory(SearchHistory.getHistory());
       
       const isZipCode = /^\d{5}$/.test(historyValue);
-      
+      const isAddress = !isZipCode && historyValue.length > 5;
       
       try {
         if (isZipCode) {
           router.push(`/results?zip=${encodeURIComponent(historyValue)}`);
+        } else if (isAddress) {
+          router.push(`/results?address=${encodeURIComponent(historyValue)}`);
         } else {
           router.push(`/representatives?search=${encodeURIComponent(historyValue)}`);
         }
@@ -194,6 +199,16 @@ export default function Home() {
             <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto animate-fade-in-up leading-relaxed" style={{animationDelay: '400ms'}}>
               Transparent access to government data. Find who represents you at every level.
             </p>
+            
+            <div className="text-center animate-fade-in-up" style={{animationDelay: '500ms'}}>
+              <Link 
+                href="/districts" 
+                className="inline-flex items-center gap-2 text-[#3ea2d4] hover:text-[#3ea2d4]/80 font-medium transition-colors"
+              >
+                <span>Search by representative name</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
           
           <div className="max-w-2xl mx-auto relative animate-fade-in-up" style={{animationDelay: '600ms'}}>
@@ -205,7 +220,7 @@ export default function Home() {
                   <input
                     ref={inputRef}
                     type="text"
-                    placeholder="Enter ZIP code (e.g., 10001)"
+                    placeholder="Enter ZIP code or address (e.g., 10001 or 123 Main St, City, State)"
                     value={searchInput}
                     onChange={(e) => {
                       setSearchInput(e.target.value);
@@ -229,7 +244,7 @@ export default function Home() {
                         ? 'bg-[#3ea2d4] hover:bg-[#3ea2d4]/90' 
                         : 'bg-[#3ea2d4]/60 hover:bg-[#3ea2d4]/80'
                   } text-white px-8 py-6 font-semibold text-lg transition-all duration-300 flex items-center gap-3 group/btn`}
-                  title={isSearching ? "Search in progress..." : !searchInput.trim() ? "Enter a ZIP code to search" : "Click to find representatives"}
+                  title={isSearching ? "Search in progress..." : !searchInput.trim() ? "Enter a ZIP code or address to search" : "Click to find representatives"}
                 >
                   {isSearching ? (
                     <>
@@ -253,7 +268,7 @@ export default function Home() {
             {showInputFeedback && (
               <div className="absolute top-full left-0 right-0 mt-2 text-center">
                 <div className="inline-block px-4 py-2 bg-[#e11d07] text-white text-sm rounded-lg shadow-lg animate-fade-in-down">
-                  Please enter a ZIP code to search for representatives
+                  Please enter a ZIP code or address to search for representatives
                 </div>
               </div>
             )}

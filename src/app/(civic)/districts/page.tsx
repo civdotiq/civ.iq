@@ -472,10 +472,25 @@ export default function DistrictsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'competitive' | 'safe-d' | 'safe-r'>('all');
   const [stateFilter, setStateFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [allRepresentatives, setAllRepresentatives] = useState<any[]>([]);
 
   useEffect(() => {
     fetchDistricts();
+    fetchAllRepresentatives();
   }, []);
+  
+  const fetchAllRepresentatives = async () => {
+    try {
+      const response = await fetch('/api/representatives/all');
+      if (response.ok) {
+        const data = await response.json();
+        setAllRepresentatives(data.representatives || []);
+      }
+    } catch (error) {
+      console.error('Error fetching representatives:', error);
+    }
+  };
 
   const fetchDistricts = async () => {
     setLoading(true);
@@ -532,6 +547,20 @@ export default function DistrictsPage() {
   };
 
   const filteredDistricts = districts.filter(district => {
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const matchesDistrict = `${district.state}-${district.number}`.toLowerCase().includes(query);
+      const matchesRepName = district.representative.name.toLowerCase().includes(query);
+      const matchesState = district.state.toLowerCase().includes(query);
+      const matchesCities = district.geography.majorCities.some(city => city.toLowerCase().includes(query));
+      const matchesCounties = district.geography.counties.some(county => county.toLowerCase().includes(query));
+      
+      if (!matchesDistrict && !matchesRepName && !matchesState && !matchesCities && !matchesCounties) {
+        return false;
+      }
+    }
+    
     // Apply state filter
     if (stateFilter !== 'all' && district.state !== stateFilter) return false;
     
@@ -608,6 +637,16 @@ export default function DistrictsPage() {
             {/* Filters */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-8">
               <div className="flex flex-wrap gap-4">
+                <div className="flex-1 min-w-64">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                  <input
+                    type="text"
+                    placeholder="Search by district, representative name, state, or city..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
                   <select

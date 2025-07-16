@@ -76,25 +76,64 @@ export default function MapComponent({ center, zoom, boundaryData, width, height
           maxZoom: 18,
         }).addTo(map);
 
-        // Add GeoJSON layer
+        // Add GeoJSON layer with enhanced interactivity
         if (boundaryData) {
           geoJsonLayer = L.geoJSON(boundaryData, {
-            style: {
-              fillColor: '#3b82f6',
-              weight: 3,
-              opacity: 1,
-              color: '#1e40af',
-              dashArray: '',
-              fillOpacity: 0.2
+            style: (feature) => {
+              // Dynamic styling based on district properties
+              const isMainDistrict = feature?.properties?.GEOID === `${boundaryData.features[0].properties.STATEFP}${boundaryData.features[0].properties.CD118FP}`;
+              return {
+                fillColor: isMainDistrict ? '#3b82f6' : '#6b7280',
+                weight: isMainDistrict ? 4 : 2,
+                opacity: 1,
+                color: isMainDistrict ? '#1e40af' : '#4b5563',
+                dashArray: isMainDistrict ? '' : '5,5',
+                fillOpacity: isMainDistrict ? 0.3 : 0.1
+              };
             },
             onEachFeature: (feature: any, layer: any) => {
+              const isMainDistrict = feature.properties.GEOID === `${boundaryData.features[0].properties.STATEFP}${boundaryData.features[0].properties.CD118FP}`;
+              
+              // Enhanced popup with more district information
               layer.bindPopup(`
-                <div>
-                  <h3 style="font-weight: 600; margin: 0 0 8px 0;">${feature.properties.NAME}</h3>
-                  <p style="margin: 0 0 4px 0; color: #666; font-size: 14px;">Congressional District</p>
-                  <p style="margin: 0; font-size: 14px;">GEOID: ${feature.properties.GEOID}</p>
+                <div style="min-width: 200px;">
+                  <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <h3 style="font-weight: 600; margin: 0; color: #1f2937;">${feature.properties.NAME}</h3>
+                    ${isMainDistrict ? '<span style="margin-left: 8px; padding: 2px 6px; background: #3b82f6; color: white; border-radius: 4px; font-size: 12px;">Current</span>' : ''}
+                  </div>
+                  <p style="margin: 0 0 4px 0; color: #6b7280; font-size: 14px;">Congressional District</p>
+                  <p style="margin: 0 0 8px 0; font-size: 14px; color: #4b5563;">GEOID: ${feature.properties.GEOID}</p>
+                  <div style="border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 8px;">
+                    <a href="/districts/${feature.properties.STATEFP}-${feature.properties.CD118FP}" 
+                       style="color: #3b82f6; text-decoration: none; font-size: 14px; font-weight: 500;">
+                      View District Details →
+                    </a>
+                  </div>
                 </div>
               `);
+              
+              // Add hover effects
+              layer.on('mouseover', function() {
+                this.setStyle({
+                  weight: isMainDistrict ? 6 : 4,
+                  fillOpacity: isMainDistrict ? 0.5 : 0.3
+                });
+              });
+              
+              layer.on('mouseout', function() {
+                this.setStyle({
+                  weight: isMainDistrict ? 4 : 2,
+                  fillOpacity: isMainDistrict ? 0.3 : 0.1
+                });
+              });
+              
+              // Add click handler for navigation
+              layer.on('click', function() {
+                const districtId = `${feature.properties.STATEFP}-${feature.properties.CD118FP}`;
+                if (typeof window !== 'undefined') {
+                  window.location.href = `/districts/${districtId}`;
+                }
+              });
             }
           }).addTo(map);
 
