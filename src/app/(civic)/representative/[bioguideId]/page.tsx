@@ -384,6 +384,13 @@ export default async function RepresentativeProfilePage({
                   chamber: representative.chamber || 'House',
                   bioguideId: bioguideId
                 }}
+                additionalData={{
+                  votes: votingData,
+                  bills: billsData,
+                  finance: financeData,
+                  news: newsData,
+                  partyAlignment: partyAlignmentData
+                }}
               />
             </div>
           </div>
