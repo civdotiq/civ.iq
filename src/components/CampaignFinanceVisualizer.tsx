@@ -1,12 +1,15 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { IndustryBreakdown } from './campaign-finance/IndustryBreakdown';
+import { DonorAnalysis } from './campaign-finance/DonorAnalysis';
+import { FundraisingTrends } from './campaign-finance/FundraisingTrends';
+import { EnhancedFECData } from '@/types/fec';
 
 interface CampaignFinanceData {
   candidate_info: any;
@@ -74,13 +77,43 @@ interface CampaignFinanceVisualizerProps {
     name: string;
     party: string;
   };
+  bioguideId?: string;
 }
 
-export function CampaignFinanceVisualizer({ financeData, representative }: CampaignFinanceVisualizerProps) {
+export function CampaignFinanceVisualizer({ financeData, representative, bioguideId }: CampaignFinanceVisualizerProps) {
   const [selectedCycle, setSelectedCycle] = useState<number | 'all'>('all');
-  const [activeTab, setActiveTab] = useState<'overview' | 'contributions' | 'expenditures' | 'trends' | 'analysis'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'industry' | 'donors' | 'trends' | 'contributions' | 'expenditures'>('overview');
   const [contributorFilter, setContributorFilter] = useState<'all' | 'individual' | 'pac' | 'party'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [enhancedData, setEnhancedData] = useState<EnhancedFECData | null>(null);
+  const [isLoadingEnhanced, setIsLoadingEnhanced] = useState(false);
+
+  // Fetch enhanced data from the new endpoint
+  useEffect(() => {
+    if (bioguideId && (activeTab === 'industry' || activeTab === 'donors' || activeTab === 'trends')) {
+      setIsLoadingEnhanced(true);
+      
+      fetch(`/api/representative/${bioguideId}/finance/enhanced`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data: EnhancedFECData) => {
+          console.log('Enhanced data fetched successfully:', data);
+          setEnhancedData(data);
+        })
+        .catch(error => {
+          console.error('Error fetching enhanced data:', error);
+          // Fall back to transformed data if fetch fails
+          setEnhancedData(null);
+        })
+        .finally(() => {
+          setIsLoadingEnhanced(false);
+        });
+    }
+  }, [bioguideId, activeTab]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -139,6 +172,8 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
   }, [currentCycleData]);
 
   const cycles = financeData.financial_summary.map(cycle => cycle.cycle).sort((a, b) => b - a);
+
+  // Note: Enhanced data is now fetched from the API endpoint instead of being transformed here
 
   const filteredContributions = useMemo(() => {
     let filtered = financeData.recent_contributions;
@@ -268,10 +303,11 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
           <nav className="flex space-x-8 px-6" aria-label="Tabs">
             {[
               { id: 'overview', name: 'Overview' },
+              { id: 'industry', name: 'Industry Analysis' },
+              { id: 'donors', name: 'Donor Analysis' },
+              { id: 'trends', name: 'Fundraising Trends' },
               { id: 'contributions', name: 'Contributions' },
-              { id: 'expenditures', name: 'Expenditures' },
-              { id: 'trends', name: 'Trends' },
-              { id: 'analysis', name: 'Analysis' }
+              { id: 'expenditures', name: 'Expenditures' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -532,6 +568,63 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
             </div>
           )}
 
+          {/* Industry Analysis Tab */}
+          {activeTab === 'industry' && (
+            <div className="space-y-6">
+              {isLoadingEnhanced ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-gray-600">Loading industry analysis...</span>
+                </div>
+              ) : enhancedData ? (
+                <IndustryBreakdown data={enhancedData} />
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Enhanced industry data not available</p>
+                  <p className="text-sm mt-2">Please ensure bioguideId is provided</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Donor Analysis Tab */}
+          {activeTab === 'donors' && (
+            <div className="space-y-6">
+              {isLoadingEnhanced ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-gray-600">Loading donor analysis...</span>
+                </div>
+              ) : enhancedData ? (
+                <DonorAnalysis data={enhancedData} />
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Enhanced donor data not available</p>
+                  <p className="text-sm mt-2">Please ensure bioguideId is provided</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Fundraising Trends Tab */}
+          {activeTab === 'trends' && (
+            <div className="space-y-6">
+              {isLoadingEnhanced ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-gray-600">Loading fundraising trends...</span>
+                </div>
+              ) : enhancedData ? (
+                <FundraisingTrends data={enhancedData} />
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Enhanced fundraising data not available</p>
+                  <p className="text-sm mt-2">Please ensure bioguideId is provided</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Contributions Tab */}
           {activeTab === 'contributions' && (
             <div className="space-y-6">
@@ -593,18 +686,6 @@ export function CampaignFinanceVisualizer({ financeData, representative }: Campa
             </div>
           )}
 
-          {/* Other tabs remain the same... */}
-          {activeTab === 'trends' && (
-            <div className="text-center py-8 text-gray-500">
-              Historical trends analysis coming soon.
-            </div>
-          )}
-
-          {activeTab === 'analysis' && (
-            <div className="text-center py-8 text-gray-500">
-              Advanced analysis features coming soon.
-            </div>
-          )}
         </div>
       </div>
 

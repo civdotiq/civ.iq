@@ -138,12 +138,14 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
 
   try {
     // Step 1: Get district info with circuit breaker and retry
-    console.log(`Fetching district info for ZIP ${zipCode}...`)
+    console.log(`[getRepresentativesByZip] Fetching district info for ZIP ${zipCode}...`)
     
     const districtInfo = await censusCircuitBreaker.execute(
       () => retryWithBackoff(() => getCongressionalDistrictFromZip(zipCode)),
       'Census API'
     )
+    
+    console.log(`[getRepresentativesByZip] District info result:`, districtInfo);
 
     if (!districtInfo) {
       return {
@@ -170,10 +172,12 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     console.log(`District found: ${districtInfo.state}-${districtInfo.district}`)
 
     // Step 2: Get representatives with circuit breaker and retry  
+    console.log(`[getRepresentativesByZip] Fetching all representatives...`);
     const allRepresentatives = await congressCircuitBreaker.execute(
       () => retryWithBackoff(() => getAllEnhancedRepresentatives()),
       'Congress Legislators'
     )
+    console.log(`[getRepresentativesByZip] Fetched ${allRepresentatives?.length || 0} representatives from congress-legislators`);
 
     if (!allRepresentatives || allRepresentatives.length === 0) {
       return {
@@ -193,8 +197,10 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     }
 
     // Step 3: Filter representatives for this district
+    console.log(`[getRepresentativesByZip] Filtering representatives for ${districtInfo.state}-${districtInfo.district}...`);
     const districtRepresentatives = allRepresentatives.filter(rep => {
       if (rep.chamber === 'Senate' && rep.state === districtInfo.state) {
+        console.log(`[getRepresentativesByZip] Found Senate rep: ${rep.name} (${rep.state})`);
         return true
       }
       if (rep.chamber === 'House' && 
@@ -203,10 +209,13 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
         // Normalize district numbers for comparison (handle '04' vs '4')
         const repDistrict = parseInt(rep.district, 10)
         const targetDistrict = parseInt(districtInfo.district, 10)
-        return repDistrict === targetDistrict
+        const matches = repDistrict === targetDistrict
+        console.log(`[getRepresentativesByZip] House rep: ${rep.name} (${rep.state}-${rep.district}) - ${matches ? 'MATCH' : 'no match'}`);
+        return matches
       }
       return false
     })
+    console.log(`[getRepresentativesByZip] Found ${districtRepresentatives.length} representatives for district`);
 
     if (districtRepresentatives.length === 0) {
       return {
@@ -340,12 +349,18 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
 }
 
 export async function GET(request: NextRequest) {
+  console.log('[Representatives API] Starting request');
+  const startTime = Date.now();
+  
   try {
     const url = new URL(request.url)
     const zipCode = url.searchParams.get('zip')
 
+    console.log('[Representatives API] ZIP code:', zipCode);
+
     // Input validation
     if (!zipCode) {
+      console.log('[Representatives API] Missing ZIP code');
       return NextResponse.json({
         success: false,
         error: {
@@ -380,21 +395,31 @@ export async function GET(request: NextRequest) {
     }
 
     // Get representatives with honest error handling
+    console.log('[Representatives API] Calling getRepresentativesByZip with:', zipCode);
     const result = await getRepresentativesByZip(zipCode)
+    console.log('[Representatives API] Result:', result.success ? 'success' : 'failed');
+    
+    if (!result.success) {
+      console.log('[Representatives API] Error details:', result.error);
+    }
 
     // Return appropriate HTTP status based on success
     const httpStatus = result.success ? 200 : 503
+    const processingTime = Date.now() - startTime;
+    console.log('[Representatives API] Processing time:', processingTime, 'ms');
 
     return NextResponse.json(result, { status: httpStatus })
 
   } catch (error) {
-    console.error('Unexpected error in representatives API:', error)
+    console.error('[Representatives API] Unexpected error:', error);
+    console.error('[Representatives API] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     
     return NextResponse.json({
       success: false,
       error: {
         code: 'INTERNAL_ERROR',
-        message: 'An internal server error occurred'
+        message: 'An internal server error occurred',
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       metadata: {
         timestamp: new Date().toISOString(),

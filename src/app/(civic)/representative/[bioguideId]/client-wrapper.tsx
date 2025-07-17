@@ -10,6 +10,7 @@ import { ErrorBoundary, LoadingErrorBoundary } from '@/components/ErrorBoundary'
 import { BillsTracker } from '@/components/BillsTracker';
 import { EnhancedVotingChart } from '@/components/EnhancedVotingChart';
 import PartyAlignmentAnalysis from '@/components/PartyAlignmentAnalysis';
+import { TradingCardPreview } from '@/components/TradingCardPreview';
 import dynamic from 'next/dynamic';
 
 // Dynamic imports for lazy loading
@@ -619,6 +620,7 @@ export function RepresentativeProfileClient({
                   <CampaignFinanceVisualizer 
                     financeData={initialData.finance}
                     representative={representative}
+                    bioguideId={bioguideId}
                   />
                 </Suspense>
               </div>

@@ -188,7 +188,7 @@ export function RepresentativePageSidebar({ representative, additionalData }: Re
             name: representative.name,
             firstName: representative.name.split(' ')[0],
             lastName: representative.name.split(' ').slice(1).join(' '),
-            party: 'Republican', // This will be dynamic later
+            party: representative.party,
             state: representative.state,
             district: representative.district,
             chamber: representative.chamber,
@@ -241,7 +241,7 @@ export function RepresentativePageSidebar({ representative, additionalData }: Re
           name: representative.name,
           firstName: representative.name.split(' ')[0],
           lastName: representative.name.split(' ').slice(1).join(' '),
-          party: 'Republican', // This will be dynamic later
+          party: representative.party,
           state: representative.state,
           district: representative.district,
           chamber: representative.chamber,

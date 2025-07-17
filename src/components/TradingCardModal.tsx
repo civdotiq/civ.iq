@@ -10,6 +10,9 @@ import { RepresentativeTradingCard } from './RepresentativeTradingCard';
 import { TradingCardGenerator } from './TradingCardGenerator';
 import { StatDetailPanel } from './StatDetailPanel';
 import { CardCustomizationPanel, CardCustomization, CardTheme } from './CardCustomizationPanel';
+import { CardTemplateSelector, CardTemplate, CARD_TEMPLATES } from './CardTemplateSelector';
+import { CardTracker } from '@/lib/cardTracking';
+import { DataValidator } from '@/lib/dataValidation';
 import { EnhancedRepresentative } from '@/types/representative';
 
 interface CardStat {
@@ -26,7 +29,7 @@ interface StatOption {
   icon: string;
   color: string;
   description: string;
-  category: 'legislative' | 'political' | 'demographic' | 'engagement';
+  category: 'legislative' | 'political' | 'demographic' | 'engagement' | 'money' | 'voting' | 'focus';
   getValue: (representative: EnhancedRepresentative, data?: any) => string | number;
 }
 
@@ -92,7 +95,7 @@ const STAT_OPTIONS: StatOption[] = [
     color: '#059669',
     description: 'Percentage of votes aligned with party position',
     category: 'political',
-    getValue: (rep, data) => data?.partyAlignment?.partySupport ? `${Math.round(data.partyAlignment.partySupport)}%` : '87%'
+    getValue: (rep, data) => data?.partyAlignment?.partySupport ? `${Math.round(data.partyAlignment.partySupport)}%` : 'No data available'
   },
   {
     id: 'voting-attendance',
@@ -101,7 +104,7 @@ const STAT_OPTIONS: StatOption[] = [
     color: '#0891b2',
     description: 'Percentage of votes attended',
     category: 'political',
-    getValue: (rep, data) => data?.votes ? `${Math.round((data.votes.filter((v: any) => v.position !== 'Not Voting').length / data.votes.length) * 100)}%` : '94%'
+    getValue: (rep, data) => data?.votes ? `${Math.round((data.votes.filter((v: any) => v.position !== 'Not Voting').length / data.votes.length) * 100)}%` : 'No data available'
   },
   {
     id: 'bipartisan-bills',
@@ -110,7 +113,7 @@ const STAT_OPTIONS: StatOption[] = [
     color: '#9333ea',
     description: 'Bills sponsored with cross-party support',
     category: 'political',
-    getValue: (rep, data) => data?.bills?.filter((b: any) => b.bipartisan).length || 12
+    getValue: (rep, data) => data?.bills?.filter((b: any) => b.bipartisan).length || 'No data available'
   },
   {
     id: 'leadership-roles',
@@ -130,7 +133,7 @@ const STAT_OPTIONS: StatOption[] = [
     color: '#0369a1',
     description: 'Total population represented',
     category: 'demographic',
-    getValue: (rep) => rep.chamber === 'House' ? '760K' : '10.1M'
+    getValue: (rep) => rep.chamber === 'House' ? '760K' : 'Statewide'
   },
   {
     id: 'district-size',
@@ -159,7 +162,7 @@ const STAT_OPTIONS: StatOption[] = [
     color: '#dc2626',
     description: 'Recent media coverage count',
     category: 'engagement',
-    getValue: (rep, data) => data?.news?.length || 24
+    getValue: (rep, data) => data?.news?.length || 'No data available'
   },
   {
     id: 'social-media',
@@ -180,17 +183,160 @@ const STAT_OPTIONS: StatOption[] = [
     color: '#059669',
     description: 'Total campaign contributions raised',
     category: 'engagement',
-    getValue: (rep, data) => data?.finance?.totalRaised ? `$${Math.round(data.finance.totalRaised / 1000)}K` : '$1.2M'
+    getValue: (rep, data) => data?.finance?.totalRaised ? `$${Math.round(data.finance.totalRaised / 1000)}K` : 'No data available'
+  },
+
+  // Follow the Money Category
+  {
+    id: 'top-industry-donor',
+    label: 'Top Industry Donor',
+    icon: '🏭',
+    color: '#dc2626',
+    description: 'Largest industry contributor to campaigns',
+    category: 'money',
+    getValue: (rep, data) => data?.finance?.topIndustry || 'No data available'
+  },
+  {
+    id: 'pac-vs-individual',
+    label: 'PAC vs Individual',
+    icon: '⚖️',
+    color: '#7c3aed',
+    description: 'Ratio of PAC money to individual contributions',
+    category: 'money',
+    getValue: (rep, data) => data?.finance?.pacRatio ? `${Math.round(data.finance.pacRatio)}% PAC` : 'No data available'
+  },
+  {
+    id: 'small-donor-percentage',
+    label: 'Small Donors',
+    icon: '👤',
+    color: '#059669',
+    description: 'Percentage from donations under $200',
+    category: 'money',
+    getValue: (rep, data) => data?.finance?.smallDonors ? `${Math.round(data.finance.smallDonors)}%` : 'No data available'
+  },
+  {
+    id: 'largest-corporate-pac',
+    label: 'Top Corporate PAC',
+    icon: '🏢',
+    color: '#ea580c',
+    description: 'Largest corporate PAC contributor',
+    category: 'money',
+    getValue: (rep, data) => data?.finance?.topCorporatePAC || 'No data available'
+  },
+  {
+    id: 'out-of-state-funding',
+    label: 'Out-of-State Funding',
+    icon: '🗺️',
+    color: '#0891b2',
+    description: 'Percentage of funding from outside state/district',
+    category: 'money',
+    getValue: (rep, data) => data?.finance?.outOfState ? `${Math.round(data.finance.outOfState)}%` : 'No data available'
+  },
+
+  // Voting Record Category
+  {
+    id: 'party-unity-score',
+    label: 'Party Unity Score',
+    icon: '🎯',
+    color: '#2563eb',
+    description: 'How often votes with party majority',
+    category: 'voting',
+    getValue: (rep, data) => data?.partyAlignment?.unityScore ? `${Math.round(data.partyAlignment.unityScore)}%` : 'No data available'
+  },
+  {
+    id: 'contrarian-votes',
+    label: 'Contrarian Votes',
+    icon: '🔄',
+    color: '#dc2626',
+    description: 'Key votes against party position',
+    category: 'voting',
+    getValue: (rep, data) => data?.votes?.contrarian?.length || 'No data available'
+  },
+  {
+    id: 'bipartisan-bill-count',
+    label: 'Bipartisan Bills',
+    icon: '🤝',
+    color: '#059669',
+    description: 'Bills with cross-party co-sponsors',
+    category: 'voting',
+    getValue: (rep, data) => data?.bills?.filter((b: any) => b.bipartisan).length || 'No data available'
+  },
+  {
+    id: 'missed-votes-percent',
+    label: 'Missed Votes',
+    icon: '❌',
+    color: '#ea580c',
+    description: 'Percentage of votes missed',
+    category: 'voting',
+    getValue: (rep, data) => data?.votes?.missed ? `${Math.round(data.votes.missed)}%` : 'No data available'
+  },
+  {
+    id: 'committee-attendance',
+    label: 'Committee Attendance',
+    icon: '🪑',
+    color: '#7c3aed',
+    description: 'Average committee meeting attendance',
+    category: 'voting',
+    getValue: (rep, data) => data?.committees?.attendance ? `${Math.round(data.committees.attendance)}%` : 'No data available'
+  },
+
+  // Legislative Focus Category
+  {
+    id: 'top-bill-topic',
+    label: 'Top Bill Topic',
+    icon: '📊',
+    color: '#059669',
+    description: 'Most common subject of sponsored bills',
+    category: 'focus',
+    getValue: (rep, data) => data?.bills?.topTopic || 'No data available'
+  },
+  {
+    id: 'bills-became-law',
+    label: 'Bills Became Law',
+    icon: '⚖️',
+    color: '#2563eb',
+    description: 'Number of sponsored bills that became law',
+    category: 'focus',
+    getValue: (rep, data) => data?.bills?.enacted || 'No data available'
+  },
+  {
+    id: 'primary-committee',
+    label: 'Primary Committee',
+    icon: '🏛️',
+    color: '#7c3aed',
+    description: 'Main committee assignment',
+    category: 'focus',
+    getValue: (rep) => rep.committees?.[0]?.name || 'No data available'
+  },
+  {
+    id: 'amendments-passed',
+    label: 'Amendments Passed',
+    icon: '📝',
+    color: '#ea580c',
+    description: 'Number of amendments successfully passed',
+    category: 'focus',
+    getValue: (rep, data) => data?.amendments?.passed || 'No data available'
+  },
+  {
+    id: 'effectiveness-rank',
+    label: 'Effectiveness Rank',
+    icon: '🏆',
+    color: '#dc2626',
+    description: 'Legislative effectiveness ranking',
+    category: 'focus',
+    getValue: (rep, data) => data?.effectiveness?.rank || 'No data available'
   }
 ];
 
 export function TradingCardModal({ representative, isOpen, onClose, onGenerate, additionalData }: TradingCardModalProps) {
   const [selectedStats, setSelectedStats] = useState<string[]>([]);
   const [previewStats, setPreviewStats] = useState<CardStat[]>([]);
-  const [activeCategory, setActiveCategory] = useState<'legislative' | 'political' | 'demographic' | 'engagement'>('legislative');
+  const [activeCategory, setActiveCategory] = useState<'legislative' | 'political' | 'demographic' | 'engagement' | 'money' | 'voting' | 'focus'>('legislative');
   const [showGenerator, setShowGenerator] = useState(false);
   const [detailStat, setDetailStat] = useState<{ id: string; stat: CardStat } | null>(null);
   const [showCustomization, setShowCustomization] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<CardTemplate>(CARD_TEMPLATES[4]); // Default to custom
+  const [cardId, setCardId] = useState<string>('');
   const [customization, setCustomization] = useState<CardCustomization>({
     theme: {
       id: 'default',
@@ -215,8 +361,25 @@ export function TradingCardModal({ representative, isOpen, onClose, onGenerate, 
     { id: 'legislative', label: 'Legislative', icon: '📜', color: 'blue' },
     { id: 'political', label: 'Political', icon: '🎯', color: 'green' },
     { id: 'demographic', label: 'Demographics', icon: '👥', color: 'purple' },
-    { id: 'engagement', label: 'Engagement', icon: '📱', color: 'orange' }
+    { id: 'engagement', label: 'Engagement', icon: '📱', color: 'orange' },
+    { id: 'money', label: 'Follow the Money', icon: '💰', color: 'red' },
+    { id: 'voting', label: 'Voting Record', icon: '✅', color: 'indigo' },
+    { id: 'focus', label: 'Legislative Focus', icon: '🎯', color: 'emerald' }
   ];
+
+  // Validate data when component loads
+  useEffect(() => {
+    const validator = new DataValidator();
+    const errors = validator.validateRepresentativeData(representative, additionalData);
+    
+    if (errors.length > 0) {
+      console.log('=== TRADING CARD DATA VALIDATION ===');
+      console.log('Representative:', representative.name, '(', representative.bioguideId, ')');
+      console.log('Raw Representative Data:', representative);
+      console.log('Additional Data:', additionalData);
+      DataValidator.logValidationErrors(errors, 'Trading Card Data');
+    }
+  }, [representative, additionalData]);
 
   // Update preview stats when selection changes
   useEffect(() => {
@@ -247,8 +410,30 @@ export function TradingCardModal({ representative, isOpen, onClose, onGenerate, 
     });
   };
 
+  const handleTemplateChange = (template: CardTemplate) => {
+    setSelectedTemplate(template);
+    if (template.id !== 'custom-combination') {
+      setSelectedStats(template.preselectedStats);
+    }
+  };
+
   const handleGenerate = () => {
     if (previewStats.length >= 1) {
+      // Generate unique card ID
+      const newCardId = CardTracker.generateCardId();
+      setCardId(newCardId);
+      
+      // Store card data
+      CardTracker.storeCard({
+        cardId: newCardId,
+        repId: representative.bioguideId,
+        repName: representative.name,
+        stats: selectedStats,
+        template: selectedTemplate.name,
+        templateId: selectedTemplate.id,
+        timestamp: new Date().toISOString()
+      });
+      
       onGenerate(previewStats);
       setShowGenerator(true);
     }
@@ -280,24 +465,35 @@ export function TradingCardModal({ representative, isOpen, onClose, onGenerate, 
         </div>
 
         <div className="flex h-[600px]">
-          {/* Left Panel - Category Selection */}
-          <div className="w-1/4 bg-gray-50 border-r border-gray-200 p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Categories</h3>
-            <div className="space-y-2">
-              {categories.map(category => (
-                <button
-                  key={category.id}
-                  onClick={() => setActiveCategory(category.id as any)}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                    activeCategory === category.id
-                      ? 'bg-indigo-100 text-indigo-700 border-indigo-300'
-                      : 'bg-white text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <span className="text-xl">{category.icon}</span>
-                  <span className="font-medium">{category.label}</span>
-                </button>
-              ))}
+          {/* Left Panel - Template & Category Selection */}
+          <div className="w-1/4 bg-gray-50 border-r border-gray-200 p-4 overflow-y-auto">
+            {/* Template Selector */}
+            <div className="mb-6">
+              <CardTemplateSelector
+                selectedTemplate={selectedTemplate}
+                onTemplateChange={handleTemplateChange}
+              />
+            </div>
+
+            {/* Category Selection */}
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Categories</h3>
+              <div className="space-y-2">
+                {categories.map(category => (
+                  <button
+                    key={category.id}
+                    onClick={() => setActiveCategory(category.id as any)}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                      activeCategory === category.id
+                        ? 'bg-indigo-100 text-indigo-700 border-indigo-300'
+                        : 'bg-white text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span className="text-xl">{category.icon}</span>
+                    <span className="font-medium">{category.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Selection Counter */}
@@ -418,6 +614,7 @@ export function TradingCardModal({ representative, isOpen, onClose, onGenerate, 
                       representative={representative}
                       stats={previewStats}
                       customization={customization}
+                      cardId={cardId}
                     />
                   </div>
                 </div>
@@ -483,6 +680,7 @@ export function TradingCardModal({ representative, isOpen, onClose, onGenerate, 
         stats={previewStats}
         isOpen={showGenerator}
         customization={customization}
+        cardId={cardId}
         onClose={() => {
           setShowGenerator(false);
           onClose();

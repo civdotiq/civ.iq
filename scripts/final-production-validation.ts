@@ -1,9 +1,8 @@
+#!/usr/bin/env tsx
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
-
-#!/usr/bin/env tsx
 
 /*
  * CIV.IQ - Civic Information Hub
@@ -428,9 +427,9 @@ class FinalProductionValidator {
 
     // Test 2: No sensitive data exposure
     const result = getCongressionalDistrictForZip('48221');
-    const hasNoSensitiveData = result && !JSON.stringify(result).includes('password') && 
+    const hasNoSensitiveData = Boolean(result && !JSON.stringify(result).includes('password') && 
                               !JSON.stringify(result).includes('secret') &&
-                              !JSON.stringify(result).includes('key');
+                              !JSON.stringify(result).includes('key'));
     
     tests.push({
       name: 'No Sensitive Data',

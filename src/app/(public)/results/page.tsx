@@ -643,21 +643,21 @@ function ResultsContent() {
             <div className="mt-4 space-y-2">
               <div className="flex items-center gap-3 text-sm flex-wrap">
                 <DataQualityIndicator
-                  quality={data.metadata.dataQuality}
-                  source={data.metadata.dataSource}
-                  freshness={data.metadata.freshness}
+                  quality={data.metadata?.dataQuality}
+                  source={data.metadata?.dataSource}
+                  freshness={data.metadata?.freshness}
                 />
-                <DataSourceBadge source={data.metadata.dataSource} showTrustLevel={true} />
+                <DataSourceBadge source={data.metadata?.dataSource} showTrustLevel={true} />
                 <InlineQualityScore 
                   score={85} 
                   label="Data Quality" 
                   showTrend={true}
                   trend="stable"
                 />
-                <DataTrustIndicator sources={[data.metadata.dataSource]} />
+                <DataTrustIndicator sources={data.metadata?.dataSource ? [data.metadata.dataSource] : []} />
               </div>
               <div className="text-xs text-gray-500">
-                Retrieved: {new Date(data.metadata.timestamp).toLocaleString()} • 
+                Retrieved: {data.metadata?.timestamp ? new Date(data.metadata.timestamp).toLocaleString() : 'Unknown'} • 
                 Status: validated • 
                 Cacheable: {data.metadata.cacheable ? 'yes' : 'no'}
               </div>
@@ -721,7 +721,7 @@ function ResultsContent() {
                     </>
                   )}
 
-                  {error && data?.error && data?.metadata && (
+                  {error && data && (
                     <ErrorState 
                       error={data.error}
                       metadata={data.metadata}
@@ -753,7 +753,7 @@ function ResultsContent() {
                       <div className="mt-8 text-center">
                         <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                           <span>Data sourced from:</span>
-                          <DataSourceBadge source={data.metadata.dataSource} />
+                          <DataSourceBadge source={data.metadata?.dataSource} />
                         </div>
                       </div>
                     </>

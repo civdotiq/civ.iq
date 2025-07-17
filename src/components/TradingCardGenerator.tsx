@@ -33,6 +33,7 @@ interface TradingCardGeneratorProps {
   onClose: () => void;
   onGenerated?: (result: CardGenerationResult) => void;
   customization?: any; // Will be properly typed when needed
+  cardId?: string;
 }
 
 export function TradingCardGenerator({ 
@@ -41,7 +42,8 @@ export function TradingCardGenerator({
   isOpen, 
   onClose, 
   onGenerated,
-  customization
+  customization,
+  cardId
 }: TradingCardGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState<string>('');
@@ -189,6 +191,7 @@ export function TradingCardGenerator({
                       representative={representative}
                       stats={stats}
                       customization={customization}
+                      cardId={cardId}
                     />
                   </div>
                 </div>
@@ -339,7 +342,8 @@ export function TradingCardGenerator({
                     </div>
                   )}
                 </div>
-              </div>
+                </div>
+              )}
 
               {/* Browser Support Info */}
               {browserSupport && (
@@ -368,7 +372,7 @@ export function TradingCardGenerator({
                 </div>
               )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Footer */}

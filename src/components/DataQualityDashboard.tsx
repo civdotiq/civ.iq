@@ -257,8 +257,19 @@ interface DataTrustIndicatorProps {
 }
 
 export function DataTrustIndicator({ sources, className = '' }: DataTrustIndicatorProps) {
+  // Defensive programming: handle missing sources prop at component level
+  const safeSources = sources || [];
+  
   const calculateTrustScore = (sources: string[]) => {
+    // Defensive programming: handle undefined, null, or empty sources
+    if (!sources || !Array.isArray(sources) || sources.length === 0) {
+      return 0; // Return 0 trust score for missing data
+    }
+    
     const trustScores = sources.map(source => {
+      // Defensive check for undefined/null source strings
+      if (!source || typeof source !== 'string') return 0;
+      
       if (source.includes('congress.gov') || source.includes('census')) return 95;
       if (source.includes('congress-legislators')) return 90;
       if (source.includes('fec')) return 85;
@@ -267,10 +278,13 @@ export function DataTrustIndicator({ sources, className = '' }: DataTrustIndicat
       return 50;
     });
     
+    // Additional check to prevent division by zero
+    if (trustScores.length === 0) return 0;
+    
     return Math.round(trustScores.reduce((sum, score) => sum + score, 0) / trustScores.length);
   };
 
-  const trustScore = calculateTrustScore(sources);
+  const trustScore = calculateTrustScore(safeSources);
   const getColor = (score: number) => {
     if (score >= 90) return 'text-green-600 bg-green-50 border-green-200';
     if (score >= 75) return 'text-blue-600 bg-blue-50 border-blue-200';
@@ -282,7 +296,7 @@ export function DataTrustIndicator({ sources, className = '' }: DataTrustIndicat
     <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border text-sm ${getColor(trustScore)} ${className}`}>
       <span className="font-medium">🛡️ Trust Score: {trustScore}%</span>
       <div className="flex gap-1">
-        {sources.map((source, index) => (
+        {safeSources.map((source, index) => (
           <DataSourceBadge key={index} source={source} className="text-xs" />
         ))}
       </div>

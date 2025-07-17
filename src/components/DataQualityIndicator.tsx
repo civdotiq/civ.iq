@@ -7,8 +7,8 @@
  */
 
 interface DataQualityIndicatorProps {
-  quality: 'high' | 'medium' | 'low' | 'unavailable';
-  source: string;
+  quality?: 'high' | 'medium' | 'low' | 'unavailable';
+  source?: string;
   freshness?: string;
   className?: string;
 }
@@ -39,6 +39,16 @@ function getFreshnessInfo(freshness?: string) {
 }
 
 export function DataQualityIndicator({ quality, source, freshness, className = '' }: DataQualityIndicatorProps) {
+  // Defensive programming: handle missing props gracefully
+  if (!quality || !source) {
+    return (
+      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-md border text-xs font-medium bg-gray-100 text-gray-800 border-gray-200 ${className}`}>
+        <span className="text-xs">?</span>
+        <span>Unknown Quality</span>
+      </div>
+    );
+  }
+
   const getQualityConfig = () => {
     switch (quality) {
       case 'high':
@@ -69,6 +79,13 @@ export function DataQualityIndicator({ quality, source, freshness, className = '
           label: 'Unavailable',
           description: 'Data could not be retrieved'
         };
+      default:
+        return {
+          color: 'bg-gray-100 text-gray-800 border-gray-200',
+          icon: '?',
+          label: 'Unknown Quality',
+          description: 'Quality status unknown'
+        };
     }
   };
 
@@ -89,12 +106,12 @@ export function DataQualityIndicator({ quality, source, freshness, className = '
 }
 
 interface ErrorStateProps {
-  error: {
+  error?: {
     code: string;
     message: string;
     details?: any;
   };
-  metadata: {
+  metadata?: {
     timestamp: string;
     zipCode: string;
     dataQuality: 'high' | 'medium' | 'low' | 'unavailable';
@@ -117,8 +134,48 @@ function getTimeAgo(timestamp: string): string {
 }
 
 export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
+  // Defensive programming: handle missing props gracefully
+  if (!error && !metadata) {
+    return (
+      <div className="p-6 rounded-lg border bg-red-50 border-red-200 text-red-800">
+        <div className="flex items-start gap-4">
+          <span className="text-2xl">❌</span>
+          <div className="flex-1">
+            <h3 className="font-semibold text-lg mb-2">Unknown Error</h3>
+            <p className="text-sm mb-4 opacity-90">An unexpected error occurred. Please try again.</p>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                Try Again
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Provide sensible defaults for missing error prop
+  const errorData = error || {
+    code: 'UNKNOWN_ERROR',
+    message: 'An unexpected error occurred',
+    details: null
+  };
+
+  // Provide sensible defaults for missing metadata prop
+  const metadataData = metadata || {
+    timestamp: new Date().toISOString(),
+    zipCode: 'unknown',
+    dataQuality: 'unavailable' as const,
+    dataSource: 'unknown',
+    cacheable: false,
+    freshness: undefined
+  };
+
   const getErrorIcon = () => {
-    switch (error.code) {
+    switch (errorData.code) {
       case 'DISTRICT_NOT_FOUND':
       case 'INVALID_ZIP_CODE':
         return '🔍';
@@ -135,7 +192,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
   };
 
   const getErrorSeverity = () => {
-    switch (error.code) {
+    switch (errorData.code) {
       case 'DISTRICT_NOT_FOUND':
       case 'INVALID_ZIP_CODE':
         return 'warning';
@@ -160,26 +217,26 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
       <div className="flex items-start gap-4">
         <span className="text-2xl">{getErrorIcon()}</span>
         <div className="flex-1">
-          <h3 className="font-semibold text-lg mb-2">{error.message}</h3>
+          <h3 className="font-semibold text-lg mb-2">{errorData.message}</h3>
           
-          {error.details && typeof error.details === 'string' && (
-            <p className="text-sm mb-4 opacity-90">{error.details}</p>
+          {errorData.details && typeof errorData.details === 'string' && (
+            <p className="text-sm mb-4 opacity-90">{errorData.details}</p>
           )}
           
-          {error.details && typeof error.details === 'object' && (
+          {errorData.details && typeof errorData.details === 'object' && (
             <div className="text-sm mb-4 opacity-90">
               <p className="font-medium mb-2">Additional Details:</p>
               <pre className="bg-black/10 p-2 rounded text-xs overflow-x-auto">
-                {JSON.stringify(error.details, null, 2)}
+                {JSON.stringify(errorData.details, null, 2)}
               </pre>
             </div>
           )}
 
           <div className="flex items-center gap-4 text-xs opacity-75 mb-4">
-            <span>Error Code: {error.code}</span>
-            <span>Occurred: {getTimeAgo(metadata.timestamp)}</span>
-            {metadata.freshness && <span>{metadata.freshness}</span>}
-            <DataSourceBadge source={metadata.dataSource} />
+            <span>Error Code: {errorData.code}</span>
+            <span>Occurred: {getTimeAgo(metadataData.timestamp)}</span>
+            {metadataData.freshness && <span>{metadataData.freshness}</span>}
+            <DataSourceBadge source={metadataData.dataSource} />
           </div>
 
           <div className="flex items-center gap-3">
@@ -192,9 +249,9 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
               </button>
             )}
             <DataQualityIndicator
-              quality={metadata.dataQuality}
-              source={metadata.dataSource}
-              freshness={metadata.freshness}
+              quality={metadataData.dataQuality}
+              source={metadataData.dataSource}
+              freshness={metadataData.freshness}
             />
           </div>
         </div>
@@ -204,12 +261,25 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
 }
 
 interface DataSourceBadgeProps {
-  source: string;
+  source?: string;
   className?: string;
   showTrustLevel?: boolean;
 }
 
 export function DataSourceBadge({ source, className = '', showTrustLevel = false }: DataSourceBadgeProps) {
+  // Defensive programming: handle missing source prop gracefully
+  if (!source) {
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800 ${className}`}>
+        <span className="text-xs">?</span>
+        Unknown Source
+        {showTrustLevel && (
+          <span className="text-xs opacity-75">(0% trust)</span>
+        )}
+      </span>
+    );
+  }
+
   const getSourceConfig = () => {
     if (source.includes('congress-legislators')) {
       return {

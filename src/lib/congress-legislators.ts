@@ -141,18 +141,22 @@ async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
     'congress-legislators-current',
     async () => {
       try {
+        console.log('[fetchCurrentLegislators] Starting fetch from congress-legislators...');
         structuredLogger.info('Fetching current legislators from congress-legislators')
         
         const response = await fetch(`${CONGRESS_LEGISLATORS_BASE_URL}/legislators-current.yaml`)
+        console.log(`[fetchCurrentLegislators] Response status: ${response.status} ${response.statusText}`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch legislators: ${response.status} ${response.statusText}`)
         }
         
         const yamlText = await response.text()
+        console.log(`[fetchCurrentLegislators] Downloaded ${yamlText.length} characters of YAML data`);
         
         // Parse YAML (simplified parser for this specific format)
         const legislators = parseCongressLegilatorsYAML(yamlText)
+        console.log(`[fetchCurrentLegislators] Parsed ${legislators.length} legislators from YAML`);
         
         structuredLogger.info('Successfully fetched current legislators', {
           count: legislators.length
@@ -160,6 +164,7 @@ async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
         
         return legislators
       } catch (error) {
+        console.error('[fetchCurrentLegislators] Error:', error);
         structuredLogger.error('Error fetching current legislators', error as Error)
         return []
       }
@@ -471,10 +476,13 @@ export async function getEnhancedRepresentative(bioguideId: string): Promise<Enh
  */
 export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresentative[]> {
   try {
+    console.log('[getAllEnhancedRepresentatives] Starting to fetch data...');
     const [legislators, socialMedia] = await Promise.all([
       fetchCurrentLegislators(),
       fetchSocialMediaData()
     ])
+    
+    console.log(`[getAllEnhancedRepresentatives] Fetched ${legislators.length} legislators and ${socialMedia.length} social media records`);
     
     const enhanced: EnhancedRepresentative[] = legislators.map(legislator => {
       const bioguideId = legislator.id.bioguide
@@ -549,12 +557,15 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
       }) as EnhancedRepresentative
     })
     
+    console.log(`[getAllEnhancedRepresentatives] Successfully processed ${enhanced.length} enhanced representatives`);
+    
     structuredLogger.info('Successfully got all enhanced representatives', {
       count: enhanced.length
     })
     
     return enhanced
   } catch (error) {
+    console.error('[getAllEnhancedRepresentatives] Error processing representatives:', error);
     structuredLogger.error('Error getting all enhanced representatives', error as Error)
     return []
   }

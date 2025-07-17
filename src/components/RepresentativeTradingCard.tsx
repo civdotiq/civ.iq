@@ -5,7 +5,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
 import RepresentativePhoto from './RepresentativePhoto';
 import { EnhancedRepresentative } from '@/types/representative';
 import { CardTheme, CardCustomization } from './CardCustomizationPanel';
@@ -22,9 +23,27 @@ interface TradingCardProps {
   stats: CardStat[];
   className?: string;
   customization?: CardCustomization;
+  cardId?: string;
 }
 
-export function RepresentativeTradingCard({ representative, stats, className = '', customization }: TradingCardProps) {
+export function RepresentativeTradingCard({ representative, stats, className = '', customization, cardId }: TradingCardProps) {
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
+
+  // Generate QR code when cardId is provided
+  useEffect(() => {
+    if (cardId && customization?.includeQRCode) {
+      const cardUrl = `https://civ.iq/c/${cardId}?utm_source=card&utm_medium=qr&utm_campaign=trading_card`;
+      QRCode.toDataURL(cardUrl, {
+        width: 80,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      }).then(setQrCodeDataUrl).catch(console.error);
+    }
+  }, [cardId, customization?.includeQRCode]);
+
   const getPartyColor = (party: string) => {
     switch (party?.toLowerCase()) {
       case 'republican':
@@ -162,20 +181,48 @@ export function RepresentativeTradingCard({ representative, stats, className = '
       {/* Footer */}
       <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
         <div className="flex items-center justify-between">
+          {/* Enhanced CIV.IQ Branding */}
           <div className="flex items-center space-x-2">
-            <svg className="w-4 h-4" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-              <rect x="36" y="51" width="28" height="30" fill="#0b983c"/>
-              <circle cx="50" cy="31" r="22" fill="#ffffff"/>
-              <circle cx="50" cy="31" r="20" fill="#e11d07"/>
-              <circle cx="38" cy="89" r="2" fill="#3ea2d4"/>
-              <circle cx="46" cy="89" r="2" fill="#3ea2d4"/>
-              <circle cx="54" cy="89" r="2" fill="#3ea2d4"/>
-              <circle cx="62" cy="89" r="2" fill="#3ea2d4"/>
-            </svg>
-            <span className="text-xs font-semibold text-gray-700">CIV.IQ</span>
+            <div className="relative">
+              <svg className="w-6 h-6" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <rect x="36" y="51" width="28" height="30" fill="#0b983c"/>
+                <circle cx="50" cy="31" r="22" fill="#ffffff"/>
+                <circle cx="50" cy="31" r="20" fill="#e11d07"/>
+                <circle cx="38" cy="89" r="2" fill="#3ea2d4"/>
+                <circle cx="46" cy="89" r="2" fill="#3ea2d4"/>
+                <circle cx="54" cy="89" r="2" fill="#3ea2d4"/>
+                <circle cx="62" cy="89" r="2" fill="#3ea2d4"/>
+              </svg>
+            </div>
+            <div>
+              <div className="text-sm font-bold text-gray-900">CIV.IQ</div>
+              <div className="text-xs text-gray-500">Civic Intelligence</div>
+            </div>
           </div>
-          <div className="text-xs text-gray-500">
-            {new Date().getFullYear()}
+
+          {/* Center section for URL or other info */}
+          <div className="flex-1 text-center">
+            {cardId && (
+              <div className="text-xs text-gray-600 font-mono">
+                civ.iq/c/{cardId}
+              </div>
+            )}
+          </div>
+
+          {/* QR Code and Year */}
+          <div className="flex items-center space-x-2">
+            {qrCodeDataUrl && customization?.includeQRCode && (
+              <div className="w-8 h-8 bg-white rounded border border-gray-200 p-1">
+                <img 
+                  src={qrCodeDataUrl} 
+                  alt="QR Code" 
+                  className="w-full h-full"
+                />
+              </div>
+            )}
+            <div className="text-xs text-gray-500">
+              {new Date().getFullYear()}
+            </div>
           </div>
         </div>
       </div>

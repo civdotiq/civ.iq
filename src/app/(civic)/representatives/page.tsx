@@ -336,9 +336,11 @@ function RepresentativesPageContent() {
     
     try {
       // Use the new transparent API endpoint
-      const apiUrl = zip ? `/api/representatives?zip=${zip}` : '/api/representatives/simple?zip=10001';
+      const apiUrl = zip ? `/api/representatives?zip=${zip}` : '/api/representatives?zip=10001';
+      console.log('[Representatives Page] Fetching from:', apiUrl);
       const response = await fetch(apiUrl);
       const data = await response.json();
+      console.log('[Representatives Page] Response:', data);
       
       // Store metadata for transparency
       setApiMetadata(data.metadata);

@@ -59,7 +59,9 @@
       "Bash(npm audit:*)",
       "Bash(cut:*)",
       "Bash(tsx scripts/validate-119th-congress-data.ts:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(git rm:*)",
+      "Bash(wc:*)"
     ],
     "deny": []
   }
