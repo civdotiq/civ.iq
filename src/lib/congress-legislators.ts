@@ -255,7 +255,7 @@ function parseSocialMediaYAML(yamlText: string): CongressLegislatorSocialMedia[]
 /**
  * Fetch committee membership data
  */
-async function fetchCommitteeMemberships(): Promise<CongressCommitteeMembership[]> {
+export async function fetchCommitteeMemberships(): Promise<CongressCommitteeMembership[]> {
   return cachedFetch(
     'congress-committee-memberships',
     async () => {
@@ -320,7 +320,7 @@ async function fetchCommitteeMemberships(): Promise<CongressCommitteeMembership[
 /**
  * Fetch committee data
  */
-async function fetchCommittees(): Promise<CongressCommittee[]> {
+export async function fetchCommittees(): Promise<CongressCommittee[]> {
   return cachedFetch(
     'congress-committees-current',
     async () => {

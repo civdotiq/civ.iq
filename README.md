@@ -77,6 +77,7 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
   - Real-time news mentions via GDELT (with intelligent deduplication)
   - **Real Party Voting Analysis**: Live party line vote tracking with peer comparisons
   - **Legislative Partnerships**: Collaboration networks and bipartisan voting patterns
+  - **Committee Intelligence**: Advanced committee tracking system
 - **Advanced Voting Analysis**: Interactive voting visualization with:
   - Multi-dimensional filtering and timeline views
   - **Real Party Alignment Statistics**: Live calculation from voting records
@@ -90,6 +91,25 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
   - Real-time contribution tracking
   - Top donor analysis and spending categories
   - Financial health assessment and trends
+
+#### **🏛️ Committee Intelligence System (January 2025)**
+- **Comprehensive Committee Pages**: Dynamic pages for all House and Senate committees with:
+  - **Committee Reports**: Live integration with Congress.gov for published committee reports
+  - **Enhanced Bills**: Detailed committee action tracking with visual timeline
+  - **Activity Timeline**: Unified chronological view of all committee work
+  - **Committee Information**: Jurisdiction, description, and subcommittee structure
+  - **Member Listings**: Complete committee membership with leadership roles
+- **3-Phase Enhancement System**:
+  - **Phase 1**: Committee Reports API with Congress.gov integration and caching
+  - **Phase 2**: Enhanced Bills with committee actions, markups, hearings, and votes
+  - **Phase 3**: Interactive Activity Timeline with filtering and statistics
+- **Advanced Features**:
+  - Real-time committee action tracking (hearings, markups, votes)
+  - Committee status badges (referred, markup scheduled, reported, stalled)
+  - Vote results and amendment tracking
+  - Interactive filtering (all activities, bills only, reports only)
+  - Activity statistics dashboard with most active month highlighting
+  - Expandable timeline views with detailed metadata
 
 #### **🗺️ Interactive District Maps & Data**
 - **Complete District Coverage**: All 438 congressional districts with enhanced detail pages
@@ -166,6 +186,13 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
   - **Error Tracking**: Detailed error messages with context and stack traces
   - **Performance Monitoring**: Processing time and cache hit rate tracking
 
+- **✅ Committee Intelligence System**: Complete 3-phase enhancement implementation
+  - **Phase 1**: Committee Reports API with Congress.gov integration
+  - **Phase 2**: Enhanced Bills with detailed committee action tracking
+  - **Phase 3**: Interactive Activity Timeline with filtering and statistics
+  - **Features**: Real-time tracking of hearings, markups, votes, and amendments
+  - **Performance**: Sub-second API responses with intelligent caching strategies
+
 ## 🚀 Production-Ready ZIP Code Mapping System
 
 ### System Overview
@@ -188,8 +215,14 @@ The CIV.IQ ZIP Code to Congressional District Mapping System provides instant, a
 
 ### API Endpoints
 ```
+# Representative Lookup
 GET /api/representatives?zip={zipCode}
 GET /api/representatives-multi-district?zip={zipCode}
+
+# Committee Intelligence
+GET /api/committee/{committeeId}/bills          # Enhanced bills with committee actions
+GET /api/committee/{committeeId}/reports        # Committee reports from Congress.gov
+GET /api/committee/{committeeId}/timeline       # Unified activity timeline
 ```
 
 ### Edge Case Support

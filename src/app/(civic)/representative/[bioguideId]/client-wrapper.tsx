@@ -6,6 +6,7 @@
  */
 
 import { useState, Suspense, ComponentType } from 'react';
+import Link from 'next/link';
 import { ErrorBoundary, LoadingErrorBoundary } from '@/components/ErrorBoundary';
 import { BillsTracker } from '@/components/BillsTracker';
 import { EnhancedVotingChart } from '@/components/EnhancedVotingChart';
@@ -324,16 +325,12 @@ export function RepresentativeProfileClient({
                       {representative.committees.map((committee: any, idx: number) => (
                         <div key={idx} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                           <div className="flex items-center justify-between mb-2">
-                            <a 
-                              href={`https://www.congress.gov/committees/${
-                                representative.chamber === 'Senate' ? 'senate' : 'house'
-                              }/${committee.name?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <Link 
+                              href={`/committee/${committee.thomas_id || committee.id || 'unknown'}`}
                               className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
                             >
                               {committee.name || 'Unknown Committee'}
-                            </a>
+                            </Link>
                             {committee.role && (
                               <span className={`text-xs px-2 py-1 rounded ${
                                 committee.role === 'Chair' ? 'bg-green-100 text-green-800' :
@@ -346,9 +343,9 @@ export function RepresentativeProfileClient({
                           </div>
                           <div className="flex items-center text-xs text-gray-500">
                             <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            <span>Click to view committee details on Congress.gov</span>
+                            <span>Click to view committee members and details</span>
                           </div>
                         </div>
                       ))}
