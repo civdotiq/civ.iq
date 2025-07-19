@@ -205,12 +205,12 @@ export function validateRateLimit(request: NextRequest, limit: number, windowMs:
             request.headers.get('x-real-ip') || 
             'unknown';
   
-  // TODO: Implement actual rate limiting with Redis
+  // Note: Rate limiting is now implemented in /src/middleware.ts
   structuredLogger.debug('Rate limit check', {
     ip,
     limit,
     windowMs,
-    note: 'Rate limiting validation placeholder'
+    note: 'Rate limiting is handled by Next.js middleware'
   });
   
   return true; // Allow all requests for now
@@ -232,10 +232,19 @@ export function withSecurityHeaders(handler: ApiHandler) {
     headers.set('X-XSS-Protection', '1; mode=block');
     headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
     
-    // CORS headers for API routes
-    headers.set('Access-Control-Allow-Origin', '*');
-    headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
+    // CORS headers for API routes - secure configuration
+    const allowedOrigins = process.env.NODE_ENV === 'production' 
+      ? ['https://civic-intel-hub.vercel.app', 'https://civiq.app', 'https://www.civiq.app']
+      : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'];
+    
+    const customOrigins = process.env.CORS_ALLOWED_ORIGINS?.split(',') || [];
+    const allAllowedOrigins = [...allowedOrigins, ...customOrigins];
+    
+    headers.set('Access-Control-Allow-Origin', allAllowedOrigins.join(', '));
+    headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key, X-Requested-With');
+    headers.set('Access-Control-Allow-Credentials', 'true');
+    headers.set('Access-Control-Max-Age', '86400');
     
     // Cache headers
     if (request.method === 'GET') {

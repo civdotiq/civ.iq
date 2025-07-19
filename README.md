@@ -30,6 +30,14 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 - **💾 Perfect Caching**: 100% cache hit rate with multi-layer optimization
 - **📊 Real-Time Monitoring**: Performance metrics and health tracking
 
+#### **🗳️ Multi-District ZIP Support** *(NEW - January 2025)*
+- **🎯 Intelligent Detection**: Automatically identifies 6,569 ZIP codes spanning multiple districts
+- **🎴 Visual Selection**: User-friendly district cards with representative previews
+- **🏠 Address Refinement**: Precise geocoding for exact district matching using Census API
+- **⭐ Smart Defaults**: Population-weighted primary district recommendations
+- **🔄 Easy Switching**: Change district selection without losing context
+- **📱 Mobile Optimized**: Touch-friendly selection interface for all devices
+
 #### **🎴 Trading Card System**
 - **✅ Accurate Party Data**: Fixed hardcoded party assignments - now pulls live data from congress-legislators
 - **🔍 Data Validation**: Comprehensive validation with error reporting and quality indicators
@@ -218,6 +226,7 @@ The CIV.IQ ZIP Code to Congressional District Mapping System provides instant, a
 # Representative Lookup
 GET /api/representatives?zip={zipCode}
 GET /api/representatives-multi-district?zip={zipCode}
+GET /api/search?q={query}                       # NEW: Unified ZIP & address search
 
 # Committee Intelligence
 GET /api/committee/{committeeId}/bills          # Enhanced bills with committee actions

@@ -8,6 +8,7 @@ import "./globals.css";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { ChunkErrorHandler } from "@/components/ChunkErrorHandler";
+import { GlobalErrorBoundary } from "@/components/error-boundaries";
 
 export const metadata: Metadata = {
   title: "CIV.IQ - Civic Information Hub",
@@ -92,10 +93,12 @@ export default function RootLayout({
         <link rel="apple-touch-startup-image" href="/splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
       </head>
       <body className="antialiased">
-        <ServiceWorkerRegistration />
-        <InstallPrompt />
-        <ChunkErrorHandler />
-        {children}
+        <GlobalErrorBoundary>
+          <ServiceWorkerRegistration />
+          <InstallPrompt />
+          <ChunkErrorHandler />
+          {children}
+        </GlobalErrorBoundary>
       </body>
     </html>
   );

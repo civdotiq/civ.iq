@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import { RollCallParser } from '@/lib/rollcall-parser';
 import { getEnhancedRepresentative } from '@/lib/congress-legislators';
-import { structuredLogger } from '@/lib/logging/logger';
+import { structuredLogger, createRequestLogger } from '@/lib/logging/logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
 interface Vote {
@@ -142,7 +142,8 @@ export async function GET(
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const { bioguideId } = await params;
-  console.log('VOTES API CALLED:', bioguideId);
+  const logger = createRequestLogger(request, `votes-${bioguideId}`);
+  logger.info('Votes API called', { bioguideId });
   const { searchParams } = new URL(request.url);
   const limit = parseInt(searchParams.get('limit') || '20');
 
@@ -178,12 +179,15 @@ export async function GET(
     });
 
     // Force fallback to mock data since Congress.gov API doesn't have direct voting endpoints
-    console.log('Congress.gov URL that would be attempted:', `https://api.congress.gov/v3/member/${bioguideId}/votes?api_key=${process.env.CONGRESS_API_KEY}`);
-    console.log('This endpoint returns 404 - Congress.gov does not provide direct member voting data');
+    structuredLogger.info('Congress.gov voting endpoint not available', {
+      bioguideId,
+      attemptedUrl: `https://api.congress.gov/v3/member/${bioguideId}/votes`,
+      reason: 'Congress.gov does not provide direct member voting endpoints'
+    });
     throw new Error('Congress.gov API does not provide direct member voting endpoints - using enhanced demo data');
 
   } catch (error) {
-    console.error('API Error:', error);
+    structuredLogger.error('Votes API error', error as Error, { bioguideId });
     
     // Get member chamber info for mock data
     let memberChamber = 'House';

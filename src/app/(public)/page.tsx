@@ -6,11 +6,10 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Search, ArrowRight } from 'lucide-react';
-import { SearchHistory, SearchHistoryItem } from '@/lib/searchHistory';
+import { ArrowRight } from 'lucide-react';
+import { SmartSearchInput } from '@/components/search/SmartSearchInput';
 
 function CiviqLogo({ className = "w-10 h-15" }: { className?: string }) {
   return (
@@ -41,125 +40,8 @@ function CiviqLogo({ className = "w-10 h-15" }: { className?: string }) {
 }
 
 export default function Home() {
-  const [searchInput, setSearchInput] = useState('');
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-  const [showInputFeedback, setShowInputFeedback] = useState(false);
   const router = useRouter();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setSearchHistory(SearchHistory.getHistory());
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
-          inputRef.current && !inputRef.current.contains(event.target as Node)) {
-        setShowHistory(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-
-  const handleSearch = () => {
-    if (isSearching) return; // Prevent double-clicking during search
-    
-    if (!searchInput.trim()) {
-      // Focus the input and show feedback if empty
-      inputRef.current?.focus();
-      setShowInputFeedback(true);
-      setTimeout(() => setShowInputFeedback(false), 3000);
-      return;
-    }
-    
-    setIsSearching(true);
-    SearchHistory.addSearch(searchInput.trim());
-    setSearchHistory(SearchHistory.getHistory());
-    setShowHistory(false);
-    
-    const isZipCode = /^\d{5}$/.test(searchInput.trim());
-    const isAddress = !isZipCode && searchInput.trim().length > 5;
-    
-    // Use router.push for more reliable navigation
-    try {
-      if (isZipCode) {
-        router.push(`/results?zip=${encodeURIComponent(searchInput.trim())}`);
-      } else if (isAddress) {
-        router.push(`/results?address=${encodeURIComponent(searchInput.trim())}`);
-      } else {
-        router.push(`/representatives?search=${encodeURIComponent(searchInput.trim())}`);
-      }
-    } catch (error) {
-      console.error('Navigation failed:', error);
-      setIsSearching(false);
-    }
-    
-    // Failsafe reset after 5 seconds
-    setTimeout(() => {
-      setIsSearching(false);
-    }, 5000);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    } else if (e.key === 'Escape') {
-      setShowHistory(false);
-    }
-  };
-
-  const handleInputFocus = () => {
-    if (searchHistory.length > 0) {
-      setShowHistory(true);
-    }
-  };
-
-  const handleHistoryItemClick = (historyValue: string) => {
-    if (!isSearching) {
-      setIsSearching(true);
-      setSearchInput(historyValue);
-      setShowHistory(false);
-      SearchHistory.addSearch(historyValue);
-      setSearchHistory(SearchHistory.getHistory());
-      
-      const isZipCode = /^\d{5}$/.test(historyValue);
-      const isAddress = !isZipCode && historyValue.length > 5;
-      
-      try {
-        if (isZipCode) {
-          router.push(`/results?zip=${encodeURIComponent(historyValue)}`);
-        } else if (isAddress) {
-          router.push(`/results?address=${encodeURIComponent(historyValue)}`);
-        } else {
-          router.push(`/representatives?search=${encodeURIComponent(historyValue)}`);
-        }
-      } catch (error) {
-        console.error('Navigation failed:', error);
-        setIsSearching(false);
-      }
-      
-      // Failsafe reset after 5 seconds
-      setTimeout(() => {
-        setIsSearching(false);
-      }, 5000);
-    }
-  };
-
-  const handleRemoveHistoryItem = (e: React.MouseEvent, value: string) => {
-    e.stopPropagation();
-    SearchHistory.removeSearch(value);
-    setSearchHistory(SearchHistory.getHistory());
-  };
-
-  const handleClearHistory = () => {
-    SearchHistory.clearHistory();
-    setSearchHistory([]);
-    setShowHistory(false);
-  };
 
   return (
     <>
@@ -214,103 +96,27 @@ export default function Home() {
           <div className="max-w-2xl mx-auto relative animate-fade-in-up" style={{animationDelay: '600ms'}}>
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-[#3ea2d4]/20 to-[#0a9338]/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
-              <div className="relative flex shadow-2xl rounded-xl overflow-hidden border border-gray-200 bg-white">
-                <div className="relative flex-1">
-                  <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400 pointer-events-none transition-colors duration-200" />
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    placeholder="Enter ZIP code or address (e.g., 10001 or 123 Main St, City, State)"
-                    value={searchInput}
-                    onChange={(e) => {
-                      setSearchInput(e.target.value);
-                      setShowInputFeedback(false); // Hide feedback when user starts typing
-                    }}
-                    onKeyPress={handleKeyPress}
-                    onFocus={handleInputFocus}
-                    onBlur={() => setTimeout(() => setShowHistory(false), 200)}
-                    className={`w-full pl-16 pr-6 py-6 text-lg focus:outline-none focus:bg-gray-50/50 transition-all duration-300 placeholder:text-gray-400 ${
-                      showInputFeedback ? 'ring-2 ring-[#e11d07] ring-opacity-50' : ''
-                    }`}
-                  />
-                </div>
-                <button 
-                  onClick={handleSearch}
-                  disabled={isSearching}
-                  className={`${
-                    isSearching 
-                      ? 'bg-gray-300 cursor-not-allowed' 
-                      : searchInput.trim() 
-                        ? 'bg-[#3ea2d4] hover:bg-[#3ea2d4]/90' 
-                        : 'bg-[#3ea2d4]/60 hover:bg-[#3ea2d4]/80'
-                  } text-white px-8 py-6 font-semibold text-lg transition-all duration-300 flex items-center gap-3 group/btn`}
-                  title={isSearching ? "Search in progress..." : !searchInput.trim() ? "Enter a ZIP code or address to search" : "Click to find representatives"}
-                >
-                  {isSearching ? (
-                    <>
-                      <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                        <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                        <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
-                      </div>
-                      <span>Searching</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Find Representatives</span>
-                      <ArrowRight className="w-5 h-5 transform transition-transform group-hover/btn:translate-x-1" />
-                    </>
-                  )}
-                </button>
+              <div className="relative shadow-2xl rounded-xl overflow-hidden border border-gray-200 bg-white">
+                <SmartSearchInput
+                  placeholder="Enter ZIP code or address (e.g., 10001 or 123 Main St, City, State)"
+                  className="w-full"
+                  showRecentSearches={true}
+                  showExamples={true}
+                  onSearch={(value) => {
+                    const isZipCode = /^\d{5}$/.test(value.trim());
+                    const isAddress = !isZipCode && value.trim().length > 5;
+                    
+                    if (isZipCode) {
+                      router.push(`/results?zip=${encodeURIComponent(value.trim())}`);
+                    } else if (isAddress) {
+                      router.push(`/results?address=${encodeURIComponent(value.trim())}`);
+                    } else {
+                      router.push(`/representatives?search=${encodeURIComponent(value.trim())}`);
+                    }
+                  }}
+                />
               </div>
             </div>
-            
-            {showInputFeedback && (
-              <div className="absolute top-full left-0 right-0 mt-2 text-center">
-                <div className="inline-block px-4 py-2 bg-[#e11d07] text-white text-sm rounded-lg shadow-lg animate-fade-in-down">
-                  Please enter a ZIP code or address to search for representatives
-                </div>
-              </div>
-            )}
-            
-            {showHistory && searchHistory.length > 0 && (
-              <div 
-                ref={dropdownRef}
-                className="absolute top-full left-0 right-0 mt-4 bg-white border border-gray-200 rounded-xl shadow-2xl z-10 max-h-64 overflow-y-auto animate-fade-in-down backdrop-blur-sm"
-              >
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                  <span className="text-sm font-semibold text-gray-700">Recent Searches</span>
-                  <button
-                    onClick={handleClearHistory}
-                    className="text-xs text-gray-500 hover:text-[#e11d07] transition-colors font-medium"
-                  >
-                    Clear All
-                  </button>
-                </div>
-                
-                {searchHistory.map((item, index) => (
-                  <div
-                    key={`${item.zipCode}-${index}`}
-                    onClick={() => handleHistoryItemClick(item.zipCode)}
-                    className="px-6 py-4 hover:bg-blue-50/50 cursor-pointer flex items-center justify-between group transition-all duration-200"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Search className="w-4 h-4 text-gray-400 group-hover:text-[#3ea2d4] transition-colors" />
-                      <span className="text-gray-700 font-medium">{item.zipCode}</span>
-                      {item.displayName && (
-                        <span className="text-sm text-gray-500">• {item.displayName}</span>
-                      )}
-                    </div>
-                    <button
-                      onClick={(e) => handleRemoveHistoryItem(e, item.zipCode)}
-                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all text-lg leading-none px-2 py-1 rounded hover:bg-red-50"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </section>

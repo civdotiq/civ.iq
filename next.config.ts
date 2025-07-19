@@ -27,7 +27,7 @@ const nextConfig: NextConfig = {
     ],
   },
   // Configure webpack to handle dynamic imports and Leaflet properly
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
     // Handle Leaflet on the client side only
     if (!isServer) {
       config.resolve.fallback = {
@@ -38,6 +38,27 @@ const nextConfig: NextConfig = {
       };
     }
     
+    // Strip console statements in production
+    if (!dev) {
+      config.optimization.minimize = true;
+      config.optimization.usedExports = true;
+      
+      // Remove console statements in production
+      if (config.optimization.minimizer) {
+        const TerserPlugin = require('terser-webpack-plugin');
+        config.optimization.minimizer.push(
+          new TerserPlugin({
+            terserOptions: {
+              compress: {
+                drop_console: true,
+                drop_debugger: true,
+              },
+            },
+          })
+        );
+      }
+    }
+    
     return config;
   },
   // Enable experimental features for better dynamic imports
@@ -45,21 +66,47 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['leaflet', 'react-leaflet'],
   },
   async headers() {
+    // Define secure CORS origins based on environment
+    const allowedOrigins = process.env.NODE_ENV === 'production' 
+      ? [
+          'https://civic-intel-hub.vercel.app',
+          'https://civiq.app',
+          'https://www.civiq.app'
+        ]
+      : [
+          'http://localhost:3000',
+          'http://localhost:3001',
+          'http://127.0.0.1:3000',
+          'http://127.0.0.1:3001'
+        ];
+
+    // Add custom origins from environment variable
+    const customOrigins = process.env.CORS_ALLOWED_ORIGINS?.split(',') || [];
+    const allAllowedOrigins = [...allowedOrigins, ...customOrigins];
+
     return [
       {
         source: '/api/:path*',
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            value: '*',
+            value: allAllowedOrigins.join(', '),
           },
           {
             key: 'Access-Control-Allow-Methods',
-            value: 'GET, POST, PUT, DELETE, OPTIONS',
+            value: 'GET, POST, OPTIONS',
           },
           {
             key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization',
+            value: 'Content-Type, Authorization, X-Requested-With',
+          },
+          {
+            key: 'Access-Control-Allow-Credentials',
+            value: 'true',
+          },
+          {
+            key: 'Access-Control-Max-Age',
+            value: '86400',
           },
         ],
       },

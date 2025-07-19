@@ -363,7 +363,7 @@ export function calculateIndustryStats(
         percentage,
         contributorCount: contributions.length,
         topEmployers,
-        trend: 'stable' as const // TODO: Calculate actual trend based on historical data
+        trend: calculateTrend(industryData) // Calculate trend based on historical data
       };
     })
     .sort((a, b) => b.amount - a.amount);
@@ -391,6 +391,34 @@ export function calculateIndustryDiversityScore(
   const diversityScore = Math.max(0, 100 - (hhi * 100));
   
   return Math.round(diversityScore);
+}
+
+/**
+ * Calculate trend based on historical data
+ */
+function calculateTrend(industryData: any): 'up' | 'down' | 'stable' {
+  // For now, implement a simple trend calculation
+  // In production, this would analyze historical contribution data
+  
+  if (!industryData || !Array.isArray(industryData) || industryData.length === 0) {
+    return 'stable';
+  }
+  
+  // Simple trend calculation based on recent vs older contributions
+  const recentContributions = industryData.slice(-Math.ceil(industryData.length / 3));
+  const olderContributions = industryData.slice(0, Math.floor(industryData.length / 3));
+  
+  const recentTotal = recentContributions.reduce((sum: number, c: any) => sum + (c.amount || 0), 0);
+  const olderTotal = olderContributions.reduce((sum: number, c: any) => sum + (c.amount || 0), 0);
+  
+  const recentAvg = recentTotal / Math.max(1, recentContributions.length);
+  const olderAvg = olderTotal / Math.max(1, olderContributions.length);
+  
+  const changePercent = ((recentAvg - olderAvg) / Math.max(1, olderAvg)) * 100;
+  
+  if (changePercent > 10) return 'up';
+  if (changePercent < -10) return 'down';
+  return 'stable';
 }
 
 /**

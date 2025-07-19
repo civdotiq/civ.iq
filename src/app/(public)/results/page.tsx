@@ -17,6 +17,9 @@ import { InteractiveDistrictMap } from '@/components/InteractiveDistrictMap';
 import { DataQualityIndicator, ErrorState, DataSourceBadge } from '@/components/DataQualityIndicator';
 import { InlineQualityScore, DataTrustIndicator } from '@/components/DataQualityDashboard';
 import RepresentativePhoto from '@/components/RepresentativePhoto';
+import { DistrictSelector } from '@/components/multi-district/DistrictSelector';
+import { AddressRefinement } from '@/components/multi-district/AddressRefinement';
+import { checkMultiDistrict, getDistrictsForZip, DistrictInfo, MultiDistrictResponse } from '@/lib/multi-district/detection';
 
 function CiviqLogo() {
   return (
@@ -504,6 +507,7 @@ function ResultsContent() {
   const searchParams = useSearchParams();
   const zipCode = searchParams.get('zip');
   const address = searchParams.get('address');
+  const query = searchParams.get('q');
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -512,10 +516,13 @@ function ResultsContent() {
   const [districtInfo, setDistrictInfo] = useState<{state: string; district: string} | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchType, setSearchType] = useState<'zip' | 'address' | 'unknown'>('unknown');
+  const [multiDistrictData, setMultiDistrictData] = useState<MultiDistrictResponse | null>(null);
+  const [showAddressRefinement, setShowAddressRefinement] = useState(false);
+  const [selectedDistrict, setSelectedDistrict] = useState<DistrictInfo | null>(null);
 
-  const fetchRepresentatives = async () => {
-    const query = zipCode || address;
-    if (!query) {
+  const fetchRepresentatives = async (selectedDistrictOverride?: DistrictInfo) => {
+    const searchQuery = query || zipCode || address;
+    if (!searchQuery) {
       setError('No search query provided');
       setLoading(false);
       return;
@@ -523,15 +530,140 @@ function ResultsContent() {
 
     try {
       setLoading(true);
-      setSearchQuery(query);
+      setSearchQuery(searchQuery);
       
       // Determine search type
-      const isZipCode = /^\d{5}$/.test(query);
+      const isZipCode = /^\d{5}$/.test(searchQuery);
       const currentSearchType = isZipCode ? 'zip' : 'address';
       setSearchType(currentSearchType);
       
-      // Use enhanced search endpoint
-      const response = await fetch(`/api/representatives-search?q=${encodeURIComponent(query)}`);
+      // For ZIP codes, check if multi-district first
+      if (isZipCode && !selectedDistrictOverride) {
+        const multiDistrictCheck = await checkMultiDistrict(searchQuery);
+        
+        if (multiDistrictCheck.success && multiDistrictCheck.isMultiDistrict) {
+          // Multi-district ZIP - show district selector
+          setMultiDistrictData(multiDistrictCheck);
+          setLoading(false);
+          return;
+        } else if (multiDistrictCheck.success && !multiDistrictCheck.isMultiDistrict) {
+          // Single district - continue with normal flow using multi-district API for consistency
+          const response = await fetch(`/api/representatives-multi-district?zip=${encodeURIComponent(searchQuery)}`);
+          const apiData: MultiDistrictResponse = await response.json();
+          
+          if (apiData.success && apiData.representatives) {
+            // Convert multi-district response to legacy format
+            const legacyData: ApiResponse = {
+              success: true,
+              representatives: apiData.representatives.map(rep => ({
+                bioguideId: rep.bioguideId,
+                name: rep.name,
+                party: rep.party,
+                state: rep.state,
+                district: rep.district,
+                chamber: rep.chamber as 'House' | 'Senate',
+                title: rep.title,
+                phone: rep.phone,
+                email: '', // Not in multi-district response
+                website: rep.website,
+                committees: [],
+                terms: [],
+                yearsInOffice: 0,
+                nextElection: '',
+                imageUrl: '',
+                dataComplete: 85
+              })),
+              metadata: {
+                timestamp: apiData.metadata.timestamp,
+                zipCode: searchQuery,
+                dataQuality: apiData.metadata.coverage.dataQuality,
+                dataSource: apiData.metadata.dataSource,
+                cacheable: true,
+                freshness: 'live'
+              }
+            };
+            
+            setData(legacyData);
+            setError(null);
+            
+            // Set district info
+            if (apiData.primaryDistrict) {
+              setDistrictInfo({
+                state: apiData.primaryDistrict.state,
+                district: apiData.primaryDistrict.district
+              });
+            }
+            
+            setLoading(false);
+            return;
+          }
+        }
+      }
+      
+      // Handle selected district override (user chose from multi-district)
+      if (selectedDistrictOverride) {
+        const response = await fetch(
+          `/api/representatives-multi-district?zip=${encodeURIComponent(searchQuery)}&district=${selectedDistrictOverride.state}-${selectedDistrictOverride.district}`
+        );
+        const apiData: MultiDistrictResponse = await response.json();
+        
+        if (apiData.success && apiData.representatives) {
+          // Convert to legacy format and continue
+          const legacyData: ApiResponse = {
+            success: true,
+            representatives: apiData.representatives.map(rep => ({
+              bioguideId: rep.bioguideId,
+              name: rep.name,
+              party: rep.party,
+              state: rep.state,
+              district: rep.district,
+              chamber: rep.chamber as 'House' | 'Senate',
+              title: rep.title,
+              phone: rep.phone,
+              email: '',
+              website: rep.website,
+              committees: [],
+              terms: [],
+              yearsInOffice: 0,
+              nextElection: '',
+              imageUrl: '',
+              dataComplete: 85
+            })),
+            metadata: {
+              timestamp: apiData.metadata.timestamp,
+              zipCode: searchQuery,
+              dataQuality: apiData.metadata.coverage.dataQuality,
+              dataSource: apiData.metadata.dataSource,
+              cacheable: true,
+              freshness: 'live'
+            }
+          };
+          
+          setData(legacyData);
+          setError(null);
+          setMultiDistrictData(null); // Clear multi-district selector
+          setSelectedDistrict(selectedDistrictOverride);
+          
+          // Set district info
+          setDistrictInfo({
+            state: selectedDistrictOverride.state,
+            district: selectedDistrictOverride.district
+          });
+          
+          setLoading(false);
+          return;
+        }
+      }
+      
+      // Fallback to original search system for non-ZIP or failed cases
+      let response;
+      if (query) {
+        // New search system
+        response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+      } else {
+        // Legacy ZIP/address endpoints
+        response = await fetch(`/api/representatives-search?q=${encodeURIComponent(searchQuery)}`);
+      }
       const apiData: ApiResponse = await response.json();
       
       setData(apiData);
@@ -578,11 +710,30 @@ function ResultsContent() {
     }
   };
 
+  const handleDistrictSelect = async (district: DistrictInfo) => {
+    setSelectedDistrict(district);
+    await fetchRepresentatives(district);
+  };
+
+  const handleAddressRefinement = () => {
+    setShowAddressRefinement(true);
+  };
+
+  const handleAddressSuccess = async (state: string, district: string, address: string) => {
+    const districtInfo: DistrictInfo = { state, district };
+    setShowAddressRefinement(false);
+    await fetchRepresentatives(districtInfo);
+  };
+
+  const handleAddressCancel = () => {
+    setShowAddressRefinement(false);
+  };
+
   useEffect(() => {
-    if (zipCode) {
+    if (zipCode || address || query) {
       fetchRepresentatives();
     }
-  }, [zipCode]);
+  }, [zipCode, address, query]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -631,9 +782,19 @@ function ResultsContent() {
           </h1>
           <p className="text-gray-600">
             Representatives for {searchType === 'zip' ? 'ZIP code' : 'address'} <span className="font-semibold">{searchQuery}</span>
-            {districtInfo && (
+            {selectedDistrict && (
+              <span className="ml-2 text-civiq-blue font-semibold">
+                • {selectedDistrict.state}-{selectedDistrict.district} Selected
+              </span>
+            )}
+            {districtInfo && !selectedDistrict && (
               <span className="ml-2">
                 • {districtInfo.state} {districtInfo.district && districtInfo.district !== '00' && `District ${districtInfo.district}`}
+              </span>
+            )}
+            {multiDistrictData && !selectedDistrict && (
+              <span className="ml-2 text-orange-600">
+                • Multiple districts found - please select
               </span>
             )}
           </p>
@@ -666,7 +827,7 @@ function ResultsContent() {
         </div>
 
         {/* Tab Navigation */}
-        {zipCode && (
+        {(zipCode || query) && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-8">
             <div className="border-b border-gray-200">
               <nav className="flex">
@@ -706,7 +867,31 @@ function ResultsContent() {
             <div className="p-6">
               {activeTab === 'federal' && (
                 <>
-                  {loading && (
+                  {/* Multi-District Selection */}
+                  {multiDistrictData && !showAddressRefinement && (
+                    <div className="mb-8">
+                      <DistrictSelector
+                        zipCode={multiDistrictData.zipCode}
+                        districts={multiDistrictData.districts}
+                        representatives={multiDistrictData.representatives}
+                        onSelect={handleDistrictSelect}
+                        onRefineAddress={handleAddressRefinement}
+                      />
+                    </div>
+                  )}
+
+                  {/* Address Refinement */}
+                  {showAddressRefinement && (
+                    <div className="mb-8">
+                      <AddressRefinement
+                        zipCode={searchQuery}
+                        onSuccess={handleAddressSuccess}
+                        onCancel={handleAddressCancel}
+                      />
+                    </div>
+                  )}
+
+                  {loading && !(multiDistrictData && !showAddressRefinement) && (
                     <>
                       <div className="text-center py-8">
                         <LoadingSpinner size="lg" />
@@ -744,6 +929,23 @@ function ResultsContent() {
 
                   {data?.success && data.representatives && (
                     <>
+                      {/* Change District Option */}
+                      {selectedDistrict && multiDistrictData && (
+                        <div className="mb-6 text-center">
+                          <button
+                            onClick={() => {
+                              setSelectedDistrict(null);
+                              setData(null);
+                              setMultiDistrictData(multiDistrictData); // Restore multi-district selection
+                            }}
+                            className="text-sm text-civiq-blue hover:text-civiq-blue/80 transition-colors inline-flex items-center space-x-1"
+                          >
+                            <span>🔄</span>
+                            <span>Change selected district</span>
+                          </button>
+                        </div>
+                      )}
+
                       <div className="space-y-6">
                         {data.representatives.map((rep, index) => (
                           <RepresentativeCard key={`${rep.name}-${index}`} representative={rep} />
@@ -761,11 +963,11 @@ function ResultsContent() {
                 </>
               )}
 
-              {activeTab === 'state' && zipCode && (
-                <StateRepresentativesTab zipCode={zipCode} />
+              {activeTab === 'state' && (zipCode || query) && (
+                <StateRepresentativesTab zipCode={zipCode || query || ''} />
               )}
 
-              {activeTab === 'map' && zipCode && (
+              {activeTab === 'map' && (zipCode || query) && (
                 <div className="space-y-4">
                   {/* Map Type Toggle */}
                   <div className="flex items-center justify-between">
@@ -786,9 +988,9 @@ function ResultsContent() {
                   </div>
                   
                   {useInteractiveMap ? (
-                    <InteractiveDistrictMap zipCode={zipCode} />
+                    <InteractiveDistrictMap zipCode={zipCode || query || ''} />
                   ) : (
-                    <DistrictMap zipCode={zipCode} />
+                    <DistrictMap zipCode={zipCode || query || ''} />
                   )}
                 </div>
               )}
@@ -796,11 +998,11 @@ function ResultsContent() {
           </div>
         )}
 
-        {/* Show error state if no ZIP code */}
-        {!zipCode && (
+        {/* Show error state if no search query */}
+        {!zipCode && !address && !query && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <p className="text-red-800 font-medium">Error</p>
-            <p className="text-red-600 mt-1">No ZIP code provided</p>
+            <p className="text-red-600 mt-1">No search query provided</p>
             <Link 
               href="/"
               className="inline-block mt-4 text-civiq-blue hover:underline"

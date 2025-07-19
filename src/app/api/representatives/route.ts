@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCongressionalDistrictFromZip } from '@/lib/census-api'
 import { getAllEnhancedRepresentatives } from '@/lib/congress-legislators'
 import { validateDistrictResponse, validateRepresentativeResponse, generateDataQualityReport, validateApiResponse } from '@/lib/validation/response-schemas'
+import { structuredLogger, createRequestLogger } from '@/lib/logging/logger'
 
 // Simplified response interfaces
 interface RepresentativeResponse {
@@ -117,7 +118,11 @@ async function retryWithBackoff<T>(
 
       // Exponential backoff: 1s, 2s, 4s
       const delay = baseDelay * Math.pow(2, attempt)
-      console.log(`Retry attempt ${attempt + 1}/${maxRetries + 1} after ${delay}ms delay`)
+      structuredLogger.warn(`Retry attempt ${attempt + 1}/${maxRetries + 1} after ${delay}ms delay`, {
+        attempt: attempt + 1,
+        maxRetries: maxRetries + 1,
+        delay
+      })
       await new Promise(resolve => setTimeout(resolve, delay))
     }
   }
@@ -138,14 +143,22 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
 
   try {
     // Step 1: Get district info with circuit breaker and retry
-    console.log(`[getRepresentativesByZip] Fetching district info for ZIP ${zipCode}...`)
+    structuredLogger.info(`Fetching district info for ZIP ${zipCode}`, {
+      zipCode,
+      operation: 'getDistrict'
+    })
     
     const districtInfo = await censusCircuitBreaker.execute(
       () => retryWithBackoff(() => getCongressionalDistrictFromZip(zipCode)),
       'Census API'
     )
     
-    console.log(`[getRepresentativesByZip] District info result:`, districtInfo);
+    structuredLogger.info(`District info retrieved successfully`, {
+      zipCode,
+      state: districtInfo.state,
+      district: districtInfo.district,
+      operation: 'getDistrict'
+    });
 
     if (!districtInfo) {
       return {
@@ -166,18 +179,33 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     // Validate district data
     const districtValidation = validateDistrictResponse(districtInfo)
     if (!districtValidation.isValid) {
-      console.warn('District data validation failed:', districtValidation.errors)
+      structuredLogger.warn('District data validation failed', {
+        zipCode,
+        validationErrors: districtValidation.errors,
+        operation: 'validateDistrict'
+      })
     }
 
-    console.log(`District found: ${districtInfo.state}-${districtInfo.district}`)
+    structuredLogger.info(`District found: ${districtInfo.state}-${districtInfo.district}`, {
+      zipCode,
+      state: districtInfo.state,
+      district: districtInfo.district
+    })
 
     // Step 2: Get representatives with circuit breaker and retry  
-    console.log(`[getRepresentativesByZip] Fetching all representatives...`);
+    structuredLogger.info(`Fetching all representatives`, {
+      zipCode,
+      operation: 'getAllRepresentatives'
+    });
     const allRepresentatives = await congressCircuitBreaker.execute(
       () => retryWithBackoff(() => getAllEnhancedRepresentatives()),
       'Congress Legislators'
     )
-    console.log(`[getRepresentativesByZip] Fetched ${allRepresentatives?.length || 0} representatives from congress-legislators`);
+    structuredLogger.info(`Fetched representatives from congress-legislators`, {
+      zipCode,
+      representativeCount: allRepresentatives?.length || 0,
+      operation: 'getAllRepresentatives'
+    });
 
     if (!allRepresentatives || allRepresentatives.length === 0) {
       return {
@@ -197,10 +225,20 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     }
 
     // Step 3: Filter representatives for this district
-    console.log(`[getRepresentativesByZip] Filtering representatives for ${districtInfo.state}-${districtInfo.district}...`);
+    structuredLogger.info(`Filtering representatives for district`, {
+      zipCode,
+      state: districtInfo.state,
+      district: districtInfo.district,
+      operation: 'filterRepresentatives'
+    });
     const districtRepresentatives = allRepresentatives.filter(rep => {
       if (rep.chamber === 'Senate' && rep.state === districtInfo.state) {
-        console.log(`[getRepresentativesByZip] Found Senate rep: ${rep.name} (${rep.state})`);
+        structuredLogger.debug(`Found Senate representative`, {
+          zipCode,
+          representativeName: rep.name,
+          state: rep.state,
+          chamber: rep.chamber
+        });
         return true
       }
       if (rep.chamber === 'House' && 
@@ -210,12 +248,23 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
         const repDistrict = parseInt(rep.district, 10)
         const targetDistrict = parseInt(districtInfo.district, 10)
         const matches = repDistrict === targetDistrict
-        console.log(`[getRepresentativesByZip] House rep: ${rep.name} (${rep.state}-${rep.district}) - ${matches ? 'MATCH' : 'no match'}`);
+        structuredLogger.debug(`Evaluating House representative`, {
+          zipCode,
+          representativeName: rep.name,
+          state: rep.state,
+          district: rep.district,
+          targetDistrict: districtInfo.district,
+          matches
+        });
         return matches
       }
       return false
     })
-    console.log(`[getRepresentativesByZip] Found ${districtRepresentatives.length} representatives for district`);
+    structuredLogger.info(`Found representatives for district`, {
+      zipCode,
+      representativeCount: districtRepresentatives.length,
+      operation: 'filterRepresentatives'
+    });
 
     if (districtRepresentatives.length === 0) {
       return {
@@ -248,7 +297,12 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       validationResults.push(validateApiResponse(rep, validateRepresentativeResponse, `congress-legislators-${rep.bioguideId}`))
       
       if (repValidation.warnings.length > 0) {
-        console.warn(`Data quality warnings for ${rep.name}:`, repValidation.warnings)
+        structuredLogger.warn(`Data quality warnings for representative`, {
+          zipCode,
+          representativeName: rep.name,
+          bioguideId: rep.bioguideId,
+          validationWarnings: repValidation.warnings
+        })
       }
       
       representatives.push({
@@ -287,7 +341,12 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     
     // Log quality issues for monitoring
     if (qualityReport.overall.issues.length > 0) {
-      console.log(`Data quality issues for ZIP ${zipCode}:`, qualityReport.overall.issues)
+      structuredLogger.warn(`Data quality issues detected`, {
+        zipCode,
+        qualityScore: qualityReport.overall.score,
+        issues: qualityReport.overall.issues,
+        operation: 'dataQualityCheck'
+      })
     }
 
     return {
@@ -305,7 +364,10 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     }
 
   } catch (error) {
-    console.error('Error fetching representatives:', error)
+    structuredLogger.error('Error fetching representatives', error, {
+      zipCode,
+      operation: 'getRepresentativesByZip'
+    })
 
     // Determine error type and provide specific messaging
     let errorCode = 'UNKNOWN_ERROR'
@@ -349,18 +411,20 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
 }
 
 export async function GET(request: NextRequest) {
-  console.log('[Representatives API] Starting request');
   const startTime = Date.now();
+  const logger = createRequestLogger(request, `rep-${Date.now()}`);
+  
+  logger.info('Representatives API request started');
   
   try {
     const url = new URL(request.url)
     const zipCode = url.searchParams.get('zip')
 
-    console.log('[Representatives API] ZIP code:', zipCode);
+    logger.info('ZIP code parameter received', { zipCode });
 
     // Input validation
     if (!zipCode) {
-      console.log('[Representatives API] Missing ZIP code');
+      logger.warn('Missing ZIP code parameter');
       return NextResponse.json({
         success: false,
         error: {
@@ -395,24 +459,39 @@ export async function GET(request: NextRequest) {
     }
 
     // Get representatives with honest error handling
-    console.log('[Representatives API] Calling getRepresentativesByZip with:', zipCode);
+    logger.info('Calling getRepresentativesByZip', { zipCode });
     const result = await getRepresentativesByZip(zipCode)
-    console.log('[Representatives API] Result:', result.success ? 'success' : 'failed');
+    logger.info('getRepresentativesByZip completed', { 
+      zipCode,
+      success: result.success,
+      representativeCount: result.success ? result.representatives?.length : 0
+    });
     
     if (!result.success) {
-      console.log('[Representatives API] Error details:', result.error);
+      logger.warn('getRepresentativesByZip failed', {
+        zipCode,
+        errorCode: result.error?.code,
+        errorMessage: result.error?.message
+      });
     }
 
     // Return appropriate HTTP status based on success
     const httpStatus = result.success ? 200 : 503
     const processingTime = Date.now() - startTime;
-    console.log('[Representatives API] Processing time:', processingTime, 'ms');
+    logger.info('Representatives API request completed', {
+      zipCode,
+      processingTime,
+      httpStatus,
+      success: result.success
+    });
 
     return NextResponse.json(result, { status: httpStatus })
 
   } catch (error) {
-    console.error('[Representatives API] Unexpected error:', error);
-    console.error('[Representatives API] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    const logger = createRequestLogger(request, `rep-error-${Date.now()}`);
+    logger.error('Unexpected error in Representatives API', error, {
+      hasStack: error instanceof Error && !!error.stack
+    });
     
     return NextResponse.json({
       success: false,

@@ -4,6 +4,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { structuredLogger } from '@/lib/logging/logger';
+
+// Get secure CORS origins
+function getSecureCorsOrigins(): string {
+  const allowedOrigins = process.env.NODE_ENV === 'production' 
+    ? ['https://civic-intel-hub.vercel.app', 'https://civiq.app', 'https://www.civiq.app']
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'];
+  
+  const customOrigins = process.env.CORS_ALLOWED_ORIGINS?.split(',') || [];
+  const allAllowedOrigins = [...allowedOrigins, ...customOrigins];
+  
+  return allAllowedOrigins.join(', ');
+}
 
 const PHOTO_SOURCES = [
   {
@@ -38,7 +51,7 @@ export async function GET(
       headers: {
         'Content-Type': cached.contentType,
         'Cache-Control': 'public, max-age=86400, s-maxage=86400',
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': getSecureCorsOrigins(),
       }
     });
   }
@@ -68,12 +81,16 @@ export async function GET(
           headers: {
             'Content-Type': contentType,
             'Cache-Control': 'public, max-age=86400, s-maxage=86400',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': getSecureCorsOrigins(),
           }
         });
       }
     } catch (error) {
-      console.error(`Failed to fetch photo from ${source.name} for ${bioguideId}:`, error);
+      structuredLogger.error(`Failed to fetch photo from ${source.name}`, error as Error, {
+        bioguideId,
+        sourceName: source.name,
+        operation: 'fetchPhoto'
+      });
       continue;
     }
   }

@@ -1,0 +1,28 @@
+{
+  "extends": ["next/core-web-vitals", "next/typescript"],
+  "rules": {
+    "no-console": "error",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": ["error", { 
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_" 
+    }],
+    "prefer-const": "error",
+    "no-var": "error",
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-warning-comments": ["warn", { 
+      "terms": ["TODO", "FIXME", "XXX", "HACK"], 
+      "location": "start" 
+    }]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "scripts/**/*.ts", "scripts/**/*.js", "**/*.config.js", "**/*.config.ts"],
+      "rules": {
+        "no-console": "off",
+        "@typescript-eslint/no-unused-vars": "off"
+      }
+    }
+  ]
+}

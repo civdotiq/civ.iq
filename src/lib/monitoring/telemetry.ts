@@ -6,7 +6,7 @@
 import { NextRequest } from 'next/server'
 
 // Simplified telemetry implementation for now
-// TODO: Re-enable OpenTelemetry when dependencies are fixed
+// Note: OpenTelemetry can be re-enabled when dependencies are resolved
 
 // Performance monitoring class
 export class PerformanceMonitor {

@@ -1,1 +1,1 @@
-npm run security:audit
+npx lint-staged
