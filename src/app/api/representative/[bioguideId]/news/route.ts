@@ -158,11 +158,49 @@ export async function GET(
         const results = await Promise.all(fetchPromises);
         const flattenedArticles = results.flat();
 
-        // Apply quality filters and final deduplication
+        // Apply advanced clustering to group related stories
+        const { newsClusteringService } = await import('@/lib/news-clustering');
+        const clusteringResult = newsClusteringService.clusterNews(
+          flattenedArticles.map(article => ({
+            url: article.url,
+            title: article.title,
+            seendate: article.publishedDate,
+            domain: article.domain || new URL(article.url).hostname,
+            socialimage: article.imageUrl,
+            language: article.language || 'en'
+          })),
+          {
+            maxClusters: 5,
+            minClusterSize: 2,
+            titleSimilarityThreshold: 0.75,
+            timespanHours: 48
+          }
+        );
+
+        // Convert clusters back to articles, keeping primary articles
+        const clusteredArticles = clusteringResult.clusters.map(cluster => {
+          const primaryArticle = flattenedArticles.find(a => a.url === cluster.primaryArticle.url);
+          return {
+            ...primaryArticle,
+            relatedStories: cluster.relatedArticles.length,
+            sources: cluster.sources.join(', '),
+            category: cluster.category,
+            importance: cluster.importance
+          };
+        }).filter(Boolean);
+
+        // Add unclustered articles
+        const unclusteredArticles = clusteringResult.unclustered
+          .map(unclustered => flattenedArticles.find(a => a.url === unclustered.url))
+          .filter(Boolean);
+
+        const finalArticles = [...clusteredArticles, ...unclusteredArticles];
+
+        // Apply quality filters and final deduplication to the clustered articles
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         
-        const qualityFilteredArticles = flattenedArticles.filter(article => {
+        const qualityFilteredArticles = finalArticles.filter(article => {
           const articleDate = new Date(article.publishedDate);
           
           return (

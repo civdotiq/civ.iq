@@ -10,8 +10,9 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState, Suspense } from 'react';
 import { SearchHistory } from '@/lib/searchHistory';
-import { RepresentativeCardSkeleton } from '@/components/SkeletonLoader';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { RepresentativeSkeleton, SearchResultsSkeleton } from '@/components/ui/SkeletonComponents';
+import { LoadingStateWrapper, LoadingMessage, Spinner } from '@/components/ui/LoadingStates';
+import { useMultiStageLoading } from '@/hooks/useSmartLoading';
 import { DistrictMap } from '@/components/DistrictMap';
 import { InteractiveDistrictMap } from '@/components/InteractiveDistrictMap';
 import { DataQualityIndicator, ErrorState, DataSourceBadge } from '@/components/DataQualityIndicator';
@@ -509,8 +510,6 @@ function ResultsContent() {
   const address = searchParams.get('address');
   const query = searchParams.get('q');
   const [data, setData] = useState<ApiResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'federal' | 'state' | 'map'>('federal');
   const [useInteractiveMap, setUseInteractiveMap] = useState(true);
   const [districtInfo, setDistrictInfo] = useState<{state: string; district: string} | null>(null);
@@ -520,16 +519,24 @@ function ResultsContent() {
   const [showAddressRefinement, setShowAddressRefinement] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictInfo | null>(null);
 
+  // Multi-stage loading for the search process
+  const loading = useMultiStageLoading([
+    'Analyzing search query...',
+    'Checking district boundaries...',
+    'Looking up representatives...',
+    'Loading additional data...',
+    'Finalizing results...'
+  ]);
+
   const fetchRepresentatives = async (selectedDistrictOverride?: DistrictInfo) => {
     const searchQuery = query || zipCode || address;
     if (!searchQuery) {
-      setError('No search query provided');
-      setLoading(false);
+      loading.setError(new Error('No search query provided'));
       return;
     }
 
     try {
-      setLoading(true);
+      loading.start();
       setSearchQuery(searchQuery);
       
       // Determine search type
@@ -539,15 +546,17 @@ function ResultsContent() {
       
       // For ZIP codes, check if multi-district first
       if (isZipCode && !selectedDistrictOverride) {
+        loading.nextStage(); // "Checking district boundaries..."
         const multiDistrictCheck = await checkMultiDistrict(searchQuery);
         
         if (multiDistrictCheck.success && multiDistrictCheck.isMultiDistrict) {
           // Multi-district ZIP - show district selector
           setMultiDistrictData(multiDistrictCheck);
-          setLoading(false);
+          loading.complete();
           return;
         } else if (multiDistrictCheck.success && !multiDistrictCheck.isMultiDistrict) {
           // Single district - continue with normal flow using multi-district API for consistency
+          loading.nextStage(); // "Looking up representatives..."
           const response = await fetch(`/api/representatives-multi-district?zip=${encodeURIComponent(searchQuery)}`);
           const apiData: MultiDistrictResponse = await response.json();
           
@@ -583,8 +592,8 @@ function ResultsContent() {
               }
             };
             
+            loading.nextStage(); // "Loading additional data..."
             setData(legacyData);
-            setError(null);
             
             // Set district info
             if (apiData.primaryDistrict) {
@@ -594,7 +603,7 @@ function ResultsContent() {
               });
             }
             
-            setLoading(false);
+            loading.complete();
             return;
           }
         }
@@ -690,7 +699,7 @@ function ResultsContent() {
         setError(apiData.error?.message || 'Failed to fetch representatives');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Network error occurred');
+      loading.setError(err instanceof Error ? err : new Error('Network error occurred'));
       setData({
         success: false,
         error: {
@@ -699,14 +708,12 @@ function ResultsContent() {
         },
         metadata: {
           timestamp: new Date().toISOString(),
-          zipCode: zipCode,
+          zipCode: zipCode || '',
           dataQuality: 'unavailable' as const,
           dataSource: 'network-error',
           cacheable: false
         }
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -891,39 +898,50 @@ function ResultsContent() {
                     </div>
                   )}
 
-                  {loading && !(multiDistrictData && !showAddressRefinement) && (
-                    <>
-                      <div className="text-center py-8">
-                        <LoadingSpinner size="lg" />
-                        <p className="mt-4 text-gray-600">Finding your federal representatives...</p>
-                      </div>
-                      
-                      <div className="space-y-6">
-                        <RepresentativeCardSkeleton />
-                        <RepresentativeCardSkeleton />
-                        <RepresentativeCardSkeleton />
-                      </div>
-                    </>
+                  {loading.loading && !(multiDistrictData && !showAddressRefinement) && (
+                    <LoadingStateWrapper
+                      loading={loading.loading}
+                      error={loading.error}
+                      retry={loading.retry}
+                      loadingComponent={
+                        <>
+                          <LoadingMessage 
+                            message={loading.currentStage}
+                            submessage={`Step ${loading.currentStageIndex + 1} of ${loading.stages?.length || 5}`}
+                            className="mb-8"
+                          />
+                          <SearchResultsSkeleton count={3} />
+                        </>
+                      }
+                      loadingMessage={loading.currentStage}
+                    >
+                      {/* This will be empty during loading */}
+                    </LoadingStateWrapper>
                   )}
 
-                  {error && data && (
-                    <ErrorState 
-                      error={data.error}
-                      metadata={data.metadata}
-                      onRetry={() => fetchRepresentatives()}
-                    />
-                  )}
-                  
-                  {error && !data?.error && (
+                  {loading.error && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-                      <p className="text-red-800 font-medium">Error</p>
-                      <p className="text-red-600 mt-1">{error}</p>
-                      <Link 
-                        href="/"
-                        className="inline-block mt-4 text-civiq-blue hover:underline"
-                      >
-                        ← Try a different ZIP code
-                      </Link>
+                      <div className="text-red-500 mb-4">
+                        <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-red-800 font-medium">Unable to find representatives</p>
+                      <p className="text-red-600 mt-1">{loading.error.message}</p>
+                      <div className="flex gap-4 justify-center mt-4">
+                        <button
+                          onClick={() => loading.retry()}
+                          className="px-4 py-2 bg-civiq-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          Try Again
+                        </button>
+                        <Link 
+                          href="/"
+                          className="px-4 py-2 text-civiq-blue hover:underline"
+                        >
+                          ← Search Again
+                        </Link>
+                      </div>
                     </div>
                   )}
 

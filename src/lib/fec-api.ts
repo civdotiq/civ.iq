@@ -533,6 +533,110 @@ class FECAPI {
       keys: Array.from(this.cache.keys())
     };
   }
+
+  /**
+   * Get PAC contributions to a candidate
+   */
+  async getPACContributions(
+    candidateId: string, 
+    cycle?: number, 
+    limit: number = 20
+  ): Promise<FECContribution[]> {
+    try {
+      const params: Record<string, string> = {
+        candidate_id: candidateId,
+        contributor_type: 'committee',
+        sort: '-contribution_receipt_date',
+        per_page: limit.toString()
+      };
+
+      if (cycle) {
+        params.cycle = cycle.toString();
+      }
+
+      const response = await this.makeRequest<FECContribution>('/schedules/schedule_a/', params);
+      
+      // Filter for actual PACs
+      const pacContributions = response?.results?.filter(contribution => 
+        contribution.receipt_type_full?.includes('PAC') ||
+        contribution.committee_name?.includes('PAC') ||
+        contribution.receipt_type === 'PAC'
+      ) || [];
+
+      return pacContributions.slice(0, limit);
+    } catch (error) {
+      console.error('Error fetching PAC contributions:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get comprehensive funding breakdown
+   */
+  async getComprehensiveFunding(candidateId: string, cycle?: number): Promise<{
+    individual: number;
+    pac: number;
+    party: number;
+    self: number;
+    total: number;
+    percentages: { individual: number; pac: number; party: number; self: number };
+    lastUpdated: string;
+    filingStatus: string;
+  }> {
+    try {
+      const [contributions, committees] = await Promise.all([
+        this.getCandidateContributions(candidateId, cycle, 200),
+        this.getCandidateCommittees(candidateId, cycle)
+      ]);
+
+      // Categorize contributions
+      let individual = 0, pac = 0, party = 0, self = 0;
+
+      contributions.forEach(contrib => {
+        const amount = contrib.contribution_receipt_amount || 0;
+        const type = contrib.receipt_type_full?.toLowerCase() || '';
+        const name = contrib.committee_name?.toLowerCase() || '';
+
+        if (type.includes('individual') || (!type.includes('committee') && !name.includes('pac'))) {
+          individual += amount;
+        } else if (type.includes('pac') || name.includes('pac')) {
+          pac += amount;
+        } else if (type.includes('party') || name.includes('democratic') || name.includes('republican')) {
+          party += amount;
+        } else if (contrib.contributor_name?.toLowerCase().includes(contrib.candidate_name?.toLowerCase() || '')) {
+          self += amount;
+        } else {
+          individual += amount; // Default to individual
+        }
+      });
+
+      const total = individual + pac + party + self;
+
+      return {
+        individual,
+        pac,
+        party,
+        self,
+        total,
+        percentages: {
+          individual: total > 0 ? (individual / total) * 100 : 0,
+          pac: total > 0 ? (pac / total) * 100 : 0,
+          party: total > 0 ? (party / total) * 100 : 0,
+          self: total > 0 ? (self / total) * 100 : 0
+        },
+        lastUpdated: new Date().toISOString(),
+        filingStatus: committees.length > 0 ? committees[0].filing_frequency || 'Unknown' : 'No committee data'
+      };
+    } catch (error) {
+      console.error('Error fetching comprehensive funding:', error);
+      return {
+        individual: 0, pac: 0, party: 0, self: 0, total: 0,
+        percentages: { individual: 0, pac: 0, party: 0, self: 0 },
+        lastUpdated: new Date().toISOString(),
+        filingStatus: 'Error fetching data'
+      };
+    }
+  }
 }
 
 // Default instance

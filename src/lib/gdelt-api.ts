@@ -262,8 +262,21 @@ export async function fetchGDELTNews(
   return retryWithBackoff(async () => {
     const encodedQuery = encodeURIComponent(searchTerm);
     
-    // Use GDELT DOC 2.0 API with enhanced parameters
-    const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodedQuery}&mode=artlist&maxrecords=${maxRecords}&format=json&sort=datedesc&timespan=30d&theme=GENERAL_GOVERNMENT,POLITICAL_PROCESS,POLITICAL_CANDIDATE`;
+    // Use GDELT DOC 2.0 API with enhanced parameters and comprehensive theme filtering
+    const themes = [
+      'GENERAL_GOVERNMENT',
+      'POLITICAL_PROCESS', 
+      'POLITICAL_CANDIDATE',
+      'ELECTORAL_POLITICS',
+      'POLITICAL_ISSUES',
+      'GOVERNMENT_TRANSPARENCY',
+      'POLITICAL_CORRUPTION',
+      'CONGRESSIONAL_POLITICS',
+      'GOVERNMENT_LEGISLATION',
+      'POLITICAL_COMMUNICATIONS'
+    ].join(',');
+    
+    const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodedQuery}&mode=artlist&maxrecords=${maxRecords}&format=json&sort=socialimage&timespan=24h&theme=${themes}&contenttype=NEWS&dedupresults=true`;
     
     structuredLogger.info('Fetching GDELT news', {
       searchTerm: searchTerm.slice(0, 100), // Show more of the search term for debugging

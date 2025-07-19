@@ -205,22 +205,22 @@ export function AdvancedSearch() {
         />
       </div>
 
-      {/* Quick Filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
+      {/* Quick Filters - Mobile Optimized */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+          className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-colors min-h-[44px] ${
             showFilters ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
           }`}
         >
           <Filter className="w-4 h-4" />
-          Advanced Filters
+          <span className="font-medium">Advanced Filters</span>
         </button>
         
         <select
           value={filters.party}
           onChange={(e) => updateFilter('party', e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="min-h-[44px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 font-medium"
         >
           <option value="all">All Parties</option>
           <option value="D">Democrat</option>
@@ -231,7 +231,7 @@ export function AdvancedSearch() {
         <select
           value={filters.chamber}
           onChange={(e) => updateFilter('chamber', e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="min-h-[44px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 font-medium"
         >
           <option value="all">Both Chambers</option>
           <option value="House">House</option>
@@ -241,24 +241,27 @@ export function AdvancedSearch() {
         <select
           value={filters.state}
           onChange={(e) => updateFilter('state', e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="min-h-[44px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 font-medium"
         >
           <option value="">All States</option>
           {states.map(state => (
             <option key={state} value={state}>{state}</option>
           ))}
         </select>
+      </div>
 
-        {(filters.query || filters.party !== 'all' || filters.chamber !== 'all' || filters.state) && (
+      {/* Clear All Button */}
+      {(filters.query || filters.party !== 'all' || filters.chamber !== 'all' || filters.state) && (
+        <div className="mb-6">
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="flex items-center justify-center gap-2 px-4 py-3 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 min-h-[44px] w-full sm:w-auto"
           >
             <X className="w-4 h-4" />
-            Clear All
+            <span className="font-medium">Clear All Filters</span>
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Advanced Filters Panel */}
       {showFilters && (
@@ -449,7 +452,7 @@ export function AdvancedSearch() {
                         </span>
                       </div>
                     </div>
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <button className="min-h-[44px] px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
                       View Profile
                     </button>
                   </div>
@@ -487,11 +490,11 @@ export function AdvancedSearch() {
             Showing {results.length} of {resultCount} results
           </p>
           <div className="flex items-center gap-2">
-            <button className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50" disabled>
+            <button className="min-h-[44px] min-w-[44px] px-4 py-3 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 font-medium" disabled>
               Previous
             </button>
-            <span className="px-3 py-1 bg-blue-600 text-white rounded text-sm">1</span>
-            <button className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">
+            <span className="min-h-[44px] min-w-[44px] px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium flex items-center justify-center">1</span>
+            <button className="min-h-[44px] min-w-[44px] px-4 py-3 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 font-medium">
               Next
             </button>
           </div>

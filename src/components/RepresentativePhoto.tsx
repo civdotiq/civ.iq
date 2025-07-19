@@ -52,15 +52,56 @@ export function RepresentativePhoto({
       return;
     }
 
-    // Directly use the API proxy URL
-    const photoUrl = `/api/representative-photo/${bioguideId.toUpperCase()}`;
-    
     setPhotoState(prev => ({
       ...prev,
-      photoUrl: photoUrl,
-      isLoading: false,
+      isLoading: true,
       hasError: false
     }));
+
+    // Use enhanced photo service for maximum reliability
+    const loadPhoto = async () => {
+      try {
+        const { enhancedPhotoService } = await import('@/lib/enhanced-photo-service');
+        const result = await enhancedPhotoService.getRepresentativePhoto(bioguideId, name);
+        
+        setPhotoState(prev => ({
+          ...prev,
+          photoUrl: result.photoUrl,
+          isLoading: false,
+          hasError: result.isGenerated, // Only consider it an error if we had to generate
+        }));
+        
+        // Log success metrics
+        if (result.photoUrl && !result.isGenerated) {
+          console.log(`Photo loaded successfully from ${result.successfulSource?.name} in ${result.loadTime}ms`);
+        }
+        
+      } catch (error) {
+        console.warn('Enhanced photo service failed, using fallback:', error);
+        
+        // Fallback to original system
+        const photoSources = getRepresentativePhotoUrls(bioguideId);
+        
+        try {
+          const url = await loadImageWithFallbacks(photoSources, 6000);
+          setPhotoState(prev => ({
+            ...prev,
+            photoUrl: url,
+            isLoading: false,
+            hasError: false
+          }));
+        } catch (fallbackError) {
+          setPhotoState(prev => ({
+            ...prev,
+            photoUrl: null,
+            isLoading: false,
+            hasError: true
+          }));
+        }
+      }
+    };
+
+    loadPhoto();
   }, [bioguideId, name]);
 
   const baseClasses = `${sizeClasses[size]} rounded-full flex items-center justify-center overflow-hidden flex-shrink-0`;
@@ -137,7 +178,7 @@ export function useRepresentativePhoto(bioguideId: string, name: string): UseRep
       hasError: false
     }));
 
-    loadImageWithFallbacks(photoSources)
+    loadImageWithFallbacks(photoSources, 6000)
       .then((url) => {
         setPhotoState(prev => ({
           ...prev,
@@ -146,7 +187,8 @@ export function useRepresentativePhoto(bioguideId: string, name: string): UseRep
           hasError: false
         }));
       })
-      .catch(() => {
+      .catch((error) => {
+        console.warn('Failed to load representative photo in hook:', error.message);
         setPhotoState(prev => ({
           ...prev,
           photoUrl: null,

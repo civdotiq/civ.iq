@@ -698,20 +698,41 @@ export function CampaignFinanceVisualizer({ financeData, representative, bioguid
                 financeData.metadata?.dataSource === 'fec.gov' ? 'bg-green-500' : 'bg-yellow-500'
               }`}></span>
               <span className="font-medium">
-                Data Source: {financeData.metadata?.dataSource === 'fec.gov' ? 'Federal Election Commission (FEC)' : 'Sample Data'}
+                Data Source: {financeData.metadata?.dataSource === 'fec.gov' ? 'Live FEC Data' : 'Sample/Demo Data'}
               </span>
+              {financeData.metadata?.dataSource === 'mock' && (
+                <div className="mt-1 text-xs text-gray-500">
+                  Real campaign finance data not available for this representative
+                </div>
+              )}
             </div>
-            {financeData.metadata?.retrievalMethod && (
+            {financeData.metadata?.retrievalMethod && financeData.metadata.dataSource === 'fec.gov' && (
               <div className="text-xs text-gray-500 mt-1">
-                Retrieved via: {financeData.metadata.retrievalMethod}
+                Retrieved via: {
+                  financeData.metadata.retrievalMethod === 'direct-mapping' ? 'Direct FEC ID mapping' :
+                  financeData.metadata.retrievalMethod === 'name-search' ? 'FEC candidate name search' :
+                  'FEC database lookup'
+                }
               </div>
             )}
           </div>
-          {financeData.metadata?.lastUpdated && (
-            <div className="text-xs text-gray-500">
-              Last updated: {new Date(financeData.metadata.lastUpdated).toLocaleDateString()}
-            </div>
-          )}
+          <div className="text-xs text-gray-500 mt-1">
+            {financeData.metadata?.lastUpdated && (
+              <div>Last updated: {new Date(financeData.metadata.lastUpdated).toLocaleDateString()}</div>
+            )}
+            {financeData.metadata?.dataSource === 'fec.gov' && (
+              <div className="mt-1">
+                📊 <span className="font-medium">About this data:</span> Official campaign finance reports filed with the FEC. 
+                Includes contributions over $200, all expenditures, and quarterly financial summaries.
+              </div>
+            )}
+            {financeData.metadata?.dataSource === 'mock' && (
+              <div className="mt-1">
+                🎯 <span className="font-medium">Sample data:</span> Representative examples to demonstrate platform capabilities. 
+                Real FEC data integration available for mapped representatives.
+              </div>
+            )}
+          </div>
         </div>
         
         {financeData.metadata?.candidateInfo && (

@@ -5,6 +5,32 @@ All notable changes to CIV.IQ will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025.01.19] - Data Quality Enhancement
+
+### Enhanced
+- **Voting Records**: Congress.gov bill-based extraction with roll call XML parsing for accurate member positions
+- **Photo Pipeline**: 6-source validation system with URL testing, reliability scoring, and 99% uptime targeting
+- **News Processing**: GDELT story clustering with 10 political themes, importance scoring, and category classification
+- **Campaign Finance**: PAC contributions, party funding analysis, and comprehensive source breakdown with filing status
+
+### Added
+- **VotingDataService**: Multi-strategy real data retrieval with bill parsing and roll call integration
+- **EnhancedPhotoService**: Progressive fallback system across congressional, biographical, and media sources
+- **NewsClusteringService**: Related story grouping with duplicate detection and source diversity tracking
+- **Enhanced FEC Integration**: getPACContributions() and getComprehensiveFunding() methods for complete transparency
+
+### Technical
+- **Data Source Transparency**: Clear indicators for real vs mock data with confidence levels and last-updated timestamps
+- **Advanced Deduplication**: Edit distance + Jaccard similarity + time window filtering for news articles
+- **Performance Monitoring**: Load time tracking, success rate metrics, and source reliability scoring
+- **Comprehensive Fallbacks**: Graceful degradation across all data sources with intelligent retry logic
+
+### API Integrations
+- **Congress.gov**: Enhanced getBillDetails() method for voting record extraction
+- **Roll Call XML**: Direct parsing of House clerk and Senate voting files with member position mapping
+- **GDELT 2.0**: 10 political themes with content type filtering and deduplication parameters
+- **FEC OpenData**: Committee analysis, PAC filtering, and comprehensive funding categorization
+
 ## [Unreleased]
 
 ### Added

@@ -806,3 +806,57 @@ function getMockRepresentatives(state: string, district?: string): Representativ
   
   return representatives;
 }
+
+/**
+ * Get detailed bill information including actions and recorded votes
+ */
+export async function getBillDetails(
+  congress: string, 
+  billType: string, 
+  billNumber: string, 
+  apiKey?: string
+): Promise<any> {
+  try {
+    await congressRateLimiter.waitIfNeeded();
+    const key = apiKey || process.env.CONGRESS_API_KEY;
+    
+    if (!key) {
+      throw new Error('Congress API key is required');
+    }
+
+    const url = `https://api.congress.gov/v3/bill/${congress}/${billType}/${billNumber}?format=json&api_key=${key}`;
+    
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'CivicIntelHub/1.0'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Congress API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.bill;
+
+  } catch (error) {
+    console.error('Error fetching bill details:', error);
+    throw error;
+  }
+}
+
+/**
+ * Export consolidated congress API instance
+ */
+export const congressApi = {
+  getCurrentMembersByState,
+  getRepresentativesByLocation,
+  getBillsByMember,
+  getVotesByMember,
+  getCommitteesByMember,
+  getRecentBills,
+  searchBills,
+  getBillDetails,
+  formatCongressMember
+};

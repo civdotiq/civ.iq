@@ -3,14 +3,15 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { Skeleton } from '@/components/SkeletonLoader';
+import { LoadingMessage } from '@/components/ui/LoadingStates';
 
 export default function Loading() {
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-pulse">
-        <Skeleton className="w-32 h-32 rounded-full" />
-      </div>
+      <LoadingMessage 
+        message="Loading CIV.IQ"
+        submessage="Preparing your civic information dashboard"
+      />
     </div>
   );
 }

@@ -113,37 +113,86 @@ export function getPartyColor(party: string): string {
 }
 
 /**
- * Image loading utility with retry logic
+ * Image loading utility with retry logic and timeout handling
  */
-export function loadImageWithFallbacks(sources: PhotoSources): Promise<string> {
+export function loadImageWithFallbacks(sources: PhotoSources, timeoutMs: number = 8000): Promise<string> {
   return new Promise((resolve, reject) => {
     const allSources = [sources.primary, ...sources.fallback].filter(Boolean);
     
     let currentIndex = 0;
+    let globalTimeout: NodeJS.Timeout | null = null;
+    
+    // Global timeout for the entire operation
+    const startGlobalTimeout = () => {
+      globalTimeout = setTimeout(() => {
+        reject(new Error(`Image loading timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
+    };
+    
+    const clearGlobalTimeout = () => {
+      if (globalTimeout) {
+        clearTimeout(globalTimeout);
+        globalTimeout = null;
+      }
+    };
     
     function tryNextImage() {
       if (currentIndex >= allSources.length) {
+        clearGlobalTimeout();
         reject(new Error('All image sources failed to load'));
         return;
       }
       
       const img = new Image();
       const currentUrl = allSources[currentIndex];
+      let imageTimeout: NodeJS.Timeout;
+      
+      // Individual timeout for each image attempt (shorter)
+      const individualTimeoutMs = Math.min(3000, timeoutMs / allSources.length);
+      
+      const cleanup = () => {
+        clearTimeout(imageTimeout);
+        img.onload = null;
+        img.onerror = null;
+      };
       
       img.onload = () => {
+        cleanup();
+        clearGlobalTimeout();
         resolve(currentUrl);
       };
       
       img.onerror = () => {
+        cleanup();
+        console.warn(`Failed to load image from: ${currentUrl}`);
         currentIndex++;
-        tryNextImage();
+        // Small delay before trying next source to avoid rapid-fire requests
+        setTimeout(tryNextImage, 100);
       };
+      
+      // Individual image timeout
+      imageTimeout = setTimeout(() => {
+        cleanup();
+        console.warn(`Image loading timeout for: ${currentUrl}`);
+        currentIndex++;
+        setTimeout(tryNextImage, 100);
+      }, individualTimeoutMs);
       
       // Set CORS to anonymous for cross-origin images
       img.crossOrigin = 'anonymous';
-      img.src = currentUrl;
+      
+      // Start loading
+      try {
+        img.src = currentUrl;
+      } catch (error) {
+        cleanup();
+        console.warn(`Error setting image src for: ${currentUrl}`, error);
+        currentIndex++;
+        setTimeout(tryNextImage, 100);
+      }
     }
     
+    startGlobalTimeout();
     tryNextImage();
   });
 }

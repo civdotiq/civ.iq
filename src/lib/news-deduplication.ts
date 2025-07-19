@@ -52,7 +52,7 @@ const DEFAULT_OPTIONS: DeduplicationOptions = {
   enableTitleSimilarity: true,
   enableContentSimilarity: false, // Disabled by default as content might not be available
   enableDomainClustering: true,
-  titleSimilarityThreshold: 0.8,
+  titleSimilarityThreshold: 0.75,
   contentSimilarityThreshold: 0.85,
   maxArticlesPerDomain: 3,
   preserveNewestArticles: true,
@@ -188,14 +188,18 @@ export class NewsDeduplicator {
       let isDuplicate = false;
       
       for (let j = 0; j < result.length; j++) {
-        const similarity = this.calculateTitleSimilarity(articles[i].title, result[j].title);
+        const jaccardSimilarity = this.calculateTitleSimilarity(articles[i].title, result[j].title);
+        const editDistanceSimilarity = this.calculateEditDistanceSimilarity(articles[i].title, result[j].title);
         
-        if (similarity >= this.options.titleSimilarityThreshold) {
+        // Consider it a duplicate if either similarity check passes
+        const maxSimilarity = Math.max(jaccardSimilarity, editDistanceSimilarity);
+        
+        if (maxSimilarity >= this.options.titleSimilarityThreshold) {
           this.stats.duplicatesDetected.push({
             method: 'title_similarity',
             originalIndex: articles.indexOf(result[j]),
             duplicateIndex: i,
-            similarity
+            similarity: maxSimilarity
           });
           
           // Keep the newer article if preserveNewestArticles is enabled
@@ -318,6 +322,52 @@ export class NewsDeduplicator {
   }
 
   /**
+   * Calculate edit distance similarity for near-identical titles
+   */
+  private calculateEditDistanceSimilarity(title1: string, title2: string): number {
+    const normalized1 = title1.toLowerCase().replace(/[^\w\s]/g, '').trim();
+    const normalized2 = title2.toLowerCase().replace(/[^\w\s]/g, '').trim();
+    
+    // If titles are very similar in length and content, use edit distance
+    const lengthDiff = Math.abs(normalized1.length - normalized2.length);
+    const maxLength = Math.max(normalized1.length, normalized2.length);
+    
+    // Only use edit distance for titles that are similar in length
+    if (lengthDiff > maxLength * 0.3) {
+      return 0;
+    }
+    
+    const editDistance = this.levenshteinDistance(normalized1, normalized2);
+    const similarity = 1 - (editDistance / maxLength);
+    
+    // Only consider high similarity scores from edit distance
+    return similarity > 0.85 ? similarity : 0;
+  }
+
+  /**
+   * Calculate Levenshtein distance between two strings
+   */
+  private levenshteinDistance(str1: string, str2: string): number {
+    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    
+    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+    
+    for (let j = 1; j <= str2.length; j++) {
+      for (let i = 1; i <= str1.length; i++) {
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1,     // deletion
+          matrix[j - 1][i] + 1,     // insertion
+          matrix[j - 1][i - 1] + indicator // substitution
+        );
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  }
+
+  /**
    * Calculate title similarity using Jaccard similarity with word sets
    */
   private calculateTitleSimilarity(title1: string, title2: string): number {
@@ -359,15 +409,20 @@ export class NewsDeduplicator {
   }
 
   /**
-   * Normalize title for comparison
+   * Normalize title for comparison with enhanced preprocessing
    */
   private normalizeTitle(title: string): string[] {
     return title
       .toLowerCase()
-      .replace(/[^\w\s]/g, '') // Remove punctuation
+      .replace(/[^\w\s]/g, ' ') // Replace punctuation with spaces
+      .replace(/\s+/g, ' ') // Normalize multiple spaces
+      .replace(/\b(says?|said|reports?|reported|announces?|announced)\b/g, '') // Remove common news verbs
+      .replace(/\b(rep|representative|sen|senator|congress|house|senate)\b/g, '') // Remove political titles
+      .trim()
       .split(/\s+/)
       .filter(word => word.length > 2) // Remove short words
-      .filter(word => !this.isStopWord(word)); // Remove stop words
+      .filter(word => !this.isStopWord(word)) // Remove stop words
+      .map(word => word.replace(/s$/, '')); // Simple stemming - remove plural 's'
   }
 
   /**
