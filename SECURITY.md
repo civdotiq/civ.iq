@@ -147,4 +147,4 @@ For security concerns, contact:
 
 ## Updates
 
-This security policy is reviewed quarterly and updated as needed. Last update: January 2025.
+This security policy is reviewed quarterly and updated as needed. Last update: July 2025.

@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -16,12 +15,8 @@ export default function PrivacyPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
             <Shield className="w-8 h-8 text-blue-600" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Privacy Policy
-          </h1>
-          <p className="text-xl text-gray-600">
-            Last updated: January 2025
-          </p>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Privacy Policy</h1>
+          <p className="text-xl text-gray-600">Last updated: July 2025</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 space-y-8">
@@ -31,9 +26,10 @@ export default function PrivacyPage() {
               Our Commitment to Privacy
             </h2>
             <p className="text-gray-700 leading-relaxed">
-              CIV.IQ is a civic utility designed to provide transparent access to public government data. 
-              We are committed to protecting your privacy while delivering valuable civic information. 
-              This policy explains what information we collect, how we use it, and your rights regarding your data.
+              CIV.IQ is a civic utility designed to provide transparent access to public government
+              data. We are committed to protecting your privacy while delivering valuable civic
+              information. This policy explains what information we collect, how we use it, and your
+              rights regarding your data.
             </p>
           </section>
 
@@ -42,7 +38,7 @@ export default function PrivacyPage() {
               <Database className="w-6 h-6 text-green-600" />
               Information We Collect
             </h2>
-            
+
             <div className="space-y-6">
               <div className="bg-gray-50 rounded-xl p-6">
                 <h3 className="font-semibold text-gray-900 mb-3">Search Queries</h3>
@@ -71,9 +67,7 @@ export default function PrivacyPage() {
 
               <div className="bg-gray-50 rounded-xl p-6">
                 <h3 className="font-semibold text-gray-900 mb-3">Technical Information</h3>
-                <p className="text-gray-700 mb-2">
-                  For security and performance, we may collect:
-                </p>
+                <p className="text-gray-700 mb-2">For security and performance, we may collect:</p>
                 <ul className="list-disc list-inside text-gray-600 space-y-1 ml-4">
                   <li>IP addresses (for rate limiting and security)</li>
                   <li>Error logs (to fix bugs and improve reliability)</li>
@@ -92,7 +86,8 @@ export default function PrivacyPage() {
               <div className="flex items-start gap-3">
                 <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
                 <p className="text-gray-700">
-                  <strong>Service Delivery:</strong> To provide accurate representative information and district data
+                  <strong>Service Delivery:</strong> To provide accurate representative information
+                  and district data
                 </p>
               </div>
               <div className="flex items-start gap-3">
@@ -125,19 +120,27 @@ export default function PrivacyPage() {
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <span className="text-green-600 text-xl">✗</span>
-                  <span className="text-gray-700">We do not sell, rent, or share your data with third parties</span>
+                  <span className="text-gray-700">
+                    We do not sell, rent, or share your data with third parties
+                  </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-green-600 text-xl">✗</span>
-                  <span className="text-gray-700">We do not require account creation or personal information</span>
+                  <span className="text-gray-700">
+                    We do not require account creation or personal information
+                  </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-green-600 text-xl">✗</span>
-                  <span className="text-gray-700">We do not use tracking cookies or advertising networks</span>
+                  <span className="text-gray-700">
+                    We do not use tracking cookies or advertising networks
+                  </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-green-600 text-xl">✗</span>
-                  <span className="text-gray-700">We do not store your searches on our servers</span>
+                  <span className="text-gray-700">
+                    We do not store your searches on our servers
+                  </span>
                 </li>
               </ul>
             </div>
@@ -150,13 +153,16 @@ export default function PrivacyPage() {
             </h2>
             <div className="space-y-4">
               <p className="text-gray-700">
-                <strong>Local Storage:</strong> Search history is stored only in your browser and can be cleared at any time
+                <strong>Local Storage:</strong> Search history is stored only in your browser and
+                can be cleared at any time
               </p>
               <p className="text-gray-700">
-                <strong>Server Logs:</strong> Technical logs are retained for 30 days for security and debugging
+                <strong>Server Logs:</strong> Technical logs are retained for 30 days for security
+                and debugging
               </p>
               <p className="text-gray-700">
-                <strong>Analytics:</strong> Aggregated analytics data may be retained indefinitely in anonymous form
+                <strong>Analytics:</strong> Aggregated analytics data may be retained indefinitely
+                in anonymous form
               </p>
             </div>
           </section>
@@ -183,7 +189,8 @@ export default function PrivacyPage() {
               Contact Us
             </h2>
             <p className="text-gray-700 mb-4">
-              If you have questions about this privacy policy or how we handle your data, please contact us:
+              If you have questions about this privacy policy or how we handle your data, please
+              contact us:
             </p>
             <div className="bg-blue-50 rounded-xl p-6">
               <p className="text-gray-900 font-medium">Email: privacy@civ.iq</p>
@@ -192,20 +199,19 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Changes to This Policy
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Changes to This Policy</h2>
             <p className="text-gray-700">
-              We may update this privacy policy from time to time. Any changes will be posted on this page 
-              with an updated revision date. For significant changes, we may provide additional notice on our 
-              homepage.
+              We may update this privacy policy from time to time. Any changes will be posted on
+              this page with an updated revision date. For significant changes, we may provide
+              additional notice on our homepage.
             </p>
           </section>
 
           <div className="mt-12 pt-8 border-t border-gray-200">
             <p className="text-sm text-gray-500 text-center">
-              This privacy policy is part of our commitment to transparency and civic engagement. 
-              CIV.IQ is a public utility designed to make government data accessible to all citizens.
+              This privacy policy is part of our commitment to transparency and civic engagement.
+              CIV.IQ is a public utility designed to make government data accessible to all
+              citizens.
             </p>
           </div>
         </div>

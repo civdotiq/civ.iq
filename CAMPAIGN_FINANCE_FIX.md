@@ -1,4 +1,4 @@
-# Campaign Finance Fix - January 2025
+# Campaign Finance Fix - July 2025
 
 ## Issue Summary
 Campaign finance data was not loading for any federal representative due to incorrect FEC API parameters.
