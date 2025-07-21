@@ -408,7 +408,7 @@ export async function fetchGDELTNews(
 }
 
 // Clean and normalize article data
-export function normalizeGDELTArticle(article: GDELTArticle): any {
+export function normalizeGDELTArticle(article: GDELTArticle): unknown {
   return {
     title: cleanTitle(article.title),
     url: article.url,
@@ -811,12 +811,12 @@ export async function monitorBreakingNews(
   state: string,
   lastCheckTime: string
 ): Promise<Array<{
-  article: any;
+  article: unknown;
   urgency: 'low' | 'medium' | 'high';
   category: 'legislation' | 'scandal' | 'election' | 'policy' | 'other';
 }>> {
   const searchTerms = generateOptimizedSearchTerms(representativeName, state);
-  const breakingNews: any[] = [];
+  const breakingNews: unknown[] = [];
 
   try {
     // Fetch deduplicated articles for all search terms
@@ -890,16 +890,16 @@ export async function monitorBreakingNews(
 /**
  * Process trend data from GDELT timeline
  */
-function processTrendData(timeline: any[], category: string): GDELTTrend[] {
+function processTrendData(timeline: unknown[], category: string): GDELTTrend[] {
   if (!timeline || timeline.length === 0) return [];
 
   const trends: GDELTTrend[] = [];
   const termCounts = new Map<string, number[]>();
 
   // Aggregate mentions over time
-  timeline.forEach((entry: any) => {
+  timeline.forEach((entry: unknown) => {
     const terms = entry.terms || [];
-    terms.forEach((term: any) => {
+    terms.forEach((term: unknown) => {
       if (!termCounts.has(term.term)) {
         termCounts.set(term.term, []);
       }
@@ -939,7 +939,7 @@ function processTrendData(timeline: any[], category: string): GDELTTrend[] {
  * Generate alerts based on GDELT data
  */
 function generateAlerts(
-  articles: any[],
+  articles: unknown[],
   events: GDELTEvent[],
   trends: GDELTTrend[],
   representativeName: string
@@ -949,7 +949,7 @@ function generateAlerts(
   timestamp: string;
   urgency: 'low' | 'medium' | 'high';
 }> {
-  const alerts: any[] = [];
+  const alerts: unknown[] = [];
   const now = new Date().toISOString();
 
   // Check for breaking news

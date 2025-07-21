@@ -13,7 +13,7 @@ interface APIHealthCheck {
   status: 'operational' | 'degraded' | 'error'
   responseTime: number
   lastChecked: string
-  details?: any
+  details?: unknown
   error?: string
 }
 

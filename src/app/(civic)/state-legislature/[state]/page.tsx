@@ -9,7 +9,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Users, FileText, Calendar, MapPin, Phone, Mail, ExternalLink, Filter, Search, TrendingUp } from 'lucide-react';
+import { Users, FileText, MapPin, Phone, Mail, ExternalLink, Search, TrendingUp } from 'lucide-react';
 
 // Logo component
 function CiviqLogo() {
@@ -216,11 +216,11 @@ function LegislatorCard({ legislator, chamberTitle }: { legislator: StateLegisla
   );
 }
 
-function ChamberOverview({ chamber, data }: { chamber: 'upper' | 'lower'; data: any }) {
+function ChamberOverview({ chamber, data }: { chamber: 'upper' | 'lower'; data: unknown }) {
   const chamberData = data.chambers[chamber];
   const totalSeats = chamberData.totalSeats;
   const demPercentage = (chamberData.democraticSeats / totalSeats) * 100;
-  const repPercentage = (chamberData.republicanSeats / totalSeats) * 100;
+  const _repPercentage = (chamberData.republicanSeats / totalSeats) * 100;
   
   const majority = chamberData.democraticSeats > chamberData.republicanSeats ? 'Democratic' : 'Republican';
   const majoritySeats = Math.max(chamberData.democraticSeats, chamberData.republicanSeats);

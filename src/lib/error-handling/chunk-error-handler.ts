@@ -90,7 +90,7 @@ class ChunkErrorHandler {
   /**
    * Check if an error is a chunk loading error
    */
-  private isChunkLoadError(error: any): boolean {
+  private isChunkLoadError(error: unknown): boolean {
     if (!error) return false;
 
     const errorMessage = error.message || '';

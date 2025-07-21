@@ -52,7 +52,8 @@ export function RepresentativeTradingCard({ representative, stats, className = '
           primary: '#e11d09',
           secondary: '#fef2f2',
           accent: '#dc2626',
-          text: '#991b1b'
+          text: '#991b1b',
+          background: '#ffffff'
         };
       case 'democratic':
       case 'democrat':
@@ -61,7 +62,8 @@ export function RepresentativeTradingCard({ representative, stats, className = '
           primary: '#3ea0d2',
           secondary: '#eff6ff',
           accent: '#2563eb',
-          text: '#1e40af'
+          text: '#1e40af',
+          background: '#ffffff'
         };
       case 'independent':
       case 'i':
@@ -69,14 +71,16 @@ export function RepresentativeTradingCard({ representative, stats, className = '
           primary: '#6b7280',
           secondary: '#f9fafb',
           accent: '#4b5563',
-          text: '#374151'
+          text: '#374151',
+          background: '#ffffff'
         };
       default:
         return {
           primary: '#6b7280',
           secondary: '#f9fafb',
           accent: '#4b5563',
-          text: '#374151'
+          text: '#374151',
+          background: '#ffffff'
         };
     }
   };

@@ -8,16 +8,16 @@
 export interface ValidationError {
   field: string;
   message: string;
-  value?: any;
+  value?: unknown;
 }
 
 export class ValidationResult {
   public errors: ValidationError[] = [];
   public warnings: string[] = [];
 
-  constructor(public data: any) {}
+  constructor(public data: unknown) {}
 
-  addError(field: string, message: string, value?: any) {
+  addError(field: string, message: string, value?: unknown) {
     this.errors.push({ field, message, value });
   }
 
@@ -98,7 +98,7 @@ export function validateBioguideId(bioguideId: string): ValidationResult {
 }
 
 // Representative data validation
-export function validateRepresentativeData(data: any): ValidationResult {
+export function validateRepresentativeData(data: unknown): ValidationResult {
   const result = new ValidationResult(data);
   
   if (!data || typeof data !== 'object') {
@@ -180,7 +180,7 @@ export function validateRepresentativeData(data: any): ValidationResult {
 }
 
 // Financial data validation
-export function validateFinancialData(data: any): ValidationResult {
+export function validateFinancialData(data: unknown): ValidationResult {
   const result = new ValidationResult(data);
   
   if (!data || typeof data !== 'object') {
@@ -216,7 +216,7 @@ export function validateFinancialData(data: any): ValidationResult {
 }
 
 // Vote data validation
-export function validateVoteData(data: any): ValidationResult {
+export function validateVoteData(data: unknown): ValidationResult {
   const result = new ValidationResult(data);
   
   if (!data || typeof data !== 'object') {
@@ -261,7 +261,7 @@ export function sanitizeString(str: string): string {
 }
 
 // Number sanitization
-export function sanitizeNumber(value: any, min?: number, max?: number): number | null {
+export function sanitizeNumber(value: unknown, min?: number, max?: number): number | null {
   const num = parseFloat(value);
   
   if (isNaN(num)) return null;

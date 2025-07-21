@@ -13,9 +13,9 @@ import { ValidationResult, validateApiInput, XSSProtection } from './schemas';
 import { structuredLogger } from '@/lib/logging/logger';
 
 export interface ValidationConfig<T = any> {
-  query?: Record<keyof T, (value: any) => ValidationResult>;
-  body?: Record<keyof T, (value: any) => ValidationResult>;
-  params?: Record<keyof T, (value: any) => ValidationResult>;
+  query?: Record<keyof T, (value: unknown) => ValidationResult>;
+  body?: Record<keyof T, (value: unknown) => ValidationResult>;
+  params?: Record<keyof T, (value: unknown) => ValidationResult>;
   sanitizeResponse?: boolean;
   logValidationErrors?: boolean;
 }

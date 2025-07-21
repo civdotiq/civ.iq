@@ -144,79 +144,79 @@ export const LazyAdvancedSearch = lazy(() =>
 );
 
 // Wrapper components with appropriate loading states
-export const DistrictMapWithSuspense = (props: any) => (
+export const DistrictMapWithSuspense = (props: unknown) => (
   <Suspense fallback={<MapSkeleton />}>
     <LazyDistrictMap {...props} />
   </Suspense>
 );
 
-export const InteractiveDistrictMapWithSuspense = (props: any) => (
+export const InteractiveDistrictMapWithSuspense = (props: unknown) => (
   <Suspense fallback={<MapSkeleton />}>
     <LazyInteractiveDistrictMap {...props} />
   </Suspense>
 );
 
-export const ChartsWithSuspense = (props: any) => (
+export const ChartsWithSuspense = (props: unknown) => (
   <Suspense fallback={<ChartSkeleton />}>
     <LazyBarChart {...props} />
   </Suspense>
 );
 
-export const EnhancedNewsFeedWithSuspense = (props: any) => (
+export const EnhancedNewsFeedWithSuspense = (props: unknown) => (
   <Suspense fallback={<NewsFeedSkeleton />}>
     <LazyEnhancedNewsFeed {...props} />
   </Suspense>
 );
 
-export const BillsTrackerWithSuspense = (props: any) => (
+export const BillsTrackerWithSuspense = (props: unknown) => (
   <Suspense fallback={<div className="animate-pulse bg-gray-200 h-20 rounded" />}>
     <LazyBillsTracker {...props} />
   </Suspense>
 );
 
-export const PartyAlignmentAnalysisWithSuspense = (props: any) => (
+export const PartyAlignmentAnalysisWithSuspense = (props: unknown) => (
   <Suspense fallback={<ChartSkeleton />}>
     <LazyPartyAlignmentAnalysis {...props} />
   </Suspense>
 );
 
-export const VotingTrendsChartWithSuspense = (props: any) => (
+export const VotingTrendsChartWithSuspense = (props: unknown) => (
   <Suspense fallback={<ChartSkeleton />}>
     <LazyVotingTrendsChart {...props} />
   </Suspense>
 );
 
-export const CampaignFinanceChartWithSuspense = (props: any) => (
+export const CampaignFinanceChartWithSuspense = (props: unknown) => (
   <Suspense fallback={<ChartSkeleton />}>
     <LazyCampaignFinanceChart {...props} />
   </Suspense>
 );
 
-export const EffectivenessChartWithSuspense = (props: any) => (
+export const EffectivenessChartWithSuspense = (props: unknown) => (
   <Suspense fallback={<ChartSkeleton />}>
     <LazyEffectivenessChart {...props} />
   </Suspense>
 );
 
-export const AdvancedDashboardWithSuspense = (props: any) => (
+export const AdvancedDashboardWithSuspense = (props: unknown) => (
   <Suspense fallback={<AnalyticsSkeleton />}>
     <div className="p-4 text-gray-500">Advanced Dashboard Component</div>
   </Suspense>
 );
 
-export const InteractiveVisualizationsWithSuspense = (props: any) => (
+export const InteractiveVisualizationsWithSuspense = (props: unknown) => (
   <Suspense fallback={<AnalyticsSkeleton />}>
     <LazyInteractiveVisualizations {...props} />
   </Suspense>
 );
 
-export const StateDataVisualizationsWithSuspense = (props: any) => (
+export const StateDataVisualizationsWithSuspense = (props: unknown) => (
   <Suspense fallback={<AnalyticsSkeleton />}>
     <LazyStateDataVisualizations {...props} />
   </Suspense>
 );
 
-export const AdvancedSearchWithSuspense = (props: any) => (
+export const AdvancedSearchWithSuspense = (props: unknown) => (
   <Suspense fallback={<div className="animate-pulse bg-gray-200 h-12 rounded" />}>
     <LazyAdvancedSearch {...props} />
   </Suspense>
@@ -269,7 +269,7 @@ export function withLazyLoading<P extends object>(
 // Hook for lazy data loading
 export function useLazyData<T>(
   fetchFunction: () => Promise<T>,
-  dependencies: any[] = [],
+  dependencies: unknown[] = [],
   options: { threshold?: number; rootMargin?: string } = {}
 ) {
   const [data, setData] = useState<T | null>(null);

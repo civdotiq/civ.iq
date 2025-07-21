@@ -31,7 +31,7 @@ interface ApiResponse {
   error?: {
     code: string
     message: string
-    details?: any
+    details?: unknown
   }
   metadata: {
     timestamp: string
@@ -260,7 +260,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     // Determine error type and provide specific messaging
     let errorCode = 'UNKNOWN_ERROR'
     let errorMessage = 'An unexpected error occurred'
-    let errorDetails: any = undefined
+    let errorDetails: unknown = undefined
 
     if (error instanceof Error) {
       if (error.message.includes('Circuit breaker open')) {

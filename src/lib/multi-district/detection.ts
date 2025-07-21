@@ -18,7 +18,7 @@ export interface MultiDistrictResponse {
   isMultiDistrict: boolean;
   districts: DistrictInfo[];
   primaryDistrict?: DistrictInfo;
-  representatives?: any[];
+  representatives?: unknown[];
   warnings?: string[];
   metadata: {
     timestamp: string;
@@ -35,7 +35,7 @@ export interface MultiDistrictResponse {
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
 }
 

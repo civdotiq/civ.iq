@@ -4,7 +4,27 @@
  */
 
 import { RollCallParser } from '@/lib/rollcall-parser'
-import { mockFetchResponse } from './test-helpers'
+
+// Helper to mock fetch responses for XML
+function mockXMLFetchResponse(xmlText: string): Promise<Response> {
+  return Promise.resolve({
+    ok: true,
+    status: 200,
+    statusText: 'OK',
+    text: () => Promise.resolve(xmlText),
+    json: () => Promise.resolve({}),
+    headers: new Headers(),
+    url: 'https://example.com',
+    redirected: false,
+    type: 'basic' as ResponseType,
+    body: null,
+    bodyUsed: false,
+    clone: () => mockXMLFetchResponse(xmlText) as Response,
+    arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+    blob: () => Promise.resolve(new Blob()),
+    formData: () => Promise.resolve(new FormData())
+  } as Response)
+}
 
 describe('RollCallParser', () => {
   let parser: RollCallParser
@@ -46,7 +66,7 @@ describe('RollCallParser', () => {
     </roll_call_vote>`
 
     it('should parse Senate roll call XML correctly', async () => {
-      global.fetch = jest.fn().mockResolvedValueOnce(mockFetchResponse(mockSenateXML))
+      global.fetch = jest.fn().mockResolvedValueOnce(mockXMLFetchResponse(mockSenateXML))
 
       const result = await parser.fetchAndParseRollCall('https://www.senate.gov/test.xml')
 
@@ -88,7 +108,7 @@ describe('RollCallParser', () => {
     })
 
     it('should find member vote correctly', async () => {
-      global.fetch = jest.fn().mockResolvedValueOnce(mockFetchResponse(mockSenateXML))
+      global.fetch = jest.fn().mockResolvedValueOnce(mockXMLFetchResponse(mockSenateXML))
 
       const rollCallData = await parser.fetchAndParseRollCall('https://www.senate.gov/test.xml')
       const memberVote = parser.findMemberVote(rollCallData!, 'S000148', 'Charles Schumer')
@@ -129,7 +149,7 @@ describe('RollCallParser', () => {
     </rollcall-vote>`
 
     it('should parse House roll call XML correctly', async () => {
-      global.fetch = jest.fn().mockResolvedValueOnce(mockFetchResponse(mockHouseXML))
+      global.fetch = jest.fn().mockResolvedValueOnce(mockXMLFetchResponse(mockHouseXML))
 
       const result = await parser.fetchAndParseRollCall('https://clerk.house.gov/test.xml')
 
@@ -188,7 +208,7 @@ describe('RollCallParser', () => {
 
       testCases.forEach(({ input, expected }) => {
         // Access private method for testing
-        const normalizeVote = (parser as any).normalizeVote.bind(parser)
+        const normalizeVote = (parser as { normalizeVote: (input: string) => string }).normalizeVote.bind(parser)
         expect(normalizeVote(input)).toBe(expected)
       })
     })
@@ -204,7 +224,7 @@ describe('RollCallParser', () => {
     })
 
     it('should handle invalid XML gracefully', async () => {
-      global.fetch = jest.fn().mockResolvedValueOnce(mockFetchResponse('invalid xml'))
+      global.fetch = jest.fn().mockResolvedValueOnce(mockXMLFetchResponse('invalid xml'))
 
       const result = await parser.fetchAndParseRollCall('https://example.com/test.xml')
 

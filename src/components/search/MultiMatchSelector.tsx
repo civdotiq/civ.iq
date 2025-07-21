@@ -102,7 +102,7 @@ export function MultiMatchSelector({
         {onCancel && (
           <Button
             onClick={onCancel}
-            variant="outline"
+            variant="secondary"
             className="flex-1"
           >
             Try Different Search

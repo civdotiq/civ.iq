@@ -9,7 +9,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { FileText, Calendar, Users, TrendingUp, Filter, Search, ExternalLink, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { FileText, Users, TrendingUp, Search, ExternalLink, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 
 // Logo component
 function CiviqLogo() {
@@ -288,7 +288,7 @@ export default function StateBillsPage() {
     subject: 'all',
     search: ''
   });
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, _setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (state) {

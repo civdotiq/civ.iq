@@ -69,7 +69,7 @@ async function fetchReportsData(committeeId: string) {
   }
 }
 
-function createTimelineFromBills(bills: any[]): TimelineItem[] {
+function createTimelineFromBills(bills: unknown[]): TimelineItem[] {
   const timelineItems: TimelineItem[] = [];
   
   bills.forEach(bill => {
@@ -90,7 +90,7 @@ function createTimelineFromBills(bills: any[]): TimelineItem[] {
     
     // Add committee actions
     if (bill.committeeActions) {
-      bill.committeeActions.forEach((action: any, idx: number) => {
+      bill.committeeActions.forEach((action: unknown, idx: number) => {
         let type: TimelineItem['type'] = 'bill';
         let importance: TimelineItem['importance'] = 'low';
         
@@ -134,7 +134,7 @@ function createTimelineFromBills(bills: any[]): TimelineItem[] {
   return timelineItems;
 }
 
-function createTimelineFromReports(reports: any[]): TimelineItem[] {
+function createTimelineFromReports(reports: unknown[]): TimelineItem[] {
   return reports.map(report => ({
     id: `report-${report.reportId}`,
     type: 'report' as const,

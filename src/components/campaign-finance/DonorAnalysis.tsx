@@ -56,7 +56,6 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
   };
 
   const renderSizeView = () => {
-    const { smallDonors, largeDonors } = data.donors.smallDonorMetrics;
     const { grassrootsScore } = data.donors.smallDonorMetrics;
     const { dependencyScore } = data.donors.largeDonorMetrics;
 

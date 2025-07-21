@@ -12,7 +12,7 @@ import { FundraisingTrends } from './campaign-finance/FundraisingTrends';
 import { EnhancedFECData } from '@/types/fec';
 
 interface CampaignFinanceData {
-  candidate_info: any;
+  candidate_info: unknown;
   financial_summary: Array<{
     cycle: number;
     total_receipts: number;

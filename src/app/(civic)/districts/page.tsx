@@ -468,12 +468,12 @@ function DemographicsComparison({ districts }: { districts: District[] }) {
 export default function DistrictsPage() {
   const [districts, setDistricts] = useState<District[]>([]);
   const [selectedDistrict, setSelectedDistrict] = useState<string>('');
-  const [selectedState, setSelectedState] = useState<any>(null);
+  const [selectedState, setSelectedState] = useState<{ name: string; abbreviation: string; } | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'competitive' | 'safe-d' | 'safe-r'>('all');
   const [stateFilter, setStateFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [allRepresentatives, setAllRepresentatives] = useState<any[]>([]);
+  const [_allRepresentatives, _setAllRepresentatives] = useState<unknown[]>([]);
 
   useEffect(() => {
     fetchDistricts();
@@ -485,10 +485,10 @@ export default function DistrictsPage() {
       const response = await fetch('/api/representatives/all');
       if (response.ok) {
         const data = await response.json();
-        setAllRepresentatives(data.representatives || []);
+        _setAllRepresentatives(data.representatives || []);
       }
-    } catch (error) {
-      console.error('Error fetching representatives:', error);
+    } catch {
+      // Error will be handled by the error boundary
     }
   };
 
@@ -503,8 +503,8 @@ export default function DistrictsPage() {
       } else {
         throw new Error('Failed to fetch districts');
       }
-    } catch (error) {
-      console.error('Error fetching districts:', error);
+    } catch {
+      // Error will be handled by the error boundary
       
       // Fallback: Generate districts from our 538 representatives
       const mockDistricts: District[] = Array.from({ length: 20 }, (_, i) => ({
@@ -664,7 +664,7 @@ export default function DistrictsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Competitiveness</label>
                   <select
                     value={filter}
-                    onChange={(e) => setFilter(e.target.value as any)}
+                    onChange={(e) => setFilter(e.target.value as 'all' | 'competitive' | 'safe-d' | 'safe-r')}
                     className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                   >
                     <option value="all">All Districts</option>

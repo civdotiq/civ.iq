@@ -100,7 +100,7 @@ interface OpenStatesJurisdiction {
 
 class OpenStatesAPI {
   private config: OpenStatesConfig;
-  private cache: Map<string, { data: any; timestamp: number; ttl: number }>;
+  private cache: Map<string, { data: unknown; timestamp: number; ttl: number }>;
 
   constructor(config?: Partial<OpenStatesConfig>) {
     this.config = {
@@ -160,7 +160,7 @@ class OpenStatesAPI {
         const data = await response.json();
 
         if (data.errors) {
-          throw new Error(`GraphQL Error: ${data.errors.map((e: any) => e.message).join(', ')}`);
+          throw new Error(`GraphQL Error: ${data.errors.map((e: unknown) => e.message).join(', ')}`);
         }
 
         // Cache successful response for 30 minutes
@@ -228,7 +228,7 @@ class OpenStatesAPI {
     const variables = { state: state.toLowerCase(), chamber };
     const result = await this.makeRequest(query, variables);
     
-    return result.people.edges.map((edge: any) => this.transformLegislator(edge.node, state));
+    return result.people.edges.map((edge: unknown) => this.transformLegislator(edge.node, state));
   }
 
   /**
@@ -307,7 +307,7 @@ class OpenStatesAPI {
     
     const result = await this.makeRequest(query, variables);
     
-    return result.bills.edges.map((edge: any) => this.transformBill(edge.node, state));
+    return result.bills.edges.map((edge: unknown) => this.transformBill(edge.node, state));
   }
 
   /**
@@ -377,15 +377,15 @@ class OpenStatesAPI {
     `;
 
     const result = await this.makeRequest(query, { name, state: state?.toLowerCase() });
-    return result.people.edges.map((edge: any) => this.transformLegislator(edge.node, state || 'unknown'));
+    return result.people.edges.map((edge: unknown) => this.transformLegislator(edge.node, state || 'unknown'));
   }
 
-  private transformLegislator(node: any, state: string): OpenStatesLegislator {
+  private transformLegislator(node: unknown, state: string): OpenStatesLegislator {
     const membership = node.currentMemberships?.[0];
     const contactDetails = node.contactDetails || [];
     
-    const email = contactDetails.find((c: any) => c.type === 'email')?.value;
-    const phone = contactDetails.find((c: any) => c.type === 'voice')?.value;
+    const email = contactDetails.find((c: unknown) => c.type === 'email')?.value;
+    const phone = contactDetails.find((c: unknown) => c.type === 'voice')?.value;
 
     return {
       id: node.id,
@@ -397,7 +397,7 @@ class OpenStatesAPI {
       email,
       phone,
       photo_url: node.image,
-      roles: node.currentMemberships?.map((m: any) => ({
+      roles: node.currentMemberships?.map((m: unknown) => ({
         type: 'legislator',
         chamber: m.organization?.chamber,
         district: m.post?.label,
@@ -409,7 +409,7 @@ class OpenStatesAPI {
     };
   }
 
-  private transformBill(node: any, state: string): OpenStatesBill {
+  private transformBill(node: unknown, state: string): OpenStatesBill {
     return {
       id: node.id,
       identifier: node.identifier,
@@ -419,19 +419,19 @@ class OpenStatesAPI {
       classification: node.classification || [],
       subject: node.subject || [],
       from_organization: node.fromOrganization?.name || 'Unknown',
-      sponsorships: node.sponsorships?.map((s: any) => ({
+      sponsorships: node.sponsorships?.map((s: unknown) => ({
         name: s.name,
         entity_type: s.entityType,
         classification: s.classification,
         primary: s.primary
       })) || [],
-      actions: node.actions?.map((a: any) => ({
+      actions: node.actions?.map((a: unknown) => ({
         date: a.date,
         description: a.description,
         organization: a.organization?.name || 'Unknown',
         classification: a.classification || []
       })) || [],
-      votes: node.votes?.map((v: any) => ({
+      votes: node.votes?.map((v: unknown) => ({
         identifier: v.identifier,
         motion_text: v.motionText,
         start_date: v.startDate,
@@ -443,10 +443,10 @@ class OpenStatesAPI {
     };
   }
 
-  private transformJurisdiction(node: any): OpenStatesJurisdiction {
+  private transformJurisdiction(node: unknown): OpenStatesJurisdiction {
     const chambers: Record<string, any> = {};
     
-    node.organizations?.forEach((org: any) => {
+    node.organizations?.forEach((org: unknown) => {
       if (org.chamber) {
         chambers[org.chamber] = {
           name: org.name,
@@ -455,7 +455,7 @@ class OpenStatesAPI {
       }
     });
 
-    const currentSession = node.legislativeSessions?.find((s: any) => s.active);
+    const currentSession = node.legislativeSessions?.find((s: unknown) => s.active);
 
     return {
       id: node.id,

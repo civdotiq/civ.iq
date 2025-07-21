@@ -23,7 +23,7 @@ export interface ConsistencyResult {
     rule: string;
     message: string;
     severity: 'error' | 'warning' | 'info';
-    data?: any;
+    data?: unknown;
   }>;
   warnings: number;
   errors: number;
@@ -109,7 +109,7 @@ export class DataConsistencyValidator {
 export const RepresentativeConsistencyRules: ConsistencyRule[] = [
   {
     name: 'bioguide_id_format',
-    check: (rep: any) => {
+    check: (rep: unknown) => {
       return typeof rep.bioguideId === 'string' && /^[A-Z]\d{6}$/.test(rep.bioguideId);
     },
     message: 'Bioguide ID must be in format: 1 letter followed by 6 digits',
@@ -117,7 +117,7 @@ export const RepresentativeConsistencyRules: ConsistencyRule[] = [
   },
   {
     name: 'required_fields',
-    check: (rep: any) => {
+    check: (rep: unknown) => {
       const required = ['bioguideId', 'name', 'state', 'party', 'chamber'];
       return required.every(field => rep[field] !== undefined && rep[field] !== null && rep[field] !== '');
     },
@@ -126,7 +126,7 @@ export const RepresentativeConsistencyRules: ConsistencyRule[] = [
   },
   {
     name: 'chamber_values',
-    check: (rep: any) => {
+    check: (rep: unknown) => {
       return ['House', 'Senate'].includes(rep.chamber);
     },
     message: 'Chamber must be either "House" or "Senate"',
@@ -134,7 +134,7 @@ export const RepresentativeConsistencyRules: ConsistencyRule[] = [
   },
   {
     name: 'state_abbreviation',
-    check: (rep: any) => {
+    check: (rep: unknown) => {
       const validStates = [
         'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
         'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
@@ -149,7 +149,7 @@ export const RepresentativeConsistencyRules: ConsistencyRule[] = [
   },
   {
     name: 'district_consistency',
-    check: (rep: any) => {
+    check: (rep: unknown) => {
       // Senate members should have null district, House members should have a district
       if (rep.chamber === 'Senate') {
         return rep.district === null || rep.district === undefined;
@@ -163,7 +163,7 @@ export const RepresentativeConsistencyRules: ConsistencyRule[] = [
   },
   {
     name: 'party_values',
-    check: (rep: any) => {
+    check: (rep: unknown) => {
       const commonParties = ['Democratic', 'Republican', 'Independent', 'Democrat', 'GOP'];
       return typeof rep.party === 'string' && rep.party.length > 0;
     },
@@ -172,7 +172,7 @@ export const RepresentativeConsistencyRules: ConsistencyRule[] = [
   },
   {
     name: 'contact_info_structure',
-    check: (rep: any) => {
+    check: (rep: unknown) => {
       if (!rep.contactInfo) return false;
       return typeof rep.contactInfo === 'object' && 
              'phone' in rep.contactInfo && 
@@ -186,7 +186,7 @@ export const RepresentativeConsistencyRules: ConsistencyRule[] = [
 export const BillConsistencyRules: ConsistencyRule[] = [
   {
     name: 'bill_identifier_format',
-    check: (bill: any) => {
+    check: (bill: unknown) => {
       return typeof bill.billNumber === 'string' && 
              /^(HR|H\.R\.|S|S\.|HB|SB)\s*\d+$/.test(bill.billNumber.replace(/\s+/g, ' '));
     },
@@ -195,7 +195,7 @@ export const BillConsistencyRules: ConsistencyRule[] = [
   },
   {
     name: 'required_bill_fields',
-    check: (bill: any) => {
+    check: (bill: unknown) => {
       const required = ['id', 'billNumber', 'title', 'chamber', 'status'];
       return required.every(field => bill[field] !== undefined && bill[field] !== null && bill[field] !== '');
     },
@@ -204,7 +204,7 @@ export const BillConsistencyRules: ConsistencyRule[] = [
   },
   {
     name: 'bill_status_values',
-    check: (bill: any) => {
+    check: (bill: unknown) => {
       const validStatuses = [
         'introduced', 'committee', 'floor', 'passed_chamber', 
         'other_chamber', 'passed_both', 'signed', 'vetoed', 'dead'
@@ -216,7 +216,7 @@ export const BillConsistencyRules: ConsistencyRule[] = [
   },
   {
     name: 'sponsor_structure',
-    check: (bill: any) => {
+    check: (bill: unknown) => {
       if (!bill.sponsor) return false;
       return typeof bill.sponsor === 'object' && 
              'name' in bill.sponsor && 
@@ -228,7 +228,7 @@ export const BillConsistencyRules: ConsistencyRule[] = [
   },
   {
     name: 'date_consistency',
-    check: (bill: any) => {
+    check: (bill: unknown) => {
       if (!bill.introducedDate || !bill.lastActionDate) return true;
       
       const introduced = new Date(bill.introducedDate);
@@ -244,7 +244,7 @@ export const BillConsistencyRules: ConsistencyRule[] = [
 export const LegislatorConsistencyRules: ConsistencyRule[] = [
   {
     name: 'legislator_required_fields',
-    check: (leg: any) => {
+    check: (leg: unknown) => {
       const required = ['id', 'name', 'party', 'chamber', 'district'];
       return required.every(field => leg[field] !== undefined && leg[field] !== null);
     },
@@ -253,7 +253,7 @@ export const LegislatorConsistencyRules: ConsistencyRule[] = [
   },
   {
     name: 'legislator_chamber_values',
-    check: (leg: any) => {
+    check: (leg: unknown) => {
       return ['upper', 'lower'].includes(leg.chamber);
     },
     message: 'Legislator chamber must be either "upper" or "lower"',
@@ -261,7 +261,7 @@ export const LegislatorConsistencyRules: ConsistencyRule[] = [
   },
   {
     name: 'contact_email_format',
-    check: (leg: any) => {
+    check: (leg: unknown) => {
       if (!leg.email) return true; // Email is optional
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return emailRegex.test(leg.email);
@@ -271,7 +271,7 @@ export const LegislatorConsistencyRules: ConsistencyRule[] = [
   },
   {
     name: 'phone_format',
-    check: (leg: any) => {
+    check: (leg: unknown) => {
       if (!leg.phone) return true; // Phone is optional
       // Allow various phone number formats
       const phoneRegex = /^[\+]?[\d\s\-\(\)\.]{10,}$/;

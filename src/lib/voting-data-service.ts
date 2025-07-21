@@ -10,8 +10,8 @@
 
 import { congressApi } from './congress-api';
 import { parseRollCallXML } from './rollcall-parser';
-import { structuredLogger } from './logging/logger';
-import { cachedFetch } from './cache';
+import { structuredLogger } from './logging/logger-edge';
+import { cachedFetch } from './cache-edge';
 
 export interface VotingRecord {
   voteId: string;
@@ -151,7 +151,7 @@ export class VotingDataService {
   ): Promise<VotingRecord[]> {
     try {
       // Get recent bills that passed through Congress
-      const bills = await congressApi.getRecentBills(119, limit * 2); // Get more bills to find votes
+      const bills = await congressApi.getRecentBills(limit * 2); // Get more bills to find votes
       const votes: VotingRecord[] = [];
 
       for (const bill of bills) {
@@ -166,7 +166,7 @@ export class VotingDataService {
           );
 
           // Look for recorded votes in bill actions
-          const recordedVotes = this.extractRecordedVotes(billDetails, bioguideId, chamber);
+          const recordedVotes = await this.extractRecordedVotes(billDetails, bioguideId, chamber);
           votes.push(...recordedVotes);
 
         } catch (billError) {
@@ -192,11 +192,11 @@ export class VotingDataService {
   /**
    * Extract recorded votes from bill actions
    */
-  private extractRecordedVotes(
-    billDetails: any, 
+  private async extractRecordedVotes(
+    billDetails: unknown, 
     bioguideId: string, 
     chamber: 'House' | 'Senate'
-  ): VotingRecord[] {
+  ): Promise<VotingRecord[]> {
     const votes: VotingRecord[] = [];
 
     if (!billDetails?.actions?.length) return votes;
@@ -220,7 +220,7 @@ export class VotingDataService {
             question: action.text || 'On Passage',
             result: recordedVote.result || 'Unknown',
             date: action.actionDate || new Date().toISOString().split('T')[0],
-            position: this.determineVotePosition(bioguideId, recordedVote),
+            position: await this.determineVotePosition(bioguideId, recordedVote),
             chamber: chamber,
             rollNumber: recordedVote.rollNumber,
             isKeyVote: this.isKeyVote(billDetails),
@@ -258,12 +258,13 @@ export class VotingDataService {
       for (const rollNumber of rollCallNumbers.slice(0, Math.min(10, limit * 2))) {
         try {
           const rollCallUrl = this.buildRollCallUrl(chamber, rollNumber);
-          const xmlData = await this.fetchRollCallXML(rollCallUrl);
-          
-          if (xmlData) {
-            const parsedVote = await parseRollCallXML(xmlData, bioguideId);
+          const parsedVote = await parseRollCallXML(rollCallUrl);
             
-            if (parsedVote && parsedVote.memberVote) {
+            if (parsedVote) {
+              // Find the member's vote in the votes array
+              const memberVote = parsedVote.votes.find(v => v.memberId === bioguideId);
+              
+              if (memberVote) {
               const vote: VotingRecord = {
                 voteId: `rollcall-${chamber.toLowerCase()}-${rollNumber}`,
                 bill: {
@@ -275,12 +276,12 @@ export class VotingDataService {
                 question: parsedVote.question || 'On Passage',
                 result: parsedVote.result || 'Unknown',
                 date: parsedVote.date || new Date().toISOString().split('T')[0],
-                position: parsedVote.memberVote as 'Yea' | 'Nay' | 'Not Voting' | 'Present',
+                position: memberVote.vote as 'Yea' | 'Nay' | 'Not Voting' | 'Present',
                 chamber: chamber,
                 rollNumber: rollNumber,
                 isKeyVote: false,
                 category: 'Other',
-                partyBreakdown: parsedVote.partyBreakdown,
+                // Party breakdown would need to be calculated from the votes array
                 metadata: {
                   sourceUrl: rollCallUrl,
                   lastUpdated: new Date().toISOString(),
@@ -288,9 +289,9 @@ export class VotingDataService {
                 }
               };
 
-              votes.push(vote);
+                votes.push(vote);
+              }
             }
-          }
         } catch (rollError) {
           structuredLogger.debug('Failed to parse roll call', { 
             rollNumber, 
@@ -313,19 +314,89 @@ export class VotingDataService {
   /**
    * Helper methods
    */
-  private determineVotePosition(bioguideId: string, recordedVote: any): 'Yea' | 'Nay' | 'Not Voting' | 'Present' {
-    // This would need to parse the actual vote data
-    // For now, return a placeholder - this would be enhanced with real parsing
-    return 'Yea';
+  private normalizeVotePosition(position: string): 'Yea' | 'Nay' | 'Not Voting' | 'Present' {
+    if (!position) return 'Not Voting';
+
+    const normalized = position.toLowerCase().trim();
+
+    if (normalized === 'yea' || normalized === 'aye' || normalized === 'yes' || normalized === 'y') {
+      return 'Yea';
+    } else if (normalized === 'nay' || normalized === 'no' || normalized === 'n') {
+      return 'Nay';
+    } else if (normalized === 'present' || normalized === 'p') {
+      return 'Present';
+    } else {
+      return 'Not Voting';
+    }
   }
 
-  private isKeyVote(billDetails: any): boolean {
+  private async fetchAndParseRollCallData(url: string, bioguideId: string): Promise<{ memberVote: string } | null> {
+    try {
+      const rollCallData = await parseRollCallXML(url);
+      if (!rollCallData) return null;
+
+      // Find the specific member's vote in the roll call data
+      const memberVote = rollCallData.votes.find(vote =>
+        vote.memberId === bioguideId
+      );
+
+      return memberVote ? { memberVote: memberVote.vote } : null;
+
+    } catch (error) {
+      structuredLogger.debug('Failed to fetch roll call data', {
+        url,
+        bioguideId,
+        error: (error as Error).message
+      });
+      return null;
+    }
+  }
+
+
+
+  private async determineVotePosition(bioguideId: string, recordedVote: unknown): Promise<'Yea' | 'Nay' | 'Not Voting' | 'Present'> {
+    try {
+      // If we have a direct roll call URL, fetch and parse the actual vote data
+      if (recordedVote.url) {
+        const rollCallData = await this.fetchAndParseRollCallData(recordedVote.url, bioguideId);
+        if (rollCallData?.memberVote) {
+          return rollCallData.memberVote as 'Yea' | 'Nay' | 'Not Voting' | 'Present';
+        }
+      }
+
+      // Fallback: try to extract vote information from the recorded vote object
+      if (recordedVote.votes && Array.isArray(recordedVote.votes)) {
+        const memberVote = recordedVote.votes.find((vote: unknown) =>
+          vote.memberId === bioguideId ||
+          vote.memberId === bioguideId
+        );
+
+        if (memberVote?.position) {
+          return this.normalizeVotePosition(memberVote.position);
+        }
+      }
+
+      // If no specific vote data found, return Not Voting as safe default
+      structuredLogger.warn('Could not determine vote position for member', {
+        bioguideId,
+        recordedVoteUrl: recordedVote.url
+      });
+
+      return 'Not Voting';
+
+    } catch (error) {
+      structuredLogger.error('Error determining vote position', error instanceof Error ? error : new Error(String(error)));
+      return 'Not Voting';
+    }
+  }
+
+  private isKeyVote(billDetails: unknown): boolean {
     const keywordIndicators = ['appropriation', 'budget', 'defense authorization', 'infrastructure'];
     const title = (billDetails.title || '').toLowerCase();
     return keywordIndicators.some(keyword => title.includes(keyword));
   }
 
-  private categorizeVote(billDetails: any): VotingRecord['category'] {
+  private categorizeVote(billDetails: unknown): VotingRecord['category'] {
     const title = (billDetails.title || '').toLowerCase();
     
     if (title.includes('budget') || title.includes('appropriation')) return 'Budget';
@@ -359,15 +430,19 @@ export class VotingDataService {
 
   private async fetchRollCallXML(url: string): Promise<string | null> {
     try {
-      const response = await cachedFetch(url, {
-        ttl: 24 * 60 * 60 * 1000, // 24 hour cache
-        headers: {
-          'User-Agent': 'CivicIntelHub/1.0 (https://civicintelhub.com)'
-        }
-      });
+      const cacheKey = `rollcall:${url}`;
+      const fetchFn = async () => {
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'CivicIntelHub/1.0 (https://civicintelhub.com)'
+          }
+        });
+        
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.text();
+      };
 
-      if (!response.ok) return null;
-      return await response.text();
+      return await cachedFetch(cacheKey, fetchFn, 24 * 60 * 60); // 24 hour cache
 
     } catch (error) {
       structuredLogger.debug('Failed to fetch roll call XML', { 

@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { EnhancedRepresentative } from '@/types/representative';
+import { EnhancedRepresentative } from '../types/representative';
 
 export interface ValidationError {
   field: string;
@@ -13,8 +13,17 @@ export interface ValidationError {
   repName?: string;
 }
 
+// Type definition for known representative data
+interface KnownRepresentativeInfo {
+  name: string;
+  party: string;
+  state: string;
+  refusesPACs: boolean;
+  expectedCommittees?: string[];
+}
+
 // Known representatives for validation
-export const KNOWN_REPRESENTATIVES = {
+export const KNOWN_REPRESENTATIVES: Record<string, KnownRepresentativeInfo> = {
   'T000481': { 
     name: 'Rashida Tlaib', 
     party: 'Democrat', 
@@ -41,7 +50,7 @@ export const KNOWN_REPRESENTATIVES = {
     state: 'NY',
     refusesPACs: false
   }
-} as const;
+};
 
 export class DataValidator {
   private errors: ValidationError[] = [];
@@ -49,7 +58,7 @@ export class DataValidator {
   /**
    * Validate representative data and return any errors found
    */
-  validateRepresentativeData(representative: EnhancedRepresentative, additionalData?: any): ValidationError[] {
+  validateRepresentativeData(representative: EnhancedRepresentative, additionalData?: unknown): ValidationError[] {
     this.errors = [];
     
     this.validateBasicInfo(representative);
@@ -106,7 +115,7 @@ export class DataValidator {
   /**
    * Validate finance data
    */
-  private validateFinanceData(rep: EnhancedRepresentative, financeData?: any): void {
+  private validateFinanceData(rep: EnhancedRepresentative, financeData?: unknown): void {
     if (!financeData) {
       return; // No finance data to validate
     }
@@ -137,7 +146,7 @@ export class DataValidator {
   /**
    * Validate voting data
    */
-  private validateVotingData(rep: EnhancedRepresentative, votingData?: any): void {
+  private validateVotingData(rep: EnhancedRepresentative, votingData?: unknown): void {
     if (!votingData) {
       return; // No voting data to validate
     }
@@ -158,8 +167,8 @@ export class DataValidator {
   /**
    * Validate against known representatives
    */
-  private validateKnownRepresentatives(rep: EnhancedRepresentative, additionalData?: any): void {
-    const knownRep = KNOWN_REPRESENTATIVES[rep.bioguideId as keyof typeof KNOWN_REPRESENTATIVES];
+  private validateKnownRepresentatives(rep: EnhancedRepresentative, additionalData?: unknown): void {
+    const knownRep = KNOWN_REPRESENTATIVES[rep.bioguideId];
     
     if (!knownRep) {
       return; // Not a known representative
@@ -180,10 +189,10 @@ export class DataValidator {
       this.addError('finance.pacRatio', `${knownRep.name} refuses PACs but showing ${additionalData.finance.pacRatio}% PAC donations`, 'warning', rep.bioguideId, rep.name);
     }
 
-    // Validate committees
+    // Validate committees (only if expectedCommittees is defined)
     if (knownRep.expectedCommittees && rep.committees) {
       const repCommitteeNames = rep.committees.map(c => c.name);
-      const hasExpectedCommittee = knownRep.expectedCommittees.some(expected => 
+      const hasExpectedCommittee = knownRep.expectedCommittees.some((expected: string) => 
         repCommitteeNames.some(actual => actual.includes(expected))
       );
       

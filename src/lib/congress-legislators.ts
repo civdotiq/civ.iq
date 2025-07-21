@@ -278,7 +278,7 @@ export async function fetchCommitteeMemberships(): Promise<CongressCommitteeMemb
         // Parse committee-based structure where each key is a committee and values are member arrays
         for (const [committeeId, memberList] of Object.entries(data)) {
           if (Array.isArray(memberList)) {
-            memberList.forEach((member: any) => {
+            memberList.forEach((member: unknown) => {
               if (member.bioguide) {
                 if (!membershipsByBioguide.has(member.bioguide)) {
                   membershipsByBioguide.set(member.bioguide, [])

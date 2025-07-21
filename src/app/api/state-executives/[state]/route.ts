@@ -173,7 +173,7 @@ function getNextElectionDate(state: string): string {
   return `${nextEvenYear}-11-07`;
 }
 
-function generateMockExecutives(state: string, stateInfo: any): StateExecutive[] {
+function generateMockExecutives(state: string, stateInfo: unknown): StateExecutive[] {
   const executives: StateExecutive[] = [];
   
   const positions: StateExecutive['position'][] = [

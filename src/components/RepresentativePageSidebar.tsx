@@ -18,13 +18,14 @@ interface RepresentativePageSidebarProps {
     district?: string;
     chamber: 'House' | 'Senate';
     bioguideId: string;
+    party?: string;
   };
   additionalData?: {
-    votes?: any[];
-    bills?: any[];
-    finance?: any;
-    news?: any[];
-    partyAlignment?: any;
+    votes?: unknown[];
+    bills?: unknown[];
+    finance?: unknown;
+    news?: unknown[];
+    partyAlignment?: unknown;
   };
 }
 
@@ -188,7 +189,7 @@ export function RepresentativePageSidebar({ representative, additionalData }: Re
             name: representative.name,
             firstName: representative.name.split(' ')[0],
             lastName: representative.name.split(' ').slice(1).join(' '),
-            party: representative.party,
+            party: representative.party || 'Unknown',
             state: representative.state,
             district: representative.district,
             chamber: representative.chamber,
@@ -241,7 +242,7 @@ export function RepresentativePageSidebar({ representative, additionalData }: Re
           name: representative.name,
           firstName: representative.name.split(' ')[0],
           lastName: representative.name.split(' ').slice(1).join(' '),
-          party: representative.party,
+          party: representative.party || 'Unknown',
           state: representative.state,
           district: representative.district,
           chamber: representative.chamber,

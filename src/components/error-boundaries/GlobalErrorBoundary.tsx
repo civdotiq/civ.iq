@@ -112,7 +112,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
               </Button>
               <Button
                 onClick={this.handleGoHome}
-                variant="outline"
+                variant="secondary"
                 className="w-full"
               >
                 Go to Homepage

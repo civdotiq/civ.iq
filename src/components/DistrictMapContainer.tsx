@@ -22,7 +22,7 @@ interface DistrictMapContainerProps {
   districts: District[];
   selectedDistrict?: string;
   onDistrictClick?: (districtId: string) => void;
-  onStateClick?: (stateInfo: any) => void;
+  onStateClick?: (stateInfo: unknown) => void;
   width?: number;
   height?: number;
 }
@@ -200,7 +200,7 @@ export default function DistrictMapContainer({
   useEffect(() => {
     if (!isClient || !containerRef.current || !mapData) return;
 
-    let map: any = null;
+    let map: unknown = null;
 
     const initializeMap = async () => {
       try {
@@ -330,14 +330,14 @@ export default function DistrictMapContainer({
             `);
 
             // Hover effects
-            layer.on('mouseover', function() {
+            layer.on('mouseover', function(this: unknown) {
               this.setStyle({
                 fillOpacity: 0.3,
                 weight: 3
               });
             });
 
-            layer.on('mouseout', function() {
+            layer.on('mouseout', function(this: unknown) {
               this.setStyle({
                 fillOpacity: 0.1,
                 weight: 2
@@ -416,7 +416,7 @@ export default function DistrictMapContainer({
             });
 
             // Hover effects
-            layer.on('mouseover', function() {
+            layer.on('mouseover', function(this: unknown) {
               this.setStyle({
                 weight: 3,
                 color: '#000',
@@ -424,7 +424,7 @@ export default function DistrictMapContainer({
               });
             });
 
-            layer.on('mouseout', function() {
+            layer.on('mouseout', function(this: unknown) {
               this.setStyle({
                 weight: selectedDistrict === props.GEOID ? 3 : 1,
                 color: selectedDistrict === props.GEOID ? '#000' : '#fff',

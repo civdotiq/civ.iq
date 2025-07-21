@@ -333,7 +333,7 @@ class GovernmentRSSFetcher {
       .replace(/<[^>]*>/g, '') // Remove HTML tags
       .replace(/\s+/g, ' ') // Normalize whitespace
       .replace(/&quot;/g, '"')
-      .replace(/&apos;/g, "'")
+      .replace(/'/g, "'")
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
       .replace(/&amp;/g, '&')

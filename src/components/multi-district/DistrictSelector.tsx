@@ -95,13 +95,14 @@ export function DistrictSelector({
               <Card
                 key={districtId}
                 className={`
-                  cursor-pointer transition-all duration-200 hover:shadow-lg
+                  transition-all duration-200 hover:shadow-lg
                   ${isSelected 
                     ? 'ring-2 ring-civiq-blue border-civiq-blue bg-civiq-blue/5' 
                     : 'border-gray-200 hover:border-civiq-blue/50'
                   }
                   ${district.primary ? 'border-civiq-green/50 bg-civiq-green/5' : ''}
                 `}
+                padding="none"
                 onClick={() => handleDistrictSelect(district)}
               >
                 <div className="p-6">
@@ -177,7 +178,7 @@ export function DistrictSelector({
               </div>
               <Button
                 onClick={onRefineAddress}
-                variant="outline"
+                variant="secondary"
                 className="inline-flex items-center space-x-2"
               >
                 <span>🏠</span>

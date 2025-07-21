@@ -61,8 +61,27 @@
       "Bash(tsx scripts/validate-119th-congress-data.ts:*)",
       "Bash(npx tsx:*)",
       "Bash(git rm:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(kill:*)",
+      "Bash(echo:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npm run test:*)",
+      "Bash(npx prettier:*)"
     ],
     "deny": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/react-app/quality-check.js"
+          }
+        ]
+      }
+    ]
   }
 }

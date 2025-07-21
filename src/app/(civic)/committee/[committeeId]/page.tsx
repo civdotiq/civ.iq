@@ -5,7 +5,7 @@
 
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { COMMITTEE_NAMES, COMMITTEE_INFO, getCommitteeInfo, getSubcommittees } from '@/lib/data/committee-names';
+import { COMMITTEE_NAMES, getCommitteeInfo, getSubcommittees } from '@/lib/data/committee-names';
 
 interface CommitteePageProps {
   params: Promise<{
@@ -28,7 +28,7 @@ async function CommitteePageContent({ params }: CommitteePageProps) {
             {committeeName}
           </h1>
           <p className="text-lg text-gray-600 mt-1">
-            {committeeInfo?.chamber.charAt(0).toUpperCase() + committeeInfo?.chamber.slice(1)} Committee
+            {committeeInfo?.chamber ? committeeInfo.chamber.charAt(0).toUpperCase() + committeeInfo.chamber.slice(1) : ''} Committee
           </p>
         </div>
       </div>

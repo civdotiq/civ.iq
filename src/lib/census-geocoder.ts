@@ -40,7 +40,7 @@ export interface GeocodeResponse {
 export interface GeocodeError {
   error: string;
   code: 'NO_MATCH' | 'INVALID_INPUT' | 'API_ERROR' | 'TIMEOUT';
-  details?: any;
+  details?: unknown;
 }
 
 // Cache for geocoding results

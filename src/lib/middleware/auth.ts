@@ -148,10 +148,10 @@ export function extractApiKey(request: NextRequest): string | null {
 }
 
 export function requireAuth(permissions: string[] = ['read']) {
-  return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function(target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value
 
-    descriptor.value = async function(request: NextRequest, ...args: any[]) {
+    descriptor.value = async function(request: NextRequest, ...args: unknown[]) {
       const apiKey = extractApiKey(request)
       
       if (!apiKey) {

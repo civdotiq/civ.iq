@@ -41,7 +41,7 @@ interface RepresentativeNews {
 }
 
 // Validate batch news request
-const validateBatchNewsRequest = (data: any): { isValid: boolean; errors: string[]; sanitized?: BatchNewsRequest } => {
+const validateBatchNewsRequest = (data: unknown): { isValid: boolean; errors: string[]; sanitized?: BatchNewsRequest } => {
   const errors: string[] = [];
   
   if (!data.bioguideIds || !Array.isArray(data.bioguideIds)) {

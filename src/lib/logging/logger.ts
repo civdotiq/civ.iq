@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import winston from 'winston'
+import * as winston from 'winston'
 import { NextRequest } from 'next/server'
 
 // Define log levels
@@ -59,43 +59,16 @@ const logger = winston.createLogger({
     version: process.env.npm_package_version || '0.1.0'
   },
   transports: [
-    // Console transport for development
+    // Console transport only (Edge Runtime compatible)
     new winston.transports.Console({
       format: process.env.NODE_ENV === 'production' 
         ? winston.format.json() 
         : structuredFormat
-    }),
-    
-    // File transport for errors
-    new winston.transports.File({
-      filename: 'logs/error.log',
-      level: 'error',
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      )
-    }),
-    
-    // File transport for all logs
-    new winston.transports.File({
-      filename: 'logs/combined.log',
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      )
     })
   ],
 })
 
-// Create logs directory if it doesn't exist
-if (typeof window === 'undefined') {
-  const fs = require('fs')
-  const path = require('path')
-  const logsDir = path.join(process.cwd(), 'logs')
-  if (!fs.existsSync(logsDir)) {
-    fs.mkdirSync(logsDir, { recursive: true })
-  }
-}
+// Edge Runtime compatible logger (no file system operations)
 
 // Interface for structured log metadata
 export interface LogMetadata {
@@ -109,7 +82,7 @@ export interface LogMetadata {
   userAgent?: string
   ip?: string
   error?: Error | string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 // Enhanced logger class with request context

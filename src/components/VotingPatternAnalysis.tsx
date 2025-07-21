@@ -41,11 +41,11 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
           
           // Calculate statistics
           const totalVotes = votes.length;
-          const yeaVotes = votes.filter((v: any) => v.position === 'Yea').length;
-          const nayVotes = votes.filter((v: any) => v.position === 'Nay').length;
-          const presentVotes = votes.filter((v: any) => v.position === 'Present').length;
-          const notVotingCount = votes.filter((v: any) => v.position === 'Not Voting').length;
-          const keyVotesCount = votes.filter((v: any) => v.isKeyVote).length;
+          const yeaVotes = votes.filter((v: unknown) => v.position === 'Yea').length;
+          const nayVotes = votes.filter((v: unknown) => v.position === 'Nay').length;
+          const presentVotes = votes.filter((v: unknown) => v.position === 'Present').length;
+          const notVotingCount = votes.filter((v: unknown) => v.position === 'Not Voting').length;
+          const keyVotesCount = votes.filter((v: unknown) => v.isKeyVote).length;
           
           // Simulate party alignment (in real app, would compare against party line votes)
           const substantiveVotes = yeaVotes + nayVotes;

@@ -85,7 +85,7 @@ async function checkExternalServices(): Promise<void> {
 }
 
 async function getSystemHealth(): Promise<SystemHealth> {
-  const startTime = Date.now()
+  const _startTime = Date.now()
   
   // Check external services
   await checkExternalServices()
@@ -132,7 +132,7 @@ async function getSystemHealth(): Promise<SystemHealth> {
   }
 }
 
-async function handleHealthCheck(request: NextRequest): Promise<NextResponse> {
+async function handleHealthCheck(_request: NextRequest): Promise<NextResponse> {
   try {
     const health = await getSystemHealth()
     

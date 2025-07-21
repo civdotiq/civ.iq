@@ -33,7 +33,7 @@ interface ApiResponse {
   error?: {
     code: string
     message: string
-    details?: any
+    details?: unknown
   }
   metadata: {
     timestamp: string
@@ -155,8 +155,8 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     
     structuredLogger.info(`District info retrieved successfully`, {
       zipCode,
-      state: districtInfo.state,
-      district: districtInfo.district,
+      state: districtInfo?.state,
+      district: districtInfo?.district,
       operation: 'getDistrict'
     });
 
@@ -289,7 +289,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
 
     // Step 4: Convert to response format with validation
     const representatives: RepresentativeResponse[] = []
-    const validationResults: any[] = []
+    const validationResults: unknown[] = []
     
     for (const rep of districtRepresentatives) {
       // Validate each representative's data
@@ -364,7 +364,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     }
 
   } catch (error) {
-    structuredLogger.error('Error fetching representatives', error, {
+    structuredLogger.error('Error fetching representatives', error as Error, {
       zipCode,
       operation: 'getRepresentativesByZip'
     })
@@ -372,7 +372,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     // Determine error type and provide specific messaging
     let errorCode = 'UNKNOWN_ERROR'
     let errorMessage = 'An unexpected error occurred'
-    let errorDetails: any = undefined
+    let errorDetails: unknown = undefined
 
     if (error instanceof Error) {
       if (error.message.includes('Circuit breaker open')) {
@@ -489,7 +489,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     const logger = createRequestLogger(request, `rep-error-${Date.now()}`);
-    logger.error('Unexpected error in Representatives API', error, {
+    logger.error('Unexpected error in Representatives API', error as Error, {
       hasStack: error instanceof Error && !!error.stack
     });
     

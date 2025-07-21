@@ -141,7 +141,7 @@ export function formatPercentage(value: number, decimals: number = 1): string {
 /**
  * Debounce function
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => any>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {

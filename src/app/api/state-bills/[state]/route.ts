@@ -142,7 +142,7 @@ async function fetchStateBills(
       totalCount: data.meta?.total_count || 0
     });
 
-    return data.results?.map((bill: any) => transformBill(bill, stateAbbrev)) || [];
+    return data.results?.map((bill: unknown) => transformBill(bill, stateAbbrev)) || [];
   } catch (error) {
     monitor.end(false, undefined, error as Error);
     structuredLogger.error('Error fetching state bills', error as Error, {
@@ -154,9 +154,9 @@ async function fetchStateBills(
 }
 
 // Transform OpenStates bill data to our format
-function transformBill(bill: any, stateAbbrev: string): StateBill {
+function transformBill(bill: unknown, stateAbbrev: string): StateBill {
   const sponsors = bill.sponsorships || [];
-  const primarySponsor = sponsors.find((s: any) => s.primary) || sponsors[0];
+  const primarySponsor = sponsors.find((s: unknown) => s.primary) || sponsors[0];
   
   // Map OpenStates bill status to our simplified status
   const mapStatus = (classification: string[], latestAction?: string): StateBill['status'] => {
@@ -174,10 +174,10 @@ function transformBill(bill: any, stateAbbrev: string): StateBill {
   };
 
   // Extract voting data from actions
-  const votes = bill.actions?.filter((action: any) => 
+  const votes = bill.actions?.filter((action: unknown) => 
     action.classification?.includes('passage') || 
     action.classification?.includes('committee-passage')
-  ).map((action: any) => ({
+  ).map((action: unknown) => ({
     chamber: action.organization?.chamber || 'unknown',
     date: action.date,
     type: action.classification?.includes('committee') ? 'committee' : 'passage',
@@ -199,13 +199,13 @@ function transformBill(bill: any, stateAbbrev: string): StateBill {
       party: normalizeParty(primarySponsor?.person?.party) || 'Independent',
       district: primarySponsor?.person?.current_role?.district || 'Unknown'
     },
-    cosponsors: sponsors.filter((s: any) => !s.primary).slice(0, 10).map((s: any) => ({
+    cosponsors: sponsors.filter((s: unknown) => !s.primary).slice(0, 10).map((s: unknown) => ({
       name: s.name || 'Unknown',
       party: normalizeParty(s.person?.party) || 'Independent',
       district: s.person?.current_role?.district || 'Unknown'
     })),
-    committee: bill.actions?.find((a: any) => a.organization?.classification === 'committee') ? {
-      name: bill.actions.find((a: any) => a.organization?.classification === 'committee')?.organization?.name || 'Unknown Committee',
+    committee: bill.actions?.find((a: unknown) => a.organization?.classification === 'committee') ? {
+      name: bill.actions.find((a: unknown) => a.organization?.classification === 'committee')?.organization?.name || 'Unknown Committee',
       chairman: 'Unknown' // Would need separate API call
     } : undefined,
     introducedDate: bill.first_action_date || bill.created_at || new Date().toISOString().split('T')[0],

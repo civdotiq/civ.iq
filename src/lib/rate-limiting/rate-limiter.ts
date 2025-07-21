@@ -8,10 +8,10 @@ import { structuredLogger } from '@/lib/logging/logger';
 
 // Rate limiter instances for different endpoint types
 const rateLimiters = {
-  general: new RateLimiter(100, 'minute', true), // 100 requests per minute
-  search: new RateLimiter(20, 'minute', true),   // 20 requests per minute for search
-  batch: new RateLimiter(5, 'minute', true),     // 5 requests per minute for batch operations
-  heavy: new RateLimiter(10, 'minute', true),    // 10 requests per minute for heavy operations
+  general: new RateLimiter({ tokensPerInterval: 100, interval: 'minute' }), // 100 requests per minute
+  search: new RateLimiter({ tokensPerInterval: 20, interval: 'minute' }),   // 20 requests per minute for search
+  batch: new RateLimiter({ tokensPerInterval: 5, interval: 'minute' }),     // 5 requests per minute for batch operations
+  heavy: new RateLimiter({ tokensPerInterval: 10, interval: 'minute' }),    // 10 requests per minute for heavy operations
 };
 
 // IP-based rate limiting using Map (in production, use Redis)
@@ -54,7 +54,7 @@ export function checkRateLimit(options: RateLimitOptions): RateLimitResult {
   let ipData = ipRateLimiters.get(ip);
   if (!ipData) {
     ipData = {
-      limiter: new RateLimiter(100, 'minute', true), // Default 100 per minute per IP
+      limiter: new RateLimiter({ tokensPerInterval: 100, interval: 'minute' }), // Default 100 per minute per IP
       firstRequest: Date.now(),
       requestCount: 0
     };

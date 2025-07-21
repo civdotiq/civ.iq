@@ -363,7 +363,7 @@ export async function GET(
     }
 
   } catch (error) {
-    structuredLogger.error('Enhanced finance API error', error as Error, { bioguideId });
+    structuredLogger.error('Enhanced finance API error', error as Error, { bioguideId: (await params).bioguideId });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

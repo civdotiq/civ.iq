@@ -141,7 +141,7 @@ async function performSearch(filters: SearchFilters): Promise<{
     const sortOrder = filters.order || 'asc';
     
     filtered.sort((a, b) => {
-      let aVal: any, bVal: any;
+      let aVal: unknown, bVal: unknown;
       
       switch (sortField) {
         case 'name':

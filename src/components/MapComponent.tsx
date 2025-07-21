@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 interface MapComponentProps {
   center: [number, number];
   zoom: number;
-  boundaryData: any;
+  boundaryData: unknown;
   width: number | string;
   height: number | string;
 }
@@ -27,8 +27,8 @@ export default function MapComponent({ center, zoom, boundaryData, width, height
   useEffect(() => {
     if (!isClient || !containerRef.current) return;
 
-    let map: any = null;
-    let geoJsonLayer: any = null;
+    let map: unknown = null;
+    let geoJsonLayer: unknown = null;
 
     const initializeMap = async () => {
       try {
@@ -91,7 +91,7 @@ export default function MapComponent({ center, zoom, boundaryData, width, height
                 fillOpacity: isMainDistrict ? 0.3 : 0.1
               };
             },
-            onEachFeature: (feature: any, layer: any) => {
+            onEachFeature: (feature: unknown, layer: unknown) => {
               const isMainDistrict = feature.properties.GEOID === `${boundaryData.features[0].properties.STATEFP}${boundaryData.features[0].properties.CD118FP}`;
               
               // Enhanced popup with more district information
@@ -113,14 +113,14 @@ export default function MapComponent({ center, zoom, boundaryData, width, height
               `);
               
               // Add hover effects
-              layer.on('mouseover', function() {
+              layer.on('mouseover', function(this: unknown) {
                 this.setStyle({
                   weight: isMainDistrict ? 6 : 4,
                   fillOpacity: isMainDistrict ? 0.5 : 0.3
                 });
               });
               
-              layer.on('mouseout', function() {
+              layer.on('mouseout', function(this: unknown) {
                 this.setStyle({
                   weight: isMainDistrict ? 4 : 2,
                   fillOpacity: isMainDistrict ? 0.3 : 0.1

@@ -166,7 +166,7 @@ async function fetchStateLegislators(stateAbbrev: string, chamber?: string): Pro
       count: data.results?.length || 0
     });
 
-    return data.results?.map((person: any) => transformLegislator(person, stateAbbrev)) || [];
+    return data.results?.map((person: unknown) => transformLegislator(person, stateAbbrev)) || [];
   } catch (error) {
     monitor.end(false, undefined, error as Error);
     structuredLogger.error('Error fetching state legislators', error as Error, {
@@ -178,12 +178,12 @@ async function fetchStateLegislators(stateAbbrev: string, chamber?: string): Pro
 }
 
 // Transform OpenStates legislator data to our format
-function transformLegislator(person: any, stateAbbrev: string): StateLegislator {
+function transformLegislator(person: unknown, stateAbbrev: string): StateLegislator {
   const currentRole = person.current_role;
   const contactDetails = person.contact_details || [];
   
-  const email = contactDetails.find((c: any) => c.type === 'email')?.value;
-  const phone = contactDetails.find((c: any) => c.type === 'voice')?.value;
+  const email = contactDetails.find((c: unknown) => c.type === 'email')?.value;
+  const phone = contactDetails.find((c: unknown) => c.type === 'voice')?.value;
   
   return {
     id: person.id || `${stateAbbrev}-${currentRole?.chamber}-${currentRole?.district}`,
@@ -193,7 +193,7 @@ function transformLegislator(person: any, stateAbbrev: string): StateLegislator 
     district: currentRole?.district || 'Unknown',
     email,
     phone,
-    office: contactDetails.find((c: any) => c.type === 'address')?.value,
+    office: contactDetails.find((c: unknown) => c.type === 'address')?.value,
     photoUrl: person.image,
     committees: [], // Would need separate API call to get committee memberships
     terms: [{
@@ -275,7 +275,7 @@ export async function GET(
         }
 
         // Calculate party distribution
-        const partyCount = legislators.reduce((acc: any, leg) => {
+        const partyCount = legislators.reduce((acc: unknown, leg) => {
           acc[leg.party] = (acc[leg.party] || 0) + 1;
           return acc;
         }, {});
@@ -283,12 +283,12 @@ export async function GET(
         const upperLegislators = legislators.filter(leg => leg.chamber === 'upper');
         const lowerLegislators = legislators.filter(leg => leg.chamber === 'lower');
 
-        const upperPartyCount = upperLegislators.reduce((acc: any, leg) => {
+        const upperPartyCount = upperLegislators.reduce((acc: unknown, leg) => {
           acc[leg.party] = (acc[leg.party] || 0) + 1;
           return acc;
         }, {});
 
-        const lowerPartyCount = lowerLegislators.reduce((acc: any, leg) => {
+        const lowerPartyCount = lowerLegislators.reduce((acc: unknown, leg) => {
           acc[leg.party] = (acc[leg.party] || 0) + 1;
           return acc;
         }, {});
@@ -305,7 +305,7 @@ export async function GET(
           },
           chambers: {
             upper: {
-              name: jurisdiction.chambers?.find((c: any) => c.chamber === 'upper')?.name || 'State Senate',
+              name: jurisdiction.chambers?.find((c: unknown) => c.chamber === 'upper')?.name || 'State Senate',
               title: 'Senator',
               totalSeats: upperLegislators.length,
               democraticSeats: upperPartyCount['Democratic'] || 0,
@@ -313,7 +313,7 @@ export async function GET(
               otherSeats: upperPartyCount['Independent'] + upperPartyCount['Other'] || 0
             },
             lower: {
-              name: jurisdiction.chambers?.find((c: any) => c.chamber === 'lower')?.name || 'House of Representatives',
+              name: jurisdiction.chambers?.find((c: unknown) => c.chamber === 'lower')?.name || 'House of Representatives',
               title: 'Representative',
               totalSeats: lowerLegislators.length,
               democraticSeats: lowerPartyCount['Democratic'] || 0,

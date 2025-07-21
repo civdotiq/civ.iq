@@ -174,7 +174,7 @@ export async function GET(
 
         // Process leadership roles from congress-legislators
         if (enhancedRep.leadershipRoles) {
-          enhancedRep.leadershipRoles.forEach((role: any) => {
+          enhancedRep.leadershipRoles.forEach((role: unknown) => {
             const { type, rank } = parseLeadershipRole(role.title, role.chamber || enhancedRep.chamber);
             
             const leadershipRole: LeadershipRole = {
@@ -226,7 +226,7 @@ export async function GET(
 
         // Process committee leadership from current term
         if (enhancedRep.committees) {
-          enhancedRep.committees.forEach((committee: any) => {
+          enhancedRep.committees.forEach((committee: unknown) => {
             if (committee.role && committee.role !== 'Member') {
               const isActive = true; // Assume current committees are active
               const { type, rank } = parseLeadershipRole(

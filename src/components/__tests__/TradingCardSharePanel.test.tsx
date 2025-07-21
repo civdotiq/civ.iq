@@ -3,6 +3,9 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+/**
+ * @jest-environment jsdom
+ */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { TradingCardSharePanel } from '../TradingCardSharePanel';
 import { EnhancedRepresentative } from '@/types/representative';
@@ -36,7 +39,14 @@ const mockRepresentative: EnhancedRepresentative = {
   state: 'CA',
   district: '12',
   chamber: 'House',
-  title: 'U.S. Representative'
+  title: 'U.S. Representative',
+  terms: [
+    {
+      congress: '119',
+      startYear: '2025',
+      endYear: '2027'
+    }
+  ]
 };
 
 const mockStats = [

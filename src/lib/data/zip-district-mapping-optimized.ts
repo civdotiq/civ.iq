@@ -357,4 +357,3 @@ export function warmUpCache(zipCodes: string[]): void {
 export { optimizedZipLookupService as zipLookupService };
 export type { OptimizedZipMapping as ZipDistrictMapping };
 export type { OptimizedZipMapping as LegacyZipDistrictMapping };
-export type { PerformanceMetrics };

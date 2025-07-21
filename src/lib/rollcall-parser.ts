@@ -73,7 +73,7 @@ export class RollCallParser {
     }
   }
 
-  private parseSenateRollCall(parsed: any, url: string): RollCallData | null {
+  private parseSenateRollCall(parsed: unknown, url: string): RollCallData | null {
     try {
       const vote = parsed.roll_call_vote;
       if (!vote) return null;
@@ -128,7 +128,7 @@ export class RollCallParser {
     }
   }
 
-  private parseHouseRollCall(parsed: any, url: string): RollCallData | null {
+  private parseHouseRollCall(parsed: unknown, url: string): RollCallData | null {
     try {
       const rollCall = parsed['rollcall-vote'];
       if (!rollCall) return null;
@@ -234,4 +234,12 @@ export class RollCallParser {
       vote.memberId === bioguideId
     ) || null;
   }
+}
+
+// Create a singleton instance for convenience
+const rollCallParser = new RollCallParser();
+
+// Export the convenience function that voting-data-service expects
+export async function parseRollCallXML(url: string): Promise<RollCallData | null> {
+  return rollCallParser.fetchAndParseRollCall(url);
 }

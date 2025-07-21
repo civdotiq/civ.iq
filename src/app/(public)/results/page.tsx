@@ -15,12 +15,12 @@ import { LoadingStateWrapper, LoadingMessage, Spinner } from '@/components/ui/Lo
 import { useMultiStageLoading } from '@/hooks/useSmartLoading';
 import { DistrictMap } from '@/components/DistrictMap';
 import { InteractiveDistrictMap } from '@/components/InteractiveDistrictMap';
-import { DataQualityIndicator, ErrorState, DataSourceBadge } from '@/components/DataQualityIndicator';
+import { DataQualityIndicator, DataSourceBadge } from '@/components/DataQualityIndicator';
 import { InlineQualityScore, DataTrustIndicator } from '@/components/DataQualityDashboard';
 import RepresentativePhoto from '@/components/RepresentativePhoto';
 import { DistrictSelector } from '@/components/multi-district/DistrictSelector';
 import { AddressRefinement } from '@/components/multi-district/AddressRefinement';
-import { checkMultiDistrict, getDistrictsForZip, DistrictInfo, MultiDistrictResponse } from '@/lib/multi-district/detection';
+import { checkMultiDistrict, DistrictInfo, MultiDistrictResponse } from '@/lib/multi-district/detection';
 
 function CiviqLogo() {
   return (
@@ -71,7 +71,7 @@ interface ApiResponse {
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
   metadata: {
     timestamp: string;
@@ -132,11 +132,6 @@ function RepresentativeCard({ representative }: { representative: Representative
     return 'text-gray-600 bg-gray-50';
   };
 
-  const getPartyTextColor = (party: string) => {
-    if (party.toLowerCase().includes('democrat')) return 'text-blue-600';
-    if (party.toLowerCase().includes('republican')) return 'text-red-600';
-    return 'text-gray-600';
-  };
 
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
@@ -415,14 +410,14 @@ function StateRepresentativesTab({ zipCode }: { zipCode: string }) {
     return (
       <>
         <div className="text-center py-8">
-          <LoadingSpinner size="lg" />
+          <Spinner size="lg" />
           <p className="mt-4 text-gray-600">Finding your state representatives...</p>
         </div>
         
         <div className="space-y-6">
-          <RepresentativeCardSkeleton />
-          <RepresentativeCardSkeleton />
-          <RepresentativeCardSkeleton />
+          <RepresentativeSkeleton />
+          <RepresentativeSkeleton />
+          <RepresentativeSkeleton />
         </div>
       </>
     );
@@ -518,6 +513,7 @@ function ResultsContent() {
   const [multiDistrictData, setMultiDistrictData] = useState<MultiDistrictResponse | null>(null);
   const [showAddressRefinement, setShowAddressRefinement] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictInfo | null>(null);
+  const [_error, setError] = useState<string | null>(null);
 
   // Multi-stage loading for the search process
   const loading = useMultiStageLoading([
@@ -585,7 +581,7 @@ function ResultsContent() {
               metadata: {
                 timestamp: apiData.metadata.timestamp,
                 zipCode: searchQuery,
-                dataQuality: apiData.metadata.coverage.dataQuality,
+                dataQuality: apiData.metadata.coverage.dataQuality as 'high' | 'medium' | 'low' | 'unavailable',
                 dataSource: apiData.metadata.dataSource,
                 cacheable: true,
                 freshness: 'live'
@@ -641,7 +637,7 @@ function ResultsContent() {
             metadata: {
               timestamp: apiData.metadata.timestamp,
               zipCode: searchQuery,
-              dataQuality: apiData.metadata.coverage.dataQuality,
+              dataQuality: apiData.metadata.coverage.dataQuality as 'high' | 'medium' | 'low' | 'unavailable',
               dataSource: apiData.metadata.dataSource,
               cacheable: true,
               freshness: 'live'
@@ -659,7 +655,7 @@ function ResultsContent() {
             district: selectedDistrictOverride.district
           });
           
-          setLoading(false);
+          loading.complete();
           return;
         }
       }
@@ -691,7 +687,7 @@ function ResultsContent() {
           // Update search history with location info
           if (typeof window !== 'undefined') {
             const displayName = `${firstRep.state}${firstRep.district && firstRep.district !== '00' ? ` District ${firstRep.district}` : ''}`;
-            SearchHistory.updateSearchDisplayName(query, displayName);
+            SearchHistory.updateSearchDisplayName(query || '', displayName);
           }
         }
       } else {
@@ -726,7 +722,7 @@ function ResultsContent() {
     setShowAddressRefinement(true);
   };
 
-  const handleAddressSuccess = async (state: string, district: string, address: string) => {
+  const handleAddressSuccess = async (state: string, district: string, _address: string) => {
     const districtInfo: DistrictInfo = { state, district };
     setShowAddressRefinement(false);
     await fetchRepresentatives(districtInfo);
@@ -907,7 +903,7 @@ function ResultsContent() {
                         <>
                           <LoadingMessage 
                             message={loading.currentStage}
-                            submessage={`Step ${loading.currentStageIndex + 1} of ${loading.stages?.length || 5}`}
+                            submessage={`Step ${loading.currentStageIndex + 1} of 5`}
                             className="mb-8"
                           />
                           <SearchResultsSkeleton count={3} />
@@ -915,7 +911,7 @@ function ResultsContent() {
                       }
                       loadingMessage={loading.currentStage}
                     >
-                      {/* This will be empty during loading */}
+                      <div></div>
                     </LoadingStateWrapper>
                   )}
 

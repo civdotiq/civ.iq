@@ -10,7 +10,7 @@ export interface CiviqErrorDetails {
   userMessage: string;
   helpText?: string;
   suggestedActions?: string[];
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   retryable?: boolean;
   autoRetry?: boolean;
   showTimer?: boolean;
@@ -18,12 +18,12 @@ export interface CiviqErrorDetails {
 }
 
 // Base custom error class
-export abstract class CiviqError extends Error {
+export class CiviqError extends Error {
   public readonly code: string;
   public readonly userMessage: string;
   public readonly helpText?: string;
   public readonly suggestedActions: string[];
-  public readonly context: Record<string, any>;
+  public readonly context: Record<string, unknown>;
   public readonly retryable: boolean;
   public readonly autoRetry: boolean;
   public readonly showTimer: boolean;
@@ -64,7 +64,7 @@ export abstract class CiviqError extends Error {
       showTimer: this.showTimer,
       severity: this.severity,
       timestamp: this.timestamp.toISOString(),
-      stack: this.stack
+      stack: this.stack,
     };
   }
 }
@@ -80,7 +80,7 @@ export class NetworkError extends CiviqError {
       retryable: true,
       autoRetry: true,
       severity: 'medium',
-      ...details
+      ...details,
     });
   }
 }
@@ -95,7 +95,7 @@ export class TimeoutError extends NetworkError {
       suggestedActions: ['Try Again', 'Wait and Retry'],
       context: { operation, timeout },
       autoRetry: true,
-      severity: 'medium'
+      severity: 'medium',
     });
   }
 }
@@ -111,7 +111,7 @@ export class RateLimitError extends NetworkError {
       suggestedActions: ['Wait and Retry'],
       context: { retryAfter, minutes },
       showTimer: true,
-      severity: 'low'
+      severity: 'low',
     });
   }
 }
@@ -125,7 +125,7 @@ export class DataError extends CiviqError {
       helpText: 'The requested information could not be found',
       suggestedActions: ['Try Different Search'],
       severity: 'medium',
-      ...details
+      ...details,
     });
   }
 }
@@ -139,7 +139,7 @@ export class RepresentativeNotFoundError extends DataError {
       helpText: 'This might be a new district or the ZIP code might be incorrect',
       suggestedActions: ['Try Different ZIP', 'Search by Address', 'Check ZIP Code'],
       context: { location },
-      severity: 'medium'
+      severity: 'medium',
     });
   }
 }
@@ -153,7 +153,7 @@ export class InvalidZipCodeError extends DataError {
       helpText: 'ZIP codes are 5 digits, like 48201 or 10001',
       suggestedActions: ['Try Again', 'Use 5 Digits'],
       context: { zipCode },
-      severity: 'low'
+      severity: 'low',
     });
   }
 }
@@ -164,10 +164,11 @@ export class InvalidAddressError extends DataError {
       code: 'INVALID_ADDRESS',
       message: `Address not recognized: ${address}`,
       userMessage: 'Address not recognized',
-      helpText: 'Include street number, street name, city, and state. Example: "123 Main St, Detroit MI"',
+      helpText:
+        'Include street number, street name, city, and state. Example: "123 Main St, Detroit MI"',
       suggestedActions: ['Try Again', 'Use Full Address', 'Try ZIP Code'],
       context: { address },
-      severity: 'low'
+      severity: 'low',
     });
   }
 }
@@ -182,14 +183,14 @@ export class DataSourceError extends DataError {
       suggestedActions: ['Try Again Later', 'Use Cached Data'],
       context: { source, operation },
       retryable: true,
-      severity: 'medium'
+      severity: 'medium',
     });
   }
 }
 
 // Validation errors
 export class ValidationError extends CiviqError {
-  constructor(field: string, value: any, constraint: string) {
+  constructor(field: string, value: unknown, constraint: string) {
     super({
       code: 'VALIDATION_ERROR',
       message: `Validation failed for ${field}: ${constraint}`,
@@ -197,7 +198,7 @@ export class ValidationError extends CiviqError {
       helpText: constraint,
       suggestedActions: ['Fix Input', 'Try Again'],
       context: { field, value, constraint },
-      severity: 'low'
+      severity: 'low',
     });
   }
 }
@@ -214,7 +215,7 @@ export class ServerError extends CiviqError {
       context: { status, statusText },
       retryable: true,
       autoRetry: status >= 500, // Auto-retry server errors, not client errors
-      severity: status >= 500 ? 'high' : 'medium'
+      severity: status >= 500 ? 'high' : 'medium',
     });
   }
 }
@@ -226,11 +227,12 @@ export class CongressApiError extends DataError {
       code: 'CONGRESS_API_ERROR',
       message: `Congress.gov API error during ${operation}`,
       userMessage: 'Congressional data temporarily unavailable',
-      helpText: 'The government data source is having issues. Voting records and bill information may be delayed.',
+      helpText:
+        'The government data source is having issues. Voting records and bill information may be delayed.',
       suggestedActions: ['Try Again Later', 'Check Recent Votes'],
       context: { operation, details },
       retryable: true,
-      severity: 'medium'
+      severity: 'medium',
     });
   }
 }
@@ -241,11 +243,12 @@ export class CensusApiError extends DataError {
       code: 'CENSUS_API_ERROR',
       message: `Census API error during ${operation}`,
       userMessage: 'District lookup unavailable',
-      helpText: 'The Census Bureau systems are temporarily down. District boundaries may not be accurate.',
+      helpText:
+        'The Census Bureau systems are temporarily down. District boundaries may not be accurate.',
       suggestedActions: ['Try ZIP Code', 'Try Again Later'],
       context: { operation },
       retryable: true,
-      severity: 'medium'
+      severity: 'medium',
     });
   }
 }
@@ -256,11 +259,12 @@ export class FecApiError extends DataError {
       code: 'FEC_API_ERROR',
       message: `FEC API error during ${operation}`,
       userMessage: 'Campaign finance data unavailable',
-      helpText: 'Federal Election Commission data is temporarily unavailable. Financial information may be delayed.',
+      helpText:
+        'Federal Election Commission data is temporarily unavailable. Financial information may be delayed.',
       suggestedActions: ['Try Again Later', 'Check Other Data'],
       context: { operation },
       retryable: true,
-      severity: 'low'
+      severity: 'low',
     });
   }
 }
@@ -272,10 +276,10 @@ export class PermissionError extends CiviqError {
       code: 'PERMISSION_ERROR',
       message: `Access denied for ${action} on ${resource}`,
       userMessage: 'Access denied',
-      helpText: 'You don\'t have permission to access this information',
+      helpText: "You don't have permission to access this information",
       suggestedActions: ['Go Back', 'Contact Support'],
       context: { resource, action },
-      severity: 'medium'
+      severity: 'medium',
     });
   }
 }
@@ -297,10 +301,10 @@ export function createErrorFromResponse(response: Response, operation: string): 
         code: 'NOT_FOUND',
         message: `Resource not found: ${operation}`,
         userMessage: 'Information not found',
-        helpText: 'The requested data doesn\'t exist or has been moved',
+        helpText: "The requested data doesn't exist or has been moved",
         suggestedActions: ['Try Different Search', 'Go Back'],
         context: { operation, status },
-        severity: 'medium'
+        severity: 'medium',
       });
     case 429:
       // Try to extract retry-after header
@@ -316,13 +320,16 @@ export function createErrorFromResponse(response: Response, operation: string): 
         message: `HTTP ${status}: ${statusText}`,
         userMessage: 'Connection problem',
         context: { status, statusText, operation },
-        severity: 'medium'
+        severity: 'medium',
       });
   }
 }
 
 // Utility function to create error from JavaScript Error
-export function createErrorFromException(error: Error, context?: Record<string, any>): CiviqError {
+export function createErrorFromException(
+  error: Error,
+  context?: Record<string, unknown>
+): CiviqError {
   // If it's already a CiviqError, return as-is
   if (error instanceof CiviqError) {
     return error;
@@ -335,12 +342,14 @@ export function createErrorFromException(error: Error, context?: Record<string, 
       userMessage: 'Network connection failed',
       helpText: 'Unable to connect to the server. Check your internet connection.',
       context: { originalError: error.message, ...context },
-      severity: 'medium'
+      severity: 'medium',
     });
   }
 
   if (error.name === 'AbortError') {
-    return new TimeoutError(context?.operation || 'Request', context?.timeout || 10000);
+    const operation = typeof context?.operation === 'string' ? context.operation : 'Request';
+    const timeout = typeof context?.timeout === 'number' ? context.timeout : 10000;
+    return new TimeoutError(operation, timeout);
   }
 
   // Default fallback for unknown errors
@@ -352,6 +361,6 @@ export function createErrorFromException(error: Error, context?: Record<string, 
     suggestedActions: ['Try Again', 'Refresh Page', 'Report Problem'],
     context: { originalError: error.message, ...context },
     retryable: true,
-    severity: 'medium'
+    severity: 'medium',
   });
 }

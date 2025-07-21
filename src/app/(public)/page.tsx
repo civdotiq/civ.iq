@@ -289,7 +289,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-gray-900 group-hover:text-purple-600 transition-colors">Comparison Tools</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Side-by-side analysis of representatives' voting patterns, funding, and legislative effectiveness.
+                  Side-by-side analysis of representatives&apos; voting patterns, funding, and legislative effectiveness.
                 </p>
               </div>
             </div>

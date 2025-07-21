@@ -239,7 +239,7 @@ function generateCountyName(city: string, state: string): string {
   return `${city} County`;
 }
 
-function generateMockLocalOfficials(locationInfo: any): LocalOfficial[] {
+function generateMockLocalOfficials(locationInfo: unknown): LocalOfficial[] {
   const officials: LocalOfficial[] = [];
   
   const firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Lisa', 'Robert', 'Maria', 'James', 'Jennifer'];
@@ -364,7 +364,7 @@ function generateMockLocalOfficials(locationInfo: any): LocalOfficial[] {
   return officials;
 }
 
-function generateNextElections(locationInfo: any) {
+function generateNextElections(locationInfo: unknown) {
   const currentYear = new Date().getFullYear();
   const nextElectionYear = currentYear % 2 === 0 ? currentYear + 1 : currentYear;
   

@@ -45,7 +45,7 @@ export function ErrorDisplay({
   useEffect(() => {
     if (showTimer && civiqError?.context?.retryAfter) {
       const retryAfter = civiqError.context.retryAfter;
-      setCountdown(retryAfter);
+      setCountdown(typeof retryAfter === 'number' ? retryAfter : 0);
       
       const timer = setInterval(() => {
         setCountdown(prev => {

@@ -137,7 +137,7 @@ class FECRateLimiter {
 
 class FECAPI {
   private config: FECConfig;
-  private cache: Map<string, { data: any; timestamp: number; ttl: number }>;
+  private cache: Map<string, { data: unknown; timestamp: number; ttl: number }>;
   private rateLimiter: FECRateLimiter;
 
   constructor(config?: Partial<FECConfig>) {

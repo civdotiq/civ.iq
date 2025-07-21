@@ -15,8 +15,8 @@ class RequestBatcher {
   private pendingRequests: Map<string, {
     requests: Array<{
       key: string;
-      resolve: (value: any) => void;
-      reject: (error: any) => void;
+      resolve: (value: unknown) => void;
+      reject: (error: unknown) => void;
     }>;
     timeoutId: NodeJS.Timeout;
   }> = new Map();
@@ -364,7 +364,7 @@ export function cleanupResources(): void {
 }
 
 // Debounce utility for performance
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => any>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {
@@ -377,7 +377,7 @@ export function debounce<T extends (...args: any[]) => any>(
 }
 
 // Throttle utility for performance
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => any>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {

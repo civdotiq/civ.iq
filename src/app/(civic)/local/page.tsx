@@ -55,7 +55,7 @@ export default function LocalPage() {
           <div className="max-w-2xl mx-auto bg-blue-50 border border-blue-200 rounded-lg p-8 mb-12">
             <h2 className="text-2xl font-semibold text-blue-900 mb-4">Coming Soon</h2>
             <p className="text-blue-800 mb-4">
-              We're working hard to bring you comprehensive local government data including mayors, city council members, county commissioners, and school board officials.
+              We&apos;re working hard to bring you comprehensive local government data including mayors, city council members, county commissioners, and school board officials.
             </p>
             <p className="text-blue-700">
               In the meantime, use our ZIP code search to find your federal and state representatives.
@@ -115,7 +115,7 @@ export default function LocalPage() {
             <h2 className="text-3xl font-semibold mb-6">Why Local Government Matters</h2>
             <div className="max-w-3xl mx-auto space-y-6 text-left">
               <p className="text-gray-700">
-                <span className="font-semibold">Direct Impact:</span> Local officials make decisions about your neighborhood's zoning, public safety, schools, and infrastructure.
+                <span className="font-semibold">Direct Impact:</span> Local officials make decisions about your neighborhood&apos;s zoning, public safety, schools, and infrastructure.
               </p>
               <p className="text-gray-700">
                 <span className="font-semibold">Accessibility:</span> Local representatives are often more accessible than state or federal officials, with regular town halls and public meetings.

@@ -109,7 +109,7 @@ export function createMockRequest(url: string, options: RequestInit = {}): NextR
 }
 
 // Helper to mock fetch responses
-export function mockFetchResponse(data: any, status = 200): Promise<Response> {
+export function mockFetchResponse(data: unknown, status = 200): Promise<Response> {
   return Promise.resolve({
     ok: status >= 200 && status < 300,
     status,
@@ -122,7 +122,7 @@ export function mockFetchResponse(data: any, status = 200): Promise<Response> {
     type: 'basic' as ResponseType,
     body: null,
     bodyUsed: false,
-    clone: () => mockFetchResponse(data, status) as any,
+    clone: () => mockFetchResponse(data, status) as Response,
     arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
     blob: () => Promise.resolve(new Blob()),
     formData: () => Promise.resolve(new FormData())
@@ -130,7 +130,7 @@ export function mockFetchResponse(data: any, status = 200): Promise<Response> {
 }
 
 // Helper to mock Congress API responses
-export function mockCongressApiResponse(endpoint: string, data: any) {
+export function mockCongressApiResponse(endpoint: string, data: unknown) {
   const url = `https://api.congress.gov/v3/${endpoint}`
   return {
     url,
@@ -139,7 +139,7 @@ export function mockCongressApiResponse(endpoint: string, data: any) {
 }
 
 // Helper to mock Census TIGER API responses
-export function mockCensusTigerResponse(data: any) {
+export function mockCensusTigerResponse(data: unknown) {
   return mockFetchResponse({
     features: [data]
   })

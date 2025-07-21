@@ -32,7 +32,7 @@ interface TradingCardGeneratorProps {
   isOpen: boolean;
   onClose: () => void;
   onGenerated?: (result: CardGenerationResult) => void;
-  customization?: any; // Will be properly typed when needed
+  customization?: unknown; // Will be properly typed when needed
   cardId?: string;
 }
 

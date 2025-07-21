@@ -258,7 +258,7 @@ export function ServiceWorkerRegistration() {
           fontWeight: '500'
         }}
       >
-        📡 You&apos;re offline. Some features may be limited.
+        📡 You're offline. Some features may be limited.
       </div>
     );
   }

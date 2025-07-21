@@ -29,11 +29,11 @@ interface LazyDataResult<T> {
 }
 
 // Simple in-memory cache for lazy loaded data
-const dataCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+const dataCache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
 
 export function useLazyData<T>(
   fetchFunction: () => Promise<T>,
-  dependencies: any[] = [],
+  dependencies: unknown[] = [],
   options: LazyDataOptions = {}
 ): LazyDataResult<T> {
   const {
@@ -190,7 +190,7 @@ export function useLazyData<T>(
 // Hook for lazy loading multiple data sources
 export function useLazyDataBatch<T extends Record<string, any>>(
   fetchFunctions: { [K in keyof T]: () => Promise<T[K]> },
-  dependencies: any[] = [],
+  dependencies: unknown[] = [],
   options: LazyDataOptions = {}
 ): {
   data: Partial<T>;

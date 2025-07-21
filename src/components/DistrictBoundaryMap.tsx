@@ -5,9 +5,9 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Loader2, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { Loader2, Maximize2 } from 'lucide-react';
 
 // Dynamic import with proper SSR handling
 const MapComponent = dynamic(() => import('./MapComponent'), { 
@@ -49,7 +49,7 @@ interface DistrictBoundary {
 }
 
 export default function DistrictBoundaryMap({ 
-  districtId, 
+  districtId: _districtId, 
   state, 
   district, 
   width = 800, 
@@ -173,7 +173,7 @@ export default function DistrictBoundaryMap({
             ];
             
             neighboringDistricts.push({
-              type: "Feature",
+              type: "Feature" as const,
               properties: {
                 GEOID: `${state}${neighborNum.toString().padStart(2, '0')}`,
                 NAME: `${state} District ${neighborNum}`,
@@ -181,7 +181,7 @@ export default function DistrictBoundaryMap({
                 STATEFP: state
               },
               geometry: {
-                type: "Polygon",
+                type: "Polygon" as const,
                 coordinates: [createDistrictShape(neighborCenter, neighborNum)]
               }
             });
@@ -193,7 +193,7 @@ export default function DistrictBoundaryMap({
           features: [
             // Main district first
             {
-              type: "Feature",
+              type: "Feature" as const,
               properties: {
                 GEOID: `${state}${district.padStart(2, '0')}`,
                 NAME: `${state} District ${district}`,
@@ -201,7 +201,7 @@ export default function DistrictBoundaryMap({
                 STATEFP: state
               },
               geometry: {
-                type: "Polygon",
+                type: "Polygon" as const,
                 coordinates: [createDistrictShape(adjustedCenter, districtNum)]
               }
             },
@@ -213,6 +213,7 @@ export default function DistrictBoundaryMap({
         setBoundaryData(mockBoundary);
       } catch (err) {
         setError('Failed to load district boundaries');
+        // eslint-disable-next-line no-console
         console.error('District boundary error:', err);
       } finally {
         setLoading(false);

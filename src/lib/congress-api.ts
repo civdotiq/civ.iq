@@ -137,7 +137,7 @@ export const getCurrentMembersByState = cache(async (state: string, apiKey?: str
       endpoints.forEach(endpoint => endpoint.params.append('api_key', congressApiKey));
     }
 
-    let allMembers: any[] = [];
+    let allMembers: unknown[] = [];
     let apiSuccess = false;
 
     for (const endpoint of endpoints) {
@@ -180,21 +180,21 @@ export const getCurrentMembersByState = cache(async (state: string, apiKey?: str
     const data = { members: allMembers };
     
     // Debug: log first few members to see state format
-    console.log('Sample members:', data.members?.slice(0, 3).map((m: any) => ({
+    console.log('Sample members:', data.members?.slice(0, 3).map((m: unknown) => ({
       name: m.name,
       state: m.state,
       partyName: m.partyName
     })));
     
     // Filter by state and current terms - handle both state codes and full names
-    const stateMembers = data.members?.filter((member: any) => {
+    const stateMembers = data.members?.filter((member: unknown) => {
       // Congress API uses full state names like "Michigan"
       // Convert our state code to full name for comparison
       const stateName = STATE_NAMES[state] || state;
       const matchesState = member.state === stateName || member.state === state;
       
       // Also check if member has a current term in 119th Congress (2025-2027)
-      const hasCurrentTerm = member.terms?.item?.some((term: any) => 
+      const hasCurrentTerm = member.terms?.item?.some((term: unknown) => 
         term.startYear >= 2025 || (term.startYear <= 2025 && (!term.endYear || term.endYear >= 2025))
       );
       
@@ -214,7 +214,7 @@ export const getCurrentMembersByState = cache(async (state: string, apiKey?: str
 /**
  * Format Congress.gov member data into our Representative interface
  */
-export function formatCongressMember(member: any): Representative {
+export function formatCongressMember(member: unknown): Representative {
   const currentYear = new Date().getFullYear();
   const currentTerm = member.terms?.item?.[0];
   const chamber = currentTerm?.chamber === 'House of Representatives' ? 'House' : 'Senate';
@@ -250,7 +250,7 @@ export function formatCongressMember(member: any): Representative {
     chamber: chamber,
     website: member.url,
     imageUrl: member.depiction?.imageUrl,
-    terms: member.terms?.item?.map((term: any) => ({
+    terms: member.terms?.item?.map((term: unknown) => ({
       congress: term.congress ? term.congress.toString() : 'Current',
       startYear: term.startYear ? term.startYear.toString() : 'Unknown',
       endYear: term.endYear ? term.endYear.toString() : (term.startYear ? (term.startYear + (chamber === 'House' ? 2 : 6)).toString() : 'Unknown')
@@ -528,7 +528,7 @@ export async function searchBills(query: string, limit = 20, apiKey?: string): P
     
     // Client-side filtering for now (not ideal for large datasets)
     const bills = data.bills || [];
-    const filtered = bills.filter((bill: any) => 
+    const filtered = bills.filter((bill: unknown) => 
       bill.title?.toLowerCase().includes(query.toLowerCase()) ||
       bill.summary?.toLowerCase().includes(query.toLowerCase())
     );

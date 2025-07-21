@@ -79,7 +79,7 @@ export async function GET(
       };
 
       // Optionally fetch additional data
-      const additionalData: any = {};
+      const additionalData: unknown = {};
       
       if (includeCommittees || includeAll) {
         try {
@@ -163,12 +163,12 @@ export async function GET(
           email: member.email,
           website: member.url,
           imageUrl: member.depiction?.imageUrl,
-          terms: member.terms?.map((term: any) => ({
+          terms: member.terms?.map((term: unknown) => ({
             congress: term.congress,
             startYear: term.startYear,
             endYear: term.endYear
           })) || [],
-          committees: member.leadership?.map((role: any) => ({
+          committees: member.leadership?.map((role: unknown) => ({
             name: role.name,
             role: role.type
           })) || [],

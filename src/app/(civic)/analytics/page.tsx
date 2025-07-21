@@ -82,7 +82,7 @@ export default function AnalyticsPage() {
             ].map(view => (
               <button
                 key={view.id}
-                onClick={() => setActiveView(view.id as any)}
+                onClick={() => setActiveView(view.id as 'engagement' | 'legislative' | 'finance' | 'districts' | 'sentiment')}
                 className={`flex-1 px-4 py-3 text-sm font-medium rounded-md transition-colors ${
                   activeView === view.id
                     ? 'bg-blue-600 text-white'

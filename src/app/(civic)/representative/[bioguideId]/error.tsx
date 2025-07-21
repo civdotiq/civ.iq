@@ -35,7 +35,7 @@ export default function Error({
         </h2>
         
         <p className="text-gray-600 mb-6">
-          We encountered an error while loading this representative's profile. This might be a temporary issue.
+          We encountered an error while loading this representative&apos;s profile. This might be a temporary issue.
         </p>
         
         <div className="space-y-3">

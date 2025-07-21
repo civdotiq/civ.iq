@@ -79,7 +79,7 @@ function generateVotingRecord(bioguideId: string): ComparisonData['votingRecord'
     'George Floyd Justice in Policing Act'
   ];
 
-  const keyVotes = keyVoteDescriptions.slice(0, random(4, 6)).map((description, index) => ({
+  const keyVotes = keyVoteDescriptions.slice(0, random(4, 6)).map((description, _index) => ({
     bill: `H.R. ${random(1000, 9999)}`,
     position: (['For', 'Against', 'Not Voting'] as const)[random(0, 2)],
     description
@@ -115,7 +115,7 @@ function generateCampaignFinance(bioguideId: string): ComparisonData['campaignFi
     'Alphabet Inc'
   ];
 
-  const topDonors = donorNames.slice(0, random(3, 5)).map((name, index) => ({
+  const topDonors = donorNames.slice(0, random(3, 5)).map((name, _index) => ({
     name,
     amount: random(5000, 50000),
     type: (['Individual', 'PAC', 'Organization'] as const)[random(0, 2)]

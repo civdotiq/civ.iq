@@ -48,7 +48,7 @@ interface MultiDistrictResponse {
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
 }
 
@@ -112,7 +112,7 @@ class ZipLookupLogger {
     }
   }
 
-  logEdgeCase(zipCode: string, caseType: 'territory' | 'dc' | 'split_state' | 'invalid', details?: any): void {
+  logEdgeCase(zipCode: string, caseType: 'territory' | 'dc' | 'split_state' | 'invalid', details?: unknown): void {
     const logEntry = {
       timestamp: new Date().toISOString(),
       zipCode,
@@ -130,10 +130,10 @@ class ZipLookupLogger {
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
   const logger = ZipLookupLogger.getInstance();
+  const url = new URL(request.url);
+  const zipCode = url.searchParams.get('zip');
   
   try {
-    const url = new URL(request.url);
-    const zipCode = url.searchParams.get('zip');
     const preferredDistrict = url.searchParams.get('district'); // For user selection
     const userAgent = request.headers.get('user-agent');
 
@@ -208,7 +208,7 @@ export async function GET(request: NextRequest) {
 
       // Log multi-district access
       if (isMultiDistrict) {
-        logger.logMultiDistrictAccess(zipCode, districts, preferredDistrict);
+        logger.logMultiDistrictAccess(zipCode, districts, preferredDistrict || undefined);
         warnings.push(`This ZIP code spans ${districts.length} congressional districts. Results show the primary district.`);
       }
 
@@ -225,7 +225,7 @@ export async function GET(request: NextRequest) {
 
     } else {
       // Fallback to Census API
-      logger.logUnmappedZip(zipCode, 'census-api', userAgent);
+      logger.logUnmappedZip(zipCode, 'census-api', userAgent || undefined);
       lookupMethod = 'census-api';
       
       try {
@@ -239,7 +239,7 @@ export async function GET(request: NextRequest) {
           warnings.push('ZIP code not found in comprehensive database. Using Census API fallback.');
         }
       } catch (error) {
-        logger.logUnmappedZip(zipCode, 'failed', userAgent);
+        logger.logUnmappedZip(zipCode, 'failed', userAgent || undefined);
         lookupMethod = 'fallback';
         warnings.push('Unable to determine congressional district. ZIP code may be invalid.');
       }
@@ -299,7 +299,7 @@ export async function GET(request: NextRequest) {
           contactInfo: {
             phone: houseRep.phone || '',
             website: houseRep.website || '',
-            office: houseRep.office || ''
+            office: (houseRep as any).office || ''
           }
         });
       }
@@ -323,7 +323,7 @@ export async function GET(request: NextRequest) {
             contactInfo: {
               phone: senateRep.phone || '',
               website: senateRep.website || '',
-              office: senateRep.office || ''
+              office: (senateRep as any).office || ''
             }
           });
         }

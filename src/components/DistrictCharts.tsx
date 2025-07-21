@@ -208,7 +208,7 @@ export function IncomeDistributionChart({ medianIncome }: { medianIncome: number
   );
 }
 
-export function RacialCompositionChart({ demographics }: { demographics: any }) {
+export function RacialCompositionChart({ demographics }: { demographics: unknown }) {
   const data = [
     { name: 'White', value: demographics.white_percent, color: '#3b82f6' },
     { name: 'Black/African American', value: demographics.black_percent, color: '#ef4444' },

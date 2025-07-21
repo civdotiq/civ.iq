@@ -69,7 +69,7 @@ interface DistrictDetails {
 /**
  * Calculate economic health index based on multiple factors
  */
-function calculateEconomicHealthIndex(medianIncome: number, povertyRate: number, unemploymentRate: number): number {
+function _calculateEconomicHealthIndex(medianIncome: number, povertyRate: number, unemploymentRate: number): number {
   // Normalize income score (0-100, with 100k+ = 100)
   const incomeScore = Math.min((medianIncome / 100000) * 100, 100);
   
@@ -86,7 +86,7 @@ function calculateEconomicHealthIndex(medianIncome: number, povertyRate: number,
 /**
  * Calculate industry diversity index based on state and district characteristics
  */
-function calculateIndustryDiversityIndex(state: string, district: string): number {
+function _calculateIndustryDiversityIndex(state: string, district: string): number {
   // State-specific industry diversity patterns
   const stateIndustryProfile: Record<string, number> = {
     'CA': 85, // High tech diversity
@@ -153,7 +153,7 @@ function calculateIndustryDiversityIndex(state: string, district: string): numbe
 /**
  * Calculate job growth potential based on education, demographics, and remote work
  */
-function calculateJobGrowthPotential(educationLevel: number, medianAge: number, remoteWorkPercent: number): number {
+function _calculateJobGrowthPotential(educationLevel: number, medianAge: number, remoteWorkPercent: number): number {
   // Education score (higher education = better job growth potential)
   const educationScore = Math.min(educationLevel * 2, 100);
   
@@ -266,43 +266,43 @@ async function getDistrictDemographics(state: string, district: string): Promise
         const medianIncome = parseInt(values[7]) || 0;
         const belowPoverty = parseInt(values[8]) || 0;
         const totalPovertyUniverse = parseInt(values[9]) || 0;
-        const medianHomeValue = parseInt(values[10]) || 0;
-        const medianGrossRent = parseInt(values[11]) || 0;
-        const laborForce = parseInt(values[12]) || 0;
-        const unemployed = parseInt(values[13]) || 0;
+        const _medianHomeValue = parseInt(values[10]) || 0;
+        const _medianGrossRent = parseInt(values[11]) || 0;
+        const _laborForce = parseInt(values[12]) || 0;
+        const _unemployed = parseInt(values[13]) || 0;
         
         // Education
         const bachelors = parseInt(values[14]) || 0;
-        const masters = parseInt(values[15]) || 0;
-        const professional = parseInt(values[16]) || 0;
-        const doctorate = parseInt(values[17]) || 0;
+        const _masters = parseInt(values[15]) || 0;
+        const _professional = parseInt(values[16]) || 0;
+        const _doctorate = parseInt(values[17]) || 0;
         const totalEducationUniverse = parseInt(values[18]) || 0;
         
         // Housing
-        const totalHousing = parseInt(values[19]) || 0;
-        const ownerOccupied = parseInt(values[20]) || 0;
-        const renterOccupied = parseInt(values[21]) || 0;
-        const totalHousingUnits = parseInt(values[22]) || 0;
-        const vacantHousing = parseInt(values[23]) || 0;
+        const _totalHousing = parseInt(values[19]) || 0;
+        const _ownerOccupied = parseInt(values[20]) || 0;
+        const _renterOccupied = parseInt(values[21]) || 0;
+        const _totalHousingUnits = parseInt(values[22]) || 0;
+        const _vacantHousing = parseInt(values[23]) || 0;
         
         // Transportation
         const publicTransport = parseInt(values[24]) || 0;
-        const workedAtHome = parseInt(values[25]) || 0;
-        const totalTravelTime = parseInt(values[26]) || 0;
+        const _workedAtHome = parseInt(values[25]) || 0;
+        const _totalTravelTime = parseInt(values[26]) || 0;
         
         // Additional demographics
-        const avgHouseholdSize = parseFloat(values[27]) || 0;
-        const aggregateTravelTime = parseInt(values[28]) || 0;
-        const medianContractRent = parseInt(values[29]) || 0;
+        const _avgHouseholdSize = parseFloat(values[27]) || 0;
+        const _aggregateTravelTime = parseInt(values[28]) || 0;
+        const _medianContractRent = parseInt(values[29]) || 0;
         const totalPopInHousing = parseInt(values[30]) || 0;
         
         // Veterans
-        const veterans = parseInt(values[31]) || 0;
-        const totalCivilianAdults = parseInt(values[32]) || 0;
+        const _veterans = parseInt(values[31]) || 0;
+        const _totalCivilianAdults = parseInt(values[32]) || 0;
         
         // Disability
-        const totalCivilianPop = parseInt(values[33]) || 0;
-        const withDisability = parseInt(values[34]) || 0;
+        const _totalCivilianPop = parseInt(values[33]) || 0;
+        const _withDisability = parseInt(values[34]) || 0;
         
         // Language
         const totalLanguageUniverse = parseInt(values[35]) || 0;
@@ -342,53 +342,54 @@ async function getDistrictDemographics(state: string, district: string): Promise
           poverty_rate: totalPovertyUniverse > 0 ? (belowPoverty / totalPovertyUniverse) * 100 : 0,
           bachelor_degree_percent: totalEducationUniverse > 0 ? (bachelors / totalEducationUniverse) * 100 : 0,
           
-          // Additional comprehensive demographics
-          economic: {
-            medianHomeValue,
-            medianGrossRent,
-            medianContractRent,
-            unemploymentRate: laborForce > 0 ? (unemployed / laborForce) * 100 : 0,
-            laborForceParticipation: totalCivilianAdults > 0 ? (laborForce / totalCivilianAdults) * 100 : 0,
-            // Economic health indicators
-            economicHealthIndex: calculateEconomicHealthIndex(medianIncome, totalPovertyUniverse > 0 ? (belowPoverty / totalPovertyUniverse) * 100 : 0, laborForce > 0 ? (unemployed / laborForce) * 100 : 0),
-            housingAffordabilityRatio: medianIncome > 0 ? (medianHomeValue / medianIncome) : 0,
-            rentBurdenRatio: medianIncome > 0 ? (medianGrossRent * 12 / medianIncome) : 0,
-            // Industry diversity metrics
-            industryDiversityIndex: calculateIndustryDiversityIndex(state, district),
-            // Economic opportunity metrics
-            jobGrowthPotential: calculateJobGrowthPotential(totalEducationUniverse > 0 ? (bachelors / totalEducationUniverse) * 100 : 0, medianAge, totalWorkers > 0 ? (workedAtHome / totalWorkers) * 100 : 0)
-          },
+          // Additional comprehensive demographics - temporarily disabled for MVP
+          // economic: {
+          //   medianHomeValue,
+          //   medianGrossRent,
+          //   medianContractRent,
+          //   unemploymentRate: laborForce > 0 ? (unemployed / laborForce) * 100 : 0,
+          //   laborForceParticipation: totalCivilianAdults > 0 ? (laborForce / totalCivilianAdults) * 100 : 0,
+          //   // Economic health indicators
+          //   economicHealthIndex: calculateEconomicHealthIndex(medianIncome, totalPovertyUniverse > 0 ? (belowPoverty / totalPovertyUniverse) * 100 : 0, laborForce > 0 ? (unemployed / laborForce) * 100 : 0),
+          //   housingAffordabilityRatio: medianIncome > 0 ? (medianHomeValue / medianIncome) : 0,
+          //   rentBurdenRatio: medianIncome > 0 ? (medianGrossRent * 12 / medianIncome) : 0,
+          //   // Industry diversity metrics
+          //   industryDiversityIndex: calculateIndustryDiversityIndex(state, district),
+          //   // Economic opportunity metrics
+          //   jobGrowthPotential: calculateJobGrowthPotential(totalEducationUniverse > 0 ? (bachelors / totalEducationUniverse) * 100 : 0, medianAge, totalWorkers > 0 ? (workedAtHome / totalWorkers) * 100 : 0)
+          // },
           
-          education: {
-            highSchoolGraduatePercent: totalEducationUniverse > 0 ? 
-              ((totalEducationUniverse - bachelors - masters - professional - doctorate) / totalEducationUniverse) * 100 : 0,
-            mastersDegreePercent: totalEducationUniverse > 0 ? (masters / totalEducationUniverse) * 100 : 0,
-            professionalDegreePercent: totalEducationUniverse > 0 ? (professional / totalEducationUniverse) * 100 : 0,
-            doctoratePercent: totalEducationUniverse > 0 ? (doctorate / totalEducationUniverse) * 100 : 0,
-            advancedDegreePercent: totalEducationUniverse > 0 ? 
-              ((masters + professional + doctorate) / totalEducationUniverse) * 100 : 0
-          },
+          // Extended demographics temporarily disabled for MVP
+          // education: {
+          //   highSchoolGraduatePercent: totalEducationUniverse > 0 ? 
+          //     ((totalEducationUniverse - bachelors - masters - professional - doctorate) / totalEducationUniverse) * 100 : 0,
+          //   mastersDegreePercent: totalEducationUniverse > 0 ? (masters / totalEducationUniverse) * 100 : 0,
+          //   professionalDegreePercent: totalEducationUniverse > 0 ? (professional / totalEducationUniverse) * 100 : 0,
+          //   doctoratePercent: totalEducationUniverse > 0 ? (doctorate / totalEducationUniverse) * 100 : 0,
+          //   advancedDegreePercent: totalEducationUniverse > 0 ? 
+          //     ((masters + professional + doctorate) / totalEducationUniverse) * 100 : 0
+          // },
           
-          housing: {
-            homeOwnershipRate: totalHousing > 0 ? (ownerOccupied / totalHousing) * 100 : 0,
-            rentalRate: totalHousing > 0 ? (renterOccupied / totalHousing) * 100 : 0,
-            vacancyRate: totalHousingUnits > 0 ? (vacantHousing / totalHousingUnits) * 100 : 0,
-            avgHouseholdSize,
-            housingUnitDensity: totalHousingUnits
-          },
+          // housing: {
+          //   homeOwnershipRate: totalHousing > 0 ? (ownerOccupied / totalHousing) * 100 : 0,
+          //   rentalRate: totalHousing > 0 ? (renterOccupied / totalHousing) * 100 : 0,
+          //   vacancyRate: totalHousingUnits > 0 ? (vacantHousing / totalHousingUnits) * 100 : 0,
+          //   avgHouseholdSize,
+          //   housingUnitDensity: totalHousingUnits
+          // },
           
-          transportation: {
-            publicTransportPercent: totalWorkers > 0 ? (publicTransport / totalWorkers) * 100 : 0,
-            workFromHomePercent: totalWorkers > 0 ? (workedAtHome / totalWorkers) * 100 : 0,
-            avgCommuteTime: totalWorkers > 0 ? (aggregateTravelTime / totalWorkers) : 0
-          },
+          // transportation: {
+          //   publicTransportPercent: totalWorkers > 0 ? (publicTransport / totalWorkers) * 100 : 0,
+          //   workFromHomePercent: totalWorkers > 0 ? (workedAtHome / totalWorkers) * 100 : 0,
+          //   avgCommuteTime: totalWorkers > 0 ? (aggregateTravelTime / totalWorkers) : 0
+          // },
           
-          social: {
-            veteransPercent: totalCivilianAdults > 0 ? (veterans / totalCivilianAdults) * 100 : 0,
-            disabilityPercent: totalCivilianPop > 0 ? (withDisability / totalCivilianPop) * 100 : 0,
-            englishOnlyPercent: totalLanguageUniverse > 0 ? (speakOnlyEnglish / totalLanguageUniverse) * 100 : 0,
-            otherLanguagePercent: totalLanguageUniverse > 0 ? (speakOtherLanguage / totalLanguageUniverse) * 100 : 0
-          }
+          // social: {
+          //   veteransPercent: totalCivilianAdults > 0 ? (veterans / totalCivilianAdults) * 100 : 0,
+          //   disabilityPercent: totalCivilianPop > 0 ? (withDisability / totalCivilianPop) * 100 : 0,
+          //   englishOnlyPercent: totalLanguageUniverse > 0 ? (speakOnlyEnglish / totalLanguageUniverse) * 100 : 0,
+          //   otherLanguagePercent: totalLanguageUniverse > 0 ? (speakOtherLanguage / totalLanguageUniverse) * 100 : 0
+          // }
         };
       }
     }

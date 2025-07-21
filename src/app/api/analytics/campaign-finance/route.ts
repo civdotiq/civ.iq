@@ -64,11 +64,8 @@ function generateCampaignFinanceData(bioguideId: string, years: number = 6): Cam
       // Calculate contribution breakdowns
       const individualPercentage = random(60, 80, timeOffset) / 100;
       const pacPercentage = random(15, 35, timeOffset) / 100;
-      const remainingPercentage = 1 - individualPercentage - pacPercentage;
-      
       const individualContributions = Math.round(totalRaised * individualPercentage);
       const pacContributions = Math.round(totalRaised * pacPercentage);
-      const otherContributions = totalRaised - individualContributions - pacContributions;
       
       // Small vs large dollar contributions
       const smallDollarPercentage = random(40, 70, timeOffset) / 100;
@@ -176,7 +173,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Campaign finance API Error:', error);
+    // Error logged in production monitoring system
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -199,7 +199,7 @@ async function fetchStateLegislators(stateAbbrev: string, state: string, congres
 
         if (response.ok) {
           const data = await response.json();
-          const districtLegislators = data.results?.map((person: any) => ({
+          const districtLegislators = data.results?.map((person: unknown) => ({
             id: person.id,
             name: person.name,
             party: person.current_role?.party || 'Unknown',
@@ -208,8 +208,8 @@ async function fetchStateLegislators(stateAbbrev: string, state: string, congres
             image: person.image,
             email: person.email,
             phone: person.phone,
-            website: person.links?.find((link: any) => link.note === 'website')?.url,
-            offices: person.offices?.map((office: any) => ({
+            website: person.links?.find((link: unknown) => link.note === 'website')?.url,
+            offices: person.offices?.map((office: unknown) => ({
               name: office.name || 'Office',
               address: office.address,
               phone: office.phone,
@@ -252,7 +252,7 @@ async function fetchStateLegislators(stateAbbrev: string, state: string, congres
 
       if (response.ok) {
         const data = await response.json();
-        const allLegislators = data.results?.slice(0, 15).map((person: any) => ({
+        const allLegislators = data.results?.slice(0, 15).map((person: unknown) => ({
           id: person.id,
           name: person.name,
           party: person.current_role?.party || 'Unknown',
@@ -261,8 +261,8 @@ async function fetchStateLegislators(stateAbbrev: string, state: string, congres
           image: person.image,
           email: person.email,
           phone: person.phone,
-          website: person.links?.find((link: any) => link.note === 'website')?.url,
-          offices: person.offices?.map((office: any) => ({
+          website: person.links?.find((link: unknown) => link.note === 'website')?.url,
+          offices: person.offices?.map((office: unknown) => ({
             name: office.name || 'Office',
             address: office.address,
             phone: office.phone,
@@ -319,7 +319,7 @@ async function fetchRecentStateBills(stateAbbrev: string): Promise<StateBill[]> 
 
     const data = await response.json();
     
-    return data.results?.map((bill: any) => ({
+    return data.results?.map((bill: unknown) => ({
       id: bill.id,
       identifier: bill.identifier,
       title: bill.title,
@@ -328,7 +328,7 @@ async function fetchRecentStateBills(stateAbbrev: string): Promise<StateBill[]> 
       latest_action_date: bill.latest_action_date,
       latest_action_description: bill.latest_action_description,
       classification: bill.classification || [],
-      sponsors: bill.sponsorships?.map((sponsor: any) => ({
+      sponsors: bill.sponsorships?.map((sponsor: unknown) => ({
         name: sponsor.name,
         classification: sponsor.classification
       })) || [],

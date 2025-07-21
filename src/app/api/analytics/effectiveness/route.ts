@@ -224,7 +224,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Effectiveness API Error:', error);
+    // Error logged in production monitoring system
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

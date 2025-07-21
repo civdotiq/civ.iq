@@ -90,7 +90,7 @@ export class PerformanceMonitor {
   }
 
   // Wrap a function with tracing
-  trace<T extends (...args: any[]) => any>(
+  trace<T extends (...args: unknown[]) => any>(
     name: string,
     fn: T,
     attributes?: Record<string, string | number | boolean>

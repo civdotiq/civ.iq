@@ -7,11 +7,10 @@
 
 import { useState, Suspense, ComponentType } from 'react';
 import Link from 'next/link';
-import { ErrorBoundary, LoadingErrorBoundary } from '@/components/ErrorBoundary';
+import { LoadingErrorBoundary } from '@/components/ErrorBoundary';
 import { BillsTracker } from '@/components/BillsTracker';
 import { EnhancedVotingChart } from '@/components/EnhancedVotingChart';
 import PartyAlignmentAnalysis from '@/components/PartyAlignmentAnalysis';
-import { TradingCardPreview } from '@/components/TradingCardPreview';
 import dynamic from 'next/dynamic';
 
 // Dynamic imports for lazy loading
@@ -45,11 +44,14 @@ interface RepresentativeDetails {
     address?: string;
     website?: string;
     contactForm?: string;
+    office?: string;
   };
   socialMedia?: {
     twitter?: string;
     facebook?: string;
     youtube?: string;
+    instagram?: string;
+    mastodon?: string;
   };
   committees?: Array<{
     name: string;
@@ -60,18 +62,18 @@ interface RepresentativeDetails {
 interface RepresentativeProfileClientProps {
   representative: RepresentativeDetails;
   initialData: {
-    votes: any[];
-    bills: any[];
-    finance: any;
-    news: any[];
-    partyAlignment: any;
+    votes: unknown[];
+    bills: unknown[];
+    finance: unknown;
+    news: unknown[];
+    partyAlignment: unknown;
   };
   partialErrors: Record<string, string>;
   bioguideId: string;
   // Lazy-loaded components passed as props to prevent unnecessary bundling
-  VotingRecordsTable?: ComponentType<any>;
-  CampaignFinanceVisualizer?: ComponentType<any>;
-  EnhancedNewsFeed?: ComponentType<any>;
+  VotingRecordsTable?: ComponentType<{ data: unknown; metadata?: unknown }>;
+  CampaignFinanceVisualizer?: ComponentType<{ data: unknown; metadata?: unknown }>;
+  EnhancedNewsFeed?: ComponentType<{ data: unknown; metadata?: unknown }>;
 }
 
 // Partial error display component
@@ -120,13 +122,6 @@ export function RepresentativeProfileClient({
 }: RepresentativeProfileClientProps) {
   const [activeTab, setActiveTab] = useState('profile');
 
-  console.log('[CIV.IQ-DEBUG] Client wrapper rendered:', {
-    activeTab,
-    hasVotes: initialData.votes.length > 0,
-    hasBills: initialData.bills.length > 0,
-    hasFinance: Object.keys(initialData.finance).length > 0,
-    hasNews: initialData.news.length > 0
-  });
 
   return (
     <>
@@ -322,7 +317,7 @@ export function RepresentativeProfileClient({
                   <div className="mt-6">
                     <h4 className="text-sm font-medium text-gray-900 mb-3">Committee Assignments</h4>
                     <div className="space-y-3">
-                      {representative.committees.map((committee: any, idx: number) => (
+                      {representative.committees.map((committee: unknown, idx: number) => (
                         <div key={idx} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                           <div className="flex items-center justify-between mb-2">
                             <Link 

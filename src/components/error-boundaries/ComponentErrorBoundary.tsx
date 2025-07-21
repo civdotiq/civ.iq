@@ -95,7 +95,7 @@ export class ComponentErrorBoundary extends Component<Props, State> {
           </p>
           <Button
             onClick={this.handleRetry}
-            variant="outline"
+            variant="secondary"
             className="mt-3 text-red-700 border-red-300 hover:bg-red-50"
             size="sm"
           >

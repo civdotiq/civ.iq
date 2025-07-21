@@ -33,7 +33,7 @@ interface Representative {
 }
 
 // Validate batch request
-const validateBatchRequest = (data: any): { isValid: boolean; errors: string[]; sanitized?: BatchRequest } => {
+const validateBatchRequest = (data: unknown): { isValid: boolean; errors: string[]; sanitized?: BatchRequest } => {
   const errors: string[] = [];
   
   if (!data.bioguideIds || !Array.isArray(data.bioguideIds)) {

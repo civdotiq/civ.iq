@@ -1,0 +1,40 @@
+{
+  "session_id": "af51ceee-df55-499c-901d-b2b1a8a3dcad",
+  "transcript_path": "/root/.claude/projects/-mnt-d-civic-intel-hub/af51ceee-df55-499c-901d-b2b1a8a3dcad.jsonl",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "TodoWrite",
+  "tool_input": {
+    "todos": [
+      {
+        "content": "Analyze current codebase structure and functionality",
+        "status": "completed",
+        "priority": "high",
+        "id": "1"
+      },
+      {
+        "content": "Test core API endpoints and data flows",
+        "status": "pending",
+        "priority": "high",
+        "id": "2"
+      },
+      {
+        "content": "Identify critical bugs and missing features",
+        "status": "completed",
+        "priority": "high",
+        "id": "3"
+      },
+      {
+        "content": "Run build and test processes to check for errors",
+        "status": "completed",
+        "priority": "medium",
+        "id": "4"
+      },
+      {
+        "content": "Fix critical syntax error in voting-data-service.ts",
+        "status": "in_progress",
+        "priority": "high",
+        "id": "5"
+      }
+    ]
+  }
+}

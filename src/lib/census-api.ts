@@ -30,7 +30,7 @@ export interface CongressionalDistrict {
 
 interface CensusAPIResponse {
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: string;
   source: 'api' | 'fallback';
 }

@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { ComponentErrorBoundary } from '@/components/error-boundaries';
 import { SmartSearchInput } from '@/components/search/SmartSearchInput';
-import { geocodeAddress } from '@/lib/census-geocoder';
+import { geocodeAddress, extractDistrictFromResult } from '@/lib/census-geocoder';
 import { structuredLogger } from '@/lib/logging/logger';
 
 interface AddressRefinementProps {
@@ -54,15 +54,21 @@ export function AddressRefinement({
 
       // Use the first (most confident) result
       const match = result[0];
+      const districtInfo = extractDistrictFromResult(match);
+      
+      if (!districtInfo) {
+        throw new Error('No congressional district information found in the geocoding result');
+      }
       
       structuredLogger.info('Address refinement successful', {
         zipCode,
-        state: match.state,
-        district: match.district,
-        confidence: match.confidence
+        state: districtInfo.state,
+        district: districtInfo.district,
+        fullDistrict: districtInfo.fullDistrict,
+        matchedAddress: match.matchedAddress
       });
 
-      onSuccess(match.state, match.district, fullAddress);
+      onSuccess(districtInfo.state, districtInfo.district, fullAddress);
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to geocode address';
@@ -137,7 +143,7 @@ export function AddressRefinement({
             <div className="flex gap-3 pt-2">
               <Button
                 onClick={onCancel}
-                variant="outline"
+                variant="secondary"
                 className="flex-1"
                 disabled={isLoading}
               >
@@ -199,7 +205,13 @@ export function InlineAddressRefinement({
       }
 
       const match = result[0];
-      onSuccess(match.state, match.district, fullAddress);
+      const districtInfo = extractDistrictFromResult(match);
+      
+      if (!districtInfo) {
+        throw new Error('No district information found');
+      }
+      
+      onSuccess(districtInfo.state, districtInfo.district, fullAddress);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to find address');

@@ -107,7 +107,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
               </Button>
               <Button
                 onClick={this.handleGoBack}
-                variant="outline"
+                variant="secondary"
                 className="w-full"
               >
                 Go Back

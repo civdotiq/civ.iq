@@ -157,7 +157,7 @@ export function AdvancedSearch() {
     }
   };
 
-  const updateFilter = (key: keyof SearchFilters, value: any) => {
+  const updateFilter = (key: keyof SearchFilters, value: unknown) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 

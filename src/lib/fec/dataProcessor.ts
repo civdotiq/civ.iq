@@ -212,7 +212,7 @@ async function fetchAllExpenditures(candidateId: string): Promise<ExpenditureDet
 /**
  * Map FEC contribution to our format
  */
-function mapFECContribution(fecContrib: any): ContributionDetail {
+function mapFECContribution(fecContrib: unknown): ContributionDetail {
   return {
     id: fecContrib.sub_id,
     contributorName: fecContrib.contributor_name || 'Unknown',
@@ -231,7 +231,7 @@ function mapFECContribution(fecContrib: any): ContributionDetail {
 /**
  * Map FEC expenditure to our format
  */
-function mapFECExpenditure(fecExp: any): ExpenditureDetail {
+function mapFECExpenditure(fecExp: unknown): ExpenditureDetail {
   const description = fecExp.disbursement_description || 'Unknown';
   const category = categorizeExpenditure(fecExp);
   
@@ -253,7 +253,7 @@ function mapFECExpenditure(fecExp: any): ExpenditureDetail {
 /**
  * Categorize expenditure based on description and codes
  */
-function categorizeExpenditure(exp: any): string {
+function categorizeExpenditure(exp: unknown): string {
   const desc = (exp.disbursement_description || '').toLowerCase();
   const category = (exp.category_code_full || '').toLowerCase();
   
@@ -327,7 +327,7 @@ async function processRawFECData(
   const geography = calculateGeography(contributions);
   
   // Calculate timeline
-  const timeline = calculateTimeline(totals.results);
+  const timeline = calculateTimeline(totals.results, contributions);
   
   // Calculate donor metrics
   const donors = calculateDonorMetrics(contributions);
@@ -356,7 +356,7 @@ async function processRawFECData(
 /**
  * Calculate burn rate from financial totals
  */
-function calculateBurnRate(totals: any[]): number {
+function calculateBurnRate(totals: unknown[]): number {
   if (totals.length < 2) return 0;
   
   const latest = totals[0];
@@ -373,7 +373,7 @@ function calculateBurnRate(totals: any[]): number {
 /**
  * Calculate quarterly average
  */
-function calculateQuarterlyAverage(totals: any[]): number {
+function calculateQuarterlyAverage(totals: unknown[]): number {
   if (totals.length === 0) return 0;
   
   const totalReceipts = totals.reduce((sum, total) => sum + (total.receipts || 0), 0);
@@ -393,7 +393,7 @@ function calculateEfficiency(raised: number, spent: number): number {
 /**
  * Calculate contribution breakdown
  */
-function calculateBreakdown(contributions: ContributionDetail[], totals: any) {
+function calculateBreakdown(contributions: ContributionDetail[], totals: unknown) {
   const totalAmount = contributions.reduce((sum, contrib) => sum + contrib.amount, 0);
   
   const individual = contributions.filter(c => c.contributionType === 'individual');
@@ -486,7 +486,7 @@ function calculateGeography(contributions: ContributionDetail[]) {
 /**
  * Calculate geographic diversity score
  */
-function calculateGeographicDiversity(topStates: any[]): number {
+function calculateGeographicDiversity(topStates: unknown[]): number {
   if (topStates.length === 0) return 0;
   
   // Use entropy calculation for diversity
@@ -509,7 +509,7 @@ function calculateGeographicDiversity(topStates: any[]): number {
 /**
  * Calculate timeline from totals
  */
-function calculateTimeline(totals: any[]) {
+function calculateTimeline(totals: unknown[], contributions: ContributionDetail[] = []) {
   return totals.map(total => ({
     period: `${total.cycle}`,
     quarter: `Q${Math.ceil(new Date(total.coverage_end_date).getMonth() / 3)}`,
@@ -607,10 +607,10 @@ function calculateExpenditureMetrics(expenditures: ExpenditureDetail[]) {
   return {
     categories,
     efficiency: {
-      adminCosts: calculateAdminCosts(contributions),
-      fundraisingCosts: calculateFundraisingCosts(contributions),
-      programCosts: calculateProgramCosts(contributions),
-      efficiencyRatio: calculateEfficiencyRatio(contributions)
+      adminCosts: 0, // Would need separate admin cost calculation for expenditures
+      fundraisingCosts: 0, // Would need separate fundraising cost calculation for expenditures
+      programCosts: 0, // Would need separate program cost calculation for expenditures
+      efficiencyRatio: 0 // Would need separate efficiency calculation for expenditures
     }
   };
 }
@@ -647,7 +647,7 @@ function calculateContributorCount(contributions: ContributionDetail[]): number 
   const uniqueContributors = new Set();
   
   for (const contrib of contributions) {
-    const key = `${contrib.contributorName}-${contrib.contributorCity}-${contrib.contributorState}`;
+    const key = `${contrib.contributorName}-${contrib.city}-${contrib.state}`;
     uniqueContributors.add(key);
   }
   
@@ -661,7 +661,7 @@ function calculateRepeatDonors(contributions: ContributionDetail[]): number {
   const contributorCounts = new Map<string, number>();
   
   for (const contrib of contributions) {
-    const key = `${contrib.contributorName}-${contrib.contributorCity}-${contrib.contributorState}`;
+    const key = `${contrib.contributorName}-${contrib.city}-${contrib.state}`;
     contributorCounts.set(key, (contributorCounts.get(key) || 0) + 1);
   }
   

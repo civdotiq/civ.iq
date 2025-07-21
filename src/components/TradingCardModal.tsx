@@ -30,7 +30,7 @@ interface StatOption {
   color: string;
   description: string;
   category: 'legislative' | 'political' | 'demographic' | 'engagement' | 'money' | 'voting' | 'focus';
-  getValue: (representative: EnhancedRepresentative, data?: any) => string | number;
+  getValue: (representative: EnhancedRepresentative, data?: unknown) => string | number;
 }
 
 interface TradingCardModalProps {
@@ -39,11 +39,11 @@ interface TradingCardModalProps {
   onClose: () => void;
   onGenerate: (stats: CardStat[]) => void;
   additionalData?: {
-    votes?: any[];
-    bills?: any[];
-    finance?: any;
-    news?: any[];
-    partyAlignment?: any;
+    votes?: unknown[];
+    bills?: unknown[];
+    finance?: unknown;
+    news?: unknown[];
+    partyAlignment?: unknown;
   };
 }
 
@@ -66,7 +66,7 @@ const STAT_OPTIONS: StatOption[] = [
     color: '#059669',
     description: 'Number of bills co-sponsored with other members',
     category: 'legislative',
-    getValue: (rep, data) => data?.bills?.filter((b: any) => b.cosponsors?.length > 0).length || 0
+    getValue: (rep, data) => data?.bills?.filter((b: unknown) => b.cosponsors?.length > 0).length || 0
   },
   {
     id: 'committee-roles',
@@ -104,7 +104,7 @@ const STAT_OPTIONS: StatOption[] = [
     color: '#0891b2',
     description: 'Percentage of votes attended',
     category: 'political',
-    getValue: (rep, data) => data?.votes ? `${Math.round((data.votes.filter((v: any) => v.position !== 'Not Voting').length / data.votes.length) * 100)}%` : 'No data available'
+    getValue: (rep, data) => data?.votes ? `${Math.round((data.votes.filter((v: unknown) => v.position !== 'Not Voting').length / data.votes.length) * 100)}%` : 'No data available'
   },
   {
     id: 'bipartisan-bills',
@@ -113,7 +113,7 @@ const STAT_OPTIONS: StatOption[] = [
     color: '#9333ea',
     description: 'Bills sponsored with cross-party support',
     category: 'political',
-    getValue: (rep, data) => data?.bills?.filter((b: any) => b.bipartisan).length || 'No data available'
+    getValue: (rep, data) => data?.bills?.filter((b: unknown) => b.bipartisan).length || 'No data available'
   },
   {
     id: 'leadership-roles',
@@ -259,7 +259,7 @@ const STAT_OPTIONS: StatOption[] = [
     color: '#059669',
     description: 'Bills with cross-party co-sponsors',
     category: 'voting',
-    getValue: (rep, data) => data?.bills?.filter((b: any) => b.bipartisan).length || 'No data available'
+    getValue: (rep, data) => data?.bills?.filter((b: unknown) => b.bipartisan).length || 'No data available'
   },
   {
     id: 'missed-votes-percent',

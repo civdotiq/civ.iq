@@ -121,7 +121,7 @@ class DataValidator {
   /**
    * Validate congressional representative data
    */
-  validateRepresentativeData(data: any, source: string): ValidationResult {
+  validateRepresentativeData(data: unknown, source: string): ValidationResult {
     const sourceInfo = DATA_SOURCES[source];
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -202,7 +202,7 @@ class DataValidator {
   /**
    * Validate campaign finance data
    */
-  validateFinanceData(data: any, source: string): ValidationResult {
+  validateFinanceData(data: unknown, source: string): ValidationResult {
     const sourceInfo = DATA_SOURCES[source];
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -271,7 +271,7 @@ class DataValidator {
   /**
    * Validate news article data
    */
-  validateNewsData(data: any, source: string): ValidationResult {
+  validateNewsData(data: unknown, source: string): ValidationResult {
     const sourceInfo = DATA_SOURCES[source];
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -343,14 +343,14 @@ class DataValidator {
   /**
    * Cross-validate data from multiple sources
    */
-  crossValidateData(dataPoints: Array<{ data: any; source: string; type: string }>): {
-    consensus: any;
-    conflicts: Array<{ field: string; values: Array<{ source: string; value: any }> }>;
+  crossValidateData(dataPoints: Array<{ data: unknown; source: string; type: string }>): {
+    consensus: unknown;
+    conflicts: Array<{ field: string; values: Array<{ source: string; value: unknown }> }>;
     reliability: number;
   } {
-    const conflicts: any[] = [];
-    const consensus: any = {};
-    const fieldValues = new Map<string, Array<{ source: string; value: any }>>();
+    const conflicts: unknown[] = [];
+    const consensus: unknown = {};
+    const fieldValues = new Map<string, Array<{ source: string; value: unknown }>>();
 
     // Collect all field values from different sources
     dataPoints.forEach(({ data, source }) => {
@@ -493,7 +493,7 @@ class DataValidator {
     }
   }
 
-  private calculateFinanceCompleteness(data: any): number {
+  private calculateFinanceCompleteness(data: unknown): number {
     const expectedFields = [
       'candidate_id', 'total_receipts', 'total_disbursements', 'cash_on_hand',
       'individual_contributions', 'pac_contributions', 'coverage_start_date', 'coverage_end_date'
@@ -503,13 +503,13 @@ class DataValidator {
     return (presentFields.length / expectedFields.length) * 100;
   }
 
-  private calculateNewsCompleteness(data: any): number {
+  private calculateNewsCompleteness(data: unknown): number {
     const expectedFields = ['title', 'url', 'source', 'publishedDate', 'description'];
     const presentFields = expectedFields.filter(field => data[field] != null);
     return (presentFields.length / expectedFields.length) * 100;
   }
 
-  private calculateNewsTimeliness(data: any): number {
+  private calculateNewsTimeliness(data: unknown): number {
     if (!data.publishedDate) return 0;
     
     const pubDate = new Date(data.publishedDate);
@@ -557,8 +557,8 @@ class DataValidator {
   }
 
   private calculateCrossValidationReliability(
-    dataPoints: Array<{ data: any; source: string; type: string }>,
-    conflicts: any[]
+    dataPoints: Array<{ data: unknown; source: string; type: string }>,
+    conflicts: unknown[]
   ): number {
     const totalFields = new Set();
     dataPoints.forEach(({ data }) => {

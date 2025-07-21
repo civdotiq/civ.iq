@@ -15,7 +15,15 @@ import {
 import { EnhancedRepresentative } from '@/types/representative';
 
 // Mock ClipboardItem
-global.ClipboardItem = jest.fn().mockImplementation((data) => data);
+class MockClipboardItem {
+  constructor(data: Record<string, string | Blob | PromiseLike<string | Blob>>) {
+    Object.assign(this, data);
+  }
+  
+  static supports = jest.fn().mockReturnValue(true);
+}
+
+global.ClipboardItem = MockClipboardItem as any;
 
 // Mock navigator APIs
 const mockNavigator = {
@@ -53,7 +61,14 @@ const mockRepresentative: EnhancedRepresentative = {
   state: 'CA',
   district: '12',
   chamber: 'House',
-  title: 'U.S. Representative'
+  title: 'U.S. Representative',
+  terms: [
+    {
+      congress: '119',
+      startYear: '2025',
+      endYear: '2027'
+    }
+  ]
 };
 
 const mockStats = [

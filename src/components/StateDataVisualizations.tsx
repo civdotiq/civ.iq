@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 
 interface StateVisualizationProps {
-  data: any;
+  data: unknown;
   type: 'chamber-composition' | 'bill-flow' | 'voting-patterns' | 'party-alignment' | 'legislative-activity';
   width?: number;
   height?: number;

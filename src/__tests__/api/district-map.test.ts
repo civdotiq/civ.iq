@@ -128,7 +128,7 @@ describe('/api/district-map', () => {
 
       for (const { state, expectedFips } of testStates) {
         // Import the function directly for testing
-        const { getStateFips } = require('@/app/api/district-map/route')
+        const { getStateFips } = await import('@/app/api/district-map/route')
         // Since getStateFips is not exported, we'll test indirectly through API calls
         
         const mockGeocodingResponse = {

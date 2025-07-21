@@ -340,7 +340,6 @@ export const COMMITTEE_NAMES: Record<string, string> = {
   'HSVY': 'House Committee on Veterans\' Affairs',
   'HSFS': 'House Committee on Financial Services',
   'HSHL': 'House Committee on Homeland Security',
-  'HSSY': 'House Committee on Science, Space, and Technology',
   
   // Senate Committees
   'SSAG': 'Senate Committee on Agriculture, Nutrition, and Forestry',
@@ -396,9 +395,6 @@ export const COMMITTEE_NAMES: Record<string, string> = {
   'ENR': 'Senate Committee on Energy and Natural Resources',
   'SBC': 'Senate Committee on Small Business and Entrepreneurship',
   'HSC': 'House Committee on Homeland Security',
-  'HSGAC': 'Senate Committee on Homeland Security and Governmental Affairs',
-  'SSCI': 'Senate Select Committee on Intelligence',
-  'HPSCI': 'House Permanent Select Committee on Intelligence',
   'SJC': 'Senate Committee on Judiciary',
   'HJC': 'House Committee on Judiciary',
   'HEEC': 'House Committee on Energy and Commerce',
@@ -429,21 +425,14 @@ export const COMMITTEE_NAMES: Record<string, string> = {
   'HFOR': 'House Committee on Foreign Affairs',
   'HOVE': 'House Committee on Oversight and Reform',
   'SGOV': 'Senate Committee on Homeland Security and Governmental Affairs',
-  'SSCI': 'Senate Select Committee on Intelligence',
-  'HPSCI': 'House Permanent Select Committee on Intelligence',
   'HSCI': 'House Committee on Science, Space, and Technology',
-  'SCOM': 'Senate Committee on Commerce, Science, and Transportation',
   'HSMA': 'House Committee on Small Business',
   'SSBE': 'Senate Committee on Small Business and Entrepreneurship',
-  'HVAC': 'House Committee on Veterans\' Affairs',
-  'SVAC': 'Senate Committee on Veterans\' Affairs',
-  'SPAG': 'Senate Special Committee on Aging',
   'SIND': 'Senate Committee on Indian Affairs',
   'JWTO': 'Joint Committee on Taxation',
   'JECON': 'Joint Economic Committee',
   'JLIB': 'Joint Committee on the Library',
-  'JPRINT': 'Joint Committee on Printing',
-  'JCSE': 'Joint Committee on Security and Cooperation in Europe'
+  'JPRINT': 'Joint Committee on Printing'
 };
 
 /**

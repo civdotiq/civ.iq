@@ -11,6 +11,7 @@ interface CardProps {
   className?: string;
   interactive?: boolean;
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  onClick?: () => void;
 }
 
 export const Card: FC<CardProps> = ({
@@ -18,6 +19,7 @@ export const Card: FC<CardProps> = ({
   className,
   interactive = false,
   padding = 'md',
+  onClick,
 }) => {
   const paddingClasses = {
     none: '',
@@ -30,10 +32,11 @@ export const Card: FC<CardProps> = ({
     <div
       className={cn(
         'bg-white rounded-lg border border-gray-100 shadow-sm',
-        interactive && 'cursor-pointer hover:shadow-md hover:border-gray-200 hover:-translate-y-0.5 transform transition-all duration-200',
+        (interactive || onClick) && 'cursor-pointer hover:shadow-md hover:border-gray-200 hover:-translate-y-0.5 transform transition-all duration-200',
         paddingClasses[padding],
         className
       )}
+      onClick={onClick}
     >
       {children}
     </div>

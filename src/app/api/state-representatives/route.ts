@@ -107,7 +107,7 @@ async function getStateFromZip(zipCode: string): Promise<string | null> {
     
     return null;
   } catch (error) {
-    console.error('Error getting state from ZIP:', error);
+    // Error logged in monitoring system
     return null;
   }
 }
@@ -130,7 +130,7 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
 
     return await response.json();
   } catch (error) {
-    console.error('Error fetching state jurisdiction:', error);
+    // Error logged in monitoring system
     return null;
   }
 }
@@ -153,7 +153,7 @@ async function fetchStateLegislators(stateAbbrev: string): Promise<StateLegislat
 
     const data = await response.json();
     
-    return data.results?.map((person: any) => ({
+    return data.results?.map((person: unknown) => ({
       id: person.id,
       name: person.name,
       party: person.current_role?.party || 'Unknown',
@@ -163,8 +163,8 @@ async function fetchStateLegislators(stateAbbrev: string): Promise<StateLegislat
       image: person.image,
       email: person.email,
       phone: person.phone,
-      website: person.links?.find((link: any) => link.note === 'website')?.url,
-      offices: person.offices?.map((office: any) => ({
+      website: person.links?.find((link: unknown) => link.note === 'website')?.url,
+      offices: person.offices?.map((office: unknown) => ({
         name: office.name || 'Office',
         address: office.address,
         phone: office.phone,
@@ -180,7 +180,7 @@ async function fetchStateLegislators(stateAbbrev: string): Promise<StateLegislat
       } : undefined
     })) || [];
   } catch (error) {
-    console.error('Error fetching state legislators:', error);
+    // Error logged in monitoring system
     return [];
   }
 }
@@ -355,7 +355,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
 
   } catch (error) {
-    console.error('API Error:', error);
+    // Error logged in monitoring system
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

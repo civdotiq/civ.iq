@@ -1,0 +1,11 @@
+{
+  "session_id": "af51ceee-df55-499c-901d-b2b1a8a3dcad",
+  "transcript_path": "/root/.claude/projects/-mnt-d-civic-intel-hub/af51ceee-df55-499c-901d-b2b1a8a3dcad.jsonl",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Edit",
+  "tool_input": {
+    "file_path": "/mnt/d/civic-intel-hub/src/lib/voting-data-service.ts",
+    "old_string": "  private async determineVotePosition(bioguideId: string, recordedVote: any): Promise<'Yea' | 'Nay' | 'Not\n  Voting' | 'Present'> {",
+    "new_string": "  private async determineVotePosition(bioguideId: string, recordedVote: any): Promise<'Yea' | 'Nay' | 'Not Voting' | 'Present'> {"
+  }
+}

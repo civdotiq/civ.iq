@@ -281,7 +281,7 @@ export function DataTrustIndicator({ sources, className = '' }: DataTrustIndicat
     // Additional check to prevent division by zero
     if (trustScores.length === 0) return 0;
     
-    return Math.round(trustScores.reduce((sum, score) => sum + score, 0) / trustScores.length);
+    return Math.round((trustScores as number[]).reduce((sum, score) => sum + score, 0) / trustScores.length) as any;
   };
 
   const trustScore = calculateTrustScore(safeSources);

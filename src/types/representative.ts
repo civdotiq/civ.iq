@@ -228,11 +228,11 @@ export interface ZipCodeRepresentatives {
 }
 
 // Type guards
-export function isEnhancedRepresentative(rep: any): rep is EnhancedRepresentative {
+export function isEnhancedRepresentative(rep: unknown): rep is EnhancedRepresentative {
   return rep && typeof rep.bioguideId === 'string' && typeof rep.name === 'string';
 }
 
-export function isRepresentativeSummary(rep: any): rep is RepresentativeSummary {
+export function isRepresentativeSummary(rep: unknown): rep is RepresentativeSummary {
   return rep && typeof rep.bioguideId === 'string' && typeof rep.name === 'string' && typeof rep.party === 'string';
 }
 
@@ -321,14 +321,14 @@ export interface BatchApiHookResult {
 // Profile data structure for batch response
 export interface RepresentativeProfile {
   profile: EnhancedRepresentative;
-  votes?: any[];
-  bills?: any[];
-  finance?: any;
-  news?: any[];
-  'party-alignment'?: any;
-  committees?: any[];
-  leadership?: any;
-  district?: any;
+  votes?: unknown[];
+  bills?: unknown[];
+  finance?: unknown;
+  news?: unknown[];
+  'party-alignment'?: unknown;
+  committees?: unknown[];
+  leadership?: unknown;
+  district?: unknown;
 }
 
 // Individual endpoint response wrapper

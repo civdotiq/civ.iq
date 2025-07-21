@@ -103,8 +103,8 @@ export async function GET(
 }
 
 // Clean up old cache entries periodically
-if (typeof global !== 'undefined' && !global._photoCleanupInterval) {
-  global._photoCleanupInterval = setInterval(() => {
+if (typeof global !== 'undefined' && !(global as any)._photoCleanupInterval) {
+  (global as any)._photoCleanupInterval = setInterval(() => {
     const now = Date.now();
     for (const [key, value] of photoCache.entries()) {
       if (now - value.timestamp > CACHE_TTL) {

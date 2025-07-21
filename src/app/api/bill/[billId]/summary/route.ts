@@ -18,7 +18,7 @@ import { ReadingLevelValidator } from '@/lib/ai/reading-level-validator';
 import { structuredLogger } from '@/lib/logging/logger';
 import { InputValidator } from '@/lib/validation/input-validator';
 
-interface BillSummaryRequest {
+interface _BillSummaryRequest {
   includeFull?: boolean;
   forceRefresh?: boolean;
   targetReadingLevel?: number;
@@ -168,7 +168,7 @@ export async function GET(
     const responseTime = Date.now() - startTime;
 
     // Build response based on format
-    const response: any = {
+    const response: unknown = {
       summary,
       metadata: {
         cached: false,
@@ -260,7 +260,7 @@ export async function POST(
     }: {
       targetReadingLevel?: number;
       priority?: 'high' | 'medium' | 'low';
-      options?: any;
+      options?: unknown;
     } = body;
 
     // Invalidate existing cache
@@ -381,7 +381,7 @@ async function fetchBillText(billId: string): Promise<{
     }
 
     const latestVersion = textVersions[0];
-    const fullTextUrl = latestVersion.formats?.find((f: any) => f.type === 'Formatted Text')?.url;
+    const fullTextUrl = latestVersion.formats?.find((f: unknown) => f.type === 'Formatted Text')?.url;
     
     if (!fullTextUrl) {
       throw new Error('Full text not available');

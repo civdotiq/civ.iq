@@ -3,106 +3,272 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createRateLimitMiddleware } from '@/lib/rate-limiting/rate-limiter';
-import { structuredLogger } from '@/lib/logging/logger';
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { logger } from '@/lib/logging/logger-edge'
 
-// Define rate limit types for different endpoints
-const RATE_LIMIT_RULES = {
-  // Search endpoints
-  '/api/search': 'search',
-  '/api/representatives': 'search',
-  
-  // Batch endpoints
-  '/api/representative/.*/batch': 'batch',
-  '/api/batch': 'batch',
-  
-  // Heavy computation endpoints
-  '/api/representative/.*/party-alignment': 'heavy',
-  '/api/representative/.*/news': 'heavy',
-  '/api/district-map': 'heavy',
-  '/api/representative/.*/votes': 'heavy',
-  
-  // General endpoints (default)
-  '/api/.*': 'general'
+// Rate limiting store (in-memory for Edge Runtime)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+// Security headers configuration
+const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'geolocation=(), microphone=(), camera=(), payment=()',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';",
 } as const;
 
-function getRateLimitType(pathname: string): 'general' | 'search' | 'batch' | 'heavy' {
-  for (const [pattern, type] of Object.entries(RATE_LIMIT_RULES)) {
-    const regex = new RegExp(pattern);
-    if (regex.test(pathname)) {
-      return type as 'general' | 'search' | 'batch' | 'heavy';
-    }
-  }
-  return 'general';
+// Rate limiting configuration
+interface RateLimitConfig {
+  requests: number;
+  windowMs: number;
 }
 
+const RATE_LIMITS: Record<string, RateLimitConfig> = {
+  '/api/': { requests: 100, windowMs: 60000 }, // 100 requests per minute for API
+  '/api/representatives': { requests: 60, windowMs: 60000 }, // 60 requests per minute for representatives
+  '/api/district-map': { requests: 30, windowMs: 60000 }, // 30 requests per minute for maps
+  default: { requests: 200, windowMs: 60000 }, // 200 requests per minute for other routes
+};
+
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  
-  // Only apply rate limiting to API routes
-  if (!pathname.startsWith('/api/')) {
-    return NextResponse.next();
-  }
-  
-  // Skip rate limiting for health check
-  if (pathname === '/api/health') {
-    return NextResponse.next();
-  }
-  
+  const startTime = Date.now();
+
   try {
-    const rateLimitType = getRateLimitType(pathname);
-    const rateLimitMiddleware = createRateLimitMiddleware(rateLimitType);
-    
-    const rateLimitResult = rateLimitMiddleware(request, pathname);
-    
-    // Create response with rate limit headers
-    const response = rateLimitResult.allowed 
-      ? NextResponse.next()
-      : NextResponse.json(
-          {
-            error: {
-              code: 'RATE_LIMIT_EXCEEDED',
-              message: rateLimitResult.message || 'Too Many Requests'
-            },
-            success: false
-          },
-          { status: rateLimitResult.status || 429 }
-        );
-    
-    // Add rate limit headers
-    Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
-      response.headers.set(key, value);
-    });
-    
-    // Log rate limit application
-    if (rateLimitResult.allowed) {
-      structuredLogger.debug('Rate limit check passed', {
-        pathname,
-        rateLimitType,
-        remaining: rateLimitResult.headers['X-RateLimit-Remaining']
+    // Extract client information
+    const clientInfo = extractClientInfo(request);
+
+    // Log request start (only for API routes to avoid spam)
+    if (request.nextUrl.pathname.startsWith('/api/')) {
+      logger.http('Request started', {
+        method: request.method,
+        url: request.url,
+        userAgent: clientInfo.userAgent,
+        ip: clientInfo.ip,
+        timestamp: new Date().toISOString()
       });
     }
-    
-    return response;
-    
-  } catch (error) {
-    // Log error but don't block request
-    structuredLogger.error('Rate limiting error', error as Error, {
-      pathname,
-      operation: 'rateLimitMiddleware'
+
+    // Validate request
+    const validationResult = validateRequest(request);
+    if (!validationResult.isValid) {
+      logger.warn('Request validation failed', {
+        url: request.url,
+        reason: validationResult.reason,
+        ip: clientInfo.ip
+      });
+
+      return createErrorResponse(validationResult.statusCode || 400, validationResult.reason || 'Invalid request');
+    }
+
+    // Apply rate limiting
+    const rateLimitResult = checkRateLimit(request, clientInfo.ip);
+    if (!rateLimitResult.allowed) {
+      logger.warn('Rate limit exceeded', {
+        url: request.url,
+        ip: clientInfo.ip,
+        limit: rateLimitResult.limit,
+        current: rateLimitResult.current
+      });
+
+      return createErrorResponse(429, 'Too Many Requests', {
+        'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+        'X-RateLimit-Remaining': Math.max(0, rateLimitResult.limit - rateLimitResult.current).toString(),
+        'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+        'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000).toString()
+      });
+    }
+
+    // Create response with security headers
+    const response = NextResponse.next();
+
+    // Add security headers
+    Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
+      response.headers.set(key, value);
     });
-    
-    return NextResponse.next();
+
+    // Add rate limit headers
+    response.headers.set('X-RateLimit-Limit', rateLimitResult.limit.toString());
+    response.headers.set('X-RateLimit-Remaining', Math.max(0, rateLimitResult.limit - rateLimitResult.current).toString());
+    response.headers.set('X-RateLimit-Reset', rateLimitResult.resetTime.toString());
+
+    // Add performance headers
+    const duration = Date.now() - startTime;
+    response.headers.set('X-Response-Time', `${duration}ms`);
+    response.headers.set('X-Request-ID', generateRequestId());
+
+    // Log successful request (only for API routes)
+    if (request.nextUrl.pathname.startsWith('/api/')) {
+      logger.http('Request completed', {
+        method: request.method,
+        url: request.url,
+        statusCode: response.status,
+        duration: `${duration}ms`,
+        ip: clientInfo.ip
+      });
+    }
+
+    return response;
+
+  } catch (error) {
+    const duration = Date.now() - startTime;
+
+    logger.error('Middleware error', error as Error, {
+      url: request.url,
+      method: request.method,
+      duration: `${duration}ms`
+    });
+
+    // Return generic error response
+    return createErrorResponse(500, 'Internal Server Error');
   }
+}
+
+// Helper functions
+function extractClientInfo(request: NextRequest) {
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIp = request.headers.get('x-real-ip');
+  const ip = forwarded?.split(',')[0] || realIp || 'unknown';
+
+  return {
+    ip: ip.trim(),
+    userAgent: request.headers.get('user-agent') || 'unknown',
+    origin: request.headers.get('origin') || 'unknown'
+  };
+}
+
+function validateRequest(request: NextRequest): { isValid: boolean; reason?: string; statusCode?: number } {
+  const url = new URL(request.url);
+
+  // Check for malicious patterns
+  const maliciousPatterns = [
+    /\.\./,                    // Path traversal
+    /<script/i,                // XSS attempts
+    /eval\(/i,                 // Code injection
+    /union.*select/i,          // SQL injection
+    /%00/,                     // Null byte injection
+    /\${/,                     // Template injection
+  ];
+
+  const fullPath = url.pathname + url.search;
+  for (const pattern of maliciousPatterns) {
+    if (pattern.test(fullPath)) {
+      return { isValid: false, reason: 'Malicious request pattern detected', statusCode: 400 };
+    }
+  }
+
+  // Validate content length for POST/PUT requests
+  if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) { // 10MB limit
+      return { isValid: false, reason: 'Request too large', statusCode: 413 };
+    }
+  }
+
+  // Validate API endpoints
+  if (url.pathname.startsWith('/api/')) {
+    // Check for required headers on API requests
+    if (!request.headers.get('accept') && request.method !== 'GET') {
+      return { isValid: false, reason: 'Missing Accept header', statusCode: 400 };
+    }
+  }
+
+  return { isValid: true };
+}
+
+function checkRateLimit(request: NextRequest, clientIp: string): {
+  allowed: boolean;
+  limit: number;
+  current: number;
+  resetTime: number;
+} {
+  const url = new URL(request.url);
+  const now = Date.now();
+
+  // Determine rate limit configuration
+  let config = RATE_LIMITS.default;
+  for (const [path, limit] of Object.entries(RATE_LIMITS)) {
+    if (path !== 'default' && url.pathname.startsWith(path)) {
+      config = limit;
+      break;
+    }
+  }
+
+  const key = `${clientIp}:${url.pathname}`;
+  const windowStart = Math.floor(now / config.windowMs) * config.windowMs;
+  const resetTime = windowStart + config.windowMs;
+
+  let entry = rateLimitStore.get(key);
+
+  // Clean up expired entries periodically
+  if (Math.random() < 0.01) { // 1% chance to cleanup
+    cleanupRateLimitStore();
+  }
+
+  if (!entry || entry.resetTime <= now) {
+    entry = { count: 0, resetTime };
+    rateLimitStore.set(key, entry);
+  }
+
+  entry.count++;
+
+  return {
+    allowed: entry.count <= config.requests,
+    limit: config.requests,
+    current: entry.count,
+    resetTime: entry.resetTime
+  };
+}
+
+function cleanupRateLimitStore() {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitStore.entries()) {
+    if (entry.resetTime <= now) {
+      rateLimitStore.delete(key);
+    }
+  }
+}
+
+function createErrorResponse(
+  status: number,
+  message: string,
+  additionalHeaders: Record<string, string> = {}
+): NextResponse {
+  const response = NextResponse.json(
+    {
+      error: {
+        code: status,
+        message,
+        timestamp: new Date().toISOString()
+      }
+    },
+    { status }
+  );
+
+  // Add security headers to error responses
+  Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+
+  // Add any additional headers
+  Object.entries(additionalHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+
+  return response;
+}
+
+function generateRequestId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
 // Configure which paths the middleware runs on
 export const config = {
   matcher: [
-    // Match all API routes
-    '/api/:path*',
-    // Exclude static files and images
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    // Skip internal Next.js paths and static files, but include API routes
+    '/((?!_next/static|_next/image|favicon.ico|icon-|manifest.json).*)',
   ],
-};
+}

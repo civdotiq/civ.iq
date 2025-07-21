@@ -89,7 +89,6 @@ interface RepresentativeDetails {
 // Server-side data fetching with Next.js 15 caching
 async function getRepresentativeData(bioguideId: string) {
   try {
-    console.log(`[CIV.IQ-DEBUG] Server-side fetch for ${bioguideId}`);
     
     if (!bioguideId || typeof bioguideId !== 'string') {
       throw new Error('Invalid bioguideId provided');
@@ -120,7 +119,6 @@ async function getRepresentativeData(bioguideId: string) {
     }
 
     if (!response.ok) {
-      console.error(`[CIV.IQ-DEBUG] Server fetch failed: ${response.status}`);
       if (response.status === 404) {
         notFound();
       }
@@ -130,8 +128,7 @@ async function getRepresentativeData(bioguideId: string) {
     let data;
     try {
       data = await response.json();
-    } catch (jsonError) {
-      console.error(`[CIV.IQ-DEBUG] JSON parsing error:`, jsonError);
+    } catch (_jsonError) {
       throw new Error('Invalid JSON response from API');
     }
 
@@ -139,11 +136,6 @@ async function getRepresentativeData(bioguideId: string) {
       throw new Error('No data received from API');
     }
 
-    console.log(`[CIV.IQ-DEBUG] Server fetch completed:`, {
-      success: data.success,
-      dataKeys: Object.keys(data.data || {}),
-      executionTime: data.executionTime
-    });
 
     // Return structured data with safe defaults
     return {
@@ -153,7 +145,6 @@ async function getRepresentativeData(bioguideId: string) {
       executionTime: data.executionTime || 0
     };
   } catch (error) {
-    console.error(`[CIV.IQ-DEBUG] Server fetch error:`, error);
     
     // Return a safe error structure instead of throwing
     return {
@@ -178,11 +169,9 @@ export default async function RepresentativeProfilePage({
     bioguideId = resolvedParams.bioguideId;
     
     if (!bioguideId || typeof bioguideId !== 'string') {
-      console.error('[CIV.IQ-DEBUG] Invalid bioguideId in params');
       notFound();
     }
-  } catch (error) {
-    console.error('[CIV.IQ-DEBUG] Error resolving params:', error);
+  } catch (_error) {
     notFound();
   }
   
@@ -191,22 +180,9 @@ export default async function RepresentativeProfilePage({
   
   // Handle fetch errors gracefully - allow partial failures
   if (!batchData || !batchData.data?.profile?.representative) {
-    console.error('[CIV.IQ-DEBUG] No valid data received:', {
-      success: batchData?.success,
-      hasData: !!batchData?.data,
-      hasProfile: !!batchData?.data?.profile,
-      hasRepresentative: !!batchData?.data?.profile?.representative,
-      errors: batchData?.errors
-    });
     notFound();
   }
   
-  // Log partial failures but don't crash
-  if (!batchData.success) {
-    console.warn('[CIV.IQ-DEBUG] Batch request had partial failures:', batchData.errors);
-  }
-
-  // Extract data from server response with safe defaults
   const representative = batchData.data.profile.representative as RepresentativeDetails;
   const votingData = batchData.data.votes || [];
   const billsData = batchData.data.bills || [];
@@ -215,29 +191,8 @@ export default async function RepresentativeProfilePage({
   const partyAlignmentData = batchData.data['party-alignment'] || {};
   const partialErrors = batchData.errors || {};
   
-  // Debug: Log the extracted data arrays
-  console.log('[CIV.IQ-DEBUG] Extracted data:', {
-    votingDataLength: Array.isArray(votingData) ? votingData.length : 'not array',
-    votingDataType: typeof votingData,
-    votingDataSample: Array.isArray(votingData) ? votingData[0] : votingData,
-    billsDataLength: Array.isArray(billsData) ? billsData.length : 'not array', 
-    billsDataType: typeof billsData,
-    billsDataSample: Array.isArray(billsData) ? billsData[0] : billsData
-  });
-  
-  // Debug: Log the representative data structure
-  console.log('[CIV.IQ-DEBUG] Representative data structure:', {
-    hasRepresentative: !!representative,
-    name: representative?.name,
-    firstName: representative?.firstName,
-    lastName: representative?.lastName,
-    bioguideId: representative?.bioguideId,
-    keys: representative ? Object.keys(representative) : []
-  });
-  
   // Validate essential representative data - be more lenient
   if (!representative || (!representative.name && !representative.firstName && !representative.lastName)) {
-    console.error('[CIV.IQ-DEBUG] Invalid representative data:', representative);
     notFound();
   }
   
@@ -246,7 +201,6 @@ export default async function RepresentativeProfilePage({
     representative.name = `${representative.firstName} ${representative.lastName}`;
   }
 
-  console.log(`[CIV.IQ-DEBUG] Server component rendered for ${representative.name}`);
 
   return (
     <ErrorBoundary>

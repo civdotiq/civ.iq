@@ -23,6 +23,12 @@
         "no-console": "off",
         "@typescript-eslint/no-unused-vars": "off"
       }
+    },
+    {
+      "files": ["**/error.tsx"],
+      "rules": {
+        "no-console": "off"
+      }
     }
   ]
 }

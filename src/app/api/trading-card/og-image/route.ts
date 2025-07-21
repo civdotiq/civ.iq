@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generateOpenGraphTags } from '@/lib/socialSharing';
+import { EnhancedRepresentative } from '@/types/representative';
 
 /**
  * API endpoint to serve Open Graph metadata for trading cards
@@ -38,10 +39,15 @@ export async function GET(request: NextRequest) {
         district: district || '',
         title: title || 'U.S. Representative',
         party: '',
-        chamber: '',
+        chamber: 'House' as const,
         firstName: '',
-        lastName: ''
-      },
+        lastName: '',
+        terms: [],
+        imageUrl: '',
+        phone: '',
+        website: '',
+        currentTerm: null
+      } satisfies Partial<EnhancedRepresentative> as EnhancedRepresentative,
       imageUrl || '/api/placeholder-card.png'
     );
 

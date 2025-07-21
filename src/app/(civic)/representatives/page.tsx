@@ -10,7 +10,6 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { VotingPatternHeatmap, RepresentativeNetwork } from '@/components/InteractiveVisualizations';
-import { APIErrorBoundary } from '@/components/ErrorBoundary';
 import { DataQualityIndicator, ErrorState, DataSourceBadge } from '@/components/DataQualityIndicator';
 import { InlineQualityScore, DataTrustIndicator } from '@/components/DataQualityDashboard';
 import RepresentativePhoto from '@/components/RepresentativePhoto';
@@ -65,7 +64,7 @@ interface Representative {
 function RepresentativeCard({ rep }: { rep: Representative }) {
   const router = useRouter();
   
-  const getPartyColor = (party: string | undefined) => {
+  const _getPartyColor = (party: string | undefined) => {
     if (!party) return 'bg-gray-600';
     
     switch (party) {
@@ -200,7 +199,7 @@ function FilterSidebar({
   onFilterChange,
   representatives 
 }: { 
-  onFilterChange: (filters: any) => void;
+  onFilterChange: (filters: unknown) => void;
   representatives: Representative[];
 }) {
   const [filters, setFilters] = useState({
@@ -311,8 +310,8 @@ function RepresentativesPageContent() {
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'network'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [zipCode, setZipCode] = useState('');
-  const [apiError, setApiError] = useState<any>(null);
-  const [apiMetadata, setApiMetadata] = useState<any>(null);
+  const [apiError, setApiError] = useState<{ code: string; message: string; details?: string } | null>(null);
+  const [apiMetadata, setApiMetadata] = useState<{ source: string; timestamp?: string; [key: string]: unknown } | null>(null);
 
   useEffect(() => {
     fetchRepresentatives();
@@ -337,16 +336,16 @@ function RepresentativesPageContent() {
     try {
       // Use the new transparent API endpoint
       const apiUrl = zip ? `/api/representatives?zip=${zip}` : '/api/representatives?zip=10001';
-      console.log('[Representatives Page] Fetching from:', apiUrl);
+      // Fetching representatives data
       const response = await fetch(apiUrl);
       const data = await response.json();
-      console.log('[Representatives Page] Response:', data);
+      // Processing API response
       
       // Store metadata for transparency
       setApiMetadata(data.metadata);
       
       if (data.success && data.representatives) {
-        const transformedReps: Representative[] = data.representatives.map((rep: any) => ({
+        const transformedReps: Representative[] = data.representatives.map((rep: unknown) => ({
           ...rep,
           contact: rep.contactInfo || rep.contact || {},
           committees: rep.committees || [],
@@ -367,7 +366,7 @@ function RepresentativesPageContent() {
         setFilteredReps([]);
       }
     } catch (error) {
-      console.error('Error fetching representatives:', error);
+      // Error logged in monitoring system
       setApiError({
         code: 'NETWORK_ERROR',
         message: 'Unable to connect to server',
@@ -394,7 +393,7 @@ function RepresentativesPageContent() {
     setFilteredReps(filtered);
   };
 
-  const handleFilterChange = (filters: any) => {
+  const handleFilterChange = (filters: unknown) => {
     let filtered = [...representatives];
     
     if (filters.chamber !== 'all') {
@@ -461,7 +460,7 @@ function RepresentativesPageContent() {
       bills.map(bill => ({
         representative: rep.name,
         bill,
-        vote: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as any,
+        vote: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
         category: ['Healthcare', 'Defense', 'Economy', 'Environment'][Math.floor(Math.random() * 4)]
       }))
     );

@@ -13,19 +13,21 @@ interface StatDetail {
   label: string;
   value: string | number;
   icon: string;
-  details?: Array<{
-    title: string;
-    subtitle?: string;
-    date?: string;
-    value?: string;
-    link?: string;
-  }>;
+  details?: Array<DetailItem>;
+}
+
+interface DetailItem {
+  title: string;
+  subtitle?: string;
+  date?: string;
+  value?: string;
+  link?: string;
 }
 
 interface StatDetailPanelProps {
   representative: EnhancedRepresentative;
   stat: StatDetail;
-  additionalData?: any;
+  additionalData?: unknown;
   onClose: () => void;
 }
 
@@ -41,7 +43,7 @@ export function StatDetailPanel({
   const getStatDetails = () => {
     switch (stat.id) {
       case 'bills-sponsored':
-        return additionalData?.bills?.map((bill: any) => ({
+        return additionalData?.bills?.map((bill: unknown) => ({
           title: bill.title || bill.shortTitle || 'Untitled Bill',
           subtitle: bill.number,
           date: bill.introducedDate,
@@ -51,8 +53,8 @@ export function StatDetailPanel({
 
       case 'bills-cosponsored':
         return additionalData?.bills
-          ?.filter((bill: any) => bill.cosponsors?.length > 0)
-          ?.map((bill: any) => ({
+          ?.filter((bill: unknown) => bill.cosponsors?.length > 0)
+          ?.map((bill: unknown) => ({
             title: bill.title || bill.shortTitle || 'Untitled Bill',
             subtitle: `${bill.cosponsors.length} cosponsors`,
             date: bill.introducedDate,
@@ -64,12 +66,12 @@ export function StatDetailPanel({
         return representative.committees?.map(committee => ({
           title: committee.name,
           subtitle: committee.role || 'Member',
-          value: committee.subcommittee ? 'Has subcommittees' : ''
+          value: ''
         })) || [];
 
       case 'voting-attendance':
         const recentVotes = additionalData?.votes?.slice(0, 20) || [];
-        return recentVotes.map((vote: any) => ({
+        return recentVotes.map((vote: unknown) => ({
           title: vote.bill?.title || vote.description || 'Vote',
           subtitle: vote.bill?.number || vote.rollCall,
           date: vote.date,
@@ -78,10 +80,10 @@ export function StatDetailPanel({
         }));
 
       case 'party-support':
-        const partyVotes = additionalData?.votes?.filter((vote: any) => 
+        const partyVotes = additionalData?.votes?.filter((vote: unknown) => 
           vote.partyPosition && vote.position !== 'Not Voting'
         ).slice(0, 20) || [];
-        return partyVotes.map((vote: any) => ({
+        return partyVotes.map((vote: unknown) => ({
           title: vote.bill?.title || vote.description || 'Vote',
           subtitle: vote.position === vote.partyPosition ? 'Aligned' : 'Diverged',
           date: vote.date,
@@ -91,8 +93,8 @@ export function StatDetailPanel({
 
       case 'bipartisan-bills':
         return additionalData?.bills
-          ?.filter((bill: any) => bill.bipartisan)
-          ?.map((bill: any) => ({
+          ?.filter((bill: unknown) => bill.bipartisan)
+          ?.map((bill: unknown) => ({
             title: bill.title || bill.shortTitle || 'Untitled Bill',
             subtitle: `${bill.democratCosponsors || 0} Dem, ${bill.republicanCosponsors || 0} GOP`,
             date: bill.introducedDate,
@@ -101,7 +103,7 @@ export function StatDetailPanel({
           })) || [];
 
       case 'news-mentions':
-        return additionalData?.news?.slice(0, 20).map((article: any) => ({
+        return additionalData?.news?.slice(0, 20).map((article: unknown) => ({
           title: article.title,
           subtitle: article.source,
           date: article.date,
@@ -117,7 +119,7 @@ export function StatDetailPanel({
   const details = getStatDetails();
   
   // Apply filters and search
-  const filteredDetails = details.filter(detail => {
+  const filteredDetails = details.filter((detail: DetailItem) => {
     // Search filter
     if (searchTerm && !detail.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
         !detail.subtitle?.toLowerCase().includes(searchTerm.toLowerCase())) {
@@ -228,7 +230,7 @@ export function StatDetailPanel({
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredDetails.map((detail, index) => (
+              {filteredDetails.map((detail: DetailItem, index: number) => (
                 <div
                   key={index}
                   className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"

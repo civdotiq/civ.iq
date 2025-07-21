@@ -11,7 +11,7 @@ import { useState } from 'react';
 interface TestResult {
   status: 'success' | 'error';
   statusCode?: number;
-  data?: any;
+  data?: unknown;
   error?: string;
 }
 

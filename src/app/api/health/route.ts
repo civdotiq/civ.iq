@@ -21,7 +21,7 @@ interface SimpleHealthCheck {
 
 const startTime = Date.now();
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const healthCheck: SimpleHealthCheck = {
       status: 'healthy',
@@ -58,6 +58,6 @@ export async function GET(request: NextRequest) {
 }
 
 // Simple health endpoint for load balancers
-export async function HEAD(request: NextRequest) {
+export async function HEAD(_request: NextRequest) {
   return new NextResponse(null, { status: 200 });
 }

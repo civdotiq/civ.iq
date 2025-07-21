@@ -9,10 +9,11 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
+  setupFiles: ['<rootDir>/jest.polyfills.js'],
   testMatch: [
     '<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}',
     '<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}',
-    '<rootDir>/tests/**/*.{js,jsx,ts,tsx}'
+    '<rootDir>/__tests__/**/*.{js,jsx,ts,tsx}'
   ],
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
@@ -35,7 +36,12 @@ const customJestConfig = {
   testPathIgnorePatterns: [
     '<rootDir>/.next/',
     '<rootDir>/node_modules/',
-    '<rootDir>/temp-nextjs/'
+    '<rootDir>/temp-nextjs/',
+    '<rootDir>/tests/e2e/',
+    '<rootDir>/tests/.*\\.spec\\.ts$',
+    '<rootDir>/tests/utils/',
+    '<rootDir>/tests/fixtures/',
+    '<rootDir>/src/.*test-helpers.*'
   ],
   // Add explicit ignore for the duplicate package.json
   rootDir: '.',

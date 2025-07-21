@@ -26,7 +26,7 @@ export interface SearchResult {
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
 }
 
@@ -162,7 +162,7 @@ async function handleZipSearch(classification: ClassificationResult): Promise<Se
       };
     }
   } catch (error) {
-    structuredLogger.warn('Census API fallback failed for ZIP', { zip, error });
+    structuredLogger.warn('Census API fallback failed for ZIP', { zip, error: error instanceof Error ? error : String(error) });
   }
   
   return createErrorResult(classification, 'ZIP_NOT_FOUND', `ZIP code ${zip} not found`);
@@ -315,7 +315,7 @@ function createErrorResult(
   classification: ClassificationResult,
   code: string,
   message: string,
-  details?: any
+  details?: unknown
 ): SearchResult {
   return {
     success: false,

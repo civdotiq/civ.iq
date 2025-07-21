@@ -88,7 +88,7 @@ export function useErrorHandler(componentName?: string): UseErrorHandlerReturn {
 // Hook for API calls with standardized error handling
 export function useApiCall<T>(
   apiCall: () => Promise<T>,
-  dependencies: any[] = [],
+  dependencies: unknown[] = [],
   componentName?: string
 ) {
   const [data, setData] = useState<T | null>(null);

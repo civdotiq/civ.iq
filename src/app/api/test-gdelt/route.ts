@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
         
         // Remove duplicates
         const seenUrls = new Set<string>();
-        results.articles = results.articles.filter((article: any) => {
+        results.articles = results.articles.filter((article: unknown) => {
           if (seenUrls.has(article.url)) return false;
           seenUrls.add(article.url);
           return true;

@@ -74,7 +74,7 @@ export class BaseValidator {
     return sanitized;
   }
 
-  static validateRequired(value: any, fieldName: string): string[] {
+  static validateRequired(value: unknown, fieldName: string): string[] {
     const errors: string[] = [];
     
     if (value === undefined || value === null || value === '') {
@@ -84,7 +84,7 @@ export class BaseValidator {
     return errors;
   }
 
-  static validateString(value: any, fieldName: string, options: {
+  static validateString(value: unknown, fieldName: string, options: {
     required?: boolean;
     minLength?: number;
     maxLength?: number;
@@ -149,7 +149,7 @@ export class BaseValidator {
     };
   }
 
-  static validateNumber(value: any, fieldName: string, options: {
+  static validateNumber(value: unknown, fieldName: string, options: {
     required?: boolean;
     min?: number;
     max?: number;
@@ -206,7 +206,7 @@ export class BaseValidator {
     };
   }
 
-  static validateBoolean(value: any, fieldName: string, required = false): ValidationResult<boolean> {
+  static validateBoolean(value: unknown, fieldName: string, required = false): ValidationResult<boolean> {
     const errors: string[] = [];
 
     // Check if required
@@ -255,7 +255,7 @@ export class BaseValidator {
 
 // Specific validators for common use cases
 export class StateValidator extends BaseValidator {
-  static validateStateAbbreviation(state: any): ValidationResult<StateAbbreviation> {
+  static validateStateAbbreviation(state: unknown): ValidationResult<StateAbbreviation> {
     const stringResult = this.validateString(state, 'state', {
       required: true,
       minLength: 2,
@@ -278,7 +278,7 @@ export class StateValidator extends BaseValidator {
 }
 
 export class ZipCodeValidator extends BaseValidator {
-  static validateZipCode(zip: any): ValidationResult<string> {
+  static validateZipCode(zip: unknown): ValidationResult<string> {
     const stringResult = this.validateString(zip, 'zip code', {
       required: true,
       minLength: 5,
@@ -303,7 +303,7 @@ export class ZipCodeValidator extends BaseValidator {
 }
 
 export class BioguideIdValidator extends BaseValidator {
-  static validateBioguideId(bioguideId: any): ValidationResult<string> {
+  static validateBioguideId(bioguideId: unknown): ValidationResult<string> {
     return this.validateString(bioguideId, 'bioguide ID', {
       required: true,
       minLength: 7,
@@ -314,7 +314,7 @@ export class BioguideIdValidator extends BaseValidator {
 }
 
 export class PaginationValidator extends BaseValidator {
-  static validatePage(page: any): ValidationResult<number> {
+  static validatePage(page: unknown): ValidationResult<number> {
     return this.validateNumber(page, 'page', {
       required: false,
       min: 1,
@@ -323,7 +323,7 @@ export class PaginationValidator extends BaseValidator {
     });
   }
 
-  static validateLimit(limit: any): ValidationResult<number> {
+  static validateLimit(limit: unknown): ValidationResult<number> {
     return this.validateNumber(limit, 'limit', {
       required: false,
       min: 1,
@@ -334,7 +334,7 @@ export class PaginationValidator extends BaseValidator {
 }
 
 export class SearchValidator extends BaseValidator {
-  static validateSearchQuery(query: any): ValidationResult<string> {
+  static validateSearchQuery(query: unknown): ValidationResult<string> {
     return this.validateString(query, 'search query', {
       required: false,
       minLength: 1,
@@ -402,7 +402,7 @@ export class XSSProtection {
 // API input validation wrapper
 export function validateApiInput<T>(
   input: Record<string, any>,
-  validators: Record<keyof T, (value: any) => ValidationResult>
+  validators: Record<keyof T, (value: unknown) => ValidationResult>
 ): ValidationResult<T> {
   const errors: string[] = [];
   const sanitized = {} as T;

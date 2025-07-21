@@ -24,7 +24,7 @@ export interface ShareResult {
 export function generateShareText(
   representative: EnhancedRepresentative,
   stats: Array<{ label: string; value: string | number }>,
-  platform: 'twitter' | 'facebook' | 'linkedin' | 'email'
+  platform: 'twitter' | 'facebook' | 'linkedin' | 'email' | 'copy'
 ): string {
   const baseText = `Check out ${representative.name}'s trading card!`;
   const statsText = stats.slice(0, 2).map(s => `${s.label}: ${s.value}`).join(' • ');
@@ -44,6 +44,9 @@ export function generateShareText(
       
     case 'email':
       return `I thought you might be interested in ${representative.name}'s trading card from CIV.IQ.\n\n${stats.map(s => `${s.label}: ${s.value}`).join('\n')}\n\nCheck it out at CIV.IQ!`;
+      
+    case 'copy':
+      return `${baseText}\n\n${statsText}\n\nvia CIV.IQ`;
       
     default:
       return baseText;

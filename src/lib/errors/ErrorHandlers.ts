@@ -3,10 +3,10 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { 
-  CiviqError, 
-  NetworkError, 
-  TimeoutError, 
+import {
+  CiviqError,
+  NetworkError,
+  TimeoutError,
   RateLimitError,
   RepresentativeNotFoundError,
   InvalidZipCodeError,
@@ -15,17 +15,18 @@ import {
   CensusApiError,
   FecApiError,
   createErrorFromResponse,
-  createErrorFromException
+  createErrorFromException,
 } from './ErrorTypes';
+import { structuredLogger } from '../logging/logger';
 
 // Enhanced fetch wrapper with automatic error handling
 export async function safeFetch(
-  url: string, 
+  url: string,
   options: RequestInit = {},
   context: { operation: string; timeout?: number } = { operation: 'API call' }
 ): Promise<Response> {
   const { operation, timeout = 10000 } = context;
-  
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -48,7 +49,7 @@ export async function safeFetch(
     return response;
   } catch (error) {
     clearTimeout(timeoutId);
-    
+
     if (error instanceof CiviqError) {
       throw error;
     }
@@ -62,7 +63,7 @@ export async function safeFetch(
 
     throw new NetworkError({
       message: `Unknown error during ${operation}`,
-      context: { operation, url }
+      context: { operation, url },
     });
   }
 }
@@ -79,7 +80,7 @@ export async function safeJsonParse<T>(response: Response, operation: string): P
         helpText: 'The server returned an empty response',
         suggestedActions: ['Try Again', 'Contact Support'],
         context: { operation },
-        severity: 'medium'
+        severity: 'medium',
       });
     }
 
@@ -96,7 +97,7 @@ export async function safeJsonParse<T>(response: Response, operation: string): P
       helpText: 'The server returned malformed data',
       suggestedActions: ['Try Again', 'Report Problem'],
       context: { operation, error: error instanceof Error ? error.message : 'Unknown' },
-      severity: 'medium'
+      severity: 'medium',
     });
   }
 }
@@ -104,49 +105,64 @@ export async function safeJsonParse<T>(response: Response, operation: string): P
 // API-specific error handlers
 export class ApiErrorHandlers {
   // Representatives API error handler
-  static handleRepresentativesError(error: any, location: string): CiviqError {
+  static handleRepresentativesError(error: unknown, location: string): CiviqError {
     if (error instanceof CiviqError) {
       return error;
     }
 
+    // Type guard for error objects
+    const errorObj = error as { code?: string; message?: string };
+
     // Check for specific error codes from the API
-    if (error?.code === 'NO_REPRESENTATIVES_FOUND') {
+    if (errorObj?.code === 'NO_REPRESENTATIVES_FOUND') {
       return new RepresentativeNotFoundError(location);
     }
 
-    if (error?.code === 'INVALID_ZIP_CODE') {
+    if (errorObj?.code === 'INVALID_ZIP_CODE') {
       return new InvalidZipCodeError(location);
     }
 
-    if (error?.code === 'INVALID_ADDRESS') {
+    if (errorObj?.code === 'INVALID_ADDRESS') {
       return new InvalidAddressError(location);
     }
 
-    return createErrorFromException(error, { location, api: 'representatives' });
+    return createErrorFromException(error instanceof Error ? error : new Error(String(error)), {
+      location,
+      api: 'representatives',
+    });
   }
 
   // Voting records API error handler
-  static handleVotingRecordsError(error: any, bioguideId: string): CiviqError {
+  static handleVotingRecordsError(error: unknown, bioguideId: string): CiviqError {
     if (error instanceof CiviqError) {
       return error;
     }
 
+    // Type guard for error objects
+    const errorObj = error as { message?: string };
+
     // Check for Congress.gov specific issues
-    if (error?.message?.includes('congress.gov')) {
-      return new CongressApiError('voting records fetch', error.message);
+    if (errorObj?.message?.includes('congress.gov')) {
+      return new CongressApiError('voting records fetch', errorObj.message);
     }
 
-    return createErrorFromException(error, { bioguideId, api: 'voting-records' });
+    return createErrorFromException(error instanceof Error ? error : new Error(String(error)), {
+      bioguideId,
+      api: 'voting-records',
+    });
   }
 
   // District mapping error handler
-  static handleDistrictMappingError(error: any, input: string): CiviqError {
+  static handleDistrictMappingError(error: unknown, input: string): CiviqError {
     if (error instanceof CiviqError) {
       return error;
     }
 
+    // Type guard for error objects
+    const errorObj = error as { message?: string };
+
     // Check for Census API specific issues
-    if (error?.message?.includes('census')) {
+    if (errorObj?.message?.includes('census')) {
       return new CensusApiError('district mapping');
     }
 
@@ -159,17 +175,23 @@ export class ApiErrorHandlers {
   }
 
   // Campaign finance error handler
-  static handleCampaignFinanceError(error: any, bioguideId: string): CiviqError {
+  static handleCampaignFinanceError(error: unknown, bioguideId: string): CiviqError {
     if (error instanceof CiviqError) {
       return error;
     }
 
+    // Type guard for error objects
+    const errorObj = error as { message?: string };
+
     // Check for FEC API specific issues
-    if (error?.message?.includes('fec')) {
+    if (errorObj?.message?.includes('fec')) {
       return new FecApiError('campaign finance data');
     }
 
-    return createErrorFromException(error, { bioguideId, api: 'campaign-finance' });
+    return createErrorFromException(error instanceof Error ? error : new Error(String(error)), {
+      bioguideId,
+      api: 'campaign-finance',
+    });
   }
 }
 
@@ -211,7 +233,7 @@ export class ValidationErrorHandler {
         helpText: 'The representative identifier is not valid',
         suggestedActions: ['Go Back', 'Search Again'],
         context: { bioguideId },
-        severity: 'medium'
+        severity: 'medium',
       });
     }
 
@@ -224,7 +246,7 @@ export class ValidationErrorHandler {
         helpText: 'Representative IDs should be in format like "P000595"',
         suggestedActions: ['Go Back', 'Search Again'],
         context: { bioguideId },
-        severity: 'medium'
+        severity: 'medium',
       });
     }
   }
@@ -239,16 +261,16 @@ export class RateLimitHandler {
   static checkRateLimit(endpoint: string): void {
     const now = Date.now();
     const requests = this.requests.get(endpoint) || [];
-    
+
     // Remove old requests outside the window
     const recentRequests = requests.filter(time => now - time < this.WINDOW_MS);
-    
+
     if (recentRequests.length >= this.MAX_REQUESTS) {
       const oldestRequest = Math.min(...recentRequests);
       const retryAfter = Math.ceil((oldestRequest + this.WINDOW_MS - now) / 1000);
       throw new RateLimitError(retryAfter);
     }
-    
+
     // Add current request
     recentRequests.push(now);
     this.requests.set(endpoint, recentRequests);
@@ -264,15 +286,15 @@ export class RetryHandler {
       baseDelay?: number;
       maxDelay?: number;
       shouldRetry?: (error: CiviqError) => boolean;
-      context?: Record<string, any>;
+      context?: Record<string, unknown>;
     } = {}
   ): Promise<T> {
     const {
       maxAttempts = 3,
       baseDelay = 1000,
       maxDelay = 10000,
-      shouldRetry = (error) => error.retryable,
-      context = {}
+      shouldRetry = error => error.retryable,
+      context = {},
     } = options;
 
     let lastError: CiviqError;
@@ -281,9 +303,10 @@ export class RetryHandler {
       try {
         return await operation();
       } catch (error) {
-        const civiqError = error instanceof CiviqError 
-          ? error 
-          : createErrorFromException(error as Error, { attempt, ...context });
+        const civiqError =
+          error instanceof CiviqError
+            ? error
+            : createErrorFromException(error as Error, { attempt, ...context });
 
         lastError = civiqError;
 
@@ -294,7 +317,7 @@ export class RetryHandler {
 
         // Calculate delay with exponential backoff
         const delay = Math.min(baseDelay * Math.pow(2, attempt - 1), maxDelay);
-        
+
         // Add jitter to prevent thundering herd
         const jitter = Math.random() * 0.1 * delay;
         await new Promise(resolve => setTimeout(resolve, delay + jitter));
@@ -307,21 +330,22 @@ export class RetryHandler {
 
 // Error analytics and monitoring
 export class ErrorAnalytics {
-  static reportError(error: CiviqError, context?: Record<string, any>): void {
+  static reportError(error: CiviqError, context?: Record<string, unknown>): void {
     const report = {
       error: error.toJSON(),
       context,
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
       url: typeof window !== 'undefined' ? window.location.href : 'server',
       timestamp: new Date().toISOString(),
-      sessionId: typeof sessionStorage !== 'undefined' 
-        ? (sessionStorage.getItem('sessionId') || 'unknown')
-        : 'server'
+      sessionId:
+        typeof sessionStorage !== 'undefined'
+          ? sessionStorage.getItem('sessionId') || 'unknown'
+          : 'server',
     };
 
     // In development, just log
     if (process.env.NODE_ENV === 'development') {
-      console.warn('Error reported:', report);
+      structuredLogger.warn('Error reported', { report });
       return;
     }
 
@@ -339,9 +363,12 @@ export class ErrorAnalytics {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
       //   body: JSON.stringify(report)
-      // }).catch(console.error);
+      // }).catch(err => structuredLogger.error('Failed to send error report', err));
     } catch (e) {
-      console.error('Failed to report error analytics:', e);
+      structuredLogger.error(
+        'Failed to report error analytics',
+        e instanceof Error ? e : String(e)
+      );
     }
   }
 
@@ -352,21 +379,23 @@ export class ErrorAnalytics {
       const reports = JSON.parse(localStorage.getItem('errorAnalytics') || '[]');
       const stats = new Map<string, { count: number; lastSeen: string }>();
 
-      reports.forEach((report: any) => {
+      reports.forEach((report: { error?: { code?: string }; timestamp: string }) => {
         const code = report.error?.code || 'UNKNOWN';
         const current = stats.get(code) || { count: 0, lastSeen: report.timestamp };
         stats.set(code, {
           count: current.count + 1,
-          lastSeen: report.timestamp > current.lastSeen ? report.timestamp : current.lastSeen
+          lastSeen: report.timestamp > current.lastSeen ? report.timestamp : current.lastSeen,
         });
       });
 
-      return Array.from(stats.entries()).map(([errorCode, data]) => ({
-        errorCode,
-        ...data
-      })).sort((a, b) => b.count - a.count);
+      return Array.from(stats.entries())
+        .map(([errorCode, data]) => ({
+          errorCode,
+          ...data,
+        }))
+        .sort((a, b) => b.count - a.count);
     } catch (e) {
-      console.error('Failed to get error stats:', e);
+      structuredLogger.error('Failed to get error stats', e instanceof Error ? e : String(e));
       return [];
     }
   }

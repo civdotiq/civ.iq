@@ -125,7 +125,7 @@ export async function GET(
         }, request);
 
         // Fetch news from GDELT with intelligent deduplication
-        const allArticles: any[] = [];
+        const allArticles: unknown[] = [];
         const articlesPerTerm = Math.ceil(limit * 1.5 / searchTerms.length); // Fetch more to account for deduplication
         let totalDuplicatesRemoved = 0;
         

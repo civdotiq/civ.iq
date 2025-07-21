@@ -126,7 +126,7 @@ export async function GET(
   }
 }
 
-function analyzePartyAlignment(representative: any, votes: any[]): PartyAlignment {
+function analyzePartyAlignment(representative: unknown, votes: unknown[]): PartyAlignment {
   // Analyze patterns in sponsored/cosponsored legislation to estimate party alignment
   const party = representative.party?.toLowerCase() || 'unknown';
   

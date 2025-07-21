@@ -1,0 +1,42 @@
+{
+  "hashes": {
+    "/mnt/d/civic-intel-hub/tsconfig.json": "f151105ce1ef76c987a3fe3e50fa304754239d04ef7d0f67b9ab0b3eeaa23dd0"
+  },
+  "mappings": {
+    "next-env.d.ts": {
+      "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
+      "excludes": [
+        "node_modules",
+        "scripts"
+      ]
+    },
+    "**/*.ts": {
+      "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
+      "excludes": [
+        "node_modules",
+        "scripts"
+      ]
+    },
+    "**/*.tsx": {
+      "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
+      "excludes": [
+        "node_modules",
+        "scripts"
+      ]
+    },
+    ".next/types/**/*.ts": {
+      "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
+      "excludes": [
+        "node_modules",
+        "scripts"
+      ]
+    },
+    "jest.setup.js": {
+      "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
+      "excludes": [
+        "node_modules",
+        "scripts"
+      ]
+    }
+  }
+}

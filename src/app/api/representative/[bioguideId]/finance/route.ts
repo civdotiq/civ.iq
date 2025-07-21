@@ -203,7 +203,7 @@ async function findFECCandidate(representativeName: string, state: string, distr
               const candidates = data.results;
               
               // Priority 1: Exact name, office, and district match
-              let candidate = candidates.find((c: any) => {
+              let candidate = candidates.find((c: unknown) => {
                 const nameMatch = isNameMatch(c.name, representativeName, name);
                 const officeMatch = district ? c.office === 'H' : c.office === 'S';
                 const locationMatch = district ? 
@@ -215,7 +215,7 @@ async function findFECCandidate(representativeName: string, state: string, distr
               
               // Priority 2: Name and office match (relaxed district)
               if (!candidate) {
-                candidate = candidates.find((c: any) => {
+                candidate = candidates.find((c: unknown) => {
                   const nameMatch = isNameMatch(c.name, representativeName, name);
                   const officeMatch = district ? c.office === 'H' : c.office === 'S';
                   const stateMatch = c.state === state;
@@ -227,8 +227,8 @@ async function findFECCandidate(representativeName: string, state: string, distr
               // Priority 3: Best name match with state
               if (!candidate && candidates.length > 0) {
                 candidate = candidates
-                  .filter((c: any) => c.state === state)
-                  .sort((a: any, b: any) => {
+                  .filter((c: unknown) => c.state === state)
+                  .sort((a: unknown, b: unknown) => {
                     const aScore = getNameMatchScore(a.name, representativeName);
                     const bScore = getNameMatchScore(b.name, representativeName);
                     return bScore - aScore; // Higher score first
@@ -255,7 +255,7 @@ async function findFECCandidate(representativeName: string, state: string, distr
               }
               
               // If no exact match but we have results for the right state and office type
-              const fallbackCandidate = data.results.find((c: any) => {
+              const fallbackCandidate = data.results.find((c: unknown) => {
                 return c.state === state && 
                        ((district && c.office === 'H') || (!district && c.office === 'S'));
               });
@@ -450,7 +450,7 @@ async function getFinancialSummary(candidateId: string): Promise<FinancialSummar
           cycles: data.results?.length || 0
         });
         
-        return data.results?.map((total: any) => ({
+        return data.results?.map((total: unknown) => ({
           cycle: total.cycle,
           total_receipts: total.receipts || 0,
           total_disbursements: total.disbursements || 0,
@@ -538,7 +538,7 @@ async function getContributions(candidateId: string): Promise<ContributionData[]
           contributionsCount: data.results?.length || 0
         });
         
-        return data.results?.map((contrib: any) => ({
+        return data.results?.map((contrib: unknown) => ({
           contributor_name: contrib.contributor_name || 'Unknown',
           contributor_employer: contrib.contributor_employer,
           contributor_occupation: contrib.contributor_occupation,
@@ -624,7 +624,7 @@ async function getExpenditures(candidateId: string): Promise<ExpenditureData[]> 
           expendituresCount: data.results?.length || 0
         });
         
-        return data.results?.map((exp: any) => ({
+        return data.results?.map((exp: unknown) => ({
           committee_name: exp.committee_name || 'Unknown',
           disbursement_description: exp.disbursement_description || 'Unknown',
           disbursement_amount: exp.disbursement_amount || 0,
@@ -692,7 +692,7 @@ export async function GET(
     }
 
     // Enhanced FEC data retrieval with better error handling
-    let enhancedRep: any = null;
+    let enhancedRep: unknown = null;
     if (process.env.FEC_API_KEY) {
       let fecCandidate: FECCandidate | null = null;
       let dataSource = 'fallback';
@@ -828,7 +828,7 @@ export async function GET(
         ]);
 
         // Process top contributors with enhanced categorization
-        const contributorTotals = contributions.reduce((acc: any, contrib) => {
+        const contributorTotals = contributions.reduce((acc: unknown, contrib) => {
           const name = contrib.contributor_name;
           if (!acc[name]) {
             acc[name] = { 
@@ -845,7 +845,7 @@ export async function GET(
         }, {});
 
         const topContributors = Object.values(contributorTotals)
-          .sort((a: any, b: any) => b.total_amount - a.total_amount)
+          .sort((a: unknown, b: unknown) => b.total_amount - a.total_amount)
           .slice(0, 10);
 
         // Helper function to categorize expenditures intelligently
@@ -910,7 +910,7 @@ export async function GET(
         }
 
         // Process expenditure categories with intelligent categorization
-        const categoryTotals = expenditures.reduce((acc: any, exp) => {
+        const categoryTotals = expenditures.reduce((acc: unknown, exp) => {
           const category = categorizeExpenditure(exp);
           if (!acc[category]) {
             acc[category] = { category, total_amount: 0, count: 0 };
@@ -921,7 +921,7 @@ export async function GET(
         }, {});
 
         const topCategories = Object.values(categoryTotals)
-          .sort((a: any, b: any) => b.total_amount - a.total_amount)
+          .sort((a: unknown, b: unknown) => b.total_amount - a.total_amount)
           .slice(0, 10);
 
         const financeData: CampaignFinanceData = {

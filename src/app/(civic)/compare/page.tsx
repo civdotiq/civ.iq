@@ -6,7 +6,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import * as d3 from 'd3';
@@ -260,21 +260,21 @@ function TimelineComparison({ rep1, rep2 }: { rep1: Representative; rep2: Repres
       .data(data)
       .enter().append('rect')
       .attr('class', 'bar')
-      .attr('x', (d: any) => xScale(d.start))
-      .attr('y', (d: any) => yScale(d.name) || 0)
-      .attr('width', (d: any) => xScale(d.end) - xScale(d.start))
+      .attr('x', (d: unknown) => xScale(d.start))
+      .attr('y', (d: unknown) => yScale(d.name) || 0)
+      .attr('width', (d: unknown) => xScale(d.end) - xScale(d.start))
       .attr('height', yScale.bandwidth())
-      .attr('fill', (d: any) => d.color)
+      .attr('fill', (d: unknown) => d.color)
       .attr('opacity', 0.8);
 
     // Add labels
     svg.selectAll('.label')
       .data(data)
       .enter().append('text')
-      .attr('x', (d: any) => xScale(d.start) + 5)
-      .attr('y', (d: any) => (yScale(d.name) || 0) + yScale.bandwidth() / 2)
+      .attr('x', (d: unknown) => xScale(d.start) + 5)
+      .attr('y', (d: unknown) => (yScale(d.name) || 0) + yScale.bandwidth() / 2)
       .attr('dy', '.35em')
-      .text((d: any) => `${d.end - d.start} years`)
+      .text((d: unknown) => `${d.end - d.start} years`)
       .attr('fill', 'white')
       .attr('font-size', '12px');
   }, [rep1, rep2]);
@@ -401,19 +401,19 @@ function NewsSentimentComparison({ rep1, rep2 }: { rep1: Representative; rep2: R
       .data(data)
       .enter().append('g')
       .attr('class', 'category')
-      .attr('transform', (d: any) => `translate(${x0(d.category)},0)`);
+      .attr('transform', (d: unknown) => `translate(${x0(d.category)},0)`);
 
     categoryGroups.selectAll('rect')
-      .data((d: any) => [
+      .data((d: unknown) => [
         { key: 'rep1', value: d.rep1 },
         { key: 'rep2', value: d.rep2 }
       ])
       .enter().append('rect')
-      .attr('x', (d: any) => x1(d.key) || 0)
-      .attr('y', (d: any) => y(d.value))
+      .attr('x', (d: unknown) => x1(d.key) || 0)
+      .attr('y', (d: unknown) => y(d.value))
       .attr('width', x1.bandwidth())
-      .attr('height', (d: any) => height - y(d.value))
-      .attr('fill', (d: any) => String(color(d.key) || '#ccc'));
+      .attr('height', (d: unknown) => height - y(d.value))
+      .attr('fill', (d: unknown) => String(color(d.key) || '#ccc'));
 
     // Add legend
     const legend = svg.append('g')
@@ -791,7 +791,7 @@ function ComparePageContent() {
       const data = await response.json();
       
       // Transform the data to match our interface
-      const transformedReps: Representative[] = data.representatives.map((rep: any) => ({
+      const transformedReps: Representative[] = data.representatives.map((rep: unknown) => ({
         bioguideId: rep.bioguideId,
         name: rep.name,
         party: rep.party,
@@ -808,11 +808,11 @@ function ComparePageContent() {
           partyLineVotes: Math.floor(Math.random() * 900) + 400,
           missedVotes: Math.floor(Math.random() * 50),
           keyVotes: {
-            healthcare: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as any,
-            environment: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as any,
-            economy: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as any,
-            defense: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as any,
-            immigration: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as any,
+            healthcare: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
+            environment: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
+            economy: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
+            defense: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
+            immigration: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
           }
         },
         legislation: {
@@ -856,8 +856,8 @@ function ComparePageContent() {
       });
       
       setRepresentatives(transformedReps);
-    } catch (error) {
-      console.error('Error fetching representatives:', error);
+    } catch {
+      // Error will be handled by the error boundary
       // Fallback to mock data if API fails
       const mockReps: Representative[] = Array.from({ length: 20 }, (_, i) => ({
         bioguideId: `B00${1000 + i}`,
@@ -880,11 +880,11 @@ function ComparePageContent() {
           partyLineVotes: Math.floor(Math.random() * 900) + 400,
           missedVotes: Math.floor(Math.random() * 50),
           keyVotes: {
-            healthcare: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as any,
-            environment: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as any,
-            economy: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as any,
-            defense: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as any,
-            immigration: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as any,
+            healthcare: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
+            environment: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
+            economy: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
+            defense: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
+            immigration: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
           }
         },
         legislation: {

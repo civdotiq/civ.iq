@@ -21,7 +21,7 @@ export interface DistrictSchema {
   district: string;
 }
 
-export function validateDistrictResponse(data: any): ResponseValidationResult<DistrictSchema> {
+export function validateDistrictResponse(data: unknown): ResponseValidationResult<DistrictSchema> {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -81,7 +81,7 @@ export interface RepresentativeSchema {
   };
 }
 
-export function validateRepresentativeResponse(data: any): ResponseValidationResult<RepresentativeSchema> {
+export function validateRepresentativeResponse(data: unknown): ResponseValidationResult<RepresentativeSchema> {
   const errors: string[] = [];
   const warnings: string[] = [];
   let completeness = 0;
@@ -194,7 +194,7 @@ export interface CongressApiSchema {
   };
 }
 
-export function validateCongressApiResponse(data: any, expectedType: 'members' | 'bills'): ResponseValidationResult<CongressApiSchema> {
+export function validateCongressApiResponse(data: unknown, expectedType: 'members' | 'bills'): ResponseValidationResult<CongressApiSchema> {
   const errors: string[] = [];
   const warnings: string[] = [];
   let completeness = 0;
@@ -219,7 +219,7 @@ export function validateCongressApiResponse(data: any, expectedType: 'members' |
       completeness += 50;
       
       // Validate each member
-      data.members.forEach((member: any, index: number) => {
+      data.members.forEach((member: unknown, index: number) => {
         if (!member.bioguideId) {
           warnings.push(`Member ${index} missing bioguideId`);
         }
@@ -243,7 +243,7 @@ export function validateCongressApiResponse(data: any, expectedType: 'members' |
       completeness += 50;
       
       // Validate each bill
-      data.bills.forEach((bill: any, index: number) => {
+      data.bills.forEach((bill: unknown, index: number) => {
         if (!bill.number) {
           warnings.push(`Bill ${index} missing number`);
         }
@@ -298,7 +298,7 @@ export interface FecApiSchema {
   };
 }
 
-export function validateFecApiResponse(data: any): ResponseValidationResult<FecApiSchema> {
+export function validateFecApiResponse(data: unknown): ResponseValidationResult<FecApiSchema> {
   const errors: string[] = [];
   const warnings: string[] = [];
   let completeness = 0;
@@ -320,7 +320,7 @@ export function validateFecApiResponse(data: any): ResponseValidationResult<FecA
     completeness += 60;
     
     // Check each result
-    data.results.forEach((result: any, index: number) => {
+    data.results.forEach((result: unknown, index: number) => {
       if (!result.candidate_id && !result.committee_id) {
         warnings.push(`Result ${index} missing both candidate_id and committee_id`);
       }
@@ -440,8 +440,8 @@ export function generateDataQualityReport(validationResults: Array<{
 
 // Utility function to validate a complete API response
 export function validateApiResponse<T>(
-  data: any, 
-  validator: (data: any) => ResponseValidationResult<T>,
+  data: unknown, 
+  validator: (data: unknown) => ResponseValidationResult<T>,
   source: string,
   freshness?: string
 ): { source: string; result: ResponseValidationResult<T>; freshness?: string } {

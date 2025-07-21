@@ -46,7 +46,7 @@ interface Committee {
   }>;
 }
 
-interface CommitteeDirectory {
+interface _CommitteeDirectory {
   houseCommittees: Committee[];
   senateCommittees: Committee[];
   jointCommittees: Committee[];
@@ -200,10 +200,10 @@ export async function GET(request: NextRequest) {
                       const members = membersData.members || [];
                       
                       // Find chair and ranking member
-                      const chair = members.find((m: any) => m.rank === 1);
-                      const rankingMember = members.find((m: any) => 
+                      const chair = members.find((m: unknown) => m.rank === 1);
+                      const rankingMember = members.find((m: unknown) => 
                         m.rank === 1 && m.party !== chair?.party
-                      ) || members.find((m: any) => m.rank === 2);
+                      ) || members.find((m: unknown) => m.rank === 2);
 
                       if (chair) {
                         committeeInfo.chair = {
@@ -224,7 +224,7 @@ export async function GET(request: NextRequest) {
                       }
 
                       // Calculate member counts
-                      const partyBreakdown = members.reduce((acc: any, member: any) => {
+                      const partyBreakdown = members.reduce((acc: unknown, member: unknown) => {
                         acc[member.party] = (acc[member.party] || 0) + 1;
                         return acc;
                       }, {});
@@ -281,7 +281,7 @@ export async function GET(request: NextRequest) {
 
                               if (subMembersResponse.ok) {
                                 const subMembersData = await subMembersResponse.json();
-                                const subChair = subMembersData.members?.find((m: any) => m.rank === 1);
+                                const subChair = subMembersData.members?.find((m: unknown) => m.rank === 1);
                                 
                                 if (subChair) {
                                   subcommitteeInfo.chair = {
@@ -332,7 +332,7 @@ export async function GET(request: NextRequest) {
               const jointData = await jointResponse.json();
               
               if (jointData.committees) {
-                jointData.committees.forEach((committee: any) => {
+                jointData.committees.forEach((committee: unknown) => {
                   committees.push({
                     code: committee.systemCode || committee.code || '',
                     name: committee.name,

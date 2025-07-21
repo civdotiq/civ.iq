@@ -205,7 +205,7 @@ export function EnhancedSmartSearchInput({
     if (showRecentSearches && typeof localStorage !== 'undefined') {
       try {
         const recent = JSON.parse(localStorage.getItem('recentSearches') || '[]');
-        const updated = [query, ...recent.filter(s => s !== query)].slice(0, 10);
+        const updated = [query, ...recent.filter((s: string) => s !== query)].slice(0, 10);
         localStorage.setItem('recentSearches', JSON.stringify(updated));
         setRecentSearches(updated.slice(0, 5));
       } catch (e) {

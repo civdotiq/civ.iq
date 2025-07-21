@@ -4,11 +4,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cachedFetch } from '@/lib/cache';
+// Temporarily remove problematic imports for testing
+// import { cachedFetch } from '@/lib/cache';
 import { RollCallParser } from '@/lib/rollcall-parser';
 import { getEnhancedRepresentative } from '@/lib/congress-legislators';
-import { structuredLogger, createRequestLogger } from '@/lib/logging/logger';
-import { monitorExternalApi } from '@/lib/monitoring/telemetry';
+import { structuredLogger, createRequestLogger } from '@/lib/logging/logger-edge';
+import { monitorExternalApi } from '@/lib/monitoring/telemetry-edge';
 
 interface Vote {
   voteId: string;
@@ -129,7 +130,7 @@ async function getEnhancedVotingRecords(
     const { votingDataService } = await import('@/lib/voting-data-service');
     
     // Attempt to get real voting data using multiple strategies
-    const votingResult = await votingDataService.getVotingRecords(bioguideId, chamber, limit);
+    const votingResult = await votingDataService.getVotingRecords(bioguideId, chamber as 'House' | 'Senate', limit);
     
     if (votingResult.votes.length > 0) {
       structuredLogger.info('Real voting data retrieved successfully', { 
@@ -249,6 +250,9 @@ export async function GET(
       return date.toISOString().split('T')[0];
     };
 
+    // Get member party from representative data or default (temporary for MVP)
+    const memberParty = 'Democrat'; // TODO: Get from actual representative data
+    
     // Generate varied voting positions based on member's party and bill type
     const generateVotePosition = (billCategory: string, memberParty: string): 'Yea' | 'Nay' | 'Not Voting' | 'Present' => {
       const rand = Math.random();

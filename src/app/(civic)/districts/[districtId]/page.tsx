@@ -10,7 +10,6 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { DemographicStats, ElectionResults, PopulationPyramid } from '@/components/Charts';
 import { DistrictCharts } from '@/components/DistrictCharts';
 
 // Dynamic import of the map component to avoid SSR issues
@@ -390,7 +389,7 @@ export default function DistrictDetailPage() {
               ].map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as 'dashboard' | 'overview' | 'demographics' | 'politics' | 'economy' | 'geography' | 'comparative')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
@@ -780,13 +779,13 @@ export default function DistrictDetailPage() {
                         <div className="text-lg font-bold text-green-600">
                           {district.demographics.bachelor_degree_percent.toFixed(1)}%
                         </div>
-                        <p className="text-sm text-gray-600">Bachelor's Degree</p>
+                        <p className="text-sm text-gray-600">Bachelor&apos;s Degree</p>
                       </div>
                       <div>
                         <div className="text-lg font-bold text-purple-600">
                           {district.demographics.education.mastersDegreePercent.toFixed(1)}%
                         </div>
-                        <p className="text-sm text-gray-600">Master's Degree</p>
+                        <p className="text-sm text-gray-600">Master&apos;s Degree</p>
                       </div>
                       <div>
                         <div className="text-lg font-bold text-orange-600">
@@ -2102,7 +2101,7 @@ export default function DistrictDetailPage() {
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">Bachelor's Degree+</span>
+                          <span className="text-sm text-gray-600">Bachelor&apos;s Degree+</span>
                           <span className="text-sm font-medium text-gray-900">
                             {district.demographics ? (district.demographics.bachelor_degree_percent * 1.09).toFixed(1) : 'N/A'}%
                           </span>

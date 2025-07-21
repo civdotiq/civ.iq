@@ -119,7 +119,7 @@ export class ErrorHandler {
   }
 
   static logError(error: Error, context?: ErrorContext): void {
-    const logData: any = {
+    const logData: unknown = {
       name: error.name,
       message: error.message,
       stack: error.stack,
@@ -149,7 +149,7 @@ export class ErrorHandler {
   static createErrorResponse(
     error: Error,
     request: NextRequest,
-    fallbackData?: any
+    fallbackData?: unknown
   ): NextResponse {
     const context = this.createErrorContext(request)
     const requestId = this.generateRequestId()
@@ -199,7 +199,7 @@ export class ErrorHandler {
     service: string,
     originalError: Error,
     request: NextRequest,
-    fallbackData?: any
+    fallbackData?: unknown
   ): NextResponse {
     const context = this.createErrorContext(request)
     const apiError = new ExternalApiError(

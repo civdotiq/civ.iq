@@ -171,7 +171,7 @@ export function RepresentativeNetwork({
     svg.selectAll('*').remove();
 
     const simulation = d3.forceSimulation(nodes as any)
-      .force('link', d3.forceLink(links).id((d: any) => d.id).distance(50))
+      .force('link', d3.forceLink(links).id((d: unknown) => d.id).distance(50))
       .force('charge', d3.forceManyBody().strength(-300))
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('collision', d3.forceCollide().radius(30));
@@ -194,7 +194,7 @@ export function RepresentativeNetwork({
       .enter().append('line')
       .attr('stroke', '#999')
       .attr('stroke-opacity', 0.6)
-      .attr('stroke-width', (d: any) => Math.sqrt(d.value));
+      .attr('stroke-width', (d: unknown) => Math.sqrt(d.value));
 
     // Add nodes
     const node = g.append('g')
@@ -208,12 +208,12 @@ export function RepresentativeNetwork({
 
     node.append('circle')
       .attr('r', 20)
-      .attr('fill', (d: any) => d.party === 'Democratic' ? '#3b82f6' : '#ef4444')
+      .attr('fill', (d: unknown) => d.party === 'Democratic' ? '#3b82f6' : '#ef4444')
       .attr('stroke', '#fff')
       .attr('stroke-width', 2);
 
     node.append('text')
-      .text((d: any) => d.name.split(' ').pop())
+      .text((d: unknown) => d.name.split(' ').pop())
       .attr('text-anchor', 'middle')
       .attr('dy', '.35em')
       .style('font-size', '10px')
@@ -230,7 +230,7 @@ export function RepresentativeNetwork({
       .style('border-radius', '4px')
       .style('font-size', '12px');
 
-    node.on('mouseover', function(event, d: any) {
+    node.on('mouseover', function(event, d: unknown) {
       tooltip.transition().duration(200).style('opacity', .9);
       tooltip.html(`${d.name}<br/>Party: ${d.party}`)
         .style('left', (event.pageX + 10) + 'px')
@@ -242,26 +242,26 @@ export function RepresentativeNetwork({
 
     simulation.on('tick', () => {
       link
-        .attr('x1', (d: any) => d.source.x)
-        .attr('y1', (d: any) => d.source.y)
-        .attr('x2', (d: any) => d.target.x)
-        .attr('y2', (d: any) => d.target.y);
+        .attr('x1', (d: unknown) => d.source.x)
+        .attr('y1', (d: unknown) => d.source.y)
+        .attr('x2', (d: unknown) => d.target.x)
+        .attr('y2', (d: unknown) => d.target.y);
 
-      node.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
+      node.attr('transform', (d: unknown) => `translate(${d.x},${d.y})`);
     });
 
-    function dragstarted(event: any, d: any) {
+    function dragstarted(event: unknown, d: unknown) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
     }
 
-    function dragged(event: any, d: any) {
+    function dragged(event: unknown, d: unknown) {
       d.fx = event.x;
       d.fy = event.y;
     }
 
-    function dragended(event: any, d: any) {
+    function dragended(event: unknown, d: unknown) {
       if (!event.active) simulation.alphaTarget(0);
       d.fx = null;
       d.fy = null;
@@ -439,7 +439,7 @@ export function CampaignFinanceFlow({
       .style('fill', '#fff');
 
     // Animated flow lines
-    function createFlow(source: any, target: any, isSpending = false) {
+    function createFlow(source: unknown, target: unknown, isSpending = false) {
       const path = g.append('path')
         .attr('d', () => {
           const sx = isSpending ? centralNode.x + centralNode.radius : source.x + 80;
