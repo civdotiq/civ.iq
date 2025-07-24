@@ -3,6 +3,27 @@
  * Provides offline functionality, caching, and progressive web app features
  */
 
+// Service Worker Logger - structured logging for debugging
+const swLogger = {
+  log: (message, ...args) => {
+    if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+      // eslint-disable-next-line no-console
+      console.log(`[SW] ${message}`, ...args);
+    }
+  },
+  error: (message, ...args) => {
+    // Always log errors
+    // eslint-disable-next-line no-console
+    console.error(`[SW Error] ${message}`, ...args);
+  },
+  info: (message, ...args) => {
+    if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+      // eslint-disable-next-line no-console
+      console.info(`[SW Info] ${message}`, ...args);
+    }
+  },
+};
+
 // Add cache versioning with build timestamp to prevent chunk errors
 const CACHE_VERSION = '2025-01-09-' + Math.floor(Date.now() / 1000);
 const CACHE_NAME = `civic-intel-hub-${CACHE_VERSION}`;
@@ -14,7 +35,7 @@ const WEBPACK_CHUNK_PATTERNS = [
   /_next\/static\/chunks\//,
   /_next\/static\/webpack\//,
   /\.js$/,
-  /\.css$/
+  /\.css$/,
 ];
 
 // Static assets to cache immediately
@@ -31,7 +52,7 @@ const API_PATTERNS = [
   '/api/representative/',
   '/api/district-map',
   '/api/state-legislature',
-  '/api/state-bills'
+  '/api/state-bills',
 ];
 
 // Cache expiration times (in milliseconds)
@@ -39,32 +60,35 @@ const CACHE_TIMES = {
   STATIC: 24 * 60 * 60 * 1000, // 24 hours
   API: 30 * 60 * 1000, // 30 minutes
   NEWS: 15 * 60 * 1000, // 15 minutes
-  IMAGES: 7 * 24 * 60 * 60 * 1000 // 7 days
+  IMAGES: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
 /**
  * Install event - cache static assets
  */
 self.addEventListener('install', event => {
-  console.log('[SW] Installing service worker');
-  
+  swLogger.log('Installing service worker');
+
   event.waitUntil(
     Promise.all([
       // Cache static assets
       caches.open(CACHE_NAME).then(cache => {
-        console.log('[SW] Caching static assets');
+        swLogger.log('Caching static assets');
         return cache.addAll(STATIC_ASSETS.map(url => new Request(url, { cache: 'reload' })));
       }),
-      
+
       // Create offline cache
       caches.open(OFFLINE_CACHE).then(cache => {
-        console.log('[SW] Creating offline cache');
-        return cache.put('/offline', new Response(getOfflineHTML(), {
-          headers: { 'Content-Type': 'text/html' }
-        }));
-      })
+        swLogger.log('Creating offline cache');
+        return cache.put(
+          '/offline',
+          new Response(getOfflineHTML(), {
+            headers: { 'Content-Type': 'text/html' },
+          })
+        );
+      }),
     ]).then(() => {
-      console.log('[SW] Installation complete');
+      swLogger.log('Installation complete');
       // Skip waiting to activate immediately
       return self.skipWaiting();
     })
@@ -75,8 +99,8 @@ self.addEventListener('install', event => {
  * Activate event - clean up old caches and clear webpack chunks
  */
 self.addEventListener('activate', event => {
-  console.log('[SW] Activating service worker');
-  
+  swLogger.log('Activating service worker');
+
   event.waitUntil(
     Promise.all([
       // Clean up old version caches
@@ -85,21 +109,20 @@ self.addEventListener('activate', event => {
           cacheNames.map(cacheName => {
             // Delete all old caches (different version)
             if (!cacheName.includes(CACHE_VERSION)) {
-              console.log('[SW] Deleting old cache:', cacheName);
+              swLogger.log('Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
           })
         );
       }),
-      
+
       // Clear webpack chunks to prevent ChunkLoadErrors
       clearWebpackChunks(),
-      
+
       // Notify clients about cache clearing
-      notifyClientsOfUpdate()
-      
+      notifyClientsOfUpdate(),
     ]).then(() => {
-      console.log('[SW] Activation complete, old caches cleared');
+      swLogger.log('Activation complete, old caches cleared');
       // Take control of all pages immediately
       return self.clients.claim();
     })
@@ -112,7 +135,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
-  
+
   // Only handle same-origin requests
   if (url.origin !== location.origin) {
     return;
@@ -137,66 +160,68 @@ async function handleAPIRequest(request) {
   const url = new URL(request.url);
   const cacheName = isNewsRequest(request) ? 'news-cache' : API_CACHE;
   const maxAge = isNewsRequest(request) ? CACHE_TIMES.NEWS : CACHE_TIMES.API;
-  
+
   try {
     // Try network first
-    console.log('[SW] Fetching from network:', url.pathname);
-    
+    swLogger.log('Fetching from network:', url.pathname);
+
     const networkResponse = await fetch(request.clone());
-    
+
     if (networkResponse.ok) {
       // Cache successful responses
       const cache = await caches.open(cacheName);
       const responseToCache = networkResponse.clone();
-      
+
       // Add timestamp for cache expiration
       const timestampedResponse = new Response(responseToCache.body, {
         status: responseToCache.status,
         statusText: responseToCache.statusText,
         headers: {
           ...Object.fromEntries(responseToCache.headers),
-          'sw-cached-at': Date.now().toString()
-        }
+          'sw-cached-at': Date.now().toString(),
+        },
       });
-      
+
       await cache.put(request, timestampedResponse);
-      console.log('[SW] Cached API response:', url.pathname);
-      
+      swLogger.log('Cached API response:', url.pathname);
+
       return networkResponse;
     }
-    
+
     throw new Error(`Network response not ok: ${networkResponse.status}`);
-    
-  } catch (error) {
-    console.log('[SW] Network failed, checking cache:', url.pathname);
-    
+  } catch {
+    swLogger.log('Network failed, checking cache:', url.pathname);
+
     // Try cache as fallback
     const cache = await caches.open(cacheName);
     const cachedResponse = await cache.match(request);
-    
+
     if (cachedResponse) {
       const cachedAt = cachedResponse.headers.get('sw-cached-at');
-      const isExpired = cachedAt && (Date.now() - parseInt(cachedAt)) > maxAge;
-      
+      const isExpired = cachedAt && Date.now() - parseInt(cachedAt) > maxAge;
+
       if (!isExpired) {
-        console.log('[SW] Serving from cache:', url.pathname);
+        swLogger.log('Serving from cache:', url.pathname);
         return cachedResponse;
       } else {
-        console.log('[SW] Cache expired for:', url.pathname);
+        swLogger.log('Cache expired for:', url.pathname);
         await cache.delete(request);
       }
     }
-    
+
     // Return offline response for API requests
-    return new Response(JSON.stringify({
-      error: 'Offline',
-      message: 'This data is not available offline',
-      offline: true,
-      timestamp: new Date().toISOString()
-    }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        error: 'Offline',
+        message: 'This data is not available offline',
+        offline: true,
+        timestamp: new Date().toISOString(),
+      }),
+      {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 }
 
@@ -206,21 +231,21 @@ async function handleAPIRequest(request) {
 async function handleImageRequest(request) {
   const cache = await caches.open(CACHE_NAME);
   const cachedResponse = await cache.match(request);
-  
+
   if (cachedResponse) {
-    console.log('[SW] Serving image from cache:', request.url);
+    swLogger.log('Serving image from cache:', request.url);
     return cachedResponse;
   }
-  
+
   try {
     const networkResponse = await fetch(request);
     if (networkResponse.ok) {
       await cache.put(request, networkResponse.clone());
-      console.log('[SW] Cached image:', request.url);
+      swLogger.log('Cached image:', request.url);
     }
     return networkResponse;
-  } catch (error) {
-    console.log('[SW] Image request failed:', request.url);
+  } catch {
+    swLogger.log('Image request failed:', request.url);
     // Return placeholder image for offline
     return new Response('', { status: 404 });
   }
@@ -233,34 +258,36 @@ async function handleNavigationRequest(request) {
   try {
     // Try network first
     const networkResponse = await fetch(request);
-    
+
     if (networkResponse.ok) {
       // Update cache with fresh content
       const cache = await caches.open(CACHE_NAME);
       await cache.put(request, networkResponse.clone());
       return networkResponse;
     }
-    
+
     throw new Error(`Network response not ok: ${networkResponse.status}`);
-    
-  } catch (error) {
-    console.log('[SW] Navigation request failed, checking cache');
-    
+  } catch {
+    swLogger.log('Navigation request failed, checking cache');
+
     // Try cache
     const cache = await caches.open(CACHE_NAME);
     const cachedResponse = await cache.match(request);
-    
+
     if (cachedResponse) {
-      console.log('[SW] Serving navigation from cache');
+      swLogger.log('Serving navigation from cache');
       return cachedResponse;
     }
-    
+
     // Return offline page
-    console.log('[SW] Serving offline page');
+    swLogger.log('Serving offline page');
     const offlineCache = await caches.open(OFFLINE_CACHE);
-    return offlineCache.match('/offline') || new Response(getOfflineHTML(), {
-      headers: { 'Content-Type': 'text/html' }
-    });
+    return (
+      offlineCache.match('/offline') ||
+      new Response(getOfflineHTML(), {
+        headers: { 'Content-Type': 'text/html' },
+      })
+    );
   }
 }
 
@@ -270,19 +297,19 @@ async function handleNavigationRequest(request) {
 async function handleStaticRequest(request) {
   const cache = await caches.open(CACHE_NAME);
   const cachedResponse = await cache.match(request);
-  
+
   if (cachedResponse) {
     return cachedResponse;
   }
-  
+
   try {
     const networkResponse = await fetch(request);
     if (networkResponse.ok) {
       await cache.put(request, networkResponse.clone());
     }
     return networkResponse;
-  } catch (error) {
-    console.log('[SW] Static request failed:', request.url);
+  } catch {
+    swLogger.log('Static request failed:', request.url);
     return new Response('', { status: 404 });
   }
 }
@@ -292,36 +319,36 @@ async function handleStaticRequest(request) {
  */
 self.addEventListener('message', event => {
   const { type, payload } = event.data;
-  
+
   switch (type) {
     case 'SKIP_WAITING':
       self.skipWaiting();
       break;
-      
+
     case 'CLEAR_CACHE':
       clearCaches(payload?.cacheNames).then(() => {
         event.ports[0].postMessage({ success: true });
       });
       break;
-      
+
     case 'CLEAR_WEBPACK_CHUNKS':
       clearWebpackChunks().then(() => {
         event.ports[0].postMessage({ success: true });
       });
       break;
-      
+
     case 'HANDLE_CHUNK_ERROR':
       handleChunkErrorRecovery().then(() => {
         event.ports[0].postMessage({ success: true });
       });
       break;
-      
+
     case 'GET_CACHE_STATUS':
       getCacheStatus().then(status => {
         event.ports[0].postMessage(status);
       });
       break;
-      
+
     case 'PREFETCH_ROUTES':
       prefetchRoutes(payload?.routes || []).then(() => {
         event.ports[0].postMessage({ success: true });
@@ -334,8 +361,8 @@ self.addEventListener('message', event => {
  * Background sync for data updates
  */
 self.addEventListener('sync', event => {
-  console.log('[SW] Background sync triggered:', event.tag);
-  
+  swLogger.log('Background sync triggered:', event.tag);
+
   if (event.tag === 'background-sync-representatives') {
     event.waitUntil(syncRepresentatives());
   } else if (event.tag === 'background-sync-news') {
@@ -348,7 +375,7 @@ self.addEventListener('sync', event => {
  */
 self.addEventListener('push', event => {
   if (!event.data) return;
-  
+
   const data = event.data.json();
   const options = {
     body: data.body,
@@ -357,23 +384,21 @@ self.addEventListener('push', event => {
     vibrate: [100, 50, 100],
     data: {
       url: data.url,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     },
     actions: [
       {
         action: 'view',
-        title: 'View Details'
+        title: 'View Details',
       },
       {
         action: 'dismiss',
-        title: 'Dismiss'
-      }
-    ]
+        title: 'Dismiss',
+      },
+    ],
   };
-  
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
 /**
@@ -381,12 +406,10 @@ self.addEventListener('push', event => {
  */
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  
+
   if (event.action === 'view') {
     const url = event.notification.data.url || '/';
-    event.waitUntil(
-      clients.openWindow(url)
-    );
+    event.waitUntil(clients.openWindow(url));
   }
 });
 
@@ -397,8 +420,7 @@ function isAPIRequest(request) {
 }
 
 function isImageRequest(request) {
-  return request.destination === 'image' || 
-         /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(request.url);
+  return request.destination === 'image' || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(request.url);
 }
 
 function isNavigationRequest(request) {
@@ -413,38 +435,36 @@ async function clearCaches(cacheNames = []) {
   if (cacheNames.length === 0) {
     cacheNames = await caches.keys();
   }
-  
-  return Promise.all(
-    cacheNames.map(name => caches.delete(name))
-  );
+
+  return Promise.all(cacheNames.map(name => caches.delete(name)));
 }
 
 async function getCacheStatus() {
   const cacheNames = await caches.keys();
   const status = {};
-  
+
   for (const name of cacheNames) {
     const cache = await caches.open(name);
     const keys = await cache.keys();
     status[name] = keys.length;
   }
-  
+
   return status;
 }
 
 async function prefetchRoutes(routes) {
   const cache = await caches.open(CACHE_NAME);
-  
+
   return Promise.all(
     routes.map(async route => {
       try {
         const response = await fetch(route);
         if (response.ok) {
           await cache.put(route, response);
-          console.log('[SW] Prefetched:', route);
+          swLogger.log('Prefetched:', route);
         }
       } catch (error) {
-        console.log('[SW] Prefetch failed:', route, error);
+        swLogger.error('Prefetch failed:', route, error);
       }
     })
   );
@@ -452,24 +472,24 @@ async function prefetchRoutes(routes) {
 
 async function syncRepresentatives() {
   try {
-    console.log('[SW] Syncing representatives data');
+    swLogger.log('Syncing representatives data');
     const response = await fetch('/api/representatives?zip=10001');
     if (response.ok) {
       const cache = await caches.open(API_CACHE);
       await cache.put('/api/representatives?zip=10001', response);
     }
   } catch (error) {
-    console.log('[SW] Background sync failed:', error);
+    swLogger.error('Background sync failed:', error);
   }
 }
 
 async function syncNewsData() {
   try {
-    console.log('[SW] Syncing news data');
+    swLogger.log('Syncing news data');
     // Sync latest news for cached representatives
     // Implementation would depend on specific requirements
   } catch (error) {
-    console.log('[SW] News sync failed:', error);
+    swLogger.error('News sync failed:', error);
   }
 }
 
@@ -477,15 +497,15 @@ async function syncNewsData() {
  * Clear webpack chunks from all caches to prevent ChunkLoadErrors
  */
 async function clearWebpackChunks() {
-  console.log('[SW] Clearing webpack chunks to prevent ChunkLoadErrors');
-  
+  swLogger.log('Clearing webpack chunks to prevent ChunkLoadErrors');
+
   try {
     const cacheNames = await caches.keys();
-    
+
     for (const cacheName of cacheNames) {
       const cache = await caches.open(cacheName);
       const requests = await cache.keys();
-      
+
       // Delete webpack chunks and Next.js static files
       for (const request of requests) {
         const url = request.url;
@@ -495,17 +515,17 @@ async function clearWebpackChunks() {
           }
           return url.includes(pattern);
         });
-        
+
         if (shouldDelete) {
           await cache.delete(request);
-          console.log('[SW] Deleted webpack chunk:', url);
+          swLogger.log('Deleted webpack chunk:', url);
         }
       }
     }
-    
-    console.log('[SW] Webpack chunk cleanup complete');
+
+    swLogger.log('Webpack chunk cleanup complete');
   } catch (error) {
-    console.error('[SW] Error clearing webpack chunks:', error);
+    swLogger.error('Error clearing webpack chunks:', error);
   }
 }
 
@@ -513,27 +533,27 @@ async function clearWebpackChunks() {
  * Handle chunk error recovery by clearing all caches and notifying clients
  */
 async function handleChunkErrorRecovery() {
-  console.log('[SW] Handling chunk error recovery');
-  
+  swLogger.log('Handling chunk error recovery');
+
   try {
     // Clear all caches
     await clearCaches();
-    
+
     // Clear webpack chunks specifically
     await clearWebpackChunks();
-    
+
     // Notify all clients to reload
     const clients = await self.clients.matchAll();
     clients.forEach(client => {
       client.postMessage({
         type: 'CHUNK_ERROR_RECOVERY',
-        action: 'reload'
+        action: 'reload',
       });
     });
-    
-    console.log('[SW] Chunk error recovery complete');
+
+    swLogger.log('Chunk error recovery complete');
   } catch (error) {
-    console.error('[SW] Error during chunk error recovery:', error);
+    swLogger.error('Error during chunk error recovery:', error);
   }
 }
 
@@ -546,12 +566,12 @@ async function notifyClientsOfUpdate() {
     clients.forEach(client => {
       client.postMessage({
         type: 'CACHE_UPDATED',
-        version: CACHE_VERSION
+        version: CACHE_VERSION,
       });
     });
-    console.log('[SW] Notified clients of cache update');
+    swLogger.log('Notified clients of cache update');
   } catch (error) {
-    console.error('[SW] Error notifying clients:', error);
+    swLogger.error('Error notifying clients:', error);
   }
 }
 
@@ -612,4 +632,4 @@ function getOfflineHTML() {
   `;
 }
 
-console.log('[SW] Service worker script loaded');
+swLogger.log('Service worker script loaded');

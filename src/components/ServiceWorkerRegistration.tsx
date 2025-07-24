@@ -1,12 +1,12 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import { useEffect, useState } from 'react';
+import { structuredLogger } from '@/lib/logging/logger-client';
 
 interface ServiceWorkerState {
   registration: ServiceWorkerRegistration | null;
@@ -20,7 +20,7 @@ export function ServiceWorkerRegistration() {
     registration: null,
     updateAvailable: false,
     isOnline: true,
-    installing: false
+    installing: false,
   });
 
   useEffect(() => {
@@ -45,30 +45,30 @@ export function ServiceWorkerRegistration() {
 
   const registerServiceWorker = async () => {
     try {
-      console.log('[PWA] Registering service worker...');
+      structuredLogger.info('Registering service worker');
       setSwState(prev => ({ ...prev, installing: true }));
 
       const registration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/'
+        scope: '/',
       });
 
-      setSwState(prev => ({ 
-        ...prev, 
+      setSwState(prev => ({
+        ...prev,
         registration,
-        installing: false 
+        installing: false,
       }));
 
-      console.log('[PWA] Service worker registered successfully');
+      structuredLogger.info('Service worker registered successfully');
 
       // Check for updates
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
         if (newWorker) {
-          console.log('[PWA] New service worker installing...');
-          
+          structuredLogger.info('New service worker installing');
+
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[PWA] New service worker installed, update available');
+              structuredLogger.info('New service worker installed, update available');
               setSwState(prev => ({ ...prev, updateAvailable: true }));
             }
           });
@@ -77,36 +77,39 @@ export function ServiceWorkerRegistration() {
 
       // Handle controlling change
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('[PWA] Service worker controller changed, reloading...');
+        structuredLogger.info('Service worker controller changed, reloading');
         window.location.reload();
       });
 
       // Send message to service worker for initial setup
       if (registration.active) {
         registration.active.postMessage({
-          type: 'GET_CACHE_STATUS'
+          type: 'GET_CACHE_STATUS',
         });
       }
 
       // Register for background sync if supported
       if ('sync' in registration) {
         try {
-          await (registration as any).sync.register('background-sync-representatives');
-          await (registration as any).sync.register('background-sync-news');
-          console.log('[PWA] Background sync registered');
+          await (registration.sync as { register: (tag: string) => Promise<void> }).register(
+            'background-sync-representatives'
+          );
+          await (registration.sync as { register: (tag: string) => Promise<void> }).register(
+            'background-sync-news'
+          );
+          structuredLogger.info('Background sync registered');
         } catch (error) {
-          console.log('[PWA] Background sync registration failed:', error);
+          structuredLogger.warn('Background sync registration failed', { error: String(error) });
         }
       }
 
       // Request persistent storage
       if ('storage' in navigator && 'persist' in navigator.storage) {
         const persistent = await navigator.storage.persist();
-        console.log('[PWA] Persistent storage:', persistent);
+        structuredLogger.info('Persistent storage status', { persistent });
       }
-
     } catch (error) {
-      console.error('[PWA] Service worker registration failed:', error);
+      structuredLogger.error('Service worker registration failed', error as Error);
       setSwState(prev => ({ ...prev, installing: false }));
     }
   };
@@ -117,51 +120,60 @@ export function ServiceWorkerRegistration() {
     }
   };
 
-  const clearCache = async () => {
+  const _clearCache = async () => {
     if (swState.registration) {
       const messageChannel = new MessageChannel();
-      
-      messageChannel.port1.onmessage = (event) => {
+
+      messageChannel.port1.onmessage = event => {
         if (event.data.success) {
-          console.log('[PWA] Cache cleared successfully');
+          structuredLogger.info('Cache cleared successfully');
           window.location.reload();
         }
       };
 
-      swState.registration.active?.postMessage({
-        type: 'CLEAR_CACHE'
-      }, [messageChannel.port2]);
+      swState.registration.active?.postMessage(
+        {
+          type: 'CLEAR_CACHE',
+        },
+        [messageChannel.port2]
+      );
     }
   };
 
-  const getCacheStatus = async () => {
+  const _getCacheStatus = async () => {
     if (swState.registration) {
       const messageChannel = new MessageChannel();
-      
-      messageChannel.port1.onmessage = (event) => {
-        console.log('[PWA] Cache status:', event.data);
+
+      messageChannel.port1.onmessage = event => {
+        structuredLogger.info('Cache status', { data: event.data });
       };
 
-      swState.registration.active?.postMessage({
-        type: 'GET_CACHE_STATUS'
-      }, [messageChannel.port2]);
+      swState.registration.active?.postMessage(
+        {
+          type: 'GET_CACHE_STATUS',
+        },
+        [messageChannel.port2]
+      );
     }
   };
 
   const prefetchRoutes = async (routes: string[]) => {
     if (swState.registration) {
       const messageChannel = new MessageChannel();
-      
-      messageChannel.port1.onmessage = (event) => {
+
+      messageChannel.port1.onmessage = event => {
         if (event.data.success) {
-          console.log('[PWA] Routes prefetched successfully');
+          structuredLogger.info('Routes prefetched successfully');
         }
       };
 
-      swState.registration.active?.postMessage({
-        type: 'PREFETCH_ROUTES',
-        payload: { routes }
-      }, [messageChannel.port2]);
+      swState.registration.active?.postMessage(
+        {
+          type: 'PREFETCH_ROUTES',
+          payload: { routes },
+        },
+        [messageChannel.port2]
+      );
     }
   };
 
@@ -172,18 +184,19 @@ export function ServiceWorkerRegistration() {
         '/representatives',
         '/api/representatives?zip=10001', // Sample ZIP for prefetch
       ];
-      
+
       // Delay prefetch to not interfere with initial load
       setTimeout(() => {
         prefetchRoutes(importantRoutes);
       }, 3000);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [swState.registration]);
 
   // Show update notification if available
   if (swState.updateAvailable) {
     return (
-      <div 
+      <div
         style={{
           position: 'fixed',
           bottom: '20px',
@@ -200,7 +213,7 @@ export function ServiceWorkerRegistration() {
           justifyContent: 'space-between',
           gap: '12px',
           fontSize: '14px',
-          fontWeight: '500'
+          fontWeight: '500',
         }}
       >
         <span>📱 App update available</span>
@@ -215,7 +228,7 @@ export function ServiceWorkerRegistration() {
               borderRadius: '4px',
               fontSize: '12px',
               fontWeight: '600',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             Update
@@ -230,7 +243,7 @@ export function ServiceWorkerRegistration() {
               borderRadius: '4px',
               fontSize: '12px',
               fontWeight: '600',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             Later
@@ -243,7 +256,7 @@ export function ServiceWorkerRegistration() {
   // Show offline indicator
   if (!swState.isOnline) {
     return (
-      <div 
+      <div
         style={{
           position: 'fixed',
           top: '0',
@@ -255,10 +268,10 @@ export function ServiceWorkerRegistration() {
           padding: '8px',
           textAlign: 'center',
           fontSize: '12px',
-          fontWeight: '500'
+          fontWeight: '500',
         }}
       >
-        📡 You're offline. Some features may be limited.
+        📡 You&apos;re offline. Some features may be limited.
       </div>
     );
   }
@@ -266,7 +279,7 @@ export function ServiceWorkerRegistration() {
   // Show install prompt if installing
   if (swState.installing) {
     return (
-      <div 
+      <div
         style={{
           position: 'fixed',
           bottom: '20px',
@@ -279,7 +292,7 @@ export function ServiceWorkerRegistration() {
           borderRadius: '8px',
           textAlign: 'center',
           fontSize: '14px',
-          fontWeight: '500'
+          fontWeight: '500',
         }}
       >
         🔄 Installing app for offline use...
@@ -309,15 +322,18 @@ export const serviceWorkerUtils = {
   async checkCacheStatus() {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       const messageChannel = new MessageChannel();
-      
-      return new Promise((resolve) => {
-        messageChannel.port1.onmessage = (event) => {
+
+      return new Promise(resolve => {
+        messageChannel.port1.onmessage = event => {
           resolve(event.data);
         };
 
-        navigator.serviceWorker.controller?.postMessage({
-          type: 'GET_CACHE_STATUS'
-        }, [messageChannel.port2]);
+        navigator.serviceWorker.controller?.postMessage(
+          {
+            type: 'GET_CACHE_STATUS',
+          },
+          [messageChannel.port2]
+        );
       });
     }
     return null;
@@ -326,17 +342,20 @@ export const serviceWorkerUtils = {
   async clearAppCache() {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       const messageChannel = new MessageChannel();
-      
-      return new Promise((resolve) => {
-        messageChannel.port1.onmessage = (event) => {
+
+      return new Promise(resolve => {
+        messageChannel.port1.onmessage = event => {
           resolve(event.data);
         };
 
-        navigator.serviceWorker.controller?.postMessage({
-          type: 'CLEAR_CACHE'
-        }, [messageChannel.port2]);
+        navigator.serviceWorker.controller?.postMessage(
+          {
+            type: 'CLEAR_CACHE',
+          },
+          [messageChannel.port2]
+        );
       });
     }
     return null;
-  }
+  },
 };
