@@ -3,6 +3,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { structuredLogger } from '@/lib/logging/universal-logger';
+
 export interface CardData {
   cardId: string;
   repId: string;
@@ -15,7 +17,7 @@ export interface CardData {
 
 export class CardTracker {
   private static readonly STORAGE_KEY = 'civiq_trading_cards';
-  
+
   /**
    * Generate a unique card ID
    */
@@ -32,13 +34,16 @@ export class CardTracker {
     try {
       const existingCards = this.getStoredCards();
       const updatedCards = [...existingCards, cardData];
-      
+
       // Keep only the last 50 cards to prevent storage overflow
       const cardsToStore = updatedCards.slice(-50);
-      
+
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(cardsToStore));
     } catch (error) {
-      console.error('Failed to store card data:', error);
+      structuredLogger.error('Failed to store card data', {
+        component: 'cardTracking',
+        error: error as Error,
+      });
     }
   }
 
@@ -50,7 +55,10 @@ export class CardTracker {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.error('Failed to retrieve stored cards:', error);
+      structuredLogger.error('Failed to retrieve stored cards', {
+        component: 'cardTracking',
+        error: error as Error,
+      });
       return [];
     }
   }
@@ -88,7 +96,10 @@ export class CardTracker {
     try {
       localStorage.removeItem(this.STORAGE_KEY);
     } catch (error) {
-      console.error('Failed to clear cards:', error);
+      structuredLogger.error('Failed to clear cards', {
+        component: 'cardTracking',
+        error: error as Error,
+      });
     }
   }
 
@@ -113,24 +124,34 @@ export class CardTracker {
   static trackCardInteraction(cardId: string, interaction: 'view' | 'share' | 'download'): void {
     // This would typically send to an analytics service
     // For now, we'll just log it
-    console.log(`Card ${cardId} ${interaction} at ${new Date().toISOString()}`);
-    
+    structuredLogger.info('Card interaction tracked', {
+      component: 'cardTracking',
+      metadata: {
+        cardId,
+        interaction,
+        timestamp: new Date().toISOString(),
+      },
+    });
+
     // Store interaction in localStorage for basic analytics
     try {
       const interactionKey = `civiq_card_interactions_${cardId}`;
       const existing = localStorage.getItem(interactionKey);
       const interactions = existing ? JSON.parse(existing) : [];
-      
+
       interactions.push({
         interaction,
         timestamp: new Date().toISOString(),
         userAgent: navigator.userAgent,
-        referrer: document.referrer
+        referrer: document.referrer,
       });
-      
+
       localStorage.setItem(interactionKey, JSON.stringify(interactions));
     } catch (error) {
-      console.error('Failed to track interaction:', error);
+      structuredLogger.error('Failed to track interaction', {
+        component: 'cardTracking',
+        error: error as Error,
+      });
     }
   }
 }

@@ -7,6 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { EnhancedFECData } from '@/types/fec';
+import { structuredLogger } from '@/lib/logging/universal-logger';
 import { getIndustryColor, getIndustryIcon } from '@/lib/fec/industryMapper';
 
 interface IndustryBreakdownProps {
@@ -22,7 +23,7 @@ interface SortOption {
 const SORT_OPTIONS: SortOption[] = [
   { value: 'amount', label: 'Amount' },
   { value: 'percentage', label: 'Percentage' },
-  { value: 'count', label: 'Contributors' }
+  { value: 'count', label: 'Contributors' },
 ];
 
 export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownProps) {
@@ -31,17 +32,29 @@ export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownPro
   const [showAllIndustries, setShowAllIndustries] = useState(false);
 
   // Debug logging to check data structure
-  console.log('IndustryBreakdown received data:', data);
-  console.log('Industries array:', data?.industries);
-  console.log('Industries length:', data?.industries?.length || 0);
+  structuredLogger.info('IndustryBreakdown received data', {
+    component: 'IndustryBreakdown',
+    metadata: {
+      hasData: !!data,
+      hasIndustries: !!data?.industries,
+      industriesLength: data?.industries?.length || 0,
+    },
+  });
 
   const sortedIndustries = useMemo(() => {
     // Safety check for data structure
     if (!data || !data.industries || !Array.isArray(data.industries)) {
-      console.warn('IndustryBreakdown: Invalid or missing industries data');
+      structuredLogger.warn('Invalid or missing industries data', {
+        component: 'IndustryBreakdown',
+        metadata: {
+          hasData: !!data,
+          hasIndustries: !!data?.industries,
+          isArray: Array.isArray(data?.industries),
+        },
+      });
       return [];
     }
-    
+
     const sorted = [...data.industries].sort((a, b) => {
       switch (sortBy) {
         case 'amount':
@@ -54,16 +67,16 @@ export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownPro
           return (b.amount || 0) - (a.amount || 0);
       }
     });
-    
+
     return showAllIndustries ? sorted : sorted.slice(0, 10);
-  }, [data.industries, sortBy, showAllIndustries]);
+  }, [data, sortBy, showAllIndustries]);
 
   const maxAmount = useMemo(() => {
     if (!data || !data.industries || data.industries.length === 0) {
       return 0;
     }
     return Math.max(...data.industries.map(i => i.amount || 0));
-  }, [data.industries]);
+  }, [data]);
 
   const formatCurrency = (amount: number): string => {
     if (amount >= 1000000) {
@@ -106,17 +119,15 @@ export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownPro
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Industry Breakdown</h3>
-          <p className="text-sm text-gray-600">
-            Top funding sources by industry sector
-          </p>
+          <p className="text-sm text-gray-600">Top funding sources by industry sector</p>
         </div>
-        
+
         {/* Sort Controls */}
         <div className="flex items-center gap-2">
           <label className="text-sm text-gray-600">Sort by:</label>
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={e => setSortBy(e.target.value as 'amount' | 'percentage' | 'count')}
             className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {SORT_OPTIONS.map(option => (
@@ -131,7 +142,10 @@ export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownPro
       {/* Industry List */}
       <div className="space-y-3">
         {sortedIndustries.map((industry, index) => (
-          <div key={`industry-${index}-${industry.name}`} className="border border-gray-200 rounded-lg overflow-hidden">
+          <div
+            key={`industry-${index}-${industry.name}`}
+            className="border border-gray-200 rounded-lg overflow-hidden"
+          >
             {/* Main Industry Row */}
             <div
               className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -141,43 +155,33 @@ export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownPro
                 <div className="flex items-center gap-3 flex-1">
                   {/* Rank & Icon */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-500 w-6">
-                      #{index + 1}
-                    </span>
+                    <span className="text-sm font-medium text-gray-500 w-6">#{index + 1}</span>
                     <span className="text-xl">
                       {getIndustryIcon(industry.name.toLowerCase().replace(/\s+/g, '-'))}
                     </span>
                   </div>
-                  
+
                   {/* Industry Name & Trend */}
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900">
-                      {industry.name}
-                    </span>
+                    <span className="font-medium text-gray-900">{industry.name}</span>
                     {getTrendIcon(industry.trend)}
                   </div>
                 </div>
-                
+
                 {/* Metrics */}
                 <div className="flex items-center gap-6 text-sm">
                   <div className="text-right">
                     <div className="font-semibold text-gray-900">
                       {formatCurrency(industry.amount)}
                     </div>
-                    <div className="text-gray-500">
-                      {industry.percentage.toFixed(1)}%
-                    </div>
+                    <div className="text-gray-500">{industry.percentage.toFixed(1)}%</div>
                   </div>
-                  
+
                   <div className="text-right">
-                    <div className="font-semibold text-gray-900">
-                      {industry.contributorCount}
-                    </div>
-                    <div className="text-gray-500">
-                      contributors
-                    </div>
+                    <div className="font-semibold text-gray-900">{industry.contributorCount}</div>
+                    <div className="text-gray-500">contributors</div>
                   </div>
-                  
+
                   <div className="w-4 h-4 flex items-center justify-center">
                     <span className="text-gray-400">
                       {expandedIndustry === industry.name ? '▼' : '▶'}
@@ -185,7 +189,7 @@ export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownPro
                   </div>
                 </div>
               </div>
-              
+
               {/* Progress Bar */}
               <div className="mt-3">
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -193,13 +197,15 @@ export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownPro
                     className="h-2 rounded-full transition-all duration-500"
                     style={{
                       width: `${(industry.amount / maxAmount) * 100}%`,
-                      backgroundColor: getIndustryColor(industry.name.toLowerCase().replace(/\s+/g, '-'))
+                      backgroundColor: getIndustryColor(
+                        industry.name.toLowerCase().replace(/\s+/g, '-')
+                      ),
                     }}
                   />
                 </div>
               </div>
             </div>
-            
+
             {/* Expanded Details */}
             {expandedIndustry === industry.name && (
               <div className="px-4 pb-4 border-t bg-gray-50">
@@ -207,11 +213,14 @@ export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownPro
                   <h4 className="text-sm font-semibold text-gray-900 mb-3">
                     Top Employers in {industry.name}
                   </h4>
-                  
+
                   {industry.topEmployers && industry.topEmployers.length > 0 ? (
                     <div className="space-y-2">
                       {industry.topEmployers.map((employer, empIndex) => (
-                        <div key={`${industry.name}-employer-${empIndex}-${employer.name || empIndex}`} className="flex items-center justify-between">
+                        <div
+                          key={`${industry.name}-employer-${empIndex}-${employer.name || empIndex}`}
+                          className="flex items-center justify-between"
+                        >
                           <span className="text-sm text-gray-700">
                             {employer.name || 'Unknown Employer'}
                           </span>
@@ -227,9 +236,7 @@ export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownPro
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500">
-                      No employer data available
-                    </p>
+                    <p className="text-sm text-gray-500">No employer data available</p>
                   )}
                 </div>
               </div>
@@ -249,33 +256,25 @@ export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownPro
           </button>
         </div>
       )}
-      
+
       {/* Summary Stats */}
       <div className="mt-6 pt-4 border-t border-gray-200">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <div className="text-lg font-semibold text-gray-900">
-              {data.industries.length}
-            </div>
-            <div className="text-sm text-gray-500">
-              Industries
-            </div>
+            <div className="text-lg font-semibold text-gray-900">{data.industries.length}</div>
+            <div className="text-sm text-gray-500">Industries</div>
           </div>
           <div>
             <div className="text-lg font-semibold text-gray-900">
               {formatCurrency(data.industries.reduce((sum, i) => sum + i.amount, 0))}
             </div>
-            <div className="text-sm text-gray-500">
-              Total Amount
-            </div>
+            <div className="text-sm text-gray-500">Total Amount</div>
           </div>
           <div>
             <div className="text-lg font-semibold text-gray-900">
               {data.industries.reduce((sum, i) => sum + i.contributorCount, 0)}
             </div>
-            <div className="text-sm text-gray-500">
-              Contributors
-            </div>
+            <div className="text-sm text-gray-500">Contributors</div>
           </div>
         </div>
       </div>

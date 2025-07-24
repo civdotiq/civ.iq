@@ -7,6 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { EnhancedFECData } from '@/types/fec';
+import { structuredLogger } from '@/lib/logging/universal-logger';
 
 interface FundraisingTrendsProps {
   data: EnhancedFECData;
@@ -18,17 +19,22 @@ type ViewMode = 'timeline' | 'quarterly' | 'projections';
 const VIEW_MODES = [
   { value: 'timeline' as const, label: 'Timeline', icon: '📈' },
   { value: 'quarterly' as const, label: 'Quarterly', icon: '📊' },
-  { value: 'projections' as const, label: 'Projections', icon: '🔮' }
+  { value: 'projections' as const, label: 'Projections', icon: '🔮' },
 ];
 
 export function FundraisingTrends({ data, className = '' }: FundraisingTrendsProps) {
   const [activeView, setActiveView] = useState<ViewMode>('timeline');
 
   // Debug logging to check data structure
-  console.log('FundraisingTrends received data:', data);
-  console.log('Timeline data:', data?.timeline);
-  console.log('Summary data:', data?.summary);
-  console.log('Timeline length:', data?.timeline?.length || 0);
+  structuredLogger.info('FundraisingTrends received data', {
+    component: 'FundraisingTrends',
+    metadata: {
+      hasData: !!data,
+      hasTimeline: !!data?.timeline,
+      hasSummary: !!data?.summary,
+      timelineLength: data?.timeline?.length || 0,
+    },
+  });
 
   const formatCurrency = (amount: number): string => {
     if (amount >= 1000000) {
@@ -73,7 +79,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
       const aYear = parseInt(a.period);
       const bYear = parseInt(b.period);
       if (aYear !== bYear) return aYear - bYear;
-      
+
       const aQuarter = parseInt(a.quarter.replace('Q', ''));
       const bQuarter = parseInt(b.quarter.replace('Q', ''));
       return aQuarter - bQuarter;
@@ -127,7 +133,9 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
             </div>
           </div>
 
-          <div className={`p-4 rounded-lg border ${getEfficiencyBackground(data.summary.efficiency)}`}>
+          <div
+            className={`p-4 rounded-lg border ${getEfficiencyBackground(data.summary.efficiency)}`}
+          >
             <div className="flex items-center gap-2 mb-2">
               <span className="text-lg">⚡</span>
               <h4 className="font-semibold text-gray-900">Efficiency</h4>
@@ -144,18 +152,24 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
           <div className="space-y-4">
             {sortedTimeline.map((period, index) => {
               const previous = index > 0 ? sortedTimeline[index - 1] : null;
-              const raisedTrend = previous ? getTrendIndicator(period.raised, previous.raised) : null;
+              const raisedTrend = previous
+                ? getTrendIndicator(period.raised, previous.raised)
+                : null;
               const spentTrend = previous ? getTrendIndicator(period.spent, previous.spent) : null;
 
               return (
-                <div key={`${period.period}-${period.quarter}`} className="border border-gray-200 rounded-lg p-4 bg-white">
+                <div
+                  key={`${period.period}-${period.quarter}`}
+                  className="border border-gray-200 rounded-lg p-4 bg-white"
+                >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <h5 className="font-medium text-gray-900">
                         {period.period} {period.quarter}
                       </h5>
                       <span className="text-sm text-gray-500">
-                        Net: {period.netChange >= 0 ? '+' : ''}{formatCurrency(period.netChange)}
+                        Net: {period.netChange >= 0 ? '+' : ''}
+                        {formatCurrency(period.netChange)}
                       </span>
                     </div>
                     <div className="text-sm text-gray-500">
@@ -168,9 +182,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                       <div className="flex items-center gap-2">
                         <span className="text-green-600 text-sm">Raised:</span>
                         {raisedTrend && (
-                          <span className={`text-sm ${raisedTrend.color}`}>
-                            {raisedTrend.icon}
-                          </span>
+                          <span className={`text-sm ${raisedTrend.color}`}>{raisedTrend.icon}</span>
                         )}
                       </div>
                       <span className="font-medium text-green-600">
@@ -181,9 +193,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                       <div className="flex items-center gap-2">
                         <span className="text-red-600 text-sm">Spent:</span>
                         {spentTrend && (
-                          <span className={`text-sm ${spentTrend.color}`}>
-                            {spentTrend.icon}
-                          </span>
+                          <span className={`text-sm ${spentTrend.color}`}>{spentTrend.icon}</span>
                         )}
                       </div>
                       <span className="font-medium text-red-600">
@@ -235,18 +245,20 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
   const renderQuarterlyView = () => {
     const quarterlyData = sortedTimeline.map((period, index) => {
       const previous = index > 0 ? sortedTimeline[index - 1] : null;
-      const raisedGrowth = previous && previous.raised > 0 
-        ? ((period.raised - previous.raised) / previous.raised) * 100 
-        : 0;
-      const spentGrowth = previous && previous.spent > 0 
-        ? ((period.spent - previous.spent) / previous.spent) * 100 
-        : 0;
+      const raisedGrowth =
+        previous && previous.raised > 0
+          ? ((period.raised - previous.raised) / previous.raised) * 100
+          : 0;
+      const spentGrowth =
+        previous && previous.spent > 0
+          ? ((period.spent - previous.spent) / previous.spent) * 100
+          : 0;
 
       return {
         ...period,
         raisedGrowth,
         spentGrowth,
-        efficiency: period.raised > 0 ? ((period.raised - period.spent) / period.raised) * 100 : 0
+        efficiency: period.raised > 0 ? ((period.raised - period.spent) / period.raised) * 100 : 0,
       };
     });
 
@@ -260,25 +272,19 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
               <div className="text-2xl font-bold text-blue-600">
                 {formatCurrency(data.summary.quarterlyAverage)}
               </div>
-              <div className="text-sm text-gray-500">
-                Quarterly Average
-              </div>
+              <div className="text-sm text-gray-500">Quarterly Average</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
                 {formatCurrency(data.summary.burnRate)}
               </div>
-              <div className="text-sm text-gray-500">
-                Average Burn Rate
-              </div>
+              <div className="text-sm text-gray-500">Average Burn Rate</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
                 {calculateRunwayMonths(data.summary.cashOnHand, data.summary.burnRate)}
               </div>
-              <div className="text-sm text-gray-500">
-                Months Runway
-              </div>
+              <div className="text-sm text-gray-500">Months Runway</div>
             </div>
           </div>
         </div>
@@ -326,12 +332,15 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {index > 0 && (
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          quarter.raisedGrowth >= 0 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {quarter.raisedGrowth >= 0 ? '+' : ''}{quarter.raisedGrowth.toFixed(1)}%
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            quarter.raisedGrowth >= 0
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {quarter.raisedGrowth >= 0 ? '+' : ''}
+                          {quarter.raisedGrowth.toFixed(1)}%
                         </span>
                       )}
                     </td>
@@ -340,20 +349,26 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {index > 0 && (
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          quarter.spentGrowth >= 0 
-                            ? 'bg-red-100 text-red-800' 
-                            : 'bg-green-100 text-green-800'
-                        }`}>
-                          {quarter.spentGrowth >= 0 ? '+' : ''}{quarter.spentGrowth.toFixed(1)}%
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            quarter.spentGrowth >= 0
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-green-100 text-green-800'
+                          }`}
+                        >
+                          {quarter.spentGrowth >= 0 ? '+' : ''}
+                          {quarter.spentGrowth.toFixed(1)}%
                         </span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className={`font-medium ${
-                        quarter.netChange >= 0 ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {quarter.netChange >= 0 ? '+' : ''}{formatCurrency(quarter.netChange)}
+                      <span
+                        className={`font-medium ${
+                          quarter.netChange >= 0 ? 'text-green-600' : 'text-red-600'
+                        }`}
+                      >
+                        {quarter.netChange >= 0 ? '+' : ''}
+                        {formatCurrency(quarter.netChange)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -374,7 +389,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
   const renderProjectionsView = () => {
     const latestPeriod = sortedTimeline[sortedTimeline.length - 1];
     const runwayMonths = calculateRunwayMonths(data.summary.cashOnHand, data.summary.burnRate);
-    
+
     // Simple projection based on current trends
     const avgQuarterlyRaised = data.summary.quarterlyAverage;
     const currentBurnRate = data.summary.burnRate;
@@ -408,16 +423,20 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                   </div>
                   <div className="flex justify-between border-t pt-2">
                     <span className="text-sm text-gray-600">Net Change:</span>
-                    <span className={`font-medium ${
-                      projectedNextQuarter - projectedSpending >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
+                    <span
+                      className={`font-medium ${
+                        projectedNextQuarter - projectedSpending >= 0
+                          ? 'text-green-600'
+                          : 'text-red-600'
+                      }`}
+                    >
                       {projectedNextQuarter - projectedSpending >= 0 ? '+' : ''}
                       {formatCurrency(projectedNextQuarter - projectedSpending)}
                     </span>
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-white p-4 rounded-lg shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-orange-600 text-lg">⏰</span>
@@ -426,9 +445,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Current Runway:</span>
-                    <span className="font-medium text-orange-600">
-                      {runwayMonths} months
-                    </span>
+                    <span className="font-medium text-orange-600">{runwayMonths} months</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Monthly Burn:</span>
@@ -438,12 +455,16 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                   </div>
                   <div className="flex justify-between border-t pt-2">
                     <span className="text-sm text-gray-600">Status:</span>
-                    <span className={`font-medium ${
-                      runwayMonths > 6 ? 'text-green-600' : 
-                      runwayMonths > 3 ? 'text-yellow-600' : 'text-red-600'
-                    }`}>
-                      {runwayMonths > 6 ? 'Healthy' : 
-                       runwayMonths > 3 ? 'Caution' : 'Critical'}
+                    <span
+                      className={`font-medium ${
+                        runwayMonths > 6
+                          ? 'text-green-600'
+                          : runwayMonths > 3
+                            ? 'text-yellow-600'
+                            : 'text-red-600'
+                      }`}
+                    >
+                      {runwayMonths > 6 ? 'Healthy' : runwayMonths > 3 ? 'Caution' : 'Critical'}
                     </span>
                   </div>
                 </div>
@@ -466,14 +487,16 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-purple-500 h-2 rounded-full"
-                      style={{ width: `${Math.min((latestPeriod?.raised || 0) / (avgQuarterlyRaised * 1.2) * 100, 100)}%` }}
+                      style={{
+                        width: `${Math.min(((latestPeriod?.raised || 0) / (avgQuarterlyRaised * 1.2)) * 100, 100)}%`,
+                      }}
                     />
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
                     Current: {formatCurrency(latestPeriod?.raised || 0)}
                   </div>
                 </div>
-                
+
                 <div>
                   <div className="flex justify-between mb-2">
                     <span className="text-sm text-gray-600">Efficiency Target</span>
@@ -511,7 +534,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
               <h5 className="font-medium text-yellow-900 mb-2">Likely Case</h5>
               <div className="space-y-2 text-sm">
@@ -525,7 +548,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-red-50 p-4 rounded-lg border border-red-200">
               <h5 className="font-medium text-red-900 mb-2">Worst Case</h5>
               <div className="space-y-2 text-sm">
@@ -562,9 +585,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Fundraising Trends</h3>
-          <p className="text-sm text-gray-600">
-            Financial performance analysis and projections
-          </p>
+          <p className="text-sm text-gray-600">Financial performance analysis and projections</p>
         </div>
       </div>
 

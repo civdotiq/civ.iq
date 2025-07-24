@@ -4,6 +4,7 @@
  */
 
 import html2canvas from 'html2canvas';
+import { structuredLogger } from '@/lib/logging/universal-logger';
 
 export interface CardGenerationOptions {
   width?: number;
@@ -41,7 +42,7 @@ export async function generateCardImage(
   options: CardGenerationOptions = {}
 ): Promise<CardGenerationResult> {
   const startTime = performance.now();
-  
+
   try {
     // Default options optimized for high-quality card generation
     const defaultOptions = {
@@ -53,7 +54,7 @@ export async function generateCardImage(
       useCORS: true,
       allowTaint: false,
       format: 'png' as const,
-      quality: 0.95
+      quality: 0.95,
     };
 
     const finalOptions = { ...defaultOptions, ...options };
@@ -85,16 +86,16 @@ export async function generateCardImage(
           }
         `;
         clonedDoc.head.appendChild(style);
-      }
+      },
     };
 
     // Generate the canvas
     const canvas = await html2canvas(element, html2canvasOptions);
-    
+
     // Create blob with specified format
     const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
-        (blob) => {
+        blob => {
           if (blob) {
             resolve(blob);
           } else {
@@ -120,13 +121,15 @@ export async function generateCardImage(
         scale: finalOptions.scale,
         format: finalOptions.format,
         fileSize: blob.size,
-        generationTime
-      }
+        generationTime,
+      },
     };
-
   } catch (error) {
-    console.error('Card generation failed:', error);
-    
+    structuredLogger.error('Card generation failed', {
+      component: 'cardGenerator',
+      error: error as Error,
+    });
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -136,8 +139,8 @@ export async function generateCardImage(
         scale: 1,
         format: options.format || 'png',
         fileSize: 0,
-        generationTime: performance.now() - startTime
-      }
+        generationTime: performance.now() - startTime,
+      },
     };
   }
 }
@@ -145,27 +148,26 @@ export async function generateCardImage(
 /**
  * Download a generated card image
  */
-export function downloadCardImage(
-  blob: Blob,
-  filename: string = 'trading-card.png'
-): void {
+export function downloadCardImage(blob: Blob, filename: string = 'trading-card.png'): void {
   try {
     // Create download link
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
-    
+
     // Trigger download
     document.body.appendChild(link);
     link.click();
-    
+
     // Cleanup
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
   } catch (error) {
-    console.error('Download failed:', error);
+    structuredLogger.error('Download failed', {
+      component: 'cardGenerator',
+      error: error as Error,
+    });
     throw new Error('Failed to download card image');
   }
 }
@@ -173,18 +175,15 @@ export function downloadCardImage(
 /**
  * Generate a unique filename for the card
  */
-export function generateCardFilename(
-  representativeName: string,
-  format: string = 'png'
-): string {
+export function generateCardFilename(representativeName: string, format: string = 'png'): string {
   const cleanName = representativeName
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
-  
+
   const timestamp = new Date().toISOString().split('T')[0];
-  
+
   return `${cleanName}-trading-card-${timestamp}.${format}`;
 }
 
@@ -204,12 +203,12 @@ export function checkBrowserSupport(): {
     canvas: !!document.createElement('canvas').getContext,
     html2canvas: typeof html2canvas !== 'undefined',
     download: 'download' in document.createElement('a'),
-    highDPI: window.devicePixelRatio > 1
+    highDPI: window.devicePixelRatio > 1,
   };
 
   return {
     supported: features.canvas && features.html2canvas && features.download,
-    features
+    features,
   };
 }
 
@@ -221,16 +220,16 @@ export function optimizeElementForGeneration(element: HTMLElement): void {
   element.style.display = 'block';
   element.style.visibility = 'visible';
   element.style.opacity = '1';
-  
+
   // Ensure proper dimensions
   element.style.width = '320px';
   element.style.height = '500px';
-  
+
   // Optimize for rendering
   element.style.transform = 'translateZ(0)'; // Force hardware acceleration
   element.style.backfaceVisibility = 'hidden';
   element.style.perspective = '1000px';
-  
+
   // Wait for fonts to load
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(() => {
@@ -255,9 +254,9 @@ export function createTempCardElement(
   container.style.height = '500px';
   container.style.zIndex = '-1';
   container.style.pointerEvents = 'none';
-  
+
   document.body.appendChild(container);
-  
+
   return container;
 }
 
@@ -270,12 +269,14 @@ export function removeTempCardElement(element: HTMLElement): void {
   }
 }
 
-export default {
+const cardGenerator = {
   generateCardImage,
   downloadCardImage,
   generateCardFilename,
   checkBrowserSupport,
   optimizeElementForGeneration,
   createTempCardElement,
-  removeTempCardElement
+  removeTempCardElement,
 };
+
+export default cardGenerator;

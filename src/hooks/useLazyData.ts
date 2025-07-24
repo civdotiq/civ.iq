@@ -1,12 +1,12 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { structuredLogger } from '@/lib/logging/universal-logger';
 
 interface LazyDataOptions {
   threshold?: number;
@@ -44,7 +44,7 @@ export function useLazyData<T>(
     retryAttempts = 3,
     retryDelay = 1000,
     cacheKey,
-    cacheTTL = 5 * 60 * 1000 // 5 minutes default
+    cacheTTL = 5 * 60 * 1000, // 5 minutes default
   } = options;
 
   const [data, setData] = useState<T | null>(null);
@@ -52,7 +52,7 @@ export function useLazyData<T>(
   const [error, setError] = useState<Error | null>(null);
   const [isVisible, setIsVisible] = useState(immediate);
   const [hasFetched, setHasFetched] = useState(false);
-  
+
   const elementRef = useRef<HTMLDivElement>(null);
   const fetchFunctionRef = useRef(fetchFunction);
   const retryTimeoutRef = useRef<NodeJS.Timeout>();
@@ -65,30 +65,33 @@ export function useLazyData<T>(
   // Check cache first
   const getCachedData = useCallback((): T | null => {
     if (!cacheKey) return null;
-    
+
     const cached = dataCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
-      return cached.data;
+      return cached.data as T;
     }
-    
+
     // Remove expired cache entry
     if (cached) {
       dataCache.delete(cacheKey);
     }
-    
+
     return null;
   }, [cacheKey]);
 
   // Set cache data
-  const setCachedData = useCallback((newData: T) => {
-    if (cacheKey) {
-      dataCache.set(cacheKey, {
-        data: newData,
-        timestamp: Date.now(),
-        ttl: cacheTTL
-      });
-    }
-  }, [cacheKey, cacheTTL]);
+  const setCachedData = useCallback(
+    (newData: T) => {
+      if (cacheKey) {
+        dataCache.set(cacheKey, {
+          data: newData,
+          timestamp: Date.now(),
+          ttl: cacheTTL,
+        });
+      }
+    },
+    [cacheKey, cacheTTL]
+  );
 
   // Intersection observer setup
   useEffect(() => {
@@ -118,42 +121,55 @@ export function useLazyData<T>(
   }, [threshold, rootMargin, immediate, enabled]);
 
   // Fetch data with retry logic
-  const fetchWithRetry = useCallback(async (attemptNumber = 1): Promise<void> => {
-    try {
-      setLoading(true);
-      setError(null);
+  const fetchWithRetry = useCallback(
+    async (attemptNumber = 1): Promise<void> => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      // Check cache first
-      const cachedData = getCachedData();
-      if (cachedData && !hasFetched) {
-        setData(cachedData);
-        setLoading(false);
+        // Check cache first
+        const cachedData = getCachedData();
+        if (cachedData && !hasFetched) {
+          setData(cachedData);
+          setLoading(false);
+          setHasFetched(true);
+          return;
+        }
+
+        const result = await fetchFunctionRef.current();
+        setData(result);
+        setCachedData(result);
+        setError(null);
         setHasFetched(true);
-        return;
-      }
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Unknown error occurred');
 
-      const result = await fetchFunctionRef.current();
-      setData(result);
-      setCachedData(result);
-      setError(null);
-      setHasFetched(true);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Unknown error occurred');
-      
-      if (attemptNumber < retryAttempts) {
-        console.log(`[LazyData] Retry attempt ${attemptNumber + 1}/${retryAttempts} after ${retryDelay}ms`);
-        
-        retryTimeoutRef.current = setTimeout(() => {
-          fetchWithRetry(attemptNumber + 1);
-        }, retryDelay * attemptNumber); // Exponential backoff
-      } else {
-        setError(error);
-        console.error('[LazyData] All retry attempts failed:', error);
+        if (attemptNumber < retryAttempts) {
+          structuredLogger.info('LazyData retry attempt', {
+            component: 'useLazyData',
+            metadata: {
+              attemptNumber: attemptNumber + 1,
+              retryAttempts,
+              retryDelay,
+            },
+          });
+
+          retryTimeoutRef.current = setTimeout(() => {
+            fetchWithRetry(attemptNumber + 1);
+          }, retryDelay * attemptNumber); // Exponential backoff
+        } else {
+          setError(error);
+          structuredLogger.error('All LazyData retry attempts failed', {
+            component: 'useLazyData',
+            error: error as Error,
+          });
+        }
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  }, [getCachedData, setCachedData, retryAttempts, retryDelay, hasFetched]);
+    },
+    [getCachedData, setCachedData, retryAttempts, retryDelay, hasFetched]
+  );
 
   // Manual refetch function
   const refetch = useCallback(async (): Promise<void> => {
@@ -183,12 +199,12 @@ export function useLazyData<T>(
     error,
     elementRef,
     refetch,
-    isVisible
+    isVisible,
   };
 }
 
 // Hook for lazy loading multiple data sources
-export function useLazyDataBatch<T extends Record<string, any>>(
+export function useLazyDataBatch<T extends Record<string, unknown>>(
   fetchFunctions: { [K in keyof T]: () => Promise<T[K]> },
   dependencies: unknown[] = [],
   options: LazyDataOptions = {}
@@ -201,11 +217,15 @@ export function useLazyDataBatch<T extends Record<string, any>>(
   isVisible: boolean;
 } {
   const [data, setData] = useState<Partial<T>>({});
-  const [loading, setLoading] = useState<{ [K in keyof T]: boolean }>({} as any);
-  const [errors, setErrors] = useState<{ [K in keyof T]: Error | null }>({} as any);
+  const [loading, setLoading] = useState<{ [K in keyof T]: boolean }>(
+    {} as { [K in keyof T]: boolean }
+  );
+  const [errors, setErrors] = useState<{ [K in keyof T]: Error | null }>(
+    {} as { [K in keyof T]: Error | null }
+  );
   const [isVisible, setIsVisible] = useState(options.immediate || false);
   const [hasFetched, setHasFetched] = useState(false);
-  
+
   const elementRef = useRef<HTMLDivElement>(null);
 
   // Intersection observer setup
@@ -219,9 +239,9 @@ export function useLazyDataBatch<T extends Record<string, any>>(
           observer.disconnect();
         }
       },
-      { 
-        threshold: options.threshold || 0.1, 
-        rootMargin: options.rootMargin || '50px' 
+      {
+        threshold: options.threshold || 0.1,
+        rootMargin: options.rootMargin || '50px',
       }
     );
 
@@ -238,7 +258,7 @@ export function useLazyDataBatch<T extends Record<string, any>>(
     if (!isVisible || hasFetched) return;
 
     const keys = Object.keys(fetchFunctions) as (keyof T)[];
-    
+
     // Initialize loading states
     const initialLoading = {} as { [K in keyof T]: boolean };
     keys.forEach(key => {
@@ -248,7 +268,7 @@ export function useLazyDataBatch<T extends Record<string, any>>(
 
     // Fetch all data sources in parallel
     const results = await Promise.allSettled(
-      keys.map(async (key) => {
+      keys.map(async key => {
         try {
           const result = await fetchFunctions[key]();
           return { key, result, success: true };
@@ -294,7 +314,7 @@ export function useLazyDataBatch<T extends Record<string, any>>(
 
   // Trigger fetch when visible
   useEffect(() => {
-    if (isVisible && (options.enabled !== false)) {
+    if (isVisible && options.enabled !== false) {
       fetchAll();
     }
   }, [isVisible, options.enabled, fetchAll, ...dependencies]);
@@ -305,7 +325,7 @@ export function useLazyDataBatch<T extends Record<string, any>>(
     errors,
     elementRef,
     refetch,
-    isVisible
+    isVisible,
   };
 }
 
@@ -319,7 +339,7 @@ export function useInfiniteScroll<T>(
   const [error, setError] = useState<Error | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  
+
   const elementRef = useRef<HTMLDivElement>(null);
 
   const loadMore = useCallback(async () => {
@@ -330,7 +350,7 @@ export function useInfiniteScroll<T>(
       setError(null);
 
       const result = await fetchFunction(page, pageSize);
-      
+
       setItems(prev => [...prev, ...result.items]);
       setHasMore(result.hasMore);
       setPage(prev => prev + 1);
@@ -374,7 +394,7 @@ export function useInfiniteScroll<T>(
     hasMore,
     elementRef,
     loadMore,
-    reset
+    reset,
   };
 }
 
@@ -387,6 +407,6 @@ export function clearLazyDataCache(): void {
 export function getLazyDataCacheStats(): { size: number; keys: string[] } {
   return {
     size: dataCache.size,
-    keys: Array.from(dataCache.keys())
+    keys: Array.from(dataCache.keys()),
   };
 }
