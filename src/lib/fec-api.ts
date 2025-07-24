@@ -3,6 +3,14 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import type {
+  FecApiCandidate,
+  FecApiCandidatesResponse,
+  FecApiContribution,
+  FecApiContributionsResponse,
+  FecApiFinancialSummary,
+} from '../types/api-responses';
+
 /**
  * Federal Election Commission (FEC) API Integration
  * 

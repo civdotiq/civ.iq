@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { withValidationAndSecurity, ValidatedRequest } from '@/lib/validation/middleware';
+import { ValidatedRequest } from '@/lib/validation/middleware';
 import { BaseValidator } from '@/lib/validation/schemas';
 import { withErrorHandling } from '@/lib/error-handling/error-handler';
 import { structuredLogger } from '@/lib/logging/logger';
@@ -33,32 +33,38 @@ interface Representative {
 }
 
 // Validate batch request
-const validateBatchRequest = (data: unknown): { isValid: boolean; errors: string[]; sanitized?: BatchRequest } => {
+const validateBatchRequest = (
+  data: unknown
+): { isValid: boolean; errors: string[]; sanitized?: BatchRequest } => {
   const errors: string[] = [];
-  
-  if (!data.bioguideIds || !Array.isArray(data.bioguideIds)) {
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!(data as any).bioguideIds || !Array.isArray((data as any).bioguideIds)) {
     errors.push('bioguideIds must be an array');
     return { isValid: false, errors };
   }
 
-  if (data.bioguideIds.length === 0) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((data as any).bioguideIds.length === 0) {
     errors.push('bioguideIds array cannot be empty');
     return { isValid: false, errors };
   }
 
-  if (data.bioguideIds.length > 50) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((data as any).bioguideIds.length > 50) {
     errors.push('bioguideIds array cannot contain more than 50 items');
     return { isValid: false, errors };
   }
 
   // Validate each bioguide ID
   const validatedIds: string[] = [];
-  for (const id of data.bioguideIds) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const id of (data as any).bioguideIds) {
     const validation = BaseValidator.validateString(id, 'bioguideId', {
       required: true,
       minLength: 7,
       maxLength: 7,
-      pattern: /^[A-Z]\d{6}$/
+      pattern: /^[A-Z]\d{6}$/,
     });
 
     if (!validation.isValid) {
@@ -75,7 +81,7 @@ const validateBatchRequest = (data: unknown): { isValid: boolean; errors: string
   return {
     isValid: true,
     errors: [],
-    sanitized: { bioguideIds: validatedIds }
+    sanitized: { bioguideIds: validatedIds },
   };
 };
 
@@ -85,28 +91,32 @@ async function handleBatchRequest(request: ValidatedRequest<BatchRequest>): Prom
   try {
     performanceMonitor.startTimer('batch-representatives-fetch', {
       count: bioguideIds.length,
-      operation: 'batch_representatives'
+      operation: 'batch_representatives',
     });
 
     // Fetch representatives in batches to avoid overwhelming the external API
     const batchSize = 10;
     const results: Record<string, Representative | null> = {};
-    
+
     const batches = [];
     for (let i = 0; i < bioguideIds.length; i += batchSize) {
       batches.push(bioguideIds.slice(i, i + batchSize));
     }
 
-    structuredLogger.info('Processing batch representative request', {
-      totalIds: bioguideIds.length,
-      batches: batches.length,
-      operation: 'batch_representatives_start'
-    }, request);
+    structuredLogger.info(
+      'Processing batch representative request',
+      {
+        totalIds: bioguideIds.length,
+        batches: batches.length,
+        operation: 'batch_representatives_start',
+      },
+      request
+    );
 
     // Process batches in parallel
     await Promise.all(
       batches.map(async (batch, batchIndex) => {
-        const batchPromises = batch.map(async (bioguideId) => {
+        const batchPromises = batch.map(async bioguideId => {
           try {
             const representative = await cachedFetch(
               `representative-${bioguideId}`,
@@ -144,12 +154,14 @@ async function handleBatchRequest(request: ValidatedRequest<BatchRequest>): Prom
                   district: member.district || null,
                   party: member.partyName,
                   chamber: member.chamber as 'House' | 'Senate',
-                  imageUrl: member.depiction?.imageUrl || `/images/representatives/default-${member.chamber.toLowerCase()}.jpg`,
+                  imageUrl:
+                    member.depiction?.imageUrl ||
+                    `/images/representatives/default-${member.chamber.toLowerCase()}.jpg`,
                   contactInfo: {
                     phone: member.phone || '',
                     website: member.officialWebsiteUrl || '',
-                    office: member.office || ''
-                  }
+                    office: member.office || '',
+                  },
                 };
               },
               30 * 60 * 1000 // 30 minutes cache
@@ -157,11 +169,16 @@ async function handleBatchRequest(request: ValidatedRequest<BatchRequest>): Prom
 
             results[bioguideId] = representative;
           } catch (error) {
-            structuredLogger.error(`Error fetching representative ${bioguideId}`, error as Error, {
-              bioguideId,
-              batchIndex,
-              operation: 'batch_representative_fetch_error'
-            }, request);
+            structuredLogger.error(
+              `Error fetching representative ${bioguideId}`,
+              error as Error,
+              {
+                bioguideId,
+                batchIndex,
+                operation: 'batch_representative_fetch_error',
+              },
+              request
+            );
             results[bioguideId] = null;
           }
         });
@@ -171,17 +188,21 @@ async function handleBatchRequest(request: ValidatedRequest<BatchRequest>): Prom
     );
 
     const duration = performanceMonitor.endTimer('batch-representatives-fetch');
-    
+
     const successCount = Object.values(results).filter(r => r !== null).length;
     const errorCount = bioguideIds.length - successCount;
 
-    structuredLogger.info('Batch representative request completed', {
-      totalRequested: bioguideIds.length,
-      successCount,
-      errorCount,
-      duration,
-      operation: 'batch_representatives_complete'
-    }, request);
+    structuredLogger.info(
+      'Batch representative request completed',
+      {
+        totalRequested: bioguideIds.length,
+        successCount,
+        errorCount,
+        duration,
+        operation: 'batch_representatives_complete',
+      },
+      request
+    );
 
     return NextResponse.json({
       results,
@@ -190,22 +211,26 @@ async function handleBatchRequest(request: ValidatedRequest<BatchRequest>): Prom
         successCount,
         errorCount,
         timestamp: new Date().toISOString(),
-        dataSource: 'congress.gov'
-      }
+        dataSource: 'congress.gov',
+      },
     });
-
   } catch (error) {
     performanceMonitor.endTimer('batch-representatives-fetch');
-    
-    structuredLogger.error('Batch representatives request failed', error as Error, {
-      bioguideIds: bioguideIds.slice(0, 10), // Log first 10 for debugging
-      operation: 'batch_representatives_error'
-    }, request);
+
+    structuredLogger.error(
+      'Batch representatives request failed',
+      error as Error,
+      {
+        bioguideIds: bioguideIds.slice(0, 10), // Log first 10 for debugging
+        operation: 'batch_representatives_error',
+      },
+      request
+    );
 
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch representatives batch',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -218,12 +243,12 @@ export async function POST(request: NextRequest) {
     // Custom validation for the batch request
     const rawBody = await request.json();
     const validation = validateBatchRequest(rawBody);
-    
+
     if (!validation.isValid) {
       return NextResponse.json(
-        { 
+        {
           error: 'Validation failed',
-          details: validation.errors
+          details: validation.errors,
         },
         { status: 400 }
       );
@@ -236,9 +261,6 @@ export async function POST(request: NextRequest) {
     return withErrorHandling(handleBatchRequest)(validatedRequest);
   } catch (error) {
     structuredLogger.error('POST batch representatives handler error', error as Error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

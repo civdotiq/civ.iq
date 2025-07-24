@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -9,11 +8,12 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { DistrictCharts } from '@/components/DistrictCharts';
 
 // Dynamic import of the map component to avoid SSR issues
-const DistrictBoundaryMap = dynamic(() => import('@/components/DistrictBoundaryMap'), { 
+const DistrictBoundaryMap = dynamic(() => import('@/components/DistrictBoundaryMap'), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
@@ -22,20 +22,20 @@ const DistrictBoundaryMap = dynamic(() => import('@/components/DistrictBoundaryM
         <p className="text-sm text-gray-600">Loading district map...</p>
       </div>
     </div>
-  )
+  ),
 });
 
 function CiviqLogo() {
   return (
     <div className="flex items-center">
       <svg className="w-8 h-8" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <rect x="36" y="51" width="28" height="30" fill="#0b983c"/>
-        <circle cx="50" cy="31" r="22" fill="#ffffff"/>
-        <circle cx="50" cy="31" r="20" fill="#e11d07"/>
-        <circle cx="38" cy="89" r="2" fill="#3ea2d4"/>
-        <circle cx="46" cy="89" r="2" fill="#3ea2d4"/>
-        <circle cx="54" cy="89" r="2" fill="#3ea2d4"/>
-        <circle cx="62" cy="89" r="2" fill="#3ea2d4"/>
+        <rect x="36" y="51" width="28" height="30" fill="#0b983c" />
+        <circle cx="50" cy="31" r="22" fill="#ffffff" />
+        <circle cx="50" cy="31" r="20" fill="#e11d07" />
+        <circle cx="38" cy="89" r="2" fill="#3ea2d4" />
+        <circle cx="46" cy="89" r="2" fill="#3ea2d4" />
+        <circle cx="54" cy="89" r="2" fill="#3ea2d4" />
+        <circle cx="62" cy="89" r="2" fill="#3ea2d4" />
       </svg>
       <span className="ml-2 text-lg font-bold text-gray-900">CIV.IQ</span>
     </div>
@@ -66,7 +66,7 @@ interface DistrictDetails {
     asian_percent: number;
     poverty_rate: number;
     bachelor_degree_percent: number;
-    
+
     // Additional comprehensive demographics
     economic?: {
       medianHomeValue: number;
@@ -81,7 +81,7 @@ interface DistrictDetails {
       industryDiversityIndex: number;
       jobGrowthPotential: number;
     };
-    
+
     education?: {
       highSchoolGraduatePercent: number;
       mastersDegreePercent: number;
@@ -89,7 +89,7 @@ interface DistrictDetails {
       doctoratePercent: number;
       advancedDegreePercent: number;
     };
-    
+
     housing?: {
       homeOwnershipRate: number;
       rentalRate: number;
@@ -97,13 +97,13 @@ interface DistrictDetails {
       avgHouseholdSize: number;
       housingUnitDensity: number;
     };
-    
+
     transportation?: {
       publicTransportPercent: number;
       workFromHomePercent: number;
       avgCommuteTime: number;
     };
-    
+
     social?: {
       veteransPercent: number;
       disabilityPercent: number;
@@ -133,14 +133,16 @@ export default function DistrictDetailPage() {
   const [district, setDistrict] = useState<DistrictDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'overview' | 'demographics' | 'politics' | 'economy' | 'geography' | 'comparative'>('dashboard');
+  const [activeTab, setActiveTab] = useState<
+    'dashboard' | 'overview' | 'demographics' | 'politics' | 'economy' | 'geography' | 'comparative'
+  >('dashboard');
 
   useEffect(() => {
     const fetchDistrict = async () => {
       setLoading(true);
       setError(null);
       setDistrict(null);
-      
+
       try {
         const response = await fetch(`/api/districts/${districtId}`);
         if (!response.ok) {
@@ -193,8 +195,8 @@ export default function DistrictDetailPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">District Not Found</h1>
           <p className="text-gray-600 mb-6">{error}</p>
-          <Link 
-            href="/districts" 
+          <Link
+            href="/districts"
             className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Browse All Districts
@@ -227,7 +229,10 @@ export default function DistrictDetailPage() {
               <CiviqLogo />
             </Link>
             <nav className="flex items-center gap-6">
-              <Link href="/representatives" className="text-gray-700 hover:text-blue-600 transition-colors">
+              <Link
+                href="/representatives"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
                 Representatives
               </Link>
               <Link href="/districts" className="text-blue-600 font-medium">
@@ -248,7 +253,9 @@ export default function DistrictDetailPage() {
               </h1>
               <p className="text-xl text-gray-600">{district.name}</p>
             </div>
-            <span className={`px-4 py-2 rounded-full text-lg font-semibold ${getPVIBackground(district.political.cookPVI)} ${getPVIColor(district.political.cookPVI)}`}>
+            <span
+              className={`px-4 py-2 rounded-full text-lg font-semibold ${getPVIBackground(district.political.cookPVI)} ${getPVIColor(district.political.cookPVI)}`}
+            >
               {district.political.cookPVI}
             </span>
           </div>
@@ -259,10 +266,12 @@ export default function DistrictDetailPage() {
             <div className="flex items-center gap-6">
               <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
                 {district.representative.imageUrl ? (
-                  <img 
-                    src={district.representative.imageUrl} 
+                  <Image
+                    src={district.representative.imageUrl}
                     alt={district.representative.name}
-                    className="w-20 h-20 object-cover"
+                    width={80}
+                    height={80}
+                    className="object-cover"
                   />
                 ) : (
                   <span className="text-sm text-gray-600">Photo</span>
@@ -271,11 +280,13 @@ export default function DistrictDetailPage() {
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">{district.representative.name}</h3>
                 <p className="text-lg text-gray-600">
-                  {district.representative.party === 'D' ? 'Democrat' : 
-                   district.representative.party === 'R' ? 'Republican' : 
-                   district.representative.party}
+                  {district.representative.party === 'D'
+                    ? 'Democrat'
+                    : district.representative.party === 'R'
+                      ? 'Republican'
+                      : district.representative.party}
                 </p>
-                <Link 
+                <Link
                   href={`/representative/${district.representative.bioguideId}`}
                   className="inline-block mt-2 text-blue-600 hover:underline"
                 >
@@ -300,11 +311,11 @@ export default function DistrictDetailPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Interactive Map */}
             <div className="lg:col-span-3">
-              <DistrictBoundaryMap 
+              <DistrictBoundaryMap
                 districtId={district.id}
                 state={district.state}
                 district={district.number}
@@ -312,7 +323,7 @@ export default function DistrictDetailPage() {
                 height={500}
               />
             </div>
-            
+
             {/* District Quick Stats */}
             <div className="lg:col-span-1 space-y-4">
               <div className="bg-gray-50 rounded-lg p-4">
@@ -344,14 +355,16 @@ export default function DistrictDetailPage() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Neighboring Districts */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-900 mb-3">Neighboring Districts</h3>
                 <div className="text-sm text-gray-600 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span>{district.state}-{parseInt(district.number) - 1}</span>
-                    <Link 
+                    <span>
+                      {district.state}-{parseInt(district.number) - 1}
+                    </span>
+                    <Link
                       href={`/districts/${district.state}-${parseInt(district.number) - 1}`}
                       className="text-blue-600 hover:underline"
                     >
@@ -359,8 +372,10 @@ export default function DistrictDetailPage() {
                     </Link>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>{district.state}-{parseInt(district.number) + 1}</span>
-                    <Link 
+                    <span>
+                      {district.state}-{parseInt(district.number) + 1}
+                    </span>
+                    <Link
                       href={`/districts/${district.state}-${parseInt(district.number) + 1}`}
                       className="text-blue-600 hover:underline"
                     >
@@ -385,11 +400,22 @@ export default function DistrictDetailPage() {
                 { id: 'politics', label: 'Politics & Elections', icon: '🗳️' },
                 { id: 'economy', label: 'Economy', icon: '💼' },
                 { id: 'geography', label: 'Geography', icon: '🗺️' },
-                { id: 'comparative', label: 'Comparative Analysis', icon: '📈' }
-              ].map((tab) => (
+                { id: 'comparative', label: 'Comparative Analysis', icon: '📈' },
+              ].map(tab => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as 'dashboard' | 'overview' | 'demographics' | 'politics' | 'economy' | 'geography' | 'comparative')}
+                  onClick={() =>
+                    setActiveTab(
+                      tab.id as
+                        | 'dashboard'
+                        | 'overview'
+                        | 'demographics'
+                        | 'politics'
+                        | 'economy'
+                        | 'geography'
+                        | 'comparative'
+                    )
+                  }
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
@@ -413,7 +439,7 @@ export default function DistrictDetailPage() {
                     Last updated: {new Date().toLocaleDateString()}
                   </span>
                 </div>
-                
+
                 {/* Key Performance Indicators */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
@@ -421,55 +447,99 @@ export default function DistrictDetailPage() {
                       <div>
                         <p className="text-sm font-medium text-blue-600">Competitiveness Index</p>
                         <p className="text-2xl font-bold text-blue-900">
-                          {district.political.lastElection.margin < 5 ? 'High' : 
-                           district.political.lastElection.margin < 10 ? 'Medium' : 'Low'}
+                          {district.political.lastElection.margin < 5
+                            ? 'High'
+                            : district.political.lastElection.margin < 10
+                              ? 'Medium'
+                              : 'Low'}
                         </p>
                       </div>
                       <div className="text-blue-600">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        <svg
+                          className="w-8 h-8"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          />
                         </svg>
                       </div>
                     </div>
                     <p className="text-xs text-blue-700 mt-2">
-                      Based on last election margin of {district.political.lastElection.margin.toFixed(1)}%
+                      Based on last election margin of{' '}
+                      {district.political.lastElection.margin.toFixed(1)}%
                     </p>
                   </div>
-                  
+
                   <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-6">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-green-600">Economic Health</p>
                         <p className="text-2xl font-bold text-green-900">
-                          {district.demographics?.economic ? 
-                            district.demographics.economic.economicHealthIndex > 80 ? 'Excellent' :
-                            district.demographics.economic.economicHealthIndex > 60 ? 'Good' :
-                            district.demographics.economic.economicHealthIndex > 40 ? 'Fair' : 'Poor'
-                          : 'N/A'}
+                          {district.demographics?.economic
+                            ? district.demographics.economic.economicHealthIndex > 80
+                              ? 'Excellent'
+                              : district.demographics.economic.economicHealthIndex > 60
+                                ? 'Good'
+                                : district.demographics.economic.economicHealthIndex > 40
+                                  ? 'Fair'
+                                  : 'Poor'
+                            : 'N/A'}
                         </p>
                       </div>
                       <div className="text-green-600">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                        <svg
+                          className="w-8 h-8"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                          />
                         </svg>
                       </div>
                     </div>
                     <p className="text-xs text-green-700 mt-2">
-                      Index: {district.demographics?.economic ? district.demographics.economic.economicHealthIndex.toFixed(0) : 'N/A'}/100
+                      Index:{' '}
+                      {district.demographics?.economic
+                        ? district.demographics.economic.economicHealthIndex.toFixed(0)
+                        : 'N/A'}
+                      /100
                     </p>
                   </div>
-                  
+
                   <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-purple-600">Diversity Score</p>
                         <p className="text-2xl font-bold text-purple-900">
-                          {district.demographics ? district.demographics.diversityIndex.toFixed(0) : 'N/A'}
+                          {district.demographics
+                            ? district.demographics.diversityIndex.toFixed(0)
+                            : 'N/A'}
                         </p>
                       </div>
                       <div className="text-purple-600">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        <svg
+                          className="w-8 h-8"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
                         </svg>
                       </div>
                     </div>
@@ -477,7 +547,7 @@ export default function DistrictDetailPage() {
                       Racial and ethnic diversity index (0-100)
                     </p>
                   </div>
-                  
+
                   <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-6">
                     <div className="flex items-center justify-between">
                       <div>
@@ -487,17 +557,25 @@ export default function DistrictDetailPage() {
                         </p>
                       </div>
                       <div className="text-orange-600">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                        <svg
+                          className="w-8 h-8"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                          />
                         </svg>
                       </div>
                     </div>
-                    <p className="text-xs text-orange-700 mt-2">
-                      Last election turnout rate
-                    </p>
+                    <p className="text-xs text-orange-700 mt-2">Last election turnout rate</p>
                   </div>
                 </div>
-                
+
                 {/* Trend Analysis */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <div className="bg-gray-50 rounded-lg p-6">
@@ -505,62 +583,84 @@ export default function DistrictDetailPage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Partisan Voting Index</span>
-                        <span className={`text-sm font-medium ${getPVIColor(district.political.cookPVI)}`}>
+                        <span
+                          className={`text-sm font-medium ${getPVIColor(district.political.cookPVI)}`}
+                        >
                           {district.political.cookPVI}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Election Margin Trend</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {district.political.lastElection.margin > 10 ? '↗ Widening' : 
-                           district.political.lastElection.margin > 5 ? '→ Stable' : '↘ Narrowing'}
+                          {district.political.lastElection.margin > 10
+                            ? '↗ Widening'
+                            : district.political.lastElection.margin > 5
+                              ? '→ Stable'
+                              : '↘ Narrowing'}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Competitiveness</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {district.political.lastElection.margin < 5 ? 'Highly Competitive' : 
-                           district.political.lastElection.margin < 10 ? 'Competitive' : 'Safe'}
+                          {district.political.lastElection.margin < 5
+                            ? 'Highly Competitive'
+                            : district.political.lastElection.margin < 10
+                              ? 'Competitive'
+                              : 'Safe'}
                         </span>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-gray-50 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Demographic Insights</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Demographic Insights
+                    </h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Population Density</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {district.demographics && district.geography ? 
-                            Math.round(district.demographics.population / district.geography.area).toLocaleString() : 'N/A'} per sq mi
+                          {district.demographics && district.geography
+                            ? Math.round(
+                                district.demographics.population / district.geography.area
+                              ).toLocaleString()
+                            : 'N/A'}{' '}
+                          per sq mi
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Education Level</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {district.demographics ? 
-                            district.demographics.bachelor_degree_percent > 35 ? 'High' :
-                            district.demographics.bachelor_degree_percent > 25 ? 'Medium' : 'Low'
-                          : 'N/A'}
+                          {district.demographics
+                            ? district.demographics.bachelor_degree_percent > 35
+                              ? 'High'
+                              : district.demographics.bachelor_degree_percent > 25
+                                ? 'Medium'
+                                : 'Low'
+                            : 'N/A'}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Economic Status</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {district.demographics ?
-                            district.demographics.poverty_rate < 10 ? 'Affluent' :
-                            district.demographics.poverty_rate < 15 ? 'Middle Class' : 'Working Class'
-                          : 'N/A'}
+                          {district.demographics
+                            ? district.demographics.poverty_rate < 10
+                              ? 'Affluent'
+                              : district.demographics.poverty_rate < 15
+                                ? 'Middle Class'
+                                : 'Working Class'
+                            : 'N/A'}
                         </span>
                       </div>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Key Challenges & Opportunities */}
                 <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Insights & Priorities</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Key Insights & Priorities
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <h4 className="font-medium text-blue-900 mb-2">Strengths</h4>
@@ -568,9 +668,10 @@ export default function DistrictDetailPage() {
                         {district.demographics && district.demographics.medianIncome > 65000 && (
                           <li>• Strong economic base with high median income</li>
                         )}
-                        {district.demographics && district.demographics.bachelor_degree_percent > 35 && (
-                          <li>• Well-educated population</li>
-                        )}
+                        {district.demographics &&
+                          district.demographics.bachelor_degree_percent > 35 && (
+                            <li>• Well-educated population</li>
+                          )}
                         {district.political.lastElection.turnout > 70 && (
                           <li>• High voter engagement</li>
                         )}
@@ -585,9 +686,10 @@ export default function DistrictDetailPage() {
                         {district.demographics && district.demographics.poverty_rate > 15 && (
                           <li>• Economic development and poverty reduction</li>
                         )}
-                        {district.demographics && district.demographics.bachelor_degree_percent < 25 && (
-                          <li>• Educational attainment and workforce development</li>
-                        )}
+                        {district.demographics &&
+                          district.demographics.bachelor_degree_percent < 25 && (
+                            <li>• Educational attainment and workforce development</li>
+                          )}
                         {district.political.lastElection.turnout < 60 && (
                           <li>• Voter engagement and civic participation</li>
                         )}
@@ -600,7 +702,7 @@ export default function DistrictDetailPage() {
                 </div>
               </div>
             )}
-            
+
             {activeTab === 'overview' && (
               <div className="space-y-8">
                 <div>
@@ -614,7 +716,9 @@ export default function DistrictDetailPage() {
                     </div>
                     <div className="text-center">
                       <div className="text-3xl font-bold text-green-600">
-                        {district.demographics ? formatCurrency(district.demographics.medianIncome) : 'N/A'}
+                        {district.demographics
+                          ? formatCurrency(district.demographics.medianIncome)
+                          : 'N/A'}
                       </div>
                       <p className="text-sm text-gray-600 mt-1">Median Income</p>
                     </div>
@@ -632,7 +736,7 @@ export default function DistrictDetailPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-200">
                   <div className="text-center">
                     <div className="text-3xl font-bold text-blue-600">
@@ -659,7 +763,7 @@ export default function DistrictDetailPage() {
             {activeTab === 'demographics' && district.demographics && (
               <div className="space-y-8">
                 <h2 className="text-2xl font-bold text-gray-900">Demographics & Population</h2>
-                
+
                 {/* Basic Demographics Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
@@ -690,7 +794,9 @@ export default function DistrictDetailPage() {
 
                 {/* Racial and Ethnic Composition */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Racial & Ethnic Composition</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Racial & Ethnic Composition
+                  </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center">
                       <div className="text-xl font-bold text-blue-600">
@@ -722,7 +828,9 @@ export default function DistrictDetailPage() {
                 {/* Economic Indicators */}
                 {district.demographics.economic && (
                   <div className="bg-white rounded-lg border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Economic Indicators</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Economic Indicators
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       <div>
                         <div className="text-lg font-bold text-green-600">
@@ -767,7 +875,9 @@ export default function DistrictDetailPage() {
                 {/* Education Levels */}
                 {district.demographics.education && (
                   <div className="bg-white rounded-lg border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Educational Attainment</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Educational Attainment
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       <div>
                         <div className="text-lg font-bold text-blue-600">
@@ -812,7 +922,9 @@ export default function DistrictDetailPage() {
                 {/* Housing Characteristics */}
                 {district.demographics.housing && (
                   <div className="bg-white rounded-lg border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Housing Characteristics</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Housing Characteristics
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       <div>
                         <div className="text-lg font-bold text-blue-600">
@@ -851,7 +963,9 @@ export default function DistrictDetailPage() {
                 {/* Transportation & Commuting */}
                 {district.demographics.transportation && (
                   <div className="bg-white rounded-lg border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Transportation & Commuting</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Transportation & Commuting
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div>
                         <div className="text-lg font-bold text-blue-600">
@@ -878,7 +992,9 @@ export default function DistrictDetailPage() {
                 {/* Social Characteristics */}
                 {district.demographics.social && (
                   <div className="bg-white rounded-lg border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Social Characteristics</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Social Characteristics
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                       <div>
                         <div className="text-lg font-bold text-blue-600">
@@ -918,8 +1034,10 @@ export default function DistrictDetailPage() {
 
             {activeTab === 'politics' && (
               <div className="space-y-8">
-                <h2 className="text-2xl font-bold text-gray-900">Political Analysis & Voting Patterns</h2>
-                
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Political Analysis & Voting Patterns
+                </h2>
+
                 {/* Political Overview Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
@@ -928,14 +1046,20 @@ export default function DistrictDetailPage() {
                     </div>
                     <p className="text-sm text-blue-700 mt-1">Cook PVI Rating</p>
                     <div className="mt-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        district.political.cookPVI.startsWith('D+') ? 'bg-blue-200 text-blue-800' :
-                        district.political.cookPVI.startsWith('R+') ? 'bg-red-200 text-red-800' :
-                        'bg-gray-200 text-gray-800'
-                      }`}>
-                        {district.political.cookPVI.startsWith('D+') ? 'Democratic Lean' :
-                         district.political.cookPVI.startsWith('R+') ? 'Republican Lean' :
-                         'Neutral'}
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          district.political.cookPVI.startsWith('D+')
+                            ? 'bg-blue-200 text-blue-800'
+                            : district.political.cookPVI.startsWith('R+')
+                              ? 'bg-red-200 text-red-800'
+                              : 'bg-gray-200 text-gray-800'
+                        }`}
+                      >
+                        {district.political.cookPVI.startsWith('D+')
+                          ? 'Democratic Lean'
+                          : district.political.cookPVI.startsWith('R+')
+                            ? 'Republican Lean'
+                            : 'Neutral'}
                       </span>
                     </div>
                   </div>
@@ -945,14 +1069,20 @@ export default function DistrictDetailPage() {
                     </div>
                     <p className="text-sm text-green-700 mt-1">Last Election Margin</p>
                     <div className="mt-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        district.political.lastElection.margin < 5 ? 'bg-red-200 text-red-800' :
-                        district.political.lastElection.margin < 10 ? 'bg-yellow-200 text-yellow-800' :
-                        'bg-green-200 text-green-800'
-                      }`}>
-                        {district.political.lastElection.margin < 5 ? 'Highly Competitive' :
-                         district.political.lastElection.margin < 10 ? 'Competitive' :
-                         'Safe'}
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          district.political.lastElection.margin < 5
+                            ? 'bg-red-200 text-red-800'
+                            : district.political.lastElection.margin < 10
+                              ? 'bg-yellow-200 text-yellow-800'
+                              : 'bg-green-200 text-green-800'
+                        }`}
+                      >
+                        {district.political.lastElection.margin < 5
+                          ? 'Highly Competitive'
+                          : district.political.lastElection.margin < 10
+                            ? 'Competitive'
+                            : 'Safe'}
                       </span>
                     </div>
                   </div>
@@ -962,14 +1092,20 @@ export default function DistrictDetailPage() {
                     </div>
                     <p className="text-sm text-purple-700 mt-1">Voter Turnout</p>
                     <div className="mt-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        district.political.lastElection.turnout > 70 ? 'bg-green-200 text-green-800' :
-                        district.political.lastElection.turnout > 60 ? 'bg-yellow-200 text-yellow-800' :
-                        'bg-red-200 text-red-800'
-                      }`}>
-                        {district.political.lastElection.turnout > 70 ? 'High' :
-                         district.political.lastElection.turnout > 60 ? 'Moderate' :
-                         'Low'}
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          district.political.lastElection.turnout > 70
+                            ? 'bg-green-200 text-green-800'
+                            : district.political.lastElection.turnout > 60
+                              ? 'bg-yellow-200 text-yellow-800'
+                              : 'bg-red-200 text-red-800'
+                        }`}
+                      >
+                        {district.political.lastElection.turnout > 70
+                          ? 'High'
+                          : district.political.lastElection.turnout > 60
+                            ? 'Moderate'
+                            : 'Low'}
                       </span>
                     </div>
                   </div>
@@ -980,7 +1116,14 @@ export default function DistrictDetailPage() {
                     <p className="text-sm text-orange-700 mt-1">Registered Voters</p>
                     <div className="mt-2">
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-200 text-orange-800">
-                        {district.demographics ? Math.round((district.political.registeredVoters / district.demographics.population) * 100) : 0}% of Population
+                        {district.demographics
+                          ? Math.round(
+                              (district.political.registeredVoters /
+                                district.demographics.population) *
+                                100
+                            )
+                          : 0}
+                        % of Population
                       </span>
                     </div>
                   </div>
@@ -988,7 +1131,9 @@ export default function DistrictDetailPage() {
 
                 {/* Voting Patterns Analysis */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Voting Patterns & Behavior</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Voting Patterns & Behavior
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
                       <h4 className="font-medium text-gray-800 mb-3">Partisan Voting History</h4>
@@ -996,48 +1141,78 @@ export default function DistrictDetailPage() {
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">2022 House</span>
                           <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              district.representative.party === 'D' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
-                            }`}>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${
+                                district.representative.party === 'D'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
                               {district.representative.party === 'D' ? 'Democratic' : 'Republican'}
                             </span>
-                            <span className="text-sm font-medium">{district.political.lastElection.margin.toFixed(1)}%</span>
+                            <span className="text-sm font-medium">
+                              {district.political.lastElection.margin.toFixed(1)}%
+                            </span>
                           </div>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">2020 House</span>
                           <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              district.representative.party === 'D' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
-                            }`}>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${
+                                district.representative.party === 'D'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
                               {district.representative.party === 'D' ? 'Democratic' : 'Republican'}
                             </span>
-                            <span className="text-sm font-medium">{(district.political.lastElection.margin + Math.random() * 4 - 2).toFixed(1)}%</span>
+                            <span className="text-sm font-medium">
+                              {(
+                                district.political.lastElection.margin +
+                                Math.random() * 4 -
+                                2
+                              ).toFixed(1)}
+                              %
+                            </span>
                           </div>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">2018 House</span>
                           <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              Math.random() > 0.6 ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
-                            }`}>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${
+                                Math.random() > 0.6
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
                               {Math.random() > 0.6 ? 'Democratic' : 'Republican'}
                             </span>
-                            <span className="text-sm font-medium">{(district.political.lastElection.margin + Math.random() * 6 - 3).toFixed(1)}%</span>
+                            <span className="text-sm font-medium">
+                              {(
+                                district.political.lastElection.margin +
+                                Math.random() * 6 -
+                                3
+                              ).toFixed(1)}
+                              %
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-medium text-gray-800 mb-3">Turnout Trends</h4>
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">2022 Midterm</span>
                           <div className="flex items-center space-x-2">
-                            <span className="text-sm font-medium">{district.political.lastElection.turnout}%</span>
+                            <span className="text-sm font-medium">
+                              {district.political.lastElection.turnout}%
+                            </span>
                             <div className="w-16 bg-gray-200 rounded-full h-2">
-                              <div 
+                              <div
                                 className="bg-blue-600 h-2 rounded-full"
                                 style={{ width: `${district.political.lastElection.turnout}%` }}
                               ></div>
@@ -1047,11 +1222,15 @@ export default function DistrictDetailPage() {
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">2020 Presidential</span>
                           <div className="flex items-center space-x-2">
-                            <span className="text-sm font-medium">{Math.min(district.political.lastElection.turnout + 15, 85)}%</span>
+                            <span className="text-sm font-medium">
+                              {Math.min(district.political.lastElection.turnout + 15, 85)}%
+                            </span>
                             <div className="w-16 bg-gray-200 rounded-full h-2">
-                              <div 
+                              <div
                                 className="bg-green-600 h-2 rounded-full"
-                                style={{ width: `${Math.min(district.political.lastElection.turnout + 15, 85)}%` }}
+                                style={{
+                                  width: `${Math.min(district.political.lastElection.turnout + 15, 85)}%`,
+                                }}
                               ></div>
                             </div>
                           </div>
@@ -1059,11 +1238,15 @@ export default function DistrictDetailPage() {
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">2018 Midterm</span>
                           <div className="flex items-center space-x-2">
-                            <span className="text-sm font-medium">{Math.max(district.political.lastElection.turnout - 8, 45)}%</span>
+                            <span className="text-sm font-medium">
+                              {Math.max(district.political.lastElection.turnout - 8, 45)}%
+                            </span>
                             <div className="w-16 bg-gray-200 rounded-full h-2">
-                              <div 
+                              <div
                                 className="bg-purple-600 h-2 rounded-full"
-                                style={{ width: `${Math.max(district.political.lastElection.turnout - 8, 45)}%` }}
+                                style={{
+                                  width: `${Math.max(district.political.lastElection.turnout - 8, 45)}%`,
+                                }}
                               ></div>
                             </div>
                           </div>
@@ -1075,13 +1258,18 @@ export default function DistrictDetailPage() {
 
                 {/* Political Competitiveness Analysis */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Competitiveness Analysis</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Competitiveness Analysis
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h4 className="font-medium text-gray-800 mb-2">Electoral Volatility</h4>
                       <div className="text-2xl font-bold text-purple-600">
-                        {district.political.lastElection.margin < 5 ? 'High' : 
-                         district.political.lastElection.margin < 10 ? 'Medium' : 'Low'}
+                        {district.political.lastElection.margin < 5
+                          ? 'High'
+                          : district.political.lastElection.margin < 10
+                            ? 'Medium'
+                            : 'Low'}
                       </div>
                       <p className="text-sm text-gray-600 mt-1">
                         Based on margin variations over time
@@ -1090,29 +1278,34 @@ export default function DistrictDetailPage() {
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h4 className="font-medium text-gray-800 mb-2">Swing Potential</h4>
                       <div className="text-2xl font-bold text-orange-600">
-                        {district.political.cookPVI === 'EVEN' ? 'High' :
-                         district.political.cookPVI.includes('+') && parseInt(district.political.cookPVI.split('+')[1]) < 5 ? 'Medium' : 'Low'}
+                        {district.political.cookPVI === 'EVEN'
+                          ? 'High'
+                          : district.political.cookPVI.includes('+') &&
+                              parseInt(district.political.cookPVI.split('+')[1]) < 5
+                            ? 'Medium'
+                            : 'Low'}
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Likelihood of changing parties
-                      </p>
+                      <p className="text-sm text-gray-600 mt-1">Likelihood of changing parties</p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h4 className="font-medium text-gray-800 mb-2">Engagement Score</h4>
                       <div className="text-2xl font-bold text-blue-600">
-                        {district.political.lastElection.turnout > 70 ? 'High' :
-                         district.political.lastElection.turnout > 60 ? 'Medium' : 'Low'}
+                        {district.political.lastElection.turnout > 70
+                          ? 'High'
+                          : district.political.lastElection.turnout > 60
+                            ? 'Medium'
+                            : 'Low'}
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Voter participation levels
-                      </p>
+                      <p className="text-sm text-gray-600 mt-1">Voter participation levels</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Demographic Political Correlations */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Demographic-Political Correlations</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Demographic-Political Correlations
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
                       <h4 className="font-medium text-gray-800 mb-3">Key Political Indicators</h4>
@@ -1120,45 +1313,59 @@ export default function DistrictDetailPage() {
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">Education Impact</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {district.demographics && district.demographics.bachelor_degree_percent > 35 ? 'High' :
-                             district.demographics && district.demographics.bachelor_degree_percent > 25 ? 'Medium' : 'Low'}
+                            {district.demographics &&
+                            district.demographics.bachelor_degree_percent > 35
+                              ? 'High'
+                              : district.demographics &&
+                                  district.demographics.bachelor_degree_percent > 25
+                                ? 'Medium'
+                                : 'Low'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">Urban/Rural Split</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {district.demographics && district.demographics.urbanPercentage > 60 ? 'Urban' :
-                             district.demographics && district.demographics.urbanPercentage > 30 ? 'Mixed' : 'Rural'}
+                            {district.demographics && district.demographics.urbanPercentage > 60
+                              ? 'Urban'
+                              : district.demographics && district.demographics.urbanPercentage > 30
+                                ? 'Mixed'
+                                : 'Rural'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">Income Influence</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {district.demographics && district.demographics.medianIncome > 75000 ? 'High' :
-                             district.demographics && district.demographics.medianIncome > 55000 ? 'Medium' : 'Low'}
+                            {district.demographics && district.demographics.medianIncome > 75000
+                              ? 'High'
+                              : district.demographics && district.demographics.medianIncome > 55000
+                                ? 'Medium'
+                                : 'Low'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">Age Distribution</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {district.demographics && district.demographics.medianAge < 35 ? 'Young' :
-                             district.demographics && district.demographics.medianAge < 45 ? 'Mixed' : 'Mature'}
+                            {district.demographics && district.demographics.medianAge < 35
+                              ? 'Young'
+                              : district.demographics && district.demographics.medianAge < 45
+                                ? 'Mixed'
+                                : 'Mature'}
                           </span>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-medium text-gray-800 mb-3">Political Predictions</h4>
                       <div className="space-y-3">
                         <div className="bg-gray-50 rounded-lg p-3">
                           <p className="text-sm font-medium text-gray-900">2024 Outlook</p>
                           <p className="text-sm text-gray-600 mt-1">
-                            {district.political.lastElection.margin < 5 ? 
-                              'Highly competitive race expected. Demographic shifts may influence outcome.' :
-                              district.political.lastElection.margin < 10 ?
-                              'Competitive race likely. Incumbent has slight advantage.' :
-                              'Likely to remain with current party. Focus on turnout operations.'}
+                            {district.political.lastElection.margin < 5
+                              ? 'Highly competitive race expected. Demographic shifts may influence outcome.'
+                              : district.political.lastElection.margin < 10
+                                ? 'Competitive race likely. Incumbent has slight advantage.'
+                                : 'Likely to remain with current party. Focus on turnout operations.'}
                           </p>
                         </div>
                         <div className="bg-gray-50 rounded-lg p-3">
@@ -1177,7 +1384,9 @@ export default function DistrictDetailPage() {
 
                 {/* Historical Election Data */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Historical Election Performance</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Historical Election Performance
+                  </h3>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
@@ -1194,40 +1403,72 @@ export default function DistrictDetailPage() {
                           <td className="py-2 px-3 font-medium">2022</td>
                           <td className="py-2 px-3">Midterm</td>
                           <td className="py-2 px-3">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              district.representative.party === 'D' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
-                            }`}>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${
+                                district.representative.party === 'D'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
                               {district.representative.party === 'D' ? 'Democratic' : 'Republican'}
                             </span>
                           </td>
-                          <td className="py-2 px-3">{district.political.lastElection.margin.toFixed(1)}%</td>
+                          <td className="py-2 px-3">
+                            {district.political.lastElection.margin.toFixed(1)}%
+                          </td>
                           <td className="py-2 px-3">{district.political.lastElection.turnout}%</td>
                         </tr>
                         <tr className="border-b border-gray-100">
                           <td className="py-2 px-3 font-medium">2020</td>
                           <td className="py-2 px-3">Presidential</td>
                           <td className="py-2 px-3">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              district.representative.party === 'D' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
-                            }`}>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${
+                                district.representative.party === 'D'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
                               {district.representative.party === 'D' ? 'Democratic' : 'Republican'}
                             </span>
                           </td>
-                          <td className="py-2 px-3">{(district.political.lastElection.margin + Math.random() * 4 - 2).toFixed(1)}%</td>
-                          <td className="py-2 px-3">{Math.min(district.political.lastElection.turnout + 15, 85)}%</td>
+                          <td className="py-2 px-3">
+                            {(
+                              district.political.lastElection.margin +
+                              Math.random() * 4 -
+                              2
+                            ).toFixed(1)}
+                            %
+                          </td>
+                          <td className="py-2 px-3">
+                            {Math.min(district.political.lastElection.turnout + 15, 85)}%
+                          </td>
                         </tr>
                         <tr className="border-b border-gray-100">
                           <td className="py-2 px-3 font-medium">2018</td>
                           <td className="py-2 px-3">Midterm</td>
                           <td className="py-2 px-3">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              Math.random() > 0.6 ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
-                            }`}>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${
+                                Math.random() > 0.6
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
                               {Math.random() > 0.6 ? 'Democratic' : 'Republican'}
                             </span>
                           </td>
-                          <td className="py-2 px-3">{(district.political.lastElection.margin + Math.random() * 6 - 3).toFixed(1)}%</td>
-                          <td className="py-2 px-3">{Math.max(district.political.lastElection.turnout - 8, 45)}%</td>
+                          <td className="py-2 px-3">
+                            {(
+                              district.political.lastElection.margin +
+                              Math.random() * 6 -
+                              3
+                            ).toFixed(1)}
+                            %
+                          </td>
+                          <td className="py-2 px-3">
+                            {Math.max(district.political.lastElection.turnout - 8, 45)}%
+                          </td>
                         </tr>
                       </tbody>
                     </table>
@@ -1236,7 +1477,9 @@ export default function DistrictDetailPage() {
 
                 {/* Political Intelligence Summary */}
                 <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Political Intelligence Summary</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Political Intelligence Summary
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <h4 className="font-medium text-blue-900 mb-2">Electoral Strengths</h4>
@@ -1247,12 +1490,14 @@ export default function DistrictDetailPage() {
                         {district.political.lastElection.margin > 10 && (
                           <li>• Stable electoral base</li>
                         )}
-                        {district.demographics && district.demographics.bachelor_degree_percent > 35 && (
-                          <li>• Highly educated electorate</li>
-                        )}
-                        {district.demographics?.economic && district.demographics.economic.economicHealthIndex > 70 && (
-                          <li>• Strong economic fundamentals</li>
-                        )}
+                        {district.demographics &&
+                          district.demographics.bachelor_degree_percent > 35 && (
+                            <li>• Highly educated electorate</li>
+                          )}
+                        {district.demographics?.economic &&
+                          district.demographics.economic.economicHealthIndex > 70 && (
+                            <li>• Strong economic fundamentals</li>
+                          )}
                         {district.demographics && district.demographics.diversityIndex > 60 && (
                           <li>• Diverse coalition potential</li>
                         )}
@@ -1286,30 +1531,39 @@ export default function DistrictDetailPage() {
             {activeTab === 'economy' && (
               <div className="space-y-8">
                 <h2 className="text-2xl font-bold text-gray-900">Economic Profile</h2>
-                
+
                 {/* Economic Overview Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-6">
                     <div className="text-2xl font-bold text-green-900">
-                      {district.demographics ? formatCurrency(district.demographics.medianIncome) : 'N/A'}
+                      {district.demographics
+                        ? formatCurrency(district.demographics.medianIncome)
+                        : 'N/A'}
                     </div>
                     <p className="text-sm text-green-700 mt-1">Median Household Income</p>
                   </div>
                   <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
                     <div className="text-2xl font-bold text-blue-900">
-                      {district.demographics?.economic ? formatCurrency(district.demographics.economic.medianHomeValue) : 'N/A'}
+                      {district.demographics?.economic
+                        ? formatCurrency(district.demographics.economic.medianHomeValue)
+                        : 'N/A'}
                     </div>
                     <p className="text-sm text-blue-700 mt-1">Median Home Value</p>
                   </div>
                   <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6">
                     <div className="text-2xl font-bold text-purple-900">
-                      {district.demographics?.economic ? formatCurrency(district.demographics.economic.medianGrossRent) : 'N/A'}
+                      {district.demographics?.economic
+                        ? formatCurrency(district.demographics.economic.medianGrossRent)
+                        : 'N/A'}
                     </div>
                     <p className="text-sm text-purple-700 mt-1">Median Gross Rent</p>
                   </div>
                   <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-6">
                     <div className="text-2xl font-bold text-red-900">
-                      {district.demographics?.economic ? district.demographics.economic.unemploymentRate.toFixed(1) : 'N/A'}%
+                      {district.demographics?.economic
+                        ? district.demographics.economic.unemploymentRate.toFixed(1)
+                        : 'N/A'}
+                      %
                     </div>
                     <p className="text-sm text-red-700 mt-1">Unemployment Rate</p>
                   </div>
@@ -1317,11 +1571,15 @@ export default function DistrictDetailPage() {
 
                 {/* Economic Indicators */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Economic Indicators</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Key Economic Indicators
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
                       <div className="text-lg font-bold text-green-600">
-                        {district.demographics ? formatCurrency(district.demographics.medianIncome) : 'N/A'}
+                        {district.demographics
+                          ? formatCurrency(district.demographics.medianIncome)
+                          : 'N/A'}
                       </div>
                       <p className="text-sm text-gray-600">Median Household Income</p>
                     </div>
@@ -1333,25 +1591,34 @@ export default function DistrictDetailPage() {
                     </div>
                     <div>
                       <div className="text-lg font-bold text-blue-600">
-                        {district.demographics?.economic ? district.demographics.economic.laborForceParticipation.toFixed(1) : 'N/A'}%
+                        {district.demographics?.economic
+                          ? district.demographics.economic.laborForceParticipation.toFixed(1)
+                          : 'N/A'}
+                        %
                       </div>
                       <p className="text-sm text-gray-600">Labor Force Participation</p>
                     </div>
                     <div>
                       <div className="text-lg font-bold text-purple-600">
-                        {district.demographics?.economic ? formatCurrency(district.demographics.economic.medianHomeValue) : 'N/A'}
+                        {district.demographics?.economic
+                          ? formatCurrency(district.demographics.economic.medianHomeValue)
+                          : 'N/A'}
                       </div>
                       <p className="text-sm text-gray-600">Median Home Value</p>
                     </div>
                     <div>
                       <div className="text-lg font-bold text-orange-600">
-                        {district.demographics?.economic ? formatCurrency(district.demographics.economic.medianGrossRent) : 'N/A'}
+                        {district.demographics?.economic
+                          ? formatCurrency(district.demographics.economic.medianGrossRent)
+                          : 'N/A'}
                       </div>
                       <p className="text-sm text-gray-600">Median Gross Rent</p>
                     </div>
                     <div>
                       <div className="text-lg font-bold text-indigo-600">
-                        {district.demographics?.economic ? formatCurrency(district.demographics.economic.medianContractRent) : 'N/A'}
+                        {district.demographics?.economic
+                          ? formatCurrency(district.demographics.economic.medianContractRent)
+                          : 'N/A'}
                       </div>
                       <p className="text-sm text-gray-600">Median Contract Rent</p>
                     </div>
@@ -1399,7 +1666,9 @@ export default function DistrictDetailPage() {
 
                 {/* Employment & Workforce */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Employment & Workforce</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Employment & Workforce
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
                       <h4 className="font-medium text-gray-800 mb-3">Labor Market Stats</h4>
@@ -1407,24 +1676,33 @@ export default function DistrictDetailPage() {
                         <div className="flex justify-between">
                           <span className="text-gray-700">Labor Force Participation</span>
                           <span className="font-semibold">
-                            {district.demographics?.economic ? district.demographics.economic.laborForceParticipation.toFixed(1) : 'N/A'}%
+                            {district.demographics?.economic
+                              ? district.demographics.economic.laborForceParticipation.toFixed(1)
+                              : 'N/A'}
+                            %
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-700">Unemployment Rate</span>
                           <span className="font-semibold">
-                            {district.demographics?.economic ? district.demographics.economic.unemploymentRate.toFixed(1) : 'N/A'}%
+                            {district.demographics?.economic
+                              ? district.demographics.economic.unemploymentRate.toFixed(1)
+                              : 'N/A'}
+                            %
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-700">Work From Home</span>
                           <span className="font-semibold">
-                            {district.demographics?.transportation ? district.demographics.transportation.workFromHomePercent.toFixed(1) : 'N/A'}%
+                            {district.demographics?.transportation
+                              ? district.demographics.transportation.workFromHomePercent.toFixed(1)
+                              : 'N/A'}
+                            %
                           </span>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-medium text-gray-800 mb-3">Major Industries</h4>
                       <div className="space-y-2 text-sm">
@@ -1456,33 +1734,53 @@ export default function DistrictDetailPage() {
                 {/* Advanced Economic Indicators */}
                 {district.demographics?.economic && (
                   <div className="bg-white rounded-lg border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Advanced Economic Indicators</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Advanced Economic Indicators
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-blue-600">Economic Health Index</p>
+                            <p className="text-sm font-medium text-blue-600">
+                              Economic Health Index
+                            </p>
                             <p className="text-xl font-bold text-blue-900">
                               {district.demographics.economic.economicHealthIndex.toFixed(0)}/100
                             </p>
                           </div>
                           <div className="text-blue-600">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            <svg
+                              className="w-6 h-6"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                              />
                             </svg>
                           </div>
                         </div>
                         <div className="mt-2">
                           <div className="bg-blue-200 rounded-full h-2">
-                            <div 
+                            <div
                               className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                              style={{ width: `${district.demographics.economic.economicHealthIndex}%` }}
+                              style={{
+                                width: `${district.demographics.economic.economicHealthIndex}%`,
+                              }}
                             ></div>
                           </div>
                           <p className="text-xs text-blue-700 mt-1">
-                            {district.demographics.economic.economicHealthIndex > 80 ? 'Excellent' :
-                             district.demographics.economic.economicHealthIndex > 60 ? 'Good' :
-                             district.demographics.economic.economicHealthIndex > 40 ? 'Fair' : 'Poor'}
+                            {district.demographics.economic.economicHealthIndex > 80
+                              ? 'Excellent'
+                              : district.demographics.economic.economicHealthIndex > 60
+                                ? 'Good'
+                                : district.demographics.economic.economicHealthIndex > 40
+                                  ? 'Fair'
+                                  : 'Poor'}
                           </p>
                         </div>
                       </div>
@@ -1496,22 +1794,38 @@ export default function DistrictDetailPage() {
                             </p>
                           </div>
                           <div className="text-green-600">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            <svg
+                              className="w-6 h-6"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                              />
                             </svg>
                           </div>
                         </div>
                         <div className="mt-2">
                           <div className="bg-green-200 rounded-full h-2">
-                            <div 
+                            <div
                               className="bg-green-600 h-2 rounded-full transition-all duration-500"
-                              style={{ width: `${district.demographics.economic.industryDiversityIndex}%` }}
+                              style={{
+                                width: `${district.demographics.economic.industryDiversityIndex}%`,
+                              }}
                             ></div>
                           </div>
                           <p className="text-xs text-green-700 mt-1">
-                            {district.demographics.economic.industryDiversityIndex > 80 ? 'Highly Diverse' :
-                             district.demographics.economic.industryDiversityIndex > 60 ? 'Diverse' :
-                             district.demographics.economic.industryDiversityIndex > 40 ? 'Moderate' : 'Limited'}
+                            {district.demographics.economic.industryDiversityIndex > 80
+                              ? 'Highly Diverse'
+                              : district.demographics.economic.industryDiversityIndex > 60
+                                ? 'Diverse'
+                                : district.demographics.economic.industryDiversityIndex > 40
+                                  ? 'Moderate'
+                                  : 'Limited'}
                           </p>
                         </div>
                       </div>
@@ -1519,28 +1833,46 @@ export default function DistrictDetailPage() {
                       <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-purple-600">Job Growth Potential</p>
+                            <p className="text-sm font-medium text-purple-600">
+                              Job Growth Potential
+                            </p>
                             <p className="text-xl font-bold text-purple-900">
                               {district.demographics.economic.jobGrowthPotential.toFixed(0)}/100
                             </p>
                           </div>
                           <div className="text-purple-600">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                            <svg
+                              className="w-6 h-6"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                              />
                             </svg>
                           </div>
                         </div>
                         <div className="mt-2">
                           <div className="bg-purple-200 rounded-full h-2">
-                            <div 
+                            <div
                               className="bg-purple-600 h-2 rounded-full transition-all duration-500"
-                              style={{ width: `${district.demographics.economic.jobGrowthPotential}%` }}
+                              style={{
+                                width: `${district.demographics.economic.jobGrowthPotential}%`,
+                              }}
                             ></div>
                           </div>
                           <p className="text-xs text-purple-700 mt-1">
-                            {district.demographics.economic.jobGrowthPotential > 80 ? 'Excellent' :
-                             district.demographics.economic.jobGrowthPotential > 60 ? 'Good' :
-                             district.demographics.economic.jobGrowthPotential > 40 ? 'Fair' : 'Limited'}
+                            {district.demographics.economic.jobGrowthPotential > 80
+                              ? 'Excellent'
+                              : district.demographics.economic.jobGrowthPotential > 60
+                                ? 'Good'
+                                : district.demographics.economic.jobGrowthPotential > 40
+                                  ? 'Fair'
+                                  : 'Limited'}
                           </p>
                         </div>
                       </div>
@@ -1551,33 +1883,48 @@ export default function DistrictDetailPage() {
                 {/* Housing Affordability Analysis */}
                 {district.demographics?.economic && (
                   <div className="bg-white rounded-lg border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Housing Affordability Analysis</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Housing Affordability Analysis
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <h4 className="font-medium text-gray-800 mb-3">Affordability Metrics</h4>
                         <div className="space-y-4">
                           <div>
                             <div className="flex justify-between mb-1">
-                              <span className="text-sm text-gray-600">Home Price-to-Income Ratio</span>
+                              <span className="text-sm text-gray-600">
+                                Home Price-to-Income Ratio
+                              </span>
                               <span className="text-sm font-medium">
-                                {district.demographics.economic.housingAffordabilityRatio.toFixed(1)}x
+                                {district.demographics.economic.housingAffordabilityRatio.toFixed(
+                                  1
+                                )}
+                                x
                               </span>
                             </div>
                             <div className="bg-gray-200 rounded-full h-2">
-                              <div 
+                              <div
                                 className={`h-2 rounded-full transition-all duration-500 ${
-                                  district.demographics.economic.housingAffordabilityRatio > 5 ? 'bg-red-500' :
-                                  district.demographics.economic.housingAffordabilityRatio > 3 ? 'bg-yellow-500' : 'bg-green-500'
+                                  district.demographics.economic.housingAffordabilityRatio > 5
+                                    ? 'bg-red-500'
+                                    : district.demographics.economic.housingAffordabilityRatio > 3
+                                      ? 'bg-yellow-500'
+                                      : 'bg-green-500'
                                 }`}
-                                style={{ width: `${Math.min(district.demographics.economic.housingAffordabilityRatio * 15, 100)}%` }}
+                                style={{
+                                  width: `${Math.min(district.demographics.economic.housingAffordabilityRatio * 15, 100)}%`,
+                                }}
                               ></div>
                             </div>
                             <p className="text-xs text-gray-500 mt-1">
-                              {district.demographics.economic.housingAffordabilityRatio > 5 ? 'Very Expensive' :
-                               district.demographics.economic.housingAffordabilityRatio > 3 ? 'Expensive' : 'Affordable'}
+                              {district.demographics.economic.housingAffordabilityRatio > 5
+                                ? 'Very Expensive'
+                                : district.demographics.economic.housingAffordabilityRatio > 3
+                                  ? 'Expensive'
+                                  : 'Affordable'}
                             </p>
                           </div>
-                          
+
                           <div>
                             <div className="flex justify-between mb-1">
                               <span className="text-sm text-gray-600">Rent Burden Ratio</span>
@@ -1586,52 +1933,66 @@ export default function DistrictDetailPage() {
                               </span>
                             </div>
                             <div className="bg-gray-200 rounded-full h-2">
-                              <div 
+                              <div
                                 className={`h-2 rounded-full transition-all duration-500 ${
-                                  district.demographics.economic.rentBurdenRatio > 0.35 ? 'bg-red-500' :
-                                  district.demographics.economic.rentBurdenRatio > 0.30 ? 'bg-yellow-500' : 'bg-green-500'
+                                  district.demographics.economic.rentBurdenRatio > 0.35
+                                    ? 'bg-red-500'
+                                    : district.demographics.economic.rentBurdenRatio > 0.3
+                                      ? 'bg-yellow-500'
+                                      : 'bg-green-500'
                                 }`}
-                                style={{ width: `${Math.min(district.demographics.economic.rentBurdenRatio * 200, 100)}%` }}
+                                style={{
+                                  width: `${Math.min(district.demographics.economic.rentBurdenRatio * 200, 100)}%`,
+                                }}
                               ></div>
                             </div>
                             <p className="text-xs text-gray-500 mt-1">
-                              {district.demographics.economic.rentBurdenRatio > 0.35 ? 'High Burden' :
-                               district.demographics.economic.rentBurdenRatio > 0.30 ? 'Moderate Burden' : 'Affordable'}
+                              {district.demographics.economic.rentBurdenRatio > 0.35
+                                ? 'High Burden'
+                                : district.demographics.economic.rentBurdenRatio > 0.3
+                                  ? 'Moderate Burden'
+                                  : 'Affordable'}
                             </p>
                           </div>
                         </div>
                       </div>
-                      
+
                       <div>
                         <h4 className="font-medium text-gray-800 mb-3">Housing Market Insights</h4>
                         <div className="space-y-3 text-sm">
                           <div className="bg-gray-50 rounded-lg p-3">
                             <p className="font-medium text-gray-900">
-                              {district.demographics.economic.housingAffordabilityRatio <= 3 ? 'Affordable' : 
-                               district.demographics.economic.housingAffordabilityRatio <= 5 ? 'Moderately Expensive' : 'Very Expensive'} Housing Market
+                              {district.demographics.economic.housingAffordabilityRatio <= 3
+                                ? 'Affordable'
+                                : district.demographics.economic.housingAffordabilityRatio <= 5
+                                  ? 'Moderately Expensive'
+                                  : 'Very Expensive'}{' '}
+                              Housing Market
                             </p>
                             <p className="text-gray-600 mt-1">
-                              {district.demographics.economic.housingAffordabilityRatio <= 3 ? 
-                                'Home prices are reasonable relative to local incomes' :
-                                district.demographics.economic.housingAffordabilityRatio <= 5 ?
-                                'Home prices are elevated but still accessible to many residents' :
-                                'Home prices may be challenging for many local residents'
-                              }
+                              {district.demographics.economic.housingAffordabilityRatio <= 3
+                                ? 'Home prices are reasonable relative to local incomes'
+                                : district.demographics.economic.housingAffordabilityRatio <= 5
+                                  ? 'Home prices are elevated but still accessible to many residents'
+                                  : 'Home prices may be challenging for many local residents'}
                             </p>
                           </div>
-                          
+
                           <div className="bg-gray-50 rounded-lg p-3">
                             <p className="font-medium text-gray-900">
-                              {district.demographics.economic.rentBurdenRatio <= 0.30 ? 'Reasonable' : 
-                               district.demographics.economic.rentBurdenRatio <= 0.35 ? 'Moderate' : 'High'} Rent Burden
+                              {district.demographics.economic.rentBurdenRatio <= 0.3
+                                ? 'Reasonable'
+                                : district.demographics.economic.rentBurdenRatio <= 0.35
+                                  ? 'Moderate'
+                                  : 'High'}{' '}
+                              Rent Burden
                             </p>
                             <p className="text-gray-600 mt-1">
-                              {district.demographics.economic.rentBurdenRatio <= 0.30 ? 
-                                'Rent costs are manageable for most households' :
-                                district.demographics.economic.rentBurdenRatio <= 0.35 ?
-                                'Rent costs are becoming a significant expense for many' :
-                                'Rent costs may strain household budgets'
-                              }
+                              {district.demographics.economic.rentBurdenRatio <= 0.3
+                                ? 'Rent costs are manageable for most households'
+                                : district.demographics.economic.rentBurdenRatio <= 0.35
+                                  ? 'Rent costs are becoming a significant expense for many'
+                                  : 'Rent costs may strain household budgets'}
                             </p>
                           </div>
                         </div>
@@ -1642,7 +2003,9 @@ export default function DistrictDetailPage() {
 
                 {/* Economic Health Assessment */}
                 <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Economic Health Assessment</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Economic Health Assessment
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <h4 className="font-medium text-green-900 mb-2">Economic Strengths</h4>
@@ -1650,27 +2013,34 @@ export default function DistrictDetailPage() {
                         {district.demographics && district.demographics.medianIncome > 65000 && (
                           <li>• High median household income</li>
                         )}
-                        {district.demographics?.economic && district.demographics.economic.unemploymentRate < 5 && (
-                          <li>• Low unemployment rate</li>
-                        )}
-                        {district.demographics?.housing && district.demographics.housing.homeOwnershipRate > 65 && (
-                          <li>• Strong home ownership</li>
-                        )}
-                        {district.demographics?.economic && district.demographics.economic.medianHomeValue > 200000 && (
-                          <li>• Strong real estate market</li>
-                        )}
-                        {district.demographics?.economic && district.demographics.economic.economicHealthIndex > 70 && (
-                          <li>• High economic health index</li>
-                        )}
-                        {district.demographics?.economic && district.demographics.economic.industryDiversityIndex > 75 && (
-                          <li>• Diverse economic base</li>
-                        )}
-                        {district.demographics?.economic && district.demographics.economic.jobGrowthPotential > 70 && (
-                          <li>• Strong job growth potential</li>
-                        )}
-                        {district.demographics?.transportation && district.demographics.transportation.workFromHomePercent > 10 && (
-                          <li>• Growing remote work flexibility</li>
-                        )}
+                        {district.demographics?.economic &&
+                          district.demographics.economic.unemploymentRate < 5 && (
+                            <li>• Low unemployment rate</li>
+                          )}
+                        {district.demographics?.housing &&
+                          district.demographics.housing.homeOwnershipRate > 65 && (
+                            <li>• Strong home ownership</li>
+                          )}
+                        {district.demographics?.economic &&
+                          district.demographics.economic.medianHomeValue > 200000 && (
+                            <li>• Strong real estate market</li>
+                          )}
+                        {district.demographics?.economic &&
+                          district.demographics.economic.economicHealthIndex > 70 && (
+                            <li>• High economic health index</li>
+                          )}
+                        {district.demographics?.economic &&
+                          district.demographics.economic.industryDiversityIndex > 75 && (
+                            <li>• Diverse economic base</li>
+                          )}
+                        {district.demographics?.economic &&
+                          district.demographics.economic.jobGrowthPotential > 70 && (
+                            <li>• Strong job growth potential</li>
+                          )}
+                        {district.demographics?.transportation &&
+                          district.demographics.transportation.workFromHomePercent > 10 && (
+                            <li>• Growing remote work flexibility</li>
+                          )}
                       </ul>
                     </div>
                     <div>
@@ -1679,30 +2049,39 @@ export default function DistrictDetailPage() {
                         {district.demographics && district.demographics.poverty_rate > 15 && (
                           <li>• High poverty rate</li>
                         )}
-                        {district.demographics?.economic && district.demographics.economic.unemploymentRate > 6 && (
-                          <li>• Elevated unemployment</li>
-                        )}
-                        {district.demographics?.housing && district.demographics.housing.vacancyRate > 10 && (
-                          <li>• High housing vacancy</li>
-                        )}
-                        {district.demographics?.economic && district.demographics.economic.medianGrossRent > district.demographics.medianIncome * 0.3 / 12 && (
-                          <li>• Housing affordability concerns</li>
-                        )}
-                        {district.demographics?.economic && district.demographics.economic.economicHealthIndex < 50 && (
-                          <li>• Low economic health index</li>
-                        )}
-                        {district.demographics?.economic && district.demographics.economic.industryDiversityIndex < 60 && (
-                          <li>• Limited industry diversity</li>
-                        )}
-                        {district.demographics?.economic && district.demographics.economic.jobGrowthPotential < 50 && (
-                          <li>• Limited job growth potential</li>
-                        )}
-                        {district.demographics?.economic && district.demographics.economic.housingAffordabilityRatio > 5 && (
-                          <li>• Very expensive housing market</li>
-                        )}
-                        {district.demographics?.economic && district.demographics.economic.rentBurdenRatio > 0.35 && (
-                          <li>• High rent burden on residents</li>
-                        )}
+                        {district.demographics?.economic &&
+                          district.demographics.economic.unemploymentRate > 6 && (
+                            <li>• Elevated unemployment</li>
+                          )}
+                        {district.demographics?.housing &&
+                          district.demographics.housing.vacancyRate > 10 && (
+                            <li>• High housing vacancy</li>
+                          )}
+                        {district.demographics?.economic &&
+                          district.demographics.economic.medianGrossRent >
+                            (district.demographics.medianIncome * 0.3) / 12 && (
+                            <li>• Housing affordability concerns</li>
+                          )}
+                        {district.demographics?.economic &&
+                          district.demographics.economic.economicHealthIndex < 50 && (
+                            <li>• Low economic health index</li>
+                          )}
+                        {district.demographics?.economic &&
+                          district.demographics.economic.industryDiversityIndex < 60 && (
+                            <li>• Limited industry diversity</li>
+                          )}
+                        {district.demographics?.economic &&
+                          district.demographics.economic.jobGrowthPotential < 50 && (
+                            <li>• Limited job growth potential</li>
+                          )}
+                        {district.demographics?.economic &&
+                          district.demographics.economic.housingAffordabilityRatio > 5 && (
+                            <li>• Very expensive housing market</li>
+                          )}
+                        {district.demographics?.economic &&
+                          district.demographics.economic.rentBurdenRatio > 0.35 && (
+                            <li>• High rent burden on residents</li>
+                          )}
                       </ul>
                     </div>
                   </div>
@@ -1733,35 +2112,49 @@ export default function DistrictDetailPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-gray-50 rounded-lg p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Counties & Cities</h3>
                     <div className="space-y-4">
                       <div>
                         <span className="text-sm font-medium text-gray-700">Counties:</span>
-                        <p className="text-gray-600 mt-1">{district.geography.counties.join(', ')}</p>
+                        <p className="text-gray-600 mt-1">
+                          {district.geography.counties.join(', ')}
+                        </p>
                       </div>
                       <div>
                         <span className="text-sm font-medium text-gray-700">Major Cities:</span>
-                        <p className="text-gray-600 mt-1">{district.geography.majorCities.join(', ')}</p>
+                        <p className="text-gray-600 mt-1">
+                          {district.geography.majorCities.join(', ')}
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-gray-50 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Transportation & Infrastructure</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Transportation & Infrastructure
+                  </h3>
                   <p className="text-gray-600">
-                    This district encompasses {district.geography.area.toLocaleString()} square miles across{' '}
-                    {district.geography.counties.length} {district.geography.counties.length === 1 ? 'county' : 'counties'}.
-                    Major population centers include {district.geography.majorCities.slice(0, 2).join(' and ')}.
-                    The district is {district.demographics?.urbanPercentage && district.demographics.urbanPercentage > 60 ? 'primarily urban' : 
-                    district.demographics?.urbanPercentage && district.demographics.urbanPercentage > 30 ? 'mixed urban-rural' : 'primarily rural'}.
+                    This district encompasses {district.geography.area.toLocaleString()} square
+                    miles across {district.geography.counties.length}{' '}
+                    {district.geography.counties.length === 1 ? 'county' : 'counties'}. Major
+                    population centers include{' '}
+                    {district.geography.majorCities.slice(0, 2).join(' and ')}. The district is{' '}
+                    {district.demographics?.urbanPercentage &&
+                    district.demographics.urbanPercentage > 60
+                      ? 'primarily urban'
+                      : district.demographics?.urbanPercentage &&
+                          district.demographics.urbanPercentage > 30
+                        ? 'mixed urban-rural'
+                        : 'primarily rural'}
+                    .
                   </p>
                 </div>
               </div>
             )}
-            
+
             {activeTab === 'comparative' && (
               <div className="space-y-8">
                 <div className="flex items-center justify-between">
@@ -1770,54 +2163,74 @@ export default function DistrictDetailPage() {
                     Compare with similar districts nationwide
                   </span>
                 </div>
-                
+
                 {/* Performance Dashboard */}
                 <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">District Performance Dashboard</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    District Performance Dashboard
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-indigo-600">
-                        {district.demographics?.economic ? district.demographics.economic.economicHealthIndex.toFixed(0) : 'N/A'}/100
+                        {district.demographics?.economic
+                          ? district.demographics.economic.economicHealthIndex.toFixed(0)
+                          : 'N/A'}
+                        /100
                       </div>
                       <p className="text-sm text-gray-600">Economic Health</p>
                       <div className="bg-gray-200 rounded-full h-2 mt-2">
-                        <div 
+                        <div
                           className="bg-indigo-600 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${district.demographics?.economic?.economicHealthIndex || 0}%` }}
+                          style={{
+                            width: `${district.demographics?.economic?.economicHealthIndex || 0}%`,
+                          }}
                         ></div>
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
-                        {district.demographics?.economic ? district.demographics.economic.industryDiversityIndex.toFixed(0) : 'N/A'}/100
+                        {district.demographics?.economic
+                          ? district.demographics.economic.industryDiversityIndex.toFixed(0)
+                          : 'N/A'}
+                        /100
                       </div>
                       <p className="text-sm text-gray-600">Industry Diversity</p>
                       <div className="bg-gray-200 rounded-full h-2 mt-2">
-                        <div 
+                        <div
                           className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${district.demographics?.economic?.industryDiversityIndex || 0}%` }}
+                          style={{
+                            width: `${district.demographics?.economic?.industryDiversityIndex || 0}%`,
+                          }}
                         ></div>
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
-                        {district.demographics?.economic ? district.demographics.economic.jobGrowthPotential.toFixed(0) : 'N/A'}/100
+                        {district.demographics?.economic
+                          ? district.demographics.economic.jobGrowthPotential.toFixed(0)
+                          : 'N/A'}
+                        /100
                       </div>
                       <p className="text-sm text-gray-600">Growth Potential</p>
                       <div className="bg-gray-200 rounded-full h-2 mt-2">
-                        <div 
+                        <div
                           className="bg-purple-600 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${district.demographics?.economic?.jobGrowthPotential || 0}%` }}
+                          style={{
+                            width: `${district.demographics?.economic?.jobGrowthPotential || 0}%`,
+                          }}
                         ></div>
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
-                        {district.demographics ? district.demographics.diversityIndex.toFixed(0) : 'N/A'}/100
+                        {district.demographics
+                          ? district.demographics.diversityIndex.toFixed(0)
+                          : 'N/A'}
+                        /100
                       </div>
                       <p className="text-sm text-gray-600">Diversity Index</p>
                       <div className="bg-gray-200 rounded-full h-2 mt-2">
-                        <div 
+                        <div
                           className="bg-green-600 h-2 rounded-full transition-all duration-500"
                           style={{ width: `${district.demographics?.diversityIndex || 0}%` }}
                         ></div>
@@ -1832,37 +2245,60 @@ export default function DistrictDetailPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-indigo-600">
-                        #{district.demographics ? Math.floor((district.demographics.medianIncome / 100000) * 100) + 50 : 'N/A'}
+                        #
+                        {district.demographics
+                          ? Math.floor((district.demographics.medianIncome / 100000) * 100) + 50
+                          : 'N/A'}
                       </div>
                       <p className="text-sm text-gray-600">Income Rank</p>
                       <p className="text-xs text-gray-500">out of 435 districts</p>
                       <div className="mt-2 text-xs">
-                        <span className={`px-2 py-1 rounded-full ${
-                          district.demographics && district.demographics.medianIncome > 80000 ? 'bg-green-100 text-green-800' :
-                          district.demographics && district.demographics.medianIncome > 60000 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {district.demographics && district.demographics.medianIncome > 80000 ? 'Top Quartile' :
-                           district.demographics && district.demographics.medianIncome > 60000 ? 'Above Average' :
-                           'Below Average'}
+                        <span
+                          className={`px-2 py-1 rounded-full ${
+                            district.demographics && district.demographics.medianIncome > 80000
+                              ? 'bg-green-100 text-green-800'
+                              : district.demographics && district.demographics.medianIncome > 60000
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {district.demographics && district.demographics.medianIncome > 80000
+                            ? 'Top Quartile'
+                            : district.demographics && district.demographics.medianIncome > 60000
+                              ? 'Above Average'
+                              : 'Below Average'}
                         </span>
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
-                        #{district.demographics ? Math.floor((district.demographics.bachelor_degree_percent / 50) * 100) + 30 : 'N/A'}
+                        #
+                        {district.demographics
+                          ? Math.floor((district.demographics.bachelor_degree_percent / 50) * 100) +
+                            30
+                          : 'N/A'}
                       </div>
                       <p className="text-sm text-gray-600">Education Rank</p>
                       <p className="text-xs text-gray-500">out of 435 districts</p>
                       <div className="mt-2 text-xs">
-                        <span className={`px-2 py-1 rounded-full ${
-                          district.demographics && district.demographics.bachelor_degree_percent > 35 ? 'bg-green-100 text-green-800' :
-                          district.demographics && district.demographics.bachelor_degree_percent > 25 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {district.demographics && district.demographics.bachelor_degree_percent > 35 ? 'Highly Educated' :
-                           district.demographics && district.demographics.bachelor_degree_percent > 25 ? 'Above Average' :
-                           'Below Average'}
+                        <span
+                          className={`px-2 py-1 rounded-full ${
+                            district.demographics &&
+                            district.demographics.bachelor_degree_percent > 35
+                              ? 'bg-green-100 text-green-800'
+                              : district.demographics &&
+                                  district.demographics.bachelor_degree_percent > 25
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {district.demographics &&
+                          district.demographics.bachelor_degree_percent > 35
+                            ? 'Highly Educated'
+                            : district.demographics &&
+                                district.demographics.bachelor_degree_percent > 25
+                              ? 'Above Average'
+                              : 'Below Average'}
                         </span>
                       </div>
                     </div>
@@ -1873,32 +2309,53 @@ export default function DistrictDetailPage() {
                       <p className="text-sm text-gray-600">Competitiveness Rank</p>
                       <p className="text-xs text-gray-500">out of 435 districts</p>
                       <div className="mt-2 text-xs">
-                        <span className={`px-2 py-1 rounded-full ${
-                          district.political.lastElection.margin < 5 ? 'bg-red-100 text-red-800' :
-                          district.political.lastElection.margin < 10 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {district.political.lastElection.margin < 5 ? 'Highly Competitive' :
-                           district.political.lastElection.margin < 10 ? 'Competitive' :
-                           'Safe'}
+                        <span
+                          className={`px-2 py-1 rounded-full ${
+                            district.political.lastElection.margin < 5
+                              ? 'bg-red-100 text-red-800'
+                              : district.political.lastElection.margin < 10
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-green-100 text-green-800'
+                          }`}
+                        >
+                          {district.political.lastElection.margin < 5
+                            ? 'Highly Competitive'
+                            : district.political.lastElection.margin < 10
+                              ? 'Competitive'
+                              : 'Safe'}
                         </span>
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
-                        #{district.demographics?.economic ? Math.floor((district.demographics.economic.economicHealthIndex / 100) * 200) + 100 : 'N/A'}
+                        #
+                        {district.demographics?.economic
+                          ? Math.floor(
+                              (district.demographics.economic.economicHealthIndex / 100) * 200
+                            ) + 100
+                          : 'N/A'}
                       </div>
                       <p className="text-sm text-gray-600">Economic Health Rank</p>
                       <p className="text-xs text-gray-500">out of 435 districts</p>
                       <div className="mt-2 text-xs">
-                        <span className={`px-2 py-1 rounded-full ${
-                          district.demographics?.economic && district.demographics.economic.economicHealthIndex > 80 ? 'bg-green-100 text-green-800' :
-                          district.demographics?.economic && district.demographics.economic.economicHealthIndex > 60 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {district.demographics?.economic && district.demographics.economic.economicHealthIndex > 80 ? 'Excellent' :
-                           district.demographics?.economic && district.demographics.economic.economicHealthIndex > 60 ? 'Good' :
-                           'Needs Improvement'}
+                        <span
+                          className={`px-2 py-1 rounded-full ${
+                            district.demographics?.economic &&
+                            district.demographics.economic.economicHealthIndex > 80
+                              ? 'bg-green-100 text-green-800'
+                              : district.demographics?.economic &&
+                                  district.demographics.economic.economicHealthIndex > 60
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {district.demographics?.economic &&
+                          district.demographics.economic.economicHealthIndex > 80
+                            ? 'Excellent'
+                            : district.demographics?.economic &&
+                                district.demographics.economic.economicHealthIndex > 60
+                              ? 'Good'
+                              : 'Needs Improvement'}
                         </span>
                       </div>
                     </div>
@@ -1909,23 +2366,70 @@ export default function DistrictDetailPage() {
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Similar Districts</h3>
                   <p className="text-sm text-gray-600 mb-4">
-                    Districts with similar demographics, economic profile, and political characteristics
+                    Districts with similar demographics, economic profile, and political
+                    characteristics
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {[
-                      { id: 'CA-15', name: 'California 15th', similarity: 92, party: 'D', income: 95000, education: 45.2 },
-                      { id: 'NY-03', name: 'New York 3rd', similarity: 89, party: 'R', income: 88000, education: 42.1 },
-                      { id: 'TX-07', name: 'Texas 7th', similarity: 87, party: 'R', income: 82000, education: 41.8 },
-                      { id: 'VA-11', name: 'Virginia 11th', similarity: 85, party: 'D', income: 91000, education: 46.3 },
-                      { id: 'WA-01', name: 'Washington 1st', similarity: 84, party: 'D', income: 87000, education: 43.7 },
-                      { id: 'CO-06', name: 'Colorado 6th', similarity: 83, party: 'D', income: 85000, education: 44.1 }
+                      {
+                        id: 'CA-15',
+                        name: 'California 15th',
+                        similarity: 92,
+                        party: 'D',
+                        income: 95000,
+                        education: 45.2,
+                      },
+                      {
+                        id: 'NY-03',
+                        name: 'New York 3rd',
+                        similarity: 89,
+                        party: 'R',
+                        income: 88000,
+                        education: 42.1,
+                      },
+                      {
+                        id: 'TX-07',
+                        name: 'Texas 7th',
+                        similarity: 87,
+                        party: 'R',
+                        income: 82000,
+                        education: 41.8,
+                      },
+                      {
+                        id: 'VA-11',
+                        name: 'Virginia 11th',
+                        similarity: 85,
+                        party: 'D',
+                        income: 91000,
+                        education: 46.3,
+                      },
+                      {
+                        id: 'WA-01',
+                        name: 'Washington 1st',
+                        similarity: 84,
+                        party: 'D',
+                        income: 87000,
+                        education: 43.7,
+                      },
+                      {
+                        id: 'CO-06',
+                        name: 'Colorado 6th',
+                        similarity: 83,
+                        party: 'D',
+                        income: 85000,
+                        education: 44.1,
+                      },
                     ].map((peer, index) => (
                       <div key={index} className="bg-gray-50 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-medium text-gray-900">{peer.name}</h4>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            peer.party === 'D' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
-                          }`}>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              peer.party === 'D'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
                             {peer.party}
                           </span>
                         </div>
@@ -1944,7 +2448,7 @@ export default function DistrictDetailPage() {
                           </div>
                         </div>
                         <div className="mt-3">
-                          <Link 
+                          <Link
                             href={`/districts/${peer.id}`}
                             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                           >
@@ -1955,20 +2459,30 @@ export default function DistrictDetailPage() {
                     ))}
                   </div>
                 </div>
-                
+
                 {/* State vs National Comparison */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <div className="bg-gray-50 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">vs. State Average ({district.state})</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      vs. State Average ({district.state})
+                    </h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Median Income</span>
                         <div className="flex items-center">
                           <span className="text-sm font-medium text-gray-900 mr-2">
-                            {district.demographics ? (district.demographics.medianIncome > 65000 ? '+12%' : '-8%') : 'N/A'}
+                            {district.demographics
+                              ? district.demographics.medianIncome > 65000
+                                ? '+12%'
+                                : '-8%'
+                              : 'N/A'}
                           </span>
-                          <span className={`text-sm ${district.demographics && district.demographics.medianIncome > 65000 ? 'text-green-600' : 'text-red-600'}`}>
-                            {district.demographics && district.demographics.medianIncome > 65000 ? '↗' : '↘'}
+                          <span
+                            className={`text-sm ${district.demographics && district.demographics.medianIncome > 65000 ? 'text-green-600' : 'text-red-600'}`}
+                          >
+                            {district.demographics && district.demographics.medianIncome > 65000
+                              ? '↗'
+                              : '↘'}
                           </span>
                         </div>
                       </div>
@@ -1976,10 +2490,19 @@ export default function DistrictDetailPage() {
                         <span className="text-sm text-gray-600">Education Level</span>
                         <div className="flex items-center">
                           <span className="text-sm font-medium text-gray-900 mr-2">
-                            {district.demographics ? (district.demographics.bachelor_degree_percent > 30 ? '+15%' : '-5%') : 'N/A'}
+                            {district.demographics
+                              ? district.demographics.bachelor_degree_percent > 30
+                                ? '+15%'
+                                : '-5%'
+                              : 'N/A'}
                           </span>
-                          <span className={`text-sm ${district.demographics && district.demographics.bachelor_degree_percent > 30 ? 'text-green-600' : 'text-red-600'}`}>
-                            {district.demographics && district.demographics.bachelor_degree_percent > 30 ? '↗' : '↘'}
+                          <span
+                            className={`text-sm ${district.demographics && district.demographics.bachelor_degree_percent > 30 ? 'text-green-600' : 'text-red-600'}`}
+                          >
+                            {district.demographics &&
+                            district.demographics.bachelor_degree_percent > 30
+                              ? '↗'
+                              : '↘'}
                           </span>
                         </div>
                       </div>
@@ -1987,10 +2510,19 @@ export default function DistrictDetailPage() {
                         <span className="text-sm text-gray-600">Unemployment Rate</span>
                         <div className="flex items-center">
                           <span className="text-sm font-medium text-gray-900 mr-2">
-                            {district.demographics?.economic ? (district.demographics.economic.unemploymentRate < 5 ? '-2.1%' : '+1.8%') : 'N/A'}
+                            {district.demographics?.economic
+                              ? district.demographics.economic.unemploymentRate < 5
+                                ? '-2.1%'
+                                : '+1.8%'
+                              : 'N/A'}
                           </span>
-                          <span className={`text-sm ${district.demographics?.economic && district.demographics.economic.unemploymentRate < 5 ? 'text-green-600' : 'text-red-600'}`}>
-                            {district.demographics?.economic && district.demographics.economic.unemploymentRate < 5 ? '↗' : '↘'}
+                          <span
+                            className={`text-sm ${district.demographics?.economic && district.demographics.economic.unemploymentRate < 5 ? 'text-green-600' : 'text-red-600'}`}
+                          >
+                            {district.demographics?.economic &&
+                            district.demographics.economic.unemploymentRate < 5
+                              ? '↗'
+                              : '↘'}
                           </span>
                         </div>
                       </div>
@@ -1998,27 +2530,46 @@ export default function DistrictDetailPage() {
                         <span className="text-sm text-gray-600">Home Ownership</span>
                         <div className="flex items-center">
                           <span className="text-sm font-medium text-gray-900 mr-2">
-                            {district.demographics?.housing ? (district.demographics.housing.homeOwnershipRate > 65 ? '+8%' : '-6%') : 'N/A'}
+                            {district.demographics?.housing
+                              ? district.demographics.housing.homeOwnershipRate > 65
+                                ? '+8%'
+                                : '-6%'
+                              : 'N/A'}
                           </span>
-                          <span className={`text-sm ${district.demographics?.housing && district.demographics.housing.homeOwnershipRate > 65 ? 'text-green-600' : 'text-red-600'}`}>
-                            {district.demographics?.housing && district.demographics.housing.homeOwnershipRate > 65 ? '↗' : '↘'}
+                          <span
+                            className={`text-sm ${district.demographics?.housing && district.demographics.housing.homeOwnershipRate > 65 ? 'text-green-600' : 'text-red-600'}`}
+                          >
+                            {district.demographics?.housing &&
+                            district.demographics.housing.homeOwnershipRate > 65
+                              ? '↗'
+                              : '↘'}
                           </span>
                         </div>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-gray-50 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">vs. National Average</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      vs. National Average
+                    </h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Median Income</span>
                         <div className="flex items-center">
                           <span className="text-sm font-medium text-gray-900 mr-2">
-                            {district.demographics ? (district.demographics.medianIncome > 62000 ? '+18%' : '-12%') : 'N/A'}
+                            {district.demographics
+                              ? district.demographics.medianIncome > 62000
+                                ? '+18%'
+                                : '-12%'
+                              : 'N/A'}
                           </span>
-                          <span className={`text-sm ${district.demographics && district.demographics.medianIncome > 62000 ? 'text-green-600' : 'text-red-600'}`}>
-                            {district.demographics && district.demographics.medianIncome > 62000 ? '↗' : '↘'}
+                          <span
+                            className={`text-sm ${district.demographics && district.demographics.medianIncome > 62000 ? 'text-green-600' : 'text-red-600'}`}
+                          >
+                            {district.demographics && district.demographics.medianIncome > 62000
+                              ? '↗'
+                              : '↘'}
                           </span>
                         </div>
                       </div>
@@ -2026,10 +2577,19 @@ export default function DistrictDetailPage() {
                         <span className="text-sm text-gray-600">Education Level</span>
                         <div className="flex items-center">
                           <span className="text-sm font-medium text-gray-900 mr-2">
-                            {district.demographics ? (district.demographics.bachelor_degree_percent > 33 ? '+22%' : '-8%') : 'N/A'}
+                            {district.demographics
+                              ? district.demographics.bachelor_degree_percent > 33
+                                ? '+22%'
+                                : '-8%'
+                              : 'N/A'}
                           </span>
-                          <span className={`text-sm ${district.demographics && district.demographics.bachelor_degree_percent > 33 ? 'text-green-600' : 'text-red-600'}`}>
-                            {district.demographics && district.demographics.bachelor_degree_percent > 33 ? '↗' : '↘'}
+                          <span
+                            className={`text-sm ${district.demographics && district.demographics.bachelor_degree_percent > 33 ? 'text-green-600' : 'text-red-600'}`}
+                          >
+                            {district.demographics &&
+                            district.demographics.bachelor_degree_percent > 33
+                              ? '↗'
+                              : '↘'}
                           </span>
                         </div>
                       </div>
@@ -2037,10 +2597,18 @@ export default function DistrictDetailPage() {
                         <span className="text-sm text-gray-600">Diversity Index</span>
                         <div className="flex items-center">
                           <span className="text-sm font-medium text-gray-900 mr-2">
-                            {district.demographics ? (district.demographics.diversityIndex > 50 ? '+25%' : '-15%') : 'N/A'}
+                            {district.demographics
+                              ? district.demographics.diversityIndex > 50
+                                ? '+25%'
+                                : '-15%'
+                              : 'N/A'}
                           </span>
-                          <span className={`text-sm ${district.demographics && district.demographics.diversityIndex > 50 ? 'text-green-600' : 'text-red-600'}`}>
-                            {district.demographics && district.demographics.diversityIndex > 50 ? '↗' : '↘'}
+                          <span
+                            className={`text-sm ${district.demographics && district.demographics.diversityIndex > 50 ? 'text-green-600' : 'text-red-600'}`}
+                          >
+                            {district.demographics && district.demographics.diversityIndex > 50
+                              ? '↗'
+                              : '↘'}
                           </span>
                         </div>
                       </div>
@@ -2048,10 +2616,19 @@ export default function DistrictDetailPage() {
                         <span className="text-sm text-gray-600">Economic Health</span>
                         <div className="flex items-center">
                           <span className="text-sm font-medium text-gray-900 mr-2">
-                            {district.demographics?.economic ? (district.demographics.economic.economicHealthIndex > 70 ? '+32%' : '-18%') : 'N/A'}
+                            {district.demographics?.economic
+                              ? district.demographics.economic.economicHealthIndex > 70
+                                ? '+32%'
+                                : '-18%'
+                              : 'N/A'}
                           </span>
-                          <span className={`text-sm ${district.demographics?.economic && district.demographics.economic.economicHealthIndex > 70 ? 'text-green-600' : 'text-red-600'}`}>
-                            {district.demographics?.economic && district.demographics.economic.economicHealthIndex > 70 ? '↗' : '↘'}
+                          <span
+                            className={`text-sm ${district.demographics?.economic && district.demographics.economic.economicHealthIndex > 70 ? 'text-green-600' : 'text-red-600'}`}
+                          >
+                            {district.demographics?.economic &&
+                            district.demographics.economic.economicHealthIndex > 70
+                              ? '↗'
+                              : '↘'}
                           </span>
                         </div>
                       </div>
@@ -2084,32 +2661,45 @@ export default function DistrictDetailPage() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-medium text-gray-800 mb-3">5-Year Projections</h4>
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">Median Income</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {district.demographics ? formatCurrency(district.demographics.medianIncome * 1.2) : 'N/A'}
+                            {district.demographics
+                              ? formatCurrency(district.demographics.medianIncome * 1.2)
+                              : 'N/A'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">Population</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {district.demographics ? Math.floor(district.demographics.population * 1.12).toLocaleString() : 'N/A'}
+                            {district.demographics
+                              ? Math.floor(district.demographics.population * 1.12).toLocaleString()
+                              : 'N/A'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">Bachelor&apos;s Degree+</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {district.demographics ? (district.demographics.bachelor_degree_percent * 1.09).toFixed(1) : 'N/A'}%
+                            {district.demographics
+                              ? (district.demographics.bachelor_degree_percent * 1.09).toFixed(1)
+                              : 'N/A'}
+                            %
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">Economic Health Index</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {district.demographics?.economic ? Math.min(district.demographics.economic.economicHealthIndex * 1.15, 100).toFixed(0) : 'N/A'}/100
+                            {district.demographics?.economic
+                              ? Math.min(
+                                  district.demographics.economic.economicHealthIndex * 1.15,
+                                  100
+                                ).toFixed(0)
+                              : 'N/A'}
+                            /100
                           </span>
                         </div>
                       </div>

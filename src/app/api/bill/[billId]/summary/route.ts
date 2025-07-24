@@ -5,7 +5,7 @@
 
 /**
  * Bill Summary API Endpoint
- * 
+ *
  * Provides AI-generated summaries of bills at an 8th grade reading level.
  * Includes caching, validation, and error handling.
  */
@@ -30,24 +30,24 @@ export async function GET(
   { params }: { params: Promise<{ billId: string }> }
 ): Promise<NextResponse> {
   const startTime = Date.now();
-  
+
   try {
     const { billId } = await params;
     const { searchParams } = new URL(request.url);
-    
+
     // Validate billId
     const billIdErrors = InputValidator.validateValue(billId, {
       required: true,
       minLength: 5,
       maxLength: 20,
-      pattern: /^[A-Z0-9\-\.]+$/i
+      pattern: /^[A-Z0-9\-\.]+$/i,
     });
-    
+
     if (billIdErrors.length > 0) {
       return NextResponse.json(
-        { 
+        {
           error: 'Invalid bill ID',
-          details: billIdErrors 
+          details: billIdErrors,
         },
         { status: 400 }
       );
@@ -65,7 +65,7 @@ export async function GET(
       forceRefresh,
       targetReadingLevel,
       format,
-      operation: 'bill_summary_api'
+      operation: 'bill_summary_api',
     });
 
     // Check cache first (unless force refresh)
@@ -73,15 +73,15 @@ export async function GET(
       const cachedSummary = await BillSummaryCache.getSummary(billId);
       if (cachedSummary) {
         const responseTime = Date.now() - startTime;
-        
+
         return NextResponse.json({
           summary: cachedSummary,
           metadata: {
             cached: true,
             responseTime,
             readingLevel: cachedSummary.readingLevel,
-            confidence: cachedSummary.confidence
-          }
+            confidence: cachedSummary.confidence,
+          },
         });
       }
     }
@@ -90,9 +90,9 @@ export async function GET(
     const billText = await fetchBillText(billId);
     if (!billText) {
       return NextResponse.json(
-        { 
+        {
           error: 'Bill text not found',
-          message: 'Unable to retrieve bill text for summarization'
+          message: 'Unable to retrieve bill text for summarization',
         },
         { status: 404 }
       );
@@ -100,7 +100,7 @@ export async function GET(
 
     // Generate text hash for cache validation
     const textHash = BillSummaryCache.generateTextHash(billText.fullText);
-    
+
     // Check if cached summary is still valid
     if (!forceRefresh) {
       const isValid = await BillSummaryCache.isSummaryValid(billId, textHash);
@@ -108,7 +108,7 @@ export async function GET(
         const cachedSummary = await BillSummaryCache.getSummary(billId);
         if (cachedSummary) {
           const responseTime = Date.now() - startTime;
-          
+
           return NextResponse.json({
             summary: cachedSummary,
             metadata: {
@@ -116,22 +116,19 @@ export async function GET(
               validated: true,
               responseTime,
               readingLevel: cachedSummary.readingLevel,
-              confidence: cachedSummary.confidence
-            }
+              confidence: cachedSummary.confidence,
+            },
           });
         }
       }
     }
 
     // Process bill text
-    const processedText = await BillTextProcessor.processBillText(
-      billText.fullText,
-      {
-        number: billText.number,
-        title: billText.title,
-        congress: billText.congress
-      }
-    );
+    const processedText = await BillTextProcessor.processBillText(billText.fullText, {
+      number: billText.number,
+      title: billText.title,
+      congress: billText.congress,
+    });
 
     // Extract key content for summarization
     const keyContent = BillTextProcessor.extractKeyContent(processedText, 3000);
@@ -143,32 +140,32 @@ export async function GET(
         number: billText.number,
         title: billText.title,
         congress: billText.congress,
-        chamber: billText.chamber
+        chamber: billText.chamber,
       },
       {
         targetReadingLevel,
-        maxLength: format === 'brief' ? 150 : format === 'detailed' ? 300 : 500
+        maxLength: format === 'brief' ? 150 : format === 'detailed' ? 300 : 500,
       }
     );
 
     // Validate reading level
-    const readingAnalysis = ReadingLevelValidator.analyzeReadingLevel(
-      summary.summary,
-      { targetGrade: targetReadingLevel }
-    );
+    const readingAnalysis = ReadingLevelValidator.analyzeReadingLevel(summary.summary, {
+      targetGrade: targetReadingLevel,
+    });
 
     // Update summary with validated reading level
     summary.readingLevel = readingAnalysis.gradeLevel;
 
     // Cache the summary
     await BillSummaryCache.storeSummary(billId, summary, textHash, {
-      priority: 'medium'
+      priority: 'medium',
     });
 
     const responseTime = Date.now() - startTime;
 
     // Build response based on format
-    const response: unknown = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response: any = {
       summary,
       metadata: {
         cached: false,
@@ -179,14 +176,14 @@ export async function GET(
           originalLength: processedText.originalLength,
           processedLength: processedText.processedLength,
           chunksGenerated: processedText.chunks.length,
-          complexity: processedText.metadata.complexity
+          complexity: processedText.metadata.complexity,
         },
         readingAnalysis: {
           passesTarget: readingAnalysis.passesTarget,
           complexWords: readingAnalysis.complexWordCount,
-          suggestions: readingAnalysis.suggestions.slice(0, 3)
-        }
-      }
+          suggestions: readingAnalysis.suggestions.slice(0, 3),
+        },
+      },
     };
 
     // Add full details if requested
@@ -194,7 +191,7 @@ export async function GET(
       response.fullAnalysis = {
         processedText: processedText.metadata,
         readingLevelAnalysis: readingAnalysis,
-        textStatistics: BillTextProcessor.getTextStatistics(processedText)
+        textStatistics: BillTextProcessor.getTextStatistics(processedText),
       };
     }
 
@@ -206,7 +203,7 @@ export async function GET(
         whatItDoes: summary.whatItDoes,
         readingLevel: summary.readingLevel,
         confidence: summary.confidence,
-        lastUpdated: summary.lastUpdated
+        lastUpdated: summary.lastUpdated,
       };
     }
 
@@ -216,26 +213,25 @@ export async function GET(
       readingLevel: summary.readingLevel,
       confidence: summary.confidence,
       format,
-      operation: 'bill_summary_api'
+      operation: 'bill_summary_api',
     });
 
     return NextResponse.json(response);
-
   } catch (error) {
     const responseTime = Date.now() - startTime;
     const { billId: errorBillId } = await params;
-    
+
     structuredLogger.error('Bill summary generation failed', error as Error, {
       billId: errorBillId,
       responseTime,
-      operation: 'bill_summary_api'
+      operation: 'bill_summary_api',
     });
 
     return NextResponse.json(
       {
         error: 'Summary generation failed',
         message: 'Unable to generate AI summary at this time',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -252,11 +248,11 @@ export async function POST(
   try {
     const { billId } = await params;
     const body = await request.json();
-    
-    const { 
+
+    const {
       targetReadingLevel = 8,
-      priority = 'medium',
-      options = {}
+      priority: _priority = 'medium',
+      options: _options = {},
     }: {
       targetReadingLevel?: number;
       priority?: 'high' | 'medium' | 'low';
@@ -268,26 +264,24 @@ export async function POST(
 
     // Generate new summary with updated parameters
     const response = await GET(
-      new NextRequest(
-        `${request.url}?forceRefresh=true&targetReadingLevel=${targetReadingLevel}`,
-        { method: 'GET' }
-      ),
+      new NextRequest(`${request.url}?forceRefresh=true&targetReadingLevel=${targetReadingLevel}`, {
+        method: 'GET',
+      }),
       { params }
     );
 
     return response;
-
   } catch (error) {
     const { billId: errorBillId } = await params;
     structuredLogger.error('Bill summary update failed', error as Error, {
       billId: errorBillId,
-      operation: 'bill_summary_api'
+      operation: 'bill_summary_api',
     });
 
     return NextResponse.json(
       {
         error: 'Summary update failed',
-        message: 'Unable to update summary at this time'
+        message: 'Unable to update summary at this time',
       },
       { status: 500 }
     );
@@ -303,30 +297,29 @@ export async function DELETE(
 ): Promise<NextResponse> {
   try {
     const { billId } = await params;
-    
+
     await BillSummaryCache.invalidateSummary(billId);
-    
+
     structuredLogger.info('Bill summary deleted', {
       billId,
-      operation: 'bill_summary_api'
+      operation: 'bill_summary_api',
     });
 
     return NextResponse.json({
       message: 'Summary deleted successfully',
-      billId
+      billId,
     });
-
   } catch (error) {
     const { billId: errorBillId } = await params;
     structuredLogger.error('Bill summary deletion failed', error as Error, {
       billId: errorBillId,
-      operation: 'bill_summary_api'
+      operation: 'bill_summary_api',
     });
 
     return NextResponse.json(
       {
         error: 'Summary deletion failed',
-        message: 'Unable to delete summary at this time'
+        message: 'Unable to delete summary at this time',
       },
       { status: 500 }
     );
@@ -347,7 +340,7 @@ async function fetchBillText(billId: string): Promise<{
     // Extract congress and bill number from billId
     const [billNumber, congressStr] = billId.split('-');
     const congress = parseInt(congressStr) || 118;
-    
+
     const congressApiKey = process.env.CONGRESS_API_KEY;
     if (!congressApiKey) {
       throw new Error('Congress API key not configured');
@@ -356,7 +349,7 @@ async function fetchBillText(billId: string): Promise<{
     // Fetch bill details first
     const billDetailsUrl = `https://api.congress.gov/v3/bill/${congress}/${billNumber.toLowerCase()}?api_key=${congressApiKey}&format=json`;
     const billDetailsResponse = await fetch(billDetailsUrl);
-    
+
     if (!billDetailsResponse.ok) {
       throw new Error(`Failed to fetch bill details: ${billDetailsResponse.status}`);
     }
@@ -373,7 +366,7 @@ async function fetchBillText(billId: string): Promise<{
     }
 
     const textData = await textResponse.json();
-    
+
     // Extract the most recent text version
     const textVersions = textData.textVersions || [];
     if (textVersions.length === 0) {
@@ -381,8 +374,9 @@ async function fetchBillText(billId: string): Promise<{
     }
 
     const latestVersion = textVersions[0];
-    const fullTextUrl = latestVersion.formats?.find((f: unknown) => f.type === 'Formatted Text')?.url;
-    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fullTextUrl = latestVersion.formats?.find((f: any) => f.type === 'Formatted Text')?.url;
+
     if (!fullTextUrl) {
       throw new Error('Full text not available');
     }
@@ -396,13 +390,12 @@ async function fetchBillText(billId: string): Promise<{
       title: bill.title,
       congress: bill.congress,
       chamber: bill.originChamber === 'House' ? 'House' : 'Senate',
-      fullText
+      fullText,
     };
-
   } catch (error) {
     structuredLogger.error('Failed to fetch bill text', error as Error, {
       billId,
-      operation: 'bill_text_fetch'
+      operation: 'bill_text_fetch',
     });
     return null;
   }

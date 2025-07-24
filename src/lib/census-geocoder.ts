@@ -72,14 +72,14 @@ export function parseAddressComponents(input: string): {
   const zip = zipMatch ? zipMatch[1] : undefined;
   
   // Remove ZIP from input for further parsing
-  let addressWithoutZip = zip ? input.replace(zipMatch![0], '').trim() : input;
+  const addressWithoutZip = zip ? input.replace(zipMatch![0], '').trim() : input;
   
   // Try to extract state (2-letter abbreviation)
   const stateMatch = addressWithoutZip.match(/\b([A-Z]{2})\b$/);
   const state = stateMatch ? stateMatch[1] : undefined;
   
   // Remove state from input
-  let addressWithoutState = state ? addressWithoutZip.replace(stateMatch![0], '').trim() : addressWithoutZip;
+  const addressWithoutState = state ? addressWithoutZip.replace(stateMatch![0], '').trim() : addressWithoutZip;
   
   // Split by comma to separate street from city
   const parts = addressWithoutState.split(',').map(p => p.trim());

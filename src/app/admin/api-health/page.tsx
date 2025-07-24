@@ -3,111 +3,112 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+
+interface APIHealthDetails {
+  hasData?: boolean;
+  sampleSize?: number;
+  [key: string]: unknown;
+}
 
 interface APIHealthCheck {
-  name: string
-  status: 'operational' | 'degraded' | 'error'
-  responseTime: number
-  lastChecked: string
-  details?: unknown
-  error?: string
+  name: string;
+  status: 'operational' | 'degraded' | 'error';
+  responseTime: number;
+  lastChecked: string;
+  details?: APIHealthDetails;
+  error?: string;
 }
 
 interface HealthReport {
-  timestamp: string
-  overall: 'operational' | 'degraded' | 'error'
-  apis: APIHealthCheck[]
+  timestamp: string;
+  overall: 'operational' | 'degraded' | 'error';
+  apis: APIHealthCheck[];
   environment: {
-    NODE_ENV: string
+    NODE_ENV: string;
     apiKeysConfigured: {
-      congress: boolean
-      fec: boolean
-      census: boolean
-      openStates: boolean
-      openAI: boolean
-    }
-  }
+      congress: boolean;
+      fec: boolean;
+      census: boolean;
+      openStates: boolean;
+      openAI: boolean;
+    };
+  };
 }
 
 export default function APIHealthPage() {
-  const [health, setHealth] = useState<HealthReport | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
+  const [health, setHealth] = useState<HealthReport | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [_lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
   const fetchHealth = async () => {
-    setLoading(true)
-    setError(null)
-    
+    setLoading(true);
+    setError(null);
+
     try {
-      const response = await fetch('/api/api-health')
+      const response = await fetch('/api/api-health');
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
-      const data = await response.json()
-      setHealth(data)
-      setLastRefresh(new Date())
+
+      const data = await response.json();
+      setHealth(data);
+      setLastRefresh(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch health data')
+      setError(err instanceof Error ? err.message : 'Failed to fetch health data');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchHealth()
-    
+    fetchHealth();
+
     // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchHealth, 30000)
-    return () => clearInterval(interval)
-  }, [])
+    const interval = setInterval(fetchHealth, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'operational':
-        return 'text-green-600 bg-green-50'
+        return 'text-green-600 bg-green-50';
       case 'degraded':
-        return 'text-yellow-600 bg-yellow-50'
+        return 'text-yellow-600 bg-yellow-50';
       case 'error':
-        return 'text-red-600 bg-red-50'
+        return 'text-red-600 bg-red-50';
       default:
-        return 'text-gray-600 bg-gray-50'
+        return 'text-gray-600 bg-gray-50';
     }
-  }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'operational':
-        return '✅'
+        return '✅';
       case 'degraded':
-        return '⚠️'
+        return '⚠️';
       case 'error':
-        return '❌'
+        return '❌';
       default:
-        return '❔'
+        return '❔';
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <Link 
-            href="/"
-            className="text-civiq-blue hover:underline mb-4 inline-block"
-          >
+          <Link href="/" className="text-civiq-blue hover:underline mb-4 inline-block">
             ← Back to Home
           </Link>
-          
+
           <h1 className="text-3xl font-bold text-gray-900">API Health Dashboard</h1>
-          <p className="mt-2 text-gray-600">
-            Monitor the status of all external APIs and services
-          </p>
+          <p className="mt-2 text-gray-600">Monitor the status of all external APIs and services</p>
         </div>
 
         {loading && !health && (
@@ -137,7 +138,8 @@ export default function APIHealthPage() {
                 <div>
                   <h2 className="text-2xl font-semibold flex items-center gap-2">
                     {getStatusIcon(health.overall)}
-                    System Status: {health.overall.charAt(0).toUpperCase() + health.overall.slice(1)}
+                    System Status:{' '}
+                    {health.overall.charAt(0).toUpperCase() + health.overall.slice(1)}
                   </h2>
                   <p className="mt-1 text-sm opacity-75">
                     Last checked: {new Date(health.timestamp).toLocaleString()}
@@ -181,31 +183,28 @@ export default function APIHealthPage() {
                         <div className="flex items-center gap-2">
                           <span>{getStatusIcon(api.status)}</span>
                           <h4 className="font-medium">{api.name}</h4>
-                          <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(api.status)}`}>
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${getStatusColor(api.status)}`}
+                          >
                             {api.status}
                           </span>
                         </div>
-                        
+
                         {api.error && (
-                          <p className="mt-1 text-sm text-red-600">
-                            Error: {api.error}
-                          </p>
+                          <p className="mt-1 text-sm text-red-600">Error: {api.error}</p>
                         )}
-                        
+
                         {api.details && (
                           <p className="mt-1 text-sm text-gray-600">
-                            {api.details.hasData ? 
-                              `✓ Returning data (${api.details.sampleSize} items sampled)` : 
-                              'No data returned'
-                            }
+                            {api.details.hasData
+                              ? `✓ Returning data (${api.details.sampleSize || 0} items sampled)`
+                              : 'No data returned'}
                           </p>
                         )}
                       </div>
-                      
+
                       <div className="text-right">
-                        <p className="text-sm font-medium">
-                          {api.responseTime}ms
-                        </p>
+                        <p className="text-sm font-medium">{api.responseTime}ms</p>
                         <p className="text-xs text-gray-500">
                           {new Date(api.lastChecked).toLocaleTimeString()}
                         </p>
@@ -241,5 +240,5 @@ export default function APIHealthPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -75,7 +75,7 @@ async function assessDataCoverage() {
     console.log('============================');
     
     let completeProfiles = 0;
-    let missingData = {
+    const missingData = {
       bioguideId: 0,
       firstName: 0,
       lastName: 0,
@@ -152,7 +152,7 @@ async function assessDataCoverage() {
       }
     });
     
-    let socialMediaStats = {
+    const socialMediaStats = {
       total: 0,
       twitter: 0,
       facebook: 0,

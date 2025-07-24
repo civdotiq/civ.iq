@@ -34,11 +34,11 @@ export async function GET(_request: NextRequest) {
         fec: !!process.env.FEC_API_KEY,
         census: !!process.env.CENSUS_API_KEY,
         openstates: !!process.env.OPENSTATES_API_KEY,
-      }
+      },
     };
 
     return NextResponse.json(healthCheck, { status: 200 });
-  } catch (error) {
+  } catch {
     const errorResponse: SimpleHealthCheck = {
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
@@ -50,7 +50,7 @@ export async function GET(_request: NextRequest) {
         fec: false,
         census: false,
         openstates: false,
-      }
+      },
     };
 
     return NextResponse.json(errorResponse, { status: 503 });

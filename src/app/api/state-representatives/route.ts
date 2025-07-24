@@ -50,16 +50,56 @@ interface StateApiResponse {
 // Helper function to get state abbreviation from full name
 function getStateAbbreviation(state: string): string {
   const stateMap: { [key: string]: string } = {
-    'Alabama': 'al', 'Alaska': 'ak', 'Arizona': 'az', 'Arkansas': 'ar', 'California': 'ca',
-    'Colorado': 'co', 'Connecticut': 'ct', 'Delaware': 'de', 'Florida': 'fl', 'Georgia': 'ga',
-    'Hawaii': 'hi', 'Idaho': 'id', 'Illinois': 'il', 'Indiana': 'in', 'Iowa': 'ia',
-    'Kansas': 'ks', 'Kentucky': 'ky', 'Louisiana': 'la', 'Maine': 'me', 'Maryland': 'md',
-    'Massachusetts': 'ma', 'Michigan': 'mi', 'Minnesota': 'mn', 'Mississippi': 'ms', 'Missouri': 'mo',
-    'Montana': 'mt', 'Nebraska': 'ne', 'Nevada': 'nv', 'New Hampshire': 'nh', 'New Jersey': 'nj',
-    'New Mexico': 'nm', 'New York': 'ny', 'North Carolina': 'nc', 'North Dakota': 'nd', 'Ohio': 'oh',
-    'Oklahoma': 'ok', 'Oregon': 'or', 'Pennsylvania': 'pa', 'Rhode Island': 'ri', 'South Carolina': 'sc',
-    'South Dakota': 'sd', 'Tennessee': 'tn', 'Texas': 'tx', 'Utah': 'ut', 'Vermont': 'vt',
-    'Virginia': 'va', 'Washington': 'wa', 'West Virginia': 'wv', 'Wisconsin': 'wi', 'Wyoming': 'wy'
+    Alabama: 'al',
+    Alaska: 'ak',
+    Arizona: 'az',
+    Arkansas: 'ar',
+    California: 'ca',
+    Colorado: 'co',
+    Connecticut: 'ct',
+    Delaware: 'de',
+    Florida: 'fl',
+    Georgia: 'ga',
+    Hawaii: 'hi',
+    Idaho: 'id',
+    Illinois: 'il',
+    Indiana: 'in',
+    Iowa: 'ia',
+    Kansas: 'ks',
+    Kentucky: 'ky',
+    Louisiana: 'la',
+    Maine: 'me',
+    Maryland: 'md',
+    Massachusetts: 'ma',
+    Michigan: 'mi',
+    Minnesota: 'mn',
+    Mississippi: 'ms',
+    Missouri: 'mo',
+    Montana: 'mt',
+    Nebraska: 'ne',
+    Nevada: 'nv',
+    'New Hampshire': 'nh',
+    'New Jersey': 'nj',
+    'New Mexico': 'nm',
+    'New York': 'ny',
+    'North Carolina': 'nc',
+    'North Dakota': 'nd',
+    Ohio: 'oh',
+    Oklahoma: 'ok',
+    Oregon: 'or',
+    Pennsylvania: 'pa',
+    'Rhode Island': 'ri',
+    'South Carolina': 'sc',
+    'South Dakota': 'sd',
+    Tennessee: 'tn',
+    Texas: 'tx',
+    Utah: 'ut',
+    Vermont: 'vt',
+    Virginia: 'va',
+    Washington: 'wa',
+    'West Virginia': 'wv',
+    Wisconsin: 'wi',
+    Wyoming: 'wy',
   };
 
   // Handle direct abbreviation inputs
@@ -73,16 +113,56 @@ function getStateAbbreviation(state: string): string {
 // Get full state name from abbreviation
 function getStateName(abbreviation: string): string {
   const stateNameMap: { [key: string]: string } = {
-    'al': 'Alabama', 'ak': 'Alaska', 'az': 'Arizona', 'ar': 'Arkansas', 'ca': 'California',
-    'co': 'Colorado', 'ct': 'Connecticut', 'de': 'Delaware', 'fl': 'Florida', 'ga': 'Georgia',
-    'hi': 'Hawaii', 'id': 'Idaho', 'il': 'Illinois', 'in': 'Indiana', 'ia': 'Iowa',
-    'ks': 'Kansas', 'ky': 'Kentucky', 'la': 'Louisiana', 'me': 'Maine', 'md': 'Maryland',
-    'ma': 'Massachusetts', 'mi': 'Michigan', 'mn': 'Minnesota', 'ms': 'Mississippi', 'mo': 'Missouri',
-    'mt': 'Montana', 'ne': 'Nebraska', 'nv': 'Nevada', 'nh': 'New Hampshire', 'nj': 'New Jersey',
-    'nm': 'New Mexico', 'ny': 'New York', 'nc': 'North Carolina', 'nd': 'North Dakota', 'oh': 'Ohio',
-    'ok': 'Oklahoma', 'or': 'Oregon', 'pa': 'Pennsylvania', 'ri': 'Rhode Island', 'sc': 'South Carolina',
-    'sd': 'South Dakota', 'tn': 'Tennessee', 'tx': 'Texas', 'ut': 'Utah', 'vt': 'Vermont',
-    'va': 'Virginia', 'wa': 'Washington', 'wv': 'West Virginia', 'wi': 'Wisconsin', 'wy': 'Wyoming'
+    al: 'Alabama',
+    ak: 'Alaska',
+    az: 'Arizona',
+    ar: 'Arkansas',
+    ca: 'California',
+    co: 'Colorado',
+    ct: 'Connecticut',
+    de: 'Delaware',
+    fl: 'Florida',
+    ga: 'Georgia',
+    hi: 'Hawaii',
+    id: 'Idaho',
+    il: 'Illinois',
+    in: 'Indiana',
+    ia: 'Iowa',
+    ks: 'Kansas',
+    ky: 'Kentucky',
+    la: 'Louisiana',
+    me: 'Maine',
+    md: 'Maryland',
+    ma: 'Massachusetts',
+    mi: 'Michigan',
+    mn: 'Minnesota',
+    ms: 'Mississippi',
+    mo: 'Missouri',
+    mt: 'Montana',
+    ne: 'Nebraska',
+    nv: 'Nevada',
+    nh: 'New Hampshire',
+    nj: 'New Jersey',
+    nm: 'New Mexico',
+    ny: 'New York',
+    nc: 'North Carolina',
+    nd: 'North Dakota',
+    oh: 'Ohio',
+    ok: 'Oklahoma',
+    or: 'Oregon',
+    pa: 'Pennsylvania',
+    ri: 'Rhode Island',
+    sc: 'South Carolina',
+    sd: 'South Dakota',
+    tn: 'Tennessee',
+    tx: 'Texas',
+    ut: 'Utah',
+    vt: 'Vermont',
+    va: 'Virginia',
+    wa: 'Washington',
+    wv: 'West Virginia',
+    wi: 'Wisconsin',
+    wy: 'Wyoming',
   };
 
   return stateNameMap[abbreviation.toLowerCase()] || abbreviation.toUpperCase();
@@ -100,36 +180,34 @@ async function getStateFromZip(zipCode: string): Promise<string | null> {
     }
 
     const data = await response.json();
-    
+
     if (data.result?.addressMatches?.[0]?.addressComponents?.state) {
       return data.result.addressMatches[0].addressComponents.state;
     }
-    
+
     return null;
-  } catch (error) {
+  } catch {
     // Error logged in monitoring system
     return null;
   }
 }
 
 // Fetch state jurisdiction info from OpenStates
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
   try {
-    const response = await fetch(
-      `https://v3.openstates.org/jurisdictions/${stateAbbrev}`,
-      {
-        headers: {
-          'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
-        }
-      }
-    );
+    const response = await fetch(`https://v3.openstates.org/jurisdictions/${stateAbbrev}`, {
+      headers: {
+        'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`OpenStates jurisdiction API error: ${response.status}`);
     }
 
     return await response.json();
-  } catch (error) {
+  } catch {
     // Error logged in monitoring system
     return null;
   }
@@ -143,7 +221,7 @@ async function fetchStateLegislators(stateAbbrev: string): Promise<StateLegislat
       {
         headers: {
           'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
-        }
+        },
       }
     );
 
@@ -152,34 +230,43 @@ async function fetchStateLegislators(stateAbbrev: string): Promise<StateLegislat
     }
 
     const data = await response.json();
-    
-    return data.results?.map((person: unknown) => ({
-      id: person.id,
-      name: person.name,
-      party: person.current_role?.party || 'Unknown',
-      chamber: person.current_role?.org_classification || 'lower',
-      district: person.current_role?.district || 'Unknown',
-      state: stateAbbrev.toUpperCase(),
-      image: person.image,
-      email: person.email,
-      phone: person.phone,
-      website: person.links?.find((link: unknown) => link.note === 'website')?.url,
-      offices: person.offices?.map((office: unknown) => ({
-        name: office.name || 'Office',
-        address: office.address,
-        phone: office.phone,
-        email: office.email
-      })),
-      currentRole: person.current_role ? {
-        title: person.current_role.title || `${person.current_role.org_classification === 'upper' ? 'State Senator' : 'State Representative'}`,
-        org_classification: person.current_role.org_classification,
-        district: person.current_role.district,
-        party: person.current_role.party,
-        start_date: person.current_role.start_date,
-        end_date: person.current_role.end_date
-      } : undefined
-    })) || [];
-  } catch (error) {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (
+      data.results?.map((person: any) => ({
+        id: person.id,
+        name: person.name,
+        party: person.current_role?.party || 'Unknown',
+        chamber: person.current_role?.org_classification || 'lower',
+        district: person.current_role?.district || 'Unknown',
+        state: stateAbbrev.toUpperCase(),
+        image: person.image,
+        email: person.email,
+        phone: person.phone,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        website: person.links?.find((link: any) => link.note === 'website')?.url,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        offices: person.offices?.map((office: any) => ({
+          name: office.name || 'Office',
+          address: office.address,
+          phone: office.phone,
+          email: office.email,
+        })),
+        currentRole: person.current_role
+          ? {
+              title:
+                person.current_role.title ||
+                `${person.current_role.org_classification === 'upper' ? 'State Senator' : 'State Representative'}`,
+              org_classification: person.current_role.org_classification,
+              district: person.current_role.district,
+              party: person.current_role.party,
+              start_date: person.current_role.start_date,
+              end_date: person.current_role.end_date,
+            }
+          : undefined,
+      })) || []
+    );
+  } catch {
     // Error logged in monitoring system
     return [];
   }
@@ -188,7 +275,7 @@ async function fetchStateLegislators(stateAbbrev: string): Promise<StateLegislat
 // Generate mock data when OpenStates API is unavailable
 function generateMockStateLegislators(state: string, stateAbbrev: string): StateLegislator[] {
   const stateName = getStateName(stateAbbrev);
-  
+
   return [
     {
       id: 'mock-sen-1',
@@ -204,8 +291,8 @@ function generateMockStateLegislators(state: string, stateAbbrev: string): State
         org_classification: 'upper',
         district: '1',
         party: 'Democratic',
-        start_date: '2021-01-01'
-      }
+        start_date: '2021-01-01',
+      },
     },
     {
       id: 'mock-rep-1',
@@ -221,8 +308,8 @@ function generateMockStateLegislators(state: string, stateAbbrev: string): State
         org_classification: 'lower',
         district: 'A',
         party: 'Republican',
-        start_date: '2020-01-01'
-      }
+        start_date: '2020-01-01',
+      },
     },
     {
       id: 'mock-sen-2',
@@ -238,8 +325,8 @@ function generateMockStateLegislators(state: string, stateAbbrev: string): State
         org_classification: 'upper',
         district: '2',
         party: 'Democratic',
-        start_date: '2019-01-01'
-      }
+        start_date: '2019-01-01',
+      },
     },
     {
       id: 'mock-rep-2',
@@ -255,8 +342,8 @@ function generateMockStateLegislators(state: string, stateAbbrev: string): State
         org_classification: 'lower',
         district: 'B',
         party: 'Republican',
-        start_date: '2022-01-01'
-      }
+        start_date: '2022-01-01',
+      },
     },
     {
       id: 'mock-rep-3',
@@ -272,9 +359,9 @@ function generateMockStateLegislators(state: string, stateAbbrev: string): State
         org_classification: 'lower',
         district: 'C',
         party: 'Democratic',
-        start_date: '2021-01-01'
-      }
-    }
+        start_date: '2021-01-01',
+      },
+    },
   ];
 }
 
@@ -283,16 +370,13 @@ export async function GET(request: NextRequest) {
   const zipCode = searchParams.get('zip');
 
   if (!zipCode) {
-    return NextResponse.json(
-      { error: 'ZIP code is required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'ZIP code is required' }, { status: 400 });
   }
 
   try {
     // Get state from ZIP code
     const stateFromZip = await getStateFromZip(zipCode);
-    
+
     if (!stateFromZip) {
       return NextResponse.json(
         { error: 'Could not determine state from ZIP code' },
@@ -307,7 +391,7 @@ export async function GET(request: NextRequest) {
       // Fetch real data from OpenStates API
       const [jurisdiction, legislators] = await Promise.all([
         fetchStateJurisdiction(stateAbbrev),
-        fetchStateLegislators(stateAbbrev)
+        fetchStateLegislators(stateAbbrev),
       ]);
 
       const response: StateApiResponse = {
@@ -326,9 +410,9 @@ export async function GET(request: NextRequest) {
           classification: 'state',
           chambers: [
             { name: 'House of Representatives', classification: 'lower' },
-            { name: 'Senate', classification: 'upper' }
-          ]
-        }
+            { name: 'Senate', classification: 'upper' },
+          ],
+        },
       };
 
       return NextResponse.json(response);
@@ -336,7 +420,7 @@ export async function GET(request: NextRequest) {
 
     // Fallback mock data
     const mockLegislators = generateMockStateLegislators(stateName, stateAbbrev);
-    
+
     const response: StateApiResponse = {
       zipCode,
       state: stateAbbrev.toUpperCase(),
@@ -347,18 +431,14 @@ export async function GET(request: NextRequest) {
         classification: 'state',
         chambers: [
           { name: 'House of Representatives', classification: 'lower' },
-          { name: 'Senate', classification: 'upper' }
-        ]
-      }
+          { name: 'Senate', classification: 'upper' },
+        ],
+      },
     };
 
     return NextResponse.json(response);
-
-  } catch (error) {
+  } catch {
     // Error logged in monitoring system
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

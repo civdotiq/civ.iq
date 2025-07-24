@@ -5,10 +5,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { 
-  generateOptimizedSearchTerms, 
-  fetchGDELTNewsWithDeduplication, 
-  normalizeGDELTArticle 
+import {
+  generateOptimizedSearchTerms,
+  fetchGDELTNewsWithDeduplication,
+  normalizeGDELTArticle,
 } from '@/lib/gdelt-api';
 import { structuredLogger } from '@/lib/logging/logger';
 
@@ -40,10 +40,7 @@ export async function GET(
   const limit = parseInt(searchParams.get('limit') || '15');
 
   if (!bioguideId) {
-    return NextResponse.json(
-      { error: 'Bioguide ID is required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
   }
 
   try {
@@ -60,25 +57,25 @@ export async function GET(
           const repResponse = await fetch(
             `${request.nextUrl.origin}/api/representative/${bioguideId}`
           );
-          
+
           if (repResponse.ok) {
             const repData = await repResponse.json();
-            
+
             // Extract the correct fields from the API response
             // Handle both BaseRepresentative and EnhancedRepresentative structures
-            const fullName = repData.fullName ? 
-              `${repData.fullName.first} ${repData.fullName.last}` : 
-              repData.name;
-              
+            const fullName = repData.fullName
+              ? `${repData.fullName.first} ${repData.fullName.last}`
+              : repData.name;
+
             representative = {
               name: fullName || `${repData.firstName} ${repData.lastName}`,
               state: repData.state,
               district: repData.district,
               party: repData.party,
               bioguideId: repData.bioguideId || bioguideId,
-              chamber: repData.chamber
+              chamber: repData.chamber,
             };
-            
+
             // Validate we have the minimum required data
             if (!representative.name || representative.name.includes('undefined')) {
               throw new Error('Invalid representative data - missing name');
@@ -87,70 +84,87 @@ export async function GET(
             throw new Error('Representative not found');
           }
         } catch (error) {
-          structuredLogger.warn('Could not fetch representative info, using fallback', {
-            bioguideId,
-            error: error instanceof Error ? error.message : 'Unknown error',
-            operation: 'representative_info_fallback'
-          }, request);
-          
+          structuredLogger.warn(
+            'Could not fetch representative info, using fallback',
+            {
+              bioguideId,
+              error: error instanceof Error ? error.message : 'Unknown error',
+              operation: 'representative_info_fallback',
+            },
+            request
+          );
+
           // Don't use generic fallback - return empty results instead
           return {
             articles: [],
             totalResults: 0,
             searchTerms: [],
             dataSource: 'fallback',
-            cacheStatus: 'Unable to fetch representative information'
+            cacheStatus: 'Unable to fetch representative information',
           };
         }
 
-        structuredLogger.info('Fetching news for representative', {
-          bioguideId,
-          representativeName: representative.name,
-          state: representative.state,
-          operation: 'news_fetch'
-        }, request);
+        structuredLogger.info(
+          'Fetching news for representative',
+          {
+            bioguideId,
+            representativeName: representative.name,
+            state: representative.state,
+            operation: 'news_fetch',
+          },
+          request
+        );
 
         // Generate optimized search terms for civic/political news
         const searchTerms = generateOptimizedSearchTerms(
-          representative.name, 
-          representative.state, 
+          representative.name,
+          representative.state,
           representative.district
         );
-        
-        structuredLogger.debug('Generated optimized search terms', {
-          bioguideId,
-          searchTerms,
-          searchTermsCount: searchTerms.length,
-          operation: 'news_search_terms_generation'
-        }, request);
+
+        structuredLogger.debug(
+          'Generated optimized search terms',
+          {
+            bioguideId,
+            searchTerms,
+            searchTermsCount: searchTerms.length,
+            operation: 'news_search_terms_generation',
+          },
+          request
+        );
 
         // Fetch news from GDELT with intelligent deduplication
-        const allArticles: unknown[] = [];
-        const articlesPerTerm = Math.ceil(limit * 1.5 / searchTerms.length); // Fetch more to account for deduplication
+        const _allArticles: unknown[] = [];
+        const articlesPerTerm = Math.ceil((limit * 1.5) / searchTerms.length); // Fetch more to account for deduplication
         let totalDuplicatesRemoved = 0;
-        
-        const fetchPromises = searchTerms.map(async (searchTerm) => {
+
+        const fetchPromises = searchTerms.map(async searchTerm => {
           try {
             const { articles: gdeltArticles, stats } = await fetchGDELTNewsWithDeduplication(
-              searchTerm, 
+              searchTerm,
               articlesPerTerm,
               {
                 titleSimilarityThreshold: 0.85,
                 maxArticlesPerDomain: 2,
-                enableDomainClustering: true
+                enableDomainClustering: true,
               }
             );
-            
+
             totalDuplicatesRemoved += stats.duplicatesRemoved;
-            
+
             // Normalize articles
             return gdeltArticles.map(article => normalizeGDELTArticle(article));
           } catch (error) {
-            structuredLogger.error(`Error fetching GDELT news for term: ${searchTerm}`, error as Error, {
-              bioguideId,
-              searchTerm,
-              operation: 'gdelt_news_fetch_error'
-            }, request);
+            structuredLogger.error(
+              `Error fetching GDELT news for term: ${searchTerm}`,
+              error as Error,
+              {
+                bioguideId,
+                searchTerm,
+                operation: 'gdelt_news_fetch_error',
+              },
+              request
+            );
             return [];
           }
         });
@@ -161,37 +175,45 @@ export async function GET(
         // Apply advanced clustering to group related stories
         const { newsClusteringService } = await import('@/lib/news-clustering');
         const clusteringResult = newsClusteringService.clusterNews(
-          flattenedArticles.map(article => ({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          flattenedArticles.map((article: any) => ({
             url: article.url,
             title: article.title,
             seendate: article.publishedDate,
             domain: article.domain || new URL(article.url).hostname,
             socialimage: article.imageUrl,
-            language: article.language || 'en'
+            language: article.language || 'en',
           })),
           {
             maxClusters: 5,
             minClusterSize: 2,
             titleSimilarityThreshold: 0.75,
-            timespanHours: 48
+            timespanHours: 48,
           }
         );
 
         // Convert clusters back to articles, keeping primary articles
-        const clusteredArticles = clusteringResult.clusters.map(cluster => {
-          const primaryArticle = flattenedArticles.find(a => a.url === cluster.primaryArticle.url);
-          return {
-            ...primaryArticle,
-            relatedStories: cluster.relatedArticles.length,
-            sources: cluster.sources.join(', '),
-            category: cluster.category,
-            importance: cluster.importance
-          };
-        }).filter(Boolean);
+        const clusteredArticles = clusteringResult.clusters
+          .map(cluster => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const primaryArticle = flattenedArticles.find(
+              (a: any) => a.url === cluster.primaryArticle.url
+            );
+            return {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              ...(primaryArticle as any),
+              relatedStories: cluster.relatedArticles.length,
+              sources: cluster.sources.join(', '),
+              category: cluster.category,
+              importance: cluster.importance,
+            };
+          })
+          .filter(Boolean);
 
         // Add unclustered articles
         const unclusteredArticles = clusteringResult.unclustered
-          .map(unclustered => flattenedArticles.find(a => a.url === unclustered.url))
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .map(unclustered => flattenedArticles.find((a: any) => a.url === unclustered.url))
           .filter(Boolean);
 
         const finalArticles = [...clusteredArticles, ...unclusteredArticles];
@@ -199,10 +221,10 @@ export async function GET(
         // Apply quality filters and final deduplication to the clustered articles
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        
+
         const qualityFilteredArticles = finalArticles.filter(article => {
           const articleDate = new Date(article.publishedDate);
-          
+
           return (
             article.language === 'English' &&
             article.title.length > 15 &&
@@ -224,12 +246,12 @@ export async function GET(
             seendate: article.publishedDate,
             domain: article.domain,
             socialimage: article.imageUrl,
-            language: article.language
+            language: article.language,
           })),
           {
             titleSimilarityThreshold: 0.9,
             maxArticlesPerDomain: 1,
-            preserveNewestArticles: true
+            preserveNewestArticles: true,
           }
         );
 
@@ -243,7 +265,9 @@ export async function GET(
           domain: article.domain,
           imageUrl: article.socialimage,
           language: article.language || 'English',
-          source: qualityFilteredArticles.find(orig => orig.url === article.url)?.source || article.domain
+          source:
+            qualityFilteredArticles.find(orig => orig.url === article.url)?.source ||
+            article.domain,
         }));
 
         const sortedArticles = uniqueArticles
@@ -251,20 +275,24 @@ export async function GET(
           .slice(0, limit);
 
         // Log deduplication statistics
-        structuredLogger.info('News deduplication completed', {
-          bioguideId,
-          originalCount: flattenedArticles.length,
-          afterQualityFilter: qualityFilteredArticles.length,
-          totalDuplicatesRemoved,
-          finalCount: sortedArticles.length,
-          operation: 'news_deduplication_complete'
-        }, request);
+        structuredLogger.info(
+          'News deduplication completed',
+          {
+            bioguideId,
+            originalCount: flattenedArticles.length,
+            afterQualityFilter: qualityFilteredArticles.length,
+            totalDuplicatesRemoved,
+            finalCount: sortedArticles.length,
+            operation: 'news_deduplication_complete',
+          },
+          request
+        );
 
         return {
           articles: sortedArticles,
           totalResults: sortedArticles.length,
           searchTerms,
-          dataSource: sortedArticles.length > 0 ? 'gdelt' : 'fallback'
+          dataSource: sortedArticles.length > 0 ? 'gdelt' : 'fallback',
         };
       },
       TTL_30_MINUTES
@@ -272,9 +300,9 @@ export async function GET(
 
     // If no real articles found, provide relevant fallback mock data
     if (newsData.articles.length === 0) {
-      const representative = newsData.searchTerms[0]?.includes('Senator') ? 
-        { name: `Senator for ${bioguideId}`, state: 'State', isSenator: true } :
-        { name: `Representative ${bioguideId}`, state: 'State', isSenator: false };
+      const representative = newsData.searchTerms[0]?.includes('Senator')
+        ? { name: `Senator for ${bioguideId}`, state: 'State', isSenator: true }
+        : { name: `Representative ${bioguideId}`, state: 'State', isSenator: false };
 
       const mockArticles: NewsArticle[] = [
         {
@@ -284,7 +312,7 @@ export async function GET(
           publishedDate: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
           language: 'English',
           domain: 'cq.com',
-          summary: 'Legislative update on current priorities and upcoming votes.'
+          summary: 'Legislative update on current priorities and upcoming votes.',
         },
         {
           title: `Committee Hearing on Infrastructure Investment`,
@@ -293,7 +321,7 @@ export async function GET(
           publishedDate: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
           language: 'English',
           domain: 'govaffairs.com',
-          summary: 'Congressional committee discusses infrastructure funding proposals.'
+          summary: 'Congressional committee discusses infrastructure funding proposals.',
         },
         {
           title: `Bipartisan Support for Healthcare Policy Reform`,
@@ -302,8 +330,8 @@ export async function GET(
           publishedDate: new Date(Date.now() - 1000 * 60 * 60 * 60).toISOString(),
           language: 'English',
           domain: 'policyreview.com',
-          summary: 'Cross-party collaboration on healthcare policy initiatives.'
-        }
+          summary: 'Cross-party collaboration on healthcare policy initiatives.',
+        },
       ];
 
       const fallbackResponse: NewsResponse = {
@@ -311,7 +339,7 @@ export async function GET(
         totalResults: mockArticles.length,
         searchTerms: newsData.searchTerms,
         dataSource: 'fallback',
-        cacheStatus: 'No live news available - showing relevant content'
+        cacheStatus: 'No live news available - showing relevant content',
       };
 
       return NextResponse.json(fallbackResponse);
@@ -320,24 +348,28 @@ export async function GET(
     // Add cache status to response
     const response: NewsResponse = {
       ...newsData,
-      cacheStatus: 'Live news data'
+      cacheStatus: 'Live news data',
     };
 
     return NextResponse.json(response);
-
   } catch (error) {
-    structuredLogger.error('News API Error', error as Error, {
-      bioguideId,
-      operation: 'news_api_error'
-    }, request);
-    
+    structuredLogger.error(
+      'News API Error',
+      error as Error,
+      {
+        bioguideId,
+        operation: 'news_api_error',
+      },
+      request
+    );
+
     // Comprehensive error response with fallback
     const errorResponse: NewsResponse = {
       articles: [],
       totalResults: 0,
       searchTerms: [],
       dataSource: 'fallback',
-      cacheStatus: 'API temporarily unavailable'
+      cacheStatus: 'API temporarily unavailable',
     };
 
     return NextResponse.json(errorResponse, { status: 200 }); // Return 200 to avoid breaking UI

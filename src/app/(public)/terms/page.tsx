@@ -27,8 +27,8 @@ export default function TermsPage() {
             </h2>
             <p className="text-gray-700 leading-relaxed mb-4">
               CIV.IQ is a free public utility that provides transparent access to government data.
-              By using our service, you agree to these terms. We've written them to be clear and
-              fair, reflecting our mission to serve the public interest.
+              By using our service, you agree to these terms. We&apos;ve written them to be clear
+              and fair, reflecting our mission to serve the public interest.
             </p>
             <div className="bg-blue-50 rounded-xl p-6">
               <p className="text-blue-900 font-medium">
@@ -131,8 +131,8 @@ export default function TermsPage() {
                 current or error-free.
               </p>
               <p className="text-gray-700">
-                <strong>No Warranty:</strong> Data is provided "as is" without warranties of any
-                kind. Always verify important information with official sources.
+                <strong>No Warranty:</strong> Data is provided &quot;as is&quot; without warranties
+                of any kind. Always verify important information with official sources.
               </p>
               <p className="text-gray-700">
                 <strong>Updates:</strong> We update data based on source availability, but there may
@@ -169,7 +169,7 @@ export default function TermsPage() {
                 <h3 className="font-semibold text-gray-900 mb-3">Government Data</h3>
                 <p className="text-gray-700">
                   All government data remains in the public domain. We claim no ownership over this
-                  data, and you are free to use it in accordance with each source's terms.
+                  data, and you are free to use it in accordance with each source&apos;s terms.
                 </p>
               </div>
             </div>
@@ -219,8 +219,8 @@ export default function TermsPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Changes to Terms</h2>
             <p className="text-gray-700">
               We may update these terms occasionally. Continued use of CIV.IQ after changes
-              constitutes acceptance of the new terms. For significant changes, we'll provide notice
-              on our homepage.
+              constitutes acceptance of the new terms. For significant changes, we&apos;ll provide
+              notice on our homepage.
             </p>
           </section>
 

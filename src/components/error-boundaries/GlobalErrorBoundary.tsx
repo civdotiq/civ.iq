@@ -6,7 +6,7 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { structuredLogger } from '@/lib/logging/logger';
+import { structuredLogger } from '@/lib/logging/logger-client';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
@@ -95,9 +95,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z"
                 />
               </svg>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Something went wrong
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h1>
               <p className="text-gray-600 mb-6">
                 We apologize for the inconvenience. An unexpected error has occurred.
               </p>
@@ -110,11 +108,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
               >
                 Try Again
               </Button>
-              <Button
-                onClick={this.handleGoHome}
-                variant="secondary"
-                className="w-full"
-              >
+              <Button onClick={this.handleGoHome} variant="secondary" className="w-full">
                 Go to Homepage
               </Button>
             </div>
@@ -128,9 +122,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                   <p className="font-medium text-red-800">Error:</p>
                   <p className="text-red-700 mb-2">{this.state.error.message}</p>
                   <p className="font-medium text-red-800">Stack:</p>
-                  <pre className="text-red-700 whitespace-pre-wrap">
-                    {this.state.error.stack}
-                  </pre>
+                  <pre className="text-red-700 whitespace-pre-wrap">{this.state.error.stack}</pre>
                   {this.state.errorInfo && (
                     <>
                       <p className="font-medium text-red-800 mt-2">Component Stack:</p>

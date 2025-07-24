@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { getEnhancedRepresentative, getAllEnhancedRepresentatives } from '@/lib/congress-legislators';
+import { getEnhancedRepresentative } from '@/lib/congress-legislators';
 import { structuredLogger } from '@/lib/logging/logger';
 
 interface LeadershipRole {
@@ -50,9 +50,9 @@ interface LeadershipData {
 
 // Leadership hierarchy rankings
 const LEADERSHIP_RANKS: Record<string, number> = {
-  'president': 1,
+  president: 1,
   'vice president': 2,
-  'speaker': 3,
+  speaker: 3,
   'president pro tempore': 4,
   'majority leader': 5,
   'minority leader': 6,
@@ -65,7 +65,7 @@ const LEADERSHIP_RANKS: Record<string, number> = {
   'committee chair': 15,
   'ranking member': 16,
   'subcommittee chair': 20,
-  'subcommittee ranking member': 21
+  'subcommittee ranking member': 21,
 };
 
 // Helper function to calculate influence score
@@ -100,8 +100,8 @@ function calculateInfluenceScore(roles: LeadershipRole[]): { score: number; fact
   }
 
   // Committee leadership bonus
-  const committeeChairs = currentRoles.filter(r => 
-    r.type === 'committee' && (r.title.includes('Chair') || r.title.includes('Ranking'))
+  const committeeChairs = currentRoles.filter(
+    r => r.type === 'committee' && (r.title.includes('Chair') || r.title.includes('Ranking'))
   );
   score += committeeChairs.length * 15;
 
@@ -113,18 +113,25 @@ function calculateInfluenceScore(roles: LeadershipRole[]): { score: number; fact
 
 // Helper function to parse leadership role from title
 function parseLeadershipRole(
-  title: string, 
-  chamber: string
+  title: string,
+  _chamber: string
 ): { type: LeadershipRole['type']; rank?: number } {
   const lowerTitle = title.toLowerCase();
-  
+
   // Determine type
   let type: LeadershipRole['type'] = 'administrative';
-  if (lowerTitle.includes('speaker') || lowerTitle.includes('leader') || 
-      lowerTitle.includes('whip') || lowerTitle.includes('president pro tempore')) {
+  if (
+    lowerTitle.includes('speaker') ||
+    lowerTitle.includes('leader') ||
+    lowerTitle.includes('whip') ||
+    lowerTitle.includes('president pro tempore')
+  ) {
     type = 'constitutional';
-  } else if (lowerTitle.includes('conference') || lowerTitle.includes('caucus') ||
-             lowerTitle.includes('policy')) {
+  } else if (
+    lowerTitle.includes('conference') ||
+    lowerTitle.includes('caucus') ||
+    lowerTitle.includes('policy')
+  ) {
     type = 'party';
   } else if (lowerTitle.includes('committee')) {
     type = 'committee';
@@ -151,10 +158,7 @@ export async function GET(
   const { bioguideId } = await params;
 
   if (!bioguideId) {
-    return NextResponse.json(
-      { error: 'Bioguide ID is required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
   }
 
   try {
@@ -174,9 +178,13 @@ export async function GET(
 
         // Process leadership roles from congress-legislators
         if (enhancedRep.leadershipRoles) {
-          enhancedRep.leadershipRoles.forEach((role: unknown) => {
-            const { type, rank } = parseLeadershipRole(role.title, role.chamber || enhancedRep.chamber);
-            
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          enhancedRep.leadershipRoles.forEach((role: any) => {
+            const { type, rank } = parseLeadershipRole(
+              role.title,
+              role.chamber || enhancedRep.chamber
+            );
+
             const leadershipRole: LeadershipRole = {
               title: role.title,
               type,
@@ -187,9 +195,10 @@ export async function GET(
               endDate: role.end,
               description: role.description,
               isActive: !role.end || new Date(role.end) > new Date(),
-              historicalSignificance: role.title.toLowerCase().includes('speaker') ||
-                                    role.title.toLowerCase().includes('majority leader') ||
-                                    role.title.toLowerCase().includes('minority leader')
+              historicalSignificance:
+                role.title.toLowerCase().includes('speaker') ||
+                role.title.toLowerCase().includes('majority leader') ||
+                role.title.toLowerCase().includes('minority leader'),
             };
 
             // Add responsibilities based on role
@@ -198,21 +207,21 @@ export async function GET(
                 'Presides over House sessions',
                 'Sets legislative agenda',
                 'Appoints committee members',
-                'Third in line of presidential succession'
+                'Third in line of presidential succession',
               ];
             } else if (role.title.toLowerCase().includes('majority leader')) {
               leadershipRole.responsibilities = [
                 'Schedules legislation for floor consideration',
                 'Coordinates party strategy',
                 'Serves as party spokesperson',
-                'Manages floor debate'
+                'Manages floor debate',
               ];
             } else if (role.title.toLowerCase().includes('whip')) {
               leadershipRole.responsibilities = [
                 'Counts votes',
                 'Enforces party discipline',
                 'Assists party leader',
-                'Mobilizes party members for votes'
+                'Mobilizes party members for votes',
               ];
             }
 
@@ -226,10 +235,11 @@ export async function GET(
 
         // Process committee leadership from current term
         if (enhancedRep.committees) {
-          enhancedRep.committees.forEach((committee: unknown) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          enhancedRep.committees.forEach((committee: any) => {
             if (committee.role && committee.role !== 'Member') {
               const isActive = true; // Assume current committees are active
-              const { type, rank } = parseLeadershipRole(
+              const { rank } = parseLeadershipRole(
                 `${committee.role}, ${committee.name}`,
                 enhancedRep.chamber
               );
@@ -242,17 +252,19 @@ export async function GET(
                 rank: rank || (committee.role.includes('Chair') ? 15 : 16),
                 description: `Leadership position on ${committee.name}`,
                 isActive,
-                responsibilities: committee.role.includes('Chair') ? [
-                  'Sets committee agenda',
-                  'Manages committee staff',
-                  'Leads committee hearings',
-                  'Negotiates legislation'
-                ] : [
-                  'Leads minority party on committee',
-                  'Offers alternative proposals',
-                  'Manages minority staff',
-                  'Represents opposition views'
-                ]
+                responsibilities: committee.role.includes('Chair')
+                  ? [
+                      'Sets committee agenda',
+                      'Manages committee staff',
+                      'Leads committee hearings',
+                      'Negotiates legislation',
+                    ]
+                  : [
+                      'Leads minority party on committee',
+                      'Offers alternative proposals',
+                      'Manages minority staff',
+                      'Represents opposition views',
+                    ],
               };
 
               currentRoles.push(committeeLeadership);
@@ -272,15 +284,18 @@ export async function GET(
 
         // Calculate analytics
         const committeeStats = {
-          chair: currentRoles.filter(r => 
-            r.type === 'committee' && r.title.includes('Chair') && !r.title.includes('Vice')
+          chair: currentRoles.filter(
+            r => r.type === 'committee' && r.title.includes('Chair') && !r.title.includes('Vice')
           ).length,
-          rankingMember: currentRoles.filter(r => 
-            r.type === 'committee' && r.title.includes('Ranking Member')
+          rankingMember: currentRoles.filter(
+            r => r.type === 'committee' && r.title.includes('Ranking Member')
           ).length,
-          subcommitteeChair: currentRoles.filter(r => 
-            r.type === 'committee' && r.title.includes('Subcommittee') && r.title.includes('Chair')
-          ).length
+          subcommitteeChair: currentRoles.filter(
+            r =>
+              r.type === 'committee' &&
+              r.title.includes('Subcommittee') &&
+              r.title.includes('Chair')
+          ).length,
         };
 
         const { score, factors } = calculateInfluenceScore([...currentRoles, ...historicalRoles]);
@@ -290,12 +305,13 @@ export async function GET(
           historicalRoles: historicalRoles.length,
           highestRank: Math.min(...[...currentRoles, ...historicalRoles].map(r => r.rank || 999)),
           committees: committeeStats,
-          influence: { score, factors }
+          influence: { score, factors },
         };
 
-        const currentCongress = new Date().getFullYear() % 2 === 0 
-          ? Math.floor((new Date().getFullYear() - 1788) / 2)
-          : Math.floor((new Date().getFullYear() - 1787) / 2);
+        const currentCongress =
+          new Date().getFullYear() % 2 === 0
+            ? Math.floor((new Date().getFullYear() - 1788) / 2)
+            : Math.floor((new Date().getFullYear() - 1787) / 2);
 
         return {
           currentRoles,
@@ -304,8 +320,8 @@ export async function GET(
           metadata: {
             lastUpdated: new Date().toISOString(),
             dataSource: 'congress-legislators',
-            congress: `${currentCongress}th Congress`
-          }
+            congress: `${currentCongress}th Congress`,
+          },
         };
       },
       2 * 60 * 60 * 1000 // 2 hour cache
@@ -314,11 +330,10 @@ export async function GET(
     structuredLogger.info('Successfully processed leadership data', {
       bioguideId,
       currentRoles: leadershipData.analytics.currentRoles,
-      influenceScore: leadershipData.analytics.influence.score
+      influenceScore: leadershipData.analytics.influence.score,
     });
 
     return NextResponse.json(leadershipData);
-
   } catch (error) {
     structuredLogger.error('Leadership data API error', error as Error, { bioguideId });
 
@@ -333,24 +348,24 @@ export async function GET(
         committees: {
           chair: 0,
           rankingMember: 0,
-          subcommitteeChair: 0
+          subcommitteeChair: 0,
         },
         influence: {
           score: 0,
-          factors: []
-        }
+          factors: [],
+        },
       },
       metadata: {
         lastUpdated: new Date().toISOString(),
         dataSource: 'mock',
-        congress: '119th Congress'
-      }
+        congress: '119th Congress',
+      },
     };
 
     return NextResponse.json({
       ...mockData,
       error: 'Using fallback data due to API error',
-      originalError: (error as Error).message
+      originalError: (error as Error).message,
     });
   }
 }

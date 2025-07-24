@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -13,14 +12,36 @@ import { AdvancedSearch } from '@/components/AdvancedSearch';
 function CiviqLogo() {
   return (
     <div className="flex items-center group">
-      <svg className="w-10 h-10 transition-transform group-hover:scale-110" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <rect x="36" y="51" width="28" height="30" fill="#0b983c"/>
-        <circle cx="50" cy="31" r="22" fill="#ffffff"/>
-        <circle cx="50" cy="31" r="20" fill="#e11d07"/>
-        <circle cx="38" cy="89" r="2" fill="#3ea2d4" className="animate-pulse"/>
-        <circle cx="46" cy="89" r="2" fill="#3ea2d4" className="animate-pulse animation-delay-100"/>
-        <circle cx="54" cy="89" r="2" fill="#3ea2d4" className="animate-pulse animation-delay-200"/>
-        <circle cx="62" cy="89" r="2" fill="#3ea2d4" className="animate-pulse animation-delay-300"/>
+      <svg
+        className="w-10 h-10 transition-transform group-hover:scale-110"
+        viewBox="0 0 100 100"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect x="36" y="51" width="28" height="30" fill="#0b983c" />
+        <circle cx="50" cy="31" r="22" fill="#ffffff" />
+        <circle cx="50" cy="31" r="20" fill="#e11d07" />
+        <circle cx="38" cy="89" r="2" fill="#3ea2d4" className="animate-pulse" />
+        <circle
+          cx="46"
+          cy="89"
+          r="2"
+          fill="#3ea2d4"
+          className="animate-pulse animation-delay-100"
+        />
+        <circle
+          cx="54"
+          cy="89"
+          r="2"
+          fill="#3ea2d4"
+          className="animate-pulse animation-delay-200"
+        />
+        <circle
+          cx="62"
+          cy="89"
+          r="2"
+          fill="#3ea2d4"
+          className="animate-pulse animation-delay-300"
+        />
       </svg>
       <span className="ml-3 text-xl font-bold text-gray-900">CIV.IQ</span>
     </div>
@@ -38,13 +59,22 @@ export default function SearchPage() {
               <CiviqLogo />
             </Link>
             <nav className="flex items-center gap-6">
-              <Link href="/representatives" className="text-gray-700 hover:text-blue-600 transition-colors">
+              <Link
+                href="/representatives"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
                 Representatives
               </Link>
-              <Link href="/districts" className="text-gray-700 hover:text-blue-600 transition-colors">
+              <Link
+                href="/districts"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
                 Districts
               </Link>
-              <Link href="/analytics" className="text-gray-700 hover:text-blue-600 transition-colors">
+              <Link
+                href="/analytics"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
                 Analytics
               </Link>
               <Link href="/compare" className="text-gray-700 hover:text-blue-600 transition-colors">
@@ -63,7 +93,8 @@ export default function SearchPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Advanced Representative Search</h1>
           <p className="text-xl text-gray-600">
-            Find representatives using multiple criteria including voting patterns, committee membership, campaign finance, and more
+            Find representatives using multiple criteria including voting patterns, committee
+            membership, campaign finance, and more
           </p>
         </div>
 
@@ -77,8 +108,8 @@ export default function SearchPage() {
             <div>
               <h4 className="font-medium mb-2">Quick Searches:</h4>
               <ul className="space-y-1">
-                <li>• Type a representative's name for direct results</li>
-                <li>• Use state abbreviations (e.g., "CA", "TX")</li>
+                <li>• Type a representative&apos;s name for direct results</li>
+                <li>• Use state abbreviations (e.g., &quot;CA&quot;, &quot;TX&quot;)</li>
                 <li>• Search by committee name or policy area</li>
               </ul>
             </div>
@@ -121,7 +152,7 @@ export default function SearchPage() {
               'Veterans Affairs',
               'Financial Services',
               'New Representatives 2024',
-              'High Fundraisers'
+              'High Fundraisers',
             ].map((search, index) => (
               <button
                 key={index}

@@ -195,7 +195,7 @@ export async function GET(request: NextRequest) {
 
     let districts: DistrictInfo[] = [];
     let lookupMethod: 'comprehensive' | 'census-api' | 'fallback' = 'comprehensive';
-    let warnings: string[] = [];
+    const warnings: string[] = [];
 
     if (allDistricts.length > 0) {
       // Found in comprehensive mapping

@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -15,7 +14,7 @@ interface DataQualityIndicatorProps {
 
 function getFreshnessInfo(freshness?: string) {
   if (!freshness) return null;
-  
+
   // Parse different freshness formats
   if (freshness.includes('Retrieved in')) {
     const timeMatch = freshness.match(/Retrieved in (\d+)ms/);
@@ -26,23 +25,30 @@ function getFreshnessInfo(freshness?: string) {
       return { status: 'live', color: 'text-orange-600', icon: '🐌' };
     }
   }
-  
+
   if (freshness.includes('Failed after')) {
     return { status: 'failed', color: 'text-red-600', icon: '❌' };
   }
-  
+
   if (freshness.includes('cached')) {
     return { status: 'cached', color: 'text-purple-600', icon: '💾' };
   }
-  
+
   return { status: 'unknown', color: 'text-gray-600', icon: '❓' };
 }
 
-export function DataQualityIndicator({ quality, source, freshness, className = '' }: DataQualityIndicatorProps) {
+export function DataQualityIndicator({
+  quality,
+  source,
+  freshness,
+  className = '',
+}: DataQualityIndicatorProps) {
   // Defensive programming: handle missing props gracefully
   if (!quality || !source) {
     return (
-      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-md border text-xs font-medium bg-gray-100 text-gray-800 border-gray-200 ${className}`}>
+      <div
+        className={`inline-flex items-center gap-2 px-3 py-1 rounded-md border text-xs font-medium bg-gray-100 text-gray-800 border-gray-200 ${className}`}
+      >
         <span className="text-xs">?</span>
         <span>Unknown Quality</span>
       </div>
@@ -56,35 +62,35 @@ export function DataQualityIndicator({ quality, source, freshness, className = '
           color: 'bg-green-100 text-green-800 border-green-200',
           icon: '✓',
           label: 'High Quality',
-          description: 'Complete and current data'
+          description: 'Complete and current data',
         };
       case 'medium':
         return {
           color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
           icon: '⚠',
           label: 'Medium Quality',
-          description: 'Some data may be missing'
+          description: 'Some data may be missing',
         };
       case 'low':
         return {
           color: 'bg-orange-100 text-orange-800 border-orange-200',
           icon: '!',
           label: 'Low Quality',
-          description: 'Limited data available'
+          description: 'Limited data available',
         };
       case 'unavailable':
         return {
           color: 'bg-red-100 text-red-800 border-red-200',
           icon: '✗',
           label: 'Unavailable',
-          description: 'Data could not be retrieved'
+          description: 'Data could not be retrieved',
         };
       default:
         return {
           color: 'bg-gray-100 text-gray-800 border-gray-200',
           icon: '?',
           label: 'Unknown Quality',
-          description: 'Quality status unknown'
+          description: 'Quality status unknown',
         };
     }
   };
@@ -93,7 +99,9 @@ export function DataQualityIndicator({ quality, source, freshness, className = '
   const freshnessInfo = getFreshnessInfo(freshness);
 
   return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-md border text-xs font-medium ${config.color} ${className}`}>
+    <div
+      className={`inline-flex items-center gap-2 px-3 py-1 rounded-md border text-xs font-medium ${config.color} ${className}`}
+    >
       <span className="text-xs">{config.icon}</span>
       <span>{config.label}</span>
       {freshnessInfo && (
@@ -126,7 +134,7 @@ function getTimeAgo(timestamp: string): string {
   const now = Date.now();
   const time = new Date(timestamp).getTime();
   const diff = now - time;
-  
+
   if (diff < 60000) return 'just now';
   if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
@@ -142,7 +150,9 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
           <span className="text-2xl">❌</span>
           <div className="flex-1">
             <h3 className="font-semibold text-lg mb-2">Unknown Error</h3>
-            <p className="text-sm mb-4 opacity-90">An unexpected error occurred. Please try again.</p>
+            <p className="text-sm mb-4 opacity-90">
+              An unexpected error occurred. Please try again.
+            </p>
             {onRetry && (
               <button
                 onClick={onRetry}
@@ -161,7 +171,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
   const errorData = error || {
     code: 'UNKNOWN_ERROR',
     message: 'An unexpected error occurred',
-    details: null
+    details: null,
   };
 
   // Provide sensible defaults for missing metadata prop
@@ -171,7 +181,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
     dataQuality: 'unavailable' as const,
     dataSource: 'unknown',
     cacheable: false,
-    freshness: undefined
+    freshness: undefined,
   };
 
   const getErrorIcon = () => {
@@ -209,7 +219,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
   const severity = getErrorSeverity();
   const severityStyles = {
     warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-    error: 'bg-red-50 border-red-200 text-red-800'
+    error: 'bg-red-50 border-red-200 text-red-800',
   };
 
   return (
@@ -218,19 +228,27 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
         <span className="text-2xl">{getErrorIcon()}</span>
         <div className="flex-1">
           <h3 className="font-semibold text-lg mb-2">{errorData.message}</h3>
-          
-          {errorData.details && typeof errorData.details === 'string' && (
-            <p className="text-sm mb-4 opacity-90">{errorData.details}</p>
-          )}
-          
-          {errorData.details && typeof errorData.details === 'object' && (
-            <div className="text-sm mb-4 opacity-90">
-              <p className="font-medium mb-2">Additional Details:</p>
-              <pre className="bg-black/10 p-2 rounded text-xs overflow-x-auto">
-                {JSON.stringify(errorData.details, null, 2)}
-              </pre>
-            </div>
-          )}
+
+          {(() => {
+            if (errorData.details && typeof errorData.details === 'string') {
+              return <p className="text-sm mb-4 opacity-90">{errorData.details}</p>;
+            }
+            return null;
+          })()}
+
+          {(() => {
+            if (errorData.details && typeof errorData.details === 'object') {
+              return (
+                <div className="text-sm mb-4 opacity-90">
+                  <p className="font-medium mb-2">Additional Details:</p>
+                  <pre className="bg-black/10 p-2 rounded text-xs overflow-x-auto">
+                    {JSON.stringify(errorData.details, null, 2)}
+                  </pre>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           <div className="flex items-center gap-4 text-xs opacity-75 mb-4">
             <span>Error Code: {errorData.code}</span>
@@ -266,16 +284,20 @@ interface DataSourceBadgeProps {
   showTrustLevel?: boolean;
 }
 
-export function DataSourceBadge({ source, className = '', showTrustLevel = false }: DataSourceBadgeProps) {
+export function DataSourceBadge({
+  source,
+  className = '',
+  showTrustLevel = false,
+}: DataSourceBadgeProps) {
   // Defensive programming: handle missing source prop gracefully
   if (!source) {
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800 ${className}`}>
+      <span
+        className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800 ${className}`}
+      >
         <span className="text-xs">?</span>
         Unknown Source
-        {showTrustLevel && (
-          <span className="text-xs opacity-75">(0% trust)</span>
-        )}
+        {showTrustLevel && <span className="text-xs opacity-75">(0% trust)</span>}
       </span>
     );
   }
@@ -287,7 +309,7 @@ export function DataSourceBadge({ source, className = '', showTrustLevel = false
         icon: '🏛️',
         label: 'Congress Data',
         trustLevel: 'official',
-        trustScore: 95
+        trustScore: 95,
       };
     } else if (source.includes('census')) {
       return {
@@ -295,7 +317,7 @@ export function DataSourceBadge({ source, className = '', showTrustLevel = false
         icon: '🗺️',
         label: 'Census Data',
         trustLevel: 'official',
-        trustScore: 98
+        trustScore: 98,
       };
     } else if (source.includes('congress.gov')) {
       return {
@@ -303,7 +325,7 @@ export function DataSourceBadge({ source, className = '', showTrustLevel = false
         icon: '⚖️',
         label: 'Congress.gov',
         trustLevel: 'official',
-        trustScore: 99
+        trustScore: 99,
       };
     } else if (source.includes('fec')) {
       return {
@@ -311,7 +333,7 @@ export function DataSourceBadge({ source, className = '', showTrustLevel = false
         icon: '💰',
         label: 'FEC Data',
         trustLevel: 'official',
-        trustScore: 92
+        trustScore: 92,
       };
     } else if (source.includes('mock') || source.includes('fallback')) {
       return {
@@ -319,7 +341,7 @@ export function DataSourceBadge({ source, className = '', showTrustLevel = false
         icon: '🔧',
         label: 'Test Data',
         trustLevel: 'synthetic',
-        trustScore: 0
+        trustScore: 0,
       };
     } else if (source.includes('error') || source.includes('failed')) {
       return {
@@ -327,7 +349,7 @@ export function DataSourceBadge({ source, className = '', showTrustLevel = false
         icon: '❌',
         label: 'Error',
         trustLevel: 'error',
-        trustScore: 0
+        trustScore: 0,
       };
     } else {
       return {
@@ -335,7 +357,7 @@ export function DataSourceBadge({ source, className = '', showTrustLevel = false
         icon: '📊',
         label: 'Data',
         trustLevel: 'unknown',
-        trustScore: 50
+        trustScore: 50,
       };
     }
   };
@@ -343,12 +365,12 @@ export function DataSourceBadge({ source, className = '', showTrustLevel = false
   const config = getSourceConfig();
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${config.color} ${className}`}>
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${config.color} ${className}`}
+    >
       <span className="text-xs">{config.icon}</span>
       {config.label}
-      {showTrustLevel && (
-        <span className="text-xs opacity-75">({config.trustScore}% trust)</span>
-      )}
+      {showTrustLevel && <span className="text-xs opacity-75">({config.trustScore}% trust)</span>}
     </span>
   );
 }

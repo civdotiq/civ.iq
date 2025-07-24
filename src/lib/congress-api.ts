@@ -3,7 +3,11 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { cache } from 'react';
+import { unstable_cache as cache } from 'next/cache';
+import type {
+  CongressApiMember,
+  CongressApiMembersResponse,
+} from '../types/api-responses';
 
 // State code to name mapping
 const STATE_NAMES: Record<string, string> = {
@@ -137,13 +141,12 @@ export const getCurrentMembersByState = cache(async (state: string, apiKey?: str
       endpoints.forEach(endpoint => endpoint.params.append('api_key', congressApiKey));
     }
 
-    let allMembers: unknown[] = [];
+    let allMembers: CongressApiMember[] = [];
     let apiSuccess = false;
 
     for (const endpoint of endpoints) {
       try {
         const url = `${endpoint.url}?${endpoint.params.toString()}`;
-        console.log('Fetching Congress members from:', url);
         
         const response = await fetch(url, {
           headers: {
@@ -151,59 +154,54 @@ export const getCurrentMembersByState = cache(async (state: string, apiKey?: str
             'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
           },
           next: { revalidate: 3600 } // Cache for 1 hour
-        });
+        } as RequestInit & { next?: { revalidate?: number } });
         
         if (!response.ok) {
           console.error(`Congress API error (${endpoint.url}):`, response.status, response.statusText);
           continue;
         }
         
-        const data = await response.json();
+        const data = await response.json() as CongressApiMembersResponse;
         
         if (data.members && Array.isArray(data.members)) {
           allMembers = [...allMembers, ...data.members];
           apiSuccess = true;
-          console.log(`Successfully fetched ${data.members.length} members from ${endpoint.url}`);
           break; // Use first successful endpoint
         }
       } catch (error) {
-        console.error(`Error with endpoint ${endpoint.url}:`, error);
+        // API endpoint failed, try next one
         continue;
       }
     }
 
     if (!apiSuccess || allMembers.length === 0) {
-      console.warn('Congress API failed, using fallback data');
       return [];
     }
 
     const data = { members: allMembers };
     
-    // Debug: log first few members to see state format
-    console.log('Sample members:', data.members?.slice(0, 3).map((m: unknown) => ({
-      name: m.name,
-      state: m.state,
-      partyName: m.partyName
-    })));
-    
     // Filter by state and current terms - handle both state codes and full names
-    const stateMembers = data.members?.filter((member: unknown) => {
+    const stateMembers = data.members?.filter((member: CongressApiMember) => {
       // Congress API uses full state names like "Michigan"
       // Convert our state code to full name for comparison
       const stateName = STATE_NAMES[state] || state;
       const matchesState = member.state === stateName || member.state === state;
       
       // Also check if member has a current term in 119th Congress (2025-2027)
-      const hasCurrentTerm = member.terms?.item?.some((term: unknown) => 
+      const hasCurrentTerm = member.terms?.item?.some((term) => 
         term.startYear >= 2025 || (term.startYear <= 2025 && (!term.endYear || term.endYear >= 2025))
       );
       
       return matchesState && hasCurrentTerm;
     }) || [];
     
-    console.log(`Found ${stateMembers.length} members for state: ${state}`);
+    // Convert CongressApiMember to CongressMember format
+    const convertedMembers: CongressMember[] = stateMembers.map((member: CongressApiMember): CongressMember => ({
+      ...member,
+      fullName: member.name || `${member.firstName} ${member.lastName}`.trim(),
+    }));
     
-    return stateMembers;
+    return convertedMembers;
     
   } catch (error) {
     console.error('Error fetching Congress members:', error);
@@ -214,7 +212,7 @@ export const getCurrentMembersByState = cache(async (state: string, apiKey?: str
 /**
  * Format Congress.gov member data into our Representative interface
  */
-export function formatCongressMember(member: unknown): Representative {
+export function formatCongressMember(member: CongressApiMember): Representative {
   const currentYear = new Date().getFullYear();
   const currentTerm = member.terms?.item?.[0];
   const chamber = currentTerm?.chamber === 'House of Representatives' ? 'House' : 'Senate';

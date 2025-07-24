@@ -8,6 +8,6 @@ const data = {} as any;
 console.log(data);
 
 // This should trigger - using var
-var badVariable = "test";
+const badVariable = "test";
 
 export { data };

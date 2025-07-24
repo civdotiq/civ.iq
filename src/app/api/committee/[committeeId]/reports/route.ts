@@ -59,10 +59,10 @@ async function fetchCommitteeReports(committeeId: string): Promise<CommitteeRepo
     async () => {
       try {
         structuredLogger.info('Fetching reports for committee', { committeeId });
-        
+
         const baseUrl = 'https://api.congress.gov/v3';
         const apiKey = process.env.CONGRESS_API_KEY;
-        
+
         if (!apiKey) {
           structuredLogger.warn('Congress API key not configured');
           return [];
@@ -71,12 +71,12 @@ async function fetchCommitteeReports(committeeId: string): Promise<CommitteeRepo
         // Transform committee ID to match Congress.gov format
         const congressCommitteeId = transformCommitteeId(committeeId);
         const chamber = getCommitteeChamber(committeeId);
-        
+
         const response = await fetch(
           `${baseUrl}/committee-report/119/${chamber}?committee=${congressCommitteeId}&limit=20&api_key=${apiKey}`,
           {
             headers: {
-              'Accept': 'application/json',
+              Accept: 'application/json',
             },
           }
         );
@@ -87,7 +87,6 @@ async function fetchCommitteeReports(committeeId: string): Promise<CommitteeRepo
 
         const data: CongressReportsApiResponse = await response.json();
         return processReportsData(data.reports, chamber);
-        
       } catch (error) {
         structuredLogger.error('Error fetching committee reports', error as Error, { committeeId });
         // Return mock data for development if API fails
@@ -120,7 +119,10 @@ function getCommitteeChamber(thomasId: string): string {
 /**
  * Process raw reports data from Congress.gov API
  */
-function processReportsData(reports: CongressReportsApiResponse['reports'], chamber: string): CommitteeReport[] {
+function processReportsData(
+  reports: CongressReportsApiResponse['reports'],
+  chamber: string
+): CommitteeReport[] {
   return reports.map(report => ({
     reportId: `${report.congress}-${report.reportType}-${report.number}`,
     reportNumber: `${report.reportType.toUpperCase()} ${report.number}${report.part ? `-${report.part}` : ''}`,
@@ -130,7 +132,7 @@ function processReportsData(reports: CongressReportsApiResponse['reports'], cham
     congress: report.congress,
     chamber: chamber,
     url: report.url,
-    summary: generateReportSummary(report.title, report.reportType)
+    summary: generateReportSummary(report.title, report.reportType),
   }));
 }
 
@@ -139,7 +141,7 @@ function processReportsData(reports: CongressReportsApiResponse['reports'], cham
  */
 function generateReportSummary(title: string, reportType: string): string {
   if (reportType.toLowerCase().includes('majority')) {
-    return 'Majority report presenting the committee\'s findings and recommendations.';
+    return "Majority report presenting the committee's findings and recommendations.";
   }
   if (reportType.toLowerCase().includes('minority')) {
     return 'Minority report presenting dissenting views and alternative recommendations.';
@@ -153,7 +155,7 @@ function generateReportSummary(title: string, reportType: string): string {
 /**
  * Mock reports data for development/fallback
  */
-function getMockReportsData(committeeId: string): CommitteeReport[] {
+function getMockReportsData(_committeeId: string): CommitteeReport[] {
   const mockReports: CommitteeReport[] = [
     {
       reportId: '119-hrpt-001',
@@ -163,8 +165,9 @@ function getMockReportsData(committeeId: string): CommitteeReport[] {
       reportType: 'hrpt',
       congress: 119,
       chamber: 'house',
-      summary: 'Committee report analyzing proposed legislation and providing recommendations for House consideration.',
-      url: 'https://www.congress.gov/congressional-report/119th-congress/house-report/1'
+      summary:
+        'Committee report analyzing proposed legislation and providing recommendations for House consideration.',
+      url: 'https://www.congress.gov/congressional-report/119th-congress/house-report/1',
     },
     {
       reportId: '119-hrpt-002',
@@ -174,8 +177,9 @@ function getMockReportsData(committeeId: string): CommitteeReport[] {
       reportType: 'hrpt',
       congress: 119,
       chamber: 'house',
-      summary: 'Oversight report examining federal agency operations and recommending improvements.',
-      url: 'https://www.congress.gov/congressional-report/119th-congress/house-report/2'
+      summary:
+        'Oversight report examining federal agency operations and recommending improvements.',
+      url: 'https://www.congress.gov/congressional-report/119th-congress/house-report/2',
     },
     {
       reportId: '119-hrpt-003',
@@ -185,9 +189,10 @@ function getMockReportsData(committeeId: string): CommitteeReport[] {
       reportType: 'hrpt',
       congress: 119,
       chamber: 'house',
-      summary: 'Detailed analysis of budget proposals with committee recommendations for fiscal year 2025.',
-      url: 'https://www.congress.gov/congressional-report/119th-congress/house-report/3'
-    }
+      summary:
+        'Detailed analysis of budget proposals with committee recommendations for fiscal year 2025.',
+      url: 'https://www.congress.gov/congressional-report/119th-congress/house-report/3',
+    },
   ];
 
   return mockReports;
@@ -199,37 +204,33 @@ export async function GET(
 ) {
   try {
     const { committeeId } = await params;
-    
+
     structuredLogger.info('Committee reports API request', { committeeId });
-    
+
     if (!committeeId) {
-      return NextResponse.json(
-        { error: 'Committee ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Committee ID is required' }, { status: 400 });
     }
 
     const reports = await fetchCommitteeReports(committeeId);
-    
+
     structuredLogger.info('Successfully fetched committee reports', {
       committeeId,
-      count: reports.length
+      count: reports.length,
     });
 
     return NextResponse.json({
       success: true,
       committeeId,
       reports,
-      count: reports.length
+      count: reports.length,
     });
-
   } catch (error) {
     structuredLogger.error('Committee reports API error', error as Error);
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch committee reports',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

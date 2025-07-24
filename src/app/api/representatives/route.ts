@@ -3,100 +3,105 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { getCongressionalDistrictFromZip } from '@/lib/census-api'
-import { getAllEnhancedRepresentatives } from '@/lib/congress-legislators'
-import { validateDistrictResponse, validateRepresentativeResponse, generateDataQualityReport, validateApiResponse } from '@/lib/validation/response-schemas'
-import { structuredLogger, createRequestLogger } from '@/lib/logging/logger'
+import { NextRequest, NextResponse } from 'next/server';
+import { getCongressionalDistrictFromZip } from '@/lib/census-api';
+import { getAllEnhancedRepresentatives } from '@/lib/congress-legislators';
+import {
+  validateDistrictResponse,
+  validateRepresentativeResponse,
+  generateDataQualityReport,
+  validateApiResponse,
+} from '@/lib/validation/response-schemas';
+import { structuredLogger, createRequestLogger } from '@/lib/logging/logger';
 
 // Simplified response interfaces
 interface RepresentativeResponse {
-  bioguideId: string
-  name: string
-  party: string
-  state: string
-  district?: string
-  chamber: string
-  title: string
-  phone?: string
-  website?: string
+  bioguideId: string;
+  name: string;
+  party: string;
+  state: string;
+  district?: string;
+  chamber: string;
+  title: string;
+  phone?: string;
+  website?: string;
   contactInfo: {
-    phone: string
-    website: string
-    office: string
-  }
+    phone: string;
+    website: string;
+    office: string;
+  };
 }
 
 interface ApiResponse {
-  success: boolean
-  representatives?: RepresentativeResponse[]
+  success: boolean;
+  representatives?: RepresentativeResponse[];
   error?: {
-    code: string
-    message: string
-    details?: unknown
-  }
+    code: string;
+    message: string;
+    details?: unknown;
+  };
   metadata: {
-    timestamp: string
-    zipCode: string
-    dataQuality: 'high' | 'medium' | 'low' | 'unavailable'
-    dataSource: string
-    cacheable: boolean
-    freshness?: string
-    validationScore?: number
-    validationStatus?: 'excellent' | 'good' | 'fair' | 'poor'
-  }
+    timestamp: string;
+    zipCode: string;
+    dataQuality: 'high' | 'medium' | 'low' | 'unavailable';
+    dataSource: string;
+    cacheable: boolean;
+    freshness?: string;
+    validationScore?: number;
+    validationStatus?: 'excellent' | 'good' | 'fair' | 'poor';
+  };
 }
 
 // Circuit breaker pattern
 class CircuitBreaker {
-  private failures = 0
-  private lastFailureTime = 0
-  private readonly threshold = 5
-  private readonly timeout = 60000 // 1 minute
+  private failures = 0;
+  private lastFailureTime = 0;
+  private readonly threshold = 5;
+  private readonly timeout = 60000; // 1 minute
 
   async execute<T>(fn: () => Promise<T>, serviceName: string): Promise<T> {
     if (this.isOpen()) {
-      throw new Error(`Circuit breaker open for ${serviceName}. Too many recent failures.`)
+      throw new Error(`Circuit breaker open for ${serviceName}. Too many recent failures.`);
     }
 
     try {
-      const result = await fn()
-      this.onSuccess()
-      return result
+      const result = await fn();
+      this.onSuccess();
+      return result;
     } catch (error) {
-      this.onFailure()
-      throw error
+      this.onFailure();
+      throw error;
     }
   }
 
   private isOpen(): boolean {
     if (this.failures >= this.threshold) {
-      return (Date.now() - this.lastFailureTime) < this.timeout
+      return Date.now() - this.lastFailureTime < this.timeout;
     }
-    return false
+    return false;
   }
 
   private onSuccess(): void {
-    this.failures = 0
+    this.failures = 0;
   }
 
   private onFailure(): void {
-    this.failures++
-    this.lastFailureTime = Date.now()
+    this.failures++;
+    this.lastFailureTime = Date.now();
   }
 
   getStatus() {
     return {
       failures: this.failures,
       isOpen: this.isOpen(),
-      lastFailureTime: this.lastFailureTime
-    }
+      lastFailureTime: this.lastFailureTime,
+    };
   }
 }
 
 // Create circuit breakers for external services
-const censusCircuitBreaker = new CircuitBreaker()
-const congressCircuitBreaker = new CircuitBreaker()
+const censusCircuitBreaker = new CircuitBreaker();
+const congressCircuitBreaker = new CircuitBreaker();
 
 // Retry with exponential backoff
 async function retryWithBackoff<T>(
@@ -104,60 +109,63 @@ async function retryWithBackoff<T>(
   maxRetries: number = 3,
   baseDelay: number = 1000
 ): Promise<T> {
-  let lastError: Error
+  let lastError: Error;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      return await fn()
+      return await fn();
     } catch (error) {
-      lastError = error as Error
-      
+      lastError = error as Error;
+
       if (attempt === maxRetries) {
-        break
+        break;
       }
 
       // Exponential backoff: 1s, 2s, 4s
-      const delay = baseDelay * Math.pow(2, attempt)
-      structuredLogger.warn(`Retry attempt ${attempt + 1}/${maxRetries + 1} after ${delay}ms delay`, {
-        attempt: attempt + 1,
-        maxRetries: maxRetries + 1,
-        delay
-      })
-      await new Promise(resolve => setTimeout(resolve, delay))
+      const delay = baseDelay * Math.pow(2, attempt);
+      structuredLogger.warn(
+        `Retry attempt ${attempt + 1}/${maxRetries + 1} after ${delay}ms delay`,
+        {
+          attempt: attempt + 1,
+          maxRetries: maxRetries + 1,
+          delay,
+        }
+      );
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
 
-  throw lastError!
+  throw lastError!;
 }
 
 // Honest data fetching with transparency
 async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
-  const startTime = Date.now()
+  const startTime = Date.now();
   const metadata: ApiResponse['metadata'] = {
     timestamp: new Date().toISOString(),
     zipCode,
     dataQuality: 'unavailable',
     dataSource: 'none',
-    cacheable: false
-  }
+    cacheable: false,
+  };
 
   try {
     // Step 1: Get district info with circuit breaker and retry
     structuredLogger.info(`Fetching district info for ZIP ${zipCode}`, {
       zipCode,
-      operation: 'getDistrict'
-    })
-    
+      operation: 'getDistrict',
+    });
+
     const districtInfo = await censusCircuitBreaker.execute(
       () => retryWithBackoff(() => getCongressionalDistrictFromZip(zipCode)),
       'Census API'
-    )
-    
+    );
+
     structuredLogger.info(`District info retrieved successfully`, {
       zipCode,
       state: districtInfo?.state,
       district: districtInfo?.district,
-      operation: 'getDistrict'
+      operation: 'getDistrict',
     });
 
     if (!districtInfo) {
@@ -166,45 +174,46 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
         error: {
           code: 'DISTRICT_NOT_FOUND',
           message: `Could not determine congressional district for ZIP code ${zipCode}`,
-          details: 'This ZIP code may be invalid or not currently mapped to a congressional district'
+          details:
+            'This ZIP code may be invalid or not currently mapped to a congressional district',
         },
         metadata: {
           ...metadata,
           dataQuality: 'unavailable',
-          dataSource: 'census-failed'
-        }
-      }
+          dataSource: 'census-failed',
+        },
+      };
     }
-    
+
     // Validate district data
-    const districtValidation = validateDistrictResponse(districtInfo)
+    const districtValidation = validateDistrictResponse(districtInfo);
     if (!districtValidation.isValid) {
       structuredLogger.warn('District data validation failed', {
         zipCode,
         validationErrors: districtValidation.errors,
-        operation: 'validateDistrict'
-      })
+        operation: 'validateDistrict',
+      });
     }
 
     structuredLogger.info(`District found: ${districtInfo.state}-${districtInfo.district}`, {
       zipCode,
       state: districtInfo.state,
-      district: districtInfo.district
-    })
+      district: districtInfo.district,
+    });
 
-    // Step 2: Get representatives with circuit breaker and retry  
+    // Step 2: Get representatives with circuit breaker and retry
     structuredLogger.info(`Fetching all representatives`, {
       zipCode,
-      operation: 'getAllRepresentatives'
+      operation: 'getAllRepresentatives',
     });
     const allRepresentatives = await congressCircuitBreaker.execute(
       () => retryWithBackoff(() => getAllEnhancedRepresentatives()),
       'Congress Legislators'
-    )
+    );
     structuredLogger.info(`Fetched representatives from congress-legislators`, {
       zipCode,
       representativeCount: allRepresentatives?.length || 0,
-      operation: 'getAllRepresentatives'
+      operation: 'getAllRepresentatives',
     });
 
     if (!allRepresentatives || allRepresentatives.length === 0) {
@@ -213,15 +222,15 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
         error: {
           code: 'REPRESENTATIVES_DATA_UNAVAILABLE',
           message: 'Representative data is temporarily unavailable',
-          details: 'Congress legislators database could not be accessed'
+          details: 'Congress legislators database could not be accessed',
         },
         metadata: {
           ...metadata,
           dataQuality: 'unavailable',
           dataSource: 'congress-legislators-failed',
-          freshness: `District lookup successful (${Date.now() - startTime}ms)`
-        }
-      }
+          freshness: `District lookup successful (${Date.now() - startTime}ms)`,
+        },
+      };
     }
 
     // Step 3: Filter representatives for this district
@@ -229,7 +238,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       zipCode,
       state: districtInfo.state,
       district: districtInfo.district,
-      operation: 'filterRepresentatives'
+      operation: 'filterRepresentatives',
     });
     const districtRepresentatives = allRepresentatives.filter(rep => {
       if (rep.chamber === 'Senate' && rep.state === districtInfo.state) {
@@ -237,33 +246,36 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
           zipCode,
           representativeName: rep.name,
           state: rep.state,
-          chamber: rep.chamber
+          chamber: rep.chamber,
         });
-        return true
+        return true;
       }
-      if (rep.chamber === 'House' && 
-          rep.state === districtInfo.state && 
-          rep.district && districtInfo.district) {
+      if (
+        rep.chamber === 'House' &&
+        rep.state === districtInfo.state &&
+        rep.district &&
+        districtInfo.district
+      ) {
         // Normalize district numbers for comparison (handle '04' vs '4')
-        const repDistrict = parseInt(rep.district, 10)
-        const targetDistrict = parseInt(districtInfo.district, 10)
-        const matches = repDistrict === targetDistrict
+        const repDistrict = parseInt(rep.district, 10);
+        const targetDistrict = parseInt(districtInfo.district, 10);
+        const matches = repDistrict === targetDistrict;
         structuredLogger.debug(`Evaluating House representative`, {
           zipCode,
           representativeName: rep.name,
           state: rep.state,
           district: rep.district,
           targetDistrict: districtInfo.district,
-          matches
+          matches,
         });
-        return matches
+        return matches;
       }
-      return false
-    })
+      return false;
+    });
     structuredLogger.info(`Found representatives for district`, {
       zipCode,
       representativeCount: districtRepresentatives.length,
-      operation: 'filterRepresentatives'
+      operation: 'filterRepresentatives',
     });
 
     if (districtRepresentatives.length === 0) {
@@ -275,36 +287,43 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
           details: {
             district: districtInfo.district,
             state: districtInfo.state,
-            totalRepsInDatabase: allRepresentatives.length
-          }
+            totalRepsInDatabase: allRepresentatives.length,
+          },
         },
         metadata: {
           ...metadata,
           dataQuality: 'low',
           dataSource: 'congress-legislators-partial',
-          freshness: `Data retrieved in ${Date.now() - startTime}ms`
-        }
-      }
+          freshness: `Data retrieved in ${Date.now() - startTime}ms`,
+        },
+      };
     }
 
     // Step 4: Convert to response format with validation
-    const representatives: RepresentativeResponse[] = []
-    const validationResults: unknown[] = []
-    
+    const representatives: RepresentativeResponse[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const validationResults: any[] = [];
+
     for (const rep of districtRepresentatives) {
       // Validate each representative's data
-      const repValidation = validateRepresentativeResponse(rep)
-      validationResults.push(validateApiResponse(rep, validateRepresentativeResponse, `congress-legislators-${rep.bioguideId}`))
-      
+      const repValidation = validateRepresentativeResponse(rep);
+      validationResults.push(
+        validateApiResponse(
+          rep,
+          validateRepresentativeResponse,
+          `congress-legislators-${rep.bioguideId}`
+        )
+      );
+
       if (repValidation.warnings.length > 0) {
         structuredLogger.warn(`Data quality warnings for representative`, {
           zipCode,
           representativeName: rep.name,
           bioguideId: rep.bioguideId,
-          validationWarnings: repValidation.warnings
-        })
+          validationWarnings: repValidation.warnings,
+        });
       }
-      
+
       representatives.push({
         bioguideId: rep.bioguideId,
         name: rep.name,
@@ -318,35 +337,35 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
         contactInfo: {
           phone: rep.currentTerm?.phone || rep.phone || '',
           website: rep.currentTerm?.website || rep.website || '',
-          office: rep.currentTerm?.office || rep.currentTerm?.address || ''
-        }
-      })
+          office: rep.currentTerm?.office || rep.currentTerm?.address || '',
+        },
+      });
     }
-    
+
     // Generate data quality report
     const qualityReport = generateDataQualityReport([
       validateApiResponse(districtInfo, validateDistrictResponse, 'census-api'),
-      ...validationResults
-    ])
+      ...validationResults,
+    ]);
 
     // Determine data quality based on validation results
-    let dataQuality: 'high' | 'medium' | 'low' = 'high'
+    let dataQuality: 'high' | 'medium' | 'low' = 'high';
     if (qualityReport.overall.score >= 90) {
-      dataQuality = 'high'
+      dataQuality = 'high';
     } else if (qualityReport.overall.score >= 70) {
-      dataQuality = 'medium'
+      dataQuality = 'medium';
     } else {
-      dataQuality = 'low'
+      dataQuality = 'low';
     }
-    
+
     // Log quality issues for monitoring
     if (qualityReport.overall.issues.length > 0) {
       structuredLogger.warn(`Data quality issues detected`, {
         zipCode,
         qualityScore: qualityReport.overall.score,
         issues: qualityReport.overall.issues,
-        operation: 'dataQualityCheck'
-      })
+        operation: 'dataQualityCheck',
+      });
     }
 
     return {
@@ -359,37 +378,37 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
         cacheable: true,
         freshness: `Retrieved in ${Date.now() - startTime}ms`,
         validationScore: qualityReport.overall.score,
-        validationStatus: qualityReport.overall.status
-      }
-    }
-
+        validationStatus: qualityReport.overall.status,
+      },
+    };
   } catch (error) {
     structuredLogger.error('Error fetching representatives', error as Error, {
       zipCode,
-      operation: 'getRepresentativesByZip'
-    })
+      operation: 'getRepresentativesByZip',
+    });
 
     // Determine error type and provide specific messaging
-    let errorCode = 'UNKNOWN_ERROR'
-    let errorMessage = 'An unexpected error occurred'
-    let errorDetails: unknown = undefined
+    let errorCode = 'UNKNOWN_ERROR';
+    let errorMessage = 'An unexpected error occurred';
+    let errorDetails: unknown = undefined;
 
     if (error instanceof Error) {
       if (error.message.includes('Circuit breaker open')) {
-        errorCode = 'SERVICE_TEMPORARILY_UNAVAILABLE'
-        errorMessage = 'Government data services are temporarily unavailable due to multiple failures'
+        errorCode = 'SERVICE_TEMPORARILY_UNAVAILABLE';
+        errorMessage =
+          'Government data services are temporarily unavailable due to multiple failures';
         errorDetails = {
           censusStatus: censusCircuitBreaker.getStatus(),
-          congressStatus: congressCircuitBreaker.getStatus()
-        }
+          congressStatus: congressCircuitBreaker.getStatus(),
+        };
       } else if (error.message.includes('timeout') || error.message.includes('ECONNRESET')) {
-        errorCode = 'SERVICE_TIMEOUT'
-        errorMessage = 'Government data services are responding slowly. Please try again.'
+        errorCode = 'SERVICE_TIMEOUT';
+        errorMessage = 'Government data services are responding slowly. Please try again.';
       } else if (error.message.includes('API key')) {
-        errorCode = 'CONFIGURATION_ERROR'
-        errorMessage = 'Service configuration issue. Please contact support.'
+        errorCode = 'CONFIGURATION_ERROR';
+        errorMessage = 'Service configuration issue. Please contact support.';
       } else {
-        errorMessage = error.message
+        errorMessage = error.message;
       }
     }
 
@@ -398,115 +417,123 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       error: {
         code: errorCode,
         message: errorMessage,
-        details: errorDetails
+        details: errorDetails,
       },
       metadata: {
         ...metadata,
         dataQuality: 'unavailable',
         dataSource: 'error',
-        freshness: `Failed after ${Date.now() - startTime}ms`
-      }
-    }
+        freshness: `Failed after ${Date.now() - startTime}ms`,
+      },
+    };
   }
 }
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
   const logger = createRequestLogger(request, `rep-${Date.now()}`);
-  
+
   logger.info('Representatives API request started');
-  
+
   try {
-    const url = new URL(request.url)
-    const zipCode = url.searchParams.get('zip')
+    const url = new URL(request.url);
+    const zipCode = url.searchParams.get('zip');
 
     logger.info('ZIP code parameter received', { zipCode });
 
     // Input validation
     if (!zipCode) {
       logger.warn('Missing ZIP code parameter');
-      return NextResponse.json({
-        success: false,
-        error: {
-          code: 'MISSING_ZIP_CODE',
-          message: 'ZIP code parameter is required'
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'MISSING_ZIP_CODE',
+            message: 'ZIP code parameter is required',
+          },
+          metadata: {
+            timestamp: new Date().toISOString(),
+            zipCode: '',
+            dataQuality: 'unavailable' as const,
+            dataSource: 'validation-error',
+            cacheable: false,
+          },
         },
-        metadata: {
-          timestamp: new Date().toISOString(),
-          zipCode: '',
-          dataQuality: 'unavailable' as const,
-          dataSource: 'validation-error',
-          cacheable: false
-        }
-      }, { status: 400 })
+        { status: 400 }
+      );
     }
 
     if (!/^\d{5}(-\d{4})?$/.test(zipCode)) {
-      return NextResponse.json({
-        success: false,
-        error: {
-          code: 'INVALID_ZIP_CODE',
-          message: 'ZIP code must be 5 digits (e.g., 10001) or 9 digits (e.g., 10001-1234)'
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'INVALID_ZIP_CODE',
+            message: 'ZIP code must be 5 digits (e.g., 10001) or 9 digits (e.g., 10001-1234)',
+          },
+          metadata: {
+            timestamp: new Date().toISOString(),
+            zipCode,
+            dataQuality: 'unavailable' as const,
+            dataSource: 'validation-error',
+            cacheable: false,
+          },
         },
-        metadata: {
-          timestamp: new Date().toISOString(),
-          zipCode,
-          dataQuality: 'unavailable' as const,
-          dataSource: 'validation-error',
-          cacheable: false
-        }
-      }, { status: 400 })
+        { status: 400 }
+      );
     }
 
     // Get representatives with honest error handling
     logger.info('Calling getRepresentativesByZip', { zipCode });
-    const result = await getRepresentativesByZip(zipCode)
-    logger.info('getRepresentativesByZip completed', { 
+    const result = await getRepresentativesByZip(zipCode);
+    logger.info('getRepresentativesByZip completed', {
       zipCode,
       success: result.success,
-      representativeCount: result.success ? result.representatives?.length : 0
+      representativeCount: result.success ? result.representatives?.length : 0,
     });
-    
+
     if (!result.success) {
       logger.warn('getRepresentativesByZip failed', {
         zipCode,
         errorCode: result.error?.code,
-        errorMessage: result.error?.message
+        errorMessage: result.error?.message,
       });
     }
 
     // Return appropriate HTTP status based on success
-    const httpStatus = result.success ? 200 : 503
+    const httpStatus = result.success ? 200 : 503;
     const processingTime = Date.now() - startTime;
     logger.info('Representatives API request completed', {
       zipCode,
       processingTime,
       httpStatus,
-      success: result.success
+      success: result.success,
     });
 
-    return NextResponse.json(result, { status: httpStatus })
-
+    return NextResponse.json(result, { status: httpStatus });
   } catch (error) {
     const logger = createRequestLogger(request, `rep-error-${Date.now()}`);
     logger.error('Unexpected error in Representatives API', error as Error, {
-      hasStack: error instanceof Error && !!error.stack
+      hasStack: error instanceof Error && !!error.stack,
     });
-    
-    return NextResponse.json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'An internal server error occurred',
-        details: error instanceof Error ? error.message : 'Unknown error'
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'An internal server error occurred',
+          details: error instanceof Error ? error.message : 'Unknown error',
+        },
+        metadata: {
+          timestamp: new Date().toISOString(),
+          zipCode: '',
+          dataQuality: 'unavailable' as const,
+          dataSource: 'internal-error',
+          cacheable: false,
+        },
       },
-      metadata: {
-        timestamp: new Date().toISOString(),
-        zipCode: '',
-        dataQuality: 'unavailable' as const,
-        dataSource: 'internal-error',
-        cacheable: false
-      }
-    }, { status: 500 })
+      { status: 500 }
+    );
   }
 }

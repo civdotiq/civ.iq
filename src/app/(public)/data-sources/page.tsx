@@ -245,7 +245,7 @@ export default function DataSourcesPage() {
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Regular Updates</h3>
                 <p className="text-gray-600">
-                  Data is refreshed according to each source's update schedule, many in real-time.
+                  Data is refreshed according to each source&apos;s update schedule, many in real-time.
                 </p>
               </div>
               

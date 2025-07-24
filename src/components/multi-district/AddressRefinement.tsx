@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { ComponentErrorBoundary } from '@/components/error-boundaries';
 import { SmartSearchInput } from '@/components/search/SmartSearchInput';
 import { geocodeAddress, extractDistrictFromResult } from '@/lib/census-geocoder';
-import { structuredLogger } from '@/lib/logging/logger';
+import { structuredLogger } from '@/lib/logging/logger-client';
 
 interface AddressRefinementProps {
   zipCode: string;
@@ -24,9 +24,8 @@ export function AddressRefinement({
   zipCode,
   onSuccess,
   onCancel,
-  className = ''
+  className = '',
 }: AddressRefinementProps) {
-  const [address, setAddress] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +38,7 @@ export function AddressRefinement({
     try {
       structuredLogger.info('Address refinement started', {
         zipCode,
-        addressLength: fullAddress.length
+        addressLength: fullAddress.length,
       });
 
       const result = await geocodeAddress(fullAddress);
@@ -55,28 +54,27 @@ export function AddressRefinement({
       // Use the first (most confident) result
       const match = result[0];
       const districtInfo = extractDistrictFromResult(match);
-      
+
       if (!districtInfo) {
         throw new Error('No congressional district information found in the geocoding result');
       }
-      
+
       structuredLogger.info('Address refinement successful', {
         zipCode,
         state: districtInfo.state,
         district: districtInfo.district,
         fullDistrict: districtInfo.fullDistrict,
-        matchedAddress: match.matchedAddress
+        matchedAddress: match.matchedAddress,
       });
 
       onSuccess(districtInfo.state, districtInfo.district, fullAddress);
-
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to geocode address';
       setError(errorMessage);
-      
+
       structuredLogger.error('Address refinement failed', err as Error, {
         zipCode,
-        address: fullAddress
+        address: fullAddress,
       });
     } finally {
       setIsLoading(false);
@@ -89,12 +87,10 @@ export function AddressRefinement({
         <div className="p-6">
           {/* Header */}
           <div className="text-center mb-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Enter Your Full Address
-            </h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Enter Your Full Address</h3>
             <p className="text-gray-600">
-              Provide your street address to get your exact congressional district.
-              This is more accurate than using just your ZIP code.
+              Provide your street address to get your exact congressional district. This is more
+              accurate than using just your ZIP code.
             </p>
           </div>
 
@@ -115,12 +111,8 @@ export function AddressRefinement({
                 <div className="flex items-start">
                   <div className="text-red-600 mr-2">⚠️</div>
                   <div>
-                    <p className="text-sm font-medium text-red-800">
-                      Address Not Found
-                    </p>
-                    <p className="text-sm text-red-700 mt-1">
-                      {error}
-                    </p>
+                    <p className="text-sm font-medium text-red-800">Address Not Found</p>
+                    <p className="text-sm text-red-700 mt-1">{error}</p>
                     <p className="text-xs text-red-600 mt-2">
                       Try including more details like your full street address, city, and state.
                     </p>
@@ -154,13 +146,14 @@ export function AddressRefinement({
 
           {/* Help Section */}
           <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h4 className="text-sm font-semibold text-blue-900 mb-2">
-              💡 Tips for Better Results
-            </h4>
+            <h4 className="text-sm font-semibold text-blue-900 mb-2">💡 Tips for Better Results</h4>
             <ul className="text-xs text-blue-800 space-y-1">
               <li>• Include your full street address (number, street name, type)</li>
               <li>• Add your city and state for best accuracy</li>
-              <li>• Examples: "123 Oak Street, Springfield, IL" or "456 Park Ave, Apt 2B, New York, NY"</li>
+              <li>
+                • Examples: &quot;123 Oak Street, Springfield, IL&quot; or &quot;456 Park Ave, Apt
+                2B, New York, NY&quot;
+              </li>
               <li>• Avoid PO Boxes - use your physical residence address</li>
             </ul>
           </div>
@@ -168,7 +161,8 @@ export function AddressRefinement({
           {/* Privacy Notice */}
           <div className="mt-4 text-center">
             <p className="text-xs text-gray-500">
-              🔒 Your address is only used to determine your congressional district and is not stored.
+              🔒 Your address is only used to determine your congressional district and is not
+              stored.
             </p>
           </div>
         </div>
@@ -181,10 +175,10 @@ export function AddressRefinement({
  * Compact inline version for smaller spaces
  */
 export function InlineAddressRefinement({
-  zipCode,
+  zipCode: _zipCode,
   onSuccess,
   onCancel,
-  className = ''
+  className = '',
 }: AddressRefinementProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -206,13 +200,12 @@ export function InlineAddressRefinement({
 
       const match = result[0];
       const districtInfo = extractDistrictFromResult(match);
-      
+
       if (!districtInfo) {
         throw new Error('No district information found');
       }
-      
-      onSuccess(districtInfo.state, districtInfo.district, fullAddress);
 
+      onSuccess(districtInfo.state, districtInfo.district, fullAddress);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to find address');
     } finally {
@@ -235,11 +228,7 @@ export function InlineAddressRefinement({
           className="w-full"
         />
 
-        {error && (
-          <div className="text-xs text-red-600 text-center">
-            {error}
-          </div>
-        )}
+        {error && <div className="text-xs text-red-600 text-center">{error}</div>}
 
         {isLoading && (
           <div className="flex items-center justify-center text-sm text-civiq-blue">

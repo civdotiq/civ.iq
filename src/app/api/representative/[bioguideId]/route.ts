@@ -6,9 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEnhancedRepresentative } from '@/lib/congress-legislators';
 import { structuredLogger } from '@/lib/logging/logger';
-import type { EnhancedRepresentative, BaseRepresentative } from '@/types/representative';
-
-interface RepresentativeDetails extends BaseRepresentative {}
+import type { EnhancedRepresentative } from '@/types/representative';
 
 export async function GET(
   request: NextRequest,
@@ -21,10 +19,7 @@ export async function GET(
   const includeAll = searchParams.get('includeAll') === 'true';
 
   if (!bioguideId) {
-    return NextResponse.json(
-      { error: 'Bioguide ID is required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
   }
 
   try {
@@ -35,17 +30,17 @@ export async function GET(
     try {
       enhancedData = await getEnhancedRepresentative(bioguideId);
       if (enhancedData) {
-        structuredLogger.info('Successfully retrieved enhanced representative data', { 
+        structuredLogger.info('Successfully retrieved enhanced representative data', {
           bioguideId,
           hasIds: !!enhancedData.ids,
           hasSocialMedia: !!enhancedData.socialMedia,
-          hasCurrentTerm: !!enhancedData.currentTerm
+          hasCurrentTerm: !!enhancedData.currentTerm,
         });
       }
     } catch (error) {
-      structuredLogger.warn('Failed to get enhanced representative data', { 
-        bioguideId, 
-        error: (error as Error).message 
+      structuredLogger.warn('Failed to get enhanced representative data', {
+        bioguideId,
+        error: (error as Error).message,
       });
     }
 
@@ -59,11 +54,13 @@ export async function GET(
         title: enhancedData.chamber === 'Senate' ? 'U.S. Senator' : 'U.S. Representative',
         phone: enhancedData.currentTerm?.phone || enhancedData.phone,
         website: enhancedData.currentTerm?.website || enhancedData.website,
-        terms: [{
-          congress: '119', // Current congress
-          startYear: enhancedData.currentTerm?.start.split('-')[0] || '2023',
-          endYear: enhancedData.currentTerm?.end.split('-')[0] || '2025'
-        }],
+        terms: [
+          {
+            congress: '119', // Current congress
+            startYear: enhancedData.currentTerm?.start.split('-')[0] || '2023',
+            endYear: enhancedData.currentTerm?.end.split('-')[0] || '2025',
+          },
+        ],
         committees: enhancedData.committees || [],
         metadata: {
           lastUpdated: new Date().toISOString(),
@@ -73,25 +70,29 @@ export async function GET(
             socialMedia: !!enhancedData.socialMedia,
             contact: !!enhancedData.currentTerm,
             committees: !!enhancedData.committees && enhancedData.committees.length > 0,
-            finance: !!enhancedData.ids?.opensecrets || !!enhancedData.ids?.fec
-          }
-        }
+            finance: !!enhancedData.ids?.opensecrets || !!enhancedData.ids?.fec,
+          },
+        },
       };
 
       // Optionally fetch additional data
       const additionalData: unknown = {};
-      
+
       if (includeCommittees || includeAll) {
         try {
           const committeeResponse = await fetch(
             `${request.url.split('/api/')[0]}/api/representative/${bioguideId}/committees`
           );
           if (committeeResponse.ok) {
-            additionalData.committees = await committeeResponse.json();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (additionalData as any).committees = await committeeResponse.json();
             representative.metadata!.dataSources.push('congress.gov');
           }
         } catch (error) {
-          structuredLogger.warn('Failed to fetch committee data', { bioguideId, error: (error as Error).message });
+          structuredLogger.warn('Failed to fetch committee data', {
+            bioguideId,
+            error: (error as Error).message,
+          });
         }
       }
 
@@ -101,13 +102,17 @@ export async function GET(
             `${request.url.split('/api/')[0]}/api/representative/${bioguideId}/leadership`
           );
           if (leadershipResponse.ok) {
-            additionalData.leadership = await leadershipResponse.json();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (additionalData as any).leadership = await leadershipResponse.json();
             if (!representative.metadata!.dataSources.includes('congress.gov')) {
               representative.metadata!.dataSources.push('congress.gov');
             }
           }
         } catch (error) {
-          structuredLogger.warn('Failed to fetch leadership data', { bioguideId, error: (error as Error).message });
+          structuredLogger.warn('Failed to fetch leadership data', {
+            bioguideId,
+            error: (error as Error).message,
+          });
         }
       }
 
@@ -115,33 +120,35 @@ export async function GET(
         bioguideId,
         includeCommittees,
         includeLeadership,
-        hasAdditionalData: Object.keys(additionalData).length > 0
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        hasAdditionalData: Object.keys(additionalData as any).length > 0,
       });
 
       return NextResponse.json({
         representative,
-        ...additionalData,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...(additionalData as any),
         success: true,
         metadata: {
           dataSource: 'congress-legislators',
           cacheHit: false,
           responseTime: Date.now(),
           includeCommittees,
-          includeLeadership
-        }
+          includeLeadership,
+        },
       });
     }
 
     // Fallback: Check if we have Congress.gov API key
     if (process.env.CONGRESS_API_KEY) {
       structuredLogger.info('Fetching from Congress.gov API', { bioguideId });
-      
+
       const response = await fetch(
         `https://api.congress.gov/v3/member/${bioguideId}?format=json&api_key=${process.env.CONGRESS_API_KEY}`,
-        { 
+        {
           headers: {
-            'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
-          }
+            'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+          },
         }
       );
 
@@ -163,15 +170,19 @@ export async function GET(
           email: member.email,
           website: member.url,
           imageUrl: member.depiction?.imageUrl,
-          terms: member.terms?.map((term: unknown) => ({
-            congress: term.congress,
-            startYear: term.startYear,
-            endYear: term.endYear
-          })) || [],
-          committees: member.leadership?.map((role: unknown) => ({
-            name: role.name,
-            role: role.type
-          })) || [],
+          terms:
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            member.terms?.map((term: any) => ({
+              congress: term.congress,
+              startYear: term.startYear,
+              endYear: term.endYear,
+            })) || [],
+          committees:
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            member.leadership?.map((role: any) => ({
+              name: role.name,
+              role: role.type,
+            })) || [],
           metadata: {
             lastUpdated: new Date().toISOString(),
             dataSources: ['congress.gov'],
@@ -180,9 +191,9 @@ export async function GET(
               socialMedia: false,
               contact: !!member.phone || !!member.email,
               committees: !!member.leadership && member.leadership.length > 0,
-              finance: false
-            }
-          }
+              finance: false,
+            },
+          },
         };
 
         structuredLogger.info('Successfully retrieved Congress.gov data', { bioguideId });
@@ -192,22 +203,22 @@ export async function GET(
           metadata: {
             dataSource: 'congress.gov',
             cacheHit: false,
-            responseTime: Date.now()
-          }
+            responseTime: Date.now(),
+          },
         });
       } else {
-        structuredLogger.warn('Congress.gov API request failed', { 
-          bioguideId, 
-          status: response.status 
+        structuredLogger.warn('Congress.gov API request failed', {
+          bioguideId,
+          status: response.status,
         });
       }
     }
 
     // Final fallback: Enhanced mock data
     structuredLogger.info('Using mock representative data', { bioguideId });
-    
+
     const commonReps: { [key: string]: Partial<EnhancedRepresentative> } = {
-      'P000595': {
+      P000595: {
         name: 'Gary Peters',
         firstName: 'Gary',
         lastName: 'Peters',
@@ -218,10 +229,10 @@ export async function GET(
         bio: { gender: 'M' },
         socialMedia: {
           twitter: 'SenGaryPeters',
-          facebook: 'SenatorGaryPeters'
-        }
+          facebook: 'SenatorGaryPeters',
+        },
       },
-      'S000770': {
+      S000770: {
         name: 'Debbie Stabenow',
         firstName: 'Debbie',
         lastName: 'Stabenow',
@@ -229,12 +240,12 @@ export async function GET(
         state: 'MI',
         chamber: 'Senate',
         title: 'U.S. Senator',
-        bio: { gender: 'F' }
-      }
+        bio: { gender: 'F' },
+      },
     };
 
     const commonRep = commonReps[bioguideId];
-    
+
     const mockRepresentative: EnhancedRepresentative = {
       bioguideId,
       name: commonRep?.name || `Representative ${bioguideId}`,
@@ -252,18 +263,18 @@ export async function GET(
         {
           congress: '118',
           startYear: '2023',
-          endYear: '2025'
-        }
+          endYear: '2025',
+        },
       ],
       committees: [
         {
           name: 'Committee on Energy and Commerce',
-          role: 'Member'
-        }
+          role: 'Member',
+        },
       ],
       fullName: {
         first: commonRep?.firstName || 'John',
-        last: commonRep?.lastName || bioguideId
+        last: commonRep?.lastName || bioguideId,
       },
       bio: commonRep?.bio || { gender: 'M' },
       socialMedia: commonRep?.socialMedia,
@@ -275,9 +286,9 @@ export async function GET(
           socialMedia: !!commonRep?.socialMedia,
           contact: true,
           committees: true,
-          finance: false
-        }
-      }
+          finance: false,
+        },
+      },
     };
 
     return NextResponse.json({
@@ -286,20 +297,19 @@ export async function GET(
       metadata: {
         dataSource: 'mock',
         cacheHit: false,
-        responseTime: Date.now()
-      }
+        responseTime: Date.now(),
+      },
     });
-
   } catch (error) {
     structuredLogger.error('Representative API error', error as Error, { bioguideId });
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
         success: false,
         metadata: {
           dataSource: 'error',
-          responseTime: Date.now()
-        }
+          responseTime: Date.now(),
+        },
       },
       { status: 500 }
     );

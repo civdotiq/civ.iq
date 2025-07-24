@@ -6,7 +6,7 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { structuredLogger } from '@/lib/logging/logger';
+import { structuredLogger } from '@/lib/logging/logger-client';
 import { Button } from '@/components/ui/Button';
 
 interface Props {
@@ -86,12 +86,10 @@ export class ComponentErrorBoundary extends Component<Props, State> {
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span className="font-medium">
-              {this.props.componentName || 'Component'} Error
-            </span>
+            <span className="font-medium">{this.props.componentName || 'Component'} Error</span>
           </div>
           <p className="text-red-600 text-sm mt-2">
-            This component encountered an error and couldn't render properly.
+            This component encountered an error and couldn&apos;t render properly.
           </p>
           <Button
             onClick={this.handleRetry}

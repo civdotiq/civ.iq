@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -8,6 +7,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import * as d3 from 'd3';
 
@@ -15,14 +15,36 @@ import * as d3 from 'd3';
 function CiviqLogo() {
   return (
     <div className="flex items-center group">
-      <svg className="w-10 h-10 transition-transform group-hover:scale-110" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <rect x="36" y="51" width="28" height="30" fill="#0b983c"/>
-        <circle cx="50" cy="31" r="22" fill="#ffffff"/>
-        <circle cx="50" cy="31" r="20" fill="#e11d07"/>
-        <circle cx="38" cy="89" r="2" fill="#3ea2d4" className="animate-pulse"/>
-        <circle cx="46" cy="89" r="2" fill="#3ea2d4" className="animate-pulse animation-delay-100"/>
-        <circle cx="54" cy="89" r="2" fill="#3ea2d4" className="animate-pulse animation-delay-200"/>
-        <circle cx="62" cy="89" r="2" fill="#3ea2d4" className="animate-pulse animation-delay-300"/>
+      <svg
+        className="w-10 h-10 transition-transform group-hover:scale-110"
+        viewBox="0 0 100 100"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect x="36" y="51" width="28" height="30" fill="#0b983c" />
+        <circle cx="50" cy="31" r="22" fill="#ffffff" />
+        <circle cx="50" cy="31" r="20" fill="#e11d07" />
+        <circle cx="38" cy="89" r="2" fill="#3ea2d4" className="animate-pulse" />
+        <circle
+          cx="46"
+          cy="89"
+          r="2"
+          fill="#3ea2d4"
+          className="animate-pulse animation-delay-100"
+        />
+        <circle
+          cx="54"
+          cy="89"
+          r="2"
+          fill="#3ea2d4"
+          className="animate-pulse animation-delay-200"
+        />
+        <circle
+          cx="62"
+          cy="89"
+          r="2"
+          fill="#3ea2d4"
+          className="animate-pulse animation-delay-300"
+        />
       </svg>
       <span className="ml-3 text-xl font-bold text-gray-900">CIV.IQ</span>
     </div>
@@ -100,7 +122,7 @@ function RepresentativeSelector({
   representatives,
   selectedId,
   onSelect,
-  position
+  position,
 }: {
   representatives: Representative[];
   selectedId: string | null;
@@ -110,9 +132,10 @@ function RepresentativeSelector({
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
 
-  const filteredReps = representatives.filter(rep =>
-    rep.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    rep.state.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredReps = representatives.filter(
+    rep =>
+      rep.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rep.state.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const selectedRep = representatives.find(r => r.bioguideId === selectedId);
@@ -127,10 +150,12 @@ function RepresentativeSelector({
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
               {selectedRep.imageUrl ? (
-                <img 
-                  src={selectedRep.imageUrl} 
+                <Image
+                  src={selectedRep.imageUrl}
                   alt={selectedRep.name}
-                  className="w-12 h-12 object-cover"
+                  width={48}
+                  height={48}
+                  className="object-cover"
                 />
               ) : (
                 <span className="text-xs text-gray-600">Photo</span>
@@ -145,9 +170,7 @@ function RepresentativeSelector({
             </div>
           </div>
         ) : (
-          <div className="text-gray-500">
-            Select Representative {position}
-          </div>
+          <div className="text-gray-500">Select Representative {position}</div>
         )}
       </button>
 
@@ -157,10 +180,10 @@ function RepresentativeSelector({
             <input
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               placeholder="Search by name or state..."
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             />
           </div>
           <div className="max-h-80 overflow-y-auto">
@@ -176,10 +199,12 @@ function RepresentativeSelector({
               >
                 <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                   {rep.imageUrl ? (
-                    <img 
-                      src={rep.imageUrl} 
+                    <Image
+                      src={rep.imageUrl}
                       alt={rep.name}
-                      className="w-10 h-10 object-cover"
+                      width={40}
+                      height={40}
+                      className="object-cover"
                     />
                   ) : (
                     <span className="text-xs text-gray-600">Photo</span>
@@ -220,61 +245,76 @@ function TimelineComparison({ rep1, rep2 }: { rep1: Representative; rep2: Repres
 
     // Create timeline data
     const currentYear = new Date().getFullYear();
-    const data = [
+
+    interface TimelineData {
+      name: string;
+      start: number;
+      end: number;
+      y: number;
+      color: string;
+    }
+
+    const data: TimelineData[] = [
       {
         name: rep1.name,
         start: currentYear - rep1.yearsInOffice,
         end: currentYear,
         y: 0,
-        color: '#3b82f6'
+        color: '#3b82f6',
       },
       {
         name: rep2.name,
         start: currentYear - rep2.yearsInOffice,
         end: currentYear,
         y: 1,
-        color: '#ef4444'
-      }
+        color: '#ef4444',
+      },
     ];
 
-    const xScale = d3.scaleLinear()
+    const xScale = d3
+      .scaleLinear()
       .domain([Math.min(...data.map(d => d.start)) - 1, currentYear])
       .range([0, width]);
 
-    const yScale = d3.scaleBand()
+    const yScale = d3
+      .scaleBand()
       .domain(data.map(d => d.name))
       .range([0, height])
       .padding(0.3);
 
     // Add X axis
-    svg.append('g')
+    svg
+      .append('g')
       .attr('transform', `translate(0,${height})`)
       .call(d3.axisBottom(xScale).tickFormat(d3.format('d')));
 
     // Add Y axis
-    svg.append('g')
-      .call(d3.axisLeft(yScale));
+    svg.append('g').call(d3.axisLeft(yScale));
 
     // Add bars
-    svg.selectAll('.bar')
+    svg
+      .selectAll('.bar')
       .data(data)
-      .enter().append('rect')
+      .enter()
+      .append('rect')
       .attr('class', 'bar')
-      .attr('x', (d: unknown) => xScale(d.start))
-      .attr('y', (d: unknown) => yScale(d.name) || 0)
-      .attr('width', (d: unknown) => xScale(d.end) - xScale(d.start))
+      .attr('x', (d: TimelineData) => xScale(d.start))
+      .attr('y', (d: TimelineData) => yScale(d.name) || 0)
+      .attr('width', (d: TimelineData) => xScale(d.end) - xScale(d.start))
       .attr('height', yScale.bandwidth())
-      .attr('fill', (d: unknown) => d.color)
+      .attr('fill', (d: TimelineData) => d.color)
       .attr('opacity', 0.8);
 
     // Add labels
-    svg.selectAll('.label')
+    svg
+      .selectAll('.label')
       .data(data)
-      .enter().append('text')
-      .attr('x', (d: unknown) => xScale(d.start) + 5)
-      .attr('y', (d: unknown) => (yScale(d.name) || 0) + yScale.bandwidth() / 2)
+      .enter()
+      .append('text')
+      .attr('x', (d: TimelineData) => xScale(d.start) + 5)
+      .attr('y', (d: TimelineData) => (yScale(d.name) || 0) + yScale.bandwidth() / 2)
       .attr('dy', '.35em')
-      .text((d: unknown) => `${d.end - d.start} years`)
+      .text((d: TimelineData) => `${d.end - d.start} years`)
       .attr('fill', 'white')
       .attr('font-size', '12px');
   }, [rep1, rep2]);
@@ -288,38 +328,44 @@ function TimelineComparison({ rep1, rep2 }: { rep1: Representative; rep2: Repres
 }
 
 // District demographics comparison
-function DistrictDemographicsComparison({ rep1, rep2 }: { rep1: Representative; rep2: Representative }) {
+function DistrictDemographicsComparison({
+  rep1,
+  rep2,
+}: {
+  rep1: Representative;
+  rep2: Representative;
+}) {
   const demographics = [
-    { 
-      label: 'Population', 
-      value1: rep1.districtDemographics.population, 
+    {
+      label: 'Population',
+      value1: rep1.districtDemographics.population,
       value2: rep2.districtDemographics.population,
-      format: (v: number) => v.toLocaleString()
+      format: (v: number) => v.toLocaleString(),
     },
-    { 
-      label: 'Median Income', 
-      value1: rep1.districtDemographics.medianIncome, 
+    {
+      label: 'Median Income',
+      value1: rep1.districtDemographics.medianIncome,
       value2: rep2.districtDemographics.medianIncome,
-      format: (v: number) => `$${v.toLocaleString()}`
+      format: (v: number) => `$${v.toLocaleString()}`,
     },
-    { 
-      label: 'Bachelor\'s Degree+', 
-      value1: rep1.districtDemographics.educationBachelor, 
+    {
+      label: "Bachelor's Degree+",
+      value1: rep1.districtDemographics.educationBachelor,
       value2: rep2.districtDemographics.educationBachelor,
-      format: (v: number) => `${v}%`
+      format: (v: number) => `${v}%`,
     },
-    { 
-      label: 'Unemployment Rate', 
-      value1: rep1.districtDemographics.unemploymentRate, 
+    {
+      label: 'Unemployment Rate',
+      value1: rep1.districtDemographics.unemploymentRate,
       value2: rep2.districtDemographics.unemploymentRate,
-      format: (v: number) => `${v}%`
+      format: (v: number) => `${v}%`,
     },
-    { 
-      label: 'Urban Population', 
-      value1: rep1.districtDemographics.urbanPercentage, 
+    {
+      label: 'Urban Population',
+      value1: rep1.districtDemographics.urbanPercentage,
       value2: rep2.districtDemographics.urbanPercentage,
-      format: (v: number) => `${v}%`
-    }
+      format: (v: number) => `${v}%`,
+    },
   ];
 
   return (
@@ -331,7 +377,9 @@ function DistrictDemographicsComparison({ rep1, rep2 }: { rep1: Representative; 
             <div className="flex justify-between text-sm text-gray-600 mb-1">
               <span>{demo.label}</span>
               <span className="text-xs text-gray-500">
-                {rep1.state}{rep1.district ? `-${rep1.district}` : ''} vs {rep2.state}{rep2.district ? `-${rep2.district}` : ''}
+                {rep1.state}
+                {rep1.district ? `-${rep1.district}` : ''} vs {rep2.state}
+                {rep2.district ? `-${rep2.district}` : ''}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -355,10 +403,28 @@ function NewsSentimentComparison({ rep1, rep2 }: { rep1: Representative; rep2: R
     const container = d3.select('#sentiment-chart');
     container.selectAll('*').remove();
 
-    const data = [
-      { category: 'Positive', rep1: rep1.newsMetrics.positiveSentiment, rep2: rep2.newsMetrics.positiveSentiment },
-      { category: 'Neutral', rep1: rep1.newsMetrics.neutralSentiment, rep2: rep2.newsMetrics.neutralSentiment },
-      { category: 'Negative', rep1: rep1.newsMetrics.negativeSentiment, rep2: rep2.newsMetrics.negativeSentiment }
+    interface SentimentData {
+      category: string;
+      rep1: number;
+      rep2: number;
+    }
+
+    const data: SentimentData[] = [
+      {
+        category: 'Positive',
+        rep1: rep1.newsMetrics.positiveSentiment,
+        rep2: rep2.newsMetrics.positiveSentiment,
+      },
+      {
+        category: 'Neutral',
+        rep1: rep1.newsMetrics.neutralSentiment,
+        rep2: rep2.newsMetrics.neutralSentiment,
+      },
+      {
+        category: 'Negative',
+        rep1: rep1.newsMetrics.negativeSentiment,
+        rep2: rep2.newsMetrics.negativeSentiment,
+      },
     ];
 
     const margin = { top: 20, right: 120, bottom: 40, left: 60 };
@@ -372,75 +438,78 @@ function NewsSentimentComparison({ rep1, rep2 }: { rep1: Representative; rep2: R
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const x0 = d3.scaleBand()
+    const x0 = d3
+      .scaleBand()
       .domain(data.map(d => d.category))
       .range([0, width])
       .padding(0.1);
 
-    const x1 = d3.scaleBand()
-      .domain(['rep1', 'rep2'])
-      .range([0, x0.bandwidth()])
-      .padding(0.05);
+    const x1 = d3.scaleBand().domain(['rep1', 'rep2']).range([0, x0.bandwidth()]).padding(0.05);
 
-    const y = d3.scaleLinear()
-      .domain([0, 100])
-      .range([height, 0]);
+    const y = d3.scaleLinear().domain([0, 100]).range([height, 0]);
 
-    const color = d3.scaleOrdinal()
-      .domain(['rep1', 'rep2'])
-      .range(['#3b82f6', '#ef4444']);
+    const color = d3.scaleOrdinal().domain(['rep1', 'rep2']).range(['#3b82f6', '#ef4444']);
 
-    svg.append('g')
-      .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x0));
+    svg.append('g').attr('transform', `translate(0,${height})`).call(d3.axisBottom(x0));
 
-    svg.append('g')
-      .call(d3.axisLeft(y));
+    svg.append('g').call(d3.axisLeft(y));
 
-    const categoryGroups = svg.selectAll('.category')
+    const categoryGroups = svg
+      .selectAll('.category')
       .data(data)
-      .enter().append('g')
+      .enter()
+      .append('g')
       .attr('class', 'category')
-      .attr('transform', (d: unknown) => `translate(${x0(d.category)},0)`);
+      .attr('transform', (d: SentimentData) => `translate(${x0(d.category)},0)`);
 
-    categoryGroups.selectAll('rect')
-      .data((d: unknown) => [
+    interface BarData {
+      key: string;
+      value: number;
+    }
+
+    categoryGroups
+      .selectAll('rect')
+      .data((d: SentimentData) => [
         { key: 'rep1', value: d.rep1 },
-        { key: 'rep2', value: d.rep2 }
+        { key: 'rep2', value: d.rep2 },
       ])
-      .enter().append('rect')
-      .attr('x', (d: unknown) => x1(d.key) || 0)
-      .attr('y', (d: unknown) => y(d.value))
+      .enter()
+      .append('rect')
+      .attr('x', (d: BarData) => x1(d.key) || 0)
+      .attr('y', (d: BarData) => y(d.value))
       .attr('width', x1.bandwidth())
-      .attr('height', (d: unknown) => height - y(d.value))
-      .attr('fill', (d: unknown) => String(color(d.key) || '#ccc'));
+      .attr('height', (d: BarData) => height - y(d.value))
+      .attr('fill', (d: BarData) => String(color(d.key) || '#ccc'));
 
     // Add legend
-    const legend = svg.append('g')
-      .attr('transform', `translate(${width + 10}, 0)`);
+    const legend = svg.append('g').attr('transform', `translate(${width + 10}, 0)`);
 
-    legend.append('rect')
+    legend
+      .append('rect')
       .attr('x', 0)
       .attr('y', 0)
       .attr('width', 18)
       .attr('height', 18)
       .style('fill', '#3b82f6');
 
-    legend.append('text')
+    legend
+      .append('text')
       .attr('x', 25)
       .attr('y', 9)
       .attr('dy', '.35em')
       .style('text-anchor', 'start')
       .text(rep1.name?.split(' ').pop() || rep1.name || 'Unknown');
 
-    legend.append('rect')
+    legend
+      .append('rect')
       .attr('x', 0)
       .attr('y', 25)
       .attr('width', 18)
       .attr('height', 18)
       .style('fill', '#ef4444');
 
-    legend.append('text')
+    legend
+      .append('text')
       .attr('x', 25)
       .attr('y', 34)
       .attr('dy', '.35em')
@@ -455,7 +524,8 @@ function NewsSentimentComparison({ rep1, rep2 }: { rep1: Representative; rep2: R
         <div className="text-sm">
           <p className="text-gray-600">Total Mentions</p>
           <p className="font-semibold">
-            <span className="text-blue-600">{rep1.newsMetrics.totalMentions}</span> vs <span className="text-red-600">{rep2.newsMetrics.totalMentions}</span>
+            <span className="text-blue-600">{rep1.newsMetrics.totalMentions}</span> vs{' '}
+            <span className="text-red-600">{rep2.newsMetrics.totalMentions}</span>
           </p>
         </div>
       </div>
@@ -469,7 +539,8 @@ function CommitteeEffectiveness({ rep1, rep2 }: { rep1: Representative; rep2: Re
   const calculateEffectiveness = (rep: Representative) => {
     const leadershipBonus = rep.committees.filter(c => c.role).length * 20;
     const committeeScore = rep.committees.length * 10;
-    const legislativeScore = (rep.legislation.billsBecameLaw / Math.max(rep.legislation.billsSponsored, 1)) * 100;
+    const legislativeScore =
+      (rep.legislation.billsBecameLaw / Math.max(rep.legislation.billsSponsored, 1)) * 100;
     return Math.min(100, (leadershipBonus + committeeScore + legislativeScore) / 3);
   };
 
@@ -486,29 +557,31 @@ function CommitteeEffectiveness({ rep1, rep2 }: { rep1: Representative; rep2: Re
             <span className="text-sm font-bold text-blue-600">{score1.toFixed(0)}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">
-            <div 
+            <div
               className="bg-blue-600 h-3 rounded-full transition-all duration-500"
               style={{ width: `${score1}%` }}
             />
           </div>
           <div className="mt-1 text-xs text-gray-600">
-            {rep1.committees.filter(c => c.role).length} leadership roles, {rep1.committees.length} committees
+            {rep1.committees.filter(c => c.role).length} leadership roles, {rep1.committees.length}{' '}
+            committees
           </div>
         </div>
-        
+
         <div>
           <div className="flex justify-between mb-2">
             <span className="text-sm font-medium text-gray-700">{rep2.name}</span>
             <span className="text-sm font-bold text-red-600">{score2.toFixed(0)}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">
-            <div 
+            <div
               className="bg-red-600 h-3 rounded-full transition-all duration-500"
               style={{ width: `${score2}%` }}
             />
           </div>
           <div className="mt-1 text-xs text-gray-600">
-            {rep2.committees.filter(c => c.role).length} leadership roles, {rep2.committees.length} committees
+            {rep2.committees.filter(c => c.role).length} leadership roles, {rep2.committees.length}{' '}
+            committees
           </div>
         </div>
       </div>
@@ -519,35 +592,55 @@ function CommitteeEffectiveness({ rep1, rep2 }: { rep1: Representative; rep2: Re
 // Enhanced Key Votes with visualization
 function EnhancedKeyVotes({ rep1, rep2 }: { rep1: Representative; rep2: Representative }) {
   const voteCategories = [
-    { key: 'healthcare', label: 'Healthcare', icon: '🏥', description: 'Healthcare reform and access' },
-    { key: 'environment', label: 'Environment', icon: '🌍', description: 'Climate and environmental protection' },
+    {
+      key: 'healthcare',
+      label: 'Healthcare',
+      icon: '🏥',
+      description: 'Healthcare reform and access',
+    },
+    {
+      key: 'environment',
+      label: 'Environment',
+      icon: '🌍',
+      description: 'Climate and environmental protection',
+    },
     { key: 'economy', label: 'Economy', icon: '💰', description: 'Economic policy and taxation' },
     { key: 'defense', label: 'Defense', icon: '🛡️', description: 'Military and defense spending' },
-    { key: 'immigration', label: 'Immigration', icon: '🗽', description: 'Immigration reform and border security' }
+    {
+      key: 'immigration',
+      label: 'Immigration',
+      icon: '🗽',
+      description: 'Immigration reform and border security',
+    },
   ];
 
   const getVoteValue = (vote: string) => {
     switch (vote) {
-      case 'Yes': return 1;
-      case 'No': return -1;
-      default: return 0;
+      case 'Yes':
+        return 1;
+      case 'No':
+        return -1;
+      default:
+        return 0;
     }
   };
 
   const calculateAlignment = () => {
     let alignedVotes = 0;
     let totalVotes = 0;
-    
+
     voteCategories.forEach(category => {
-      const vote1 = rep1.votingRecord.keyVotes[category.key as keyof typeof rep1.votingRecord.keyVotes];
-      const vote2 = rep2.votingRecord.keyVotes[category.key as keyof typeof rep2.votingRecord.keyVotes];
-      
+      const vote1 =
+        rep1.votingRecord.keyVotes[category.key as keyof typeof rep1.votingRecord.keyVotes];
+      const vote2 =
+        rep2.votingRecord.keyVotes[category.key as keyof typeof rep2.votingRecord.keyVotes];
+
       if (vote1 !== 'Not Voting' && vote2 !== 'Not Voting') {
         totalVotes++;
         if (vote1 === vote2) alignedVotes++;
       }
     });
-    
+
     return totalVotes > 0 ? (alignedVotes / totalVotes) * 100 : 0;
   };
 
@@ -560,15 +653,17 @@ function EnhancedKeyVotes({ rep1, rep2 }: { rep1: Representative; rep2: Represen
           <p className="text-sm text-gray-600">Alignment</p>
         </div>
       </div>
-      
+
       <div className="space-y-4">
         {voteCategories.map(category => {
-          const vote1 = rep1.votingRecord.keyVotes[category.key as keyof typeof rep1.votingRecord.keyVotes];
-          const vote2 = rep2.votingRecord.keyVotes[category.key as keyof typeof rep2.votingRecord.keyVotes];
+          const vote1 =
+            rep1.votingRecord.keyVotes[category.key as keyof typeof rep1.votingRecord.keyVotes];
+          const vote2 =
+            rep2.votingRecord.keyVotes[category.key as keyof typeof rep2.votingRecord.keyVotes];
           const value1 = getVoteValue(vote1);
           const value2 = getVoteValue(vote2);
           const agreement = vote1 === vote2 && vote1 !== 'Not Voting';
-          
+
           return (
             <div key={category.key} className="border-b border-gray-100 pb-4 last:border-0">
               <div className="flex items-start gap-3 mb-2">
@@ -578,28 +673,38 @@ function EnhancedKeyVotes({ rep1, rep2 }: { rep1: Representative; rep2: Represen
                   <p className="text-xs text-gray-600">{category.description}</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-4 mt-3">
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-blue-600 font-medium">{rep1.name.split(' ').pop()}</span>
-                    <span className={`text-sm font-medium ${
-                      vote1 === 'Yes' ? 'text-green-600' : vote1 === 'No' ? 'text-red-600' : 'text-gray-500'
-                    }`}>{vote1}</span>
+                    <span className="text-sm text-blue-600 font-medium">
+                      {rep1.name.split(' ').pop()}
+                    </span>
+                    <span
+                      className={`text-sm font-medium ${
+                        vote1 === 'Yes'
+                          ? 'text-green-600'
+                          : vote1 === 'No'
+                            ? 'text-red-600'
+                            : 'text-gray-500'
+                      }`}
+                    >
+                      {vote1}
+                    </span>
                   </div>
                   <div className="mt-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className={`h-full transition-all duration-500 ${
                         value1 > 0 ? 'bg-green-500' : value1 < 0 ? 'bg-red-500' : 'bg-gray-400'
                       }`}
-                      style={{ 
+                      style={{
                         width: value1 === 0 ? '50%' : value1 > 0 ? '100%' : '100%',
-                        marginLeft: value1 < 0 ? '0' : '0'
+                        marginLeft: value1 < 0 ? '0' : '0',
                       }}
                     />
                   </div>
                 </div>
-                
+
                 <div className="flex items-center">
                   {agreement ? (
                     <span className="text-green-600 text-sm font-medium">✓</span>
@@ -609,22 +714,32 @@ function EnhancedKeyVotes({ rep1, rep2 }: { rep1: Representative; rep2: Represen
                     <span className="text-red-600 text-sm font-medium">✗</span>
                   )}
                 </div>
-                
+
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-red-600 font-medium">{rep2.name.split(' ').pop()}</span>
-                    <span className={`text-sm font-medium ${
-                      vote2 === 'Yes' ? 'text-green-600' : vote2 === 'No' ? 'text-red-600' : 'text-gray-500'
-                    }`}>{vote2}</span>
+                    <span className="text-sm text-red-600 font-medium">
+                      {rep2.name.split(' ').pop()}
+                    </span>
+                    <span
+                      className={`text-sm font-medium ${
+                        vote2 === 'Yes'
+                          ? 'text-green-600'
+                          : vote2 === 'No'
+                            ? 'text-red-600'
+                            : 'text-gray-500'
+                      }`}
+                    >
+                      {vote2}
+                    </span>
                   </div>
                   <div className="mt-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className={`h-full transition-all duration-500 ${
                         value2 > 0 ? 'bg-green-500' : value2 < 0 ? 'bg-red-500' : 'bg-gray-400'
                       }`}
-                      style={{ 
+                      style={{
                         width: value2 === 0 ? '50%' : value2 > 0 ? '100%' : '100%',
-                        marginLeft: value2 < 0 ? '0' : '0'
+                        marginLeft: value2 < 0 ? '0' : '0',
                       }}
                     />
                   </div>
@@ -639,7 +754,13 @@ function EnhancedKeyVotes({ rep1, rep2 }: { rep1: Representative; rep2: Represen
 }
 
 // Legislative effectiveness chart
-function LegislativeEffectivenessChart({ rep1, rep2 }: { rep1: Representative; rep2: Representative }) {
+function LegislativeEffectivenessChart({
+  rep1,
+  rep2,
+}: {
+  rep1: Representative;
+  rep2: Representative;
+}) {
   useEffect(() => {
     const container = d3.select('#legislative-chart');
     container.selectAll('*').remove();
@@ -652,8 +773,8 @@ function LegislativeEffectivenessChart({ rep1, rep2 }: { rep1: Representative; r
           rep1.legislation.billsSponsored,
           rep1.legislation.billsPassedHouse,
           rep1.legislation.billsPassedSenate,
-          rep1.legislation.billsBecameLaw
-        ]
+          rep1.legislation.billsBecameLaw,
+        ],
       },
       {
         name: rep2.name,
@@ -661,9 +782,9 @@ function LegislativeEffectivenessChart({ rep1, rep2 }: { rep1: Representative; r
           rep2.legislation.billsSponsored,
           rep2.legislation.billsPassedHouse,
           rep2.legislation.billsPassedSenate,
-          rep2.legislation.billsBecameLaw
-        ]
-      }
+          rep2.legislation.billsBecameLaw,
+        ],
+      },
     ];
 
     const margin = { top: 20, right: 120, bottom: 60, left: 60 };
@@ -677,21 +798,21 @@ function LegislativeEffectivenessChart({ rep1, rep2 }: { rep1: Representative; r
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const x = d3.scalePoint()
-      .domain(stages)
-      .range([0, width])
-      .padding(0.5);
+    const x = d3.scalePoint().domain(stages).range([0, width]).padding(0.5);
 
-    const y = d3.scaleLinear()
+    const y = d3
+      .scaleLinear()
       .domain([0, Math.max(...data.flatMap(d => d.values))])
       .range([height, 0]);
 
-    const line = d3.line<number>()
+    const line = d3
+      .line<number>()
       .x((d, i) => x(stages[i]) || 0)
       .y(d => y(d))
       .curve(d3.curveMonotoneX);
 
-    svg.append('g')
+    svg
+      .append('g')
       .attr('transform', `translate(0,${height})`)
       .call(d3.axisBottom(x))
       .selectAll('text')
@@ -700,22 +821,24 @@ function LegislativeEffectivenessChart({ rep1, rep2 }: { rep1: Representative; r
       .attr('dy', '.15em')
       .attr('transform', 'rotate(-45)');
 
-    svg.append('g')
-      .call(d3.axisLeft(y));
+    svg.append('g').call(d3.axisLeft(y));
 
     const colors = ['#3b82f6', '#ef4444'];
 
     data.forEach((rep, index) => {
-      svg.append('path')
+      svg
+        .append('path')
         .datum(rep.values)
         .attr('fill', 'none')
         .attr('stroke', colors[index])
         .attr('stroke-width', 3)
         .attr('d', line);
 
-      svg.selectAll(`.dot-${index}`)
+      svg
+        .selectAll(`.dot-${index}`)
         .data(rep.values)
-        .enter().append('circle')
+        .enter()
+        .append('circle')
         .attr('class', `dot-${index}`)
         .attr('cx', (d, i) => x(stages[i]) || 0)
         .attr('cy', d => y(d))
@@ -724,14 +847,13 @@ function LegislativeEffectivenessChart({ rep1, rep2 }: { rep1: Representative; r
     });
 
     // Add legend
-    const legend = svg.append('g')
-      .attr('transform', `translate(${width + 10}, 0)`);
+    const legend = svg.append('g').attr('transform', `translate(${width + 10}, 0)`);
 
     data.forEach((rep, index) => {
-      const legendRow = legend.append('g')
-        .attr('transform', `translate(0, ${index * 25})`);
+      const legendRow = legend.append('g').attr('transform', `translate(0, ${index * 25})`);
 
-      legendRow.append('line')
+      legendRow
+        .append('line')
         .attr('x1', 0)
         .attr('x2', 20)
         .attr('y1', 0)
@@ -739,7 +861,8 @@ function LegislativeEffectivenessChart({ rep1, rep2 }: { rep1: Representative; r
         .attr('stroke', colors[index])
         .attr('stroke-width', 3);
 
-      legendRow.append('text')
+      legendRow
+        .append('text')
         .attr('x', 25)
         .attr('y', 0)
         .attr('dy', '.35em')
@@ -761,12 +884,14 @@ function LegislativeEffectivenessChart({ rep1, rep2 }: { rep1: Representative; r
 function ComparePageContent() {
   const searchParams = useSearchParams();
   const repsParam = searchParams.get('reps');
-  
+
   const [representatives, setRepresentatives] = useState<Representative[]>([]);
   const [selectedRep1, setSelectedRep1] = useState<string | null>(null);
   const [selectedRep2, setSelectedRep2] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [compareView, setCompareView] = useState<'overview' | 'voting' | 'legislation' | 'finance' | 'district'>('overview');
+  const [compareView, setCompareView] = useState<
+    'overview' | 'voting' | 'legislation' | 'finance' | 'district'
+  >('overview');
 
   // Parse initial representatives from URL
   useEffect(() => {
@@ -787,74 +912,112 @@ function ComparePageContent() {
     try {
       const response = await fetch('/api/representatives');
       if (!response.ok) throw new Error('Failed to fetch representatives');
-      
+
       const data = await response.json();
-      
+
       // Transform the data to match our interface
-      const transformedReps: Representative[] = data.representatives.map((rep: unknown) => ({
-        bioguideId: rep.bioguideId,
-        name: rep.name,
-        party: rep.party,
-        state: rep.state,
-        district: rep.district,
-        chamber: rep.chamber,
-        title: rep.title,
-        yearsInOffice: rep.yearsInOffice || Math.floor(Math.random() * 20) + 1,
-        startDate: rep.startDate || new Date(2024 - (rep.yearsInOffice || 5), 0, 1).toISOString(),
-        imageUrl: rep.imageUrl,
-        committees: rep.committees || [],
-        votingRecord: {
-          totalVotes: Math.floor(Math.random() * 1000) + 500,
-          partyLineVotes: Math.floor(Math.random() * 900) + 400,
-          missedVotes: Math.floor(Math.random() * 50),
-          keyVotes: {
-            healthcare: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
-            environment: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
-            economy: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
-            defense: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
-            immigration: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
-          }
-        },
-        legislation: {
-          billsSponsored: Math.floor(Math.random() * 50) + 10,
-          billsCoSponsored: Math.floor(Math.random() * 200) + 50,
-          billsPassedHouse: Math.floor(Math.random() * 20),
-          billsPassedSenate: Math.floor(Math.random() * 15),
-          billsBecameLaw: Math.floor(Math.random() * 5)
-        },
-        finance: {
-          totalRaised: Math.floor(Math.random() * 5000000) + 1000000,
-          individualContributions: Math.floor(Math.random() * 3000000) + 500000,
-          pacContributions: Math.floor(Math.random() * 1500000) + 200000,
-          selfFunded: Math.floor(Math.random() * 500000),
-          topContributors: []
-        },
-        ratings: {
-          conservativeScore: rep.party === 'R' ? Math.floor(Math.random() * 50) + 50 : Math.floor(Math.random() * 30),
-          liberalScore: rep.party === 'D' ? Math.floor(Math.random() * 50) + 50 : Math.floor(Math.random() * 30),
-          bipartisanScore: Math.floor(Math.random() * 40) + 30,
-          effectivenessScore: Math.floor(Math.random() * 60) + 40
-        },
-        newsMetrics: {
-          totalMentions: Math.floor(Math.random() * 1000) + 100,
-          positiveSentiment: Math.floor(Math.random() * 40) + 20,
-          negativeSentiment: Math.floor(Math.random() * 30) + 10,
-          neutralSentiment: 0
-        },
-        districtDemographics: {
-          population: Math.floor(Math.random() * 500000) + 500000,
-          medianIncome: Math.floor(Math.random() * 40000) + 50000,
-          educationBachelor: Math.floor(Math.random() * 30) + 20,
-          unemploymentRate: Math.floor(Math.random() * 5) + 3,
-          urbanPercentage: Math.floor(Math.random() * 60) + 20
-        }
-      }));
-      
+      interface ApiRepresentative {
+        bioguideId: string;
+        name: string;
+        party: string;
+        state: string;
+        district?: string;
+        chamber: 'House' | 'Senate';
+        title: string;
+        yearsInOffice?: number;
+        startDate?: string;
+        imageUrl?: string;
+        committees?: Array<{ name: string; role?: string }>;
+      }
+
+      const transformedReps: Representative[] = data.representatives.map(
+        (rep: ApiRepresentative) => ({
+          bioguideId: rep.bioguideId,
+          name: rep.name,
+          party: rep.party,
+          state: rep.state,
+          district: rep.district,
+          chamber: rep.chamber,
+          title: rep.title,
+          yearsInOffice: rep.yearsInOffice || Math.floor(Math.random() * 20) + 1,
+          startDate: rep.startDate || new Date(2024 - (rep.yearsInOffice || 5), 0, 1).toISOString(),
+          imageUrl: rep.imageUrl,
+          committees: rep.committees || [],
+          votingRecord: {
+            totalVotes: Math.floor(Math.random() * 1000) + 500,
+            partyLineVotes: Math.floor(Math.random() * 900) + 400,
+            missedVotes: Math.floor(Math.random() * 50),
+            keyVotes: {
+              healthcare: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
+                | 'Yes'
+                | 'No'
+                | 'Not Voting',
+              environment: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
+                | 'Yes'
+                | 'No'
+                | 'Not Voting',
+              economy: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
+                | 'Yes'
+                | 'No'
+                | 'Not Voting',
+              defense: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
+                | 'Yes'
+                | 'No'
+                | 'Not Voting',
+              immigration: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
+                | 'Yes'
+                | 'No'
+                | 'Not Voting',
+            },
+          },
+          legislation: {
+            billsSponsored: Math.floor(Math.random() * 50) + 10,
+            billsCoSponsored: Math.floor(Math.random() * 200) + 50,
+            billsPassedHouse: Math.floor(Math.random() * 20),
+            billsPassedSenate: Math.floor(Math.random() * 15),
+            billsBecameLaw: Math.floor(Math.random() * 5),
+          },
+          finance: {
+            totalRaised: Math.floor(Math.random() * 5000000) + 1000000,
+            individualContributions: Math.floor(Math.random() * 3000000) + 500000,
+            pacContributions: Math.floor(Math.random() * 1500000) + 200000,
+            selfFunded: Math.floor(Math.random() * 500000),
+            topContributors: [],
+          },
+          ratings: {
+            conservativeScore:
+              rep.party === 'R'
+                ? Math.floor(Math.random() * 50) + 50
+                : Math.floor(Math.random() * 30),
+            liberalScore:
+              rep.party === 'D'
+                ? Math.floor(Math.random() * 50) + 50
+                : Math.floor(Math.random() * 30),
+            bipartisanScore: Math.floor(Math.random() * 40) + 30,
+            effectivenessScore: Math.floor(Math.random() * 60) + 40,
+          },
+          newsMetrics: {
+            totalMentions: Math.floor(Math.random() * 1000) + 100,
+            positiveSentiment: Math.floor(Math.random() * 40) + 20,
+            negativeSentiment: Math.floor(Math.random() * 30) + 10,
+            neutralSentiment: 0,
+          },
+          districtDemographics: {
+            population: Math.floor(Math.random() * 500000) + 500000,
+            medianIncome: Math.floor(Math.random() * 40000) + 50000,
+            educationBachelor: Math.floor(Math.random() * 30) + 20,
+            unemploymentRate: Math.floor(Math.random() * 5) + 3,
+            urbanPercentage: Math.floor(Math.random() * 60) + 20,
+          },
+        })
+      );
+
       // Calculate neutral sentiment
       transformedReps.forEach(rep => {
-        rep.newsMetrics.neutralSentiment = 100 - rep.newsMetrics.positiveSentiment - rep.newsMetrics.negativeSentiment;
+        rep.newsMetrics.neutralSentiment =
+          100 - rep.newsMetrics.positiveSentiment - rep.newsMetrics.negativeSentiment;
       });
-      
+
       setRepresentatives(transformedReps);
     } catch {
       // Error will be handled by the error boundary
@@ -864,7 +1027,7 @@ function ComparePageContent() {
         name: ['Sen. John Smith', 'Rep. Jane Doe', 'Sen. Bob Johnson', 'Rep. Mary Williams'][i % 4],
         party: i % 3 === 0 ? 'Democratic' : 'Republican',
         state: ['CA', 'TX', 'NY', 'FL', 'IL'][i % 5],
-        district: i % 2 === 0 ? undefined : String(i % 10 + 1),
+        district: i % 2 === 0 ? undefined : String((i % 10) + 1),
         chamber: i % 2 === 0 ? 'Senate' : 'House',
         title: i % 2 === 0 ? 'U.S. Senator' : 'U.S. Representative',
         yearsInOffice: Math.floor(Math.random() * 20) + 1,
@@ -873,26 +1036,41 @@ function ComparePageContent() {
         committees: [
           { name: 'Ways and Means', role: i % 3 === 0 ? 'Chair' : undefined },
           { name: 'Foreign Affairs' },
-          { name: 'Energy and Commerce' }
+          { name: 'Energy and Commerce' },
         ].slice(0, Math.floor(Math.random() * 3) + 1),
         votingRecord: {
           totalVotes: Math.floor(Math.random() * 1000) + 500,
           partyLineVotes: Math.floor(Math.random() * 900) + 400,
           missedVotes: Math.floor(Math.random() * 50),
           keyVotes: {
-            healthcare: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
-            environment: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
-            economy: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
-            defense: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
-            immigration: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as 'Yes' | 'No' | 'Not Voting',
-          }
+            healthcare: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
+              | 'Yes'
+              | 'No'
+              | 'Not Voting',
+            environment: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
+              | 'Yes'
+              | 'No'
+              | 'Not Voting',
+            economy: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
+              | 'Yes'
+              | 'No'
+              | 'Not Voting',
+            defense: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
+              | 'Yes'
+              | 'No'
+              | 'Not Voting',
+            immigration: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
+              | 'Yes'
+              | 'No'
+              | 'Not Voting',
+          },
         },
         legislation: {
           billsSponsored: Math.floor(Math.random() * 50) + 10,
           billsCoSponsored: Math.floor(Math.random() * 200) + 50,
           billsPassedHouse: Math.floor(Math.random() * 20),
           billsPassedSenate: Math.floor(Math.random() * 15),
-          billsBecameLaw: Math.floor(Math.random() * 5)
+          billsBecameLaw: Math.floor(Math.random() * 5),
         },
         finance: {
           totalRaised: Math.floor(Math.random() * 5000000) + 1000000,
@@ -902,28 +1080,30 @@ function ComparePageContent() {
           topContributors: [
             { name: 'Contributor A', amount: Math.floor(Math.random() * 50000) + 10000 },
             { name: 'Contributor B', amount: Math.floor(Math.random() * 40000) + 8000 },
-            { name: 'Contributor C', amount: Math.floor(Math.random() * 30000) + 5000 }
-          ]
+            { name: 'Contributor C', amount: Math.floor(Math.random() * 30000) + 5000 },
+          ],
         },
         ratings: {
-          conservativeScore: i % 3 === 1 ? Math.floor(Math.random() * 50) + 50 : Math.floor(Math.random() * 30),
-          liberalScore: i % 3 === 0 ? Math.floor(Math.random() * 50) + 50 : Math.floor(Math.random() * 30),
+          conservativeScore:
+            i % 3 === 1 ? Math.floor(Math.random() * 50) + 50 : Math.floor(Math.random() * 30),
+          liberalScore:
+            i % 3 === 0 ? Math.floor(Math.random() * 50) + 50 : Math.floor(Math.random() * 30),
           bipartisanScore: Math.floor(Math.random() * 40) + 30,
-          effectivenessScore: Math.floor(Math.random() * 60) + 40
+          effectivenessScore: Math.floor(Math.random() * 60) + 40,
         },
         newsMetrics: {
           totalMentions: Math.floor(Math.random() * 1000) + 100,
           positiveSentiment: Math.floor(Math.random() * 40) + 20,
           negativeSentiment: Math.floor(Math.random() * 30) + 10,
-          neutralSentiment: Math.floor(Math.random() * 50) + 20
+          neutralSentiment: Math.floor(Math.random() * 50) + 20,
         },
         districtDemographics: {
           population: Math.floor(Math.random() * 500000) + 500000,
           medianIncome: Math.floor(Math.random() * 40000) + 50000,
           educationBachelor: Math.floor(Math.random() * 30) + 20,
           unemploymentRate: Math.floor(Math.random() * 5) + 3,
-          urbanPercentage: Math.floor(Math.random() * 60) + 20
-        }
+          urbanPercentage: Math.floor(Math.random() * 60) + 20,
+        },
       }));
       setRepresentatives(mockReps);
     } finally {
@@ -944,10 +1124,16 @@ function ComparePageContent() {
               <CiviqLogo />
             </Link>
             <nav className="flex items-center gap-6">
-              <Link href="/representatives" className="text-gray-700 hover:text-blue-600 transition-colors">
+              <Link
+                href="/representatives"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
                 Representatives
               </Link>
-              <Link href="/districts" className="text-gray-700 hover:text-blue-600 transition-colors">
+              <Link
+                href="/districts"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
                 Districts
               </Link>
               <Link href="/compare" className="text-blue-600 font-medium">
@@ -963,7 +1149,8 @@ function ComparePageContent() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Compare Representatives</h1>
           <p className="text-xl text-gray-600">
-            Comprehensive side-by-side analysis of voting records, effectiveness, and district representation
+            Comprehensive side-by-side analysis of voting records, effectiveness, and district
+            representation
           </p>
         </div>
 
@@ -995,19 +1182,21 @@ function ComparePageContent() {
                 {/* View selector tabs */}
                 <div className="bg-white rounded-lg shadow-md p-1 mb-8">
                   <nav className="flex flex-wrap">
-                    {(['overview', 'voting', 'legislation', 'finance', 'district'] as const).map(view => (
-                      <button
-                        key={view}
-                        onClick={() => setCompareView(view)}
-                        className={`flex-1 px-4 py-3 text-sm font-medium rounded-md transition-colors ${
-                          compareView === view
-                            ? 'bg-blue-600 text-white'
-                            : 'text-gray-700 hover:bg-gray-100'
-                        }`}
-                      >
-                        {view.charAt(0).toUpperCase() + view.slice(1)}
-                      </button>
-                    ))}
+                    {(['overview', 'voting', 'legislation', 'finance', 'district'] as const).map(
+                      view => (
+                        <button
+                          key={view}
+                          onClick={() => setCompareView(view)}
+                          className={`flex-1 px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+                            compareView === view
+                              ? 'bg-blue-600 text-white'
+                              : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          {view.charAt(0).toUpperCase() + view.slice(1)}
+                        </button>
+                      )
+                    )}
                   </nav>
                 </div>
 
@@ -1050,15 +1239,21 @@ function ComparePageContent() {
 
                   {compareView === 'finance' && (
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Campaign Finance Comparison</h3>
-                      <p className="text-gray-600">Campaign finance data visualization coming soon...</p>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                        Campaign Finance Comparison
+                      </h3>
+                      <p className="text-gray-600">
+                        Campaign finance data visualization coming soon...
+                      </p>
                     </div>
                   )}
                 </div>
 
                 {/* Enhanced share functionality */}
                 <div className="mt-12 bg-gradient-to-r from-blue-50 to-red-50 rounded-lg p-8 text-center">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Share This Comparison</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                    Share This Comparison
+                  </h3>
                   <div className="flex justify-center gap-4">
                     <button
                       onClick={() => {
@@ -1068,8 +1263,18 @@ function ComparePageContent() {
                       }}
                       className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
                       </svg>
                       Copy Link
                     </button>
@@ -1077,12 +1282,15 @@ function ComparePageContent() {
                       onClick={() => {
                         const text = `Compare ${rep1.name} vs ${rep2.name} on CIV.IQ`;
                         const url = `${window.location.origin}/compare?reps=${rep1.bioguideId},${rep2.bioguideId}`;
-                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                        window.open(
+                          `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+                          '_blank'
+                        );
                       }}
                       className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
                     >
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
                       </svg>
                       Share on X
                     </button>
@@ -1094,11 +1302,25 @@ function ComparePageContent() {
             {/* Empty state */}
             {(!rep1 || !rep2) && !loading && (
               <div className="text-center py-16 bg-white rounded-lg shadow-md">
-                <svg className="w-24 h-24 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <svg
+                  className="w-24 h-24 mx-auto text-gray-400 mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
                 </svg>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Select Representatives to Compare</h3>
-                <p className="text-gray-600">Choose two representatives above to see their comprehensive comparison</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Select Representatives to Compare
+                </h3>
+                <p className="text-gray-600">
+                  Choose two representatives above to see their comprehensive comparison
+                </p>
               </div>
             )}
           </>
@@ -1123,7 +1345,9 @@ function ComparePageContent() {
 // Main export with Suspense wrapper
 export default function ComparePage() {
   return (
-    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading...</div>}>
+    <Suspense
+      fallback={<div className="flex justify-center items-center min-h-screen">Loading...</div>}
+    >
       <ComparePageContent />
     </Suspense>
   );

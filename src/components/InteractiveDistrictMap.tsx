@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -8,29 +7,16 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import { LatLngBounds } from 'leaflet';
+import { useTileProvider } from '@/lib/map-tiles';
 
 // Dynamic imports for leaflet components (SSR compatibility)
-const MapContainer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
-  { ssr: false }
-);
-const GeoJSON = dynamic(
-  () => import('react-leaflet').then((mod) => mod.GeoJSON),
-  { ssr: false }
-);
-const Marker = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Marker),
-  { ssr: false }
-);
-const Popup = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Popup),
-  { ssr: false }
-);
+const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), {
+  ssr: false,
+});
+const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
+const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
+const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 
 interface DistrictBoundary {
   type: string;
@@ -82,10 +68,13 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
   const [selectedLayer, setSelectedLayer] = useState<string>('congressional');
   const [isClient, setIsClient] = useState(false);
 
+  // Use tile provider with fallback support
+  const { currentProvider, handleTileError } = useTileProvider();
+
   const layers: MapLayer[] = [
     { id: 'congressional', name: 'Congressional District', color: '#e11d07', visible: true },
     { id: 'state_senate', name: 'State Senate District', color: '#0b983c', visible: false },
-    { id: 'state_house', name: 'State House District', color: '#3ea2d4', visible: false }
+    { id: 'state_house', name: 'State House District', color: '#3ea2d4', visible: false },
   ];
 
   // Ensure we're on the client side for leaflet
@@ -98,12 +87,12 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
       try {
         setLoading(true);
         const response = await fetch(`/api/district-map?zip=${encodeURIComponent(zipCode)}`);
-        
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Failed to fetch map data');
         }
-        
+
         const data: MapData = await response.json();
         setMapData(data);
         setError(null);
@@ -130,9 +119,9 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
       type: 'Feature' as const,
       geometry: {
         type: boundary.type as 'Polygon',
-        coordinates: boundary.coordinates
+        coordinates: boundary.coordinates,
       },
-      properties: boundary.properties
+      properties: boundary.properties,
     };
   }, [mapData, selectedLayer]);
 
@@ -143,7 +132,8 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
   // Calculate map bounds from boundary data
   const mapBounds = useMemo(() => {
     if (!mapData || !isClient) return null;
-    
+
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const L = require('leaflet');
     return new L.LatLngBounds(
       [mapData.bbox.minLat, mapData.bbox.minLng],
@@ -154,7 +144,8 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
   // Create custom marker icon
   const createCustomIcon = () => {
     if (!isClient) return null;
-    
+
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const L = require('leaflet');
     return L.divIcon({
       className: 'custom-marker',
@@ -177,7 +168,7 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
         </div>
       `,
       iconSize: [24, 24],
-      iconAnchor: [12, 12]
+      iconAnchor: [12, 12],
     });
   };
 
@@ -197,9 +188,7 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
       <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Interactive District Map</h3>
         <div className="text-center py-8">
-          <div className="text-gray-500 mb-2">
-            {error || 'Unable to load district map'}
-          </div>
+          <div className="text-gray-500 mb-2">{error || 'Unable to load district map'}</div>
           <p className="text-sm text-gray-400">
             Interactive district boundaries are not available for this location
           </p>
@@ -225,10 +214,10 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
     <div className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${className}`}>
       <div className="p-6 pb-4 border-b border-gray-100">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Interactive District Map</h3>
-        
+
         {/* Layer Controls */}
         <div className="flex flex-wrap gap-2">
-          {layers.map((layer) => (
+          {layers.map(layer => (
             <button
               key={layer.id}
               onClick={() => setSelectedLayer(layer.id)}
@@ -238,7 +227,7 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
                   : 'text-gray-600 bg-gray-100 hover:bg-gray-200'
               }`}
               style={{
-                backgroundColor: selectedLayer === layer.id ? layer.color : undefined
+                backgroundColor: selectedLayer === layer.id ? layer.color : undefined,
               }}
             >
               {layer.name}
@@ -256,10 +245,16 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
             boundsOptions={{ padding: [20, 20] }}
           >
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution={currentProvider.attribution}
+              url={currentProvider.url}
+              maxZoom={currentProvider.maxZoom}
+              subdomains={currentProvider.subdomains}
+              errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+              eventHandlers={{
+                tileerror: handleTileError,
+              }}
             />
-            
+
             {/* District Boundary */}
             {getCurrentGeoJSON && layerInfo && (
               <GeoJSON
@@ -269,11 +264,11 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
                   weight: 2,
                   opacity: 0.8,
                   fillColor: layerInfo.color,
-                  fillOpacity: 0.3
+                  fillOpacity: 0.3,
                 }}
               />
             )}
-            
+
             {/* ZIP Code Location Marker */}
             <Marker
               position={[mapData.coordinates.lat, mapData.coordinates.lng]}
@@ -281,9 +276,12 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
             >
               <Popup>
                 <div className="text-sm">
-                  <strong>Your Location</strong><br />
-                  ZIP Code: {mapData.zipCode}<br />
-                  Lat: {mapData.coordinates.lat.toFixed(4)}<br />
+                  <strong>Your Location</strong>
+                  <br />
+                  ZIP Code: {mapData.zipCode}
+                  <br />
+                  Lat: {mapData.coordinates.lat.toFixed(4)}
+                  <br />
                   Lng: {mapData.coordinates.lng.toFixed(4)}
                 </div>
               </Popup>
@@ -301,10 +299,7 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
             </div>
             {layerInfo && (
               <div className="flex items-center gap-2">
-                <div 
-                  className="w-3 h-3 rounded"
-                  style={{ backgroundColor: layerInfo.color }}
-                ></div>
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: layerInfo.color }}></div>
                 <span className="text-xs text-gray-600">{layerInfo.name}</span>
               </div>
             )}
@@ -315,9 +310,7 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
       {/* District Information */}
       {boundary && (
         <div className="p-6 pt-4 bg-gray-50 border-t border-gray-100">
-          <h4 className="font-medium text-gray-900 mb-3">
-            {boundary.properties.name}
-          </h4>
+          <h4 className="font-medium text-gray-900 mb-3">{boundary.properties.name}</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-gray-600">District:</span>
@@ -338,14 +331,10 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
               <span className="ml-2 font-medium">{mapData.zipCode}</span>
             </div>
           </div>
-          
+
           <div className="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between text-sm text-gray-500">
-            <div>
-              Interactive map with zoom, pan, and district boundaries
-            </div>
-            <div className="text-xs">
-              Data: U.S. Census Bureau TIGER/Line
-            </div>
+            <div>Interactive map with zoom, pan, and district boundaries</div>
+            <div className="text-xs">Data: U.S. Census Bureau TIGER/Line</div>
           </div>
         </div>
       )}

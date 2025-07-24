@@ -5,9 +5,9 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { structuredLogger } from '@/lib/logging/logger';
+import { structuredLogger } from '@/lib/logging/logger-client';
 
 interface CommitteeBill {
   billId: string;
@@ -53,12 +53,7 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
   const [reportsLoading, setReportsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'bills' | 'reports'>('bills');
 
-  useEffect(() => {
-    fetchBills();
-    fetchReports();
-  }, [committeeId]);
-
-  const fetchBills = async () => {
+  const fetchBills = useCallback(async () => {
     try {
       setBillsLoading(true);
       const response = await fetch(`/api/committee/${committeeId}/bills`);
@@ -69,14 +64,14 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
     } catch (error) {
       structuredLogger.error('Error fetching bills', error as Error, {
         committeeId,
-        operation: 'fetchBills'
+        operation: 'fetchBills',
       });
     } finally {
       setBillsLoading(false);
     }
-  };
+  }, [committeeId]);
 
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     try {
       setReportsLoading(true);
       const response = await fetch(`/api/committee/${committeeId}/reports`);
@@ -87,12 +82,17 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
     } catch (error) {
       structuredLogger.error('Error fetching reports', error as Error, {
         committeeId,
-        operation: 'fetchReports'
+        operation: 'fetchReports',
       });
     } finally {
       setReportsLoading(false);
     }
-  };
+  }, [committeeId]);
+
+  useEffect(() => {
+    fetchBills();
+    fetchReports();
+  }, [committeeId, fetchBills, fetchReports]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -175,10 +175,10 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
       {activeTab === 'bills' && (
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Committee Bills</h2>
-          
+
           {billsLoading ? (
             <div className="animate-pulse space-y-4">
-              {[1, 2, 3].map((i) => (
+              {[1, 2, 3].map(i => (
                 <div key={i} className="border rounded-lg p-4">
                   <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
                   <div className="h-3 bg-gray-200 rounded w-1/2"></div>
@@ -187,7 +187,7 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
             </div>
           ) : bills.length > 0 ? (
             <div className="space-y-4">
-              {bills.map((bill) => (
+              {bills.map(bill => (
                 <div key={bill.billId} className="border rounded-lg p-4 hover:bg-gray-50">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
@@ -195,30 +195,36 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
                       <p className="text-sm text-gray-600 mt-1">{bill.title}</p>
                     </div>
                     <div className="flex space-x-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(bill.status)}`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(bill.status)}`}
+                      >
                         {bill.status}
                       </span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCommitteeStatusColor(bill.committeeStatus)}`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getCommitteeStatusColor(bill.committeeStatus)}`}
+                      >
                         {formatCommitteeStatus(bill.committeeStatus)}
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="text-sm text-gray-600 mb-2">
-                    <strong>Sponsor:</strong> {bill.sponsor.name} ({bill.sponsor.party} - {bill.sponsor.state})
+                    <strong>Sponsor:</strong> {bill.sponsor.name} ({bill.sponsor.party} -{' '}
+                    {bill.sponsor.state})
                   </div>
-                  
+
                   <div className="text-sm text-gray-600 mb-2">
-                    <strong>Introduced:</strong> {new Date(bill.introducedDate).toLocaleDateString()}
+                    <strong>Introduced:</strong>{' '}
+                    {new Date(bill.introducedDate).toLocaleDateString()}
                   </div>
-                  
+
                   <div className="text-sm text-gray-600 mb-2">
                     <strong>Latest Action:</strong> {bill.latestAction.text}
                     <span className="text-gray-500 ml-2">
                       ({new Date(bill.latestAction.date).toLocaleDateString()})
                     </span>
                   </div>
-                  
+
                   {bill.nextCommitteeAction && (
                     <div className="text-sm text-blue-600 mt-2">
                       <strong>Next Action:</strong> {bill.nextCommitteeAction.description}
@@ -233,9 +239,7 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              No bills found for this committee.
-            </div>
+            <div className="text-center py-8 text-gray-500">No bills found for this committee.</div>
           )}
         </div>
       )}
@@ -244,10 +248,10 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
       {activeTab === 'reports' && (
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Committee Reports</h2>
-          
+
           {reportsLoading ? (
             <div className="animate-pulse space-y-4">
-              {[1, 2, 3].map((i) => (
+              {[1, 2, 3].map(i => (
                 <div key={i} className="border rounded-lg p-4">
                   <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
                   <div className="h-3 bg-gray-200 rounded w-1/2"></div>
@@ -256,7 +260,7 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
             </div>
           ) : reports.length > 0 ? (
             <div className="space-y-4">
-              {reports.map((report) => (
+              {reports.map(report => (
                 <div key={report.reportId} className="border rounded-lg p-4 hover:bg-gray-50">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
@@ -267,17 +271,18 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
                       {report.reportType.toUpperCase()}
                     </span>
                   </div>
-                  
+
                   <div className="text-sm text-gray-600 mb-2">
-                    <strong>Published:</strong> {new Date(report.publishedDate).toLocaleDateString()}
+                    <strong>Published:</strong>{' '}
+                    {new Date(report.publishedDate).toLocaleDateString()}
                   </div>
-                  
+
                   {report.summary && (
                     <div className="text-sm text-gray-600 mb-2">
                       <strong>Summary:</strong> {report.summary}
                     </div>
                   )}
-                  
+
                   {report.url && (
                     <div className="mt-2">
                       <Link

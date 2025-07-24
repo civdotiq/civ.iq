@@ -114,7 +114,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
               <UserCheck className="w-6 h-6 text-green-600" />
-              What We Don't Do
+              What We Don&apos;t Do
             </h2>
             <div className="bg-green-50 rounded-xl p-6">
               <ul className="space-y-3">

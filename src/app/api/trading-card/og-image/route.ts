@@ -6,28 +6,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateOpenGraphTags } from '@/lib/socialSharing';
 import { EnhancedRepresentative } from '@/types/representative';
+import { structuredLogger } from '@/lib/logging/logger';
 
 /**
  * API endpoint to serve Open Graph metadata for trading cards
  * This enables rich previews when sharing on social media
- * 
+ *
  * Example: /api/trading-card/og-image?bioguideId=S001234&imageUrl=...
  */
 export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams;
-    const bioguideId = searchParams.get('bioguideId');
-    const imageUrl = searchParams.get('imageUrl');
-    const name = searchParams.get('name');
-    const state = searchParams.get('state');
-    const district = searchParams.get('district');
-    const title = searchParams.get('title');
+  const searchParams = request.nextUrl.searchParams;
+  const bioguideId = searchParams.get('bioguideId');
+  const imageUrl = searchParams.get('imageUrl');
+  const name = searchParams.get('name');
+  const state = searchParams.get('state');
+  const district = searchParams.get('district');
+  const title = searchParams.get('title');
 
+  try {
     if (!bioguideId || !name) {
-      return NextResponse.json(
-        { error: 'Missing required parameters' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
     // Generate Open Graph tags
@@ -46,7 +44,7 @@ export async function GET(request: NextRequest) {
         imageUrl: '',
         phone: '',
         website: '',
-        currentTerm: null
+        currentTerm: undefined,
       } satisfies Partial<EnhancedRepresentative> as EnhancedRepresentative,
       imageUrl || '/api/placeholder-card.png'
     );
@@ -58,11 +56,13 @@ export async function GET(request: NextRequest) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  ${Object.entries(ogTags).map(([property, content]) => 
-    property.startsWith('twitter:') 
-      ? `<meta name="${property}" content="${content}" />`
-      : `<meta property="${property}" content="${content}" />`
-  ).join('\n  ')}
+  ${Object.entries(ogTags)
+    .map(([property, content]) =>
+      property.startsWith('twitter:')
+        ? `<meta name="${property}" content="${content}" />`
+        : `<meta property="${property}" content="${content}" />`
+    )
+    .join('\n  ')}
   <title>${ogTags['og:title']}</title>
 </head>
 <body>
@@ -80,13 +80,14 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'public, max-age=3600, s-maxage=3600',
       },
     });
-
   } catch (error) {
-    console.error('Error generating OG image metadata:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate metadata' },
-      { status: 500 }
-    );
+    structuredLogger.error('Error generating OG image metadata', error as Error, {
+      bioguideId: bioguideId || 'unknown',
+      name: name || 'unknown',
+      state: state || 'unknown',
+      district: district || 'unknown',
+    });
+    return NextResponse.json({ error: 'Failed to generate metadata' }, { status: 500 });
   }
 }
 

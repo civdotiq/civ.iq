@@ -39,7 +39,7 @@ async function finalValidation() {
     ];
     
     let successCount = 0;
-    let totalTests = testCases.length;
+    const totalTests = testCases.length;
     
     console.log('Testing district lookup with FIXED logic:\n');
     

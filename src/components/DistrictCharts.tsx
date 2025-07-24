@@ -5,7 +5,21 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, ResponsiveContainer } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  LineChart,
+  Line,
+  ResponsiveContainer,
+} from 'recharts';
 
 interface DistrictChartsProps {
   districtData: {
@@ -39,7 +53,7 @@ const generateAgeDistribution = (medianAge: number) => {
     { age: '35-44', percent: 16 },
     { age: '45-54', percent: 15 },
     { age: '55-64', percent: 14 },
-    { age: '65+', percent: 25 }
+    { age: '65+', percent: 25 },
   ];
 
   // Adjust based on median age
@@ -50,7 +64,7 @@ const generateAgeDistribution = (medianAge: number) => {
       { age: '35-44', percent: 19 },
       { age: '45-54', percent: 16 },
       { age: '55-64', percent: 13 },
-      { age: '65+', percent: 14 }
+      { age: '65+', percent: 14 },
     ];
   } else if (medianAge > 45) {
     return [
@@ -59,18 +73,16 @@ const generateAgeDistribution = (medianAge: number) => {
       { age: '35-44', percent: 14 },
       { age: '45-54', percent: 18 },
       { age: '55-64', percent: 22 },
-      { age: '65+', percent: 26 }
+      { age: '65+', percent: 26 },
     ];
   }
-  
+
   return baseDistribution;
 };
 
 // Generate income distribution data
 const generateIncomeDistribution = (medianIncome: number) => {
-  const brackets = [
-    '<$25k', '$25k-$50k', '$50k-$75k', '$75k-$100k', '$100k-$150k', '$150k+'
-  ];
+  const _brackets = ['<$25k', '$25k-$50k', '$50k-$75k', '$75k-$100k', '$100k-$150k', '$150k+'];
 
   if (medianIncome < 50000) {
     return [
@@ -79,7 +91,7 @@ const generateIncomeDistribution = (medianIncome: number) => {
       { bracket: '$50k-$75k', percent: 20, households: 3000 },
       { bracket: '$75k-$100k', percent: 12, households: 1800 },
       { bracket: '$100k-$150k', percent: 6, households: 900 },
-      { bracket: '$150k+', percent: 2, households: 300 }
+      { bracket: '$150k+', percent: 2, households: 300 },
     ];
   } else if (medianIncome > 80000) {
     return [
@@ -88,7 +100,7 @@ const generateIncomeDistribution = (medianIncome: number) => {
       { bracket: '$50k-$75k', percent: 22, households: 3300 },
       { bracket: '$75k-$100k', percent: 20, households: 3000 },
       { bracket: '$100k-$150k', percent: 18, households: 2700 },
-      { bracket: '$150k+', percent: 10, households: 1500 }
+      { bracket: '$150k+', percent: 10, households: 1500 },
     ];
   }
 
@@ -98,46 +110,46 @@ const generateIncomeDistribution = (medianIncome: number) => {
     { bracket: '$50k-$75k', percent: 24, households: 3600 },
     { bracket: '$75k-$100k', percent: 16, households: 2400 },
     { bracket: '$100k-$150k', percent: 12, households: 1800 },
-    { bracket: '$150k+', percent: 5, households: 750 }
+    { bracket: '$150k+', percent: 5, households: 750 },
   ];
 };
 
 // Generate election history
-const generateElectionHistory = (currentPVI: string, currentMargin: number) => {
-  const currentYear = 2024;
+const generateElectionHistory = (currentPVI: string, _currentMargin: number) => {
+  const _currentYear = 2024;
   const isPVIRepublican = currentPVI.startsWith('R+');
   const isPVIDemocratic = currentPVI.startsWith('D+');
-  
+
   return [
     {
       year: 2016,
       democratic: isPVIDemocratic ? 58 + Math.random() * 10 : 35 + Math.random() * 15,
       republican: isPVIRepublican ? 62 + Math.random() * 10 : 45 + Math.random() * 15,
-      turnout: 68 + Math.random() * 8
+      turnout: 68 + Math.random() * 8,
     },
     {
       year: 2018,
       democratic: isPVIDemocratic ? 61 + Math.random() * 8 : 38 + Math.random() * 12,
       republican: isPVIRepublican ? 59 + Math.random() * 8 : 42 + Math.random() * 12,
-      turnout: 51 + Math.random() * 6
+      turnout: 51 + Math.random() * 6,
     },
     {
       year: 2020,
       democratic: isPVIDemocratic ? 63 + Math.random() * 7 : 40 + Math.random() * 10,
       republican: isPVIRepublican ? 57 + Math.random() * 7 : 40 + Math.random() * 10,
-      turnout: 72 + Math.random() * 8
+      turnout: 72 + Math.random() * 8,
     },
     {
       year: 2022,
       democratic: isPVIDemocratic ? 59 + Math.random() * 6 : 37 + Math.random() * 8,
       republican: isPVIRepublican ? 61 + Math.random() * 6 : 43 + Math.random() * 8,
-      turnout: 48 + Math.random() * 5
-    }
+      turnout: 48 + Math.random() * 5,
+    },
   ].map(election => ({
     ...election,
     democratic: Math.round(election.democratic),
     republican: Math.round(election.republican),
-    turnout: Math.round(election.turnout)
+    turnout: Math.round(election.turnout),
   }));
 };
 
@@ -153,11 +165,22 @@ const generateEmploymentData = () => {
     { industry: 'Transportation', percent: 8, employees: 12000 },
     { industry: 'Construction', percent: 7, employees: 10500 },
     { industry: 'Finance & Insurance', percent: 6, employees: 9000 },
-    { industry: 'Other', percent: 5, employees: 7500 }
+    { industry: 'Other', percent: 5, employees: 7500 },
   ];
 };
 
-const COLORS = ['#e11d07', '#0b983c', '#3ea2d4', '#f59e0b', '#8b5cf6', '#ef4444', '#10b981', '#f97316', '#3b82f6', '#6366f1'];
+const COLORS = [
+  '#e11d07',
+  '#0b983c',
+  '#3ea2d4',
+  '#f59e0b',
+  '#8b5cf6',
+  '#ef4444',
+  '#10b981',
+  '#f97316',
+  '#3b82f6',
+  '#6366f1',
+];
 
 export function AgeDistributionChart({ medianAge }: { medianAge: number }) {
   const data = generateAgeDistribution(medianAge);
@@ -170,7 +193,7 @@ export function AgeDistributionChart({ medianAge }: { medianAge: number }) {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="age" />
           <YAxis />
-          <Tooltip formatter={(value) => [`${value}%`, 'Population']} />
+          <Tooltip formatter={value => [`${value}%`, 'Population']} />
           <Bar dataKey="percent" fill="#3b82f6" />
         </BarChart>
       </ResponsiveContainer>
@@ -192,11 +215,11 @@ export function IncomeDistributionChart({ medianIncome }: { medianIncome: number
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="bracket" />
           <YAxis />
-          <Tooltip 
+          <Tooltip
             formatter={(value, name) => [
               name === 'percent' ? `${value}%` : `${value.toLocaleString()} households`,
-              name === 'percent' ? 'Population' : 'Households'
-            ]} 
+              name === 'percent' ? 'Population' : 'Households',
+            ]}
           />
           <Bar dataKey="percent" fill="#0b983c" />
         </BarChart>
@@ -210,11 +233,31 @@ export function IncomeDistributionChart({ medianIncome }: { medianIncome: number
 
 export function RacialCompositionChart({ demographics }: { demographics: unknown }) {
   const data = [
-    { name: 'White', value: demographics.white_percent, color: '#3b82f6' },
-    { name: 'Black/African American', value: demographics.black_percent, color: '#ef4444' },
-    { name: 'Hispanic/Latino', value: demographics.hispanic_percent, color: '#f59e0b' },
-    { name: 'Asian', value: demographics.asian_percent, color: '#10b981' },
-    { name: 'Other', value: Math.max(0, 100 - demographics.white_percent - demographics.black_percent - demographics.hispanic_percent - demographics.asian_percent), color: '#8b5cf6' }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    { name: 'White', value: (demographics as any).white_percent, color: '#3b82f6' },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    {
+      name: 'Black/African American',
+      value: (demographics as any).black_percent,
+      color: '#ef4444',
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    { name: 'Hispanic/Latino', value: (demographics as any).hispanic_percent, color: '#f59e0b' },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    { name: 'Asian', value: (demographics as any).asian_percent, color: '#10b981' },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    {
+      name: 'Other',
+      value: Math.max(
+        0,
+        100 -
+          (demographics as any).white_percent -
+          (demographics as any).black_percent -
+          (demographics as any).hispanic_percent -
+          (demographics as any).asian_percent
+      ),
+      color: '#8b5cf6',
+    },
   ].filter(item => item.value > 0);
 
   return (
@@ -235,7 +278,7 @@ export function RacialCompositionChart({ demographics }: { demographics: unknown
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
-          <Tooltip formatter={(value) => `${Number(value).toFixed(1)}%`} />
+          <Tooltip formatter={value => `${Number(value).toFixed(1)}%`} />
           <Legend />
         </PieChart>
       </ResponsiveContainer>
@@ -243,7 +286,13 @@ export function RacialCompositionChart({ demographics }: { demographics: unknown
   );
 }
 
-export function ElectionHistoryChart({ currentPVI, currentMargin }: { currentPVI: string; currentMargin: number }) {
+export function ElectionHistoryChart({
+  currentPVI,
+  currentMargin,
+}: {
+  currentPVI: string;
+  currentMargin: number;
+}) {
   const data = generateElectionHistory(currentPVI, currentMargin);
 
   return (
@@ -254,20 +303,44 @@ export function ElectionHistoryChart({ currentPVI, currentMargin }: { currentPVI
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="year" />
           <YAxis domain={[0, 80]} />
-          <Tooltip 
+          <Tooltip
             formatter={(value, name) => [
               `${Number(value).toFixed(1)}%`,
-              name === 'democratic' ? 'Democratic' : name === 'republican' ? 'Republican' : 'Turnout'
-            ]} 
+              name === 'democratic'
+                ? 'Democratic'
+                : name === 'republican'
+                  ? 'Republican'
+                  : 'Turnout',
+            ]}
           />
           <Legend />
-          <Line type="monotone" dataKey="democratic" stroke="#3b82f6" strokeWidth={3} name="Democratic" />
-          <Line type="monotone" dataKey="republican" stroke="#ef4444" strokeWidth={3} name="Republican" />
-          <Line type="monotone" dataKey="turnout" stroke="#10b981" strokeWidth={2} strokeDasharray="5 5" name="Turnout" />
+          <Line
+            type="monotone"
+            dataKey="democratic"
+            stroke="#3b82f6"
+            strokeWidth={3}
+            name="Democratic"
+          />
+          <Line
+            type="monotone"
+            dataKey="republican"
+            stroke="#ef4444"
+            strokeWidth={3}
+            name="Republican"
+          />
+          <Line
+            type="monotone"
+            dataKey="turnout"
+            stroke="#10b981"
+            strokeWidth={2}
+            strokeDasharray="5 5"
+            name="Turnout"
+          />
         </LineChart>
       </ResponsiveContainer>
       <p className="text-sm text-gray-600 mt-2">
-        Current PVI: <strong>{currentPVI}</strong> | Last margin: <strong>{currentMargin.toFixed(1)}%</strong>
+        Current PVI: <strong>{currentPVI}</strong> | Last margin:{' '}
+        <strong>{currentMargin.toFixed(1)}%</strong>
       </p>
     </div>
   );
@@ -294,11 +367,11 @@ export function EmploymentByIndustryChart() {
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip 
+          <Tooltip
             formatter={(value, name, props) => [
               `${value}% (${props.payload.employees.toLocaleString()} jobs)`,
-              'Employment'
-            ]} 
+              'Employment',
+            ]}
           />
           <Legend />
         </PieChart>
@@ -325,15 +398,15 @@ export function DistrictCharts({ districtData }: DistrictChartsProps) {
         <AgeDistributionChart medianAge={districtData.demographics.medianAge} />
         <IncomeDistributionChart medianIncome={districtData.demographics.medianIncome} />
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RacialCompositionChart demographics={districtData.demographics} />
-        <ElectionHistoryChart 
-          currentPVI={districtData.political.cookPVI} 
-          currentMargin={districtData.political.lastElection.margin} 
+        <ElectionHistoryChart
+          currentPVI={districtData.political.cookPVI}
+          currentMargin={districtData.political.lastElection.margin}
         />
       </div>
-      
+
       <EmploymentByIndustryChart />
     </div>
   );

@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -8,7 +7,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useCallback } from 'react';
 import { SearchHistory } from '@/lib/searchHistory';
 import { RepresentativeSkeleton, SearchResultsSkeleton } from '@/components/ui/SkeletonComponents';
 import { LoadingStateWrapper, LoadingMessage, Spinner } from '@/components/ui/LoadingStates';
@@ -20,19 +19,23 @@ import { InlineQualityScore, DataTrustIndicator } from '@/components/DataQuality
 import RepresentativePhoto from '@/components/RepresentativePhoto';
 import { DistrictSelector } from '@/components/multi-district/DistrictSelector';
 import { AddressRefinement } from '@/components/multi-district/AddressRefinement';
-import { checkMultiDistrict, DistrictInfo, MultiDistrictResponse } from '@/lib/multi-district/detection';
+import {
+  checkMultiDistrict,
+  DistrictInfo,
+  MultiDistrictResponse,
+} from '@/lib/multi-district/detection';
 
 function CiviqLogo() {
   return (
     <div className="flex items-center">
       <svg className="w-10 h-10" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <rect x="36" y="51" width="28" height="30" fill="#0b983c"/>
-        <circle cx="50" cy="31" r="22" fill="#ffffff"/>
-        <circle cx="50" cy="31" r="20" fill="#e11d07"/>
-        <circle cx="38" cy="89" r="2" fill="#3ea2d4"/>
-        <circle cx="46" cy="89" r="2" fill="#3ea2d4"/>
-        <circle cx="54" cy="89" r="2" fill="#3ea2d4"/>
-        <circle cx="62" cy="89" r="2" fill="#3ea2d4"/>
+        <rect x="36" y="51" width="28" height="30" fill="#0b983c" />
+        <circle cx="50" cy="31" r="22" fill="#ffffff" />
+        <circle cx="50" cy="31" r="20" fill="#e11d07" />
+        <circle cx="38" cy="89" r="2" fill="#3ea2d4" />
+        <circle cx="46" cy="89" r="2" fill="#3ea2d4" />
+        <circle cx="54" cy="89" r="2" fill="#3ea2d4" />
+        <circle cx="62" cy="89" r="2" fill="#3ea2d4" />
       </svg>
       <span className="ml-3 text-xl font-bold text-gray-900">CIV.IQ</span>
     </div>
@@ -63,6 +66,18 @@ interface Representative {
   nextElection?: string;
   imageUrl?: string;
   dataComplete: number;
+}
+
+interface MultiDistrictRepresentative {
+  bioguideId: string;
+  name: string;
+  party: string;
+  state: string;
+  district?: string;
+  chamber: string;
+  title: string;
+  phone?: string;
+  website?: string;
 }
 
 interface ApiResponse {
@@ -132,13 +147,12 @@ function RepresentativeCard({ representative }: { representative: Representative
     return 'text-gray-600 bg-gray-50';
   };
 
-
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
       {/* Header Section */}
       <div className="p-6 pb-4">
         <div className="flex items-start gap-4">
-          <RepresentativePhoto 
+          <RepresentativePhoto
             bioguideId={representative.bioguideId}
             name={representative.name}
             size="lg"
@@ -146,9 +160,11 @@ function RepresentativeCard({ representative }: { representative: Representative
           <div className="flex-1 min-w-0">
             <h3 className="text-xl font-semibold text-gray-900 mb-1">{representative.name}</h3>
             <p className="text-gray-600 mb-2">{representative.title}</p>
-            
+
             <div className="flex flex-wrap gap-2 mb-3">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPartyColor(representative.party)}`}>
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${getPartyColor(representative.party)}`}
+              >
                 {representative.party}
               </span>
               {representative.chamber === 'House' && representative.district && (
@@ -181,9 +197,7 @@ function RepresentativeCard({ representative }: { representative: Representative
             {representative.committees.slice(0, 3).map((committee, index) => (
               <div key={index} className="text-sm text-gray-600">
                 <span className="font-medium">{committee.name}</span>
-                {committee.role && (
-                  <span className="text-civiq-blue ml-1">({committee.role})</span>
-                )}
+                {committee.role && <span className="text-civiq-blue ml-1">({committee.role})</span>}
               </div>
             ))}
             {representative.committees.length > 3 && (
@@ -207,7 +221,7 @@ function RepresentativeCard({ representative }: { representative: Representative
           {representative.email && (
             <div className="flex items-center gap-2">
               <span className="font-medium text-gray-700">✉️</span>
-              <a 
+              <a
                 href={`mailto:${representative.email}`}
                 className="text-civiq-blue hover:underline truncate"
               >
@@ -218,7 +232,7 @@ function RepresentativeCard({ representative }: { representative: Representative
           {representative.website && (
             <div className="flex items-center gap-2 md:col-span-2">
               <span className="font-medium text-gray-700">🌐</span>
-              <a 
+              <a
                 href={representative.website}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -236,14 +250,14 @@ function RepresentativeCard({ representative }: { representative: Representative
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1">
             <div className="flex-1 bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-civiq-green h-2 rounded-full" 
+              <div
+                className="bg-civiq-green h-2 rounded-full"
                 style={{ width: `${representative.dataComplete}%` }}
               ></div>
             </div>
             <span className="text-xs text-gray-600">{representative.dataComplete}% complete</span>
           </div>
-          <Link 
+          <Link
             href={`/representative/${representative.bioguideId}`}
             className="ml-4 bg-civiq-blue text-white px-4 py-2 rounded hover:bg-civiq-blue/90 transition-colors text-sm font-medium"
           >
@@ -263,7 +277,8 @@ function StateLegislatorCard({ legislator }: { legislator: StateLegislator }) {
   };
 
   const getChamberInfo = (chamber: string) => {
-    if (chamber === 'upper') return { name: 'State Senate', color: 'bg-purple-100 text-purple-800' };
+    if (chamber === 'upper')
+      return { name: 'State Senate', color: 'bg-purple-100 text-purple-800' };
     if (chamber === 'lower') return { name: 'State House', color: 'bg-green-100 text-green-800' };
     return { name: 'Legislature', color: 'bg-gray-100 text-gray-800' };
   };
@@ -275,19 +290,17 @@ function StateLegislatorCard({ legislator }: { legislator: StateLegislator }) {
       {/* Header Section */}
       <div className="p-6 pb-4">
         <div className="flex items-start gap-4">
-          <RepresentativePhoto 
-            bioguideId={legislator.id}
-            name={legislator.name}
-            size="md"
-          />
+          <RepresentativePhoto bioguideId={legislator.id} name={legislator.name} size="md" />
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-semibold text-gray-900 mb-1">{legislator.name}</h3>
             <p className="text-gray-600 mb-2">
               {legislator.currentRole?.title || `${chamberInfo.name} Member`}
             </p>
-            
+
             <div className="flex flex-wrap gap-2 mb-3">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPartyColor(legislator.party)}`}>
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${getPartyColor(legislator.party)}`}
+              >
                 {legislator.party}
               </span>
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${chamberInfo.color}`}>
@@ -313,7 +326,7 @@ function StateLegislatorCard({ legislator }: { legislator: StateLegislator }) {
           {legislator.email && (
             <div className="flex items-center gap-2">
               <span className="font-medium text-gray-700">✉️</span>
-              <a 
+              <a
                 href={`mailto:${legislator.email}`}
                 className="text-civiq-blue hover:underline truncate"
               >
@@ -324,7 +337,7 @@ function StateLegislatorCard({ legislator }: { legislator: StateLegislator }) {
           {legislator.website && (
             <div className="flex items-center gap-2 md:col-span-2">
               <span className="font-medium text-gray-700">🌐</span>
-              <a 
+              <a
                 href={legislator.website}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -348,9 +361,7 @@ function StateLegislatorCard({ legislator }: { legislator: StateLegislator }) {
                 {office.address && (
                   <div className="text-xs text-gray-500 mt-1">{office.address}</div>
                 )}
-                {office.phone && (
-                  <div className="text-xs text-gray-500">Phone: {office.phone}</div>
-                )}
+                {office.phone && <div className="text-xs text-gray-500">Phone: {office.phone}</div>}
               </div>
             ))}
           </div>
@@ -360,9 +371,7 @@ function StateLegislatorCard({ legislator }: { legislator: StateLegislator }) {
       {/* Footer */}
       <div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600">
-            {legislator.state} State Legislature
-          </span>
+          <span className="text-gray-600">{legislator.state} State Legislature</span>
           {legislator.currentRole?.start_date && (
             <span className="text-gray-500">
               Since {new Date(legislator.currentRole.start_date).getFullYear()}
@@ -383,13 +392,15 @@ function StateRepresentativesTab({ zipCode }: { zipCode: string }) {
     const fetchStateRepresentatives = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/state-representatives?zip=${encodeURIComponent(zipCode)}`);
-        
+        const response = await fetch(
+          `/api/state-representatives?zip=${encodeURIComponent(zipCode)}`
+        );
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Failed to fetch state representatives');
         }
-        
+
         const data: StateApiResponse = await response.json();
         setStateData(data);
         setError(null);
@@ -413,7 +424,7 @@ function StateRepresentativesTab({ zipCode }: { zipCode: string }) {
           <Spinner size="lg" />
           <p className="mt-4 text-gray-600">Finding your state representatives...</p>
         </div>
-        
+
         <div className="space-y-6">
           <RepresentativeSkeleton />
           <RepresentativeSkeleton />
@@ -456,7 +467,10 @@ function StateRepresentativesTab({ zipCode }: { zipCode: string }) {
         {stateData.jurisdiction && (
           <div className="mt-4 flex flex-wrap gap-2">
             {stateData.jurisdiction.chambers.map((chamber, index) => (
-              <span key={index} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+              <span
+                key={index}
+                className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+              >
                 {chamber.name}
               </span>
             ))}
@@ -471,7 +485,7 @@ function StateRepresentativesTab({ zipCode }: { zipCode: string }) {
             State Senators ({senators.length})
           </h3>
           <div className="space-y-4">
-            {senators.map((senator) => (
+            {senators.map(senator => (
               <StateLegislatorCard key={senator.id} legislator={senator} />
             ))}
           </div>
@@ -485,7 +499,7 @@ function StateRepresentativesTab({ zipCode }: { zipCode: string }) {
             State Representatives ({representatives.length})
           </h3>
           <div className="space-y-4">
-            {representatives.map((representative) => (
+            {representatives.map(representative => (
               <StateLegislatorCard key={representative.id} legislator={representative} />
             ))}
           </div>
@@ -507,7 +521,9 @@ function ResultsContent() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [activeTab, setActiveTab] = useState<'federal' | 'state' | 'map'>('federal');
   const [useInteractiveMap, setUseInteractiveMap] = useState(true);
-  const [districtInfo, setDistrictInfo] = useState<{state: string; district: string} | null>(null);
+  const [districtInfo, setDistrictInfo] = useState<{ state: string; district: string } | null>(
+    null
+  );
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchType, setSearchType] = useState<'zip' | 'address' | 'unknown'>('unknown');
   const [multiDistrictData, setMultiDistrictData] = useState<MultiDistrictResponse | null>(null);
@@ -521,197 +537,239 @@ function ResultsContent() {
     'Checking district boundaries...',
     'Looking up representatives...',
     'Loading additional data...',
-    'Finalizing results...'
+    'Finalizing results...',
   ]);
 
-  const fetchRepresentatives = async (selectedDistrictOverride?: DistrictInfo) => {
-    const searchQuery = query || zipCode || address;
-    if (!searchQuery) {
-      loading.setError(new Error('No search query provided'));
-      return;
-    }
+  // Extract methods to avoid infinite loop
+  const {
+    start: startLoading,
+    setError: setLoadingError,
+    nextStage,
+    complete: completeLoading,
+  } = loading;
 
-    try {
-      loading.start();
-      setSearchQuery(searchQuery);
-      
-      // Determine search type
-      const isZipCode = /^\d{5}$/.test(searchQuery);
-      const currentSearchType = isZipCode ? 'zip' : 'address';
-      setSearchType(currentSearchType);
-      
-      // For ZIP codes, check if multi-district first
-      if (isZipCode && !selectedDistrictOverride) {
-        loading.nextStage(); // "Checking district boundaries..."
-        const multiDistrictCheck = await checkMultiDistrict(searchQuery);
-        
-        if (multiDistrictCheck.success && multiDistrictCheck.isMultiDistrict) {
-          // Multi-district ZIP - show district selector
-          setMultiDistrictData(multiDistrictCheck);
-          loading.complete();
-          return;
-        } else if (multiDistrictCheck.success && !multiDistrictCheck.isMultiDistrict) {
-          // Single district - continue with normal flow using multi-district API for consistency
-          loading.nextStage(); // "Looking up representatives..."
-          const response = await fetch(`/api/representatives-multi-district?zip=${encodeURIComponent(searchQuery)}`);
+  const fetchRepresentatives = useCallback(
+    async (selectedDistrictOverride?: DistrictInfo) => {
+      const searchQuery = query || zipCode || address;
+      if (!searchQuery) {
+        setLoadingError(new Error('No search query provided'));
+        return;
+      }
+
+      try {
+        startLoading();
+        setSearchQuery(searchQuery);
+
+        // Determine search type
+        const isZipCode = /^\d{5}$/.test(searchQuery);
+        const currentSearchType = isZipCode ? 'zip' : 'address';
+        setSearchType(currentSearchType);
+
+        // For ZIP codes, check if multi-district first
+        if (isZipCode && !selectedDistrictOverride) {
+          nextStage(); // "Checking district boundaries..."
+          const multiDistrictCheck = await checkMultiDistrict(searchQuery);
+
+          if (multiDistrictCheck.success && multiDistrictCheck.isMultiDistrict) {
+            // Multi-district ZIP - show district selector
+            setMultiDistrictData(multiDistrictCheck);
+            completeLoading();
+            return;
+          } else if (multiDistrictCheck.success && !multiDistrictCheck.isMultiDistrict) {
+            // Single district - continue with normal flow using multi-district API for consistency
+            nextStage(); // "Looking up representatives..."
+            const response = await fetch(
+              `/api/representatives-multi-district?zip=${encodeURIComponent(searchQuery)}`
+            );
+            const apiData: MultiDistrictResponse = await response.json();
+
+            if (apiData.success && apiData.representatives) {
+              // Convert multi-district response to legacy format
+              const legacyData: ApiResponse = {
+                success: true,
+                representatives: (apiData.representatives as MultiDistrictRepresentative[]).map(
+                  rep => ({
+                    bioguideId: rep.bioguideId,
+                    name: rep.name,
+                    party: rep.party,
+                    state: rep.state,
+                    district: rep.district,
+                    chamber: rep.chamber as 'House' | 'Senate',
+                    title: rep.title,
+                    phone: rep.phone,
+                    email: '', // Not in multi-district response
+                    website: rep.website,
+                    committees: [],
+                    terms: [],
+                    yearsInOffice: 0,
+                    nextElection: '',
+                    imageUrl: '',
+                    dataComplete: 85,
+                  })
+                ),
+                metadata: {
+                  timestamp: apiData.metadata.timestamp,
+                  zipCode: searchQuery,
+                  dataQuality: apiData.metadata.coverage.dataQuality as
+                    | 'high'
+                    | 'medium'
+                    | 'low'
+                    | 'unavailable',
+                  dataSource: apiData.metadata.dataSource,
+                  cacheable: true,
+                  freshness: 'live',
+                },
+              };
+
+              nextStage(); // "Loading additional data..."
+              setData(legacyData);
+
+              // Set district info
+              if (apiData.primaryDistrict) {
+                setDistrictInfo({
+                  state: apiData.primaryDistrict.state,
+                  district: apiData.primaryDistrict.district,
+                });
+              }
+
+              completeLoading();
+              return;
+            }
+          }
+        }
+
+        // Handle selected district override (user chose from multi-district)
+        if (selectedDistrictOverride) {
+          const response = await fetch(
+            `/api/representatives-multi-district?zip=${encodeURIComponent(searchQuery)}&district=${selectedDistrictOverride.state}-${selectedDistrictOverride.district}`
+          );
           const apiData: MultiDistrictResponse = await response.json();
-          
+
           if (apiData.success && apiData.representatives) {
-            // Convert multi-district response to legacy format
+            // Convert to legacy format and continue
             const legacyData: ApiResponse = {
               success: true,
-              representatives: apiData.representatives.map(rep => ({
-                bioguideId: rep.bioguideId,
-                name: rep.name,
-                party: rep.party,
-                state: rep.state,
-                district: rep.district,
-                chamber: rep.chamber as 'House' | 'Senate',
-                title: rep.title,
-                phone: rep.phone,
-                email: '', // Not in multi-district response
-                website: rep.website,
-                committees: [],
-                terms: [],
-                yearsInOffice: 0,
-                nextElection: '',
-                imageUrl: '',
-                dataComplete: 85
-              })),
+              representatives: (apiData.representatives as MultiDistrictRepresentative[]).map(
+                rep => ({
+                  bioguideId: rep.bioguideId,
+                  name: rep.name,
+                  party: rep.party,
+                  state: rep.state,
+                  district: rep.district,
+                  chamber: rep.chamber as 'House' | 'Senate',
+                  title: rep.title,
+                  phone: rep.phone,
+                  email: '',
+                  website: rep.website,
+                  committees: [],
+                  terms: [],
+                  yearsInOffice: 0,
+                  nextElection: '',
+                  imageUrl: '',
+                  dataComplete: 85,
+                })
+              ),
               metadata: {
                 timestamp: apiData.metadata.timestamp,
                 zipCode: searchQuery,
-                dataQuality: apiData.metadata.coverage.dataQuality as 'high' | 'medium' | 'low' | 'unavailable',
+                dataQuality: apiData.metadata.coverage.dataQuality as
+                  | 'high'
+                  | 'medium'
+                  | 'low'
+                  | 'unavailable',
                 dataSource: apiData.metadata.dataSource,
                 cacheable: true,
-                freshness: 'live'
-              }
+                freshness: 'live',
+              },
             };
-            
-            loading.nextStage(); // "Loading additional data..."
+
             setData(legacyData);
-            
+            setError(null);
+            setMultiDistrictData(null); // Clear multi-district selector
+            setSelectedDistrict(selectedDistrictOverride);
+
             // Set district info
-            if (apiData.primaryDistrict) {
-              setDistrictInfo({
-                state: apiData.primaryDistrict.state,
-                district: apiData.primaryDistrict.district
-              });
-            }
-            
-            loading.complete();
+            setDistrictInfo({
+              state: selectedDistrictOverride.state,
+              district: selectedDistrictOverride.district,
+            });
+
+            completeLoading();
             return;
           }
         }
-      }
-      
-      // Handle selected district override (user chose from multi-district)
-      if (selectedDistrictOverride) {
-        const response = await fetch(
-          `/api/representatives-multi-district?zip=${encodeURIComponent(searchQuery)}&district=${selectedDistrictOverride.state}-${selectedDistrictOverride.district}`
-        );
-        const apiData: MultiDistrictResponse = await response.json();
-        
+
+        // Fallback to original search system for non-ZIP or failed cases
+        let response;
+        if (query) {
+          // New search system
+          response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+        } else {
+          // Legacy ZIP/address endpoints
+          response = await fetch(
+            `/api/representatives-search?q=${encodeURIComponent(searchQuery)}`
+          );
+        }
+        const apiData: ApiResponse = await response.json();
+
+        setData(apiData);
+
         if (apiData.success && apiData.representatives) {
-          // Convert to legacy format and continue
-          const legacyData: ApiResponse = {
-            success: true,
-            representatives: apiData.representatives.map(rep => ({
-              bioguideId: rep.bioguideId,
-              name: rep.name,
-              party: rep.party,
-              state: rep.state,
-              district: rep.district,
-              chamber: rep.chamber as 'House' | 'Senate',
-              title: rep.title,
-              phone: rep.phone,
-              email: '',
-              website: rep.website,
-              committees: [],
-              terms: [],
-              yearsInOffice: 0,
-              nextElection: '',
-              imageUrl: '',
-              dataComplete: 85
-            })),
-            metadata: {
-              timestamp: apiData.metadata.timestamp,
-              zipCode: searchQuery,
-              dataQuality: apiData.metadata.coverage.dataQuality as 'high' | 'medium' | 'low' | 'unavailable',
-              dataSource: apiData.metadata.dataSource,
-              cacheable: true,
-              freshness: 'live'
-            }
-          };
-          
-          setData(legacyData);
           setError(null);
-          setMultiDistrictData(null); // Clear multi-district selector
-          setSelectedDistrict(selectedDistrictOverride);
-          
-          // Set district info
-          setDistrictInfo({
-            state: selectedDistrictOverride.state,
-            district: selectedDistrictOverride.district
-          });
-          
-          loading.complete();
-          return;
-        }
-      }
-      
-      // Fallback to original search system for non-ZIP or failed cases
-      let response;
-      if (query) {
-        // New search system
-        response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
-      } else {
-        // Legacy ZIP/address endpoints
-        response = await fetch(`/api/representatives-search?q=${encodeURIComponent(searchQuery)}`);
-      }
-      const apiData: ApiResponse = await response.json();
-      
-      setData(apiData);
-      
-      if (apiData.success && apiData.representatives) {
-        setError(null);
-        
-        // Extract district info from first representative
-        const firstRep = apiData.representatives[0];
-        if (firstRep) {
-          setDistrictInfo({
-            state: firstRep.state,
-            district: firstRep.district || '00'
-          });
-          
-          // Update search history with location info
-          if (typeof window !== 'undefined') {
-            const displayName = `${firstRep.state}${firstRep.district && firstRep.district !== '00' ? ` District ${firstRep.district}` : ''}`;
-            SearchHistory.updateSearchDisplayName(query || '', displayName);
+
+          // Extract district info from first representative
+          const firstRep = apiData.representatives[0];
+          if (firstRep) {
+            setDistrictInfo({
+              state: firstRep.state,
+              district: firstRep.district || '00',
+            });
+
+            // Update search history with location info
+            if (typeof window !== 'undefined') {
+              const displayName = `${firstRep.state}${firstRep.district && firstRep.district !== '00' ? ` District ${firstRep.district}` : ''}`;
+              SearchHistory.updateSearchDisplayName(query || '', displayName);
+            }
           }
+        } else {
+          // Handle API error transparently
+          setError(apiData.error?.message || 'Failed to fetch representatives');
         }
-      } else {
-        // Handle API error transparently
-        setError(apiData.error?.message || 'Failed to fetch representatives');
+      } catch (err) {
+        setLoadingError(err instanceof Error ? err : new Error('Network error occurred'));
+        setData({
+          success: false,
+          error: {
+            code: 'NETWORK_ERROR',
+            message: 'Unable to connect to server',
+          },
+          metadata: {
+            timestamp: new Date().toISOString(),
+            zipCode: zipCode || '',
+            dataQuality: 'unavailable' as const,
+            dataSource: 'network-error',
+            cacheable: false,
+          },
+        });
       }
-    } catch (err) {
-      loading.setError(err instanceof Error ? err : new Error('Network error occurred'));
-      setData({
-        success: false,
-        error: {
-          code: 'NETWORK_ERROR',
-          message: 'Unable to connect to server'
-        },
-        metadata: {
-          timestamp: new Date().toISOString(),
-          zipCode: zipCode || '',
-          dataQuality: 'unavailable' as const,
-          dataSource: 'network-error',
-          cacheable: false
-        }
-      });
-    }
-  };
+    },
+    [
+      query,
+      zipCode,
+      address,
+      startLoading,
+      setLoadingError,
+      nextStage,
+      completeLoading,
+      setSearchQuery,
+      setSearchType,
+      setMultiDistrictData,
+      setData,
+      setError,
+      setSelectedDistrict,
+      setDistrictInfo,
+    ]
+  );
 
   const handleDistrictSelect = async (district: DistrictInfo) => {
     setSelectedDistrict(district);
@@ -736,6 +794,7 @@ function ResultsContent() {
     if (zipCode || address || query) {
       fetchRepresentatives();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zipCode, address, query]);
 
   return (
@@ -749,25 +808,28 @@ function ResultsContent() {
             <div className="flex items-center gap-4">
               {/* Quick search history in header */}
               <div className="hidden md:flex items-center gap-2">
-                {typeof window !== 'undefined' && SearchHistory.getHistory().slice(0, 3).map((item, index) => (
-                  <Link
-                    key={`header-${item.zipCode}-${index}`}
-                    href={`/results?zip=${encodeURIComponent(item.zipCode)}`}
-                    className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 transition-colors"
-                  >
-                    {item.zipCode}
-                  </Link>
-                ))}
+                {typeof window !== 'undefined' &&
+                  SearchHistory.getHistory()
+                    .slice(0, 3)
+                    .map((item, index) => (
+                      <Link
+                        key={`header-${item.zipCode}-${index}`}
+                        href={`/results?zip=${encodeURIComponent(item.zipCode)}`}
+                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                      >
+                        {item.zipCode}
+                      </Link>
+                    ))}
               </div>
               <div className="flex items-center gap-4">
-                <Link 
-                  href="/compare" 
+                <Link
+                  href="/compare"
                   className="text-civiq-green hover:text-civiq-green/80 text-sm font-medium"
                 >
                   Compare Representatives
                 </Link>
-                <Link 
-                  href="/" 
+                <Link
+                  href="/"
                   className="text-civiq-blue hover:text-civiq-blue/80 text-sm font-medium"
                 >
                   ← New Search
@@ -780,11 +842,10 @@ function ResultsContent() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Your Representatives
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Representatives</h1>
           <p className="text-gray-600">
-            Representatives for {searchType === 'zip' ? 'ZIP code' : 'address'} <span className="font-semibold">{searchQuery}</span>
+            Representatives for {searchType === 'zip' ? 'ZIP code' : 'address'}{' '}
+            <span className="font-semibold">{searchQuery}</span>
             {selectedDistrict && (
               <span className="ml-2 text-civiq-blue font-semibold">
                 • {selectedDistrict.state}-{selectedDistrict.district} Selected
@@ -792,7 +853,10 @@ function ResultsContent() {
             )}
             {districtInfo && !selectedDistrict && (
               <span className="ml-2">
-                • {districtInfo.state} {districtInfo.district && districtInfo.district !== '00' && `District ${districtInfo.district}`}
+                • {districtInfo.state}{' '}
+                {districtInfo.district &&
+                  districtInfo.district !== '00' &&
+                  `District ${districtInfo.district}`}
               </span>
             )}
             {multiDistrictData && !selectedDistrict && (
@@ -801,7 +865,7 @@ function ResultsContent() {
               </span>
             )}
           </p>
-          
+
           {/* Data Quality Indicator */}
           {data?.metadata && (
             <div className="mt-4 space-y-2">
@@ -812,18 +876,22 @@ function ResultsContent() {
                   freshness={data.metadata?.freshness}
                 />
                 <DataSourceBadge source={data.metadata?.dataSource} showTrustLevel={true} />
-                <InlineQualityScore 
-                  score={85} 
-                  label="Data Quality" 
+                <InlineQualityScore
+                  score={85}
+                  label="Data Quality"
                   showTrend={true}
                   trend="stable"
                 />
-                <DataTrustIndicator sources={data.metadata?.dataSource ? [data.metadata.dataSource] : []} />
+                <DataTrustIndicator
+                  sources={data.metadata?.dataSource ? [data.metadata.dataSource] : []}
+                />
               </div>
               <div className="text-xs text-gray-500">
-                Retrieved: {data.metadata?.timestamp ? new Date(data.metadata.timestamp).toLocaleString() : 'Unknown'} • 
-                Status: validated • 
-                Cacheable: {data.metadata.cacheable ? 'yes' : 'no'}
+                Retrieved:{' '}
+                {data.metadata?.timestamp
+                  ? new Date(data.metadata.timestamp).toLocaleString()
+                  : 'Unknown'}{' '}
+                • Status: validated • Cacheable: {data.metadata.cacheable ? 'yes' : 'no'}
               </div>
             </div>
           )}
@@ -876,7 +944,7 @@ function ResultsContent() {
                       <DistrictSelector
                         zipCode={multiDistrictData.zipCode}
                         districts={multiDistrictData.districts}
-                        representatives={multiDistrictData.representatives}
+                        representatives={multiDistrictData.representatives as Representative[]}
                         onSelect={handleDistrictSelect}
                         onRefineAddress={handleAddressRefinement}
                       />
@@ -901,7 +969,7 @@ function ResultsContent() {
                       retry={loading.retry}
                       loadingComponent={
                         <>
-                          <LoadingMessage 
+                          <LoadingMessage
                             message={loading.currentStage}
                             submessage={`Step ${loading.currentStageIndex + 1} of 5`}
                             className="mb-8"
@@ -918,8 +986,18 @@ function ResultsContent() {
                   {loading.error && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
                       <div className="text-red-500 mb-4">
-                        <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="w-12 h-12 mx-auto"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                       </div>
                       <p className="text-red-800 font-medium">Unable to find representatives</p>
@@ -931,10 +1009,7 @@ function ResultsContent() {
                         >
                           Try Again
                         </button>
-                        <Link 
-                          href="/"
-                          className="px-4 py-2 text-civiq-blue hover:underline"
-                        >
+                        <Link href="/" className="px-4 py-2 text-civiq-blue hover:underline">
                           ← Search Again
                         </Link>
                       </div>
@@ -1000,7 +1075,7 @@ function ResultsContent() {
                       </button>
                     </div>
                   </div>
-                  
+
                   {useInteractiveMap ? (
                     <InteractiveDistrictMap zipCode={zipCode || query || ''} />
                   ) : (
@@ -1017,10 +1092,7 @@ function ResultsContent() {
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <p className="text-red-800 font-medium">Error</p>
             <p className="text-red-600 mt-1">No search query provided</p>
-            <Link 
-              href="/"
-              className="inline-block mt-4 text-civiq-blue hover:underline"
-            >
+            <Link href="/" className="inline-block mt-4 text-civiq-blue hover:underline">
               ← Go to search page
             </Link>
           </div>
@@ -1032,14 +1104,16 @@ function ResultsContent() {
 
 export default function Results() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-civiq-blue"></div>
-          <p className="mt-4 text-gray-600">Loading results...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-civiq-blue"></div>
+            <p className="mt-4 text-gray-600">Loading results...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <ResultsContent />
     </Suspense>
   );

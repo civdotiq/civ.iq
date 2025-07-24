@@ -47,7 +47,7 @@ async function testProfileEnhancements() {
   ];
   
   let passedTests = 0;
-  let totalTests = testCases.length;
+  const totalTests = testCases.length;
   
   for (const test of testCases) {
     try {

@@ -6,7 +6,7 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { structuredLogger } from '@/lib/logging/logger';
+import { structuredLogger } from '@/lib/logging/logger-client';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
@@ -90,9 +90,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
-                Page Error
-              </h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Page Error</h2>
               <p className="text-gray-600 mb-6">
                 This page encountered an error. Please try again or go back to the previous page.
               </p>
@@ -105,11 +103,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
               >
                 Try Again
               </Button>
-              <Button
-                onClick={this.handleGoBack}
-                variant="secondary"
-                className="w-full"
-              >
+              <Button onClick={this.handleGoBack} variant="secondary" className="w-full">
                 Go Back
               </Button>
             </div>

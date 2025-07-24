@@ -6,7 +6,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { structuredLogger } from '@/lib/logging/logger';
+import { structuredLogger } from '@/lib/logging/logger-client';
 
 export interface ErrorState {
   error: Error | null;
@@ -16,11 +16,11 @@ export interface ErrorState {
 
 export interface UseErrorHandlerReturn {
   error: ErrorState;
-  handleError: (error: Error, context?: Record<string, any>) => void;
+  handleError: (error: Error, context?: Record<string, unknown>) => void;
   clearError: () => void;
   withErrorHandling: <T>(
-    asyncFn: () => Promise<T>, 
-    context?: Record<string, any>
+    asyncFn: () => Promise<T>,
+    context?: Record<string, unknown>
   ) => Promise<T | null>;
 }
 
@@ -32,9 +32,9 @@ export function useErrorHandler(componentName?: string): UseErrorHandlerReturn {
   });
 
   const handleError = useCallback(
-    (error: Error, context: Record<string, any> = {}) => {
+    (error: Error, context: Record<string, unknown> = {}) => {
       const errorMessage = error.message || 'An unexpected error occurred';
-      
+
       // Log error with context
       structuredLogger.error('Component error handled', error, {
         componentName: componentName || 'Unknown',
@@ -64,7 +64,7 @@ export function useErrorHandler(componentName?: string): UseErrorHandlerReturn {
   const withErrorHandling = useCallback(
     async <T>(
       asyncFn: () => Promise<T>,
-      context: Record<string, any> = {}
+      context: Record<string, unknown> = {}
     ): Promise<T | null> => {
       try {
         clearError();
@@ -102,7 +102,8 @@ export function useApiCall<T>(
       setData(result);
     }
     setLoading(false);
-  }, dependencies);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiCall, withErrorHandling, ...dependencies]);
 
   return {
     data,

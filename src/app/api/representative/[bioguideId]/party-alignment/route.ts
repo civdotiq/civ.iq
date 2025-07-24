@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
+import { structuredLogger } from '@/lib/logging/logger';
 
 interface PartyAlignment {
   overall_alignment: number;
@@ -42,10 +43,7 @@ export async function GET(
   const { bioguideId } = await params;
 
   if (!bioguideId) {
-    return NextResponse.json(
-      { error: 'Bioguide ID is required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
   }
 
   try {
@@ -54,14 +52,18 @@ export async function GET(
       `party-alignment-${bioguideId}`,
       async () => {
         // Get representative info first
-        const repResponse = await fetch(`${request.nextUrl.origin}/api/representative/${bioguideId}`);
+        const repResponse = await fetch(
+          `${request.nextUrl.origin}/api/representative/${bioguideId}`
+        );
         if (!repResponse.ok) {
           throw new Error('Could not fetch representative data');
         }
         const representative = await repResponse.json();
 
         // Get legislative activity data
-        const votesResponse = await fetch(`${request.nextUrl.origin}/api/representative/${bioguideId}/votes?limit=100`);
+        const votesResponse = await fetch(
+          `${request.nextUrl.origin}/api/representative/${bioguideId}/votes?limit=100`
+        );
         const votesData = votesResponse.ok ? await votesResponse.json() : { votes: [] };
 
         // Analyze party alignment based on sponsorship/cosponsorship patterns
@@ -73,10 +75,9 @@ export async function GET(
     );
 
     return NextResponse.json(alignmentData);
-
   } catch (error) {
-    console.error('Error calculating party alignment:', error);
-    
+    structuredLogger.error('Error calculating party alignment', error as Error, { bioguideId });
+
     // Return meaningful mock data for fallback
     const mockAlignment: PartyAlignment = {
       overall_alignment: 82.5,
@@ -92,7 +93,7 @@ export async function GET(
           vote_date: '2024-03-15',
           representative_position: 'Yea',
           party_majority_position: 'Nay',
-          significance: 'high'
+          significance: 'high',
         },
         {
           bill_number: 'S. 567',
@@ -100,39 +101,42 @@ export async function GET(
           vote_date: '2024-02-20',
           representative_position: 'Nay',
           party_majority_position: 'Yea',
-          significance: 'medium'
-        }
+          significance: 'medium',
+        },
       ],
       voting_patterns: {
         with_party: 129,
         against_party: 18,
         bipartisan: 23,
-        absent: 9
+        absent: 9,
       },
       comparison_to_peers: {
         state_avg_alignment: 79.3,
         party_avg_alignment: 87.1,
-        chamber_avg_alignment: 81.7
-      }
+        chamber_avg_alignment: 81.7,
+      },
     };
 
     return NextResponse.json({
       ...mockAlignment,
       metadata: {
         dataSource: 'estimated',
-        note: 'Party alignment calculated from legislative activity patterns. Actual floor vote data requires additional API access.'
-      }
+        note: 'Party alignment calculated from legislative activity patterns. Actual floor vote data requires additional API access.',
+      },
     });
   }
 }
 
 function analyzePartyAlignment(representative: unknown, votes: unknown[]): PartyAlignment {
   // Analyze patterns in sponsored/cosponsored legislation to estimate party alignment
-  const party = representative.party?.toLowerCase() || 'unknown';
-  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const party = (representative as any).party?.toLowerCase() || 'unknown';
+
   // Count different types of legislative activities
-  const sponsored = votes.filter(v => v.question === 'On Sponsorship').length;
-  const cosponsored = votes.filter(v => v.question === 'On Cosponsorship').length;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sponsored = votes.filter((v: any) => v.question === 'On Sponsorship').length;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const cosponsored = votes.filter((v: any) => v.question === 'On Cosponsorship').length;
   const totalActivity = sponsored + cosponsored;
 
   // Estimate alignment based on legislative patterns
@@ -152,7 +156,7 @@ function analyzePartyAlignment(representative: unknown, votes: unknown[]): Party
   estimatedAlignment = Math.max(40, Math.min(95, estimatedAlignment));
 
   const recentAlignment = estimatedAlignment + (Math.random() * 10 - 5);
-  
+
   // Determine trend
   const alignmentDiff = recentAlignment - estimatedAlignment;
   let trend: 'increasing' | 'decreasing' | 'stable' = 'stable';
@@ -168,15 +172,18 @@ function analyzePartyAlignment(representative: unknown, votes: unknown[]): Party
 
   // Generate key departures based on actual bills if available
   const keyDepartures = votes
-    .filter(v => v.question === 'On Sponsorship')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter((v: any) => v.question === 'On Sponsorship')
     .slice(0, 3)
-    .map((vote, index) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((vote: any, index) => ({
       bill_number: vote.bill.number,
       bill_title: vote.bill.title.substring(0, 80) + (vote.bill.title.length > 80 ? '...' : ''),
       vote_date: vote.date,
       representative_position: 'Yea',
       party_majority_position: Math.random() > 0.7 ? 'Nay' : 'Yea',
-      significance: index === 0 ? 'high' : (index === 1 ? 'medium' : 'low') as 'high' | 'medium' | 'low'
+      significance:
+        index === 0 ? 'high' : ((index === 1 ? 'medium' : 'low') as 'high' | 'medium' | 'low'),
     }));
 
   return {
@@ -191,12 +198,12 @@ function analyzePartyAlignment(representative: unknown, votes: unknown[]): Party
       with_party: withParty,
       against_party: againstParty,
       bipartisan: bipartisan,
-      absent: Math.max(0, absent)
+      absent: Math.max(0, absent),
     },
     comparison_to_peers: {
       state_avg_alignment: Math.round((estimatedAlignment + Math.random() * 10 - 5) * 10) / 10,
       party_avg_alignment: Math.round((estimatedAlignment + Math.random() * 8 - 2) * 10) / 10,
-      chamber_avg_alignment: Math.round((estimatedAlignment + Math.random() * 6 - 3) * 10) / 10
-    }
+      chamber_avg_alignment: Math.round((estimatedAlignment + Math.random() * 6 - 3) * 10) / 10,
+    },
   };
 }

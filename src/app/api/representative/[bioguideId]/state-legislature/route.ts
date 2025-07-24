@@ -69,16 +69,56 @@ interface StateLegislatureData {
 // Helper function to get state abbreviation mapping
 function getStateAbbreviation(state: string): string {
   const stateMap: { [key: string]: string } = {
-    'Alabama': 'al', 'Alaska': 'ak', 'Arizona': 'az', 'Arkansas': 'ar', 'California': 'ca',
-    'Colorado': 'co', 'Connecticut': 'ct', 'Delaware': 'de', 'Florida': 'fl', 'Georgia': 'ga',
-    'Hawaii': 'hi', 'Idaho': 'id', 'Illinois': 'il', 'Indiana': 'in', 'Iowa': 'ia',
-    'Kansas': 'ks', 'Kentucky': 'ky', 'Louisiana': 'la', 'Maine': 'me', 'Maryland': 'md',
-    'Massachusetts': 'ma', 'Michigan': 'mi', 'Minnesota': 'mn', 'Mississippi': 'ms', 'Missouri': 'mo',
-    'Montana': 'mt', 'Nebraska': 'ne', 'Nevada': 'nv', 'New Hampshire': 'nh', 'New Jersey': 'nj',
-    'New Mexico': 'nm', 'New York': 'ny', 'North Carolina': 'nc', 'North Dakota': 'nd', 'Ohio': 'oh',
-    'Oklahoma': 'ok', 'Oregon': 'or', 'Pennsylvania': 'pa', 'Rhode Island': 'ri', 'South Carolina': 'sc',
-    'South Dakota': 'sd', 'Tennessee': 'tn', 'Texas': 'tx', 'Utah': 'ut', 'Vermont': 'vt',
-    'Virginia': 'va', 'Washington': 'wa', 'West Virginia': 'wv', 'Wisconsin': 'wi', 'Wyoming': 'wy'
+    Alabama: 'al',
+    Alaska: 'ak',
+    Arizona: 'az',
+    Arkansas: 'ar',
+    California: 'ca',
+    Colorado: 'co',
+    Connecticut: 'ct',
+    Delaware: 'de',
+    Florida: 'fl',
+    Georgia: 'ga',
+    Hawaii: 'hi',
+    Idaho: 'id',
+    Illinois: 'il',
+    Indiana: 'in',
+    Iowa: 'ia',
+    Kansas: 'ks',
+    Kentucky: 'ky',
+    Louisiana: 'la',
+    Maine: 'me',
+    Maryland: 'md',
+    Massachusetts: 'ma',
+    Michigan: 'mi',
+    Minnesota: 'mn',
+    Mississippi: 'ms',
+    Missouri: 'mo',
+    Montana: 'mt',
+    Nebraska: 'ne',
+    Nevada: 'nv',
+    'New Hampshire': 'nh',
+    'New Jersey': 'nj',
+    'New Mexico': 'nm',
+    'New York': 'ny',
+    'North Carolina': 'nc',
+    'North Dakota': 'nd',
+    Ohio: 'oh',
+    Oklahoma: 'ok',
+    Oregon: 'or',
+    Pennsylvania: 'pa',
+    'Rhode Island': 'ri',
+    'South Carolina': 'sc',
+    'South Dakota': 'sd',
+    Tennessee: 'tn',
+    Texas: 'tx',
+    Utah: 'ut',
+    Vermont: 'vt',
+    Virginia: 'va',
+    Washington: 'wa',
+    'West Virginia': 'wv',
+    Wisconsin: 'wi',
+    Wyoming: 'wy',
   };
 
   // Handle direct state abbreviation inputs
@@ -90,38 +130,39 @@ function getStateAbbreviation(state: string): string {
 }
 
 // Helper function to get state legislative districts for specific areas
-function getStateDistrictsForArea(state: string, congressionalDistrict?: string): { senate: string[], house: string[] } {
+function getStateDistrictsForArea(
+  state: string,
+  congressionalDistrict?: string
+): { senate: string[]; house: string[] } {
   // ZIP 48221 is in Detroit, Michigan Congressional District 13
   // Based on Michigan redistricting, Detroit area includes these districts
   if (state === 'Michigan' && congressionalDistrict === '13') {
     return {
       senate: ['1', '2', '3', '4', '5'], // Detroit metro area senate districts
-      house: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'] // Detroit metro area house districts
+      house: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'], // Detroit metro area house districts
     };
   }
-  
+
   // Default: return empty to fetch all legislators
   return { senate: [], house: [] };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
   const startTime = Date.now();
   try {
-    const response = await fetch(
-      `https://v3.openstates.org/jurisdictions/${stateAbbrev}`,
-      {
-        headers: {
-          'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
-        }
-      }
-    );
-    
+    const response = await fetch(`https://v3.openstates.org/jurisdictions/${stateAbbrev}`, {
+      headers: {
+        'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
+      },
+    });
+
     const duration = Date.now() - startTime;
-    
+
     // Log external API call
     structuredLogger.externalApi('OpenStates', 'fetchJurisdiction', duration, response.ok, {
       stateAbbrev,
-      statusCode: response.status
+      statusCode: response.status,
     });
 
     if (!response.ok) {
@@ -131,163 +172,183 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
     return await response.json();
   } catch (error) {
     const duration = Date.now() - startTime;
-    
+
     // Log failed external API call
     structuredLogger.externalApi('OpenStates', 'fetchJurisdiction', duration, false, {
       stateAbbrev,
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     });
-    
+
     structuredLogger.error('Error fetching state jurisdiction', error as Error, {
       stateAbbrev,
-      operation: 'state_jurisdiction_fetch'
+      operation: 'state_jurisdiction_fetch',
     });
     return null;
   }
 }
 
-async function fetchStateLegislators(stateAbbrev: string, state: string, congressionalDistrict?: string): Promise<StateLegislator[]> {
+async function fetchStateLegislators(
+  stateAbbrev: string,
+  state: string,
+  congressionalDistrict?: string
+): Promise<StateLegislator[]> {
   try {
     const districts = getStateDistrictsForArea(state, congressionalDistrict);
     const legislators: StateLegislator[] = [];
-    
+
     structuredLogger.info('Fetching state legislators', {
       state,
       congressionalDistrict,
-      operation: 'state_legislators_fetch'
+      operation: 'state_legislators_fetch',
     });
     structuredLogger.debug('Target state districts', {
       state,
       congressionalDistrict,
       districts,
-      operation: 'state_districts_mapping'
+      operation: 'state_districts_mapping',
     });
-    
+
     // If we have specific districts to target, fetch them individually
     if (districts.senate.length > 0 || districts.house.length > 0) {
       // Fetch specific districts
       const allDistrictsToFetch = [
         ...districts.senate.map(d => ({ district: d, chamber: 'upper' })),
-        ...districts.house.map(d => ({ district: d, chamber: 'lower' }))
+        ...districts.house.map(d => ({ district: d, chamber: 'lower' })),
       ];
-      
-      for (const { district, chamber } of allDistrictsToFetch.slice(0, 10)) { // Limit to avoid too many requests
+
+      for (const { district, chamber } of allDistrictsToFetch.slice(0, 10)) {
+        // Limit to avoid too many requests
         const url = `https://v3.openstates.org/people?jurisdiction=${stateAbbrev}&current_role=true&district=${district}`;
-        
+
         structuredLogger.debug('Fetching legislators from district', {
           district,
           chamber,
           url: url.replace(process.env.OPENSTATES_API_KEY || '', 'API_KEY_HIDDEN'),
-          operation: 'district_legislators_fetch'
+          operation: 'district_legislators_fetch',
         });
-        
+
         const fetchStartTime = Date.now();
         const response = await fetch(url, {
           headers: {
             'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
-          }
+          },
         });
-        
+
         const fetchDuration = Date.now() - fetchStartTime;
-        
+
         // Log external API call
         structuredLogger.externalApi('OpenStates', 'fetchLegislators', fetchDuration, response.ok, {
           district,
           chamber,
-          statusCode: response.status
+          statusCode: response.status,
         });
 
         if (response.ok) {
           const data = await response.json();
-          const districtLegislators = data.results?.map((person: unknown) => ({
-            id: person.id,
-            name: person.name,
-            party: person.current_role?.party || 'Unknown',
-            chamber: person.current_role?.org_classification || chamber,
-            district: person.current_role?.district || district,
-            image: person.image,
-            email: person.email,
-            phone: person.phone,
-            website: person.links?.find((link: unknown) => link.note === 'website')?.url,
-            offices: person.offices?.map((office: unknown) => ({
-              name: office.name || 'Office',
-              address: office.address,
-              phone: office.phone,
-              email: office.email
-            }))
-          })) || [];
-          
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const districtLegislators =
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            data.results?.map((person: any) => ({
+              id: person.id,
+              name: person.name,
+              party: person.current_role?.party || 'Unknown',
+              chamber: person.current_role?.org_classification || chamber,
+              district: person.current_role?.district || district,
+              image: person.image,
+              email: person.email,
+              phone: person.phone,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              website: person.links?.find((link: any) => link.note === 'website')?.url,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              offices: person.offices?.map((office: any) => ({
+                name: office.name || 'Office',
+                address: office.address,
+                phone: office.phone,
+                email: office.email,
+              })),
+            })) || [];
+
           legislators.push(...districtLegislators);
           structuredLogger.info('Found legislators in district', {
             district,
             legislatorCount: districtLegislators.length,
-            operation: 'district_legislators_found'
+            operation: 'district_legislators_found',
           });
         }
       }
     } else {
       // Fallback: fetch all current legislators for the state
       const url = `https://v3.openstates.org/people?jurisdiction=${stateAbbrev}&current_role=true&per_page=20`;
-      
+
       structuredLogger.info('Fetching all current legislators', {
         stateAbbrev,
         url: url.replace(process.env.OPENSTATES_API_KEY || '', 'API_KEY_HIDDEN'),
-        operation: 'all_legislators_fetch'
+        operation: 'all_legislators_fetch',
       });
-      
+
       const fetchStartTime = Date.now();
       const response = await fetch(url, {
         headers: {
           'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
-        }
+        },
       });
-      
+
       const fetchDuration = Date.now() - fetchStartTime;
-      
+
       // Log external API call
-      structuredLogger.externalApi('OpenStates', 'fetchAllLegislators', fetchDuration, response.ok, {
-        stateAbbrev,
-        statusCode: response.status
-      });
+      structuredLogger.externalApi(
+        'OpenStates',
+        'fetchAllLegislators',
+        fetchDuration,
+        response.ok,
+        {
+          stateAbbrev,
+          statusCode: response.status,
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        const allLegislators = data.results?.slice(0, 15).map((person: unknown) => ({
-          id: person.id,
-          name: person.name,
-          party: person.current_role?.party || 'Unknown',
-          chamber: person.current_role?.org_classification || 'lower',
-          district: person.current_role?.district || 'Unknown',
-          image: person.image,
-          email: person.email,
-          phone: person.phone,
-          website: person.links?.find((link: unknown) => link.note === 'website')?.url,
-          offices: person.offices?.map((office: unknown) => ({
-            name: office.name || 'Office',
-            address: office.address,
-            phone: office.phone,
-            email: office.email
-          }))
-        })) || [];
-        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const allLegislators =
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          data.results?.slice(0, 15).map((person: any) => ({
+            id: person.id,
+            name: person.name,
+            party: person.current_role?.party || 'Unknown',
+            chamber: person.current_role?.org_classification || 'lower',
+            district: person.current_role?.district || 'Unknown',
+            image: person.image,
+            email: person.email,
+            phone: person.phone,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            website: person.links?.find((link: any) => link.note === 'website')?.url,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            offices: person.offices?.map((office: any) => ({
+              name: office.name || 'Office',
+              address: office.address,
+              phone: office.phone,
+              email: office.email,
+            })),
+          })) || [];
+
         legislators.push(...allLegislators);
       }
     }
-    
+
     structuredLogger.info('Total legislators found', {
       state,
       congressionalDistrict,
       legislatorCount: legislators.length,
-      operation: 'legislators_fetch_complete'
+      operation: 'legislators_fetch_complete',
     });
     return legislators;
-    
   } catch (error) {
     structuredLogger.error('Error fetching state legislators', error as Error, {
       stateAbbrev,
       state,
       congressionalDistrict,
-      operation: 'state_legislators_fetch_error'
+      operation: 'state_legislators_fetch_error',
     });
     return [];
   }
@@ -301,16 +362,16 @@ async function fetchRecentStateBills(stateAbbrev: string): Promise<StateBill[]> 
       {
         headers: {
           'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
-        }
+        },
       }
     );
-    
+
     const duration = Date.now() - startTime;
-    
+
     // Log external API call
     structuredLogger.externalApi('OpenStates', 'fetchBills', duration, response.ok, {
       stateAbbrev,
-      statusCode: response.status
+      statusCode: response.status,
     });
 
     if (!response.ok) {
@@ -318,36 +379,41 @@ async function fetchRecentStateBills(stateAbbrev: string): Promise<StateBill[]> 
     }
 
     const data = await response.json();
-    
-    return data.results?.map((bill: unknown) => ({
-      id: bill.id,
-      identifier: bill.identifier,
-      title: bill.title,
-      subject: bill.subject || [],
-      abstract: bill.abstract,
-      latest_action_date: bill.latest_action_date,
-      latest_action_description: bill.latest_action_description,
-      classification: bill.classification || [],
-      sponsors: bill.sponsorships?.map((sponsor: unknown) => ({
-        name: sponsor.name,
-        classification: sponsor.classification
-      })) || [],
-      session: bill.session,
-      created_at: bill.created_at,
-      updated_at: bill.updated_at
-    })) || [];
+
+    return (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data.results?.map((bill: any) => ({
+        id: bill.id,
+        identifier: bill.identifier,
+        title: bill.title,
+        subject: bill.subject || [],
+        abstract: bill.abstract,
+        latest_action_date: bill.latest_action_date,
+        latest_action_description: bill.latest_action_description,
+        classification: bill.classification || [],
+        sponsors:
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          bill.sponsorships?.map((sponsor: any) => ({
+            name: sponsor.name,
+            classification: sponsor.classification,
+          })) || [],
+        session: bill.session,
+        created_at: bill.created_at,
+        updated_at: bill.updated_at,
+      })) || []
+    );
   } catch (error) {
     const duration = Date.now() - startTime;
-    
+
     // Log failed external API call
     structuredLogger.externalApi('OpenStates', 'fetchBills', duration, false, {
       stateAbbrev,
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     });
-    
+
     structuredLogger.error('Error fetching state bills', error as Error, {
       stateAbbrev,
-      operation: 'state_bills_fetch_error'
+      operation: 'state_bills_fetch_error',
     });
     return [];
   }
@@ -360,18 +426,13 @@ export async function GET(
   const { bioguideId } = await params;
 
   if (!bioguideId) {
-    return NextResponse.json(
-      { error: 'Bioguide ID is required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
   }
 
   try {
     // First, get representative info
-    const repResponse = await fetch(
-      `${request.nextUrl.origin}/api/representative/${bioguideId}`
-    );
-    
+    const repResponse = await fetch(`${request.nextUrl.origin}/api/representative/${bioguideId}`);
+
     if (!repResponse.ok) {
       throw new Error('Failed to fetch representative info');
     }
@@ -384,7 +445,7 @@ export async function GET(
       const [jurisdiction, legislators, recentBills] = await Promise.all([
         fetchStateJurisdiction(stateAbbrev),
         fetchStateLegislators(stateAbbrev, representative.state, representative.district),
-        fetchRecentStateBills(stateAbbrev)
+        fetchRecentStateBills(stateAbbrev),
       ]);
 
       const stateData: StateLegislatureData = {
@@ -394,18 +455,20 @@ export async function GET(
           classification: 'state',
           chambers: [
             { name: 'House', classification: 'lower' },
-            { name: 'Senate', classification: 'upper' }
-          ]
+            { name: 'Senate', classification: 'upper' },
+          ],
         },
         current_session: jurisdiction?.current_session || null,
         state_legislators: legislators,
         recent_bills: recentBills,
-        representative_district_bills: recentBills.filter(bill => 
-          bill.subject.some(subj => 
-            subj.toLowerCase().includes('federal') || 
-            subj.toLowerCase().includes('congress')
+        representative_district_bills: recentBills
+          .filter(bill =>
+            bill.subject.some(
+              subj =>
+                subj.toLowerCase().includes('federal') || subj.toLowerCase().includes('congress')
+            )
           )
-        ).slice(0, 5)
+          .slice(0, 5),
       };
 
       return NextResponse.json(stateData);
@@ -419,15 +482,15 @@ export async function GET(
         classification: 'state',
         chambers: [
           { name: 'House of Representatives', classification: 'lower' },
-          { name: 'Senate', classification: 'upper' }
-        ]
+          { name: 'Senate', classification: 'upper' },
+        ],
       },
       current_session: {
         identifier: '2024',
         name: '2024 Regular Session',
         classification: 'primary',
         start_date: '2024-01-08',
-        end_date: '2024-06-30'
+        end_date: '2024-06-30',
       },
       state_legislators: [
         {
@@ -437,7 +500,7 @@ export async function GET(
           chamber: 'upper',
           district: '1',
           email: 'senator1@state.gov',
-          phone: '(555) 123-4567'
+          phone: '(555) 123-4567',
         },
         {
           id: 'mock-2',
@@ -446,7 +509,7 @@ export async function GET(
           chamber: 'lower',
           district: 'A',
           email: 'rep-a@state.gov',
-          phone: '(555) 234-5678'
+          phone: '(555) 234-5678',
         },
         {
           id: 'mock-3',
@@ -455,8 +518,8 @@ export async function GET(
           chamber: 'upper',
           district: '2',
           email: 'senator2@state.gov',
-          phone: '(555) 345-6789'
-        }
+          phone: '(555) 345-6789',
+        },
       ],
       recent_bills: [
         {
@@ -464,16 +527,17 @@ export async function GET(
           identifier: 'SB 1234',
           title: 'State Infrastructure Modernization Act',
           subject: ['Transportation', 'Infrastructure'],
-          abstract: 'A bill to modernize state transportation infrastructure and improve road safety.',
+          abstract:
+            'A bill to modernize state transportation infrastructure and improve road safety.',
           latest_action_date: '2024-03-15',
           latest_action_description: 'Passed Senate, sent to House',
           classification: ['bill'],
           sponsors: [
-            { name: `State Sen. ${representative.state} District 1`, classification: 'primary' }
+            { name: `State Sen. ${representative.state} District 1`, classification: 'primary' },
           ],
           session: '2024',
           created_at: '2024-02-01T00:00:00Z',
-          updated_at: '2024-03-15T00:00:00Z'
+          updated_at: '2024-03-15T00:00:00Z',
         },
         {
           id: 'mock-bill-2',
@@ -485,11 +549,11 @@ export async function GET(
           latest_action_description: 'Committee hearing scheduled',
           classification: ['bill'],
           sponsors: [
-            { name: `State Rep. ${representative.state} District A`, classification: 'primary' }
+            { name: `State Rep. ${representative.state} District A`, classification: 'primary' },
           ],
           session: '2024',
           created_at: '2024-01-20T00:00:00Z',
-          updated_at: '2024-03-10T00:00:00Z'
+          updated_at: '2024-03-10T00:00:00Z',
         },
         {
           id: 'mock-bill-3',
@@ -501,26 +565,22 @@ export async function GET(
           latest_action_description: 'Introduced in Senate',
           classification: ['bill'],
           sponsors: [
-            { name: `State Sen. ${representative.state} District 2`, classification: 'primary' }
+            { name: `State Sen. ${representative.state} District 2`, classification: 'primary' },
           ],
           session: '2024',
           created_at: '2024-03-05T00:00:00Z',
-          updated_at: '2024-03-05T00:00:00Z'
-        }
+          updated_at: '2024-03-05T00:00:00Z',
+        },
       ],
-      representative_district_bills: []
+      representative_district_bills: [],
     };
 
     return NextResponse.json(mockData);
-
   } catch (error) {
     structuredLogger.error('State Legislature API Error', error as Error, {
       bioguideId,
-      operation: 'state_legislature_api_error'
+      operation: 'state_legislature_api_error',
     });
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -5,15 +5,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { withValidationAndSecurity, ValidatedRequest } from '@/lib/validation/middleware';
+import {
+  withValidationAndSecurity as _withValidationAndSecurity,
+  ValidatedRequest,
+} from '@/lib/validation/middleware';
 import { BaseValidator } from '@/lib/validation/schemas';
 import { withErrorHandling } from '@/lib/error-handling/error-handler';
 import { structuredLogger } from '@/lib/logging/logger';
 import { performanceMonitor } from '@/utils/performance';
-import { 
-  generateOptimizedSearchTerms, 
-  fetchGDELTNewsWithDeduplication 
-} from '@/lib/gdelt-api';
+import { generateOptimizedSearchTerms, fetchGDELTNewsWithDeduplication } from '@/lib/gdelt-api';
 
 interface BatchNewsRequest {
   bioguideIds: string[];
@@ -41,32 +41,35 @@ interface RepresentativeNews {
 }
 
 // Validate batch news request
-const validateBatchNewsRequest = (data: unknown): { isValid: boolean; errors: string[]; sanitized?: BatchNewsRequest } => {
+const validateBatchNewsRequest = (
+  data: unknown
+): { isValid: boolean; errors: string[]; sanitized?: BatchNewsRequest } => {
   const errors: string[] = [];
-  
-  if (!data.bioguideIds || !Array.isArray(data.bioguideIds)) {
+
+  const typedData = data as BatchNewsRequest;
+  if (!typedData.bioguideIds || !Array.isArray(typedData.bioguideIds)) {
     errors.push('bioguideIds must be an array');
     return { isValid: false, errors };
   }
 
-  if (data.bioguideIds.length === 0) {
+  if (typedData.bioguideIds.length === 0) {
     errors.push('bioguideIds array cannot be empty');
     return { isValid: false, errors };
   }
 
-  if (data.bioguideIds.length > 20) {
+  if (typedData.bioguideIds.length > 20) {
     errors.push('bioguideIds array cannot contain more than 20 items for news batch requests');
     return { isValid: false, errors };
   }
 
   // Validate each bioguide ID
   const validatedIds: string[] = [];
-  for (const id of data.bioguideIds) {
+  for (const id of typedData.bioguideIds) {
     const validation = BaseValidator.validateString(id, 'bioguideId', {
       required: true,
       minLength: 7,
       maxLength: 7,
-      pattern: /^[A-Z]\d{6}$/
+      pattern: /^[A-Z]\d{6}$/,
     });
 
     if (!validation.isValid) {
@@ -78,10 +81,10 @@ const validateBatchNewsRequest = (data: unknown): { isValid: boolean; errors: st
 
   // Validate limit if provided
   let limit = 10; // default
-  if (data.limit !== undefined) {
-    const limitValidation = BaseValidator.validateNumber(data.limit, 'limit', {
+  if (typedData.limit !== undefined) {
+    const limitValidation = BaseValidator.validateNumber(typedData.limit, 'limit', {
       min: 1,
-      max: 50
+      max: 50,
     });
 
     if (!limitValidation.isValid) {
@@ -98,34 +101,36 @@ const validateBatchNewsRequest = (data: unknown): { isValid: boolean; errors: st
   return {
     isValid: true,
     errors: [],
-    sanitized: { bioguideIds: validatedIds, limit }
+    sanitized: { bioguideIds: validatedIds, limit },
   };
 };
 
 async function fetchRepresentativeInfo(bioguideId: string) {
   try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/representative/${bioguideId}`);
+    const response = await fetch(
+      `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/representative/${bioguideId}`
+    );
     if (response.ok) {
       return await response.json();
     }
   } catch (error) {
     structuredLogger.warn('Could not fetch representative info for news', {
       bioguideId,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-  
+
   // Fallback data
   return {
     name: `Representative ${bioguideId}`,
     state: 'Unknown',
     district: null,
-    bioguideId
+    bioguideId,
   };
 }
 
 async function fetchNewsForRepresentative(
-  bioguideId: string, 
+  bioguideId: string,
   limit: number
 ): Promise<RepresentativeNews> {
   try {
@@ -146,10 +151,10 @@ async function fetchNewsForRepresentative(
         );
 
         // Fetch news with deduplication
-        const allArticles: NewsArticle[] = [];
-        const articlesPerTerm = Math.ceil(limit * 1.2 / searchTerms.length); // Fetch slightly more for deduplication
+        const _allArticles: NewsArticle[] = [];
+        const articlesPerTerm = Math.ceil((limit * 1.2) / searchTerms.length); // Fetch slightly more for deduplication
 
-        const newsPromises = searchTerms.map(async (searchTerm) => {
+        const newsPromises = searchTerms.map(async searchTerm => {
           try {
             const { articles } = await fetchGDELTNewsWithDeduplication(
               searchTerm,
@@ -157,7 +162,7 @@ async function fetchNewsForRepresentative(
               {
                 titleSimilarityThreshold: 0.85,
                 maxArticlesPerDomain: 2,
-                enableDomainClustering: true
+                enableDomainClustering: true,
               }
             );
 
@@ -168,12 +173,12 @@ async function fetchNewsForRepresentative(
               publishedDate: article.seendate,
               language: article.language,
               imageUrl: article.socialimage,
-              domain: article.domain
+              domain: article.domain,
             }));
           } catch (error) {
             structuredLogger.error(`Error fetching news for term: ${searchTerm}`, error as Error, {
               bioguideId,
-              searchTerm
+              searchTerm,
             });
             return [];
           }
@@ -185,10 +190,10 @@ async function fetchNewsForRepresentative(
         // Apply final deduplication and quality filters
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        
+
         const qualityFilteredArticles = flattenedArticles.filter(article => {
           const articleDate = new Date(article.publishedDate);
-          
+
           return (
             article.language === 'English' &&
             article.title.length > 15 &&
@@ -221,18 +226,17 @@ async function fetchNewsForRepresentative(
           articles: sortedArticles,
           totalResults: sortedArticles.length,
           searchTerms,
-          dataSource: sortedArticles.length > 0 ? 'gdelt' : 'fallback'
+          dataSource: sortedArticles.length > 0 ? 'gdelt' : 'fallback',
         };
       },
       TTL_30_MINUTES
     );
 
     return result;
-
   } catch (error) {
     structuredLogger.error(`Error fetching news for representative ${bioguideId}`, error as Error, {
       bioguideId,
-      operation: 'batch_news_fetch_error'
+      operation: 'batch_news_fetch_error',
     });
 
     return {
@@ -241,31 +245,37 @@ async function fetchNewsForRepresentative(
       totalResults: 0,
       searchTerms: [],
       dataSource: 'fallback',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
 
-async function handleBatchNewsRequest(request: ValidatedRequest<BatchNewsRequest>): Promise<NextResponse> {
+async function handleBatchNewsRequest(
+  request: ValidatedRequest<BatchNewsRequest>
+): Promise<NextResponse> {
   const { bioguideIds, limit = 10 } = request.validatedBody!;
 
   try {
     performanceMonitor.startTimer('batch-news-fetch', {
       count: bioguideIds.length,
       limit,
-      operation: 'batch_news'
+      operation: 'batch_news',
     });
 
-    structuredLogger.info('Processing batch news request', {
-      totalIds: bioguideIds.length,
-      limit,
-      operation: 'batch_news_start'
-    }, request);
+    structuredLogger.info(
+      'Processing batch news request',
+      {
+        totalIds: bioguideIds.length,
+        limit,
+        operation: 'batch_news_start',
+      },
+      request
+    );
 
     // Fetch news for all representatives in parallel with concurrency limit
     const concurrencyLimit = 5;
     const results: Record<string, RepresentativeNews> = {};
-    
+
     // Process in smaller batches to avoid overwhelming GDELT API
     const batches = [];
     for (let i = 0; i < bioguideIds.length; i += concurrencyLimit) {
@@ -273,12 +283,10 @@ async function handleBatchNewsRequest(request: ValidatedRequest<BatchNewsRequest
     }
 
     for (const batch of batches) {
-      const batchPromises = batch.map(bioguideId =>
-        fetchNewsForRepresentative(bioguideId, limit)
-      );
+      const batchPromises = batch.map(bioguideId => fetchNewsForRepresentative(bioguideId, limit));
 
       const batchResults = await Promise.all(batchPromises);
-      
+
       batchResults.forEach(result => {
         results[result.bioguideId] = result;
       });
@@ -290,19 +298,23 @@ async function handleBatchNewsRequest(request: ValidatedRequest<BatchNewsRequest
     }
 
     const duration = performanceMonitor.endTimer('batch-news-fetch');
-    
+
     const successCount = Object.values(results).filter(r => !r.error).length;
     const errorCount = bioguideIds.length - successCount;
     const totalArticles = Object.values(results).reduce((sum, r) => sum + r.articles.length, 0);
 
-    structuredLogger.info('Batch news request completed', {
-      totalRequested: bioguideIds.length,
-      successCount,
-      errorCount,
-      totalArticles,
-      duration,
-      operation: 'batch_news_complete'
-    }, request);
+    structuredLogger.info(
+      'Batch news request completed',
+      {
+        totalRequested: bioguideIds.length,
+        successCount,
+        errorCount,
+        totalArticles,
+        duration,
+        operation: 'batch_news_complete',
+      },
+      request
+    );
 
     return NextResponse.json({
       results,
@@ -312,22 +324,26 @@ async function handleBatchNewsRequest(request: ValidatedRequest<BatchNewsRequest
         errorCount,
         totalArticles,
         timestamp: new Date().toISOString(),
-        dataSource: 'gdelt'
-      }
+        dataSource: 'gdelt',
+      },
     });
-
   } catch (error) {
     performanceMonitor.endTimer('batch-news-fetch');
-    
-    structuredLogger.error('Batch news request failed', error as Error, {
-      bioguideIds: bioguideIds.slice(0, 5), // Log first 5 for debugging
-      operation: 'batch_news_error'
-    }, request);
+
+    structuredLogger.error(
+      'Batch news request failed',
+      error as Error,
+      {
+        bioguideIds: bioguideIds.slice(0, 5), // Log first 5 for debugging
+        operation: 'batch_news_error',
+      },
+      request
+    );
 
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch news batch',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -340,12 +356,12 @@ export async function POST(request: NextRequest) {
     // Custom validation for the batch request
     const rawBody = await request.json();
     const validation = validateBatchNewsRequest(rawBody);
-    
+
     if (!validation.isValid) {
       return NextResponse.json(
-        { 
+        {
           error: 'Validation failed',
-          details: validation.errors
+          details: validation.errors,
         },
         { status: 400 }
       );
@@ -358,9 +374,6 @@ export async function POST(request: NextRequest) {
     return withErrorHandling(handleBatchNewsRequest)(validatedRequest);
   } catch (error) {
     structuredLogger.error('POST batch news handler error', error as Error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

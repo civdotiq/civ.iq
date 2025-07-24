@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -8,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import clientLogger from '@/lib/logging/logger-client';
 import { useParams } from 'next/navigation';
 import * as d3 from 'd3';
 
@@ -15,14 +15,36 @@ import * as d3 from 'd3';
 function CiviqLogo() {
   return (
     <div className="flex items-center group">
-      <svg className="w-10 h-10 transition-transform group-hover:scale-110" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <rect x="36" y="51" width="28" height="30" fill="#0b983c"/>
-        <circle cx="50" cy="31" r="22" fill="#ffffff"/>
-        <circle cx="50" cy="31" r="20" fill="#e11d07"/>
-        <circle cx="38" cy="89" r="2" fill="#3ea2d4" className="animate-pulse"/>
-        <circle cx="46" cy="89" r="2" fill="#3ea2d4" className="animate-pulse animation-delay-100"/>
-        <circle cx="54" cy="89" r="2" fill="#3ea2d4" className="animate-pulse animation-delay-200"/>
-        <circle cx="62" cy="89" r="2" fill="#3ea2d4" className="animate-pulse animation-delay-300"/>
+      <svg
+        className="w-10 h-10 transition-transform group-hover:scale-110"
+        viewBox="0 0 100 100"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect x="36" y="51" width="28" height="30" fill="#0b983c" />
+        <circle cx="50" cy="31" r="22" fill="#ffffff" />
+        <circle cx="50" cy="31" r="20" fill="#e11d07" />
+        <circle cx="38" cy="89" r="2" fill="#3ea2d4" className="animate-pulse" />
+        <circle
+          cx="46"
+          cy="89"
+          r="2"
+          fill="#3ea2d4"
+          className="animate-pulse animation-delay-100"
+        />
+        <circle
+          cx="54"
+          cy="89"
+          r="2"
+          fill="#3ea2d4"
+          className="animate-pulse animation-delay-200"
+        />
+        <circle
+          cx="62"
+          cy="89"
+          r="2"
+          fill="#3ea2d4"
+          className="animate-pulse animation-delay-300"
+        />
       </svg>
       <span className="ml-3 text-xl font-bold text-gray-900">CIV.IQ</span>
     </div>
@@ -126,7 +148,7 @@ function StateMap({ stateAbbr }: { stateAbbr: string }) {
     const districts = Array.from({ length: 8 }, (_, i) => ({
       id: i + 1,
       x: 100 + (i % 4) * 120,
-      y: 150 + Math.floor(i / 4) * 100
+      y: 150 + Math.floor(i / 4) * 100,
     }));
 
     g.selectAll('.district')
@@ -134,23 +156,25 @@ function StateMap({ stateAbbr }: { stateAbbr: string }) {
       .enter()
       .append('g')
       .attr('class', 'district')
-      .each(function(d) {
+      .each(function (d) {
         const district = d3.select(this);
-        
-        district.append('circle')
+
+        district
+          .append('circle')
           .attr('cx', d.x)
           .attr('cy', d.y)
           .attr('r', 30)
-          .attr('fill', (d, i) => (i as number) % 2 === 0 ? '#3b82f6' : '#ef4444')
+          .attr('fill', (d, i) => ((i as number) % 2 === 0 ? '#3b82f6' : '#ef4444'))
           .attr('opacity', 0.3)
-          .on('mouseover', function() {
+          .on('mouseover', function () {
             d3.select(this).attr('opacity', 0.6);
           })
-          .on('mouseout', function() {
+          .on('mouseout', function () {
             d3.select(this).attr('opacity', 0.3);
           });
 
-        district.append('text')
+        district
+          .append('text')
           .attr('x', d.x)
           .attr('y', d.y)
           .attr('text-anchor', 'middle')
@@ -179,7 +203,7 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
     return {
       control: dem > rep ? 'Democratic' : 'Republican',
       margin: Math.abs(dem - rep),
-      demPercent
+      demPercent,
     };
   };
 
@@ -189,20 +213,22 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">State Legislature Control</h3>
-      
+
       <div className="space-y-6">
         {/* Upper House */}
         <div>
           <div className="flex justify-between items-center mb-2">
             <h4 className="font-medium text-gray-700">{upperHouse.name}</h4>
-            <span className={`text-sm font-medium ${
-              upperControl.control === 'Democratic' ? 'text-blue-600' : 'text-red-600'
-            }`}>
+            <span
+              className={`text-sm font-medium ${
+                upperControl.control === 'Democratic' ? 'text-blue-600' : 'text-red-600'
+              }`}
+            >
               {upperControl.control} Control (+{upperControl.margin})
             </span>
           </div>
           <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden">
-            <div 
+            <div
               className="absolute left-0 top-0 h-full bg-blue-600 transition-all duration-500"
               style={{ width: `${upperControl.demPercent}%` }}
             />
@@ -217,14 +243,16 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
         <div>
           <div className="flex justify-between items-center mb-2">
             <h4 className="font-medium text-gray-700">{lowerHouse.name}</h4>
-            <span className={`text-sm font-medium ${
-              lowerControl.control === 'Democratic' ? 'text-blue-600' : 'text-red-600'
-            }`}>
+            <span
+              className={`text-sm font-medium ${
+                lowerControl.control === 'Democratic' ? 'text-blue-600' : 'text-red-600'
+              }`}
+            >
               {lowerControl.control} Control (+{lowerControl.margin})
             </span>
           </div>
           <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden">
-            <div 
+            <div
               className="absolute left-0 top-0 h-full bg-blue-600 transition-all duration-500"
               style={{ width: `${lowerControl.demPercent}%` }}
             />
@@ -240,9 +268,11 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
           <p className="text-sm text-gray-600">
             <span className="font-medium">Trifecta Status:</span>{' '}
             {upperControl.control === lowerControl.control ? (
-              <span className={`font-medium ${
-                upperControl.control === 'Democratic' ? 'text-blue-600' : 'text-red-600'
-              }`}>
+              <span
+                className={`font-medium ${
+                  upperControl.control === 'Democratic' ? 'text-blue-600' : 'text-red-600'
+                }`}
+              >
                 {upperControl.control} Trifecta
               </span>
             ) : (
@@ -272,24 +302,21 @@ function PresidentialHistory({ history }: { history: StateData['presidentialHist
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const x = d3.scaleBand()
+    const x = d3
+      .scaleBand()
       .range([0, width])
       .domain(history.map(d => d.year.toString()))
       .padding(0.1);
 
-    const y = d3.scaleLinear()
-      .domain([-20, 20])
-      .range([height, 0]);
+    const y = d3.scaleLinear().domain([-20, 20]).range([height, 0]);
 
-    svg.append('g')
-      .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x));
+    svg.append('g').attr('transform', `translate(0,${height})`).call(d3.axisBottom(x));
 
-    svg.append('g')
-      .call(d3.axisLeft(y).tickFormat(d => `${Math.abs(d.valueOf())}%`));
+    svg.append('g').call(d3.axisLeft(y).tickFormat(d => `${Math.abs(d.valueOf())}%`));
 
     // Add zero line
-    svg.append('line')
+    svg
+      .append('line')
       .attr('x1', 0)
       .attr('x2', width)
       .attr('y1', y(0))
@@ -298,20 +325,24 @@ function PresidentialHistory({ history }: { history: StateData['presidentialHist
       .attr('stroke-dasharray', '3,3');
 
     // Add bars
-    svg.selectAll('.bar')
+    svg
+      .selectAll('.bar')
       .data(history)
-      .enter().append('rect')
+      .enter()
+      .append('rect')
       .attr('class', 'bar')
       .attr('x', d => x(d.year.toString()) || 0)
       .attr('width', x.bandwidth())
-      .attr('y', d => d.margin > 0 ? y(d.margin) : y(0))
+      .attr('y', d => (d.margin > 0 ? y(d.margin) : y(0)))
       .attr('height', d => Math.abs(y(d.margin) - y(0)))
-      .attr('fill', d => d.winner === 'Democratic' ? '#3b82f6' : '#ef4444');
+      .attr('fill', d => (d.winner === 'Democratic' ? '#3b82f6' : '#ef4444'));
 
     // Add labels
-    svg.selectAll('.label')
+    svg
+      .selectAll('.label')
       .data(history)
-      .enter().append('text')
+      .enter()
+      .append('text')
       .attr('x', d => (x(d.year.toString()) || 0) + x.bandwidth() / 2)
       .attr('y', d => y(d.margin) + (d.margin > 0 ? -5 : 15))
       .attr('text-anchor', 'middle')
@@ -319,34 +350,27 @@ function PresidentialHistory({ history }: { history: StateData['presidentialHist
       .text(d => `${Math.abs(d.margin)}%`);
 
     // Add legend
-    const legend = svg.append('g')
-      .attr('transform', `translate(${width - 100}, 0)`);
+    const legend = svg.append('g').attr('transform', `translate(${width - 100}, 0)`);
 
-    legend.append('rect')
+    legend
+      .append('rect')
       .attr('x', 0)
       .attr('y', 0)
       .attr('width', 18)
       .attr('height', 18)
       .style('fill', '#3b82f6');
 
-    legend.append('text')
-      .attr('x', 25)
-      .attr('y', 9)
-      .attr('dy', '.35em')
-      .text('Democratic');
+    legend.append('text').attr('x', 25).attr('y', 9).attr('dy', '.35em').text('Democratic');
 
-    legend.append('rect')
+    legend
+      .append('rect')
       .attr('x', 0)
       .attr('y', 25)
       .attr('width', 18)
       .attr('height', 18)
       .style('fill', '#ef4444');
 
-    legend.append('text')
-      .attr('x', 25)
-      .attr('y', 34)
-      .attr('dy', '.35em')
-      .text('Republican');
+    legend.append('text').attr('x', 25).attr('y', 34).attr('dy', '.35em').text('Republican');
   }, [history]);
 
   return (
@@ -378,23 +402,23 @@ function KeyIssuesRadar({ issues }: { issues: StateData['keyIssues'] }) {
     const angleSlice = (Math.PI * 2) / issues.length;
 
     // Scales
-    const rScale = d3.scaleLinear()
-      .range([0, radius])
-      .domain([0, 100]);
+    const rScale = d3.scaleLinear().range([0, radius]).domain([0, 100]);
 
     // Grid circles
     const gridLevels = 5;
     for (let level = 0; level < gridLevels; level++) {
       const levelRadius = (radius / gridLevels) * (level + 1);
-      
-      svg.append('circle')
+
+      svg
+        .append('circle')
         .attr('r', levelRadius)
         .style('fill', 'none')
         .style('stroke', '#e5e7eb')
         .style('stroke-width', '1px');
 
       if (level === gridLevels - 1) {
-        svg.append('text')
+        svg
+          .append('text')
           .attr('x', 5)
           .attr('y', -levelRadius)
           .attr('dy', '0.4em')
@@ -406,7 +430,8 @@ function KeyIssuesRadar({ issues }: { issues: StateData['keyIssues'] }) {
 
     // Axis lines
     issues.forEach((d, i) => {
-      svg.append('line')
+      svg
+        .append('line')
         .attr('x1', 0)
         .attr('y1', 0)
         .attr('x2', radius * Math.cos(angleSlice * i - Math.PI / 2))
@@ -419,8 +444,9 @@ function KeyIssuesRadar({ issues }: { issues: StateData['keyIssues'] }) {
     issues.forEach((d, i) => {
       const angle = angleSlice * i - Math.PI / 2;
       const labelRadius = radius + 20;
-      
-      svg.append('text')
+
+      svg
+        .append('text')
         .attr('x', labelRadius * Math.cos(angle))
         .attr('y', labelRadius * Math.sin(angle))
         .attr('text-anchor', 'middle')
@@ -430,12 +456,14 @@ function KeyIssuesRadar({ issues }: { issues: StateData['keyIssues'] }) {
     });
 
     // Data area
-    const radarLine = d3.lineRadial<StateData['keyIssues'][0]>()
+    const radarLine = d3
+      .lineRadial<StateData['keyIssues'][0]>()
       .radius(d => rScale(d.importance))
       .angle((d, i) => i * angleSlice)
       .curve(d3.curveLinearClosed);
 
-    svg.append('path')
+    svg
+      .append('path')
       .datum(issues)
       .attr('d', radarLine)
       .style('fill', '#3b82f6')
@@ -444,9 +472,11 @@ function KeyIssuesRadar({ issues }: { issues: StateData['keyIssues'] }) {
       .style('stroke-width', 2);
 
     // Data points
-    svg.selectAll('.radar-point')
+    svg
+      .selectAll('.radar-point')
       .data(issues)
-      .enter().append('circle')
+      .enter()
+      .append('circle')
       .attr('class', 'radar-point')
       .attr('r', 4)
       .attr('cx', (d, i) => rScale(d.importance) * Math.cos(angleSlice * i - Math.PI / 2))
@@ -474,27 +504,29 @@ function DistrictCompetitiveness({ districts }: { districts: StateData['district
     return party === 'D' ? -parseInt(value) : parseInt(value);
   };
 
-  const sortedDistricts = [...districts].sort((a, b) => getPVIValue(a.cookPVI) - getPVIValue(b.cookPVI));
+  const sortedDistricts = [...districts].sort(
+    (a, b) => getPVIValue(a.cookPVI) - getPVIValue(b.cookPVI)
+  );
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">District Competitiveness</h3>
       <div className="space-y-2">
-        {sortedDistricts.map((district) => {
+        {sortedDistricts.map(district => {
           const pviValue = getPVIValue(district.cookPVI);
           const isCompetitive = Math.abs(pviValue) <= 5;
-          
+
           return (
             <div key={district.number} className="flex items-center gap-3">
               <span className="text-sm font-medium text-gray-700 w-16">CD-{district.number}</span>
               <div className="flex-1 relative h-6 bg-gray-200 rounded-full overflow-hidden">
-                <div 
+                <div
                   className={`absolute h-full transition-all duration-500 ${
                     pviValue < 0 ? 'bg-blue-600 right-1/2' : 'bg-red-600 left-1/2'
                   }`}
-                  style={{ 
+                  style={{
                     width: `${Math.abs(pviValue) * 2}%`,
-                    maxWidth: '50%'
+                    maxWidth: '50%',
                   }}
                 />
                 {isCompetitive && (
@@ -505,9 +537,11 @@ function DistrictCompetitiveness({ districts }: { districts: StateData['district
                   </div>
                 )}
               </div>
-              <span className={`text-sm font-medium w-20 text-right ${
-                district.party === 'Democratic' ? 'text-blue-600' : 'text-red-600'
-              }`}>
+              <span
+                className={`text-sm font-medium w-20 text-right ${
+                  district.party === 'Democratic' ? 'text-blue-600' : 'text-red-600'
+                }`}
+              >
                 {district.cookPVI}
               </span>
             </div>
@@ -533,9 +567,14 @@ function DistrictCompetitiveness({ districts }: { districts: StateData['district
 }
 
 // State statistics card
-function StatCard({ title, value, subtitle, trend }: { 
-  title: string; 
-  value: string | number; 
+function StatCard({
+  title,
+  value,
+  subtitle,
+  trend,
+}: {
+  title: string;
+  value: string | number;
   subtitle?: string;
   trend?: { value: number; positive: boolean };
 }) {
@@ -545,9 +584,11 @@ function StatCard({ title, value, subtitle, trend }: {
       <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
       {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
       {trend && (
-        <div className={`flex items-center gap-1 mt-2 text-sm ${
-          trend.positive ? 'text-green-600' : 'text-red-600'
-        }`}>
+        <div
+          className={`flex items-center gap-1 mt-2 text-sm ${
+            trend.positive ? 'text-green-600' : 'text-red-600'
+          }`}
+        >
           <span>{trend.positive ? '↑' : '↓'}</span>
           <span>{Math.abs(trend.value)}%</span>
         </div>
@@ -560,10 +601,12 @@ function StatCard({ title, value, subtitle, trend }: {
 export default function StateOverviewPage() {
   const params = useParams();
   const stateId = params.state as string;
-  
+
   const [stateData, setStateData] = useState<StateData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'legislature' | 'elections' | 'districts'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'legislature' | 'elections' | 'districts'
+  >('overview');
 
   useEffect(() => {
     fetchStateData();
@@ -573,7 +616,7 @@ export default function StateOverviewPage() {
     setLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Mock state data - in production this would come from APIs
       const mockData: StateData = {
         name: 'California',
@@ -588,27 +631,27 @@ export default function StateOverviewPage() {
         educationBachelor: 35.3,
         senators: [
           { name: 'Alex Padilla', party: 'Democratic', nextElection: 2028 },
-          { name: 'Laphonza Butler', party: 'Democratic', nextElection: 2024 }
+          { name: 'Laphonza Butler', party: 'Democratic', nextElection: 2024 },
         ],
         houseMembers: 52,
         governor: {
           name: 'Gavin Newsom',
           party: 'Democratic',
-          termEnds: 2027
+          termEnds: 2027,
         },
         legislature: {
           upperHouse: {
             name: 'State Senate',
             seats: 40,
             democratSeats: 32,
-            republicanSeats: 8
+            republicanSeats: 8,
           },
           lowerHouse: {
             name: 'State Assembly',
             seats: 80,
             democratSeats: 62,
-            republicanSeats: 18
-          }
+            republicanSeats: 18,
+          },
         },
         electoralVotes: 54,
         presidentialHistory: [
@@ -617,7 +660,7 @@ export default function StateOverviewPage() {
           { year: 2012, winner: 'Democratic', margin: 23.1 },
           { year: 2008, winner: 'Democratic', margin: 24.0 },
           { year: 2004, winner: 'Democratic', margin: 9.9 },
-          { year: 2000, winner: 'Democratic', margin: 11.8 }
+          { year: 2000, winner: 'Democratic', margin: 11.8 },
         ],
         keyIssues: [
           { name: 'Healthcare', importance: 85 },
@@ -625,19 +668,22 @@ export default function StateOverviewPage() {
           { name: 'Economy', importance: 78 },
           { name: 'Education', importance: 88 },
           { name: 'Immigration', importance: 75 },
-          { name: 'Housing', importance: 95 }
+          { name: 'Housing', importance: 95 },
         ],
         districts: Array.from({ length: 52 }, (_, i) => ({
           number: String(i + 1),
           representative: `Rep. ${i + 1}`,
           party: Math.random() > 0.3 ? 'Democratic' : 'Republican',
-          cookPVI: i < 10 ? 'D+15' : i < 20 ? 'D+8' : i < 30 ? 'EVEN' : i < 40 ? 'R+3' : 'R+10'
-        }))
+          cookPVI: i < 10 ? 'D+15' : i < 20 ? 'D+8' : i < 30 ? 'EVEN' : i < 40 ? 'R+3' : 'R+10',
+        })),
       };
-      
+
       setStateData(mockData);
     } catch (error) {
-      console.error('Error fetching state data:', error);
+      clientLogger.error(
+        'Error fetching state data',
+        error instanceof Error ? error : new Error(String(error))
+      );
     } finally {
       setLoading(false);
     }
@@ -674,10 +720,16 @@ export default function StateOverviewPage() {
               <CiviqLogo />
             </Link>
             <nav className="flex items-center gap-6">
-              <Link href="/representatives" className="text-gray-700 hover:text-blue-600 transition-colors">
+              <Link
+                href="/representatives"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
                 Representatives
               </Link>
-              <Link href="/districts" className="text-gray-700 hover:text-blue-600 transition-colors">
+              <Link
+                href="/districts"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
                 Districts
               </Link>
               <Link href="/states" className="text-blue-600 font-medium">
@@ -738,9 +790,7 @@ export default function StateOverviewPage() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 px-4 py-3 text-sm font-medium rounded-md transition-colors ${
-                  activeTab === tab
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
+                  activeTab === tab ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -757,7 +807,7 @@ export default function StateOverviewPage() {
                 <StateMap stateAbbr={stateData.abbreviation} />
                 <KeyIssuesRadar issues={stateData.keyIssues} />
               </div>
-              
+
               {/* State leadership */}
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Leadership</h3>
@@ -766,7 +816,9 @@ export default function StateOverviewPage() {
                     <h4 className="font-medium text-gray-700 mb-2">Governor</h4>
                     <p className="text-lg font-semibold">{stateData.governor.name}</p>
                     <p className="text-sm text-gray-600">{stateData.governor.party}</p>
-                    <p className="text-sm text-gray-500">Term ends: {stateData.governor.termEnds}</p>
+                    <p className="text-sm text-gray-500">
+                      Term ends: {stateData.governor.termEnds}
+                    </p>
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-700 mb-2">U.S. Senators</h4>
@@ -792,7 +844,7 @@ export default function StateOverviewPage() {
           {activeTab === 'legislature' && (
             <>
               <PartyControl legislature={stateData.legislature} />
-              
+
               {/* Additional legislature info */}
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Legislative Statistics</h3>
@@ -801,7 +853,7 @@ export default function StateOverviewPage() {
                     <h4 className="font-medium text-gray-700 mb-3">Education & Employment</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Bachelor's Degree or Higher</span>
+                        <span className="text-gray-600">Bachelor&apos;s Degree or Higher</span>
                         <span className="font-medium">{stateData.educationBachelor}%</span>
                       </div>
                       <div className="flex justify-between">
@@ -833,16 +885,21 @@ export default function StateOverviewPage() {
           {activeTab === 'elections' && (
             <>
               <PresidentialHistory history={stateData.presidentialHistory} />
-              
+
               {/* Electoral trends */}
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Electoral Trends</h3>
                 <div className="prose max-w-none">
                   <p className="text-gray-600">
-                    {stateData.name} has {stateData.electoralVotes} electoral votes in presidential elections. 
-                    The state has voted {stateData.presidentialHistory[0].winner} in the last {
-                      stateData.presidentialHistory.filter(h => h.winner === stateData.presidentialHistory[0].winner).length
-                    } presidential elections.
+                    {stateData.name} has {stateData.electoralVotes} electoral votes in presidential
+                    elections. The state has voted {stateData.presidentialHistory[0].winner} in the
+                    last{' '}
+                    {
+                      stateData.presidentialHistory.filter(
+                        h => h.winner === stateData.presidentialHistory[0].winner
+                      ).length
+                    }{' '}
+                    presidential elections.
                   </p>
                 </div>
               </div>
@@ -852,10 +909,12 @@ export default function StateOverviewPage() {
           {activeTab === 'districts' && (
             <>
               <DistrictCompetitiveness districts={stateData.districts} />
-              
+
               {/* District delegation breakdown */}
               <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">House Delegation Breakdown</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  House Delegation Breakdown
+                </h3>
                 <div className="flex items-center justify-center gap-8">
                   <div className="text-center">
                     <p className="text-3xl font-bold text-blue-600">
@@ -872,7 +931,8 @@ export default function StateOverviewPage() {
                   </div>
                 </div>
                 <div className="mt-4 text-center text-sm text-gray-600">
-                  {stateData.districts.filter(d => Math.abs(getPVIValue(d.cookPVI)) <= 5).length} competitive districts
+                  {stateData.districts.filter(d => Math.abs(getPVIValue(d.cookPVI)) <= 5).length}{' '}
+                  competitive districts
                 </div>
               </div>
             </>

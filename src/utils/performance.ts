@@ -12,14 +12,17 @@
 class RequestBatcher {
   private batchTimeoutMs: number;
   private maxBatchSize: number;
-  private pendingRequests: Map<string, {
-    requests: Array<{
-      key: string;
-      resolve: (value: unknown) => void;
-      reject: (error: unknown) => void;
-    }>;
-    timeoutId: NodeJS.Timeout;
-  }> = new Map();
+  private pendingRequests: Map<
+    string,
+    {
+      requests: Array<{
+        key: string;
+        resolve: (value: unknown) => void;
+        reject: (error: unknown) => void;
+      }>;
+      timeoutId: NodeJS.Timeout;
+    }
+  > = new Map();
 
   constructor(batchTimeoutMs: number = 50, maxBatchSize: number = 10) {
     this.batchTimeoutMs = batchTimeoutMs;
@@ -48,7 +51,7 @@ class RequestBatcher {
           requests: [{ key: requestKey, resolve, reject }],
           timeoutId: setTimeout(() => {
             this.executeBatch(batchKey, batchFunction);
-          }, this.batchTimeoutMs)
+          }, this.batchTimeoutMs),
         };
 
         this.pendingRequests.set(batchKey, newBatch);
@@ -107,12 +110,12 @@ export async function batchApiRequests<T>(
   ids: string[],
   batchFunction: (batchedIds: string[]) => Promise<Record<string, T>>
 ): Promise<Record<string, T>> {
-  const batchPromises = ids.map(id => 
+  const batchPromises = ids.map(id =>
     requestBatcher.batchRequest(`api:${endpoint}`, id, batchFunction)
   );
 
   const results = await Promise.all(batchPromises);
-  
+
   // Convert array back to object
   const resultObject: Record<string, T> = {};
   ids.forEach((id, index) => {
@@ -124,44 +127,36 @@ export async function batchApiRequests<T>(
 
 // Representative data batching
 export async function batchRepresentativeRequests(bioguideIds: string[]) {
-  return batchApiRequests(
-    'representatives',
-    bioguideIds,
-    async (ids) => {
-      const response = await fetch('/api/representatives/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bioguideIds: ids })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Batch request failed: ${response.statusText}`);
-      }
-      
-      return await response.json();
+  return batchApiRequests('representatives', bioguideIds, async ids => {
+    const response = await fetch('/api/representatives/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bioguideIds: ids }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Batch request failed: ${response.statusText}`);
     }
-  );
+
+    return await response.json();
+  });
 }
 
 // News data batching
 export async function batchNewsRequests(bioguideIds: string[]) {
-  return batchApiRequests(
-    'news',
-    bioguideIds,
-    async (ids) => {
-      const response = await fetch('/api/news/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bioguideIds: ids })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Batch news request failed: ${response.statusText}`);
-      }
-      
-      return await response.json();
+  return batchApiRequests('news', bioguideIds, async ids => {
+    const response = await fetch('/api/news/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bioguideIds: ids }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Batch news request failed: ${response.statusText}`);
     }
-  );
+
+    return await response.json();
+  });
 }
 
 // Performance monitoring utilities
@@ -170,30 +165,30 @@ interface PerformanceMetrics {
   startTime: number;
   endTime?: number;
   duration?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 class PerformanceMonitor {
   private metrics: PerformanceMetrics[] = [];
   private activeTimers: Map<string, number> = new Map();
 
-  startTimer(name: string, metadata?: Record<string, any>): void {
+  startTimer(name: string, metadata?: Record<string, unknown>): void {
     const startTime = performance.now();
     this.activeTimers.set(name, startTime);
-    
+
     this.metrics.push({
       name,
       startTime,
-      metadata
+      metadata,
     });
   }
 
   endTimer(name: string): number | null {
     const endTime = performance.now();
     const startTime = this.activeTimers.get(name);
-    
+
     if (!startTime) {
-      console.warn(`No active timer found for: ${name}`);
+      // No active timer found
       return null;
     }
 
@@ -207,25 +202,29 @@ class PerformanceMonitor {
       metric.duration = duration;
     }
 
-    // Log slow operations
+    // Track slow operations
     if (duration > 1000) {
-      console.warn(`Slow operation detected: ${name} took ${duration.toFixed(2)}ms`);
+      // Slow operation detected
     }
 
     return duration;
   }
 
-  measureAsync<T>(name: string, fn: () => Promise<T>, metadata?: Record<string, any>): Promise<T> {
+  measureAsync<T>(
+    name: string,
+    fn: () => Promise<T>,
+    metadata?: Record<string, unknown>
+  ): Promise<T> {
     this.startTimer(name, metadata);
-    
+
     return fn().finally(() => {
       this.endTimer(name);
     });
   }
 
-  measure<T>(name: string, fn: () => T, metadata?: Record<string, any>): T {
+  measure<T>(name: string, fn: () => T, metadata?: Record<string, unknown>): T {
     this.startTimer(name, metadata);
-    
+
     try {
       return fn();
     } finally {
@@ -240,7 +239,7 @@ class PerformanceMonitor {
   getAverageTime(name: string): number {
     const matchingMetrics = this.metrics.filter(m => m.name === name && m.duration);
     if (matchingMetrics.length === 0) return 0;
-    
+
     const totalTime = matchingMetrics.reduce((sum, m) => sum + (m.duration || 0), 0);
     return totalTime / matchingMetrics.length;
   }
@@ -270,7 +269,7 @@ export function preloadResource(href: string, as: string, crossorigin?: string):
   link.rel = 'preload';
   link.href = href;
   link.as = as;
-  
+
   if (crossorigin) {
     link.crossOrigin = crossorigin;
   }
@@ -305,13 +304,13 @@ export function preloadScript(src: string): Promise<void> {
     script.src = src;
     script.onload = () => resolve();
     script.onerror = reject;
-    
+
     document.head.appendChild(script);
   });
 }
 
 // Bundle optimization utilities
-export function loadChunk(chunkName: string): Promise<any> {
+export function loadChunk(chunkName: string): Promise<unknown> {
   // Dynamic import with explicit chunk name
   switch (chunkName) {
     case 'charts':
@@ -336,11 +335,13 @@ export function estimateMemoryUsage(): {
   percentage: number;
 } | null {
   if ('memory' in performance) {
-    const memory = (performance as any).memory;
+    const memory = (
+      performance as unknown as { memory: { usedJSHeapSize: number; totalJSHeapSize: number } }
+    ).memory;
     return {
       used: memory.usedJSHeapSize,
       total: memory.totalJSHeapSize,
-      percentage: (memory.usedJSHeapSize / memory.totalJSHeapSize) * 100
+      percentage: (memory.usedJSHeapSize / memory.totalJSHeapSize) * 100,
     };
   }
   return null;
@@ -349,27 +350,25 @@ export function estimateMemoryUsage(): {
 export function cleanupResources(): void {
   // Clear request batcher
   requestBatcher.clear();
-  
+
   // Clear performance metrics older than 5 minutes
   const fiveMinutesAgo = performance.now() - 5 * 60 * 1000;
-  const monitor = performanceMonitor as any;
-  monitor.metrics = monitor.metrics.filter((m: PerformanceMetrics) => 
-    m.startTime > fiveMinutesAgo
-  );
+  const monitor = performanceMonitor as unknown as { metrics: PerformanceMetrics[] };
+  monitor.metrics = monitor.metrics.filter((m: PerformanceMetrics) => m.startTime > fiveMinutesAgo);
 
   // Suggest garbage collection if available
-  if ('gc' in window && typeof (window as any).gc === 'function') {
-    (window as any).gc();
+  if ('gc' in window && typeof (window as unknown as { gc?: () => void }).gc === 'function') {
+    (window as unknown as { gc: () => void }).gc();
   }
 }
 
 // Debounce utility for performance
-export function debounce<T extends (...args: unknown[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {
   let timeoutId: NodeJS.Timeout;
-  
+
   return (...args: Parameters<T>) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => func(...args), delay);
@@ -377,15 +376,15 @@ export function debounce<T extends (...args: unknown[]) => any>(
 }
 
 // Throttle utility for performance
-export function throttle<T extends (...args: unknown[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {
   let lastExecTime = 0;
-  
+
   return (...args: Parameters<T>) => {
     const now = Date.now();
-    
+
     if (now - lastExecTime >= delay) {
       func(...args);
       lastExecTime = now;
@@ -398,15 +397,14 @@ export function optimizeNetworkRequests() {
   // Prefetch important resources
   preloadResource('/api/representatives', 'fetch');
   preloadResource('/manifest.json', 'manifest');
-  
+
   // Preload critical images
-  const criticalImages = [
-    '/icon-192x192.png',
-    '/icon-512x512.png'
-  ];
-  
+  const criticalImages = ['/icon-192x192.png', '/icon-512x512.png'];
+
   criticalImages.forEach(src => {
-    preloadImage(src).catch(console.warn);
+    preloadImage(src).catch(() => {
+      /* Image preload failed */
+    });
   });
 }
 
@@ -429,7 +427,7 @@ export function initializePerformanceOptimizations(): void {
     setInterval(() => {
       const memory = estimateMemoryUsage();
       if (memory && memory.percentage > 80) {
-        console.warn(`High memory usage: ${memory.percentage.toFixed(1)}%`);
+        // High memory usage detected
         cleanupResources();
       }
     }, 30000); // Every 30 seconds
