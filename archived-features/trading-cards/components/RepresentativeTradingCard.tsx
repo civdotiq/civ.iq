@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
-import RepresentativePhoto from './RepresentativePhoto';
+import RepresentativePhoto from '@/components/RepresentativePhoto';
 import { EnhancedRepresentative } from '@/types/representative';
 import { CardTheme, CardCustomization } from './CardCustomizationPanel';
 

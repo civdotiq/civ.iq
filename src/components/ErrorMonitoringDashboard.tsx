@@ -5,9 +5,10 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ErrorAnalytics } from '@/lib/errors/ErrorHandlers';
-import { CiviqError } from '@/lib/errors/ErrorTypes';
+// CiviqError type available for future use if needed
+import { structuredLogger } from '@/lib/logging/universal-logger';
 
 interface ErrorStats {
   errorCode: string;
@@ -23,17 +24,28 @@ interface ErrorFeedback {
   url: string;
 }
 
+interface ErrorReport {
+  error?: {
+    code?: string;
+    severity?: string;
+    message?: string;
+    userMessage?: string;
+    context?: unknown;
+  };
+  timestamp: string;
+  userAgent?: string;
+  url?: string;
+  userId?: string;
+  sessionId?: string;
+}
+
 export function ErrorMonitoringDashboard() {
   const [errorStats, setErrorStats] = useState<ErrorStats[]>([]);
-  const [errorReports, setErrorReports] = useState<any[]>([]);
+  const [errorReports, setErrorReports] = useState<ErrorReport[]>([]);
   const [errorFeedback, setErrorFeedback] = useState<ErrorFeedback[]>([]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1h' | '24h' | '7d' | 'all'>('24h');
 
-  useEffect(() => {
-    loadErrorData();
-  }, [selectedTimeframe]);
-
-  const loadErrorData = () => {
+  const loadErrorData = useCallback(() => {
     try {
       // Load error statistics
       const stats = ErrorAnalytics.getErrorStats();
@@ -43,31 +55,43 @@ export function ErrorMonitoringDashboard() {
       const reports = JSON.parse(localStorage.getItem('errorReports') || '[]');
       const analytics = JSON.parse(localStorage.getItem('errorAnalytics') || '[]');
       const allReports = [...reports, ...analytics];
-      
+
       // Filter by timeframe
       const now = new Date();
       const filteredReports = allReports.filter(report => {
         const reportTime = new Date(report.timestamp);
         const diffHours = (now.getTime() - reportTime.getTime()) / (1000 * 60 * 60);
-        
+
         switch (selectedTimeframe) {
-          case '1h': return diffHours <= 1;
-          case '24h': return diffHours <= 24;
-          case '7d': return diffHours <= 168; // 7 * 24
-          case 'all': return true;
-          default: return diffHours <= 24;
+          case '1h':
+            return diffHours <= 1;
+          case '24h':
+            return diffHours <= 24;
+          case '7d':
+            return diffHours <= 168; // 7 * 24
+          case 'all':
+            return true;
+          default:
+            return diffHours <= 24;
         }
       });
-      
+
       setErrorReports(filteredReports);
 
       // Load error feedback
       const feedback = JSON.parse(localStorage.getItem('errorFeedback') || '[]');
       setErrorFeedback(feedback);
     } catch (e) {
-      console.error('Failed to load error data:', e);
+      structuredLogger.error('Failed to load error data', {
+        component: 'ErrorMonitoringDashboard',
+        error: e as Error,
+      });
     }
-  };
+  }, [selectedTimeframe]);
+
+  useEffect(() => {
+    loadErrorData();
+  }, [loadErrorData]);
 
   const clearErrorData = () => {
     if (confirm('Are you sure you want to clear all error data?')) {
@@ -84,7 +108,7 @@ export function ErrorMonitoringDashboard() {
       stats: errorStats,
       reports: errorReports,
       feedback: errorFeedback,
-      exportTime: new Date().toISOString()
+      exportTime: new Date().toISOString(),
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -100,11 +124,16 @@ export function ErrorMonitoringDashboard() {
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'low': return 'text-yellow-600 bg-yellow-100';
-      case 'medium': return 'text-orange-600 bg-orange-100';
-      case 'high': return 'text-red-600 bg-red-100';
-      case 'critical': return 'text-red-800 bg-red-200';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'low':
+        return 'text-yellow-600 bg-yellow-100';
+      case 'medium':
+        return 'text-orange-600 bg-orange-100';
+      case 'high':
+        return 'text-red-600 bg-red-100';
+      case 'critical':
+        return 'text-red-800 bg-red-200';
+      default:
+        return 'text-gray-600 bg-gray-100';
     }
   };
 
@@ -121,7 +150,7 @@ export function ErrorMonitoringDashboard() {
   const getErrorResolutionRate = () => {
     const totalFeedback = errorFeedback.length;
     if (totalFeedback === 0) return 0;
-    
+
     const helpfulFeedback = errorFeedback.filter(f => f.helpful).length;
     return Math.round((helpfulFeedback / totalFeedback) * 100);
   };
@@ -133,12 +162,13 @@ export function ErrorMonitoringDashboard() {
       .map(stat => {
         const relatedFeedback = errorFeedback.filter(f => f.errorCode === stat.errorCode);
         const helpfulCount = relatedFeedback.filter(f => f.helpful).length;
-        const helpfulRate = relatedFeedback.length > 0 ? (helpfulCount / relatedFeedback.length) * 100 : 0;
-        
+        const helpfulRate =
+          relatedFeedback.length > 0 ? (helpfulCount / relatedFeedback.length) * 100 : 0;
+
         return {
           ...stat,
           feedbackCount: relatedFeedback.length,
-          helpfulRate: Math.round(helpfulRate)
+          helpfulRate: Math.round(helpfulRate),
         };
       });
   };
@@ -150,7 +180,7 @@ export function ErrorMonitoringDashboard() {
         <div className="flex gap-3">
           <select
             value={selectedTimeframe}
-            onChange={(e) => setSelectedTimeframe(e.target.value as any)}
+            onChange={e => setSelectedTimeframe(e.target.value as '1h' | '24h' | '7d' | 'all')}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-civiq-blue"
           >
             <option value="1h">Last Hour</option>
@@ -192,19 +222,13 @@ export function ErrorMonitoringDashboard() {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">User Feedback</h3>
           <p className="text-3xl font-bold text-gray-900">{errorFeedback.length}</p>
-          <p className="text-sm text-gray-600 mt-1">
-            {getErrorResolutionRate()}% found helpful
-          </p>
+          <p className="text-sm text-gray-600 mt-1">{getErrorResolutionRate()}% found helpful</p>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Top Issue</h3>
-          <p className="text-xl font-bold text-gray-900">
-            {errorStats[0]?.errorCode || 'None'}
-          </p>
-          <p className="text-sm text-gray-600 mt-1">
-            {errorStats[0]?.count || 0} occurrences
-          </p>
+          <p className="text-xl font-bold text-gray-900">{errorStats[0]?.errorCode || 'None'}</p>
+          <p className="text-sm text-gray-600 mt-1">{errorStats[0]?.count || 0} occurrences</p>
         </div>
       </div>
 
@@ -233,27 +257,25 @@ export function ErrorMonitoringDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {getMostProblematicErrors().map((error, index) => (
+              {getMostProblematicErrors().map((error, _index) => (
                 <tr key={error.errorCode} className="hover:bg-gray-50">
                   <td className="px-4 py-4">
-                    <code className="text-sm bg-gray-100 px-2 py-1 rounded">
-                      {error.errorCode}
-                    </code>
+                    <code className="text-sm bg-gray-100 px-2 py-1 rounded">{error.errorCode}</code>
                   </td>
-                  <td className="px-4 py-4 text-sm text-gray-900">
-                    {error.count}
-                  </td>
-                  <td className="px-4 py-4 text-sm">
-                    {getTrendIcon(error.count)}
-                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-900">{error.count}</td>
+                  <td className="px-4 py-4 text-sm">{getTrendIcon(error.count)}</td>
                   <td className="px-4 py-4 text-sm">
                     {error.feedbackCount > 0 ? (
                       <div>
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          error.helpfulRate > 70 ? 'bg-green-100 text-green-800' : 
-                          error.helpfulRate > 40 ? 'bg-yellow-100 text-yellow-800' : 
-                          'bg-red-100 text-red-800'
-                        }`}>
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                            error.helpfulRate > 70
+                              ? 'bg-green-100 text-green-800'
+                              : error.helpfulRate > 40
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                          }`}
+                        >
                           {error.helpfulRate}% helpful
                         </span>
                         <div className="text-xs text-gray-500 mt-1">
@@ -285,9 +307,11 @@ export function ErrorMonitoringDashboard() {
                   <code className="text-sm bg-gray-100 px-2 py-1 rounded">
                     {report.error?.code || 'UNKNOWN'}
                   </code>
-                  <span className={`ml-2 inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                    getSeverityColor(report.error?.severity || 'medium')
-                  }`}>
+                  <span
+                    className={`ml-2 inline-flex px-2 py-1 text-xs font-medium rounded-full ${getSeverityColor(
+                      report.error?.severity || 'medium'
+                    )}`}
+                  >
                     {report.error?.severity || 'medium'}
                   </span>
                 </div>
@@ -301,13 +325,11 @@ export function ErrorMonitoringDashboard() {
               <div className="text-xs text-gray-500">
                 <span className="font-medium">URL:</span> {report.url}
               </div>
-              {report.error?.context && (
+              {report.error?.context !== undefined && (
                 <details className="mt-2">
-                  <summary className="text-xs text-gray-600 cursor-pointer">
-                    Show details
-                  </summary>
+                  <summary className="text-xs text-gray-600 cursor-pointer">Show details</summary>
                   <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-auto">
-                    {JSON.stringify(report.error.context, null, 2)}
+                    {String(JSON.stringify(report.error.context, null, 2))}
                   </pre>
                 </details>
               )}
@@ -327,9 +349,11 @@ export function ErrorMonitoringDashboard() {
                   <code className="text-sm bg-gray-100 px-2 py-1 rounded">
                     {feedback.errorCode}
                   </code>
-                  <span className={`ml-2 inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                    feedback.helpful ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
+                  <span
+                    className={`ml-2 inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                      feedback.helpful ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}
+                  >
                     {feedback.helpful ? 'Helpful' : 'Not Helpful'}
                   </span>
                 </div>
@@ -339,7 +363,7 @@ export function ErrorMonitoringDashboard() {
               </div>
               {feedback.comment && (
                 <p className="text-sm text-gray-700 mt-2 italic">
-                  "{feedback.comment}"
+                  &ldquo;{feedback.comment}&rdquo;
                 </p>
               )}
             </div>

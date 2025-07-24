@@ -1,13 +1,13 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { representativeApi } from '@/lib/api/representatives';
+import { structuredLogger } from '@/lib/logging/universal-logger';
 
 interface NewsArticle {
   title: string;
@@ -44,41 +44,61 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
   const [selectedTimeframe, setSelectedTimeframe] = useState<'all' | '7days' | '30days'>('all');
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchNewsData = useCallback(async (showLoading = true) => {
-    if (showLoading) setLoading(true);
-    setRefreshing(!showLoading);
-    
-    try {
-      console.log(`[CIV.IQ-DEBUG] EnhancedNewsFeed fetching news for ${bioguideId}`);
-      
-      // Use the optimized API client with caching
-      const data = await representativeApi.getNews(bioguideId);
-      setNewsData(data);
-      
-      console.log(`[CIV.IQ-DEBUG] EnhancedNewsFeed fetched ${data.articles?.length || 0} articles`);
-    } catch (error) {
-      console.error('Error fetching news data:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [bioguideId]);
+  const fetchNewsData = useCallback(
+    async (showLoading = true) => {
+      if (showLoading) setLoading(true);
+      setRefreshing(!showLoading);
+
+      try {
+        structuredLogger.info('Fetching news data for representative', {
+          component: 'EnhancedNewsFeed',
+          metadata: { bioguideId, showLoading },
+        });
+
+        // Use the optimized API client with caching
+        const data = await representativeApi.getNews(bioguideId);
+        setNewsData(data);
+
+        structuredLogger.info('News data fetched successfully', {
+          component: 'EnhancedNewsFeed',
+          metadata: {
+            bioguideId,
+            articlesCount: data.articles?.length || 0,
+            hasThemes: !!data.themes,
+          },
+        });
+      } catch (error) {
+        structuredLogger.error('Error fetching news data', {
+          component: 'EnhancedNewsFeed',
+          error: error as Error,
+          metadata: { bioguideId },
+        });
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [bioguideId]
+  );
 
   // Auto-refresh optimization using Page Visibility API
   useEffect(() => {
     fetchNewsData();
-    
+
     let interval: NodeJS.Timeout;
-    
+
     const startAutoRefresh = () => {
       // Only auto-refresh when page is visible
       if (!document.hidden) {
-        interval = setInterval(() => {
-          fetchNewsData(false);
-        }, 5 * 60 * 1000); // 5 minutes for more frequent news updates
+        interval = setInterval(
+          () => {
+            fetchNewsData(false);
+          },
+          5 * 60 * 1000
+        ); // 5 minutes for more frequent news updates
       }
     };
-    
+
     const handleVisibilityChange = () => {
       if (document.hidden) {
         clearInterval(interval);
@@ -88,10 +108,10 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
         startAutoRefresh();
       }
     };
-    
+
     startAutoRefresh();
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     return () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -106,7 +126,7 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
 
   const filteredArticles = useMemo(() => {
     if (!newsData) return [];
-    
+
     let filtered = newsData.articles;
 
     // Source filter
@@ -122,29 +142,29 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
       filtered = filtered.filter(article => new Date(article.publishedDate) >= cutoffDate);
     }
 
-
-    return filtered.sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime());
+    return filtered.sort(
+      (a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime()
+    );
   }, [newsData, selectedSource, selectedTimeframe]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     if (diffInHours < 48) return 'Yesterday';
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays}d ago`;
-    
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined 
+
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
     });
   };
-
 
   if (loading) {
     return (
@@ -181,8 +201,18 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
             disabled={refreshing}
             className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
           >
-            <svg className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            <svg
+              className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
             </svg>
             Refresh
           </button>
@@ -190,9 +220,9 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
 
         {/* Filters */}
         <div className="flex flex-wrap gap-4 mb-4">
-          <select 
+          <select
             value={selectedSource}
-            onChange={(e) => setSelectedSource(e.target.value)}
+            onChange={e => setSelectedSource(e.target.value)}
             className="text-sm border border-gray-300 rounded px-3 py-1"
           >
             {sources.map(source => (
@@ -201,10 +231,10 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
               </option>
             ))}
           </select>
-          
-          <select 
+
+          <select
             value={selectedTimeframe}
-            onChange={(e) => setSelectedTimeframe(e.target.value as any)}
+            onChange={e => setSelectedTimeframe(e.target.value as 'all' | '7days' | '30days')}
             className="text-sm border border-gray-300 rounded px-3 py-1"
           >
             <option value="all">All Time</option>
@@ -225,7 +255,11 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600">
-              {newsData?.dataSource === 'gdelt' ? 'Live' : newsData?.dataSource === 'cached' ? 'Cached' : 'Sample'}
+              {newsData?.dataSource === 'gdelt'
+                ? 'Live'
+                : newsData?.dataSource === 'cached'
+                  ? 'Cached'
+                  : 'Sample'}
             </div>
             <div className="text-sm text-gray-600">Data Status</div>
           </div>
@@ -247,7 +281,7 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
                     .replace(/"/g, '')
                     .replace(/\(/g, '(')
                     .replace(/\)/g, ')');
-                  
+
                   return (
                     <div key={index} className="text-xs bg-gray-50 px-2 py-1 rounded font-mono">
                       {readableTerm}
@@ -268,30 +302,30 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
           </div>
         ) : (
           filteredArticles.map((article, index) => (
-            <article 
-              key={`${article.url}-${index}`} 
+            <article
+              key={`${article.url}-${index}`}
               className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200"
             >
               <div className="p-6">
                 <div className="flex items-start gap-4">
                   {article.imageUrl && (
                     <div className="flex-shrink-0 w-24 h-16 bg-gray-200 rounded overflow-hidden">
-                      <img 
-                        src={article.imageUrl} 
+                      <img
+                        src={article.imageUrl}
                         alt="Article thumbnail"
                         className="w-full h-full object-cover"
-                        onError={(e) => {
+                        onError={e => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
                         }}
                       />
                     </div>
                   )}
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="text-lg font-semibold text-gray-900 line-clamp-2 flex-1">
-                        <a 
+                        <a
                           href={article.url}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -301,7 +335,7 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
                         </a>
                       </h4>
                     </div>
-                    
+
                     <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
                       <span className="font-medium text-civiq-blue">{article.source}</span>
                       <span>•</span>
@@ -311,24 +345,32 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
                     </div>
 
                     {article.summary && (
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                        {article.summary}
-                      </p>
+                      <p className="text-sm text-gray-600 line-clamp-2 mb-3">{article.summary}</p>
                     )}
 
                     <div className="flex items-center justify-between">
-                      <a 
+                      <a
                         href={article.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-sm text-civiq-blue hover:text-civiq-blue/80 font-medium transition-colors"
                       >
                         Read Full Article
-                        <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        <svg
+                          className="ml-1 w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                          />
                         </svg>
                       </a>
-                      
+
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <span>{article.language}</span>
                         <span>•</span>
@@ -347,8 +389,18 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
         News articles sourced from the GDELT Project global news database
         {refreshing && (
           <span className="ml-2 inline-flex items-center gap-1">
-            <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            <svg
+              className="w-3 h-3 animate-spin"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
             </svg>
             Updating...
           </span>

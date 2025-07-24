@@ -8,6 +8,7 @@
 import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { CiviqError, createErrorFromException } from '@/lib/errors/ErrorTypes';
 import { ErrorDisplay } from '@/components/ui/ErrorComponents';
+import { structuredLogger } from '@/lib/logging/universal-logger';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -20,7 +21,7 @@ interface ErrorBoundaryProps {
   fallback?: (error: CiviqError, retry: () => void) => ReactNode;
   onError?: (error: CiviqError, errorInfo: ErrorInfo) => void;
   isolate?: boolean; // If true, prevents error from bubbling up
-  context?: Record<string, any>; // Additional context for error reporting
+  context?: Record<string, unknown>; // Additional context for error reporting
 }
 
 export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -31,7 +32,7 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     this.state = {
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     };
   }
 
@@ -39,13 +40,13 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     // Convert the error to our CiviqError type
     const civiqError = createErrorFromException(error, {
       boundary: 'ErrorBoundary',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     return {
       hasError: true,
       error: civiqError,
-      errorInfo: null
+      errorInfo: null,
     };
   }
 
@@ -57,7 +58,7 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     const civiqError = createErrorFromException(error, {
       boundary: 'ErrorBoundary',
       componentStack: errorInfo.componentStack,
-      ...this.props.context
+      ...this.props.context,
     });
 
     // Call error handler if provided
@@ -65,14 +66,16 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
       this.props.onError(civiqError, errorInfo);
     }
 
-    // Log error for development
-    if (process.env.NODE_ENV === 'development') {
-      console.group('🚨 Error Boundary Caught Error');
-      console.error('Error:', error);
-      console.error('Component Stack:', errorInfo.componentStack);
-      console.error('CiviqError:', civiqError.toJSON());
-      console.groupEnd();
-    }
+    // Log error with structured logging
+    structuredLogger.error('Error Boundary caught error', {
+      component: 'EnhancedErrorBoundary',
+      error: error,
+      metadata: {
+        componentStack: errorInfo.componentStack,
+        civiqError: civiqError.toJSON(),
+        environment: process.env.NODE_ENV,
+      },
+    });
 
     // Report error to monitoring service (in production)
     if (process.env.NODE_ENV === 'production') {
@@ -93,19 +96,19 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
       const errorReport = {
         error: error.toJSON(),
         errorInfo: {
-          componentStack: errorInfo.componentStack
+          componentStack: errorInfo.componentStack,
         },
         userAgent: navigator.userAgent,
         url: window.location.href,
         timestamp: new Date().toISOString(),
         userId: 'anonymous', // Would come from auth context
-        sessionId: sessionStorage.getItem('sessionId') || 'unknown'
+        sessionId: sessionStorage.getItem('sessionId') || 'unknown',
       };
 
       // Store for later analysis
       const existingReports = JSON.parse(localStorage.getItem('errorReports') || '[]');
       existingReports.push(errorReport);
-      
+
       // Keep only last 10 reports
       const recentReports = existingReports.slice(-10);
       localStorage.setItem('errorReports', JSON.stringify(recentReports));
@@ -117,7 +120,10 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
       //   body: JSON.stringify(errorReport)
       // });
     } catch (reportError) {
-      console.error('Failed to report error:', reportError);
+      structuredLogger.error('Failed to report error', {
+        component: 'EnhancedErrorBoundary',
+        error: reportError as Error,
+      });
     }
   };
 
@@ -126,7 +132,7 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     });
 
     // Add a small delay to prevent immediate re-error
@@ -144,7 +150,7 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
       helpful,
       comment,
       timestamp: new Date().toISOString(),
-      url: window.location.href
+      url: window.location.href,
     };
 
     // Store feedback for analysis
@@ -152,7 +158,13 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     existingFeedback.push(feedback);
     localStorage.setItem('errorFeedback', JSON.stringify(existingFeedback.slice(-50)));
 
-    console.log('Error feedback collected:', feedback);
+    structuredLogger.info('Error feedback collected', {
+      component: 'EnhancedErrorBoundary',
+      metadata: {
+        feedback,
+        errorCode: this.state.error?.code,
+      },
+    });
   };
 
   render() {
@@ -171,7 +183,7 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
               onRetry={this.handleRetry}
               onFeedback={this.handleFeedback}
             />
-            
+
             {/* Development info */}
             {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
               <details className="mt-6 p-4 bg-gray-100 rounded-lg text-sm">
@@ -220,14 +232,19 @@ export function withErrorBoundary<P extends object>(
 
 // Hook for programmatic error reporting
 export function useErrorReporting() {
-  const reportError = (error: Error | CiviqError, context?: Record<string, any>) => {
-    const civiqError = error instanceof CiviqError 
-      ? error 
-      : createErrorFromException(error, context);
+  const reportError = (error: Error | CiviqError, context?: Record<string, unknown>) => {
+    const civiqError =
+      error instanceof CiviqError ? error : createErrorFromException(error, context);
 
     // In a real app, this would send to your monitoring service
-    console.error('Reported error:', civiqError.toJSON());
-    
+    structuredLogger.error('Error reported to monitoring service', {
+      component: 'EnhancedErrorBoundary',
+      metadata: {
+        civiqError: civiqError.toJSON(),
+        context: context,
+      },
+    });
+
     // Store for analysis
     try {
       const errorReport = {
@@ -235,14 +252,17 @@ export function useErrorReporting() {
         userAgent: navigator.userAgent,
         url: window.location.href,
         timestamp: new Date().toISOString(),
-        context
+        context,
       };
 
       const existingReports = JSON.parse(localStorage.getItem('manualErrorReports') || '[]');
       existingReports.push(errorReport);
       localStorage.setItem('manualErrorReports', JSON.stringify(existingReports.slice(-20)));
     } catch (e) {
-      console.error('Failed to store error report:', e);
+      structuredLogger.error('Failed to store error report', {
+        component: 'EnhancedErrorBoundary',
+        error: e as Error,
+      });
     }
   };
 

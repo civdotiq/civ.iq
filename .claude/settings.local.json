@@ -67,7 +67,8 @@
       "Bash(npm run lint:*)",
       "Bash(npx eslint:*)",
       "Bash(npm run test:*)",
-      "Bash(npx prettier:*)"
+      "Bash(npx prettier:*)",
+      "Bash(cp:*)"
     ],
     "deny": []
   },

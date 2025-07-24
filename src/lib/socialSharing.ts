@@ -3,6 +3,16 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { structuredLogger } from '@/lib/logging/universal-logger';
+
+// General sharing utilities - keep these
+export interface ShareResult {
+  success: boolean;
+  url?: string;
+  error?: string;
+}
+
+/* ARCHIVED: Trading Card Features - Remove comments to restore
 import { EnhancedRepresentative } from '@/types/representative';
 
 export interface ShareOptions {
@@ -12,15 +22,46 @@ export interface ShareOptions {
   platform: 'twitter' | 'facebook' | 'linkedin' | 'copy' | 'email';
 }
 
-export interface ShareResult {
-  success: boolean;
-  url?: string;
-  error?: string;
-}
-
 /**
  * Generate share text for social media posts
  */
+/*
+export function generateShareText(
+  representative: EnhancedRepresentative,
+  stats: Array<{ label: string; value: string | number }>,
+  platform: 'twitter' | 'facebook' | 'linkedin' | 'email' | 'copy'
+): string {
+  const baseText = `Check out ${representative.name}'s trading card!`;
+  const statsText = stats.slice(0, 2).map(s => `${s.label}: ${s.value}`).join(' • ');
+  const hashtags = ['CivicEngagement', 'KnowYourRep', 'CivIQ'];
+  
+  switch (platform) {
+    case 'twitter':
+      // Twitter has 280 character limit
+      const twitterHashtags = hashtags.map(h => `#${h}`).join(' ');
+      return `${baseText}\\n\\n${statsText}\\n\\n${twitterHashtags}\\n\\nvia @CivIQHub`;
+      
+    case 'facebook':
+      return `${baseText}\\n\\n${statsText}\\n\\n${hashtags.map(h => `#${h}`).join(' ')}`;
+      
+    case 'linkedin':
+      return `${baseText}\\n\\nKey Stats:\\n${stats.map(s => `• ${s.label}: ${s.value}`).join('\\n')}\\n\\n${hashtags.map(h => `#${h}`).join(' ')}`;
+      
+    case 'email':
+      return `I thought you might be interested in ${representative.name}'s trading card from CIV.IQ.\\n\\n${stats.map(s => `${s.label}: ${s.value}`).join('\\n')}\\n\\nCheck it out at CIV.IQ!`;
+      
+    case 'copy':
+      return `${baseText}\\n\\n${statsText}\\n\\nvia CIV.IQ`;
+      
+    default:
+      return baseText;
+  }
+}
+
+/**
+ * Generate share URL for different platforms
+ */
+/*
 export function generateShareText(
   representative: EnhancedRepresentative,
   stats: Array<{ label: string; value: string | number }>,
@@ -56,6 +97,7 @@ export function generateShareText(
 /**
  * Generate share URL for different platforms
  */
+/*
 export function generateShareUrl(options: ShareOptions): ShareResult {
   const { representative, stats, platform } = options;
   const shareText = generateShareText(representative, stats, platform);
@@ -104,6 +146,7 @@ export function generateShareUrl(options: ShareOptions): ShareResult {
     };
   }
 }
+*/
 
 /**
  * Open share dialog in new window
@@ -113,7 +156,7 @@ export function openShareWindow(url: string, platform: string): void {
   const height = 400;
   const left = (window.innerWidth - width) / 2;
   const top = (window.innerHeight - height) / 2;
-  
+
   window.open(
     url,
     `${platform}-share`,
@@ -129,16 +172,18 @@ export async function copyImageToClipboard(blob: Blob): Promise<boolean> {
     if (!navigator.clipboard || !navigator.clipboard.write) {
       throw new Error('Clipboard API not supported');
     }
-    
+
     const clipboardItem = new ClipboardItem({
-      'image/png': blob
+      'image/png': blob,
     });
-    
+
     await navigator.clipboard.write([clipboardItem]);
     return true;
-    
   } catch (error) {
-    console.error('Failed to copy image:', error);
+    structuredLogger.error('Failed to copy image to clipboard', {
+      component: 'socialSharing',
+      error: error as Error,
+    });
     return false;
   }
 }
@@ -164,14 +209,19 @@ export async function copyTextToClipboard(text: string): Promise<boolean> {
       return success;
     }
   } catch (error) {
-    console.error('Failed to copy text:', error);
+    structuredLogger.error('Failed to copy text to clipboard', {
+      component: 'socialSharing',
+      error: error as Error,
+    });
     return false;
   }
 }
 
+/* ARCHIVED: Trading Card Features - Remove comments to restore
 /**
  * Generate Open Graph meta tags for card sharing
  */
+/*
 export function generateOpenGraphTags(
   representative: EnhancedRepresentative,
   imageUrl: string
@@ -194,27 +244,24 @@ export function generateOpenGraphTags(
     'twitter:site': '@CivIQHub'
   };
 }
+*/
 
 /**
  * Check if platform supports native sharing
  */
 export function canNativeShare(): boolean {
-  return typeof navigator !== 'undefined' && 
-         'share' in navigator && 
-         'canShare' in navigator;
+  return typeof navigator !== 'undefined' && 'share' in navigator && 'canShare' in navigator;
 }
 
 /**
  * Native share with fallback
  */
-export async function shareWithFallback(
-  options: {
-    title: string;
-    text: string;
-    url?: string;
-    files?: File[];
-  }
-): Promise<ShareResult> {
+export async function shareWithFallback(options: {
+  title: string;
+  text: string;
+  url?: string;
+  files?: File[];
+}): Promise<ShareResult> {
   try {
     if (canNativeShare()) {
       // Check if we can share files
@@ -222,17 +269,17 @@ export async function shareWithFallback(
         // Remove files if not supported
         delete options.files;
       }
-      
+
       await navigator.share(options);
       return { success: true };
     } else {
       // Fallback to copying to clipboard
       const shareText = `${options.title}\n\n${options.text}${options.url ? `\n\n${options.url}` : ''}`;
       const copied = await copyTextToClipboard(shareText);
-      
+
       return {
         success: copied,
-        error: copied ? undefined : 'Failed to copy to clipboard'
+        error: copied ? undefined : 'Failed to copy to clipboard',
       };
     }
   } catch (error) {
@@ -240,10 +287,10 @@ export async function shareWithFallback(
     if (error instanceof Error && error.name === 'AbortError') {
       return { success: false, error: 'Share cancelled' };
     }
-    
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Share failed'
+      error: error instanceof Error ? error.message : 'Share failed',
     };
   }
 }

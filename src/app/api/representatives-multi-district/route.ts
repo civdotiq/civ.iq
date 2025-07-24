@@ -1,21 +1,21 @@
 /*
  * CIV.IQ - Civic Information Hub
  * Phase 4: Multi-District ZIP Code API
- * 
+ *
  * Enhanced API endpoint that handles ZIP codes spanning multiple congressional districts
  * with comprehensive edge case handling and user-friendly responses.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  getAllCongressionalDistrictsForZip, 
+import {
+  getAllCongressionalDistrictsForZip,
   getPrimaryCongressionalDistrictForZip,
   isZipMultiDistrict,
   getZipLookupMetrics,
-  zipLookupService
 } from '@/lib/data/zip-district-mapping';
 import { getAllEnhancedRepresentatives } from '@/lib/congress-legislators';
 import { getCongressionalDistrictFromZip } from '@/lib/census-api';
+import { structuredLogger } from '@/lib/logging/universal-logger';
 
 // Enhanced interfaces for multi-district support
 interface DistrictInfo {
@@ -72,7 +72,7 @@ interface RepresentativeResponse {
 // Enhanced logging for unmapped ZIPs
 class ZipLookupLogger {
   private static instance: ZipLookupLogger;
-  
+
   static getInstance(): ZipLookupLogger {
     if (!ZipLookupLogger.instance) {
       ZipLookupLogger.instance = new ZipLookupLogger();
@@ -86,14 +86,15 @@ class ZipLookupLogger {
       zipCode,
       fallbackMethod,
       userAgent,
-      type: 'unmapped_zip'
+      type: 'unmapped_zip',
     };
-    
-    // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('🚨 Unmapped ZIP Code:', logEntry);
-    }
-    
+
+    // Log unmapped ZIP code
+    structuredLogger.warn('Unmapped ZIP Code', {
+      component: 'multiDistrictApi',
+      metadata: logEntry,
+    });
+
     // In production, you'd send this to your logging service
     // Example: await sendToAnalytics(logEntry);
   }
@@ -104,26 +105,32 @@ class ZipLookupLogger {
       zipCode,
       districts: districts.length,
       userSelection,
-      type: 'multi_district_access'
+      type: 'multi_district_access',
     };
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.info('🗺️ Multi-District ZIP Access:', logEntry);
-    }
+
+    structuredLogger.info('Multi-District ZIP Access', {
+      component: 'multiDistrictApi',
+      metadata: logEntry,
+    });
   }
 
-  logEdgeCase(zipCode: string, caseType: 'territory' | 'dc' | 'split_state' | 'invalid', details?: unknown): void {
+  logEdgeCase(
+    zipCode: string,
+    caseType: 'territory' | 'dc' | 'split_state' | 'invalid',
+    details?: unknown
+  ): void {
     const logEntry = {
       timestamp: new Date().toISOString(),
       zipCode,
       caseType,
       details,
-      type: 'edge_case'
+      type: 'edge_case',
     };
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.info('⚠️ Edge Case:', logEntry);
-    }
+
+    structuredLogger.info('Edge Case detected', {
+      component: 'multiDistrictApi',
+      metadata: logEntry,
+    });
   }
 }
 
@@ -132,60 +139,66 @@ export async function GET(request: NextRequest) {
   const logger = ZipLookupLogger.getInstance();
   const url = new URL(request.url);
   const zipCode = url.searchParams.get('zip');
-  
+
   try {
     const preferredDistrict = url.searchParams.get('district'); // For user selection
     const userAgent = request.headers.get('user-agent');
 
     // Input validation
     if (!zipCode) {
-      return NextResponse.json({
-        success: false,
-        error: {
-          code: 'MISSING_ZIP_CODE',
-          message: 'ZIP code parameter is required'
-        },
-        metadata: {
-          timestamp: new Date().toISOString(),
-          dataSource: 'validation-error',
-          totalDistricts: 0,
-          lookupMethod: 'fallback',
-          processingTime: Date.now() - startTime,
-          coverage: {
-            zipFound: false,
-            representativesFound: false,
-            dataQuality: 'poor'
-          }
-        }
-      } as MultiDistrictResponse, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'MISSING_ZIP_CODE',
+            message: 'ZIP code parameter is required',
+          },
+          metadata: {
+            timestamp: new Date().toISOString(),
+            dataSource: 'validation-error',
+            totalDistricts: 0,
+            lookupMethod: 'fallback',
+            processingTime: Date.now() - startTime,
+            coverage: {
+              zipFound: false,
+              representativesFound: false,
+              dataQuality: 'poor',
+            },
+          },
+        } as MultiDistrictResponse,
+        { status: 400 }
+      );
     }
 
     // Validate ZIP code format
     const zipRegex = /^\d{5}$/;
     if (!zipRegex.test(zipCode)) {
-      return NextResponse.json({
-        success: false,
-        zipCode,
-        isMultiDistrict: false,
-        districts: [],
-        error: {
-          code: 'INVALID_ZIP_FORMAT',
-          message: 'ZIP code must be exactly 5 digits',
-          details: { provided: zipCode, expected: '5-digit format (e.g., 10001)' }
-        },
-        metadata: {
-          timestamp: new Date().toISOString(),
-          dataSource: 'validation-error',
-          totalDistricts: 0,
-          lookupMethod: 'fallback',
-          processingTime: Date.now() - startTime,
-          coverage: {
-            zipFound: false,
-            representativesFound: false,
-            dataQuality: 'poor'
-          }
-        }
-      } as MultiDistrictResponse, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          zipCode,
+          isMultiDistrict: false,
+          districts: [],
+          error: {
+            code: 'INVALID_ZIP_FORMAT',
+            message: 'ZIP code must be exactly 5 digits',
+            details: { provided: zipCode, expected: '5-digit format (e.g., 10001)' },
+          },
+          metadata: {
+            timestamp: new Date().toISOString(),
+            dataSource: 'validation-error',
+            totalDistricts: 0,
+            lookupMethod: 'fallback',
+            processingTime: Date.now() - startTime,
+            coverage: {
+              zipFound: false,
+              representativesFound: false,
+              dataQuality: 'poor',
+            },
+          },
+        } as MultiDistrictResponse,
+        { status: 400 }
+      );
     }
 
     // Step 1: Check comprehensive mapping (Phase 3 integration)
@@ -203,13 +216,15 @@ export async function GET(request: NextRequest) {
         state: d.state,
         district: d.district,
         primary: d.primary,
-        confidence: 'high' as const
+        confidence: 'high' as const,
       }));
 
       // Log multi-district access
       if (isMultiDistrict) {
         logger.logMultiDistrictAccess(zipCode, districts, preferredDistrict || undefined);
-        warnings.push(`This ZIP code spans ${districts.length} congressional districts. Results show the primary district.`);
+        warnings.push(
+          `This ZIP code spans ${districts.length} congressional districts. Results show the primary district.`
+        );
       }
 
       // Check for edge cases
@@ -217,28 +232,29 @@ export async function GET(request: NextRequest) {
         logger.logEdgeCase(zipCode, 'dc', { district: districts[0].district });
         warnings.push('District of Columbia has non-voting representation in Congress.');
       }
-      
+
       if (['GU', 'PR', 'VI', 'AS', 'MP'].includes(districts[0].state)) {
         logger.logEdgeCase(zipCode, 'territory', { territory: districts[0].state });
         warnings.push('This territory has non-voting representation in Congress.');
       }
-
     } else {
       // Fallback to Census API
       logger.logUnmappedZip(zipCode, 'census-api', userAgent || undefined);
       lookupMethod = 'census-api';
-      
+
       try {
         const fallbackDistrict = await getCongressionalDistrictFromZip(zipCode);
         if (fallbackDistrict) {
-          districts = [{
-            state: fallbackDistrict.state,
-            district: fallbackDistrict.district,
-            confidence: 'medium' as const
-          }];
+          districts = [
+            {
+              state: fallbackDistrict.state,
+              district: fallbackDistrict.district,
+              confidence: 'medium' as const,
+            },
+          ];
           warnings.push('ZIP code not found in comprehensive database. Using Census API fallback.');
         }
-      } catch (error) {
+      } catch {
         logger.logUnmappedZip(zipCode, 'failed', userAgent || undefined);
         lookupMethod = 'fallback';
         warnings.push('Unable to determine congressional district. ZIP code may be invalid.');
@@ -247,30 +263,34 @@ export async function GET(request: NextRequest) {
 
     // If no districts found, return error
     if (districts.length === 0) {
-      return NextResponse.json({
-        success: false,
-        zipCode,
-        isMultiDistrict: false,
-        districts: [],
-        warnings,
-        error: {
-          code: 'DISTRICT_NOT_FOUND',
-          message: `Could not determine congressional district for ZIP code ${zipCode}`,
-          details: 'This ZIP code may be invalid, rural, or not currently mapped to a congressional district'
-        },
-        metadata: {
-          timestamp: new Date().toISOString(),
-          dataSource: 'comprehensive-mapping',
-          totalDistricts: 0,
-          lookupMethod,
-          processingTime: Date.now() - startTime,
-          coverage: {
-            zipFound: false,
-            representativesFound: false,
-            dataQuality: 'poor'
-          }
-        }
-      } as MultiDistrictResponse, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          zipCode,
+          isMultiDistrict: false,
+          districts: [],
+          warnings,
+          error: {
+            code: 'DISTRICT_NOT_FOUND',
+            message: `Could not determine congressional district for ZIP code ${zipCode}`,
+            details:
+              'This ZIP code may be invalid, rural, or not currently mapped to a congressional district',
+          },
+          metadata: {
+            timestamp: new Date().toISOString(),
+            dataSource: 'comprehensive-mapping',
+            totalDistricts: 0,
+            lookupMethod,
+            processingTime: Date.now() - startTime,
+            coverage: {
+              zipFound: false,
+              representativesFound: false,
+              dataQuality: 'poor',
+            },
+          },
+        } as MultiDistrictResponse,
+        { status: 404 }
+      );
     }
 
     // Step 2: Get representatives for all districts
@@ -279,10 +299,11 @@ export async function GET(request: NextRequest) {
 
     for (const district of districts) {
       // Get House representative for this district
-      const houseRep = allRepresentatives.find(rep => 
-        rep.chamber === 'House' && 
-        rep.state === district.state && 
-        rep.district === district.district
+      const houseRep = allRepresentatives.find(
+        rep =>
+          rep.chamber === 'House' &&
+          rep.state === district.state &&
+          rep.district === district.district
       );
 
       if (houseRep) {
@@ -299,15 +320,16 @@ export async function GET(request: NextRequest) {
           contactInfo: {
             phone: houseRep.phone || '',
             website: houseRep.website || '',
-            office: (houseRep as any).office || ''
-          }
+            office: (houseRep as unknown as { office?: string }).office || '',
+          },
         });
       }
 
       // Get Senate representatives for this state (only add once)
-      if (district.primary !== false) { // Only add senators for primary district
-        const senateReps = allRepresentatives.filter(rep => 
-          rep.chamber === 'Senate' && rep.state === district.state
+      if (district.primary !== false) {
+        // Only add senators for primary district
+        const senateReps = allRepresentatives.filter(
+          rep => rep.chamber === 'Senate' && rep.state === district.state
         );
 
         for (const senateRep of senateReps) {
@@ -323,8 +345,8 @@ export async function GET(request: NextRequest) {
             contactInfo: {
               phone: senateRep.phone || '',
               website: senateRep.website || '',
-              office: (senateRep as any).office || ''
-            }
+              office: (senateRep as unknown as { office?: string }).office || '',
+            },
           });
         }
       }
@@ -336,20 +358,22 @@ export async function GET(request: NextRequest) {
     if (lookupMethod === 'fallback') dataQuality = 'fair';
     if (representatives.length === 0) dataQuality = 'poor';
 
-    // Get performance metrics
-    const metrics = getZipLookupMetrics();
+    // Get performance metrics (for future use)
+    const _metrics = getZipLookupMetrics();
 
     const response: MultiDistrictResponse = {
       success: true,
       zipCode,
       isMultiDistrict,
       districts,
-      primaryDistrict: primaryDistrict ? {
-        state: primaryDistrict.state,
-        district: primaryDistrict.district,
-        primary: primaryDistrict.primary,
-        confidence: 'high' as const
-      } : districts[0],
+      primaryDistrict: primaryDistrict
+        ? {
+            state: primaryDistrict.state,
+            district: primaryDistrict.district,
+            primary: primaryDistrict.primary,
+            confidence: 'high' as const,
+          }
+        : districts[0],
       representatives,
       warnings: warnings.length > 0 ? warnings : undefined,
       metadata: {
@@ -361,38 +385,44 @@ export async function GET(request: NextRequest) {
         coverage: {
           zipFound: true,
           representativesFound: representatives.length > 0,
-          dataQuality
-        }
-      }
+          dataQuality,
+        },
+      },
     };
 
     return NextResponse.json(response);
-
   } catch (error) {
-    console.error('Multi-district API error:', error);
-    
-    return NextResponse.json({
-      success: false,
-      zipCode: zipCode || '',
-      isMultiDistrict: false,
-      districts: [],
-      error: {
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred while processing your request',
-        details: process.env.NODE_ENV === 'development' ? error : undefined
-      },
-      metadata: {
-        timestamp: new Date().toISOString(),
-        dataSource: 'error',
-        totalDistricts: 0,
-        lookupMethod: 'fallback',
-        processingTime: Date.now() - startTime,
-        coverage: {
-          zipFound: false,
-          representativesFound: false,
-          dataQuality: 'poor'
-        }
-      }
-    } as MultiDistrictResponse, { status: 500 });
+    structuredLogger.error('Multi-district API error', {
+      component: 'multiDistrictApi',
+      error: error as Error,
+      metadata: { zipCode },
+    });
+
+    return NextResponse.json(
+      {
+        success: false,
+        zipCode: zipCode || '',
+        isMultiDistrict: false,
+        districts: [],
+        error: {
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'An unexpected error occurred while processing your request',
+          details: process.env.NODE_ENV === 'development' ? error : undefined,
+        },
+        metadata: {
+          timestamp: new Date().toISOString(),
+          dataSource: 'error',
+          totalDistricts: 0,
+          lookupMethod: 'fallback',
+          processingTime: Date.now() - startTime,
+          coverage: {
+            zipFound: false,
+            representativesFound: false,
+            dataQuality: 'poor',
+          },
+        },
+      } as MultiDistrictResponse,
+      { status: 500 }
+    );
   }
 }

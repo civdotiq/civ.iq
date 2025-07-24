@@ -16,7 +16,7 @@ import {
   checkBrowserSupport,
   optimizeElementForGeneration,
   CardGenerationResult,
-} from '@/lib/cardGenerator';
+} from '../lib/cardGenerator';
 import { structuredLogger } from '@/lib/logging/logger-client';
 
 interface CardStat {

@@ -3,10 +3,12 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+/* ARCHIVED: Trading Card Features - Remove comments to restore
 import { NextRequest, NextResponse } from 'next/server';
 import { generateOpenGraphTags } from '@/lib/socialSharing';
 import { EnhancedRepresentative } from '@/types/representative';
 import { structuredLogger } from '@/lib/logging/logger';
+*/
 
 /**
  * API endpoint to serve Open Graph metadata for trading cards
@@ -14,6 +16,7 @@ import { structuredLogger } from '@/lib/logging/logger';
  *
  * Example: /api/trading-card/og-image?bioguideId=S001234&imageUrl=...
  */
+/* ARCHIVED: Trading Card Features - Remove comments to restore
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const bioguideId = searchParams.get('bioguideId');
@@ -95,3 +98,4 @@ export async function GET(request: NextRequest) {
 export async function HEAD(request: NextRequest) {
   return GET(request);
 }
+*/

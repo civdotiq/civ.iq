@@ -11,7 +11,7 @@ import { TradingCardGenerator } from './TradingCardGenerator';
 import { StatDetailPanel } from './StatDetailPanel';
 import { CardCustomizationPanel, CardCustomization, CardTheme } from './CardCustomizationPanel';
 import { CardTemplateSelector, CardTemplate, CARD_TEMPLATES } from './CardTemplateSelector';
-import { CardTracker } from '@/lib/cardTracking';
+import { CardTracker } from '../lib/cardTracking';
 import { DataValidator } from '@/lib/dataValidation';
 import { EnhancedRepresentative } from '@/types/representative';
 
