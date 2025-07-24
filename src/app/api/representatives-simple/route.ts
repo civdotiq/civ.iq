@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { structuredLogger } from '@/lib/logging/logger-client';
 
 interface Representative {
   bioguideId: string;
@@ -40,7 +41,8 @@ interface Representative {
 
 // Mock data for different ZIP codes
 const mockRepresentatives: Record<string, Representative[]> = {
-  '48221': [ // Detroit, MI
+  '48221': [
+    // Detroit, MI
     {
       bioguideId: 'T000481',
       name: 'Rashida Tlaib',
@@ -50,25 +52,25 @@ const mockRepresentatives: Record<string, Representative[]> = {
       district: '12',
       party: 'Democratic',
       chamber: 'House',
-      title: 'U.S. Representative for Michigan\'s 12th District',
+      title: "U.S. Representative for Michigan's 12th District",
       imageUrl: '',
       contactInfo: {
         phone: '(202) 225-5126',
         website: 'https://tlaib.house.gov',
-        office: '1628 Longworth House Office Building'
+        office: '1628 Longworth House Office Building',
       },
       committees: [
         { name: 'Committee on Financial Services' },
-        { name: 'Committee on Oversight and Reform' }
+        { name: 'Committee on Oversight and Reform' },
       ],
       social: {
-        twitter: '@RepRashida'
+        twitter: '@RepRashida',
       },
       phone: '(202) 225-5126',
       website: 'https://tlaib.house.gov',
       yearsInOffice: 6,
       nextElection: '2024',
-      dataComplete: 95
+      dataComplete: 95,
     },
     {
       bioguideId: 'S000770',
@@ -84,20 +86,20 @@ const mockRepresentatives: Record<string, Representative[]> = {
       contactInfo: {
         phone: '(202) 224-4822',
         website: 'https://www.stabenow.senate.gov',
-        office: '731 Hart Senate Office Building'
+        office: '731 Hart Senate Office Building',
       },
       committees: [
         { name: 'Committee on Agriculture, Nutrition, and Forestry', role: 'Chair' },
-        { name: 'Committee on Finance' }
+        { name: 'Committee on Finance' },
       ],
       social: {
-        twitter: '@SenStabenow'
+        twitter: '@SenStabenow',
       },
       phone: '(202) 224-4822',
       website: 'https://www.stabenow.senate.gov',
       yearsInOffice: 24,
       nextElection: '2024',
-      dataComplete: 98
+      dataComplete: 98,
     },
     {
       bioguideId: 'P000595',
@@ -113,23 +115,24 @@ const mockRepresentatives: Record<string, Representative[]> = {
       contactInfo: {
         phone: '(202) 224-6221',
         website: 'https://www.peters.senate.gov',
-        office: '724 Hart Senate Office Building'
+        office: '724 Hart Senate Office Building',
       },
       committees: [
         { name: 'Committee on Homeland Security and Governmental Affairs', role: 'Chair' },
-        { name: 'Committee on Commerce, Science, and Transportation' }
+        { name: 'Committee on Commerce, Science, and Transportation' },
       ],
       social: {
-        twitter: '@SenGaryPeters'
+        twitter: '@SenGaryPeters',
       },
       phone: '(202) 224-6221',
       website: 'https://www.peters.senate.gov',
       yearsInOffice: 10,
       nextElection: '2026',
-      dataComplete: 97
-    }
+      dataComplete: 97,
+    },
   ],
-  '10001': [ // New York, NY
+  '10001': [
+    // New York, NY
     {
       bioguideId: 'N000002',
       name: 'Jerrold Nadler',
@@ -139,24 +142,22 @@ const mockRepresentatives: Record<string, Representative[]> = {
       district: '12',
       party: 'Democratic',
       chamber: 'House',
-      title: 'U.S. Representative for New York\'s 12th District',
+      title: "U.S. Representative for New York's 12th District",
       imageUrl: '',
       contactInfo: {
         phone: '(202) 225-5635',
         website: 'https://nadler.house.gov',
-        office: '2132 Rayburn House Office Building'
+        office: '2132 Rayburn House Office Building',
       },
-      committees: [
-        { name: 'Committee on the Judiciary', role: 'Ranking Member' }
-      ],
+      committees: [{ name: 'Committee on the Judiciary', role: 'Ranking Member' }],
       social: {
-        twitter: '@RepJerryNadler'
+        twitter: '@RepJerryNadler',
       },
       phone: '(202) 225-5635',
       website: 'https://nadler.house.gov',
       yearsInOffice: 32,
       nextElection: '2024',
-      dataComplete: 96
+      dataComplete: 96,
     },
     {
       bioguideId: 'S000148',
@@ -172,19 +173,17 @@ const mockRepresentatives: Record<string, Representative[]> = {
       contactInfo: {
         phone: '(202) 224-6542',
         website: 'https://www.schumer.senate.gov',
-        office: '322 Hart Senate Office Building'
+        office: '322 Hart Senate Office Building',
       },
-      committees: [
-        { name: 'Committee on Rules and Administration', role: 'Chair' }
-      ],
+      committees: [{ name: 'Committee on Rules and Administration', role: 'Chair' }],
       social: {
-        twitter: '@SenSchumer'
+        twitter: '@SenSchumer',
       },
       phone: '(202) 224-6542',
       website: 'https://www.schumer.senate.gov',
       yearsInOffice: 26,
       nextElection: '2028',
-      dataComplete: 99
+      dataComplete: 99,
     },
     {
       bioguideId: 'G000555',
@@ -200,23 +199,24 @@ const mockRepresentatives: Record<string, Representative[]> = {
       contactInfo: {
         phone: '(202) 224-4451',
         website: 'https://www.gillibrand.senate.gov',
-        office: '478 Russell Senate Office Building'
+        office: '478 Russell Senate Office Building',
       },
       committees: [
         { name: 'Committee on Armed Services' },
-        { name: 'Committee on Environment and Public Works' }
+        { name: 'Committee on Environment and Public Works' },
       ],
       social: {
-        twitter: '@SenGillibrand'
+        twitter: '@SenGillibrand',
       },
       phone: '(202) 224-4451',
       website: 'https://www.gillibrand.senate.gov',
       yearsInOffice: 15,
       nextElection: '2024',
-      dataComplete: 98
-    }
+      dataComplete: 98,
+    },
   ],
-  '90210': [ // Beverly Hills, CA
+  '90210': [
+    // Beverly Hills, CA
     {
       bioguideId: 'S001150',
       name: 'Adam Schiff',
@@ -226,24 +226,22 @@ const mockRepresentatives: Record<string, Representative[]> = {
       district: '30',
       party: 'Democratic',
       chamber: 'House',
-      title: 'U.S. Representative for California\'s 30th District',
+      title: "U.S. Representative for California's 30th District",
       imageUrl: '',
       contactInfo: {
         phone: '(202) 225-4176',
         website: 'https://schiff.house.gov',
-        office: '2309 Rayburn House Office Building'
+        office: '2309 Rayburn House Office Building',
       },
-      committees: [
-        { name: 'Permanent Select Committee on Intelligence', role: 'Ranking Member' }
-      ],
+      committees: [{ name: 'Permanent Select Committee on Intelligence', role: 'Ranking Member' }],
       social: {
-        twitter: '@RepAdamSchiff'
+        twitter: '@RepAdamSchiff',
       },
       phone: '(202) 225-4176',
       website: 'https://schiff.house.gov',
       yearsInOffice: 24,
       nextElection: '2024',
-      dataComplete: 97
+      dataComplete: 97,
     },
     {
       bioguideId: 'F000062',
@@ -259,20 +257,20 @@ const mockRepresentatives: Record<string, Representative[]> = {
       contactInfo: {
         phone: '(202) 224-3841',
         website: 'https://www.feinstein.senate.gov',
-        office: '331 Hart Senate Office Building'
+        office: '331 Hart Senate Office Building',
       },
       committees: [
         { name: 'Committee on the Judiciary', role: 'Ranking Member' },
-        { name: 'Committee on Intelligence' }
+        { name: 'Committee on Intelligence' },
       ],
       social: {
-        twitter: '@SenFeinstein'
+        twitter: '@SenFeinstein',
       },
       phone: '(202) 224-3841',
       website: 'https://www.feinstein.senate.gov',
       yearsInOffice: 31,
       nextElection: '2024',
-      dataComplete: 95
+      dataComplete: 95,
     },
     {
       bioguideId: 'P000145',
@@ -288,22 +286,22 @@ const mockRepresentatives: Record<string, Representative[]> = {
       contactInfo: {
         phone: '(202) 224-3553',
         website: 'https://www.padilla.senate.gov',
-        office: '112 Hart Senate Office Building'
+        office: '112 Hart Senate Office Building',
       },
       committees: [
         { name: 'Committee on Environment and Public Works' },
-        { name: 'Committee on Homeland Security and Governmental Affairs' }
+        { name: 'Committee on Homeland Security and Governmental Affairs' },
       ],
       social: {
-        twitter: '@SenAlexPadilla'
+        twitter: '@SenAlexPadilla',
       },
       phone: '(202) 224-3553',
       website: 'https://www.padilla.senate.gov',
       yearsInOffice: 4,
       nextElection: '2028',
-      dataComplete: 94
-    }
-  ]
+      dataComplete: 94,
+    },
+  ],
 };
 
 // Default representatives for unknown ZIP codes
@@ -322,20 +320,18 @@ const defaultRepresentatives: Representative[] = [
     contactInfo: {
       phone: '(202) 225-0000',
       website: 'https://example.house.gov',
-      office: '1000 Longworth House Office Building'
+      office: '1000 Longworth House Office Building',
     },
-    committees: [
-      { name: 'Committee on Example Affairs' }
-    ],
+    committees: [{ name: 'Committee on Example Affairs' }],
     social: {
-      twitter: '@DemoRep'
+      twitter: '@DemoRep',
     },
     phone: '(202) 225-0000',
     website: 'https://example.house.gov',
     yearsInOffice: 8,
     nextElection: '2024',
-    dataComplete: 75
-  }
+    dataComplete: 75,
+  },
 ];
 
 export async function GET(request: NextRequest) {
@@ -344,10 +340,7 @@ export async function GET(request: NextRequest) {
 
   // Validate ZIP code
   if (!zipCode) {
-    return NextResponse.json(
-      { error: 'ZIP code is required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'ZIP code is required' }, { status: 400 });
   }
 
   if (!/^\d{5}$/.test(zipCode)) {
@@ -374,23 +367,22 @@ export async function GET(request: NextRequest) {
         dataSource: 'demo',
         timestamp: new Date().toISOString(),
         totalFound: representatives.length,
-        note: 'Demo data - Add API keys to .env.local for live data'
-      }
+        note: 'Demo data - Add API keys to .env.local for live data',
+      },
     };
 
     return NextResponse.json(response, {
       headers: {
-        'Cache-Control': 'public, max-age=300, stale-while-revalidate=60'
-      }
+        'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
+      },
     });
-
   } catch (error) {
-    console.error('Representatives API error:', error);
-    
+    structuredLogger.error('Representatives API error', error as Error, { zipCode });
+
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
-        message: 'Unable to fetch representatives at this time'
+        message: 'Unable to fetch representatives at this time',
       },
       { status: 500 }
     );

@@ -3,20 +3,14 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import type {
-  FecApiCandidate,
-  FecApiCandidatesResponse,
-  FecApiContribution,
-  FecApiContributionsResponse,
-  FecApiFinancialSummary,
-} from '../types/api-responses';
+import { structuredLogger } from './logging/logger-client';
 
 /**
  * Federal Election Commission (FEC) API Integration
- * 
+ *
  * This module provides utilities for integrating with the FEC API
  * to fetch real campaign finance data for federal candidates.
- * 
+ *
  * API Documentation: https://api.open.fec.gov/developers/
  */
 
@@ -127,18 +121,20 @@ class FECRateLimiter {
   async waitIfNeeded(): Promise<void> {
     const now = Date.now();
     const oneHourAgo = now - 3600000;
-    
+
     // Remove requests older than 1 hour
     this.requests = this.requests.filter(time => time > oneHourAgo);
-    
+
     if (this.requests.length >= this.maxRequestsPerHour) {
       const waitTime = 3600000 - (now - this.requests[0]);
       if (waitTime > 0) {
-        console.log(`FEC API rate limit reached, waiting ${Math.round(waitTime / 1000)} seconds`);
+        structuredLogger.warn(
+          `FEC API rate limit reached, waiting ${Math.round(waitTime / 1000)} seconds`
+        );
         await new Promise(resolve => setTimeout(resolve, waitTime));
       }
     }
-    
+
     this.requests.push(now);
   }
 }
@@ -154,34 +150,37 @@ class FECAPI {
       baseUrl: 'https://api.open.fec.gov/v1',
       timeout: 30000,
       retryAttempts: 3,
-      ...config
+      ...config,
     };
-    
+
     this.cache = new Map();
     this.rateLimiter = new FECRateLimiter();
   }
 
-  private async makeRequest<T>(endpoint: string, params: Record<string, string> = {}): Promise<FECAPIResponse<T> | null> {
+  private async makeRequest<T>(
+    endpoint: string,
+    params: Record<string, string> = {}
+  ): Promise<FECAPIResponse<T> | null> {
     await this.rateLimiter.waitIfNeeded();
-    
+
     const cacheKey = `${endpoint}?${new URLSearchParams(params).toString()}`;
     const cached = this.cache.get(cacheKey);
-    
+
     // Check cache first (6 hour TTL for FEC data)
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
-      return cached.data;
+      return cached.data as FECAPIResponse<T> | null;
     }
 
     if (!this.config.apiKey) {
-      console.warn('FEC API key not configured, some features may not work');
+      structuredLogger.warn('FEC API key not configured, some features may not work');
       return null;
     }
 
     const url = new URL(`${this.config.baseUrl}${endpoint}`);
-    
+
     // Add API key
     params.api_key = this.config.apiKey;
-    
+
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.append(key, value);
     });
@@ -197,8 +196,8 @@ class FECAPI {
           signal: controller.signal,
           headers: {
             'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-            'Accept': 'application/json'
-          }
+            Accept: 'application/json',
+          },
         });
 
         clearTimeout(timeoutId);
@@ -209,11 +208,13 @@ class FECAPI {
           try {
             const errorBody = await response.text();
             errorDetails = errorBody.substring(0, 500); // Limit error message length
-          } catch (e) {
+          } catch {
             errorDetails = 'Could not read error response body';
           }
-          
-          throw new Error(`HTTP ${response.status}: ${response.statusText}. Details: ${errorDetails}`);
+
+          throw new Error(
+            `HTTP ${response.status}: ${response.statusText}. Details: ${errorDetails}`
+          );
         }
 
         const data = await response.json();
@@ -226,14 +227,13 @@ class FECAPI {
         this.cache.set(cacheKey, {
           data,
           timestamp: Date.now(),
-          ttl: 6 * 60 * 60 * 1000
+          ttl: 6 * 60 * 60 * 1000,
         });
 
         return data;
-
       } catch (error) {
         lastError = error as Error;
-        
+
         if (attempt < this.config.retryAttempts) {
           // Wait before retry with exponential backoff
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
@@ -241,7 +241,7 @@ class FECAPI {
       }
     }
 
-    console.error('FEC API request failed:', lastError?.message);
+    structuredLogger.error('FEC API request failed', lastError, { endpoint });
     return null;
   }
 
@@ -252,7 +252,7 @@ class FECAPI {
     try {
       const params: Record<string, string> = {
         name: name,
-        per_page: '20'
+        per_page: '20',
       };
 
       if (cycle) {
@@ -261,9 +261,8 @@ class FECAPI {
 
       const response = await this.makeRequest<FECCandidate>('/candidates/search/', params);
       return response?.results || [];
-
     } catch (error) {
-      console.error('Error searching FEC candidates:', error);
+      structuredLogger.error('Error searching FEC candidates', error as Error, { name, cycle });
       return [];
     }
   }
@@ -276,21 +275,20 @@ class FECAPI {
       // Normalize and validate candidate ID
       const normalizedId = FECUtils.normalizeCandidateId(candidateId);
       const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
-      
+
       if (!validationInfo.isValid) {
-        console.error('Invalid FEC candidate ID format:', {
+        structuredLogger.error('Invalid FEC candidate ID format', undefined, {
           candidateId,
           normalizedId,
-          errors: validationInfo.errors
+          errors: validationInfo.errors,
         });
         return null;
       }
-      
+
       const response = await this.makeRequest<FECCandidate>(`/candidate/${normalizedId}/`);
       return response?.results?.[0] || null;
-
     } catch (error) {
-      console.error('Error fetching FEC candidate:', error);
+      structuredLogger.error('Error fetching FEC candidate', error as Error, { candidateId });
       return null;
     }
   }
@@ -298,22 +296,30 @@ class FECAPI {
   /**
    * Get financial summary for a candidate
    */
-  async getCandidateFinancials(candidateId: string, cycle?: number): Promise<FECFinancialSummary[]> {
+  async getCandidateFinancials(
+    candidateId: string,
+    cycle?: number
+  ): Promise<FECFinancialSummary[]> {
     try {
       const params: Record<string, string> = {
         sort: '-cycle',
-        per_page: '20'
+        per_page: '20',
       };
 
       if (cycle) {
         params.cycle = cycle.toString();
       }
 
-      const response = await this.makeRequest<FECFinancialSummary>(`/candidate/${candidateId}/totals/`, params);
+      const response = await this.makeRequest<FECFinancialSummary>(
+        `/candidate/${candidateId}/totals/`,
+        params
+      );
       return response?.results || [];
-
     } catch (error) {
-      console.error('Error fetching candidate financials:', error);
+      structuredLogger.error('Error fetching candidate financials', error as Error, {
+        candidateId,
+        cycle,
+      });
       return [];
     }
   }
@@ -326,7 +332,7 @@ class FECAPI {
       const params: Record<string, string> = {
         candidate_id: candidateId,
         sort: '-receipts',
-        per_page: '20'
+        per_page: '20',
       };
 
       if (cycle) {
@@ -335,9 +341,11 @@ class FECAPI {
 
       const response = await this.makeRequest<FECCommittee>('/committees/', params);
       return response?.results || [];
-
     } catch (error) {
-      console.error('Error fetching candidate committees:', error);
+      structuredLogger.error('Error fetching candidate committees', error as Error, {
+        candidateId,
+        cycle,
+      });
       return [];
     }
   }
@@ -346,8 +354,8 @@ class FECAPI {
    * Get contributions to a candidate
    */
   async getCandidateContributions(
-    candidateId: string, 
-    cycle?: number, 
+    candidateId: string,
+    cycle?: number,
     minAmount?: number,
     limit = 100
   ): Promise<FECContribution[]> {
@@ -355,7 +363,7 @@ class FECAPI {
       const params: Record<string, string> = {
         candidate_id: candidateId,
         sort: '-contribution_receipt_date',
-        per_page: limit.toString()
+        per_page: limit.toString(),
       };
 
       if (cycle) {
@@ -368,9 +376,13 @@ class FECAPI {
 
       const response = await this.makeRequest<FECContribution>('/schedules/schedule_a/', params);
       return response?.results || [];
-
     } catch (error) {
-      console.error('Error fetching candidate contributions:', error);
+      structuredLogger.error('Error fetching candidate contributions', error as Error, {
+        candidateId,
+        cycle,
+        minAmount,
+        limit,
+      });
       return [];
     }
   }
@@ -386,18 +398,18 @@ class FECAPI {
     try {
       // First get the candidate's committees
       const committees = await this.getCandidateCommittees(candidateId, cycle);
-      
+
       if (committees.length === 0) {
         return [];
       }
 
       // Get expenditures for the primary committee
       const primaryCommittee = committees[0];
-      
+
       const params: Record<string, string> = {
         committee_id: primaryCommittee.committee_id,
         sort: '-disbursement_date',
-        per_page: limit.toString()
+        per_page: limit.toString(),
       };
 
       if (cycle) {
@@ -406,9 +418,12 @@ class FECAPI {
 
       const response = await this.makeRequest<FECExpenditure>('/schedules/schedule_b/', params);
       return response?.results || [];
-
     } catch (error) {
-      console.error('Error fetching candidate expenditures:', error);
+      structuredLogger.error('Error fetching candidate expenditures', error as Error, {
+        candidateId,
+        cycle,
+        limit,
+      });
       return [];
     }
   }
@@ -420,29 +435,34 @@ class FECAPI {
     candidateId: string,
     cycle?: number,
     limit = 20
-  ): Promise<Array<{
-    contributor_name: string;
-    total_amount: number;
-    contribution_count: number;
-    employer?: string;
-    occupation?: string;
-  }>> {
+  ): Promise<
+    Array<{
+      contributor_name: string;
+      total_amount: number;
+      contribution_count: number;
+      employer?: string;
+      occupation?: string;
+    }>
+  > {
     try {
       const contributions = await this.getCandidateContributions(candidateId, cycle, 200, 1000);
-      
+
       // Aggregate by contributor name
-      const contributorMap = new Map<string, {
-        name: string;
-        total: number;
-        count: number;
-        employer?: string;
-        occupation?: string;
-      }>();
+      const contributorMap = new Map<
+        string,
+        {
+          name: string;
+          total: number;
+          count: number;
+          employer?: string;
+          occupation?: string;
+        }
+      >();
 
       contributions.forEach(contribution => {
         const name = contribution.contributor_name;
         const existing = contributorMap.get(name);
-        
+
         if (existing) {
           existing.total += contribution.contribution_receipt_amount;
           existing.count += 1;
@@ -452,7 +472,7 @@ class FECAPI {
             total: contribution.contribution_receipt_amount,
             count: 1,
             employer: contribution.contributor_employer,
-            occupation: contribution.contributor_occupation
+            occupation: contribution.contributor_occupation,
           });
         }
       });
@@ -466,11 +486,14 @@ class FECAPI {
           total_amount: contributor.total,
           contribution_count: contributor.count,
           employer: contributor.employer,
-          occupation: contributor.occupation
+          occupation: contributor.occupation,
         }));
-
     } catch (error) {
-      console.error('Error fetching top contributors:', error);
+      structuredLogger.error('Error fetching top contributors', error as Error, {
+        candidateId,
+        cycle,
+        limit,
+      });
       return [];
     }
   }
@@ -481,31 +504,36 @@ class FECAPI {
   async getSpendingCategories(
     candidateId: string,
     cycle?: number
-  ): Promise<Array<{
-    category: string;
-    total_amount: number;
-    expenditure_count: number;
-  }>> {
+  ): Promise<
+    Array<{
+      category: string;
+      total_amount: number;
+      expenditure_count: number;
+    }>
+  > {
     try {
       const expenditures = await this.getCandidateExpenditures(candidateId, cycle, 1000);
-      
+
       // Aggregate by category
-      const categoryMap = new Map<string, {
-        total: number;
-        count: number;
-      }>();
+      const categoryMap = new Map<
+        string,
+        {
+          total: number;
+          count: number;
+        }
+      >();
 
       expenditures.forEach(expenditure => {
         const category = expenditure.category_code_full || expenditure.purpose_code_full || 'Other';
         const existing = categoryMap.get(category);
-        
+
         if (existing) {
           existing.total += expenditure.disbursement_amount;
           existing.count += 1;
         } else {
           categoryMap.set(category, {
             total: expenditure.disbursement_amount,
-            count: 1
+            count: 1,
           });
         }
       });
@@ -515,12 +543,14 @@ class FECAPI {
         .map(([category, data]) => ({
           category,
           total_amount: data.total,
-          expenditure_count: data.count
+          expenditure_count: data.count,
         }))
         .sort((a, b) => b.total_amount - a.total_amount);
-
     } catch (error) {
-      console.error('Error fetching spending categories:', error);
+      structuredLogger.error('Error fetching spending categories', error as Error, {
+        candidateId,
+        cycle,
+      });
       return [];
     }
   }
@@ -538,7 +568,7 @@ class FECAPI {
   getCacheStats(): { size: number; keys: string[] } {
     return {
       size: this.cache.size,
-      keys: Array.from(this.cache.keys())
+      keys: Array.from(this.cache.keys()),
     };
   }
 
@@ -546,8 +576,8 @@ class FECAPI {
    * Get PAC contributions to a candidate
    */
   async getPACContributions(
-    candidateId: string, 
-    cycle?: number, 
+    candidateId: string,
+    cycle?: number,
     limit: number = 20
   ): Promise<FECContribution[]> {
     try {
@@ -555,7 +585,7 @@ class FECAPI {
         candidate_id: candidateId,
         contributor_type: 'committee',
         sort: '-contribution_receipt_date',
-        per_page: limit.toString()
+        per_page: limit.toString(),
       };
 
       if (cycle) {
@@ -563,17 +593,23 @@ class FECAPI {
       }
 
       const response = await this.makeRequest<FECContribution>('/schedules/schedule_a/', params);
-      
+
       // Filter for actual PACs
-      const pacContributions = response?.results?.filter(contribution => 
-        contribution.receipt_type_full?.includes('PAC') ||
-        contribution.committee_name?.includes('PAC') ||
-        contribution.receipt_type === 'PAC'
-      ) || [];
+      const pacContributions =
+        response?.results?.filter(
+          contribution =>
+            contribution.receipt_type_full?.includes('PAC') ||
+            contribution.committee_name?.includes('PAC') ||
+            contribution.receipt_type === 'PAC'
+        ) || [];
 
       return pacContributions.slice(0, limit);
     } catch (error) {
-      console.error('Error fetching PAC contributions:', error);
+      structuredLogger.error('Error fetching PAC contributions', error as Error, {
+        candidateId,
+        cycle,
+        limit,
+      });
       return [];
     }
   }
@@ -581,7 +617,10 @@ class FECAPI {
   /**
    * Get comprehensive funding breakdown
    */
-  async getComprehensiveFunding(candidateId: string, cycle?: number): Promise<{
+  async getComprehensiveFunding(
+    candidateId: string,
+    cycle?: number
+  ): Promise<{
     individual: number;
     pac: number;
     party: number;
@@ -594,11 +633,14 @@ class FECAPI {
     try {
       const [contributions, committees] = await Promise.all([
         this.getCandidateContributions(candidateId, cycle, 200),
-        this.getCandidateCommittees(candidateId, cycle)
+        this.getCandidateCommittees(candidateId, cycle),
       ]);
 
       // Categorize contributions
-      let individual = 0, pac = 0, party = 0, self = 0;
+      let individual = 0,
+        pac = 0,
+        party = 0,
+        self = 0;
 
       contributions.forEach(contrib => {
         const amount = contrib.contribution_receipt_amount || 0;
@@ -609,9 +651,17 @@ class FECAPI {
           individual += amount;
         } else if (type.includes('pac') || name.includes('pac')) {
           pac += amount;
-        } else if (type.includes('party') || name.includes('democratic') || name.includes('republican')) {
+        } else if (
+          type.includes('party') ||
+          name.includes('democratic') ||
+          name.includes('republican')
+        ) {
           party += amount;
-        } else if (contrib.contributor_name?.toLowerCase().includes(contrib.candidate_name?.toLowerCase() || '')) {
+        } else if (
+          contrib.contributor_name
+            ?.toLowerCase()
+            .includes(contrib.candidate_name?.toLowerCase() || '')
+        ) {
           self += amount;
         } else {
           individual += amount; // Default to individual
@@ -630,18 +680,26 @@ class FECAPI {
           individual: total > 0 ? (individual / total) * 100 : 0,
           pac: total > 0 ? (pac / total) * 100 : 0,
           party: total > 0 ? (party / total) * 100 : 0,
-          self: total > 0 ? (self / total) * 100 : 0
+          self: total > 0 ? (self / total) * 100 : 0,
         },
         lastUpdated: new Date().toISOString(),
-        filingStatus: committees.length > 0 ? committees[0].filing_frequency || 'Unknown' : 'No committee data'
+        filingStatus:
+          committees.length > 0 ? committees[0].filing_frequency || 'Unknown' : 'No committee data',
       };
     } catch (error) {
-      console.error('Error fetching comprehensive funding:', error);
+      structuredLogger.error('Error fetching comprehensive funding', error as Error, {
+        candidateId,
+        cycle,
+      });
       return {
-        individual: 0, pac: 0, party: 0, self: 0, total: 0,
+        individual: 0,
+        pac: 0,
+        party: 0,
+        self: 0,
+        total: 0,
         percentages: { individual: 0, pac: 0, party: 0, self: 0 },
         lastUpdated: new Date().toISOString(),
-        filingStatus: 'Error fetching data'
+        filingStatus: 'Error fetching data',
       };
     }
   }
@@ -658,7 +716,7 @@ export type {
   FECContribution,
   FECExpenditure,
   FECAPIResponse,
-  FECConfig
+  FECConfig,
 };
 
 // Export class for custom instances
@@ -684,7 +742,7 @@ export const FECUtils = {
     if (!candidateId || typeof candidateId !== 'string') {
       return false;
     }
-    
+
     // Standard FEC candidate ID format
     const fecIdPattern = /^[HSP]\d[A-Z]{2}\d{5}$/;
     return fecIdPattern.test(candidateId);
@@ -701,48 +759,48 @@ export const FECUtils = {
     errors: string[];
   } {
     const errors: string[] = [];
-    
+
     if (!candidateId || typeof candidateId !== 'string') {
       errors.push('Candidate ID is required and must be a string');
       return { isValid: false, errors };
     }
-    
+
     if (candidateId.length !== 9) {
       errors.push(`Expected length 9, got ${candidateId.length}`);
     }
-    
+
     // Check office code
     const officeCode = candidateId.charAt(0);
     if (!['H', 'S', 'P'].includes(officeCode)) {
       errors.push(`Invalid office code '${officeCode}', expected H, S, or P`);
     }
-    
+
     // Check cycle digit
     const cycleDigit = candidateId.charAt(1);
     if (!/^\d$/.test(cycleDigit)) {
       errors.push(`Invalid cycle digit '${cycleDigit}', expected a number`);
     }
-    
+
     // Check state code
     const stateCode = candidateId.substring(2, 4);
     if (!/^[A-Z]{2}$/.test(stateCode)) {
       errors.push(`Invalid state code '${stateCode}', expected 2 uppercase letters`);
     }
-    
+
     // Check sequence number
     const sequenceNumber = candidateId.substring(4, 9);
     if (!/^\d{5}$/.test(sequenceNumber)) {
       errors.push(`Invalid sequence number '${sequenceNumber}', expected 5 digits`);
     }
-    
+
     const isValid = errors.length === 0;
-    
+
     return {
       isValid,
       office: isValid ? this.getOfficeDescription(officeCode) : undefined,
       state: isValid ? stateCode : undefined,
       sequence: isValid ? sequenceNumber : undefined,
-      errors
+      errors,
     };
   },
 
@@ -753,7 +811,7 @@ export const FECUtils = {
     if (!candidateId || typeof candidateId !== 'string') {
       return '';
     }
-    
+
     return candidateId.trim().toUpperCase();
   },
 
@@ -765,7 +823,7 @@ export const FECUtils = {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   },
 
@@ -782,10 +840,14 @@ export const FECUtils = {
    */
   getOfficeDescription(office: string): string {
     switch (office) {
-      case 'H': return 'House of Representatives';
-      case 'S': return 'Senate';
-      case 'P': return 'President';
-      default: return 'Unknown';
+      case 'H':
+        return 'House of Representatives';
+      case 'S':
+        return 'Senate';
+      case 'P':
+        return 'President';
+      default:
+        return 'Unknown';
     }
   },
 
@@ -794,25 +856,25 @@ export const FECUtils = {
    */
   getPartyColor(party: string): string {
     switch (party?.toUpperCase()) {
-      case 'DEM': return '#3B82F6'; // Blue
-      case 'REP': return '#EF4444'; // Red
-      case 'IND': return '#8B5CF6'; // Purple
-      default: return '#6B7280'; // Gray
+      case 'DEM':
+        return '#3B82F6'; // Blue
+      case 'REP':
+        return '#EF4444'; // Red
+      case 'IND':
+        return '#8B5CF6'; // Purple
+      default:
+        return '#6B7280'; // Gray
     }
   },
 
   /**
    * Calculate fundraising efficiency (receipts per day)
    */
-  calculateFundraisingRate(
-    totalReceipts: number, 
-    startDate: string, 
-    endDate: string
-  ): number {
+  calculateFundraisingRate(totalReceipts: number, startDate: string, endDate: string): number {
     const start = new Date(startDate).getTime();
     const end = new Date(endDate).getTime();
     const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
-    
+
     return totalReceipts / days;
   },
 
@@ -824,5 +886,5 @@ export const FECUtils = {
     if (amount < 1000) return 'Medium Dollar';
     if (amount < 2900) return 'Large Dollar';
     return 'Max Contribution';
-  }
+  },
 };

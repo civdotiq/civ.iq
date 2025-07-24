@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { structuredLogger } from '@/lib/logging/logger-client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,18 +12,12 @@ export async function GET(request: NextRequest) {
     const zipCode = url.searchParams.get('zip');
 
     if (!zipCode) {
-      return NextResponse.json(
-        { error: 'ZIP code is required' }, 
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'ZIP code is required' }, { status: 400 });
     }
 
     // Basic ZIP code validation
     if (!/^\d{5}(-\d{4})?$/.test(zipCode)) {
-      return NextResponse.json(
-        { error: 'Invalid ZIP code format' }, 
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid ZIP code format' }, { status: 400 });
     }
 
     // Simple mock response for now
@@ -35,7 +30,7 @@ export async function GET(request: NextRequest) {
         chamber: 'Senate',
         title: 'U.S. Senator',
         phone: '(202) 224-6542',
-        website: 'https://www.schumer.senate.gov'
+        website: 'https://www.schumer.senate.gov',
       },
       {
         bioguideId: 'G000555',
@@ -45,8 +40,8 @@ export async function GET(request: NextRequest) {
         chamber: 'Senate',
         title: 'U.S. Senator',
         phone: '(202) 224-4451',
-        website: 'https://www.gillibrand.senate.gov'
-      }
+        website: 'https://www.gillibrand.senate.gov',
+      },
     ];
 
     return NextResponse.json({
@@ -56,16 +51,12 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
         zipCode,
         totalFound: mockRepresentatives.length,
-        note: 'Simplified endpoint - mock data only'
-      }
+        note: 'Simplified endpoint - mock data only',
+      },
     });
-
   } catch (error) {
-    console.error('Representatives API error:', error);
-    
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    structuredLogger.error('Representatives API error', error as Error, { url: request.url });
+
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
