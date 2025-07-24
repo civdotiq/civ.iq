@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { structuredLogger } from '@/lib/logging/logger-client';
 
 interface TimelineItem {
   id: string;
@@ -50,10 +51,10 @@ interface CommitteeActivityTimelineProps {
   initialStats: TimelineStats;
 }
 
-export default function CommitteeActivityTimeline({ 
-  committeeId, 
-  initialTimeline, 
-  initialStats 
+export default function CommitteeActivityTimeline({
+  committeeId,
+  initialTimeline,
+  initialStats,
 }: CommitteeActivityTimelineProps) {
   const [filter, setFilter] = useState<'all' | 'bills' | 'reports'>('all');
   const [timeline, setTimeline] = useState(initialTimeline);
@@ -63,22 +64,33 @@ export default function CommitteeActivityTimeline({
 
   const getTimelineIcon = (type: TimelineItem['type']) => {
     switch (type) {
-      case 'bill': return '📋';
-      case 'report': return '📊';
-      case 'hearing': return '👥';
-      case 'markup': return '✏️';
-      case 'vote': return '🗳️';
-      case 'amendment': return '📝';
-      default: return '•';
+      case 'bill':
+        return '📋';
+      case 'report':
+        return '📊';
+      case 'hearing':
+        return '👥';
+      case 'markup':
+        return '✏️';
+      case 'vote':
+        return '🗳️';
+      case 'amendment':
+        return '📝';
+      default:
+        return '•';
     }
   };
 
   const getImportanceColor = (importance: TimelineItem['importance']) => {
     switch (importance) {
-      case 'high': return 'border-red-500 bg-red-50';
-      case 'medium': return 'border-yellow-500 bg-yellow-50';
-      case 'low': return 'border-gray-400 bg-gray-50';
-      default: return 'border-gray-400 bg-gray-50';
+      case 'high':
+        return 'border-red-500 bg-red-50';
+      case 'medium':
+        return 'border-yellow-500 bg-yellow-50';
+      case 'low':
+        return 'border-gray-400 bg-gray-50';
+      default:
+        return 'border-gray-400 bg-gray-50';
     }
   };
 
@@ -90,23 +102,26 @@ export default function CommitteeActivityTimeline({
   useEffect(() => {
     const fetchFilteredTimeline = async () => {
       if (filter === 'all' && timeline === initialTimeline) return;
-      
+
       setLoading(true);
       try {
-        const response = await fetch(`/api/committee/${committeeId}/timeline?filter=${filter}&limit=${expanded ? 50 : 20}`);
+        const response = await fetch(
+          `/api/committee/${committeeId}/timeline?filter=${filter}&limit=${expanded ? 50 : 20}`
+        );
         if (response.ok) {
           const data = await response.json();
           setTimeline(data.timeline || []);
           setStats(data.stats || initialStats);
         }
       } catch (error) {
-        console.error('Error fetching filtered timeline:', error);
+        structuredLogger.error('Error fetching filtered timeline:', error as Error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchFilteredTimeline();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, expanded, committeeId]);
 
   const displayedItems = expanded ? timeline : timeline.slice(0, 10);
@@ -121,8 +136,8 @@ export default function CommitteeActivityTimeline({
             <button
               onClick={() => setFilter('all')}
               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                filter === 'all' 
-                  ? 'bg-blue-600 text-white' 
+                filter === 'all'
+                  ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -131,8 +146,8 @@ export default function CommitteeActivityTimeline({
             <button
               onClick={() => setFilter('bills')}
               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                filter === 'bills' 
-                  ? 'bg-blue-600 text-white' 
+                filter === 'bills'
+                  ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -141,8 +156,8 @@ export default function CommitteeActivityTimeline({
             <button
               onClick={() => setFilter('reports')}
               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                filter === 'reports' 
-                  ? 'bg-blue-600 text-white' 
+                filter === 'reports'
+                  ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -179,8 +194,9 @@ export default function CommitteeActivityTimeline({
       {/* Most Active Month */}
       {stats.mostActiveMonth && (
         <div className="mb-4 p-3 bg-blue-50 rounded text-sm">
-          <span className="font-semibold">Most Active Month:</span> {formatMonthYear(stats.mostActiveMonth)} 
-          ({stats.activityByMonth[stats.mostActiveMonth]} activities)
+          <span className="font-semibold">Most Active Month:</span>{' '}
+          {formatMonthYear(stats.mostActiveMonth)}({stats.activityByMonth[stats.mostActiveMonth]}{' '}
+          activities)
         </div>
       )}
 
@@ -190,13 +206,18 @@ export default function CommitteeActivityTimeline({
       ) : (
         <div className="space-y-3">
           {displayedItems.map(item => (
-            <div key={item.id} className={`border-l-4 p-3 rounded ${getImportanceColor(item.importance)}`}>
+            <div
+              key={item.id}
+              className={`border-l-4 p-3 rounded ${getImportanceColor(item.importance)}`}
+            >
               <div className="flex items-start space-x-2">
                 <span className="text-lg flex-shrink-0">{getTimelineIcon(item.type)}</span>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold text-gray-900">{item.title}</h4>
-                    <span className="text-sm text-gray-500">{new Date(item.date).toLocaleDateString()}</span>
+                    <span className="text-sm text-gray-500">
+                      {new Date(item.date).toLocaleDateString()}
+                    </span>
                   </div>
                   <p className="text-sm text-gray-700 mt-1">{item.description}</p>
                   {item.metadata.voteResult && (
@@ -205,7 +226,7 @@ export default function CommitteeActivityTimeline({
                     </div>
                   )}
                   {item.metadata.url && (
-                    <a 
+                    <a
                       href={item.metadata.url}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -218,7 +239,7 @@ export default function CommitteeActivityTimeline({
               </div>
             </div>
           ))}
-          
+
           {/* Show More/Less Button */}
           {timeline.length > 10 && (
             <div className="text-center pt-4">
