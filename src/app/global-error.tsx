@@ -1,12 +1,12 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import { useEffect } from 'react';
+import { structuredLogger } from '@/lib/logging/logger-client';
 
 export default function GlobalError({
   error,
@@ -17,11 +17,9 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     // Log global error details for debugging
-    console.error('Global Error:', {
-      message: error.message,
-      stack: error.stack,
+    structuredLogger.error('Global Error:', error, {
       digest: error.digest,
-      component: 'app/global-error.tsx'
+      component: 'app/global-error.tsx',
     });
   }, [error]);
 
@@ -50,7 +48,7 @@ export default function GlobalError({
               Try again
             </button>
             <button
-              onClick={() => window.location.href = '/'}
+              onClick={() => (window.location.href = '/')}
               className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
             >
               Go to Home
