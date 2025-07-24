@@ -6,13 +6,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  getRepresentativePhotoUrls, 
-  getRepresentativeInitials, 
+import {
+  getRepresentativePhotoUrls,
+  getRepresentativeInitials,
   getAvatarBackgroundColor,
   loadImageWithFallbacks,
-  type UseRepresentativePhotoResult 
+  type UseRepresentativePhotoResult,
 } from '@/lib/representative-photos';
+import { structuredLogger } from '@/lib/logging/logger-client';
 
 interface RepresentativePhotoProps {
   bioguideId: string;
@@ -25,21 +26,21 @@ const sizeClasses = {
   sm: 'w-12 h-12 text-sm',
   md: 'w-16 h-16 text-base',
   lg: 'w-20 h-20 text-lg',
-  xl: 'w-24 h-24 text-xl'
+  xl: 'w-24 h-24 text-xl',
 };
 
-export function RepresentativePhoto({ 
-  bioguideId, 
-  name, 
-  className = '', 
-  size = 'lg' 
+export function RepresentativePhoto({
+  bioguideId,
+  name,
+  className = '',
+  size = 'lg',
 }: RepresentativePhotoProps) {
   const [photoState, setPhotoState] = useState<UseRepresentativePhotoResult>({
     photoUrl: null,
     isLoading: true,
     hasError: false,
     initials: getRepresentativeInitials(name),
-    backgroundColor: getAvatarBackgroundColor(name)
+    backgroundColor: getAvatarBackgroundColor(name),
   });
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export function RepresentativePhoto({
       setPhotoState(prev => ({
         ...prev,
         isLoading: false,
-        hasError: true
+        hasError: true,
       }));
       return;
     }
@@ -55,7 +56,7 @@ export function RepresentativePhoto({
     setPhotoState(prev => ({
       ...prev,
       isLoading: true,
-      hasError: false
+      hasError: false,
     }));
 
     // Use enhanced photo service for maximum reliability
@@ -63,39 +64,42 @@ export function RepresentativePhoto({
       try {
         const { enhancedPhotoService } = await import('@/lib/enhanced-photo-service');
         const result = await enhancedPhotoService.getRepresentativePhoto(bioguideId, name);
-        
+
         setPhotoState(prev => ({
           ...prev,
           photoUrl: result.photoUrl,
           isLoading: false,
           hasError: result.isGenerated, // Only consider it an error if we had to generate
         }));
-        
+
         // Log success metrics
         if (result.photoUrl && !result.isGenerated) {
-          console.log(`Photo loaded successfully from ${result.successfulSource?.name} in ${result.loadTime}ms`);
+          structuredLogger.info(
+            `Photo loaded successfully from ${result.successfulSource?.name} in ${result.loadTime}ms`
+          );
         }
-        
       } catch (error) {
-        console.warn('Enhanced photo service failed, using fallback:', error);
-        
+        structuredLogger.warn('Enhanced photo service failed, using fallback:', {
+          error: String(error),
+        });
+
         // Fallback to original system
         const photoSources = getRepresentativePhotoUrls(bioguideId);
-        
+
         try {
           const url = await loadImageWithFallbacks(photoSources, 6000);
           setPhotoState(prev => ({
             ...prev,
             photoUrl: url,
             isLoading: false,
-            hasError: false
+            hasError: false,
           }));
-        } catch (fallbackError) {
+        } catch {
           setPhotoState(prev => ({
             ...prev,
             photoUrl: null,
             isLoading: false,
-            hasError: true
+            hasError: true,
           }));
         }
       }
@@ -120,7 +124,8 @@ export function RepresentativePhoto({
   if (photoState.photoUrl && !photoState.hasError) {
     return (
       <div className={combinedClasses}>
-        <img 
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={photoState.photoUrl}
           alt={`Photo of ${name}`}
           className="w-full h-full object-cover rounded-full"
@@ -128,7 +133,7 @@ export function RepresentativePhoto({
             setPhotoState(prev => ({
               ...prev,
               photoUrl: null,
-              hasError: true
+              hasError: true,
             }));
           }}
         />
@@ -138,7 +143,7 @@ export function RepresentativePhoto({
 
   // Fallback to initials avatar
   return (
-    <div 
+    <div
       className={`${combinedClasses} text-white font-semibold`}
       style={{ backgroundColor: photoState.backgroundColor }}
       title={`${name} (no photo available)`}
@@ -151,13 +156,16 @@ export function RepresentativePhoto({
 /**
  * Hook for using representative photo data in other components
  */
-export function useRepresentativePhoto(bioguideId: string, name: string): UseRepresentativePhotoResult {
+export function useRepresentativePhoto(
+  bioguideId: string,
+  name: string
+): UseRepresentativePhotoResult {
   const [photoState, setPhotoState] = useState<UseRepresentativePhotoResult>({
     photoUrl: null,
     isLoading: true,
     hasError: false,
     initials: getRepresentativeInitials(name),
-    backgroundColor: getAvatarBackgroundColor(name)
+    backgroundColor: getAvatarBackgroundColor(name),
   });
 
   useEffect(() => {
@@ -165,35 +173,37 @@ export function useRepresentativePhoto(bioguideId: string, name: string): UseRep
       setPhotoState(prev => ({
         ...prev,
         isLoading: false,
-        hasError: true
+        hasError: true,
       }));
       return;
     }
 
     const photoSources = getRepresentativePhotoUrls(bioguideId);
-    
+
     setPhotoState(prev => ({
       ...prev,
       isLoading: true,
-      hasError: false
+      hasError: false,
     }));
 
     loadImageWithFallbacks(photoSources, 6000)
-      .then((url) => {
+      .then(url => {
         setPhotoState(prev => ({
           ...prev,
           photoUrl: url,
           isLoading: false,
-          hasError: false
+          hasError: false,
         }));
       })
-      .catch((error) => {
-        console.warn('Failed to load representative photo in hook:', error.message);
+      .catch(error => {
+        structuredLogger.warn('Failed to load representative photo in hook:', {
+          error: error.message,
+        });
         setPhotoState(prev => ({
           ...prev,
           photoUrl: null,
           isLoading: false,
-          hasError: true
+          hasError: true,
         }));
       });
   }, [bioguideId, name]);

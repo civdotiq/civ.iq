@@ -1,12 +1,12 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import React from 'react';
+import { structuredLogger } from '@/lib/logging/logger-client';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -29,7 +29,7 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return {
       hasError: true,
-      error
+      error,
     };
   }
 
@@ -39,16 +39,14 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
       return;
     }
 
-    console.error('Error Boundary caught an error:', {
-      message: error.message,
-      stack: error.stack,
+    structuredLogger.error('Error Boundary caught an error:', error, {
       componentStack: errorInfo.componentStack,
-      errorBoundary: this.constructor.name
+      errorBoundary: this.constructor.name,
     });
-    
+
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
 
     // Call optional error handler with error catching to prevent cascading errors
@@ -56,7 +54,7 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
       try {
         this.props.onError(error, errorInfo);
       } catch (handlerError) {
-        console.error('Error in onError handler:', handlerError);
+        structuredLogger.error('Error in onError handler:', handlerError as Error);
       }
     }
   }
@@ -78,8 +76,18 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
         <div className="min-h-96 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
           <div className="text-center p-8">
             <div className="mb-4">
-              <svg className="w-16 h-16 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+              <svg
+                className="w-16 h-16 text-red-500 mx-auto"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z"
+                />
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Something went wrong</h3>
@@ -114,31 +122,36 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
 
 // HOC wrapper for easier use
 export function ErrorBoundary({ children, ...props }: ErrorBoundaryProps) {
-  return (
-    <ErrorBoundaryClass {...props}>
-      {children}
-    </ErrorBoundaryClass>
-  );
+  return <ErrorBoundaryClass {...props}>{children}</ErrorBoundaryClass>;
 }
 
 // Specialized error boundary for API components
 export function APIErrorBoundary({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary
-      fallback={({ error, retry }) => (
+      fallback={({ error: _error, retry }) => (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-start">
             <div className="flex-shrink-0">
-              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5 text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <div className="ml-3 flex-1">
-              <h3 className="text-sm font-medium text-red-800">
-                Unable to load data
-              </h3>
+              <h3 className="text-sm font-medium text-red-800">Unable to load data</h3>
               <p className="text-sm text-red-700 mt-1">
-                There was a problem connecting to our data sources. This could be due to high traffic or a temporary server issue.
+                There was a problem connecting to our data sources. This could be due to high
+                traffic or a temporary server issue.
               </p>
               <div className="mt-3">
                 <button
@@ -154,7 +167,7 @@ export function APIErrorBoundary({ children }: { children: React.ReactNode }) {
       )}
       onError={(error, errorInfo) => {
         // Log API errors for monitoring
-        console.error('API Error:', error.message, errorInfo);
+        structuredLogger.error('API Error:', error, { componentStack: errorInfo.componentStack });
       }}
     >
       {children}
@@ -166,12 +179,22 @@ export function APIErrorBoundary({ children }: { children: React.ReactNode }) {
 export function LoadingErrorBoundary({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary
-      fallback={({ error, retry }) => (
+      fallback={({ error: _error, retry }) => (
         <div className="flex items-center justify-center py-8">
           <div className="text-center">
             <div className="text-gray-400 mb-3">
-              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-12 h-12 mx-auto"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <p className="text-gray-600 mb-3">Loading failed</p>

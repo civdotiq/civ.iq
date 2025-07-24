@@ -14,7 +14,7 @@ export enum LogLevel {
   ERROR = 0,
   WARN = 1,
   INFO = 2,
-  DEBUG = 3
+  DEBUG = 3,
 }
 
 // Interface for structured log metadata
@@ -52,7 +52,7 @@ class ClientLogger {
         level,
         message,
         environment: 'browser',
-        ...metadata
+        ...metadata,
       };
       return JSON.stringify(logEntry);
     }
@@ -66,7 +66,7 @@ class ClientLogger {
     if (!this.shouldLog(LogLevel.ERROR)) return;
 
     const errorMeta: LogMetadata = { ...metadata };
-    
+
     if (error instanceof Error) {
       errorMeta.error = error.message;
       errorMeta.stack = error.stack;
@@ -75,31 +75,37 @@ class ClientLogger {
     }
 
     const formattedMessage = this.formatMessage('error', message, errorMeta);
-    
+
     if (this.isDevelopment) {
+      // eslint-disable-next-line no-console
       console.error(formattedMessage);
       if (error instanceof Error && error.stack) {
+        // eslint-disable-next-line no-console
         console.error('Stack trace:', error.stack);
       }
     } else {
+      // eslint-disable-next-line no-console
       console.error(formattedMessage);
     }
   }
 
   warn(message: string, metadata?: LogMetadata): void {
     if (!this.shouldLog(LogLevel.WARN)) return;
+    // eslint-disable-next-line no-console
     console.warn(this.formatMessage('warn', message, metadata));
   }
 
   info(message: string, metadata?: LogMetadata): void {
     if (!this.shouldLog(LogLevel.INFO)) return;
+    // eslint-disable-next-line no-console
     console.info(this.formatMessage('info', message, metadata));
   }
 
   debug(message: string, metadata?: LogMetadata): void {
     if (!this.shouldLog(LogLevel.DEBUG)) return;
-    
+
     if (this.isDevelopment) {
+      // eslint-disable-next-line no-console
       console.debug(this.formatMessage('debug', message, metadata));
     } else {
       // In production, debug logs are silenced
@@ -110,18 +116,21 @@ class ClientLogger {
   // Helper method for HTTP/API calls
   http(message: string, metadata?: LogMetadata): void {
     if (!this.shouldLog(LogLevel.INFO)) return;
+    // eslint-disable-next-line no-console
     console.log(this.formatMessage('http', message, metadata));
   }
 
   // Performance logging helper
   time(label: string): void {
     if (this.isDevelopment) {
+      // eslint-disable-next-line no-console
       console.time(label);
     }
   }
 
   timeEnd(label: string): void {
     if (this.isDevelopment) {
+      // eslint-disable-next-line no-console
       console.timeEnd(label);
     }
   }
@@ -129,12 +138,14 @@ class ClientLogger {
   // Group logging for better organization in dev tools
   group(label: string): void {
     if (this.isDevelopment) {
+      // eslint-disable-next-line no-console
       console.group(label);
     }
   }
 
   groupEnd(): void {
     if (this.isDevelopment) {
+      // eslint-disable-next-line no-console
       console.groupEnd();
     }
   }
@@ -162,26 +173,26 @@ export const logger = {
 // Performance timing utility
 export function createTimer() {
   const start = performance.now();
-  
+
   return {
     end: () => Math.round(performance.now() - start),
-    endMs: () => performance.now() - start
+    endMs: () => performance.now() - start,
   };
 }
 
 // Component-specific logger factory
 export function createComponentLogger(componentName: string) {
   return {
-    error: (message: string, error?: Error | unknown, metadata?: LogMetadata) => 
+    error: (message: string, error?: Error | unknown, metadata?: LogMetadata) =>
       clientLogger.error(message, error, { component: componentName, ...metadata }),
-    
-    warn: (message: string, metadata?: LogMetadata) => 
+
+    warn: (message: string, metadata?: LogMetadata) =>
       clientLogger.warn(message, { component: componentName, ...metadata }),
-    
-    info: (message: string, metadata?: LogMetadata) => 
+
+    info: (message: string, metadata?: LogMetadata) =>
       clientLogger.info(message, { component: componentName, ...metadata }),
-    
-    debug: (message: string, metadata?: LogMetadata) => 
+
+    debug: (message: string, metadata?: LogMetadata) =>
       clientLogger.debug(message, { component: componentName, ...metadata }),
   };
 }

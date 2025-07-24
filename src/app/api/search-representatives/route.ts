@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { structuredLogger } from '@/lib/logging/logger-client';
 
 interface Representative {
   bioguideId: string;
@@ -27,8 +28,8 @@ const mockRepresentatives: Representative[] = [
     state: 'California',
     district: '5',
     chamber: 'House',
-    title: 'Representative for California\'s 5th Congressional District',
-    yearsInOffice: 37
+    title: "Representative for California's 5th Congressional District",
+    yearsInOffice: 37,
   },
   {
     bioguideId: 'M000312',
@@ -37,8 +38,8 @@ const mockRepresentatives: Representative[] = [
     state: 'Massachusetts',
     district: '2',
     chamber: 'House',
-    title: 'Representative for Massachusetts\'s 2nd Congressional District',
-    yearsInOffice: 27
+    title: "Representative for Massachusetts's 2nd Congressional District",
+    yearsInOffice: 27,
   },
   {
     bioguideId: 'J000289',
@@ -47,8 +48,8 @@ const mockRepresentatives: Representative[] = [
     state: 'Ohio',
     district: '4',
     chamber: 'House',
-    title: 'Representative for Ohio\'s 4th Congressional District',
-    yearsInOffice: 17
+    title: "Representative for Ohio's 4th Congressional District",
+    yearsInOffice: 17,
   },
   {
     bioguideId: 'A000371',
@@ -57,8 +58,8 @@ const mockRepresentatives: Representative[] = [
     state: 'California',
     district: '33',
     chamber: 'House',
-    title: 'Representative for California\'s 33rd Congressional District',
-    yearsInOffice: 10
+    title: "Representative for California's 33rd Congressional District",
+    yearsInOffice: 10,
   },
   {
     bioguideId: 'S000344',
@@ -67,8 +68,8 @@ const mockRepresentatives: Representative[] = [
     state: 'California',
     district: '32',
     chamber: 'House',
-    title: 'Representative for California\'s 32nd Congressional District',
-    yearsInOffice: 27
+    title: "Representative for California's 32nd Congressional District",
+    yearsInOffice: 27,
   },
   {
     bioguideId: 'G000551',
@@ -77,8 +78,8 @@ const mockRepresentatives: Representative[] = [
     state: 'Arizona',
     district: '7',
     chamber: 'House',
-    title: 'Representative for Arizona\'s 7th Congressional District',
-    yearsInOffice: 21
+    title: "Representative for Arizona's 7th Congressional District",
+    yearsInOffice: 21,
   },
   {
     bioguideId: 'M001135',
@@ -87,8 +88,8 @@ const mockRepresentatives: Representative[] = [
     state: 'North Carolina',
     district: '6',
     chamber: 'House',
-    title: 'Representative for North Carolina\'s 6th Congressional District',
-    yearsInOffice: 4
+    title: "Representative for North Carolina's 6th Congressional District",
+    yearsInOffice: 4,
   },
   {
     bioguideId: 'C001084',
@@ -97,8 +98,8 @@ const mockRepresentatives: Representative[] = [
     state: 'Rhode Island',
     district: '1',
     chamber: 'House',
-    title: 'Representative for Rhode Island\'s 1st Congressional District',
-    yearsInOffice: 13
+    title: "Representative for Rhode Island's 1st Congressional District",
+    yearsInOffice: 13,
   },
 
   // Sample Senate Representatives
@@ -109,7 +110,7 @@ const mockRepresentatives: Representative[] = [
     state: 'New York',
     chamber: 'Senate',
     title: 'United States Senator from New York',
-    yearsInOffice: 25
+    yearsInOffice: 25,
   },
   {
     bioguideId: 'M000355',
@@ -118,7 +119,7 @@ const mockRepresentatives: Representative[] = [
     state: 'Kentucky',
     chamber: 'Senate',
     title: 'United States Senator from Kentucky',
-    yearsInOffice: 39
+    yearsInOffice: 39,
   },
   {
     bioguideId: 'W000817',
@@ -127,7 +128,7 @@ const mockRepresentatives: Representative[] = [
     state: 'Massachusetts',
     chamber: 'Senate',
     title: 'United States Senator from Massachusetts',
-    yearsInOffice: 12
+    yearsInOffice: 12,
   },
   {
     bioguideId: 'C001098',
@@ -136,7 +137,7 @@ const mockRepresentatives: Representative[] = [
     state: 'Texas',
     chamber: 'Senate',
     title: 'United States Senator from Texas',
-    yearsInOffice: 12
+    yearsInOffice: 12,
   },
   {
     bioguideId: 'S001194',
@@ -145,7 +146,7 @@ const mockRepresentatives: Representative[] = [
     state: 'Hawaii',
     chamber: 'Senate',
     title: 'United States Senator from Hawaii',
-    yearsInOffice: 12
+    yearsInOffice: 12,
   },
   {
     bioguideId: 'K000367',
@@ -154,7 +155,7 @@ const mockRepresentatives: Representative[] = [
     state: 'Minnesota',
     chamber: 'Senate',
     title: 'United States Senator from Minnesota',
-    yearsInOffice: 18
+    yearsInOffice: 18,
   },
   {
     bioguideId: 'C001113',
@@ -163,7 +164,7 @@ const mockRepresentatives: Representative[] = [
     state: 'Nevada',
     chamber: 'Senate',
     title: 'United States Senator from Nevada',
-    yearsInOffice: 8
+    yearsInOffice: 8,
   },
   {
     bioguideId: 'B001288',
@@ -172,7 +173,7 @@ const mockRepresentatives: Representative[] = [
     state: 'New Jersey',
     chamber: 'Senate',
     title: 'United States Senator from New Jersey',
-    yearsInOffice: 11
+    yearsInOffice: 11,
   },
   {
     bioguideId: 'S001197',
@@ -181,7 +182,7 @@ const mockRepresentatives: Representative[] = [
     state: 'Nebraska',
     chamber: 'Senate',
     title: 'United States Senator from Nebraska',
-    yearsInOffice: 10
+    yearsInOffice: 10,
   },
   {
     bioguideId: 'H001042',
@@ -190,45 +191,47 @@ const mockRepresentatives: Representative[] = [
     state: 'Hawaii',
     chamber: 'Senate',
     title: 'United States Senator from Hawaii',
-    yearsInOffice: 12
-  }
+    yearsInOffice: 12,
+  },
 ];
 
 function searchRepresentatives(query: string): Representative[] {
   const searchTerm = query.toLowerCase().trim();
-  
+
   if (!searchTerm) {
     return [];
   }
 
-  return mockRepresentatives.filter(rep => {
-    // Search by name
-    if (rep.name.toLowerCase().includes(searchTerm)) {
-      return true;
-    }
-    
-    // Search by state
-    if (rep.state.toLowerCase().includes(searchTerm)) {
-      return true;
-    }
-    
-    // Search by party
-    if (rep.party.toLowerCase().includes(searchTerm)) {
-      return true;
-    }
-    
-    // Search by district (if applicable)
-    if (rep.district && rep.district.includes(searchTerm)) {
-      return true;
-    }
-    
-    // Search by chamber
-    if (rep.chamber.toLowerCase().includes(searchTerm)) {
-      return true;
-    }
-    
-    return false;
-  }).slice(0, 10); // Limit to 10 results
+  return mockRepresentatives
+    .filter(rep => {
+      // Search by name
+      if (rep.name.toLowerCase().includes(searchTerm)) {
+        return true;
+      }
+
+      // Search by state
+      if (rep.state.toLowerCase().includes(searchTerm)) {
+        return true;
+      }
+
+      // Search by party
+      if (rep.party.toLowerCase().includes(searchTerm)) {
+        return true;
+      }
+
+      // Search by district (if applicable)
+      if (rep.district && rep.district.includes(searchTerm)) {
+        return true;
+      }
+
+      // Search by chamber
+      if (rep.chamber.toLowerCase().includes(searchTerm)) {
+        return true;
+      }
+
+      return false;
+    })
+    .slice(0, 10); // Limit to 10 results
 }
 
 export async function GET(request: NextRequest) {
@@ -236,21 +239,14 @@ export async function GET(request: NextRequest) {
   const query = searchParams.get('q');
 
   if (!query) {
-    return NextResponse.json(
-      { error: 'Search query is required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Search query is required' }, { status: 400 });
   }
 
   try {
     const results = searchRepresentatives(query);
     return NextResponse.json(results);
-
   } catch (error) {
-    console.error('Search API Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    structuredLogger.error('Search API Error:', error as Error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
