@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -8,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { APIErrorBoundary } from './ErrorBoundary';
+import { structuredLogger } from '@/lib/logging/logger-client';
 
 interface PartyAlignment {
   overall_alignment: number;
@@ -51,7 +51,15 @@ interface PartyAlignmentAnalysisProps {
   };
 }
 
-function AlignmentMeter({ value, label, comparison }: { value: number; label: string; comparison?: number }) {
+function AlignmentMeter({
+  value,
+  label,
+  comparison,
+}: {
+  value: number;
+  label: string;
+  comparison?: number;
+}) {
   const getColor = (val: number) => {
     if (val >= 80) return 'bg-green-500';
     if (val >= 60) return 'bg-yellow-500';
@@ -65,14 +73,15 @@ function AlignmentMeter({ value, label, comparison }: { value: number; label: st
         <span className="text-lg font-bold text-gray-900">{value.toFixed(1)}%</span>
       </div>
       <div className="w-full bg-gray-200 rounded-full h-2">
-        <div 
+        <div
           className={`h-2 rounded-full transition-all duration-300 ${getColor(value)}`}
           style={{ width: `${Math.min(100, value)}%` }}
         />
       </div>
       {comparison && (
         <div className="text-xs text-gray-500 mt-1">
-          {value > comparison ? '+' : ''}{(value - comparison).toFixed(1)} vs peers
+          {value > comparison ? '+' : ''}
+          {(value - comparison).toFixed(1)} vs peers
         </div>
       )}
     </div>
@@ -99,7 +108,10 @@ function TrendIndicator({ trend }: { trend: 'increasing' | 'decreasing' | 'stabl
   );
 }
 
-export function PartyAlignmentAnalysis({ bioguideId, representative }: PartyAlignmentAnalysisProps) {
+export function PartyAlignmentAnalysis({
+  bioguideId,
+  representative,
+}: PartyAlignmentAnalysisProps) {
   const [alignmentData, setAlignmentData] = useState<PartyAlignment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,17 +121,17 @@ export function PartyAlignmentAnalysis({ bioguideId, representative }: PartyAlig
       try {
         setLoading(true);
         setError(null);
-        
+
         const response = await fetch(`/api/representative/${bioguideId}/party-alignment`);
         if (!response.ok) {
           throw new Error('Failed to fetch party alignment data');
         }
-        
+
         const data = await response.json();
         setAlignmentData(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
-        console.error('Error fetching party alignment:', err);
+        structuredLogger.error('Error fetching party alignment:', err as Error);
       } finally {
         setLoading(false);
       }
@@ -148,8 +160,18 @@ export function PartyAlignmentAnalysis({ bioguideId, representative }: PartyAlig
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="text-center py-8">
           <div className="text-gray-400 mb-2">
-            <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            <svg
+              className="w-12 h-12 mx-auto"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
             </svg>
           </div>
           <p className="text-gray-600">Party alignment data unavailable</p>
@@ -163,7 +185,7 @@ export function PartyAlignmentAnalysis({ bioguideId, representative }: PartyAlig
       <div className="mb-6">
         <h3 className="text-xl font-bold text-gray-900 mb-2">Party Alignment Analysis</h3>
         <p className="text-gray-600">
-          Analysis of {representative.name}'s voting patterns and party loyalty
+          Analysis of {representative.name}&apos;s voting patterns and party loyalty
         </p>
         {alignmentData.metadata && (
           <div className="mt-2 text-xs text-gray-500 bg-gray-50 p-2 rounded">
@@ -174,17 +196,14 @@ export function PartyAlignmentAnalysis({ bioguideId, representative }: PartyAlig
 
       {/* Key Metrics */}
       <div className="grid md:grid-cols-2 gap-4 mb-6">
-        <AlignmentMeter 
-          value={alignmentData.overall_alignment} 
+        <AlignmentMeter
+          value={alignmentData.overall_alignment}
           label="Overall Party Alignment"
           comparison={alignmentData.comparison_to_peers.party_avg_alignment}
         />
-        <AlignmentMeter 
-          value={alignmentData.party_loyalty_score} 
-          label="Party Loyalty Score"
-        />
-        <AlignmentMeter 
-          value={alignmentData.recent_alignment} 
+        <AlignmentMeter value={alignmentData.party_loyalty_score} label="Party Loyalty Score" />
+        <AlignmentMeter
+          value={alignmentData.recent_alignment}
           label="Recent Alignment (Last 6 months)"
         />
         <div className="bg-gray-50 rounded-lg p-4">
@@ -206,19 +225,27 @@ export function PartyAlignmentAnalysis({ bioguideId, representative }: PartyAlig
         <h4 className="text-lg font-semibold text-gray-900 mb-3">Voting Patterns</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="text-center p-3 bg-green-50 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">{alignmentData.voting_patterns.with_party}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {alignmentData.voting_patterns.with_party}
+            </div>
             <div className="text-xs text-green-700">With Party</div>
           </div>
           <div className="text-center p-3 bg-red-50 rounded-lg">
-            <div className="text-2xl font-bold text-red-600">{alignmentData.voting_patterns.against_party}</div>
+            <div className="text-2xl font-bold text-red-600">
+              {alignmentData.voting_patterns.against_party}
+            </div>
             <div className="text-xs text-red-700">Against Party</div>
           </div>
           <div className="text-center p-3 bg-blue-50 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{alignmentData.voting_patterns.bipartisan}</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {alignmentData.voting_patterns.bipartisan}
+            </div>
             <div className="text-xs text-blue-700">Bipartisan</div>
           </div>
           <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <div className="text-2xl font-bold text-gray-600">{alignmentData.voting_patterns.absent}</div>
+            <div className="text-2xl font-bold text-gray-600">
+              {alignmentData.voting_patterns.absent}
+            </div>
             <div className="text-xs text-gray-700">Absent</div>
           </div>
         </div>
@@ -230,15 +257,21 @@ export function PartyAlignmentAnalysis({ bioguideId, representative }: PartyAlig
         <div className="space-y-2">
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
             <span className="text-gray-600">State Average ({representative.state})</span>
-            <span className="font-medium">{alignmentData.comparison_to_peers.state_avg_alignment.toFixed(1)}%</span>
+            <span className="font-medium">
+              {alignmentData.comparison_to_peers.state_avg_alignment.toFixed(1)}%
+            </span>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-100">
             <span className="text-gray-600">Party Average ({representative.party})</span>
-            <span className="font-medium">{alignmentData.comparison_to_peers.party_avg_alignment.toFixed(1)}%</span>
+            <span className="font-medium">
+              {alignmentData.comparison_to_peers.party_avg_alignment.toFixed(1)}%
+            </span>
           </div>
           <div className="flex justify-between items-center py-2">
             <span className="text-gray-600">Chamber Average ({representative.chamber})</span>
-            <span className="font-medium">{alignmentData.comparison_to_peers.chamber_avg_alignment.toFixed(1)}%</span>
+            <span className="font-medium">
+              {alignmentData.comparison_to_peers.chamber_avg_alignment.toFixed(1)}%
+            </span>
           </div>
         </div>
       </div>
@@ -246,7 +279,9 @@ export function PartyAlignmentAnalysis({ bioguideId, representative }: PartyAlig
       {/* Key Departures */}
       {alignmentData.key_departures.length > 0 && (
         <div>
-          <h4 className="text-lg font-semibold text-gray-900 mb-3">Notable Departures from Party Line</h4>
+          <h4 className="text-lg font-semibold text-gray-900 mb-3">
+            Notable Departures from Party Line
+          </h4>
           <div className="space-y-3">
             {alignmentData.key_departures.map((departure, index) => (
               <div key={index} className="border border-gray-200 rounded-lg p-4">
@@ -256,11 +291,15 @@ export function PartyAlignmentAnalysis({ bioguideId, representative }: PartyAlig
                     <div className="text-sm text-gray-600 mb-1">{departure.bill_title}</div>
                     <div className="text-xs text-gray-500">{departure.vote_date}</div>
                   </div>
-                  <div className={`px-2 py-1 rounded text-xs font-medium ${
-                    departure.significance === 'high' ? 'bg-red-100 text-red-800' :
-                    departure.significance === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
+                  <div
+                    className={`px-2 py-1 rounded text-xs font-medium ${
+                      departure.significance === 'high'
+                        ? 'bg-red-100 text-red-800'
+                        : departure.significance === 'medium'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
                     {departure.significance} impact
                   </div>
                 </div>
@@ -284,7 +323,9 @@ export function PartyAlignmentAnalysis({ bioguideId, representative }: PartyAlig
 }
 
 // Wrapper with error boundary
-export default function PartyAlignmentAnalysisWithErrorBoundary(props: PartyAlignmentAnalysisProps) {
+export default function PartyAlignmentAnalysisWithErrorBoundary(
+  props: PartyAlignmentAnalysisProps
+) {
   return (
     <APIErrorBoundary>
       <PartyAlignmentAnalysis {...props} />
