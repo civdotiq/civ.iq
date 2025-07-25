@@ -12,7 +12,7 @@ CIV.IQ aims to be the most comprehensive, user-friendly platform for citizens to
 
 #### Major Enhancements Completed
 
-- [x] **🏦 Enhanced FEC Campaign Finance System (Jan 25, 2025)**
+- [x] **🏦 Enhanced FEC Campaign Finance System (Jul 25, 2025)**
   - [x] Industry categorization with 50+ employer mappings
   - [x] Bundled contributions analysis (employee + PAC linking)
   - [x] Independent expenditures tracking (Schedule E)
