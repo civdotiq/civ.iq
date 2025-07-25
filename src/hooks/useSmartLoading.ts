@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface LoadingState {
   loading: boolean;
@@ -37,12 +37,7 @@ export function useSmartLoading(
   asyncOperation?: () => Promise<void>,
   options: UseSmartLoadingOptions = {}
 ): UseSmartLoadingReturn {
-  const {
-    timeout = 10000,
-    stages = [],
-    retryCount = 3,
-    retryDelay = 1000
-  } = options;
+  const { timeout = 10000, stages = [], retryCount = 3, retryDelay = 1000 } = options;
 
   const [state, setState] = useState<LoadingState>({
     loading: false,
@@ -50,86 +45,104 @@ export function useSmartLoading(
     progress: 0,
     stage: stages[0] || 'Loading...',
     timeElapsed: 0,
-    showTimeout: false
+    showTimeout: false,
   });
 
   const [startTime, setStartTime] = useState<number | null>(null);
   const [currentRetries, setCurrentRetries] = useState(0);
+  const isMounted = useRef(true);
+
+  // Cleanup effect for component unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Update time elapsed
   useEffect(() => {
     if (!state.loading || !startTime) return;
 
     const interval = setInterval(() => {
+      if (!isMounted.current) return;
       const elapsed = Date.now() - startTime;
       setState(prev => ({
         ...prev,
         timeElapsed: elapsed,
-        showTimeout: elapsed >= timeout
+        showTimeout: elapsed >= timeout,
       }));
     }, 100);
 
     return () => clearInterval(interval);
   }, [state.loading, startTime, timeout]);
 
-  const start = useCallback((stage?: string) => {
-    setStartTime(Date.now());
-    setState(prev => ({
-      ...prev,
-      loading: true,
-      error: null,
-      progress: 0,
-      stage: stage || stages[0] || 'Loading...',
-      timeElapsed: 0,
-      showTimeout: false
-    }));
-  }, [stages]);
+  const start = useCallback(
+    (stage?: string) => {
+      if (!isMounted.current) return;
+      setStartTime(Date.now());
+      setState(prev => ({
+        ...prev,
+        loading: true,
+        error: null,
+        progress: 0,
+        stage: stage || stages[0] || 'Loading...',
+        timeElapsed: 0,
+        showTimeout: false,
+      }));
+    },
+    [stages]
+  );
 
   const complete = useCallback(() => {
+    if (!isMounted.current) return;
     setState(prev => ({
       ...prev,
       loading: false,
       progress: 100,
       timeElapsed: 0,
-      showTimeout: false
+      showTimeout: false,
     }));
     setStartTime(null);
     setCurrentRetries(0);
   }, []);
 
   const setError = useCallback((error: Error) => {
+    if (!isMounted.current) return;
     setState(prev => ({
       ...prev,
       loading: false,
       error,
       timeElapsed: 0,
-      showTimeout: false
+      showTimeout: false,
     }));
     setStartTime(null);
   }, []);
 
   const setProgress = useCallback((progress: number) => {
+    if (!isMounted.current) return;
     setState(prev => ({
       ...prev,
-      progress: Math.min(100, Math.max(0, progress))
+      progress: Math.min(100, Math.max(0, progress)),
     }));
   }, []);
 
   const setStage = useCallback((stage: string) => {
+    if (!isMounted.current) return;
     setState(prev => ({
       ...prev,
-      stage
+      stage,
     }));
   }, []);
 
   const retry = useCallback(async () => {
+    if (!isMounted.current) return;
     if (currentRetries >= retryCount) {
       setError(new Error(`Failed after ${retryCount} attempts`));
       return;
     }
 
     setCurrentRetries(prev => prev + 1);
-    
+
     // Exponential backoff
     const delay = retryDelay * Math.pow(2, currentRetries);
     await new Promise(resolve => setTimeout(resolve, delay));
@@ -147,7 +160,7 @@ export function useSmartLoading(
         }
       }
     }
-  }, [asyncOperation, currentRetries, retryCount, retryDelay, start, complete]);
+  }, [asyncOperation, currentRetries, retryCount, retryDelay, start, complete, setError]);
 
   const reset = useCallback(() => {
     setState({
@@ -156,7 +169,7 @@ export function useSmartLoading(
       progress: 0,
       stage: stages[0] || 'Loading...',
       timeElapsed: 0,
-      showTimeout: false
+      showTimeout: false,
     });
     setStartTime(null);
     setCurrentRetries(0);
@@ -170,7 +183,7 @@ export function useSmartLoading(
     setProgress,
     setStage,
     retry,
-    reset
+    reset,
   };
 }
 
@@ -205,25 +218,22 @@ export function useMultiStageLoading(stages: string[]) {
     currentStage: stages[currentStageIndex],
     nextStage,
     start,
-    complete
+    complete,
   };
 }
 
 // Hook for timeout-aware operations
-export function useTimeoutLoading(
-  operation: () => Promise<void>,
-  timeoutMs: number = 10000
-) {
+export function useTimeoutLoading(operation: () => Promise<void>, timeoutMs: number = 10000) {
   const loading = useSmartLoading(operation, { timeout: timeoutMs });
-  
+
   const executeWithTimeout = useCallback(async () => {
     loading.start();
-    
+
     try {
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Operation timed out')), timeoutMs);
       });
-      
+
       await Promise.race([operation(), timeoutPromise]);
       loading.complete();
     } catch (error) {
@@ -233,27 +243,30 @@ export function useTimeoutLoading(
 
   return {
     ...loading,
-    execute: executeWithTimeout
+    execute: executeWithTimeout,
   };
 }
 
 // Hook for tracking upload/download progress
 export function useProgressLoading() {
   const loading = useSmartLoading();
-  
-  const trackProgress = useCallback((event: ProgressEvent) => {
-    if (event.lengthComputable) {
-      const progress = (event.loaded / event.total) * 100;
-      loading.setProgress(progress);
-      
-      if (progress >= 100) {
-        loading.complete();
+
+  const trackProgress = useCallback(
+    (event: ProgressEvent) => {
+      if (event.lengthComputable) {
+        const progress = (event.loaded / event.total) * 100;
+        loading.setProgress(progress);
+
+        if (progress >= 100) {
+          loading.complete();
+        }
       }
-    }
-  }, [loading]);
+    },
+    [loading]
+  );
 
   return {
     ...loading,
-    trackProgress
+    trackProgress,
   };
 }

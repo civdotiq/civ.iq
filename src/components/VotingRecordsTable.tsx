@@ -7,24 +7,24 @@
 
 import { useState, useEffect, useMemo, useTransition } from 'react';
 import { representativeApi } from '@/lib/api/representatives';
-import { 
-  ResponsiveTable, 
-  ResponsiveTableHead, 
-  ResponsiveTableBody, 
-  ResponsiveTableRow, 
+import {
+  ResponsiveTable,
+  ResponsiveTableHead,
+  ResponsiveTableBody,
+  ResponsiveTableRow,
   ResponsiveTableCell,
   VoteCard,
-  TouchPagination
+  TouchPagination,
 } from '@/components/ui/ResponsiveTable';
 import { VotingRecordsSkeleton } from '@/components/ui/SkeletonComponents';
 import { LoadingStateWrapper } from '@/components/ui/LoadingStates';
 import { useSmartLoading } from '@/hooks/useSmartLoading';
 import { ApiErrorHandlers } from '@/lib/errors/ErrorHandlers';
-import { ErrorDisplay } from '@/components/ui/ErrorComponents';
+import { structuredLogger } from '@/lib/logging/universal-logger';
 
-// Using simple Unicode arrows instead of heroicons
-const ChevronDownIcon = () => <span>▼</span>;
-const ChevronUpIcon = () => <span>▲</span>;
+// Using simple Unicode arrows instead of heroicons (unused but available for future use)
+const _ChevronDownIcon = () => <span>▼</span>;
+const _ChevronUpIcon = () => <span>▲</span>;
 
 interface Vote {
   voteId: string;
@@ -48,7 +48,7 @@ interface VotingRecordsTableProps {
   chamber: 'House' | 'Senate';
 }
 
-export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTableProps) {
+export function VotingRecordsTable({ bioguideId, chamber: _chamber }: VotingRecordsTableProps) {
   const [votes, setVotes] = useState<Vote[]>([]);
   const [sortField, setSortField] = useState<'date' | 'bill' | 'result'>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -58,26 +58,43 @@ export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTablePr
   const [isPending, startTransition] = useTransition();
 
   const votesPerPage = 10;
-  
+
   // Smart loading hook with timeout and retry
-  const loading = useSmartLoading(async () => {
-    try {
-      console.log(`[CIV.IQ-DEBUG] VotingRecordsTable fetching votes for ${bioguideId}`);
-      const data = await representativeApi.getVotes(bioguideId);
-      setVotes(data.votes || []);
-    } catch (error) {
-      console.error('Error fetching votes:', error);
-      // Use our error handler for specific voting records errors
-      throw ApiErrorHandlers.handleVotingRecordsError(error, bioguideId);
+  const loading = useSmartLoading(
+    async () => {
+      try {
+        structuredLogger.info('VotingRecordsTable fetching votes', { bioguideId });
+        const data = await representativeApi.getVotes(bioguideId);
+        setVotes(data.votes || []);
+      } catch (error) {
+        structuredLogger.error('Error fetching votes', {
+          error: error as Error,
+          bioguideId,
+        });
+        // Use our error handler for specific voting records errors
+        throw ApiErrorHandlers.handleVotingRecordsError(error, bioguideId);
+      }
+    },
+    {
+      timeout: 15000,
+      stages: ['Connecting to Congress.gov...', 'Loading voting records...', 'Processing data...'],
     }
-  }, { 
-    timeout: 15000,
-    stages: ['Connecting to Congress.gov...', 'Loading voting records...', 'Processing data...']
-  });
+  );
 
   useEffect(() => {
-    loading.start('Loading voting records...');
-    // The async operation is handled by the useSmartLoading hook
+    let cancelled = false;
+
+    const loadVotes = async () => {
+      if (cancelled) return;
+      loading.start('Loading voting records...');
+      // The async operation is handled by the useSmartLoading hook
+    };
+
+    loadVotes();
+
+    return () => {
+      cancelled = true;
+    };
   }, [bioguideId, loading]);
 
   const filteredAndSortedVotes = useMemo(() => {
@@ -95,7 +112,7 @@ export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTablePr
     // Apply sorting
     filtered.sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortField) {
         case 'date':
           comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
@@ -153,11 +170,16 @@ export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTablePr
 
   const getPositionColor = (position: string) => {
     switch (position) {
-      case 'Yea': return 'text-green-700 bg-green-100 border-green-300';
-      case 'Nay': return 'text-red-700 bg-red-100 border-red-300';
-      case 'Not Voting': return 'text-gray-700 bg-gray-100 border-gray-300';
-      case 'Present': return 'text-blue-700 bg-blue-100 border-blue-300';
-      default: return 'text-gray-700 bg-gray-100 border-gray-300';
+      case 'Yea':
+        return 'text-green-700 bg-green-100 border-green-300';
+      case 'Nay':
+        return 'text-red-700 bg-red-100 border-red-300';
+      case 'Not Voting':
+        return 'text-gray-700 bg-gray-100 border-gray-300';
+      case 'Present':
+        return 'text-blue-700 bg-blue-100 border-blue-300';
+      default:
+        return 'text-gray-700 bg-gray-100 border-gray-300';
     }
   };
 
@@ -186,215 +208,211 @@ export function VotingRecordsTable({ bioguideId, chamber }: VotingRecordsTablePr
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      {/* Header with filters */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Votes</h3>
-          <div className="flex flex-wrap gap-2">
-            <span className="text-sm text-gray-600">Filter by Category:</span>
-            <button
-              onClick={() => handleFilterChange('all')}
-              className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                filterCategory === 'all' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              All Categories
-            </button>
-            <button
-              onClick={() => handleFilterChange('key')}
-              className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                filterCategory === 'key' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Key Votes
-            </button>
-            <button
-              onClick={() => handleFilterChange('passed')}
-              className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                filterCategory === 'passed' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Passed
-            </button>
-            <button
-              onClick={() => handleFilterChange('failed')}
-              className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                filterCategory === 'failed' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Failed
-            </button>
+          {/* Header with filters */}
+          <div className="p-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <h3 className="text-lg font-semibold text-gray-900">Recent Votes</h3>
+              <div className="flex flex-wrap gap-2">
+                <span className="text-sm text-gray-600">Filter by Category:</span>
+                <button
+                  onClick={() => handleFilterChange('all')}
+                  className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                    filterCategory === 'all'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  All Categories
+                </button>
+                <button
+                  onClick={() => handleFilterChange('key')}
+                  className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                    filterCategory === 'key'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Key Votes
+                </button>
+                <button
+                  onClick={() => handleFilterChange('passed')}
+                  className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                    filterCategory === 'passed'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Passed
+                </button>
+                <button
+                  onClick={() => handleFilterChange('failed')}
+                  className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                    filterCategory === 'failed'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Failed
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Show pending indicator during transitions */}
-      {isPending && (
-        <div className="absolute top-0 left-0 right-0 bg-blue-50 border-b border-blue-200 py-2 px-4 z-10">
-          <div className="flex items-center gap-2 text-sm text-blue-700">
-            <div className="animate-spin w-4 h-4 border-2 border-blue-700 border-t-transparent rounded-full"></div>
-            Updating results...
-          </div>
-        </div>
-      )}
-      
-      {/* Responsive Table */}
-      <ResponsiveTable>
-        <ResponsiveTableHead>
-          <tr>
-            <th className="px-4 py-3 text-left">
-              <button 
-                onClick={() => handleSort('date')}
-                className="font-medium text-xs uppercase tracking-wider text-gray-700 hover:text-gray-900 flex items-center gap-1"
-              >
-                Date
-                {sortField === 'date' && (
-                  sortDirection === 'desc' ? <span className="text-xs">▼</span> : <span className="text-xs">▲</span>
-                )}
-              </button>
-            </th>
-            <th className="px-4 py-3 text-left">
-              <button 
-                onClick={() => handleSort('bill')}
-                className="font-medium text-xs uppercase tracking-wider text-gray-700 hover:text-gray-900 flex items-center gap-1"
-              >
-                Bill
-                {sortField === 'bill' && (
-                  sortDirection === 'desc' ? <span className="text-xs">▼</span> : <span className="text-xs">▲</span>
-                )}
-              </button>
-            </th>
-            <th className="px-4 py-3 text-left">
-              <span className="font-medium text-xs uppercase tracking-wider text-gray-700">
-                Description
-              </span>
-            </th>
-            <th className="px-4 py-3 text-center">
-              <span className="font-medium text-xs uppercase tracking-wider text-gray-700">
-                Vote
-              </span>
-            </th>
-            <th className="px-4 py-3 text-left">
-              <button 
-                onClick={() => handleSort('result')}
-                className="font-medium text-xs uppercase tracking-wider text-gray-700 hover:text-gray-900 flex items-center gap-1"
-              >
-                Result
-                {sortField === 'result' && (
-                  sortDirection === 'desc' ? <span className="text-xs">▼</span> : <span className="text-xs">▲</span>
-                )}
-              </button>
-            </th>
-          </tr>
-        </ResponsiveTableHead>
-        <ResponsiveTableBody>
-          {paginatedVotes.map((vote) => (
-            <ResponsiveTableRow 
-              key={vote.voteId}
-              onClick={() => toggleRowExpansion(vote.voteId)}
-              mobileCard={
-                <VoteCard
-                  vote={vote}
-                  onToggleExpansion={toggleRowExpansion}
-                  isExpanded={expandedRows.has(vote.voteId)}
-                  getPositionColor={getPositionColor}
-                  getResultColor={getResultColor}
-                />
-              }
-            >
-              <ResponsiveTableCell 
-                label="Date"
-                priority="high"
-                className="text-sm text-gray-900 whitespace-nowrap"
-              >
-                {new Date(vote.date).toLocaleDateString('en-US', {
-                  month: 'numeric',
-                  day: 'numeric',
-                  year: 'numeric'
-                })}
-              </ResponsiveTableCell>
-              
-              <ResponsiveTableCell 
-                label="Bill"
-                priority="high"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-blue-600 hover:text-blue-800">
-                    {vote.bill.number}
+          {/* Show pending indicator during transitions */}
+          {isPending && (
+            <div className="absolute top-0 left-0 right-0 bg-blue-50 border-b border-blue-200 py-2 px-4 z-10">
+              <div className="flex items-center gap-2 text-sm text-blue-700">
+                <div className="animate-spin w-4 h-4 border-2 border-blue-700 border-t-transparent rounded-full"></div>
+                Updating results...
+              </div>
+            </div>
+          )}
+
+          {/* Responsive Table */}
+          <ResponsiveTable>
+            <ResponsiveTableHead>
+              <tr>
+                <th className="px-4 py-3 text-left">
+                  <button
+                    onClick={() => handleSort('date')}
+                    className="font-medium text-xs uppercase tracking-wider text-gray-700 hover:text-gray-900 flex items-center gap-1"
+                  >
+                    Date
+                    {sortField === 'date' &&
+                      (sortDirection === 'desc' ? (
+                        <span className="text-xs">▼</span>
+                      ) : (
+                        <span className="text-xs">▲</span>
+                      ))}
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left">
+                  <button
+                    onClick={() => handleSort('bill')}
+                    className="font-medium text-xs uppercase tracking-wider text-gray-700 hover:text-gray-900 flex items-center gap-1"
+                  >
+                    Bill
+                    {sortField === 'bill' &&
+                      (sortDirection === 'desc' ? (
+                        <span className="text-xs">▼</span>
+                      ) : (
+                        <span className="text-xs">▲</span>
+                      ))}
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left">
+                  <span className="font-medium text-xs uppercase tracking-wider text-gray-700">
+                    Description
                   </span>
-                  {vote.isKeyVote && (
-                    <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">
-                      Key Vote
-                    </span>
-                  )}
-                </div>
-              </ResponsiveTableCell>
-              
-              <ResponsiveTableCell 
-                label="Description"
-                priority="medium"
-                hideOnMobile={true}
-              >
-                <div>
-                  <p className="text-sm text-gray-900 line-clamp-2">
-                    {vote.bill.title}
-                  </p>
-                  {expandedRows.has(vote.voteId) && (
-                    <div className="mt-2 pt-2 border-t border-gray-100">
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">Question:</span> {vote.question}
-                      </p>
-                      {vote.rollNumber && (
-                        <p className="text-sm text-gray-600 mt-1">
-                          <span className="font-medium">Roll Call:</span> {vote.chamber} Roll #{vote.rollNumber}
-                        </p>
+                </th>
+                <th className="px-4 py-3 text-center">
+                  <span className="font-medium text-xs uppercase tracking-wider text-gray-700">
+                    Vote
+                  </span>
+                </th>
+                <th className="px-4 py-3 text-left">
+                  <button
+                    onClick={() => handleSort('result')}
+                    className="font-medium text-xs uppercase tracking-wider text-gray-700 hover:text-gray-900 flex items-center gap-1"
+                  >
+                    Result
+                    {sortField === 'result' &&
+                      (sortDirection === 'desc' ? (
+                        <span className="text-xs">▼</span>
+                      ) : (
+                        <span className="text-xs">▲</span>
+                      ))}
+                  </button>
+                </th>
+              </tr>
+            </ResponsiveTableHead>
+            <ResponsiveTableBody>
+              {paginatedVotes.map(vote => (
+                <ResponsiveTableRow
+                  key={vote.voteId}
+                  onClick={() => toggleRowExpansion(vote.voteId)}
+                  mobileCard={
+                    <VoteCard
+                      vote={vote}
+                      onToggleExpansion={toggleRowExpansion}
+                      isExpanded={expandedRows.has(vote.voteId)}
+                      getPositionColor={getPositionColor}
+                      getResultColor={getResultColor}
+                    />
+                  }
+                >
+                  <ResponsiveTableCell
+                    label="Date"
+                    priority="high"
+                    className="text-sm text-gray-900 whitespace-nowrap"
+                  >
+                    {new Date(vote.date).toLocaleDateString('en-US', {
+                      month: 'numeric',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </ResponsiveTableCell>
+
+                  <ResponsiveTableCell label="Bill" priority="high">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                        {vote.bill.number}
+                      </span>
+                      {vote.isKeyVote && (
+                        <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">
+                          Key Vote
+                        </span>
                       )}
                     </div>
-                  )}
-                </div>
-              </ResponsiveTableCell>
-              
-              <ResponsiveTableCell 
-                label="Vote"
-                priority="high"
-                className="text-center"
-              >
-                <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full border ${getPositionColor(vote.position)}`}>
-                  {vote.position}
-                </span>
-              </ResponsiveTableCell>
-              
-              <ResponsiveTableCell 
-                label="Result"
-                priority="medium"
-              >
-                <span className={`text-sm font-medium ${getResultColor(vote.result)}`}>
-                  {vote.result}
-                </span>
-              </ResponsiveTableCell>
-            </ResponsiveTableRow>
-          ))}
-        </ResponsiveTableBody>
-      </ResponsiveTable>
+                  </ResponsiveTableCell>
 
-      {/* Touch-Friendly Pagination */}
-      {totalPages > 1 && (
-        <TouchPagination
-          currentPage={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          itemsShown={`Showing ${((page - 1) * votesPerPage) + 1} to ${Math.min(page * votesPerPage, filteredAndSortedVotes.length)} of ${filteredAndSortedVotes.length} votes`}
-          totalItems={filteredAndSortedVotes.length}
-        />
-      )}
+                  <ResponsiveTableCell label="Description" priority="medium" hideOnMobile={true}>
+                    <div>
+                      <p className="text-sm text-gray-900 line-clamp-2">{vote.bill.title}</p>
+                      {expandedRows.has(vote.voteId) && (
+                        <div className="mt-2 pt-2 border-t border-gray-100">
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">Question:</span> {vote.question}
+                          </p>
+                          {vote.rollNumber && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              <span className="font-medium">Roll Call:</span> {vote.chamber} Roll #
+                              {vote.rollNumber}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </ResponsiveTableCell>
+
+                  <ResponsiveTableCell label="Vote" priority="high" className="text-center">
+                    <span
+                      className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full border ${getPositionColor(vote.position)}`}
+                    >
+                      {vote.position}
+                    </span>
+                  </ResponsiveTableCell>
+
+                  <ResponsiveTableCell label="Result" priority="medium">
+                    <span className={`text-sm font-medium ${getResultColor(vote.result)}`}>
+                      {vote.result}
+                    </span>
+                  </ResponsiveTableCell>
+                </ResponsiveTableRow>
+              ))}
+            </ResponsiveTableBody>
+          </ResponsiveTable>
+
+          {/* Touch-Friendly Pagination */}
+          {totalPages > 1 && (
+            <TouchPagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              itemsShown={`Showing ${(page - 1) * votesPerPage + 1} to ${Math.min(page * votesPerPage, filteredAndSortedVotes.length)} of ${filteredAndSortedVotes.length} votes`}
+              totalItems={filteredAndSortedVotes.length}
+            />
+          )}
         </div>
       )}
     </LoadingStateWrapper>

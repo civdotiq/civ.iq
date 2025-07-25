@@ -5,13 +5,22 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense, useMemo, memo, lazy, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  VotingPatternHeatmap,
-  RepresentativeNetwork,
-} from '@/components/InteractiveVisualizations';
+
+// Lazy load visualization components to reduce initial bundle size
+const VotingPatternHeatmap = lazy(() =>
+  import('@/components/InteractiveVisualizations').then(module => ({
+    default: module.VotingPatternHeatmap,
+  }))
+);
+
+const RepresentativeNetwork = lazy(() =>
+  import('@/components/InteractiveVisualizations').then(module => ({
+    default: module.RepresentativeNetwork,
+  }))
+);
 import {
   DataQualityIndicator,
   ErrorState,
@@ -60,6 +69,75 @@ function CiviqLogo() {
   );
 }
 
+// Performance optimizations
+interface CachedApiResponse {
+  data: unknown;
+  timestamp: number;
+  ttl: number;
+}
+
+const API_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_MAX_SIZE = 50; // Limit cache size to prevent memory leaks
+
+// In-memory cache for API responses with size management
+const apiCache = new Map<string, CachedApiResponse>();
+
+// Debounce hook for search optimization
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  const timeoutRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    // Clear previous timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // Set new timeout
+    timeoutRef.current = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    // Cleanup on unmount
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+// Cache utilities
+function getCachedResponse(key: string): unknown | null {
+  const cached = apiCache.get(key);
+  if (cached && Date.now() - cached.timestamp < cached.ttl) {
+    return cached.data;
+  }
+  if (cached) {
+    apiCache.delete(key); // Remove expired cache
+  }
+  return null;
+}
+
+function setCachedResponse(key: string, data: unknown): void {
+  // Implement cache size management to prevent memory leaks
+  if (apiCache.size >= CACHE_MAX_SIZE) {
+    // Remove oldest entries
+    const oldestKey = apiCache.keys().next().value;
+    if (oldestKey) {
+      apiCache.delete(oldestKey);
+    }
+  }
+
+  apiCache.set(key, {
+    data,
+    timestamp: Date.now(),
+    ttl: API_CACHE_TTL,
+  });
+}
+
 // Types
 interface Representative {
   bioguideId: string;
@@ -88,8 +166,82 @@ interface Representative {
   yearsInOffice: number;
 }
 
-// Enhanced Representative Card
-function RepresentativeCard({ rep }: { rep: Representative }) {
+// Virtual scrolling component for performance optimization
+const VirtualizedGrid = memo(function VirtualizedGrid({
+  items,
+  renderItem,
+  itemHeight = 200,
+  containerHeight = 600,
+  columnsPerRow = 3,
+}: {
+  items: Representative[];
+  renderItem: (item: Representative) => React.ReactNode;
+  itemHeight?: number;
+  containerHeight?: number;
+  columnsPerRow?: number;
+}) {
+  const [scrollTop, setScrollTop] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const totalRows = Math.ceil(items.length / columnsPerRow);
+  const visibleRowCount = Math.ceil(containerHeight / itemHeight);
+  const startRow = Math.floor(scrollTop / itemHeight);
+  const endRow = Math.min(startRow + visibleRowCount + 2, totalRows); // +2 for buffer
+
+  const visibleItems = useMemo(() => {
+    const visible: Array<{ item: Representative; index: number; row: number; col: number }> = [];
+
+    for (let row = startRow; row < endRow; row++) {
+      for (let col = 0; col < columnsPerRow; col++) {
+        const index = row * columnsPerRow + col;
+        if (index < items.length) {
+          visible.push({
+            item: items[index],
+            index,
+            row,
+            col,
+          });
+        }
+      }
+    }
+
+    return visible;
+  }, [items, startRow, endRow, columnsPerRow]);
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop(e.currentTarget.scrollTop);
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative overflow-auto"
+      style={{ height: containerHeight }}
+      onScroll={handleScroll}
+    >
+      {/* Total height spacer */}
+      <div style={{ height: totalRows * itemHeight, position: 'relative' }}>
+        {/* Visible items */}
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 absolute w-full"
+          style={{
+            top: startRow * itemHeight,
+            transform: `translateY(0px)`,
+          }}
+        >
+          {visibleItems.map(({ item, index }) => (
+            <div key={item.bioguideId} data-index={index}>
+              {renderItem(item)}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// Enhanced Representative Card - Memoized for performance
+const RepresentativeCard = memo(function RepresentativeCard({ rep }: { rep: Representative }) {
   const router = useRouter();
 
   const _getPartyColor = (party: string | undefined) => {
@@ -250,7 +402,7 @@ function RepresentativeCard({ rep }: { rep: Representative }) {
       </div>
     </div>
   );
-}
+});
 
 // Filter sidebar
 interface FilterState {
@@ -260,7 +412,7 @@ interface FilterState {
   committee: string;
 }
 
-function FilterSidebar({
+const FilterSidebar = memo(function FilterSidebar({
   onFilterChange,
   representatives,
 }: {
@@ -367,7 +519,7 @@ function FilterSidebar({
       </button>
     </div>
   );
-}
+});
 
 // Main Representatives Page Component (with useSearchParams)
 function RepresentativesPageContent() {
@@ -381,6 +533,9 @@ function RepresentativesPageContent() {
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'network'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [zipCode, setZipCode] = useState('');
+
+  // Debounce search term to improve performance
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [apiError, setApiError] = useState<{
     code: string;
     message: string;
@@ -398,10 +553,7 @@ function RepresentativesPageContent() {
     }
   };
 
-  useEffect(() => {
-    applySearch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, representatives]);
+  // Remove old useEffect since we now use useMemo for search filtering
 
   const fetchRepresentatives = async (zip?: string) => {
     if (!zip) {
@@ -414,12 +566,49 @@ function RepresentativesPageContent() {
     setApiError(null);
     setApiMetadata(null);
 
+    // Check cache first
+    const cacheKey = `representatives-${zip}`;
+    const cachedData = getCachedResponse(cacheKey);
+
+    if (cachedData) {
+      // Use cached data
+      const cached = cachedData as unknown as {
+        success: boolean;
+        representatives?: unknown[];
+        metadata?: unknown;
+      };
+      setApiMetadata(cached.metadata);
+
+      if (cached.success && cached.representatives) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const transformedReps: Representative[] = cached.representatives.map((rep: any) => ({
+          ...rep,
+          contact: rep.contactInfo || rep.contact || {},
+          committees: rep.committees || [],
+          stats: {
+            billsSponsored: Math.floor(Math.random() * 100),
+            votingAttendance: Math.floor(Math.random() * 20) + 80,
+            partyLineVoting: Math.floor(Math.random() * 30) + 70,
+          },
+          nextElection: rep.chamber === 'Senate' ? '2024' : '2024',
+          yearsInOffice: Math.floor(Math.random() * 20) + 1,
+        }));
+        setRepresentatives(transformedReps);
+        setFilteredReps(transformedReps);
+      }
+      setLoading(false);
+      return;
+    }
+
     try {
       // Use the new transparent API endpoint
       const apiUrl = `/api/representatives?zip=${zip}`;
       // Fetching representatives data
       const response = await fetch(apiUrl);
       const data = await response.json();
+
+      // Cache the response
+      setCachedResponse(cacheKey, data);
       // Processing API response
 
       // Store metadata for transparency
@@ -469,15 +658,23 @@ function RepresentativesPageContent() {
     }
   };
 
-  const applySearch = useCallback(() => {
-    const filtered = representatives.filter(
+  // Memoized search filtering for better performance with debouncing
+  const searchFilteredReps = useMemo(() => {
+    if (!debouncedSearchTerm) return representatives;
+
+    const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
+    return representatives.filter(
       rep =>
-        rep.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        rep.state.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (rep.district && rep.district.includes(searchTerm))
+        rep.name.toLowerCase().includes(lowerSearchTerm) ||
+        rep.state.toLowerCase().includes(lowerSearchTerm) ||
+        (rep.district && rep.district.includes(debouncedSearchTerm))
     );
-    setFilteredReps(filtered);
-  }, [representatives, searchTerm]);
+  }, [representatives, debouncedSearchTerm]);
+
+  // Update filtered reps when search results change
+  useEffect(() => {
+    setFilteredReps(searchFilteredReps);
+  }, [searchFilteredReps]);
 
   const handleFilterChange = useCallback(
     (filters: { chamber: string; party: string; state: string; committee: string }) => {
@@ -496,19 +693,19 @@ function RepresentativesPageContent() {
         filtered = filtered.filter(r => r.committees.some(c => c.name === filters.committee));
       }
 
-      // Apply search term
-      if (searchTerm) {
+      // Apply debounced search term for better performance
+      if (debouncedSearchTerm) {
         filtered = filtered.filter(
           rep =>
-            rep.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            rep.state.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (rep.district && rep.district.includes(searchTerm))
+            rep.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+            rep.state.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+            (rep.district && rep.district.includes(debouncedSearchTerm))
         );
       }
 
       setFilteredReps(filtered);
     },
-    [representatives, searchTerm]
+    [representatives, debouncedSearchTerm]
   );
 
   const generateNetworkData = () => {
@@ -804,11 +1001,13 @@ function RepresentativesPageContent() {
               </div>
 
               {viewMode === 'grid' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {filteredReps.map(rep => (
-                    <RepresentativeCard key={rep.bioguideId} rep={rep} />
-                  ))}
-                </div>
+                <VirtualizedGrid
+                  items={filteredReps}
+                  renderItem={rep => <RepresentativeCard rep={rep} />}
+                  itemHeight={220}
+                  containerHeight={800}
+                  columnsPerRow={3}
+                />
               )}
 
               {viewMode === 'list' && (

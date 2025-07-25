@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   getRepresentativePhotoUrls,
   getRepresentativeInitials,
@@ -37,13 +37,38 @@ export function RepresentativePhoto({
 }: RepresentativePhotoProps) {
   const [photoState, setPhotoState] = useState<UseRepresentativePhotoResult>({
     photoUrl: null,
-    isLoading: true,
+    isLoading: false, // Start as not loading
     hasError: false,
     initials: getRepresentativeInitials(name),
     backgroundColor: getAvatarBackgroundColor(name),
   });
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const imgRef = useRef<HTMLDivElement>(null);
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    if (!imgRef.current) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      {
+        rootMargin: '50px', // Load 50px before entering viewport
+      }
+    );
+
+    observer.observe(imgRef.current);
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
+    if (!shouldLoad) return;
     if (!bioguideId) {
       setPhotoState(prev => ({
         ...prev,
@@ -106,7 +131,7 @@ export function RepresentativePhoto({
     };
 
     loadPhoto();
-  }, [bioguideId, name]);
+  }, [bioguideId, name, shouldLoad]);
 
   const baseClasses = `${sizeClasses[size]} rounded-full flex items-center justify-center overflow-hidden flex-shrink-0`;
   const combinedClasses = `${baseClasses} ${className}`;
@@ -114,7 +139,7 @@ export function RepresentativePhoto({
   // Show loading state
   if (photoState.isLoading) {
     return (
-      <div className={`${combinedClasses} bg-gray-200 animate-pulse`}>
+      <div ref={imgRef} className={`${combinedClasses} bg-gray-200 animate-pulse`}>
         <div className="w-full h-full bg-gray-300 rounded-full"></div>
       </div>
     );
@@ -123,7 +148,7 @@ export function RepresentativePhoto({
   // Show photo if available
   if (photoState.photoUrl && !photoState.hasError) {
     return (
-      <div className={combinedClasses}>
+      <div ref={imgRef} className={combinedClasses}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={photoState.photoUrl}
@@ -144,6 +169,7 @@ export function RepresentativePhoto({
   // Fallback to initials avatar
   return (
     <div
+      ref={imgRef}
       className={`${combinedClasses} text-white font-semibold`}
       style={{ backgroundColor: photoState.backgroundColor }}
       title={`${name} (no photo available)`}
