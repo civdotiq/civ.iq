@@ -1,13 +1,11 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import { lazy, Suspense, ComponentType, useEffect, useState, useRef } from 'react';
-import { Skeleton } from './SkeletonLoader';
 
 // Loading fallback components
 const ChartSkeleton = () => (
@@ -18,7 +16,10 @@ const ChartSkeleton = () => (
         <div key={i} className="flex items-center gap-3">
           <div className="w-24 h-4 bg-gray-200 rounded animate-pulse"></div>
           <div className="flex-1 h-6 bg-gray-100 rounded-full">
-            <div className="h-6 bg-gray-200 rounded-full animate-pulse" style={{ width: `${Math.random() * 80 + 20}%` }}></div>
+            <div
+              className="h-6 bg-gray-200 rounded-full animate-pulse"
+              style={{ width: `${Math.random() * 80 + 20}%` }}
+            ></div>
           </div>
           <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
         </div>
@@ -82,7 +83,7 @@ const AnalyticsSkeleton = () => (
 );
 
 // Lazy loaded components
-export const LazyDistrictMap = lazy(() => 
+export const LazyDistrictMap = lazy(() =>
   import('./DistrictMap').then(module => ({ default: module.DistrictMap }))
 );
 
@@ -120,7 +121,9 @@ export const LazyVotingTrendsChart = lazy(() =>
 );
 
 export const LazyCampaignFinanceChart = lazy(() =>
-  import('./analytics/CampaignFinanceChart').then(module => ({ default: module.CampaignFinanceChart }))
+  import('./analytics/CampaignFinanceChart').then(module => ({
+    default: module.CampaignFinanceChart,
+  }))
 );
 
 export const LazyEffectivenessChart = lazy(() =>
@@ -128,95 +131,98 @@ export const LazyEffectivenessChart = lazy(() =>
 );
 
 export const LazyCivicEngagementDashboard = lazy(() =>
-  import('./dashboard/AdvancedDashboard').then(module => ({ default: module.CivicEngagementDashboard }))
+  import('./dashboard/AdvancedDashboard').then(module => ({
+    default: module.CivicEngagementDashboard,
+  }))
 );
 
 export const LazyInteractiveVisualizations = lazy(() =>
   import('./InteractiveVisualizations').then(module => ({ default: module.VotingPatternHeatmap }))
 );
 
-export const LazyStateDataVisualizations = lazy(() =>
-  import('./StateDataVisualizations')
-);
+export const LazyStateDataVisualizations = lazy(() => import('./StateDataVisualizations'));
 
 export const LazyAdvancedSearch = lazy(() =>
   import('./AdvancedSearch').then(module => ({ default: module.AdvancedSearch }))
 );
 
 // Wrapper components with appropriate loading states
-export const DistrictMapWithSuspense = (props: unknown) => (
+export const DistrictMapWithSuspense = (props: { zipCode: string; className?: string }) => (
   <Suspense fallback={<MapSkeleton />}>
     <LazyDistrictMap {...props} />
   </Suspense>
 );
 
-export const InteractiveDistrictMapWithSuspense = (props: unknown) => (
+export const InteractiveDistrictMapWithSuspense = (props: {
+  zipCode: string;
+  className?: string;
+}) => (
   <Suspense fallback={<MapSkeleton />}>
     <LazyInteractiveDistrictMap {...props} />
   </Suspense>
 );
 
-export const ChartsWithSuspense = (props: unknown) => (
+export const ChartsWithSuspense = (props: any) => (
   <Suspense fallback={<ChartSkeleton />}>
     <LazyBarChart {...props} />
   </Suspense>
 );
 
-export const EnhancedNewsFeedWithSuspense = (props: unknown) => (
+export const EnhancedNewsFeedWithSuspense = (props: any) => (
   <Suspense fallback={<NewsFeedSkeleton />}>
     <LazyEnhancedNewsFeed {...props} />
   </Suspense>
 );
 
-export const BillsTrackerWithSuspense = (props: unknown) => (
+export const BillsTrackerWithSuspense = (props: any) => (
   <Suspense fallback={<div className="animate-pulse bg-gray-200 h-20 rounded" />}>
     <LazyBillsTracker {...props} />
   </Suspense>
 );
 
-export const PartyAlignmentAnalysisWithSuspense = (props: unknown) => (
+export const PartyAlignmentAnalysisWithSuspense = (props: any) => (
   <Suspense fallback={<ChartSkeleton />}>
     <LazyPartyAlignmentAnalysis {...props} />
   </Suspense>
 );
 
-export const VotingTrendsChartWithSuspense = (props: unknown) => (
+export const VotingTrendsChartWithSuspense = (props: any) => (
   <Suspense fallback={<ChartSkeleton />}>
     <LazyVotingTrendsChart {...props} />
   </Suspense>
 );
 
-export const CampaignFinanceChartWithSuspense = (props: unknown) => (
+export const CampaignFinanceChartWithSuspense = (props: any) => (
   <Suspense fallback={<ChartSkeleton />}>
     <LazyCampaignFinanceChart {...props} />
   </Suspense>
 );
 
-export const EffectivenessChartWithSuspense = (props: unknown) => (
+export const EffectivenessChartWithSuspense = (props: any) => (
   <Suspense fallback={<ChartSkeleton />}>
     <LazyEffectivenessChart {...props} />
   </Suspense>
 );
 
-export const AdvancedDashboardWithSuspense = (props: unknown) => (
+export const AdvancedDashboardWithSuspense = (_props: any) => (
   <Suspense fallback={<AnalyticsSkeleton />}>
     <div className="p-4 text-gray-500">Advanced Dashboard Component</div>
   </Suspense>
 );
 
-export const InteractiveVisualizationsWithSuspense = (props: unknown) => (
+export const InteractiveVisualizationsWithSuspense = (props: any) => (
   <Suspense fallback={<AnalyticsSkeleton />}>
     <LazyInteractiveVisualizations {...props} />
   </Suspense>
 );
 
-export const StateDataVisualizationsWithSuspense = (props: unknown) => (
+export const StateDataVisualizationsWithSuspense = (props: any) => (
   <Suspense fallback={<AnalyticsSkeleton />}>
     <LazyStateDataVisualizations {...props} />
   </Suspense>
 );
 
-export const AdvancedSearchWithSuspense = (props: unknown) => (
+export const AdvancedSearchWithSuspense = (props: any) => (
   <Suspense fallback={<div className="animate-pulse bg-gray-200 h-12 rounded" />}>
     <LazyAdvancedSearch {...props} />
   </Suspense>
@@ -234,16 +240,13 @@ export function withLazyLoading<P extends object>(
     const elementRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting && !hasLoaded) {
-            setIsVisible(true);
-            setHasLoaded(true);
-            observer.disconnect();
-          }
-        },
-        options
-      );
+      const observer = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting && !hasLoaded) {
+          setIsVisible(true);
+          setHasLoaded(true);
+          observer.disconnect();
+        }
+      }, options);
 
       if (elementRef.current) {
         observer.observe(elementRef.current);
@@ -288,7 +291,7 @@ export function useLazyData<T>(
       },
       {
         threshold: options.threshold || 0.1,
-        rootMargin: options.rootMargin || '50px'
+        rootMargin: options.rootMargin || '50px',
       }
     );
 

@@ -15,7 +15,13 @@ interface MapComponentProps {
   height: number | string;
 }
 
-export default function MapComponent({ center, zoom, boundaryData, width, height }: MapComponentProps) {
+export default function MapComponent({
+  center,
+  zoom,
+  boundaryData,
+  width,
+  height,
+}: MapComponentProps) {
   const mapRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
@@ -34,29 +40,31 @@ export default function MapComponent({ center, zoom, boundaryData, width, height
       try {
         // Dynamic import of Leaflet to avoid SSR issues
         const L = await import('leaflet');
-        
+
         // Import Leaflet CSS
         await import('leaflet/dist/leaflet.css');
-        
+
         // Fix for default markers
         delete (L as any).Icon.Default.prototype._getIconUrl;
         L.Icon.Default.mergeOptions({
-          iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+          iconRetinaUrl:
+            'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
           iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+          shadowUrl:
+            'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
         });
 
         // Ensure container exists and has dimensions
         if (!containerRef.current) return;
-        
+
         const container = containerRef.current;
-        
+
         // Clear any existing map
         if (mapRef.current) {
           mapRef.current.remove();
           mapRef.current = null;
         }
-        
+
         // Clear container
         container.innerHTML = '';
 
@@ -72,28 +80,33 @@ export default function MapComponent({ center, zoom, boundaryData, width, height
 
         // Add tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
           maxZoom: 18,
-        }).addTo(map);
+        }).addTo(map as any);
 
         // Add GeoJSON layer with enhanced interactivity
         if (boundaryData) {
           geoJsonLayer = L.geoJSON(boundaryData, {
-            style: (feature) => {
+            style: feature => {
               // Dynamic styling based on district properties
-              const isMainDistrict = feature?.properties?.GEOID === `${boundaryData.features[0].properties.STATEFP}${boundaryData.features[0].properties.CD118FP}`;
+              const isMainDistrict =
+                feature?.properties?.GEOID ===
+                `${boundaryData.features[0].properties.STATEFP}${boundaryData.features[0].properties.CD118FP}`;
               return {
                 fillColor: isMainDistrict ? '#3b82f6' : '#6b7280',
                 weight: isMainDistrict ? 4 : 2,
                 opacity: 1,
                 color: isMainDistrict ? '#1e40af' : '#4b5563',
                 dashArray: isMainDistrict ? '' : '5,5',
-                fillOpacity: isMainDistrict ? 0.3 : 0.1
+                fillOpacity: isMainDistrict ? 0.3 : 0.1,
               };
             },
             onEachFeature: (feature: unknown, layer: unknown) => {
-              const isMainDistrict = feature.properties.GEOID === `${boundaryData.features[0].properties.STATEFP}${boundaryData.features[0].properties.CD118FP}`;
-              
+              const isMainDistrict =
+                feature.properties.GEOID ===
+                `${boundaryData.features[0].properties.STATEFP}${boundaryData.features[0].properties.CD118FP}`;
+
               // Enhanced popup with more district information
               layer.bindPopup(`
                 <div style="min-width: 200px;">
@@ -111,30 +124,30 @@ export default function MapComponent({ center, zoom, boundaryData, width, height
                   </div>
                 </div>
               `);
-              
+
               // Add hover effects
-              layer.on('mouseover', function(this: unknown) {
+              layer.on('mouseover', function (this: unknown) {
                 this.setStyle({
                   weight: isMainDistrict ? 6 : 4,
-                  fillOpacity: isMainDistrict ? 0.5 : 0.3
+                  fillOpacity: isMainDistrict ? 0.5 : 0.3,
                 });
               });
-              
-              layer.on('mouseout', function(this: unknown) {
+
+              layer.on('mouseout', function (this: unknown) {
                 this.setStyle({
                   weight: isMainDistrict ? 4 : 2,
-                  fillOpacity: isMainDistrict ? 0.3 : 0.1
+                  fillOpacity: isMainDistrict ? 0.3 : 0.1,
                 });
               });
-              
+
               // Add click handler for navigation
-              layer.on('click', function() {
+              layer.on('click', function () {
                 const districtId = `${feature.properties.STATEFP}-${feature.properties.CD118FP}`;
                 if (typeof window !== 'undefined') {
                   window.location.href = `/districts/${districtId}`;
                 }
               });
-            }
+            },
           }).addTo(map);
 
           // Fit map to bounds
@@ -156,7 +169,6 @@ export default function MapComponent({ center, zoom, boundaryData, width, height
             map.invalidateSize();
           }
         }, 100);
-
       } catch (error) {
         console.error('Error initializing map:', error);
       }
@@ -194,12 +206,12 @@ export default function MapComponent({ center, zoom, boundaryData, width, height
   }
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      style={{ 
-        width: typeof width === 'string' ? width : `${width}px`, 
+      style={{
+        width: typeof width === 'string' ? width : `${width}px`,
         height: typeof height === 'string' ? height : `${height}px`,
-        minHeight: '400px'
+        minHeight: '400px',
       }}
       className="relative z-0"
     />
