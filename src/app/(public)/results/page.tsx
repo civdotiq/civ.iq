@@ -5,7 +5,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState, Suspense, useCallback } from 'react';
 import { SearchHistory } from '@/lib/searchHistory';
@@ -515,6 +515,7 @@ function StateRepresentativesTab({ zipCode }: { zipCode: string }) {
 
 function ResultsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const zipCode = searchParams.get('zip');
   const address = searchParams.get('address');
   const query = searchParams.get('q');
@@ -772,8 +773,8 @@ function ResultsContent() {
   );
 
   const handleDistrictSelect = async (district: DistrictInfo) => {
-    setSelectedDistrict(district);
-    await fetchRepresentatives(district);
+    // Navigate to representatives page with district parameters
+    router.push(`/representatives?district=${district.district}&state=${district.state}`);
   };
 
   const handleAddressRefinement = () => {

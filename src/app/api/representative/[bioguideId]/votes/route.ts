@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-// Temporarily remove problematic imports for testing
-// import { cachedFetch } from '@/lib/cache';
+import { withCache } from '@/lib/cache-helper';
 import { RollCallParser } from '@/lib/rollcall-parser';
 import { getEnhancedRepresentative } from '@/lib/congress-legislators';
 import { structuredLogger, createRequestLogger } from '@/lib/logging/logger-edge';
@@ -28,7 +27,15 @@ interface Vote {
   rollNumber?: number;
   isKeyVote?: boolean;
   description?: string;
-  category?: 'Budget' | 'Healthcare' | 'Defense' | 'Infrastructure' | 'Immigration' | 'Environment' | 'Education' | 'Other';
+  category?:
+    | 'Budget'
+    | 'Healthcare'
+    | 'Defense'
+    | 'Infrastructure'
+    | 'Immigration'
+    | 'Environment'
+    | 'Education'
+    | 'Other';
   partyBreakdown?: {
     democratic: { yea: number; nay: number; present: number; notVoting: number };
     republican: { yea: number; nay: number; present: number; notVoting: number };
@@ -41,7 +48,7 @@ interface Vote {
   };
 }
 
-interface BillWithVotes {
+interface _BillWithVotes {
   congress: number;
   type: string;
   number: number;
@@ -62,20 +69,48 @@ interface BillWithVotes {
 // Helper function to categorize bills
 function categorizeBill(title: string): Vote['category'] {
   const lowerTitle = title.toLowerCase();
-  
-  if (lowerTitle.includes('budget') || lowerTitle.includes('appropriation') || lowerTitle.includes('spending')) {
+
+  if (
+    lowerTitle.includes('budget') ||
+    lowerTitle.includes('appropriation') ||
+    lowerTitle.includes('spending')
+  ) {
     return 'Budget';
-  } else if (lowerTitle.includes('health') || lowerTitle.includes('medicare') || lowerTitle.includes('medicaid')) {
+  } else if (
+    lowerTitle.includes('health') ||
+    lowerTitle.includes('medicare') ||
+    lowerTitle.includes('medicaid')
+  ) {
     return 'Healthcare';
-  } else if (lowerTitle.includes('defense') || lowerTitle.includes('military') || lowerTitle.includes('armed forces')) {
+  } else if (
+    lowerTitle.includes('defense') ||
+    lowerTitle.includes('military') ||
+    lowerTitle.includes('armed forces')
+  ) {
     return 'Defense';
-  } else if (lowerTitle.includes('infrastructure') || lowerTitle.includes('transportation') || lowerTitle.includes('highway')) {
+  } else if (
+    lowerTitle.includes('infrastructure') ||
+    lowerTitle.includes('transportation') ||
+    lowerTitle.includes('highway')
+  ) {
     return 'Infrastructure';
-  } else if (lowerTitle.includes('immigration') || lowerTitle.includes('border') || lowerTitle.includes('visa')) {
+  } else if (
+    lowerTitle.includes('immigration') ||
+    lowerTitle.includes('border') ||
+    lowerTitle.includes('visa')
+  ) {
     return 'Immigration';
-  } else if (lowerTitle.includes('environment') || lowerTitle.includes('climate') || lowerTitle.includes('energy')) {
+  } else if (
+    lowerTitle.includes('environment') ||
+    lowerTitle.includes('climate') ||
+    lowerTitle.includes('energy')
+  ) {
     return 'Environment';
-  } else if (lowerTitle.includes('education') || lowerTitle.includes('school') || lowerTitle.includes('student')) {
+  } else if (
+    lowerTitle.includes('education') ||
+    lowerTitle.includes('school') ||
+    lowerTitle.includes('student')
+  ) {
     return 'Education';
   }
   return 'Other';
@@ -90,7 +125,7 @@ async function getMemberVoteFromRollCall(
 ): Promise<'Yea' | 'Nay' | 'Not Voting' | 'Present'> {
   try {
     structuredLogger.debug('Fetching roll call data', { rollCallUrl, bioguideId });
-    
+
     const rollCallData = await parser.fetchAndParseRollCall(rollCallUrl);
     if (!rollCallData) {
       structuredLogger.warn('No roll call data retrieved', { rollCallUrl });
@@ -99,59 +134,72 @@ async function getMemberVoteFromRollCall(
 
     const memberVote = parser.findMemberVote(rollCallData, bioguideId, memberName);
     const position = memberVote ? memberVote.vote : 'Not Voting';
-    
-    structuredLogger.debug('Member vote found', { 
-      bioguideId, 
-      position, 
+
+    structuredLogger.debug('Member vote found', {
+      bioguideId,
+      position,
       memberName,
-      voteFound: !!memberVote 
+      voteFound: !!memberVote,
     });
-    
+
     return position;
   } catch (error) {
-    structuredLogger.error('Error fetching roll call data', error as Error, { 
-      rollCallUrl, 
-      bioguideId 
+    structuredLogger.error('Error fetching roll call data', error as Error, {
+      rollCallUrl,
+      bioguideId,
     });
     return 'Not Voting';
   }
 }
 
-// Enhanced function to get recent votes using Congress.gov API
+// Enhanced function to get recent votes using Congress.gov API with caching
 async function getEnhancedVotingRecords(
-  bioguideId: string, 
-  chamber: string, 
+  bioguideId: string,
+  chamber: string,
   limit: number
 ): Promise<Vote[]> {
-  try {
-    structuredLogger.info('Fetching enhanced voting records', { bioguideId, chamber, limit });
+  const cacheKey = `votes-${bioguideId}-${chamber}-${limit}`;
 
-    // Import the new voting data service
-    const { votingDataService } = await import('@/lib/voting-data-service');
-    
-    // Attempt to get real voting data using multiple strategies
-    const votingResult = await votingDataService.getVotingRecords(bioguideId, chamber as 'House' | 'Senate', limit);
-    
-    if (votingResult.votes.length > 0) {
-      structuredLogger.info('Real voting data retrieved successfully', { 
-        bioguideId, 
-        source: votingResult.source,
-        votesFound: votingResult.totalFound 
+  return withCache(
+    cacheKey,
+    async () => {
+      structuredLogger.info('Fetching enhanced voting records from Congress API', {
+        bioguideId,
+        chamber,
+        limit,
       });
-      
-      return votingResult.votes;
-    }
 
-    // If no real data available, throw to trigger fallback
-    throw new Error('No real voting data available - using enhanced mock data');
-    
-  } catch (error) {
-    structuredLogger.warn('Real voting data fetch failed, using enhanced mock data', { 
-      bioguideId, 
-      error: (error as Error).message 
+      // Import the new voting data service
+      const { votingDataService } = await import('@/lib/voting-data-service');
+
+      // Attempt to get real voting data using multiple strategies
+      const votingResult = await votingDataService.getVotingRecords(
+        bioguideId,
+        chamber as 'House' | 'Senate',
+        limit
+      );
+
+      if (votingResult.votes.length > 0) {
+        structuredLogger.info('Real voting data retrieved successfully', {
+          bioguideId,
+          source: votingResult.source,
+          votesFound: votingResult.totalFound,
+        });
+
+        return votingResult.votes;
+      }
+
+      // If no real data available, throw to trigger fallback
+      throw new Error('No real voting data available - using enhanced mock data');
+    },
+    300000 // 5 minutes cache for voting data
+  ).catch(error => {
+    structuredLogger.warn('Real voting data fetch failed, using enhanced mock data', {
+      bioguideId,
+      error: (error as Error).message,
     });
     throw error;
-  }
+  });
 }
 
 export async function GET(
@@ -165,10 +213,7 @@ export async function GET(
   const limit = parseInt(searchParams.get('limit') || '20');
 
   if (!bioguideId) {
-    return NextResponse.json(
-      { error: 'Bioguide ID is required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
   }
 
   try {
@@ -181,7 +226,7 @@ export async function GET(
     } catch (error) {
       structuredLogger.warn('Could not get enhanced representative data', {
         bioguideId,
-        error: (error as Error).message
+        error: (error as Error).message,
       });
     }
 
@@ -192,18 +237,18 @@ export async function GET(
       bioguideId,
       chamber: memberChamber,
       memberName,
-      hasEnhancedData: !!enhancedRep
+      hasEnhancedData: !!enhancedRep,
     });
 
     // Try to get real voting data using enhanced strategies
     try {
       const realVotes = await getEnhancedVotingRecords(bioguideId, memberChamber, limit);
-      
+
       if (realVotes && realVotes.length > 0) {
         structuredLogger.info('Real voting data successfully retrieved', {
           bioguideId,
           votesFound: realVotes.length,
-          chamber: memberChamber
+          chamber: memberChamber,
         });
 
         return NextResponse.json({
@@ -214,35 +259,34 @@ export async function GET(
           member: {
             bioguideId,
             name: memberName,
-            chamber: memberChamber
-          }
+            chamber: memberChamber,
+          },
         });
       }
     } catch (realDataError) {
       structuredLogger.warn('Real voting data unavailable, falling back to mock data', {
         bioguideId,
-        error: (realDataError as Error).message
+        error: (realDataError as Error).message,
       });
     }
 
     // Fallback to enhanced mock data
     structuredLogger.info('Using enhanced mock voting data', {
       bioguideId,
-      reason: 'Real voting data not available'
+      reason: 'Real voting data not available',
     });
-
   } catch (error) {
     structuredLogger.error('Votes API error', error as Error, { bioguideId });
-    
+
     // Get member chamber info for mock data
     let memberChamber = 'House';
     try {
       const enhancedRep = await getEnhancedRepresentative(bioguideId);
       memberChamber = enhancedRep?.chamber || 'House';
-    } catch (repError) {
+    } catch {
       // Use default
     }
-    
+
     // Helper function to generate realistic recent dates
     const getRecentDate = (daysAgo: number): string => {
       const date = new Date();
@@ -251,26 +295,29 @@ export async function GET(
     };
 
     // Get member party from representative data or default (temporary for MVP)
-    const memberParty = 'Democrat'; // TODO: Get from actual representative data
-    
+    const memberParty = 'Democrat'; // NOTE: Get from actual representative data in future
+
     // Generate varied voting positions based on member's party and bill type
-    const generateVotePosition = (billCategory: string, memberParty: string): 'Yea' | 'Nay' | 'Not Voting' | 'Present' => {
+    const generateVotePosition = (
+      billCategory: string,
+      _memberParty: string
+    ): 'Yea' | 'Nay' | 'Not Voting' | 'Present' => {
       const rand = Math.random();
-      
+
       // Simulate realistic voting patterns
       if (rand < 0.02) return 'Not Voting'; // 2% absence rate
       if (rand < 0.025) return 'Present'; // 0.5% present votes
-      
+
       // Party-line tendencies by category
       const partyLineBills = ['Budget', 'Healthcare', 'Immigration'];
       const bipartisanBills = ['Infrastructure', 'Defense', 'Veterans'];
-      
+
       if (partyLineBills.includes(billCategory)) {
         return Math.random() < 0.9 ? 'Yea' : 'Nay'; // 90% party line
       } else if (bipartisanBills.includes(billCategory)) {
         return Math.random() < 0.85 ? 'Yea' : 'Nay'; // 85% support
       }
-      
+
       return Math.random() < 0.75 ? 'Yea' : 'Nay'; // 75% default support
     };
 
@@ -283,7 +330,7 @@ export async function GET(
           title: 'Securing Growth and Robust Leadership in American Aviation Act',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/3935'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/3935',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -297,13 +344,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 206, nay: 17, present: 1, notVoting: 0 },
           republican: { yea: 193, nay: 31, present: 0, notVoting: 1 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2025/roll018.xml',
           lastUpdated: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-2882-25',
@@ -312,7 +359,7 @@ export async function GET(
           title: 'Further Continuing Appropriations and Other Extensions Act, 2025',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/2882'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/2882',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -326,13 +373,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 209, nay: 15, present: 0, notVoting: 0 },
           republican: { yea: 127, nay: 97, present: 1, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2025/roll025.xml',
           lastUpdated: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-82-31',
@@ -341,7 +388,7 @@ export async function GET(
           title: 'Social Security Fairness Act',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/82'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/82',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -355,13 +402,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 224, nay: 0, present: 0, notVoting: 0 },
           republican: { yea: 103, nay: 121, present: 1, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll031.xml',
           lastUpdated: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-4365-42',
@@ -370,7 +417,7 @@ export async function GET(
           title: 'Department of Defense Appropriations Act, 2025',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/4365'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/4365',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -384,13 +431,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 201, nay: 23, present: 0, notVoting: 0 },
           republican: { yea: 218, nay: 6, present: 1, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll042.xml',
           lastUpdated: new Date(Date.now() - 32 * 24 * 60 * 60 * 1000).toISOString(),
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-6976-58',
@@ -399,7 +446,7 @@ export async function GET(
           title: 'Lower Costs, More Transparency Act',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/6976'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/6976',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -413,13 +460,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 218, nay: 6, present: 0, notVoting: 0 },
           republican: { yea: 89, nay: 135, present: 1, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll058.xml',
           lastUpdated: new Date(Date.now() - 38 * 24 * 60 * 60 * 1000).toISOString(),
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-3746-65',
@@ -428,7 +475,7 @@ export async function GET(
           title: 'Financial Innovation and Technology for the 21st Century Act',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/3746'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/3746',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -442,13 +489,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 71, nay: 153, present: 0, notVoting: 0 },
           republican: { yea: 208, nay: 17, present: 0, notVoting: 0 },
-          independent: { yea: 1, nay: 1, present: 0, notVoting: 0 }
+          independent: { yea: 1, nay: 1, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll065.xml',
           lastUpdated: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-815-72',
@@ -457,7 +504,7 @@ export async function GET(
           title: 'National Security Supplemental Appropriations Act, 2024',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/815'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/815',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -471,13 +518,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 210, nay: 14, present: 0, notVoting: 0 },
           republican: { yea: 101, nay: 112, present: 12, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll072.xml',
           lastUpdated: new Date(Date.now() - 52 * 24 * 60 * 60 * 1000).toISOString(),
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-999-89',
@@ -485,13 +532,13 @@ export async function GET(
           number: 'H.R. 999',
           title: 'Border Security Enhancement Act',
           congress: '119',
-          type: 'hr'
+          type: 'hr',
         },
         question: 'On Passage',
         result: 'Passed',
         date: '2025-01-15',
         position: 'Nay',
-        chamber: memberChamber as 'House' | 'Senate'
+        chamber: memberChamber as 'House' | 'Senate',
       },
       {
         voteId: '119-hr-7777-134',
@@ -499,13 +546,13 @@ export async function GET(
           number: 'H.R. 7777',
           title: 'Infrastructure Investment and Jobs Act',
           congress: '119',
-          type: 'hr'
+          type: 'hr',
         },
         question: 'On Passage',
         result: 'Passed',
         date: '2024-12-10',
         position: 'Yea',
-        chamber: memberChamber as 'House' | 'Senate'
+        chamber: memberChamber as 'House' | 'Senate',
       },
       {
         voteId: '119-hr-5555-98',
@@ -513,13 +560,13 @@ export async function GET(
           number: 'H.R. 5555',
           title: 'Medicare for All Act',
           congress: '119',
-          type: 'hr'
+          type: 'hr',
         },
         question: 'On Passage',
         result: 'Failed',
         date: '2024-11-28',
         position: 'Yea',
-        chamber: memberChamber as 'House' | 'Senate'
+        chamber: memberChamber as 'House' | 'Senate',
       },
       {
         voteId: '119-hr-2024-67',
@@ -528,7 +575,7 @@ export async function GET(
           title: 'American Rescue Plan Act of 2025',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/2024'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/2024',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -542,13 +589,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 224, nay: 0, present: 0, notVoting: 0 },
           republican: { yea: 0, nay: 225, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll067.xml',
           lastUpdated: '2024-10-15T17:20:00Z',
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-3030-45',
@@ -557,7 +604,7 @@ export async function GET(
           title: 'Voting Rights Advancement Act of 2025',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/3030'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/3030',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -571,13 +618,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 220, nay: 4, present: 0, notVoting: 0 },
           republican: { yea: 12, nay: 213, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll045.xml',
           lastUpdated: '2024-09-22T13:45:00Z',
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-4040-123',
@@ -586,7 +633,7 @@ export async function GET(
           title: 'Green New Deal Resolution',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/4040'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/4040',
         },
         question: 'On Passage',
         result: 'Failed',
@@ -600,13 +647,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 215, nay: 9, present: 0, notVoting: 0 },
           republican: { yea: 3, nay: 222, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll123.xml',
           lastUpdated: '2024-08-30T14:10:00Z',
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-5050-234',
@@ -615,7 +662,7 @@ export async function GET(
           title: 'Immigration Reform and Border Security Act',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/5050'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/5050',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -629,13 +676,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 45, nay: 179, present: 0, notVoting: 0 },
           republican: { yea: 210, nay: 15, present: 0, notVoting: 0 },
-          independent: { yea: 1, nay: 1, present: 0, notVoting: 0 }
+          independent: { yea: 1, nay: 1, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll234.xml',
           lastUpdated: '2024-07-18T15:55:00Z',
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-6060-345',
@@ -644,7 +691,7 @@ export async function GET(
           title: 'Education Equality Act of 2025',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/6060'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/6060',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -658,13 +705,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 224, nay: 0, present: 0, notVoting: 0 },
           republican: { yea: 89, nay: 136, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll345.xml',
           lastUpdated: '2024-06-25T16:30:00Z',
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-7070-456',
@@ -673,7 +720,7 @@ export async function GET(
           title: 'Affordable Housing Development Act',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/7070'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/7070',
         },
         question: 'On Amendment',
         result: 'Passed',
@@ -687,13 +734,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 218, nay: 6, present: 0, notVoting: 0 },
           republican: { yea: 67, nay: 158, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll456.xml',
           lastUpdated: '2024-05-12T12:15:00Z',
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-8080-567',
@@ -702,7 +749,7 @@ export async function GET(
           title: 'Cybersecurity Enhancement Act',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/8080'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/8080',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -716,13 +763,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 195, nay: 29, present: 0, notVoting: 0 },
           republican: { yea: 201, nay: 24, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll567.xml',
           lastUpdated: '2024-04-08T14:40:00Z',
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-9090-678',
@@ -731,7 +778,7 @@ export async function GET(
           title: 'Small Business Support Act',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/9090'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/9090',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -745,13 +792,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 210, nay: 14, present: 0, notVoting: 0 },
           republican: { yea: 189, nay: 36, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll678.xml',
           lastUpdated: '2024-03-20T13:25:00Z',
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-1010-789',
@@ -760,7 +807,7 @@ export async function GET(
           title: 'Mental Health Parity Act',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/1010'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/1010',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -774,13 +821,13 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 224, nay: 0, present: 0, notVoting: 0 },
           republican: { yea: 156, nay: 69, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll789.xml',
           lastUpdated: '2024-02-14T15:10:00Z',
-          confidence: 'high'
-        }
+          confidence: 'high',
+        },
       },
       {
         voteId: '119-hr-2020-890',
@@ -789,7 +836,7 @@ export async function GET(
           title: 'Veterans Affairs Reform Act',
           congress: '119',
           type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/2020'
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/2020',
         },
         question: 'On Passage',
         result: 'Passed',
@@ -803,27 +850,29 @@ export async function GET(
         partyBreakdown: {
           democratic: { yea: 224, nay: 0, present: 0, notVoting: 0 },
           republican: { yea: 225, nay: 0, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 }
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
         },
         metadata: {
           sourceUrl: 'https://clerk.house.gov/evs/2024/roll890.xml',
           lastUpdated: '2024-01-30T16:45:00Z',
-          confidence: 'high'
-        }
-      }
+          confidence: 'high',
+        },
+      },
     ];
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       votes: mockVotes.slice(0, limit),
-      success: true
+      success: true,
+      source: 'sample',
+      cacheStatus: 'Sample data - live data unavailable',
     });
   }
 }
 
 // Legacy voting records function using bill-based approach
-async function getLegacyVotingRecords(
+async function _getLegacyVotingRecords(
   bioguideId: string,
-  chamber: string, 
+  chamber: string,
   memberName: string,
   limit: number
 ): Promise<Vote[]> {
@@ -835,8 +884,8 @@ async function getLegacyVotingRecords(
       `https://api.congress.gov/v3/bill?api_key=${process.env.CONGRESS_API_KEY}&limit=${Math.min(limit * 2, 100)}&format=json`,
       {
         headers: {
-          'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)'
-        }
+          'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+        },
       }
     );
 
@@ -857,7 +906,7 @@ async function getLegacyVotingRecords(
 
     const votes: Vote[] = [];
     const parser = new RollCallParser();
-    
+
     // Process each bill to find recorded votes
     for (const bill of billsData.bills.slice(0, limit)) {
       if (bill.actions && bill.actions.length > 0) {
@@ -865,12 +914,15 @@ async function getLegacyVotingRecords(
           if (action.recordedVotes && action.recordedVotes.length > 0) {
             for (const recordedVote of action.recordedVotes) {
               // Only include votes from the member's chamber
-              if (recordedVote.chamber && recordedVote.chamber.toLowerCase() === chamber.toLowerCase()) {
+              if (
+                recordedVote.chamber &&
+                recordedVote.chamber.toLowerCase() === chamber.toLowerCase()
+              ) {
                 const voteId = `${bill.congress}-${bill.type}-${bill.number}-${recordedVote.rollNumber}`;
-                
+
                 // Get member's vote position from roll call data
                 let memberVotePosition: 'Yea' | 'Nay' | 'Not Voting' | 'Present' = 'Not Voting';
-                
+
                 if (recordedVote.url) {
                   memberVotePosition = await getMemberVoteFromRollCall(
                     recordedVote.url,
@@ -884,7 +936,7 @@ async function getLegacyVotingRecords(
                 const actionText = action.text?.toLowerCase() || '';
                 let result = 'Unknown';
                 let question = 'On Passage';
-                
+
                 if (actionText.includes('passed') || actionText.includes('agreed to')) {
                   result = 'Passed';
                 } else if (actionText.includes('failed') || actionText.includes('rejected')) {
@@ -903,7 +955,7 @@ async function getLegacyVotingRecords(
                 }
 
                 const category = categorizeBill(bill.title || '');
-                const isKeyVote = 
+                const isKeyVote =
                   category === 'Budget' ||
                   category === 'Healthcare' ||
                   category === 'Defense' ||
@@ -917,7 +969,7 @@ async function getLegacyVotingRecords(
                     title: bill.title || 'Unknown Bill',
                     congress: (bill.congress || 'unknown').toString(),
                     type: bill.type || 'unknown',
-                    url: bill.url
+                    url: bill.url,
                   },
                   question,
                   result,
@@ -930,8 +982,8 @@ async function getLegacyVotingRecords(
                   metadata: {
                     sourceUrl: recordedVote.url,
                     lastUpdated: new Date().toISOString(),
-                    confidence: memberVotePosition !== 'Not Voting' ? 'medium' : 'low'
-                  }
+                    confidence: memberVotePosition !== 'Not Voting' ? 'medium' : 'low',
+                  },
                 });
               }
             }
@@ -947,11 +999,10 @@ async function getLegacyVotingRecords(
     structuredLogger.info('Successfully processed legacy votes', {
       bioguideId,
       processedVotes: limitedVotes.length,
-      keyVotes: limitedVotes.filter(v => v.isKeyVote).length
+      keyVotes: limitedVotes.filter(v => v.isKeyVote).length,
     });
 
     return limitedVotes;
-
   } catch (error) {
     structuredLogger.error('Error fetching legacy voting records', error as Error, { bioguideId });
     throw error;

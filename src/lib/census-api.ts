@@ -384,10 +384,22 @@ export const getCongressionalDistrictFromAddress = cache(
 
       // Clean and format the address
       const cleanAddress = address.trim().replace(/\s+/g, ' ');
-      const encodedAddress = encodeURIComponent(cleanAddress);
 
       // Use Census Geocoding API for address lookup
-      const url = `https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?address=${encodedAddress}&benchmark=Public_AR_Current&vintage=Current_Current&format=json`;
+      const params = new URLSearchParams({
+        address: cleanAddress,
+        benchmark: 'Public_AR_Current',
+        vintage: 'Current_Current',
+        layers: '54', // Congressional Districts layer (119th Congress)
+        format: 'json',
+      });
+
+      const url = `https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?${params}`;
+
+      structuredLogger.info('Geocoding address via Census API', {
+        address: cleanAddress,
+        url: url.replace(/address=[^&]+/, 'address=REDACTED'),
+      });
 
       const response = await fetch(url, {
         headers: {

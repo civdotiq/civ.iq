@@ -5,7 +5,44 @@ All notable changes to CIV.IQ will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2025.01.25] - Enhanced FEC Campaign Finance System 🏦
+## [2025.07.25] - Critical MVP Bug Fixes & Caching System 🚀
+
+### Fixed
+
+- **Multi-district selection navigation**: Fixed handleDistrictSelect to properly navigate to representatives page with district parameters
+- **View Profile buttons**: Verified and ensured all RepresentativeCard components properly navigate to individual representative pages
+- **Address search returning empty**: Fixed Census API geocoding by adding missing `layers` parameter and improved error logging
+- **API rate limiting issues**: Implemented comprehensive caching system to prevent external API failures
+
+### Added
+
+- **Basic caching system** (`cache-helper.ts`):
+  - In-memory cache with configurable TTL (default 24 hours)
+  - Stale-while-revalidate functionality for graceful degradation
+  - Cache management functions for debugging and maintenance
+  - Automatic fallback to cached data when APIs fail
+- **Enhanced votes endpoint with caching**:
+  - 5-minute cache for voting data to reduce Congress.gov API calls
+  - Clear data source indicators ("Live data" vs "Sample data")
+  - Graceful fallback to mock data when real data unavailable
+- **Improved error handling**: Replaced console statements with structured logging throughout
+
+### Technical Improvements
+
+- **Smart API caching**: Prevents rate limits while ensuring data freshness
+- **Better geocoding**: Address searches now properly query Census API with correct parameters
+- **Enhanced debugging**: Added comprehensive logging for address geocoding failures
+- **Code quality**: Fixed all ESLint warnings and TypeScript issues
+
+### User Experience
+
+- **Reliable navigation**: Multi-district ZIP code selection now properly redirects users
+- **Clear data transparency**: Users can see whether they're viewing live or sample data
+- **Improved performance**: Cached responses reduce loading times and API failures
+
+---
+
+## [2025.07.25] - Enhanced FEC Campaign Finance System 🏦
 
 ### Major Enhancement: Comprehensive Campaign Finance Intelligence
 
