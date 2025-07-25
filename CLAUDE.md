@@ -5,6 +5,7 @@ You are working in: /mnt/d/civic-intel-hub
 This is the ONLY active CIV.IQ project. Ignore any other folders with similar names.
 
 ## Project Identity
+
 - **Folder**: civic-intel-hub
 - **Location**: D:\ drive (/mnt/d/civic-intel-hub in WSL)
 - **Version**: 2025 Advanced Civic Information Platform (Phase 6 Complete)
@@ -17,6 +18,7 @@ We're building production-quality code together. Your role is to create maintain
 When you seem stuck or overly complex, I'll redirect you - my guidance helps you stay on track.
 
 ## 🚨 AUTOMATED CHECKS ARE MANDATORY
+
 **ALL hook issues are BLOCKING - EVERYTHING must be ✅ GREEN!**  
 No errors. No formatting issues. No linting problems. Zero tolerance.  
 These are not suggestions. Fix ALL issues before continuing.
@@ -24,9 +26,11 @@ These are not suggestions. Fix ALL issues before continuing.
 ## CRITICAL WORKFLOW - ALWAYS FOLLOW THIS!
 
 ### Research → Plan → Implement
+
 **NEVER JUMP STRAIGHT TO CODING!** Always follow this sequence:
+
 1. **Research**: Explore the codebase, understand existing patterns
-2. **Plan**: Create a detailed implementation plan and verify it with me  
+2. **Plan**: Create a detailed implementation plan and verify it with me
 3. **Implement**: Execute the plan with validation checkpoints
 
 When asked to implement any feature, you'll first say: "Let me research the codebase and create a plan before implementing."
@@ -34,19 +38,22 @@ When asked to implement any feature, you'll first say: "Let me research the code
 For complex architectural decisions or challenging problems, use **"ultrathink"** to engage maximum reasoning capacity. Say: "Let me ultrathink about this architecture before proposing a solution."
 
 ### USE MULTIPLE AGENTS!
-*Leverage subagents aggressively* for better results:
 
-* Spawn agents to explore different parts of the codebase in parallel
-* Use one agent to write tests while another implements features
-* Delegate research tasks: "I'll have an agent investigate the database schema while I analyze the API structure"
-* For complex refactors: One agent identifies changes, another implements them
+_Leverage subagents aggressively_ for better results:
+
+- Spawn agents to explore different parts of the codebase in parallel
+- Use one agent to write tests while another implements features
+- Delegate research tasks: "I'll have an agent investigate the database schema while I analyze the API structure"
+- For complex refactors: One agent identifies changes, another implements them
 
 Say: "I'll spawn agents to tackle different aspects of this problem" whenever a task has multiple independent parts.
 
 ### Reality Checkpoints
+
 **Stop and validate** at these moments:
+
 - After implementing a complete feature
-- Before starting a new major component  
+- Before starting a new major component
 - When something feels wrong
 - Before declaring "done"
 - **WHEN HOOKS FAIL WITH ERRORS** ❌
@@ -56,7 +63,9 @@ Run: `make fmt && make test && make lint`
 > Why: You can lose track of what's actually working. These checkpoints prevent cascading failures.
 
 ### 🚨 CRITICAL: Hook Failures Are BLOCKING
+
 **When hooks report ANY issues (exit code 2), you MUST:**
+
 1. **STOP IMMEDIATELY** - Do not continue with other tasks
 2. **FIX ALL ISSUES** - Address every ❌ issue until everything is ✅ GREEN
 3. **VERIFY THE FIX** - Re-run the failed command to confirm it's fixed
@@ -64,6 +73,7 @@ Run: `make fmt && make test && make lint`
 5. **NEVER IGNORE** - There are NO warnings, only requirements
 
 This includes:
+
 - Formatting issues (gofmt, black, prettier, etc.)
 - Linting violations (golangci-lint, eslint, etc.)
 - Forbidden patterns (time.Sleep, panic(), interface{})
@@ -72,6 +82,7 @@ This includes:
 Your code must be 100% clean. No exceptions.
 
 **Recovery Protocol:**
+
 - When interrupted by a hook failure, maintain awareness of your original task
 - After fixing all issues and verifying the fix, continue where you left off
 - Use the todo list to track both the fix and your original task
@@ -79,13 +90,15 @@ Your code must be 100% clean. No exceptions.
 ## Quick Reference
 
 ### Brand Colors
+
 ```css
---civiq-red: #e11d07;    /* Logo circle, errors */
---civiq-green: #0a9338;  /* Logo rectangle, success */
---civiq-blue: #3ea2d4;   /* Links, accents */
+--civiq-red: #e11d07; /* Logo circle, errors */
+--civiq-green: #0a9338; /* Logo rectangle, success */
+--civiq-blue: #3ea2d4; /* Links, accents */
 ```
 
 ### Key Files
+
 - `src/app/page.tsx` - Landing page (clean design)
 - `src/app/representatives/page.tsx` - Representatives list
 - `src/app/representative/[bioguideId]/page.tsx` - Enhanced profile pages
@@ -95,6 +108,7 @@ Your code must be 100% clean. No exceptions.
 - `src/components/BillSummary.tsx` - AI-powered bill summaries
 
 ### API Endpoints
+
 ```
 GET /api/representatives?zip=48221             # Enhanced with congress-legislators
 GET /api/representative/[bioguideId]           # Enhanced profiles with social media
@@ -111,6 +125,7 @@ GET /api/health                                # Service health monitoring
 ```
 
 ### Development Commands
+
 ```bash
 npm run dev      # Start development server
 npm run build    # Production build
@@ -129,6 +144,7 @@ npm run validate-mappings  # Validate mappings
 ```
 
 ### Critical Rules
+
 1. ONLY use approved APIs (Congress-Legislators, Census, Congress, FEC, OpenStates, GDELT)
 2. NEVER use Google Civic or ProPublica APIs
 3. Keep the clean, minimalist design
@@ -137,6 +153,7 @@ npm run validate-mappings  # Validate mappings
 6. Always implement null-safe patterns (use optional chaining)
 
 ### Current Phase: MVP PRODUCTION READY (Phase 6 Complete + Full Verification - Jul 2025)
+
 - ✅ Federal representatives with enhanced congress-legislators data
 - ✅ ZIP code lookup with real Census API
 - ✅ Enhanced profiles with social media and biographical data
@@ -160,9 +177,11 @@ npm run validate-mappings  # Validate mappings
 - ✅ **🎉 MVP VERIFICATION COMPLETE (Jan 21, 2025)** - All federal functionality tested and production-ready
 - ✅ **District Map API Fix (Jan 21, 2025)** - Fixed geocoding with intelligent fallbacks and real boundaries
 - ✅ **Complete Error Handling (Jan 21, 2025)** - Enhanced TypeScript safety and null-checking across all systems
+- ✅ **🏦 Enhanced FEC Campaign Finance System (Jan 25, 2025)** - Industry categorization, bundled contributions, and independent expenditures tracking
 - ❌ State/local (Phase 2+)
 
 ### Phase 3 Complete: Integration with Existing System
+
 - ✅ **Comprehensive Integration** - 39,363 ZIP codes seamlessly integrated with existing CIV.IQ system
 - ✅ **Sub-millisecond performance** - 0.000ms average response time with 100% hit rate
 - ✅ **100% backward compatibility** - All existing APIs preserved with zero breaking changes
@@ -173,6 +192,7 @@ npm run validate-mappings  # Validate mappings
 - ✅ **Perfect integration** - 9/9 integration tests passed with TypeScript compilation verified
 
 ### Phase 2 Complete: Data Processing Pipeline
+
 - ✅ **CSV processing** - 46,620 rows processed in 169ms with zero errors
 - ✅ **District normalization** - At-large districts (98 → 00) and format standardization
 - ✅ **Multi-district handling** - 6,569 multi-district ZIPs with primary assignment logic
@@ -181,6 +201,7 @@ npm run validate-mappings  # Validate mappings
 - ✅ **Quality assurance** - 100% data validation with comprehensive reporting pipeline
 
 ### Phase 1 Complete: 119th Congress ZIP Code Integration
+
 - ✅ **OpenSourceActivismTech data validated** - 39,363 ZIP codes with 119th Congress districts
 - ✅ **Data quality verified** - 100% clean data, zero missing fields
 - ✅ **Complete US coverage** - All 50 states + territories (DC, GU, PR, VI)
@@ -189,12 +210,14 @@ npm run validate-mappings  # Validate mappings
 - ✅ **Performance ready** - 90% API call reduction, <10ms lookup times projected
 
 ### Ready for Phase 4: Edge Case Handling & UI Updates
+
 - ⏳ **Multi-district ZIP UI strategy** - Design UI for handling multiple districts
 - ⏳ **Enhanced tooltips and warnings** - User-friendly edge case messaging
 - ⏳ **Comprehensive state testing** - All 50 states + territories validation
 - ⏳ **Unmapped ZIP logging** - Tracking and analytics for missing ZIPs
 
 ### Environment Variables
+
 ```env
 CONGRESS_API_KEY=
 FEC_API_KEY=
@@ -202,6 +225,7 @@ CENSUS_API_KEY=
 ```
 
 ### Design Principles
+
 - Clean, minimalist interface
 - Data clarity over decoration
 - Fast, responsive performance
@@ -209,6 +233,7 @@ CENSUS_API_KEY=
 - Mobile-first approach
 
 ### Git Workflow
+
 1. Feature branch from `main`
 2. Clear commit messages (feat/fix/docs)
 3. Test before pushing
@@ -217,16 +242,18 @@ CENSUS_API_KEY=
 ## Working Memory Management
 
 ### When context gets long:
+
 - Re-read this CLAUDE.md file
 - Summarize progress in a PROGRESS.md file
 - Document current state before major changes
 
 ### Maintain TODO.md:
+
 ```
 ## Current Task
 - [ ] What we're doing RIGHT NOW
 
-## Completed  
+## Completed
 - [x] What's actually done and tested
 
 ## Next Steps
@@ -236,6 +263,7 @@ CENSUS_API_KEY=
 ## Go-Specific Rules
 
 ### FORBIDDEN - NEVER DO THESE:
+
 - **NO interface{}** or **any{}** - use concrete types!
 - **NO time.Sleep()** or busy waits - use channels for synchronization!
 - **NO** keeping old and new code together
@@ -248,6 +276,7 @@ CENSUS_API_KEY=
 > When you see `❌ FORBIDDEN PATTERN`, you MUST fix it immediately!
 
 ### Required Standards:
+
 - **Delete** old code when replacing it
 - **Meaningful names**: `userID` not `id`
 - **Early returns** to reduce nesting
@@ -260,19 +289,22 @@ CENSUS_API_KEY=
 ## Implementation Standards
 
 ### Our code is complete when:
+
 - ✅ All linters pass with zero issues
-- ✅ All tests pass  
+- ✅ All tests pass
 - ✅ Feature works end-to-end
 - ✅ Old code is deleted
 - ✅ Godoc on all exported symbols
 
 ### Testing Strategy
+
 - Complex business logic → Write tests first
 - Simple CRUD → Write tests after
 - Hot paths → Add benchmarks
 - Skip tests for main() and simple CLI parsing
 
 ### Project Structure
+
 ```
 cmd/        # Application entrypoints
 internal/   # Private code (the majority goes here)
@@ -282,6 +314,7 @@ pkg/        # Public libraries (only if truly reusable)
 ## Problem-Solving Together
 
 When you're stuck or confused:
+
 1. **Stop** - Don't spiral into complex solutions
 2. **Delegate** - Consider spawning agents for parallel investigation
 3. **Ultrathink** - For complex problems, say "I need to ultrathink through this challenge" to engage deeper reasoning
@@ -294,11 +327,13 @@ My insights on better approaches are valued - please ask for them!
 ## Performance & Security
 
 ### **Measure First**:
+
 - No premature optimization
 - Benchmark before claiming something is faster
 - Use pprof for real bottlenecks
 
 ### **Security Always**:
+
 - Validate all inputs
 - Use crypto/rand for randomness
 - Prepared statements for SQL (never concatenate!)
@@ -306,13 +341,15 @@ My insights on better approaches are valued - please ask for them!
 ## Communication Protocol
 
 ### Progress Updates:
+
 ```
 ✓ Implemented authentication (all tests passing)
-✓ Added rate limiting  
+✓ Added rate limiting
 ✗ Found issue with token expiration - investigating
 ```
 
 ### Suggesting Improvements:
+
 "The current approach works, but I notice [observation].
 Would you like me to [specific improvement]?"
 
@@ -325,6 +362,7 @@ Would you like me to [specific improvement]?"
 Avoid complex abstractions or "clever" code. The simple, obvious solution is probably better, and my guidance helps you stay focused on what matters.
 
 ## If Confused
+
 - Check `README.md` for full documentation
 - Run `pwd` to verify location
 - Check `git status` for current branch

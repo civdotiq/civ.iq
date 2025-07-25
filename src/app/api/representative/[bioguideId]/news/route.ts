@@ -9,8 +9,11 @@ import {
   generateOptimizedSearchTerms,
   fetchGDELTNewsWithDeduplication,
   normalizeGDELTArticle,
+  fetchGDELTNews,
 } from '@/lib/gdelt-api';
+import { buildOptimizedGDELTQuery } from '@/lib/gdelt-query-builder';
 import { structuredLogger } from '@/lib/logging/logger';
+import type { EnhancedRepresentative } from '@/types/representative';
 
 interface NewsArticle {
   title: string;
@@ -60,20 +63,22 @@ export async function GET(
 
           if (repResponse.ok) {
             const repData = await repResponse.json();
+            const enhancedRep = repData.representative as EnhancedRepresentative;
 
             // Extract the correct fields from the API response
             // Handle both BaseRepresentative and EnhancedRepresentative structures
-            const fullName = repData.fullName
-              ? `${repData.fullName.first} ${repData.fullName.last}`
-              : repData.name;
+            const fullName = enhancedRep.fullName
+              ? `${enhancedRep.fullName.first} ${enhancedRep.fullName.last}`
+              : enhancedRep.name;
 
             representative = {
-              name: fullName || `${repData.firstName} ${repData.lastName}`,
-              state: repData.state,
-              district: repData.district,
-              party: repData.party,
-              bioguideId: repData.bioguideId || bioguideId,
-              chamber: repData.chamber,
+              ...enhancedRep,
+              name: fullName || `${enhancedRep.firstName} ${enhancedRep.lastName}`,
+              state: enhancedRep.state,
+              district: enhancedRep.district,
+              party: enhancedRep.party,
+              bioguideId: enhancedRep.bioguideId || bioguideId,
+              chamber: enhancedRep.chamber,
             };
 
             // Validate we have the minimum required data
@@ -115,12 +120,24 @@ export async function GET(
           request
         );
 
-        // Generate optimized search terms for civic/political news
-        const searchTerms = generateOptimizedSearchTerms(
-          representative.name,
-          representative.state,
-          representative.district
-        );
+        // Try enhanced query builder if we have full representative data
+        let searchTerms: string[];
+        const useEnhancedQueries = searchParams.get('enhanced') !== 'false';
+
+        if (useEnhancedQueries && representative.committees) {
+          // Use advanced query builder with full metadata
+          searchTerms = buildOptimizedGDELTQuery(representative as EnhancedRepresentative, {
+            focusLocal: true,
+            timespan: '24h',
+          });
+        } else {
+          // Fallback to basic search terms
+          searchTerms = generateOptimizedSearchTerms(
+            representative.name,
+            representative.state,
+            representative.district
+          );
+        }
 
         structuredLogger.debug(
           'Generated optimized search terms',
@@ -134,26 +151,32 @@ export async function GET(
         );
 
         // Fetch news from GDELT with intelligent deduplication
-        const _allArticles: unknown[] = [];
         const articlesPerTerm = Math.ceil((limit * 1.5) / searchTerms.length); // Fetch more to account for deduplication
         let totalDuplicatesRemoved = 0;
 
-        const fetchPromises = searchTerms.map(async searchTerm => {
+        const fetchPromises = searchTerms.map(async (searchTerm, _index) => {
           try {
-            const { articles: gdeltArticles, stats } = await fetchGDELTNewsWithDeduplication(
-              searchTerm,
-              articlesPerTerm,
-              {
-                titleSimilarityThreshold: 0.85,
-                maxArticlesPerDomain: 2,
-                enableDomainClustering: true,
-              }
-            );
+            // Use raw fetchGDELTNews for enhanced queries (already include themes)
+            // Use deduplication wrapper for basic queries
+            if (useEnhancedQueries && representative.committees) {
+              const gdeltArticles = await fetchGDELTNews(searchTerm, articlesPerTerm);
+              return gdeltArticles.map(article => normalizeGDELTArticle(article));
+            } else {
+              const { articles: gdeltArticles, stats } = await fetchGDELTNewsWithDeduplication(
+                searchTerm,
+                articlesPerTerm,
+                {
+                  titleSimilarityThreshold: 0.85,
+                  maxArticlesPerDomain: 2,
+                  enableDomainClustering: true,
+                }
+              );
 
-            totalDuplicatesRemoved += stats.duplicatesRemoved;
+              totalDuplicatesRemoved += stats.duplicatesRemoved;
 
-            // Normalize articles
-            return gdeltArticles.map(article => normalizeGDELTArticle(article));
+              // Normalize articles
+              return gdeltArticles.map(article => normalizeGDELTArticle(article));
+            }
           } catch (error) {
             structuredLogger.error(
               `Error fetching GDELT news for term: ${searchTerm}`,
@@ -195,13 +218,12 @@ export async function GET(
         // Convert clusters back to articles, keeping primary articles
         const clusteredArticles = clusteringResult.clusters
           .map(cluster => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const primaryArticle = flattenedArticles.find(
-              (a: any) => a.url === cluster.primaryArticle.url
+              (a: unknown) => (a as { url: string }).url === cluster.primaryArticle.url
             );
+            const articleData = primaryArticle as Record<string, unknown>;
             return {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              ...(primaryArticle as any),
+              ...articleData,
               relatedStories: cluster.relatedArticles.length,
               sources: cluster.sources.join(', '),
               category: cluster.category,
@@ -222,32 +244,48 @@ export async function GET(
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-        const qualityFilteredArticles = finalArticles.filter(article => {
-          const articleDate = new Date(article.publishedDate);
+        const qualityFilteredArticles = finalArticles.filter((article: unknown) => {
+          const articleData = article as {
+            publishedDate: string;
+            language: string;
+            title: string;
+            domain: string;
+          };
+          const articleDate = new Date(articleData.publishedDate);
 
           return (
-            article.language === 'English' &&
-            article.title.length > 15 &&
-            article.title.length < 300 &&
+            articleData.language === 'English' &&
+            articleData.title.length > 15 &&
+            articleData.title.length < 300 &&
             articleDate >= thirtyDaysAgo &&
-            !article.title.toLowerCase().includes('404') &&
-            !article.title.toLowerCase().includes('error') &&
-            !article.domain.includes('facebook.com') &&
-            !article.domain.includes('twitter.com')
+            !articleData.title.toLowerCase().includes('404') &&
+            !articleData.title.toLowerCase().includes('error') &&
+            !articleData.domain.includes('facebook.com') &&
+            !articleData.domain.includes('twitter.com')
           );
         });
 
         // Final cross-term deduplication
         const { deduplicateNews } = await import('@/lib/news-deduplication');
         const { articles: finalDeduplicatedArticles, stats: finalStats } = deduplicateNews(
-          qualityFilteredArticles.map(article => ({
-            url: article.url,
-            title: article.title,
-            seendate: article.publishedDate,
-            domain: article.domain,
-            socialimage: article.imageUrl,
-            language: article.language,
-          })),
+          qualityFilteredArticles.map((article: unknown) => {
+            const articleData = article as {
+              url: string;
+              title: string;
+              publishedDate: string;
+              domain: string;
+              imageUrl?: string;
+              language: string;
+            };
+            return {
+              url: articleData.url,
+              title: articleData.title,
+              seendate: articleData.publishedDate,
+              domain: articleData.domain,
+              socialimage: articleData.imageUrl,
+              language: articleData.language,
+            };
+          }),
           {
             titleSimilarityThreshold: 0.9,
             maxArticlesPerDomain: 1,
@@ -266,8 +304,11 @@ export async function GET(
           imageUrl: article.socialimage,
           language: article.language || 'English',
           source:
-            qualityFilteredArticles.find(orig => orig.url === article.url)?.source ||
-            article.domain,
+            (
+              qualityFilteredArticles.find(
+                (orig: unknown) => (orig as { url: string }).url === article.url
+              ) as { source?: string }
+            )?.source || article.domain,
         }));
 
         const sortedArticles = uniqueArticles

@@ -9,6 +9,12 @@ import { getFECIdFromBioguide, hasFECMapping } from '@/lib/data/bioguide-fec-map
 import { structuredLogger } from '@/lib/logging/logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import { FECUtils } from '@/lib/fec-api';
+import { industryCategorizer } from '@/lib/fec/industry-categorizer';
+import { bundledContributionsAnalyzer } from '@/lib/fec/bundled-contributions';
+import { independentExpendituresAnalyzer } from '@/lib/fec/independent-expenditures';
+import type { ContributionsBySector } from '@/lib/fec/industry-categorizer';
+import type { BundledContributor } from '@/lib/fec/bundled-contributions';
+import type { IndependentExpenditureAnalysis } from '@/lib/fec/independent-expenditures';
 
 // State name to abbreviation mapping
 const STATE_ABBR: Record<string, string> = {
@@ -128,6 +134,15 @@ interface CampaignFinanceData {
     total_amount: number;
     count: number;
   }>;
+  // Enhanced features
+  industry_breakdown?: ContributionsBySector[];
+  bundled_contributions?: BundledContributor[];
+  independent_expenditures?: IndependentExpenditureAnalysis;
+  funding_diversity?: {
+    sector_count: number;
+    top_sector_percentage: number;
+    herfindahl_index: number;
+  };
 }
 
 // Enhanced helper function to find FEC candidate by name and state
@@ -549,9 +564,9 @@ async function getFinancialSummary(candidateId: string): Promise<FinancialSummar
   );
 }
 
-async function getContributions(candidateId: string): Promise<ContributionData[]> {
+async function getContributions(candidateId: string, limit = 200): Promise<ContributionData[]> {
   const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
-  const cacheKey = `fec-contributions-${candidateId}-${new Date().toISOString().split('T')[0]}`; // Daily cache
+  const cacheKey = `fec-contributions-${candidateId}-${limit}-${new Date().toISOString().split('T')[0]}`; // Daily cache
 
   // Validate candidate ID format
   const normalizedId = FECUtils.normalizeCandidateId(candidateId);
@@ -573,7 +588,7 @@ async function getContributions(candidateId: string): Promise<ContributionData[]
         structuredLogger.info('Fetching contributions from FEC', { candidateId, currentCycle });
 
         const response = await fetch(
-          `https://api.open.fec.gov/v1/schedules/schedule_a/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&two_year_transaction_period=${currentCycle}&sort=-contribution_receipt_date&per_page=20`,
+          `https://api.open.fec.gov/v1/schedules/schedule_a/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&two_year_transaction_period=${currentCycle}&sort=-contribution_receipt_date&per_page=${limit}`,
           {
             headers: {
               'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
@@ -639,6 +654,122 @@ async function getContributions(candidateId: string): Promise<ContributionData[]
       }
     },
     60 * 60 * 1000 // 1 hour cache for contributions (more frequent updates)
+  );
+}
+
+// New function to fetch PAC contributions for bundled analysis
+async function getPACContributions(candidateId: string): Promise<ContributionData[]> {
+  const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
+  const cacheKey = `fec-pac-contributions-${candidateId}-${new Date().toISOString().split('T')[0]}`;
+
+  const normalizedId = FECUtils.normalizeCandidateId(candidateId);
+  const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
+
+  if (!validationInfo.isValid) {
+    return [];
+  }
+
+  return cachedFetch(
+    cacheKey,
+    async () => {
+      try {
+        const response = await fetch(
+          `https://api.open.fec.gov/v1/schedules/schedule_a/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&contributor_type=committee&two_year_transaction_period=${currentCycle}&sort=-contribution_receipt_date&per_page=100`,
+          {
+            headers: {
+              'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+              Accept: 'application/json',
+            },
+          }
+        );
+
+        if (!response.ok) {
+          return [];
+        }
+
+        const data = await response.json();
+        return (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          data.results?.map((contrib: any) => ({
+            contributor_name: contrib.contributor_name || contrib.committee_name || 'Unknown',
+            contributor_employer: contrib.committee_name,
+            contribution_receipt_amount: contrib.contribution_receipt_amount || 0,
+            contribution_receipt_date: contrib.contribution_receipt_date,
+            committee_name: contrib.committee_name || 'Unknown',
+          })) || []
+        );
+      } catch (error) {
+        structuredLogger.error('Error fetching PAC contributions', error as Error, {
+          candidateId,
+        });
+        return [];
+      }
+    },
+    60 * 60 * 1000
+  );
+}
+
+// New function to fetch independent expenditures
+async function getIndependentExpenditures(candidateId: string) {
+  const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
+  const cacheKey = `fec-independent-expenditures-${candidateId}-${new Date().toISOString().split('T')[0]}`;
+
+  const normalizedId = FECUtils.normalizeCandidateId(candidateId);
+  const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
+
+  if (!validationInfo.isValid) {
+    return [];
+  }
+
+  return cachedFetch(
+    cacheKey,
+    async () => {
+      try {
+        const response = await fetch(
+          `https://api.open.fec.gov/v1/schedules/schedule_e/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&two_year_transaction_period=${currentCycle}&sort=-expenditure_date&per_page=100`,
+          {
+            headers: {
+              'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+              Accept: 'application/json',
+            },
+          }
+        );
+
+        if (!response.ok) {
+          return [];
+        }
+
+        const data = await response.json();
+        return (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          data.results?.map((exp: any) => ({
+            committee_id: exp.committee_id,
+            committee_name: exp.committee_name || 'Unknown',
+            candidate_id: exp.candidate_id,
+            candidate_name: exp.candidate_name,
+            expenditure_amount: exp.expenditure_amount || 0,
+            expenditure_date: exp.expenditure_date,
+            expenditure_description: exp.expenditure_description || 'Unknown',
+            support_oppose_indicator: exp.support_oppose_indicator,
+            election_type: exp.election_type,
+            expenditure_purpose: exp.expenditure_purpose_descrip || exp.expenditure_description,
+            payee_name: exp.payee_name || 'Unknown',
+            payee_city: exp.payee_city,
+            payee_state: exp.payee_state,
+            filing_form: exp.filing_form,
+            report_type: exp.report_type,
+            image_number: exp.image_number,
+            memo_text: exp.memo_text,
+          })) || []
+        );
+      } catch (error) {
+        structuredLogger.error('Error fetching independent expenditures', error as Error, {
+          candidateId,
+        });
+        return [];
+      }
+    },
+    2 * 60 * 60 * 1000 // 2 hours cache
   );
 }
 
@@ -794,7 +925,9 @@ export async function GET(
 
           // Use FEC IDs from congress-legislators if available
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const enhancedRepIds = (enhancedRep as any)?.ids;
+          const enhancedRepIds = (enhancedRep as Record<string, unknown>)?.ids as
+            | Record<string, string[]>
+            | undefined;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if (enhancedRepIds?.fec && enhancedRepIds.fec.length > 0) {
             mappedFECId = enhancedRepIds.fec[0]; // Use the first FEC ID
@@ -880,10 +1013,10 @@ export async function GET(
           const stateAbbr = getStateAbbreviation(representative.state);
 
           // Use enhanced name data if available
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const enhancedRepData = enhancedRep as any;
+          const enhancedRepData = enhancedRep as Record<string, unknown> | null;
+          const fullName = enhancedRepData?.fullName as Record<string, string> | undefined;
           const searchName =
-            enhancedRepData?.fullName?.official || enhancedRepData?.name || representative.name;
+            fullName?.official || (enhancedRepData?.name as string) || representative.name;
 
           fecCandidate = await findFECCandidate(searchName, stateAbbr, representative.district);
 
@@ -906,11 +1039,19 @@ export async function GET(
       }
 
       if (fecCandidate) {
-        // Fetch financial data
-        const [financialSummary, contributions, expenditures] = await Promise.all([
+        // Fetch comprehensive financial data including enhanced features
+        const [
+          financialSummary,
+          contributions,
+          expenditures,
+          pacContributions,
+          independentExpenditures,
+        ] = await Promise.all([
           getFinancialSummary(fecCandidate.candidate_id),
-          getContributions(fecCandidate.candidate_id),
+          getContributions(fecCandidate.candidate_id, 500), // Get more for analysis
           getExpenditures(fecCandidate.candidate_id),
+          getPACContributions(fecCandidate.candidate_id),
+          getIndependentExpenditures(fecCandidate.candidate_id),
         ]);
 
         // Process top contributors with enhanced categorization
@@ -1062,15 +1203,76 @@ export async function GET(
           .sort((a: any, b: any) => b.total_amount - a.total_amount)
           .slice(0, 10);
 
+        // Enhanced Analysis Phase: Industry categorization, bundled contributions, and independent expenditures
+
+        // 1. Industry Categorization
+        const industryBreakdown = industryCategorizer.categorizeContributions(
+          contributions.map(contrib => ({
+            contributor_employer: contrib.contributor_employer,
+            contribution_receipt_amount: contrib.contribution_receipt_amount,
+            contributor_name: contrib.contributor_name,
+          }))
+        );
+
+        // 2. Bundled Contributions Analysis
+        const bundledContributions = bundledContributionsAnalyzer.analyzeBundledContributions(
+          contributions.map(contrib => ({
+            contributor_name: contrib.contributor_name,
+            contributor_employer: contrib.contributor_employer,
+            contribution_receipt_amount: contrib.contribution_receipt_amount,
+            contribution_receipt_date: contrib.contribution_receipt_date,
+            committee_name: contrib.committee_name,
+          })),
+          pacContributions.map(pac => ({
+            committee_name: pac.committee_name,
+            committee_id: pac.committee_name, // Use name as ID for basic analysis
+            contribution_receipt_amount: pac.contribution_receipt_amount,
+            contribution_receipt_date: pac.contribution_receipt_date,
+          }))
+        );
+
+        // 3. Independent Expenditures Analysis
+        const independentExpendituresAnalysis =
+          independentExpenditures.length > 0
+            ? independentExpendituresAnalyzer.analyzeIndependentExpenditures(
+                independentExpenditures,
+                fecCandidate.candidate_id
+              )
+            : undefined;
+
+        // 4. Funding Diversity Metrics
+        const fundingDiversity =
+          industryBreakdown.length > 0
+            ? {
+                sector_count: industryBreakdown.length,
+                top_sector_percentage: industryBreakdown[0]?.percentage || 0,
+                herfindahl_index: industryBreakdown.reduce(
+                  (sum, sector) => sum + Math.pow(sector.percentage / 100, 2),
+                  0
+                ),
+              }
+            : undefined;
+
         const financeData: CampaignFinanceData = {
           candidate_info: fecCandidate,
           financial_summary: financialSummary,
           recent_contributions: contributions.slice(0, 10),
           recent_expenditures: expenditures.slice(0, 10),
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          top_contributors: topContributors as any,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          top_expenditure_categories: topCategories as any,
+          top_contributors: topContributors as Array<{
+            name: string;
+            total_amount: number;
+            count: number;
+          }>,
+          top_expenditure_categories: topCategories as Array<{
+            category: string;
+            total_amount: number;
+            count: number;
+          }>,
+          // Enhanced features
+          industry_breakdown: industryBreakdown,
+          bundled_contributions: bundledContributions,
+          independent_expenditures: independentExpendituresAnalysis,
+          funding_diversity: fundingDiversity,
         };
 
         return NextResponse.json({

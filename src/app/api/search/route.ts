@@ -7,6 +7,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/lib/congress-legislators';
 import { structuredLogger } from '@/lib/logging/logger';
 import { cachedFetch } from '@/lib/cache';
+import {
+  geocodeAddress,
+  extractDistrictFromResult,
+  parseAddressComponents,
+} from '@/lib/census-geocoder';
 
 interface SearchFilters {
   query?: string;
@@ -47,6 +52,138 @@ interface SearchResult {
   };
 }
 
+// Detect if query looks like an address
+function isAddressQuery(query: string): boolean {
+  const addressPatterns = [
+    /\d+\s+[A-Za-z\s]+(Street|St|Avenue|Ave|Road|Rd|Drive|Dr|Lane|Ln|Boulevard|Blvd|Way|Place|Pl|Court|Ct)/i,
+    /\b\d{5}(-\d{4})?\b/, // ZIP code
+    /\d+\s+[^,]+,\s*[^,]+,\s*[A-Z]{2}/i, // Address, City, State format
+  ];
+  return addressPatterns.some(pattern => pattern.test(query));
+}
+
+// Perform address-based search using geocoding
+async function performAddressSearch(filters: SearchFilters): Promise<{
+  results: SearchResult[];
+  totalResults: number;
+  page: number;
+  totalPages: number;
+}> {
+  if (!filters.query) {
+    return { results: [], totalResults: 0, page: 1, totalPages: 0 };
+  }
+
+  try {
+    // Try to extract ZIP code first for faster lookup
+    const addressComponents = parseAddressComponents(filters.query);
+
+    // If we have a ZIP code, try direct ZIP lookup first
+    if (addressComponents.zip) {
+      try {
+        const zipResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/representatives-multi-district?zip=${addressComponents.zip}`
+        );
+        if (zipResponse.ok) {
+          const zipData = await zipResponse.json();
+          if (zipData.success && zipData.representatives?.length > 0) {
+            return {
+              results: zipData.representatives.map((rep: unknown) =>
+                transformToSearchResult(rep as SearchResult)
+              ),
+              totalResults: zipData.representatives.length,
+              page: 1,
+              totalPages: 1,
+            };
+          }
+        }
+      } catch (error) {
+        structuredLogger.warn('ZIP lookup failed, falling back to geocoding', {
+          error: error as Error,
+        });
+      }
+    }
+
+    // Fall back to full address geocoding
+    const geocodeResult = await geocodeAddress(filters.query);
+
+    if ('error' in geocodeResult) {
+      structuredLogger.warn('Address geocoding failed', {
+        query: filters.query,
+        error: geocodeResult.error,
+      });
+      return { results: [], totalResults: 0, page: 1, totalPages: 0 };
+    }
+
+    // Extract district information from geocode results
+    const districts = geocodeResult
+      .map(extractDistrictFromResult)
+      .filter((district): district is NonNullable<typeof district> => district !== null);
+
+    if (districts.length === 0) {
+      return { results: [], totalResults: 0, page: 1, totalPages: 0 };
+    }
+
+    // Get representatives for the found districts
+    const representatives = await getAllEnhancedRepresentatives();
+    const results: SearchResult[] = [];
+
+    for (const district of districts) {
+      // Find House representative for this district
+      const houseRep = representatives.find(
+        rep =>
+          rep.chamber === 'House' &&
+          rep.state === district.state &&
+          rep.district === district.district
+      );
+
+      if (houseRep) {
+        results.push(transformToSearchResult(houseRep));
+      }
+
+      // Find Senate representatives for this state
+      const senateReps = representatives.filter(
+        rep => rep.chamber === 'Senate' && rep.state === district.state
+      );
+
+      for (const senateRep of senateReps) {
+        if (!results.find(r => r.bioguideId === senateRep.bioguideId)) {
+          results.push(transformToSearchResult(senateRep));
+        }
+      }
+    }
+
+    return {
+      results,
+      totalResults: results.length,
+      page: 1,
+      totalPages: 1,
+    };
+  } catch (error) {
+    structuredLogger.error('Address search error', error as Error, { query: filters.query });
+    return { results: [], totalResults: 0, page: 1, totalPages: 0 };
+  }
+}
+
+// Transform representative to search result format
+function transformToSearchResult(rep: unknown): SearchResult {
+  const representative = rep as SearchResult;
+  return {
+    bioguideId: representative.bioguideId,
+    name: representative.name,
+    party: representative.party,
+    state: representative.state,
+    district: representative.district,
+    chamber: representative.chamber,
+    yearsInOffice: representative.yearsInOffice || 0,
+    committees: representative.committees || [],
+    billsSponsored: representative.billsSponsored || 0,
+    votingScore: representative.votingScore,
+    fundraisingTotal: representative.fundraisingTotal,
+    imageUrl: representative.imageUrl,
+    socialMedia: representative.socialMedia,
+  };
+}
+
 async function performSearch(filters: SearchFilters): Promise<{
   results: SearchResult[];
   totalResults: number;
@@ -57,6 +194,11 @@ async function performSearch(filters: SearchFilters): Promise<{
     const startTime = Date.now();
     const currentYear = new Date().getFullYear();
     structuredLogger.info('Performing representative search', { filters });
+
+    // Check if query is an address
+    if (filters.query && isAddressQuery(filters.query)) {
+      return await performAddressSearch(filters);
+    }
 
     // Get all representatives
     const representatives = await getAllEnhancedRepresentatives();
@@ -173,11 +315,17 @@ async function performSearch(filters: SearchFilters): Promise<{
       }
 
       if (sortOrder === 'asc') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (aVal as any) < (bVal as any) ? -1 : (aVal as any) > (bVal as any) ? 1 : 0;
+        return (aVal as string | number) < (bVal as string | number)
+          ? -1
+          : (aVal as string | number) > (bVal as string | number)
+            ? 1
+            : 0;
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (aVal as any) > (bVal as any) ? -1 : (aVal as any) < (bVal as any) ? 1 : 0;
+        return (aVal as string | number) > (bVal as string | number)
+          ? -1
+          : (aVal as string | number) < (bVal as string | number)
+            ? 1
+            : 0;
       }
     });
 

@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -10,10 +9,10 @@ import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 
 // Voting Pattern Heatmap
-export function VotingPatternHeatmap({ 
+export function VotingPatternHeatmap({
   data,
   width = 800,
-  height = 400 
+  height = 400,
 }: {
   data: Array<{
     representative: string;
@@ -45,27 +44,22 @@ export function VotingPatternHeatmap({
     const representatives = Array.from(new Set(data.map(d => d.representative)));
     const bills = Array.from(new Set(data.map(d => d.bill)));
 
-    const xScale = d3.scaleBand()
-      .domain(bills)
-      .range([0, innerWidth])
-      .padding(0.05);
+    const xScale = d3.scaleBand().domain(bills).range([0, innerWidth]).padding(0.05);
 
-    const yScale = d3.scaleBand()
-      .domain(representatives)
-      .range([0, innerHeight])
-      .padding(0.05);
+    const yScale = d3.scaleBand().domain(representatives).range([0, innerHeight]).padding(0.05);
 
-    const colorScale = d3.scaleOrdinal<string>()
+    const colorScale = d3
+      .scaleOrdinal<string>()
       .domain(['Yes', 'No', 'Not Voting'])
       .range(['#10b981', '#ef4444', '#9ca3af']);
 
-    const g = svg.append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
     // Add cells
     g.selectAll('.cell')
       .data(data)
-      .enter().append('rect')
+      .enter()
+      .append('rect')
       .attr('class', 'cell')
       .attr('x', d => xScale(d.bill) || 0)
       .attr('y', d => yScale(d.representative) || 0)
@@ -75,17 +69,17 @@ export function VotingPatternHeatmap({
       .attr('stroke', '#fff')
       .attr('stroke-width', 1)
       .style('cursor', 'pointer')
-      .on('mouseover', function(event, d) {
+      .on('mouseover', function (event, d) {
         d3.select(this).attr('stroke', '#000').attr('stroke-width', 2);
         const [x, y] = d3.pointer(event, svg.node());
         setTooltip({
           visible: true,
           x,
           y: y - 10,
-          content: `${d.representative} voted ${d.vote} on ${d.bill}`
+          content: `${d.representative} voted ${d.vote} on ${d.bill}`,
         });
       })
-      .on('mouseout', function() {
+      .on('mouseout', function () {
         d3.select(this).attr('stroke', '#fff').attr('stroke-width', 1);
         setTooltip({ visible: false, x: 0, y: 0, content: '' });
       });
@@ -101,28 +95,20 @@ export function VotingPatternHeatmap({
       .attr('dy', '.15em');
 
     // Add y-axis
-    g.append('g')
-      .call(d3.axisLeft(yScale));
+    g.append('g').call(d3.axisLeft(yScale));
 
     // Add legend
-    const legend = svg.append('g')
+    const legend = svg
+      .append('g')
       .attr('transform', `translate(${width - margin.right - 100}, ${margin.top})`);
 
     const legendItems = ['Yes', 'No', 'Not Voting'];
     legendItems.forEach((item, i) => {
-      const legendRow = legend.append('g')
-        .attr('transform', `translate(0, ${i * 25})`);
+      const legendRow = legend.append('g').attr('transform', `translate(0, ${i * 25})`);
 
-      legendRow.append('rect')
-        .attr('width', 20)
-        .attr('height', 20)
-        .attr('fill', colorScale(item));
+      legendRow.append('rect').attr('width', 20).attr('height', 20).attr('fill', colorScale(item));
 
-      legendRow.append('text')
-        .attr('x', 25)
-        .attr('y', 15)
-        .text(item)
-        .style('font-size', '12px');
+      legendRow.append('text').attr('x', 25).attr('y', 15).text(item).style('font-size', '12px');
     });
   }, [data, width, height]);
 
@@ -146,7 +132,7 @@ export function RepresentativeNetwork({
   nodes,
   links,
   width = 800,
-  height = 600
+  height = 600,
 }: {
   nodes: Array<{
     id: string;
@@ -170,8 +156,15 @@ export function RepresentativeNetwork({
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
 
-    const simulation = d3.forceSimulation(nodes as any)
-      .force('link', d3.forceLink(links).id((d: unknown) => d.id).distance(50))
+    const simulation = d3
+      .forceSimulation(nodes as any)
+      .force(
+        'link',
+        d3
+          .forceLink(links)
+          .id((d: any) => d.id)
+          .distance(50)
+      )
       .force('charge', d3.forceManyBody().strength(-300))
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('collision', d3.forceCollide().radius(30));
@@ -179,40 +172,44 @@ export function RepresentativeNetwork({
     const g = svg.append('g');
 
     // Add zoom behavior
-    const zoom = d3.zoom()
+    const zoom = d3
+      .zoom()
       .scaleExtent([0.1, 4])
-      .on('zoom', (event) => {
+      .on('zoom', event => {
         g.attr('transform', event.transform);
       });
 
     svg.call(zoom as any);
 
     // Add links
-    const link = g.append('g')
+    const link = g
+      .append('g')
       .selectAll('line')
       .data(links)
-      .enter().append('line')
+      .enter()
+      .append('line')
       .attr('stroke', '#999')
       .attr('stroke-opacity', 0.6)
       .attr('stroke-width', (d: unknown) => Math.sqrt(d.value));
 
     // Add nodes
-    const node = g.append('g')
+    const node = g
+      .append('g')
       .selectAll('g')
       .data(nodes)
-      .enter().append('g')
-      .call(d3.drag()
-        .on('start', dragstarted)
-        .on('drag', dragged)
-        .on('end', dragended) as any);
+      .enter()
+      .append('g')
+      .call(d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended) as any);
 
-    node.append('circle')
+    node
+      .append('circle')
       .attr('r', 20)
-      .attr('fill', (d: unknown) => d.party === 'Democratic' ? '#3b82f6' : '#ef4444')
+      .attr('fill', (d: unknown) => (d.party === 'Democratic' ? '#3b82f6' : '#ef4444'))
       .attr('stroke', '#fff')
       .attr('stroke-width', 2);
 
-    node.append('text')
+    node
+      .append('text')
       .text((d: unknown) => d.name.split(' ').pop())
       .attr('text-anchor', 'middle')
       .attr('dy', '.35em')
@@ -220,7 +217,9 @@ export function RepresentativeNetwork({
       .style('fill', '#fff');
 
     // Add tooltip
-    const tooltip = d3.select('body').append('div')
+    const tooltip = d3
+      .select('body')
+      .append('div')
       .attr('class', 'tooltip')
       .style('opacity', 0)
       .style('position', 'absolute')
@@ -230,15 +229,17 @@ export function RepresentativeNetwork({
       .style('border-radius', '4px')
       .style('font-size', '12px');
 
-    node.on('mouseover', function(event, d: unknown) {
-      tooltip.transition().duration(200).style('opacity', .9);
-      tooltip.html(`${d.name}<br/>Party: ${d.party}`)
-        .style('left', (event.pageX + 10) + 'px')
-        .style('top', (event.pageY - 28) + 'px');
-    })
-    .on('mouseout', function() {
-      tooltip.transition().duration(500).style('opacity', 0);
-    });
+    node
+      .on('mouseover', function (event, d: unknown) {
+        tooltip.transition().duration(200).style('opacity', 0.9);
+        tooltip
+          .html(`${d.name}<br/>Party: ${d.party}`)
+          .style('left', event.pageX + 10 + 'px')
+          .style('top', event.pageY - 28 + 'px');
+      })
+      .on('mouseout', function () {
+        tooltip.transition().duration(500).style('opacity', 0);
+      });
 
     simulation.on('tick', () => {
       link
@@ -279,7 +280,7 @@ export function RepresentativeNetwork({
 export function CampaignFinanceFlow({
   data,
   width = 800,
-  height = 500
+  height = 500,
 }: {
   data: {
     sources: Array<{ name: string; amount: number; type: string }>;
@@ -300,8 +301,7 @@ export function CampaignFinanceFlow({
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
-    const g = svg.append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
     // Create nodes
     const totalRaised = data.sources.reduce((sum, s) => sum + s.amount, 0);
@@ -316,7 +316,7 @@ export function CampaignFinanceFlow({
         type: 'source',
         x: 100,
         y: sourceY,
-        height: (source.amount / totalRaised) * 300
+        height: (source.amount / totalRaised) * 300,
       };
       sourceY += node.height + 10;
       return node;
@@ -329,7 +329,7 @@ export function CampaignFinanceFlow({
       type: 'central',
       x: innerWidth / 2,
       y: innerHeight / 2,
-      radius: 60
+      radius: 60,
     };
 
     // Spending nodes (right)
@@ -341,19 +341,22 @@ export function CampaignFinanceFlow({
         type: 'spending',
         x: innerWidth - 100,
         y: spendingY,
-        height: (spending.amount / totalSpent) * 300
+        height: (spending.amount / totalSpent) * 300,
       };
       spendingY += node.height + 10;
       return node;
     });
 
     // Draw source nodes
-    const sources = g.selectAll('.source-node')
+    const sources = g
+      .selectAll('.source-node')
       .data(sourceNodes)
-      .enter().append('g')
+      .enter()
+      .append('g')
       .attr('class', 'source-node');
 
-    sources.append('rect')
+    sources
+      .append('rect')
       .attr('x', d => d.x - 80)
       .attr('y', d => d.y)
       .attr('width', 160)
@@ -362,7 +365,8 @@ export function CampaignFinanceFlow({
       .attr('opacity', 0.7)
       .attr('rx', 4);
 
-    sources.append('text')
+    sources
+      .append('text')
       .attr('x', d => d.x)
       .attr('y', d => d.y + d.height / 2)
       .attr('text-anchor', 'middle')
@@ -371,7 +375,8 @@ export function CampaignFinanceFlow({
       .style('font-size', '12px')
       .style('fill', '#fff');
 
-    sources.append('text')
+    sources
+      .append('text')
       .attr('x', d => d.x)
       .attr('y', d => d.y + d.height / 2 + 15)
       .attr('text-anchor', 'middle')
@@ -381,8 +386,9 @@ export function CampaignFinanceFlow({
 
     // Draw central node
     const central = g.append('g');
-    
-    central.append('circle')
+
+    central
+      .append('circle')
       .attr('cx', centralNode.x)
       .attr('cy', centralNode.y)
       .attr('r', centralNode.radius)
@@ -390,7 +396,8 @@ export function CampaignFinanceFlow({
       .attr('stroke', '#fff')
       .attr('stroke-width', 3);
 
-    central.append('text')
+    central
+      .append('text')
       .attr('x', centralNode.x)
       .attr('y', centralNode.y - 10)
       .attr('text-anchor', 'middle')
@@ -398,7 +405,8 @@ export function CampaignFinanceFlow({
       .style('font-size', '14px')
       .style('font-weight', 'bold');
 
-    central.append('text')
+    central
+      .append('text')
       .attr('x', centralNode.x)
       .attr('y', centralNode.y + 10)
       .attr('text-anchor', 'middle')
@@ -407,12 +415,15 @@ export function CampaignFinanceFlow({
       .style('font-weight', 'bold');
 
     // Draw spending nodes
-    const spending = g.selectAll('.spending-node')
+    const spending = g
+      .selectAll('.spending-node')
       .data(spendingNodes)
-      .enter().append('g')
+      .enter()
+      .append('g')
       .attr('class', 'spending-node');
 
-    spending.append('rect')
+    spending
+      .append('rect')
       .attr('x', d => d.x - 80)
       .attr('y', d => d.y)
       .attr('width', 160)
@@ -421,7 +432,8 @@ export function CampaignFinanceFlow({
       .attr('opacity', 0.7)
       .attr('rx', 4);
 
-    spending.append('text')
+    spending
+      .append('text')
       .attr('x', d => d.x)
       .attr('y', d => d.y + d.height / 2)
       .attr('text-anchor', 'middle')
@@ -430,7 +442,8 @@ export function CampaignFinanceFlow({
       .style('font-size', '12px')
       .style('fill', '#fff');
 
-    spending.append('text')
+    spending
+      .append('text')
       .attr('x', d => d.x)
       .attr('y', d => d.y + d.height / 2 + 15)
       .attr('text-anchor', 'middle')
@@ -440,13 +453,14 @@ export function CampaignFinanceFlow({
 
     // Animated flow lines
     function createFlow(source: unknown, target: unknown, isSpending = false) {
-      const path = g.append('path')
+      const path = g
+        .append('path')
         .attr('d', () => {
           const sx = isSpending ? centralNode.x + centralNode.radius : source.x + 80;
           const sy = isSpending ? centralNode.y : source.y + source.height / 2;
           const tx = isSpending ? target.x - 80 : centralNode.x - centralNode.radius;
           const ty = isSpending ? target.y + target.height / 2 : centralNode.y;
-          
+
           return `M ${sx} ${sy} Q ${(sx + tx) / 2} ${(sy + ty) / 2} ${tx} ${ty}`;
         })
         .attr('stroke', isSpending ? '#ef4444' : '#3b82f6')
@@ -455,7 +469,8 @@ export function CampaignFinanceFlow({
         .attr('opacity', 0.3);
 
       // Animate particles along path
-      const particle = g.append('circle')
+      const particle = g
+        .append('circle')
         .attr('r', 4)
         .attr('fill', isSpending ? '#ef4444' : '#3b82f6');
 
@@ -484,7 +499,6 @@ export function CampaignFinanceFlow({
     // Create flows
     sourceNodes.forEach(source => createFlow(source, centralNode));
     spendingNodes.forEach(spending => createFlow(centralNode, spending, true));
-
   }, [data, width, height]);
 
   return <svg ref={svgRef} width={width} height={height} />;
@@ -494,7 +508,7 @@ export function CampaignFinanceFlow({
 export function LegislativeSuccessFunnel({
   data,
   width = 600,
-  height = 400
+  height = 400,
 }: {
   data: Array<{
     stage: string;
@@ -516,15 +530,15 @@ export function LegislativeSuccessFunnel({
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
-    const g = svg.append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
     const maxCount = Math.max(...data.map(d => d.count));
     const funnelWidth = innerWidth * 0.8;
     const segmentHeight = innerHeight / data.length;
 
     // Create gradient
-    const gradient = svg.append('defs')
+    const gradient = svg
+      .append('defs')
       .append('linearGradient')
       .attr('id', 'funnel-gradient')
       .attr('x1', '0%')
@@ -532,11 +546,10 @@ export function LegislativeSuccessFunnel({
       .attr('x2', '0%')
       .attr('y2', '100%');
 
-    gradient.append('stop')
-      .attr('offset', '0%')
-      .attr('style', 'stop-color:#3b82f6;stop-opacity:1');
+    gradient.append('stop').attr('offset', '0%').attr('style', 'stop-color:#3b82f6;stop-opacity:1');
 
-    gradient.append('stop')
+    gradient
+      .append('stop')
       .attr('offset', '100%')
       .attr('style', 'stop-color:#1e40af;stop-opacity:1');
 
@@ -551,15 +564,19 @@ export function LegislativeSuccessFunnel({
         { x: x, y: y },
         { x: x + topWidth, y: y },
         { x: (innerWidth - bottomWidth) / 2 + bottomWidth, y: y + segmentHeight },
-        { x: (innerWidth - bottomWidth) / 2, y: y + segmentHeight }
+        { x: (innerWidth - bottomWidth) / 2, y: y + segmentHeight },
       ];
 
       g.append('path')
         .datum(trapezoid)
-        .attr('d', d3.line<any>()
-          .x(d => d.x)
-          .y(d => d.y)
-          .curve(d3.curveLinearClosed))
+        .attr(
+          'd',
+          d3
+            .line<any>()
+            .x(d => d.x)
+            .y(d => d.y)
+            .curve(d3.curveLinearClosed)
+        )
         .attr('fill', 'url(#funnel-gradient)')
         .attr('opacity', 0.8 - i * 0.1)
         .attr('stroke', '#fff')
@@ -585,7 +602,6 @@ export function LegislativeSuccessFunnel({
         .style('font-size', '12px')
         .style('fill', '#fff');
     });
-
   }, [data, width, height]);
 
   return <svg ref={svgRef} width={width} height={height} />;
@@ -597,7 +613,7 @@ export function InteractiveDistrictMap({
   selectedDistrict,
   onDistrictClick,
   width = 800,
-  height = 600
+  height = 600,
 }: {
   districts: Array<{
     id: string;
@@ -634,11 +650,10 @@ export function InteractiveDistrictMap({
       const x = col * cellWidth;
       const y = row * cellHeight;
 
-      const group = g.append('g')
-        .attr('class', 'district')
-        .style('cursor', 'pointer');
+      const group = g.append('g').attr('class', 'district').style('cursor', 'pointer');
 
-      const rect = group.append('rect')
+      const rect = group
+        .append('rect')
         .attr('x', x + 5)
         .attr('y', y + 5)
         .attr('width', cellWidth - 10)
@@ -649,7 +664,8 @@ export function InteractiveDistrictMap({
         .attr('stroke-width', selectedDistrict === district.id ? 3 : 1)
         .attr('rx', 4);
 
-      group.append('text')
+      group
+        .append('text')
         .attr('x', x + cellWidth / 2)
         .attr('y', y + cellHeight / 2 - 10)
         .attr('text-anchor', 'middle')
@@ -657,35 +673,37 @@ export function InteractiveDistrictMap({
         .style('font-size', '12px')
         .style('font-weight', 'bold');
 
-      group.append('text')
+      group
+        .append('text')
         .attr('x', x + cellWidth / 2)
         .attr('y', y + cellHeight / 2 + 10)
         .attr('text-anchor', 'middle')
         .text(`Pop: ${(district.population / 1000).toFixed(0)}k`)
         .style('font-size', '10px');
 
-      group.on('click', () => {
-        if (onDistrictClick) {
-          onDistrictClick(district.id);
-        }
-      })
-      .on('mouseover', function() {
-        rect.attr('opacity', 0.8);
-      })
-      .on('mouseout', function() {
-        rect.attr('opacity', 0.3 + (district.competitiveness / 100) * 0.7);
-      });
+      group
+        .on('click', () => {
+          if (onDistrictClick) {
+            onDistrictClick(district.id);
+          }
+        })
+        .on('mouseover', function () {
+          rect.attr('opacity', 0.8);
+        })
+        .on('mouseout', function () {
+          rect.attr('opacity', 0.3 + (district.competitiveness / 100) * 0.7);
+        });
     });
 
     // Add zoom
-    const zoom = d3.zoom()
+    const zoom = d3
+      .zoom()
       .scaleExtent([0.5, 4])
-      .on('zoom', (event) => {
+      .on('zoom', event => {
         g.attr('transform', event.transform);
       });
 
     svg.call(zoom as any);
-
   }, [districts, selectedDistrict, onDistrictClick, width, height]);
 
   return <svg ref={svgRef} width={width} height={height} />;

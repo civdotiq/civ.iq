@@ -297,7 +297,15 @@ export async function GET(request: NextRequest) {
     const allRepresentatives = await getAllEnhancedRepresentatives();
     const representatives: RepresentativeResponse[] = [];
 
-    for (const district of districts) {
+    // If user selected a specific district, only show representatives for that district
+    const districtsToProcess = preferredDistrict
+      ? districts.filter(d => `${d.state}-${d.district}` === preferredDistrict)
+      : districts;
+
+    // If no matching district found but preferredDistrict was provided, fall back to all districts
+    const finalDistricts = districtsToProcess.length > 0 ? districtsToProcess : districts;
+
+    for (const district of finalDistricts) {
       // Get House representative for this district
       const houseRep = allRepresentatives.find(
         rep =>
@@ -326,28 +334,31 @@ export async function GET(request: NextRequest) {
       }
 
       // Get Senate representatives for this state (only add once)
-      if (district.primary !== false) {
-        // Only add senators for primary district
+      // When a specific district is selected, always include senators
+      if (district.primary !== false || preferredDistrict) {
         const senateReps = allRepresentatives.filter(
           rep => rep.chamber === 'Senate' && rep.state === district.state
         );
 
         for (const senateRep of senateReps) {
-          representatives.push({
-            bioguideId: senateRep.bioguideId,
-            name: senateRep.name,
-            party: senateRep.party,
-            state: senateRep.state,
-            chamber: senateRep.chamber,
-            title: senateRep.title,
-            phone: senateRep.phone,
-            website: senateRep.website,
-            contactInfo: {
-              phone: senateRep.phone || '',
-              website: senateRep.website || '',
-              office: (senateRep as unknown as { office?: string }).office || '',
-            },
-          });
+          // Check if we already added this senator
+          if (!representatives.find(r => r.bioguideId === senateRep.bioguideId)) {
+            representatives.push({
+              bioguideId: senateRep.bioguideId,
+              name: senateRep.name,
+              party: senateRep.party,
+              state: senateRep.state,
+              chamber: senateRep.chamber,
+              title: senateRep.title,
+              phone: senateRep.phone,
+              website: senateRep.website,
+              contactInfo: {
+                phone: senateRep.phone || '',
+                website: senateRep.website || '',
+                office: (senateRep as unknown as { office?: string }).office || '',
+              },
+            });
+          }
         }
       }
     }

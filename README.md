@@ -12,6 +12,7 @@ A comprehensive Progressive Web Application (PWA) that connects citizens with th
 ## 🎯 Mission
 
 CIV.IQ empowers citizens with transparent, real-time access to government data, making it easy to:
+
 - Find representatives from federal to local levels using live APIs
 - Track voting records and legislative activity in real-time
 - Monitor campaign finance with FEC integration
@@ -22,13 +23,15 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 
 ### 🎉 **Production-Ready Civic Intelligence Platform (July 2025)**
 
-#### **📊 Enhanced Data Quality System** *(NEW - July 2025)*
+#### **📊 Enhanced Data Quality System** _(NEW - July 2025)_
+
 - **Real Voting Records**: Congress.gov API integration with bill-based vote extraction and roll call parsing
 - **Multi-Source Photos**: 6-source pipeline with 99% reliability and intelligent validation
 - **Advanced News Clustering**: GDELT story grouping with 10 political themes and deduplication
 - **Complete FEC Integration**: PAC contributions, party funding, and comprehensive source breakdown
 
 #### **🚀 ZIP Code Mapping System**
+
 - **146x Coverage Expansion**: Complete mapping for 39,363 ZIP codes (up from 270)
 - **⚡ Sub-millisecond Performance**: 0.0001ms average response time with 1.8M+ operations/second
 - **🗺️ Complete Geographic Coverage**: All 50 states + DC + 5 territories
@@ -36,7 +39,8 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 - **💾 Perfect Caching**: 100% cache hit rate with multi-layer optimization
 - **📊 Real-Time Monitoring**: Performance metrics and health tracking
 
-#### **🗳️ Multi-District ZIP Support** *(NEW - July 2025)*
+#### **🗳️ Multi-District ZIP Support** _(NEW - July 2025)_
+
 - **🎯 Intelligent Detection**: Automatically identifies 6,569 ZIP codes spanning multiple districts
 - **🎴 Visual Selection**: User-friendly district cards with representative previews
 - **🏠 Address Refinement**: Precise geocoding for exact district matching using Census API
@@ -45,12 +49,14 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 - **📱 Mobile Optimized**: Touch-friendly selection interface for all devices
 
 #### **🎴 Trading Card System**
+
 - **✅ Accurate Party Data**: Fixed hardcoded party assignments - now pulls live data from congress-legislators
 - **🔍 Data Validation**: Comprehensive validation with error reporting and quality indicators
 - **📊 Dynamic Statistics**: Real-time representative stats with customizable metrics
 - **🎨 Themable Design**: Multiple card templates with party-appropriate color schemes
 
 #### **🏛️ Congressional District Intelligence**
+
 - **🎯 Intelligence Dashboard**: Real-time KPIs, trend analysis, and predictive insights
 - **📊 Live Census Demographics**: 38 comprehensive ACS variables with economic, education, housing, transportation, and social indicators
 - **💼 Advanced Economic Analysis**: Health indices, affordability ratios, industry diversity, and job growth potential
@@ -60,6 +66,7 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 - **📈 7-Tab Analysis**: Dashboard, overview, demographics, politics, economy, geography, and comparative analysis
 
 #### **📱 Progressive Web App Features**
+
 - **🔄 Offline Functionality**: Full app functionality without internet connection
 - **📱 Mobile Installation**: Native app experience on iOS and Android devices
 - **🔄 Background Sync**: Automatic data updates when connection is restored
@@ -71,6 +78,7 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 - **🗂️ Route Organization**: Clean Next.js 15 App Router with logical route groups
 
 #### **🏛️ Representative Intelligence & Tracking**
+
 - **Smart Representative Search**: Find federal representatives by ZIP code with live Census geocoding
 - **🎴 Interactive Trading Cards**: Gamified civic engagement with customizable representative cards:
   - **5-Phase Implementation**: Complete card creation, customization, and sharing system
@@ -101,12 +109,18 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
   - Live status updates from Congress.gov
   - Sponsor and co-sponsor networks
   - Amendment tracking and procedural history
-- **Campaign Finance**: Live FEC integration including:
-  - Real-time contribution tracking
-  - Top donor analysis and spending categories
-  - Financial health assessment and trends
+- **🏦 Enhanced Campaign Finance**: Advanced FEC integration with comprehensive analysis:
+  - **📊 Industry Categorization**: Automatic employer classification into 15+ industry sectors
+  - **🔗 Bundled Contributions**: Links employee contributions with corporate PAC donations
+  - **💰 Independent Expenditures**: Schedule E tracking of outside money (support vs oppose)
+  - **📈 Funding Diversity Metrics**: Herfindahl index and sector concentration analysis
+  - **🏢 Corporate Influence Mapping**: Company-to-PAC relationship database (50+ mappings)
+  - **📋 Smart Categorization**: Fuzzy matching for employer name normalization
+  - **📊 Advanced Analytics**: Monthly trends, purpose breakdown, committee statistics
+  - **⚡ Real-time Data**: Live FEC API integration with intelligent caching
 
 #### **🏛️ Committee Intelligence System (July 2025)**
+
 - **Comprehensive Committee Pages**: Dynamic pages for all House and Senate committees with:
   - **Committee Reports**: Live integration with Congress.gov for published committee reports
   - **Enhanced Bills**: Detailed committee action tracking with visual timeline
@@ -126,6 +140,7 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
   - Expandable timeline views with detailed metadata
 
 #### **🗺️ Interactive District Maps & Data**
+
 - **Complete District Coverage**: All 438 congressional districts with enhanced detail pages
 - **Interactive Mapping**: Leaflet-powered maps with realistic boundaries:
   - Interactive zoom, pan, and fullscreen controls
@@ -137,7 +152,7 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
   - Racial/ethnic composition pie charts
   - Historical election results and trends
   - Employment by industry analysis
-- **Multi-Source Data Integration**: 
+- **Multi-Source Data Integration**:
   - Live Census ACS demographics with intelligent fallbacks
   - Political analysis with Cook PVI ratings and election data
   - Geographic data including counties, cities, and area statistics
@@ -146,6 +161,7 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 - **Precise ZIP Code Integration**: Live geocoding for accurate district mapping
 
 #### **🏛️ State & Local Government Coverage**
+
 - **State Legislature**: Complete state-level coverage with:
   - Upper and lower chamber composition
   - State bill tracking and committee assignments
@@ -157,6 +173,7 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
   - Special district officials
 
 #### **📰 Real-time News & Intelligence**
+
 - **Intelligent News Deduplication**: Advanced AI-powered filtering using:
   - URL normalization and similarity detection
   - Title similarity analysis with Jaccard coefficient
@@ -173,6 +190,7 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
   - Supreme Court decisions
 
 #### **🔍 Data Quality & Validation**
+
 - **Multi-source Validation**: Cross-reference data from multiple APIs
 - **Quality Metrics**: Completeness, accuracy, timeliness scoring
 - **Source Attribution**: Full transparency with reliability ratings
@@ -185,6 +203,7 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 ### **🎉 MVP VERIFICATION COMPLETE - PRODUCTION READY**
 
 #### **✅ Comprehensive Federal Functionality Verified (January 21, 2025)**
+
 - **API Health Status**: All 8 core endpoints operational with intelligent fallbacks
 - **Representative Data**: 535+ federal members with complete profiles, committees, and party data
 - **District Functionality**: 39,363 ZIP codes with multi-district support and boundary visualization
@@ -193,36 +212,66 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 - **Edge Cases**: DC delegates, at-large districts, and territories all working correctly
 
 #### **🔧 Critical Infrastructure Fixes**
+
 - **✅ District Map API**: Fixed geocoding failures with intelligent fallback system
   - **Issue**: `/api/district-map` returning "Could not geocode ZIP code" errors
   - **Root Cause**: Census geocoding API requiring full addresses, not just ZIP codes
   - **Fix**: Added state-center coordinate fallbacks + multi-source geocoding attempts
   - **Verification**: Now returns complete boundary data with real GeoJSON from Census TIGER
-  
 - **✅ Error Handling**: Enhanced TypeScript safety and null-checking
   - Fixed unknown error types in logging systems
   - Added comprehensive type safety across all district mapping functions
   - Improved error messages with structured logging context
 
 ### **🏆 Production Readiness Achievements**
+
 - **Performance**: Sub-20ms API response times across all endpoints
 - **Reliability**: 100% uptime with graceful fallbacks when external APIs fail
 - **Data Quality**: Complete null-safe patterns preventing undefined errors
 - **Coverage**: Full federal government with all edge cases handled
 - **Type Safety**: Zero TypeScript compilation errors in core functionality
 
+#### **🏦 Enhanced FEC Campaign Finance System (January 2025)**
+
+- **📊 Industry Categorization**: Comprehensive employer classification system
+  - **50+ Industry Mappings**: Technology, Finance, Healthcare, Energy, Defense, etc.
+  - **Fuzzy Matching**: Intelligent employer name normalization and matching
+  - **Sector Analytics**: Percentage breakdowns and top employers per industry
+  - **15+ Categories**: Complete industry sector coverage with subcategories
+
+- **🔗 Bundled Contributions Analysis**: Revolutionary corporate influence tracking
+  - **Employee + PAC Linking**: Connects individual contributions with corporate PACs
+  - **30+ Corporate Mappings**: Major corporation-to-PAC relationship database
+  - **Similarity Algorithms**: Advanced matching for related committees
+  - **True Influence Metrics**: Shows combined organizational impact on campaigns
+
+- **💰 Independent Expenditures Tracking**: Schedule E outside money analysis
+  - **Support vs Oppose**: Separates expenditures for/against candidates
+  - **Purpose Categorization**: Media, consulting, digital, polling, legal compliance
+  - **Monthly Trends**: Time-series analysis of outside spending patterns
+  - **Committee Analytics**: Top supporters/opponents with detailed statistics
+
+- **📈 Advanced Analytics & Metrics**:
+  - **Funding Diversity**: Herfindahl index and sector concentration analysis
+  - **Real-time Integration**: Live FEC API with intelligent caching strategies
+  - **Comprehensive API**: Enhanced `/api/representative/[bioguideId]/finance` endpoint
+  - **Performance Optimized**: Efficient data processing with TypeScript safety
+
 ### **Previous Critical Issues Resolved**
+
 - **✅ Trading Card Party Data**: Fixed hardcoded "Republican" party assignments
-- **✅ Representatives Page Loading**: Fixed complete page loading failure 
+- **✅ Representatives Page Loading**: Fixed complete page loading failure
 - **✅ Enhanced Debugging**: Added comprehensive logging and monitoring
 - **✅ Committee Intelligence System**: Complete 3-phase enhancement implementation
 
 ## 🚀 Production-Ready ZIP Code Mapping System
 
 ### System Overview
+
 The CIV.IQ ZIP Code to Congressional District Mapping System provides instant, accurate mapping for all 39,363 US ZIP codes with unprecedented performance and scale.
 
 ### Key Achievements
+
 - **146x Coverage Expansion**: From 270 hardcoded ZIP codes to 39,363 comprehensive mappings
 - **10,960x Performance Improvement**: Average response time reduced from 1.096ms to 0.0001ms
 - **1,947x Throughput Increase**: From 924 ops/sec to 1.8M+ operations per second
@@ -230,6 +279,7 @@ The CIV.IQ ZIP Code to Congressional District Mapping System provides instant, a
 - **99.7% Production Readiness**: Grade A+ validation score
 
 ### Technical Specifications
+
 - **Response Time**: 0.0001ms average (sub-millisecond)
 - **Throughput**: 1.8M+ operations per second
 - **Cache Hit Rate**: 100% with multi-layer optimization
@@ -238,6 +288,7 @@ The CIV.IQ ZIP Code to Congressional District Mapping System provides instant, a
 - **Data Accuracy**: 100% for validated samples
 
 ### API Endpoints
+
 ```
 # Representative Lookup
 GET /api/representatives?zip={zipCode}
@@ -251,6 +302,7 @@ GET /api/committee/{committeeId}/timeline       # Unified activity timeline
 ```
 
 ### Edge Case Support
+
 - **Multi-District ZIP Codes**: 6,569 ZIP codes with intelligent primary district assignment
 - **Territories**: Complete support for GU, PR, VI, AS, MP with educational context
 - **District of Columbia**: Non-voting delegate information with explanations
@@ -259,16 +311,17 @@ GET /api/committee/{committeeId}/timeline       # Unified activity timeline
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **PWA**: Service Worker with offline support and caching strategies
 - **Components**: Lazy-loaded components with intersection observers
-- **Visualizations**: 
+- **Visualizations**:
   - **Recharts 3.0**: Interactive charts and data visualization
   - **React Leaflet 4.2**: Interactive maps and geospatial data
   - **Leaflet 1.9**: Core mapping engine with dynamic imports
-- **Trading Cards**: 
+- **Trading Cards**:
   - **html2canvas 1.4**: High-quality image generation with 2x scaling
   - **Browser APIs**: Navigator.share, Clipboard API, Web Storage
   - **Theme System**: Dynamic color schemes with real-time preview
@@ -276,6 +329,7 @@ GET /api/committee/{committeeId}/timeline       # Unified activity timeline
 - **Data Fetching**: Intelligent request batching and lazy loading
 
 ### Backend & Infrastructure
+
 - **Runtime**: Node.js
 - **API Routes**: Next.js API routes with validation middleware
 - **Caching**: Redis with automatic fallback to in-memory cache
@@ -285,6 +339,7 @@ GET /api/committee/{committeeId}/timeline       # Unified activity timeline
 - **Security**: XSS protection, input validation, and sanitization
 
 ### Live Data Sources & APIs
+
 - **Congress-Legislators YAML**: Comprehensive legislator data with social media, IDs, and enhanced profiles
 - **Congress.gov API**: Real-time legislative data, member info, bills, votes
 - **FEC.gov API**: Live campaign finance data, contributions, expenditures
@@ -294,6 +349,7 @@ GET /api/committee/{committeeId}/timeline       # Unified activity timeline
 - **Government RSS Feeds**: Official announcements and press releases
 
 ### API Integration Features
+
 - **Request Batching**: Optimize API calls by batching multiple requests
 - **Intelligent Caching**: Redis-backed caching with automatic fallback
 - **Rate Limiting**: Per-service throttling with exponential backoff
@@ -305,7 +361,8 @@ GET /api/committee/{committeeId}/timeline       # Unified activity timeline
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm or yarn
 - Git
 - Redis (for production caching - optional for development)
@@ -313,26 +370,30 @@ GET /api/committee/{committeeId}/timeline       # Unified activity timeline
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/yourusername/civic-intel-hub.git
 cd civic-intel-hub
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Set up environment variables:
+
 ```bash
 cp .env.example .env.local
 ```
 
 Edit `.env.local` with your API keys:
+
 ```env
 # Required API Keys
 CONGRESS_API_KEY=your_congress_api_key_here
-FEC_API_KEY=your_fec_api_key_here  
+FEC_API_KEY=your_fec_api_key_here
 CENSUS_API_KEY=your_census_api_key_here
 OPENSTATES_API_KEY=your_openstates_api_key_here
 
@@ -356,6 +417,7 @@ ENABLE_REQUEST_BATCHING=true
 For detailed environment configuration, see [ENVIRONMENT.md](ENVIRONMENT.md).
 
 4. Run the development server:
+
 ```bash
 npm run dev
 ```
@@ -363,6 +425,7 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 5. Optional: Set up Redis for enhanced caching (recommended for production):
+
 ```bash
 # Using Docker
 docker run -d --name redis-civic -p 6379:6379 redis:alpine
@@ -404,6 +467,7 @@ npm run security:emergency
 ### Security Configuration
 
 The `.npmrc` file enforces:
+
 - Moderate audit level for all operations
 - Package lock requirement
 - Exact version saving
@@ -414,12 +478,14 @@ For detailed security policies and vulnerability reporting, see [SECURITY.md](SE
 ## 🎛️ Enhanced Components & Features
 
 ### Progressive Web App Components
+
 - **ServiceWorkerRegistration**: Automatic PWA setup with update notifications
 - **InstallPrompt**: Smart installation prompts for iOS and Android devices
 - **LazyComponents**: Intersection observer-based lazy loading for performance
 - **Pagination**: Comprehensive pagination with infinite scroll support
 
 ### Enhanced Data Components
+
 - **EnhancedVotingChart**: Advanced voting records visualization with:
   - Multi-dimensional filtering and interactive timeline
   - Lazy loading and performance optimization
@@ -438,6 +504,7 @@ For detailed security policies and vulnerability reporting, see [SECURITY.md](SE
   - Real-time updates with background sync
 
 ### Performance & Optimization Features
+
 - **Batch API System**: Revolutionary multi-endpoint requests:
   - Single request fetches profile, votes, bills, finance, news data
   - Reduces round-trips by up to 80% for complex pages
@@ -460,34 +527,37 @@ For detailed security policies and vulnerability reporting, see [SECURITY.md](SE
 The CIV.IQ platform uses a cutting-edge hybrid architecture that combines the benefits of server-side rendering with strategic lazy loading for optimal performance:
 
 #### **Server Components (Above-the-fold)**
+
 - **Critical Data Fetching**: Representative profiles, basic info, and party alignment rendered on server
 - **Streaming HTML**: Users see content immediately without loading states
 - **Next.js 15 Caching**: Intelligent caching with automatic deduplication
 - **SEO Optimized**: Pre-rendered content improves search engine visibility
 
 #### **Client Components (Interactive Features)**
+
 - **Lazy-loaded Tabs**: Voting records, campaign finance, news load on-demand
 - **Suspense Boundaries**: Non-blocking UI updates with skeleton loaders
 - **React 18 Concurrent**: Smooth transitions with useTransition
 - **Smart Auto-refresh**: Page visibility API prevents unnecessary requests
 
 #### **Performance Metrics**
-| Metric | Before | After | Improvement |
-|--------|---------|-------|-------------|
-| **Time to Interactive** | 2.5s | 0.8s | **68% faster** |
-| **First Contentful Paint** | 1.8s | 0.3s | **83% faster** |
-| **JavaScript Bundle** | 850KB | 340KB | **60% smaller** |
-| **API Calls** | 8 requests | 1 request | **87% reduction** |
+
+| Metric                     | Before     | After     | Improvement       |
+| -------------------------- | ---------- | --------- | ----------------- |
+| **Time to Interactive**    | 2.5s       | 0.8s      | **68% faster**    |
+| **First Contentful Paint** | 1.8s       | 0.3s      | **83% faster**    |
+| **JavaScript Bundle**      | 850KB      | 340KB     | **60% smaller**   |
+| **API Calls**              | 8 requests | 1 request | **87% reduction** |
 
 ### Cache Strategy
 
 ```typescript
 // Different cache times based on data freshness
 const cacheStrategies = {
-  profile: 600,      // 10 min - rarely changes
-  votes: 300,        // 5 min - moderate updates
-  news: 180,         // 3 min - frequent updates
-  finance: 1800,     // 30 min - quarterly updates
+  profile: 600, // 10 min - rarely changes
+  votes: 300, // 5 min - moderate updates
+  news: 180, // 3 min - frequent updates
+  finance: 1800, // 30 min - quarterly updates
 };
 ```
 
@@ -497,7 +567,7 @@ const cacheStrategies = {
 // Heavy components loaded on-demand
 const CampaignFinanceVisualizer = dynamic(
   () => import('@/components/CampaignFinanceVisualizer'),
-  { 
+  {
     loading: () => <SkeletonLoader />,
     ssr: false // Chart libraries client-only
   }
@@ -574,12 +644,13 @@ civic-intel-hub/
 ### Internal API Endpoints
 
 #### Federal Government
+
 ```
 GET /api/representatives?zip=48221         # Find reps by ZIP
 GET /api/representative/[bioguideId]       # Representative details
 GET /api/representative/[bioguideId]/votes # Voting records
 GET /api/representative/[bioguideId]/bills # Sponsored bills
-GET /api/representative/[bioguideId]/finance # Campaign finance
+GET /api/representative/[bioguideId]/finance # Enhanced campaign finance with industry categorization, bundled contributions, and independent expenditures
 GET /api/representative/[bioguideId]/news  # Recent news mentions (deduplicated)
 GET /api/representative/[bioguideId]/party-alignment # Real party voting analysis
 GET /api/representative/[bioguideId]/committees # Committee assignments
@@ -587,6 +658,7 @@ GET /api/representative/[bioguideId]/leadership # Leadership roles
 ```
 
 #### State & Local Government
+
 ```
 GET /api/state-legislature/[state]         # State legislators
 GET /api/state-bills/[state]              # State bills
@@ -595,6 +667,7 @@ GET /api/local-government/[location]      # Local officials
 ```
 
 #### Batch API Endpoints (Performance Optimized)
+
 ```
 POST /api/representative/[bioguideId]/batch # Multi-endpoint batch requests
 POST /api/representatives/batch           # Batch representative requests
@@ -602,6 +675,7 @@ POST /api/news/batch                     # Batch news requests
 ```
 
 #### Districts & Geography
+
 ```
 GET /api/districts/all                    # All 438 congressional districts
 GET /api/districts/[districtId]           # District details with Census data
@@ -610,12 +684,14 @@ GET /api/search                          # Advanced representative search
 ```
 
 #### Monitoring & Health
+
 ```
 GET /api/health                          # Comprehensive health check
 HEAD /api/health                         # Quick health check for load balancers
 ```
 
 #### Real-time Data
+
 ```
 GET /api/gdelt/trends                     # Political trends
 GET /api/rss/government                   # Government announcements
@@ -627,17 +703,20 @@ GET /api/census/district/[zip]            # District demographics
 The platform integrates with multiple government and research APIs:
 
 #### Government Sources (High Reliability)
+
 - **Congress-Legislators YAML**: Comprehensive legislator profiles with social media and enhanced data
 - **Congress.gov API**: Real-time legislative data with 5000 req/hour limit
-- **FEC.gov API**: Campaign finance with 1000 req/hour limit  
+- **FEC.gov API**: Campaign finance with 1000 req/hour limit
 - **Census.gov API**: Demographics and geocoding with 500 req/day limit
 - **Government RSS**: White House, Congress, Federal agencies
 
 #### Research Sources (Medium-High Reliability)
+
 - **GDELT Project**: Real-time news and events with 30 req/minute limit
 - **OpenStates.org**: State legislature data (API key required)
 
 #### Data Quality Features
+
 - **Real Voting Data**: Bill-based extraction with roll call XML parsing for accurate member positions
 - **Photo Validation**: 6-source pipeline with URL testing and reliability scoring
 - **Story Clustering**: Groups related news articles with importance scoring and category classification
@@ -652,17 +731,20 @@ The platform integrates with multiple government and research APIs:
 ## 🎨 Design System
 
 ### Brand Colors
+
 - **Primary Red**: `#e11d07` - Logo circle, important actions
 - **Primary Green**: `#0b983c` - Logo rectangle, success states
 - **Primary Blue**: `#3ea2d4` - Links, accents, interactive elements
 - **Neutral**: Tailwind gray scale for text and backgrounds
 
 ### Typography
+
 - **Headings**: System font stack with bold weights
 - **Body**: Clean, readable sans-serif
 - **Monospace**: For data and statistics
 
 ### Components
+
 - Clean, minimalist design
 - Focus on data clarity
 - Consistent spacing and alignment
@@ -671,6 +753,7 @@ The platform integrates with multiple government and research APIs:
 ## 🧪 Testing
 
 Run the test suite:
+
 ```bash
 # Unit tests
 npm run test
@@ -728,12 +811,14 @@ npm run security:full
 ## 🚦 Development Guidelines
 
 ### Code Style
+
 - Use TypeScript for all new code
 - Follow ESLint configuration
 - Use Prettier for formatting
 - Write meaningful commit messages
 
 ### Best Practices
+
 - Keep components small and focused
 - Use semantic HTML
 - Ensure accessibility (WCAG 2.1 AA)
@@ -741,6 +826,7 @@ npm run security:full
 - Cache API responses appropriately
 
 ### Git Workflow
+
 1. Create feature branch from `main`
 2. Make changes with clear commits
 3. Write/update tests
@@ -750,6 +836,7 @@ npm run security:full
 ## 📊 Performance & Monitoring
 
 ### Performance Metrics
+
 - **Lighthouse Score**: Target 95+ across all metrics
 - **Bundle Optimization**: Lazy loading and code splitting for optimal load times
 - **Progressive Loading**: Intersection observer-based component loading
@@ -757,6 +844,7 @@ npm run security:full
 - **Redis Caching**: Sub-millisecond cache response times with automatic fallback
 
 ### Monitoring & Observability
+
 - **Health Checks**: Real-time monitoring of all external services
 - **Error Tracking**: Sentry integration for comprehensive error monitoring
 - **Performance Monitoring**: Request timing, memory usage, and response metrics
@@ -764,6 +852,7 @@ npm run security:full
 - **Cache Analytics**: Redis performance metrics and hit/miss ratios
 
 ### PWA Performance
+
 - **Offline Functionality**: Full app functionality without internet connection
 - **Service Worker Caching**: Intelligent caching strategies for optimal performance
 - **Background Sync**: Automatic data updates when connection is restored
@@ -774,6 +863,7 @@ npm run security:full
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ### Areas for Contribution
+
 - **Performance Optimization**: Bundle size reduction, lazy loading improvements
 - **PWA Enhancement**: Push notifications, offline sync, advanced caching
 - **Data Sources**: Additional government APIs and data validation
