@@ -9,7 +9,12 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
-import * as d3 from 'd3';
+// Modular D3 imports for optimal bundle size
+import { select } from 'd3-selection';
+import { scaleBand, scaleLinear, scaleOrdinal, scalePoint } from 'd3-scale';
+import { axisBottom, axisLeft } from 'd3-axis';
+import { line, curveMonotoneX } from 'd3-shape';
+import { format } from 'd3-format';
 
 // Enhanced Logo with animation
 function CiviqLogo() {
@@ -229,7 +234,7 @@ function RepresentativeSelector({
 // Timeline comparison component
 function TimelineComparison({ rep1, rep2 }: { rep1: Representative; rep2: Representative }) {
   useEffect(() => {
-    const container = d3.select('#timeline-chart');
+    const container = select('#timeline-chart');
     container.selectAll('*').remove();
 
     const margin = { top: 20, right: 30, bottom: 40, left: 100 };
@@ -271,13 +276,11 @@ function TimelineComparison({ rep1, rep2 }: { rep1: Representative; rep2: Repres
       },
     ];
 
-    const xScale = d3
-      .scaleLinear()
+    const xScale = scaleLinear()
       .domain([Math.min(...data.map(d => d.start)) - 1, currentYear])
       .range([0, width]);
 
-    const yScale = d3
-      .scaleBand()
+    const yScale = scaleBand()
       .domain(data.map(d => d.name))
       .range([0, height])
       .padding(0.3);
@@ -286,10 +289,10 @@ function TimelineComparison({ rep1, rep2 }: { rep1: Representative; rep2: Repres
     svg
       .append('g')
       .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(xScale).tickFormat(d3.format('d')));
+      .call(axisBottom(xScale).tickFormat(format('d')));
 
     // Add Y axis
-    svg.append('g').call(d3.axisLeft(yScale));
+    svg.append('g').call(axisLeft(yScale));
 
     // Add bars
     svg
@@ -400,7 +403,7 @@ function DistrictDemographicsComparison({
 // News sentiment comparison
 function NewsSentimentComparison({ rep1, rep2 }: { rep1: Representative; rep2: Representative }) {
   useEffect(() => {
-    const container = d3.select('#sentiment-chart');
+    const container = select('#sentiment-chart');
     container.selectAll('*').remove();
 
     interface SentimentData {
@@ -438,21 +441,20 @@ function NewsSentimentComparison({ rep1, rep2 }: { rep1: Representative; rep2: R
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const x0 = d3
-      .scaleBand()
+    const x0 = scaleBand()
       .domain(data.map(d => d.category))
       .range([0, width])
       .padding(0.1);
 
-    const x1 = d3.scaleBand().domain(['rep1', 'rep2']).range([0, x0.bandwidth()]).padding(0.05);
+    const x1 = scaleBand().domain(['rep1', 'rep2']).range([0, x0.bandwidth()]).padding(0.05);
 
-    const y = d3.scaleLinear().domain([0, 100]).range([height, 0]);
+    const y = scaleLinear().domain([0, 100]).range([height, 0]);
 
-    const color = d3.scaleOrdinal().domain(['rep1', 'rep2']).range(['#3b82f6', '#ef4444']);
+    const color = scaleOrdinal().domain(['rep1', 'rep2']).range(['#3b82f6', '#ef4444']);
 
-    svg.append('g').attr('transform', `translate(0,${height})`).call(d3.axisBottom(x0));
+    svg.append('g').attr('transform', `translate(0,${height})`).call(axisBottom(x0));
 
-    svg.append('g').call(d3.axisLeft(y));
+    svg.append('g').call(axisLeft(y));
 
     const categoryGroups = svg
       .selectAll('.category')
@@ -762,7 +764,7 @@ function LegislativeEffectivenessChart({
   rep2: Representative;
 }) {
   useEffect(() => {
-    const container = d3.select('#legislative-chart');
+    const container = select('#legislative-chart');
     container.selectAll('*').remove();
 
     const stages = ['Sponsored', 'Passed House', 'Passed Senate', 'Became Law'];
@@ -798,30 +800,28 @@ function LegislativeEffectivenessChart({
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const x = d3.scalePoint().domain(stages).range([0, width]).padding(0.5);
+    const x = scalePoint().domain(stages).range([0, width]).padding(0.5);
 
-    const y = d3
-      .scaleLinear()
+    const y = scaleLinear()
       .domain([0, Math.max(...data.flatMap(d => d.values))])
       .range([height, 0]);
 
-    const line = d3
-      .line<number>()
+    const lineGenerator = line<number>()
       .x((d, i) => x(stages[i]) || 0)
       .y(d => y(d))
-      .curve(d3.curveMonotoneX);
+      .curve(curveMonotoneX);
 
     svg
       .append('g')
       .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x))
+      .call(axisBottom(x))
       .selectAll('text')
       .style('text-anchor', 'end')
       .attr('dx', '-.8em')
       .attr('dy', '.15em')
       .attr('transform', 'rotate(-45)');
 
-    svg.append('g').call(d3.axisLeft(y));
+    svg.append('g').call(axisLeft(y));
 
     const colors = ['#3b82f6', '#ef4444'];
 
@@ -832,7 +832,7 @@ function LegislativeEffectivenessChart({
         .attr('fill', 'none')
         .attr('stroke', colors[index])
         .attr('stroke-width', 3)
-        .attr('d', line);
+        .attr('d', lineGenerator);
 
       svg
         .selectAll(`.dot-${index}`)

@@ -7,7 +7,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useEffect, useState, Suspense, useCallback } from 'react';
+import { useEffect, useState, Suspense, useCallback, memo } from 'react';
 import { SearchHistory } from '@/lib/searchHistory';
 import { RepresentativeSkeleton, SearchResultsSkeleton } from '@/components/ui/SkeletonComponents';
 import { LoadingStateWrapper, LoadingMessage, Spinner } from '@/components/ui/LoadingStates';
@@ -140,7 +140,11 @@ interface StateApiResponse {
   };
 }
 
-function RepresentativeCard({ representative }: { representative: Representative }) {
+const RepresentativeCard = memo(function RepresentativeCard({
+  representative,
+}: {
+  representative: Representative;
+}) {
   const getPartyColor = (party: string) => {
     if (party.toLowerCase().includes('democrat')) return 'text-blue-600 bg-blue-50';
     if (party.toLowerCase().includes('republican')) return 'text-red-600 bg-red-50';
@@ -267,9 +271,13 @@ function RepresentativeCard({ representative }: { representative: Representative
       </div>
     </div>
   );
-}
+});
 
-function StateLegislatorCard({ legislator }: { legislator: StateLegislator }) {
+const StateLegislatorCard = memo(function StateLegislatorCard({
+  legislator,
+}: {
+  legislator: StateLegislator;
+}) {
   const getPartyColor = (party: string) => {
     if (party.toLowerCase().includes('democrat')) return 'text-blue-600 bg-blue-50';
     if (party.toLowerCase().includes('republican')) return 'text-red-600 bg-red-50';
@@ -381,9 +389,13 @@ function StateLegislatorCard({ legislator }: { legislator: StateLegislator }) {
       </div>
     </div>
   );
-}
+});
 
-function StateRepresentativesTab({ zipCode }: { zipCode: string }) {
+const StateRepresentativesTab = memo(function StateRepresentativesTab({
+  zipCode,
+}: {
+  zipCode: string;
+}) {
   const [stateData, setStateData] = useState<StateApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -511,7 +523,7 @@ function StateRepresentativesTab({ zipCode }: { zipCode: string }) {
       </div>
     </div>
   );
-}
+});
 
 function ResultsContent() {
   const searchParams = useSearchParams();

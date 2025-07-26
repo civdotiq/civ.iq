@@ -1,52 +1,55 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import { useState, useEffect } from 'react';
-import * as d3 from 'd3';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  DollarSign, 
+// Modular D3 imports for optimal bundle size
+import { select } from 'd3-selection';
+import { scaleTime, scaleLinear } from 'd3-scale';
+import { axisBottom, axisLeft } from 'd3-axis';
+import { line, area, arc, pie, curveMonotoneX } from 'd3-shape';
+import { extent, max } from 'd3-array';
+import { timeFormat } from 'd3-time-format';
+import {
+  TrendingUp,
+  TrendingDown,
+  Users,
   FileText,
   AlertCircle,
   Calendar,
   BarChart3,
-  PieChart,
-  Activity
+  Activity,
 } from 'lucide-react';
 
 // Civic Engagement Dashboard
 export function CivicEngagementDashboard() {
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
-  
+
   const engagementMetrics = {
     week: {
       searches: 12450,
       profileViews: 8320,
       contactsInitiated: 342,
       billsTracked: 1203,
-      trend: 15.2
+      trend: 15.2,
     },
     month: {
       searches: 48920,
       profileViews: 32100,
       contactsInitiated: 1420,
       billsTracked: 5102,
-      trend: 8.7
+      trend: 8.7,
     },
     year: {
       searches: 523400,
       profileViews: 412300,
       contactsInitiated: 18200,
       billsTracked: 62300,
-      trend: 42.3
-    }
+      trend: 42.3,
+    },
   };
 
   const metrics = engagementMetrics[timeRange];
@@ -112,13 +115,13 @@ export function CivicEngagementDashboard() {
 }
 
 // Metric Card Component
-function MetricCard({ 
-  icon, 
-  title, 
-  value, 
-  trend, 
-  color 
-}: { 
+function MetricCard({
+  icon,
+  title,
+  value,
+  trend,
+  color,
+}: {
   icon: React.ReactNode;
   title: string;
   value: string;
@@ -129,19 +132,19 @@ function MetricCard({
     blue: 'bg-blue-100 text-blue-600',
     green: 'bg-green-100 text-green-600',
     purple: 'bg-purple-100 text-purple-600',
-    orange: 'bg-orange-100 text-orange-600'
+    orange: 'bg-orange-100 text-orange-600',
   };
 
   return (
     <div className="bg-gray-50 rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
-          {icon}
-        </div>
+        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>{icon}</div>
         {trend !== 0 && (
-          <div className={`flex items-center gap-1 text-sm ${
-            trend > 0 ? 'text-green-600' : 'text-red-600'
-          }`}>
+          <div
+            className={`flex items-center gap-1 text-sm ${
+              trend > 0 ? 'text-green-600' : 'text-red-600'
+            }`}
+          >
             {trend > 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
             <span>{Math.abs(trend)}%</span>
           </div>
@@ -156,7 +159,7 @@ function MetricCard({
 // Engagement Chart
 function EngagementChart({ timeRange }: { timeRange: 'week' | 'month' | 'year' }) {
   useEffect(() => {
-    const container = d3.select('#engagement-chart');
+    const container = select('#engagement-chart');
     container.selectAll('*').remove();
 
     const data = generateTimeSeriesData(timeRange);
@@ -171,27 +174,28 @@ function EngagementChart({ timeRange }: { timeRange: 'week' | 'month' | 'year' }
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const x = d3.scaleTime()
-      .domain(d3.extent(data, d => d.date) as [Date, Date])
+    const x = scaleTime()
+      .domain(extent(data, d => d.date) as [Date, Date])
       .range([0, width]);
 
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.value) as number])
+    const y = scaleLinear()
+      .domain([0, max(data, d => d.value) as number])
       .range([height, 0]);
 
-    const line = d3.line<any>()
+    const lineGenerator = line<any>()
       .x(d => x(d.date))
       .y(d => y(d.value))
-      .curve(d3.curveMonotoneX);
+      .curve(curveMonotoneX);
 
-    svg.append('g')
+    svg
+      .append('g')
       .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x).tickFormat(d3.timeFormat('%b %d') as any));
+      .call(axisBottom(x).tickFormat(timeFormat('%b %d') as any));
 
-    svg.append('g')
-      .call(d3.axisLeft(y));
+    svg.append('g').call(axisLeft(y));
 
-    const gradient = svg.append('defs')
+    const gradient = svg
+      .append('defs')
       .append('linearGradient')
       .attr('id', 'area-gradient')
       .attr('x1', '0%')
@@ -199,34 +203,35 @@ function EngagementChart({ timeRange }: { timeRange: 'week' | 'month' | 'year' }
       .attr('x2', '0%')
       .attr('y2', '100%');
 
-    gradient.append('stop')
+    gradient
+      .append('stop')
       .attr('offset', '0%')
       .attr('style', 'stop-color:#3b82f6;stop-opacity:0.8');
 
-    gradient.append('stop')
+    gradient
+      .append('stop')
       .attr('offset', '100%')
       .attr('style', 'stop-color:#3b82f6;stop-opacity:0.1');
 
-    const area = d3.area<any>()
+    const areaGenerator = area<any>()
       .x(d => x(d.date))
       .y0(height)
       .y1(d => y(d.value))
-      .curve(d3.curveMonotoneX);
+      .curve(curveMonotoneX);
 
-    svg.append('path')
-      .datum(data)
-      .attr('fill', 'url(#area-gradient)')
-      .attr('d', area);
+    svg.append('path').datum(data).attr('fill', 'url(#area-gradient)').attr('d', areaGenerator);
 
-    svg.append('path')
+    svg
+      .append('path')
       .datum(data)
       .attr('fill', 'none')
       .attr('stroke', '#3b82f6')
       .attr('stroke-width', 2)
-      .attr('d', line);
+      .attr('d', lineGenerator);
 
     // Add interactive tooltip
-    const tooltip = d3.select('body').append('div')
+    const tooltip = select('body')
+      .append('div')
       .attr('class', 'tooltip')
       .style('opacity', 0)
       .style('position', 'absolute')
@@ -236,21 +241,24 @@ function EngagementChart({ timeRange }: { timeRange: 'week' | 'month' | 'year' }
       .style('border-radius', '4px')
       .style('font-size', '12px');
 
-    svg.selectAll('.dot')
+    svg
+      .selectAll('.dot')
       .data(data)
-      .enter().append('circle')
+      .enter()
+      .append('circle')
       .attr('class', 'dot')
       .attr('cx', d => x(d.date))
       .attr('cy', d => y(d.value))
       .attr('r', 4)
       .attr('fill', '#3b82f6')
-      .on('mouseover', function(event, d) {
-        tooltip.transition().duration(200).style('opacity', .9);
-        tooltip.html(`${d3.timeFormat('%b %d')(d.date)}<br/>Engagements: ${d.value.toLocaleString()}`)
-          .style('left', (event.pageX + 10) + 'px')
-          .style('top', (event.pageY - 28) + 'px');
+      .on('mouseover', function (event, d) {
+        tooltip.transition().duration(200).style('opacity', 0.9);
+        tooltip
+          .html(`${timeFormat('%b %d')(d.date)}<br/>Engagements: ${d.value.toLocaleString()}`)
+          .style('left', event.pageX + 10 + 'px')
+          .style('top', event.pageY - 28 + 'px');
       })
-      .on('mouseout', function() {
+      .on('mouseout', function () {
         tooltip.transition().duration(500).style('opacity', 0);
       });
 
@@ -274,7 +282,7 @@ function EngagementChart({ timeRange }: { timeRange: 'week' | 'month' | 'year' }
       date.setDate(date.getDate() - (points - i - 1));
       return {
         date,
-        value: Math.floor(Math.random() * 1000) + 500
+        value: Math.floor(Math.random() * 1000) + 500,
       };
     });
   }
@@ -287,7 +295,7 @@ function TopSearchedRepresentatives() {
     { name: 'Rep. Jane Doe', searches: 2890, party: 'R', trend: -5 },
     { name: 'Sen. Bob Johnson', searches: 2340, party: 'D', trend: 8 },
     { name: 'Rep. Mary Williams', searches: 1920, party: 'R', trend: 15 },
-    { name: 'Sen. James Brown', searches: 1780, party: 'I', trend: 3 }
+    { name: 'Sen. James Brown', searches: 1780, party: 'I', trend: 3 },
   ];
 
   return (
@@ -304,16 +312,22 @@ function TopSearchedRepresentatives() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className={`px-2 py-1 rounded text-xs font-medium ${
-                rep.party === 'D' ? 'bg-blue-100 text-blue-700' : 
-                rep.party === 'R' ? 'bg-red-100 text-red-700' : 
-                'bg-gray-100 text-gray-700'
-              }`}>
+              <span
+                className={`px-2 py-1 rounded text-xs font-medium ${
+                  rep.party === 'D'
+                    ? 'bg-blue-100 text-blue-700'
+                    : rep.party === 'R'
+                      ? 'bg-red-100 text-red-700'
+                      : 'bg-gray-100 text-gray-700'
+                }`}
+              >
                 {rep.party}
               </span>
-              <div className={`flex items-center gap-1 text-sm ${
-                rep.trend > 0 ? 'text-green-600' : 'text-red-600'
-              }`}>
+              <div
+                className={`flex items-center gap-1 text-sm ${
+                  rep.trend > 0 ? 'text-green-600' : 'text-red-600'
+                }`}
+              >
                 {rep.trend > 0 ? '↑' : '↓'} {Math.abs(rep.trend)}%
               </div>
             </div>
@@ -327,7 +341,7 @@ function TopSearchedRepresentatives() {
 // Legislative Activity Monitor
 export function LegislativeActivityMonitor() {
   const [filter, setFilter] = useState<'all' | 'tracked' | 'voting'>('all');
-  
+
   const activities = [
     {
       id: 1,
@@ -337,7 +351,7 @@ export function LegislativeActivityMonitor() {
       date: 'Today, 2:30 PM',
       chamber: 'House',
       tracked: true,
-      urgent: true
+      urgent: true,
     },
     {
       id: 2,
@@ -347,7 +361,7 @@ export function LegislativeActivityMonitor() {
       date: 'Tomorrow, 10:00 AM',
       chamber: 'Senate',
       tracked: true,
-      urgent: false
+      urgent: false,
     },
     {
       id: 3,
@@ -357,7 +371,7 @@ export function LegislativeActivityMonitor() {
       date: '2 days ago',
       chamber: 'House',
       tracked: false,
-      urgent: false
+      urgent: false,
     },
     {
       id: 4,
@@ -367,8 +381,8 @@ export function LegislativeActivityMonitor() {
       date: '3 days ago',
       chamber: 'Senate',
       tracked: true,
-      urgent: false
-    }
+      urgent: false,
+    },
   ];
 
   const filteredActivities = activities.filter(activity => {
@@ -400,15 +414,16 @@ export function LegislativeActivityMonitor() {
 
       <div className="space-y-4">
         {filteredActivities.map(activity => (
-          <div key={activity.id} className={`border rounded-lg p-4 ${
-            activity.urgent ? 'border-red-300 bg-red-50' : 'border-gray-200'
-          }`}>
+          <div
+            key={activity.id}
+            className={`border rounded-lg p-4 ${
+              activity.urgent ? 'border-red-300 bg-red-50' : 'border-gray-200'
+            }`}
+          >
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  {activity.urgent && (
-                    <AlertCircle className="w-5 h-5 text-red-600" />
-                  )}
+                  {activity.urgent && <AlertCircle className="w-5 h-5 text-red-600" />}
                   <h3 className="font-semibold text-gray-900">{activity.title}</h3>
                   {activity.tracked && (
                     <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
@@ -421,16 +436,24 @@ export function LegislativeActivityMonitor() {
                     <Calendar className="w-4 h-4" />
                     {activity.date}
                   </span>
-                  <span className={`px-2 py-1 rounded ${
-                    activity.chamber === 'House' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'
-                  }`}>
+                  <span
+                    className={`px-2 py-1 rounded ${
+                      activity.chamber === 'House'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-purple-100 text-purple-700'
+                    }`}
+                  >
                     {activity.chamber}
                   </span>
-                  <span className={`font-medium ${
-                    activity.status === 'Scheduled for Vote' ? 'text-red-600' :
-                    activity.status === 'Passed Senate' ? 'text-green-600' :
-                    'text-gray-700'
-                  }`}>
+                  <span
+                    className={`font-medium ${
+                      activity.status === 'Scheduled for Vote'
+                        ? 'text-red-600'
+                        : activity.status === 'Passed Senate'
+                          ? 'text-green-600'
+                          : 'text-gray-700'
+                    }`}
+                  >
                     {activity.status}
                   </span>
                 </div>
@@ -447,7 +470,8 @@ export function LegislativeActivityMonitor() {
         <div className="flex items-center gap-2">
           <AlertCircle className="w-5 h-5 text-blue-600" />
           <p className="text-sm text-blue-900">
-            <span className="font-medium">3 bills</span> you're tracking have votes scheduled this week
+            <span className="font-medium">3 bills</span> you&apos;re tracking have votes scheduled
+            this week
           </p>
         </div>
       </div>
@@ -458,9 +482,9 @@ export function LegislativeActivityMonitor() {
 // Campaign Finance Overview Widget
 export function CampaignFinanceOverview() {
   const [selectedCycle, setSelectedCycle] = useState('2024');
-  
+
   useEffect(() => {
-    const container = d3.select('#finance-donut');
+    const container = select('#finance-donut');
     container.selectAll('*').remove();
 
     const data = [
@@ -468,7 +492,7 @@ export function CampaignFinanceOverview() {
       { category: 'PAC Contributions', amount: 25000000, color: '#10b981' },
       { category: 'Party Committees', amount: 15000000, color: '#f59e0b' },
       { category: 'Self-Funded', amount: 10000000, color: '#ef4444' },
-      { category: 'Other', amount: 5000000, color: '#8b5cf6' }
+      { category: 'Other', amount: 5000000, color: '#8b5cf6' },
     ];
 
     const width = 300;
@@ -482,51 +506,56 @@ export function CampaignFinanceOverview() {
       .append('g')
       .attr('transform', `translate(${width / 2},${height / 2})`);
 
-    const arc = d3.arc()
+    const arcGenerator = arc()
       .innerRadius(radius * 0.6)
       .outerRadius(radius);
 
-    const pie = d3.pie<any>()
+    const pieGenerator = pie<any>()
       .value(d => d.amount)
       .sort(null);
 
-    const arcs = svg.selectAll('.arc')
-      .data(pie(data))
-      .enter().append('g')
+    const arcs = svg
+      .selectAll('.arc')
+      .data(pieGenerator(data))
+      .enter()
+      .append('g')
       .attr('class', 'arc');
 
-    arcs.append('path')
-      .attr('d', arc as any)
+    arcs
+      .append('path')
+      .attr('d', arcGenerator as any)
       .attr('fill', d => d.data.color)
       .attr('stroke', '#fff')
       .attr('stroke-width', 2)
-      .on('mouseover', function(event, d) {
-        d3.select(this).transition().duration(200)
-          .attr('transform', function(d) {
-            const [x, y] = arc.centroid(d as any);
+      .on('mouseover', function (_event, d) {
+        select(this)
+          .transition()
+          .duration(200)
+          .attr('transform', function (_d) {
+            const [x, y] = arcGenerator.centroid(d as any);
             return `translate(${x * 0.1},${y * 0.1})`;
           });
       })
-      .on('mouseout', function() {
-        d3.select(this).transition().duration(200)
-          .attr('transform', 'translate(0,0)');
+      .on('mouseout', function () {
+        select(this).transition().duration(200).attr('transform', 'translate(0,0)');
       });
 
     // Center text
-    svg.append('text')
+    svg
+      .append('text')
       .attr('text-anchor', 'middle')
       .attr('dy', '-0.5em')
       .style('font-size', '24px')
       .style('font-weight', 'bold')
       .text('$100M');
 
-    svg.append('text')
+    svg
+      .append('text')
       .attr('text-anchor', 'middle')
       .attr('dy', '1em')
       .style('font-size', '14px')
       .style('fill', '#6b7280')
       .text('Total Raised');
-
   }, [selectedCycle]);
 
   return (
@@ -535,7 +564,7 @@ export function CampaignFinanceOverview() {
         <h2 className="text-2xl font-bold text-gray-900">Campaign Finance Overview</h2>
         <select
           value={selectedCycle}
-          onChange={(e) => setSelectedCycle(e.target.value)}
+          onChange={e => setSelectedCycle(e.target.value)}
           className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
         >
           <option value="2024">2024 Cycle</option>
@@ -555,15 +584,20 @@ export function CampaignFinanceOverview() {
             { name: 'Healthcare Workers United', amount: 3500000 },
             { name: 'Tech Innovation Fund', amount: 2800000 },
             { name: 'Environmental Action Committee', amount: 2200000 },
-            { name: 'Small Business Alliance', amount: 1800000 }
+            { name: 'Small Business Alliance', amount: 1800000 },
           ].map((contributor, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div
+              key={index}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+            >
               <div>
                 <p className="font-medium text-gray-900">{contributor.name}</p>
-                <p className="text-sm text-gray-600">${(contributor.amount / 1000000).toFixed(1)}M</p>
+                <p className="text-sm text-gray-600">
+                  ${(contributor.amount / 1000000).toFixed(1)}M
+                </p>
               </div>
               <div className="w-32 bg-gray-200 rounded-full h-2">
-                <div 
+                <div
                   className="bg-blue-600 h-2 rounded-full"
                   style={{ width: `${(contributor.amount / 5000000) * 100}%` }}
                 />
@@ -594,17 +628,57 @@ export function CampaignFinanceOverview() {
 // District Performance Dashboard
 export function DistrictPerformanceDashboard() {
   const districts = [
-    { id: 'CA-12', name: 'California 12th', incumbent: 'Nancy Pelosi', party: 'D', margin: 85.2, turnout: 72.3, competitiveness: 'Safe D' },
-    { id: 'TX-23', name: 'Texas 23rd', incumbent: 'Tony Gonzales', party: 'R', margin: 52.1, turnout: 58.9, competitiveness: 'Competitive' },
-    { id: 'PA-07', name: 'Pennsylvania 7th', incumbent: 'Susan Wild', party: 'D', margin: 51.3, turnout: 68.7, competitiveness: 'Toss-up' },
-    { id: 'FL-27', name: 'Florida 27th', incumbent: 'Maria Salazar', party: 'R', margin: 53.4, turnout: 61.2, competitiveness: 'Lean R' },
-    { id: 'AZ-01', name: 'Arizona 1st', incumbent: 'David Schweikert', party: 'R', margin: 50.8, turnout: 64.5, competitiveness: 'Toss-up' }
+    {
+      id: 'CA-12',
+      name: 'California 12th',
+      incumbent: 'Nancy Pelosi',
+      party: 'D',
+      margin: 85.2,
+      turnout: 72.3,
+      competitiveness: 'Safe D',
+    },
+    {
+      id: 'TX-23',
+      name: 'Texas 23rd',
+      incumbent: 'Tony Gonzales',
+      party: 'R',
+      margin: 52.1,
+      turnout: 58.9,
+      competitiveness: 'Competitive',
+    },
+    {
+      id: 'PA-07',
+      name: 'Pennsylvania 7th',
+      incumbent: 'Susan Wild',
+      party: 'D',
+      margin: 51.3,
+      turnout: 68.7,
+      competitiveness: 'Toss-up',
+    },
+    {
+      id: 'FL-27',
+      name: 'Florida 27th',
+      incumbent: 'Maria Salazar',
+      party: 'R',
+      margin: 53.4,
+      turnout: 61.2,
+      competitiveness: 'Lean R',
+    },
+    {
+      id: 'AZ-01',
+      name: 'Arizona 1st',
+      incumbent: 'David Schweikert',
+      party: 'R',
+      margin: 50.8,
+      turnout: 64.5,
+      competitiveness: 'Toss-up',
+    },
   ];
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">District Performance Analysis</h2>
-      
+
       <div className="overflow-x-auto">
         <table className="min-w-full">
           <thead>
@@ -618,7 +692,7 @@ export function DistrictPerformanceDashboard() {
             </tr>
           </thead>
           <tbody>
-            {districts.map((district) => (
+            {districts.map(district => (
               <tr key={district.id} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="py-3 px-4">
                   <div>
@@ -628,9 +702,13 @@ export function DistrictPerformanceDashboard() {
                 </td>
                 <td className="py-3 px-4 text-gray-900">{district.incumbent}</td>
                 <td className="py-3 px-4 text-center">
-                  <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                    district.party === 'D' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
-                  }`}>
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                      district.party === 'D'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-red-100 text-red-700'
+                    }`}
+                  >
                     {district.party}
                   </span>
                 </td>
@@ -638,7 +716,7 @@ export function DistrictPerformanceDashboard() {
                   <div className="flex items-center justify-center gap-2">
                     <span className="font-medium">{district.margin}%</span>
                     <div className="w-16 bg-gray-200 rounded-full h-2">
-                      <div 
+                      <div
                         className={`h-2 rounded-full ${
                           district.party === 'D' ? 'bg-blue-600' : 'bg-red-600'
                         }`}
@@ -648,20 +726,28 @@ export function DistrictPerformanceDashboard() {
                   </div>
                 </td>
                 <td className="py-3 px-4 text-center">
-                  <span className={`font-medium ${
-                    district.turnout > 65 ? 'text-green-600' : 'text-gray-900'
-                  }`}>
+                  <span
+                    className={`font-medium ${
+                      district.turnout > 65 ? 'text-green-600' : 'text-gray-900'
+                    }`}
+                  >
                     {district.turnout}%
                   </span>
                 </td>
                 <td className="py-3 px-4 text-center">
-                  <span className={`inline-flex px-3 py-1 text-xs rounded-full ${
-                    district.competitiveness === 'Safe D' ? 'bg-blue-100 text-blue-700' :
-                    district.competitiveness === 'Safe R' ? 'bg-red-100 text-red-700' :
-                    district.competitiveness === 'Toss-up' ? 'bg-yellow-100 text-yellow-700' :
-                    district.competitiveness === 'Competitive' ? 'bg-purple-100 text-purple-700' :
-                    'bg-gray-100 text-gray-700'
-                  }`}>
+                  <span
+                    className={`inline-flex px-3 py-1 text-xs rounded-full ${
+                      district.competitiveness === 'Safe D'
+                        ? 'bg-blue-100 text-blue-700'
+                        : district.competitiveness === 'Safe R'
+                          ? 'bg-red-100 text-red-700'
+                          : district.competitiveness === 'Toss-up'
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : district.competitiveness === 'Competitive'
+                              ? 'bg-purple-100 text-purple-700'
+                              : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
                     {district.competitiveness}
                   </span>
                 </td>
@@ -695,13 +781,13 @@ export function DistrictPerformanceDashboard() {
 // News Sentiment Tracker
 export function NewsSentimentTracker() {
   const [selectedTopic, setSelectedTopic] = useState('all');
-  
+
   const topics = [
     { id: 'all', name: 'All Topics', positive: 42, neutral: 38, negative: 20 },
     { id: 'healthcare', name: 'Healthcare', positive: 58, neutral: 32, negative: 10 },
     { id: 'economy', name: 'Economy', positive: 35, neutral: 40, negative: 25 },
     { id: 'climate', name: 'Climate', positive: 48, neutral: 35, negative: 17 },
-    { id: 'immigration', name: 'Immigration', positive: 28, neutral: 42, negative: 30 }
+    { id: 'immigration', name: 'Immigration', positive: 28, neutral: 42, negative: 30 },
   ];
 
   const selectedData = topics.find(t => t.id === selectedTopic) || topics[0];
@@ -712,11 +798,13 @@ export function NewsSentimentTracker() {
         <h2 className="text-2xl font-bold text-gray-900">News Sentiment Analysis</h2>
         <select
           value={selectedTopic}
-          onChange={(e) => setSelectedTopic(e.target.value)}
+          onChange={e => setSelectedTopic(e.target.value)}
           className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
         >
           {topics.map(topic => (
-            <option key={topic.id} value={topic.id}>{topic.name}</option>
+            <option key={topic.id} value={topic.id}>
+              {topic.name}
+            </option>
           ))}
         </select>
       </div>
@@ -727,15 +815,15 @@ export function NewsSentimentTracker() {
           <span className="text-sm text-gray-600">Based on 1,234 articles</span>
         </div>
         <div className="relative h-12 bg-gray-200 rounded-full overflow-hidden">
-          <div 
+          <div
             className="absolute left-0 top-0 h-full bg-green-500"
             style={{ width: `${selectedData.positive}%` }}
           />
-          <div 
+          <div
             className="absolute top-0 h-full bg-gray-400"
             style={{ left: `${selectedData.positive}%`, width: `${selectedData.neutral}%` }}
           />
-          <div 
+          <div
             className="absolute right-0 top-0 h-full bg-red-500"
             style={{ width: `${selectedData.negative}%` }}
           />
@@ -750,10 +838,30 @@ export function NewsSentimentTracker() {
       <div className="space-y-3">
         <h3 className="font-semibold text-gray-700">Recent Headlines</h3>
         {[
-          { title: 'Congress Passes Bipartisan Infrastructure Bill', sentiment: 'positive', source: 'AP News', time: '2 hours ago' },
-          { title: 'Debate Continues Over Healthcare Reform Proposal', sentiment: 'neutral', source: 'Reuters', time: '4 hours ago' },
-          { title: 'Economic Concerns Rise Amid Inflation Data', sentiment: 'negative', source: 'Bloomberg', time: '6 hours ago' },
-          { title: 'New Climate Initiative Gains Support in Senate', sentiment: 'positive', source: 'CNN', time: '8 hours ago' }
+          {
+            title: 'Congress Passes Bipartisan Infrastructure Bill',
+            sentiment: 'positive',
+            source: 'AP News',
+            time: '2 hours ago',
+          },
+          {
+            title: 'Debate Continues Over Healthcare Reform Proposal',
+            sentiment: 'neutral',
+            source: 'Reuters',
+            time: '4 hours ago',
+          },
+          {
+            title: 'Economic Concerns Rise Amid Inflation Data',
+            sentiment: 'negative',
+            source: 'Bloomberg',
+            time: '6 hours ago',
+          },
+          {
+            title: 'New Climate Initiative Gains Support in Senate',
+            sentiment: 'positive',
+            source: 'CNN',
+            time: '8 hours ago',
+          },
         ].map((article, index) => (
           <div key={index} className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
             <div className="flex items-start justify-between">
@@ -765,11 +873,15 @@ export function NewsSentimentTracker() {
                   <span>{article.time}</span>
                 </div>
               </div>
-              <div className={`ml-3 w-2 h-2 rounded-full mt-2 ${
-                article.sentiment === 'positive' ? 'bg-green-500' :
-                article.sentiment === 'negative' ? 'bg-red-500' :
-                'bg-gray-400'
-              }`} />
+              <div
+                className={`ml-3 w-2 h-2 rounded-full mt-2 ${
+                  article.sentiment === 'positive'
+                    ? 'bg-green-500'
+                    : article.sentiment === 'negative'
+                      ? 'bg-red-500'
+                      : 'bg-gray-400'
+                }`}
+              />
             </div>
           </div>
         ))}

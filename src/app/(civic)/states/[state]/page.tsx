@@ -9,7 +9,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import clientLogger from '@/lib/logging/logger-client';
 import { useParams } from 'next/navigation';
-import * as d3 from 'd3';
+// Modular D3 imports for optimal bundle size
+import { select } from 'd3-selection';
+import { scaleBand, scaleLinear } from 'd3-scale';
+import { axisBottom, axisLeft } from 'd3-axis';
+import { lineRadial, curveLinearClosed } from 'd3-shape';
 
 // Logo component
 function CiviqLogo() {
@@ -109,7 +113,7 @@ interface StateData {
 // State map component
 function StateMap({ stateAbbr }: { stateAbbr: string }) {
   useEffect(() => {
-    const container = d3.select('#state-map');
+    const container = select('#state-map');
     container.selectAll('*').remove();
 
     const width = 600;
@@ -157,7 +161,7 @@ function StateMap({ stateAbbr }: { stateAbbr: string }) {
       .append('g')
       .attr('class', 'district')
       .each(function (d) {
-        const district = d3.select(this);
+        const district = select(this);
 
         district
           .append('circle')
@@ -167,10 +171,10 @@ function StateMap({ stateAbbr }: { stateAbbr: string }) {
           .attr('fill', (d, i) => ((i as number) % 2 === 0 ? '#3b82f6' : '#ef4444'))
           .attr('opacity', 0.3)
           .on('mouseover', function () {
-            d3.select(this).attr('opacity', 0.6);
+            select(this).attr('opacity', 0.6);
           })
           .on('mouseout', function () {
-            d3.select(this).attr('opacity', 0.3);
+            select(this).attr('opacity', 0.3);
           });
 
         district
@@ -288,7 +292,7 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
 // Presidential voting history
 function PresidentialHistory({ history }: { history: StateData['presidentialHistory'] }) {
   useEffect(() => {
-    const container = d3.select('#presidential-chart');
+    const container = select('#presidential-chart');
     container.selectAll('*').remove();
 
     const margin = { top: 20, right: 30, bottom: 40, left: 60 };
@@ -302,17 +306,16 @@ function PresidentialHistory({ history }: { history: StateData['presidentialHist
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const x = d3
-      .scaleBand()
+    const x = scaleBand()
       .range([0, width])
       .domain(history.map(d => d.year.toString()))
       .padding(0.1);
 
-    const y = d3.scaleLinear().domain([-20, 20]).range([height, 0]);
+    const y = scaleLinear().domain([-20, 20]).range([height, 0]);
 
-    svg.append('g').attr('transform', `translate(0,${height})`).call(d3.axisBottom(x));
+    svg.append('g').attr('transform', `translate(0,${height})`).call(axisBottom(x));
 
-    svg.append('g').call(d3.axisLeft(y).tickFormat(d => `${Math.abs(d.valueOf())}%`));
+    svg.append('g').call(axisLeft(y).tickFormat(d => `${Math.abs(d.valueOf())}%`));
 
     // Add zero line
     svg
@@ -384,7 +387,7 @@ function PresidentialHistory({ history }: { history: StateData['presidentialHist
 // Key issues radar chart
 function KeyIssuesRadar({ issues }: { issues: StateData['keyIssues'] }) {
   useEffect(() => {
-    const container = d3.select('#issues-radar');
+    const container = select('#issues-radar');
     container.selectAll('*').remove();
 
     const width = 400;
@@ -402,7 +405,7 @@ function KeyIssuesRadar({ issues }: { issues: StateData['keyIssues'] }) {
     const angleSlice = (Math.PI * 2) / issues.length;
 
     // Scales
-    const rScale = d3.scaleLinear().range([0, radius]).domain([0, 100]);
+    const rScale = scaleLinear().range([0, radius]).domain([0, 100]);
 
     // Grid circles
     const gridLevels = 5;
@@ -456,11 +459,10 @@ function KeyIssuesRadar({ issues }: { issues: StateData['keyIssues'] }) {
     });
 
     // Data area
-    const radarLine = d3
-      .lineRadial<StateData['keyIssues'][0]>()
+    const radarLine = lineRadial<StateData['keyIssues'][0]>()
       .radius(d => rScale(d.importance))
       .angle((d, i) => i * angleSlice)
-      .curve(d3.curveLinearClosed);
+      .curve(curveLinearClosed);
 
     svg
       .append('path')

@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import {
   Users,
@@ -171,13 +172,14 @@ function LegislatorCard({
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
       <div className="flex items-start gap-4">
-        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center relative overflow-hidden">
           {legislator.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={legislator.photoUrl}
               alt={legislator.name}
-              className="w-16 h-16 rounded-full object-cover"
+              fill
+              sizes="64px"
+              className="rounded-full object-cover"
             />
           ) : (
             <span className="text-lg font-medium text-gray-600">

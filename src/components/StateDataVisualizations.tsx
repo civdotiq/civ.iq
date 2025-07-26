@@ -1,17 +1,26 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import { useEffect, useRef, useState } from 'react';
-import * as d3 from 'd3';
+// Modular D3 imports for optimal bundle size
+import { select } from 'd3-selection';
+import { scaleBand, scaleLinear, scaleOrdinal } from 'd3-scale';
+import { axisBottom, axisLeft } from 'd3-axis';
+import { line as d3Line, curveMonotoneX } from 'd3-shape';
+import { max } from 'd3-array';
 
 interface StateVisualizationProps {
   data: unknown;
-  type: 'chamber-composition' | 'bill-flow' | 'voting-patterns' | 'party-alignment' | 'legislative-activity';
+  type:
+    | 'chamber-composition'
+    | 'bill-flow'
+    | 'voting-patterns'
+    | 'party-alignment'
+    | 'legislative-activity';
   width?: number;
   height?: number;
   className?: string;
@@ -40,7 +49,7 @@ interface VotingPatternsData {
   totalVotes: number;
 }
 
-interface PartyAlignmentData {
+interface _PartyAlignmentData {
   bill: string;
   democraticSupport: number;
   republicanSupport: number;
@@ -55,36 +64,35 @@ interface LegislativeActivityData {
 }
 
 // Chamber Composition Visualization
-function ChamberComposition({ data, width = 400, height = 300 }: { 
-  data: ChamberCompositionData[]; 
-  width?: number; 
-  height?: number; 
+function ChamberComposition({
+  data,
+  width = 400,
+  height = 300,
+}: {
+  data: ChamberCompositionData[];
+  width?: number;
+  height?: number;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     if (!svgRef.current || !data.length) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg = select(svgRef.current);
     svg.selectAll('*').remove();
 
     const margin = { top: 20, right: 20, bottom: 40, left: 60 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
-    const g = svg
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
     // Create stacked bar chart
     const chambers = data.map(d => d.name);
-    const yScale = d3.scaleBand()
-      .domain(chambers)
-      .range([0, innerHeight])
-      .padding(0.3);
+    const yScale = scaleBand().domain(chambers).range([0, innerHeight]).padding(0.3);
 
-    const xScale = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.totalSeats) || 100])
+    const xScale = scaleLinear()
+      .domain([0, max(data, d => d.totalSeats) || 100])
       .range([0, innerWidth]);
 
     // Stack data
@@ -93,7 +101,7 @@ function ChamberComposition({ data, width = 400, height = 300 }: {
       democratic: d.democraticSeats,
       republican: d.republicanSeats,
       other: d.otherSeats,
-      total: d.totalSeats
+      total: d.totalSeats,
     }));
 
     // Draw Democratic bars
@@ -162,68 +170,77 @@ function ChamberComposition({ data, width = 400, height = 300 }: {
       .text(d => `${d.republican}R`);
 
     // Y axis
-    g.append('g')
-      .call(d3.axisLeft(yScale))
-      .selectAll('text')
-      .style('font-size', '12px');
+    g.append('g').call(axisLeft(yScale)).selectAll('text').style('font-size', '12px');
 
     // X axis
     g.append('g')
       .attr('transform', `translate(0,${innerHeight})`)
-      .call(d3.axisBottom(xScale))
+      .call(axisBottom(xScale))
       .selectAll('text')
       .style('font-size', '12px');
 
     // Add title
-    svg.append('text')
+    svg
+      .append('text')
       .attr('x', width / 2)
       .attr('y', 15)
       .attr('text-anchor', 'middle')
       .attr('font-size', '16px')
       .attr('font-weight', 'bold')
       .text('Chamber Composition');
-
   }, [data, width, height]);
 
   return <svg ref={svgRef} width={width} height={height} />;
 }
 
 // Bill Flow Sankey Diagram
-function BillFlow({ data, width = 600, height = 400 }: { 
-  data: BillFlowData[]; 
-  width?: number; 
-  height?: number; 
+function BillFlow({
+  data,
+  width = 600,
+  height = 400,
+}: {
+  data: BillFlowData[];
+  width?: number;
+  height?: number;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     if (!svgRef.current || !data.length) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg = select(svgRef.current);
     svg.selectAll('*').remove();
 
     const margin = { top: 40, right: 40, bottom: 40, left: 40 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
-    const g = svg
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
     // Create a simplified flow diagram
-    const statusOrder = ['introduced', 'committee', 'floor', 'passed_chamber', 'other_chamber', 'passed_both', 'signed'];
-    const sortedData = data.sort((a, b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status));
+    const statusOrder = [
+      'introduced',
+      'committee',
+      'floor',
+      'passed_chamber',
+      'other_chamber',
+      'passed_both',
+      'signed',
+    ];
+    const sortedData = data.sort(
+      (a, b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status)
+    );
 
-    const xScale = d3.scaleBand()
+    const xScale = scaleBand()
       .domain(sortedData.map(d => d.status))
       .range([0, innerWidth])
       .padding(0.1);
 
-    const yScale = d3.scaleLinear()
-      .domain([0, d3.max(sortedData, d => d.count) || 100])
+    const yScale = scaleLinear()
+      .domain([0, max(sortedData, d => d.count) || 100])
       .range([innerHeight, 0]);
 
-    const colorScale = d3.scaleOrdinal()
+    const colorScale = scaleOrdinal()
       .domain(statusOrder)
       .range(['#FEF3C7', '#FDE68A', '#FCD34D', '#F59E0B', '#D97706', '#92400E', '#059669']);
 
@@ -256,70 +273,67 @@ function BillFlow({ data, width = 600, height = 400 }: {
     // X axis
     g.append('g')
       .attr('transform', `translate(0,${innerHeight})`)
-      .call(d3.axisBottom(xScale))
+      .call(axisBottom(xScale))
       .selectAll('text')
       .attr('transform', 'rotate(-45)')
       .style('text-anchor', 'end')
       .style('font-size', '10px');
 
     // Y axis
-    g.append('g')
-      .call(d3.axisLeft(yScale))
-      .selectAll('text')
-      .style('font-size', '12px');
+    g.append('g').call(axisLeft(yScale)).selectAll('text').style('font-size', '12px');
 
     // Add title
-    svg.append('text')
+    svg
+      .append('text')
       .attr('x', width / 2)
       .attr('y', 20)
       .attr('text-anchor', 'middle')
       .attr('font-size', '16px')
       .attr('font-weight', 'bold')
       .text('Bill Progress Flow');
-
   }, [data, width, height]);
 
   return <svg ref={svgRef} width={width} height={height} />;
 }
 
 // Voting Patterns Scatter Plot
-function VotingPatterns({ data, width = 500, height = 400 }: { 
-  data: VotingPatternsData[]; 
-  width?: number; 
-  height?: number; 
+function VotingPatterns({
+  data,
+  width = 500,
+  height = 400,
+}: {
+  data: VotingPatternsData[];
+  width?: number;
+  height?: number;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     if (!svgRef.current || !data.length) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg = select(svgRef.current);
     svg.selectAll('*').remove();
 
     const margin = { top: 40, right: 40, bottom: 60, left: 60 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
-    const g = svg
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
     // Calculate party line percentage
     const processedData = data.map(d => ({
       ...d,
       partyLinePercentage: d.totalVotes > 0 ? (d.partyLineVotes / d.totalVotes) * 100 : 0,
-      crossoverPercentage: d.totalVotes > 0 ? (d.crossoverVotes / d.totalVotes) * 100 : 0
+      crossoverPercentage: d.totalVotes > 0 ? (d.crossoverVotes / d.totalVotes) * 100 : 0,
     }));
 
-    const xScale = d3.scaleLinear()
-      .domain([0, 100])
-      .range([0, innerWidth]);
+    const xScale = scaleLinear().domain([0, 100]).range([0, innerWidth]);
 
-    const yScale = d3.scaleLinear()
-      .domain([0, d3.max(processedData, d => d.totalVotes) || 100])
+    const yScale = scaleLinear()
+      .domain([0, max(processedData, d => d.totalVotes) || 100])
       .range([innerHeight, 0]);
 
-    const colorScale = d3.scaleOrdinal()
+    const colorScale = scaleOrdinal()
       .domain(['Democratic', 'Republican', 'Independent'])
       .range(['#3B82F6', '#EF4444', '#8B5CF6']);
 
@@ -340,15 +354,12 @@ function VotingPatterns({ data, width = 500, height = 400 }: {
     // X axis
     g.append('g')
       .attr('transform', `translate(0,${innerHeight})`)
-      .call(d3.axisBottom(xScale))
+      .call(axisBottom(xScale))
       .selectAll('text')
       .style('font-size', '12px');
 
     // Y axis
-    g.append('g')
-      .call(d3.axisLeft(yScale))
-      .selectAll('text')
-      .style('font-size', '12px');
+    g.append('g').call(axisLeft(yScale)).selectAll('text').style('font-size', '12px');
 
     // Axis labels
     g.append('text')
@@ -367,18 +378,18 @@ function VotingPatterns({ data, width = 500, height = 400 }: {
       .text('Total Votes');
 
     // Legend
-    const legend = g.append('g')
-      .attr('transform', `translate(${innerWidth - 120}, 20)`);
+    const legend = g.append('g').attr('transform', `translate(${innerWidth - 120}, 20)`);
 
     ['Democratic', 'Republican', 'Independent'].forEach((party, i) => {
-      const legendRow = legend.append('g')
-        .attr('transform', `translate(0, ${i * 20})`);
+      const legendRow = legend.append('g').attr('transform', `translate(0, ${i * 20})`);
 
-      legendRow.append('circle')
+      legendRow
+        .append('circle')
         .attr('r', 6)
         .attr('fill', colorScale(party) as string);
 
-      legendRow.append('text')
+      legendRow
+        .append('text')
         .attr('x', 15)
         .attr('y', 0)
         .attr('dy', '0.35em')
@@ -387,54 +398,59 @@ function VotingPatterns({ data, width = 500, height = 400 }: {
     });
 
     // Add title
-    svg.append('text')
+    svg
+      .append('text')
       .attr('x', width / 2)
       .attr('y', 20)
       .attr('text-anchor', 'middle')
       .attr('font-size', '16px')
       .attr('font-weight', 'bold')
       .text('Voting Patterns by Party');
-
   }, [data, width, height]);
 
   return <svg ref={svgRef} width={width} height={height} />;
 }
 
 // Legislative Activity Timeline
-function LegislativeActivity({ data, width = 700, height = 300 }: { 
-  data: LegislativeActivityData[]; 
-  width?: number; 
-  height?: number; 
+function LegislativeActivity({
+  data,
+  width = 700,
+  height = 300,
+}: {
+  data: LegislativeActivityData[];
+  width?: number;
+  height?: number;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     if (!svgRef.current || !data.length) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg = select(svgRef.current);
     svg.selectAll('*').remove();
 
     const margin = { top: 40, right: 40, bottom: 60, left: 60 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
-    const g = svg
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const xScale = d3.scaleBand()
+    const xScale = scaleBand()
       .domain(data.map(d => d.month))
       .range([0, innerWidth])
       .padding(0.1);
 
-    const yScale = d3.scaleLinear()
-      .domain([0, d3.max(data, d => Math.max(d.billsIntroduced, d.billsPassed, d.committeeMeetings)) || 100])
+    const yScale = scaleLinear()
+      .domain([
+        0,
+        max(data, d => Math.max(d.billsIntroduced, d.billsPassed, d.committeeMeetings)) || 100,
+      ])
       .range([innerHeight, 0]);
 
-    const line = d3.line<LegislativeActivityData>()
+    const lineGenerator = d3Line<LegislativeActivityData>()
       .x(d => xScale(d.month)! + xScale.bandwidth() / 2)
       .y(d => yScale(d.billsIntroduced))
-      .curve(d3.curveMonotoneX);
+      .curve(curveMonotoneX);
 
     // Draw introduced bills line
     g.append('path')
@@ -442,13 +458,13 @@ function LegislativeActivity({ data, width = 700, height = 300 }: {
       .attr('fill', 'none')
       .attr('stroke', '#3B82F6')
       .attr('stroke-width', 3)
-      .attr('d', line);
+      .attr('d', lineGenerator);
 
     // Draw passed bills line
-    const passedLine = d3.line<LegislativeActivityData>()
+    const passedLine = d3Line<LegislativeActivityData>()
       .x(d => xScale(d.month)! + xScale.bandwidth() / 2)
       .y(d => yScale(d.billsPassed))
-      .curve(d3.curveMonotoneX);
+      .curve(curveMonotoneX);
 
     g.append('path')
       .datum(data)
@@ -494,34 +510,30 @@ function LegislativeActivity({ data, width = 700, height = 300 }: {
     // X axis
     g.append('g')
       .attr('transform', `translate(0,${innerHeight})`)
-      .call(d3.axisBottom(xScale))
+      .call(axisBottom(xScale))
       .selectAll('text')
       .attr('transform', 'rotate(-45)')
       .style('text-anchor', 'end')
       .style('font-size', '12px');
 
     // Y axis
-    g.append('g')
-      .call(d3.axisLeft(yScale))
-      .selectAll('text')
-      .style('font-size', '12px');
+    g.append('g').call(axisLeft(yScale)).selectAll('text').style('font-size', '12px');
 
     // Legend
-    const legend = g.append('g')
-      .attr('transform', `translate(20, 20)`);
+    const legend = g.append('g').attr('transform', `translate(20, 20)`);
 
     const legendData = [
       { label: 'Bills Introduced', color: '#3B82F6', type: 'line' },
       { label: 'Bills Passed', color: '#059669', type: 'line' },
-      { label: 'Committee Meetings', color: '#F59E0B', type: 'bar' }
+      { label: 'Committee Meetings', color: '#F59E0B', type: 'bar' },
     ];
 
     legendData.forEach((item, i) => {
-      const legendRow = legend.append('g')
-        .attr('transform', `translate(0, ${i * 20})`);
+      const legendRow = legend.append('g').attr('transform', `translate(0, ${i * 20})`);
 
       if (item.type === 'line') {
-        legendRow.append('line')
+        legendRow
+          .append('line')
           .attr('x1', 0)
           .attr('x2', 20)
           .attr('y1', 0)
@@ -529,7 +541,8 @@ function LegislativeActivity({ data, width = 700, height = 300 }: {
           .attr('stroke', item.color)
           .attr('stroke-width', 3);
       } else {
-        legendRow.append('rect')
+        legendRow
+          .append('rect')
           .attr('width', 20)
           .attr('height', 10)
           .attr('y', -5)
@@ -537,7 +550,8 @@ function LegislativeActivity({ data, width = 700, height = 300 }: {
           .attr('opacity', 0.6);
       }
 
-      legendRow.append('text')
+      legendRow
+        .append('text')
         .attr('x', 25)
         .attr('y', 0)
         .attr('dy', '0.35em')
@@ -546,33 +560,35 @@ function LegislativeActivity({ data, width = 700, height = 300 }: {
     });
 
     // Add title
-    svg.append('text')
+    svg
+      .append('text')
       .attr('x', width / 2)
       .attr('y', 20)
       .attr('text-anchor', 'middle')
       .attr('font-size', '16px')
       .attr('font-weight', 'bold')
       .text('Legislative Activity Timeline');
-
   }, [data, width, height]);
 
   return <svg ref={svgRef} width={width} height={height} />;
 }
 
 // Main State Data Visualizations Component
-export default function StateDataVisualizations({ 
-  data, 
-  type, 
-  width = 500, 
-  height = 400, 
-  className = '' 
+export default function StateDataVisualizations({
+  data,
+  type,
+  width = 500,
+  height = 400,
+  className = '',
 }: StateVisualizationProps) {
   const [error, setError] = useState<string | null>(null);
 
   if (!data) {
     return (
-      <div className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`} 
-           style={{ width, height }}>
+      <div
+        className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}
+        style={{ width, height }}
+      >
         <p className="text-gray-500">No data available</p>
       </div>
     );
@@ -583,35 +599,45 @@ export default function StateDataVisualizations({
       case 'chamber-composition':
         return (
           <div className={className}>
-            <ChamberComposition data={data} width={width} height={height} />
+            <ChamberComposition
+              data={data as ChamberCompositionData[]}
+              width={width}
+              height={height}
+            />
           </div>
         );
-      
+
       case 'bill-flow':
         return (
           <div className={className}>
-            <BillFlow data={data} width={width} height={height} />
+            <BillFlow data={data as BillFlowData[]} width={width} height={height} />
           </div>
         );
-      
+
       case 'voting-patterns':
         return (
           <div className={className}>
-            <VotingPatterns data={data} width={width} height={height} />
+            <VotingPatterns data={data as VotingPatternsData[]} width={width} height={height} />
           </div>
         );
-      
+
       case 'legislative-activity':
         return (
           <div className={className}>
-            <LegislativeActivity data={data} width={width} height={height} />
+            <LegislativeActivity
+              data={data as LegislativeActivityData[]}
+              width={width}
+              height={height}
+            />
           </div>
         );
-      
+
       default:
         return (
-          <div className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`} 
-               style={{ width, height }}>
+          <div
+            className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}
+            style={{ width, height }}
+          >
             <p className="text-gray-500">Visualization type not supported</p>
           </div>
         );
@@ -619,8 +645,10 @@ export default function StateDataVisualizations({
   } catch (err) {
     setError(err instanceof Error ? err.message : 'Visualization error');
     return (
-      <div className={`flex items-center justify-center bg-red-100 rounded-lg ${className}`} 
-           style={{ width, height }}>
+      <div
+        className={`flex items-center justify-center bg-red-100 rounded-lg ${className}`}
+        style={{ width, height }}
+      >
         <p className="text-red-600">Error: {error}</p>
       </div>
     );
@@ -628,12 +656,7 @@ export default function StateDataVisualizations({
 }
 
 // Export individual visualization components
-export {
-  ChamberComposition,
-  BillFlow,
-  VotingPatterns,
-  LegislativeActivity
-};
+export { ChamberComposition, BillFlow, VotingPatterns, LegislativeActivity };
 
 // Export types for use in other components
 export type {
@@ -641,5 +664,5 @@ export type {
   BillFlowData,
   VotingPatternsData,
   LegislativeActivityData,
-  StateVisualizationProps
+  StateVisualizationProps,
 };

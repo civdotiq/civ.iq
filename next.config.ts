@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Configure webpack to handle dynamic imports and Leaflet properly
+  // Enhanced webpack configuration for code splitting and optimization
   webpack: (config, { isServer, dev }) => {
     // Handle Leaflet on the client side only
     if (!isServer) {
@@ -45,48 +45,118 @@ const nextConfig: NextConfig = {
         tls: false,
       };
     }
-    
-    // Strip console statements in production
+
+    // Enhanced code splitting and optimization
     if (!dev) {
       config.optimization.minimize = true;
       config.optimization.usedExports = true;
-      
-      // Remove console statements in production
-      if (config.optimization.minimizer) {
-        const TerserPlugin = require('terser-webpack-plugin');
-        config.optimization.minimizer.push(
-          new TerserPlugin({
-            terserOptions: {
-              compress: {
-                drop_console: true,
-                drop_debugger: true,
-              },
-            },
-          })
-        );
-      }
+      config.optimization.sideEffects = false;
+
+      // Improved chunk splitting strategy
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        minSize: 20000,
+        maxSize: 244000,
+        cacheGroups: {
+          // Vendor libraries
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            priority: 10,
+            reuseExistingChunk: true,
+            chunks: 'all',
+          },
+          // D3 and visualization libraries
+          d3: {
+            test: /[\\/]node_modules[\\/](d3|@types\/d3)[\\/]/,
+            name: 'd3-vendor',
+            priority: 15,
+            reuseExistingChunk: true,
+            chunks: 'all',
+          },
+          // Leaflet and mapping libraries
+          leaflet: {
+            test: /[\\/]node_modules[\\/](leaflet|react-leaflet)[\\/]/,
+            name: 'leaflet-vendor',
+            priority: 15,
+            reuseExistingChunk: true,
+            chunks: 'all',
+          },
+          // Chart libraries
+          charts: {
+            test: /[\\/]node_modules[\\/](recharts|react-window)[\\/]/,
+            name: 'charts-vendor',
+            priority: 15,
+            reuseExistingChunk: true,
+            chunks: 'all',
+          },
+          // React ecosystem
+          react: {
+            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+            name: 'react-vendor',
+            priority: 20,
+            reuseExistingChunk: true,
+            chunks: 'all',
+          },
+          // Common utilities
+          utils: {
+            test: /[\\/]node_modules[\\/](clsx|tailwind-merge|lucide-react)[\\/]/,
+            name: 'utils-vendor',
+            priority: 12,
+            reuseExistingChunk: true,
+            chunks: 'all',
+          },
+          // Default group for remaining modules
+          default: {
+            minChunks: 2,
+            priority: -10,
+            reuseExistingChunk: true,
+          },
+        },
+      };
+
+      // Enhanced minification already handled by Next.js built-in optimization
+      // Console statements will be removed automatically in production builds
     }
-    
+
+    // Optimize module resolution - handled by Next.js internally
+    // React deduplication is managed by the framework
+
     return config;
   },
-  // Enable experimental features for better dynamic imports
+  // Enable experimental features for better optimization
   experimental: {
-    optimizePackageImports: ['leaflet', 'react-leaflet'],
+    optimizePackageImports: [
+      'leaflet',
+      'react-leaflet',
+      'd3',
+      'recharts',
+      'lucide-react',
+      'clsx',
+      'tailwind-merge',
+    ],
+    // Enable modern bundling features
+    turbo: {
+      // Optimize for better development performance
+      rules: {
+        '*.{js,jsx,ts,tsx}': {
+          loaders: ['swc-loader'],
+          as: '*.js',
+        },
+      },
+    },
   },
   async headers() {
     // Define secure CORS origins based on environment
-    const allowedOrigins = process.env.NODE_ENV === 'production' 
-      ? [
-          'https://civic-intel-hub.vercel.app',
-          'https://civiq.app',
-          'https://www.civiq.app'
-        ]
-      : [
-          'http://localhost:3000',
-          'http://localhost:3001',
-          'http://127.0.0.1:3000',
-          'http://127.0.0.1:3001'
-        ];
+    const allowedOrigins =
+      process.env.NODE_ENV === 'production'
+        ? ['https://civic-intel-hub.vercel.app', 'https://civiq.app', 'https://www.civiq.app']
+        : [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:3001',
+          ];
 
     // Add custom origins from environment variable
     const customOrigins = process.env.CORS_ALLOWED_ORIGINS?.split(',') || [];

@@ -9,7 +9,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import * as d3 from 'd3';
+// Modular D3 imports for optimal bundle size
+import { select, pointer } from 'd3-selection';
+import { scaleBand, scaleOrdinal } from 'd3-scale';
+import { axisBottom, axisLeft } from 'd3-axis';
+import { format } from 'd3-format';
+import { easeBackOut } from 'd3-ease';
+import { max } from 'd3-array';
 import NationalStatsCards from '@/components/NationalStatsCards';
 import StateInfoPanel from '@/components/StateInfoPanel';
 
@@ -201,7 +207,7 @@ function CompetitivenessChart({ districts }: { districts: District[] }) {
   }>({ visible: false, x: 0, y: 0, content: '' });
 
   useEffect(() => {
-    const container = d3.select('#competitiveness-chart');
+    const container = select('#competitiveness-chart');
     container.selectAll('*').remove();
 
     const margin = { top: 40, right: 40, bottom: 80, left: 80 };
@@ -256,17 +262,15 @@ function CompetitivenessChart({ districts }: { districts: District[] }) {
     }));
 
     // Color scheme for categories
-    const colorScale = d3
-      .scaleOrdinal<string>()
+    const colorScale = scaleOrdinal<string>()
       .domain(categories)
       .range(['#1e40af', '#3b82f6', '#60a5fa', '#9ca3af', '#f87171', '#ef4444', '#dc2626']);
 
     // Create scales
-    const x = d3.scaleBand().domain(categories).range([0, width]).padding(0.2);
+    const x = scaleBand().domain(categories).range([0, width]).padding(0.2);
 
-    const y = d3
-      .scaleLinear()
-      .domain([0, d3.max(categoryData, d => d.count) || 0])
+    const y = scaleLinear()
+      .domain([0, max(categoryData, d => d.count) || 0])
       .range([height, 0]);
 
     // Add title
@@ -283,7 +287,7 @@ function CompetitivenessChart({ districts }: { districts: District[] }) {
     svg
       .append('g')
       .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x))
+      .call(axisBottom(x))
       .selectAll('text')
       .style('font-size', '12px')
       .attr('transform', 'rotate(-45)')
@@ -294,7 +298,7 @@ function CompetitivenessChart({ districts }: { districts: District[] }) {
     // Add y-axis
     svg
       .append('g')
-      .call(d3.axisLeft(y).tickFormat(d3.format('d')))
+      .call(axisLeft(y).tickFormat(format('d')))
       .selectAll('text')
       .style('font-size', '12px');
 
@@ -339,7 +343,7 @@ function CompetitivenessChart({ districts }: { districts: District[] }) {
     bars
       .transition()
       .duration(800)
-      .ease(d3.easeBackOut)
+      .ease(easeBackOut)
       .attr('y', d => y(d.count))
       .attr('height', d => height - y(d.count));
 
@@ -365,9 +369,9 @@ function CompetitivenessChart({ districts }: { districts: District[] }) {
     // Add interactivity
     bars
       .on('mouseover', function (event, d) {
-        d3.select(this).attr('opacity', 0.8).attr('stroke', '#000').attr('stroke-width', 2);
+        select(this).attr('opacity', 0.8).attr('stroke', '#000').attr('stroke-width', 2);
 
-        const [mouseX, mouseY] = d3.pointer(event, svg.node());
+        const [mouseX, mouseY] = pointer(event, svg.node());
         setTooltip({
           visible: true,
           x: mouseX + margin.left,
@@ -379,7 +383,7 @@ function CompetitivenessChart({ districts }: { districts: District[] }) {
         });
       })
       .on('mouseout', function () {
-        d3.select(this).attr('opacity', 1).attr('stroke', '#fff').attr('stroke-width', 1);
+        select(this).attr('opacity', 1).attr('stroke', '#fff').attr('stroke-width', 1);
 
         setTooltip({ visible: false, x: 0, y: 0, content: '' });
       });

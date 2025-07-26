@@ -5,17 +5,10 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useState, useEffect, useMemo, useTransition } from 'react';
+import { useState, useEffect, useMemo, useTransition, useCallback, CSSProperties } from 'react';
+import { VariableSizeList as List } from 'react-window';
 import { representativeApi } from '@/lib/api/representatives';
-import {
-  ResponsiveTable,
-  ResponsiveTableHead,
-  ResponsiveTableBody,
-  ResponsiveTableRow,
-  ResponsiveTableCell,
-  VoteCard,
-  TouchPagination,
-} from '@/components/ui/ResponsiveTable';
+import { TouchPagination } from '@/components/ui/ResponsiveTable';
 import { VotingRecordsSkeleton } from '@/components/ui/SkeletonComponents';
 import { LoadingStateWrapper } from '@/components/ui/LoadingStates';
 import { useSmartLoading } from '@/hooks/useSmartLoading';
@@ -47,6 +40,126 @@ interface VotingRecordsTableProps {
   bioguideId: string;
   chamber: 'House' | 'Senate';
 }
+
+interface VotesListProps {
+  votes: Vote[];
+  expandedRows: Set<string>;
+  toggleRowExpansion: (voteId: string) => void;
+  getPositionColor: (position: string) => string;
+  getResultColor: (result: string) => string;
+}
+
+// Virtual scrolling component for votes
+const VotesList = ({
+  votes,
+  expandedRows,
+  toggleRowExpansion,
+  getPositionColor,
+  getResultColor,
+}: VotesListProps) => {
+  const VoteRow = useCallback(
+    ({ index, style }: { index: number; style: CSSProperties }) => {
+      const vote = votes[index];
+      const isExpanded = expandedRows.has(vote.voteId);
+
+      return (
+        <div style={style} className="px-1 py-1">
+          <div
+            className={`bg-white rounded-lg border transition-all duration-200 cursor-pointer ${
+              isExpanded ? 'border-civiq-blue shadow-md' : 'border-gray-200 hover:border-gray-300'
+            }`}
+            onClick={() => toggleRowExpansion(vote.voteId)}
+          >
+            <div className="p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                      {vote.bill.number}
+                    </span>
+                    {vote.isKeyVote && (
+                      <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">
+                        Key Vote
+                      </span>
+                    )}
+                  </div>
+                  <h5 className="text-gray-900 font-medium mb-2 line-clamp-2">{vote.bill.title}</h5>
+                  <div className="text-sm text-gray-600">
+                    {new Date(vote.date).toLocaleDateString('en-US', {
+                      month: 'numeric',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-2 ml-4">
+                  <span
+                    className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full border ${getPositionColor(vote.position)}`}
+                  >
+                    {vote.position}
+                  </span>
+                  <span className={`text-sm font-medium ${getResultColor(vote.result)}`}>
+                    {vote.result}
+                  </span>
+                </div>
+              </div>
+
+              {/* Expanded Details */}
+              {isExpanded && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <p>
+                      <span className="font-medium">Question:</span> {vote.question}
+                    </p>
+                    {vote.rollNumber && (
+                      <p>
+                        <span className="font-medium">Roll Call:</span> {vote.chamber} Roll #
+                        {vote.rollNumber}
+                      </p>
+                    )}
+                    {vote.description && (
+                      <p>
+                        <span className="font-medium">Description:</span> {vote.description}
+                      </p>
+                    )}
+                    <p>
+                      <span className="font-medium">Congress:</span> {vote.bill.congress}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    },
+    [votes, expandedRows, toggleRowExpansion, getPositionColor, getResultColor]
+  );
+
+  if (votes.length === 0) {
+    return null;
+  }
+
+  // Calculate item height based on whether it's expanded
+  const getItemSize = (index: number) => {
+    const vote = votes[index];
+    const isExpanded = expandedRows.has(vote.voteId);
+    return isExpanded ? 200 : 120; // Approximate heights
+  };
+
+  return (
+    <div className="bg-gray-50 rounded-lg p-2">
+      <List
+        height={600} // Max height of the list container
+        itemCount={votes.length}
+        itemSize={getItemSize}
+        width="100%"
+      >
+        {VoteRow}
+      </List>
+    </div>
+  );
+};
 
 export function VotingRecordsTable({ bioguideId, chamber: _chamber }: VotingRecordsTableProps) {
   const [votes, setVotes] = useState<Vote[]>([]);
@@ -138,7 +251,7 @@ export function VotingRecordsTable({ bioguideId, chamber: _chamber }: VotingReco
 
   const totalPages = Math.ceil(filteredAndSortedVotes.length / votesPerPage);
 
-  const handleSort = (field: 'date' | 'bill' | 'result') => {
+  const _handleSort = (field: 'date' | 'bill' | 'result') => {
     // Use transition for non-urgent sorting updates
     startTransition(() => {
       if (sortField === field) {
@@ -268,140 +381,14 @@ export function VotingRecordsTable({ bioguideId, chamber: _chamber }: VotingReco
             </div>
           )}
 
-          {/* Responsive Table */}
-          <ResponsiveTable>
-            <ResponsiveTableHead>
-              <tr>
-                <th className="px-4 py-3 text-left">
-                  <button
-                    onClick={() => handleSort('date')}
-                    className="font-medium text-xs uppercase tracking-wider text-gray-700 hover:text-gray-900 flex items-center gap-1"
-                  >
-                    Date
-                    {sortField === 'date' &&
-                      (sortDirection === 'desc' ? (
-                        <span className="text-xs">▼</span>
-                      ) : (
-                        <span className="text-xs">▲</span>
-                      ))}
-                  </button>
-                </th>
-                <th className="px-4 py-3 text-left">
-                  <button
-                    onClick={() => handleSort('bill')}
-                    className="font-medium text-xs uppercase tracking-wider text-gray-700 hover:text-gray-900 flex items-center gap-1"
-                  >
-                    Bill
-                    {sortField === 'bill' &&
-                      (sortDirection === 'desc' ? (
-                        <span className="text-xs">▼</span>
-                      ) : (
-                        <span className="text-xs">▲</span>
-                      ))}
-                  </button>
-                </th>
-                <th className="px-4 py-3 text-left">
-                  <span className="font-medium text-xs uppercase tracking-wider text-gray-700">
-                    Description
-                  </span>
-                </th>
-                <th className="px-4 py-3 text-center">
-                  <span className="font-medium text-xs uppercase tracking-wider text-gray-700">
-                    Vote
-                  </span>
-                </th>
-                <th className="px-4 py-3 text-left">
-                  <button
-                    onClick={() => handleSort('result')}
-                    className="font-medium text-xs uppercase tracking-wider text-gray-700 hover:text-gray-900 flex items-center gap-1"
-                  >
-                    Result
-                    {sortField === 'result' &&
-                      (sortDirection === 'desc' ? (
-                        <span className="text-xs">▼</span>
-                      ) : (
-                        <span className="text-xs">▲</span>
-                      ))}
-                  </button>
-                </th>
-              </tr>
-            </ResponsiveTableHead>
-            <ResponsiveTableBody>
-              {paginatedVotes.map(vote => (
-                <ResponsiveTableRow
-                  key={vote.voteId}
-                  onClick={() => toggleRowExpansion(vote.voteId)}
-                  mobileCard={
-                    <VoteCard
-                      vote={vote}
-                      onToggleExpansion={toggleRowExpansion}
-                      isExpanded={expandedRows.has(vote.voteId)}
-                      getPositionColor={getPositionColor}
-                      getResultColor={getResultColor}
-                    />
-                  }
-                >
-                  <ResponsiveTableCell
-                    label="Date"
-                    priority="high"
-                    className="text-sm text-gray-900 whitespace-nowrap"
-                  >
-                    {new Date(vote.date).toLocaleDateString('en-US', {
-                      month: 'numeric',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </ResponsiveTableCell>
-
-                  <ResponsiveTableCell label="Bill" priority="high">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-blue-600 hover:text-blue-800">
-                        {vote.bill.number}
-                      </span>
-                      {vote.isKeyVote && (
-                        <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">
-                          Key Vote
-                        </span>
-                      )}
-                    </div>
-                  </ResponsiveTableCell>
-
-                  <ResponsiveTableCell label="Description" priority="medium" hideOnMobile={true}>
-                    <div>
-                      <p className="text-sm text-gray-900 line-clamp-2">{vote.bill.title}</p>
-                      {expandedRows.has(vote.voteId) && (
-                        <div className="mt-2 pt-2 border-t border-gray-100">
-                          <p className="text-sm text-gray-600">
-                            <span className="font-medium">Question:</span> {vote.question}
-                          </p>
-                          {vote.rollNumber && (
-                            <p className="text-sm text-gray-600 mt-1">
-                              <span className="font-medium">Roll Call:</span> {vote.chamber} Roll #
-                              {vote.rollNumber}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </ResponsiveTableCell>
-
-                  <ResponsiveTableCell label="Vote" priority="high" className="text-center">
-                    <span
-                      className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full border ${getPositionColor(vote.position)}`}
-                    >
-                      {vote.position}
-                    </span>
-                  </ResponsiveTableCell>
-
-                  <ResponsiveTableCell label="Result" priority="medium">
-                    <span className={`text-sm font-medium ${getResultColor(vote.result)}`}>
-                      {vote.result}
-                    </span>
-                  </ResponsiveTableCell>
-                </ResponsiveTableRow>
-              ))}
-            </ResponsiveTableBody>
-          </ResponsiveTable>
+          {/* Virtual Scrolling Votes List */}
+          <VotesList
+            votes={paginatedVotes}
+            expandedRows={expandedRows}
+            toggleRowExpansion={toggleRowExpansion}
+            getPositionColor={getPositionColor}
+            getResultColor={getResultColor}
+          />
 
           {/* Touch-Friendly Pagination */}
           {totalPages > 1 && (

@@ -6,6 +6,7 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { representativeApi } from '@/lib/api/representatives';
 import { structuredLogger } from '@/lib/logging/universal-logger';
 
@@ -309,14 +310,15 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
               <div className="p-6">
                 <div className="flex items-start gap-4">
                   {article.imageUrl && (
-                    <div className="flex-shrink-0 w-24 h-16 bg-gray-200 rounded overflow-hidden">
-                      <img
+                    <div className="flex-shrink-0 w-24 h-16 bg-gray-200 rounded overflow-hidden relative">
+                      <Image
                         src={article.imageUrl}
                         alt="Article thumbnail"
-                        className="w-full h-full object-cover"
-                        onError={e => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
+                        fill
+                        sizes="96px"
+                        className="object-cover"
+                        onError={() => {
+                          // Handle error by hiding the image container
                         }}
                       />
                     </div>

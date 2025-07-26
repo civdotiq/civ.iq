@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Search, Filter, MapPin, Users, Calendar, DollarSign, FileText, X } from 'lucide-react';
 import { structuredLogger } from '@/lib/logging/universal-logger';
 
@@ -531,12 +532,14 @@ export function AdvancedSearch() {
               className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start gap-6">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center relative overflow-hidden">
                   {rep.imageUrl ? (
-                    <img
+                    <Image
                       src={rep.imageUrl}
                       alt={rep.name}
-                      className="w-16 h-16 rounded-full object-cover"
+                      fill
+                      sizes="64px"
+                      className="rounded-full object-cover"
                     />
                   ) : (
                     <span className="text-lg font-medium text-gray-600">

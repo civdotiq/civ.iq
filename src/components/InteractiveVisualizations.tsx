@@ -6,7 +6,41 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import * as d3 from 'd3';
+// Modular D3 imports for optimal bundle size
+import { select, pointer } from 'd3-selection';
+import { scaleBand, scaleOrdinal } from 'd3-scale';
+import { axisBottom, axisLeft } from 'd3-axis';
+import { forceSimulation, forceManyBody, forceCenter, forceLink, forceCollide } from 'd3-force';
+import { drag } from 'd3-drag';
+import { zoom as d3Zoom } from 'd3-zoom';
+import { interpolate } from 'd3-interpolate';
+import { easeLinear } from 'd3-ease';
+import { curveLinearClosed, line } from 'd3-shape';
+import type { SimulationNodeDatum, SimulationLinkDatum, D3DragEvent, Selection } from 'd3';
+
+// Type definitions for D3 visualizations
+interface NetworkNode extends SimulationNodeDatum {
+  id: string;
+  name: string;
+  party: string;
+  group: number;
+}
+
+interface NetworkLink extends SimulationLinkDatum<NetworkNode> {
+  source: string | NetworkNode;
+  target: string | NetworkNode;
+  value: number;
+}
+
+interface _FlowNode {
+  name: string;
+  amount: number;
+  type: string;
+  x: number;
+  y: number;
+  height?: number;
+  radius?: number;
+}
 
 // Voting Pattern Heatmap
 export function VotingPatternHeatmap({
@@ -34,7 +68,7 @@ export function VotingPatternHeatmap({
   useEffect(() => {
     if (!svgRef.current || !data.length) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg = select(svgRef.current);
     svg.selectAll('*').remove();
 
     const margin = { top: 100, right: 50, bottom: 100, left: 150 };
@@ -44,12 +78,11 @@ export function VotingPatternHeatmap({
     const representatives = Array.from(new Set(data.map(d => d.representative)));
     const bills = Array.from(new Set(data.map(d => d.bill)));
 
-    const xScale = d3.scaleBand().domain(bills).range([0, innerWidth]).padding(0.05);
+    const xScale = scaleBand().domain(bills).range([0, innerWidth]).padding(0.05);
 
-    const yScale = d3.scaleBand().domain(representatives).range([0, innerHeight]).padding(0.05);
+    const yScale = scaleBand().domain(representatives).range([0, innerHeight]).padding(0.05);
 
-    const colorScale = d3
-      .scaleOrdinal<string>()
+    const colorScale = scaleOrdinal<string>()
       .domain(['Yes', 'No', 'Not Voting'])
       .range(['#10b981', '#ef4444', '#9ca3af']);
 
@@ -70,8 +103,8 @@ export function VotingPatternHeatmap({
       .attr('stroke-width', 1)
       .style('cursor', 'pointer')
       .on('mouseover', function (event, d) {
-        d3.select(this).attr('stroke', '#000').attr('stroke-width', 2);
-        const [x, y] = d3.pointer(event, svg.node());
+        select(this).attr('stroke', '#000').attr('stroke-width', 2);
+        const [x, y] = pointer(event, svg.node());
         setTooltip({
           visible: true,
           x,
@@ -80,14 +113,14 @@ export function VotingPatternHeatmap({
         });
       })
       .on('mouseout', function () {
-        d3.select(this).attr('stroke', '#fff').attr('stroke-width', 1);
+        select(this).attr('stroke', '#fff').attr('stroke-width', 1);
         setTooltip({ visible: false, x: 0, y: 0, content: '' });
       });
 
     // Add x-axis
     g.append('g')
       .attr('transform', `translate(0,${innerHeight})`)
-      .call(d3.axisBottom(xScale))
+      .call(axisBottom(xScale))
       .selectAll('text')
       .attr('transform', 'rotate(-45)')
       .style('text-anchor', 'end')
@@ -95,7 +128,7 @@ export function VotingPatternHeatmap({
       .attr('dy', '.15em');
 
     // Add y-axis
-    g.append('g').call(d3.axisLeft(yScale));
+    g.append('g').call(axisLeft(yScale));
 
     // Add legend
     const legend = svg
@@ -134,17 +167,8 @@ export function RepresentativeNetwork({
   width = 800,
   height = 600,
 }: {
-  nodes: Array<{
-    id: string;
-    name: string;
-    party: string;
-    group: number;
-  }>;
-  links: Array<{
-    source: string;
-    target: string;
-    value: number;
-  }>;
+  nodes: NetworkNode[];
+  links: NetworkLink[];
   width?: number;
   height?: number;
 }) {
@@ -153,33 +177,34 @@ export function RepresentativeNetwork({
   useEffect(() => {
     if (!svgRef.current || !nodes.length) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg = select(svgRef.current);
     svg.selectAll('*').remove();
 
-    const simulation = d3
-      .forceSimulation(nodes as any)
+    const simulation = forceSimulation<NetworkNode>(nodes)
       .force(
         'link',
-        d3
-          .forceLink(links)
-          .id((d: any) => d.id)
+        forceLink<NetworkNode, NetworkLink>(links)
+          .id(d => d.id)
           .distance(50)
       )
-      .force('charge', d3.forceManyBody().strength(-300))
-      .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide().radius(30));
+      .force('charge', forceManyBody().strength(-300))
+      .force('center', forceCenter(width / 2, height / 2))
+      .force('collision', forceCollide().radius(30));
 
     const g = svg.append('g');
 
     // Add zoom behavior
-    const zoom = d3
-      .zoom()
+    const zoomBehavior = d3Zoom()
       .scaleExtent([0.1, 4])
       .on('zoom', event => {
         g.attr('transform', event.transform);
       });
 
-    svg.call(zoom as any);
+    svg.call(
+      zoomBehavior as unknown as (
+        selection: Selection<SVGSVGElement, unknown, null, undefined>
+      ) => void
+    );
 
     // Add links
     const link = g
@@ -190,7 +215,7 @@ export function RepresentativeNetwork({
       .append('line')
       .attr('stroke', '#999')
       .attr('stroke-opacity', 0.6)
-      .attr('stroke-width', (d: unknown) => Math.sqrt(d.value));
+      .attr('stroke-width', d => Math.sqrt(d.value));
 
     // Add nodes
     const node = g
@@ -199,26 +224,30 @@ export function RepresentativeNetwork({
       .data(nodes)
       .enter()
       .append('g')
-      .call(d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended) as any);
+      .call(
+        drag<SVGGElement, NetworkNode>()
+          .on('start', dragstarted)
+          .on('drag', dragged)
+          .on('end', dragended)
+      );
 
     node
       .append('circle')
       .attr('r', 20)
-      .attr('fill', (d: unknown) => (d.party === 'Democratic' ? '#3b82f6' : '#ef4444'))
+      .attr('fill', d => (d.party === 'Democratic' ? '#3b82f6' : '#ef4444'))
       .attr('stroke', '#fff')
       .attr('stroke-width', 2);
 
     node
       .append('text')
-      .text((d: unknown) => d.name.split(' ').pop())
+      .text(d => d.name.split(' ').pop() || '')
       .attr('text-anchor', 'middle')
       .attr('dy', '.35em')
       .style('font-size', '10px')
       .style('fill', '#fff');
 
     // Add tooltip
-    const tooltip = d3
-      .select('body')
+    const tooltip = select('body')
       .append('div')
       .attr('class', 'tooltip')
       .style('opacity', 0)
@@ -230,7 +259,7 @@ export function RepresentativeNetwork({
       .style('font-size', '12px');
 
     node
-      .on('mouseover', function (event, d: unknown) {
+      .on('mouseover', function (event: MouseEvent, d: NetworkNode) {
         tooltip.transition().duration(200).style('opacity', 0.9);
         tooltip
           .html(`${d.name}<br/>Party: ${d.party}`)
@@ -243,32 +272,40 @@ export function RepresentativeNetwork({
 
     simulation.on('tick', () => {
       link
-        .attr('x1', (d: unknown) => d.source.x)
-        .attr('y1', (d: unknown) => d.source.y)
-        .attr('x2', (d: unknown) => d.target.x)
-        .attr('y2', (d: unknown) => d.target.y);
+        .attr('x1', d => (d.source as NetworkNode).x!)
+        .attr('y1', d => (d.source as NetworkNode).y!)
+        .attr('x2', d => (d.target as NetworkNode).x!)
+        .attr('y2', d => (d.target as NetworkNode).y!);
 
-      node.attr('transform', (d: unknown) => `translate(${d.x},${d.y})`);
+      node.attr('transform', d => `translate(${d.x},${d.y})`);
     });
 
-    function dragstarted(event: unknown, d: unknown) {
+    function dragstarted(
+      event: D3DragEvent<SVGGElement, NetworkNode, NetworkNode>,
+      d: NetworkNode
+    ) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
     }
 
-    function dragged(event: unknown, d: unknown) {
+    function dragged(event: D3DragEvent<SVGGElement, NetworkNode, NetworkNode>, d: NetworkNode) {
       d.fx = event.x;
       d.fy = event.y;
     }
 
-    function dragended(event: unknown, d: unknown) {
+    function dragended(event: D3DragEvent<SVGGElement, NetworkNode, NetworkNode>, d: NetworkNode) {
       if (!event.active) simulation.alphaTarget(0);
       d.fx = null;
       d.fy = null;
     }
 
     return () => {
+      // Stop the simulation to prevent memory leaks
+      simulation.stop();
+      // Remove all event listeners and DOM elements
+      svg.selectAll('*').remove();
+      // Remove the tooltip from body
       tooltip.remove();
     };
   }, [nodes, links, width, height]);
@@ -294,7 +331,7 @@ export function CampaignFinanceFlow({
   useEffect(() => {
     if (!svgRef.current) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg = select(svgRef.current);
     svg.selectAll('*').remove();
 
     const margin = { top: 20, right: 20, bottom: 20, left: 20 };
@@ -452,14 +489,18 @@ export function CampaignFinanceFlow({
       .style('fill', '#fff');
 
     // Animated flow lines
-    function createFlow(source: unknown, target: unknown, isSpending = false) {
+    function createFlow(
+      source: _FlowNode,
+      target: { x: number; y: number; height?: number; radius?: number },
+      isSpending = false
+    ) {
       const path = g
         .append('path')
         .attr('d', () => {
           const sx = isSpending ? centralNode.x + centralNode.radius : source.x + 80;
-          const sy = isSpending ? centralNode.y : source.y + source.height / 2;
+          const sy = isSpending ? centralNode.y : source.y + (source.height || 0) / 2;
           const tx = isSpending ? target.x - 80 : centralNode.x - centralNode.radius;
-          const ty = isSpending ? target.y + target.height / 2 : centralNode.y;
+          const ty = isSpending ? target.y + (target.height || 0) / 2 : centralNode.y;
 
           return `M ${sx} ${sy} Q ${(sx + tx) / 2} ${(sy + ty) / 2} ${tx} ${ty}`;
         })
@@ -479,9 +520,9 @@ export function CampaignFinanceFlow({
           .attr('opacity', 1)
           .transition()
           .duration(2000)
-          .ease(d3.easeLinear)
+          .ease(easeLinear)
           .attrTween('transform', () => {
-            const interpolate = d3.interpolate(0, 1);
+            const _interpolate = interpolate(0, 1);
             return (t: number) => {
               const p = path.node()!.getPointAtLength(t * path.node()!.getTotalLength());
               return `translate(${p.x},${p.y})`;
@@ -523,7 +564,7 @@ export function LegislativeSuccessFunnel({
   useEffect(() => {
     if (!svgRef.current || !data.length) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg = select(svgRef.current);
     svg.selectAll('*').remove();
 
     const margin = { top: 20, right: 20, bottom: 20, left: 20 };
@@ -571,11 +612,10 @@ export function LegislativeSuccessFunnel({
         .datum(trapezoid)
         .attr(
           'd',
-          d3
-            .line<any>()
+          line<{ x: number; y: number }>()
             .x(d => d.x)
             .y(d => d.y)
-            .curve(d3.curveLinearClosed)
+            .curve(curveLinearClosed)
         )
         .attr('fill', 'url(#funnel-gradient)')
         .attr('opacity', 0.8 - i * 0.1)
@@ -632,7 +672,7 @@ export function InteractiveDistrictMap({
   useEffect(() => {
     if (!svgRef.current) return;
 
-    const svg = d3.select(svgRef.current);
+    const svg = select(svgRef.current);
     svg.selectAll('*').remove();
 
     // This is a placeholder - in production, you'd load actual GeoJSON data
@@ -696,14 +736,17 @@ export function InteractiveDistrictMap({
     });
 
     // Add zoom
-    const zoom = d3
-      .zoom()
+    const zoomBehavior = d3Zoom()
       .scaleExtent([0.5, 4])
       .on('zoom', event => {
         g.attr('transform', event.transform);
       });
 
-    svg.call(zoom as any);
+    svg.call(
+      zoomBehavior as unknown as (
+        selection: Selection<SVGSVGElement, unknown, null, undefined>
+      ) => void
+    );
   }, [districts, selectedDistrict, onDistrictClick, width, height]);
 
   return <svg ref={svgRef} width={width} height={height} />;
