@@ -11,7 +11,7 @@ import Image from 'next/image';
 import dynamic from 'next/dynamic';
 // Modular D3 imports for optimal bundle size
 import { select, pointer } from 'd3-selection';
-import { scaleBand, scaleOrdinal } from 'd3-scale';
+import { scaleBand, scaleOrdinal, scaleLinear } from 'd3-scale';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { format } from 'd3-format';
 import { easeBackOut } from 'd3-ease';

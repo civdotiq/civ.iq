@@ -138,6 +138,139 @@ async function retryWithBackoff<T>(
   throw lastError!;
 }
 
+// Get representatives by state and district directly
+async function getRepresentativesByStateDistrict(
+  state: string,
+  district: string
+): Promise<ApiResponse> {
+  const startTime = Date.now();
+  const metadata: ApiResponse['metadata'] = {
+    timestamp: new Date().toISOString(),
+    zipCode: `${state}-${district}`, // Use state-district as identifier
+    dataQuality: 'unavailable',
+    dataSource: 'none',
+    cacheable: false,
+  };
+
+  try {
+    // Get representatives with circuit breaker and retry
+    structuredLogger.info(`Fetching all representatives for ${state}-${district}`, {
+      state,
+      district,
+      operation: 'getAllRepresentatives',
+    });
+    const allRepresentatives = await congressCircuitBreaker.execute(
+      () => retryWithBackoff(() => getAllEnhancedRepresentatives()),
+      'Congress Legislators'
+    );
+
+    if (!allRepresentatives || allRepresentatives.length === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'REPRESENTATIVES_DATA_UNAVAILABLE',
+          message: 'Representative data is temporarily unavailable',
+          details: 'Congress legislators database could not be accessed',
+        },
+        metadata: {
+          ...metadata,
+          dataQuality: 'unavailable',
+          dataSource: 'congress-legislators-failed',
+          freshness: `Failed after ${Date.now() - startTime}ms`,
+        },
+      };
+    }
+
+    // Filter representatives for this state and district
+    const districtRepresentatives = allRepresentatives.filter(rep => {
+      if (rep.chamber === 'Senate' && rep.state === state) {
+        return true;
+      }
+      if (rep.chamber === 'House' && rep.state === state && rep.district) {
+        // Normalize district numbers for comparison
+        const repDistrict = parseInt(rep.district, 10);
+        const targetDistrict = parseInt(district, 10);
+        return repDistrict === targetDistrict;
+      }
+      return false;
+    });
+
+    if (districtRepresentatives.length === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'NO_REPRESENTATIVES_FOUND',
+          message: `No representatives found for ${state}-${district}`,
+          details: {
+            district,
+            state,
+            totalRepsInDatabase: allRepresentatives.length,
+          },
+        },
+        metadata: {
+          ...metadata,
+          dataQuality: 'low',
+          dataSource: 'congress-legislators-partial',
+          freshness: `Data retrieved in ${Date.now() - startTime}ms`,
+        },
+      };
+    }
+
+    // Convert to response format
+    const representatives: RepresentativeResponse[] = districtRepresentatives.map(rep => ({
+      bioguideId: rep.bioguideId,
+      name: rep.name,
+      party: rep.party,
+      state: rep.state,
+      district: rep.district,
+      chamber: rep.chamber,
+      title: rep.title,
+      phone: rep.currentTerm?.phone || rep.phone,
+      website: rep.currentTerm?.website || rep.website,
+      contactInfo: {
+        phone: rep.currentTerm?.phone || rep.phone || '',
+        website: rep.currentTerm?.website || rep.website || '',
+        office: rep.currentTerm?.office || rep.currentTerm?.address || '',
+      },
+    }));
+
+    return {
+      success: true,
+      representatives,
+      metadata: {
+        ...metadata,
+        dataQuality: 'high',
+        dataSource: 'congress-legislators',
+        cacheable: true,
+        freshness: `Retrieved in ${Date.now() - startTime}ms`,
+        validationScore: 95,
+        validationStatus: 'excellent',
+      },
+    };
+  } catch (error) {
+    structuredLogger.error('Error fetching representatives by state/district', error as Error, {
+      state,
+      district,
+      operation: 'getRepresentativesByStateDistrict',
+    });
+
+    return {
+      success: false,
+      error: {
+        code: 'UNKNOWN_ERROR',
+        message: 'An unexpected error occurred',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      metadata: {
+        ...metadata,
+        dataQuality: 'unavailable',
+        dataSource: 'error',
+        freshness: `Failed after ${Date.now() - startTime}ms`,
+      },
+    };
+  }
+}
+
 // Honest data fetching with transparency
 async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
   const startTime = Date.now();
@@ -438,22 +571,24 @@ export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
     const zipCode = url.searchParams.get('zip');
+    const state = url.searchParams.get('state');
+    const district = url.searchParams.get('district');
 
-    logger.info('ZIP code parameter received', { zipCode });
+    logger.info('Request parameters received', { zipCode, state, district });
 
-    // Input validation
-    if (!zipCode) {
-      logger.warn('Missing ZIP code parameter');
+    // Input validation - either ZIP code OR state+district required
+    if (!zipCode && (!state || !district)) {
+      logger.warn('Missing required parameters');
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: 'MISSING_ZIP_CODE',
-            message: 'ZIP code parameter is required',
+            code: 'MISSING_PARAMETERS',
+            message: 'Either zip code or both state and district parameters are required',
           },
           metadata: {
             timestamp: new Date().toISOString(),
-            zipCode: '',
+            zipCode: zipCode || '',
             dataQuality: 'unavailable' as const,
             dataSource: 'validation-error',
             cacheable: false,
@@ -463,7 +598,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!/^\d{5}(-\d{4})?$/.test(zipCode)) {
+    // Validate ZIP code if provided
+    if (zipCode && !/^\d{5}(-\d{4})?$/.test(zipCode)) {
       return NextResponse.json(
         {
           success: false,
@@ -484,8 +620,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Get representatives with honest error handling
-    logger.info('Calling getRepresentativesByZip', { zipCode });
-    const result = await getRepresentativesByZip(zipCode);
+    let result: ApiResponse;
+    if (zipCode) {
+      logger.info('Calling getRepresentativesByZip', { zipCode });
+      result = await getRepresentativesByZip(zipCode);
+    } else {
+      // state and district are guaranteed to be non-null by validation above
+      logger.info('Calling getRepresentativesByStateDistrict', { state, district });
+      result = await getRepresentativesByStateDistrict(state!, district!);
+    }
     logger.info('getRepresentativesByZip completed', {
       zipCode,
       success: result.success,

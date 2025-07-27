@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import {
   getRepresentativePhotoUrls,
   getRepresentativeInitials,
@@ -29,6 +30,13 @@ const sizeClasses = {
   xl: 'w-24 h-24 text-xl',
 };
 
+const sizeDimensions = {
+  sm: 48,
+  md: 64,
+  lg: 80,
+  xl: 96,
+};
+
 export function RepresentativePhoto({
   bioguideId,
   name,
@@ -42,33 +50,9 @@ export function RepresentativePhoto({
     initials: getRepresentativeInitials(name),
     backgroundColor: getAvatarBackgroundColor(name),
   });
-  const [shouldLoad, setShouldLoad] = useState(false);
   const imgRef = useRef<HTMLDivElement>(null);
 
-  // Intersection Observer for lazy loading
   useEffect(() => {
-    if (!imgRef.current) return;
-
-    const observer = new IntersectionObserver(
-      entries => {
-        const [entry] = entries;
-        if (entry.isIntersecting) {
-          setShouldLoad(true);
-          observer.disconnect();
-        }
-      },
-      {
-        rootMargin: '50px', // Load 50px before entering viewport
-      }
-    );
-
-    observer.observe(imgRef.current);
-
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!shouldLoad) return;
     if (!bioguideId) {
       setPhotoState(prev => ({
         ...prev,
@@ -131,7 +115,7 @@ export function RepresentativePhoto({
     };
 
     loadPhoto();
-  }, [bioguideId, name, shouldLoad]);
+  }, [bioguideId, name]);
 
   const baseClasses = `${sizeClasses[size]} rounded-full flex items-center justify-center overflow-hidden flex-shrink-0`;
   const combinedClasses = `${baseClasses} ${className}`;
@@ -149,11 +133,15 @@ export function RepresentativePhoto({
   if (photoState.photoUrl && !photoState.hasError) {
     return (
       <div ref={imgRef} className={combinedClasses}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={photoState.photoUrl}
           alt={`Photo of ${name}`}
+          width={sizeDimensions[size]}
+          height={sizeDimensions[size]}
           className="w-full h-full object-cover rounded-full"
+          priority={size === 'xl'} // Prioritize larger images
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
           onError={() => {
             setPhotoState(prev => ({
               ...prev,

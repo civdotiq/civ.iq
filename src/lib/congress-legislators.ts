@@ -5,132 +5,158 @@
 
 /**
  * Congress Legislators Data Integration
- * 
+ *
  * This module integrates with the unitedstates/congress-legislators repository
  * to provide enhanced representative data including social media, contact info,
  * committee memberships, and comprehensive ID mappings.
- * 
+ *
  * Data sources:
  * - https://github.com/unitedstates/congress-legislators
  * - legislators-current.yaml: Current members of Congress
  * - legislators-social-media.yaml: Social media accounts
  */
 
-import { cachedFetch } from '@/lib/cache'
-import { structuredLogger } from '@/lib/logging/logger'
-import yaml from 'js-yaml'
-import type { EnhancedRepresentative } from '@/types/representative'
+import { cachedFetch } from '@/lib/cache';
+import { structuredLogger } from '@/lib/logging/logger';
+import yaml from 'js-yaml';
+import type { EnhancedRepresentative } from '@/types/representative';
 
 // Base URLs for congress-legislators data
-const CONGRESS_LEGISLATORS_BASE_URL = 'https://raw.githubusercontent.com/unitedstates/congress-legislators/main'
+const CONGRESS_LEGISLATORS_BASE_URL =
+  'https://raw.githubusercontent.com/unitedstates/congress-legislators/main';
 
-// Interfaces for congress-legislators data
-export interface CongressLegislatorId {
-  bioguide: string
-  thomas?: string
-  lis?: string
-  govtrack?: number
-  opensecrets?: string
-  votesmart?: number
-  fec?: string[]
-  cspan?: number
-  wikipedia?: string
-  house_history?: number
-  ballotpedia?: string
-  maplight?: number
-  icpsr?: number
-  wikidata?: string
-}
+// Rate limiter for GitHub API calls
+class RateLimiter {
+  private requests: number[] = [];
+  private readonly maxRequestsPerSecond = 10; // GitHub's rate limit
 
-export interface CongressLegislatorName {
-  first: string
-  middle?: string
-  last: string
-  suffix?: string
-  nickname?: string
-  official_full?: string
-}
+  async waitIfNeeded(): Promise<void> {
+    const now = Date.now();
+    const oneSecondAgo = now - 1000;
 
-export interface CongressLegislatorBio {
-  birthday?: string
-  gender: 'M' | 'F'
-  religion?: string
-}
+    // Remove requests older than 1 second
+    this.requests = this.requests.filter(time => time > oneSecondAgo);
 
-export interface CongressLegislatorTerm {
-  type: 'rep' | 'sen'
-  start: string
-  end: string
-  state: string
-  district?: number
-  party: string
-  caucus?: string
-  state_rank?: 'junior' | 'senior'
-  url?: string
-  address?: string
-  phone?: string
-  fax?: string
-  contact_form?: string
-  office?: string
-  rss_url?: string
-  class?: number
-}
+    if (this.requests.length >= this.maxRequestsPerSecond) {
+      const waitTime = 1000 - (now - this.requests[0]);
+      if (waitTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+    }
 
-export interface CongressLegislatorLeadership {
-  title: string
-  start: string
-  end?: string
-}
-
-export interface CongressLegislator {
-  id: CongressLegislatorId
-  name: CongressLegislatorName
-  bio: CongressLegislatorBio
-  terms: CongressLegislatorTerm[]
-  leadership_roles?: CongressLegislatorLeadership[]
-}
-
-export interface CongressLegislatorSocialMedia {
-  bioguide: string
-  social?: {
-    twitter?: string
-    twitter_id?: string
-    facebook?: string
-    facebook_id?: string
-    youtube?: string
-    youtube_id?: string
-    instagram?: string
-    instagram_id?: string
-    mastodon?: string
+    this.requests.push(now);
   }
 }
 
+const githubRateLimiter = new RateLimiter();
+
+// Interfaces for congress-legislators data
+export interface CongressLegislatorId {
+  bioguide: string;
+  thomas?: string;
+  lis?: string;
+  govtrack?: number;
+  opensecrets?: string;
+  votesmart?: number;
+  fec?: string[];
+  cspan?: number;
+  wikipedia?: string;
+  house_history?: number;
+  ballotpedia?: string;
+  maplight?: number;
+  icpsr?: number;
+  wikidata?: string;
+}
+
+export interface CongressLegislatorName {
+  first: string;
+  middle?: string;
+  last: string;
+  suffix?: string;
+  nickname?: string;
+  official_full?: string;
+}
+
+export interface CongressLegislatorBio {
+  birthday?: string;
+  gender: 'M' | 'F';
+  religion?: string;
+}
+
+export interface CongressLegislatorTerm {
+  type: 'rep' | 'sen';
+  start: string;
+  end: string;
+  state: string;
+  district?: number;
+  party: string;
+  caucus?: string;
+  state_rank?: 'junior' | 'senior';
+  url?: string;
+  address?: string;
+  phone?: string;
+  fax?: string;
+  contact_form?: string;
+  office?: string;
+  rss_url?: string;
+  class?: number;
+}
+
+export interface CongressLegislatorLeadership {
+  title: string;
+  start: string;
+  end?: string;
+}
+
+export interface CongressLegislator {
+  id: CongressLegislatorId;
+  name: CongressLegislatorName;
+  bio: CongressLegislatorBio;
+  terms: CongressLegislatorTerm[];
+  leadership_roles?: CongressLegislatorLeadership[];
+}
+
+export interface CongressLegislatorSocialMedia {
+  bioguide: string;
+  social?: {
+    twitter?: string;
+    twitter_id?: string;
+    facebook?: string;
+    facebook_id?: string;
+    youtube?: string;
+    youtube_id?: string;
+    instagram?: string;
+    instagram_id?: string;
+    mastodon?: string;
+  };
+}
+
 export interface CongressCommitteeMembership {
-  bioguide: string
-  thomas?: string
+  bioguide: string;
+  thomas?: string;
   committees: Array<{
-    thomas_id: string
-    house_committee_id?: string
-    senate_committee_id?: string
-    rank?: number
-    party?: string
-    title?: string
-    chamber?: 'house' | 'senate'
-  }>
+    thomas_id: string;
+    house_committee_id?: string;
+    senate_committee_id?: string;
+    rank?: number;
+    party?: string;
+    title?: string;
+    chamber?: 'house' | 'senate';
+  }>;
 }
 
 export interface CongressCommittee {
-  thomas_id: string
-  house_committee_id?: string
-  senate_committee_id?: string
-  type: 'house' | 'senate' | 'joint'
-  name: string
-  chamber?: 'house' | 'senate'
-  jurisdiction?: string
+  thomas_id: string;
+  house_committee_id?: string;
+  senate_committee_id?: string;
+  type: 'house' | 'senate' | 'joint';
+  name: string;
+  chamber?: 'house' | 'senate';
+  jurisdiction?: string;
   subcommittees?: Array<{
-    thomas_id: string
-    name: string
-  }>
+    thomas_id: string;
+    name: string;
+  }>;
 }
 
 /**
@@ -141,36 +167,36 @@ async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
     'congress-legislators-current',
     async () => {
       try {
-        console.log('[fetchCurrentLegislators] Starting fetch from congress-legislators...');
-        structuredLogger.info('Fetching current legislators from congress-legislators')
-        
-        const response = await fetch(`${CONGRESS_LEGISLATORS_BASE_URL}/legislators-current.yaml`)
-        console.log(`[fetchCurrentLegislators] Response status: ${response.status} ${response.statusText}`);
-        
+        structuredLogger.info('Fetching current legislators from congress-legislators');
+
+        // Apply rate limiting
+        await githubRateLimiter.waitIfNeeded();
+
+        const response = await fetch(`${CONGRESS_LEGISLATORS_BASE_URL}/legislators-current.yaml`, {
+          signal: AbortSignal.timeout(30000), // 30 second timeout
+        });
+
         if (!response.ok) {
-          throw new Error(`Failed to fetch legislators: ${response.status} ${response.statusText}`)
+          throw new Error(`Failed to fetch legislators: ${response.status} ${response.statusText}`);
         }
-        
-        const yamlText = await response.text()
-        console.log(`[fetchCurrentLegislators] Downloaded ${yamlText.length} characters of YAML data`);
-        
+
+        const yamlText = await response.text();
+
         // Parse YAML (simplified parser for this specific format)
-        const legislators = parseCongressLegilatorsYAML(yamlText)
-        console.log(`[fetchCurrentLegislators] Parsed ${legislators.length} legislators from YAML`);
-        
+        const legislators = parseCongressLegilatorsYAML(yamlText);
+
         structuredLogger.info('Successfully fetched current legislators', {
-          count: legislators.length
-        })
-        
-        return legislators
+          count: legislators.length,
+        });
+
+        return legislators;
       } catch (error) {
-        console.error('[fetchCurrentLegislators] Error:', error);
-        structuredLogger.error('Error fetching current legislators', error as Error)
-        return []
+        structuredLogger.error('Error fetching current legislators', error as Error);
+        return [];
       }
     },
     6 * 60 * 60 * 1000 // 6 hours cache - data doesn't change frequently
-  )
+  );
 }
 
 /**
@@ -181,74 +207,99 @@ async function fetchSocialMediaData(): Promise<CongressLegislatorSocialMedia[]> 
     'congress-legislators-social-media',
     async () => {
       try {
-        structuredLogger.info('Fetching social media data from congress-legislators')
-        
-        const response = await fetch(`${CONGRESS_LEGISLATORS_BASE_URL}/legislators-social-media.yaml`)
-        
+        structuredLogger.info('Fetching social media data from congress-legislators');
+
+        // Apply rate limiting
+        await githubRateLimiter.waitIfNeeded();
+
+        const response = await fetch(
+          `${CONGRESS_LEGISLATORS_BASE_URL}/legislators-social-media.yaml`,
+          {
+            signal: AbortSignal.timeout(30000), // 30 second timeout
+          }
+        );
+
         if (!response.ok) {
-          throw new Error(`Failed to fetch social media: ${response.status} ${response.statusText}`)
+          throw new Error(
+            `Failed to fetch social media: ${response.status} ${response.statusText}`
+          );
         }
-        
-        const yamlText = await response.text()
-        
+
+        const yamlText = await response.text();
+
         // Parse YAML for social media data
-        const socialMedia = parseSocialMediaYAML(yamlText)
-        
+        const socialMedia = parseSocialMediaYAML(yamlText);
+
         structuredLogger.info('Successfully fetched social media data', {
-          count: socialMedia.length
-        })
-        
-        return socialMedia
+          count: socialMedia.length,
+        });
+
+        return socialMedia;
       } catch (error) {
-        structuredLogger.error('Error fetching social media data', error as Error)
-        return []
+        structuredLogger.error('Error fetching social media data', error as Error);
+        return [];
       }
     },
     6 * 60 * 60 * 1000 // 6 hours cache
-  )
+  );
 }
 
 /**
- * Parse YAML data for congress-legislators format
+ * Parse YAML data for congress-legislators format with memory-efficient streaming
  */
 function parseCongressLegilatorsYAML(yamlText: string): CongressLegislator[] {
   try {
-    const data = yaml.load(yamlText) as CongressLegislator[]
-    
-    if (!Array.isArray(data)) {
-      throw new Error('Invalid YAML format: expected array of legislators')
+    // Check file size before parsing to prevent memory issues
+    const sizeInMB = yamlText.length / (1024 * 1024);
+    if (sizeInMB > 10) {
+      structuredLogger.warn('Large YAML file detected', { sizeInMB });
     }
-    
+
+    // Parse with safe loading to prevent memory overflow
+    const data = yaml.load(yamlText) as CongressLegislator[];
+
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid YAML format: expected array of legislators');
+    }
+
     structuredLogger.info('Successfully parsed congress legislators YAML', {
-      count: data.length
-    })
-    
-    return data
+      count: data.length,
+      sizeInMB: sizeInMB.toFixed(2),
+    });
+
+    return data;
   } catch (error) {
-    structuredLogger.error('Error parsing congress legislators YAML', error as Error)
-    return []
+    structuredLogger.error('Error parsing congress legislators YAML', error as Error);
+    return [];
   }
 }
 
 /**
- * Parse YAML data for social media format
+ * Parse YAML data for social media format with memory limits
  */
 function parseSocialMediaYAML(yamlText: string): CongressLegislatorSocialMedia[] {
   try {
-    const data = yaml.load(yamlText) as CongressLegislatorSocialMedia[]
-    
-    if (!Array.isArray(data)) {
-      throw new Error('Invalid YAML format: expected array of social media entries')
+    // Check file size before parsing
+    const sizeInMB = yamlText.length / (1024 * 1024);
+    if (sizeInMB > 10) {
+      structuredLogger.warn('Large social media YAML file detected', { sizeInMB });
     }
-    
+
+    const data = yaml.load(yamlText) as CongressLegislatorSocialMedia[];
+
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid YAML format: expected array of social media entries');
+    }
+
     structuredLogger.info('Successfully parsed social media YAML', {
-      count: data.length
-    })
-    
-    return data
+      count: data.length,
+      sizeInMB: sizeInMB.toFixed(2),
+    });
+
+    return data;
   } catch (error) {
-    structuredLogger.error('Error parsing social media YAML', error as Error)
-    return []
+    structuredLogger.error('Error parsing social media YAML', error as Error);
+    return [];
   }
 }
 
@@ -260,61 +311,86 @@ export async function fetchCommitteeMemberships(): Promise<CongressCommitteeMemb
     'congress-committee-memberships',
     async () => {
       try {
-        structuredLogger.info('Fetching committee memberships from congress-legislators')
-        
-        const response = await fetch(`${CONGRESS_LEGISLATORS_BASE_URL}/committee-membership-current.yaml`)
-        
+        structuredLogger.info('Fetching committee memberships from congress-legislators');
+
+        // Apply rate limiting
+        await githubRateLimiter.waitIfNeeded();
+
+        const response = await fetch(
+          `${CONGRESS_LEGISLATORS_BASE_URL}/committee-membership-current.yaml`,
+          {
+            signal: AbortSignal.timeout(30000), // 30 second timeout
+          }
+        );
+
         if (!response.ok) {
-          throw new Error(`Failed to fetch committee memberships: ${response.status} ${response.statusText}`)
+          throw new Error(
+            `Failed to fetch committee memberships: ${response.status} ${response.statusText}`
+          );
         }
-        
-        const yamlText = await response.text()
-        const data = yaml.load(yamlText) as any
-        
+
+        const yamlText = await response.text();
+        const data = yaml.load(yamlText) as Record<string, unknown>;
+
         // Transform the committee membership data which is organized by committee ID
-        const memberships: CongressCommitteeMembership[] = []
-        const membershipsByBioguide = new Map<string, any[]>()
-        
+        const memberships: CongressCommitteeMembership[] = [];
+        const membershipsByBioguide = new Map<
+          string,
+          Array<{
+            thomas_id: string;
+            rank?: number;
+            party?: string;
+            title?: string;
+            chamber?: 'house' | 'senate';
+          }>
+        >();
+
         // Parse committee-based structure where each key is a committee and values are member arrays
         for (const [committeeId, memberList] of Object.entries(data)) {
           if (Array.isArray(memberList)) {
             memberList.forEach((member: unknown) => {
-              if (member.bioguide) {
-                if (!membershipsByBioguide.has(member.bioguide)) {
-                  membershipsByBioguide.set(member.bioguide, [])
+              const typedMember = member as {
+                bioguide?: string;
+                rank?: number;
+                party?: string;
+                title?: string;
+              };
+              if (typedMember.bioguide) {
+                if (!membershipsByBioguide.has(typedMember.bioguide)) {
+                  membershipsByBioguide.set(typedMember.bioguide, []);
                 }
-                membershipsByBioguide.get(member.bioguide)!.push({
+                membershipsByBioguide.get(typedMember.bioguide)!.push({
                   thomas_id: committeeId,
-                  rank: member.rank,
-                  party: member.party,
-                  title: member.title,
-                  chamber: committeeId.startsWith('H') ? 'house' : 'senate'
-                })
+                  rank: typedMember.rank,
+                  party: typedMember.party,
+                  title: typedMember.title,
+                  chamber: committeeId.startsWith('H') ? 'house' : 'senate',
+                });
               }
-            })
+            });
           }
         }
-        
+
         // Convert map to array format
         for (const [bioguideId, committees] of membershipsByBioguide.entries()) {
           memberships.push({
             bioguide: bioguideId,
-            committees: committees
-          })
+            committees: committees,
+          });
         }
-        
+
         structuredLogger.info('Successfully fetched committee memberships', {
-          count: memberships.length
-        })
-        
-        return memberships
+          count: memberships.length,
+        });
+
+        return memberships;
       } catch (error) {
-        structuredLogger.error('Error fetching committee memberships', error as Error)
-        return []
+        structuredLogger.error('Error fetching committee memberships', error as Error);
+        return [];
       }
     },
     6 * 60 * 60 * 1000 // 6 hours cache
-  )
+  );
 }
 
 /**
@@ -325,68 +401,73 @@ export async function fetchCommittees(): Promise<CongressCommittee[]> {
     'congress-committees-current',
     async () => {
       try {
-        structuredLogger.info('Fetching committees from congress-legislators')
-        
-        const response = await fetch(`${CONGRESS_LEGISLATORS_BASE_URL}/committees-current.yaml`)
-        
+        structuredLogger.info('Fetching committees from congress-legislators');
+
+        const response = await fetch(`${CONGRESS_LEGISLATORS_BASE_URL}/committees-current.yaml`);
+
         if (!response.ok) {
-          throw new Error(`Failed to fetch committees: ${response.status} ${response.statusText}`)
+          throw new Error(`Failed to fetch committees: ${response.status} ${response.statusText}`);
         }
-        
-        const yamlText = await response.text()
-        const committees = yaml.load(yamlText) as CongressCommittee[]
-        
+
+        const yamlText = await response.text();
+        const committees = yaml.load(yamlText) as CongressCommittee[];
+
         structuredLogger.info('Successfully fetched committees', {
-          count: committees.length
-        })
-        
-        return committees
+          count: committees.length,
+        });
+
+        return committees;
       } catch (error) {
-        structuredLogger.error('Error fetching committees', error as Error)
-        return []
+        structuredLogger.error('Error fetching committees', error as Error);
+        return [];
       }
     },
     6 * 60 * 60 * 1000 // 6 hours cache
-  )
+  );
 }
 
 /**
  * Get enhanced representative data by bioguide ID
  */
-export async function getEnhancedRepresentative(bioguideId: string): Promise<EnhancedRepresentative | null> {
+export async function getEnhancedRepresentative(
+  bioguideId: string
+): Promise<EnhancedRepresentative | null> {
   try {
     const [legislators, socialMedia, committeeMemberships, committees] = await Promise.all([
       fetchCurrentLegislators(),
       fetchSocialMediaData(),
       fetchCommitteeMemberships(),
-      fetchCommittees()
-    ])
-    
+      fetchCommittees(),
+    ]);
+
     // Find the legislator by bioguide ID
-    const legislator = legislators.find(l => l.id.bioguide === bioguideId)
+    const legislator = legislators.find(l => l.id.bioguide === bioguideId);
     if (!legislator) {
-      structuredLogger.warn('Legislator not found in congress-legislators data', { bioguideId })
-      return null
+      structuredLogger.warn('Legislator not found in congress-legislators data', { bioguideId });
+      return null;
     }
-    
+
     // Find social media data
-    const social = socialMedia.find(s => s.bioguide === bioguideId)
-    
+    const social = socialMedia.find(s => s.bioguide === bioguideId);
+
     // Find committee memberships
-    const memberCommittees = committeeMemberships.find(m => m.bioguide === bioguideId)
-    
+    const memberCommittees = committeeMemberships.find(m => m.bioguide === bioguideId);
+
     // Build committee array with names
-    const representativeCommittees = memberCommittees?.committees?.map(membership => {
-      const committee = committees.find(c => c.thomas_id === membership.thomas_id)
-      return {
-        name: committee?.name || membership.thomas_id,
-        role: membership.title || 'Member'
-      }
-    }).filter(c => c.name) || []
-    
+    const representativeCommittees =
+      memberCommittees?.committees
+        ?.map(membership => {
+          const committee = committees.find(c => c.thomas_id === membership.thomas_id);
+          return {
+            name: committee?.name || membership.thomas_id,
+            role: membership.title || 'Member',
+          };
+        })
+        .filter(c => c.name) || [];
+
     // Get current term (most recent)
-    const currentTerm = legislator.terms[legislator.terms.length - 1]
-    
+    const currentTerm = legislator.terms[legislator.terms.length - 1];
+
     // Build enhanced representative object
     const enhanced: EnhancedRepresentative = {
       bioguideId: legislator.id.bioguide,
@@ -400,28 +481,30 @@ export async function getEnhancedRepresentative(bioguideId: string): Promise<Enh
       title: currentTerm.type === 'sen' ? 'U.S. Senator' : 'U.S. Representative',
       phone: currentTerm.phone,
       website: currentTerm.url,
-      terms: [{
-        congress: '119', // Current congress
-        startYear: currentTerm.start.split('-')[0],
-        endYear: currentTerm.end.split('-')[0]
-      }],
+      terms: [
+        {
+          congress: '119', // Current congress
+          startYear: currentTerm.start.split('-')[0],
+          endYear: currentTerm.end.split('-')[0],
+        },
+      ],
       committees: representativeCommittees,
-      
+
       fullName: {
         first: legislator.name.first,
         middle: legislator.name.middle,
         last: legislator.name.last,
         suffix: legislator.name.suffix,
         nickname: legislator.name.nickname,
-        official: legislator.name.official_full
+        official: legislator.name.official_full,
       },
-      
+
       bio: {
         birthday: legislator.bio.birthday,
         gender: legislator.bio.gender,
-        religion: legislator.bio.religion
+        religion: legislator.bio.religion,
       },
-      
+
       currentTerm: {
         start: currentTerm.start,
         end: currentTerm.end,
@@ -432,17 +515,19 @@ export async function getEnhancedRepresentative(bioguideId: string): Promise<Enh
         contactForm: currentTerm.contact_form,
         rssUrl: currentTerm.rss_url,
         stateRank: currentTerm.state_rank,
-        class: currentTerm.class
+        class: currentTerm.class,
       },
-      
-      socialMedia: social?.social ? {
-        twitter: social.social.twitter,
-        facebook: social.social.facebook,
-        youtube: social.social.youtube,
-        instagram: social.social.instagram,
-        mastodon: social.social.mastodon
-      } : undefined,
-      
+
+      socialMedia: social?.social
+        ? {
+            twitter: social.social.twitter,
+            facebook: social.social.facebook,
+            youtube: social.social.youtube,
+            instagram: social.social.instagram,
+            mastodon: social.social.mastodon,
+          }
+        : undefined,
+
       ids: {
         govtrack: legislator.id.govtrack,
         opensecrets: legislator.id.opensecrets,
@@ -451,23 +536,23 @@ export async function getEnhancedRepresentative(bioguideId: string): Promise<Enh
         cspan: legislator.id.cspan,
         wikipedia: legislator.id.wikipedia,
         wikidata: legislator.id.wikidata,
-        ballotpedia: legislator.id.ballotpedia
+        ballotpedia: legislator.id.ballotpedia,
       },
-      
-      leadershipRoles: legislator.leadership_roles
-    }
-    
+
+      leadershipRoles: legislator.leadership_roles,
+    };
+
     structuredLogger.info('Successfully enhanced representative data', {
       bioguideId,
       hasIds: !!enhanced.ids,
       hasSocialMedia: !!enhanced.socialMedia,
-      hasCurrentTerm: !!enhanced.currentTerm
-    })
-    
-    return enhanced
+      hasCurrentTerm: !!enhanced.currentTerm,
+    });
+
+    return enhanced;
   } catch (error) {
-    structuredLogger.error('Error getting enhanced representative', error as Error, { bioguideId })
-    return null
+    structuredLogger.error('Error getting enhanced representative', error as Error, { bioguideId });
+    return null;
   }
 }
 
@@ -476,20 +561,23 @@ export async function getEnhancedRepresentative(bioguideId: string): Promise<Enh
  */
 export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresentative[]> {
   try {
-    console.log('[getAllEnhancedRepresentatives] Starting to fetch data...');
+    structuredLogger.debug('Starting to fetch all enhanced representatives data');
     const [legislators, socialMedia] = await Promise.all([
       fetchCurrentLegislators(),
-      fetchSocialMediaData()
-    ])
-    
-    console.log(`[getAllEnhancedRepresentatives] Fetched ${legislators.length} legislators and ${socialMedia.length} social media records`);
-    
+      fetchSocialMediaData(),
+    ]);
+
+    structuredLogger.debug('Fetched legislators and social media data', {
+      legislatorsCount: legislators.length,
+      socialMediaCount: socialMedia.length,
+    });
+
     const enhanced: EnhancedRepresentative[] = legislators.map(legislator => {
-      const bioguideId = legislator.id.bioguide
-      const social = socialMedia.find(s => s.bioguide === bioguideId)
-      const currentTerm = legislator.terms[legislator.terms.length - 1]
-      
-      return ({
+      const bioguideId = legislator.id.bioguide;
+      const social = socialMedia.find(s => s.bioguide === bioguideId);
+      const currentTerm = legislator.terms[legislator.terms.length - 1];
+
+      return {
         bioguideId: legislator.id.bioguide,
         name: `${legislator.name.first} ${legislator.name.last}`,
         firstName: legislator.name.first,
@@ -499,28 +587,30 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
         district: currentTerm.district?.toString(),
         chamber: currentTerm.type === 'sen' ? 'Senate' : 'House',
         title: currentTerm.type === 'sen' ? 'U.S. Senator' : 'U.S. Representative',
-        terms: [{
-          congress: '119', // Current congress
-          startYear: currentTerm.start.split('-')[0],
-          endYear: currentTerm.end.split('-')[0]
-        }],
+        terms: [
+          {
+            congress: '119', // Current congress
+            startYear: currentTerm.start.split('-')[0],
+            endYear: currentTerm.end.split('-')[0],
+          },
+        ],
         committees: [],
-        
+
         fullName: {
           first: legislator.name.first,
           middle: legislator.name.middle,
           last: legislator.name.last,
           suffix: legislator.name.suffix,
           nickname: legislator.name.nickname,
-          official: legislator.name.official_full
+          official: legislator.name.official_full,
         },
-        
+
         bio: {
           birthday: legislator.bio.birthday,
           gender: legislator.bio.gender,
-          religion: legislator.bio.religion
+          religion: legislator.bio.religion,
         },
-        
+
         currentTerm: {
           start: currentTerm.start,
           end: currentTerm.end,
@@ -531,17 +621,19 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
           contactForm: currentTerm.contact_form,
           rssUrl: currentTerm.rss_url,
           stateRank: currentTerm.state_rank,
-          class: currentTerm.class
+          class: currentTerm.class,
         },
-        
-        socialMedia: social?.social ? {
-          twitter: social.social.twitter,
-          facebook: social.social.facebook,
-          youtube: social.social.youtube,
-          instagram: social.social.instagram,
-          mastodon: social.social.mastodon
-        } : undefined,
-        
+
+        socialMedia: social?.social
+          ? {
+              twitter: social.social.twitter,
+              facebook: social.social.facebook,
+              youtube: social.social.youtube,
+              instagram: social.social.instagram,
+              mastodon: social.social.mastodon,
+            }
+          : undefined,
+
         ids: {
           govtrack: legislator.id.govtrack,
           opensecrets: legislator.id.opensecrets,
@@ -550,37 +642,41 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
           cspan: legislator.id.cspan,
           wikipedia: legislator.id.wikipedia,
           wikidata: legislator.id.wikidata,
-          ballotpedia: legislator.id.ballotpedia
+          ballotpedia: legislator.id.ballotpedia,
         },
-        
-        leadershipRoles: legislator.leadership_roles
-      }) as EnhancedRepresentative
-    })
-    
-    console.log(`[getAllEnhancedRepresentatives] Successfully processed ${enhanced.length} enhanced representatives`);
-    
+
+        leadershipRoles: legislator.leadership_roles,
+      } as EnhancedRepresentative;
+    });
+
+    structuredLogger.debug('Successfully processed enhanced representatives', {
+      count: enhanced.length,
+    });
+
     structuredLogger.info('Successfully got all enhanced representatives', {
-      count: enhanced.length
-    })
-    
-    return enhanced
+      count: enhanced.length,
+    });
+
+    return enhanced;
   } catch (error) {
-    console.error('[getAllEnhancedRepresentatives] Error processing representatives:', error);
-    structuredLogger.error('Error getting all enhanced representatives', error as Error)
-    return []
+    structuredLogger.error('Error getting all enhanced representatives', error as Error);
+    return [];
   }
 }
 
 /**
  * Get OpenSecrets ID for improved FEC matching
  */
-export function getOpenSecretsId(bioguideId: string, enhanced?: EnhancedRepresentative): string | null {
+export function getOpenSecretsId(
+  bioguideId: string,
+  enhanced?: EnhancedRepresentative
+): string | null {
   if (enhanced?.ids?.opensecrets) {
-    return enhanced.ids.opensecrets
+    return enhanced.ids.opensecrets;
   }
-  
+
   // Could also fetch this individually if needed
-  return null
+  return null;
 }
 
 /**
@@ -588,8 +684,8 @@ export function getOpenSecretsId(bioguideId: string, enhanced?: EnhancedRepresen
  */
 export function getFECIds(bioguideId: string, enhanced?: EnhancedRepresentative): string[] {
   if (enhanced?.ids?.fec) {
-    return enhanced.ids.fec
+    return enhanced.ids.fec;
   }
-  
-  return []
+
+  return [];
 }

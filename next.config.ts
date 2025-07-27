@@ -90,6 +90,12 @@ const nextConfig: NextConfig = {
             reuseExistingChunk: true,
             chunks: 'all',
           },
+          // Server-only dependencies (exclude from client bundle)
+          serverOnly: {
+            test: /[\\/]node_modules[\\/](@opentelemetry|@redis|redis|ioredis|winston)[\\/]/,
+            name: false, // Don't create a chunk for server-only deps
+            chunks: () => false, // Exclude from client bundle
+          },
           // React ecosystem
           react: {
             test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
@@ -134,17 +140,11 @@ const nextConfig: NextConfig = {
       'lucide-react',
       'clsx',
       'tailwind-merge',
+      'swr',
+      'react-window',
     ],
-    // Enable modern bundling features
-    turbo: {
-      // Optimize for better development performance
-      rules: {
-        '*.{js,jsx,ts,tsx}': {
-          loaders: ['swc-loader'],
-          as: '*.js',
-        },
-      },
-    },
+    // Tree shaking optimization for unused code
+    optimizeCss: true,
   },
   async headers() {
     // Define secure CORS origins based on environment

@@ -8,12 +8,31 @@
 import { useState, Suspense, ComponentType } from 'react';
 import Link from 'next/link';
 import { LoadingErrorBoundary } from '@/components/ErrorBoundary';
-import { BillsTracker } from '@/components/BillsTracker';
-import { EnhancedVotingChart } from '@/components/EnhancedVotingChart';
-import PartyAlignmentAnalysis from '@/components/PartyAlignmentAnalysis';
 import dynamic from 'next/dynamic';
 
-// Dynamic imports for lazy loading
+// Dynamic imports for lazy loading - optimized for performance
+const LazyBillsTracker = dynamic(
+  () => import('@/components/BillsTracker').then(mod => ({ default: mod.BillsTracker })),
+  {
+    ssr: false,
+    loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
+  }
+);
+
+const LazyEnhancedVotingChart = dynamic(
+  () =>
+    import('@/components/EnhancedVotingChart').then(mod => ({ default: mod.EnhancedVotingChart })),
+  {
+    ssr: false,
+    loading: () => <div className="animate-pulse bg-gray-200 h-24 rounded"></div>,
+  }
+);
+
+const LazyPartyAlignmentAnalysis = dynamic(() => import('@/components/PartyAlignmentAnalysis'), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-gray-200 h-40 rounded"></div>,
+});
+
 const LazyVotingRecordsTable = dynamic(
   () =>
     import('@/components/VotingRecordsTable').then(mod => ({ default: mod.VotingRecordsTable })),
@@ -633,7 +652,7 @@ export function RepresentativeProfileClient({
                 {/* Party Alignment Analysis - Moved from Profile section */}
                 {Object.keys(initialData.partyAlignment || {}).length > 0 &&
                   representative.party && (
-                    <PartyAlignmentAnalysis
+                    <LazyPartyAlignmentAnalysis
                       bioguideId={bioguideId}
                       representative={{
                         name: representative.name || 'Representative',
@@ -645,7 +664,7 @@ export function RepresentativeProfileClient({
                   )}
 
                 {/* Pre-rendered voting chart with server data */}
-                <EnhancedVotingChart
+                <LazyEnhancedVotingChart
                   votes={initialData.votes}
                   party={representative.party || 'Unknown'}
                 />
@@ -690,7 +709,7 @@ export function RepresentativeProfileClient({
                 </div>
 
                 {/* Pre-rendered bills tracker with server data - no additional loading needed */}
-                <BillsTracker bills={initialData.bills} representative={representative} />
+                <LazyBillsTracker bills={initialData.bills} representative={representative} />
               </div>
             ) : (
               <div className="text-center py-8">

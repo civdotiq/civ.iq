@@ -317,6 +317,8 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
                         fill
                         sizes="96px"
                         className="object-cover"
+                        priority={index < 3} // Prioritize first 3 images
+                        loading={index < 3 ? 'eager' : 'lazy'}
                         onError={() => {
                           // Handle error by hiding the image container
                         }}

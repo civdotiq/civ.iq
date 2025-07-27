@@ -87,7 +87,7 @@ export default function MapComponent({
 
         // Add GeoJSON layer with enhanced interactivity
         if (boundaryData) {
-          geoJsonLayer = L.geoJSON(boundaryData, {
+          geoJsonLayer = L.geoJSON(boundaryData as any, {
             style: feature => {
               // Dynamic styling based on district properties
               const isMainDistrict =

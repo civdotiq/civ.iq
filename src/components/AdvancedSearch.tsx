@@ -526,7 +526,7 @@ export function AdvancedSearch() {
             <p className="text-gray-600">Try adjusting your search criteria or filters</p>
           </div>
         ) : (
-          results.map(rep => (
+          results.map((rep, index) => (
             <div
               key={rep.bioguideId}
               className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
@@ -540,6 +540,8 @@ export function AdvancedSearch() {
                       fill
                       sizes="64px"
                       className="rounded-full object-cover"
+                      priority={index < 4} // Prioritize first 4 search results
+                      loading={index < 4 ? 'eager' : 'lazy'}
                     />
                   ) : (
                     <span className="text-lg font-medium text-gray-600">
