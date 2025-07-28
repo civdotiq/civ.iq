@@ -5,13 +5,14 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useState, useEffect, useMemo, useTransition, useCallback, CSSProperties } from 'react';
+import { useState, useMemo, useTransition, useCallback, CSSProperties } from 'react';
 import { VariableSizeList as List } from 'react-window';
+import Link from 'next/link';
+import useSWR from 'swr';
 import { representativeApi } from '@/lib/api/representatives';
 import { TouchPagination } from '@/components/ui/ResponsiveTable';
 import { VotingRecordsSkeleton } from '@/components/ui/SkeletonComponents';
 import { LoadingStateWrapper } from '@/components/ui/LoadingStates';
-import { useSmartLoading } from '@/hooks/useSmartLoading';
 import { ApiErrorHandlers } from '@/lib/errors/ErrorHandlers';
 import { structuredLogger } from '@/lib/logging/universal-logger';
 
@@ -74,16 +75,26 @@ const VotesList = ({
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                    <Link
+                      href={`/bill/${vote.bill.number}`}
+                      className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                      onClick={e => e.stopPropagation()}
+                    >
                       {vote.bill.number}
-                    </span>
+                    </Link>
                     {vote.isKeyVote && (
                       <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">
                         Key Vote
                       </span>
                     )}
                   </div>
-                  <h5 className="text-gray-900 font-medium mb-2 line-clamp-2">{vote.bill.title}</h5>
+                  <Link
+                    href={`/bill/${vote.bill.number}`}
+                    className="block text-gray-900 font-medium mb-2 line-clamp-2 hover:text-blue-600 transition-colors"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    {vote.bill.title}
+                  </Link>
                   <div className="text-sm text-gray-600">
                     {new Date(vote.date).toLocaleDateString('en-US', {
                       month: 'numeric',
@@ -162,7 +173,6 @@ const VotesList = ({
 };
 
 export function VotingRecordsTable({ bioguideId, chamber: _chamber }: VotingRecordsTableProps) {
-  const [votes, setVotes] = useState<Vote[]>([]);
   const [sortField, setSortField] = useState<'date' | 'bill' | 'result'>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filterCategory, setFilterCategory] = useState<'all' | 'key' | 'passed' | 'failed'>('all');
@@ -172,13 +182,18 @@ export function VotingRecordsTable({ bioguideId, chamber: _chamber }: VotingReco
 
   const votesPerPage = 10;
 
-  // Smart loading hook with timeout and retry
-  const loading = useSmartLoading(
+  // SWR for voting records with caching
+  const {
+    data: votesData,
+    error,
+    isLoading,
+  } = useSWR(
+    `/api/representative/${bioguideId}/votes`,
     async () => {
       try {
         structuredLogger.info('VotingRecordsTable fetching votes', { bioguideId });
         const data = await representativeApi.getVotes(bioguideId);
-        setVotes(data.votes || []);
+        return data.votes || [];
       } catch (error) {
         structuredLogger.error('Error fetching votes', {
           error: error as Error,
@@ -189,26 +204,14 @@ export function VotingRecordsTable({ bioguideId, chamber: _chamber }: VotingReco
       }
     },
     {
-      timeout: 15000,
-      stages: ['Connecting to Congress.gov...', 'Loading voting records...', 'Processing data...'],
+      revalidateOnFocus: false,
+      dedupingInterval: 300000, // 5 minutes
+      errorRetryCount: 3,
+      errorRetryInterval: 2000,
     }
   );
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadVotes = async () => {
-      if (cancelled) return;
-      loading.start('Loading voting records...');
-      // The async operation is handled by the useSmartLoading hook
-    };
-
-    loadVotes();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [bioguideId, loading]);
+  const votes = useMemo(() => votesData || [], [votesData]);
 
   const filteredAndSortedVotes = useMemo(() => {
     let filtered = [...votes];
@@ -308,11 +311,11 @@ export function VotingRecordsTable({ bioguideId, chamber: _chamber }: VotingReco
 
   return (
     <LoadingStateWrapper
-      loading={loading.loading}
-      error={loading.error}
-      retry={loading.retry}
+      loading={isLoading}
+      error={error}
+      retry={() => window.location.reload()}
       loadingComponent={<VotingRecordsSkeleton rows={votesPerPage} />}
-      loadingMessage={loading.stage}
+      loadingMessage="Loading voting records..."
       timeoutMessage="Voting records are taking longer than usual to load"
     >
       {votes.length === 0 ? (

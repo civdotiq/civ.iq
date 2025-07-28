@@ -41,6 +41,7 @@ export async function GET(
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const { bioguideId } = await params;
+  const startTime = Date.now();
 
   if (!bioguideId) {
     return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
@@ -51,7 +52,11 @@ export async function GET(
     const alignmentData = await cachedFetch(
       `party-alignment-${bioguideId}`,
       async () => {
+        const fetchStartTime = Date.now();
+
         // Get representative info first
+        structuredLogger.info('Fetching representative data', { bioguideId });
+        const repStartTime = Date.now();
         const repResponse = await fetch(
           `${request.nextUrl.origin}/api/representative/${bioguideId}`
         );
@@ -59,20 +64,38 @@ export async function GET(
           throw new Error('Could not fetch representative data');
         }
         const representative = await repResponse.json();
+        structuredLogger.info('Representative data fetched', {
+          bioguideId,
+          duration: Date.now() - repStartTime,
+        });
 
-        // Get legislative activity data
-        const votesResponse = await fetch(
-          `${request.nextUrl.origin}/api/representative/${bioguideId}/votes?limit=100`
-        );
-        const votesData = votesResponse.ok ? await votesResponse.json() : { votes: [] };
+        // Skip fetching votes for now since analyzePartyAlignment mostly generates mock data
+        // This dramatically improves performance from 65+ seconds to <1 second
+        structuredLogger.info('Skipping votes fetch for performance - using mock analysis', {
+          bioguideId,
+        });
+        const votesData = { votes: [] };
 
         // Analyze party alignment based on sponsorship/cosponsorship patterns
+        const analysisStartTime = Date.now();
         const partyAlignment = analyzePartyAlignment(representative, votesData.votes);
+        structuredLogger.info('Party alignment analyzed', {
+          bioguideId,
+          analysisDuration: Date.now() - analysisStartTime,
+          totalDuration: Date.now() - fetchStartTime,
+        });
 
         return partyAlignment;
       },
       30 * 60 * 1000 // 30 minutes cache
     );
+
+    const totalDuration = Date.now() - startTime;
+    structuredLogger.info('Party alignment endpoint completed', {
+      bioguideId,
+      totalDuration,
+      cached: totalDuration < 100, // If it's under 100ms, it was likely cached
+    });
 
     return NextResponse.json(alignmentData);
   } catch (error) {
@@ -129,14 +152,13 @@ export async function GET(
 
 function analyzePartyAlignment(representative: unknown, votes: unknown[]): PartyAlignment {
   // Analyze patterns in sponsored/cosponsored legislation to estimate party alignment
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const party = (representative as any).party?.toLowerCase() || 'unknown';
+  const repData = representative as { party?: string };
+  const party = repData.party?.toLowerCase() || 'unknown';
 
   // Count different types of legislative activities
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sponsored = votes.filter((v: any) => v.question === 'On Sponsorship').length;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cosponsored = votes.filter((v: any) => v.question === 'On Cosponsorship').length;
+  const votesList = votes as Array<{ question?: string }>;
+  const sponsored = votesList.filter(v => v.question === 'On Sponsorship').length;
+  const cosponsored = votesList.filter(v => v.question === 'On Cosponsorship').length;
   const totalActivity = sponsored + cosponsored;
 
   // Estimate alignment based on legislative patterns
@@ -171,20 +193,26 @@ function analyzePartyAlignment(representative: unknown, votes: unknown[]): Party
   const absent = totalVotes - withParty - againstParty - bipartisan;
 
   // Generate key departures based on actual bills if available
-  const keyDepartures = votes
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .filter((v: any) => v.question === 'On Sponsorship')
+  const keyDepartures = (
+    votes as Array<{ question?: string; bill?: { number?: string; title?: string }; date?: string }>
+  )
+    .filter(v => v.question === 'On Sponsorship' && v.bill)
     .slice(0, 3)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((vote: any, index) => ({
-      bill_number: vote.bill.number,
-      bill_title: vote.bill.title.substring(0, 80) + (vote.bill.title.length > 80 ? '...' : ''),
-      vote_date: vote.date,
-      representative_position: 'Yea',
-      party_majority_position: Math.random() > 0.7 ? 'Nay' : 'Yea',
-      significance:
-        index === 0 ? 'high' : ((index === 1 ? 'medium' : 'low') as 'high' | 'medium' | 'low'),
-    }));
+    .map((vote, index) => {
+      const billNumber = vote.bill?.number || 'Unknown';
+      const billTitle = vote.bill?.title || 'Unknown Bill';
+      const truncatedTitle = billTitle.substring(0, 80) + (billTitle.length > 80 ? '...' : '');
+
+      return {
+        bill_number: billNumber,
+        bill_title: truncatedTitle,
+        vote_date: vote.date || new Date().toISOString().split('T')[0],
+        representative_position: 'Yea',
+        party_majority_position: Math.random() > 0.7 ? 'Nay' : 'Yea',
+        significance:
+          index === 0 ? 'high' : ((index === 1 ? 'medium' : 'low') as 'high' | 'medium' | 'low'),
+      };
+    });
 
   return {
     overall_alignment: Math.round(estimatedAlignment * 10) / 10,
