@@ -7,6 +7,7 @@
 
 import { useState, useMemo, useCallback, CSSProperties } from 'react';
 import { VariableSizeList as List } from 'react-window';
+import Link from 'next/link';
 
 interface SponsoredBill {
   billId: string;
@@ -173,22 +174,15 @@ const BillsList = ({
 
               {/* Read More Link */}
               <div className="flex items-center justify-between">
-                <button
+                <Link
+                  href={`/bill/${bill.billId}`}
                   className="text-civiq-blue hover:text-civiq-blue/80 text-sm font-medium"
                   onClick={e => {
                     e.stopPropagation();
-                    if (bill.url) {
-                      window.open(bill.url, '_blank');
-                    } else {
-                      window.open(
-                        `https://congress.gov/bill/${bill.congress}th-congress/${bill.type}/${bill.number.split('.')[1]}`,
-                        '_blank'
-                      );
-                    }
                   }}
                 >
                   Read more →
-                </button>
+                </Link>
                 <span className="text-xs text-gray-400">Congress {bill.congress}</span>
               </div>
 
@@ -776,22 +770,15 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
 
                   {/* Read More Link */}
                   <div className="flex items-center justify-between">
-                    <button
+                    <Link
+                      href={`/bill/${bill.billId}`}
                       className="text-civiq-blue hover:text-civiq-blue/80 text-sm font-medium"
                       onClick={e => {
                         e.stopPropagation();
-                        if (bill.url) {
-                          window.open(bill.url, '_blank');
-                        } else {
-                          window.open(
-                            `https://congress.gov/bill/${bill.congress}th-congress/${bill.type}/${bill.number.split('.')[1]}`,
-                            '_blank'
-                          );
-                        }
                       }}
                     >
                       Read more →
-                    </button>
+                    </Link>
                     <span className="text-xs text-gray-400">Congress {bill.congress}</span>
                   </div>
 

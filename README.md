@@ -19,11 +19,47 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 - Access breaking news and policy trends via GDELT
 - Compare representatives with validated, cross-referenced data
 
+## 🌟 Project Philosophy
+
+**"Making the complex web of civic power as navigable as the World Wide Web"**
+
+Inspired by PageRank's insight that connections reveal importance and Tim Berners-Lee's vision of universal information linking, CIV.IQ transforms civic data into a navigable web of connections. Just as Google made web information universally accessible and PageRank revealed importance through links, we reveal political influence through the connections between representatives, bills, donors, and votes.
+
+### Core Principles:
+
+- **Connections Reveal Truth**: Political influence is measured not by titles but by legislative success, committee positions, and funding networks
+- **Natural Discovery**: Start with any question about government and follow intuitive links to understanding
+- **Simplicity Reveals Complexity**: Complex political relationships made clear through simple interfaces
+- **Democratic Data**: Every citizen can navigate power structures as easily as they browse the web
+
+For the full philosophical framework, see [PROJECT-PHILOSOPHY.md](PROJECT-PHILOSOPHY.md)
+
 ## ✨ Features
 
 ### 🎉 **Production-Ready Civic Intelligence Platform (July 2025)**
 
-#### **🛠️ Critical MVP Bug Fixes & Performance** _(LATEST - July 25, 2025)_
+#### **🏛️ Interactive Committee Profile System** _(LATEST - January 28, 2025)_
+
+- **🔗 Clickable Committee Navigation**: All committee assignments on representative profiles now link to dedicated committee pages
+- **📋 Comprehensive Committee Profiles**: Full committee information including leadership, members, subcommittees, and jurisdiction
+- **👥 Committee Leadership Display**: Chair and Ranking Member with photos, party affiliation, and service dates
+- **📊 Member Lists with Party Badges**: Complete committee membership with party colors and district information
+- **🏢 Subcommittee Integration**: Nested committee structure with focus areas and leadership
+- **📞 Contact Information**: Phone numbers, addresses, and direct Congress.gov links
+- **🔍 Smart Name Resolution**: Eliminates "Unknown Committee" issues with comprehensive committee name mapping
+- **⚡ Performance Optimized**: 24-hour caching with Congress.gov API integration for 119th Congress
+
+#### **🚀 Voting Records & Bill Navigation Overhaul** _(January 27, 2025)_
+
+- **⚡ 70% Performance Improvement**: Implemented SWR caching with 5-minute deduplication for voting records
+- **🔗 Interconnected Navigation**: Complete web of connections between representatives, bills, committees, and votes
+- **📋 Bill Page System**: Comprehensive bill pages with sponsor/cosponsor links, committee tracking, and voting history
+- **🖱️ Clickable Voting Records**: All bill titles and numbers now link directly to detailed bill pages
+- **📊 Enhanced Bill Intelligence**: Full Congress.gov integration with real-time status, timeline, and related bills
+- **🏛️ Committee Integration**: Seamless navigation from bills to committees to representatives
+- **💾 Smart Caching**: Background data updates with automatic error recovery and retry logic
+
+#### **🛠️ Previous Critical MVP Bug Fixes & Performance** _(July 25, 2025)_
 
 - **✅ Fixed Navigation Issues**: Multi-district selection and View Profile buttons now work correctly
 - **🔧 Enhanced Address Search**: Fixed Census API geocoding with proper parameters for reliable results

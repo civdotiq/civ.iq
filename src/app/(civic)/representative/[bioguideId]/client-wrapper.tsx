@@ -8,6 +8,8 @@
 import { useState, Suspense, ComponentType } from 'react';
 import Link from 'next/link';
 import { LoadingErrorBoundary } from '@/components/ErrorBoundary';
+import { getCommitteeDisplayName } from '@/types/committee';
+import { getCommitteeName } from '@/lib/data/committee-names';
 import dynamic from 'next/dynamic';
 
 // Dynamic imports for lazy loading - optimized for performance
@@ -414,18 +416,37 @@ export function RepresentativeProfileClient({
                             name?: string;
                             role?: string;
                           };
+
+                          // Use thomas_id first, then fallback to id, then to a safe default
+                          const committeeId = comm.thomas_id || comm.id;
+                          const hasValidId = committeeId && committeeId !== 'unknown';
+
+                          // Get committee name with cascading fallback logic
+                          const getDisplayName = () => {
+                            if (comm.name) return comm.name;
+                            if (comm.thomas_id) return getCommitteeName(comm.thomas_id);
+                            if (comm.id) return getCommitteeDisplayName(comm.id);
+                            return committeeId ? `Committee ${committeeId}` : 'Unknown Committee';
+                          };
+
                           return (
                             <div
                               key={idx}
                               className="bg-gray-50 p-4 rounded-lg border border-gray-200"
                             >
                               <div className="flex items-center justify-between mb-2">
-                                <Link
-                                  href={`/committee/${comm.thomas_id || comm.id || 'unknown'}`}
-                                  className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                                >
-                                  {comm.name || 'Unknown Committee'}
-                                </Link>
+                                {hasValidId ? (
+                                  <Link
+                                    href={`/committee/${committeeId}`}
+                                    className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                                  >
+                                    {getDisplayName()}
+                                  </Link>
+                                ) : (
+                                  <span className="text-sm font-medium text-gray-600">
+                                    {getDisplayName()}
+                                  </span>
+                                )}
                                 {comm.role && (
                                   <span
                                     className={`text-xs px-2 py-1 rounded ${

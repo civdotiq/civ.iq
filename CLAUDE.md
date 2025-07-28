@@ -118,6 +118,8 @@ GET /api/representative/[bioguideId]/finance   # Real FEC data
 GET /api/representative/[bioguideId]/news      # GDELT news with deduplication
 GET /api/representative/[bioguideId]/party-alignment # Real party voting analysis
 POST /api/representative/[bioguideId]/batch    # Batch API for multiple endpoints
+GET /api/committee/[committeeId]               # Committee details with leadership and members
+GET /api/bill/[billId]                         # Individual bill details and summaries
 GET /api/districts/[districtId]                # Districts with real Census data
 GET /api/district-map?zip=48221                # Interactive maps with GeoJSON
 GET /api/search                                # Advanced representative search
@@ -179,6 +181,7 @@ npm run validate-mappings  # Validate mappings
 - ✅ **Complete Error Handling (Jan 21, 2025)** - Enhanced TypeScript safety and null-checking across all systems
 - ✅ **🏦 Enhanced FEC Campaign Finance System (Jan 25, 2025)** - Industry categorization, bundled contributions, and independent expenditures tracking
 - ✅ **🚀 Comprehensive Performance Optimization (Jan 26, 2025)** - Complete performance overhaul with 70% improvement in rendering, memory leak fixes, virtual scrolling, modular D3 imports, SWR caching, and Next.js image optimization
+- ✅ **🏛️ Interactive Committee Profile Pages (Jan 28, 2025)** - Full committee navigation system with clickable committee assignments, comprehensive committee profiles showing leadership, members, subcommittees, and jurisdiction for 119th Congress
 - ❌ State/local (Phase 2+)
 
 ### Phase 3 Complete: Integration with Existing System
