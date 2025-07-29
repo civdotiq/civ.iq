@@ -14,7 +14,7 @@ import dynamic from 'next/dynamic';
 
 // Dynamic imports for lazy loading - optimized for performance
 const LazyBillsTracker = dynamic(
-  () => import('@/components/BillsTracker').then(mod => ({ default: mod.BillsTracker })),
+  () => import('@/features/legislation/components/BillsTracker').then(mod => ({ default: mod.BillsTracker })),
   {
     ssr: false,
     loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
@@ -36,8 +36,7 @@ const LazyPartyAlignmentAnalysis = dynamic(() => import('@/components/PartyAlign
 });
 
 const LazyVotingRecordsTable = dynamic(
-  () =>
-    import('@/components/VotingRecordsTable').then(mod => ({ default: mod.VotingRecordsTable })),
+  () => import('@/components/safe/SafeVotingRecordsTable'),
   {
     ssr: false,
     loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
@@ -56,7 +55,10 @@ const LazyCampaignFinanceVisualizer = dynamic(
 );
 
 const LazyEnhancedNewsFeed = dynamic(
-  () => import('@/components/EnhancedNewsFeed').then(mod => ({ default: mod.EnhancedNewsFeed })),
+  () =>
+    import('@/features/news/components/EnhancedNewsFeed').then(mod => ({
+      default: mod.EnhancedNewsFeed,
+    })),
   {
     ssr: false,
     loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,

@@ -10,9 +10,9 @@ import { VariableSizeList as List } from 'react-window';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { representativeApi } from '@/lib/api/representatives';
-import { TouchPagination } from '@/components/ui/ResponsiveTable';
-import { VotingRecordsSkeleton } from '@/components/ui/SkeletonComponents';
-import { LoadingStateWrapper } from '@/components/ui/LoadingStates';
+import { TouchPagination } from '@/shared/components/ui/ResponsiveTable';
+import { VotingRecordsSkeleton } from '@/shared/components/ui/SkeletonComponents';
+import { LoadingStateWrapper } from '@/shared/components/ui/LoadingStates';
 import { ApiErrorHandlers } from '@/lib/errors/ErrorHandlers';
 import { structuredLogger } from '@/lib/logging/universal-logger';
 
@@ -147,8 +147,9 @@ const VotesList = ({
     [votes, expandedRows, toggleRowExpansion, getPositionColor, getResultColor]
   );
 
-  if (votes.length === 0) {
-    return null;
+  // Don't render anything if no votes
+  if (!votes || votes.length === 0) {
+    return <div className="text-center py-4 text-gray-500">No voting records to display</div>;
   }
 
   // Calculate item height based on whether it's expanded
@@ -173,6 +174,14 @@ const VotesList = ({
 };
 
 export function VotingRecordsTable({ bioguideId, chamber: _chamber }: VotingRecordsTableProps) {
+  // Early return if no bioguideId
+  if (!bioguideId) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+        <p className="text-gray-600">Invalid representative ID</p>
+      </div>
+    );
+  }
   const [sortField, setSortField] = useState<'date' | 'bill' | 'result'>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filterCategory, setFilterCategory] = useState<'all' | 'key' | 'passed' | 'failed'>('all');
@@ -193,7 +202,15 @@ export function VotingRecordsTable({ bioguideId, chamber: _chamber }: VotingReco
       try {
         structuredLogger.info('VotingRecordsTable fetching votes', { bioguideId });
         const data = await representativeApi.getVotes(bioguideId);
-        return data.votes || [];
+        // Handle different response formats
+        if (Array.isArray(data)) {
+          return data;
+        } else if (data && typeof data === 'object' && 'votes' in data) {
+          return data.votes || [];
+        } else {
+          structuredLogger.warn('Unexpected votes data format', { data, bioguideId });
+          return [];
+        }
       } catch (error) {
         structuredLogger.error('Error fetching votes', {
           error: error as Error,
@@ -211,7 +228,12 @@ export function VotingRecordsTable({ bioguideId, chamber: _chamber }: VotingReco
     }
   );
 
-  const votes = useMemo(() => votesData || [], [votesData]);
+  // Ensure votes is always an array
+  const votes = useMemo(() => {
+    if (!votesData) return [];
+    if (Array.isArray(votesData)) return votesData;
+    return [];
+  }, [votesData]);
 
   const filteredAndSortedVotes = useMemo(() => {
     let filtered = [...votes];
@@ -385,13 +407,15 @@ export function VotingRecordsTable({ bioguideId, chamber: _chamber }: VotingReco
           )}
 
           {/* Virtual Scrolling Votes List */}
-          <VotesList
-            votes={paginatedVotes}
-            expandedRows={expandedRows}
-            toggleRowExpansion={toggleRowExpansion}
-            getPositionColor={getPositionColor}
-            getResultColor={getResultColor}
-          />
+          {paginatedVotes.length > 0 && (
+            <VotesList
+              votes={paginatedVotes}
+              expandedRows={expandedRows}
+              toggleRowExpansion={toggleRowExpansion}
+              getPositionColor={getPositionColor}
+              getResultColor={getResultColor}
+            />
+          )}
 
           {/* Touch-Friendly Pagination */}
           {totalPages > 1 && (
@@ -408,3 +432,6 @@ export function VotingRecordsTable({ bioguideId, chamber: _chamber }: VotingReco
     </LoadingStateWrapper>
   );
 }
+
+// Default export for dynamic imports
+export default VotingRecordsTable;
