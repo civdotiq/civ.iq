@@ -4,12 +4,24 @@
  */
 
 import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Users, MapPin, Calendar, ExternalLink, Phone } from 'lucide-react';
 import { getCommitteeDisplayName } from '@/types/committee';
 import type { Committee, CommitteeAPIResponse } from '@/types/committee';
-import RepresentativePhoto from '@/components/RepresentativePhoto';
+import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
+
+// Dynamically import the SubcommitteeCard component (client component)
+const SubcommitteeCard = dynamic(() => import('@/components/SubcommitteeCard'), {
+  ssr: true,
+  loading: () => (
+    <div className="border border-gray-200 rounded-lg p-4 animate-pulse">
+      <div className="h-6 w-1/2 bg-gray-200 rounded mb-2"></div>
+      <div className="h-4 w-full bg-gray-200 rounded"></div>
+    </div>
+  ),
+});
 
 interface CommitteePageProps {
   params: Promise<{ committeeId: string }>;
@@ -368,22 +380,7 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
 
             <div className="grid gap-4">
               {committee.subcommittees.map(subcommittee => (
-                <div key={subcommittee.id} className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">{subcommittee.name}</h3>
-                  <p className="text-gray-600 mb-3">{subcommittee.focus}</p>
-
-                  {subcommittee.chair && (
-                    <div className="flex items-center text-sm text-gray-700">
-                      <span className="font-medium mr-2">Chair:</span>
-                      <Link
-                        href={`/representative/${subcommittee.chair.bioguideId}`}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        {subcommittee.chair.name}
-                      </Link>
-                    </div>
-                  )}
-                </div>
+                <SubcommitteeCard key={subcommittee.id} subcommittee={subcommittee} />
               ))}
             </div>
           </div>
