@@ -113,12 +113,12 @@ export function CampaignFinanceVisualizer({
           return response.json();
         })
         .then((data: EnhancedFECData) => {
-          structuredLogger.info('Enhanced FEC data fetched successfully', {
-            component: 'CampaignFinanceVisualizer',
-            metadata: {
-              hasData: !!data,
-              dataKeys: Object.keys(data || {}),
-            },
+          structuredLogger.debug('Enhanced FEC data fetched successfully', {
+          component: 'CampaignFinanceVisualizer',
+          metadata: {
+          hasData: !!data,
+          dataKeys: Object.keys(data || {}),
+          },
           });
           setEnhancedData(data);
         })
@@ -569,6 +569,7 @@ export function CampaignFinanceVisualizer({
                           {financeData.financial_summary.map((cycle, index) => {
                             if (index === 0) return null;
                             const prevCycle = financeData.financial_summary[index - 1];
+                            if (!prevCycle) return null;
                             const maxAmount = Math.max(
                               ...financeData.financial_summary.map(c => c.total_receipts)
                             );

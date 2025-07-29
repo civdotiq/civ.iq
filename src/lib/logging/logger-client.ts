@@ -36,7 +36,7 @@ class ClientLogger {
 
   constructor(level?: LogLevel) {
     this.isDevelopment = process.env.NODE_ENV === 'development';
-    this.logLevel = level ?? (this.isDevelopment ? LogLevel.DEBUG : LogLevel.INFO);
+    this.logLevel = level ?? (this.isDevelopment ? LogLevel.DEBUG : LogLevel.WARN);
   }
 
   private formatMessage(level: string, message: string, metadata?: LogMetadata): string {

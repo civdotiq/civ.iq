@@ -32,14 +32,16 @@ export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownPro
   const [showAllIndustries, setShowAllIndustries] = useState(false);
 
   // Debug logging to check data structure
-  structuredLogger.info('IndustryBreakdown received data', {
-    component: 'IndustryBreakdown',
-    metadata: {
-      hasData: !!data,
-      hasIndustries: !!data?.industries,
-      industriesLength: data?.industries?.length || 0,
-    },
-  });
+  if (process.env.NODE_ENV === 'development') {
+    structuredLogger.debug('IndustryBreakdown received data', {
+      component: 'IndustryBreakdown',
+      metadata: {
+        hasData: !!data,
+        hasIndustries: !!data?.industries,
+        industriesLength: data?.industries?.length || 0,
+      },
+    });
+  }
 
   const sortedIndustries = useMemo(() => {
     // Safety check for data structure

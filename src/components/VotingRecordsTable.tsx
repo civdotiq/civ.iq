@@ -200,7 +200,7 @@ export function VotingRecordsTable({ bioguideId, chamber: _chamber }: VotingReco
     `/api/representative/${bioguideId}/votes`,
     async () => {
       try {
-        structuredLogger.info('VotingRecordsTable fetching votes', { bioguideId });
+        structuredLogger.debug('VotingRecordsTable fetching votes', { bioguideId });
         const data = await representativeApi.getVotes(bioguideId);
         // Handle different response formats
         if (Array.isArray(data)) {
