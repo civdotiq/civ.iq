@@ -3,6 +3,10 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+// Note: This file contains sample committee data for demonstration purposes.
+// In production, this should be dynamically fetched from official sources.
+// Some members listed may no longer be serving in the 119th Congress.
+
 import type { Committee, CommitteeMember } from '@/types/committee';
 import type { EnhancedRepresentative } from '@/types/representative';
 
@@ -98,7 +102,8 @@ const democraticMembers: EnhancedRepresentative[] = [
   createRepresentative('C001067', 'Yvette Clarke', 'D', 'NY', '09'),
   createRepresentative('P000613', 'Jimmy Panetta', 'D', 'CA', '19'),
   createRepresentative('C001112', 'Salud Carbajal', 'D', 'CA', '24'),
-  createRepresentative('O000173', 'Tom O\'Halleran', 'D', 'AZ', '01'),
+  // Note: Tom O'Halleran lost reelection in 2022. This is placeholder data.
+  createRepresentative('O000171', 'Tom O\'Halleran', 'D', 'AZ', '01'),
   createRepresentative('K000389', 'Ro Khanna', 'D', 'CA', '17'),
   createRepresentative('S001216', 'Kim Schrier', 'D', 'WA', '08'),
   createRepresentative('S001225', 'Eric Sorensen', 'D', 'IL', '17'),
