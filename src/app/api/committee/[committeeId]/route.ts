@@ -10,7 +10,7 @@ import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import type { Committee, CommitteeAPIResponse, CommitteeMember } from '@/types/committee';
 import { COMMITTEE_ID_MAP } from '@/types/committee';
 import type { EnhancedRepresentative } from '@/types/representative';
-import { getCommitteeData } from '@/lib/data/committees/house-agriculture-119th';
+import { getCommitteeData } from '@/lib/data/committees';
 
 // Helper function to get committee metadata
 function getCommitteeMetadata(committeeId: string) {
@@ -452,7 +452,7 @@ export async function GET(
     let committee: Committee | null = null;
 
     // First try to get hardcoded committee data
-    committee = getCommitteeData(committeeId);
+    committee = await getCommitteeData(committeeId);
 
     // If not found, try to fetch from Congress.gov if API key is available
     if (!committee && process.env.CONGRESS_API_KEY) {
