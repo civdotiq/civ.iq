@@ -85,7 +85,6 @@ export const committeeRegistry: CommitteeRegistry = {
       const { houseAgricultureCommittee } = await import('./house/agriculture');
       return houseAgricultureCommittee;
     },
-    // TODO: Add other House committees as they are implemented
     HSAP: async () => {
       const { houseAppropriationsCommittee } = await import('./house/appropriations');
       return houseAppropriationsCommittee;
