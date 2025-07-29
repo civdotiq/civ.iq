@@ -10,17 +10,28 @@ import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import type { Committee, CommitteeAPIResponse, CommitteeMember } from '@/types/committee';
 import { COMMITTEE_ID_MAP } from '@/types/committee';
 import type { EnhancedRepresentative } from '@/types/representative';
+import { getCommitteeData } from '@/lib/data/committees/house-agriculture';
 
 // Helper function to get committee metadata
 function getCommitteeMetadata(committeeId: string) {
   const upperCommitteeId = committeeId.toUpperCase();
 
-  // Check if it's a known committee ID
+  // Check if it's a known committee ID (including numbered variants)
   if (COMMITTEE_ID_MAP[upperCommitteeId]) {
     return {
       id: upperCommitteeId,
       name: COMMITTEE_ID_MAP[upperCommitteeId].name,
       chamber: COMMITTEE_ID_MAP[upperCommitteeId].chamber as 'House' | 'Senate',
+    };
+  }
+
+  // Try to find base committee ID by removing trailing numbers
+  const baseCommitteeId = upperCommitteeId.replace(/\d+$/, '');
+  if (COMMITTEE_ID_MAP[baseCommitteeId]) {
+    return {
+      id: upperCommitteeId,
+      name: COMMITTEE_ID_MAP[baseCommitteeId].name,
+      chamber: COMMITTEE_ID_MAP[baseCommitteeId].chamber as 'House' | 'Senate',
     };
   }
 
@@ -329,6 +340,35 @@ function generateMockCommitteeData(committeeId: string): Committee {
   // Use enhanced mock member system
   const mockRepresentatives = generateCommitteeMockMembers(committeeId, metadata.chamber);
 
+  // Ensure we have at least basic representatives for leadership roles
+  if (mockRepresentatives.length < 2) {
+    // Add fallback representatives if generation failed or insufficient
+    const fallbackRep: Partial<EnhancedRepresentative> = {
+      bioguideId: 'X000000',
+      name: 'Committee Chair',
+      party: 'Unknown',
+      state: 'XX',
+      district: '00',
+      chamber: metadata.chamber === 'Joint' ? 'House' : metadata.chamber,
+      title: metadata.chamber === 'House' ? 'Representative' : 'Senator',
+    };
+
+    if (mockRepresentatives.length === 0) {
+      mockRepresentatives.push(fallbackRep as EnhancedRepresentative);
+      mockRepresentatives.push({
+        ...fallbackRep,
+        name: 'Ranking Member',
+        bioguideId: 'X000001',
+      } as EnhancedRepresentative);
+    } else if (mockRepresentatives.length === 1) {
+      mockRepresentatives.push({
+        ...fallbackRep,
+        name: 'Ranking Member',
+        bioguideId: 'X000001',
+      } as EnhancedRepresentative);
+    }
+  }
+
   return {
     id: metadata.id,
     thomas_id: committeeId,
@@ -339,14 +379,14 @@ function generateMockCommitteeData(committeeId: string): Committee {
 
     leadership: {
       chair: {
-        representative: mockRepresentatives[0],
+        representative: mockRepresentatives[0]!,
         role: 'Chair',
         joinedDate: '2023-01-03',
         rank: 1,
         subcommittees: [],
       },
       rankingMember: {
-        representative: mockRepresentatives[1],
+        representative: mockRepresentatives[1]!,
         role: 'Ranking Member',
         joinedDate: '2023-01-03',
         rank: 2,
@@ -366,11 +406,11 @@ function generateMockCommitteeData(committeeId: string): Committee {
       {
         id: `${committeeId}_sub1`,
         name: 'Nutrition, Foreign Agriculture',
-        chair: mockRepresentatives[0],
+        chair: mockRepresentatives[0]!,
         focus: 'Nutrition programs and foreign agricultural trade',
         members: [
           {
-            representative: mockRepresentatives[0],
+            representative: mockRepresentatives[0]!,
             role: 'Chair',
             joinedDate: '2023-01-03',
           },
@@ -411,8 +451,11 @@ export async function GET(
 
     let committee: Committee | null = null;
 
-    // Try to fetch from Congress.gov if API key is available
-    if (process.env.CONGRESS_API_KEY) {
+    // First try to get hardcoded committee data
+    committee = getCommitteeData(committeeId);
+
+    // If not found, try to fetch from Congress.gov if API key is available
+    if (!committee && process.env.CONGRESS_API_KEY) {
       committee = await fetchCommitteeFromCongress(committeeId);
     }
 
