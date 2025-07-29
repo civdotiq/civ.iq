@@ -10,7 +10,7 @@ import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import type { Committee, CommitteeAPIResponse, CommitteeMember } from '@/types/committee';
 import { COMMITTEE_ID_MAP } from '@/types/committee';
 import type { EnhancedRepresentative } from '@/types/representative';
-import { getCommitteeData } from '@/lib/data/committees/house-agriculture';
+import { getCommitteeData } from '@/lib/data/committees/house-agriculture-119th';
 
 // Helper function to get committee metadata
 function getCommitteeMetadata(committeeId: string) {
