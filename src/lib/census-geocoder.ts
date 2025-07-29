@@ -124,7 +124,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
       params = new URLSearchParams({
         benchmark: 'Public_AR_Current',
         vintage: 'Current_Current',
-        layers: '54', // Congressional Districts 119th Congress
+        layers: '20', // Congressional Districts (current)
         format: 'json',
       });
 
@@ -140,7 +140,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
         address: cleanedAddress,
         benchmark: 'Public_AR_Current',
         vintage: 'Current_Current',
-        layers: '54', // Congressional Districts 119th Congress
+        layers: '20', // Congressional Districts (current)
         format: 'json',
       });
 

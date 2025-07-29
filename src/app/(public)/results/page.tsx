@@ -9,14 +9,17 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState, Suspense, useCallback, memo } from 'react';
 import { SearchHistory } from '@/lib/searchHistory';
-import { RepresentativeSkeleton, SearchResultsSkeleton } from '@/components/ui/SkeletonComponents';
-import { LoadingStateWrapper, LoadingMessage, Spinner } from '@/components/ui/LoadingStates';
+import {
+  RepresentativeSkeleton,
+  SearchResultsSkeleton,
+} from '@/shared/components/ui/SkeletonComponents';
+import { LoadingStateWrapper, LoadingMessage, Spinner } from '@/shared/components/ui/LoadingStates';
 import { useMultiStageLoading } from '@/hooks/useSmartLoading';
 import { DistrictMap } from '@/components/DistrictMap';
 import { InteractiveDistrictMap } from '@/components/InteractiveDistrictMap';
 import { DataQualityIndicator, DataSourceBadge } from '@/components/DataQualityIndicator';
 import { InlineQualityScore, DataTrustIndicator } from '@/components/DataQualityDashboard';
-import RepresentativePhoto from '@/components/RepresentativePhoto';
+import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { DistrictSelector } from '@/components/multi-district/DistrictSelector';
 import { AddressRefinement } from '@/components/multi-district/AddressRefinement';
 import {
@@ -794,9 +797,8 @@ function ResultsContent() {
   };
 
   const handleAddressSuccess = async (state: string, district: string, _address: string) => {
-    const districtInfo: DistrictInfo = { state, district };
-    setShowAddressRefinement(false);
-    await fetchRepresentatives(districtInfo);
+    // Navigate directly to the representatives page with the district info
+    router.push(`/representatives?state=${state}&district=${district}`);
   };
 
   const handleAddressCancel = () => {
@@ -983,7 +985,7 @@ function ResultsContent() {
                       loadingComponent={
                         <>
                           <LoadingMessage
-                            message={loading.currentStage}
+                            message={loading.currentStage || 'Loading...'}
                             submessage={`Step ${loading.currentStageIndex + 1} of 5`}
                             className="mb-8"
                           />
