@@ -118,9 +118,31 @@ export const COMMITTEE_ID_MAP: Record<string, { name: string; chamber: string }>
 };
 
 export function getCommitteeDisplayName(committeeId: string): string {
-  return COMMITTEE_ID_MAP[committeeId]?.name || `Committee ${committeeId}`;
+  // Try exact match first
+  if (COMMITTEE_ID_MAP[committeeId]) {
+    return COMMITTEE_ID_MAP[committeeId].name;
+  }
+  
+  // Extract base committee ID (e.g., "HSIF" from "HSIF03")
+  const baseId = committeeId.replace(/\d+$/, '');
+  if (baseId !== committeeId && COMMITTEE_ID_MAP[baseId]) {
+    return COMMITTEE_ID_MAP[baseId].name;
+  }
+  
+  return `Committee ${committeeId}`;
 }
 
 export function getCommitteeChamber(committeeId: string): string {
-  return COMMITTEE_ID_MAP[committeeId]?.chamber || 'Unknown';
+  // Try exact match first
+  if (COMMITTEE_ID_MAP[committeeId]) {
+    return COMMITTEE_ID_MAP[committeeId].chamber;
+  }
+  
+  // Extract base committee ID
+  const baseId = committeeId.replace(/\d+$/, '');
+  if (baseId !== committeeId && COMMITTEE_ID_MAP[baseId]) {
+    return COMMITTEE_ID_MAP[baseId].chamber;
+  }
+  
+  return 'Unknown';
 }
