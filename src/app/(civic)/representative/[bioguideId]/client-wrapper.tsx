@@ -420,14 +420,44 @@ export function RepresentativeProfileClient({
                           };
 
                           // Use thomas_id first, then fallback to id, then to a safe default
-                          const committeeId = comm.thomas_id || comm.id;
-                          const hasValidId = committeeId && committeeId !== 'unknown';
+                          const committeeId = comm.thomas_id || comm.id || '';
+                          
+                          // Extract base committee ID (e.g., "HSAG" from "HSAG22")
+                          const baseCommitteeId = committeeId.replace(/\d+$/, '');
+                          
+                          // Check if it's a valid committee ID (not 'unknown' or empty)
+                          const hasValidId = committeeId && committeeId !== 'unknown' && committeeId !== '';
 
                           // Get committee name with cascading fallback logic
                           const getDisplayName = () => {
+                            // First, try the provided name
                             if (comm.name) return comm.name;
-                            if (comm.thomas_id) return getCommitteeName(comm.thomas_id);
-                            if (comm.id) return getCommitteeDisplayName(comm.id);
+                            
+                            // Try exact match first
+                            if (committeeId) {
+                              const exactMatch = getCommitteeDisplayName(committeeId);
+                              if (exactMatch !== `Committee ${committeeId}`) {
+                                return exactMatch;
+                              }
+                            }
+                            
+                            // Try base committee ID (without numbers)
+                            if (baseCommitteeId && baseCommitteeId !== committeeId) {
+                              const baseMatch = getCommitteeDisplayName(baseCommitteeId);
+                              if (baseMatch !== `Committee ${baseCommitteeId}`) {
+                                return baseMatch;
+                              }
+                            }
+                            
+                            // Try Thomas ID lookups
+                            if (comm.thomas_id) {
+                              const thomasName = getCommitteeName(comm.thomas_id);
+                              if (thomasName !== comm.thomas_id) {
+                                return thomasName;
+                              }
+                            }
+                            
+                            // Final fallback
                             return committeeId ? `Committee ${committeeId}` : 'Unknown Committee';
                           };
 
@@ -439,7 +469,7 @@ export function RepresentativeProfileClient({
                               <div className="flex items-center justify-between mb-2">
                                 {hasValidId ? (
                                   <Link
-                                    href={`/committee/${committeeId}`}
+                                    href={`/committee/${baseCommitteeId || committeeId}`}
                                     className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
                                   >
                                     {getDisplayName()}

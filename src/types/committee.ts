@@ -71,6 +71,7 @@ export interface CommitteeAPIResponse {
 export const COMMITTEE_ID_MAP: Record<string, { name: string; chamber: string }> = {
   HSAG: { name: 'House Committee on Agriculture', chamber: 'House' },
   HSAG22: { name: 'House Committee on Agriculture', chamber: 'House' },
+  HSHL: { name: 'House Committee on Homeland Security', chamber: 'House' },
   HSHM: { name: 'House Committee on Homeland Security', chamber: 'House' },
   HSHM09: { name: 'House Committee on Homeland Security', chamber: 'House' },
   HSJU: { name: 'House Committee on the Judiciary', chamber: 'House' },
