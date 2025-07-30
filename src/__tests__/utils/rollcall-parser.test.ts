@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { RollCallParser } from '@/lib/rollcall-parser'
+import { RollCallParser } from '@/features/legislation/services/rollcall-parser';
 
 // Helper to mock fetch responses for XML
 function mockXMLFetchResponse(xmlText: string): Promise<Response> {
@@ -19,20 +19,21 @@ function mockXMLFetchResponse(xmlText: string): Promise<Response> {
     type: 'basic' as ResponseType,
     body: null,
     bodyUsed: false,
-    clone: () => mockXMLFetchResponse(xmlText) as Response,
+    clone: () => new Response(xmlText, { status: 200 }),
     arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
     blob: () => Promise.resolve(new Blob()),
-    formData: () => Promise.resolve(new FormData())
-  } as Response)
+    formData: () => Promise.resolve(new FormData()),
+    bytes: () => Promise.resolve(new Uint8Array()),
+  } as unknown as Response);
 }
 
 describe('RollCallParser', () => {
-  let parser: RollCallParser
-  
+  let parser: RollCallParser;
+
   beforeEach(() => {
-    parser = new RollCallParser()
-    jest.clearAllMocks()
-  })
+    parser = new RollCallParser();
+    jest.clearAllMocks();
+  });
 
   describe('Senate Roll Call Parsing', () => {
     const mockSenateXML = `<?xml version="1.0" encoding="UTF-8"?>
@@ -63,12 +64,12 @@ describe('RollCallParser', () => {
           <vote_cast>Yea</vote_cast>
         </member>
       </members>
-    </roll_call_vote>`
+    </roll_call_vote>`;
 
     it('should parse Senate roll call XML correctly', async () => {
-      global.fetch = jest.fn().mockResolvedValueOnce(mockXMLFetchResponse(mockSenateXML))
+      global.fetch = jest.fn().mockResolvedValueOnce(mockXMLFetchResponse(mockSenateXML));
 
-      const result = await parser.fetchAndParseRollCall('https://www.senate.gov/test.xml')
+      const result = await parser.fetchAndParseRollCall('https://www.senate.gov/test.xml');
 
       expect(result).toEqual({
         congress: 117,
@@ -78,7 +79,7 @@ describe('RollCallParser', () => {
         date: '2022-03-08',
         bill: {
           number: 'H.R. 3076',
-          title: 'Postal Service Reform Act'
+          title: 'Postal Service Reform Act',
         },
         question: 'On Passage of the Bill',
         result: 'Bill Passed',
@@ -88,40 +89,40 @@ describe('RollCallParser', () => {
             memberName: 'Baldwin',
             party: 'D',
             state: 'WI',
-            vote: 'Yea'
+            vote: 'Yea',
           },
           {
             memberId: 'S000148',
             memberName: 'Schumer',
             party: 'D',
             state: 'NY',
-            vote: 'Yea'
-          }
+            vote: 'Yea',
+          },
         ],
         totals: {
           yea: 2,
           nay: 0,
           present: 0,
-          notVoting: 0
-        }
-      })
-    })
+          notVoting: 0,
+        },
+      });
+    });
 
     it('should find member vote correctly', async () => {
-      global.fetch = jest.fn().mockResolvedValueOnce(mockXMLFetchResponse(mockSenateXML))
+      global.fetch = jest.fn().mockResolvedValueOnce(mockXMLFetchResponse(mockSenateXML));
 
-      const rollCallData = await parser.fetchAndParseRollCall('https://www.senate.gov/test.xml')
-      const memberVote = parser.findMemberVote(rollCallData!, 'S000148', 'Charles Schumer')
+      const rollCallData = await parser.fetchAndParseRollCall('https://www.senate.gov/test.xml');
+      const memberVote = parser.findMemberVote(rollCallData!, 'S000148', 'Charles Schumer');
 
       expect(memberVote).toEqual({
         memberId: 'S000148',
         memberName: 'Schumer',
         party: 'D',
         state: 'NY',
-        vote: 'Yea'
-      })
-    })
-  })
+        vote: 'Yea',
+      });
+    });
+  });
 
   describe('House Roll Call Parsing', () => {
     const mockHouseXML = `<?xml version="1.0"?>
@@ -146,12 +147,12 @@ describe('RollCallParser', () => {
           <vote>Yea</vote>
         </recorded-vote>
       </vote-data>
-    </rollcall-vote>`
+    </rollcall-vote>`;
 
     it('should parse House roll call XML correctly', async () => {
-      global.fetch = jest.fn().mockResolvedValueOnce(mockXMLFetchResponse(mockHouseXML))
+      global.fetch = jest.fn().mockResolvedValueOnce(mockXMLFetchResponse(mockHouseXML));
 
-      const result = await parser.fetchAndParseRollCall('https://clerk.house.gov/test.xml')
+      const result = await parser.fetchAndParseRollCall('https://clerk.house.gov/test.xml');
 
       expect(result).toEqual({
         congress: 119,
@@ -161,7 +162,7 @@ describe('RollCallParser', () => {
         date: '2025-02-04',
         bill: {
           number: 'H.R. 43',
-          title: 'Alaska Native Village Municipal Lands Restoration Act'
+          title: 'Alaska Native Village Municipal Lands Restoration Act',
         },
         question: 'On Motion to Suspend the Rules and Pass',
         result: 'Passed',
@@ -171,25 +172,25 @@ describe('RollCallParser', () => {
             memberName: 'ADERHOLT, Robert',
             party: 'R',
             state: 'AL',
-            vote: 'Yea'
+            vote: 'Yea',
           },
           {
             memberId: 'O000172',
             memberName: 'OCASIO-CORTEZ, Alexandria',
             party: 'D',
             state: 'NY',
-            vote: 'Yea'
-          }
+            vote: 'Yea',
+          },
         ],
         totals: {
           yea: 2,
           nay: 0,
           present: 0,
-          notVoting: 0
-        }
-      })
-    })
-  })
+          notVoting: 0,
+        },
+      });
+    });
+  });
 
   describe('Vote Normalization', () => {
     it('should normalize different vote formats', () => {
@@ -203,44 +204,46 @@ describe('RollCallParser', () => {
         { input: 'Present', expected: 'Present' },
         { input: 'Not Voting', expected: 'Not Voting' },
         { input: '', expected: 'Not Voting' },
-        { input: 'Unknown', expected: 'Not Voting' }
-      ]
+        { input: 'Unknown', expected: 'Not Voting' },
+      ];
 
       testCases.forEach(({ input, expected }) => {
         // Access private method for testing
-        const normalizeVote = (parser as { normalizeVote: (input: string) => string }).normalizeVote.bind(parser)
-        expect(normalizeVote(input)).toBe(expected)
-      })
-    })
-  })
+        const normalizeVote = (
+          parser as unknown as { normalizeVote: (input: string) => string }
+        ).normalizeVote.bind(parser);
+        expect(normalizeVote(input)).toBe(expected);
+      });
+    });
+  });
 
   describe('Error Handling', () => {
     it('should handle fetch errors gracefully', async () => {
-      global.fetch = jest.fn().mockRejectedValueOnce(new Error('Network error'))
+      global.fetch = jest.fn().mockRejectedValueOnce(new Error('Network error'));
 
-      const result = await parser.fetchAndParseRollCall('https://invalid-url.com/test.xml')
+      const result = await parser.fetchAndParseRollCall('https://invalid-url.com/test.xml');
 
-      expect(result).toBeNull()
-    })
+      expect(result).toBeNull();
+    });
 
     it('should handle invalid XML gracefully', async () => {
-      global.fetch = jest.fn().mockResolvedValueOnce(mockXMLFetchResponse('invalid xml'))
+      global.fetch = jest.fn().mockResolvedValueOnce(mockXMLFetchResponse('invalid xml'));
 
-      const result = await parser.fetchAndParseRollCall('https://example.com/test.xml')
+      const result = await parser.fetchAndParseRollCall('https://example.com/test.xml');
 
-      expect(result).toBeNull()
-    })
+      expect(result).toBeNull();
+    });
 
     it('should handle 404 responses gracefully', async () => {
       global.fetch = jest.fn().mockResolvedValueOnce({
         ok: false,
         status: 404,
-        statusText: 'Not Found'
-      })
+        statusText: 'Not Found',
+      });
 
-      const result = await parser.fetchAndParseRollCall('https://example.com/test.xml')
+      const result = await parser.fetchAndParseRollCall('https://example.com/test.xml');
 
-      expect(result).toBeNull()
-    })
-  })
-})
+      expect(result).toBeNull();
+    });
+  });
+});

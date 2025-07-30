@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { NextRequest } from 'next/server'
+import { NextRequest } from 'next/server';
 
 // Mock representative data for testing
 export const mockRepresentative = {
@@ -19,19 +19,19 @@ export const mockRepresentative = {
   contactInfo: {
     phone: '(202) 224-6542',
     website: 'https://www.schumer.senate.gov',
-    office: '322 Hart Senate Office Building'
+    office: '322 Hart Senate Office Building',
   },
   committees: [
     {
       name: 'Committee on Rules and Administration',
-      role: 'Chair'
-    }
+      role: 'Chair',
+    },
   ],
   social: {
     twitter: '@SenSchumer',
-    facebook: 'senschumer'
-  }
-}
+    facebook: 'senschumer',
+  },
+};
 
 // Mock vote data
 export const mockVote = {
@@ -39,7 +39,7 @@ export const mockVote = {
   bill: {
     number: 'HR 1',
     title: 'One Big Beautiful Bill Act',
-    congress: '119'
+    congress: '119',
   },
   question: 'On Passage',
   result: 'Passed',
@@ -47,27 +47,29 @@ export const mockVote = {
   position: 'Yea' as const,
   chamber: 'House' as const,
   rollNumber: 190,
-  isKeyVote: true
-}
+  isKeyVote: true,
+};
 
 // Mock district boundary data
 export const mockDistrictBoundary = {
   type: 'Polygon',
-  coordinates: [[
-    [-74.0059, 40.7128],
-    [-74.0000, 40.7128],
-    [-74.0000, 40.7200],
-    [-74.0059, 40.7200],
-    [-74.0059, 40.7128]
-  ]],
+  coordinates: [
+    [
+      [-74.0059, 40.7128],
+      [-74.0, 40.7128],
+      [-74.0, 40.72],
+      [-74.0059, 40.72],
+      [-74.0059, 40.7128],
+    ],
+  ],
   properties: {
     district: '10',
     state: 'NY',
     name: 'Congressional District 10',
     type: 'congressional' as const,
-    source: 'census-tiger'
-  }
-}
+    source: 'census-tiger',
+  },
+};
 
 // Mock campaign finance data
 export const mockFinanceData = {
@@ -78,7 +80,7 @@ export const mockFinanceData = {
     office: 'S',
     state: 'NY',
     election_years: [2022, 2016],
-    cycles: [2022, 2024]
+    cycles: [2022, 2024],
   },
   financial_summary: [
     {
@@ -89,23 +91,23 @@ export const mockFinanceData = {
       individual_contributions: 850000,
       pac_contributions: 300000,
       party_contributions: 75000,
-      candidate_contributions: 25000
-    }
+      candidate_contributions: 25000,
+    },
   ],
   recent_contributions: [],
   recent_expenditures: [],
   top_contributors: [],
-  top_expenditure_categories: []
-}
+  top_expenditure_categories: [],
+};
 
 // Helper to create mock NextRequest
 export function createMockRequest(url: string, options: RequestInit = {}): NextRequest {
   const requestOptions = {
     ...options,
-    signal: options.signal || undefined
-  }
-  const request = new NextRequest(url, requestOptions)
-  return request
+    signal: options.signal || undefined,
+  };
+  const request = new NextRequest(url, requestOptions);
+  return request;
 }
 
 // Helper to mock fetch responses
@@ -122,48 +124,48 @@ export function mockFetchResponse(data: unknown, status = 200): Promise<Response
     type: 'basic' as ResponseType,
     body: null,
     bodyUsed: false,
-    clone: () => mockFetchResponse(data, status) as Response,
+    clone: () => new Response(JSON.stringify(data), { status }),
     arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
     blob: () => Promise.resolve(new Blob()),
-    formData: () => Promise.resolve(new FormData())
-  } as Response)
+    formData: () => Promise.resolve(new FormData()),
+  } as Response);
 }
 
 // Helper to mock Congress API responses
 export function mockCongressApiResponse(endpoint: string, data: unknown) {
-  const url = `https://api.congress.gov/v3/${endpoint}`
+  const url = `https://api.congress.gov/v3/${endpoint}`;
   return {
     url,
-    response: mockFetchResponse(data)
-  }
+    response: mockFetchResponse(data),
+  };
 }
 
 // Helper to mock Census TIGER API responses
 export function mockCensusTigerResponse(data: unknown) {
   return mockFetchResponse({
-    features: [data]
-  })
+    features: [data],
+  });
 }
 
 // Helper to create test environment
 export function setupTestEnvironment() {
   // Mock console methods
-  const originalConsole = global.console
+  const originalConsole = global.console;
   global.console = {
     ...console,
     log: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
-  }
+  };
 
   return {
     restoreConsole: () => {
-      global.console = originalConsole
-    }
-  }
+      global.console = originalConsole;
+    },
+  };
 }
 
 // Helper to wait for async operations
 export function waitFor(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

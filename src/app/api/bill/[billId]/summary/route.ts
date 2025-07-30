@@ -11,10 +11,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { BillSummarizer } from '@/lib/ai/bill-summarizer';
-import { BillSummaryCache } from '@/lib/ai/bill-summary-cache';
-import { BillTextProcessor } from '@/lib/ai/bill-text-processor';
-import { ReadingLevelValidator } from '@/lib/ai/reading-level-validator';
+import { BillSummarizer } from '@/features/legislation/services/ai/bill-summarizer';
+import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
+import { BillTextProcessor } from '@/features/legislation/services/ai/bill-text-processor';
+import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
 import { structuredLogger } from '@/lib/logging/logger';
 import { InputValidator } from '@/lib/validation/input-validator';
 
@@ -339,7 +339,11 @@ async function fetchBillText(billId: string): Promise<{
   try {
     // Extract congress and bill number from billId
     const [billNumber, congressStr] = billId.split('-');
-    const congress = parseInt(congressStr) || 118;
+    const congress = parseInt(congressStr || '118') || 118;
+
+    if (!billNumber) {
+      throw new Error('Invalid bill ID format');
+    }
 
     const congressApiKey = process.env.CONGRESS_API_KEY;
     if (!congressApiKey) {
