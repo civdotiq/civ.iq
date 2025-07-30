@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getEnhancedRepresentative } from '@/lib/congress-legislators';
+import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { structuredLogger } from '@/lib/logging/logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 

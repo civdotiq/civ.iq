@@ -10,8 +10,8 @@ import {
   fetchGDELTNewsWithDeduplication,
   normalizeGDELTArticle,
   fetchGDELTNews,
-} from '@/lib/gdelt-api';
-import { buildOptimizedGDELTQuery } from '@/lib/gdelt-query-builder';
+} from '@/features/news/services/gdelt-api';
+import { buildOptimizedGDELTQuery } from '@/features/news/services/gdelt-query-builder';
 import { structuredLogger } from '@/lib/logging/logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
@@ -196,7 +196,7 @@ export async function GET(
         const flattenedArticles = results.flat();
 
         // Apply advanced clustering to group related stories
-        const { newsClusteringService } = await import('@/lib/news-clustering');
+        const { newsClusteringService } = await import('@/features/news/utils/news-clustering');
         const clusteringResult = newsClusteringService.clusterNews(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           flattenedArticles.map((article: any) => ({
@@ -266,7 +266,7 @@ export async function GET(
         });
 
         // Final cross-term deduplication
-        const { deduplicateNews } = await import('@/lib/news-deduplication');
+        const { deduplicateNews } = await import('@/features/news/utils/news-deduplication');
         const { articles: finalDeduplicatedArticles, stats: finalStats } = deduplicateNews(
           qualityFilteredArticles.map((article: unknown) => {
             const articleData = article as {
@@ -347,31 +347,34 @@ export async function GET(
 
       const mockArticles: NewsArticle[] = [
         {
-          title: `${representative.name} Addresses Key Legislative Priorities`,
-          url: 'https://example.com/legislative-priorities',
-          source: 'Congressional Quarterly',
+          title: `[SAMPLE] ${representative.name} Addresses Key Legislative Priorities`,
+          url: '#',
+          source: 'Sample - Congressional Quarterly',
           publishedDate: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
           language: 'English',
-          domain: 'cq.com',
-          summary: 'Legislative update on current priorities and upcoming votes.',
+          domain: 'sample-cq.com',
+          summary:
+            'SAMPLE NEWS: Legislative update on current priorities and upcoming votes. This is sample content shown when real news data is unavailable.',
         },
         {
-          title: `Committee Hearing on Infrastructure Investment`,
-          url: 'https://example.com/infrastructure-hearing',
-          source: 'Government Affairs Daily',
+          title: `[SAMPLE] Committee Hearing on Infrastructure Investment`,
+          url: '#',
+          source: 'Sample - Government Affairs Daily',
           publishedDate: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
           language: 'English',
-          domain: 'govaffairs.com',
-          summary: 'Congressional committee discusses infrastructure funding proposals.',
+          domain: 'sample-govaffairs.com',
+          summary:
+            'SAMPLE NEWS: Congressional committee discusses infrastructure funding proposals. This is sample content shown when real news data is unavailable.',
         },
         {
-          title: `Bipartisan Support for Healthcare Policy Reform`,
-          url: 'https://example.com/healthcare-reform',
-          source: 'Policy Review',
+          title: `[SAMPLE] Bipartisan Support for Healthcare Policy Reform`,
+          url: '#',
+          source: 'Sample - Policy Review',
           publishedDate: new Date(Date.now() - 1000 * 60 * 60 * 60).toISOString(),
           language: 'English',
-          domain: 'policyreview.com',
-          summary: 'Cross-party collaboration on healthcare policy initiatives.',
+          domain: 'sample-policyreview.com',
+          summary:
+            'SAMPLE NEWS: Cross-party collaboration on healthcare policy initiatives. This is sample content shown when real news data is unavailable.',
         },
       ];
 
@@ -380,7 +383,7 @@ export async function GET(
         totalResults: mockArticles.length,
         searchTerms: newsData.searchTerms,
         dataSource: 'fallback',
-        cacheStatus: 'No live news available - showing relevant content',
+        cacheStatus: 'No live news available - showing clearly labeled sample content',
       };
 
       return NextResponse.json(fallbackResponse);

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllEnhancedRepresentatives } from '@/lib/congress-legislators';
+import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { structuredLogger } from '@/lib/logging/logger';
 import { cachedFetch } from '@/lib/cache';
 import {
@@ -303,9 +303,13 @@ async function performSearch(filters: SearchFilters): Promise<{
           break;
         case 'yearsInOffice':
           const aYear =
-            a.terms && a.terms.length > 0 ? parseInt(a.terms[0].startYear) : currentYear;
+            a.terms && a.terms.length > 0
+              ? parseInt(a.terms[0]?.startYear || String(currentYear))
+              : currentYear;
           const bYear =
-            b.terms && b.terms.length > 0 ? parseInt(b.terms[0].startYear) : currentYear;
+            b.terms && b.terms.length > 0
+              ? parseInt(b.terms[0]?.startYear || String(currentYear))
+              : currentYear;
           aVal = currentYear - aYear;
           bVal = currentYear - bYear;
           break;

@@ -6,11 +6,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { ComponentErrorBoundary } from '@/components/error-boundaries';
+import { Card } from '@/shared/components/ui/Card';
+import { Button } from '@/shared/components/ui/Button';
+import { ComponentErrorBoundary } from '@/shared/components/error-boundaries';
 import { DistrictInfo, formatDistrictName } from '@/lib/multi-district/detection';
-import RepresentativePhoto from '@/components/RepresentativePhoto';
+import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 
 interface Representative {
   bioguideId: string;
@@ -39,7 +39,7 @@ export function DistrictSelector({
   representatives = [],
   onSelect,
   onRefineAddress,
-  className = ''
+  className = '',
 }: DistrictSelectorProps) {
   const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +47,7 @@ export function DistrictSelector({
   const handleDistrictSelect = async (district: DistrictInfo) => {
     setIsLoading(true);
     setSelectedDistrictId(`${district.state}-${district.district}`);
-    
+
     try {
       await onSelect(district);
     } finally {
@@ -56,10 +56,11 @@ export function DistrictSelector({
   };
 
   const getRepresentativeForDistrict = (district: DistrictInfo): Representative | undefined => {
-    return representatives.find(rep => 
-      rep.chamber === 'House' && 
-      rep.state === district.state && 
-      rep.district === district.district
+    return representatives.find(
+      rep =>
+        rep.chamber === 'House' &&
+        rep.state === district.state &&
+        rep.district === district.district
     );
   };
 
@@ -74,9 +75,7 @@ export function DistrictSelector({
       <div className={`space-y-6 ${className}`}>
         {/* Header */}
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Multiple Districts Found
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Multiple Districts Found</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             ZIP code <span className="font-semibold text-civiq-blue">{zipCode}</span> spans{' '}
             <span className="font-semibold">{districts.length} congressional districts</span>.
@@ -90,15 +89,16 @@ export function DistrictSelector({
             const representative = getRepresentativeForDistrict(district);
             const districtId = `${district.state}-${district.district}`;
             const isSelected = selectedDistrictId === districtId;
-            
+
             return (
               <Card
                 key={districtId}
                 className={`
                   transition-all duration-200 hover:shadow-lg
-                  ${isSelected 
-                    ? 'ring-2 ring-civiq-blue border-civiq-blue bg-civiq-blue/5' 
-                    : 'border-gray-200 hover:border-civiq-blue/50'
+                  ${
+                    isSelected
+                      ? 'ring-2 ring-civiq-blue border-civiq-blue bg-civiq-blue/5'
+                      : 'border-gray-200 hover:border-civiq-blue/50'
                   }
                   ${district.primary ? 'border-civiq-green/50 bg-civiq-green/5' : ''}
                 `}
@@ -123,9 +123,7 @@ export function DistrictSelector({
                         </span>
                       )}
                     </div>
-                    <div className="text-2xl">
-                      {isSelected ? '✓' : `${index + 1}`}
-                    </div>
+                    <div className="text-2xl">{isSelected ? '✓' : `${index + 1}`}</div>
                   </div>
 
                   {/* Representative Info */}
@@ -140,10 +138,10 @@ export function DistrictSelector({
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {representative.name}
                         </p>
-                        <p className="text-sm text-gray-600 truncate">
-                          {representative.title}
-                        </p>
-                        <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border mt-1 ${getPartyColor(representative.party)}`}>
+                        <p className="text-sm text-gray-600 truncate">{representative.title}</p>
+                        <div
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border mt-1 ${getPartyColor(representative.party)}`}
+                        >
                           {representative.party}
                         </div>
                       </div>
@@ -173,9 +171,7 @@ export function DistrictSelector({
         {onRefineAddress && (
           <div className="text-center">
             <div className="inline-flex flex-col items-center space-y-3 p-6 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="text-sm text-gray-600">
-                Not sure which district you're in?
-              </div>
+              <div className="text-sm text-gray-600">Not sure which district you're in?</div>
               <Button
                 onClick={onRefineAddress}
                 variant="secondary"
@@ -194,8 +190,8 @@ export function DistrictSelector({
         {/* Help Text */}
         <div className="text-center text-sm text-gray-500 max-w-2xl mx-auto">
           <p>
-            Congressional districts can change due to redistricting. If you're unsure,
-            using your full street address will provide the most accurate results.
+            Congressional districts can change due to redistricting. If you're unsure, using your
+            full street address will provide the most accurate results.
           </p>
         </div>
       </div>
@@ -211,7 +207,7 @@ export function CompactDistrictSelector({
   districts,
   onSelect,
   onRefineAddress,
-  className = ''
+  className = '',
 }: DistrictSelectorProps) {
   const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(null);
 
@@ -230,7 +226,7 @@ export function CompactDistrictSelector({
         </div>
 
         <div className="flex flex-wrap gap-2 justify-center">
-          {districts.map((district) => {
+          {districts.map(district => {
             const districtId = `${district.state}-${district.district}`;
             const isSelected = selectedDistrictId === districtId;
 
@@ -240,9 +236,10 @@ export function CompactDistrictSelector({
                 onClick={() => handleSelect(district)}
                 className={`
                   px-3 py-2 rounded-lg text-sm font-medium transition-all
-                  ${isSelected 
-                    ? 'bg-civiq-blue text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ${
+                    isSelected
+                      ? 'bg-civiq-blue text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }
                   ${district.primary ? 'ring-2 ring-civiq-green ring-opacity-50' : ''}
                 `}

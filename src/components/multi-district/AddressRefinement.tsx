@@ -6,10 +6,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { ComponentErrorBoundary } from '@/components/error-boundaries';
-import { SmartSearchInput } from '@/components/search/SmartSearchInput';
+import { Card } from '@/shared/components/ui/Card';
+import { Button } from '@/shared/components/ui/Button';
+import { ComponentErrorBoundary } from '@/shared/components/error-boundaries';
+import { SmartSearchInput } from '@/features/search/components/search/SmartSearchInput';
 import { geocodeAddress, extractDistrictFromResult } from '@/lib/census-geocoder';
 import { structuredLogger } from '@/lib/logging/logger-client';
 

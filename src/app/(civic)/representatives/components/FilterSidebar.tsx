@@ -6,7 +6,7 @@
  */
 
 import { useState, memo } from 'react';
-import { Representative } from '@/lib/congress-api';
+import { Representative } from '@/features/representatives/services/congress-api';
 
 interface FilterState {
   chamber: string;

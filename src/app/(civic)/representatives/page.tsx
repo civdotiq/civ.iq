@@ -5,8 +5,8 @@
 
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { getRepresentativesByLocation } from '@/lib/congress-api';
-import { CiviqLogo } from '@/components/CiviqLogo';
+import { getRepresentativesByLocation } from '@/features/representatives/services/congress-api';
+import { CiviqLogo } from '@/shared/ui/CiviqLogo';
 import { RepresentativesClient } from './components/RepresentativesClient';
 
 interface SearchParams {
@@ -15,6 +15,8 @@ interface SearchParams {
     state?: string;
     district?: string;
     compare?: string;
+    chamber?: string;
+    party?: string;
   }>;
 }
 
@@ -26,7 +28,7 @@ async function getInitialRepresentatives(zip?: string, state?: string, district?
 }
 
 export default async function RepresentativesPage({ searchParams }: SearchParams) {
-  const { zip, state, district, compare } = await searchParams;
+  const { zip, state, district, compare, chamber, party } = await searchParams;
   const compareIds = compare?.split(',').filter(Boolean) || [];
 
   // Fetch initial data on the server if we have URL params
@@ -100,6 +102,11 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
           <RepresentativesClient
             initialRepresentatives={initialRepresentatives}
             compareIds={compareIds}
+            initialFilters={{
+              chamber: chamber || 'all',
+              party: party || 'all',
+              state: state || 'all',
+            }}
           />
         </Suspense>
       </main>

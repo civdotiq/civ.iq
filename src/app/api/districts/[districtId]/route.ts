@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllEnhancedRepresentatives } from '@/lib/congress-legislators';
+import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { structuredLogger } from '@/lib/logging/logger';
 import { cachedFetch } from '@/lib/cache';
 
@@ -701,7 +701,7 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
       representative.terms && representative.terms.length > 0
         ? representative.terms[0]
         : { startYear: currentYear.toString() };
-    const yearsInOffice = currentYear - parseInt(firstTerm.startYear);
+    const yearsInOffice = currentYear - parseInt(firstTerm?.startYear || currentYear.toString());
 
     // Generate political data based on party
     const isRepublican = representative.party?.toLowerCase().includes('republican');

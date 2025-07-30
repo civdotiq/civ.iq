@@ -503,7 +503,7 @@ function DistrictCompetitiveness({ districts }: { districts: StateData['district
     const match = pvi.match(/([DR])\+(\d+)/);
     if (!match) return 0;
     const [, party, value] = match;
-    return party === 'D' ? -parseInt(value) : parseInt(value);
+    return party === 'D' ? -parseInt(value || '0') : parseInt(value || '0');
   };
 
   const sortedDistricts = [...districts].sort(
@@ -894,11 +894,11 @@ export default function StateOverviewPage() {
                 <div className="prose max-w-none">
                   <p className="text-gray-600">
                     {stateData.name} has {stateData.electoralVotes} electoral votes in presidential
-                    elections. The state has voted {stateData.presidentialHistory[0].winner} in the
-                    last{' '}
+                    elections. The state has voted{' '}
+                    {stateData.presidentialHistory[0]?.winner || 'Unknown'} in the last{' '}
                     {
                       stateData.presidentialHistory.filter(
-                        h => h.winner === stateData.presidentialHistory[0].winner
+                        h => h.winner === stateData.presidentialHistory[0]?.winner
                       ).length
                     }{' '}
                     presidential elections.
@@ -961,6 +961,6 @@ export default function StateOverviewPage() {
     const match = pvi.match(/([DR])\+(\d+)/);
     if (!match) return 0;
     const [, party, value] = match;
-    return party === 'D' ? -parseInt(value) : parseInt(value);
+    return party === 'D' ? -parseInt(value || '0') : parseInt(value || '0');
   }
 }

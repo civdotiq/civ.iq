@@ -4,9 +4,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getBillsByMember, getVotesByMember, getCommitteesByMember } from '@/lib/congress-api';
+import {
+  getBillsByMember,
+  getVotesByMember,
+  getCommitteesByMember,
+} from '@/features/representatives/services/congress-api';
 import { fecAPI } from '@/lib/fec-api';
-import { fetchGDELTNews } from '@/lib/gdelt-api';
+import { fetchGDELTNews } from '@/features/news/services/gdelt-api';
 
 interface BatchRequestBody {
   endpoints: string[];

@@ -296,10 +296,12 @@ function calculateBoundingBox(
   coordinates.forEach(ring => {
     ring.forEach(coord => {
       const [lng, lat] = coord;
-      minLat = Math.min(minLat, lat);
-      maxLat = Math.max(maxLat, lat);
-      minLng = Math.min(minLng, lng);
-      maxLng = Math.max(maxLng, lng);
+      if (typeof lng === 'number' && typeof lat === 'number') {
+        minLat = Math.min(minLat, lat);
+        maxLat = Math.max(maxLat, lat);
+        minLng = Math.min(minLng, lng);
+        maxLng = Math.max(maxLng, lng);
+      }
     });
   });
 

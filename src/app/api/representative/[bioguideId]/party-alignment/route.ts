@@ -206,7 +206,7 @@ function analyzePartyAlignment(representative: unknown, votes: unknown[]): Party
       return {
         bill_number: billNumber,
         bill_title: truncatedTitle,
-        vote_date: vote.date || new Date().toISOString().split('T')[0],
+        vote_date: (vote.date ?? new Date().toISOString().split('T')[0]) as string,
         representative_position: 'Yea',
         party_majority_position: Math.random() > 0.7 ? 'Nay' : 'Yea',
         significance:

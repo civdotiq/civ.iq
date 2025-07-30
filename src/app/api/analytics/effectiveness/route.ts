@@ -141,7 +141,9 @@ function generateEffectivenessData(bioguideId: string, years: number = 8): Effec
 
         return {
           title: template.title,
-          status: statusOptions[random(0, statusOptions.length - 1, yearOffset + index)],
+          status:
+            statusOptions[random(0, statusOptions.length - 1, yearOffset + index)] ||
+            'in_committee',
           significance: template.significance,
           bipartisan: random(0, 1, yearOffset + index) === 1,
         };

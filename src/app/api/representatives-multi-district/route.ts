@@ -13,7 +13,7 @@ import {
   isZipMultiDistrict,
   getZipLookupMetrics,
 } from '@/lib/data/zip-district-mapping';
-import { getAllEnhancedRepresentatives } from '@/lib/congress-legislators';
+import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { getCongressionalDistrictFromZip } from '@/lib/census-api';
 import { structuredLogger } from '@/lib/logging/universal-logger';
 
@@ -228,12 +228,12 @@ export async function GET(request: NextRequest) {
       }
 
       // Check for edge cases
-      if (districts[0].state === 'DC') {
+      if (districts[0]?.state === 'DC') {
         logger.logEdgeCase(zipCode, 'dc', { district: districts[0].district });
         warnings.push('District of Columbia has non-voting representation in Congress.');
       }
 
-      if (['GU', 'PR', 'VI', 'AS', 'MP'].includes(districts[0].state)) {
+      if (districts[0] && ['GU', 'PR', 'VI', 'AS', 'MP'].includes(districts[0].state)) {
         logger.logEdgeCase(zipCode, 'territory', { territory: districts[0].state });
         warnings.push('This territory has non-voting representation in Congress.');
       }

@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { getEnhancedRepresentative } from '@/lib/congress-legislators';
+import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { structuredLogger } from '@/lib/logging/logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
@@ -57,25 +57,25 @@ function isLeadershipRole(role: string): boolean {
 // Helper function to parse committee jurisdiction
 function parseJurisdiction(committeeName: string): string {
   const jurisdictionMap: Record<string, string> = {
-    'appropriations': 'Federal spending and budget allocation',
+    appropriations: 'Federal spending and budget allocation',
     'armed services': 'Military and defense matters',
-    'banking': 'Financial institutions and monetary policy',
-    'budget': 'Federal budget process and fiscal policy',
-    'commerce': 'Interstate and foreign commerce',
-    'education': 'Education policy and workforce development',
-    'energy': 'Energy policy and commerce',
-    'environment': 'Environmental protection and public works',
-    'finance': 'Taxation and revenue measures',
-    'foreign': 'Foreign relations and international affairs',
-    'health': 'Public health and healthcare policy',
-    'homeland': 'National security and border protection',
-    'intelligence': 'Intelligence and counterintelligence activities',
-    'judiciary': 'Federal courts and legal matters',
-    'rules': 'House or Senate procedures and administration',
-    'science': 'Scientific research and technology policy',
-    'transportation': 'Transportation and infrastructure',
-    'veterans': 'Veterans affairs and benefits',
-    'ways and means': 'Taxation, trade, and social programs'
+    banking: 'Financial institutions and monetary policy',
+    budget: 'Federal budget process and fiscal policy',
+    commerce: 'Interstate and foreign commerce',
+    education: 'Education policy and workforce development',
+    energy: 'Energy policy and commerce',
+    environment: 'Environmental protection and public works',
+    finance: 'Taxation and revenue measures',
+    foreign: 'Foreign relations and international affairs',
+    health: 'Public health and healthcare policy',
+    homeland: 'National security and border protection',
+    intelligence: 'Intelligence and counterintelligence activities',
+    judiciary: 'Federal courts and legal matters',
+    rules: 'House or Senate procedures and administration',
+    science: 'Scientific research and technology policy',
+    transportation: 'Transportation and infrastructure',
+    veterans: 'Veterans affairs and benefits',
+    'ways and means': 'Taxation, trade, and social programs',
   };
 
   const lowerName = committeeName.toLowerCase();
@@ -94,10 +94,7 @@ export async function GET(
   const { bioguideId } = await params;
 
   if (!bioguideId) {
-    return NextResponse.json(
-      { error: 'Bioguide ID is required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
   }
 
   try {
@@ -111,24 +108,24 @@ export async function GET(
         let enhancedRep;
         let memberName = '';
         let chamber: 'House' | 'Senate' = 'House';
-        
+
         try {
           enhancedRep = await getEnhancedRepresentative(bioguideId);
           if (enhancedRep) {
             memberName = enhancedRep.fullName?.official || enhancedRep.name;
             chamber = enhancedRep.chamber;
-            
+
             structuredLogger.info('Using enhanced representative data for committees', {
               bioguideId,
               memberName,
               chamber,
-              hasLeadershipRoles: !!enhancedRep.leadershipRoles
+              hasLeadershipRoles: !!enhancedRep.leadershipRoles,
             });
           }
         } catch (error) {
           structuredLogger.warn('Could not get enhanced representative data', {
             bioguideId,
-            error: (error as Error).message
+            error: (error as Error).message,
           });
         }
 
@@ -139,8 +136,11 @@ export async function GET(
         // NOTE: Direct member committees endpoint doesn't exist in Congress API v3
         // The endpoint /member/{bioguideId}/committees returns 404
         // Using congress-legislators data instead which already has committee info
-        structuredLogger.info('Using congress-legislators data for committees (direct endpoint not available)', { bioguideId });
-        
+        structuredLogger.info(
+          'Using congress-legislators data for committees (direct endpoint not available)',
+          { bioguideId }
+        );
+
         // Return fallback data structure
         return {
           committees: [],
@@ -151,8 +151,8 @@ export async function GET(
             leadershipRoles: 0,
             dataSource: 'fallback',
             congress: '119th Congress',
-            lastUpdated: new Date().toISOString()
-          }
+            lastUpdated: new Date().toISOString(),
+          },
         };
       },
       30 * 60 * 1000 // 30 minutes cache
@@ -169,14 +169,14 @@ export async function GET(
           name: 'House Committee on Technology',
           role: 'Member',
           isLeadership: false,
-          subcommittees: []
+          subcommittees: [],
         },
         {
           name: 'House Committee on Public Safety',
           role: 'Member',
           isLeadership: false,
-          subcommittees: []
-        }
+          subcommittees: [],
+        },
       ],
       leadershipRoles: [],
       metadata: {
@@ -185,14 +185,14 @@ export async function GET(
         leadershipRoles: 0,
         lastUpdated: new Date().toISOString(),
         dataSource: 'mock',
-        congress: '119th Congress'
-      }
+        congress: '119th Congress',
+      },
     };
 
     return NextResponse.json({
       ...mockData,
       error: 'Using fallback data due to API error',
-      originalError: (error as Error).message
+      originalError: (error as Error).message,
     });
   }
 }

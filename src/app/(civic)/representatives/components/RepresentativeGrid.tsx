@@ -7,8 +7,8 @@
 
 import { useState, useRef, useCallback, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Representative } from '@/lib/congress-api';
-import RepresentativePhoto from '@/components/RepresentativePhoto';
+import { Representative } from '@/features/representatives/services/congress-api';
+import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 
 interface RepresentativeGridProps {
   representatives: Representative[];
@@ -43,7 +43,7 @@ const VirtualizedGrid = memo(function VirtualizedGrid({
     for (let row = startRow; row < endRow; row++) {
       for (let col = 0; col < columnsPerRow; col++) {
         const index = row * columnsPerRow + col;
-        if (index < items.length) {
+        if (index < items.length && items[index]) {
           visible.push({
             item: items[index],
             index,

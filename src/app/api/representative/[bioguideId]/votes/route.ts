@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/cache-helper';
-import { RollCallParser } from '@/lib/rollcall-parser';
-import { getEnhancedRepresentative } from '@/lib/congress-legislators';
+import { RollCallParser } from '@/features/legislation/services/rollcall-parser';
+import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { structuredLogger, createRequestLogger } from '@/lib/logging/logger-edge';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry-edge';
 
@@ -170,7 +170,9 @@ async function getEnhancedVotingRecords(
       });
 
       // Import the new voting data service
-      const { votingDataService } = await import('@/lib/voting-data-service');
+      const { votingDataService } = await import(
+        '@/features/representatives/services/voting-data-service'
+      );
 
       // Attempt to get real voting data using multiple strategies
       const votingResult = await votingDataService.getVotingRecords(
@@ -189,8 +191,15 @@ async function getEnhancedVotingRecords(
         return votingResult.votes;
       }
 
-      // If no real data available, throw to trigger fallback
-      throw new Error('No real voting data available - using enhanced mock data');
+      // If no real data available, log and continue to fallback without throwing
+      structuredLogger.warn('No real voting data available from Congress.gov', {
+        bioguideId,
+        source: votingResult.source,
+        cacheStatus: votingResult.cacheStatus,
+      });
+
+      // Return empty array to trigger natural fallback to mock data
+      return [];
     },
     300000 // 5 minutes cache for voting data
   ).catch(error => {
@@ -275,6 +284,81 @@ export async function GET(
       bioguideId,
       reason: 'Real voting data not available',
     });
+
+    // Generate and return mock data when real data is not available
+    // Helper function to generate realistic recent dates
+    const getRecentDate = (daysAgo: number): string => {
+      const date = new Date();
+      date.setDate(date.getDate() - daysAgo);
+      return date.toISOString().split('T')[0] || date.toISOString();
+    };
+
+    // Get member party from representative data or default (temporary for MVP)
+    const memberParty = 'Democrat'; // NOTE: Get from actual representative data in future
+
+    // Generate varied voting positions based on member's party and bill type
+    const generateVotePosition = (
+      billCategory: string,
+      _memberParty: string
+    ): 'Yea' | 'Nay' | 'Not Voting' | 'Present' => {
+      const rand = Math.random();
+
+      // Simulate realistic voting patterns
+      if (rand < 0.02) return 'Not Voting'; // 2% absence rate
+      if (rand < 0.025) return 'Present'; // 0.5% present votes
+
+      // Party-line tendencies by category
+      const partyLineBills = ['Budget', 'Healthcare', 'Immigration'];
+      const bipartisanBills = ['Infrastructure', 'Defense', 'Veterans'];
+
+      if (partyLineBills.includes(billCategory)) {
+        return Math.random() < 0.9 ? 'Yea' : 'Nay'; // 90% party line
+      } else if (bipartisanBills.includes(billCategory)) {
+        return Math.random() < 0.85 ? 'Yea' : 'Nay'; // 85% support
+      }
+
+      return Math.random() < 0.75 ? 'Yea' : 'Nay'; // 75% default support
+    };
+
+    // Simple mock votes for fallback
+    const mockVotes: Vote[] = [
+      {
+        voteId: '119-sample-1',
+        bill: {
+          number: 'H.R. 1234',
+          title: 'Sample Legislative Act',
+          congress: '119',
+          type: 'hr',
+          url: 'https://www.congress.gov/bill/119th-congress/house-bill/1234',
+        },
+        question: 'On Passage',
+        result: 'Passed',
+        date: getRecentDate(5),
+        position: generateVotePosition('Infrastructure', memberParty),
+        chamber: memberChamber as 'House' | 'Senate',
+        rollNumber: 1,
+        isKeyVote: true,
+        category: 'Infrastructure',
+        description: 'Sample infrastructure bill',
+        partyBreakdown: {
+          democratic: { yea: 200, nay: 20, present: 1, notVoting: 3 },
+          republican: { yea: 180, nay: 40, present: 0, notVoting: 5 },
+          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
+        },
+        metadata: {
+          sourceUrl: 'https://sample.gov/votes',
+          lastUpdated: new Date().toISOString(),
+          confidence: 'medium',
+        },
+      },
+    ];
+
+    return NextResponse.json({
+      votes: mockVotes.slice(0, limit),
+      success: true,
+      source: 'sample',
+      cacheStatus: 'Sample data - live data unavailable',
+    });
   } catch (error) {
     structuredLogger.error('Votes API error', error as Error, { bioguideId });
 
@@ -291,7 +375,7 @@ export async function GET(
     const getRecentDate = (daysAgo: number): string => {
       const date = new Date();
       date.setDate(date.getDate() - daysAgo);
-      return date.toISOString().split('T')[0];
+      return date.toISOString().split('T')[0] || date.toISOString();
     };
 
     // Get member party from representative data or default (temporary for MVP)

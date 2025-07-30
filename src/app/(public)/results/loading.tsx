@@ -3,13 +3,13 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { SearchResultsSkeleton } from '@/components/ui/SkeletonComponents';
-import { LoadingMessage } from '@/components/ui/LoadingStates';
+import { SearchResultsSkeleton } from '@/shared/components/ui/SkeletonComponents';
+import { LoadingMessage } from '@/shared/components/ui/LoadingStates';
 
 export default function Loading() {
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <LoadingMessage 
+      <LoadingMessage
         message="Finding Your Representatives"
         submessage="Looking up your district and gathering representative information..."
         className="mb-8"

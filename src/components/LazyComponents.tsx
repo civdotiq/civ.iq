@@ -116,13 +116,17 @@ export const LazyDonutChart = lazy(() =>
 
 // Heavy visualization components
 export const LazyEnhancedNewsFeed = lazy(() =>
-  import(/* webpackChunkName: "news-feed" */ './EnhancedNewsFeed').then(module => ({
-    default: module.EnhancedNewsFeed,
-  }))
+  import(/* webpackChunkName: "news-feed" */ '../features/news/components/EnhancedNewsFeed').then(
+    module => ({
+      default: module.EnhancedNewsFeed,
+    })
+  )
 );
 
 export const LazyBillsTracker = lazy(() =>
-  import(/* webpackChunkName: "bills-tracker" */ './BillsTracker').then(module => ({
+  import(
+    /* webpackChunkName: "bills-tracker" */ '../features/legislation/components/BillsTracker'
+  ).then(module => ({
     default: module.BillsTracker,
   }))
 );
@@ -204,7 +208,9 @@ export const LazyStateDataVisualizations = lazy(
 );
 
 export const LazyAdvancedSearch = lazy(() =>
-  import(/* webpackChunkName: "advanced-search" */ './AdvancedSearch').then(module => ({
+  import(
+    /* webpackChunkName: "advanced-search" */ '../features/search/components/AdvancedSearch'
+  ).then(module => ({
     default: module.AdvancedSearch,
   }))
 );
@@ -253,7 +259,10 @@ export const LazyCommitteeActivityTimeline = lazy(
 );
 
 export const LazyCommitteeBillsAndReports = lazy(
-  () => import(/* webpackChunkName: "committee-components" */ './CommitteeBillsAndReports')
+  () =>
+    import(
+      /* webpackChunkName: "committee-components" */ '../features/legislation/components/CommitteeBillsAndReports'
+    )
 );
 
 // Third-party heavy components

@@ -6,11 +6,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import { structuredLogger } from '@/lib/logging/logger';
-import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import type { Committee, CommitteeAPIResponse, CommitteeMember } from '@/types/committee';
 import { COMMITTEE_ID_MAP } from '@/types/committee';
 import type { EnhancedRepresentative } from '@/types/representative';
 import { getCommitteeData } from '@/lib/data/committees';
+import {
+  fetchCommittees,
+  fetchCommitteeMemberships,
+  getAllEnhancedRepresentatives,
+} from '@/features/representatives/services/congress.service';
 
 // Helper function to get committee metadata
 function getCommitteeMetadata(committeeId: string) {
@@ -46,171 +50,144 @@ function getCommitteeMetadata(committeeId: string) {
   };
 }
 
-// Helper function to fetch committee data from Congress.gov
-async function fetchCommitteeFromCongress(committeeId: string): Promise<Committee | null> {
-  const currentCongress = 119; // 119th Congress
-  const cacheKey = `committee-${committeeId}-${currentCongress}`;
+// Helper function to fetch committee data from congress-legislators
+async function fetchCommitteeFromCongressLegislators(
+  committeeId: string
+): Promise<Committee | null> {
+  const cacheKey = `committee-real-${committeeId}`;
 
   return cachedFetch(
     cacheKey,
     async () => {
       try {
-        structuredLogger.info('Fetching committee data from Congress.gov', {
-          committeeId,
-          currentCongress,
-        });
+        structuredLogger.info('Fetching committee data from congress-legislators', { committeeId });
 
-        const committeeResponse = await fetch(
-          `https://api.congress.gov/v3/committee/${committeeId}?api_key=${process.env.CONGRESS_API_KEY}&format=json`,
-          {
-            headers: {
-              'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-              Accept: 'application/json',
-            },
-          }
+        // Get committees and memberships data from congress-legislators
+        const [committees, memberships, allRepresentatives] = await Promise.all([
+          fetchCommittees(),
+          fetchCommitteeMemberships(),
+          getAllEnhancedRepresentatives(),
+        ]);
+
+        // Find the committee by ID (try both exact match and variations)
+        const committee = committees.find(
+          c =>
+            c.thomas_id === committeeId ||
+            c.thomas_id === committeeId.toUpperCase() ||
+            c.house_committee_id === committeeId ||
+            c.senate_committee_id === committeeId
         );
 
-        const monitor = monitorExternalApi('congress', 'committee-detail', committeeResponse.url);
-
-        if (!committeeResponse.ok) {
-          monitor.end(false, committeeResponse.status);
-
-          if (committeeResponse.status === 404) {
-            structuredLogger.warn('Committee not found in Congress.gov', { committeeId });
-            return null;
-          }
-
-          throw new Error(`Congress.gov API error: ${committeeResponse.status}`);
-        }
-
-        const committeeData = await committeeResponse.json();
-        monitor.end(true, 200);
-
-        if (!committeeData.committee) {
-          structuredLogger.warn('No committee data in response', { committeeId });
+        if (!committee) {
+          structuredLogger.warn('Committee not found in congress-legislators data', {
+            committeeId,
+          });
           return null;
         }
 
-        const committee = committeeData.committee;
-        const metadata = getCommitteeMetadata(committeeId);
-
-        // Fetch committee members for 119th Congress
+        // Find committee memberships for this committee
         const committeeMembers: CommitteeMember[] = [];
         const leadership = {
           chair: undefined as CommitteeMember | undefined,
           rankingMember: undefined as CommitteeMember | undefined,
         };
 
-        try {
-          // Try multiple endpoints to get committee members
-          const membersData = null;
-
-          // First try: Get committee reports which may include member info
-          const reportsResponse = await fetch(
-            `https://api.congress.gov/v3/committee/${committeeId}/${currentCongress}/reports?api_key=${process.env.CONGRESS_API_KEY}&format=json&limit=1`,
-            {
-              headers: {
-                'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-                Accept: 'application/json',
-              },
-            }
+        for (const membership of memberships) {
+          // Find committee membership for this specific committee
+          const memberCommittee = membership.committees.find(
+            c => c.thomas_id === committee.thomas_id
           );
 
-          // Second try: Get committee meetings which may include member info
-          if (!reportsResponse.ok) {
-            const meetingsResponse = await fetch(
-              `https://api.congress.gov/v3/committee/${committeeId}/${currentCongress}/meetings?api_key=${process.env.CONGRESS_API_KEY}&format=json&limit=5`,
-              {
-                headers: {
-                  'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-                  Accept: 'application/json',
-                },
-              }
+          if (memberCommittee) {
+            // Find the representative data
+            const representative = allRepresentatives.find(
+              rep => rep.bioguideId === membership.bioguide
             );
 
-            if (meetingsResponse.ok) {
-              const meetingsData = await meetingsResponse.json();
-              if (meetingsData.meetings && meetingsData.meetings.length > 0) {
-                // Extract member info from meeting data if available
-                structuredLogger.info('Found committee meetings data', {
-                  committeeId,
-                  meetingsCount: meetingsData.meetings.length,
-                });
-              }
-            }
-          }
+            if (representative) {
+              const role = memberCommittee.title || 'Member';
+              const normalizedRole =
+                role.includes('Chair') && !role.includes('Ranking')
+                  ? ('Chair' as const)
+                  : role.includes('Ranking')
+                    ? ('Ranking Member' as const)
+                    : role.includes('Vice')
+                      ? ('Vice Chair' as const)
+                      : ('Member' as const);
 
-          // If no real data is available, populate with enhanced mock data based on known committee structures
-          if (!membersData) {
-            // Use committee-specific mock data based on real committee structures
-            const mockMembers = generateCommitteeMockMembers(committeeId, metadata.chamber);
-            for (const mockMember of mockMembers) {
               const member: CommitteeMember = {
-                representative: mockMember,
-                role: mockMember.bioguideId.endsWith('001')
-                  ? 'Chair'
-                  : mockMember.bioguideId.endsWith('002')
-                    ? 'Ranking Member'
-                    : 'Member',
-                joinedDate: '2023-01-03',
-                rank: committeeMembers.length + 1,
+                representative,
+                role: normalizedRole,
+                joinedDate: '2023-01-03', // Default date for 119th Congress
+                rank: memberCommittee.rank || committeeMembers.length + 1,
                 subcommittees: [],
               };
 
               committeeMembers.push(member);
 
-              // Assign leadership roles
-              if (member.role === 'Chair') {
-                leadership.chair = member;
-              } else if (member.role === 'Ranking Member') {
-                leadership.rankingMember = member;
+              // Assign leadership roles based on title
+              const title = (memberCommittee.title || '').toLowerCase();
+              if (title.includes('chair') && !title.includes('ranking')) {
+                leadership.chair = { ...member, role: 'Chair' };
+              } else if (title.includes('ranking')) {
+                leadership.rankingMember = { ...member, role: 'Ranking Member' };
               }
             }
           }
-        } catch (memberError) {
-          structuredLogger.warn('Could not fetch committee members, using basic committee data', {
-            committeeId,
-            error: memberError instanceof Error ? memberError : new Error(String(memberError)),
-          });
+        }
+
+        // If no chair/ranking member found, assign based on party (common pattern)
+        if (!leadership.chair || !leadership.rankingMember) {
+          const republicans = committeeMembers.filter(m => m.representative.party === 'Republican');
+          const democrats = committeeMembers.filter(m => m.representative.party === 'Democratic');
+
+          if (!leadership.chair && republicans.length > 0) {
+            leadership.chair = { ...republicans[0]!, role: 'Chair' };
+          }
+          if (!leadership.rankingMember && democrats.length > 0) {
+            leadership.rankingMember = { ...democrats[0]!, role: 'Ranking Member' };
+          }
         }
 
         const result: Committee = {
-          id: metadata.id,
-          thomas_id: committeeId,
-          name: committee.name || metadata.name,
-          chamber: metadata.chamber,
-          jurisdiction: committee.jurisdiction || 'Committee jurisdiction information',
-          type: committee.committeeTypeCode === 'Standing' ? 'Standing' : 'Select',
-
-          leadership,
+          id: committee.thomas_id,
+          thomas_id: committee.thomas_id,
+          name: committee.name,
+          chamber:
+            committee.type === 'house' ? 'House' : committee.type === 'senate' ? 'Senate' : 'Joint',
+          jurisdiction: committee.jurisdiction || `${committee.name} jurisdiction`,
+          type: 'Standing',
+          leadership: {
+            chair: leadership.chair,
+            rankingMember: leadership.rankingMember,
+          },
           members: committeeMembers,
           subcommittees:
-            committee.subcommittees?.map((sub: unknown) => {
-              const subcommittee = sub as {
-                systemCode?: string;
-                name: string;
-                jurisdiction?: string;
-              };
-              return {
-                id: subcommittee.systemCode || subcommittee.name,
-                name: subcommittee.name,
-                chair: undefined,
-                rankingMember: undefined,
-                focus: subcommittee.jurisdiction || 'Subcommittee focus area',
-                members: [],
-              };
-            }) || [],
-
-          url: committee.url,
-          phone: committee.phone,
-          address: committee.address,
-          established: committee.establishedDate,
+            committee.subcommittees?.map(sub => ({
+              id: sub.thomas_id,
+              name: sub.name,
+              chair: committeeMembers[0]?.representative, // Simplified
+              focus: `${sub.name} subcommittee`,
+              members: committeeMembers[0]
+                ? [
+                    {
+                      representative: committeeMembers[0].representative,
+                      role: 'Chair',
+                      joinedDate: '2023-01-03',
+                    },
+                  ]
+                : [],
+            })) || [],
+          url: `https://www.congress.gov/committee/${committee.thomas_id.toLowerCase()}`,
           lastUpdated: new Date().toISOString(),
         };
 
-        structuredLogger.info('Successfully fetched committee data', {
+        structuredLogger.info('Successfully built committee from congress-legislators data', {
           committeeId,
-          name: result.name,
+          committeeName: result.name,
+          memberCount: result.members.length,
+          hasChair: !!result.leadership.chair,
+          hasRankingMember: !!result.leadership.rankingMember,
           subcommitteeCount: result.subcommittees.length,
         });
 
@@ -454,9 +431,9 @@ export async function GET(
     // First try to get hardcoded committee data
     committee = await getCommitteeData(committeeId);
 
-    // If not found, try to fetch from Congress.gov if API key is available
-    if (!committee && process.env.CONGRESS_API_KEY) {
-      committee = await fetchCommitteeFromCongress(committeeId);
+    // If not found, try to get real data from congress-legislators
+    if (!committee) {
+      committee = await fetchCommitteeFromCongressLegislators(committeeId);
     }
 
     // Fallback to mock data if real data unavailable
@@ -468,7 +445,8 @@ export async function GET(
     const response: CommitteeAPIResponse = {
       committee,
       metadata: {
-        dataSource: process.env.CONGRESS_API_KEY && committee.url ? 'congress.gov' : 'mock',
+        dataSource:
+          committee.url && !committee.url.includes('mock') ? 'congress-legislators' : 'mock',
         lastUpdated: committee.lastUpdated,
         memberCount: committee.members.length,
         subcommitteeCount: committee.subcommittees.length,

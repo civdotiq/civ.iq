@@ -7,7 +7,7 @@
 
 import { useState, useCallback, useMemo, useEffect, lazy } from 'react';
 import { useRouter } from 'next/navigation';
-import { Representative } from '@/lib/congress-api';
+import { Representative } from '@/features/representatives/services/congress-api';
 import { useRepresentativesByZip } from '@/hooks/useRepresentatives';
 import { SearchForm } from './SearchForm';
 import { RepresentativeGrid } from './RepresentativeGrid';
@@ -22,7 +22,7 @@ const VotingPatternHeatmap = lazy(() =>
 );
 
 const RepresentativeNetwork = lazy(() =>
-  import('@/components/visualizations/RepresentativeNetwork').then(module => ({
+  import('@/features/representatives/components/RepresentativeNetwork').then(module => ({
     default: module.RepresentativeNetwork,
   }))
 );
@@ -30,6 +30,11 @@ const RepresentativeNetwork = lazy(() =>
 interface RepresentativesClientProps {
   initialRepresentatives: Representative[];
   compareIds: string[];
+  initialFilters?: {
+    chamber?: string;
+    party?: string;
+    state?: string;
+  };
 }
 
 interface FilterState {
@@ -42,12 +47,19 @@ interface FilterState {
 export function RepresentativesClient({
   initialRepresentatives,
   compareIds,
+  initialFilters,
 }: RepresentativesClientProps) {
   const router = useRouter();
 
   const [zipCode, setZipCode] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'network'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<FilterState>({
+    chamber: initialFilters?.chamber || 'all',
+    party: initialFilters?.party || 'all',
+    state: initialFilters?.state || 'all',
+    committee: 'all',
+  });
 
   // Use SWR for automatic caching and data fetching
   const {
@@ -63,30 +75,9 @@ export function RepresentativesClient({
     zipCode && swrRepresentatives.length > 0 ? swrRepresentatives : initialRepresentatives;
   const [filteredReps, setFilteredReps] = useState<Representative[]>(representatives);
 
-  // Update filtered reps when representatives change
-  useEffect(() => {
-    setFilteredReps(representatives);
-  }, [representatives]);
-
   const handleZipSearch = (zip: string) => {
     setZipCode(zip);
   };
-
-  const searchFilteredReps = useMemo(() => {
-    if (!searchTerm) return representatives;
-
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    return representatives.filter(
-      rep =>
-        rep.name.toLowerCase().includes(lowerSearchTerm) ||
-        rep.state.toLowerCase().includes(lowerSearchTerm) ||
-        (rep.district && rep.district.includes(searchTerm))
-    );
-  }, [representatives, searchTerm]);
-
-  useEffect(() => {
-    setFilteredReps(searchFilteredReps);
-  }, [searchFilteredReps]);
 
   const handleFilterChange = useCallback(
     (filters: FilterState) => {
@@ -119,6 +110,31 @@ export function RepresentativesClient({
     [representatives, searchTerm]
   );
 
+  // Update filtered reps when representatives change
+  useEffect(() => {
+    if (initialFilters) {
+      handleFilterChange(filters);
+    } else {
+      setFilteredReps(representatives);
+    }
+  }, [representatives, filters, initialFilters, handleFilterChange]);
+
+  const searchFilteredReps = useMemo(() => {
+    if (!searchTerm) return representatives;
+
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return representatives.filter(
+      rep =>
+        rep.name.toLowerCase().includes(lowerSearchTerm) ||
+        rep.state.toLowerCase().includes(lowerSearchTerm) ||
+        (rep.district && rep.district.includes(searchTerm))
+    );
+  }, [representatives, searchTerm]);
+
+  useEffect(() => {
+    setFilteredReps(searchFilteredReps);
+  }, [searchFilteredReps]);
+
   const generateNetworkData = () => {
     const nodes = filteredReps.slice(0, 30).map(rep => ({
       id: rep.bioguideId,
@@ -132,14 +148,20 @@ export function RepresentativesClient({
       for (let j = i + 1; j < nodes.length; j++) {
         const rep1 = filteredReps[i];
         const rep2 = filteredReps[j];
+        const node1 = nodes[i];
+        const node2 = nodes[j];
+
+        // Skip if any required data is undefined
+        if (!rep1 || !rep2 || !node1 || !node2) continue;
+
         const sharedCommittees =
           rep1.committees?.filter(c1 => rep2.committees?.some(c2 => c1.name === c2.name))?.length ||
           0;
 
         if (sharedCommittees > 0) {
           links.push({
-            source: nodes[i].id,
-            target: nodes[j].id,
+            source: node1.id,
+            target: node2.id,
             value: sharedCommittees * 3,
           });
         }
@@ -159,9 +181,9 @@ export function RepresentativesClient({
           | 'Yes'
           | 'No'
           | 'Not Voting',
-        category: ['Healthcare', 'Defense', 'Economy', 'Environment'][
-          Math.floor(Math.random() * 4)
-        ],
+        category:
+          ['Healthcare', 'Defense', 'Economy', 'Environment'][Math.floor(Math.random() * 4)] ||
+          'Unknown',
       }))
     );
   };
@@ -248,7 +270,14 @@ export function RepresentativesClient({
       <div className="flex gap-8">
         {/* Sidebar */}
         <div className="w-64 flex-shrink-0 hidden lg:block">
-          <FilterSidebar onFilterChange={handleFilterChange} representatives={representatives} />
+          <FilterSidebar
+            onFilterChange={newFilters => {
+              setFilters(newFilters);
+              handleFilterChange(newFilters);
+            }}
+            representatives={representatives}
+            initialFilters={filters}
+          />
         </div>
 
         {/* Main content */}

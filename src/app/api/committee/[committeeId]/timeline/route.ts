@@ -211,8 +211,8 @@ function calculateTimelineStats(timelineItems: TimelineItem[]): TimelineStats {
 
   // Date range
   const sortedDates = timelineItems.map(item => item.date).sort();
-  stats.dateRange.start = sortedDates[0];
-  stats.dateRange.end = sortedDates[sortedDates.length - 1];
+  stats.dateRange.start = sortedDates[0] || 'No data';
+  stats.dateRange.end = sortedDates[sortedDates.length - 1] || 'No data';
 
   // Most active month
   let maxActivity = 0;

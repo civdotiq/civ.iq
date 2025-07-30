@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getCongressionalDistrictFromZip } from '@/lib/census-api';
-import { getAllEnhancedRepresentatives } from '@/lib/congress-legislators';
+import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { structuredLogger } from '@/lib/logging/logger-client';
 
 // Simplified response interfaces

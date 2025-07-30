@@ -85,7 +85,7 @@ function generateCampaignFinanceData(bioguideId: string, years: number = 6): Cam
       const totalSpent = Math.round(totalRaised * spendingRate);
 
       // Cash accumulation
-      const previousCash = data.length > 0 ? data[data.length - 1].cashOnHand : 0;
+      const previousCash = data.length > 0 ? data[data.length - 1]?.cashOnHand || 0 : 0;
       const cashOnHand = previousCash + totalRaised - totalSpent;
 
       // Expenditure breakdown

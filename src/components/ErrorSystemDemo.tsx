@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
+import {
   InvalidZipCodeError,
   InvalidAddressError,
   RepresentativeNotFoundError,
@@ -14,11 +14,11 @@ import {
   RateLimitError,
   CongressApiError,
   NetworkError,
-  ServerError
+  ServerError,
 } from '@/lib/errors/ErrorTypes';
-import { ErrorDisplay, InlineError, ErrorToast } from '@/components/ui/ErrorComponents';
+import { ErrorDisplay, InlineError, ErrorToast } from '@/shared/components/ui/ErrorComponents';
 import { EnhancedErrorBoundary } from '@/components/EnhancedErrorBoundary';
-import { SearchValidation } from '@/components/search/SearchValidation';
+import { SearchValidation } from '@/features/search/components/search/SearchValidation';
 
 export function ErrorSystemDemo() {
   const [activeDemo, setActiveDemo] = useState<string>('validation');
@@ -33,23 +33,30 @@ export function ErrorSystemDemo() {
     timeout: new TimeoutError('API request', 10000),
     rateLimit: new RateLimitError(30),
     congressApi: new CongressApiError('voting records fetch', 'Service temporarily unavailable'),
-    network: new NetworkError({ message: 'Connection failed', context: { url: '/api/representatives' } }),
-    server: new ServerError(500, 'Internal Server Error')
+    network: new NetworkError({
+      message: 'Connection failed',
+      context: { url: '/api/representatives' },
+    }),
+    server: new ServerError(500, 'Internal Server Error'),
   };
 
   const BuggyComponent = () => {
     if (selectedError) {
       throw sampleErrors[selectedError as keyof typeof sampleErrors];
     }
-    return <div className="p-4 bg-green-50 text-green-800 rounded">Component working correctly!</div>;
+    return (
+      <div className="p-4 bg-green-50 text-green-800 rounded">Component working correctly!</div>
+    );
   };
 
   const demos = {
     validation: (
       <div className="space-y-6">
         <h3 className="text-lg font-semibold">Search Validation</h3>
-        <p className="text-gray-600">Try entering invalid ZIP codes or addresses to see specific error messages:</p>
-        
+        <p className="text-gray-600">
+          Try entering invalid ZIP codes or addresses to see specific error messages:
+        </p>
+
         <div className="max-w-md">
           <SearchValidation
             onValidSearch={(query, type) => {
@@ -60,12 +67,22 @@ export function ErrorSystemDemo() {
         </div>
 
         <div className="text-sm text-gray-600 space-y-2">
-          <p><strong>Try these invalid inputs:</strong></p>
+          <p>
+            <strong>Try these invalid inputs:</strong>
+          </p>
           <ul className="list-disc list-inside space-y-1">
-            <li><code>1234</code> - Too short ZIP code</li>
-            <li><code>abc</code> - Non-numeric ZIP code</li>
-            <li><code>main st</code> - Address without street number</li>
-            <li><code>48201</code> - Valid ZIP code (should work)</li>
+            <li>
+              <code>1234</code> - Too short ZIP code
+            </li>
+            <li>
+              <code>abc</code> - Non-numeric ZIP code
+            </li>
+            <li>
+              <code>main st</code> - Address without street number
+            </li>
+            <li>
+              <code>48201</code> - Valid ZIP code (should work)
+            </li>
           </ul>
         </div>
       </div>
@@ -77,8 +94,8 @@ export function ErrorSystemDemo() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">ZIP Code</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               className="w-full px-3 py-2 border border-red-300 rounded bg-red-50"
               value="1234"
               readOnly
@@ -88,8 +105,8 @@ export function ErrorSystemDemo() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               className="w-full px-3 py-2 border border-red-300 rounded bg-red-50"
               value="main street"
               readOnly
@@ -106,7 +123,7 @@ export function ErrorSystemDemo() {
         <div className="space-y-4">
           <select
             value={selectedError}
-            onChange={(e) => setSelectedError(e.target.value)}
+            onChange={e => setSelectedError(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg"
           >
             <option value="">Select an error type</option>
@@ -126,7 +143,9 @@ export function ErrorSystemDemo() {
               onRetry={() => setSelectedError('')}
               onFeedback={(helpful, comment) => {
                 console.log('Feedback:', { helpful, comment });
-                alert(`Feedback recorded: ${helpful ? 'Helpful' : 'Not helpful'}${comment ? ` - "${comment}"` : ''}`);
+                alert(
+                  `Feedback recorded: ${helpful ? 'Helpful' : 'Not helpful'}${comment ? ` - "${comment}"` : ''}`
+                );
               }}
             />
           )}
@@ -155,12 +174,13 @@ export function ErrorSystemDemo() {
       <div className="space-y-6">
         <h3 className="text-lg font-semibold">Error Boundary</h3>
         <p className="text-gray-600">
-          Select an error type and the component below will throw that error, demonstrating our error boundary:
+          Select an error type and the component below will throw that error, demonstrating our
+          error boundary:
         </p>
-        
+
         <select
           value={selectedError}
-          onChange={(e) => setSelectedError(e.target.value)}
+          onChange={e => setSelectedError(e.target.value)}
           className="px-3 py-2 border border-gray-300 rounded-lg"
         >
           <option value="">No error (component works)</option>
@@ -209,7 +229,7 @@ export function ErrorSystemDemo() {
           />
         )}
       </div>
-    )
+    ),
   };
 
   return (
@@ -223,7 +243,7 @@ export function ErrorSystemDemo() {
 
       {/* Navigation */}
       <div className="flex flex-wrap gap-2 mb-8 border-b border-gray-200">
-        {Object.keys(demos).map((demo) => (
+        {Object.keys(demos).map(demo => (
           <button
             key={demo}
             onClick={() => setActiveDemo(demo)}
@@ -256,7 +276,7 @@ export function ErrorSystemDemo() {
               <li>• Clear problem identification</li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="font-medium mb-2 text-blue-700">🔄 Recovery Actions</h3>
             <ul className="text-sm text-gray-600 space-y-1">
@@ -266,7 +286,7 @@ export function ErrorSystemDemo() {
               <li>• Clear next steps for users</li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="font-medium mb-2 text-purple-700">📊 User Feedback</h3>
             <ul className="text-sm text-gray-600 space-y-1">
@@ -276,7 +296,7 @@ export function ErrorSystemDemo() {
               <li>• Continuous improvement data</li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="font-medium mb-2 text-red-700">⚡ Smart Timeouts</h3>
             <ul className="text-sm text-gray-600 space-y-1">
@@ -286,7 +306,7 @@ export function ErrorSystemDemo() {
               <li>• No infinite loading states</li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="font-medium mb-2 text-orange-700">🎯 Contextual Help</h3>
             <ul className="text-sm text-gray-600 space-y-1">
@@ -296,7 +316,7 @@ export function ErrorSystemDemo() {
               <li>• Progressive disclosure</li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="font-medium mb-2 text-teal-700">🔍 Error Monitoring</h3>
             <ul className="text-sm text-gray-600 space-y-1">

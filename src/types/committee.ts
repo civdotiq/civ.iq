@@ -55,7 +55,7 @@ export interface Subcommittee {
 export interface CommitteeAPIResponse {
   committee: Committee;
   metadata: {
-    dataSource: 'congress.gov' | 'mock';
+    dataSource: 'congress.gov' | 'congress-legislators' | 'mock';
     lastUpdated: string;
     memberCount: number;
     subcommitteeCount: number;
@@ -69,6 +69,7 @@ export interface CommitteeAPIResponse {
 
 // Committee ID mapping for better URLs
 export const COMMITTEE_ID_MAP: Record<string, { name: string; chamber: string }> = {
+  // House committees - base IDs
   HSAG: { name: 'House Committee on Agriculture', chamber: 'House' },
   HSAG22: { name: 'House Committee on Agriculture', chamber: 'House' },
   HSHL: { name: 'House Committee on Homeland Security', chamber: 'House' },
@@ -122,13 +123,13 @@ export function getCommitteeDisplayName(committeeId: string): string {
   if (COMMITTEE_ID_MAP[committeeId]) {
     return COMMITTEE_ID_MAP[committeeId].name;
   }
-  
+
   // Extract base committee ID (e.g., "HSIF" from "HSIF03")
   const baseId = committeeId.replace(/\d+$/, '');
   if (baseId !== committeeId && COMMITTEE_ID_MAP[baseId]) {
     return COMMITTEE_ID_MAP[baseId].name;
   }
-  
+
   return `Committee ${committeeId}`;
 }
 
@@ -137,12 +138,12 @@ export function getCommitteeChamber(committeeId: string): string {
   if (COMMITTEE_ID_MAP[committeeId]) {
     return COMMITTEE_ID_MAP[committeeId].chamber;
   }
-  
+
   // Extract base committee ID
   const baseId = committeeId.replace(/\d+$/, '');
   if (baseId !== committeeId && COMMITTEE_ID_MAP[baseId]) {
     return COMMITTEE_ID_MAP[baseId].chamber;
   }
-  
+
   return 'Unknown';
 }

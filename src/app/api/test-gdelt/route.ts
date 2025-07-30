@@ -8,7 +8,7 @@ import {
   generateOptimizedSearchTerms,
   fetchGDELTNews,
   normalizeGDELTArticle,
-} from '@/lib/gdelt-api';
+} from '@/features/news/services/gdelt-api';
 import { structuredLogger } from '@/lib/logging/logger';
 
 export async function GET(request: NextRequest) {

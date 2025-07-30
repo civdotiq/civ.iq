@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { ProfileHeaderSkeleton, TabContentSkeleton } from '@/components/SkeletonLoader';
+import { ProfileHeaderSkeleton, TabContentSkeleton } from '@/shared/components/ui';
 
 export default function Loading() {
   return (

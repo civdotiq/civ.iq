@@ -15,7 +15,7 @@ import { scaleBand, scaleOrdinal, scaleLinear } from 'd3-scale';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { format } from 'd3-format';
 import { easeBackOut } from 'd3-ease';
-import { max } from 'd3-array';
+import { Users, Building2, MapPin } from 'lucide-react';
 import NationalStatsCards from '@/components/NationalStatsCards';
 import StateInfoPanel from '@/components/StateInfoPanel';
 
@@ -197,330 +197,263 @@ function DistrictCard({ district }: { district: District }) {
   );
 }
 
-// Enhanced Competitiveness Distribution Chart
-function CompetitivenessChart({ districts }: { districts: District[] }) {
-  const [tooltip, setTooltip] = useState<{
-    visible: boolean;
-    x: number;
-    y: number;
-    content: string;
-  }>({ visible: false, x: 0, y: 0, content: '' });
+// Enhanced Demographics Dashboard
+function DemographicsDashboard({
+  districts,
+  selectedState,
+}: {
+  districts: District[];
+  selectedState?: string;
+}) {
+  // Handle empty districts array
+  if (!districts || districts.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          {selectedState ? `${selectedState} Demographics` : 'National Demographics Overview'}
+        </h2>
+        <p className="text-gray-600">Loading district data...</p>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    const container = select('#competitiveness-chart');
-    container.selectAll('*').remove();
+  // Filter districts by state if selected
+  const filteredDistricts =
+    selectedState && selectedState !== 'all'
+      ? districts.filter(d => d.state === selectedState)
+      : districts;
 
-    const margin = { top: 40, right: 40, bottom: 80, left: 80 };
-    const width = 800 - margin.left - margin.right;
-    const height = 450 - margin.top - margin.bottom;
+  // Calculate comprehensive statistics
+  const stats = {
+    // Basic counts
+    totalDistricts: filteredDistricts.length,
+    democraticDistricts: filteredDistricts.filter(d => d.representative.party === 'D').length,
+    republicanDistricts: filteredDistricts.filter(d => d.representative.party === 'R').length,
 
-    const svg = container
-      .append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+    // Population stats
+    totalPopulation: filteredDistricts.reduce((sum, d) => sum + d.demographics.population, 0),
+    avgPopulation:
+      filteredDistricts.reduce((sum, d) => sum + d.demographics.population, 0) /
+      filteredDistricts.length,
 
-    // Process data into competitiveness categories
-    const processedData = districts.map(d => {
+    // Economic stats
+    avgMedianIncome:
+      filteredDistricts.reduce((sum, d) => sum + d.demographics.medianIncome, 0) /
+      filteredDistricts.length,
+    highestIncome: Math.max(...filteredDistricts.map(d => d.demographics.medianIncome)),
+    lowestIncome: Math.min(...filteredDistricts.map(d => d.demographics.medianIncome)),
+
+    // Demographics
+    avgMedianAge:
+      filteredDistricts.reduce((sum, d) => sum + d.demographics.medianAge, 0) /
+      filteredDistricts.length,
+    avgUrbanPercentage:
+      filteredDistricts.reduce((sum, d) => sum + d.demographics.urbanPercentage, 0) /
+      filteredDistricts.length,
+    avgDiversityIndex:
+      filteredDistricts.reduce((sum, d) => sum + d.demographics.diversityIndex, 0) /
+      filteredDistricts.length,
+
+    // Political stats
+    avgElectionMargin:
+      filteredDistricts.reduce((sum, d) => sum + d.political.lastElection.margin, 0) /
+      filteredDistricts.length,
+    avgTurnout:
+      filteredDistricts.reduce((sum, d) => sum + d.political.lastElection.turnout, 0) /
+      filteredDistricts.length,
+    competitiveDistricts: filteredDistricts.filter(d => {
       const pvi = d.political.cookPVI;
-      let pviValue = 0;
-      let category = 'Toss-up';
+      if (pvi === 'EVEN') return true;
+      const match = pvi.match(/[DR]\+(\d+)/);
+      return match && parseInt(match[1] || '0') <= 5;
+    }).length,
+  };
 
-      if (pvi !== 'EVEN') {
-        const match = pvi.match(/([DR])\+(\d+)/);
-        if (match) {
-          pviValue = parseInt(match[2]) * (match[1] === 'D' ? -1 : 1);
+  // Get top districts by various metrics
+  const topByPopulation = [...filteredDistricts]
+    .sort((a, b) => b.demographics.population - a.demographics.population)
+    .slice(0, 5);
 
-          // Categorize based on standard political science definitions
-          if (pviValue <= -10) category = 'Safe D';
-          else if (pviValue <= -5) category = 'Likely D';
-          else if (pviValue <= -2) category = 'Lean D';
-          else if (pviValue < 2) category = 'Toss-up';
-          else if (pviValue < 5) category = 'Lean R';
-          else if (pviValue < 10) category = 'Likely R';
-          else category = 'Safe R';
-        }
-      }
+  const topByIncome = [...filteredDistricts]
+    .sort((a, b) => b.demographics.medianIncome - a.demographics.medianIncome)
+    .slice(0, 5);
 
-      return {
-        district: `${d.state}-${d.number}`,
-        pviValue,
-        category,
-        party: d.representative.party,
-        population: d.demographics.population,
-        name: d.name,
-      };
-    });
-
-    // Group data by category
-    const categories = ['Safe D', 'Likely D', 'Lean D', 'Toss-up', 'Lean R', 'Likely R', 'Safe R'];
-    const categoryData = categories.map(cat => ({
-      category: cat,
-      count: processedData.filter(d => d.category === cat).length,
-      districts: processedData.filter(d => d.category === cat),
-    }));
-
-    // Color scheme for categories
-    const colorScale = scaleOrdinal<string>()
-      .domain(categories)
-      .range(['#1e40af', '#3b82f6', '#60a5fa', '#9ca3af', '#f87171', '#ef4444', '#dc2626']);
-
-    // Create scales
-    const x = scaleBand().domain(categories).range([0, width]).padding(0.2);
-
-    const y = scaleLinear()
-      .domain([0, max(categoryData, d => d.count) || 0])
-      .range([height, 0]);
-
-    // Add title
-    svg
-      .append('text')
-      .attr('x', width / 2)
-      .attr('y', -15)
-      .attr('text-anchor', 'middle')
-      .style('font-size', '16px')
-      .style('font-weight', 'bold')
-      .text('Distribution of Districts by Partisan Lean (Cook PVI)');
-
-    // Add x-axis
-    svg
-      .append('g')
-      .attr('transform', `translate(0,${height})`)
-      .call(axisBottom(x))
-      .selectAll('text')
-      .style('font-size', '12px')
-      .attr('transform', 'rotate(-45)')
-      .style('text-anchor', 'end')
-      .attr('dx', '-.8em')
-      .attr('dy', '.15em');
-
-    // Add y-axis
-    svg
-      .append('g')
-      .call(axisLeft(y).tickFormat(format('d')))
-      .selectAll('text')
-      .style('font-size', '12px');
-
-    // Add y-axis label
-    svg
-      .append('text')
-      .attr('transform', 'rotate(-90)')
-      .attr('y', 0 - margin.left)
-      .attr('x', 0 - height / 2)
-      .attr('dy', '1em')
-      .style('text-anchor', 'middle')
-      .style('font-size', '14px')
-      .style('font-weight', '500')
-      .text('Number of Districts');
-
-    // Add x-axis label
-    svg
-      .append('text')
-      .attr('transform', `translate(${width / 2}, ${height + margin.bottom - 10})`)
-      .style('text-anchor', 'middle')
-      .style('font-size', '14px')
-      .style('font-weight', '500')
-      .text('Competitiveness Category');
-
-    // Add bars with animation
-    const bars = svg
-      .selectAll('.bar')
-      .data(categoryData)
-      .enter()
-      .append('rect')
-      .attr('class', 'bar')
-      .attr('x', d => x(d.category) || 0)
-      .attr('width', x.bandwidth())
-      .attr('y', height)
-      .attr('height', 0)
-      .attr('fill', d => colorScale(d.category))
-      .attr('stroke', '#fff')
-      .attr('stroke-width', 1)
-      .style('cursor', 'pointer');
-
-    // Animate bars
-    bars
-      .transition()
-      .duration(800)
-      .ease(easeBackOut)
-      .attr('y', d => y(d.count))
-      .attr('height', d => height - y(d.count));
-
-    // Add count labels on bars
-    svg
-      .selectAll('.count-label')
-      .data(categoryData)
-      .enter()
-      .append('text')
-      .attr('class', 'count-label')
-      .attr('x', d => (x(d.category) || 0) + x.bandwidth() / 2)
-      .attr('y', height)
-      .attr('text-anchor', 'middle')
-      .style('font-size', '14px')
-      .style('font-weight', 'bold')
-      .style('fill', '#fff')
-      .text(d => d.count)
-      .transition()
-      .duration(800)
-      .delay(400)
-      .attr('y', d => y(d.count) + 20);
-
-    // Add interactivity
-    bars
-      .on('mouseover', function (event, d) {
-        select(this).attr('opacity', 0.8).attr('stroke', '#000').attr('stroke-width', 2);
-
-        const [mouseX, mouseY] = pointer(event, svg.node());
-        setTooltip({
-          visible: true,
-          x: mouseX + margin.left,
-          y: mouseY + margin.top,
-          content: `${d.category}: ${d.count} districts\n${d.districts
-            .slice(0, 5)
-            .map(dist => dist.district)
-            .join(', ')}${d.count > 5 ? `\n+${d.count - 5} more...` : ''}`,
-        });
-      })
-      .on('mouseout', function () {
-        select(this).attr('opacity', 1).attr('stroke', '#fff').attr('stroke-width', 1);
-
-        setTooltip({ visible: false, x: 0, y: 0, content: '' });
-      });
-
-    // Add center line for even districts
-    const evenPosition = x('Toss-up');
-    if (evenPosition !== undefined) {
-      svg
-        .append('line')
-        .attr('x1', evenPosition + x.bandwidth() / 2)
-        .attr('x2', evenPosition + x.bandwidth() / 2)
-        .attr('y1', 0)
-        .attr('y2', height)
-        .attr('stroke', '#374151')
-        .attr('stroke-width', 2)
-        .attr('stroke-dasharray', '5,5')
-        .attr('opacity', 0.5);
-    }
-
-    // Add explanatory text
-    svg
-      .append('text')
-      .attr('x', width / 2)
-      .attr('y', height + 60)
-      .attr('text-anchor', 'middle')
-      .style('font-size', '12px')
-      .style('fill', '#6b7280')
-      .text(
-        'Cook Partisan Voting Index (PVI): Measures how much a district leans compared to national average'
-      );
-  }, [districts]);
+  const mostUrban = [...filteredDistricts]
+    .sort((a, b) => b.demographics.urbanPercentage - a.demographics.urbanPercentage)
+    .slice(0, 5);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 relative">
-      <div className="mb-4">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
-          District Competitiveness Distribution
+    <div className="bg-white rounded-lg shadow-lg p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          {selectedState && selectedState !== 'all'
+            ? `${selectedState} Demographics`
+            : 'National Demographics Overview'}
         </h2>
-        <p className="text-sm text-gray-600">
-          Shows how districts are distributed across the competitive spectrum using Cook PVI
-          ratings.
+        <p className="text-gray-600">
+          Comprehensive demographic and political analysis of {stats.totalDistricts} congressional
+          districts
         </p>
       </div>
 
-      <div id="competitiveness-chart"></div>
-
-      {/* Legend */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">Category Definitions:</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-gray-600">
-          <div>
-            <strong>Safe:</strong> PVI ±10+
-          </div>
-          <div>
-            <strong>Likely:</strong> PVI ±5 to ±9
-          </div>
-          <div>
-            <strong>Lean:</strong> PVI ±2 to ±4
-          </div>
-          <div>
-            <strong>Toss-up:</strong> PVI ±1 or Even
-          </div>
+      {/* Main Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+        <div className="text-center p-4 bg-gray-50 rounded-lg">
+          <div className="text-3xl font-bold text-blue-600">{stats.totalDistricts}</div>
+          <p className="text-sm text-gray-600 mt-1">Total Districts</p>
+          <p className="text-xs text-gray-500 mt-1">
+            D: {stats.democraticDistricts} | R: {stats.republicanDistricts}
+          </p>
         </div>
-      </div>
 
-      {/* Tooltip */}
-      {tooltip.visible && (
-        <div
-          className="absolute bg-gray-900 text-white px-3 py-2 rounded text-sm pointer-events-none z-10 max-w-xs"
-          style={{ left: tooltip.x, top: tooltip.y }}
-        >
-          {tooltip.content.split('\n').map((line, i) => (
-            <div key={i}>{line}</div>
-          ))}
+        <div className="text-center p-4 bg-gray-50 rounded-lg">
+          <div className="text-3xl font-bold text-green-600">
+            {(stats.totalPopulation / 1000000).toFixed(1)}M
+          </div>
+          <p className="text-sm text-gray-600 mt-1">Total Population</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Avg: {Math.round(stats.avgPopulation).toLocaleString()}
+          </p>
         </div>
-      )}
-    </div>
-  );
-}
 
-// Demographics comparison
-function DemographicsComparison({ districts }: { districts: District[] }) {
-  const avgData = {
-    medianIncome:
-      districts.reduce((sum, d) => sum + d.demographics.medianIncome, 0) / districts.length,
-    medianAge: districts.reduce((sum, d) => sum + d.demographics.medianAge, 0) / districts.length,
-    urbanPercentage:
-      districts.reduce((sum, d) => sum + d.demographics.urbanPercentage, 0) / districts.length,
-    diversityIndex:
-      districts.reduce((sum, d) => sum + d.demographics.diversityIndex, 0) / districts.length,
-  };
-
-  return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Demographics Overview</h2>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="text-center">
-          <div className="text-3xl font-bold text-blue-600">
-            ${Math.round(avgData.medianIncome / 1000)}k
+        <div className="text-center p-4 bg-gray-50 rounded-lg">
+          <div className="text-3xl font-bold text-purple-600">
+            ${Math.round(stats.avgMedianIncome / 1000)}k
           </div>
           <p className="text-sm text-gray-600 mt-1">Avg. Median Income</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Range: ${Math.round(stats.lowestIncome / 1000)}k - $
+            {Math.round(stats.highestIncome / 1000)}k
+          </p>
         </div>
-        <div className="text-center">
-          <div className="text-3xl font-bold text-green-600">{avgData.medianAge.toFixed(1)}</div>
-          <p className="text-sm text-gray-600 mt-1">Avg. Median Age</p>
-        </div>
-        <div className="text-center">
-          <div className="text-3xl font-bold text-purple-600">
-            {avgData.urbanPercentage.toFixed(0)}%
+
+        <div className="text-center p-4 bg-gray-50 rounded-lg">
+          <div className="text-3xl font-bold text-orange-600">
+            {stats.avgUrbanPercentage.toFixed(0)}%
           </div>
           <p className="text-sm text-gray-600 mt-1">Urban Population</p>
-        </div>
-        <div className="text-center">
-          <div className="text-3xl font-bold text-orange-600">
-            {avgData.diversityIndex.toFixed(1)}
-          </div>
-          <p className="text-sm text-gray-600 mt-1">Diversity Index</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Diversity Index: {stats.avgDiversityIndex.toFixed(1)}
+          </p>
         </div>
       </div>
 
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <h3 className="font-semibold text-gray-700 mb-3">Top Districts by Population</h3>
-        <div className="space-y-2">
-          {districts
-            .sort((a, b) => b.demographics.population - a.demographics.population)
-            .slice(0, 5)
-            .map((district, index) => (
-              <div key={district.id} className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">
+      {/* Secondary Stats Row */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 p-4 bg-blue-50 rounded-lg">
+        <div className="text-center">
+          <div className="text-xl font-semibold text-blue-900">{stats.avgMedianAge.toFixed(1)}</div>
+          <p className="text-xs text-blue-700">Median Age</p>
+        </div>
+        <div className="text-center">
+          <div className="text-xl font-semibold text-blue-900">{stats.competitiveDistricts}</div>
+          <p className="text-xs text-blue-700">Competitive Districts</p>
+        </div>
+        <div className="text-center">
+          <div className="text-xl font-semibold text-blue-900">{stats.avgTurnout.toFixed(0)}%</div>
+          <p className="text-xs text-blue-700">Avg. Voter Turnout</p>
+        </div>
+        <div className="text-center">
+          <div className="text-xl font-semibold text-blue-900">
+            {stats.avgElectionMargin.toFixed(1)}%
+          </div>
+          <p className="text-xs text-blue-700">Avg. Victory Margin</p>
+        </div>
+        <div className="text-center">
+          <div className="text-xl font-semibold text-blue-900">
+            {Math.round(
+              filteredDistricts.reduce((sum, d) => sum + d.political.registeredVoters, 0) / 1000000
+            )}
+            M
+          </div>
+          <p className="text-xs text-blue-700">Registered Voters</p>
+        </div>
+      </div>
+
+      {/* Rankings Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Most Populous Districts */}
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
+            <Users className="w-4 h-4 mr-2 text-blue-600" />
+            Most Populous Districts
+          </h3>
+          <div className="space-y-2">
+            {topByPopulation.map((district, index) => (
+              <div key={district.id} className="flex items-center justify-between text-sm">
+                <span className="text-gray-700">
                   {index + 1}. {district.state}-{district.number}
                 </span>
-                <span className="text-sm font-medium">
+                <span className="font-medium text-gray-900">
                   {district.demographics.population.toLocaleString()}
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Highest Income Districts */}
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
+            <Building2 className="w-4 h-4 mr-2 text-green-600" />
+            Highest Income Districts
+          </h3>
+          <div className="space-y-2">
+            {topByIncome.map((district, index) => (
+              <div key={district.id} className="flex items-center justify-between text-sm">
+                <span className="text-gray-700">
+                  {index + 1}. {district.state}-{district.number}
+                </span>
+                <span className="font-medium text-gray-900">
+                  ${district.demographics.medianIncome.toLocaleString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Most Urban Districts */}
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
+            <MapPin className="w-4 h-4 mr-2 text-purple-600" />
+            Most Urban Districts
+          </h3>
+          <div className="space-y-2">
+            {mostUrban.map((district, index) => (
+              <div key={district.id} className="flex items-center justify-between text-sm">
+                <span className="text-gray-700">
+                  {index + 1}. {district.state}-{district.number}
+                </span>
+                <span className="font-medium text-gray-900">
+                  {district.demographics.urbanPercentage.toFixed(0)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Political Balance Visualization */}
+      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+        <h3 className="font-semibold text-gray-800 mb-3">Political Balance</h3>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-gray-600">Party Control</span>
+          <span className="text-sm text-gray-600">
+            D: {((stats.democraticDistricts / stats.totalDistricts) * 100).toFixed(1)}% | R:{' '}
+            {((stats.republicanDistricts / stats.totalDistricts) * 100).toFixed(1)}%
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+          <div className="h-full flex">
+            <div
+              className="bg-blue-600 h-full transition-all duration-500"
+              style={{ width: `${(stats.democraticDistricts / stats.totalDistricts) * 100}%` }}
+            />
+            <div
+              className="bg-red-600 h-full transition-all duration-500"
+              style={{ width: `${(stats.republicanDistricts / stats.totalDistricts) * 100}%` }}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -559,24 +492,41 @@ export default function DistrictsPage() {
     setLoading(true);
     try {
       // Fetch real district data from our representatives API
-      const response = await fetch('/api/districts/all');
+      // Bust cache on first load to get fresh data
+      const url = districts.length === 0 ? '/api/districts/all?bust=true' : '/api/districts/all';
+      const response = await fetch(url);
+      console.log('Districts API response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
-        setDistricts(data.districts);
+        console.log('Districts API returned:', data.districts?.length, 'districts');
+        if (data.districts && data.districts.length > 0) {
+          setDistricts(data.districts);
+        } else {
+          throw new Error('No districts returned from API');
+        }
       } else {
-        throw new Error('Failed to fetch districts');
+        const errorData = await response.json();
+        console.error('Districts API error:', errorData);
+        console.error('Error details:', errorData.details);
+        throw new Error(
+          `Failed to fetch districts: ${response.status} - ${errorData.details || errorData.error}`
+        );
       }
-    } catch {
+    } catch (error) {
+      console.error('Error fetching districts:', error);
       // Error will be handled by the error boundary
 
       // Fallback: Generate districts from our 538 representatives
       const mockDistricts: District[] = Array.from({ length: 20 }, (_, i) => ({
         id: `district-${i}`,
-        state: ['CA', 'TX', 'NY', 'FL', 'PA'][i % 5],
+        state: ['CA', 'TX', 'NY', 'FL', 'PA'][i % 5] || 'Unknown',
         number: String((i % 10) + 1),
         name: `${['California', 'Texas', 'New York', 'Florida', 'Pennsylvania'][i % 5]} ${(i % 10) + 1}${['st', 'nd', 'rd', 'th'][Math.min(i % 10, 3)]} District`,
         representative: {
-          name: ['John Smith', 'Jane Doe', 'Bob Johnson', 'Mary Williams'][i % 4],
+          name:
+            ['John Smith', 'Jane Doe', 'Bob Johnson', 'Mary Williams'][i % 4] ||
+            'Unknown Representative',
           party: i % 3 === 0 ? 'D' : 'R',
           imageUrl: undefined,
         },
@@ -645,7 +595,7 @@ export default function DistrictsPage() {
       const pvi = district.political.cookPVI;
       if (pvi === 'EVEN') return true;
       const match = pvi.match(/[DR]\+(\d+)/);
-      return match && parseInt(match[1]) <= 5;
+      return match && parseInt(match[1] || '0') <= 5;
     }
     if (filter === 'safe-d') {
       return district.political.cookPVI.startsWith('D+');
@@ -659,13 +609,16 @@ export default function DistrictsPage() {
 
   const states = Array.from(new Set(districts.map(d => d.state))).sort();
 
-  const districtMapData = districts.map(d => ({
-    id: d.id,
-    name: `${d.state}-${d.number}`,
-    party: d.representative.party === 'D' ? 'Democratic' : 'Republican',
-    competitiveness: Math.abs(d.political.lastElection.margin),
-    population: d.demographics.population,
-  }));
+  const districtMapData =
+    districts.length > 0
+      ? districts.map(d => ({
+          id: d.id,
+          name: `${d.state}-${d.number}`,
+          party: d.representative.party === 'D' ? 'Democratic' : 'Republican',
+          competitiveness: Math.abs(d.political.lastElection.margin),
+          population: d.demographics.population,
+        }))
+      : [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -811,10 +764,9 @@ export default function DistrictsPage() {
               </div>
             </div>
 
-            {/* Summary statistics */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-              <CompetitivenessChart districts={filteredDistricts} />
-              <DemographicsComparison districts={filteredDistricts} />
+            {/* Demographics Dashboard */}
+            <div className="mb-8">
+              <DemographicsDashboard districts={filteredDistricts} selectedState={stateFilter} />
             </div>
 
             {/* District grid */}

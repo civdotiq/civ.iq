@@ -11,6 +11,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { DistrictCharts } from '@/components/DistrictCharts';
+import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 
 // Dynamic import of the map component to avoid SSR issues
 const DistrictBoundaryMap = dynamic(() => import('@/components/DistrictBoundaryMap'), {
@@ -264,19 +265,11 @@ export default function DistrictDetailPage() {
           <div className="border-t border-gray-200 pt-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Current Representative</h2>
             <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
-                {district.representative.imageUrl ? (
-                  <Image
-                    src={district.representative.imageUrl}
-                    alt={district.representative.name}
-                    width={80}
-                    height={80}
-                    className="object-cover"
-                  />
-                ) : (
-                  <span className="text-sm text-gray-600">Photo</span>
-                )}
-              </div>
+              <RepresentativePhoto
+                bioguideId={district.representative.bioguideId}
+                name={district.representative.name}
+                size="lg"
+              />
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">{district.representative.name}</h3>
                 <p className="text-lg text-gray-600">
@@ -1281,7 +1274,7 @@ export default function DistrictDetailPage() {
                         {district.political.cookPVI === 'EVEN'
                           ? 'High'
                           : district.political.cookPVI.includes('+') &&
-                              parseInt(district.political.cookPVI.split('+')[1]) < 5
+                              parseInt(district.political.cookPVI.split('+')[1] || '0') < 5
                             ? 'Medium'
                             : 'Low'}
                       </div>

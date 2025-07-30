@@ -7,8 +7,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { RepresentativeProfileClient } from './client-wrapper';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { RepresentativePageSidebar } from '@/components/RepresentativePageSidebar';
-import RepresentativePhoto from '@/components/RepresentativePhoto';
+import { RepresentativePageSidebar } from '@/features/representatives/components/RepresentativePageSidebar';
+import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 
 // Client-side components will be dynamically imported in the client wrapper
 
@@ -51,6 +51,8 @@ interface RepresentativeDetails {
   committees?: Array<{
     name: string;
     role?: string;
+    thomas_id?: string;
+    id?: string;
   }>;
   fullName?: {
     first: string;

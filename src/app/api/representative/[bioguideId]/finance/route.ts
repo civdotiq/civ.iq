@@ -174,30 +174,31 @@ async function findFECCandidate(
         if (representativeName.includes(',')) {
           const parts = representativeName.split(',').map(p => p.trim());
           if (parts.length >= 2) {
-            const lastName = parts[0].replace(/^(Rep\.|Representative|Senator|Sen\.)\s+/i, '');
-            const firstName = parts[1].split(' ')[0]; // Get first name only
+            const lastName =
+              parts[0]?.replace(/^(Rep\.|Representative|Senator|Sen\.)\s+/i, '') || '';
+            const firstName = parts[1]?.split(' ')[0] || ''; // Get first name only
             nameVariants.add(`${firstName} ${lastName}`);
             nameVariants.add(lastName);
             nameVariants.add(`${lastName}, ${firstName}`);
-            nameVariants.add(`${lastName.toUpperCase()}, ${firstName.toUpperCase()}`);
+            nameVariants.add(`${lastName?.toUpperCase() || ''}, ${firstName?.toUpperCase() || ''}`);
           }
         } else {
           // Handle "First Last" format
           const nameParts = searchName.split(' ');
           if (nameParts.length >= 2) {
-            const firstName = nameParts[0];
-            const lastName = nameParts[nameParts.length - 1];
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts[nameParts.length - 1] || '';
             nameVariants.add(lastName); // Last name only
             nameVariants.add(`${lastName}, ${firstName}`); // Formal format
-            nameVariants.add(`${lastName.toUpperCase()}, ${firstName.toUpperCase()}`); // Uppercase formal
+            nameVariants.add(`${lastName?.toUpperCase() || ''}, ${firstName?.toUpperCase() || ''}`); // Uppercase formal
 
             // Add middle initials variants
             if (nameParts.length > 2) {
-              const middleInitial = nameParts[1].charAt(0);
+              const middleInitial = nameParts[1]?.charAt(0) || '';
               nameVariants.add(`${firstName} ${middleInitial} ${lastName}`);
               nameVariants.add(`${lastName}, ${firstName} ${middleInitial}`);
               nameVariants.add(
-                `${lastName.toUpperCase()}, ${firstName.toUpperCase()} ${middleInitial.toUpperCase()}`
+                `${lastName?.toUpperCase() || ''}, ${firstName?.toUpperCase() || ''} ${middleInitial?.toUpperCase() || ''}`
               );
             }
           }
@@ -459,7 +460,7 @@ function getNameMatchScore(fecName: string, originalName: string): number {
     const fecMiddle = fecParts[1];
     const origMiddle = origParts[1];
     if (fecMiddle === origMiddle) score += 10;
-    if (fecMiddle.charAt(0) === origMiddle.charAt(0)) score += 5;
+    if (fecMiddle?.charAt(0) === origMiddle?.charAt(0)) score += 5;
   }
 
   // Penalize length differences
@@ -920,7 +921,9 @@ export async function GET(
 
         // Try to get enhanced representative data for better FEC matching
         try {
-          const { getEnhancedRepresentative } = await import('@/lib/congress-legislators');
+          const { getEnhancedRepresentative } = await import(
+            '@/features/representatives/services/congress.service'
+          );
           enhancedRep = await getEnhancedRepresentative(bioguideId);
 
           // Use FEC IDs from congress-legislators if available
@@ -930,7 +933,7 @@ export async function GET(
             | undefined;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if (enhancedRepIds?.fec && enhancedRepIds.fec.length > 0) {
-            mappedFECId = enhancedRepIds.fec[0]; // Use the first FEC ID
+            mappedFECId = enhancedRepIds.fec[0] || null; // Use the first FEC ID
             structuredLogger.info('Found enhanced FEC ID from congress-legislators', {
               bioguideId,
               fecId: mappedFECId,

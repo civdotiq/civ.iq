@@ -5,10 +5,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { BillSummaryCache } from '@/lib/ai/bill-summary-cache';
+import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
 import { structuredLogger } from '@/lib/logging/logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
-import type { BillSummary } from '@/lib/ai/bill-summarizer';
+import type { BillSummary } from '@/features/legislation/services/ai/bill-summarizer';
 
 interface SponsoredBill {
   billId: string;

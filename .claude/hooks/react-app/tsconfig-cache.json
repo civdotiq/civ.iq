@@ -1,47 +1,27 @@
 {
   "hashes": {
-    "/mnt/d/civic-intel-hub/tsconfig.json": "e1da25307928849d39cc3d03048e75deba0b8436ed6fd52a0d6bdbb6cf1b5732"
+    "/mnt/d/civic-intel-hub/tsconfig.json": "cfc8eb2db5e0ebe8a3593ddababd831c8e574ac7c004bcbfdf90b7af2065d97f"
   },
   "mappings": {
     "next-env.d.ts": {
       "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
-      "excludes": [
-        "node_modules",
-        "scripts",
-        "archived-features"
-      ]
+      "excludes": ["node_modules", "scripts", "archived-features"]
     },
     "**/*.ts": {
       "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
-      "excludes": [
-        "node_modules",
-        "scripts",
-        "archived-features"
-      ]
+      "excludes": ["node_modules", "scripts", "archived-features"]
     },
     "**/*.tsx": {
       "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
-      "excludes": [
-        "node_modules",
-        "scripts",
-        "archived-features"
-      ]
+      "excludes": ["node_modules", "scripts", "archived-features"]
     },
     ".next/types/**/*.ts": {
       "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
-      "excludes": [
-        "node_modules",
-        "scripts",
-        "archived-features"
-      ]
+      "excludes": ["node_modules", "scripts", "archived-features"]
     },
     "jest.setup.js": {
       "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
-      "excludes": [
-        "node_modules",
-        "scripts",
-        "archived-features"
-      ]
+      "excludes": ["node_modules", "scripts", "archived-features"]
     }
   }
 }

@@ -320,9 +320,9 @@ export function loadChunk(chunkName: string): Promise<unknown> {
     case 'analytics':
       return import('../components/analytics/VotingTrendsChart');
     case 'news-feed':
-      return import('../components/EnhancedNewsFeed');
+      return import('../features/news/components/EnhancedNewsFeed');
     case 'advanced-search':
-      return import('../components/AdvancedSearch');
+      return import('../features/search/components/AdvancedSearch');
     default:
       throw new Error(`Unknown chunk: ${chunkName}`);
   }

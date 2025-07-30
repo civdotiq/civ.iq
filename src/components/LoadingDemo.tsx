@@ -6,29 +6,32 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Spinner, 
-  ProgressBar, 
-  LoadingMessage, 
-  LoadingStateWrapper 
-} from '@/components/ui/LoadingStates';
-import { 
-  RepresentativeSkeleton, 
-  VotingRecordsSkeleton, 
+import {
+  Spinner,
+  ProgressBar,
+  LoadingMessage,
+  LoadingStateWrapper,
+} from '@/shared/components/ui/LoadingStates';
+import {
+  RepresentativeSkeleton,
+  VotingRecordsSkeleton,
   SearchResultsSkeleton,
   DistrictMapSkeleton,
-  CampaignFinanceSkeleton
-} from '@/components/ui/SkeletonComponents';
+  CampaignFinanceSkeleton,
+} from '@/shared/components/ui/SkeletonComponents';
 import { useSmartLoading, useMultiStageLoading } from '@/hooks/useSmartLoading';
 
 export function LoadingDemo() {
   const [activeDemo, setActiveDemo] = useState<string>('spinners');
-  
+
   // Demo with smart loading hook
-  const smartLoading = useSmartLoading(async () => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 3000));
-  }, { timeout: 5000 });
+  const smartLoading = useSmartLoading(
+    async () => {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    },
+    { timeout: 5000 }
+  );
 
   // Demo with multi-stage loading
   const multiStageLoading = useMultiStageLoading([
@@ -36,17 +39,17 @@ export function LoadingDemo() {
     'Authenticating...',
     'Loading data...',
     'Processing results...',
-    'Finalizing...'
+    'Finalizing...',
   ]);
 
   const startMultiStageDemo = async () => {
     multiStageLoading.start();
-    
+
     for (let i = 0; i < 5; i++) {
       await new Promise(resolve => setTimeout(resolve, 800));
       if (i < 4) multiStageLoading.nextStage();
     }
-    
+
     multiStageLoading.complete();
   };
 
@@ -68,7 +71,7 @@ export function LoadingDemo() {
             <p className="text-sm mt-2">Large</p>
           </div>
         </div>
-        
+
         <div className="space-y-4">
           <h4 className="font-medium">Different Colors</h4>
           <div className="flex items-center gap-6">
@@ -79,7 +82,7 @@ export function LoadingDemo() {
         </div>
       </div>
     ),
-    
+
     progress: (
       <div className="space-y-6">
         <h3 className="text-lg font-semibold">Progress Indicators</h3>
@@ -88,22 +91,22 @@ export function LoadingDemo() {
         <ProgressBar progress={90} label="Almost Complete" showPercentage />
       </div>
     ),
-    
+
     messages: (
       <div className="space-y-6">
         <h3 className="text-lg font-semibold">Loading Messages</h3>
-        <LoadingMessage 
+        <LoadingMessage
           message="Finding Your Representatives"
           submessage="Looking up your district and gathering representative information..."
         />
-        <LoadingMessage 
+        <LoadingMessage
           message="Processing Data"
           submessage="This may take a moment..."
           showSpinner={false}
         />
       </div>
     ),
-    
+
     skeletons: (
       <div className="space-y-6">
         <h3 className="text-lg font-semibold">Skeleton Screens</h3>
@@ -127,7 +130,7 @@ export function LoadingDemo() {
         </div>
       </div>
     ),
-    
+
     smart: (
       <div className="space-y-6">
         <h3 className="text-lg font-semibold">Smart Loading with Timeout & Retry</h3>
@@ -152,7 +155,7 @@ export function LoadingDemo() {
             Reset
           </button>
         </div>
-        
+
         <LoadingStateWrapper
           loading={smartLoading.loading}
           error={smartLoading.error}
@@ -165,7 +168,7 @@ export function LoadingDemo() {
             <p className="text-green-600 mt-1">Data loaded successfully.</p>
           </div>
         </LoadingStateWrapper>
-        
+
         {smartLoading.showTimeout && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-yellow-800 text-sm">
@@ -175,7 +178,7 @@ export function LoadingDemo() {
         )}
       </div>
     ),
-    
+
     multistage: (
       <div className="space-y-6">
         <h3 className="text-lg font-semibold">Multi-Stage Loading</h3>
@@ -194,21 +197,21 @@ export function LoadingDemo() {
             Reset
           </button>
         </div>
-        
+
         <div className="space-y-4">
-          <ProgressBar 
-            progress={multiStageLoading.progress} 
+          <ProgressBar
+            progress={multiStageLoading.progress}
             label={multiStageLoading.currentStage}
             showPercentage
           />
-          
+
           {multiStageLoading.loading && (
-            <LoadingMessage 
+            <LoadingMessage
               message={multiStageLoading.currentStage}
               submessage={`Step ${multiStageLoading.currentStageIndex + 1} of 5`}
             />
           )}
-          
+
           {!multiStageLoading.loading && multiStageLoading.progress === 100 && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
               <p className="text-green-800 font-medium">✓ All Stages Complete!</p>
@@ -216,7 +219,7 @@ export function LoadingDemo() {
           )}
         </div>
       </div>
-    )
+    ),
   };
 
   return (
@@ -224,13 +227,14 @@ export function LoadingDemo() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">Loading States Demo</h1>
         <p className="text-gray-600">
-          Comprehensive loading system with spinners, skeletons, progress indicators, and smart error handling.
+          Comprehensive loading system with spinners, skeletons, progress indicators, and smart
+          error handling.
         </p>
       </div>
-      
+
       {/* Navigation */}
       <div className="flex flex-wrap gap-2 mb-8 border-b border-gray-200">
-        {Object.keys(demos).map((demo) => (
+        {Object.keys(demos).map(demo => (
           <button
             key={demo}
             onClick={() => setActiveDemo(demo)}
@@ -244,12 +248,12 @@ export function LoadingDemo() {
           </button>
         ))}
       </div>
-      
+
       {/* Demo Content */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         {demos[activeDemo as keyof typeof demos]}
       </div>
-      
+
       {/* Implementation Guide */}
       <div className="mt-8 bg-gray-50 rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4">Implementation Guide</h2>
@@ -257,7 +261,7 @@ export function LoadingDemo() {
           <div>
             <h3 className="font-medium mb-2">Basic Usage</h3>
             <pre className="bg-gray-800 text-gray-100 p-3 rounded text-xs overflow-x-auto">
-{`import { useSmartLoading } from '@/hooks/useSmartLoading';
+              {`import { useSmartLoading } from '@/hooks/useSmartLoading';
 
 const loading = useSmartLoading(async () => {
   const data = await api.getData();

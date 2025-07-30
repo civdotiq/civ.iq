@@ -185,7 +185,7 @@ function parseLocation(location: string): LocationInfo {
 
   if (parts.length >= 2) {
     const cityName = parts.slice(0, -1).join(' ').replace(/_/g, ' ');
-    const state = parts[parts.length - 1].toUpperCase();
+    const state = parts[parts.length - 1]?.toUpperCase() || 'ST';
 
     return {
       city: cityName,
@@ -319,8 +319,8 @@ function generateMockLocalOfficials(locationInfo: unknown): LocalOfficial[] {
   ];
 
   cityPositions.forEach((pos, index) => {
-    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)] || 'John';
+    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)] || 'Doe';
     const name = `${firstName} ${lastName}`;
 
     officials.push({
@@ -335,7 +335,7 @@ function generateMockLocalOfficials(locationInfo: unknown): LocalOfficial[] {
             ? 'Democratic'
             : 'Republican'
           : 'Nonpartisan',
-      email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${(locationInfo as LocationInfo).city.replace(' ', '').toLowerCase()}.gov`,
+      email: `${firstName?.toLowerCase() || 'john'}.${lastName?.toLowerCase() || 'doe'}@${(locationInfo as LocationInfo).city.replace(' ', '').toLowerCase()}.gov`,
       phone: `(${Math.floor(Math.random() * 900) + 100}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
       office: `City Hall, ${(locationInfo as LocationInfo).city}`,
       termStart: '2022-01-01',
@@ -393,8 +393,8 @@ function generateMockLocalOfficials(locationInfo: unknown): LocalOfficial[] {
   ];
 
   countyPositions.forEach((pos, index) => {
-    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)] || 'Jane';
+    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)] || 'Smith';
     const name = `${firstName} ${lastName}`;
 
     officials.push({
@@ -405,7 +405,7 @@ function generateMockLocalOfficials(locationInfo: unknown): LocalOfficial[] {
       jurisdictionName: (locationInfo as LocationInfo).county,
       party:
         Math.random() > 0.3 ? (Math.random() > 0.5 ? 'Democratic' : 'Republican') : 'Nonpartisan',
-      email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${(locationInfo as LocationInfo).county.replace(' ', '').toLowerCase()}.gov`,
+      email: `${firstName?.toLowerCase() || 'jane'}.${lastName?.toLowerCase() || 'smith'}@${(locationInfo as LocationInfo).county.replace(' ', '').toLowerCase()}.gov`,
       phone: `(${Math.floor(Math.random() * 900) + 100}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
       office: `${(locationInfo as LocationInfo).county} Administration Building`,
       termStart: '2022-01-01',
@@ -443,8 +443,8 @@ function generateMockLocalOfficials(locationInfo: unknown): LocalOfficial[] {
   ];
 
   schoolPositions.forEach((pos, index) => {
-    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)] || 'Alex';
+    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)] || 'Johnson';
     const name = `${firstName} ${lastName}`;
 
     officials.push({
@@ -454,7 +454,7 @@ function generateMockLocalOfficials(locationInfo: unknown): LocalOfficial[] {
       jurisdiction: 'school_district',
       jurisdictionName: `${(locationInfo as LocationInfo).city} School District`,
       party: 'Nonpartisan',
-      email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${(locationInfo as LocationInfo).city.replace(' ', '').toLowerCase()}schools.org`,
+      email: `${firstName?.toLowerCase() || 'alex'}.${lastName?.toLowerCase() || 'johnson'}@${(locationInfo as LocationInfo).city.replace(' ', '').toLowerCase()}schools.org`,
       phone: `(${Math.floor(Math.random() * 900) + 100}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
       office: `${(locationInfo as LocationInfo).city} School District Office`,
       termStart: '2022-07-01',

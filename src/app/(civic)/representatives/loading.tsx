@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { RepresentativeCardSkeleton } from '@/components/SkeletonLoader';
+import { RepresentativeCardSkeleton } from '@/shared/components/ui';
 
 export default function Loading() {
   return (

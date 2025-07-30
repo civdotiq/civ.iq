@@ -75,7 +75,9 @@ function generateVotingTrends(bioguideId: string, years: number = 5): VotingTren
         .map((template, index) => ({
           ...template,
           bill: `${template.bill.split('.')[0]}.${random(1000, 9999, timeOffset + index)}`,
-          position: (['For', 'Against', 'Not Voting'] as const)[random(0, 2, timeOffset + index)],
+          position:
+            (['For', 'Against', 'Not Voting'] as const)[random(0, 2, timeOffset + index)] ||
+            'Not Voting',
           date: `${year}-${(quarter - 1) * 3 + random(1, 3, timeOffset)}-${random(1, 28, timeOffset)}`,
         }));
 
@@ -128,7 +130,8 @@ export async function GET(request: NextRequest) {
         ),
         trendDirection:
           trends.length > 1
-            ? trends[trends.length - 1].partyLoyaltyScore > trends[0].partyLoyaltyScore
+            ? (trends[trends.length - 1]?.partyLoyaltyScore || 0) >
+              (trends[0]?.partyLoyaltyScore || 0)
               ? 'increasing'
               : 'decreasing'
             : 'stable',

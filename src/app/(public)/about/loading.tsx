@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { Skeleton } from '@/components/SkeletonLoader';
+import { Skeleton } from '@/shared/components/ui';
 
 export default function Loading() {
   return (
@@ -13,7 +13,7 @@ export default function Loading() {
           <Skeleton className="h-10 w-64 mx-auto" />
           <Skeleton className="h-6 w-96 mx-auto" />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-4">
             <Skeleton className="h-8 w-48" />
@@ -21,7 +21,7 @@ export default function Loading() {
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-3/4" />
           </div>
-          
+
           <div className="space-y-4">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-4 w-full" />

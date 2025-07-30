@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { ArrowLeft, ExternalLink, Calendar, Users, FileText, Vote } from 'lucide-react';
 import type { Bill, BillAPIResponse } from '@/types/bill';
 import { getBillDisplayStatus, getBillStatusColor } from '@/types/bill';
-import RepresentativePhoto from '@/components/RepresentativePhoto';
+import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 
 interface BillPageProps {
   params: Promise<{ billId: string }>;

@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { getEnhancedRepresentative } from '@/lib/congress-legislators';
+import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { structuredLogger } from '@/lib/logging/logger';
 
 interface LeadershipRole {

@@ -10,7 +10,7 @@ import dynamic from 'next/dynamic';
 import { Loader2, Maximize2 } from 'lucide-react';
 
 // Dynamic import with proper SSR handling
-const MapComponent = dynamic(() => import('./MapComponent'), { 
+const MapComponent = dynamic(() => import('./MapComponent'), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-full bg-gray-100">
@@ -19,7 +19,7 @@ const MapComponent = dynamic(() => import('./MapComponent'), {
         <p className="text-sm text-gray-600">Loading map...</p>
       </div>
     </div>
-  )
+  ),
 });
 
 interface DistrictBoundaryMapProps {
@@ -32,9 +32,9 @@ interface DistrictBoundaryMapProps {
 }
 
 interface DistrictBoundary {
-  type: "FeatureCollection";
+  type: 'FeatureCollection';
   features: Array<{
-    type: "Feature";
+    type: 'Feature';
     properties: {
       GEOID: string;
       NAME: string;
@@ -42,19 +42,19 @@ interface DistrictBoundary {
       STATEFP: string;
     };
     geometry: {
-      type: "Polygon";
+      type: 'Polygon';
       coordinates: number[][][];
     };
   }>;
 }
 
-export default function DistrictBoundaryMap({ 
-  districtId: _districtId, 
-  state, 
-  district, 
-  width = 800, 
+export default function DistrictBoundaryMap({
+  districtId: _districtId,
+  state,
+  district,
+  width = 800,
   height = 500,
-  className = ""
+  className = '',
 }: DistrictBoundaryMapProps) {
   const [boundaryData, setBoundaryData] = useState<DistrictBoundary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,143 +71,143 @@ export default function DistrictBoundaryMap({
       try {
         // State centers for realistic district positioning
         const stateCenters: Record<string, [number, number]> = {
-          'AL': [32.806671, -86.79113],
-          'AK': [64.0685, -152.2782],
-          'AZ': [34.168218, -111.930907],
-          'AR': [34.736009, -92.331122],
-          'CA': [36.17, -119.7462],
-          'CO': [39.059, -105.311],
-          'CT': [41.767, -72.677],
-          'DE': [39.161921, -75.526755],
-          'FL': [27.4193, -81.4639],
-          'GA': [32.9866, -83.6487],
-          'HI': [21.1098, -157.5311],
-          'ID': [44.931109, -116.237651],
-          'IL': [40.349457, -88.986137],
-          'IN': [40.551217, -85.602364],
-          'IA': [42.032974, -93.581543],
-          'KS': [38.572954, -98.580009],
-          'KY': [37.839333, -84.27002],
-          'LA': [30.45809, -91.140229],
-          'ME': [45.323781, -69.765261],
-          'MD': [39.063946, -76.802101],
-          'MA': [42.2352, -71.0275],
-          'MI': [42.354558, -84.955255],
-          'MN': [46.39241, -94.63623],
-          'MS': [32.320, -90.207],
-          'MO': [38.572954, -92.60376],
-          'MT': [47.042418, -109.633835],
-          'NE': [41.590939, -99.675285],
-          'NV': [39.161921, -117.015289],
-          'NH': [43.220093, -71.549896],
-          'NJ': [40.221741, -74.756138],
-          'NM': [34.307144, -106.018066],
-          'NY': [42.659829, -75.615],
-          'NC': [35.771, -78.638],
-          'ND': [47.411631, -100.779004],
-          'OH': [40.367474, -82.996216],
-          'OK': [35.482309, -97.534994],
-          'OR': [44.931109, -123.029159],
-          'PA': [40.269789, -76.875613],
-          'RI': [41.82355, -71.422132],
-          'SC': [33.836082, -81.163727],
-          'SD': [44.367966, -100.336378],
-          'TN': [35.771, -86.784],
-          'TX': [31.106, -97.6475],
-          'UT': [39.161921, -111.313726],
-          'VT': [44.26639, -72.580009],
-          'VA': [37.54, -78.4588],
-          'WA': [47.042418, -120.718],
-          'WV': [38.349497, -81.633294],
-          'WI': [44.95, -89.5],
-          'WY': [42.859859, -107.47]
+          AL: [32.806671, -86.79113],
+          AK: [64.0685, -152.2782],
+          AZ: [34.168218, -111.930907],
+          AR: [34.736009, -92.331122],
+          CA: [36.17, -119.7462],
+          CO: [39.059, -105.311],
+          CT: [41.767, -72.677],
+          DE: [39.161921, -75.526755],
+          FL: [27.4193, -81.4639],
+          GA: [32.9866, -83.6487],
+          HI: [21.1098, -157.5311],
+          ID: [44.931109, -116.237651],
+          IL: [40.349457, -88.986137],
+          IN: [40.551217, -85.602364],
+          IA: [42.032974, -93.581543],
+          KS: [38.572954, -98.580009],
+          KY: [37.839333, -84.27002],
+          LA: [30.45809, -91.140229],
+          ME: [45.323781, -69.765261],
+          MD: [39.063946, -76.802101],
+          MA: [42.2352, -71.0275],
+          MI: [42.354558, -84.955255],
+          MN: [46.39241, -94.63623],
+          MS: [32.32, -90.207],
+          MO: [38.572954, -92.60376],
+          MT: [47.042418, -109.633835],
+          NE: [41.590939, -99.675285],
+          NV: [39.161921, -117.015289],
+          NH: [43.220093, -71.549896],
+          NJ: [40.221741, -74.756138],
+          NM: [34.307144, -106.018066],
+          NY: [42.659829, -75.615],
+          NC: [35.771, -78.638],
+          ND: [47.411631, -100.779004],
+          OH: [40.367474, -82.996216],
+          OK: [35.482309, -97.534994],
+          OR: [44.931109, -123.029159],
+          PA: [40.269789, -76.875613],
+          RI: [41.82355, -71.422132],
+          SC: [33.836082, -81.163727],
+          SD: [44.367966, -100.336378],
+          TN: [35.771, -86.784],
+          TX: [31.106, -97.6475],
+          UT: [39.161921, -111.313726],
+          VT: [44.26639, -72.580009],
+          VA: [37.54, -78.4588],
+          WA: [47.042418, -120.718],
+          WV: [38.349497, -81.633294],
+          WI: [44.95, -89.5],
+          WY: [42.859859, -107.47],
         };
 
         const center = stateCenters[state] || [39.8283, -98.5795];
-        
+
         // Adjust position based on district number for variety
         const districtNum = parseInt(district) || 1;
-        const offsetLat = (districtNum % 3 - 1) * 0.5;
-        const offsetLng = ((districtNum * 2) % 5 - 2) * 0.5;
-        
-        const adjustedCenter: [number, number] = [
-          center[0] + offsetLat,
-          center[1] + offsetLng
-        ];
-        
+        const offsetLat = ((districtNum % 3) - 1) * 0.5;
+        const offsetLng = (((districtNum * 2) % 5) - 2) * 0.5;
+
+        const adjustedCenter: [number, number] = [center[0] + offsetLat, center[1] + offsetLng];
+
         setMapCenter(adjustedCenter);
         setMapZoom(state === 'AK' || state === 'TX' || state === 'CA' ? 6 : 8);
 
         // Create a more realistic district boundary shape
-        const createDistrictShape = (center: [number, number], districtNum: number) => {
+        const createDistrictShape = (center: [number, number], districtNum: number): number[][] => {
           const [lat, lng] = center;
           const size = 0.3 + (districtNum % 3) * 0.1; // Vary size
           const rotation = (districtNum * 30) % 360; // Vary shape
-          
+
           // Create an irregular polygon that looks more like a real district
-          const points = [];
+          const points: number[][] = [];
           for (let i = 0; i < 8; i++) {
-            const angle = (i * 45 + rotation) * Math.PI / 180;
+            const angle = ((i * 45 + rotation) * Math.PI) / 180;
             const radius = size * (0.7 + Math.sin(i * 1.7) * 0.3); // Irregular radius
             const pointLat = lat + radius * Math.cos(angle);
             const pointLng = lng + radius * Math.sin(angle);
             points.push([pointLng, pointLat]);
           }
           // Close the polygon
-          points.push(points[0]);
+          if (points.length > 0 && points[0]) {
+            points.push(points[0]);
+          }
           return points;
         };
 
         // Create neighboring districts for better visualization
         const neighboringDistricts = [];
         const currentDistrictNum = parseInt(district);
-        
+
         // Add neighboring districts (previous and next)
         for (let i = -1; i <= 1; i++) {
           if (i === 0) continue; // Skip current district
           const neighborNum = currentDistrictNum + i;
-          if (neighborNum > 0 && neighborNum <= 50) { // Reasonable range
+          if (neighborNum > 0 && neighborNum <= 50) {
+            // Reasonable range
             const neighborCenter: [number, number] = [
-              adjustedCenter[0] + (i * 0.4),
-              adjustedCenter[1] + (i * 0.3)
+              adjustedCenter[0] + i * 0.4,
+              adjustedCenter[1] + i * 0.3,
             ];
-            
+
             neighboringDistricts.push({
-              type: "Feature" as const,
+              type: 'Feature' as const,
               properties: {
                 GEOID: `${state}${neighborNum.toString().padStart(2, '0')}`,
                 NAME: `${state} District ${neighborNum}`,
                 CD118FP: neighborNum.toString().padStart(2, '0'),
-                STATEFP: state
+                STATEFP: state,
               },
               geometry: {
-                type: "Polygon" as const,
-                coordinates: [createDistrictShape(neighborCenter, neighborNum)]
-              }
+                type: 'Polygon' as const,
+                coordinates: [createDistrictShape(neighborCenter, neighborNum)],
+              },
             });
           }
         }
 
         const mockBoundary: DistrictBoundary = {
-          type: "FeatureCollection",
+          type: 'FeatureCollection',
           features: [
             // Main district first
             {
-              type: "Feature" as const,
+              type: 'Feature' as const,
               properties: {
                 GEOID: `${state}${district.padStart(2, '0')}`,
                 NAME: `${state} District ${district}`,
                 CD118FP: district.padStart(2, '0'),
-                STATEFP: state
+                STATEFP: state,
               },
               geometry: {
-                type: "Polygon" as const,
-                coordinates: [createDistrictShape(adjustedCenter, districtNum)]
-              }
+                type: 'Polygon' as const,
+                coordinates: [createDistrictShape(adjustedCenter, districtNum)],
+              },
             },
             // Add neighboring districts
-            ...neighboringDistricts
-          ]
+            ...neighboringDistricts,
+          ],
         };
 
         setBoundaryData(mockBoundary);
@@ -229,7 +229,7 @@ export default function DistrictBoundaryMap({
 
   if (loading) {
     return (
-      <div 
+      <div
         className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}
         style={{ width, height }}
       >
@@ -243,14 +243,18 @@ export default function DistrictBoundaryMap({
 
   if (error) {
     return (
-      <div 
+      <div
         className={`flex items-center justify-center bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 ${className}`}
         style={{ width, height }}
       >
         <div className="text-center">
           <p className="text-sm text-gray-600 mb-2">{error}</p>
-          <p className="text-xs text-gray-500">District: {state}-{district}</p>
-          <p className="text-xs text-gray-400 mt-2">In production, this would use Census TIGER/Line data</p>
+          <p className="text-xs text-gray-500">
+            District: {state}-{district}
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            In production, this would use Census TIGER/Line data
+          </p>
         </div>
       </div>
     );
@@ -270,11 +274,11 @@ export default function DistrictBoundaryMap({
       </div>
 
       {/* Map Container with explicit dimensions */}
-      <div 
-        style={{ 
-          width: isFullscreen ? '100vw' : `${width}px`, 
+      <div
+        style={{
+          width: isFullscreen ? '100vw' : `${width}px`,
           height: isFullscreen ? '100vh' : `${height}px`,
-          minHeight: '400px'
+          minHeight: '400px',
         }}
       >
         {typeof window !== 'undefined' && boundaryData && (
@@ -293,7 +297,10 @@ export default function DistrictBoundaryMap({
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center space-x-4">
             <div>
-              <strong>{state}-{district}</strong> Congressional District boundaries
+              <strong>
+                {state}-{district}
+              </strong>{' '}
+              Congressional District boundaries
             </div>
             <div className="flex items-center space-x-3">
               <div className="flex items-center">
@@ -301,14 +308,15 @@ export default function DistrictBoundaryMap({
                 <span>Current District</span>
               </div>
               <div className="flex items-center">
-                <div className="w-3 h-3 bg-gray-400 rounded-full mr-1" style={{borderStyle: 'dashed'}}></div>
+                <div
+                  className="w-3 h-3 bg-gray-400 rounded-full mr-1"
+                  style={{ borderStyle: 'dashed' }}
+                ></div>
                 <span>Neighboring Districts</span>
               </div>
             </div>
           </div>
-          <div>
-            Data: U.S. Census Bureau TIGER/Line (Simulated)
-          </div>
+          <div>Data: U.S. Census Bureau TIGER/Line (Simulated)</div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
           <div>
@@ -337,7 +345,8 @@ export default function DistrictBoundaryMap({
           </div>
         </div>
         <p className="mt-2 text-gray-500 text-center">
-          In production, this map displays actual district boundaries from the Census Bureau's TIGER/Line dataset with real-time updates.
+          In production, this map displays actual district boundaries from the Census Bureau&apos;s
+          TIGER/Line dataset with real-time updates.
         </p>
       </div>
     </div>

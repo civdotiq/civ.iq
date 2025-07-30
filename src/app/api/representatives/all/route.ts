@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllEnhancedRepresentatives } from '@/lib/congress-legislators';
+import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { createRequestLogger } from '@/lib/logging/logger';
 
 // Response interface for all representatives

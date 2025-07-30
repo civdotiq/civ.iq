@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { SmartSearchInput } from '@/components/search/SmartSearchInput';
+import { SmartSearchInput } from '@/features/search/components/search/SmartSearchInput';
 
 function CiviqLogo({ className = 'w-10 h-15' }: { className?: string }) {
   return (

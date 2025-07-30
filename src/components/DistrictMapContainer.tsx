@@ -138,7 +138,7 @@ export default function DistrictMapContainer({
         // Extract state and district number from district name
         const nameParts = district.name.split('-');
         const state = nameParts[0] || 'CA';
-        const districtNum = parseInt(nameParts[1]) || (index % 10) + 1;
+        const districtNum = parseInt(nameParts[1] || '0') || (index % 10) + 1;
 
         const basePosition = statePositions[state] || [-98.5795, 39.8283];
 

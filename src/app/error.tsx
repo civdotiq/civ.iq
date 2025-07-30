@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -27,11 +26,11 @@ async function clearAllCaches() {
       await Promise.all(cacheNames.map(name => caches.delete(name)));
       console.log('[CIV.IQ-CACHE] Cleared all caches');
     }
-    
+
     // Clear localStorage and sessionStorage
     localStorage.clear();
     sessionStorage.clear();
-    
+
     // Unregister service worker
     if ('serviceWorker' in navigator) {
       const registrations = await navigator.serviceWorker.getRegistrations();
@@ -60,13 +59,13 @@ export default function Error({
       stack: error.stack,
       digest: error.digest,
       component: 'app/error.tsx',
-      isChunkError: isChunkLoadError(error)
+      isChunkError: isChunkLoadError(error),
     });
 
     // Auto-handle ChunkLoadErrors
     if (isChunkLoadError(error)) {
       console.log('[CIV.IQ-ERROR] ChunkLoadError detected, initiating auto-recovery');
-      
+
       // Start countdown for automatic reload
       const timer = setInterval(() => {
         setCountdown(prev => {
@@ -81,14 +80,17 @@ export default function Error({
 
       return () => clearInterval(timer);
     }
+
+    // Return undefined for non-chunk errors (no cleanup needed)
+    return undefined;
   }, [error]);
 
   const handleChunkError = async () => {
     setReloading(true);
     console.log('[CIV.IQ-ERROR] Clearing caches and reloading...');
-    
+
     await clearAllCaches();
-    
+
     // Force hard reload
     window.location.reload();
   };
@@ -108,8 +110,18 @@ export default function Error({
         <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
           <div className="mb-4">
             <div className="w-16 h-16 mx-auto mb-4 text-orange-500">
-              <svg className="w-full h-full animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <svg
+                className="w-full h-full animate-spin"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
               </svg>
             </div>
           </div>
@@ -140,14 +152,10 @@ export default function Error({
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
         <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong!</h2>
-        <p className="text-gray-600 mb-4">
-          {error.message || 'An unexpected error occurred'}
-        </p>
+        <p className="text-gray-600 mb-4">{error.message || 'An unexpected error occurred'}</p>
         <details className="text-left mb-4">
           <summary className="cursor-pointer text-sm text-gray-500">Error details</summary>
-          <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
-            {error.stack}
-          </pre>
+          <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">{error.stack}</pre>
         </details>
         <button
           onClick={handleManualRetry}

@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -61,7 +60,7 @@ export function DistrictMap({ zipCode, className = '' }: DistrictMapProps) {
   const layers: MapLayer[] = [
     { id: 'congressional', name: 'Congressional District', color: '#e11d07', visible: true },
     { id: 'state_senate', name: 'State Senate District', color: '#0b983c', visible: false },
-    { id: 'state_house', name: 'State House District', color: '#3ea2d4', visible: false }
+    { id: 'state_house', name: 'State House District', color: '#3ea2d4', visible: false },
   ];
 
   useEffect(() => {
@@ -69,12 +68,12 @@ export function DistrictMap({ zipCode, className = '' }: DistrictMapProps) {
       try {
         setLoading(true);
         const response = await fetch(`/api/district-map?zip=${encodeURIComponent(zipCode)}`);
-        
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Failed to fetch map data');
         }
-        
+
         const data: MapData = await response.json();
         setMapData(data);
         setError(null);
@@ -92,22 +91,40 @@ export function DistrictMap({ zipCode, className = '' }: DistrictMapProps) {
   }, [zipCode]);
 
   // Convert lat/lng to SVG coordinates
-  const projectToSVG = (lat: number, lng: number, bbox: MapData['bbox'], width: number, height: number) => {
+  const projectToSVG = (
+    lat: number,
+    lng: number,
+    bbox: MapData['bbox'],
+    width: number,
+    height: number
+  ) => {
     const x = ((lng - bbox.minLng) / (bbox.maxLng - bbox.minLng)) * width;
     const y = height - ((lat - bbox.minLat) / (bbox.maxLat - bbox.minLat)) * height;
     return { x, y };
   };
 
   // Convert coordinates array to SVG path
-  const coordinatesToPath = (coordinates: number[][][], bbox: MapData['bbox'], width: number, height: number) => {
-    return coordinates.map(ring => {
-      const pathData = ring.map((coord, index) => {
-        const [lng, lat] = coord;
-        const { x, y } = projectToSVG(lat, lng, bbox, width, height);
-        return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-      }).join(' ') + ' Z';
-      return pathData;
-    }).join(' ');
+  const coordinatesToPath = (
+    coordinates: number[][][],
+    bbox: MapData['bbox'],
+    width: number,
+    height: number
+  ) => {
+    return coordinates
+      .map(ring => {
+        const pathData =
+          ring
+            .map((coord, index) => {
+              const [lng, lat] = coord;
+              if (typeof lat !== 'number' || typeof lng !== 'number') return '';
+              const { x, y } = projectToSVG(lat, lng, bbox, width, height);
+              return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+            })
+            .filter(path => path !== '')
+            .join(' ') + ' Z';
+        return pathData;
+      })
+      .join(' ');
   };
 
   const getCurrentBoundary = () => {
@@ -135,9 +152,7 @@ export function DistrictMap({ zipCode, className = '' }: DistrictMapProps) {
       <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">District Map</h3>
         <div className="text-center py-8">
-          <div className="text-gray-500 mb-2">
-            {error || 'Unable to load district map'}
-          </div>
+          <div className="text-gray-500 mb-2">{error || 'Unable to load district map'}</div>
           <p className="text-sm text-gray-400">
             Interactive district boundaries are not available for this location
           </p>
@@ -155,10 +170,10 @@ export function DistrictMap({ zipCode, className = '' }: DistrictMapProps) {
     <div className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${className}`}>
       <div className="p-6 pb-4 border-b border-gray-100">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">District Map</h3>
-        
+
         {/* Layer Controls */}
         <div className="flex flex-wrap gap-2">
-          {layers.map((layer) => (
+          {layers.map(layer => (
             <button
               key={layer.id}
               onClick={() => setSelectedLayer(layer.id)}
@@ -168,7 +183,7 @@ export function DistrictMap({ zipCode, className = '' }: DistrictMapProps) {
                   : 'text-gray-600 bg-gray-100 hover:bg-gray-200'
               }`}
               style={{
-                backgroundColor: selectedLayer === layer.id ? layer.color : undefined
+                backgroundColor: selectedLayer === layer.id ? layer.color : undefined,
               }}
             >
               {layer.name}
@@ -189,15 +204,21 @@ export function DistrictMap({ zipCode, className = '' }: DistrictMapProps) {
           >
             {/* Background */}
             <rect width={svgWidth} height={svgHeight} fill="#f8fafc" />
-            
+
             {/* Grid lines */}
             <defs>
               <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#e2e8f0" strokeWidth="1" opacity="0.3"/>
+                <path
+                  d="M 50 0 L 0 0 0 50"
+                  fill="none"
+                  stroke="#e2e8f0"
+                  strokeWidth="1"
+                  opacity="0.3"
+                />
               </pattern>
             </defs>
             <rect width={svgWidth} height={svgHeight} fill="url(#grid)" />
-            
+
             {/* District Boundary */}
             {boundary && layerInfo && (
               <g>
@@ -211,7 +232,7 @@ export function DistrictMap({ zipCode, className = '' }: DistrictMapProps) {
                 />
               </g>
             )}
-            
+
             {/* ZIP Code Location Marker */}
             {mapData.coordinates && (
               <g>
@@ -226,28 +247,16 @@ export function DistrictMap({ zipCode, className = '' }: DistrictMapProps) {
                   return (
                     <>
                       {/* Marker outer ring */}
-                      <circle
-                        cx={x}
-                        cy={y}
-                        r="12"
-                        fill="white"
-                        stroke="#1f2937"
-                        strokeWidth="2"
-                      />
+                      <circle cx={x} cy={y} r="12" fill="white" stroke="#1f2937" strokeWidth="2" />
                       {/* Marker inner dot */}
-                      <circle
-                        cx={x}
-                        cy={y}
-                        r="6"
-                        fill="#1f2937"
-                      />
+                      <circle cx={x} cy={y} r="6" fill="#1f2937" />
                     </>
                   );
                 })()}
               </g>
             )}
           </svg>
-          
+
           {/* Map Legend */}
           <div className="absolute top-4 right-4 bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-3 shadow-sm border border-gray-200">
             <div className="text-xs font-medium text-gray-700 mb-2">Legend</div>
@@ -258,7 +267,7 @@ export function DistrictMap({ zipCode, className = '' }: DistrictMapProps) {
               </div>
               {layerInfo && (
                 <div className="flex items-center gap-2">
-                  <div 
+                  <div
                     className="w-3 h-3 rounded"
                     style={{ backgroundColor: layerInfo.color }}
                   ></div>
@@ -272,9 +281,7 @@ export function DistrictMap({ zipCode, className = '' }: DistrictMapProps) {
         {/* District Information */}
         {boundary && (
           <div className="mt-4 bg-gray-50 rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-2">
-              {boundary.properties.name}
-            </h4>
+            <h4 className="font-medium text-gray-900 mb-2">{boundary.properties.name}</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-600">District:</span>
@@ -300,12 +307,8 @@ export function DistrictMap({ zipCode, className = '' }: DistrictMapProps) {
 
         {/* Map Controls */}
         <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-          <div>
-            Interactive map showing district boundaries for ZIP code {mapData.zipCode}
-          </div>
-          <div className="text-xs">
-            Data: U.S. Census Bureau TIGER/Line
-          </div>
+          <div>Interactive map showing district boundaries for ZIP code {mapData.zipCode}</div>
+          <div className="text-xs">Data: U.S. Census Bureau TIGER/Line</div>
         </div>
       </div>
     </div>

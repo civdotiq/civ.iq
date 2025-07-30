@@ -7,7 +7,7 @@
 
 import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { CiviqError, createErrorFromException } from '@/lib/errors/ErrorTypes';
-import { ErrorDisplay } from '@/components/ui/ErrorComponents';
+import { ErrorDisplay } from '@/shared/components/ui/ErrorComponents';
 import { structuredLogger } from '@/lib/logging/universal-logger';
 
 interface ErrorBoundaryState {

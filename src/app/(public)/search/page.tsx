@@ -6,7 +6,7 @@
  */
 
 import Link from 'next/link';
-import { AdvancedSearch } from '@/components/AdvancedSearch';
+import { AdvancedSearch } from '@/features/search/components/AdvancedSearch';
 
 // Logo component
 function CiviqLogo() {

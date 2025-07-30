@@ -18,7 +18,7 @@ function getFreshnessInfo(freshness?: string) {
   // Parse different freshness formats
   if (freshness.includes('Retrieved in')) {
     const timeMatch = freshness.match(/Retrieved in (\d+)ms/);
-    if (timeMatch) {
+    if (timeMatch && timeMatch[1]) {
       const ms = parseInt(timeMatch[1]);
       if (ms < 100) return { status: 'real-time', color: 'text-green-600', icon: '🔥' };
       if (ms < 1000) return { status: 'fast', color: 'text-blue-600', icon: '⚡' };

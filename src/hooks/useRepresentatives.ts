@@ -4,7 +4,7 @@
  */
 
 import useSWR from 'swr';
-import { Representative } from '@/lib/congress-api';
+import { Representative } from '@/features/representatives/services/congress-api';
 
 interface RepresentativesResponse {
   success: boolean;

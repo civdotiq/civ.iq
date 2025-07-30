@@ -16,6 +16,13 @@ import { axisBottom, axisLeft } from 'd3-axis';
 import { line, curveMonotoneX } from 'd3-shape';
 import { format } from 'd3-format';
 
+// Helper function for vote selection
+const getRandomVote = (): 'Yes' | 'No' | 'Not Voting' => {
+  const votes: ('Yes' | 'No' | 'Not Voting')[] = ['Yes', 'No', 'Not Voting'];
+  const index = Math.floor(Math.random() * 3);
+  return votes[index] ?? 'Not Voting';
+};
+
 // Enhanced Logo with animation
 function CiviqLogo() {
   return (
@@ -807,7 +814,7 @@ function LegislativeEffectivenessChart({
       .range([height, 0]);
 
     const lineGenerator = line<number>()
-      .x((d, i) => x(stages[i]) || 0)
+      .x((d, i) => x(stages[i] || '') || 0)
       .y(d => y(d))
       .curve(curveMonotoneX);
 
@@ -823,14 +830,16 @@ function LegislativeEffectivenessChart({
 
     svg.append('g').call(axisLeft(y));
 
-    const colors = ['#3b82f6', '#ef4444'];
+    const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
 
     data.forEach((rep, index) => {
+      const color = colors[index % colors.length] || '#6b7280';
+
       svg
         .append('path')
         .datum(rep.values)
         .attr('fill', 'none')
-        .attr('stroke', colors[index])
+        .attr('stroke', color)
         .attr('stroke-width', 3)
         .attr('d', lineGenerator);
 
@@ -840,16 +849,17 @@ function LegislativeEffectivenessChart({
         .enter()
         .append('circle')
         .attr('class', `dot-${index}`)
-        .attr('cx', (d, i) => x(stages[i]) || 0)
+        .attr('cx', (d, i) => x(stages[i] || '') || 0)
         .attr('cy', d => y(d))
         .attr('r', 5)
-        .attr('fill', colors[index]);
+        .attr('fill', color);
     });
 
     // Add legend
     const legend = svg.append('g').attr('transform', `translate(${width + 10}, 0)`);
 
     data.forEach((rep, index) => {
+      const color = colors[index % colors.length] || '#6b7280';
       const legendRow = legend.append('g').attr('transform', `translate(0, ${index * 25})`);
 
       legendRow
@@ -858,7 +868,7 @@ function LegislativeEffectivenessChart({
         .attr('x2', 20)
         .attr('y1', 0)
         .attr('y2', 0)
-        .attr('stroke', colors[index])
+        .attr('stroke', color)
         .attr('stroke-width', 3);
 
       legendRow
@@ -948,26 +958,11 @@ function ComparePageContent() {
             partyLineVotes: Math.floor(Math.random() * 900) + 400,
             missedVotes: Math.floor(Math.random() * 50),
             keyVotes: {
-              healthcare: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
-                | 'Yes'
-                | 'No'
-                | 'Not Voting',
-              environment: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
-                | 'Yes'
-                | 'No'
-                | 'Not Voting',
-              economy: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
-                | 'Yes'
-                | 'No'
-                | 'Not Voting',
-              defense: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
-                | 'Yes'
-                | 'No'
-                | 'Not Voting',
-              immigration: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
-                | 'Yes'
-                | 'No'
-                | 'Not Voting',
+              healthcare: getRandomVote(),
+              environment: getRandomVote(),
+              economy: getRandomVote(),
+              defense: getRandomVote(),
+              immigration: getRandomVote(),
             },
           },
           legislation: {
@@ -1024,9 +1019,11 @@ function ComparePageContent() {
       // Fallback to mock data if API fails
       const mockReps: Representative[] = Array.from({ length: 20 }, (_, i) => ({
         bioguideId: `B00${1000 + i}`,
-        name: ['Sen. John Smith', 'Rep. Jane Doe', 'Sen. Bob Johnson', 'Rep. Mary Williams'][i % 4],
+        name:
+          ['Sen. John Smith', 'Rep. Jane Doe', 'Sen. Bob Johnson', 'Rep. Mary Williams'][i % 4] ||
+          'Unknown Representative',
         party: i % 3 === 0 ? 'Democratic' : 'Republican',
-        state: ['CA', 'TX', 'NY', 'FL', 'IL'][i % 5],
+        state: ['CA', 'TX', 'NY', 'FL', 'IL'][i % 5] || 'Unknown',
         district: i % 2 === 0 ? undefined : String((i % 10) + 1),
         chamber: i % 2 === 0 ? 'Senate' : 'House',
         title: i % 2 === 0 ? 'U.S. Senator' : 'U.S. Representative',
@@ -1043,26 +1040,11 @@ function ComparePageContent() {
           partyLineVotes: Math.floor(Math.random() * 900) + 400,
           missedVotes: Math.floor(Math.random() * 50),
           keyVotes: {
-            healthcare: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
-              | 'Yes'
-              | 'No'
-              | 'Not Voting',
-            environment: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
-              | 'Yes'
-              | 'No'
-              | 'Not Voting',
-            economy: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
-              | 'Yes'
-              | 'No'
-              | 'Not Voting',
-            defense: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
-              | 'Yes'
-              | 'No'
-              | 'Not Voting',
-            immigration: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
-              | 'Yes'
-              | 'No'
-              | 'Not Voting',
+            healthcare: getRandomVote(),
+            environment: getRandomVote(),
+            economy: getRandomVote(),
+            defense: getRandomVote(),
+            immigration: getRandomVote(),
           },
         },
         legislation: {

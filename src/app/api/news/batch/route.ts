@@ -13,7 +13,10 @@ import { BaseValidator } from '@/lib/validation/schemas';
 import { withErrorHandling } from '@/lib/error-handling/error-handler';
 import { structuredLogger } from '@/lib/logging/logger';
 import { performanceMonitor } from '@/utils/performance';
-import { generateOptimizedSearchTerms, fetchGDELTNewsWithDeduplication } from '@/lib/gdelt-api';
+import {
+  generateOptimizedSearchTerms,
+  fetchGDELTNewsWithDeduplication,
+} from '@/features/news/services/gdelt-api';
 
 interface BatchNewsRequest {
   bioguideIds: string[];

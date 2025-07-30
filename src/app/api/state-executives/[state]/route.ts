@@ -10,7 +10,14 @@ import { structuredLogger } from '@/lib/logging/logger';
 interface StateExecutive {
   id: string;
   name: string;
-  position: 'governor' | 'lieutenant_governor' | 'attorney_general' | 'secretary_of_state' | 'treasurer' | 'comptroller' | 'other';
+  position:
+    | 'governor'
+    | 'lieutenant_governor'
+    | 'attorney_general'
+    | 'secretary_of_state'
+    | 'treasurer'
+    | 'comptroller'
+    | 'other';
   party: 'Democratic' | 'Republican' | 'Independent' | 'Other';
   email?: string;
   phone?: string;
@@ -58,10 +65,7 @@ export async function GET(
   const { state } = await params;
 
   if (!state || state.length !== 2) {
-    return NextResponse.json(
-      { error: 'Valid state abbreviation is required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Valid state abbreviation is required' }, { status: 400 });
   }
 
   try {
@@ -71,10 +75,14 @@ export async function GET(
     const executivesData = await cachedFetch(
       cacheKey,
       async (): Promise<StateExecutivesData> => {
-        structuredLogger.info('Fetching state executives', {
-          state: state.toUpperCase(),
-          operation: 'state_executives_fetch'
-        }, request);
+        structuredLogger.info(
+          'Fetching state executives',
+          {
+            state: state.toUpperCase(),
+            operation: 'state_executives_fetch',
+          },
+          request
+        );
 
         // In production, this would integrate with official state sources
         const stateInfo = getStateInfo(state.toUpperCase());
@@ -85,7 +93,7 @@ export async function GET(
           Democratic: 0,
           Republican: 0,
           Independent: 0,
-          Other: 0
+          Other: 0,
         };
 
         executives.forEach(exec => {
@@ -98,36 +106,40 @@ export async function GET(
           lastUpdated: new Date().toISOString(),
           nextElection: {
             date: getNextElectionDate(state.toUpperCase()),
-            offices: ['governor', 'lieutenant_governor', 'attorney_general', 'secretary_of_state']
+            offices: ['governor', 'lieutenant_governor', 'attorney_general', 'secretary_of_state'],
           },
           executives,
           totalCount: executives.length,
-          partyBreakdown
+          partyBreakdown,
         };
       },
       TTL_24_HOURS
     );
 
     return NextResponse.json(executivesData);
-
   } catch (error) {
-    structuredLogger.error('State Executives API Error', error as Error, {
-      state: state.toUpperCase(),
-      operation: 'state_executives_api_error'
-    }, request);
-    
+    structuredLogger.error(
+      'State Executives API Error',
+      error as Error,
+      {
+        state: state.toUpperCase(),
+        operation: 'state_executives_api_error',
+      },
+      request
+    );
+
     const errorResponse = {
       state: state.toUpperCase(),
       stateName: 'Unknown State',
       lastUpdated: new Date().toISOString(),
       nextElection: {
         date: '',
-        offices: []
+        offices: [],
       },
       executives: [],
       totalCount: 0,
       partyBreakdown: { Democratic: 0, Republican: 0, Independent: 0, Other: 0 },
-      error: 'State executives data temporarily unavailable'
+      error: 'State executives data temporarily unavailable',
     };
 
     return NextResponse.json(errorResponse, { status: 200 });
@@ -136,25 +148,25 @@ export async function GET(
 
 function getStateInfo(state: string) {
   const stateNames: Record<string, string> = {
-    'CA': 'California',
-    'TX': 'Texas',
-    'NY': 'New York',
-    'FL': 'Florida',
-    'MI': 'Michigan',
-    'PA': 'Pennsylvania',
-    'IL': 'Illinois',
-    'OH': 'Ohio',
-    'GA': 'Georgia',
-    'NC': 'North Carolina',
-    'VA': 'Virginia',
-    'WA': 'Washington',
-    'MA': 'Massachusetts',
-    'MD': 'Maryland',
-    'CO': 'Colorado'
+    CA: 'California',
+    TX: 'Texas',
+    NY: 'New York',
+    FL: 'Florida',
+    MI: 'Michigan',
+    PA: 'Pennsylvania',
+    IL: 'Illinois',
+    OH: 'Ohio',
+    GA: 'Georgia',
+    NC: 'North Carolina',
+    VA: 'Virginia',
+    WA: 'Washington',
+    MA: 'Massachusetts',
+    MD: 'Maryland',
+    CO: 'Colorado',
   };
 
   return {
-    name: stateNames[state] || 'Generic State'
+    name: stateNames[state] || 'Generic State',
   };
 }
 
@@ -162,36 +174,58 @@ function getNextElectionDate(state: string): string {
   // Most gubernatorial elections are in even years
   const currentYear = new Date().getFullYear();
   const nextEvenYear = currentYear % 2 === 0 ? currentYear + 2 : currentYear + 1;
-  
+
   // Some states have off-year elections (Virginia, New Jersey, etc.)
   const offYearStates = ['VA', 'NJ'];
   if (offYearStates.includes(state)) {
     const nextOddYear = currentYear % 2 === 0 ? currentYear + 1 : currentYear + 2;
     return `${nextOddYear}-11-07`; // First Tuesday after first Monday in November
   }
-  
+
   return `${nextEvenYear}-11-07`;
 }
 
-function generateMockExecutives(state: string, stateInfo: unknown): StateExecutive[] {
+function generateMockExecutives(state: string, _stateInfo: unknown): StateExecutive[] {
   const executives: StateExecutive[] = [];
-  
+
   const positions: StateExecutive['position'][] = [
     'governor',
     'lieutenant_governor',
     'attorney_general',
     'secretary_of_state',
-    'treasurer'
+    'treasurer',
   ];
 
-  const firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Lisa', 'Robert', 'Maria', 'James', 'Jennifer'];
-  const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
-  
+  const firstNames = [
+    'John',
+    'Jane',
+    'Michael',
+    'Sarah',
+    'David',
+    'Lisa',
+    'Robert',
+    'Maria',
+    'James',
+    'Jennifer',
+  ];
+  const lastNames = [
+    'Smith',
+    'Johnson',
+    'Williams',
+    'Brown',
+    'Jones',
+    'Garcia',
+    'Miller',
+    'Davis',
+    'Rodriguez',
+    'Martinez',
+  ];
+
   // Generate realistic party distributions based on state
   const getPartyDistribution = (state: string): ('Democratic' | 'Republican')[] => {
     const blueStates = ['CA', 'NY', 'WA', 'MA', 'MD', 'IL'];
     const redStates = ['TX', 'FL', 'GA', 'OH', 'NC'];
-    
+
     if (blueStates.includes(state)) {
       return ['Democratic', 'Democratic', 'Democratic', 'Republican', 'Democratic'];
     } else if (redStates.includes(state)) {
@@ -204,41 +238,41 @@ function generateMockExecutives(state: string, stateInfo: unknown): StateExecuti
   const partyDistribution = getPartyDistribution(state);
 
   positions.forEach((position, index) => {
-    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)] || 'John';
+    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)] || 'Doe';
     const name = `${firstName} ${lastName}`;
-    const party = partyDistribution[index];
+    const party = partyDistribution[index] || 'Independent';
 
     const currentYear = new Date().getFullYear();
     const termLength = position === 'governor' ? 4 : 4; // Most state executives serve 4-year terms
-    
+
     const initiatives = {
       governor: [
         'Economic Development Initiative',
         'Education Reform Package',
         'Healthcare Access Expansion',
-        'Infrastructure Investment Plan'
+        'Infrastructure Investment Plan',
       ],
       lieutenant_governor: [
         'Small Business Support Program',
         'Veterans Affairs Coordination',
-        'Tourism Development Initiative'
+        'Tourism Development Initiative',
       ],
       attorney_general: [
         'Consumer Protection Enhancement',
         'Criminal Justice Reform',
-        'Environmental Enforcement Program'
+        'Environmental Enforcement Program',
       ],
       secretary_of_state: [
         'Election Security Modernization',
         'Business Registration Streamlining',
-        'Digital Government Services'
+        'Digital Government Services',
       ],
       treasurer: [
         'State Investment Diversification',
         'Debt Management Strategy',
-        'Pension Fund Optimization'
-      ]
+        'Pension Fund Optimization',
+      ],
     };
 
     const executive: StateExecutive = {
@@ -246,22 +280,32 @@ function generateMockExecutives(state: string, stateInfo: unknown): StateExecuti
       name,
       position,
       party,
-      email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${state.toLowerCase()}.gov`,
+      email: `${firstName?.toLowerCase() || 'john'}.${lastName?.toLowerCase() || 'doe'}@${state.toLowerCase()}.gov`,
       phone: `(${Math.floor(Math.random() * 900) + 100}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
-      office: `Office of the ${position.replace('_', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`,
+      office: `Office of the ${position
+        .replace('_', ' ')
+        .split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ')}`,
       termStart: `${currentYear - 1}-01-15`,
       termEnd: `${currentYear + termLength - 1}-01-15`,
       isIncumbent: true,
-      previousOffices: Math.random() > 0.5 ? [{
-        office: Math.random() > 0.5 ? 'State Legislature' : 'City Mayor',
-        startYear: currentYear - 8,
-        endYear: currentYear - 1
-      }] : [],
-      keyInitiatives: (position in initiatives) ? initiatives[position as keyof typeof initiatives] : [],
+      previousOffices:
+        Math.random() > 0.5
+          ? [
+              {
+                office: Math.random() > 0.5 ? 'State Legislature' : 'City Mayor',
+                startYear: currentYear - 8,
+                endYear: currentYear - 1,
+              },
+            ]
+          : [],
+      keyInitiatives:
+        position in initiatives ? initiatives[position as keyof typeof initiatives] : [],
       socialMedia: {
         twitter: `@${firstName}${lastName}${state}`,
-        website: `https://www.${state.toLowerCase()}.gov/${position.replace('_', '-')}`
-      }
+        website: `https://www.${state.toLowerCase()}.gov/${position.replace('_', '-')}`,
+      },
     };
 
     executives.push(executive);
