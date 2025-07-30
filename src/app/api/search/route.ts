@@ -269,13 +269,11 @@ async function performSearch(filters: SearchFilters): Promise<{
         return false;
       }
 
-      // Bills sponsored filter (would need real data)
-      const billsSponsored = Math.floor(Math.random() * 300); // Placeholder
-      if (filters.billsSponsoredMin !== undefined && billsSponsored < filters.billsSponsoredMin) {
-        return false;
-      }
-      if (filters.billsSponsoredMax !== undefined && billsSponsored > filters.billsSponsoredMax) {
-        return false;
+      // Bills sponsored filter - requires real Congress.gov data
+      // Filtering disabled until real data integration
+      if (filters.billsSponsoredMin !== undefined || filters.billsSponsoredMax !== undefined) {
+        // Bills sponsored data unavailable - cannot filter by this criteria
+        structuredLogger.info('Bills sponsored filter requested but real data unavailable');
       }
 
       return true;
@@ -355,9 +353,9 @@ async function performSearch(filters: SearchFilters): Promise<{
         chamber: rep.chamber as 'House' | 'Senate',
         yearsInOffice,
         committees: (rep.committees || []).map(c => (typeof c === 'string' ? c : c.name)),
-        billsSponsored: Math.floor(Math.random() * 300), // Placeholder
-        votingScore: Math.random() * 100, // Placeholder
-        fundraisingTotal: Math.floor(Math.random() * 10000000), // Placeholder
+        billsSponsored: 0, // Real data requires Congress.gov API integration
+        votingScore: 0, // Real data requires voting record analysis
+        fundraisingTotal: 0, // Real data requires FEC API integration
         imageUrl: rep.imageUrl,
         socialMedia: rep.socialMedia,
       };

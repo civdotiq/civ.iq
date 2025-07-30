@@ -16,12 +16,7 @@ import { axisBottom, axisLeft } from 'd3-axis';
 import { line, curveMonotoneX } from 'd3-shape';
 import { format } from 'd3-format';
 
-// Helper function for vote selection
-const getRandomVote = (): 'Yes' | 'No' | 'Not Voting' => {
-  const votes: ('Yes' | 'No' | 'Not Voting')[] = ['Yes', 'No', 'Not Voting'];
-  const index = Math.floor(Math.random() * 3);
-  return votes[index] ?? 'Not Voting';
-};
+// Vote selection helper removed - all voting data unavailable
 
 // Enhanced Logo with animation
 function CiviqLogo() {
@@ -949,60 +944,54 @@ function ComparePageContent() {
           district: rep.district,
           chamber: rep.chamber,
           title: rep.title,
-          yearsInOffice: rep.yearsInOffice || Math.floor(Math.random() * 20) + 1,
-          startDate: rep.startDate || new Date(2024 - (rep.yearsInOffice || 5), 0, 1).toISOString(),
+          yearsInOffice: rep.yearsInOffice || 0,
+          startDate: rep.startDate || new Date().toISOString(),
           imageUrl: rep.imageUrl,
           committees: rep.committees || [],
           votingRecord: {
-            totalVotes: Math.floor(Math.random() * 1000) + 500,
-            partyLineVotes: Math.floor(Math.random() * 900) + 400,
-            missedVotes: Math.floor(Math.random() * 50),
+            totalVotes: 0, // Real data requires Congress.gov API integration
+            partyLineVotes: 0, // Real data requires voting record analysis
+            missedVotes: 0, // Real data requires Congress.gov API integration
             keyVotes: {
-              healthcare: getRandomVote(),
-              environment: getRandomVote(),
-              economy: getRandomVote(),
-              defense: getRandomVote(),
-              immigration: getRandomVote(),
+              healthcare: 'Not Voting', // Real voting data unavailable
+              environment: 'Not Voting', // Real voting data unavailable
+              economy: 'Not Voting', // Real voting data unavailable
+              defense: 'Not Voting', // Real voting data unavailable
+              immigration: 'Not Voting', // Real voting data unavailable
             },
           },
           legislation: {
-            billsSponsored: Math.floor(Math.random() * 50) + 10,
-            billsCoSponsored: Math.floor(Math.random() * 200) + 50,
-            billsPassedHouse: Math.floor(Math.random() * 20),
-            billsPassedSenate: Math.floor(Math.random() * 15),
-            billsBecameLaw: Math.floor(Math.random() * 5),
+            billsSponsored: 0, // Real data requires Congress.gov API integration
+            billsCoSponsored: 0, // Real data requires Congress.gov API integration
+            billsPassedHouse: 0, // Real data requires Congress.gov API integration
+            billsPassedSenate: 0, // Real data requires Congress.gov API integration
+            billsBecameLaw: 0, // Real data requires Congress.gov API integration
           },
           finance: {
-            totalRaised: Math.floor(Math.random() * 5000000) + 1000000,
-            individualContributions: Math.floor(Math.random() * 3000000) + 500000,
-            pacContributions: Math.floor(Math.random() * 1500000) + 200000,
-            selfFunded: Math.floor(Math.random() * 500000),
-            topContributors: [],
+            totalRaised: 0, // Real data requires FEC API integration
+            individualContributions: 0, // Real data requires FEC API integration
+            pacContributions: 0, // Real data requires FEC API integration
+            selfFunded: 0, // Real data requires FEC API integration
+            topContributors: [], // Real data requires FEC API integration
           },
           ratings: {
-            conservativeScore:
-              rep.party === 'R'
-                ? Math.floor(Math.random() * 50) + 50
-                : Math.floor(Math.random() * 30),
-            liberalScore:
-              rep.party === 'D'
-                ? Math.floor(Math.random() * 50) + 50
-                : Math.floor(Math.random() * 30),
-            bipartisanScore: Math.floor(Math.random() * 40) + 30,
-            effectivenessScore: Math.floor(Math.random() * 60) + 40,
+            conservativeScore: 0, // Real data requires third-party analysis
+            liberalScore: 0, // Real data requires third-party analysis
+            bipartisanScore: 0, // Real data requires voting record analysis
+            effectivenessScore: 0, // Real data requires legislative effectiveness analysis
           },
           newsMetrics: {
-            totalMentions: Math.floor(Math.random() * 1000) + 100,
-            positiveSentiment: Math.floor(Math.random() * 40) + 20,
-            negativeSentiment: Math.floor(Math.random() * 30) + 10,
-            neutralSentiment: 0,
+            totalMentions: 0, // Real data requires GDELT API integration
+            positiveSentiment: 0, // Real data requires sentiment analysis
+            negativeSentiment: 0, // Real data requires sentiment analysis
+            neutralSentiment: 0, // Real data requires sentiment analysis
           },
           districtDemographics: {
-            population: Math.floor(Math.random() * 500000) + 500000,
-            medianIncome: Math.floor(Math.random() * 40000) + 50000,
-            educationBachelor: Math.floor(Math.random() * 30) + 20,
-            unemploymentRate: Math.floor(Math.random() * 5) + 3,
-            urbanPercentage: Math.floor(Math.random() * 60) + 20,
+            population: 0, // Real data requires Census API integration
+            medianIncome: 0, // Real data requires Census API integration
+            educationBachelor: 0, // Real data requires Census API integration
+            unemploymentRate: 0, // Real data requires Census API integration
+            urbanPercentage: 0, // Real data requires Census API integration
           },
         })
       );
@@ -1019,72 +1008,64 @@ function ComparePageContent() {
       // Fallback to mock data if API fails
       const mockReps: Representative[] = Array.from({ length: 20 }, (_, i) => ({
         bioguideId: `B00${1000 + i}`,
-        name:
-          ['Sen. John Smith', 'Rep. Jane Doe', 'Sen. Bob Johnson', 'Rep. Mary Williams'][i % 4] ||
-          'Unknown Representative',
+        name: 'Representative Data Unavailable',
         party: i % 3 === 0 ? 'Democratic' : 'Republican',
         state: ['CA', 'TX', 'NY', 'FL', 'IL'][i % 5] || 'Unknown',
         district: i % 2 === 0 ? undefined : String((i % 10) + 1),
         chamber: i % 2 === 0 ? 'Senate' : 'House',
         title: i % 2 === 0 ? 'U.S. Senator' : 'U.S. Representative',
-        yearsInOffice: Math.floor(Math.random() * 20) + 1,
-        startDate: new Date(2024 - Math.floor(Math.random() * 20), 0, 1).toISOString(),
+        yearsInOffice: 0, // Real data unavailable
+        startDate: new Date().toISOString(), // Real data unavailable
         imageUrl: undefined,
         committees: [
           { name: 'Ways and Means', role: i % 3 === 0 ? 'Chair' : undefined },
           { name: 'Foreign Affairs' },
           { name: 'Energy and Commerce' },
-        ].slice(0, Math.floor(Math.random() * 3) + 1),
+        ].slice(0, 1), // Single committee assignment when data unavailable
         votingRecord: {
-          totalVotes: Math.floor(Math.random() * 1000) + 500,
-          partyLineVotes: Math.floor(Math.random() * 900) + 400,
-          missedVotes: Math.floor(Math.random() * 50),
+          totalVotes: 0, // Real data unavailable
+          partyLineVotes: 0, // Real data unavailable
+          missedVotes: 0, // Real data unavailable
           keyVotes: {
-            healthcare: getRandomVote(),
-            environment: getRandomVote(),
-            economy: getRandomVote(),
-            defense: getRandomVote(),
-            immigration: getRandomVote(),
+            healthcare: 'Not Voting', // Real data unavailable
+            environment: 'Not Voting', // Real data unavailable
+            economy: 'Not Voting', // Real data unavailable
+            defense: 'Not Voting', // Real data unavailable
+            immigration: 'Not Voting', // Real data unavailable
           },
         },
         legislation: {
-          billsSponsored: Math.floor(Math.random() * 50) + 10,
-          billsCoSponsored: Math.floor(Math.random() * 200) + 50,
-          billsPassedHouse: Math.floor(Math.random() * 20),
-          billsPassedSenate: Math.floor(Math.random() * 15),
-          billsBecameLaw: Math.floor(Math.random() * 5),
+          billsSponsored: 0, // Real data unavailable
+          billsCoSponsored: 0, // Real data unavailable
+          billsPassedHouse: 0, // Real data unavailable
+          billsPassedSenate: 0, // Real data unavailable
+          billsBecameLaw: 0, // Real data unavailable
         },
         finance: {
-          totalRaised: Math.floor(Math.random() * 5000000) + 1000000,
-          individualContributions: Math.floor(Math.random() * 3000000) + 500000,
-          pacContributions: Math.floor(Math.random() * 1500000) + 200000,
-          selfFunded: Math.floor(Math.random() * 500000),
-          topContributors: [
-            { name: 'Contributor A', amount: Math.floor(Math.random() * 50000) + 10000 },
-            { name: 'Contributor B', amount: Math.floor(Math.random() * 40000) + 8000 },
-            { name: 'Contributor C', amount: Math.floor(Math.random() * 30000) + 5000 },
-          ],
+          totalRaised: 0, // Real data unavailable
+          individualContributions: 0, // Real data unavailable
+          pacContributions: 0, // Real data unavailable
+          selfFunded: 0, // Real data unavailable
+          topContributors: [], // Real data unavailable
         },
         ratings: {
-          conservativeScore:
-            i % 3 === 1 ? Math.floor(Math.random() * 50) + 50 : Math.floor(Math.random() * 30),
-          liberalScore:
-            i % 3 === 0 ? Math.floor(Math.random() * 50) + 50 : Math.floor(Math.random() * 30),
-          bipartisanScore: Math.floor(Math.random() * 40) + 30,
-          effectivenessScore: Math.floor(Math.random() * 60) + 40,
+          conservativeScore: 0, // Real data unavailable
+          liberalScore: 0, // Real data unavailable
+          bipartisanScore: 0, // Real data unavailable
+          effectivenessScore: 0, // Real data unavailable
         },
         newsMetrics: {
-          totalMentions: Math.floor(Math.random() * 1000) + 100,
-          positiveSentiment: Math.floor(Math.random() * 40) + 20,
-          negativeSentiment: Math.floor(Math.random() * 30) + 10,
-          neutralSentiment: Math.floor(Math.random() * 50) + 20,
+          totalMentions: 0, // Real data unavailable
+          positiveSentiment: 0, // Real data unavailable
+          negativeSentiment: 0, // Real data unavailable
+          neutralSentiment: 0, // Real data unavailable
         },
         districtDemographics: {
-          population: Math.floor(Math.random() * 500000) + 500000,
-          medianIncome: Math.floor(Math.random() * 40000) + 50000,
-          educationBachelor: Math.floor(Math.random() * 30) + 20,
-          unemploymentRate: Math.floor(Math.random() * 5) + 3,
-          urbanPercentage: Math.floor(Math.random() * 60) + 20,
+          population: 0, // Real data unavailable
+          medianIncome: 0, // Real data unavailable
+          educationBachelor: 0, // Real data unavailable
+          unemploymentRate: 0, // Real data unavailable
+          urbanPercentage: 0, // Real data unavailable
         },
       }));
       setRepresentatives(mockReps);

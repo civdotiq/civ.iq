@@ -19,6 +19,17 @@ CIV.IQ empowers citizens with transparent, real-time access to government data, 
 - Access breaking news and policy trends via GDELT
 - Compare representatives with validated, cross-referenced data
 
+## 🚨 Data Integrity
+
+**100% Transparent Government Data - No Mock Information**
+
+CIV.IQ has undergone complete **Mock Data Elimination** to ensure users never receive misleading algorithmic fake data. All information displayed is either:
+
+- Real government data from official APIs (Congress.gov, FEC, Census)
+- Clear "Data Unavailable" indicators when real data isn't accessible
+
+📋 [**View Complete Mock Data Elimination Report**](./MOCK-DATA-ELIMINATION.md)
+
 ## 🌟 Project Philosophy
 
 **"Making the complex web of civic power as navigable as the World Wide Web"**

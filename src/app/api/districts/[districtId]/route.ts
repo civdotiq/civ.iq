@@ -464,37 +464,22 @@ async function getDistrictDemographics(
  * Generate realistic placeholder demographics based on state and district
  */
 function generatePlaceholderDemographics(
-  state: string,
-  district: string
+  _state: string,
+  _district: string
 ): DistrictDetails['demographics'] {
-  // Use state and district to generate consistent but varied data
-  const seed = state.charCodeAt(0) + parseInt(district) * 10;
-  const random = (n: number) => ((seed * n * 9301 + 49297) % 233280) / 233280;
-
-  // Base demographics on general US patterns with state variations
-  const basePopulation = 760000; // Average district size
-  const stateMultipliers: Record<string, { pop: number; income: number; urban: number }> = {
-    CA: { pop: 1.1, income: 1.3, urban: 0.9 },
-    NY: { pop: 1.0, income: 1.2, urban: 0.95 },
-    TX: { pop: 1.2, income: 0.95, urban: 0.8 },
-    FL: { pop: 1.05, income: 0.9, urban: 0.85 },
-    MI: { pop: 0.95, income: 0.9, urban: 0.75 },
-  };
-
-  const multiplier = stateMultipliers[state] || { pop: 1.0, income: 1.0, urban: 0.7 };
-
+  // No mock demographic data - return unavailable indicators
   return {
-    population: Math.floor(basePopulation * multiplier.pop * (0.8 + random(1) * 0.4)),
-    medianIncome: Math.floor(65000 * multiplier.income * (0.7 + random(2) * 0.6)),
-    medianAge: 35 + random(3) * 15,
-    diversityIndex: random(4) * 100,
-    urbanPercentage: Math.floor(multiplier.urban * 100 * (0.3 + random(5) * 0.7)),
-    white_percent: 40 + random(6) * 40,
-    black_percent: 5 + random(7) * 30,
-    hispanic_percent: 5 + random(8) * 25,
-    asian_percent: 2 + random(9) * 15,
-    poverty_rate: 5 + random(10) * 20,
-    bachelor_degree_percent: 20 + random(11) * 30,
+    population: 0,
+    medianIncome: 0,
+    medianAge: 0,
+    diversityIndex: 0,
+    urbanPercentage: 0,
+    white_percent: 0,
+    black_percent: 0,
+    hispanic_percent: 0,
+    asian_percent: 0,
+    poverty_rate: 0,
+    bachelor_degree_percent: 0,
   };
 }
 
@@ -703,19 +688,8 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
         : { startYear: currentYear.toString() };
     const yearsInOffice = currentYear - parseInt(firstTerm?.startYear || currentYear.toString());
 
-    // Generate political data based on party
-    const isRepublican = representative.party?.toLowerCase().includes('republican');
-    const isDemocratic =
-      representative.party?.toLowerCase().includes('democratic') ||
-      representative.party?.toLowerCase().includes('democrat');
-
-    // Estimate PVI based on party and add some randomness
-    let cookPVI = 'EVEN';
-    if (isRepublican) {
-      cookPVI = `R+${Math.floor(Math.random() * 15) + 2}`;
-    } else if (isDemocratic) {
-      cookPVI = `D+${Math.floor(Math.random() * 15) + 2}`;
-    }
+    // Cook PVI data requires specialized political analysis
+    const cookPVI = 'Data unavailable';
 
     const districtDetails: DistrictDetails = {
       id: districtId.toLowerCase(),
@@ -736,11 +710,11 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
       political: {
         cookPVI,
         lastElection: {
-          winner: representative.party || 'Unknown',
-          margin: Math.random() * 30 + 2,
-          turnout: Math.floor(Math.random() * 20) + 60,
+          winner: 'Data unavailable',
+          margin: 0,
+          turnout: 0,
         },
-        registeredVoters: Math.floor(Math.random() * 200000) + 400000,
+        registeredVoters: 0,
       },
       geography: await getDistrictGeography(representative.state, representative.district || '01'),
     };
@@ -775,8 +749,8 @@ export async function GET(
       district,
       metadata: {
         timestamp: new Date().toISOString(),
-        dataSource: 'congress-legislators + estimates',
-        note: 'Demographic data includes estimates. Full Census integration provides more accurate data.',
+        dataSource: 'congress-legislators + census-api',
+        note: 'Political data unavailable. Demographic data from Census API when available, otherwise marked as unavailable.',
       },
     });
   } catch (error) {

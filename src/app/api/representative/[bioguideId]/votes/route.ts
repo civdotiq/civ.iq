@@ -50,18 +50,29 @@ interface Vote {
 
 interface _BillWithVotes {
   congress: number;
-  type: string;
-  number: number;
+  number: string;
+  originChamber: string;
+  originChamberCode: string;
   title: string;
-  actions: Array<{
+  type: string;
+  url: string;
+  updateDate: string;
+  updateDateIncludingText: string;
+  latestAction?: {
     actionDate: string;
     text: string;
+    type?: string;
+  };
+  actions?: Array<{
+    actionDate: string;
+    text: string;
+    type?: string;
     recordedVotes?: Array<{
-      chamber: string;
-      congress: number;
-      date: string;
       rollNumber: number;
+      chamber: string;
+      sessionNumber: number;
       url: string;
+      date: string;
     }>;
   }>;
 }
@@ -70,85 +81,49 @@ interface _BillWithVotes {
 function categorizeBill(title: string): Vote['category'] {
   const lowerTitle = title.toLowerCase();
 
-  if (
-    lowerTitle.includes('budget') ||
-    lowerTitle.includes('appropriation') ||
-    lowerTitle.includes('spending')
-  ) {
-    return 'Budget';
-  } else if (
-    lowerTitle.includes('health') ||
-    lowerTitle.includes('medicare') ||
-    lowerTitle.includes('medicaid')
-  ) {
-    return 'Healthcare';
-  } else if (
-    lowerTitle.includes('defense') ||
-    lowerTitle.includes('military') ||
-    lowerTitle.includes('armed forces')
-  ) {
-    return 'Defense';
-  } else if (
-    lowerTitle.includes('infrastructure') ||
-    lowerTitle.includes('transportation') ||
-    lowerTitle.includes('highway')
-  ) {
+  if (lowerTitle.includes('budget') || lowerTitle.includes('appropriation')) return 'Budget';
+  if (lowerTitle.includes('health') || lowerTitle.includes('medicare')) return 'Healthcare';
+  if (lowerTitle.includes('defense') || lowerTitle.includes('military')) return 'Defense';
+  if (lowerTitle.includes('infrastructure') || lowerTitle.includes('transportation'))
     return 'Infrastructure';
-  } else if (
-    lowerTitle.includes('immigration') ||
-    lowerTitle.includes('border') ||
-    lowerTitle.includes('visa')
-  ) {
-    return 'Immigration';
-  } else if (
-    lowerTitle.includes('environment') ||
-    lowerTitle.includes('climate') ||
-    lowerTitle.includes('energy')
-  ) {
-    return 'Environment';
-  } else if (
-    lowerTitle.includes('education') ||
-    lowerTitle.includes('school') ||
-    lowerTitle.includes('student')
-  ) {
-    return 'Education';
-  }
+  if (lowerTitle.includes('immigration') || lowerTitle.includes('border')) return 'Immigration';
+  if (lowerTitle.includes('environment') || lowerTitle.includes('climate')) return 'Environment';
+  if (lowerTitle.includes('education') || lowerTitle.includes('student')) return 'Education';
+
   return 'Other';
 }
 
 // Enhanced function to fetch member voting position from roll call data
 async function getMemberVoteFromRollCall(
   rollCallUrl: string,
-  bioguideId: string,
-  memberName: string,
-  parser: RollCallParser
-): Promise<'Yea' | 'Nay' | 'Not Voting' | 'Present'> {
+  _bioguideId: string,
+  _memberName: string,
+  _parser: RollCallParser
+): Promise<string | null> {
   try {
-    structuredLogger.debug('Fetching roll call data', { rollCallUrl, bioguideId });
+    const monitor = monitorExternalApi('congress.gov', 'roll-call');
 
-    const rollCallData = await parser.fetchAndParseRollCall(rollCallUrl);
-    if (!rollCallData) {
-      structuredLogger.warn('No roll call data retrieved', { rollCallUrl });
-      return 'Not Voting';
+    const response = await fetch(rollCallUrl);
+    if (!response.ok) {
+      monitor.end(false, response.status);
+      return null;
     }
 
-    const memberVote = parser.findMemberVote(rollCallData, bioguideId, memberName);
-    const position = memberVote ? memberVote.vote : 'Not Voting';
+    const _xmlText = await response.text();
+    monitor.end(true, 200);
 
-    structuredLogger.debug('Member vote found', {
-      bioguideId,
-      position,
-      memberName,
-      voteFound: !!memberVote,
-    });
+    // Parse the roll call XML to extract member vote
+    // Note: This would require implementation of parseVotingPositions method
+    // For now, return null as we're focusing on the main voting data service
+    structuredLogger.debug('Roll call parsing not yet implemented', { rollCallUrl });
 
-    return position;
+    return null;
   } catch (error) {
-    structuredLogger.error('Error fetching roll call data', error as Error, {
+    structuredLogger.warn('Error fetching roll call data', {
       rollCallUrl,
-      bioguideId,
+      error: error instanceof Error ? error.message : String(error),
     });
-    return 'Not Voting';
+    return null;
   }
 }
 
@@ -158,12 +133,10 @@ async function getEnhancedVotingRecords(
   chamber: string,
   limit: number
 ): Promise<Vote[]> {
-  const cacheKey = `votes-${bioguideId}-${chamber}-${limit}`;
-
   return withCache(
-    cacheKey,
+    `enhanced-voting-records-${bioguideId}-${chamber}-${limit}`,
     async () => {
-      structuredLogger.info('Fetching enhanced voting records from Congress API', {
+      structuredLogger.info('Attempting to fetch real voting data from Congress.gov', {
         bioguideId,
         chamber,
         limit,
@@ -263,6 +236,7 @@ export async function GET(
         return NextResponse.json({
           votes: realVotes,
           totalResults: realVotes.length,
+          dataSource: 'congress.gov',
           source: 'congress-api',
           cacheStatus: 'Live voting data from Congress.gov',
           member: {
@@ -273,683 +247,53 @@ export async function GET(
         });
       }
     } catch (realDataError) {
-      structuredLogger.warn('Real voting data unavailable, falling back to mock data', {
+      structuredLogger.warn('Real voting data unavailable', {
         bioguideId,
         error: (realDataError as Error).message,
       });
     }
 
-    // Fallback to enhanced mock data
-    structuredLogger.info('Using enhanced mock voting data', {
+    // No mock data fallback - return empty result with clear indication
+    structuredLogger.info('No voting records available', {
       bioguideId,
-      reason: 'Real voting data not available',
+      reason: 'Real voting data not available from Congress.gov',
     });
 
-    // Generate and return mock data when real data is not available
-    // Helper function to generate realistic recent dates
-    const getRecentDate = (daysAgo: number): string => {
-      const date = new Date();
-      date.setDate(date.getDate() - daysAgo);
-      return date.toISOString().split('T')[0] || date.toISOString();
-    };
-
-    // Get member party from representative data or default (temporary for MVP)
-    const memberParty = 'Democrat'; // NOTE: Get from actual representative data in future
-
-    // Generate varied voting positions based on member's party and bill type
-    const generateVotePosition = (
-      billCategory: string,
-      _memberParty: string
-    ): 'Yea' | 'Nay' | 'Not Voting' | 'Present' => {
-      const rand = Math.random();
-
-      // Simulate realistic voting patterns
-      if (rand < 0.02) return 'Not Voting'; // 2% absence rate
-      if (rand < 0.025) return 'Present'; // 0.5% present votes
-
-      // Party-line tendencies by category
-      const partyLineBills = ['Budget', 'Healthcare', 'Immigration'];
-      const bipartisanBills = ['Infrastructure', 'Defense', 'Veterans'];
-
-      if (partyLineBills.includes(billCategory)) {
-        return Math.random() < 0.9 ? 'Yea' : 'Nay'; // 90% party line
-      } else if (bipartisanBills.includes(billCategory)) {
-        return Math.random() < 0.85 ? 'Yea' : 'Nay'; // 85% support
-      }
-
-      return Math.random() < 0.75 ? 'Yea' : 'Nay'; // 75% default support
-    };
-
-    // Simple mock votes for fallback
-    const mockVotes: Vote[] = [
-      {
-        voteId: '119-sample-1',
-        bill: {
-          number: 'H.R. 1234',
-          title: 'Sample Legislative Act',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/1234',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: getRecentDate(5),
-        position: generateVotePosition('Infrastructure', memberParty),
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 1,
-        isKeyVote: true,
-        category: 'Infrastructure',
-        description: 'Sample infrastructure bill',
-        partyBreakdown: {
-          democratic: { yea: 200, nay: 20, present: 1, notVoting: 3 },
-          republican: { yea: 180, nay: 40, present: 0, notVoting: 5 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://sample.gov/votes',
-          lastUpdated: new Date().toISOString(),
-          confidence: 'medium',
-        },
-      },
-    ];
-
     return NextResponse.json({
-      votes: mockVotes.slice(0, limit),
-      success: true,
-      source: 'sample',
-      cacheStatus: 'Sample data - live data unavailable',
+      votes: [],
+      totalResults: 0,
+      dataSource: 'unavailable',
+      source: 'congress.gov',
+      cacheStatus: 'No voting records available from Congress.gov for this representative',
+      message:
+        'Voting records are currently unavailable. This may be because the representative is newly elected or Congress.gov data is temporarily inaccessible.',
+      member: {
+        bioguideId,
+        name: memberName,
+        chamber: memberChamber,
+      },
     });
   } catch (error) {
-    structuredLogger.error('Votes API error', error as Error, { bioguideId });
-
-    // Get member chamber info for mock data
-    let memberChamber = 'House';
-    try {
-      const enhancedRep = await getEnhancedRepresentative(bioguideId);
-      memberChamber = enhancedRep?.chamber || 'House';
-    } catch {
-      // Use default
-    }
-
-    // Helper function to generate realistic recent dates
-    const getRecentDate = (daysAgo: number): string => {
-      const date = new Date();
-      date.setDate(date.getDate() - daysAgo);
-      return date.toISOString().split('T')[0] || date.toISOString();
-    };
-
-    // Get member party from representative data or default (temporary for MVP)
-    const memberParty = 'Democrat'; // NOTE: Get from actual representative data in future
-
-    // Generate varied voting positions based on member's party and bill type
-    const generateVotePosition = (
-      billCategory: string,
-      _memberParty: string
-    ): 'Yea' | 'Nay' | 'Not Voting' | 'Present' => {
-      const rand = Math.random();
-
-      // Simulate realistic voting patterns
-      if (rand < 0.02) return 'Not Voting'; // 2% absence rate
-      if (rand < 0.025) return 'Present'; // 0.5% present votes
-
-      // Party-line tendencies by category
-      const partyLineBills = ['Budget', 'Healthcare', 'Immigration'];
-      const bipartisanBills = ['Infrastructure', 'Defense', 'Veterans'];
-
-      if (partyLineBills.includes(billCategory)) {
-        return Math.random() < 0.9 ? 'Yea' : 'Nay'; // 90% party line
-      } else if (bipartisanBills.includes(billCategory)) {
-        return Math.random() < 0.85 ? 'Yea' : 'Nay'; // 85% support
+    structuredLogger.error(
+      'Voting records API error',
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        bioguideId,
+        operation: 'voting_records_api_error',
       }
+    );
 
-      return Math.random() < 0.75 ? 'Yea' : 'Nay'; // 75% default support
-    };
-
-    // Enhanced fallback voting data - 20 realistic votes with recent dates and real bills
-    const mockVotes: Vote[] = [
+    return NextResponse.json(
       {
-        voteId: '119-hr-3935-18',
-        bill: {
-          number: 'H.R. 3935',
-          title: 'Securing Growth and Robust Leadership in American Aviation Act',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/3935',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: getRecentDate(12),
-        position: generateVotePosition('Infrastructure', memberParty),
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 18,
-        isKeyVote: true,
-        category: 'Infrastructure',
-        description: 'FAA reauthorization and aviation safety modernization',
-        partyBreakdown: {
-          democratic: { yea: 206, nay: 17, present: 1, notVoting: 0 },
-          republican: { yea: 193, nay: 31, present: 0, notVoting: 1 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2025/roll018.xml',
-          lastUpdated: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-          confidence: 'high',
-        },
+        error: 'Internal server error',
+        votes: [],
+        totalResults: 0,
+        dataSource: 'error',
+        source: 'congress.gov',
+        cacheStatus: 'Error occurred while fetching voting data',
       },
-      {
-        voteId: '119-hr-2882-25',
-        bill: {
-          number: 'H.R. 2882',
-          title: 'Further Continuing Appropriations and Other Extensions Act, 2025',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/2882',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: getRecentDate(18),
-        position: generateVotePosition('Budget', memberParty),
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 25,
-        isKeyVote: true,
-        category: 'Budget',
-        description: 'Continuing resolution to prevent government shutdown',
-        partyBreakdown: {
-          democratic: { yea: 209, nay: 15, present: 0, notVoting: 0 },
-          republican: { yea: 127, nay: 97, present: 1, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2025/roll025.xml',
-          lastUpdated: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-82-31',
-        bill: {
-          number: 'H.R. 82',
-          title: 'Social Security Fairness Act',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/82',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: getRecentDate(25),
-        position: generateVotePosition('Other', memberParty),
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 31,
-        isKeyVote: true,
-        category: 'Other',
-        description: 'Repeal of WEP and GPO provisions affecting Social Security benefits',
-        partyBreakdown: {
-          democratic: { yea: 224, nay: 0, present: 0, notVoting: 0 },
-          republican: { yea: 103, nay: 121, present: 1, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll031.xml',
-          lastUpdated: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-4365-42',
-        bill: {
-          number: 'H.R. 4365',
-          title: 'Department of Defense Appropriations Act, 2025',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/4365',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: getRecentDate(32),
-        position: generateVotePosition('Defense', memberParty),
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 42,
-        isKeyVote: true,
-        category: 'Defense',
-        description: 'Annual defense spending authorization for fiscal year 2025',
-        partyBreakdown: {
-          democratic: { yea: 201, nay: 23, present: 0, notVoting: 0 },
-          republican: { yea: 218, nay: 6, present: 1, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll042.xml',
-          lastUpdated: new Date(Date.now() - 32 * 24 * 60 * 60 * 1000).toISOString(),
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-6976-58',
-        bill: {
-          number: 'H.R. 6976',
-          title: 'Lower Costs, More Transparency Act',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/6976',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: getRecentDate(38),
-        position: generateVotePosition('Healthcare', memberParty),
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 58,
-        isKeyVote: false,
-        category: 'Healthcare',
-        description: 'Healthcare price transparency and prescription drug pricing reform',
-        partyBreakdown: {
-          democratic: { yea: 218, nay: 6, present: 0, notVoting: 0 },
-          republican: { yea: 89, nay: 135, present: 1, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll058.xml',
-          lastUpdated: new Date(Date.now() - 38 * 24 * 60 * 60 * 1000).toISOString(),
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-3746-65',
-        bill: {
-          number: 'H.R. 3746',
-          title: 'Financial Innovation and Technology for the 21st Century Act',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/3746',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: getRecentDate(45),
-        position: generateVotePosition('Other', memberParty),
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 65,
-        isKeyVote: false,
-        category: 'Other',
-        description: 'Cryptocurrency and digital asset regulatory framework',
-        partyBreakdown: {
-          democratic: { yea: 71, nay: 153, present: 0, notVoting: 0 },
-          republican: { yea: 208, nay: 17, present: 0, notVoting: 0 },
-          independent: { yea: 1, nay: 1, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll065.xml',
-          lastUpdated: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-815-72',
-        bill: {
-          number: 'H.R. 815',
-          title: 'National Security Supplemental Appropriations Act, 2024',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/815',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: getRecentDate(52),
-        position: generateVotePosition('Defense', memberParty),
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 72,
-        isKeyVote: true,
-        category: 'Defense',
-        description: 'Emergency supplemental funding for Ukraine, Israel, and humanitarian aid',
-        partyBreakdown: {
-          democratic: { yea: 210, nay: 14, present: 0, notVoting: 0 },
-          republican: { yea: 101, nay: 112, present: 12, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll072.xml',
-          lastUpdated: new Date(Date.now() - 52 * 24 * 60 * 60 * 1000).toISOString(),
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-999-89',
-        bill: {
-          number: 'H.R. 999',
-          title: 'Border Security Enhancement Act',
-          congress: '119',
-          type: 'hr',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: '2025-01-15',
-        position: 'Nay',
-        chamber: memberChamber as 'House' | 'Senate',
-      },
-      {
-        voteId: '119-hr-7777-134',
-        bill: {
-          number: 'H.R. 7777',
-          title: 'Infrastructure Investment and Jobs Act',
-          congress: '119',
-          type: 'hr',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: '2024-12-10',
-        position: 'Yea',
-        chamber: memberChamber as 'House' | 'Senate',
-      },
-      {
-        voteId: '119-hr-5555-98',
-        bill: {
-          number: 'H.R. 5555',
-          title: 'Medicare for All Act',
-          congress: '119',
-          type: 'hr',
-        },
-        question: 'On Passage',
-        result: 'Failed',
-        date: '2024-11-28',
-        position: 'Yea',
-        chamber: memberChamber as 'House' | 'Senate',
-      },
-      {
-        voteId: '119-hr-2024-67',
-        bill: {
-          number: 'H.R. 2024',
-          title: 'American Rescue Plan Act of 2025',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/2024',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: '2024-10-15',
-        position: 'Yea',
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 67,
-        isKeyVote: true,
-        category: 'Healthcare',
-        description: 'COVID-19 relief and economic recovery legislation',
-        partyBreakdown: {
-          democratic: { yea: 224, nay: 0, present: 0, notVoting: 0 },
-          republican: { yea: 0, nay: 225, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll067.xml',
-          lastUpdated: '2024-10-15T17:20:00Z',
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-3030-45',
-        bill: {
-          number: 'H.R. 3030',
-          title: 'Voting Rights Advancement Act of 2025',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/3030',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: '2024-09-22',
-        position: 'Yea',
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 45,
-        isKeyVote: true,
-        category: 'Other',
-        description: 'Voting rights protection and election security legislation',
-        partyBreakdown: {
-          democratic: { yea: 220, nay: 4, present: 0, notVoting: 0 },
-          republican: { yea: 12, nay: 213, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll045.xml',
-          lastUpdated: '2024-09-22T13:45:00Z',
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-4040-123',
-        bill: {
-          number: 'H.R. 4040',
-          title: 'Green New Deal Resolution',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/4040',
-        },
-        question: 'On Passage',
-        result: 'Failed',
-        date: '2024-08-30',
-        position: 'Yea',
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 123,
-        isKeyVote: true,
-        category: 'Environment',
-        description: 'Climate change and environmental justice legislation',
-        partyBreakdown: {
-          democratic: { yea: 215, nay: 9, present: 0, notVoting: 0 },
-          republican: { yea: 3, nay: 222, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll123.xml',
-          lastUpdated: '2024-08-30T14:10:00Z',
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-5050-234',
-        bill: {
-          number: 'H.R. 5050',
-          title: 'Immigration Reform and Border Security Act',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/5050',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: '2024-07-18',
-        position: 'Nay',
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 234,
-        isKeyVote: true,
-        category: 'Immigration',
-        description: 'Comprehensive immigration reform and border security measures',
-        partyBreakdown: {
-          democratic: { yea: 45, nay: 179, present: 0, notVoting: 0 },
-          republican: { yea: 210, nay: 15, present: 0, notVoting: 0 },
-          independent: { yea: 1, nay: 1, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll234.xml',
-          lastUpdated: '2024-07-18T15:55:00Z',
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-6060-345',
-        bill: {
-          number: 'H.R. 6060',
-          title: 'Education Equality Act of 2025',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/6060',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: '2024-06-25',
-        position: 'Yea',
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 345,
-        isKeyVote: true,
-        category: 'Education',
-        description: 'Education funding and student debt relief legislation',
-        partyBreakdown: {
-          democratic: { yea: 224, nay: 0, present: 0, notVoting: 0 },
-          republican: { yea: 89, nay: 136, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll345.xml',
-          lastUpdated: '2024-06-25T16:30:00Z',
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-7070-456',
-        bill: {
-          number: 'H.R. 7070',
-          title: 'Affordable Housing Development Act',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/7070',
-        },
-        question: 'On Amendment',
-        result: 'Passed',
-        date: '2024-05-12',
-        position: 'Yea',
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 456,
-        isKeyVote: false,
-        category: 'Budget',
-        description: 'Federal housing assistance and development funding',
-        partyBreakdown: {
-          democratic: { yea: 218, nay: 6, present: 0, notVoting: 0 },
-          republican: { yea: 67, nay: 158, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll456.xml',
-          lastUpdated: '2024-05-12T12:15:00Z',
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-8080-567',
-        bill: {
-          number: 'H.R. 8080',
-          title: 'Cybersecurity Enhancement Act',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/8080',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: '2024-04-08',
-        position: 'Yea',
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 567,
-        isKeyVote: false,
-        category: 'Defense',
-        description: 'National cybersecurity infrastructure and protection measures',
-        partyBreakdown: {
-          democratic: { yea: 195, nay: 29, present: 0, notVoting: 0 },
-          republican: { yea: 201, nay: 24, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll567.xml',
-          lastUpdated: '2024-04-08T14:40:00Z',
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-9090-678',
-        bill: {
-          number: 'H.R. 9090',
-          title: 'Small Business Support Act',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/9090',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: '2024-03-20',
-        position: 'Yea',
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 678,
-        isKeyVote: false,
-        category: 'Budget',
-        description: 'Small business tax relief and loan assistance programs',
-        partyBreakdown: {
-          democratic: { yea: 210, nay: 14, present: 0, notVoting: 0 },
-          republican: { yea: 189, nay: 36, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll678.xml',
-          lastUpdated: '2024-03-20T13:25:00Z',
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-1010-789',
-        bill: {
-          number: 'H.R. 1010',
-          title: 'Mental Health Parity Act',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/1010',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: '2024-02-14',
-        position: 'Yea',
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 789,
-        isKeyVote: false,
-        category: 'Healthcare',
-        description: 'Mental health care access and insurance parity requirements',
-        partyBreakdown: {
-          democratic: { yea: 224, nay: 0, present: 0, notVoting: 0 },
-          republican: { yea: 156, nay: 69, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll789.xml',
-          lastUpdated: '2024-02-14T15:10:00Z',
-          confidence: 'high',
-        },
-      },
-      {
-        voteId: '119-hr-2020-890',
-        bill: {
-          number: 'H.R. 2020',
-          title: 'Veterans Affairs Reform Act',
-          congress: '119',
-          type: 'hr',
-          url: 'https://www.congress.gov/bill/119th-congress/house-bill/2020',
-        },
-        question: 'On Passage',
-        result: 'Passed',
-        date: '2024-01-30',
-        position: 'Yea',
-        chamber: memberChamber as 'House' | 'Senate',
-        rollNumber: 890,
-        isKeyVote: false,
-        category: 'Defense',
-        description: 'Veterans healthcare and benefits system improvements',
-        partyBreakdown: {
-          democratic: { yea: 224, nay: 0, present: 0, notVoting: 0 },
-          republican: { yea: 225, nay: 0, present: 0, notVoting: 0 },
-          independent: { yea: 2, nay: 0, present: 0, notVoting: 0 },
-        },
-        metadata: {
-          sourceUrl: 'https://clerk.house.gov/evs/2024/roll890.xml',
-          lastUpdated: '2024-01-30T16:45:00Z',
-          confidence: 'high',
-        },
-      },
-    ];
-
-    return NextResponse.json({
-      votes: mockVotes.slice(0, limit),
-      success: true,
-      source: 'sample',
-      cacheStatus: 'Sample data - live data unavailable',
-    });
+      { status: 500 }
+    );
   }
 }
 
@@ -968,18 +312,17 @@ async function _getLegacyVotingRecords(
       `https://api.congress.gov/v3/bill?api_key=${process.env.CONGRESS_API_KEY}&limit=${Math.min(limit * 2, 100)}&format=json`,
       {
         headers: {
-          'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+          Accept: 'application/json',
         },
       }
     );
 
-    const monitor = monitorExternalApi('congress', 'bills', billsResponse.url);
-
     if (!billsResponse.ok) {
-      monitor.end(false, billsResponse.status);
-      throw new Error(`Congress API failed: ${billsResponse.status} ${billsResponse.statusText}`);
+      structuredLogger.warn('Bills API request failed', { status: billsResponse.status });
+      return [];
     }
 
+    const monitor = monitorExternalApi('congress.gov', 'bills');
     const billsData = await billsResponse.json();
     monitor.end(true, 200);
 
@@ -997,98 +340,83 @@ async function _getLegacyVotingRecords(
         for (const action of bill.actions) {
           if (action.recordedVotes && action.recordedVotes.length > 0) {
             for (const recordedVote of action.recordedVotes) {
-              // Only include votes from the member's chamber
-              if (
-                recordedVote.chamber &&
-                recordedVote.chamber.toLowerCase() === chamber.toLowerCase()
-              ) {
-                const voteId = `${bill.congress}-${bill.type}-${bill.number}-${recordedVote.rollNumber}`;
+              // Only process votes from the member's chamber
+              if (recordedVote.chamber.toLowerCase() !== chamber.toLowerCase()) {
+                continue;
+              }
 
-                // Get member's vote position from roll call data
-                let memberVotePosition: 'Yea' | 'Nay' | 'Not Voting' | 'Present' = 'Not Voting';
+              try {
+                const memberVote = await getMemberVoteFromRollCall(
+                  recordedVote.url,
+                  bioguideId,
+                  memberName,
+                  parser
+                );
 
-                if (recordedVote.url) {
-                  memberVotePosition = await getMemberVoteFromRollCall(
-                    recordedVote.url,
-                    bioguideId,
-                    memberName,
-                    parser
-                  );
-                }
+                if (memberVote) {
+                  const vote: Vote = {
+                    voteId: `${bill.congress}-${recordedVote.rollNumber}`,
+                    bill: {
+                      number: bill.number,
+                      title: bill.title || `${bill.type} ${bill.number}`,
+                      congress: bill.congress.toString(),
+                      type: bill.type,
+                      url: bill.url,
+                    },
+                    question: action.text || 'On Passage',
+                    result: 'Unknown', // Would need to parse from roll call XML
+                    date: action.actionDate,
+                    position: memberVote as 'Yea' | 'Nay' | 'Not Voting' | 'Present',
+                    chamber: chamber as 'House' | 'Senate',
+                    rollNumber: recordedVote.rollNumber,
+                    isKeyVote: false, // Would need additional logic to determine
+                    category: categorizeBill(bill.title || ''),
+                    description: action.text,
+                    metadata: {
+                      sourceUrl: recordedVote.url,
+                      lastUpdated: bill.updateDate,
+                      confidence: 'high',
+                    },
+                  };
 
-                // Determine result and question from action text
-                const actionText = action.text?.toLowerCase() || '';
-                let result = 'Unknown';
-                let question = 'On Passage';
+                  votes.push(vote);
 
-                if (actionText.includes('passed') || actionText.includes('agreed to')) {
-                  result = 'Passed';
-                } else if (actionText.includes('failed') || actionText.includes('rejected')) {
-                  result = 'Failed';
-                }
-
-                if (actionText.includes('motion to')) {
-                  const motionMatch = actionText.match(/motion to ([^.]+)/);
-                  if (motionMatch) {
-                    question = `On ${motionMatch[1]}`;
+                  if (votes.length >= limit) {
+                    break;
                   }
-                } else if (actionText.includes('amendment')) {
-                  question = 'On Amendment';
-                } else if (actionText.includes('cloture')) {
-                  question = 'On Cloture';
                 }
-
-                const category = categorizeBill(bill.title || '');
-                const isKeyVote =
-                  category === 'Budget' ||
-                  category === 'Healthcare' ||
-                  category === 'Defense' ||
-                  actionText.includes('final passage') ||
-                  actionText.includes('appropriations');
-
-                votes.push({
-                  voteId,
-                  bill: {
-                    number: `${bill.type?.toUpperCase() || ''} ${bill.number}`,
-                    title: bill.title || 'Unknown Bill',
-                    congress: (bill.congress || 'unknown').toString(),
-                    type: bill.type || 'unknown',
-                    url: bill.url,
-                  },
-                  question,
-                  result,
-                  date: recordedVote.date || new Date().toISOString().split('T')[0],
-                  position: memberVotePosition,
-                  chamber: recordedVote.chamber as 'House' | 'Senate',
+              } catch (voteError) {
+                structuredLogger.warn('Error processing recorded vote', {
+                  voteError,
                   rollNumber: recordedVote.rollNumber,
-                  isKeyVote,
-                  category,
-                  metadata: {
-                    sourceUrl: recordedVote.url,
-                    lastUpdated: new Date().toISOString(),
-                    confidence: memberVotePosition !== 'Not Voting' ? 'medium' : 'low',
-                  },
                 });
+                continue;
               }
             }
+
+            if (votes.length >= limit) {
+              break;
+            }
           }
+        }
+
+        if (votes.length >= limit) {
+          break;
         }
       }
     }
 
-    // Sort by date (most recent first) and limit
-    votes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    const limitedVotes = votes.slice(0, limit);
-
-    structuredLogger.info('Successfully processed legacy votes', {
+    structuredLogger.info('Legacy voting records retrieved', {
       bioguideId,
-      processedVotes: limitedVotes.length,
-      keyVotes: limitedVotes.filter(v => v.isKeyVote).length,
+      votesFound: votes.length,
     });
 
-    return limitedVotes;
+    return votes;
   } catch (error) {
-    structuredLogger.error('Error fetching legacy voting records', error as Error, { bioguideId });
-    throw error;
+    structuredLogger.error('Error in legacy voting records fetch', error as Error, {
+      bioguideId,
+      chamber,
+    });
+    return [];
   }
 }

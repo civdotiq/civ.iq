@@ -5,16 +5,12 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { structuredLogger } from '@/lib/logging/logger';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-// Modular D3 imports for optimal bundle size
-import { select, pointer } from 'd3-selection';
-import { scaleBand, scaleOrdinal, scaleLinear } from 'd3-scale';
-import { axisBottom, axisLeft } from 'd3-axis';
-import { format } from 'd3-format';
-import { easeBackOut } from 'd3-ease';
+// D3 imports removed - not used in current implementation
 import { Users, Building2, MapPin } from 'lucide-react';
 import NationalStatsCards from '@/components/NationalStatsCards';
 import StateInfoPanel from '@/components/StateInfoPanel';
@@ -471,11 +467,6 @@ export default function DistrictsPage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [_allRepresentatives, _setAllRepresentatives] = useState<unknown[]>([]);
 
-  useEffect(() => {
-    fetchDistricts();
-    fetchAllRepresentatives();
-  }, []);
-
   const fetchAllRepresentatives = async () => {
     try {
       const response = await fetch('/api/representatives/all');
@@ -488,18 +479,18 @@ export default function DistrictsPage() {
     }
   };
 
-  const fetchDistricts = async () => {
+  const fetchDistricts = useCallback(async () => {
     setLoading(true);
     try {
       // Fetch real district data from our representatives API
       // Bust cache on first load to get fresh data
       const url = districts.length === 0 ? '/api/districts/all?bust=true' : '/api/districts/all';
       const response = await fetch(url);
-      console.log('Districts API response status:', response.status);
+      structuredLogger.info('Districts API response', { status: response.status });
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Districts API returned:', data.districts?.length, 'districts');
+        structuredLogger.info('Districts API returned', { districtCount: data.districts?.length });
         if (data.districts && data.districts.length > 0) {
           setDistricts(data.districts);
         } else {
@@ -507,60 +498,29 @@ export default function DistrictsPage() {
         }
       } else {
         const errorData = await response.json();
-        console.error('Districts API error:', errorData);
-        console.error('Error details:', errorData.details);
+        structuredLogger.error('Districts API error', new Error(errorData.error || 'API Error'), {
+          errorData,
+        });
         throw new Error(
           `Failed to fetch districts: ${response.status} - ${errorData.details || errorData.error}`
         );
       }
     } catch (error) {
-      console.error('Error fetching districts:', error);
+      structuredLogger.error('Error fetching districts', error as Error);
       // Error will be handled by the error boundary
 
-      // Fallback: Generate districts from our 538 representatives
-      const mockDistricts: District[] = Array.from({ length: 20 }, (_, i) => ({
-        id: `district-${i}`,
-        state: ['CA', 'TX', 'NY', 'FL', 'PA'][i % 5] || 'Unknown',
-        number: String((i % 10) + 1),
-        name: `${['California', 'Texas', 'New York', 'Florida', 'Pennsylvania'][i % 5]} ${(i % 10) + 1}${['st', 'nd', 'rd', 'th'][Math.min(i % 10, 3)]} District`,
-        representative: {
-          name:
-            ['John Smith', 'Jane Doe', 'Bob Johnson', 'Mary Williams'][i % 4] ||
-            'Unknown Representative',
-          party: i % 3 === 0 ? 'D' : 'R',
-          imageUrl: undefined,
-        },
-        demographics: {
-          population: Math.floor(Math.random() * 300000) + 500000,
-          medianIncome: Math.floor(Math.random() * 40000) + 50000,
-          medianAge: Math.floor(Math.random() * 20) + 30,
-          diversityIndex: Math.random() * 100,
-          urbanPercentage: Math.floor(Math.random() * 60) + 20,
-        },
-        political: {
-          cookPVI: i < 5 ? 'D+15' : i < 10 ? 'D+5' : i < 15 ? 'EVEN' : 'R+8',
-          lastElection: {
-            winner: i % 3 === 0 ? 'Democrat' : 'Republican',
-            margin: Math.random() * 30 + 2,
-            turnout: Math.floor(Math.random() * 20) + 55,
-          },
-          registeredVoters: Math.floor(Math.random() * 200000) + 300000,
-        },
-        geography: {
-          area: Math.floor(Math.random() * 5000) + 1000,
-          counties: ['County A', 'County B', 'County C'].slice(
-            0,
-            Math.floor(Math.random() * 3) + 1
-          ),
-          majorCities: ['City A', 'City B'].slice(0, Math.floor(Math.random() * 2) + 1),
-        },
-      }));
-
-      setDistricts(mockDistricts);
+      // No fallback mock data - show clear unavailable state
+      structuredLogger.warn('Districts data unavailable, showing empty state');
+      setDistricts([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [districts.length]);
+
+  useEffect(() => {
+    fetchDistricts();
+    fetchAllRepresentatives();
+  }, [fetchDistricts]);
 
   const filteredDistricts = districts.filter(district => {
     // Apply search filter

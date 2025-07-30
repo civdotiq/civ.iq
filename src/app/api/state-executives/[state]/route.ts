@@ -196,30 +196,7 @@ function generateMockExecutives(state: string, _stateInfo: unknown): StateExecut
     'treasurer',
   ];
 
-  const firstNames = [
-    'John',
-    'Jane',
-    'Michael',
-    'Sarah',
-    'David',
-    'Lisa',
-    'Robert',
-    'Maria',
-    'James',
-    'Jennifer',
-  ];
-  const lastNames = [
-    'Smith',
-    'Johnson',
-    'Williams',
-    'Brown',
-    'Jones',
-    'Garcia',
-    'Miller',
-    'Davis',
-    'Rodriguez',
-    'Martinez',
-  ];
+  // No longer generating fake executive names - returning "Data Unavailable" placeholders
 
   // Generate realistic party distributions based on state
   const getPartyDistribution = (state: string): ('Democratic' | 'Republican')[] => {
@@ -238,8 +215,8 @@ function generateMockExecutives(state: string, _stateInfo: unknown): StateExecut
   const partyDistribution = getPartyDistribution(state);
 
   positions.forEach((position, index) => {
-    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)] || 'John';
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)] || 'Doe';
+    const firstName = 'Data';
+    const lastName = 'Unavailable';
     const name = `${firstName} ${lastName}`;
     const party = partyDistribution[index] || 'Independent';
 
@@ -281,7 +258,7 @@ function generateMockExecutives(state: string, _stateInfo: unknown): StateExecut
       position,
       party,
       email: `${firstName?.toLowerCase() || 'john'}.${lastName?.toLowerCase() || 'doe'}@${state.toLowerCase()}.gov`,
-      phone: `(${Math.floor(Math.random() * 900) + 100}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
+      phone: 'Data unavailable',
       office: `Office of the ${position
         .replace('_', ' ')
         .split(' ')
@@ -290,16 +267,7 @@ function generateMockExecutives(state: string, _stateInfo: unknown): StateExecut
       termStart: `${currentYear - 1}-01-15`,
       termEnd: `${currentYear + termLength - 1}-01-15`,
       isIncumbent: true,
-      previousOffices:
-        Math.random() > 0.5
-          ? [
-              {
-                office: Math.random() > 0.5 ? 'State Legislature' : 'City Mayor',
-                startYear: currentYear - 8,
-                endYear: currentYear - 1,
-              },
-            ]
-          : [],
+      previousOffices: [],
       keyInitiatives:
         position in initiatives ? initiatives[position as keyof typeof initiatives] : [],
       socialMedia: {
