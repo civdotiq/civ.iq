@@ -12,6 +12,49 @@ import { FundraisingTrends } from './campaign-finance/FundraisingTrends';
 import { EnhancedFECData } from '@/types/fec';
 import { structuredLogger } from '@/lib/logging/universal-logger';
 
+// Lobbying data interface
+interface LobbyingData {
+  representative: {
+    bioguideId: string;
+    name: string;
+    committees: string[];
+  };
+  lobbyingData: {
+    totalRelevantSpending: number;
+    affectedCommittees: number;
+    topCompanies: Array<{
+      name: string;
+      totalSpending: number;
+      committees: string[];
+      recentFilings: number;
+    }>;
+    committeeBreakdown: Array<{
+      committee: string;
+      totalSpending: number;
+      companyCount: number;
+      topIssues: string[];
+    }>;
+    summary: {
+      quarterlyTrend: Array<{
+        quarter: string;
+        year: number;
+        spending: number;
+      }>;
+      industryBreakdown: Array<{
+        industry: string;
+        spending: number;
+        percentage: number;
+      }>;
+    };
+  };
+  metadata: {
+    dataSource: string;
+    lastUpdated: string;
+    coveragePeriod: string;
+    note: string;
+  };
+}
+
 interface CampaignFinanceData {
   candidate_info: unknown;
   financial_summary: Array<{
@@ -88,7 +131,7 @@ export function CampaignFinanceVisualizer({
 }: CampaignFinanceVisualizerProps) {
   const [selectedCycle, setSelectedCycle] = useState<number | 'all'>('all');
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'industry' | 'donors' | 'trends' | 'contributions' | 'expenditures'
+    'overview' | 'industry' | 'donors' | 'trends' | 'contributions' | 'expenditures' | 'lobbying'
   >('overview');
   const [_contributorFilter, _setContributorFilter] = useState<
     'all' | 'individual' | 'pac' | 'party'
@@ -96,6 +139,8 @@ export function CampaignFinanceVisualizer({
   const [searchQuery, setSearchQuery] = useState('');
   const [enhancedData, setEnhancedData] = useState<EnhancedFECData | null>(null);
   const [isLoadingEnhanced, setIsLoadingEnhanced] = useState(false);
+  const [lobbyingData, setLobbyingData] = useState<LobbyingData | null>(null);
+  const [isLoadingLobbying, setIsLoadingLobbying] = useState(false);
 
   // Fetch enhanced data from the new endpoint
   useEffect(() => {
@@ -114,11 +159,11 @@ export function CampaignFinanceVisualizer({
         })
         .then((data: EnhancedFECData) => {
           structuredLogger.debug('Enhanced FEC data fetched successfully', {
-          component: 'CampaignFinanceVisualizer',
-          metadata: {
-          hasData: !!data,
-          dataKeys: Object.keys(data || {}),
-          },
+            component: 'CampaignFinanceVisualizer',
+            metadata: {
+              hasData: !!data,
+              dataKeys: Object.keys(data || {}),
+            },
           });
           setEnhancedData(data);
         })
@@ -133,6 +178,43 @@ export function CampaignFinanceVisualizer({
         })
         .finally(() => {
           setIsLoadingEnhanced(false);
+        });
+    }
+  }, [bioguideId, activeTab]);
+
+  // Fetch lobbying data from the new endpoint
+  useEffect(() => {
+    if (bioguideId && activeTab === 'lobbying') {
+      setIsLoadingLobbying(true);
+
+      fetch(`/api/representative/${bioguideId}/lobbying`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data: LobbyingData) => {
+          structuredLogger.debug('Lobbying data fetched successfully', {
+            component: 'CampaignFinanceVisualizer',
+            metadata: {
+              hasData: !!data,
+              totalSpending: data?.lobbyingData?.totalRelevantSpending || 0,
+              affectedCommittees: data?.lobbyingData?.affectedCommittees || 0,
+            },
+          });
+          setLobbyingData(data);
+        })
+        .catch(error => {
+          structuredLogger.error('Error fetching lobbying data', {
+            component: 'CampaignFinanceVisualizer',
+            error: error as Error,
+            metadata: { bioguideId },
+          });
+          setLobbyingData(null);
+        })
+        .finally(() => {
+          setIsLoadingLobbying(false);
         });
     }
   }, [bioguideId, activeTab]);
@@ -347,6 +429,7 @@ export function CampaignFinanceVisualizer({
               { id: 'trends', name: 'Fundraising Trends' },
               { id: 'contributions', name: 'Contributions' },
               { id: 'expenditures', name: 'Expenditures' },
+              { id: 'lobbying', name: 'Corporate Lobbying' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -359,6 +442,7 @@ export function CampaignFinanceVisualizer({
                       | 'trends'
                       | 'contributions'
                       | 'expenditures'
+                      | 'lobbying'
                   )
                 }
                 className={`${
@@ -767,6 +851,221 @@ export function CampaignFinanceVisualizer({
                   ))}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Corporate Lobbying Tab */}
+          {activeTab === 'lobbying' && (
+            <div className="space-y-6">
+              {isLoadingLobbying ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-gray-600">Loading lobbying data...</span>
+                </div>
+              ) : lobbyingData && lobbyingData.lobbyingData.totalRelevantSpending > 0 ? (
+                <>
+                  {/* Lobbying Overview */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-6">
+                      Corporate Lobbying Overview
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="bg-orange-50 rounded-lg p-6 text-center border border-orange-200">
+                        <div className="text-4xl font-bold text-orange-600 mb-2">
+                          {formatCurrency(lobbyingData.lobbyingData.totalRelevantSpending)}
+                        </div>
+                        <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                          Total Lobbying Spending
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500">
+                          On committee-related issues
+                        </div>
+                      </div>
+                      <div className="bg-purple-50 rounded-lg p-6 text-center border border-purple-200">
+                        <div className="text-4xl font-bold text-purple-600 mb-2">
+                          {lobbyingData.lobbyingData.affectedCommittees}
+                        </div>
+                        <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                          Committees Affected
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500">With relevant lobbying</div>
+                      </div>
+                      <div className="bg-red-50 rounded-lg p-6 text-center border border-red-200">
+                        <div className="text-4xl font-bold text-red-600 mb-2">
+                          {lobbyingData.lobbyingData.topCompanies.length}
+                        </div>
+                        <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                          Active Companies
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500">
+                          Lobbying on these committees
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Top Lobbying Companies */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-6">
+                      Top Companies Lobbying This Representative&apos;s Committees
+                    </h4>
+                    <div className="space-y-4">
+                      {lobbyingData.lobbyingData.topCompanies.slice(0, 8).map((company, index) => {
+                        const maxAmount =
+                          lobbyingData.lobbyingData.topCompanies[0]?.totalSpending || 1;
+                        const percentage = (company.totalSpending / maxAmount) * 100;
+
+                        return (
+                          <div key={index} className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <div className="font-medium text-gray-900 text-sm">
+                                {company.name}
+                              </div>
+                              <div className="text-sm font-semibold text-orange-600">
+                                {formatCurrency(company.totalSpending)}
+                              </div>
+                            </div>
+                            <div className="text-xs text-gray-600 mb-2">
+                              Active on: {company.committees.join(', ')}
+                            </div>
+                            <div className="relative">
+                              <div className="w-full bg-gray-200 rounded-full h-3">
+                                <div
+                                  className="bg-orange-500 h-3 rounded-full transition-all duration-700 relative"
+                                  style={{ width: `${percentage}%` }}
+                                >
+                                  <div className="absolute right-2 top-0 h-full flex items-center">
+                                    <span className="text-xs font-medium text-white">
+                                      {company.recentFilings} filings
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Committee Breakdown */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-6">
+                      Lobbying by Committee Assignment
+                    </h4>
+                    <div className="space-y-4">
+                      {lobbyingData.lobbyingData.committeeBreakdown.map((committee, index) => (
+                        <div key={index} className="border border-gray-100 rounded-lg p-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <h5 className="font-medium text-gray-900">{committee.committee}</h5>
+                              <p className="text-sm text-gray-600">
+                                {committee.companyCount} companies •{' '}
+                                {formatCurrency(committee.totalSpending)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            <span className="font-medium">Top Issues:</span>{' '}
+                            {committee.topIssues.slice(0, 3).join(', ')}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Industry Breakdown */}
+                  {lobbyingData.lobbyingData.summary.industryBreakdown.length > 0 && (
+                    <div className="bg-white rounded-lg border border-gray-200 p-6">
+                      <h4 className="text-lg font-semibold text-gray-900 mb-6">
+                        Lobbying by Industry
+                      </h4>
+                      <div className="space-y-3">
+                        {lobbyingData.lobbyingData.summary.industryBreakdown.map(
+                          (industry, index) => (
+                            <div key={index} className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900">{industry.industry}</div>
+                                <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                  <div
+                                    className="bg-purple-500 h-2 rounded-full transition-all duration-700"
+                                    style={{ width: `${industry.percentage}%` }}
+                                  />
+                                </div>
+                              </div>
+                              <div className="ml-4 text-right">
+                                <div className="font-medium text-purple-600">
+                                  {formatCurrency(industry.spending)}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {industry.percentage.toFixed(1)}%
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Data Source Information for Lobbying */}
+                  <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0">
+                        <span className="inline-block w-2 h-2 rounded-full bg-yellow-500 mt-2"></span>
+                      </div>
+                      <div className="text-sm">
+                        <div className="font-medium text-yellow-800 mb-1">
+                          📊 About Corporate Lobbying Data
+                        </div>
+                        <p className="text-yellow-700 mb-2">{lobbyingData.metadata.note}</p>
+                        <div className="text-xs text-yellow-600">
+                          <div>
+                            <strong>Data Source:</strong> {lobbyingData.metadata.dataSource}
+                          </div>
+                          <div>
+                            <strong>Coverage:</strong> {lobbyingData.metadata.coveragePeriod}
+                          </div>
+                          <div>
+                            <strong>Last Updated:</strong>{' '}
+                            {new Date(lobbyingData.metadata.lastUpdated).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 mb-4">
+                    <svg
+                      className="w-16 h-16 mx-auto"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1}
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No Corporate Lobbying Data Available
+                  </h3>
+                  <p className="text-gray-500 mb-2">
+                    {lobbyingData?.representative?.committees?.length === 0
+                      ? 'This representative has no committee assignments to analyze lobbying activity.'
+                      : "No lobbying activity found related to this representative's committee assignments."}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    Lobbying data shows corporate spending on issues related to congressional
+                    committee work.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

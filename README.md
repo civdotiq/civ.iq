@@ -70,6 +70,17 @@ For the full philosophical framework, see [PROJECT-PHILOSOPHY.md](PROJECT-PHILOS
 - **📋 Type-Safe Components**: Enhanced component prop validation and error prevention
 - **⚡ Development Experience**: Better IntelliSense, error catching, and maintainability
 
+#### **🏢 Corporate Lobbying Transparency System** _(January 31, 2025)_
+
+- **📊 Senate Lobbying Disclosure Integration**: Real-time data from Senate Lobbying Disclosure Act (LDA) database
+- **🎯 Committee-Based Analysis**: Matches corporate lobbying activity to representatives' committee assignments
+- **🏛️ Campaign Finance Integration**: New "Corporate Lobbying" tab within existing Campaign Finance component
+- **💰 Spending Visualization**: Top lobbying companies, spending trends, and industry breakdowns
+- **🔍 Influence Transparency**: Clear view of which corporations are lobbying on issues relevant to each representative
+- **⚡ Real-Time Data**: Live Senate lobbying disclosure data with intelligent caching and error handling
+- **📈 Industry Analysis**: Categorized lobbying spending by sector (Healthcare, Technology, Energy, etc.)
+- **🛡️ Data Integrity**: Comprehensive TypeScript typing and error boundaries for reliable operation
+
 #### **🏛️ Interactive Committee Profile System** _(January 28, 2025)_
 
 - **🔗 Clickable Committee Navigation**: All committee assignments on representative profiles now link to dedicated committee pages
@@ -785,6 +796,7 @@ GET /api/representative/[bioguideId]       # Representative details
 GET /api/representative/[bioguideId]/votes # Voting records
 GET /api/representative/[bioguideId]/bills # Sponsored bills
 GET /api/representative/[bioguideId]/finance # Enhanced campaign finance with industry categorization, bundled contributions, and independent expenditures
+GET /api/representative/[bioguideId]/lobbying # Corporate lobbying activity matched to committee assignments
 GET /api/representative/[bioguideId]/news  # Recent news mentions (deduplicated)
 GET /api/representative/[bioguideId]/party-alignment # Real party voting analysis
 GET /api/representative/[bioguideId]/committees # Committee assignments
