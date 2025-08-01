@@ -1,0 +1,111 @@
+{
+  "districts": {
+    "06-12": {
+      "id": "06-12",
+      "state_fips": "06",
+      "state_name": "California",
+      "state_abbr": "CA",
+      "district_num": "12",
+      "name": "CA-12",
+      "full_name": "California Congressional District 12",
+      "centroid": [-122.4194, 37.7749],
+      "bbox": [-122.5194, 37.7249, -122.3194, 37.8249],
+      "area_sqm": 150000000,
+      "geoid": "0612"
+    },
+    "36-14": {
+      "id": "36-14",
+      "state_fips": "36",
+      "state_name": "New York",
+      "state_abbr": "NY",
+      "district_num": "14",
+      "name": "NY-14",
+      "full_name": "New York Congressional District 14",
+      "centroid": [-73.837, 40.8176],
+      "bbox": [-73.937, 40.7676, -73.737, 40.8676],
+      "area_sqm": 125000000,
+      "geoid": "3614"
+    },
+    "48-02": {
+      "id": "48-02",
+      "state_fips": "48",
+      "state_name": "Texas",
+      "state_abbr": "TX",
+      "district_num": "02",
+      "name": "TX-02",
+      "full_name": "Texas Congressional District 2",
+      "centroid": [-95.3698, 29.7604],
+      "bbox": [-95.4698, 29.7104, -95.2698, 29.8104],
+      "area_sqm": 200000000,
+      "geoid": "4802"
+    }
+  },
+  "states": {
+    "06": {
+      "fips": "06",
+      "name": "California",
+      "abbr": "CA",
+      "district_count": 52,
+      "districts": [
+        "06-01",
+        "06-02",
+        "06-03",
+        "06-04",
+        "06-05",
+        "06-06",
+        "06-07",
+        "06-08",
+        "06-09",
+        "06-10",
+        "06-11",
+        "06-12"
+      ]
+    },
+    "36": {
+      "fips": "36",
+      "name": "New York",
+      "abbr": "NY",
+      "district_count": 26,
+      "districts": [
+        "36-01",
+        "36-02",
+        "36-03",
+        "36-04",
+        "36-05",
+        "36-06",
+        "36-07",
+        "36-08",
+        "36-09",
+        "36-10",
+        "36-11",
+        "36-12",
+        "36-13",
+        "36-14"
+      ]
+    },
+    "48": {
+      "fips": "48",
+      "name": "Texas",
+      "abbr": "TX",
+      "district_count": 38,
+      "districts": [
+        "48-01",
+        "48-02",
+        "48-03",
+        "48-04",
+        "48-05",
+        "48-06",
+        "48-07",
+        "48-08",
+        "48-09",
+        "48-10"
+      ]
+    }
+  },
+  "summary": {
+    "total_districts": 3,
+    "states_with_districts": 3,
+    "last_updated": "2025-08-01T12:00:00.000Z",
+    "source": "Demo data - Run npm run process-district-boundaries with GDAL/OGR installed for real data"
+  }
+}
