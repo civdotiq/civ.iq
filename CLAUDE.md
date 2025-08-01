@@ -140,6 +140,10 @@ npx tsx scripts/validate-119th-congress-data.ts  # Phase 1: Validate ZIP code da
 npm run process-zip-districts  # Phase 2: Process ZIP to district data
 npm run test-phase3-integration  # Phase 3: Test integration
 
+# Congressional District Boundaries (REAL Census Data)
+npm run process-real-census-districts  # Download & process all Census TIGER/Line shapefiles
+npm run test-district-accuracy  # Validate all 435 districts with real boundaries
+
 # Additional utilities
 npm run process-census   # Process census data
 npm run validate-mappings  # Validate mappings
@@ -184,6 +188,7 @@ npm run validate-mappings  # Validate mappings
 - ✅ **🏛️ Interactive Committee Profile Pages (Jan 28, 2025)** - Full committee navigation system with clickable committee assignments, comprehensive committee profiles showing leadership, members, subcommittees, and jurisdiction for 119th Congress
 - ✅ **🎯 CRITICAL: Complete Mock Data Elimination (Jul 30, 2025)** - Replaced ALL federal mock data with real Congress.gov/congress-legislators data across representatives, voting records, committees, and comparisons. Added clear labeling for sample fallback content.
 - ✅ **📰 GDELT News Integration Fix (Aug 1, 2025)** - Fixed GDELT V2 DOC API integration for live news feeds on member profiles. Updated search strategy for better article discovery, fixed TypeScript safety issues, and verified working News tabs showing real articles from legitimate sources.
+- ✅ **🗺️ REAL Congressional District Boundaries (Aug 1, 2025)** - Implemented complete Census TIGER/Line shapefile processing for all 435 congressional districts + territories. Generated PMTiles (64MB) and GeoJSON (306MB) from authentic Census data. Updated MapLibre GL JS components to display actual district boundaries. NO MOCK DATA - all boundaries sourced from U.S. Census Bureau TIGER/Line Shapefiles 2024 (119th Congress).
 - ❌ State/local (Phase 2+)
 
 ### Phase 3 Complete: Integration with Existing System

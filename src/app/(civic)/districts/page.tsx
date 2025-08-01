@@ -15,18 +15,24 @@ import { Users, Building2, MapPin } from 'lucide-react';
 import NationalStatsCards from '@/components/NationalStatsCards';
 import StateInfoPanel from '@/components/StateInfoPanel';
 
-// Dynamic import of the map component to avoid SSR issues
-const DistrictMapContainer = dynamic(() => import('@/components/DistrictMapContainer'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
-        <p className="text-sm text-gray-600">Loading district map...</p>
+// Dynamic import of the REAL district map component to avoid SSR issues
+const RealDistrictMapContainer = dynamic(
+  () =>
+    import('@/components/enhanced/RealDistrictMapContainer').then(mod => ({
+      default: mod.RealDistrictMapContainer,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+          <p className="text-sm text-gray-600">Loading real district boundaries...</p>
+        </div>
       </div>
-    </div>
-  ),
-});
+    ),
+  }
+);
 
 // Logo component
 function CiviqLogo() {
@@ -569,7 +575,7 @@ export default function DistrictsPage() {
 
   const states = Array.from(new Set(districts.map(d => d.state))).sort();
 
-  const districtMapData =
+  const _districtMapData =
     districts.length > 0
       ? districts.map(d => ({
           id: d.id,
@@ -687,37 +693,14 @@ export default function DistrictsPage() {
                 states to see senators and district information.
               </p>
               <div className="relative">
-                <DistrictMapContainer
-                  districts={districtMapData}
+                <RealDistrictMapContainer
                   selectedDistrict={selectedDistrict}
-                  onDistrictClick={setSelectedDistrict}
-                  onStateClick={stateInfo => {
-                    if (
-                      stateInfo &&
-                      typeof stateInfo === 'object' &&
-                      'name' in stateInfo &&
-                      'abbreviation' in stateInfo
-                    ) {
-                      const state = stateInfo as unknown as {
-                        name: string;
-                        abbreviation?: string;
-                        code?: string;
-                        population?: number;
-                        districts?: number;
-                        senators?: string[];
-                      };
-                      // Create a proper StateInfo object with mock data for now
-                      setSelectedState({
-                        code: state.abbreviation || state.code || '',
-                        name: state.name || '',
-                        population: state.population || 0,
-                        districts: state.districts || 1,
-                        senators: state.senators || [],
-                      });
-                    }
+                  onDistrictClick={district => {
+                    setSelectedDistrict(district.id || '');
                   }}
-                  width={900}
-                  height={500}
+                  height="500px"
+                  showControls={true}
+                  enableInteraction={true}
                 />
                 {/* State Info Panel */}
                 <StateInfoPanel state={selectedState} onClose={() => setSelectedState(null)} />
