@@ -156,59 +156,49 @@ export function generateOptimizedSearchTerms(
   const nameParts = cleanName.split(' ');
   const lastName = nameParts[nameParts.length - 1];
 
+  // Start with broader searches that are more likely to have results
+  // Then add more specific terms
+
+  // 1. Simple name search (most likely to have results)
+  searchTerms.push(`"${cleanName}"`);
+
   if (district) {
     // House Representative specific searches
-    // Most specific: Full name with district and state
-    searchTerms.push(
-      `"${cleanName}" AND "${state}" AND ("${district} district" OR "district ${district}")`
-    );
-
-    // Name with Congress/House context
-    searchTerms.push(`"${cleanName}" AND (Congress OR House) AND "${state}"`);
-
-    // Representative title with name
-    searchTerms.push(
-      `"Representative ${cleanName}" OR "Rep. ${cleanName}" OR "Congressman ${cleanName}" OR "Congresswoman ${cleanName}"`
-    );
-
-    // Last name with strong political context
-    if (lastName !== cleanName) {
-      searchTerms.push(
-        `"${lastName}" AND "${state}" AND (Representative OR Congress OR House) AND (bill OR vote OR committee)`
-      );
+    // 2. Name with state for Representatives
+    if (state) {
+      searchTerms.push(`"${cleanName}" AND "${state}"`);
     }
+
+    // 3. Representative title with name
+    searchTerms.push(`"Representative ${cleanName}" OR "Rep. ${cleanName}"`);
+
+    // 4. Name with Congress/House context
+    searchTerms.push(`"${cleanName}" AND (Congress OR House)`);
   } else {
     // Senator specific searches
-    // Most specific: Full name with Senate and state
-    searchTerms.push(`"${cleanName}" AND Senate AND "${state}"`);
-
-    // Senator title with name
+    // 2. Senator title with name (very specific for senators)
     searchTerms.push(`"Senator ${cleanName}" OR "Sen. ${cleanName}"`);
 
-    // Name with strong Senate context
-    searchTerms.push(
-      `"${cleanName}" AND "${state}" AND (Senate OR Senator) AND (bill OR amendment OR committee OR hearing)`
-    );
-
-    // Last name with Senate context
-    if (lastName !== cleanName) {
-      searchTerms.push(
-        `"${lastName}" AND "${state}" AND Senate AND (legislation OR vote OR filibuster)`
-      );
+    // 3. Name with state for Senators
+    if (state) {
+      searchTerms.push(`"${cleanName}" AND "${state}"`);
     }
+
+    // 4. Name with Senate context
+    searchTerms.push(`"${cleanName}" AND Senate`);
   }
 
-  // Add one broader search with full name and political context
-  searchTerms.push(
-    `"${cleanName}" AND (politics OR government OR election OR campaign OR legislation)`
-  );
+  // Add fallback with just last name if we have a multi-word name
+  if (lastName && lastName !== cleanName && lastName.length > 3) {
+    searchTerms.push(`"${lastName}"`);
+  }
 
   structuredLogger.debug(`Generated search terms for ${fullName}`, {
     searchTerms,
     operation: 'gdelt_search_terms',
   });
 
-  // Return top 4 most relevant search terms
+  // Return top 4 most relevant search terms, starting with broadest
   return searchTerms.slice(0, 4);
 }
 
@@ -483,14 +473,16 @@ function extractSourceName(domain: string): string {
   };
 
   const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
+  const domainPart = cleanDomain.split('.')[0];
   return (
     domainMap[cleanDomain] ||
-    cleanDomain
-      .split('.')[0]
-      .replace(/[-_]/g, ' ')
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ')
+    (domainPart
+      ? domainPart
+          .replace(/[-_]/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
+      : cleanDomain)
   );
 }
 
@@ -920,7 +912,7 @@ export async function monitorBreakingNews(
     return breakingNews
       .sort((a, b) => {
         const urgencyWeight: { [key: string]: number } = { high: 3, medium: 2, low: 1 };
-        return urgencyWeight[b.urgency] - urgencyWeight[a.urgency];
+        return (urgencyWeight[b.urgency] || 0) - (urgencyWeight[a.urgency] || 0);
       })
       .slice(0, 10);
   } catch (error) {
@@ -1023,7 +1015,7 @@ function generateAlerts(
 
   // Check for trending topics
   const risingTrends = trends.filter(trend => trend.trend === 'rising' && trend.percentChange > 50);
-  if (risingTrends.length > 0) {
+  if (risingTrends.length > 0 && risingTrends[0]) {
     alerts.push({
       type: 'trending',
       message: `Trending: ${risingTrends[0].term} (+${risingTrends[0].percentChange}%)`,

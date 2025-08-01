@@ -20,6 +20,7 @@ import { cachedFetch } from '@/lib/cache';
 import { structuredLogger } from '@/lib/logging/logger';
 import yaml from 'js-yaml';
 import type { EnhancedRepresentative } from '@/types/representative';
+import { filterCurrent119thCongress } from '@/utils/congress-validation';
 
 // Base URLs for congress-legislators data
 const CONGRESS_LEGISLATORS_BASE_URL =
@@ -574,7 +575,16 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
       socialMediaCount: socialMedia.length,
     });
 
-    const enhanced: EnhancedRepresentative[] = legislators.map(legislator => {
+    // Filter for current 119th Congress members only
+    const currentLegislators = filterCurrent119thCongress(legislators);
+
+    structuredLogger.debug('Filtered to current 119th Congress members', {
+      originalCount: legislators.length,
+      currentCount: currentLegislators.length,
+      filteredOut: legislators.length - currentLegislators.length,
+    });
+
+    const enhanced: EnhancedRepresentative[] = currentLegislators.map(legislator => {
       const bioguideId = legislator.id.bioguide;
       const social = socialMedia.find(s => s.bioguide === bioguideId);
       const currentTerm = legislator.terms[legislator.terms.length - 1];

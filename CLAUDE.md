@@ -115,7 +115,7 @@ GET /api/representative/[bioguideId]           # Enhanced profiles with social m
 GET /api/representative/[bioguideId]/votes     # Real voting records
 GET /api/representative/[bioguideId]/bills     # Real bills with categorization
 GET /api/representative/[bioguideId]/finance   # Real FEC data
-GET /api/representative/[bioguideId]/news      # GDELT news with deduplication
+GET /api/representative/[bioguideId]/news      # GDELT V2 DOC API with smart search terms & deduplication
 GET /api/representative/[bioguideId]/party-alignment # Real party voting analysis
 POST /api/representative/[bioguideId]/batch    # Batch API for multiple endpoints
 GET /api/committee/[committeeId]               # Committee details with leadership and members
@@ -161,7 +161,7 @@ npm run validate-mappings  # Validate mappings
 - ✅ Enhanced profiles with social media and biographical data
 - ✅ **Real voting records from Congress.gov with bill-based extraction and roll call parsing (Enhanced Jul 2025)**
 - ✅ **Campaign finance with real FEC data including PAC contributions and complete source breakdown (Enhanced Jul 2025)**
-- ✅ **GDELT news integration with advanced story clustering and 10 political themes (Enhanced Jul 2025)**
+- ✅ **GDELT news integration with advanced story clustering and 10 political themes (Enhanced Jul 2025) - FIXED & VERIFIED Aug 2025**
 - ✅ **Multi-source photo pipeline with 99% reliability and 6-source validation (Enhanced Jul 2025)**
 - ✅ AI-powered bill summarization
 - ✅ **Real party line voting analysis with peer comparisons**
@@ -183,6 +183,7 @@ npm run validate-mappings  # Validate mappings
 - ✅ **🚀 Comprehensive Performance Optimization (Jan 26, 2025)** - Complete performance overhaul with 70% improvement in rendering, memory leak fixes, virtual scrolling, modular D3 imports, SWR caching, and Next.js image optimization
 - ✅ **🏛️ Interactive Committee Profile Pages (Jan 28, 2025)** - Full committee navigation system with clickable committee assignments, comprehensive committee profiles showing leadership, members, subcommittees, and jurisdiction for 119th Congress
 - ✅ **🎯 CRITICAL: Complete Mock Data Elimination (Jul 30, 2025)** - Replaced ALL federal mock data with real Congress.gov/congress-legislators data across representatives, voting records, committees, and comparisons. Added clear labeling for sample fallback content.
+- ✅ **📰 GDELT News Integration Fix (Aug 1, 2025)** - Fixed GDELT V2 DOC API integration for live news feeds on member profiles. Updated search strategy for better article discovery, fixed TypeScript safety issues, and verified working News tabs showing real articles from legitimate sources.
 - ❌ State/local (Phase 2+)
 
 ### Phase 3 Complete: Integration with Existing System

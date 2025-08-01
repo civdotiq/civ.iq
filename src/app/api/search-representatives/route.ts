@@ -5,248 +5,130 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { structuredLogger } from '@/lib/logging/logger-client';
-
-interface Representative {
-  bioguideId: string;
-  name: string;
-  party: string;
-  state: string;
-  district?: string;
-  chamber: 'House' | 'Senate';
-  title: string;
-  imageUrl?: string;
-  yearsInOffice?: number;
-}
-
-// Mock representatives database - in production this would be a real database
-const mockRepresentatives: Representative[] = [
-  // Sample House Representatives
-  {
-    bioguideId: 'P000197',
-    name: 'Nancy Pelosi',
-    party: 'Democratic',
-    state: 'California',
-    district: '5',
-    chamber: 'House',
-    title: "Representative for California's 5th Congressional District",
-    yearsInOffice: 37,
-  },
-  {
-    bioguideId: 'M000312',
-    name: 'James P. McGovern',
-    party: 'Democratic',
-    state: 'Massachusetts',
-    district: '2',
-    chamber: 'House',
-    title: "Representative for Massachusetts's 2nd Congressional District",
-    yearsInOffice: 27,
-  },
-  {
-    bioguideId: 'J000289',
-    name: 'Jim Jordan',
-    party: 'Republican',
-    state: 'Ohio',
-    district: '4',
-    chamber: 'House',
-    title: "Representative for Ohio's 4th Congressional District",
-    yearsInOffice: 17,
-  },
-  {
-    bioguideId: 'A000371',
-    name: 'Pete Aguilar',
-    party: 'Democratic',
-    state: 'California',
-    district: '33',
-    chamber: 'House',
-    title: "Representative for California's 33rd Congressional District",
-    yearsInOffice: 10,
-  },
-  {
-    bioguideId: 'S000344',
-    name: 'Brad Sherman',
-    party: 'Democratic',
-    state: 'California',
-    district: '32',
-    chamber: 'House',
-    title: "Representative for California's 32nd Congressional District",
-    yearsInOffice: 27,
-  },
-  {
-    bioguideId: 'G000551',
-    name: 'Raúl M. Grijalva',
-    party: 'Democratic',
-    state: 'Arizona',
-    district: '7',
-    chamber: 'House',
-    title: "Representative for Arizona's 7th Congressional District",
-    yearsInOffice: 21,
-  },
-  {
-    bioguideId: 'M001135',
-    name: 'Kathy Manning',
-    party: 'Democratic',
-    state: 'North Carolina',
-    district: '6',
-    chamber: 'House',
-    title: "Representative for North Carolina's 6th Congressional District",
-    yearsInOffice: 4,
-  },
-  {
-    bioguideId: 'C001084',
-    name: 'David N. Cicilline',
-    party: 'Democratic',
-    state: 'Rhode Island',
-    district: '1',
-    chamber: 'House',
-    title: "Representative for Rhode Island's 1st Congressional District",
-    yearsInOffice: 13,
-  },
-
-  // Sample Senate Representatives
-  {
-    bioguideId: 'S000148',
-    name: 'Charles E. Schumer',
-    party: 'Democratic',
-    state: 'New York',
-    chamber: 'Senate',
-    title: 'United States Senator from New York',
-    yearsInOffice: 25,
-  },
-  {
-    bioguideId: 'M000355',
-    name: 'Mitch McConnell',
-    party: 'Republican',
-    state: 'Kentucky',
-    chamber: 'Senate',
-    title: 'United States Senator from Kentucky',
-    yearsInOffice: 39,
-  },
-  {
-    bioguideId: 'W000817',
-    name: 'Elizabeth Warren',
-    party: 'Democratic',
-    state: 'Massachusetts',
-    chamber: 'Senate',
-    title: 'United States Senator from Massachusetts',
-    yearsInOffice: 12,
-  },
-  {
-    bioguideId: 'C001098',
-    name: 'Ted Cruz',
-    party: 'Republican',
-    state: 'Texas',
-    chamber: 'Senate',
-    title: 'United States Senator from Texas',
-    yearsInOffice: 12,
-  },
-  {
-    bioguideId: 'S001194',
-    name: 'Brian Schatz',
-    party: 'Democratic',
-    state: 'Hawaii',
-    chamber: 'Senate',
-    title: 'United States Senator from Hawaii',
-    yearsInOffice: 12,
-  },
-  {
-    bioguideId: 'K000367',
-    name: 'Amy Klobuchar',
-    party: 'Democratic',
-    state: 'Minnesota',
-    chamber: 'Senate',
-    title: 'United States Senator from Minnesota',
-    yearsInOffice: 18,
-  },
-  {
-    bioguideId: 'C001113',
-    name: 'Catherine Cortez Masto',
-    party: 'Democratic',
-    state: 'Nevada',
-    chamber: 'Senate',
-    title: 'United States Senator from Nevada',
-    yearsInOffice: 8,
-  },
-  {
-    bioguideId: 'B001288',
-    name: 'Cory A. Booker',
-    party: 'Democratic',
-    state: 'New Jersey',
-    chamber: 'Senate',
-    title: 'United States Senator from New Jersey',
-    yearsInOffice: 11,
-  },
-  {
-    bioguideId: 'S001197',
-    name: 'Ben Sasse',
-    party: 'Republican',
-    state: 'Nebraska',
-    chamber: 'Senate',
-    title: 'United States Senator from Nebraska',
-    yearsInOffice: 10,
-  },
-  {
-    bioguideId: 'H001042',
-    name: 'Mazie K. Hirono',
-    party: 'Democratic',
-    state: 'Hawaii',
-    chamber: 'Senate',
-    title: 'United States Senator from Hawaii',
-    yearsInOffice: 12,
-  },
-];
-
-function searchRepresentatives(query: string): Representative[] {
-  const searchTerm = query.toLowerCase().trim();
-
-  if (!searchTerm) {
-    return [];
-  }
-
-  return mockRepresentatives
-    .filter(rep => {
-      // Search by name
-      if (rep.name.toLowerCase().includes(searchTerm)) {
-        return true;
-      }
-
-      // Search by state
-      if (rep.state.toLowerCase().includes(searchTerm)) {
-        return true;
-      }
-
-      // Search by party
-      if (rep.party.toLowerCase().includes(searchTerm)) {
-        return true;
-      }
-
-      // Search by district (if applicable)
-      if (rep.district && rep.district.includes(searchTerm)) {
-        return true;
-      }
-
-      // Search by chamber
-      if (rep.chamber.toLowerCase().includes(searchTerm)) {
-        return true;
-      }
-
-      return false;
-    })
-    .slice(0, 10); // Limit to 10 results
-}
+import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
+import type { EnhancedRepresentative } from '@/types/representative';
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const query = searchParams.get('q');
-
-  if (!query) {
-    return NextResponse.json({ error: 'Search query is required' }, { status: 400 });
-  }
-
   try {
-    const results = searchRepresentatives(query);
-    return NextResponse.json(results);
+    const url = new URL(request.url);
+    const query = url.searchParams.get('q')?.toLowerCase() || '';
+    const state = url.searchParams.get('state')?.toUpperCase();
+    const party = url.searchParams.get('party')?.toLowerCase();
+    const chamber = url.searchParams.get('chamber')?.toLowerCase();
+
+    structuredLogger.info('Search representatives request', {
+      query,
+      state,
+      party,
+      chamber,
+    });
+
+    // Get all current representatives from congress-legislators
+    const allRepresentatives = await getAllEnhancedRepresentatives();
+
+    if (!allRepresentatives || allRepresentatives.length === 0) {
+      return NextResponse.json(
+        {
+          error: 'No representatives data available',
+          message: 'Unable to fetch representatives at this time',
+        },
+        { status: 503 }
+      );
+    }
+
+    // Filter representatives based on search criteria
+    const filtered = allRepresentatives.filter(rep => {
+      // Search by name
+      if (query && !rep.name.toLowerCase().includes(query)) {
+        return false;
+      }
+
+      // Filter by state
+      if (state && rep.state !== state) {
+        return false;
+      }
+
+      // Filter by party
+      if (party) {
+        const repParty = rep.party.toLowerCase();
+        if (party === 'democrat' && !repParty.includes('democrat')) return false;
+        if (party === 'republican' && !repParty.includes('republican')) return false;
+        if (party === 'independent' && !repParty.includes('independent')) return false;
+      }
+
+      // Filter by chamber
+      if (chamber) {
+        if (chamber === 'house' && rep.chamber !== 'House') return false;
+        if (chamber === 'senate' && rep.chamber !== 'Senate') return false;
+      }
+
+      return true;
+    });
+
+    // Sort results
+    const sorted = filtered.sort((a, b) => {
+      // Sort by state, then by chamber (Senate first), then by name
+      if (a.state !== b.state) return a.state.localeCompare(b.state);
+      if (a.chamber !== b.chamber) return a.chamber === 'Senate' ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    // Transform to simpler format for response
+    const results = sorted.map(rep => ({
+      bioguideId: rep.bioguideId,
+      name: rep.name,
+      party: rep.party,
+      state: rep.state,
+      district: rep.district,
+      chamber: rep.chamber,
+      title: rep.title,
+      imageUrl: rep.imageUrl || `/api/representative-photo/${rep.bioguideId}`,
+      yearsInOffice: calculateYearsInOffice(rep),
+    }));
+
+    structuredLogger.info('Search representatives completed', {
+      totalCount: allRepresentatives.length,
+      filteredCount: results.length,
+      query,
+      state,
+      party,
+      chamber,
+    });
+
+    return NextResponse.json({
+      results,
+      metadata: {
+        totalResults: results.length,
+        dataSource: 'congress-legislators',
+        timestamp: new Date().toISOString(),
+        congress: 119,
+        searchCriteria: {
+          query: query || undefined,
+          state: state || undefined,
+          party: party || undefined,
+          chamber: chamber || undefined,
+        },
+      },
+    });
   } catch (error) {
-    structuredLogger.error('Search API Error:', error as Error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    structuredLogger.error('Search representatives error', error as Error);
+
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        message: 'Unable to search representatives at this time',
+      },
+      { status: 500 }
+    );
   }
+}
+
+function calculateYearsInOffice(rep: EnhancedRepresentative): number {
+  if (!rep.currentTerm?.start) return 0;
+
+  const startDate = new Date(rep.currentTerm.start);
+  const now = new Date();
+  const years = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365));
+
+  return Math.max(0, years);
 }
