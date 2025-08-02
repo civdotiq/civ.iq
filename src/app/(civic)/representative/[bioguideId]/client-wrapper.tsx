@@ -6,10 +6,7 @@
  */
 
 import { useState, Suspense, ComponentType } from 'react';
-import Link from 'next/link';
 import { LoadingErrorBoundary } from '@/components/ErrorBoundary';
-import { getCommitteeDisplayName } from '@/types/committee';
-import { getCommitteeName } from '@/lib/data/committee-names';
 import dynamic from 'next/dynamic';
 
 // Dynamic imports for lazy loading - optimized for performance
@@ -38,10 +35,27 @@ const LazyPartyAlignmentAnalysis = dynamic(() => import('@/components/PartyAlign
   loading: () => <div className="animate-pulse bg-gray-200 h-40 rounded"></div>,
 });
 
-const LazyVotingRecordsTable = dynamic(() => import('@/components/safe/SafeVotingRecordsTable'), {
-  ssr: false,
-  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
-});
+const LazyVotingRecordsTable = dynamic(
+  () =>
+    import('@/components/safe/SafeVotingRecordsTable')
+      .then(mod => ({
+        default: mod.SafeVotingRecordsTable,
+      }))
+      .catch(() => ({
+        default: ({ bioguideId, chamber }: { bioguideId: string; chamber: 'House' | 'Senate' }) => (
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <p className="text-gray-600 mb-4">Voting records are temporarily unavailable.</p>
+            <p className="text-sm text-gray-500">
+              We&apos;re working to display voting data for {chamber} representative {bioguideId}.
+            </p>
+          </div>
+        ),
+      })),
+  {
+    ssr: false,
+    loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded"></div>,
+  }
+);
 
 const LazyCampaignFinanceVisualizer = dynamic(
   () =>
@@ -82,17 +96,27 @@ interface RepresentativeDetails {
   name: string;
   firstName: string;
   lastName: string;
-  party?: string;
+  party: string;
   state: string;
   district?: string;
   chamber: 'House' | 'Senate';
   title: string;
+  terms: Array<{
+    congress: string;
+    startYear: string;
+    endYear: string;
+  }>;
   currentTerm?: {
+    start: string;
+    end: string;
+    office?: string;
     phone?: string;
     address?: string;
     website?: string;
     contactForm?: string;
-    office?: string;
+    rssUrl?: string;
+    stateRank?: 'junior' | 'senior';
+    class?: number;
   };
   socialMedia?: {
     twitter?: string;
