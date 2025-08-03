@@ -10,6 +10,7 @@ import type {
   CongressApiBill,
 } from '@/types/api-responses';
 import { structuredLogger } from '@/lib/logging/universal-logger';
+import { getAllEnhancedRepresentatives } from './congress.service';
 
 // State code to name mapping
 const STATE_NAMES: Record<string, string> = {
@@ -118,6 +119,28 @@ export interface Representative {
 
 // Congress.gov API configuration
 const CONGRESS_API_BASE = 'https://api.congress.gov/v3';
+
+// Bioguide ID validation
+export function isValidBioguideId(bioguideId: string): boolean {
+  // Valid bioguide IDs: Letter followed by 6 digits (e.g., "P000197", "J000282")
+  return /^[A-Z]\d{6}$/.test(bioguideId);
+}
+
+// Filter out representatives with invalid bioguide IDs
+export function validateRepresentatives(reps: Representative[]): Representative[] {
+  return reps.filter(rep => {
+    const isValid = isValidBioguideId(rep.bioguideId);
+    if (!isValid) {
+      structuredLogger.warn('Invalid bioguide ID detected, filtering out representative', {
+        component: 'congressApi',
+        bioguideId: rep.bioguideId,
+        name: rep.name,
+        metadata: { state: rep.state, district: rep.district },
+      });
+    }
+    return isValid;
+  });
+}
 
 // Rate limiter for Congress API calls
 class CongressRateLimiter {
@@ -329,7 +352,7 @@ export function formatCongressMember(member: CongressApiMember): Representative 
 
 /**
  * Get representatives for a specific state and optional district
- * Falls back to mock data if API fails
+ * Falls back to congress-legislators data if API fails
  */
 export async function getRepresentativesByLocation(
   state: string,
@@ -337,6 +360,9 @@ export async function getRepresentativesByLocation(
   apiKey?: string
 ): Promise<Representative[]> {
   const representatives: Representative[] = [];
+
+  // Track if we need to use congress-legislators data as fallback
+  let shouldUseFallback = false;
 
   // Try to get senators from Congress.gov API first
   try {
@@ -389,6 +415,7 @@ export async function getRepresentativesByLocation(
       error: error as Error,
       metadata: { state },
     });
+    shouldUseFallback = true;
   }
 
   // For House members, try the API but filter carefully
@@ -443,39 +470,84 @@ export async function getRepresentativesByLocation(
         component: 'congressApi',
         error: error as Error,
       });
+      shouldUseFallback = true;
     }
 
-    // If no House member found, add a placeholder
+    // If no House member found, log but don't create fake data
     if (!representatives.find(r => r.chamber === 'House')) {
-      structuredLogger.info('No House member found, using placeholder', {
+      structuredLogger.warn('No House member found for district', {
         component: 'congressApi',
         metadata: { state, district },
       });
-      representatives.push({
-        bioguideId: `${state}H${district}`,
-        name: `Representative for ${state}-${district}`,
-        party: 'Contact your local election office',
-        state: state,
-        district: district,
-        chamber: 'House',
-        phone: '(202) 225-0000',
-        website: `https://www.house.gov`,
-        yearsInOffice: 0,
-        nextElection: '2026',
-        imageUrl: undefined,
+      // Return empty array rather than creating fake representatives
+    }
+  }
+
+  // If we have no representatives or API failed, try congress-legislators fallback
+  if (representatives.length === 0 || shouldUseFallback) {
+    try {
+      structuredLogger.info('Using congress-legislators fallback for missing representatives', {
+        component: 'congressApi',
+        metadata: { state, district },
+      });
+
+      const allEnhanced = await getAllEnhancedRepresentatives();
+      const filteredReps = allEnhanced
+        .filter(rep => {
+          // Match state
+          if (rep.state !== state) return false;
+
+          // If district specified, match House members only for that district
+          if (district) {
+            return rep.chamber === 'House' && rep.district === district;
+          }
+
+          // If no district specified, return all (Senate and House)
+          return true;
+        })
+        .map(enhanced => ({
+          bioguideId: enhanced.bioguideId,
+          name: enhanced.name,
+          party: enhanced.party,
+          state: enhanced.state,
+          district: enhanced.district,
+          chamber: enhanced.chamber,
+          website: enhanced.website,
+          phone: enhanced.phone,
+          imageUrl: enhanced.imageUrl,
+          yearsInOffice: 0, // Will be calculated from terms if needed
+          nextElection: '2026', // Default next election year
+          terms: enhanced.terms || [],
+        }));
+
+      representatives.push(...filteredReps);
+
+      structuredLogger.info('Added representatives from congress-legislators fallback', {
+        component: 'congressApi',
+        metadata: { count: filteredReps.length, state, district },
+      });
+    } catch (error) {
+      structuredLogger.error('Error using congress-legislators fallback', {
+        component: 'congressApi',
+        error: error as Error,
+        metadata: { state, district },
       });
     }
   }
 
+  // Validate all bioguide IDs before returning
+  const validatedRepresentatives = validateRepresentatives(representatives);
+
   structuredLogger.info('Returning representatives', {
     component: 'congressApi',
     metadata: {
-      count: representatives.length,
+      count: validatedRepresentatives.length,
+      originalCount: representatives.length,
       state,
       district: district || 'all',
     },
   });
-  return representatives;
+  return validatedRepresentatives;
 }
 
 /**

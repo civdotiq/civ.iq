@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { getRepresentativesByLocation } from '@/features/representatives/services/congress-api';
 import { CiviqLogo } from '@/shared/ui/CiviqLogo';
 import { RepresentativesClient } from './components/RepresentativesClient';
+import { LoadingState } from '@/components/ui/LoadingState';
 
 interface SearchParams {
   searchParams: Promise<{
@@ -91,14 +92,7 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
           </div>
         )}
 
-        <Suspense
-          fallback={
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              <p className="mt-4 text-gray-600">Loading representatives...</p>
-            </div>
-          }
-        >
+        <Suspense fallback={<LoadingState message="Loading representatives..." />}>
           <RepresentativesClient
             initialRepresentatives={initialRepresentatives}
             compareIds={compareIds}

@@ -1,0 +1,103 @@
+/* Campaign Finance Component Styles */
+
+/* Container */
+.campaign-finance-container {
+  @apply max-w-7xl mx-auto;
+}
+
+/* Section spacing */
+.campaign-finance-header,
+.campaign-finance-tabs,
+.campaign-finance-footer {
+  @apply mb-4;
+}
+
+/* Tab content containers */
+.industry-analysis-content,
+.donor-analysis-content,
+.fundraising-trends-content,
+.contributions-content,
+.expenditures-content,
+.lobbying-content {
+  @apply min-h-[400px];
+}
+
+/* Chart containers */
+.campaign-finance-container .chart-container {
+  @apply bg-gray-50 rounded-lg p-4 border border-gray-200;
+}
+
+/* Metric cards */
+.campaign-finance-container .metric-card {
+  @apply bg-white rounded-lg p-4 text-center shadow-sm border border-gray-200 hover:shadow-md transition-shadow;
+}
+
+/* Data rows */
+.campaign-finance-container .data-row {
+  @apply flex items-center justify-between p-3 border border-gray-100 rounded hover:bg-gray-50 transition-colors;
+}
+
+/* Progress bars */
+.campaign-finance-container .progress-bar {
+  @apply bg-gray-200 rounded-full h-3;
+}
+
+.campaign-finance-container .progress-fill {
+  @apply h-3 rounded-full transition-all duration-700 relative;
+}
+
+/* Empty states */
+.campaign-finance-container .empty-state {
+  @apply text-center py-12 text-gray-500;
+}
+
+.campaign-finance-container .empty-state-icon {
+  @apply mx-auto h-12 w-12 text-gray-400 mb-4;
+}
+
+/* Debug panel specific styles */
+.debug-panel-container {
+  @apply fixed bottom-4 right-4 z-50;
+}
+
+.debug-panel-toggle {
+  @apply bg-gray-800 text-white px-3 py-1 rounded-t text-xs font-mono hover:bg-gray-700 transition-colors;
+}
+
+.debug-panel-content {
+  @apply bg-gray-800 text-white p-4 rounded-l rounded-b text-xs font-mono max-w-md max-h-96 overflow-auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .campaign-finance-container {
+    @apply px-2;
+  }
+
+  .campaign-finance-tabs nav {
+    @apply flex-wrap;
+  }
+
+  .campaign-finance-container .metric-card {
+    @apply p-3;
+  }
+
+  .campaign-finance-container .text-3xl {
+    @apply text-2xl;
+  }
+}
+
+/* Print styles */
+@media print {
+  .debug-panel-container {
+    @apply hidden;
+  }
+
+  .campaign-finance-tabs nav {
+    @apply border-b-0;
+  }
+
+  .campaign-finance-container .hover\:shadow-md:hover {
+    @apply shadow-none;
+  }
+}

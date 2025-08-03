@@ -54,20 +54,32 @@ export async function GET(
       async () => {
         const fetchStartTime = Date.now();
 
-        // Get representative info first
+        // Get representative info from congress.service
         structuredLogger.info('Fetching representative data', { bioguideId });
         const repStartTime = Date.now();
-        const repResponse = await fetch(
-          `${request.nextUrl.origin}/api/representative/${bioguideId}`
-        );
-        if (!repResponse.ok) {
-          throw new Error('Could not fetch representative data');
+        let representative = null;
+
+        try {
+          const { getEnhancedRepresentative } = await import(
+            '@/features/representatives/services/congress.service'
+          );
+          representative = await getEnhancedRepresentative(bioguideId);
+
+          if (!representative) {
+            throw new Error('Representative not found');
+          }
+
+          structuredLogger.info('Representative data fetched', {
+            bioguideId,
+            duration: Date.now() - repStartTime,
+          });
+        } catch (error) {
+          structuredLogger.warn('Could not fetch representative data, using defaults', {
+            bioguideId,
+            error: (error as Error).message,
+          });
+          // Continue with empty representative data
         }
-        const representative = await repResponse.json();
-        structuredLogger.info('Representative data fetched', {
-          bioguideId,
-          duration: Date.now() - repStartTime,
-        });
 
         // Skip fetching votes for now since analyzePartyAlignment mostly generates mock data
         // This dramatically improves performance from 65+ seconds to <1 second

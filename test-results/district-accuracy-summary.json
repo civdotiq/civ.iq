@@ -1,0 +1,24 @@
+{
+  "districtMetadata": {
+    "total_districts": 444,
+    "states_with_districts": 56,
+    "last_updated": "2025-08-01T02:33:02.963Z",
+    "source": "U.S. Census Bureau TIGER/Line Shapefiles 2024 - 119th Congress - REAL DATA",
+    "data_files": {
+      "geojson": "congressional_districts_119_real.geojson",
+      "pmtiles": "congressional_districts_119_real.pmtiles"
+    },
+    "processing_info": {
+      "total_features": 444,
+      "has_territories": true
+    }
+  },
+  "overall": {
+    "total": 20,
+    "passed": 5,
+    "failed": 15
+  },
+  "success_rate": "25.0%",
+  "total_errors": 15,
+  "total_warnings": 0
+}

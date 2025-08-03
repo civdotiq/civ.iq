@@ -426,7 +426,7 @@ export function withLazyLoading<P extends object>(
 
     useEffect(() => {
       const observer = new IntersectionObserver(([entry]) => {
-        if (entry.isIntersecting && !hasLoaded) {
+        if (entry?.isIntersecting && !hasLoaded) {
           setIsVisible(true);
           setHasLoaded(true);
           observer.disconnect();
@@ -472,7 +472,7 @@ export function useLazyData<T>(
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry?.isIntersecting) {
           setIsVisible(true);
           observer.disconnect();
         }

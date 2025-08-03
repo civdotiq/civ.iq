@@ -142,36 +142,57 @@ async function getEnhancedVotingRecords(
         limit,
       });
 
-      // Import the new voting data service
-      const { votingDataService } = await import(
-        '@/features/representatives/services/voting-data-service'
-      );
+      // Try to use the congress-api service for voting data
+      const { getVotesByMember } = await import('@/features/representatives/services/congress-api');
 
-      // Attempt to get real voting data using multiple strategies
-      const votingResult = await votingDataService.getVotingRecords(
-        bioguideId,
-        chamber as 'House' | 'Senate',
-        limit
-      );
+      try {
+        const votingData = await getVotesByMember(bioguideId);
 
-      if (votingResult.votes.length > 0) {
-        structuredLogger.info('Real voting data retrieved successfully', {
+        if (votingData && votingData.length > 0) {
+          structuredLogger.info('Voting data retrieved from congress-api', {
+            bioguideId,
+            votesFound: votingData.length,
+          });
+
+          // Transform the data to match our Vote interface
+          const transformedVotes: Vote[] = votingData
+            .slice(0, limit)
+            .map((vote: unknown, index: number) => {
+              const voteData = vote as Record<string, unknown>;
+              const billData = (voteData.bill as Record<string, unknown>) || {};
+
+              return {
+                voteId: `${bioguideId}-vote-${index}`,
+                bill: {
+                  number: (billData.number as string) || 'Unknown',
+                  title:
+                    (billData.title as string) || (voteData.question as string) || 'Unknown Bill',
+                  congress: (voteData.congress as string) || '118',
+                  type: (billData.type as string) || 'Bill',
+                },
+                question: (voteData.question as string) || 'On Passage',
+                result: (voteData.result as string) || 'Unknown',
+                date: (voteData.date as string) ?? new Date().toISOString().split('T')[0],
+                position:
+                  (voteData.position as 'Yea' | 'Nay' | 'Not Voting' | 'Present') || 'Not Voting',
+                chamber: chamber as 'House' | 'Senate',
+                rollNumber: voteData.rollNumber as number,
+                category: categorizeBill(
+                  (billData.title as string) || (voteData.question as string) || ''
+                ),
+              };
+            });
+
+          return transformedVotes;
+        }
+      } catch (importError) {
+        structuredLogger.warn('Failed to import congress-api voting service', {
           bioguideId,
-          source: votingResult.source,
-          votesFound: votingResult.totalFound,
+          error: (importError as Error).message,
         });
-
-        return votingResult.votes;
       }
 
-      // If no real data available, log and continue to fallback without throwing
-      structuredLogger.warn('No real voting data available from Congress.gov', {
-        bioguideId,
-        source: votingResult.source,
-        cacheStatus: votingResult.cacheStatus,
-      });
-
-      // Return empty array to trigger natural fallback to mock data
+      // Return empty array if no data found
       return [];
     },
     300000 // 5 minutes cache for voting data

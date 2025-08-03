@@ -21,6 +21,7 @@ import { structuredLogger } from '@/lib/logging/logger';
 import yaml from 'js-yaml';
 import type { EnhancedRepresentative } from '@/types/representative';
 import { filterCurrent119thCongress } from '@/utils/congress-validation';
+import { getFileCache } from '@/lib/cache/file-cache';
 
 // Base URLs for congress-legislators data
 const CONGRESS_LEGISLATORS_BASE_URL =
@@ -50,6 +51,65 @@ class RateLimiter {
 }
 
 const githubRateLimiter = new RateLimiter();
+const fileCache = getFileCache();
+
+/**
+ * Enhanced caching with file persistence for large congress data
+ */
+async function persistentCachedFetch<T>(
+  key: string,
+  fetchFn: () => Promise<T>,
+  ttlSeconds: number = 86400
+): Promise<T> {
+  const startTime = Date.now();
+
+  // Try file cache first for persistence across restarts
+  const fileCached = await fileCache.get<T>(key);
+  if (fileCached) {
+    const duration = Date.now() - startTime;
+    // eslint-disable-next-line no-console
+    console.log(`🎯 [CACHE HIT] File cache hit for ${key} (${duration}ms)`);
+    structuredLogger.info('File cache hit for congress data', { key, duration });
+    return fileCached;
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(`❌ [CACHE MISS] File cache miss for ${key}, checking memory cache...`);
+
+  // Fall back to regular cache and fetch
+  return cachedFetch(
+    key,
+    async () => {
+      // eslint-disable-next-line no-console
+      console.log(`📡 [FETCHING] Downloading ${key} from GitHub...`);
+      structuredLogger.info('Fetching congress data from remote source', { key });
+
+      const fetchStartTime = Date.now();
+      const data = await fetchFn();
+      const fetchDuration = Date.now() - fetchStartTime;
+
+      // eslint-disable-next-line no-console
+      console.log(`✅ [FETCH COMPLETE] Downloaded ${key} in ${fetchDuration}ms`);
+
+      // Save to file cache for persistence
+      const cacheStartTime = Date.now();
+      await fileCache.set(key, data, ttlSeconds);
+      const cacheDuration = Date.now() - cacheStartTime;
+
+      // eslint-disable-next-line no-console
+      console.log(`💾 [CACHE SAVE] Saved ${key} to file cache in ${cacheDuration}ms`);
+      structuredLogger.info('Congress data cached successfully', {
+        key,
+        fetchDuration,
+        cacheDuration,
+        totalDuration: Date.now() - startTime,
+      });
+
+      return data;
+    },
+    ttlSeconds
+  );
+}
 
 // Interfaces for congress-legislators data
 export interface CongressLegislatorId {
@@ -164,7 +224,7 @@ export interface CongressCommittee {
  * Fetch current legislators data
  */
 async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
-  return cachedFetch(
+  return persistentCachedFetch(
     'congress-legislators-current',
     async () => {
       try {
@@ -174,7 +234,7 @@ async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
         await githubRateLimiter.waitIfNeeded();
 
         const response = await fetch(`${CONGRESS_LEGISLATORS_BASE_URL}/legislators-current.yaml`, {
-          signal: AbortSignal.timeout(30000), // 30 second timeout
+          signal: AbortSignal.timeout(60000), // 60 second timeout for large YAML files
         });
 
         if (!response.ok) {
@@ -192,7 +252,29 @@ async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
 
         return legislators;
       } catch (error) {
-        structuredLogger.error('Error fetching current legislators', error as Error);
+        structuredLogger.error('Error fetching current legislators', error as Error, {
+          url: `${CONGRESS_LEGISLATORS_BASE_URL}/legislators-current.yaml`,
+          timeout: '60s',
+          errorType: error instanceof Error ? error.name : 'Unknown',
+        });
+
+        // Check if we have any cached data we can use as fallback
+        const fallbackData = await fileCache.get<CongressLegislator[]>(
+          'congress-legislators-current-fallback'
+        );
+        if (fallbackData && fallbackData.length > 0) {
+          // eslint-disable-next-line no-console
+          console.log(
+            `🔄 [FALLBACK] Using cached fallback data (${fallbackData.length} legislators)`
+          );
+          structuredLogger.warn('Using fallback data due to fetch error', {
+            fallbackCount: fallbackData.length,
+          });
+          return fallbackData;
+        }
+
+        // eslint-disable-next-line no-console
+        console.log('❌ [ERROR] No fallback data available, returning empty array');
         return [];
       }
     },
@@ -204,7 +286,7 @@ async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
  * Fetch social media data
  */
 async function fetchSocialMediaData(): Promise<CongressLegislatorSocialMedia[]> {
-  return cachedFetch(
+  return persistentCachedFetch(
     'congress-legislators-social-media',
     async () => {
       try {
@@ -216,7 +298,7 @@ async function fetchSocialMediaData(): Promise<CongressLegislatorSocialMedia[]> 
         const response = await fetch(
           `${CONGRESS_LEGISLATORS_BASE_URL}/legislators-social-media.yaml`,
           {
-            signal: AbortSignal.timeout(30000), // 30 second timeout
+            signal: AbortSignal.timeout(60000), // 60 second timeout for large YAML files
           }
         );
 

@@ -136,7 +136,8 @@ async function getRealVotingRecord(
   }
 }
 
-// Generate mock campaign finance data
+// MOCK DATA: Generates deterministic but fake campaign finance data for development
+// NOTE: Should be replaced with real FEC data or "data unavailable" indicators
 function generateCampaignFinance(bioguideId: string): ComparisonData['campaignFinance'] {
   const seed = bioguideId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const random = (min: number, max: number) => min + ((seed * 11) % (max - min + 1));

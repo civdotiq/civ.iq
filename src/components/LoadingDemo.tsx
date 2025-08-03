@@ -17,7 +17,6 @@ import {
   VotingRecordsSkeleton,
   SearchResultsSkeleton,
   DistrictMapSkeleton,
-  CampaignFinanceSkeleton,
 } from '@/shared/components/ui/SkeletonComponents';
 import { useSmartLoading, useMultiStageLoading } from '@/hooks/useSmartLoading';
 
@@ -201,13 +200,13 @@ export function LoadingDemo() {
         <div className="space-y-4">
           <ProgressBar
             progress={multiStageLoading.progress}
-            label={multiStageLoading.currentStage}
+            label={multiStageLoading.currentStage || 'Loading...'}
             showPercentage
           />
 
           {multiStageLoading.loading && (
             <LoadingMessage
-              message={multiStageLoading.currentStage}
+              message={multiStageLoading.currentStage || 'Loading...'}
               submessage={`Step ${multiStageLoading.currentStageIndex + 1} of 5`}
             />
           )}

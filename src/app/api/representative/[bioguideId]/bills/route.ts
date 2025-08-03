@@ -279,8 +279,7 @@ export async function GET(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           sponsoredData.sponsoredLegislation.forEach((bill: any) => {
             // Skip amendments and null/undefined entries that aren't actual bills
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if (!(bill as any).type || !(bill as any).number || !(bill as any).title) {
+            if (!bill?.type || !bill?.number || !bill?.title) {
               return;
             }
 
@@ -334,8 +333,7 @@ export async function GET(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .forEach((bill: any) => {
               // Skip amendments and null/undefined entries that aren't actual bills
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              if (!(bill as any).type || !(bill as any).number || !(bill as any).title) {
+              if (!bill?.type || !bill?.number || !bill?.title) {
                 return;
               }
 
@@ -451,7 +449,8 @@ export async function GET(
       includeSummaries,
     });
 
-    // Enhanced fallback mock bills data
+    // FALLBACK DATA: Used when Congress.gov API is unavailable
+    // This provides realistic bill structure to maintain UI functionality
     const mockBills: SponsoredBill[] = [
       {
         billId: 'hr1000-118',
