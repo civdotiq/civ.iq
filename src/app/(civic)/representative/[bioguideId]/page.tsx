@@ -9,6 +9,7 @@ import { RepresentativeProfileClient } from './client-wrapper';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { RepresentativePageSidebar } from '@/features/representatives/components/RepresentativePageSidebar';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
+import { structuredLogger } from '@/lib/logging/logger-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -94,16 +95,23 @@ interface RepresentativeDetails {
 async function getRepresentativeData(bioguideId: string) {
   try {
     if (!bioguideId || typeof bioguideId !== 'string') {
-      throw new Error('Invalid bioguideId provided');
+      const error = 'Invalid bioguideId provided';
+      structuredLogger.error('Representative data fetch failed', new Error(error), {
+        bioguideId,
+        endpoint: 'representative-batch',
+        component: 'RepresentativeProfilePage',
+      });
+      throw new Error(error);
     }
 
-    // Construct full URL for server-side fetch
-    const baseUrl =
-      process.env.NEXT_PUBLIC_API_URL ||
-      (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '');
+    structuredLogger.info('Fetching representative data', {
+      bioguideId,
+      endpoint: 'representative-batch',
+      component: 'RepresentativeProfilePage',
+    });
 
-    // Use Next.js 15 fetch with built-in caching and revalidation
-    const response = await fetch(`${baseUrl}/api/representative/${bioguideId}/batch`, {
+    // Use relative URL for API calls (works in both dev and production)
+    const response = await fetch(`/api/representative/${bioguideId}/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -128,11 +136,29 @@ async function getRepresentativeData(bioguideId: string) {
     } as RequestInit & { next?: { revalidate?: number; tags?: string[] } });
 
     if (!response) {
-      throw new Error('No response received from API');
+      const error = 'No response received from API';
+      structuredLogger.error('Representative API fetch failed', new Error(error), {
+        bioguideId,
+        endpoint: 'representative-batch',
+        component: 'RepresentativeProfilePage',
+      });
+      throw new Error(error);
     }
 
     if (!response.ok) {
+      structuredLogger.warn('Representative API returned non-OK status', {
+        bioguideId,
+        status: response.status,
+        statusText: response.statusText,
+        endpoint: 'representative-batch',
+        component: 'RepresentativeProfilePage',
+      });
+
       if (response.status === 404) {
+        structuredLogger.info('Representative not found, triggering 404', {
+          bioguideId,
+          component: 'RepresentativeProfilePage',
+        });
         notFound();
       }
       throw new Error(
@@ -143,13 +169,34 @@ async function getRepresentativeData(bioguideId: string) {
     let data;
     try {
       data = await response.json();
-    } catch {
-      throw new Error('Invalid JSON response from API');
+    } catch (parseError) {
+      const error = 'Invalid JSON response from API';
+      structuredLogger.error('Representative API JSON parse failed', parseError, {
+        bioguideId,
+        endpoint: 'representative-batch',
+        component: 'RepresentativeProfilePage',
+      });
+      throw new Error(error);
     }
 
     if (!data) {
-      throw new Error('No data received from API');
+      const error = 'No data received from API';
+      structuredLogger.error('Representative API returned empty data', new Error(error), {
+        bioguideId,
+        endpoint: 'representative-batch',
+        component: 'RepresentativeProfilePage',
+      });
+      throw new Error(error);
     }
+
+    structuredLogger.info('Representative data fetched successfully', {
+      bioguideId,
+      success: data.success !== false,
+      hasProfile: !!data.data?.profile,
+      endpoint: 'representative-batch',
+      component: 'RepresentativeProfilePage',
+      executionTime: data.executionTime || 0,
+    });
 
     // Return structured data with safe defaults
     return {
@@ -159,7 +206,14 @@ async function getRepresentativeData(bioguideId: string) {
       executionTime: data.executionTime || 0,
     };
   } catch (error) {
-    // Return a safe error structure instead of throwing
+    // Log the error but return a safe error structure instead of throwing
+    structuredLogger.error('Representative data fetch completely failed', error, {
+      bioguideId,
+      endpoint: 'representative-batch',
+      component: 'RepresentativeProfilePage',
+      errorMessage: error instanceof Error ? error.message : 'Unknown error occurred',
+    });
+
     return {
       success: false,
       data: {},

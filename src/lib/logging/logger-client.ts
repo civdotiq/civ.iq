@@ -35,7 +35,8 @@ class ClientLogger {
   private isDevelopment: boolean;
 
   constructor(level?: LogLevel) {
-    this.isDevelopment = process.env.NODE_ENV === 'development';
+    // Safe environment check for both browser and server environments
+    this.isDevelopment = typeof process !== 'undefined' && process.env?.NODE_ENV === 'development';
     this.logLevel = level ?? (this.isDevelopment ? LogLevel.DEBUG : LogLevel.WARN);
   }
 
@@ -172,11 +173,22 @@ export const logger = {
 
 // Performance timing utility
 export function createTimer() {
-  const start = performance.now();
+  // Safe performance check for environments that might not have performance API
+  const start = typeof performance !== 'undefined' ? performance.now() : Date.now();
 
   return {
-    end: () => Math.round(performance.now() - start),
-    endMs: () => performance.now() - start,
+    end: () => {
+      if (typeof performance !== 'undefined') {
+        return Math.round(performance.now() - start);
+      }
+      return Math.round(Date.now() - start);
+    },
+    endMs: () => {
+      if (typeof performance !== 'undefined') {
+        return performance.now() - start;
+      }
+      return Date.now() - start;
+    },
   };
 }
 

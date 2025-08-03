@@ -55,7 +55,11 @@ export class GlobalErrorBoundary extends Component<Props, State> {
     });
 
     // Report to external service if configured
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+    if (
+      typeof window !== 'undefined' &&
+      typeof process !== 'undefined' &&
+      process.env?.NODE_ENV === 'production'
+    ) {
       // This would integrate with Sentry or similar service
       // Sentry.captureException(error, { extra: errorInfo });
     }
@@ -113,27 +117,29 @@ export class GlobalErrorBoundary extends Component<Props, State> {
               </Button>
             </div>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="mt-6 text-left">
-                <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
-                  Error Details (Development Only)
-                </summary>
-                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded text-xs">
-                  <p className="font-medium text-red-800">Error:</p>
-                  <p className="text-red-700 mb-2">{this.state.error.message}</p>
-                  <p className="font-medium text-red-800">Stack:</p>
-                  <pre className="text-red-700 whitespace-pre-wrap">{this.state.error.stack}</pre>
-                  {this.state.errorInfo && (
-                    <>
-                      <p className="font-medium text-red-800 mt-2">Component Stack:</p>
-                      <pre className="text-red-700 whitespace-pre-wrap">
-                        {this.state.errorInfo.componentStack}
-                      </pre>
-                    </>
-                  )}
-                </div>
-              </details>
-            )}
+            {typeof process !== 'undefined' &&
+              process.env?.NODE_ENV === 'development' &&
+              this.state.error && (
+                <details className="mt-6 text-left">
+                  <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+                    Error Details (Development Only)
+                  </summary>
+                  <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded text-xs">
+                    <p className="font-medium text-red-800">Error:</p>
+                    <p className="text-red-700 mb-2">{this.state.error.message}</p>
+                    <p className="font-medium text-red-800">Stack:</p>
+                    <pre className="text-red-700 whitespace-pre-wrap">{this.state.error.stack}</pre>
+                    {this.state.errorInfo && (
+                      <>
+                        <p className="font-medium text-red-800 mt-2">Component Stack:</p>
+                        <pre className="text-red-700 whitespace-pre-wrap">
+                          {this.state.errorInfo.componentStack}
+                        </pre>
+                      </>
+                    )}
+                  </div>
+                </details>
+              )}
           </Card>
         </div>
       );

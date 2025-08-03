@@ -7,12 +7,18 @@
 
 export async function register() {
   const timestamp = new Date().toISOString();
+
+  // Safe environment checks for production
+  const nodeEnv = typeof process !== 'undefined' && process.env ? process.env.NODE_ENV : 'unknown';
+  const nodeVersion =
+    typeof process !== 'undefined' && process.version ? process.version : 'unknown';
+
   console.log(`[${timestamp}] 🚀 Civic Intel Hub starting up...`);
-  console.log(`[${timestamp}] Node version: ${process.version}`);
-  console.log(`[${timestamp}] Environment: ${process.env.NODE_ENV}`);
+  console.log(`[${timestamp}] Node version: ${nodeVersion}`);
+  console.log(`[${timestamp}] Environment: ${nodeEnv}`);
 
   // Log when we're about to fetch congress data
-  if (process.env.NODE_ENV === 'development') {
+  if (nodeEnv === 'development') {
     console.log(
       `[${timestamp}] 📊 Preparing to fetch congress-legislators data on first request...`
     );

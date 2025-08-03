@@ -32,7 +32,7 @@ export default function GlobalError({
             <p className="text-gray-600 mb-4">
               Something went wrong with the application. Please try refreshing the page.
             </p>
-            {process.env.NODE_ENV === 'development' && (
+            {typeof process !== 'undefined' && process.env?.NODE_ENV === 'development' && (
               <details className="text-left mb-4">
                 <summary className="cursor-pointer text-sm text-gray-500">Error details</summary>
                 <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
