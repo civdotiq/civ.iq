@@ -1,0 +1,265 @@
+{
+  "summary": {
+    "districtMetadata": {
+      "total_districts": 444,
+      "states_with_districts": 56,
+      "last_updated": "2025-08-01T02:33:02.963Z",
+      "source": "U.S. Census Bureau TIGER/Line Shapefiles 2024 - 119th Congress - REAL DATA",
+      "data_files": {
+        "geojson": "congressional_districts_119_real.geojson",
+        "pmtiles": "congressional_districts_119_real.pmtiles"
+      },
+      "processing_info": {
+        "total_features": 444,
+        "has_territories": true
+      }
+    },
+    "overall": {
+      "total": 20,
+      "passed": 5,
+      "failed": 15
+    },
+    "success_rate": "25.0%",
+    "total_errors": 15,
+    "total_warnings": 0
+  },
+  "districts": {},
+  "states": {},
+  "errors": [
+    {
+      "suite": "API Endpoints",
+      "test": "District metadata API",
+      "error": "Unexpected token < in JSON at position 0",
+      "timestamp": "2025-08-01T02:38:28.997Z"
+    },
+    {
+      "suite": "API Endpoints",
+      "test": "Districts API",
+      "details": "Status: 500, Districts: 0",
+      "timestamp": "2025-08-01T02:38:29.793Z"
+    },
+    {
+      "suite": "API Endpoints",
+      "test": "ZIP code lookup API",
+      "error": "Unexpected token < in JSON at position 0",
+      "timestamp": "2025-08-01T02:38:29.881Z"
+    },
+    {
+      "suite": "District Completeness",
+      "test": "Total district count (should be 435)",
+      "details": "Found: 444, Expected: 435",
+      "timestamp": "2025-08-01T02:38:29.885Z"
+    },
+    {
+      "suite": "District Completeness",
+      "test": "State district counts",
+      "details": "Illinois: Expected 17, Found 18; New Hampshire: Expected 2, Found 3; Connecticut: Expected 5, Found 6",
+      "timestamp": "2025-08-01T02:38:29.885Z"
+    },
+    {
+      "suite": "District Completeness",
+      "test": "District ID format validation",
+      "details": "Invalid IDs: 09-ZZ, 17-ZZ, 33-ZZ",
+      "timestamp": "2025-08-01T02:38:29.885Z"
+    },
+    {
+      "suite": "Geographic Accuracy",
+      "test": "Centroid coordinates validity",
+      "details": "Invalid centroids: 02-00: [0.3142975356280573, 61.307439], 60-98: [-169.6217595, -12.799508], 66-98: [144.7862965, 13.444257], 69-98: [145.483878, 17.3265605], 72-98: [-66.583627, 18.199755500000002]...",
+      "timestamp": "2025-08-01T02:38:29.889Z"
+    },
+    {
+      "suite": "Geographic Accuracy",
+      "test": "Bounding box validation",
+      "details": "Invalid bboxes: 02-00: Outside US bounds, 15-02: Outside US bounds, 23-02: Outside US bounds, 60-98: Outside US bounds, 66-98: Outside US bounds...",
+      "timestamp": "2025-08-01T02:38:29.890Z"
+    },
+    {
+      "suite": "Geographic Accuracy",
+      "test": "State FIPS code validation",
+      "details": "Invalid FIPS: 11-98: 11, 60-98: 60, 66-98: 66, 69-98: 69, 72-98: 72...",
+      "timestamp": "2025-08-01T02:38:29.890Z"
+    },
+    {
+      "suite": "Boundary Validation",
+      "test": "Boundary data for 06-12",
+      "details": "Unexpected token < in JSON at position 0",
+      "timestamp": "2025-08-01T02:38:29.985Z"
+    },
+    {
+      "suite": "Boundary Validation",
+      "test": "Boundary data for 36-14",
+      "details": "Unexpected token < in JSON at position 0",
+      "timestamp": "2025-08-01T02:38:30.074Z"
+    },
+    {
+      "suite": "Boundary Validation",
+      "test": "Boundary data for 48-02",
+      "details": "Unexpected token < in JSON at position 0",
+      "timestamp": "2025-08-01T02:38:30.167Z"
+    },
+    {
+      "suite": "Boundary Validation",
+      "test": "Boundary data for 17-05",
+      "details": "Unexpected token < in JSON at position 0",
+      "timestamp": "2025-08-01T02:38:30.252Z"
+    },
+    {
+      "suite": "Boundary Validation",
+      "test": "Boundary data for 25-07",
+      "details": "Unexpected token < in JSON at position 0",
+      "timestamp": "2025-08-01T02:38:30.339Z"
+    },
+    {
+      "suite": "Lookup Services",
+      "test": "District lookup by ZIP code",
+      "details": "0/4 ZIP codes resolved successfully",
+      "timestamp": "2025-08-01T02:38:30.759Z"
+    }
+  ],
+  "warnings": [],
+  "performance": {
+    "metadataApiTime": 88,
+    "districtsApiTime": 459,
+    "metadata_json_size_mb": 0.002033233642578125
+  },
+  "data_files": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "tests": [
+      {
+        "name": "REAL District metadata file exists",
+        "passed": true
+      },
+      {
+        "name": "REAL GeoJSON file exists",
+        "passed": true
+      },
+      {
+        "name": "REAL PMTiles file exists",
+        "passed": true
+      },
+      {
+        "name": "REAL Metadata structure validation",
+        "passed": true,
+        "details": "Total districts in REAL metadata: 444 (Census TIGER/Line data)"
+      }
+    ]
+  },
+  "api_endpoints": {
+    "total": 3,
+    "passed": 0,
+    "failed": 3,
+    "tests": [
+      {
+        "name": "Districts API",
+        "passed": false,
+        "details": "Status: 500, Districts: 0"
+      }
+    ]
+  },
+  "district_completeness": {
+    "total": 3,
+    "passed": 0,
+    "failed": 3,
+    "tests": [
+      {
+        "name": "Total district count (should be 435)",
+        "passed": false,
+        "details": "Found: 444, Expected: 435"
+      },
+      {
+        "name": "State district counts",
+        "passed": false,
+        "details": "Illinois: Expected 17, Found 18; New Hampshire: Expected 2, Found 3; Connecticut: Expected 5, Found 6"
+      },
+      {
+        "name": "District ID format validation",
+        "passed": false,
+        "details": "Invalid IDs: 09-ZZ, 17-ZZ, 33-ZZ"
+      }
+    ]
+  },
+  "geographic_accuracy": {
+    "total": 3,
+    "passed": 0,
+    "failed": 3,
+    "tests": [
+      {
+        "name": "Centroid coordinates validity",
+        "passed": false,
+        "details": "Invalid centroids: 02-00: [0.3142975356280573, 61.307439], 60-98: [-169.6217595, -12.799508], 66-98: [144.7862965, 13.444257], 69-98: [145.483878, 17.3265605], 72-98: [-66.583627, 18.199755500000002]..."
+      },
+      {
+        "name": "Bounding box validation",
+        "passed": false,
+        "details": "Invalid bboxes: 02-00: Outside US bounds, 15-02: Outside US bounds, 23-02: Outside US bounds, 60-98: Outside US bounds, 66-98: Outside US bounds..."
+      },
+      {
+        "name": "State FIPS code validation",
+        "passed": false,
+        "details": "Invalid FIPS: 11-98: 11, 60-98: 60, 66-98: 66, 69-98: 69, 72-98: 72..."
+      }
+    ]
+  },
+  "boundary_validation": {
+    "total": 5,
+    "passed": 0,
+    "failed": 5,
+    "tests": [
+      {
+        "name": "Boundary data for 06-12",
+        "passed": false,
+        "details": "Unexpected token < in JSON at position 0"
+      },
+      {
+        "name": "Boundary data for 36-14",
+        "passed": false,
+        "details": "Unexpected token < in JSON at position 0"
+      },
+      {
+        "name": "Boundary data for 48-02",
+        "passed": false,
+        "details": "Unexpected token < in JSON at position 0"
+      },
+      {
+        "name": "Boundary data for 17-05",
+        "passed": false,
+        "details": "Unexpected token < in JSON at position 0"
+      },
+      {
+        "name": "Boundary data for 25-07",
+        "passed": false,
+        "details": "Unexpected token < in JSON at position 0"
+      }
+    ]
+  },
+  "lookup_services": {
+    "total": 2,
+    "passed": 1,
+    "failed": 1,
+    "tests": [
+      {
+        "name": "District lookup by coordinates (San Francisco)",
+        "passed": true,
+        "details": "Lookup service responded with status 404"
+      },
+      {
+        "name": "District lookup by ZIP code",
+        "passed": false,
+        "details": "0/4 ZIP codes resolved successfully"
+      }
+    ]
+  },
+  "metadata": {
+    "timestamp": "2025-08-01T02:38:31.311Z",
+    "duration_ms": 2438,
+    "duration_formatted": "2.44s",
+    "test_environment": {
+      "node_version": "v18.19.1",
+      "platform": "linux",
+      "arch": "x64"
+    }
+  }
+}

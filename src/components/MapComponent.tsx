@@ -90,9 +90,10 @@ export default function MapComponent({
           geoJsonLayer = L.geoJSON(boundaryData as any, {
             style: feature => {
               // Dynamic styling based on district properties
+              const typedBoundaryData = boundaryData as any;
               const isMainDistrict =
                 feature?.properties?.GEOID ===
-                `${boundaryData.features[0].properties.STATEFP}${boundaryData.features[0].properties.CD118FP}`;
+                `${typedBoundaryData.features?.[0]?.properties?.STATEFP}${typedBoundaryData.features?.[0]?.properties?.CD118FP}`;
               return {
                 fillColor: isMainDistrict ? '#3b82f6' : '#6b7280',
                 weight: isMainDistrict ? 4 : 2,
