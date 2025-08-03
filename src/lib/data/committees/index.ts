@@ -91,6 +91,18 @@ export const committeeRegistry: CommitteeRegistry = {
       const { houseAppropriationsCommittee } = await import('./house/appropriations');
       return houseAppropriationsCommittee;
     },
+    HSAS: async () => {
+      const { houseArmedServicesCommittee } = await import('./house/armed-services');
+      return houseArmedServicesCommittee;
+    },
+    HSBA: async () => {
+      const { houseBudgetCommittee } = await import('./house/budget');
+      return houseBudgetCommittee;
+    },
+    HSED: async () => {
+      const { houseEducationWorkforceCommittee } = await import('./house/education-workforce');
+      return houseEducationWorkforceCommittee;
+    },
     HSIF: async () => {
       const { houseEnergyCommerceCommittee } = await import('./house/energy-commerce');
       return houseEnergyCommerceCommittee;
@@ -109,7 +121,10 @@ export const committeeRegistry: CommitteeRegistry = {
     },
   },
   senate: {
-    // Senate committee implementations pending
+    SSAF: async () => {
+      const { senateAgricultureCommittee } = await import('./senate/agriculture');
+      return senateAgricultureCommittee;
+    },
   },
   joint: {
     // Joint committee implementations pending
