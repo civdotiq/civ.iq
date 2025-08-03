@@ -10,6 +10,8 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { RepresentativePageSidebar } from '@/features/representatives/components/RepresentativePageSidebar';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 
+export const dynamic = 'force-dynamic';
+
 // Client-side components will be dynamically imported in the client wrapper
 
 function CiviqLogo() {
