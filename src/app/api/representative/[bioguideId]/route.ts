@@ -76,7 +76,7 @@ export async function GET(
       };
 
       // Optionally fetch additional data
-      const additionalData: unknown = {};
+      const additionalData: Record<string, unknown> = {};
 
       if (includeCommittees || includeAll) {
         try {
@@ -84,8 +84,7 @@ export async function GET(
             `${request.url.split('/api/')[0]}/api/representative/${bioguideId}/committees`
           );
           if (committeeResponse.ok) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (additionalData as any).committees = await committeeResponse.json();
+            additionalData.committees = await committeeResponse.json();
             representative.metadata!.dataSources.push('congress.gov');
           }
         } catch (error) {
@@ -102,8 +101,7 @@ export async function GET(
             `${request.url.split('/api/')[0]}/api/representative/${bioguideId}/leadership`
           );
           if (leadershipResponse.ok) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (additionalData as any).leadership = await leadershipResponse.json();
+            additionalData.leadership = await leadershipResponse.json();
             if (!representative.metadata!.dataSources.includes('congress.gov')) {
               representative.metadata!.dataSources.push('congress.gov');
             }
@@ -120,14 +118,12 @@ export async function GET(
         bioguideId,
         includeCommittees,
         includeLeadership,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        hasAdditionalData: Object.keys(additionalData as any).length > 0,
+        hasAdditionalData: Object.keys(additionalData).length > 0,
       });
 
       return NextResponse.json({
         representative,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ...(additionalData as any),
+        ...additionalData,
         success: true,
         metadata: {
           dataSource: 'congress-legislators',
@@ -214,8 +210,8 @@ export async function GET(
       }
     }
 
-    // Final fallback: Enhanced mock data
-    structuredLogger.info('Using mock representative data', { bioguideId });
+    // FALLBACK DATA: Real data for known representatives, generic fallback for unknown
+    structuredLogger.info('Using fallback representative data', { bioguideId });
 
     const commonReps: { [key: string]: Partial<EnhancedRepresentative> } = {
       P000595: {

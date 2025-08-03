@@ -4,6 +4,7 @@
  */
 
 import type { Committee } from '@/types/committee';
+import { structuredLogger } from '@/lib/logging/logger';
 
 // Index of all House and Senate committees for the 119th Congress
 // This serves as the main registry for committee data
@@ -38,7 +39,7 @@ export const HOUSE_COMMITTEES = {
   HSSM: 'Small Business',
   HSSO: 'Ethics',
   HSTG: 'Transportation and Infrastructure',
-  HSVR: 'Veterans\' Affairs',
+  HSVR: "Veterans' Affairs",
   HSWM: 'Ways and Means',
   HSPW: 'Permanent Select Committee on Intelligence',
   HSSY: 'Science, Space, and Technology',
@@ -62,7 +63,7 @@ export const SENATE_COMMITTEES = {
   SSJU: 'Judiciary',
   SSRA: 'Rules and Administration',
   SSSB: 'Small Business and Entrepreneurship',
-  SSVA: 'Veterans\' Affairs',
+  SSVA: "Veterans' Affairs",
   SLIA: 'Indian Affairs',
   SSSO: 'Select Committee on Ethics',
   SSAG: 'Special Committee on Aging',
@@ -79,6 +80,7 @@ export const JOINT_COMMITTEES = {
 
 // Committee data loader functions
 // These will lazy-load committee data only when needed
+// Only includes committees with actual implementation files
 export const committeeRegistry: CommitteeRegistry = {
   house: {
     HSAG: async () => {
@@ -88,18 +90,6 @@ export const committeeRegistry: CommitteeRegistry = {
     HSAP: async () => {
       const { houseAppropriationsCommittee } = await import('./house/appropriations');
       return houseAppropriationsCommittee;
-    },
-    HSAS: async () => {
-      const { houseArmedServicesCommittee } = await import('./house/armed-services');
-      return houseArmedServicesCommittee;
-    },
-    HSBA: async () => {
-      const { houseBudgetCommittee } = await import('./house/budget');
-      return houseBudgetCommittee;
-    },
-    HSED: async () => {
-      const { houseEducationCommittee } = await import('./house/education-workforce');
-      return houseEducationCommittee;
     },
     HSIF: async () => {
       const { houseEnergyCommerceCommittee } = await import('./house/energy-commerce');
@@ -119,71 +109,53 @@ export const committeeRegistry: CommitteeRegistry = {
     },
   },
   senate: {
-    SSAF: async () => {
-      const { senateAgricultureCommittee } = await import('./senate/agriculture');
-      return senateAgricultureCommittee;
-    },
-    SSAP: async () => {
-      const { senateAppropriationsCommittee } = await import('./senate/appropriations');
-      return senateAppropriationsCommittee;
-    },
-    SSAS: async () => {
-      const { senateArmedServicesCommittee } = await import('./senate/armed-services');
-      return senateArmedServicesCommittee;
-    },
-    SSJU: async () => {
-      const { senateJudiciaryCommittee } = await import('./senate/judiciary');
-      return senateJudiciaryCommittee;
-    },
-    // TODO: Add other Senate committees
+    // Senate committee implementations pending
   },
   joint: {
-    JSEC: async () => {
-      const { jointEconomicCommittee } = await import('./joint/economic');
-      return jointEconomicCommittee;
-    },
-    JSTX: async () => {
-      const { jointTaxationCommittee } = await import('./joint/taxation');
-      return jointTaxationCommittee;
-    },
-    // TODO: Add other Joint committees
+    // Joint committee implementations pending
   },
 };
 
 // Helper function to get any committee data
 export async function getCommitteeData(committeeId: string): Promise<Committee | null> {
   const upperCommitteeId = committeeId.toUpperCase();
-  
+
   // Check House committees
   if (committeeRegistry.house[upperCommitteeId]) {
     try {
       return await committeeRegistry.house[upperCommitteeId]();
     } catch (error) {
-      console.error(`Failed to load House committee ${upperCommitteeId}:`, error);
+      structuredLogger.error('Failed to load House committee', error as Error, {
+        committeeId: upperCommitteeId,
+      });
       return null;
     }
   }
-  
+
   // Check Senate committees
   if (committeeRegistry.senate[upperCommitteeId]) {
     try {
       return await committeeRegistry.senate[upperCommitteeId]();
     } catch (error) {
-      console.error(`Failed to load Senate committee ${upperCommitteeId}:`, error);
+      structuredLogger.error('Failed to load Senate committee', error as Error, {
+        committeeId: upperCommitteeId,
+      });
       return null;
     }
   }
-  
+
   // Check Joint committees
   if (committeeRegistry.joint[upperCommitteeId]) {
     try {
       return await committeeRegistry.joint[upperCommitteeId]();
     } catch (error) {
-      console.error(`Failed to load Joint committee ${upperCommitteeId}:`, error);
+      structuredLogger.error('Failed to load Joint committee', error as Error, {
+        committeeId: upperCommitteeId,
+      });
       return null;
     }
   }
-  
+
   return null;
 }
 
@@ -197,29 +169,31 @@ export function getAllCommitteeIds(): string[] {
 }
 
 // Get committee info by ID
-export function getCommitteeInfo(committeeId: string): { name: string; chamber: 'House' | 'Senate' | 'Joint' } | null {
+export function getCommitteeInfo(
+  committeeId: string
+): { name: string; chamber: 'House' | 'Senate' | 'Joint' } | null {
   const upperCommitteeId = committeeId.toUpperCase();
-  
+
   if (HOUSE_COMMITTEES[upperCommitteeId as keyof typeof HOUSE_COMMITTEES]) {
     return {
       name: `House Committee on ${HOUSE_COMMITTEES[upperCommitteeId as keyof typeof HOUSE_COMMITTEES]}`,
       chamber: 'House',
     };
   }
-  
+
   if (SENATE_COMMITTEES[upperCommitteeId as keyof typeof SENATE_COMMITTEES]) {
     return {
       name: `Senate Committee on ${SENATE_COMMITTEES[upperCommitteeId as keyof typeof SENATE_COMMITTEES]}`,
       chamber: 'Senate',
     };
   }
-  
+
   if (JOINT_COMMITTEES[upperCommitteeId as keyof typeof JOINT_COMMITTEES]) {
     return {
       name: JOINT_COMMITTEES[upperCommitteeId as keyof typeof JOINT_COMMITTEES],
       chamber: 'Joint',
     };
   }
-  
+
   return null;
 }

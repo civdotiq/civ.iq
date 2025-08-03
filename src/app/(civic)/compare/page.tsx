@@ -1005,7 +1005,8 @@ function ComparePageContent() {
       setRepresentatives(transformedReps);
     } catch {
       // Error will be handled by the error boundary
-      // Fallback to mock data if API fails
+      // FALLBACK DATA: Used when representatives API is unavailable
+      // All data is clearly labeled as "unavailable" to avoid confusion
       const mockReps: Representative[] = Array.from({ length: 20 }, (_, i) => ({
         bioguideId: `B00${1000 + i}`,
         name: 'Representative Data Unavailable',

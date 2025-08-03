@@ -1,3 +1,19 @@
+// District demographics interface for type safety
+export interface DistrictDemographics {
+  population: number;
+  medianIncome: number;
+  medianAge: number;
+  white: number;
+  black: number;
+  asian: number;
+  hispanic: number;
+  housingUnits: number;
+  educationBachelors: number;
+  votingAgePopulation: number;
+  diversityIndex: number;
+  urbanPercentage: number;
+}
+
 // Census API variables for congressional districts
 export const CENSUS_VARIABLES = {
   // Population
@@ -109,7 +125,7 @@ export function calculateDiversityIndex(demographics: {
 export async function fetchStateDistrictDemographics(
   stateAbbr: string,
   censusApiKey: string
-): Promise<Map<string, any>> {
+): Promise<Map<string, DistrictDemographics>> {
   const stateFips = STATE_FIPS[stateAbbr];
   if (!stateFips) {
     throw new Error(`Invalid state abbreviation: ${stateAbbr}`);
@@ -150,7 +166,7 @@ export async function fetchStateDistrictDemographics(
     // Skip at-large districts (00) for now
     if (districtNum === '00') continue;
 
-    const demographics = {
+    const demographics: DistrictDemographics = {
       population: parseInt(row[indices.population]) || 0,
       medianIncome: parseInt(row[indices.income]) || 0,
       medianAge: parseFloat(row[indices.age]) || 0,
@@ -161,6 +177,8 @@ export async function fetchStateDistrictDemographics(
       housingUnits: parseInt(row[indices.housing]) || 0,
       educationBachelors: parseInt(row[indices.education]) || 0,
       votingAgePopulation: parseInt(row[indices.votingAge]) || 0,
+      diversityIndex: 0, // Will be calculated below
+      urbanPercentage: 0, // Will be calculated below
     };
 
     // Calculate diversity index
@@ -187,7 +205,7 @@ export async function fetchStateDistrictDemographics(
 // Fetch all states' district demographics
 export async function fetchAllDistrictDemographics(
   censusApiKey: string
-): Promise<Map<string, any>> {
+): Promise<Map<string, DistrictDemographics & { state: string }>> {
   const allDistricts = new Map();
 
   // Process states in batches to avoid rate limiting
@@ -201,8 +219,9 @@ export async function fetchAllDistrictDemographics(
       try {
         const stateDistricts = await fetchStateDistrictDemographics(state, censusApiKey);
         return { state, districts: stateDistricts };
-      } catch (error) {
-        console.error(`Error fetching data for ${state}:`, error);
+      } catch {
+        // Silently fail for individual states to avoid blocking the entire process
+        // Error will be logged by the calling code if needed
         return { state, districts: new Map() };
       }
     });

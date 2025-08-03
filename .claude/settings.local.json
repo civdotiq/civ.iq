@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
       "Bash(npx create-next-app:*)",
@@ -68,7 +69,13 @@
       "Bash(npx eslint:*)",
       "Bash(npm run test:*)",
       "Bash(npx prettier:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npm run dev)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx next dev -H 0.0.0.0)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx next dev --hostname 0.0.0.0 --port 3000)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx next dev --port 3001)",
+      "Bash(export NODE_OPTIONS=\"--max-old-space-size=8192\")",
+      "Bash(NODE_ENV=production npx next build --no-lint)"
     ],
     "deny": []
   },

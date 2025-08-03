@@ -18,18 +18,22 @@ interface FilterState {
 interface FilterSidebarProps {
   onFilterChange: (filters: FilterState) => void;
   representatives: Representative[];
+  initialFilters?: FilterState;
 }
 
 export const FilterSidebar = memo(function FilterSidebar({
   onFilterChange,
   representatives,
+  initialFilters,
 }: FilterSidebarProps) {
-  const [filters, setFilters] = useState<FilterState>({
-    chamber: 'all',
-    party: 'all',
-    state: 'all',
-    committee: 'all',
-  });
+  const [filters, setFilters] = useState<FilterState>(
+    initialFilters || {
+      chamber: 'all',
+      party: 'all',
+      state: 'all',
+      committee: 'all',
+    }
+  );
 
   const states = Array.from(new Set(representatives.map(r => r.state))).sort();
   const committees = Array.from(

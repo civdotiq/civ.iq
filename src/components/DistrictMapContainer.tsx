@@ -5,7 +5,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface District {
@@ -67,13 +67,7 @@ export default function DistrictMapContainer({
     setIsClient(true);
   }, []);
 
-  useEffect(() => {
-    if (!isClient) return;
-
-    generateMapData();
-  }, [isClient, districts]);
-
-  const generateMapData = async () => {
+  const generateMapData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -141,24 +135,30 @@ export default function DistrictMapContainer({
         const districtNum = parseInt(nameParts[1] || '0') || (index % 10) + 1;
 
         const basePosition = statePositions[state] || [-98.5795, 39.8283];
+        const baseLng = basePosition[0];
+        const baseLat = basePosition[1];
+
+        if (typeof baseLng !== 'number' || typeof baseLat !== 'number') {
+          throw new Error(`Invalid base position for state ${state}`);
+        }
 
         // Create variations for multiple districts per state
         const offsetLng = (((districtNum - 1) % 5) - 2) * 1.5;
         const offsetLat = ((Math.floor((districtNum - 1) / 5) % 3) - 1) * 1.0;
 
-        const centerLng = basePosition[0] + offsetLng;
-        const centerLat = basePosition[1] + offsetLat;
+        const centerLng = baseLng + offsetLng;
+        const centerLat = baseLat + offsetLat;
 
         // Create realistic district boundary
         const createDistrictBoundary = (
           centerLng: number,
           centerLat: number,
           districtNum: number
-        ) => {
+        ): number[][] => {
           const size = 0.4 + (districtNum % 3) * 0.2;
           const rotation = (districtNum * 45) % 360;
 
-          const points = [];
+          const points: number[][] = [];
           for (let i = 0; i < 8; i++) {
             const angle = ((i * 45 + rotation) * Math.PI) / 180;
             const radius = size * (0.6 + Math.sin(i * 2.1) * 0.4);
@@ -166,7 +166,11 @@ export default function DistrictMapContainer({
             const pointLat = centerLat + radius * Math.sin(angle);
             points.push([pointLng, pointLat]);
           }
-          points.push(points[0]); // Close the polygon
+          // Close the polygon - ensure we get the first point which is guaranteed to exist
+          const firstPoint = points[0];
+          if (firstPoint) {
+            points.push([...firstPoint]); // Create a copy to avoid reference issues
+          }
           return points;
         };
 
@@ -200,7 +204,13 @@ export default function DistrictMapContainer({
     } finally {
       setLoading(false);
     }
-  };
+  }, [districts]);
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    generateMapData();
+  }, [isClient, generateMapData]);
 
   useEffect(() => {
     if (!isClient || !containerRef.current || !mapData) return;
@@ -216,9 +226,9 @@ export default function DistrictMapContainer({
         // @ts-ignore
         await import('leaflet/dist/leaflet.css');
 
-        // Fix default markers
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        delete (L as any).Icon.Default.prototype._getIconUrl;
+        // Fix default markers - required for Leaflet icon fix
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+        delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
         L.Icon.Default.mergeOptions({
           iconRetinaUrl:
             'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -342,14 +352,23 @@ export default function DistrictMapContainer({
             const [lng, lat] = info.center;
             const size = Math.sqrt(info.population / 1000000) * 2; // Size based on population
 
+            // Ensure lng and lat are valid numbers
+            if (typeof lng !== 'number' || typeof lat !== 'number') {
+              throw new Error(`Invalid center coordinates for state ${code}`);
+            }
+
             // Create a rough state shape
-            const coords = [];
+            const coords: number[][] = [];
             for (let i = 0; i < 12; i++) {
               const angle = (i * 30 * Math.PI) / 180;
               const radius = size * (0.8 + Math.sin(i * 2.3) * 0.3);
               coords.push([lng + radius * Math.cos(angle), lat + radius * Math.sin(angle)]);
             }
-            coords.push(coords[0]); // Close polygon
+            // Close polygon - ensure we get the first point
+            const firstCoord = coords[0];
+            if (firstCoord) {
+              coords.push([...firstCoord]);
+            }
 
             return {
               type: 'Feature' as const,
@@ -402,20 +421,22 @@ export default function DistrictMapContainer({
             `);
 
             // Hover effects
-            layer.on('mouseover', function (this: any) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (this as any).setStyle({
-                fillOpacity: 0.3,
-                weight: 3,
-              });
+            layer.on('mouseover', function (this: L.Layer) {
+              if ('setStyle' in this && typeof this.setStyle === 'function') {
+                this.setStyle({
+                  fillOpacity: 0.3,
+                  weight: 3,
+                });
+              }
             });
 
-            layer.on('mouseout', function (this: any) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (this as any).setStyle({
-                fillOpacity: 0.1,
-                weight: 2,
-              });
+            layer.on('mouseout', function (this: L.Layer) {
+              if ('setStyle' in this && typeof this.setStyle === 'function') {
+                this.setStyle({
+                  fillOpacity: 0.1,
+                  weight: 2,
+                });
+              }
             });
 
             // Click handler for state info panel
@@ -490,22 +511,24 @@ export default function DistrictMapContainer({
             });
 
             // Hover effects
-            layer.on('mouseover', function (this: any) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (this as any).setStyle({
-                weight: 3,
-                color: '#000',
-                fillOpacity: 0.7,
-              });
+            layer.on('mouseover', function (this: L.Layer) {
+              if ('setStyle' in this && typeof this.setStyle === 'function') {
+                this.setStyle({
+                  weight: 3,
+                  color: '#000',
+                  fillOpacity: 0.7,
+                });
+              }
             });
 
-            layer.on('mouseout', function (this: any) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (this as any).setStyle({
-                weight: selectedDistrict === props.GEOID ? 3 : 1,
-                color: selectedDistrict === props.GEOID ? '#000' : '#fff',
-                fillOpacity: 0.3 + (props.competitiveness / 100) * 0.5,
-              });
+            layer.on('mouseout', function (this: L.Layer) {
+              if ('setStyle' in this && typeof this.setStyle === 'function') {
+                this.setStyle({
+                  weight: selectedDistrict === props.GEOID ? 3 : 1,
+                  color: selectedDistrict === props.GEOID ? '#000' : '#fff',
+                  fillOpacity: 0.3 + (props.competitiveness / 100) * 0.5,
+                });
+              }
             });
           },
         }).addTo(map);
@@ -542,7 +565,7 @@ export default function DistrictMapContainer({
         mapRef.current = null;
       }
     };
-  }, [isClient, mapData, selectedDistrict, onDistrictClick]);
+  }, [isClient, mapData, selectedDistrict, onDistrictClick, onStateClick]);
 
   // Handle resize when dimensions change
   useEffect(() => {

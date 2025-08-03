@@ -17,6 +17,14 @@ interface CongressAction {
   actionDate: string;
   text: string;
   actionCode?: string;
+  recordedVotes?: Array<{
+    chamber?: string;
+    congress?: number;
+    date?: string;
+    rollNumber?: number;
+    url?: string;
+    result?: string;
+  }>;
 }
 
 interface CongressSponsor {

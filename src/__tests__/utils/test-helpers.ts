@@ -5,7 +5,7 @@
 
 import { NextRequest } from 'next/server';
 
-// Mock representative data for testing
+// TEST DATA: Mock representative data for unit testing only
 export const mockRepresentative = {
   bioguideId: 'S000148',
   name: 'Charles E. Schumer',
@@ -33,7 +33,7 @@ export const mockRepresentative = {
   },
 };
 
-// Mock vote data
+// TEST DATA: Mock vote data for unit testing only
 export const mockVote = {
   voteId: '119-hr-1-190',
   bill: {
@@ -50,7 +50,7 @@ export const mockVote = {
   isKeyVote: true,
 };
 
-// Mock district boundary data
+// TEST DATA: Mock district boundary data for unit testing only
 export const mockDistrictBoundary = {
   type: 'Polygon',
   coordinates: [
@@ -71,7 +71,7 @@ export const mockDistrictBoundary = {
   },
 };
 
-// Mock campaign finance data
+// TEST DATA: Mock campaign finance data for unit testing only
 export const mockFinanceData = {
   candidate_info: {
     candidate_id: 'S8NY00082',
@@ -100,7 +100,7 @@ export const mockFinanceData = {
   top_expenditure_categories: [],
 };
 
-// Helper to create mock NextRequest
+// TEST UTILITY: Helper to create mock NextRequest for unit testing
 export function createMockRequest(url: string, options: RequestInit = {}): NextRequest {
   const requestOptions = {
     ...options,
@@ -110,7 +110,7 @@ export function createMockRequest(url: string, options: RequestInit = {}): NextR
   return request;
 }
 
-// Helper to mock fetch responses
+// TEST UTILITY: Helper to mock fetch responses for unit testing
 export function mockFetchResponse(data: unknown, status = 200): Promise<Response> {
   return Promise.resolve({
     ok: status >= 200 && status < 300,
@@ -131,7 +131,7 @@ export function mockFetchResponse(data: unknown, status = 200): Promise<Response
   } as Response);
 }
 
-// Helper to mock Congress API responses
+// TEST UTILITY: Helper to mock Congress API responses for unit testing
 export function mockCongressApiResponse(endpoint: string, data: unknown) {
   const url = `https://api.congress.gov/v3/${endpoint}`;
   return {

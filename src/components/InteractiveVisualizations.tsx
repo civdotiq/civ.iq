@@ -596,7 +596,7 @@ export function LegislativeSuccessFunnel({
 
     // Draw funnel segments
     data.forEach((d, i) => {
-      const topWidth = i === 0 ? funnelWidth : (data[i - 1].count / maxCount) * funnelWidth;
+      const topWidth = i === 0 ? funnelWidth : ((data[i - 1]?.count || 0) / maxCount) * funnelWidth;
       const bottomWidth = (d.count / maxCount) * funnelWidth;
       const x = (innerWidth - topWidth) / 2;
       const y = i * segmentHeight;

@@ -34,7 +34,7 @@ interface RepresentativeDetails {
   name: string;
   firstName: string;
   lastName: string;
-  party?: string;
+  party: string;
   state: string;
   district?: string;
   chamber: 'House' | 'Senate';
@@ -43,7 +43,7 @@ interface RepresentativeDetails {
   email?: string;
   website?: string;
   imageUrl?: string;
-  terms?: Array<{
+  terms: Array<{
     congress: string;
     startYear: string;
     endYear: string;
