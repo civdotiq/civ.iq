@@ -284,6 +284,8 @@ export const getCurrentMembersByState = cache(
 
       return convertedMembers;
     } catch (_error) {
+      // eslint-disable-next-line no-console
+      console.error('Error fetching Congress members:', _error);
       structuredLogger.error('Error fetching Congress members', {
         component: 'congressApi',
         error: _error as Error,
@@ -410,6 +412,8 @@ export async function getRepresentativesByLocation(
       });
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error getting senators from API:', error);
     structuredLogger.error('Error getting senators from API', {
       component: 'congressApi',
       error: error as Error,
@@ -466,6 +470,8 @@ export async function getRepresentativesByLocation(
         }
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error getting House members:', error);
       structuredLogger.error('Error getting House members', {
         component: 'congressApi',
         error: error as Error,
@@ -527,6 +533,8 @@ export async function getRepresentativesByLocation(
         metadata: { count: filteredReps.length, state, district },
       });
     } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error using congress-legislators fallback:', error);
       structuredLogger.error('Error using congress-legislators fallback', {
         component: 'congressApi',
         error: error as Error,
@@ -588,6 +596,8 @@ export async function getBillsByMember(bioguideId: string, apiKey?: string): Pro
     const data = await response.json();
     return data.sponsoredLegislation || [];
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching member bills:', error);
     structuredLogger.error('Error fetching member bills', {
       component: 'congressApi',
       error: error as Error,
@@ -636,6 +646,8 @@ export async function getVotesByMember(bioguideId: string, apiKey?: string): Pro
     const data = await response.json();
     return data.votes || [];
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching member votes:', error);
     structuredLogger.error('Error fetching member votes', {
       component: 'congressApi',
       error: error as Error,
@@ -685,6 +697,8 @@ export async function getCommitteesByMember(
     const data = await response.json();
     return data.memberships || [];
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching member committees:', error);
     structuredLogger.error('Error fetching member committees', {
       component: 'congressApi',
       error: error as Error,
@@ -733,6 +747,8 @@ export async function getRecentBills(limit = 20, apiKey?: string): Promise<unkno
     const data = await response.json();
     return data.bills || [];
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching recent bills:', error);
     structuredLogger.error('Error fetching recent bills', {
       component: 'congressApi',
       error: error as Error,
@@ -792,6 +808,8 @@ export async function searchBills(query: string, limit = 20, apiKey?: string): P
 
     return filtered.slice(0, limit);
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error searching bills:', error);
     structuredLogger.error('Error searching bills', {
       component: 'congressApi',
       error: error as Error,
@@ -891,6 +909,8 @@ export async function getBillDetails(
     const data = await response.json();
     return data.bill;
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching bill details:', error);
     structuredLogger.error('Error fetching bill details', {
       component: 'congressApi',
       error: error as Error,

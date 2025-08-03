@@ -22,10 +22,54 @@ interface SearchParams {
 }
 
 async function getInitialRepresentatives(zip?: string, state?: string, district?: string) {
-  if (state && district) {
-    return await getRepresentativesByLocation(state, district);
+  // eslint-disable-next-line no-console
+  console.log('Fetching representatives...', { zip, state, district });
+
+  try {
+    // If we have state and district, get specific ones
+    if (state && district) {
+      const representatives = await getRepresentativesByLocation(state, district);
+      // eslint-disable-next-line no-console
+      console.log('Fetched representatives by location:', representatives.length);
+      return representatives;
+    }
+
+    // If we have a ZIP, fetch from API
+    if (zip) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://civdotiq.org';
+      const response = await fetch(`${baseUrl}/api/representatives?zip=${zip}`);
+      const data = await response.json();
+      // eslint-disable-next-line no-console
+      console.log('API response for ZIP:', data);
+      return data.representatives || [];
+    }
+
+    // Otherwise fetch ALL representatives from the API
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://civdotiq.org';
+    // eslint-disable-next-line no-console
+    console.log('Fetching all representatives from:', `${baseUrl}/api/representatives/all`);
+
+    const response = await fetch(`${baseUrl}/api/representatives/all`, {
+      // @ts-expect-error - Next.js fetch extension
+      next: { revalidate: 300 }, // Cache for 5 minutes
+    });
+
+    if (!response.ok) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to fetch representatives:', response.status, response.statusText);
+      throw new Error(`Failed to fetch: ${response.status}`);
+    }
+
+    const data = await response.json();
+    // eslint-disable-next-line no-console
+    console.log('API response - all representatives:', data?.representatives?.length || 0);
+
+    return data.representatives || [];
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to fetch representatives:', error);
+    return [];
   }
-  return [];
 }
 
 export default async function RepresentativesPage({ searchParams }: SearchParams) {
