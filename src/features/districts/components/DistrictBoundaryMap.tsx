@@ -10,7 +10,7 @@ import dynamic from 'next/dynamic';
 import { Loader2, Maximize2 } from 'lucide-react';
 
 // Dynamic import with proper SSR handling
-const MapComponent = dynamic(() => import('./MapComponent'), {
+const MapComponent = dynamic(() => import('@/shared/components/ui/MapComponent'), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-full bg-gray-100">

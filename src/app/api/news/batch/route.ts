@@ -12,7 +12,7 @@ import {
 import { BaseValidator } from '@/lib/validation/schemas';
 import { withErrorHandling } from '@/lib/error-handling/error-handler';
 import { structuredLogger } from '@/lib/logging/logger';
-import { performanceMonitor } from '@/utils/performance';
+import { performanceMonitor } from '@/lib/helpers/performance';
 import {
   generateOptimizedSearchTerms,
   fetchGDELTNewsWithDeduplication,

@@ -7,7 +7,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { structuredLogger } from '@/lib/logging/universal-logger';
-import { districtBoundaryService, type DistrictBoundary } from '@/utils/district-boundary-utils';
+import { districtBoundaryService, type DistrictBoundary } from '@/lib/helpers/district-boundary-utils';
 import type { Map } from 'maplibre-gl';
 
 interface RealDistrictBoundaryMapProps {

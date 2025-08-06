@@ -11,7 +11,7 @@ import { Representative } from '@/features/representatives/services/congress-api
 import { SearchForm } from './SearchForm';
 import { RepresentativeGrid } from './RepresentativeGrid';
 import { FilterSidebar } from './FilterSidebar';
-import { ErrorState } from '@/components/DataQualityIndicator';
+import { ErrorState } from '@/components/ui/DataQualityIndicator';
 import { useRepresentativesStore, useUIStore } from '@/store';
 
 // Lazy load visualization components with dynamic imports for better code splitting

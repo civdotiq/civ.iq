@@ -8,23 +8,25 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import { DistrictCharts } from '@/components/DistrictCharts';
+import { DistrictCharts } from '@/features/districts/components/DistrictCharts';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 
 // Dynamic import of the map component to avoid SSR issues
-const DistrictBoundaryMap = dynamic(() => import('@/components/DistrictBoundaryMap'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
-        <p className="text-sm text-gray-600">Loading district map...</p>
+const DistrictBoundaryMap = dynamic(
+  () => import('@/features/districts/components/DistrictBoundaryMap'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+          <p className="text-sm text-gray-600">Loading district map...</p>
+        </div>
       </div>
-    </div>
-  ),
-});
+    ),
+  }
+);
 
 function CiviqLogo() {
   return (

@@ -5,7 +5,7 @@
  * using Census TIGER/Line data and geometric calculations.
  */
 
-import { districtBoundaryService, type DistrictBoundary } from '@/utils/district-boundary-utils';
+import { districtBoundaryService, type DistrictBoundary } from '@/lib/helpers/district-boundary-utils';
 import { structuredLogger } from '@/lib/logging/logger';
 
 interface GeocodeResult {

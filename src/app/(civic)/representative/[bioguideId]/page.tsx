@@ -6,7 +6,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { RepresentativeProfileClient } from './client-wrapper';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { RepresentativePageSidebar } from '@/features/representatives/components/RepresentativePageSidebar';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { structuredLogger } from '@/lib/logging/logger-client';

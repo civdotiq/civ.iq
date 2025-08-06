@@ -6,8 +6,8 @@
  */
 
 import { useState } from 'react';
-import { DataQualityIndicator, DataSourceBadge } from '@/components/DataQualityIndicator';
-import { InlineQualityScore, DataTrustIndicator } from '@/components/DataQualityDashboard';
+import { DataQualityIndicator, DataSourceBadge } from '@/components/ui/DataQualityIndicator';
+import { InlineQualityScore, DataTrustIndicator } from '@/shared/components/ui/DataQualityDashboard';
 
 interface ApiMetadata {
   dataQuality?: 'high' | 'medium' | 'low' | 'unavailable';

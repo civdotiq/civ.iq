@@ -12,13 +12,13 @@ import Image from 'next/image';
 import dynamic from 'next/dynamic';
 // D3 imports removed - not used in current implementation
 import { Users, Building2, MapPin } from 'lucide-react';
-import NationalStatsCards from '@/components/NationalStatsCards';
-import StateInfoPanel from '@/components/StateInfoPanel';
+import NationalStatsCards from '@/shared/components/ui/NationalStatsCards';
+import StateInfoPanel from '@/shared/components/ui/StateInfoPanel';
 
 // Dynamic import of the REAL district map component to avoid SSR issues
 const RealDistrictMapContainer = dynamic(
   () =>
-    import('@/components/enhanced/RealDistrictMapContainer').then(mod => ({
+    import('@/features/districts/components/RealDistrictMapContainer').then(mod => ({
       default: mod.RealDistrictMapContainer,
     })),
   {

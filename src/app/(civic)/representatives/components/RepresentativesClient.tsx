@@ -12,11 +12,11 @@ import { useRepresentativesByZip } from '@/hooks/useRepresentatives';
 import { SearchForm } from './SearchForm';
 import { RepresentativeGrid } from './RepresentativeGrid';
 import { FilterSidebar } from './FilterSidebar';
-import { ErrorState } from '@/components/DataQualityIndicator';
+import { ErrorState } from '@/components/ui/DataQualityIndicator';
 
 // Lazy load visualization components with dynamic imports for better code splitting
 const VotingPatternHeatmap = lazy(() =>
-  import('@/components/visualizations/VotingPatternHeatmap').then(module => ({
+  import('@/shared/components/ui/VotingPatternHeatmap').then(module => ({
     default: module.VotingPatternHeatmap,
   }))
 );

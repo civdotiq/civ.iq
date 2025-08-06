@@ -15,13 +15,13 @@ import {
 } from '@/shared/components/ui/SkeletonComponents';
 import { LoadingStateWrapper, LoadingMessage, Spinner } from '@/shared/components/ui/LoadingStates';
 import { useMultiStageLoading } from '@/hooks/useSmartLoading';
-import { DistrictMap } from '@/components/DistrictMap';
-import { InteractiveDistrictMap } from '@/components/InteractiveDistrictMap';
-import { DataQualityIndicator, DataSourceBadge } from '@/components/DataQualityIndicator';
-import { InlineQualityScore, DataTrustIndicator } from '@/components/DataQualityDashboard';
+import { DistrictMap } from '@/features/districts/components/DistrictMap';
+import { InteractiveDistrictMap } from '@/features/districts/components/InteractiveDistrictMap';
+import { DataQualityIndicator, DataSourceBadge } from '@/components/ui/DataQualityIndicator';
+import { InlineQualityScore, DataTrustIndicator } from '@/shared/components/ui/DataQualityDashboard';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
-import { DistrictSelector } from '@/components/multi-district/DistrictSelector';
-import { AddressRefinement } from '@/components/multi-district/AddressRefinement';
+import { DistrictSelector } from '@/features/districts/components/DistrictSelector';
+import { AddressRefinement } from '@/features/districts/components/AddressRefinement';
 import {
   checkMultiDistrict,
   DistrictInfo,

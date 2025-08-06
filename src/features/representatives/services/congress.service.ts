@@ -20,7 +20,7 @@ import { cachedFetch } from '@/lib/cache';
 import { structuredLogger } from '@/lib/logging/logger';
 import yaml from 'js-yaml';
 import type { EnhancedRepresentative } from '@/types/representative';
-import { filterCurrent119thCongress } from '@/utils/congress-validation';
+import { filterCurrent119thCongress } from '@/lib/helpers/congress-validation';
 import { getFileCache } from '@/lib/cache/file-cache';
 
 // Base URLs for congress-legislators data

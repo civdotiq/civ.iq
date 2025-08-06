@@ -8,7 +8,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { cachedFetch } from '@/lib/cache';
 import { structuredLogger } from '@/lib/logging/logger';
-import type { DistrictBoundary, StateMetadata } from '@/utils/district-boundary-utils';
+import type { DistrictBoundary, StateMetadata } from '@/lib/helpers/district-boundary-utils';
 
 interface DistrictMetadataResponse {
   districts: Record<string, DistrictBoundary>;

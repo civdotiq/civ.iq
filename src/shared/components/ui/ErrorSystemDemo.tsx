@@ -17,7 +17,7 @@ import {
   ServerError,
 } from '@/lib/errors/ErrorTypes';
 import { ErrorDisplay, InlineError, ErrorToast } from '@/shared/components/ui/ErrorComponents';
-import { EnhancedErrorBoundary } from '@/components/EnhancedErrorBoundary';
+import { EnhancedErrorBoundary } from '@/components/common/EnhancedErrorBoundary';
 import { SearchValidation } from '@/features/search/components/search/SearchValidation';
 
 export function ErrorSystemDemo() {

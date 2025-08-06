@@ -6,7 +6,7 @@
  */
 
 import { useState, Suspense, ComponentType } from 'react';
-import { LoadingErrorBoundary } from '@/components/ErrorBoundary';
+import { LoadingErrorBoundary } from '@/components/common/ErrorBoundary';
 import dynamic from 'next/dynamic';
 
 // Dynamic imports for lazy loading - optimized for performance
@@ -23,21 +23,26 @@ const LazyBillsTracker = dynamic(
 
 const LazyEnhancedVotingChart = dynamic(
   () =>
-    import('@/components/EnhancedVotingChart').then(mod => ({ default: mod.EnhancedVotingChart })),
+    import('@/features/representatives/components/EnhancedVotingChart').then(mod => ({
+      default: mod.EnhancedVotingChart,
+    })),
   {
     ssr: false,
     loading: () => <div className="animate-pulse bg-gray-200 h-24 rounded"></div>,
   }
 );
 
-const LazyPartyAlignmentAnalysis = dynamic(() => import('@/components/PartyAlignmentAnalysis'), {
-  ssr: false,
-  loading: () => <div className="animate-pulse bg-gray-200 h-40 rounded"></div>,
-});
+const LazyPartyAlignmentAnalysis = dynamic(
+  () => import('@/features/representatives/components/PartyAlignmentAnalysis'),
+  {
+    ssr: false,
+    loading: () => <div className="animate-pulse bg-gray-200 h-40 rounded"></div>,
+  }
+);
 
 const LazyVotingRecordsTable = dynamic(
   () =>
-    import('@/components/safe/SafeVotingRecordsTable')
+    import('@/features/representatives/components/SafeVotingRecordsTable')
       .then(mod => ({
         default: mod.SafeVotingRecordsTable,
       }))
@@ -59,7 +64,7 @@ const LazyVotingRecordsTable = dynamic(
 
 const LazyCampaignFinanceVisualizer = dynamic(
   () =>
-    import('@/components/CampaignFinanceVisualizer').then(mod => ({
+    import('@/features/campaign-finance/components/CampaignFinanceVisualizer').then(mod => ({
       default: mod.CampaignFinanceVisualizer,
     })),
   {

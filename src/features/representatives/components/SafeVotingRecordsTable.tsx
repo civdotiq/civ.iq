@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import { VotingRecordsTable } from '../VotingRecordsTable';
-import { ErrorBoundary } from '../ErrorBoundary';
+import { VotingRecordsTable } from './VotingRecordsTable';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 
 interface SafeVotingRecordsTableProps {
   bioguideId: string;

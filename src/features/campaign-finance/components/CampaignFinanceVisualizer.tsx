@@ -6,9 +6,9 @@
  */
 
 import { useState, useMemo, useEffect } from 'react';
-import { IndustryBreakdown } from './campaign-finance/IndustryBreakdown';
-import { DonorAnalysis } from './campaign-finance/DonorAnalysis';
-import { FundraisingTrends } from './campaign-finance/FundraisingTrends';
+import { IndustryBreakdown } from './IndustryBreakdown';
+import { DonorAnalysis } from './DonorAnalysis';
+import { FundraisingTrends } from './FundraisingTrends';
 import { EnhancedFECData } from '@/types/fec';
 import { structuredLogger } from '@/lib/logging/universal-logger';
 

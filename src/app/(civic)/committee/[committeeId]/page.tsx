@@ -13,15 +13,18 @@ import type { Committee, CommitteeAPIResponse } from '@/types/committee';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 
 // Dynamically import the SubcommitteeCard component (client component)
-const SubcommitteeCard = dynamic(() => import('@/components/SubcommitteeCard'), {
-  ssr: true,
-  loading: () => (
-    <div className="border border-gray-200 rounded-lg p-4 animate-pulse">
-      <div className="h-6 w-1/2 bg-gray-200 rounded mb-2"></div>
-      <div className="h-4 w-full bg-gray-200 rounded"></div>
-    </div>
-  ),
-});
+const SubcommitteeCard = dynamic(
+  () => import('@/features/legislation/components/SubcommitteeCard'),
+  {
+    ssr: true,
+    loading: () => (
+      <div className="border border-gray-200 rounded-lg p-4 animate-pulse">
+        <div className="h-6 w-1/2 bg-gray-200 rounded mb-2"></div>
+        <div className="h-4 w-full bg-gray-200 rounded"></div>
+      </div>
+    ),
+  }
+);
 
 interface CommitteePageProps {
   params: Promise<{ committeeId: string }>;

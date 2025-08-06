@@ -1,13 +1,12 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import { useState } from 'react';
-import { DataQualityIndicator, DataSourceBadge } from './DataQualityIndicator';
+import { DataSourceBadge } from '@/components/ui/DataQualityIndicator';
 
 interface DataQualityMetrics {
   overall: {
@@ -48,23 +47,35 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'excellent': return 'bg-green-100 text-green-800';
-      case 'good': return 'bg-blue-100 text-blue-800';
-      case 'fair': return 'bg-yellow-100 text-yellow-800';
-      case 'poor': return 'bg-red-100 text-red-800';
-      case 'healthy': return 'bg-green-100 text-green-800';
-      case 'degraded': return 'bg-yellow-100 text-yellow-800';
-      case 'failed': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'excellent':
+        return 'bg-green-100 text-green-800';
+      case 'good':
+        return 'bg-blue-100 text-blue-800';
+      case 'fair':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'poor':
+        return 'bg-red-100 text-red-800';
+      case 'healthy':
+        return 'bg-green-100 text-green-800';
+      case 'degraded':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case 'improving': return { icon: '📈', color: 'text-green-600' };
-      case 'stable': return { icon: '➡️', color: 'text-blue-600' };
-      case 'declining': return { icon: '📉', color: 'text-red-600' };
-      default: return { icon: '❓', color: 'text-gray-600' };
+      case 'improving':
+        return { icon: '📈', color: 'text-green-600' };
+      case 'stable':
+        return { icon: '➡️', color: 'text-blue-600' };
+      case 'declining':
+        return { icon: '📉', color: 'text-red-600' };
+      default:
+        return { icon: '❓', color: 'text-gray-600' };
     }
   };
 
@@ -88,9 +99,11 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
             </div>
             <div className="text-sm text-gray-600">Overall Score</div>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(metrics.overall.status)}`}>
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(metrics.overall.status)}`}
+            >
               {metrics.overall.status}
             </span>
             <span className={`flex items-center gap-1 text-sm ${trendInfo.color}`}>
@@ -101,11 +114,15 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
 
         {/* Score Breakdown Bar */}
         <div className="w-full bg-gray-200 rounded-full h-3">
-          <div 
+          <div
             className={`h-3 rounded-full transition-all duration-500 ${
-              metrics.overall.score >= 90 ? 'bg-green-500' :
-              metrics.overall.score >= 75 ? 'bg-yellow-500' :
-              metrics.overall.score >= 50 ? 'bg-orange-500' : 'bg-red-500'
+              metrics.overall.score >= 90
+                ? 'bg-green-500'
+                : metrics.overall.score >= 75
+                  ? 'bg-yellow-500'
+                  : metrics.overall.score >= 50
+                    ? 'bg-orange-500'
+                    : 'bg-red-500'
             }`}
             style={{ width: `${metrics.overall.score}%` }}
           />
@@ -118,7 +135,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
         <div className="space-y-3">
           {Object.entries(metrics.sources).map(([key, source]) => (
             <div key={key} className="border rounded-lg">
-              <div 
+              <div
                 className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                 onClick={() => setExpandedSource(expandedSource === key ? null : key)}
               >
@@ -126,11 +143,13 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
                   <div className="flex items-center gap-3">
                     <DataSourceBadge source={key} />
                     <span className="font-medium">{source.name}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(source.status)}`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${getStatusColor(source.status)}`}
+                    >
                       {source.status}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center gap-4 text-sm text-gray-600">
                     <span className={getScoreColor(source.completeness)}>
                       {source.completeness}% complete
@@ -147,7 +166,9 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
                 <div className="px-4 pb-4 border-t bg-gray-50">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 mb-4">
                     <div className="text-center">
-                      <div className={`text-lg font-semibold ${getScoreColor(source.completeness)}`}>
+                      <div
+                        className={`text-lg font-semibold ${getScoreColor(source.completeness)}`}
+                      >
                         {source.completeness}%
                       </div>
                       <div className="text-xs text-gray-600">Completeness</div>
@@ -159,9 +180,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
                       <div className="text-xs text-gray-600">Reliability</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-semibold text-blue-600">
-                        {source.latency}ms
-                      </div>
+                      <div className="text-lg font-semibold text-blue-600">{source.latency}ms</div>
                       <div className="text-xs text-gray-600">Avg Latency</div>
                     </div>
                     <div className="text-center">
@@ -222,7 +241,12 @@ interface InlineQualityScoreProps {
   trend?: 'up' | 'down' | 'stable';
 }
 
-export function InlineQualityScore({ score, label = 'Quality', showTrend = false, trend = 'stable' }: InlineQualityScoreProps) {
+export function InlineQualityScore({
+  score,
+  label = 'Quality',
+  showTrend = false,
+  trend = 'stable',
+}: InlineQualityScoreProps) {
   const getScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-600';
     if (score >= 75) return 'text-yellow-600';
@@ -232,10 +256,14 @@ export function InlineQualityScore({ score, label = 'Quality', showTrend = false
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case 'up': return '↗️';
-      case 'down': return '↘️';
-      case 'stable': return '→';
-      default: return '';
+      case 'up':
+        return '↗️';
+      case 'down':
+        return '↘️';
+      case 'stable':
+        return '→';
+      default:
+        return '';
     }
   };
 
@@ -243,9 +271,7 @@ export function InlineQualityScore({ score, label = 'Quality', showTrend = false
     <span className="inline-flex items-center gap-1 text-sm">
       <span className="text-gray-600">{label}:</span>
       <span className={`font-semibold ${getScoreColor(score)}`}>{score}%</span>
-      {showTrend && (
-        <span className="text-xs">{getTrendIcon(trend)}</span>
-      )}
+      {showTrend && <span className="text-xs">{getTrendIcon(trend)}</span>}
     </span>
   );
 }
@@ -259,17 +285,17 @@ interface DataTrustIndicatorProps {
 export function DataTrustIndicator({ sources, className = '' }: DataTrustIndicatorProps) {
   // Defensive programming: handle missing sources prop at component level
   const safeSources = sources || [];
-  
+
   const calculateTrustScore = (sources: string[]) => {
     // Defensive programming: handle undefined, null, or empty sources
     if (!sources || !Array.isArray(sources) || sources.length === 0) {
       return 0; // Return 0 trust score for missing data
     }
-    
+
     const trustScores = sources.map(source => {
       // Defensive check for undefined/null source strings
       if (!source || typeof source !== 'string') return 0;
-      
+
       if (source.includes('congress.gov') || source.includes('census')) return 95;
       if (source.includes('congress-legislators')) return 90;
       if (source.includes('fec')) return 85;
@@ -277,11 +303,13 @@ export function DataTrustIndicator({ sources, className = '' }: DataTrustIndicat
       if (source.includes('mock') || source.includes('fallback')) return 20;
       return 50;
     });
-    
+
     // Additional check to prevent division by zero
     if (trustScores.length === 0) return 0;
-    
-    return Math.round((trustScores as number[]).reduce((sum, score) => sum + score, 0) / trustScores.length) as any;
+
+    return Math.round(
+      (trustScores as number[]).reduce((sum, score) => sum + score, 0) / trustScores.length
+    ) as number;
   };
 
   const trustScore = calculateTrustScore(safeSources);
@@ -293,7 +321,9 @@ export function DataTrustIndicator({ sources, className = '' }: DataTrustIndicat
   };
 
   return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border text-sm ${getColor(trustScore)} ${className}`}>
+    <div
+      className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border text-sm ${getColor(trustScore)} ${className}`}
+    >
       <span className="font-medium">🛡️ Trust Score: {trustScore}%</span>
       <div className="flex gap-1">
         {safeSources.map((source, index) => (

@@ -13,7 +13,7 @@ import {
   CampaignFinanceOverview,
   DistrictPerformanceDashboard,
   NewsSentimentTracker,
-} from '@/components/dashboard/AdvancedDashboard';
+} from '@/shared/components/ui/AdvancedDashboard';
 import { CiviqLogo } from '@/shared/ui/CiviqLogo';
 
 export default function AnalyticsPage() {

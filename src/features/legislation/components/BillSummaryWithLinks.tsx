@@ -19,7 +19,7 @@ import {
   Target,
 } from 'lucide-react';
 import type { BillSummary } from '@/features/legislation/services/ai/bill-summarizer';
-import { EntityLinkWrapper } from '@/components/EntityLinkWrapper';
+import { EntityLinkWrapper } from '@/shared/components/ui/EntityLinkWrapper';
 
 interface BillSummaryProps {
   summary: BillSummary;

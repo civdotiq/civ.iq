@@ -39,7 +39,11 @@ class RequestBatcher {
 
       if (batch) {
         // Add to existing batch
-        batch.requests.push({ key: requestKey, resolve, reject });
+        batch.requests.push({
+          key: requestKey,
+          resolve: resolve as (value: unknown) => void,
+          reject: reject as (error: unknown) => void,
+        });
 
         // Check if batch is full
         if (batch.requests.length >= this.maxBatchSize) {
@@ -48,7 +52,13 @@ class RequestBatcher {
       } else {
         // Create new batch
         const newBatch = {
-          requests: [{ key: requestKey, resolve, reject }],
+          requests: [
+            {
+              key: requestKey,
+              resolve: resolve as (value: unknown) => void,
+              reject: reject as (error: unknown) => void,
+            },
+          ],
           timeoutId: setTimeout(() => {
             this.executeBatch(batchKey, batchFunction);
           }, this.batchTimeoutMs),
@@ -119,7 +129,10 @@ export async function batchApiRequests<T>(
   // Convert array back to object
   const resultObject: Record<string, T> = {};
   ids.forEach((id, index) => {
-    resultObject[id] = results[index];
+    const result = results[index];
+    if (result !== undefined) {
+      resultObject[id] = result;
+    }
   });
 
   return resultObject;
@@ -314,15 +327,15 @@ export function loadChunk(chunkName: string): Promise<unknown> {
   // Dynamic import with explicit chunk name
   switch (chunkName) {
     case 'charts':
-      return import('../components/Charts');
+      return import('@/shared/components/ui/Charts');
     case 'district-map':
-      return import('../components/DistrictMap');
+      return import('@/features/districts/components/DistrictMap');
     case 'analytics':
-      return import('../components/analytics/VotingTrendsChart');
+      return import('@/features/analytics/components/VotingTrendsChart');
     case 'news-feed':
-      return import('../features/news/components/EnhancedNewsFeed');
+      return import('@/features/news/components/EnhancedNewsFeed');
     case 'advanced-search':
-      return import('../features/search/components/AdvancedSearch');
+      return import('@/features/search/components/AdvancedSearch');
     default:
       throw new Error(`Unknown chunk: ${chunkName}`);
   }

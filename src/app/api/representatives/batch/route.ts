@@ -9,7 +9,7 @@ import { ValidatedRequest } from '@/lib/validation/middleware';
 import { BaseValidator } from '@/lib/validation/schemas';
 import { withErrorHandling } from '@/lib/error-handling/error-handler';
 import { structuredLogger } from '@/lib/logging/logger';
-import { performanceMonitor } from '@/utils/performance';
+import { performanceMonitor } from '@/lib/helpers/performance';
 
 interface BatchRequest {
   bioguideIds: string[];
