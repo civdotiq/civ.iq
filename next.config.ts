@@ -36,13 +36,27 @@ const nextConfig: NextConfig = {
   },
   // Enhanced webpack configuration for code splitting and optimization
   webpack: (config, { isServer, dev }) => {
-    // Handle Leaflet on the client side only
+    // Handle server-only dependencies and Leaflet on the client side only
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
         net: false,
         tls: false,
+      };
+
+      // Exclude server-only dependencies from client bundle for better performance
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@opentelemetry/api': false,
+        '@opentelemetry/auto-instrumentations-node': false,
+        '@opentelemetry/instrumentation-fs': false,
+        '@opentelemetry/instrumentation-http': false,
+        '@redis/client': false,
+        ioredis: false,
+        redis: false,
+        winston: false,
+        'fast-xml-parser': false,
       };
     }
 

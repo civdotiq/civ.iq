@@ -9,6 +9,7 @@ import './globals.css';
 // import { InstallPrompt } from "@/components/InstallPrompt";
 import { ChunkErrorHandler } from '@/shared/components/ChunkErrorHandler';
 import { GlobalErrorBoundary } from '@/shared/components/error-boundaries';
+import { SWRProvider } from '@/shared/components/providers/SWRProvider';
 
 export const metadata: Metadata = {
   title: 'CIV.IQ - Civic Information Hub',
@@ -128,10 +129,12 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <GlobalErrorBoundary>
-          {/* <ServiceWorkerRegistration />
-          <InstallPrompt /> */}
-          <ChunkErrorHandler />
-          {children}
+          <SWRProvider>
+            {/* <ServiceWorkerRegistration />
+            <InstallPrompt /> */}
+            <ChunkErrorHandler />
+            {children}
+          </SWRProvider>
         </GlobalErrorBoundary>
       </body>
     </html>

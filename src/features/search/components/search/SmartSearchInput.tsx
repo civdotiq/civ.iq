@@ -118,22 +118,28 @@ export function SmartSearchInput({
     [inputType, onSearch, router, showRecentSearches]
   );
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSubmit(value);
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSubmit(value);
+      }
+    },
+    [handleSubmit, value]
+  );
 
-  const handleRecentSearchClick = (search: string) => {
-    setValue(search);
-    handleSubmit(search);
-  };
+  const handleRecentSearchClick = useCallback(
+    (search: string) => {
+      setValue(search);
+      handleSubmit(search);
+    },
+    [handleSubmit]
+  );
 
-  const handleClearRecent = () => {
+  const handleClearRecent = useCallback(() => {
     clearRecentSearches();
     setRecentSearches([]);
-  };
+  }, []);
 
   const examples = [
     { text: '48201', type: 'ZIP code' },

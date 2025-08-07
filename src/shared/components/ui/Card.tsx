@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, memo } from 'react';
 import { cn } from '@/lib/utils';
 
 interface CardProps {
@@ -14,35 +14,33 @@ interface CardProps {
   onClick?: () => void;
 }
 
-export const Card: FC<CardProps> = ({
-  children,
-  className,
-  interactive = false,
-  padding = 'md',
-  onClick,
-}) => {
-  const paddingClasses = {
-    none: '',
-    sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-8',
-  };
+export const Card: FC<CardProps> = memo(
+  ({ children, className, interactive = false, padding = 'md', onClick }) => {
+    const paddingClasses = {
+      none: '',
+      sm: 'p-4',
+      md: 'p-6',
+      lg: 'p-8',
+    };
 
-  return (
-    <div
-      className={cn(
-        'bg-white rounded-lg border border-gray-100 shadow-sm',
-        (interactive || onClick) &&
-          'cursor-pointer hover:shadow-md hover:border-gray-200 hover:-translate-y-0.5 transform transition-all duration-200',
-        paddingClasses[padding],
-        className
-      )}
-      onClick={onClick}
-    >
-      {children}
-    </div>
-  );
-};
+    return (
+      <div
+        className={cn(
+          'bg-white rounded-lg border border-gray-100 shadow-sm',
+          (interactive || onClick) &&
+            'cursor-pointer hover:shadow-md hover:border-gray-200 hover:-translate-y-0.5 transform transition-all duration-200',
+          paddingClasses[padding],
+          className
+        )}
+        onClick={onClick}
+      >
+        {children}
+      </div>
+    );
+  }
+);
+
+Card.displayName = 'Card';
 
 interface CardHeaderProps {
   children: ReactNode;

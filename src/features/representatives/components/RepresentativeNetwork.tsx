@@ -5,7 +5,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 // Modular D3 imports for optimal bundle size
 import { select } from 'd3-selection';
 import { scaleOrdinal } from 'd3-scale';
@@ -33,7 +33,7 @@ interface RepresentativeNetworkProps {
   height?: number;
 }
 
-export function RepresentativeNetwork({
+export const RepresentativeNetwork = memo(function RepresentativeNetwork({
   nodes,
   links,
   width = 800,
@@ -175,4 +175,4 @@ export function RepresentativeNetwork({
       <svg ref={svgRef} width={width} height={height} />
     </div>
   );
-}
+});

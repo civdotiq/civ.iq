@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo, useMemo } from 'react';
 import Image from 'next/image';
 import {
   getRepresentativePhotoUrls,
@@ -39,7 +39,7 @@ const sizeDimensions = {
   xl: 96,
 };
 
-export function RepresentativePhoto({
+export const RepresentativePhoto = memo(function RepresentativePhoto({
   bioguideId,
   name,
   className = '',
@@ -73,7 +73,9 @@ export function RepresentativePhoto({
     // Use enhanced photo service for maximum reliability
     const loadPhoto = async () => {
       try {
-        const { enhancedPhotoService } = await import('@/features/representatives/services/enhanced-photo-service');
+        const { enhancedPhotoService } = await import(
+          '@/features/representatives/services/enhanced-photo-service'
+        );
         const result = await enhancedPhotoService.getRepresentativePhoto(bioguideId, name);
 
         setPhotoState(prev => ({
@@ -119,8 +121,10 @@ export function RepresentativePhoto({
     loadPhoto();
   }, [bioguideId, name]);
 
-  const baseClasses = `${sizeClasses[size]} rounded-full flex items-center justify-center overflow-hidden flex-shrink-0`;
-  const combinedClasses = `${baseClasses} ${className}`;
+  const combinedClasses = useMemo(() => {
+    const baseClasses = `${sizeClasses[size]} rounded-full flex items-center justify-center overflow-hidden flex-shrink-0`;
+    return `${baseClasses} ${className}`;
+  }, [size, className]);
 
   // Show loading state
   if (photoState.isLoading) {
@@ -167,12 +171,12 @@ export function RepresentativePhoto({
       {photoState.initials}
     </div>
   );
-}
+});
 
 /**
  * Hook for using representative photo data in other components
  */
-export function useRepresentativePhoto(
+export const useRepresentativePhoto = function (
   bioguideId: string,
   name: string
 ): UseRepresentativePhotoResult {
@@ -225,7 +229,7 @@ export function useRepresentativePhoto(
   }, [bioguideId, name]);
 
   return photoState;
-}
+};
 
 // Export hook and component
 export default RepresentativePhoto;

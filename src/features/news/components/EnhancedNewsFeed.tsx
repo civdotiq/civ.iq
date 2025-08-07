@@ -5,7 +5,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, memo } from 'react';
 import Image from 'next/image';
 import { representativeApi } from '@/lib/api/representatives';
 import { structuredLogger } from '@/lib/logging/universal-logger';
@@ -38,7 +38,10 @@ interface EnhancedNewsFeedProps {
   };
 }
 
-export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFeedProps) {
+export const EnhancedNewsFeed = memo(function EnhancedNewsFeed({
+  bioguideId,
+  representative,
+}: EnhancedNewsFeedProps) {
   const [newsData, setNewsData] = useState<NewsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedSource, setSelectedSource] = useState<'all' | string>('all');
@@ -148,7 +151,7 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
     );
   }, [newsData, selectedSource, selectedTimeframe]);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
@@ -165,7 +168,7 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
       day: 'numeric',
       year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
     });
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -412,4 +415,4 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
       </div>
     </div>
   );
-}
+});

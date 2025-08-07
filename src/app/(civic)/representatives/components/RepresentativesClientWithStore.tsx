@@ -16,7 +16,7 @@ import { useRepresentativesStore, useUIStore } from '@/store';
 
 // Lazy load visualization components with dynamic imports for better code splitting
 const _VotingPatternHeatmap = lazy(() =>
-  import('@/components/visualizations/VotingPatternHeatmap').then(module => ({
+  import('@/shared/components/ui/VotingPatternHeatmap').then(module => ({
     default: module.VotingPatternHeatmap,
   }))
 );

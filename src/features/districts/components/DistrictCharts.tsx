@@ -5,6 +5,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { useMemo } from 'react';
 import {
   PieChart,
   Pie,
@@ -183,7 +184,7 @@ const COLORS = [
 ];
 
 export function AgeDistributionChart({ medianAge }: { medianAge: number }) {
-  const data = generateAgeDistribution(medianAge);
+  const data = useMemo(() => generateAgeDistribution(medianAge), [medianAge]);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -205,7 +206,7 @@ export function AgeDistributionChart({ medianAge }: { medianAge: number }) {
 }
 
 export function IncomeDistributionChart({ medianIncome }: { medianIncome: number }) {
-  const data = generateIncomeDistribution(medianIncome);
+  const data = useMemo(() => generateIncomeDistribution(medianIncome), [medianIncome]);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -231,34 +232,40 @@ export function IncomeDistributionChart({ medianIncome }: { medianIncome: number
   );
 }
 
-export function RacialCompositionChart({ demographics }: { demographics: unknown }) {
-  const data = [
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    { name: 'White', value: (demographics as any).white_percent, color: '#3b82f6' },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    {
-      name: 'Black/African American',
-      value: (demographics as any).black_percent,
-      color: '#ef4444',
-    },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    { name: 'Hispanic/Latino', value: (demographics as any).hispanic_percent, color: '#f59e0b' },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    { name: 'Asian', value: (demographics as any).asian_percent, color: '#10b981' },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    {
-      name: 'Other',
-      value: Math.max(
-        0,
-        100 -
-          (demographics as any).white_percent -
-          (demographics as any).black_percent -
-          (demographics as any).hispanic_percent -
-          (demographics as any).asian_percent
-      ),
-      color: '#8b5cf6',
-    },
-  ].filter(item => item.value > 0);
+interface DemographicsData {
+  white_percent: number;
+  black_percent: number;
+  hispanic_percent: number;
+  asian_percent: number;
+}
+
+export function RacialCompositionChart({ demographics }: { demographics: DemographicsData }) {
+  const data = useMemo(
+    () =>
+      [
+        { name: 'White', value: demographics.white_percent, color: '#3b82f6' },
+        {
+          name: 'Black/African American',
+          value: demographics.black_percent,
+          color: '#ef4444',
+        },
+        { name: 'Hispanic/Latino', value: demographics.hispanic_percent, color: '#f59e0b' },
+        { name: 'Asian', value: demographics.asian_percent, color: '#10b981' },
+        {
+          name: 'Other',
+          value: Math.max(
+            0,
+            100 -
+              demographics.white_percent -
+              demographics.black_percent -
+              demographics.hispanic_percent -
+              demographics.asian_percent
+          ),
+          color: '#8b5cf6',
+        },
+      ].filter(item => item.value > 0),
+    [demographics]
+  );
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -293,7 +300,10 @@ export function ElectionHistoryChart({
   currentPVI: string;
   currentMargin: number;
 }) {
-  const data = generateElectionHistory(currentPVI, currentMargin);
+  const data = useMemo(
+    () => generateElectionHistory(currentPVI, currentMargin),
+    [currentPVI, currentMargin]
+  );
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -347,7 +357,7 @@ export function ElectionHistoryChart({
 }
 
 export function EmploymentByIndustryChart() {
-  const data = generateEmploymentData();
+  const data = useMemo(() => generateEmploymentData(), []);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">

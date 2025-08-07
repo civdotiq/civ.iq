@@ -203,6 +203,17 @@
   }
 }
 
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -226,7 +237,8 @@
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -244,7 +256,8 @@
 }
 
 @keyframes pulse-soft {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -255,6 +268,10 @@
 /* Animation utilities */
 .animate-fadeIn {
   animation: fadeIn 0.4s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
 }
 
 .animate-fadeInUp {
@@ -269,6 +286,10 @@
 .animate-fade-in-down {
   animation: fade-in-down 0.6s ease-out forwards;
   opacity: 0;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out forwards;
 }
 
 .animate-slideIn {
@@ -355,9 +376,9 @@
 }
 
 /* Form element improvements */
-input[type="text"],
-input[type="email"],
-input[type="search"],
+input[type='text'],
+input[type='email'],
+input[type='search'],
 textarea,
 select {
   @apply transition-all duration-200;
@@ -392,7 +413,9 @@ select:disabled {
 
 /* Enhanced shadows */
 .shadow-xl-colored {
-  box-shadow: 0 20px 25px -5px rgba(62, 162, 212, 0.1), 0 10px 10px -5px rgba(62, 162, 212, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(62, 162, 212, 0.1),
+    0 10px 10px -5px rgba(62, 162, 212, 0.04);
 }
 
 .shadow-2xl-colored {
@@ -401,7 +424,9 @@ select:disabled {
 
 /* Loading dots animation */
 @keyframes blink {
-  0%, 60%, 100% {
+  0%,
+  60%,
+  100% {
     opacity: 0.2;
   }
   30% {
@@ -495,7 +520,7 @@ select:disabled {
   .no-print {
     display: none !important;
   }
-  
+
   .print-break {
     page-break-after: always;
   }
@@ -506,7 +531,7 @@ select:disabled {
   .card {
     @apply border-2 border-gray-900;
   }
-  
+
   .btn-primary {
     @apply border-2 border-gray-900;
   }

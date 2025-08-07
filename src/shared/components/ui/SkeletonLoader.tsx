@@ -3,19 +3,21 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { memo } from 'react';
+
 interface SkeletonProps {
   className?: string;
 }
 
-export function Skeleton({ className = '' }: SkeletonProps) {
+export const Skeleton = memo(function Skeleton({ className = '' }: SkeletonProps) {
   return (
     <div
       className={`shimmer bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] rounded ${className}`}
     />
   );
-}
+});
 
-export function RepresentativeCardSkeleton() {
+export const RepresentativeCardSkeleton = memo(function RepresentativeCardSkeleton() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in-up">
       {/* Header Section */}
@@ -68,9 +70,9 @@ export function RepresentativeCardSkeleton() {
       </div>
     </div>
   );
-}
+});
 
-export function ProfileHeaderSkeleton() {
+export const ProfileHeaderSkeleton = memo(function ProfileHeaderSkeleton() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8 animate-fade-in-up">
       <div className="flex items-start gap-6">
@@ -83,9 +85,9 @@ export function ProfileHeaderSkeleton() {
       </div>
     </div>
   );
-}
+});
 
-export function TabContentSkeleton() {
+export const TabContentSkeleton = memo(function TabContentSkeleton() {
   return (
     <div className="space-y-6">
       {[1, 2, 3].map(item => (
@@ -109,9 +111,9 @@ export function TabContentSkeleton() {
       ))}
     </div>
   );
-}
+});
 
-export function ContactTabSkeleton() {
+export const ContactTabSkeleton = memo(function ContactTabSkeleton() {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm animate-fade-in-up">
@@ -162,4 +164,10 @@ export function ContactTabSkeleton() {
       </div>
     </div>
   );
-}
+});
+
+// Add display names for all memoized components
+RepresentativeCardSkeleton.displayName = 'RepresentativeCardSkeleton';
+ProfileHeaderSkeleton.displayName = 'ProfileHeaderSkeleton';
+TabContentSkeleton.displayName = 'TabContentSkeleton';
+ContactTabSkeleton.displayName = 'ContactTabSkeleton';
