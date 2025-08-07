@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Search, Filter, MapPin, Users, Calendar, DollarSign, FileText, X } from 'lucide-react';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface SearchFilters {
   query: string;
@@ -208,7 +208,7 @@ export function AdvancedSearch() {
       setResults(data.results || []);
       setResultCount(data.totalResults || 0);
     } catch (error) {
-      structuredLogger.error('Advanced search error', {
+      logger.error('Advanced search error', {
         component: 'AdvancedSearch',
         error: error as Error,
         metadata: { filters },

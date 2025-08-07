@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 /**
  * Independent Expenditures Analysis (Schedule E)
@@ -324,7 +324,7 @@ export class IndependentExpendituresAnalyzer {
     // Cache the result
     this.analysisCache.set(cacheKey, analysis);
 
-    structuredLogger.info('Completed independent expenditures analysis', {
+    logger.info('Completed independent expenditures analysis', {
       candidateId,
       totalExpenditures: expenditures.length,
       totalSupport,

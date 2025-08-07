@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import type { Bill, BillAPIResponse, BillStatus, BillVote } from '@/types/bill';
 import { parseBillNumber } from '@/types/bill';
@@ -114,7 +114,7 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
     cacheKey,
     async () => {
       try {
-        structuredLogger.info('Fetching bill data from Congress.gov', {
+        logger.info('Fetching bill data from Congress.gov', {
           billId,
           type,
           number,
@@ -137,7 +137,7 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
           monitor.end(false, billResponse.status);
 
           if (billResponse.status === 404) {
-            structuredLogger.warn('Bill not found in Congress.gov', { billId });
+            logger.warn('Bill not found in Congress.gov', { billId });
             return null;
           }
 
@@ -148,7 +148,7 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
         monitor.end(true, 200);
 
         if (!billData.bill) {
-          structuredLogger.warn('No bill data in response', { billId });
+          logger.warn('No bill data in response', { billId });
           return null;
         }
 
@@ -264,7 +264,7 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
         const votes = await fetchBillVotes(bill, congress.toString(), type, number.toString());
         result.votes = votes;
 
-        structuredLogger.info('Successfully fetched bill data', {
+        logger.info('Successfully fetched bill data', {
           billId,
           title: result.title,
           status: result.status.current,
@@ -274,7 +274,7 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
 
         return result;
       } catch (error) {
-        structuredLogger.error('Error fetching bill from Congress.gov', error as Error, {
+        logger.error('Error fetching bill from Congress.gov', error as Error, {
           billId,
         });
         return null;
@@ -336,7 +336,7 @@ async function fetchBillVotes(
 
             if (recordedVote.url) {
               try {
-                structuredLogger.info('Fetching roll call data', { url: recordedVote.url });
+                logger.info('Fetching roll call data', { url: recordedVote.url });
 
                 // Parse actual roll call XML data
                 const rollCallData = await parseRollCallXML(recordedVote.url);
@@ -373,7 +373,7 @@ async function fetchBillVotes(
                     }
                   }
 
-                  structuredLogger.info('Successfully parsed roll call data', {
+                  logger.info('Successfully parsed roll call data', {
                     url: recordedVote.url,
                     totalVotes: rollCallData.votes.length,
                   });
@@ -406,7 +406,7 @@ async function fetchBillVotes(
                   };
                 }
               } catch (error) {
-                structuredLogger.warn('Failed to fetch roll call details', {
+                logger.warn('Failed to fetch roll call details', {
                   url: recordedVote.url,
                   error: (error as Error).message,
                 });
@@ -466,12 +466,12 @@ async function fetchBillVotes(
       }
     }
 
-    structuredLogger.info('Fetched bill votes', {
+    logger.info('Fetched bill votes', {
       billId: `${type}-${number}`,
       votesCount: votes.length,
     });
   } catch (error) {
-    structuredLogger.error('Error fetching bill votes', error as Error, {
+    logger.error('Error fetching bill votes', error as Error, {
       billId: `${type}-${number}`,
     });
   }
@@ -625,7 +625,7 @@ export async function GET(
       );
     }
 
-    structuredLogger.info('Bill API request', { billId });
+    logger.info('Bill API request', { billId });
 
     let bill: Bill | null = null;
 
@@ -636,7 +636,7 @@ export async function GET(
 
     // Fallback to mock data if real data unavailable
     if (!bill) {
-      structuredLogger.info('Using mock bill data', { billId });
+      logger.info('Using mock bill data', { billId });
       bill = generateMockBillData(billId);
     }
 
@@ -659,7 +659,7 @@ export async function GET(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown server error';
 
-    structuredLogger.error('Bill API error', error as Error, {
+    logger.error('Bill API error', error as Error, {
       billId: (await params).billId,
     });
 

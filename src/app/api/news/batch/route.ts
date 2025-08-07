@@ -11,7 +11,7 @@ import {
 } from '@/lib/validation/middleware';
 import { BaseValidator } from '@/lib/validation/schemas';
 import { withErrorHandling } from '@/lib/error-handling/error-handler';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { performanceMonitor } from '@/lib/helpers/performance';
 import {
   generateOptimizedSearchTerms,
@@ -117,7 +117,7 @@ async function fetchRepresentativeInfo(bioguideId: string) {
       return await response.json();
     }
   } catch (error) {
-    structuredLogger.warn('Could not fetch representative info for news', {
+    logger.warn('Could not fetch representative info for news', {
       bioguideId,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
@@ -179,7 +179,7 @@ async function fetchNewsForRepresentative(
               domain: article.domain,
             }));
           } catch (error) {
-            structuredLogger.error(`Error fetching news for term: ${searchTerm}`, error as Error, {
+            logger.error(`Error fetching news for term: ${searchTerm}`, error as Error, {
               bioguideId,
               searchTerm,
             });
@@ -237,7 +237,7 @@ async function fetchNewsForRepresentative(
 
     return result;
   } catch (error) {
-    structuredLogger.error(`Error fetching news for representative ${bioguideId}`, error as Error, {
+    logger.error(`Error fetching news for representative ${bioguideId}`, error as Error, {
       bioguideId,
       operation: 'batch_news_fetch_error',
     });
@@ -265,7 +265,7 @@ async function handleBatchNewsRequest(
       operation: 'batch_news',
     });
 
-    structuredLogger.info(
+    logger.info(
       'Processing batch news request',
       {
         totalIds: bioguideIds.length,
@@ -306,7 +306,7 @@ async function handleBatchNewsRequest(
     const errorCount = bioguideIds.length - successCount;
     const totalArticles = Object.values(results).reduce((sum, r) => sum + r.articles.length, 0);
 
-    structuredLogger.info(
+    logger.info(
       'Batch news request completed',
       {
         totalRequested: bioguideIds.length,
@@ -333,7 +333,7 @@ async function handleBatchNewsRequest(
   } catch (error) {
     performanceMonitor.endTimer('batch-news-fetch');
 
-    structuredLogger.error(
+    logger.error(
       'Batch news request failed',
       error as Error,
       {
@@ -376,7 +376,7 @@ export async function POST(request: NextRequest) {
 
     return withErrorHandling(handleBatchNewsRequest)(validatedRequest);
   } catch (error) {
-    structuredLogger.error('POST batch news handler error', error as Error);
+    logger.error('POST batch news handler error', error as Error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

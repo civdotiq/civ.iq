@@ -4,7 +4,7 @@
  */
 
 import { BaseService } from '../api/base.service';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { redisService } from '../cache/redis.service';
 import { BillSummaryFallbacks } from '@/features/legislation/services/ai/bill-summary-fallbacks';
 
@@ -82,7 +82,7 @@ class SummarizationService extends BaseService {
       if (opts.useCache) {
         const cached = await redisService.get<BillSummary>(cacheKey);
         if (cached.success && cached.data) {
-          structuredLogger.info('Bill summary cache hit', {
+          logger.info('Bill summary cache hit', {
             billNumber: billMetadata.number,
             operation: 'bill_summarization',
           });
@@ -101,7 +101,7 @@ class SummarizationService extends BaseService {
 
       // If reading level is too high, regenerate with simpler language
       if (readingLevel > opts.targetReadingLevel + 1) {
-        structuredLogger.warn('Summary reading level too high, regenerating', {
+        logger.warn('Summary reading level too high, regenerating', {
           billNumber: billMetadata.number,
           readingLevel,
           target: opts.targetReadingLevel,
@@ -126,7 +126,7 @@ class SummarizationService extends BaseService {
         await redisService.set(cacheKey, summary, 24 * 60 * 60); // Cache for 24 hours
       }
 
-      structuredLogger.info('Bill summary generated successfully', {
+      logger.info('Bill summary generated successfully', {
         billNumber: billMetadata.number,
         readingLevel: summary.readingLevel,
         confidence: summary.confidence,
@@ -135,7 +135,7 @@ class SummarizationService extends BaseService {
 
       return summary;
     } catch (error) {
-      structuredLogger.error('Bill summarization failed, attempting fallbacks', error as Error, {
+      logger.error('Bill summarization failed, attempting fallbacks', error as Error, {
         billNumber: billMetadata.number,
         operation: 'bill_summarization',
       });
@@ -153,7 +153,7 @@ class SummarizationService extends BaseService {
       );
 
       // Log fallback result
-      structuredLogger.info('Fallback summary generated', {
+      logger.info('Fallback summary generated', {
         billNumber: billMetadata.number,
         fallbackMethod: fallbackResult.fallbackMethod,
         success: fallbackResult.success,
@@ -255,7 +255,7 @@ class SummarizationService extends BaseService {
       const response = await this.callOpenAI(prompt);
       return this.parseSummaryResponse(response, billMetadata);
     } catch (error) {
-      structuredLogger.warn('OpenAI summarization failed, trying fallback', {
+      logger.warn('OpenAI summarization failed, trying fallback', {
         billNumber: billMetadata.number,
         error: error instanceof Error ? error.message : 'Unknown error',
       });

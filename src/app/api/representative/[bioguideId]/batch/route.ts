@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface BatchRequest {
   endpoints: string[];
@@ -53,7 +53,7 @@ export async function POST(
       );
     }
 
-    structuredLogger.info('Batch API request', {
+    logger.info('Batch API request', {
       bioguideId,
       endpoints,
       endpointCount: endpoints.length,
@@ -108,7 +108,7 @@ export async function POST(
 
         return { endpoint, data, success: true };
       } catch (error) {
-        structuredLogger.error(`Batch endpoint error: ${endpoint}`, error as Error, {
+        logger.error(`Batch endpoint error: ${endpoint}`, error as Error, {
           bioguideId,
           endpoint,
         });
@@ -170,7 +170,7 @@ export async function POST(
       executionTime: totalTime, // Added for API client compatibility
     };
 
-    structuredLogger.info('Batch API completed', {
+    logger.info('Batch API completed', {
       bioguideId,
       successCount: successfulEndpoints.length,
       errorCount: failedEndpoints.length,
@@ -180,7 +180,7 @@ export async function POST(
     return NextResponse.json(batchResponse);
   } catch (error) {
     const totalTime = Date.now() - startTime;
-    structuredLogger.error('Batch API error', error as Error, {
+    logger.error('Batch API error', error as Error, {
       bioguideId: (await params).bioguideId,
       totalTime,
     });

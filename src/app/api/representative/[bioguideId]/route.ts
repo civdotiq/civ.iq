@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
 export async function GET(
@@ -23,14 +23,14 @@ export async function GET(
   }
 
   try {
-    structuredLogger.info('Fetching representative data', { bioguideId });
+    logger.info('Fetching representative data', { bioguideId });
 
     // First, try to get enhanced data from congress-legislators
     let enhancedData: EnhancedRepresentative | null = null;
     try {
       enhancedData = await getEnhancedRepresentative(bioguideId);
       if (enhancedData) {
-        structuredLogger.info('Successfully retrieved enhanced representative data', {
+        logger.info('Successfully retrieved enhanced representative data', {
           bioguideId,
           hasIds: !!enhancedData.ids,
           hasSocialMedia: !!enhancedData.socialMedia,
@@ -38,7 +38,7 @@ export async function GET(
         });
       }
     } catch (error) {
-      structuredLogger.warn('Failed to get enhanced representative data', {
+      logger.warn('Failed to get enhanced representative data', {
         bioguideId,
         error: (error as Error).message,
       });
@@ -88,7 +88,7 @@ export async function GET(
             representative.metadata!.dataSources.push('congress.gov');
           }
         } catch (error) {
-          structuredLogger.warn('Failed to fetch committee data', {
+          logger.warn('Failed to fetch committee data', {
             bioguideId,
             error: (error as Error).message,
           });
@@ -107,14 +107,14 @@ export async function GET(
             }
           }
         } catch (error) {
-          structuredLogger.warn('Failed to fetch leadership data', {
+          logger.warn('Failed to fetch leadership data', {
             bioguideId,
             error: (error as Error).message,
           });
         }
       }
 
-      structuredLogger.info('Successfully processed representative data', {
+      logger.info('Successfully processed representative data', {
         bioguideId,
         includeCommittees,
         includeLeadership,
@@ -137,7 +137,7 @@ export async function GET(
 
     // Fallback: Check if we have Congress.gov API key
     if (process.env.CONGRESS_API_KEY) {
-      structuredLogger.info('Fetching from Congress.gov API', { bioguideId });
+      logger.info('Fetching from Congress.gov API', { bioguideId });
 
       const response = await fetch(
         `https://api.congress.gov/v3/member/${bioguideId}?format=json&api_key=${process.env.CONGRESS_API_KEY}`,
@@ -192,7 +192,7 @@ export async function GET(
           },
         };
 
-        structuredLogger.info('Successfully retrieved Congress.gov data', { bioguideId });
+        logger.info('Successfully retrieved Congress.gov data', { bioguideId });
         return NextResponse.json({
           representative,
           success: true,
@@ -203,7 +203,7 @@ export async function GET(
           },
         });
       } else {
-        structuredLogger.warn('Congress.gov API request failed', {
+        logger.warn('Congress.gov API request failed', {
           bioguideId,
           status: response.status,
         });
@@ -211,7 +211,7 @@ export async function GET(
     }
 
     // FALLBACK DATA: Real data for known representatives, generic fallback for unknown
-    structuredLogger.info('Using fallback representative data', { bioguideId });
+    logger.info('Using fallback representative data', { bioguideId });
 
     const commonReps: { [key: string]: Partial<EnhancedRepresentative> } = {
       P000595: {
@@ -297,7 +297,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    structuredLogger.error('Representative API error', error as Error, { bioguideId });
+    logger.error('Representative API error', error as Error, { bioguideId });
     return NextResponse.json(
       {
         error: 'Internal server error',

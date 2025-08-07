@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    structuredLogger.info('Fetching representative by district', { state, district });
+    logger.info('Fetching representative by district', { state, district });
 
     // Get all representatives
     const allReps = await getAllEnhancedRepresentatives();
@@ -33,14 +33,14 @@ export async function GET(request: NextRequest) {
     const representatives = [...districtReps, ...senators];
 
     if (representatives.length === 0) {
-      structuredLogger.warn('No representatives found for district', { state, district });
+      logger.warn('No representatives found for district', { state, district });
       return NextResponse.json({
         representatives: [],
         message: `No representatives found for ${state}-${district}`,
       });
     }
 
-    structuredLogger.info('Successfully found representatives for district', {
+    logger.info('Successfully found representatives for district', {
       state,
       district,
       count: representatives.length,
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ representatives });
   } catch (error) {
-    structuredLogger.error('Error fetching district representative', error as Error, {
+    logger.error('Error fetching district representative', error as Error, {
       state,
       district,
     });

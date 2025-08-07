@@ -6,7 +6,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface FileCacheEntry<T = unknown> {
   data: T;
@@ -27,7 +27,7 @@ export class FileCache {
     try {
       await fs.mkdir(this.cacheDir, { recursive: true });
     } catch (error) {
-      structuredLogger.error('Failed to create cache directory', error as Error, {
+      logger.error('Failed to create cache directory', error as Error, {
         cacheDir: this.cacheDir,
       });
     }
@@ -53,17 +53,17 @@ export class FileCache {
       const now = Date.now();
       const age = now - entry.timestamp;
       if (age > entry.ttl * 1000) {
-        structuredLogger.info('File cache expired', { key, age, ttl: entry.ttl });
+        logger.info('File cache expired', { key, age, ttl: entry.ttl });
         await this.delete(key);
         return null;
       }
 
-      structuredLogger.info('File cache hit', { key, age: Math.round(age / 1000) });
+      logger.info('File cache hit', { key, age: Math.round(age / 1000) });
       return entry.data;
     } catch (error) {
       const err = error as NodeJS.ErrnoException;
       if (err.code !== 'ENOENT') {
-        structuredLogger.error('File cache read error', err, { key });
+        logger.error('File cache read error', err, { key });
       }
       return null;
     }
@@ -83,14 +83,14 @@ export class FileCache {
       const filePath = this.getCachePath(key);
       await fs.writeFile(filePath, JSON.stringify(entry, null, 2), 'utf-8');
 
-      structuredLogger.info('File cache write successful', {
+      logger.info('File cache write successful', {
         key,
         ttl: ttlSeconds,
         size: JSON.stringify(entry).length,
       });
       return true;
     } catch (error) {
-      structuredLogger.error('File cache write error', error as Error, { key });
+      logger.error('File cache write error', error as Error, { key });
       return false;
     }
   }
@@ -99,12 +99,12 @@ export class FileCache {
     try {
       const filePath = this.getCachePath(key);
       await fs.unlink(filePath);
-      structuredLogger.info('File cache entry deleted', { key });
+      logger.info('File cache entry deleted', { key });
       return true;
     } catch (error) {
       const err = error as NodeJS.ErrnoException;
       if (err.code !== 'ENOENT') {
-        structuredLogger.error('File cache delete error', err, { key });
+        logger.error('File cache delete error', err, { key });
       }
       return false;
     }
@@ -114,9 +114,9 @@ export class FileCache {
     try {
       const files = await fs.readdir(this.cacheDir);
       await Promise.all(files.map(file => fs.unlink(path.join(this.cacheDir, file))));
-      structuredLogger.info('File cache cleared', { count: files.length });
+      logger.info('File cache cleared', { count: files.length });
     } catch (error) {
-      structuredLogger.error('File cache clear error', error as Error);
+      logger.error('File cache clear error', error as Error);
     }
   }
 
@@ -152,7 +152,7 @@ export class FileCache {
         oldestEntry,
       };
     } catch (error) {
-      structuredLogger.error('File cache stats error', error as Error);
+      logger.error('File cache stats error', error as Error);
       return { entries: 0, totalSize: 0, oldestEntry: Date.now() };
     }
   }

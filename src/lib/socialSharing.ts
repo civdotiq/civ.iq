@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 // General sharing utilities - keep these
 export interface ShareResult {
@@ -180,7 +180,7 @@ export async function copyImageToClipboard(blob: Blob): Promise<boolean> {
     await navigator.clipboard.write([clipboardItem]);
     return true;
   } catch (error) {
-    structuredLogger.error('Failed to copy image to clipboard', {
+    logger.error('Failed to copy image to clipboard', {
       component: 'socialSharing',
       error: error as Error,
     });
@@ -209,7 +209,7 @@ export async function copyTextToClipboard(text: string): Promise<boolean> {
       return success;
     }
   } catch (error) {
-    structuredLogger.error('Failed to copy text to clipboard', {
+    logger.error('Failed to copy text to clipboard', {
       component: 'socialSharing',
       error: error as Error,
     });

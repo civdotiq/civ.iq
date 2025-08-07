@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
 export interface GeocodeResult {
@@ -106,7 +106,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
   // Check cache
   const cached = geocodeCache.get(cleanedAddress);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    structuredLogger.debug('Census Geocoder cache hit', { address: cleanedAddress });
+    logger.debug('Census Geocoder cache hit', { address: cleanedAddress });
     return cached.data;
   }
 
@@ -147,7 +147,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
       url = `https://geocoding.geo.census.gov/geocoder/geographies/address?${params}`;
     }
 
-    structuredLogger.info('Census Geocoder API request', {
+    logger.info('Census Geocoder API request', {
       address: cleanedAddress,
       url,
     });
@@ -168,7 +168,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
     monitor.end(true, 200);
 
     if (!data.result?.addressMatches || data.result.addressMatches.length === 0) {
-      structuredLogger.warn('No address matches found', { address: cleanedAddress });
+      logger.warn('No address matches found', { address: cleanedAddress });
       return {
         error: 'No matching address found',
         code: 'NO_MATCH',
@@ -182,7 +182,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
     );
 
     if (validMatches.length === 0) {
-      structuredLogger.warn('Addresses found but no congressional district data', {
+      logger.warn('Addresses found but no congressional district data', {
         address: cleanedAddress,
         matchCount: data.result.addressMatches.length,
       });
@@ -202,7 +202,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
       timestamp: Date.now(),
     });
 
-    structuredLogger.info('Census Geocoder success', {
+    logger.info('Census Geocoder success', {
       address: cleanedAddress,
       matchCount: validMatches.length,
       districts: validMatches
@@ -213,7 +213,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
     return validMatches;
   } catch (error) {
     monitor.end(false, 0);
-    structuredLogger.error('Census Geocoder error', error as Error, { address: cleanedAddress });
+    logger.error('Census Geocoder error', error as Error, { address: cleanedAddress });
 
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
@@ -270,7 +270,7 @@ export function formatMatchedAddress(result: GeocodeResult): string {
  */
 export function clearGeocodeCache(): void {
   geocodeCache.clear();
-  structuredLogger.info('Geocode cache cleared');
+  logger.info('Geocode cache cleared');
 }
 
 /**

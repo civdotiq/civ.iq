@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { structuredLogger, createRequestLogger } from '@/lib/logging/logger-edge';
+import { logger, createRequestLogger } from '@/lib/logging/logger-edge';
 
 /**
  * Proxy route for Senate.gov XML voting data to handle CORS
@@ -15,7 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ voteNumber: string }> }
 ) {
   const { voteNumber } = await params;
-  const logger = createRequestLogger(request, `senate-votes-${voteNumber}`);
+  // Using simple logger
   logger.info('Senate votes proxy called', { voteNumber });
 
   if (!voteNumber) {
@@ -29,7 +29,7 @@ export async function GET(
     // Senate.gov XML URL format for 119th Congress, Session 1
     const senateXmlUrl = `https://www.senate.gov/legislative/LIS/roll_call_votes/vote1191/vote_119_1_${paddedVoteNumber}.xml`;
 
-    structuredLogger.info('Fetching Senate XML data', {
+    logger.info('Fetching Senate XML data', {
       voteNumber,
       paddedVoteNumber,
       url: senateXmlUrl,
@@ -42,7 +42,7 @@ export async function GET(
     });
 
     if (!response.ok) {
-      structuredLogger.error(
+      logger.error(
         'Senate XML fetch failed',
         new Error(`${response.status} ${response.statusText}`),
         {
@@ -59,7 +59,7 @@ export async function GET(
 
     const xmlText = await response.text();
 
-    structuredLogger.info('Senate XML fetched successfully', {
+    logger.info('Senate XML fetched successfully', {
       voteNumber,
       dataLength: xmlText.length,
     });
@@ -75,7 +75,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    structuredLogger.error('Senate votes proxy error', error as Error, {
+    logger.error('Senate votes proxy error', error as Error, {
       voteNumber,
       operation: 'senate_votes_proxy_error',
     });

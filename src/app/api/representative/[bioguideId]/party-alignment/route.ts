@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface PartyAlignment {
   overall_alignment: number;
@@ -55,7 +55,7 @@ export async function GET(
         const fetchStartTime = Date.now();
 
         // Get representative info from congress.service
-        structuredLogger.info('Fetching representative data', { bioguideId });
+        logger.info('Fetching representative data', { bioguideId });
         const repStartTime = Date.now();
         let representative = null;
 
@@ -69,12 +69,12 @@ export async function GET(
             throw new Error('Representative not found');
           }
 
-          structuredLogger.info('Representative data fetched', {
+          logger.info('Representative data fetched', {
             bioguideId,
             duration: Date.now() - repStartTime,
           });
         } catch (error) {
-          structuredLogger.warn('Could not fetch representative data, using defaults', {
+          logger.warn('Could not fetch representative data, using defaults', {
             bioguideId,
             error: (error as Error).message,
           });
@@ -83,7 +83,7 @@ export async function GET(
 
         // Skip fetching votes for now since analyzePartyAlignment mostly generates mock data
         // This dramatically improves performance from 65+ seconds to <1 second
-        structuredLogger.info('Skipping votes fetch for performance - using mock analysis', {
+        logger.info('Skipping votes fetch for performance - using mock analysis', {
           bioguideId,
         });
         const votesData = { votes: [] };
@@ -91,7 +91,7 @@ export async function GET(
         // Analyze party alignment based on sponsorship/cosponsorship patterns
         const analysisStartTime = Date.now();
         const partyAlignment = analyzePartyAlignment(representative, votesData.votes);
-        structuredLogger.info('Party alignment analyzed', {
+        logger.info('Party alignment analyzed', {
           bioguideId,
           analysisDuration: Date.now() - analysisStartTime,
           totalDuration: Date.now() - fetchStartTime,
@@ -103,7 +103,7 @@ export async function GET(
     );
 
     const totalDuration = Date.now() - startTime;
-    structuredLogger.info('Party alignment endpoint completed', {
+    logger.info('Party alignment endpoint completed', {
       bioguideId,
       totalDuration,
       cached: totalDuration < 100, // If it's under 100ms, it was likely cached
@@ -111,7 +111,7 @@ export async function GET(
 
     return NextResponse.json(alignmentData);
   } catch (error) {
-    structuredLogger.error('Error calculating party alignment', error as Error, { bioguideId });
+    logger.error('Error calculating party alignment', error as Error, { bioguideId });
 
     // Return unavailable response instead of mock data
     return NextResponse.json({
@@ -143,7 +143,7 @@ export async function GET(
 
 function analyzePartyAlignment(_representative: unknown, _votes: unknown[]): PartyAlignment {
   // No mock data generation - return unavailable response
-  structuredLogger.info('Party alignment analysis requires real voting data from Congress.gov');
+  logger.info('Party alignment analysis requires real voting data from Congress.gov');
 
   return {
     overall_alignment: 0,

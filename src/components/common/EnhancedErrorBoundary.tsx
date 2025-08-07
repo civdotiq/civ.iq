@@ -8,7 +8,7 @@
 import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { CiviqError, createErrorFromException } from '@/lib/errors/ErrorTypes';
 import { ErrorDisplay } from '@/shared/components/ui/ErrorComponents';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -67,7 +67,7 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     }
 
     // Log error with structured logging
-    structuredLogger.error('Error Boundary caught error', {
+    logger.error('Error Boundary caught error', {
       component: 'EnhancedErrorBoundary',
       error: error,
       metadata: {
@@ -120,7 +120,7 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
       //   body: JSON.stringify(errorReport)
       // });
     } catch (reportError) {
-      structuredLogger.error('Failed to report error', {
+      logger.error('Failed to report error', {
         component: 'EnhancedErrorBoundary',
         error: reportError as Error,
       });
@@ -158,7 +158,7 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     existingFeedback.push(feedback);
     localStorage.setItem('errorFeedback', JSON.stringify(existingFeedback.slice(-50)));
 
-    structuredLogger.info('Error feedback collected', {
+    logger.info('Error feedback collected', {
       component: 'EnhancedErrorBoundary',
       metadata: {
         feedback,
@@ -237,7 +237,7 @@ export function useErrorReporting() {
       error instanceof CiviqError ? error : createErrorFromException(error, context);
 
     // In a real app, this would send to your monitoring service
-    structuredLogger.error('Error reported to monitoring service', {
+    logger.error('Error reported to monitoring service', {
       component: 'EnhancedErrorBoundary',
       metadata: {
         civiqError: civiqError.toJSON(),
@@ -259,7 +259,7 @@ export function useErrorReporting() {
       existingReports.push(errorReport);
       localStorage.setItem('manualErrorReports', JSON.stringify(existingReports.slice(-20)));
     } catch (e) {
-      structuredLogger.error('Failed to store error report', {
+      logger.error('Failed to store error report', {
         component: 'EnhancedErrorBoundary',
         error: e as Error,
       });

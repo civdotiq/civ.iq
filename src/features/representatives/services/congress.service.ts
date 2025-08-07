@@ -17,7 +17,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import yaml from 'js-yaml';
 import type { EnhancedRepresentative } from '@/types/representative';
 import { filterCurrent119thCongress } from '@/lib/helpers/congress-validation';
@@ -69,7 +69,7 @@ async function persistentCachedFetch<T>(
     const duration = Date.now() - startTime;
     // eslint-disable-next-line no-console
     console.log(`🎯 [CACHE HIT] File cache hit for ${key} (${duration}ms)`);
-    structuredLogger.info('File cache hit for congress data', { key, duration });
+    logger.info('File cache hit for congress data', { key, duration });
     return fileCached;
   }
 
@@ -82,7 +82,7 @@ async function persistentCachedFetch<T>(
     async () => {
       // eslint-disable-next-line no-console
       console.log(`📡 [FETCHING] Downloading ${key} from GitHub...`);
-      structuredLogger.info('Fetching congress data from remote source', { key });
+      logger.info('Fetching congress data from remote source', { key });
 
       const fetchStartTime = Date.now();
       const data = await fetchFn();
@@ -98,7 +98,7 @@ async function persistentCachedFetch<T>(
 
       // eslint-disable-next-line no-console
       console.log(`💾 [CACHE SAVE] Saved ${key} to file cache in ${cacheDuration}ms`);
-      structuredLogger.info('Congress data cached successfully', {
+      logger.info('Congress data cached successfully', {
         key,
         fetchDuration,
         cacheDuration,
@@ -228,7 +228,7 @@ async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
     'congress-legislators-current',
     async () => {
       try {
-        structuredLogger.info('Fetching current legislators from congress-legislators');
+        logger.info('Fetching current legislators from congress-legislators');
 
         // Apply rate limiting
         await githubRateLimiter.waitIfNeeded();
@@ -246,13 +246,13 @@ async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
         // Parse YAML (simplified parser for this specific format)
         const legislators = parseCongressLegilatorsYAML(yamlText);
 
-        structuredLogger.info('Successfully fetched current legislators', {
+        logger.info('Successfully fetched current legislators', {
           count: legislators.length,
         });
 
         return legislators;
       } catch (error) {
-        structuredLogger.error('Error fetching current legislators', error as Error, {
+        logger.error('Error fetching current legislators', error as Error, {
           url: `${CONGRESS_LEGISLATORS_BASE_URL}/legislators-current.yaml`,
           timeout: '60s',
           errorType: error instanceof Error ? error.name : 'Unknown',
@@ -267,7 +267,7 @@ async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
           console.log(
             `🔄 [FALLBACK] Using cached fallback data (${fallbackData.length} legislators)`
           );
-          structuredLogger.warn('Using fallback data due to fetch error', {
+          logger.warn('Using fallback data due to fetch error', {
             fallbackCount: fallbackData.length,
           });
           return fallbackData;
@@ -290,7 +290,7 @@ async function fetchSocialMediaData(): Promise<CongressLegislatorSocialMedia[]> 
     'congress-legislators-social-media',
     async () => {
       try {
-        structuredLogger.info('Fetching social media data from congress-legislators');
+        logger.info('Fetching social media data from congress-legislators');
 
         // Apply rate limiting
         await githubRateLimiter.waitIfNeeded();
@@ -313,13 +313,13 @@ async function fetchSocialMediaData(): Promise<CongressLegislatorSocialMedia[]> 
         // Parse YAML for social media data
         const socialMedia = parseSocialMediaYAML(yamlText);
 
-        structuredLogger.info('Successfully fetched social media data', {
+        logger.info('Successfully fetched social media data', {
           count: socialMedia.length,
         });
 
         return socialMedia;
       } catch (error) {
-        structuredLogger.error('Error fetching social media data', error as Error);
+        logger.error('Error fetching social media data', error as Error);
         return [];
       }
     },
@@ -335,7 +335,7 @@ function parseCongressLegilatorsYAML(yamlText: string): CongressLegislator[] {
     // Check file size before parsing to prevent memory issues
     const sizeInMB = yamlText.length / (1024 * 1024);
     if (sizeInMB > 10) {
-      structuredLogger.warn('Large YAML file detected', { sizeInMB });
+      logger.warn('Large YAML file detected', { sizeInMB });
     }
 
     // Parse with safe loading to prevent memory overflow
@@ -345,14 +345,14 @@ function parseCongressLegilatorsYAML(yamlText: string): CongressLegislator[] {
       throw new Error('Invalid YAML format: expected array of legislators');
     }
 
-    structuredLogger.info('Successfully parsed congress legislators YAML', {
+    logger.info('Successfully parsed congress legislators YAML', {
       count: data.length,
       sizeInMB: sizeInMB.toFixed(2),
     });
 
     return data;
   } catch (error) {
-    structuredLogger.error('Error parsing congress legislators YAML', error as Error);
+    logger.error('Error parsing congress legislators YAML', error as Error);
     return [];
   }
 }
@@ -365,7 +365,7 @@ function parseSocialMediaYAML(yamlText: string): CongressLegislatorSocialMedia[]
     // Check file size before parsing
     const sizeInMB = yamlText.length / (1024 * 1024);
     if (sizeInMB > 10) {
-      structuredLogger.warn('Large social media YAML file detected', { sizeInMB });
+      logger.warn('Large social media YAML file detected', { sizeInMB });
     }
 
     const data = yaml.load(yamlText) as CongressLegislatorSocialMedia[];
@@ -374,14 +374,14 @@ function parseSocialMediaYAML(yamlText: string): CongressLegislatorSocialMedia[]
       throw new Error('Invalid YAML format: expected array of social media entries');
     }
 
-    structuredLogger.info('Successfully parsed social media YAML', {
+    logger.info('Successfully parsed social media YAML', {
       count: data.length,
       sizeInMB: sizeInMB.toFixed(2),
     });
 
     return data;
   } catch (error) {
-    structuredLogger.error('Error parsing social media YAML', error as Error);
+    logger.error('Error parsing social media YAML', error as Error);
     return [];
   }
 }
@@ -394,7 +394,7 @@ export async function fetchCommitteeMemberships(): Promise<CongressCommitteeMemb
     'congress-committee-memberships',
     async () => {
       try {
-        structuredLogger.info('Fetching committee memberships from congress-legislators');
+        logger.info('Fetching committee memberships from congress-legislators');
 
         // Apply rate limiting
         await githubRateLimiter.waitIfNeeded();
@@ -462,13 +462,13 @@ export async function fetchCommitteeMemberships(): Promise<CongressCommitteeMemb
           });
         }
 
-        structuredLogger.info('Successfully fetched committee memberships', {
+        logger.info('Successfully fetched committee memberships', {
           count: memberships.length,
         });
 
         return memberships;
       } catch (error) {
-        structuredLogger.error('Error fetching committee memberships', error as Error);
+        logger.error('Error fetching committee memberships', error as Error);
         return [];
       }
     },
@@ -484,7 +484,7 @@ export async function fetchCommittees(): Promise<CongressCommittee[]> {
     'congress-committees-current',
     async () => {
       try {
-        structuredLogger.info('Fetching committees from congress-legislators');
+        logger.info('Fetching committees from congress-legislators');
 
         const response = await fetch(`${CONGRESS_LEGISLATORS_BASE_URL}/committees-current.yaml`);
 
@@ -495,13 +495,13 @@ export async function fetchCommittees(): Promise<CongressCommittee[]> {
         const yamlText = await response.text();
         const committees = yaml.load(yamlText) as CongressCommittee[];
 
-        structuredLogger.info('Successfully fetched committees', {
+        logger.info('Successfully fetched committees', {
           count: committees.length,
         });
 
         return committees;
       } catch (error) {
-        structuredLogger.error('Error fetching committees', error as Error);
+        logger.error('Error fetching committees', error as Error);
         return [];
       }
     },
@@ -526,7 +526,7 @@ export async function getEnhancedRepresentative(
     // Find the legislator by bioguide ID
     const legislator = legislators.find(l => l.id.bioguide === bioguideId);
     if (!legislator) {
-      structuredLogger.warn('Legislator not found in congress-legislators data', { bioguideId });
+      logger.warn('Legislator not found in congress-legislators data', { bioguideId });
       return null;
     }
 
@@ -627,7 +627,7 @@ export async function getEnhancedRepresentative(
       leadershipRoles: legislator.leadership_roles,
     };
 
-    structuredLogger.info('Successfully enhanced representative data', {
+    logger.info('Successfully enhanced representative data', {
       bioguideId,
       hasIds: !!enhanced.ids,
       hasSocialMedia: !!enhanced.socialMedia,
@@ -636,7 +636,7 @@ export async function getEnhancedRepresentative(
 
     return enhanced;
   } catch (error) {
-    structuredLogger.error('Error getting enhanced representative', error as Error, { bioguideId });
+    logger.error('Error getting enhanced representative', error as Error, { bioguideId });
     return null;
   }
 }
@@ -646,13 +646,13 @@ export async function getEnhancedRepresentative(
  */
 export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresentative[]> {
   try {
-    structuredLogger.debug('Starting to fetch all enhanced representatives data');
+    logger.debug('Starting to fetch all enhanced representatives data');
     const [legislators, socialMedia] = await Promise.all([
       fetchCurrentLegislators(),
       fetchSocialMediaData(),
     ]);
 
-    structuredLogger.debug('Fetched legislators and social media data', {
+    logger.debug('Fetched legislators and social media data', {
       legislatorsCount: legislators.length,
       socialMediaCount: socialMedia.length,
     });
@@ -660,7 +660,7 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
     // Filter for current 119th Congress members only
     const currentLegislators = filterCurrent119thCongress(legislators);
 
-    structuredLogger.debug('Filtered to current 119th Congress members', {
+    logger.debug('Filtered to current 119th Congress members', {
       originalCount: legislators.length,
       currentCount: currentLegislators.length,
       filteredOut: legislators.length - currentLegislators.length,
@@ -743,17 +743,17 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
       } as EnhancedRepresentative;
     });
 
-    structuredLogger.debug('Successfully processed enhanced representatives', {
+    logger.debug('Successfully processed enhanced representatives', {
       count: enhanced.length,
     });
 
-    structuredLogger.info('Successfully got all enhanced representatives', {
+    logger.info('Successfully got all enhanced representatives', {
       count: enhanced.length,
     });
 
     return enhanced;
   } catch (error) {
-    structuredLogger.error('Error getting all enhanced representatives', error as Error);
+    logger.error('Error getting all enhanced representatives', error as Error);
     return [];
   }
 }

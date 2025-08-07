@@ -12,7 +12,7 @@ import {
   fetchGDELTNews,
 } from '@/features/news/services/gdelt-api';
 import { buildOptimizedGDELTQuery } from '@/features/news/services/gdelt-query-builder';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
 interface NewsArticle {
@@ -89,7 +89,7 @@ export async function GET(
             throw new Error('Representative not found');
           }
         } catch (error) {
-          structuredLogger.warn(
+          logger.warn(
             'Could not fetch representative info, using fallback',
             {
               bioguideId,
@@ -109,7 +109,7 @@ export async function GET(
           };
         }
 
-        structuredLogger.info(
+        logger.info(
           'Fetching news for representative',
           {
             bioguideId,
@@ -139,7 +139,7 @@ export async function GET(
           );
         }
 
-        structuredLogger.debug(
+        logger.debug(
           'Generated optimized search terms',
           {
             bioguideId,
@@ -178,7 +178,7 @@ export async function GET(
               return gdeltArticles.map(article => normalizeGDELTArticle(article));
             }
           } catch (error) {
-            structuredLogger.error(
+            logger.error(
               `Error fetching GDELT news for term: ${searchTerm}`,
               error as Error,
               {
@@ -316,7 +316,7 @@ export async function GET(
           .slice(0, limit);
 
         // Log deduplication statistics
-        structuredLogger.info(
+        logger.info(
           'News deduplication completed',
           {
             bioguideId,
@@ -341,7 +341,7 @@ export async function GET(
 
     // Return empty result when no real news is available
     if (newsData.articles.length === 0) {
-      structuredLogger.info('No real news data available from GDELT', {
+      logger.info('No real news data available from GDELT', {
         bioguideId,
       });
 
@@ -364,7 +364,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    structuredLogger.error(
+    logger.error(
       'News API Error',
       error as Error,
       {

@@ -4,7 +4,7 @@
  */
 
 import Redis from 'ioredis';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { monitorCache } from '@/lib/monitoring/telemetry';
 
 interface CacheConfig {
@@ -67,7 +67,7 @@ class RedisService {
       // Connection retry strategy
       retryStrategy: times => {
         const delay = Math.min(times * 50, 2000);
-        structuredLogger.warn('Redis connection retry', { attempt: times, delay });
+        logger.warn('Redis connection retry', { attempt: times, delay });
         return delay;
       },
 
@@ -92,16 +92,16 @@ class RedisService {
   private setupEventHandlers(): void {
     this.client.on('connect', () => {
       this.isConnected = true;
-      structuredLogger.info('Redis connected successfully');
+      logger.info('Redis connected successfully');
     });
 
     this.client.on('ready', () => {
-      structuredLogger.info('Redis client ready');
+      logger.info('Redis client ready');
     });
 
     this.client.on('error', error => {
       this.isConnected = false;
-      structuredLogger.error('Redis connection error', error, {
+      logger.error('Redis connection error', error, {
         redisHost: process.env.REDIS_HOST,
         redisPort: process.env.REDIS_PORT,
       });
@@ -109,11 +109,11 @@ class RedisService {
 
     this.client.on('close', () => {
       this.isConnected = false;
-      structuredLogger.warn('Redis connection closed');
+      logger.warn('Redis connection closed');
     });
 
     this.client.on('reconnecting', () => {
-      structuredLogger.info('Redis reconnecting');
+      logger.info('Redis reconnecting');
     });
   }
 
@@ -139,7 +139,7 @@ class RedisService {
     }
 
     if (cleaned > 0) {
-      structuredLogger.debug('Cleaned up fallback cache', { entriesRemoved: cleaned });
+      logger.debug('Cleaned up fallback cache', { entriesRemoved: cleaned });
     }
   }
 
@@ -159,7 +159,7 @@ class RedisService {
 
         if (value) {
           monitor.end(true);
-          structuredLogger.cache('hit', key);
+          logger.cache('hit', key);
           return {
             success: true,
             data: JSON.parse(value),
@@ -167,7 +167,7 @@ class RedisService {
           };
         } else {
           monitor.end(false);
-          structuredLogger.cache('miss', key);
+          logger.cache('miss', key);
           return {
             success: true,
             data: undefined,
@@ -181,7 +181,7 @@ class RedisService {
 
         if (entry && Date.now() - entry.timestamp < entry.ttl) {
           monitor.end(true);
-          structuredLogger.cache('hit', key, { source: 'fallback' });
+          logger.cache('hit', key, { source: 'fallback' });
           return {
             success: true,
             data: entry.data as T,
@@ -192,7 +192,7 @@ class RedisService {
             this.fallbackCache.delete(fallbackKey);
           }
           monitor.end(false);
-          structuredLogger.cache('miss', key, { source: 'fallback' });
+          logger.cache('miss', key, { source: 'fallback' });
           return {
             success: true,
             data: undefined,
@@ -202,7 +202,7 @@ class RedisService {
       }
     } catch (error) {
       monitor.end(false, error as Error);
-      structuredLogger.cache('error', key, { error: (error as Error).message });
+      logger.cache('error', key, { error: (error as Error).message });
 
       // Try fallback cache on Redis error
       const fallbackKey = this.getFallbackKey(key);
@@ -239,7 +239,7 @@ class RedisService {
       if (this.isConnected) {
         await this.client.setex(key, ttlSeconds, serializedValue);
         monitor.end();
-        structuredLogger.cache('set', key, { ttl: ttlSeconds });
+        logger.cache('set', key, { ttl: ttlSeconds });
         return {
           success: true,
           source: 'redis',
@@ -253,7 +253,7 @@ class RedisService {
           ttl: ttlSeconds * 1000, // Convert to milliseconds
         });
         monitor.end();
-        structuredLogger.cache('set', key, { ttl: ttlSeconds, source: 'fallback' });
+        logger.cache('set', key, { ttl: ttlSeconds, source: 'fallback' });
         return {
           success: true,
           source: 'fallback',
@@ -261,7 +261,7 @@ class RedisService {
       }
     } catch (error) {
       monitor.end(false, error as Error);
-      structuredLogger.cache('error', key, {
+      logger.cache('error', key, {
         operation: 'set',
         error: (error as Error).message,
       });
@@ -297,7 +297,7 @@ class RedisService {
       if (this.isConnected) {
         const result = await this.client.del(key);
         monitor.end();
-        structuredLogger.cache('delete', key, { deleted: result > 0 });
+        logger.cache('delete', key, { deleted: result > 0 });
         return {
           success: true,
           data: result > 0,
@@ -309,7 +309,7 @@ class RedisService {
         const existed = this.fallbackCache.has(fallbackKey);
         this.fallbackCache.delete(fallbackKey);
         monitor.end();
-        structuredLogger.cache('delete', key, { deleted: existed, source: 'fallback' });
+        logger.cache('delete', key, { deleted: existed, source: 'fallback' });
         return {
           success: true,
           data: existed,
@@ -318,7 +318,7 @@ class RedisService {
       }
     } catch (error) {
       monitor.end(false, error as Error);
-      structuredLogger.cache('error', key, {
+      logger.cache('error', key, {
         operation: 'delete',
         error: (error as Error).message,
       });
@@ -342,18 +342,18 @@ class RedisService {
     try {
       if (this.isConnected) {
         await this.client.flushdb();
-        structuredLogger.info('Redis cache flushed');
+        logger.info('Redis cache flushed');
       }
 
       // Clear fallback cache too
       this.fallbackCache.clear();
-      structuredLogger.info('Fallback cache cleared');
+      logger.info('Fallback cache cleared');
 
       return {
         success: true,
       };
     } catch (error) {
-      structuredLogger.error('Failed to flush cache', error as Error);
+      logger.error('Failed to flush cache', error as Error);
 
       // Clear fallback cache even if Redis fails
       this.fallbackCache.clear();
@@ -387,7 +387,7 @@ class RedisService {
         };
       }
     } catch (error) {
-      structuredLogger.cache('error', key, {
+      logger.cache('error', key, {
         operation: 'exists',
         error: (error as Error).message,
       });
@@ -427,7 +427,7 @@ class RedisService {
         };
       }
     } catch (error) {
-      structuredLogger.error('Failed to get keys', error as Error, { pattern });
+      logger.error('Failed to get keys', error as Error, { pattern });
       return {
         success: false,
         error: (error as Error).message,
@@ -448,7 +448,7 @@ class RedisService {
         lastError = error as Error;
 
         if (attempt < maxRetries) {
-          structuredLogger.warn('Retrying cache operation', {
+          logger.warn('Retrying cache operation', {
             attempt: attempt + 1,
             maxRetries,
             error: lastError.message,
@@ -529,9 +529,9 @@ class RedisService {
   async disconnect(): Promise<void> {
     try {
       await this.client.quit();
-      structuredLogger.info('Redis client disconnected');
+      logger.info('Redis client disconnected');
     } catch (error) {
-      structuredLogger.error('Error disconnecting Redis', error as Error);
+      logger.error('Error disconnecting Redis', error as Error);
     }
   }
 

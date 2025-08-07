@@ -10,7 +10,7 @@
  * for AI-generated bill summaries to ensure 8th grade accessibility.
  */
 
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 export interface ReadingLevelAnalysis {
   gradeLevel: number;
@@ -158,7 +158,7 @@ export class ReadingLevelValidator {
         confidence,
       };
 
-      structuredLogger.debug('Reading level analysis completed', {
+      logger.debug('Reading level analysis completed', {
         gradeLevel: analysis.gradeLevel,
         passesTarget: analysis.passesTarget,
         complexWordCount: analysis.complexWordCount,
@@ -168,7 +168,7 @@ export class ReadingLevelValidator {
 
       return analysis;
     } catch (error) {
-      structuredLogger.error('Reading level analysis failed', error as Error, {
+      logger.error('Reading level analysis failed', error as Error, {
         targetGrade,
         textLength: text.length,
         operation: 'reading_level_validation',
@@ -434,7 +434,7 @@ export class ReadingLevelValidator {
         const analysis = this.analyzeReadingLevel(content, options);
         results.set(id, analysis);
       } catch (error) {
-        structuredLogger.error('Batch reading level validation failed for item', error as Error, {
+        logger.error('Batch reading level validation failed for item', error as Error, {
           itemId: id,
           operation: 'reading_level_validation',
         });

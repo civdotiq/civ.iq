@@ -4,12 +4,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createRequestLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { apiConfig } from '@/config';
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  const logger = createRequestLogger(request, `search-v1-${Date.now()}`);
+  // Using simple logger}`);
 
   logger.info('Search API v1 request started');
 
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (error) {
-    const logger = createRequestLogger(request, `search-v1-error-${Date.now()}`);
+    // Using simple logger}`);
     logger.error('Unexpected error in Search API v1', error as Error, {
       apiVersion: apiConfig.version,
     });

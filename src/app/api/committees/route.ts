@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
 interface CommitteeMember {
@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
   const includeMembers = searchParams.get('includeMembers') === 'true';
 
   try {
-    structuredLogger.info('Fetching committee directory', {
+    logger.info('Fetching committee directory', {
       chamber,
       includeSubcommittees,
       includeMembers,
@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
 
             if (!response.ok) {
               monitor.end(false, response.status);
-              structuredLogger.warn(`Failed to fetch ${chamberName} committees`, {
+              logger.warn(`Failed to fetch ${chamberName} committees`, {
                 status: response.status,
                 statusText: response.statusText,
               });
@@ -176,7 +176,7 @@ export async function GET(request: NextRequest) {
             const data = await response.json();
             monitor.end(true, 200);
 
-            structuredLogger.info(`Retrieved ${chamberName} committees`, {
+            logger.info(`Retrieved ${chamberName} committees`, {
               count: data.committees?.length || 0,
             });
 
@@ -257,7 +257,7 @@ export async function GET(request: NextRequest) {
                       };
                     }
                   } catch (error) {
-                    structuredLogger.warn('Failed to fetch committee members', {
+                    logger.warn('Failed to fetch committee members', {
                       committee: committee.systemCode,
                       error: (error as Error).message,
                     });
@@ -330,7 +330,7 @@ export async function GET(request: NextRequest) {
                       }
                     }
                   } catch (error) {
-                    structuredLogger.warn('Failed to fetch subcommittees', {
+                    logger.warn('Failed to fetch subcommittees', {
                       committee: committee.systemCode,
                       error: (error as Error).message,
                     });
@@ -341,7 +341,7 @@ export async function GET(request: NextRequest) {
               }
             }
           } catch (error) {
-            structuredLogger.error(`Error fetching ${chamberName} committees`, error as Error);
+            logger.error(`Error fetching ${chamberName} committees`, error as Error);
           }
         }
 
@@ -383,7 +383,7 @@ export async function GET(request: NextRequest) {
               }
             }
           } catch (error) {
-            structuredLogger.warn('Failed to fetch joint committees', {
+            logger.warn('Failed to fetch joint committees', {
               error: (error as Error).message,
             });
           }
@@ -435,7 +435,7 @@ export async function GET(request: NextRequest) {
       2 * 60 * 60 * 1000 // 2 hour cache
     );
 
-    structuredLogger.info('Successfully processed committee directory', {
+    logger.info('Successfully processed committee directory', {
       totalCommittees: committeeData.statistics.totalCommittees,
       chamber,
       includeSubcommittees,
@@ -444,7 +444,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(committeeData);
   } catch (error) {
-    structuredLogger.error('Committee directory API error', error as Error, {
+    logger.error('Committee directory API error', error as Error, {
       chamber,
       includeSubcommittees,
       includeMembers,

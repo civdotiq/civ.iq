@@ -8,7 +8,7 @@
  * Uses multiple fallback sources and intelligent validation
  */
 
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { cachedFetch as _cachedFetch } from '@/lib/cache';
 
 export interface PhotoSource {
@@ -57,7 +57,7 @@ export class EnhancedPhotoService {
   ): Promise<EnhancedPhotoResult> {
     const startTime = Date.now();
 
-    structuredLogger.info('Starting enhanced photo fetch', {
+    logger.info('Starting enhanced photo fetch', {
       bioguideId,
       representativeName,
       maxAttempts,
@@ -81,7 +81,7 @@ export class EnhancedPhotoService {
         if (validation.isValid) {
           const loadTime = Date.now() - startTime;
 
-          structuredLogger.info('Photo successfully loaded', {
+          logger.info('Photo successfully loaded', {
             bioguideId,
             source: source.name,
             url: source.url,
@@ -100,7 +100,7 @@ export class EnhancedPhotoService {
           };
         } else {
           failedSources.push(source);
-          structuredLogger.debug('Photo source failed validation', {
+          logger.debug('Photo source failed validation', {
             bioguideId,
             source: source.name,
             error: validation.error,
@@ -108,7 +108,7 @@ export class EnhancedPhotoService {
         }
       } catch (error) {
         failedSources.push(source);
-        structuredLogger.debug('Photo source threw error', {
+        logger.debug('Photo source threw error', {
           bioguideId,
           source: source.name,
           error: (error as Error).message,
@@ -119,7 +119,7 @@ export class EnhancedPhotoService {
     // Generate fallback avatar
     const loadTime = Date.now() - startTime;
 
-    structuredLogger.warn('All photo sources failed, generating avatar', {
+    logger.warn('All photo sources failed, generating avatar', {
       bioguideId,
       representativeName,
       failedSources: failedSources.length,
@@ -315,7 +315,7 @@ export class EnhancedPhotoService {
   ): Promise<Map<string, EnhancedPhotoResult>> {
     const results = new Map<string, EnhancedPhotoResult>();
 
-    structuredLogger.info('Starting batch photo validation', {
+    logger.info('Starting batch photo validation', {
       count: representatives.length,
     });
 
@@ -329,7 +329,7 @@ export class EnhancedPhotoService {
           const result = await this.getRepresentativePhoto(rep.bioguideId, rep.name);
           results.set(rep.bioguideId, result);
         } catch (error) {
-          structuredLogger.warn('Batch photo validation failed', {
+          logger.warn('Batch photo validation failed', {
             bioguideId: rep.bioguideId,
             error: (error as Error).message,
           });
@@ -339,7 +339,7 @@ export class EnhancedPhotoService {
       await Promise.all(chunkPromises);
     }
 
-    structuredLogger.info('Batch photo validation completed', {
+    logger.info('Batch photo validation completed', {
       total: representatives.length,
       successful: Array.from(results.values()).filter(r => r.photoUrl).length,
       generated: Array.from(results.values()).filter(r => r.isGenerated).length,

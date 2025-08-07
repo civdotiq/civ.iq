@@ -5,7 +5,7 @@
 
 import useSWR, { SWRConfiguration, mutate } from 'swr';
 import { representativeApi, RepresentativeApiError } from '@/lib/api/representatives';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 import { RepresentativeProfile } from '@/types/representative';
 
 // Enhanced SWR configuration with intelligent caching and background revalidation
@@ -21,7 +21,7 @@ const defaultConfig: SWRConfiguration = {
     return error.statusCode >= 500;
   },
   onError: (error: RepresentativeApiError, key: string) => {
-    structuredLogger.error('SWR request failed', {
+    logger.error('SWR request failed', {
       error,
       key,
       statusCode: error.statusCode,
@@ -29,7 +29,7 @@ const defaultConfig: SWRConfiguration = {
     });
   },
   onSuccess: (data: unknown, key: string) => {
-    structuredLogger.info('SWR request succeeded', {
+    logger.info('SWR request succeeded', {
       key,
       dataType: typeof data,
       hasData: !!data,

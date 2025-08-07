@@ -6,8 +6,11 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { structuredLogger } from '@/lib/logging/universal-logger';
-import { districtBoundaryService, type DistrictBoundary } from '@/lib/helpers/district-boundary-utils';
+import logger from '@/lib/logging/simple-logger';
+import {
+  districtBoundaryService,
+  type DistrictBoundary,
+} from '@/lib/helpers/district-boundary-utils';
 import type { Map } from 'maplibre-gl';
 
 interface RealDistrictBoundaryMapProps {
@@ -64,7 +67,7 @@ export function RealDistrictBoundaryMap({
           district,
         }));
       } catch (error) {
-        structuredLogger.error('Failed to initialize district', {
+        logger.error('Failed to initialize district', {
           component: 'RealDistrictBoundaryMap',
           error: error as Error,
           districtId,
@@ -143,7 +146,7 @@ export function RealDistrictBoundaryMap({
         });
 
         map.on('error', (e: { error: Error }) => {
-          structuredLogger.error('MapLibre GL error', {
+          logger.error('MapLibre GL error', {
             component: 'RealDistrictBoundaryMap',
             error: e.error,
             districtId,
@@ -154,7 +157,7 @@ export function RealDistrictBoundaryMap({
           }));
         });
       } catch (error) {
-        structuredLogger.error('Failed to initialize MapLibre GL', {
+        logger.error('Failed to initialize MapLibre GL', {
           component: 'RealDistrictBoundaryMap',
           error: error as Error,
           districtId,
@@ -285,7 +288,7 @@ export function RealDistrictBoundaryMap({
 
       setMapState(prev => ({ ...prev, loading: false }));
     } catch (error) {
-      structuredLogger.error('Failed to load district boundary', {
+      logger.error('Failed to load district boundary', {
         component: 'RealDistrictBoundaryMap',
         error: error as Error,
         districtId,

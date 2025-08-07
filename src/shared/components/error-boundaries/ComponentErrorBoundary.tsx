@@ -6,7 +6,7 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 import { Button } from '@/shared/components/ui/Button';
 
 interface Props {
@@ -39,7 +39,7 @@ export class ComponentErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error with component context
-    structuredLogger.error('Component error boundary caught error', error, {
+    logger.error('Component error boundary caught error', error, {
       componentName: this.props.componentName || 'Unknown',
       componentStack: errorInfo.componentStack,
       errorBoundary: 'ComponentErrorBoundary',

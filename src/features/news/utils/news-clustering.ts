@@ -8,7 +8,7 @@
  * Groups related articles into stories and identifies the best representative article
  */
 
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { NewsArticle } from './news-deduplication';
 
 export interface NewsCluster {
@@ -64,7 +64,7 @@ export class NewsClusteringService {
       timespanHours = 48,
     } = options || {};
 
-    structuredLogger.info('Starting news clustering', {
+    logger.info('Starting news clustering', {
       totalArticles: articles.length,
       maxClusters,
       minClusterSize,
@@ -129,7 +129,7 @@ export class NewsClusteringService {
           : 0,
     };
 
-    structuredLogger.info('News clustering completed', {
+    logger.info('News clustering completed', {
       clustersFound: result.clustersFound,
       unclusteredArticles: result.unclustered.length,
       averageClusterSize: result.averageClusterSize,

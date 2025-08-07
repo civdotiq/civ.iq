@@ -5,7 +5,7 @@
 
 import { unifiedSearch, SearchResult } from './unified-search';
 import { getAllEnhancedRepresentatives } from '@/lib/congress-legislators';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { EnhancedRepresentative } from '@/types/representative';
 
 export interface SearchResponse {
@@ -125,7 +125,7 @@ export async function handleSearch(input: string): Promise<SearchResponse> {
       },
     };
   } catch (error) {
-    structuredLogger.error('Search handler error', error as Error, {
+    logger.error('Search handler error', error as Error, {
       input,
       duration: Date.now() - startTime,
     });
@@ -159,7 +159,7 @@ async function fetchRepresentativesForDistrict(
     const allRepresentatives = await getAllEnhancedRepresentatives();
 
     if (!allRepresentatives || allRepresentatives.length === 0) {
-      structuredLogger.warn('No representatives data available');
+      logger.warn('No representatives data available');
       return [];
     }
 
@@ -186,7 +186,7 @@ async function fetchRepresentativesForDistrict(
       return false;
     });
 
-    structuredLogger.info('Representatives found for district', {
+    logger.info('Representatives found for district', {
       state,
       district,
       count: districtReps.length,
@@ -199,7 +199,7 @@ async function fetchRepresentativesForDistrict(
 
     return districtReps;
   } catch (error) {
-    structuredLogger.error('Error fetching representatives', error as Error, {
+    logger.error('Error fetching representatives', error as Error, {
       state,
       district,
     });
@@ -233,7 +233,7 @@ export async function handleMatchSelection(
       },
     };
   } catch (error) {
-    structuredLogger.error('Match selection error', error as Error, {
+    logger.error('Match selection error', error as Error, {
       matchId,
       state,
       district,

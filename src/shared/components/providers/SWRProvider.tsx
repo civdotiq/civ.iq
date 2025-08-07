@@ -6,7 +6,7 @@
 'use client';
 
 import { SWRConfig } from 'swr';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 // Global SWR configuration for the entire application
 const swrConfig = {
@@ -29,7 +29,7 @@ const swrConfig = {
 
   // Logging and monitoring
   onError: (error: Error, key: string) => {
-    structuredLogger.error('SWR request failed', {
+    logger.error('SWR request failed', {
       error,
       key,
       component: 'SWRProvider',
@@ -37,7 +37,7 @@ const swrConfig = {
   },
 
   onSuccess: (data: unknown, key: string) => {
-    structuredLogger.debug('SWR request succeeded', {
+    logger.debug('SWR request succeeded', {
       key,
       dataType: typeof data,
       hasData: !!data,
@@ -46,7 +46,7 @@ const swrConfig = {
   },
 
   onLoadingSlow: (key: string) => {
-    structuredLogger.warn('SWR request is taking longer than expected', {
+    logger.warn('SWR request is taking longer than expected', {
       key,
       component: 'SWRProvider',
     });

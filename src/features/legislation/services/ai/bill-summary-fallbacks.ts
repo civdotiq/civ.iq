@@ -10,7 +10,7 @@
  * to ensure users always get some form of summary even when AI fails.
  */
 
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import type { BillSummary } from './bill-summarizer';
 
 export interface FallbackOptions {
@@ -52,7 +52,7 @@ export class BillSummaryFallbacks {
     const opts = { ...this.DEFAULT_OPTIONS, ...options };
     const errors: string[] = [originalError.message];
 
-    structuredLogger.info('Starting bill summary fallback chain', {
+    logger.info('Starting bill summary fallback chain', {
       billNumber: billMetadata.number,
       originalError: originalError.message,
       fallbackOptions: opts,
@@ -64,7 +64,7 @@ export class BillSummaryFallbacks {
       try {
         const congressionalSummary = await this.extractCongressionalSummary(billText, billMetadata);
         if (congressionalSummary) {
-          structuredLogger.info('Congressional summary fallback successful', {
+          logger.info('Congressional summary fallback successful', {
             billNumber: billMetadata.number,
             operation: 'bill_summary_fallback',
           });
@@ -88,7 +88,7 @@ export class BillSummaryFallbacks {
       try {
         const keywordSummary = await this.createKeywordBasedSummary(billText, billMetadata);
         if (keywordSummary) {
-          structuredLogger.info('Keyword extraction fallback successful', {
+          logger.info('Keyword extraction fallback successful', {
             billNumber: billMetadata.number,
             operation: 'bill_summary_fallback',
           });
@@ -112,7 +112,7 @@ export class BillSummaryFallbacks {
       try {
         const simpleSummary = await this.createSimpleExtractionSummary(billText, billMetadata);
         if (simpleSummary) {
-          structuredLogger.info('Simple extraction fallback successful', {
+          logger.info('Simple extraction fallback successful', {
             billNumber: billMetadata.number,
             operation: 'bill_summary_fallback',
           });
@@ -134,7 +134,7 @@ export class BillSummaryFallbacks {
     // Final fallback: Basic template-based summary
     const basicSummary = this.createBasicFallbackSummary(billMetadata);
 
-    structuredLogger.warn('All fallback methods failed, using basic template', {
+    logger.warn('All fallback methods failed, using basic template', {
       billNumber: billMetadata.number,
       errors,
       operation: 'bill_summary_fallback',
@@ -193,7 +193,7 @@ export class BillSummaryFallbacks {
         source: 'congressional-summary',
       };
     } catch (error) {
-      structuredLogger.error('Congressional summary extraction failed', error as Error, {
+      logger.error('Congressional summary extraction failed', error as Error, {
         billNumber: billMetadata.number,
         operation: 'bill_summary_fallback',
       });
@@ -253,7 +253,7 @@ export class BillSummaryFallbacks {
         source: 'ai-generated',
       };
     } catch (error) {
-      structuredLogger.error('Keyword-based summary creation failed', error as Error, {
+      logger.error('Keyword-based summary creation failed', error as Error, {
         billNumber: billMetadata.number,
         operation: 'bill_summary_fallback',
       });
@@ -303,7 +303,7 @@ export class BillSummaryFallbacks {
         source: 'ai-generated',
       };
     } catch (error) {
-      structuredLogger.error('Simple extraction summary creation failed', error as Error, {
+      logger.error('Simple extraction summary creation failed', error as Error, {
         billNumber: billMetadata.number,
         operation: 'bill_summary_fallback',
       });

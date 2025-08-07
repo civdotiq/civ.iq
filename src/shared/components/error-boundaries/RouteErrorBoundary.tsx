@@ -6,7 +6,7 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 import { Button } from '@/shared/components/ui/Button';
 import { Card } from '@/shared/components/ui/Card';
 
@@ -39,7 +39,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error with route context
-    structuredLogger.error('Route error boundary caught error', error, {
+    logger.error('Route error boundary caught error', error, {
       route: this.props.route,
       componentStack: errorInfo.componentStack,
       errorBoundary: 'RouteErrorBoundary',

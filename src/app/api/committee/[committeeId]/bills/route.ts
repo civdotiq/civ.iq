@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface CommitteeAction {
   date: string;
@@ -120,7 +120,7 @@ async function fetchCommitteeBills(committeeId: string): Promise<CongressBill[]>
     `committee-bills-${committeeId}`,
     async () => {
       try {
-        structuredLogger.info('Fetching bills for committee', { committeeId });
+        logger.info('Fetching bills for committee', { committeeId });
 
         // Congress.gov API endpoint for bills by committee
         // Note: This is a simplified version - the actual Congress.gov API may require different parameters
@@ -128,7 +128,7 @@ async function fetchCommitteeBills(committeeId: string): Promise<CongressBill[]>
         const apiKey = process.env.CONGRESS_API_KEY;
 
         if (!apiKey) {
-          structuredLogger.warn('Congress API key not configured');
+          logger.warn('Congress API key not configured');
           return [];
         }
 
@@ -166,7 +166,7 @@ async function fetchCommitteeBills(committeeId: string): Promise<CongressBill[]>
         const data: CongressApiResponse = await response.json();
         return processBillsData(data.bills, committeeId);
       } catch (error) {
-        structuredLogger.error('Error fetching committee bills', error as Error, { committeeId });
+        logger.error('Error fetching committee bills', error as Error, { committeeId });
         // Return mock data for development if API fails
         return getMockBillsData(committeeId);
       }
@@ -475,7 +475,7 @@ export async function GET(
   try {
     const { committeeId } = await params;
 
-    structuredLogger.info('Committee bills API request', { committeeId });
+    logger.info('Committee bills API request', { committeeId });
 
     if (!committeeId) {
       return NextResponse.json({ error: 'Committee ID is required' }, { status: 400 });
@@ -483,7 +483,7 @@ export async function GET(
 
     const bills = await fetchCommitteeBills(committeeId);
 
-    structuredLogger.info('Successfully fetched committee bills', {
+    logger.info('Successfully fetched committee bills', {
       committeeId,
       count: bills.length,
     });
@@ -495,7 +495,7 @@ export async function GET(
       count: bills.length,
     });
   } catch (error) {
-    structuredLogger.error('Committee bills API error', error as Error);
+    logger.error('Committee bills API error', error as Error);
 
     return NextResponse.json(
       {

@@ -11,7 +11,7 @@ import { Button } from '@/shared/components/ui/Button';
 import { ComponentErrorBoundary } from '@/shared/components/error-boundaries';
 import { SmartSearchInput } from '@/features/search/components/search/SmartSearchInput';
 import { geocodeAddress, extractDistrictFromResult } from '@/lib/census-geocoder';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 
 interface AddressRefinementProps {
   zipCode: string;
@@ -36,7 +36,7 @@ export function AddressRefinement({
     setError(null);
 
     try {
-      structuredLogger.info('Address refinement started', {
+      logger.info('Address refinement started', {
         zipCode,
         addressLength: fullAddress.length,
       });
@@ -59,7 +59,7 @@ export function AddressRefinement({
         throw new Error('No congressional district information found in the geocoding result');
       }
 
-      structuredLogger.info('Address refinement successful', {
+      logger.info('Address refinement successful', {
         zipCode,
         state: districtInfo.state,
         district: districtInfo.district,
@@ -72,7 +72,7 @@ export function AddressRefinement({
       const errorMessage = err instanceof Error ? err.message : 'Failed to geocode address';
       setError(errorMessage);
 
-      structuredLogger.error('Address refinement failed', err as Error, {
+      logger.error('Address refinement failed', err as Error, {
         zipCode,
         address: fullAddress,
       });

@@ -13,7 +13,7 @@ import {
   saveRecentSearch,
   clearRecentSearches,
 } from '@/features/search/services/unified-search';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 import { ComponentErrorBoundary } from '@/shared/components/error-boundaries';
 
 interface SmartSearchInputProps {
@@ -98,7 +98,7 @@ export function SmartSearchInput({
       }
 
       // Log search
-      structuredLogger.info('Search submitted', {
+      logger.info('Search submitted', {
         value: trimmedValue,
         inputType,
         component: 'SmartSearchInput',

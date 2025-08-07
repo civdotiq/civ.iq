@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import structuredLogger from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { votingDataService } from '@/features/representatives/services/voting-data-service';
 
@@ -67,12 +67,12 @@ async function getRealVotingRecord(
   chamber: 'House' | 'Senate'
 ): Promise<ComparisonData['votingRecord']> {
   try {
-    structuredLogger.info('Fetching real voting data for comparison', { bioguideId, chamber });
+    logger.info('Fetching real voting data for comparison', { bioguideId, chamber });
 
     const votingResult = await votingDataService.getVotingRecords(bioguideId, chamber, 50);
 
     if (votingResult.votes.length === 0) {
-      structuredLogger.warn('No real voting data available for comparison', { bioguideId });
+      logger.warn('No real voting data available for comparison', { bioguideId });
       // Return fallback data with clear labeling
       return {
         totalVotes: 0,
@@ -108,7 +108,7 @@ async function getRealVotingRecord(
         description: vote.bill.title || vote.description || vote.question,
       }));
 
-    structuredLogger.info('Successfully calculated real voting record for comparison', {
+    logger.info('Successfully calculated real voting record for comparison', {
       bioguideId,
       totalVotes,
       keyVotesCount: keyVotes.length,
@@ -122,7 +122,7 @@ async function getRealVotingRecord(
       keyVotes,
     };
   } catch (error) {
-    structuredLogger.error('Error fetching real voting data for comparison', error as Error, {
+    logger.error('Error fetching real voting data for comparison', error as Error, {
       bioguideId,
     });
 
@@ -218,17 +218,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    structuredLogger.info('Fetching real comparison data', { bioguideId });
+    logger.info('Fetching real comparison data', { bioguideId });
 
     // Get enhanced representative data to determine chamber
     const representative = await getEnhancedRepresentative(bioguideId);
     if (!representative) {
-      structuredLogger.warn('Representative not found for comparison', { bioguideId });
+      logger.warn('Representative not found for comparison', { bioguideId });
       return NextResponse.json({ error: 'Representative not found' }, { status: 404 });
     }
 
     const chamber = representative.chamber;
-    structuredLogger.info('Representative found for comparison', {
+    logger.info('Representative found for comparison', {
       bioguideId,
       name: representative.name,
       chamber,
@@ -247,17 +247,14 @@ export async function GET(request: NextRequest) {
       effectiveness,
     };
 
-    structuredLogger.info('Successfully generated comparison data', {
+    logger.info('Successfully generated comparison data', {
       bioguideId,
       hasRealVotingData: votingRecord.totalVotes > 0,
     });
 
     return NextResponse.json(comparisonData);
   } catch (error) {
-    structuredLogger.error(
-      'Comparison API Error',
-      error instanceof Error ? error : new Error(String(error))
-    );
+    logger.error('Comparison API Error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

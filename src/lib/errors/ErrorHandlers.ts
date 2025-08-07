@@ -17,7 +17,7 @@ import {
   createErrorFromResponse,
   createErrorFromException,
 } from './ErrorTypes';
-import { structuredLogger } from '../logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 // Enhanced fetch wrapper with automatic error handling
 export async function safeFetch(
@@ -345,7 +345,7 @@ export class ErrorAnalytics {
 
     // In development, just log
     if (process.env.NODE_ENV === 'development') {
-      structuredLogger.warn('Error reported', { report });
+      logger.warn('Error reported', { report });
       return;
     }
 
@@ -363,12 +363,9 @@ export class ErrorAnalytics {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
       //   body: JSON.stringify(report)
-      // }).catch(err => structuredLogger.error('Failed to send error report', err));
+      // }).catch(err => logger.error('Failed to send error report', err));
     } catch (e) {
-      structuredLogger.error(
-        'Failed to report error analytics',
-        e instanceof Error ? e : String(e)
-      );
+      logger.error('Failed to report error analytics', e instanceof Error ? e : String(e));
     }
   }
 
@@ -395,7 +392,7 @@ export class ErrorAnalytics {
         }))
         .sort((a, b) => b.count - a.count);
     } catch (e) {
-      structuredLogger.error('Failed to get error stats', e instanceof Error ? e : String(e));
+      logger.error('Failed to get error stats', e instanceof Error ? e : String(e));
       return [];
     }
   }

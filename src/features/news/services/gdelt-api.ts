@@ -4,7 +4,7 @@
  */
 
 // GDELT API utility with proper error handling, rate limiting, and retry logic
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import {
   deduplicateNews,
   type NewsArticle,
@@ -103,7 +103,7 @@ async function retryWithBackoff<T>(
       // Calculate delay with exponential backoff
       const delay = Math.min(options.baseDelay * Math.pow(2, attempt), options.maxDelay);
 
-      structuredLogger.warn(`GDELT API retry attempt ${attempt + 1}`, {
+      logger.warn(`GDELT API retry attempt ${attempt + 1}`, {
         attempt: attempt + 1,
         maxRetries: options.maxRetries,
         delay,
@@ -129,14 +129,14 @@ export function generateOptimizedSearchTerms(
     typeof representativeName !== 'string' ||
     representativeName.trim() === ''
   ) {
-    structuredLogger.warn('No representative name provided for GDELT search', {
+    logger.warn('No representative name provided for GDELT search', {
       operation: 'gdelt_search_validation',
     });
     return [];
   }
 
   if (!state || typeof state !== 'string' || state.trim() === '') {
-    structuredLogger.warn('No state provided for GDELT search', {
+    logger.warn('No state provided for GDELT search', {
       operation: 'gdelt_search_validation',
     });
     state = ''; // Will still search but without state context
@@ -193,7 +193,7 @@ export function generateOptimizedSearchTerms(
     searchTerms.push(`"${lastName}"`);
   }
 
-  structuredLogger.debug(`Generated search terms for ${fullName}`, {
+  logger.debug(`Generated search terms for ${fullName}`, {
     searchTerms,
     operation: 'gdelt_search_terms',
   });
@@ -246,7 +246,7 @@ export async function fetchGDELTNewsWithDeduplication(
   }));
 
   // Log deduplication results
-  structuredLogger.info('GDELT news deduplication completed', {
+  logger.info('GDELT news deduplication completed', {
     searchTerm: searchTerm.slice(0, 50),
     originalCount: stats.originalCount,
     duplicatesRemoved: stats.duplicatesRemoved,
@@ -268,7 +268,7 @@ export async function fetchGDELTNews(
   if (!rateLimiter.canMakeCall()) {
     const waitTime = rateLimiter.getWaitTime();
     if (waitTime > 0) {
-      structuredLogger.warn('GDELT API rate limited', {
+      logger.warn('GDELT API rate limited', {
         waitTime,
         operation: 'gdelt_rate_limit',
       });
@@ -295,7 +295,7 @@ export async function fetchGDELTNews(
 
     const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodedQuery}&mode=artlist&maxrecords=${maxRecords}&format=json&sort=socialimage&timespan=24h&theme=${themes}&contenttype=NEWS&dedupresults=true`;
 
-    structuredLogger.info('Fetching GDELT news', {
+    logger.info('Fetching GDELT news', {
       searchTerm: searchTerm.slice(0, 100), // Show more of the search term for debugging
       maxRecords,
       operation: 'gdelt_news_fetch',
@@ -326,7 +326,7 @@ export async function fetchGDELTNews(
       const duration = Date.now() - startTime;
 
       // Log external API call
-      structuredLogger.externalApi('GDELT', 'fetchNews', duration, response.ok, {
+      logger.externalApi('GDELT', 'fetchNews', duration, response.ok, {
         searchTerm: searchTerm.slice(0, 50),
         maxRecords,
         statusCode: response.status,
@@ -348,7 +348,7 @@ export async function fetchGDELTNews(
       const text = await response.text();
 
       if (!text || text.trim() === '') {
-        structuredLogger.warn('Empty response from GDELT API', {
+        logger.warn('Empty response from GDELT API', {
           searchTerm: searchTerm.slice(0, 50),
           operation: 'gdelt_empty_response',
         });
@@ -357,7 +357,7 @@ export async function fetchGDELTNews(
 
       // Log non-JSON responses for debugging
       if (!isJSON) {
-        structuredLogger.warn('GDELT API returned non-JSON response', {
+        logger.warn('GDELT API returned non-JSON response', {
           searchTerm: searchTerm.slice(0, 50),
           contentType,
           responseStart: text.slice(0, 200),
@@ -374,7 +374,7 @@ export async function fetchGDELTNews(
       try {
         data = JSON.parse(text);
       } catch (parseError) {
-        structuredLogger.error('Failed to parse GDELT JSON response', parseError as Error, {
+        logger.error('Failed to parse GDELT JSON response', parseError as Error, {
           searchTerm: searchTerm.slice(0, 50),
           contentType,
           responseStart: text.slice(0, 200),
@@ -384,7 +384,7 @@ export async function fetchGDELTNews(
       }
 
       const articles = data.articles || [];
-      structuredLogger.info('GDELT articles retrieved', {
+      logger.info('GDELT articles retrieved', {
         searchTerm: searchTerm.slice(0, 50),
         articleCount: articles.length,
         operation: 'gdelt_articles_retrieved',
@@ -409,7 +409,7 @@ export async function fetchGDELTNews(
       const duration = Date.now() - startTime;
 
       // Log failed external API call
-      structuredLogger.externalApi('GDELT', 'fetchNews', duration, false, {
+      logger.externalApi('GDELT', 'fetchNews', duration, false, {
         searchTerm: searchTerm.slice(0, 50),
         maxRecords,
         error: error instanceof Error ? error.message : String(error),
@@ -557,7 +557,7 @@ function normalizeDate(dateString: string): string {
       return date.toISOString();
     }
   } catch (error) {
-    structuredLogger.error('Error parsing GDELT date', error as Error, {
+    logger.error('Error parsing GDELT date', error as Error, {
       dateString,
       dateStringLength: dateString.length,
       operation: 'gdelt_date_parse_error',
@@ -636,7 +636,7 @@ export async function fetchGDELTRealTimeEvents(
     // Use GDELT GEO 2.0 API for real-time events
     const url = `https://api.gdeltproject.org/api/v2/geo/geo?query=${queryTerms}&mode=pointdata&format=json&timespan=${timeframe}&output=json`;
 
-    structuredLogger.info('Fetching GDELT real-time events', {
+    logger.info('Fetching GDELT real-time events', {
       keywords,
       timeframe,
       operation: 'gdelt_realtime_events_fetch',
@@ -693,7 +693,7 @@ export async function fetchGDELTTrends(
     // Use GDELT TV 2.0 API for trending analysis
     const url = `https://api.gdeltproject.org/api/v2/tv/tv?query=${query}&mode=timelinevol&format=json&timespan=${timeframe}`;
 
-    structuredLogger.info('Fetching GDELT trends', {
+    logger.info('Fetching GDELT trends', {
       category,
       timeframe,
       operation: 'gdelt_trends_fetch',
@@ -810,7 +810,7 @@ export async function getGDELTRealTimeStream(
       alerts,
     };
   } catch (error) {
-    structuredLogger.error('Error fetching GDELT real-time stream', error as Error, {
+    logger.error('Error fetching GDELT real-time stream', error as Error, {
       representativeName,
       state,
       district,
@@ -916,7 +916,7 @@ export async function monitorBreakingNews(
       })
       .slice(0, 10);
   } catch (error) {
-    structuredLogger.error('Error monitoring breaking news', error as Error, {
+    logger.error('Error monitoring breaking news', error as Error, {
       representativeName,
       state,
       operation: 'gdelt_breaking_news_error',

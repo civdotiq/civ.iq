@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ErrorAnalytics } from '@/lib/errors/ErrorHandlers';
 // CiviqError type available for future use if needed
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface ErrorStats {
   errorCode: string;
@@ -82,7 +82,7 @@ export function ErrorMonitoringDashboard() {
       const feedback = JSON.parse(localStorage.getItem('errorFeedback') || '[]');
       setErrorFeedback(feedback);
     } catch (e) {
-      structuredLogger.error('Failed to load error data', {
+      logger.error('Failed to load error data', {
         component: 'ErrorMonitoringDashboard',
         error: e as Error,
       });

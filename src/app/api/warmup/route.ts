@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { getFileCache } from '@/lib/cache/file-cache';
 
 /**
@@ -22,27 +22,27 @@ export async function GET() {
   };
 
   try {
-    structuredLogger.info('Starting warmup process...');
+    logger.info('Starting warmup process...');
 
     // Pre-fetch congress legislators data
     try {
-      structuredLogger.info('Pre-fetching congress legislators data...');
+      logger.info('Pre-fetching congress legislators data...');
       const representatives = await getAllEnhancedRepresentatives();
       if (representatives.length > 0) {
         results.cached.push(`congress-legislators (${representatives.length} members)`);
-        structuredLogger.info('Congress legislators data cached successfully', {
+        logger.info('Congress legislators data cached successfully', {
           count: representatives.length,
         });
       }
     } catch (error) {
-      structuredLogger.error('Failed to cache congress legislators', error as Error);
+      logger.error('Failed to cache congress legislators', error as Error);
       results.errors.push('congress-legislators');
     }
 
     // Check file cache stats
     const fileCache = getFileCache();
     const cacheStats = await fileCache.getStats();
-    structuredLogger.info('File cache statistics', cacheStats);
+    logger.info('File cache statistics', cacheStats);
 
     results.duration = Date.now() - startTime;
 
@@ -50,7 +50,7 @@ export async function GET() {
       results.success = false;
     }
 
-    structuredLogger.info('Warmup process completed', {
+    logger.info('Warmup process completed', {
       duration: results.duration,
       cached: results.cached.length,
       errors: results.errors.length,
@@ -60,7 +60,7 @@ export async function GET() {
       status: results.success ? 200 : 207, // 207 Multi-Status if partial success
     });
   } catch (error) {
-    structuredLogger.error('Warmup process failed', error as Error);
+    logger.error('Warmup process failed', error as Error);
     return NextResponse.json(
       {
         success: false,

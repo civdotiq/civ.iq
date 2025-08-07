@@ -7,7 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { EnhancedFECData } from '@/types/fec';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface FundraisingTrendsProps {
   data: EnhancedFECData;
@@ -26,7 +26,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
   const [activeView, setActiveView] = useState<ViewMode>('timeline');
 
   // Debug logging to check data structure
-  structuredLogger.info('FundraisingTrends received data', {
+  logger.info('FundraisingTrends received data', {
     component: 'FundraisingTrends',
     metadata: {
       hasData: !!data,

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 
 export async function GET(_request: NextRequest) {
   try {
@@ -24,7 +24,7 @@ export async function GET(_request: NextRequest) {
     // Test a simple Congress.gov API call
     const testUrl = `https://api.congress.gov/v3/member?api_key=${congressApiKey}&limit=3`;
 
-    structuredLogger.info('Testing Congress API', {
+    logger.info('Testing Congress API', {
       url: testUrl.replace(congressApiKey, 'HIDDEN'),
     });
 
@@ -37,7 +37,7 @@ export async function GET(_request: NextRequest) {
       signal: AbortSignal.timeout(10000), // 10 second timeout
     });
 
-    structuredLogger.info('Congress API Response', {
+    logger.info('Congress API Response', {
       status: response.status,
       headers: Object.fromEntries(response.headers.entries()),
     });
@@ -78,7 +78,7 @@ export async function GET(_request: NextRequest) {
       rawDataSample: data,
     });
   } catch (error) {
-    structuredLogger.error('Congress API test failed', error as Error);
+    logger.error('Congress API test failed', error as Error);
 
     return NextResponse.json(
       {

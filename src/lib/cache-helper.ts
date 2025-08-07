@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 // Simple in-memory cache to prevent API rate limits
 const cache = new Map<string, { data: unknown; time: number }>();
@@ -36,7 +36,7 @@ export async function withCache<T>(
   } catch (error) {
     // Return stale data if available, otherwise rethrow error
     if (cached) {
-      structuredLogger.warn('Returning stale cached data due to fetch error', {
+      logger.warn('Returning stale cached data due to fetch error', {
         key,
         error: error instanceof Error ? error.message : String(error),
       });

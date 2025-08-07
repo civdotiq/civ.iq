@@ -11,7 +11,7 @@
  */
 
 import { getRedisCache } from '@/lib/cache/redis-client';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import type { BillSummary } from './bill-summarizer';
 
 export interface BillSummaryCacheEntry {
@@ -90,7 +90,7 @@ export class BillSummaryCache {
       // Update index
       await this.updateCacheIndex(billId, 'add');
 
-      structuredLogger.info('Bill summary cached successfully', {
+      logger.info('Bill summary cached successfully', {
         billId,
         ttl,
         confidence: summary.confidence,
@@ -98,7 +98,7 @@ export class BillSummaryCache {
         operation: 'bill_summary_cache',
       });
     } catch (error) {
-      structuredLogger.error('Failed to cache bill summary', error as Error, {
+      logger.error('Failed to cache bill summary', error as Error, {
         billId,
         operation: 'bill_summary_cache',
       });
@@ -120,7 +120,7 @@ export class BillSummaryCache {
       ]);
 
       if (!cacheEntry) {
-        structuredLogger.debug('Bill summary cache miss', {
+        logger.debug('Bill summary cache miss', {
           billId,
           operation: 'bill_summary_cache',
         });
@@ -130,7 +130,7 @@ export class BillSummaryCache {
       // Update access metadata
       await this.updateAccessMetadata(billId, metadata || undefined);
 
-      structuredLogger.info('Bill summary cache hit', {
+      logger.info('Bill summary cache hit', {
         billId,
         confidence: cacheEntry.summary.confidence,
         readingLevel: cacheEntry.summary.readingLevel,
@@ -139,7 +139,7 @@ export class BillSummaryCache {
 
       return cacheEntry.summary;
     } catch (error) {
-      structuredLogger.error('Failed to retrieve bill summary from cache', error as Error, {
+      logger.error('Failed to retrieve bill summary from cache', error as Error, {
         billId,
         operation: 'bill_summary_cache',
       });
@@ -161,7 +161,7 @@ export class BillSummaryCache {
 
       const isValid = cachedHash === currentBillTextHash;
 
-      structuredLogger.debug('Bill summary validation check', {
+      logger.debug('Bill summary validation check', {
         billId,
         isValid,
         operation: 'bill_summary_cache',
@@ -169,7 +169,7 @@ export class BillSummaryCache {
 
       return isValid;
     } catch (error) {
-      structuredLogger.error('Failed to validate bill summary', error as Error, {
+      logger.error('Failed to validate bill summary', error as Error, {
         billId,
         operation: 'bill_summary_cache',
       });
@@ -191,12 +191,12 @@ export class BillSummaryCache {
       await Promise.all(keys.map(key => this.cache.delete(key)));
       await this.updateCacheIndex(billId, 'remove');
 
-      structuredLogger.info('Bill summary invalidated', {
+      logger.info('Bill summary invalidated', {
         billId,
         operation: 'bill_summary_cache',
       });
     } catch (error) {
-      structuredLogger.error('Failed to invalidate bill summary', error as Error, {
+      logger.error('Failed to invalidate bill summary', error as Error, {
         billId,
         operation: 'bill_summary_cache',
       });
@@ -224,12 +224,12 @@ export class BillSummaryCache {
           results.set(billId, entry.summary);
           // Update access metadata asynchronously
           this.updateAccessMetadata(billId).catch(err =>
-            structuredLogger.warn('Failed to update access metadata', { billId, error: err })
+            logger.warn('Failed to update access metadata', { billId, error: err })
           );
         }
       }
 
-      structuredLogger.info('Batch bill summaries retrieved', {
+      logger.info('Batch bill summaries retrieved', {
         requested: billIds.length,
         found: results.size,
         hitRate: (results.size / billIds.length) * 100,
@@ -238,7 +238,7 @@ export class BillSummaryCache {
 
       return results;
     } catch (error) {
-      structuredLogger.error('Failed to retrieve batch summaries', error as Error, {
+      logger.error('Failed to retrieve batch summaries', error as Error, {
         billIds: billIds.slice(0, 5), // Log first 5 IDs only
         operation: 'bill_summary_cache',
       });
@@ -294,7 +294,7 @@ export class BillSummaryCache {
         sizeEstimate,
       };
     } catch (error) {
-      structuredLogger.error('Failed to get cache stats', error as Error, {
+      logger.error('Failed to get cache stats', error as Error, {
         operation: 'bill_summary_cache',
       });
 
@@ -389,7 +389,7 @@ export class BillSummaryCache {
       const removed = toRemove.length;
       const retained = billIds.length - removed;
 
-      structuredLogger.info('Cache cleanup completed', {
+      logger.info('Cache cleanup completed', {
         removed,
         retained,
         totalBefore: billIds.length,
@@ -401,7 +401,7 @@ export class BillSummaryCache {
 
       return { removed, retained };
     } catch (error) {
-      structuredLogger.error('Cache cleanup failed', error as Error, {
+      logger.error('Cache cleanup failed', error as Error, {
         operation: 'bill_summary_cache',
       });
       return { removed: 0, retained: 0 };
@@ -452,7 +452,7 @@ export class BillSummaryCache {
       }
     } catch (error) {
       // Don't throw on metadata update failures
-      structuredLogger.warn('Failed to update access metadata', {
+      logger.warn('Failed to update access metadata', {
         billId,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
@@ -479,7 +479,7 @@ export class BillSummaryCache {
 
       await this.cache.set(indexKey, newIndex, this.LONG_TTL);
     } catch (error) {
-      structuredLogger.warn('Failed to update cache index', {
+      logger.warn('Failed to update cache index', {
         billId,
         operation,
         error: error instanceof Error ? error.message : 'Unknown error',

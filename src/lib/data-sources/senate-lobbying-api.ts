@@ -4,7 +4,7 @@
  */
 
 import { cachedFetch } from '@/lib/cache';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 export interface LobbyingFiling {
   id: string;
@@ -60,7 +60,7 @@ export class SenateLobbyingAPI {
         async () => {
           const url = `${this.baseUrl}/filings/?filing_year=${year}&filing_period=Q${quarter}&government_entity=SENATE`;
           
-          structuredLogger.info('Fetching Senate lobbying data', {
+          logger.info('Fetching Senate lobbying data', {
             year,
             quarter,
             url: url.replace(this.baseUrl, '[REDACTED]'),
@@ -80,11 +80,11 @@ export class SenateLobbyingAPI {
           const data = await response.json();
           
           if (!data || !Array.isArray(data.results)) {
-            structuredLogger.warn('Unexpected Senate LDA API response format', { data });
+            logger.warn('Unexpected Senate LDA API response format', { data });
             return [];
           }
 
-          structuredLogger.info('Successfully fetched Senate lobbying data', {
+          logger.info('Successfully fetched Senate lobbying data', {
             year,
             quarter,
             filingCount: data.results.length,
@@ -95,7 +95,7 @@ export class SenateLobbyingAPI {
         7 * 24 * 60 * 60 * 1000 // 7 days cache - lobbying data is quarterly
       );
     } catch (error) {
-      structuredLogger.error('Failed to fetch Senate lobbying data', error as Error, {
+      logger.error('Failed to fetch Senate lobbying data', error as Error, {
         year,
         quarter,
       });
@@ -127,7 +127,7 @@ export class SenateLobbyingAPI {
       }
     }
 
-    structuredLogger.info('Fetched all recent lobbying filings', {
+    logger.info('Fetched all recent lobbying filings', {
       totalFilings: allFilings.length,
       yearsCovered: years,
     });
@@ -143,7 +143,7 @@ export class SenateLobbyingAPI {
       const allFilings = await this.fetchRecentFilings();
       
       if (allFilings.length === 0) {
-        structuredLogger.warn('No lobbying filings available for committee analysis');
+        logger.warn('No lobbying filings available for committee analysis');
         return [];
       }
 
@@ -199,7 +199,7 @@ export class SenateLobbyingAPI {
         }
       }
 
-      structuredLogger.info('Generated committee lobbying analysis', {
+      logger.info('Generated committee lobbying analysis', {
         committeesAnalyzed: committees.length,
         committeesWithData: committeeData.length,
         totalFilingsProcessed: allFilings.length,
@@ -207,7 +207,7 @@ export class SenateLobbyingAPI {
 
       return committeeData.sort((a, b) => b.totalSpending - a.totalSpending);
     } catch (error) {
-      structuredLogger.error('Failed to analyze committee lobbying data', error as Error, {
+      logger.error('Failed to analyze committee lobbying data', error as Error, {
         committees,
       });
       return [];
@@ -265,7 +265,7 @@ export class SenateLobbyingAPI {
         },
       };
     } catch (error) {
-      structuredLogger.error('Failed to generate lobbying summary', error as Error);
+      logger.error('Failed to generate lobbying summary', error as Error);
       return {
         totalSpending: 0,
         totalFilings: 0,

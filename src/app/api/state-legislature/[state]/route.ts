@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
 interface StateLegislator {
@@ -145,20 +145,16 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
 
     if (!response.ok) {
       monitor.end(false, response.status);
-      structuredLogger.error(
-        'OpenStates jurisdiction API error',
-        new Error(`HTTP ${response.status}`),
-        {
-          stateAbbrev,
-          statusCode: response.status,
-        }
-      );
+      logger.error('OpenStates jurisdiction API error', new Error(`HTTP ${response.status}`), {
+        stateAbbrev,
+        statusCode: response.status,
+      });
       return null;
     }
 
     monitor.end(true, 200);
     const data = await response.json();
-    structuredLogger.info('Successfully fetched state jurisdiction', {
+    logger.info('Successfully fetched state jurisdiction', {
       stateAbbrev,
       jurisdictionName: data.name,
     });
@@ -166,7 +162,7 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
     return data;
   } catch (error) {
     monitor.end(false, undefined, error as Error);
-    structuredLogger.error('Error fetching state jurisdiction', error as Error, {
+    logger.error('Error fetching state jurisdiction', error as Error, {
       stateAbbrev,
     });
     return null;
@@ -202,22 +198,18 @@ async function fetchStateLegislators(
 
     if (!response.ok) {
       monitor.end(false, response.status);
-      structuredLogger.error(
-        'OpenStates legislators API error',
-        new Error(`HTTP ${response.status}`),
-        {
-          stateAbbrev,
-          chamber,
-          statusCode: response.status,
-        }
-      );
+      logger.error('OpenStates legislators API error', new Error(`HTTP ${response.status}`), {
+        stateAbbrev,
+        chamber,
+        statusCode: response.status,
+      });
       return [];
     }
 
     monitor.end(true, 200);
     const data = await response.json();
 
-    structuredLogger.info('Successfully fetched state legislators', {
+    logger.info('Successfully fetched state legislators', {
       stateAbbrev,
       chamber,
       count: data.results?.length || 0,
@@ -226,7 +218,7 @@ async function fetchStateLegislators(
     return data.results?.map((person: unknown) => transformLegislator(person, stateAbbrev)) || [];
   } catch (error) {
     monitor.end(false, undefined, error as Error);
-    structuredLogger.error('Error fetching state legislators', error as Error, {
+    logger.error('Error fetching state legislators', error as Error, {
       stateAbbrev,
       chamber,
     });
@@ -317,7 +309,7 @@ export async function GET(
     const legislatureData = await cachedFetch(
       cacheKey,
       async (): Promise<StateLegislatureData> => {
-        structuredLogger.info(
+        logger.info(
           'Fetching state legislature data from OpenStates',
           {
             state: state.toUpperCase(),
@@ -338,7 +330,7 @@ export async function GET(
 
         // If OpenStates API fails, fall back to mock data
         if (!jurisdiction || legislators.length === 0) {
-          structuredLogger.warn('OpenStates API failed, falling back to mock data', {
+          logger.warn('OpenStates API failed, falling back to mock data', {
             state: state.toUpperCase(),
             hasJurisdiction: !!jurisdiction,
             legislatorCount: legislators.length,
@@ -447,7 +439,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    structuredLogger.error(
+    logger.error(
       'State Legislature API Error',
       error as Error,
       {
@@ -501,7 +493,7 @@ export async function GET(
 async function generateFallbackData(state: string): Promise<StateLegislatureData> {
   const stateInfo = getBasicStateInfo(state);
 
-  structuredLogger.info('Generating fallback mock data', {
+  logger.info('Generating fallback mock data', {
     state,
     operation: 'fallback_data_generation',
   });

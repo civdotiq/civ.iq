@@ -5,8 +5,11 @@
  * using Census TIGER/Line data and geometric calculations.
  */
 
-import { districtBoundaryService, type DistrictBoundary } from '@/lib/helpers/district-boundary-utils';
-import { structuredLogger } from '@/lib/logging/logger';
+import {
+  districtBoundaryService,
+  type DistrictBoundary,
+} from '@/lib/helpers/district-boundary-utils';
+import logger from '@/lib/logging/simple-logger';
 
 interface GeocodeResult {
   latitude: number;
@@ -34,7 +37,7 @@ class DistrictLookupService {
       await districtBoundaryService.initialize();
       this.initialized = true;
     } catch (error) {
-      structuredLogger.error('Failed to initialize district lookup service', error as Error, {
+      logger.error('Failed to initialize district lookup service', error as Error, {
         service: 'DistrictLookupService',
       });
       throw error;
@@ -73,7 +76,7 @@ class DistrictLookupService {
         method: result.method === 'pmtiles' ? 'geometry' : result.method,
       };
     } catch (error) {
-      structuredLogger.error('Error in district coordinate lookup', error as Error, {
+      logger.error('Error in district coordinate lookup', error as Error, {
         latitude,
         longitude,
         service: 'DistrictLookupService',
@@ -155,7 +158,7 @@ class DistrictLookupService {
         method: 'census_api',
       };
     } catch (error) {
-      structuredLogger.error('Error in district ZIP lookup', error as Error, {
+      logger.error('Error in district ZIP lookup', error as Error, {
         zipCode,
         service: 'DistrictLookupService',
       });
@@ -201,7 +204,7 @@ class DistrictLookupService {
         geocoded: geocodeResult,
       };
     } catch (error) {
-      structuredLogger.error('Error in district address lookup', error as Error, {
+      logger.error('Error in district address lookup', error as Error, {
         address,
         service: 'DistrictLookupService',
       });
@@ -282,7 +285,7 @@ class DistrictLookupService {
         confidence: match.tigerLine?.score || 0.8,
       };
     } catch (error) {
-      structuredLogger.error('Geocoding failed', error as Error, {
+      logger.error('Geocoding failed', error as Error, {
         address,
         service: 'DistrictLookupService',
       });

@@ -6,7 +6,7 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 import { Button } from '@/shared/components/ui/Button';
 import { Card } from '@/shared/components/ui/Card';
 
@@ -41,7 +41,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to Winston
-    structuredLogger.error('Global error boundary caught error', error, {
+    logger.error('Global error boundary caught error', error, {
       componentStack: errorInfo.componentStack,
       errorBoundary: 'GlobalErrorBoundary',
       userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',

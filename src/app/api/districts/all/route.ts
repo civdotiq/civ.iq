@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCookPVI as getRealCookPVI } from '../cook-pvi-data';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import type { CongressApiMember, CongressApiMembersResponse } from '@/types/api-responses';
 
 // Define district data structure
@@ -52,15 +52,15 @@ export async function GET(request: Request) {
 
     // Check cache
     if (!bustCache && cachedData && Date.now() - cacheTime < CACHE_DURATION) {
-      structuredLogger.cache('hit', 'districts-all');
-      structuredLogger.info('Returning cached districts data', {
+      logger.cache('hit', 'districts-all');
+      logger.info('Returning cached districts data', {
         cacheAge: Date.now() - cacheTime,
         districtCount: cachedData.length,
       });
       return NextResponse.json({ districts: cachedData });
     }
 
-    structuredLogger.cache('miss', 'districts-all');
+    logger.cache('miss', 'districts-all');
 
     const congressApiKey = process.env.CONGRESS_API_KEY;
     const censusApiKey = process.env.CENSUS_API_KEY;
@@ -71,7 +71,7 @@ export async function GET(request: Request) {
 
     // Get current Congress members from Congress.gov API
     // We need to handle pagination as the API limits results
-    structuredLogger.info('Fetching House members from Congress.gov API');
+    logger.info('Fetching House members from Congress.gov API');
     const allMembers: CongressApiMember[] = [];
     let offset = 0;
     const limit = 250; // API max limit per request
@@ -80,7 +80,7 @@ export async function GET(request: Request) {
     while (hasMore) {
       const url = `https://api.congress.gov/v3/member?format=json&limit=${limit}&offset=${offset}&currentMember=true&chamber=house`;
       const apiStartTime = Date.now();
-      structuredLogger.debug(`Fetching members with offset ${offset}`, { offset, limit });
+      logger.debug(`Fetching members with offset ${offset}`, { offset, limit });
 
       const membersResponse = await fetch(url, {
         headers: {
@@ -92,7 +92,7 @@ export async function GET(request: Request) {
 
       if (!membersResponse.ok) {
         const errorText = await membersResponse.text();
-        structuredLogger.error(
+        logger.error(
           'Congress API error',
           new Error(`HTTP ${membersResponse.status}: ${errorText}`),
           {
@@ -107,7 +107,7 @@ export async function GET(request: Request) {
       const membersData: CongressApiMembersResponse = await membersResponse.json();
       const members = membersData.members || [];
 
-      structuredLogger.externalApi('Congress.gov', 'fetch-members', apiDuration, true, {
+      logger.externalApi('Congress.gov', 'fetch-members', apiDuration, true, {
         offset,
         membersReceived: members.length,
       });
@@ -126,7 +126,7 @@ export async function GET(request: Request) {
       }
     }
 
-    structuredLogger.info(`Fetched total House members from Congress API`, {
+    logger.info(`Fetched total House members from Congress API`, {
       totalMembers: allMembers.length,
       apiCalls: Math.ceil(allMembers.length / limit),
     });
@@ -141,13 +141,13 @@ export async function GET(request: Request) {
     // Temporarily disable Census API to isolate the issue
     /*
     try {
-      structuredLogger.info('Fetching Census data for all districts');
+      logger.info('Fetching Census data for all districts');
       censusDataMap = await fetchAllDistrictDemographics(censusApiKey);
-      structuredLogger.info('Fetched Census demographic data', {
+      logger.info('Fetched Census demographic data', {
         districtCount: censusDataMap.size
       });
     } catch (error) {
-      structuredLogger.error('Error fetching comprehensive Census data', error instanceof Error ? error : new Error(String(error)));
+      logger.error('Error fetching comprehensive Census data', error instanceof Error ? error : new Error(String(error)));
       // Continue without Census data
     }
     */
@@ -225,14 +225,14 @@ export async function GET(request: Request) {
       processedCount++;
     }
 
-    structuredLogger.info('District processing completed', {
+    logger.info('District processing completed', {
       processedCount,
       skippedCount,
       totalInputMembers: members.length,
     });
 
     const districtsArray = Array.from(districtsMap.values());
-    structuredLogger.info('Districts response prepared', {
+    logger.info('Districts response prepared', {
       districtCount: districtsArray.length,
       processingTime: Date.now() - startTime,
     });
@@ -240,7 +240,7 @@ export async function GET(request: Request) {
     // Cache the data
     cachedData = districtsArray;
     cacheTime = Date.now();
-    structuredLogger.cache('set', 'districts-all', {
+    logger.cache('set', 'districts-all', {
       districtCount: districtsArray.length,
       cacheTime: new Date(cacheTime).toISOString(),
     });
@@ -248,7 +248,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ districts: districtsArray });
   } catch (error) {
     const errorDuration = Date.now() - startTime;
-    structuredLogger.error(
+    logger.error(
       'Error fetching districts data',
       error instanceof Error ? error : new Error(String(error)),
       {

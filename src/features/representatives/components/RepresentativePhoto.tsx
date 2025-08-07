@@ -14,7 +14,7 @@ import {
   loadImageWithFallbacks,
   type UseRepresentativePhotoResult,
 } from '@/features/representatives/services/representative-photos';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 
 interface RepresentativePhotoProps {
   bioguideId: string;
@@ -87,12 +87,12 @@ export const RepresentativePhoto = memo(function RepresentativePhoto({
 
         // Log success metrics
         if (result.photoUrl && !result.isGenerated) {
-          structuredLogger.info(
+          logger.info(
             `Photo loaded successfully from ${result.successfulSource?.name} in ${result.loadTime}ms`
           );
         }
       } catch (error) {
-        structuredLogger.warn('Enhanced photo service failed, using fallback:', {
+        logger.warn('Enhanced photo service failed, using fallback:', {
           error: String(error),
         });
 
@@ -216,7 +216,7 @@ export const useRepresentativePhoto = function (
         }));
       })
       .catch(error => {
-        structuredLogger.warn('Failed to load representative photo in hook:', {
+        logger.warn('Failed to load representative photo in hook:', {
           error: error.message,
         });
         setPhotoState(prev => ({

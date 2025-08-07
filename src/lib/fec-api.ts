@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { structuredLogger } from './logging/logger-client';
+import { logger } from './logging/logger-client';
 
 /**
  * Federal Election Commission (FEC) API Integration
@@ -128,9 +128,7 @@ class FECRateLimiter {
     if (this.requests.length >= this.maxRequestsPerHour) {
       const waitTime = 3600000 - (now - this.requests[0]);
       if (waitTime > 0) {
-        structuredLogger.warn(
-          `FEC API rate limit reached, waiting ${Math.round(waitTime / 1000)} seconds`
-        );
+        logger.warn(`FEC API rate limit reached, waiting ${Math.round(waitTime / 1000)} seconds`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
       }
     }
@@ -172,7 +170,7 @@ class FECAPI {
     }
 
     if (!this.config.apiKey) {
-      structuredLogger.warn('FEC API key not configured, some features may not work');
+      logger.warn('FEC API key not configured, some features may not work');
       return null;
     }
 
@@ -241,7 +239,7 @@ class FECAPI {
       }
     }
 
-    structuredLogger.error('FEC API request failed', lastError, { endpoint });
+    logger.error('FEC API request failed', lastError, { endpoint });
     return null;
   }
 
@@ -262,7 +260,7 @@ class FECAPI {
       const response = await this.makeRequest<FECCandidate>('/candidates/search/', params);
       return response?.results || [];
     } catch (error) {
-      structuredLogger.error('Error searching FEC candidates', error as Error, { name, cycle });
+      logger.error('Error searching FEC candidates', error as Error, { name, cycle });
       return [];
     }
   }
@@ -277,7 +275,7 @@ class FECAPI {
       const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
 
       if (!validationInfo.isValid) {
-        structuredLogger.error('Invalid FEC candidate ID format', undefined, {
+        logger.error('Invalid FEC candidate ID format', undefined, {
           candidateId,
           normalizedId,
           errors: validationInfo.errors,
@@ -288,7 +286,7 @@ class FECAPI {
       const response = await this.makeRequest<FECCandidate>(`/candidate/${normalizedId}/`);
       return response?.results?.[0] || null;
     } catch (error) {
-      structuredLogger.error('Error fetching FEC candidate', error as Error, { candidateId });
+      logger.error('Error fetching FEC candidate', error as Error, { candidateId });
       return null;
     }
   }
@@ -316,7 +314,7 @@ class FECAPI {
       );
       return response?.results || [];
     } catch (error) {
-      structuredLogger.error('Error fetching candidate financials', error as Error, {
+      logger.error('Error fetching candidate financials', error as Error, {
         candidateId,
         cycle,
       });
@@ -342,7 +340,7 @@ class FECAPI {
       const response = await this.makeRequest<FECCommittee>('/committees/', params);
       return response?.results || [];
     } catch (error) {
-      structuredLogger.error('Error fetching candidate committees', error as Error, {
+      logger.error('Error fetching candidate committees', error as Error, {
         candidateId,
         cycle,
       });
@@ -377,7 +375,7 @@ class FECAPI {
       const response = await this.makeRequest<FECContribution>('/schedules/schedule_a/', params);
       return response?.results || [];
     } catch (error) {
-      structuredLogger.error('Error fetching candidate contributions', error as Error, {
+      logger.error('Error fetching candidate contributions', error as Error, {
         candidateId,
         cycle,
         minAmount,
@@ -419,7 +417,7 @@ class FECAPI {
       const response = await this.makeRequest<FECExpenditure>('/schedules/schedule_b/', params);
       return response?.results || [];
     } catch (error) {
-      structuredLogger.error('Error fetching candidate expenditures', error as Error, {
+      logger.error('Error fetching candidate expenditures', error as Error, {
         candidateId,
         cycle,
         limit,
@@ -489,7 +487,7 @@ class FECAPI {
           occupation: contributor.occupation,
         }));
     } catch (error) {
-      structuredLogger.error('Error fetching top contributors', error as Error, {
+      logger.error('Error fetching top contributors', error as Error, {
         candidateId,
         cycle,
         limit,
@@ -547,7 +545,7 @@ class FECAPI {
         }))
         .sort((a, b) => b.total_amount - a.total_amount);
     } catch (error) {
-      structuredLogger.error('Error fetching spending categories', error as Error, {
+      logger.error('Error fetching spending categories', error as Error, {
         candidateId,
         cycle,
       });
@@ -605,7 +603,7 @@ class FECAPI {
 
       return pacContributions.slice(0, limit);
     } catch (error) {
-      structuredLogger.error('Error fetching PAC contributions', error as Error, {
+      logger.error('Error fetching PAC contributions', error as Error, {
         candidateId,
         cycle,
         limit,
@@ -687,7 +685,7 @@ class FECAPI {
           committees.length > 0 ? committees[0].filing_frequency || 'Unknown' : 'No committee data',
       };
     } catch (error) {
-      structuredLogger.error('Error fetching comprehensive funding', error as Error, {
+      logger.error('Error fetching comprehensive funding', error as Error, {
         candidateId,
         cycle,
       });

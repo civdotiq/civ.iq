@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface StateExecutive {
   id: string;
@@ -75,7 +75,7 @@ export async function GET(
     const executivesData = await cachedFetch(
       cacheKey,
       async (): Promise<StateExecutivesData> => {
-        structuredLogger.info(
+        logger.info(
           'Fetching state executives',
           {
             state: state.toUpperCase(),
@@ -118,7 +118,7 @@ export async function GET(
 
     return NextResponse.json(executivesData);
   } catch (error) {
-    structuredLogger.error(
+    logger.error(
       'State Executives API Error',
       error as Error,
       {

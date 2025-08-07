@@ -7,7 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { EnhancedFECData } from '@/types/fec';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 import { getIndustryColor, getIndustryIcon } from '@/lib/fec/industryMapper';
 
 interface IndustryBreakdownProps {
@@ -33,7 +33,7 @@ export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownPro
 
   // Debug logging to check data structure
   if (process.env.NODE_ENV === 'development') {
-    structuredLogger.debug('IndustryBreakdown received data', {
+    logger.debug('IndustryBreakdown received data', {
       component: 'IndustryBreakdown',
       metadata: {
         hasData: !!data,
@@ -46,7 +46,7 @@ export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownPro
   const sortedIndustries = useMemo(() => {
     // Safety check for data structure
     if (!data || !data.industries || !Array.isArray(data.industries)) {
-      structuredLogger.warn('Invalid or missing industries data', {
+      logger.warn('Invalid or missing industries data', {
         component: 'IndustryBreakdown',
         metadata: {
           hasData: !!data,

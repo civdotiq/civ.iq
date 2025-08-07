@@ -15,7 +15,7 @@ import {
 } from '@/lib/data/zip-district-mapping';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { getCongressionalDistrictFromZip } from '@/lib/census-api';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 // Enhanced interfaces for multi-district support
 interface DistrictInfo {
@@ -90,7 +90,7 @@ class ZipLookupLogger {
     };
 
     // Log unmapped ZIP code
-    structuredLogger.warn('Unmapped ZIP Code', {
+    logger.warn('Unmapped ZIP Code', {
       component: 'multiDistrictApi',
       metadata: logEntry,
     });
@@ -108,7 +108,7 @@ class ZipLookupLogger {
       type: 'multi_district_access',
     };
 
-    structuredLogger.info('Multi-District ZIP Access', {
+    logger.info('Multi-District ZIP Access', {
       component: 'multiDistrictApi',
       metadata: logEntry,
     });
@@ -127,7 +127,7 @@ class ZipLookupLogger {
       type: 'edge_case',
     };
 
-    structuredLogger.info('Edge Case detected', {
+    logger.info('Edge Case detected', {
       component: 'multiDistrictApi',
       metadata: logEntry,
     });
@@ -403,7 +403,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    structuredLogger.error('Multi-district API error', {
+    logger.error('Multi-district API error', {
       component: 'multiDistrictApi',
       error: error as Error,
       metadata: { zipCode },

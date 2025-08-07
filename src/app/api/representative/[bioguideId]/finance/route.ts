@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import { getFECIdFromBioguide, hasFECMapping } from '@/lib/data/bioguide-fec-mapping';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import { FECUtils } from '@/lib/fec-api';
 import { industryCategorizer } from '@/lib/fec/industry-categorizer';
@@ -204,7 +204,7 @@ async function findFECCandidate(
           }
         }
 
-        structuredLogger.info('Enhanced FEC candidate search', {
+        logger.info('Enhanced FEC candidate search', {
           originalName: representativeName,
           searchVariants: Array.from(nameVariants),
           state,
@@ -243,7 +243,7 @@ async function findFECCandidate(
 
             if (!response.ok) {
               monitor.end(false, response.status);
-              structuredLogger.warn('FEC search failed', {
+              logger.warn('FEC search failed', {
                 name,
                 cycle,
                 status: response.status,
@@ -253,7 +253,7 @@ async function findFECCandidate(
 
             const data = await response.json();
             monitor.end(true, 200);
-            structuredLogger.info('FEC candidate search results', {
+            logger.info('FEC candidate search results', {
               name,
               cycle,
               resultsCount: data.results?.length || 0,
@@ -302,7 +302,7 @@ async function findFECCandidate(
               }
 
               if (candidate) {
-                structuredLogger.info('Found matching FEC candidate', {
+                logger.info('Found matching FEC candidate', {
                   candidateName: candidate.name,
                   candidateId: candidate.candidate_id,
                   searchName,
@@ -330,7 +330,7 @@ async function findFECCandidate(
               });
 
               if (fallbackCandidate) {
-                structuredLogger.info('Using fallback FEC candidate', {
+                logger.info('Using fallback FEC candidate', {
                   candidateName: fallbackCandidate.name,
                   candidateId: fallbackCandidate.candidate_id,
                   searchName,
@@ -350,10 +350,10 @@ async function findFECCandidate(
           }
         }
 
-        structuredLogger.warn('No FEC candidate found', { searchName, state });
+        logger.warn('No FEC candidate found', { searchName, state });
         return null;
       } catch (error) {
-        structuredLogger.error('Error finding FEC candidate', error as Error, {
+        logger.error('Error finding FEC candidate', error as Error, {
           representativeName,
           state,
           district,
@@ -479,7 +479,7 @@ async function getFinancialSummary(candidateId: string): Promise<FinancialSummar
   const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
 
   if (!validationInfo.isValid) {
-    structuredLogger.warn('Invalid FEC candidate ID format for financial summary', {
+    logger.warn('Invalid FEC candidate ID format for financial summary', {
       candidateId,
       normalizedId,
       errors: validationInfo.errors,
@@ -491,7 +491,7 @@ async function getFinancialSummary(candidateId: string): Promise<FinancialSummar
     cacheKey,
     async () => {
       try {
-        structuredLogger.info('Fetching financial summary from FEC', { candidateId, currentCycle });
+        logger.info('Fetching financial summary from FEC', { candidateId, currentCycle });
 
         const response = await fetch(
           `https://api.open.fec.gov/v1/candidate/${normalizedId}/totals/?api_key=${process.env.FEC_API_KEY}&cycle=${currentCycle}&cycle=${currentCycle - 2}&sort=-cycle`,
@@ -517,17 +517,13 @@ async function getFinancialSummary(candidateId: string): Promise<FinancialSummar
             errorDetails = 'Could not read error response body';
           }
 
-          structuredLogger.error(
-            'FEC financial summary API error',
-            new Error(`HTTP ${response.status}`),
-            {
-              candidateId,
-              status: response.status,
-              statusText: response.statusText,
-              errorDetails,
-              url: response.url.replace(process.env.FEC_API_KEY!, '[REDACTED]'),
-            }
-          );
+          logger.error('FEC financial summary API error', new Error(`HTTP ${response.status}`), {
+            candidateId,
+            status: response.status,
+            statusText: response.statusText,
+            errorDetails,
+            url: response.url.replace(process.env.FEC_API_KEY!, '[REDACTED]'),
+          });
 
           return [];
         }
@@ -535,7 +531,7 @@ async function getFinancialSummary(candidateId: string): Promise<FinancialSummar
         const data = await response.json();
         monitor.end(true, 200);
 
-        structuredLogger.info('Successfully fetched financial summary', {
+        logger.info('Successfully fetched financial summary', {
           candidateId,
           cycles: data.results?.length || 0,
         });
@@ -554,7 +550,7 @@ async function getFinancialSummary(candidateId: string): Promise<FinancialSummar
           })) || []
         );
       } catch (error) {
-        structuredLogger.error('Error fetching financial summary', error as Error, {
+        logger.error('Error fetching financial summary', error as Error, {
           candidateId,
           cacheKey,
         });
@@ -574,7 +570,7 @@ async function getContributions(candidateId: string, limit = 200): Promise<Contr
   const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
 
   if (!validationInfo.isValid) {
-    structuredLogger.warn('Invalid FEC candidate ID format for contributions', {
+    logger.warn('Invalid FEC candidate ID format for contributions', {
       candidateId,
       normalizedId,
       errors: validationInfo.errors,
@@ -586,7 +582,7 @@ async function getContributions(candidateId: string, limit = 200): Promise<Contr
     cacheKey,
     async () => {
       try {
-        structuredLogger.info('Fetching contributions from FEC', { candidateId, currentCycle });
+        logger.info('Fetching contributions from FEC', { candidateId, currentCycle });
 
         const response = await fetch(
           `https://api.open.fec.gov/v1/schedules/schedule_a/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&two_year_transaction_period=${currentCycle}&sort=-contribution_receipt_date&per_page=${limit}`,
@@ -612,17 +608,13 @@ async function getContributions(candidateId: string, limit = 200): Promise<Contr
             errorDetails = 'Could not read error response body';
           }
 
-          structuredLogger.error(
-            'FEC contributions API error',
-            new Error(`HTTP ${response.status}`),
-            {
-              candidateId,
-              status: response.status,
-              statusText: response.statusText,
-              errorDetails,
-              url: response.url.replace(process.env.FEC_API_KEY!, '[REDACTED]'),
-            }
-          );
+          logger.error('FEC contributions API error', new Error(`HTTP ${response.status}`), {
+            candidateId,
+            status: response.status,
+            statusText: response.statusText,
+            errorDetails,
+            url: response.url.replace(process.env.FEC_API_KEY!, '[REDACTED]'),
+          });
 
           return [];
         }
@@ -630,7 +622,7 @@ async function getContributions(candidateId: string, limit = 200): Promise<Contr
         const data = await response.json();
         monitor.end(true, 200);
 
-        structuredLogger.info('Successfully fetched contributions', {
+        logger.info('Successfully fetched contributions', {
           candidateId,
           contributionsCount: data.results?.length || 0,
         });
@@ -647,7 +639,7 @@ async function getContributions(candidateId: string, limit = 200): Promise<Contr
           })) || []
         );
       } catch (error) {
-        structuredLogger.error('Error fetching contributions', error as Error, {
+        logger.error('Error fetching contributions', error as Error, {
           candidateId,
           cacheKey,
         });
@@ -700,7 +692,7 @@ async function getPACContributions(candidateId: string): Promise<ContributionDat
           })) || []
         );
       } catch (error) {
-        structuredLogger.error('Error fetching PAC contributions', error as Error, {
+        logger.error('Error fetching PAC contributions', error as Error, {
           candidateId,
         });
         return [];
@@ -764,7 +756,7 @@ async function getIndependentExpenditures(candidateId: string) {
           })) || []
         );
       } catch (error) {
-        structuredLogger.error('Error fetching independent expenditures', error as Error, {
+        logger.error('Error fetching independent expenditures', error as Error, {
           candidateId,
         });
         return [];
@@ -783,7 +775,7 @@ async function getExpenditures(candidateId: string): Promise<ExpenditureData[]> 
   const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
 
   if (!validationInfo.isValid) {
-    structuredLogger.warn('Invalid FEC candidate ID format for expenditures', {
+    logger.warn('Invalid FEC candidate ID format for expenditures', {
       candidateId,
       normalizedId,
       errors: validationInfo.errors,
@@ -795,7 +787,7 @@ async function getExpenditures(candidateId: string): Promise<ExpenditureData[]> 
     cacheKey,
     async () => {
       try {
-        structuredLogger.info('Fetching expenditures from FEC', { candidateId, currentCycle });
+        logger.info('Fetching expenditures from FEC', { candidateId, currentCycle });
 
         const response = await fetch(
           `https://api.open.fec.gov/v1/schedules/schedule_b/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&two_year_transaction_period=${currentCycle}&sort=-disbursement_date&per_page=20`,
@@ -821,17 +813,13 @@ async function getExpenditures(candidateId: string): Promise<ExpenditureData[]> 
             errorDetails = 'Could not read error response body';
           }
 
-          structuredLogger.error(
-            'FEC expenditures API error',
-            new Error(`HTTP ${response.status}`),
-            {
-              candidateId,
-              status: response.status,
-              statusText: response.statusText,
-              errorDetails,
-              url: response.url.replace(process.env.FEC_API_KEY!, '[REDACTED]'),
-            }
-          );
+          logger.error('FEC expenditures API error', new Error(`HTTP ${response.status}`), {
+            candidateId,
+            status: response.status,
+            statusText: response.statusText,
+            errorDetails,
+            url: response.url.replace(process.env.FEC_API_KEY!, '[REDACTED]'),
+          });
 
           return [];
         }
@@ -839,7 +827,7 @@ async function getExpenditures(candidateId: string): Promise<ExpenditureData[]> 
         const data = await response.json();
         monitor.end(true, 200);
 
-        structuredLogger.info('Successfully fetched expenditures', {
+        logger.info('Successfully fetched expenditures', {
           candidateId,
           expendituresCount: data.results?.length || 0,
         });
@@ -857,7 +845,7 @@ async function getExpenditures(candidateId: string): Promise<ExpenditureData[]> 
           })) || []
         );
       } catch (error) {
-        structuredLogger.error('Error fetching expenditures', error as Error, {
+        logger.error('Error fetching expenditures', error as Error, {
           candidateId,
           cacheKey,
         });
@@ -896,7 +884,7 @@ export async function GET(
         };
       }
     } catch (error) {
-      structuredLogger.warn('Could not fetch representative info, using fallback', {
+      logger.warn('Could not fetch representative info, using fallback', {
         bioguideId,
         error: (error as Error).message,
       });
@@ -934,21 +922,21 @@ export async function GET(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if (enhancedRepIds?.fec && enhancedRepIds.fec.length > 0) {
             mappedFECId = enhancedRepIds.fec[0] || null; // Use the first FEC ID
-            structuredLogger.info('Found enhanced FEC ID from congress-legislators', {
+            logger.info('Found enhanced FEC ID from congress-legislators', {
               bioguideId,
               fecId: mappedFECId,
               totalFECIds: enhancedRepIds.fec.length,
             });
           }
         } catch (enhancedError) {
-          structuredLogger.warn('Could not get enhanced representative data', {
+          logger.warn('Could not get enhanced representative data', {
             bioguideId,
             error: (enhancedError as Error).message,
           });
         }
 
         if (mappedFECId) {
-          structuredLogger.info('Found direct FEC mapping', {
+          logger.info('Found direct FEC mapping', {
             bioguideId,
             fecId: mappedFECId,
             source: enhancedRep ? 'congress-legislators' : 'bioguide-mapping',
@@ -960,7 +948,7 @@ export async function GET(
             const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedFECId);
 
             if (!validationInfo.isValid) {
-              structuredLogger.warn('Invalid FEC candidate ID format', {
+              logger.warn('Invalid FEC candidate ID format', {
                 bioguideId,
                 fecId: mappedFECId,
                 normalizedId: normalizedFECId,
@@ -987,14 +975,14 @@ export async function GET(
                     cycles: candidate.cycles || [],
                   };
                   dataSource = enhancedRep ? 'congress-legislators-mapping' : 'direct-mapping';
-                  structuredLogger.info('Successfully retrieved FEC data via direct mapping', {
+                  logger.info('Successfully retrieved FEC data via direct mapping', {
                     bioguideId,
                     candidateId: fecCandidate.candidate_id,
                     mappingSource: dataSource,
                   });
                 }
               } else {
-                structuredLogger.warn('FEC candidate lookup returned non-OK status', {
+                logger.warn('FEC candidate lookup returned non-OK status', {
                   bioguideId,
                   fecId: mappedFECId,
                   status: candidateResponse.status,
@@ -1003,7 +991,7 @@ export async function GET(
               }
             }
           } catch (mappingError) {
-            structuredLogger.warn('Direct FEC mapping failed, trying search', {
+            logger.warn('Direct FEC mapping failed, trying search', {
               bioguideId,
               fecId: mappedFECId,
               error: (mappingError as Error).message,
@@ -1025,7 +1013,7 @@ export async function GET(
 
           if (fecCandidate) {
             dataSource = 'enhanced-name-search';
-            structuredLogger.info('Found FEC candidate via enhanced name search', {
+            logger.info('Found FEC candidate via enhanced name search', {
               bioguideId,
               candidateId: fecCandidate.candidate_id,
               searchName,
@@ -1035,7 +1023,7 @@ export async function GET(
           }
         }
       } catch (searchError) {
-        structuredLogger.error('FEC search failed', searchError as Error, {
+        logger.error('FEC search failed', searchError as Error, {
           bioguideId,
           representativeName: representative.name,
         });
@@ -1419,7 +1407,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    structuredLogger.error('Finance API error', error as Error, { bioguideId });
+    logger.error('Finance API error', error as Error, { bioguideId });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

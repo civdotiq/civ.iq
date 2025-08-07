@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { industryCategorizer } from './industry-categorizer';
 
 /**
@@ -280,7 +280,7 @@ export class BundledContributionsAnalyzer {
       }
     }
 
-    structuredLogger.info('Matched PACs to employers', {
+    logger.info('Matched PACs to employers', {
       employersProcessed: employerGroups.size,
       pacsMatched: matches.size,
       totalPACContribs: pacContribs.length,
@@ -361,7 +361,7 @@ export class BundledContributionsAnalyzer {
       .filter(contributor => contributor.combined > 0)
       .sort((a, b) => b.combined - a.combined);
 
-    structuredLogger.info('Completed bundled contributions analysis', {
+    logger.info('Completed bundled contributions analysis', {
       totalContributors: result.length,
       withPACContributions: result.filter(c => c.pacTotal > 0).length,
       totalCombinedAmount: result.reduce((sum, c) => sum + c.combined, 0),

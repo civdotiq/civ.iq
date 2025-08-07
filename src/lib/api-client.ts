@@ -4,7 +4,7 @@
  */
 
 import toast from 'react-hot-toast';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface ApiClientOptions {
   timeout?: number;
@@ -81,7 +81,7 @@ class ApiClient {
         lastError = error as Error;
 
         // Log the attempt
-        structuredLogger.warn('API request failed', {
+        logger.warn('API request failed', {
           url: fullUrl,
           attempt: attempt + 1,
           maxRetries: retries + 1,
@@ -120,7 +120,7 @@ class ApiClient {
     }
 
     // Log the final error
-    structuredLogger.error('API request failed after all retries', lastError, {
+    logger.error('API request failed after all retries', lastError, {
       url: fullUrl,
       totalAttempts: retries + 1,
     });

@@ -14,7 +14,7 @@ import { TouchPagination } from '@/shared/components/ui/ResponsiveTable';
 import { VotingRecordsSkeleton } from '@/shared/components/ui/SkeletonComponents';
 import { LoadingStateWrapper } from '@/shared/components/ui/LoadingStates';
 import { ApiErrorHandlers } from '@/lib/errors/ErrorHandlers';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 // Using simple Unicode arrows instead of heroicons (unused but available for future use)
 const _ChevronDownIcon = () => <span>▼</span>;
@@ -201,7 +201,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
     `/api/representative/${bioguideId}/votes`,
     async () => {
       try {
-        structuredLogger.debug('VotingRecordsTable fetching votes', { bioguideId });
+        logger.debug('VotingRecordsTable fetching votes', { bioguideId });
         const data = await representativeApi.getVotes(bioguideId);
         // Handle different response formats
         if (Array.isArray(data)) {
@@ -209,11 +209,11 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
         } else if (data && typeof data === 'object' && 'votes' in data) {
           return data.votes || [];
         } else {
-          structuredLogger.warn('Unexpected votes data format', { data, bioguideId });
+          logger.warn('Unexpected votes data format', { data, bioguideId });
           return [];
         }
       } catch (error) {
-        structuredLogger.error('Error fetching votes', {
+        logger.error('Error fetching votes', {
           error: error as Error,
           bioguideId,
         });

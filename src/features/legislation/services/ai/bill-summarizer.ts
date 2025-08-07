@@ -10,7 +10,7 @@
  * Uses multiple AI providers with fallback mechanisms for reliability.
  */
 
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { BillSummaryFallbacks } from './bill-summary-fallbacks';
 
@@ -68,7 +68,7 @@ export class BillSummarizer {
       if (opts.useCache) {
         const cached = await getRedisCache().get<BillSummary>(cacheKey);
         if (cached) {
-          structuredLogger.info('Bill summary cache hit', {
+          logger.info('Bill summary cache hit', {
             billNumber: billMetadata.number,
             operation: 'bill_summarization',
           });
@@ -87,7 +87,7 @@ export class BillSummarizer {
 
       // If reading level is too high, regenerate with simpler language
       if (readingLevel > opts.targetReadingLevel + 1) {
-        structuredLogger.warn('Summary reading level too high, regenerating', {
+        logger.warn('Summary reading level too high, regenerating', {
           billNumber: billMetadata.number,
           readingLevel,
           target: opts.targetReadingLevel,
@@ -112,7 +112,7 @@ export class BillSummarizer {
         await getRedisCache().set(cacheKey, summary, 24 * 60 * 60); // Cache for 24 hours
       }
 
-      structuredLogger.info('Bill summary generated successfully', {
+      logger.info('Bill summary generated successfully', {
         billNumber: billMetadata.number,
         readingLevel: summary.readingLevel,
         confidence: summary.confidence,
@@ -121,7 +121,7 @@ export class BillSummarizer {
 
       return summary;
     } catch (error) {
-      structuredLogger.error('Bill summarization failed, attempting fallbacks', error as Error, {
+      logger.error('Bill summarization failed, attempting fallbacks', error as Error, {
         billNumber: billMetadata.number,
         operation: 'bill_summarization',
       });
@@ -139,7 +139,7 @@ export class BillSummarizer {
       );
 
       // Log fallback result
-      structuredLogger.info('Fallback summary generated', {
+      logger.info('Fallback summary generated', {
         billNumber: billMetadata.number,
         fallbackMethod: fallbackResult.fallbackMethod,
         success: fallbackResult.success,
@@ -200,7 +200,7 @@ export class BillSummarizer {
       const response = await this.callOpenAI(prompt);
       return this.parseSummaryResponse(response, billMetadata);
     } catch (error) {
-      structuredLogger.warn('OpenAI summarization failed, trying fallback', {
+      logger.warn('OpenAI summarization failed, trying fallback', {
         billNumber: billMetadata.number,
         error: error instanceof Error ? error.message : 'Unknown error',
       });

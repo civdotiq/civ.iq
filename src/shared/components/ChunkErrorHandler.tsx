@@ -7,7 +7,7 @@
 
 import { useEffect } from 'react';
 import { initializeChunkErrorHandler } from '@/lib/error-handling/chunk-error-handler';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 /**
  * Client component to initialize the global chunk error handler
@@ -18,7 +18,7 @@ export function ChunkErrorHandler() {
     // Initialize the global chunk error handler
     const _handler = initializeChunkErrorHandler();
 
-    structuredLogger.info('Global chunk error handler initialized', {
+    logger.info('Global chunk error handler initialized', {
       component: 'ChunkErrorHandler',
       metadata: { system: 'chunk-error-handling' },
     });
@@ -26,7 +26,7 @@ export function ChunkErrorHandler() {
     // Cleanup function (though the handler should persist)
     return () => {
       // Handler continues to run globally
-      structuredLogger.info('ChunkErrorHandler component unmounted', {
+      logger.info('ChunkErrorHandler component unmounted', {
         component: 'ChunkErrorHandler',
         metadata: { system: 'chunk-error-handling' },
       });

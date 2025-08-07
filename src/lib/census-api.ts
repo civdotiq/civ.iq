@@ -5,7 +5,7 @@
 
 import { cache } from 'react';
 import { ZIP_TO_DISTRICT_MAP, getStateFromZip } from './data/zip-district-mapping';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 export interface CongressionalDistrict {
   state: string;
@@ -220,7 +220,7 @@ async function fetchFromCensusAPI(zipCode: string): Promise<CensusAPIResponse> {
 
     return { success: false, error: 'No congressional district found', source: 'fallback' };
   } catch (error) {
-    structuredLogger.error('Census API error', {
+    logger.error('Census API error', {
       component: 'censusApi',
       error: error as Error,
       metadata: { zipCode },
@@ -291,7 +291,7 @@ async function fetchDemographics(
       }
     }
   } catch (error) {
-    structuredLogger.error('Error fetching demographics', {
+    logger.error('Error fetching demographics', {
       component: 'censusApi',
       error: error as Error,
       metadata: { state, district },
@@ -396,7 +396,7 @@ export const getCongressionalDistrictFromAddress = cache(
 
       const url = `https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?${params}`;
 
-      structuredLogger.info('Geocoding address via Census API', {
+      logger.info('Geocoding address via Census API', {
         address: cleanAddress,
         url: url.replace(/address=[^&]+/, 'address=REDACTED'),
       });
@@ -468,7 +468,7 @@ export const getCongressionalDistrictFromAddress = cache(
 
       return null;
     } catch (error) {
-      structuredLogger.error('Error geocoding address', {
+      logger.error('Error geocoding address', {
         component: 'censusApi',
         error: error as Error,
         metadata: { address },

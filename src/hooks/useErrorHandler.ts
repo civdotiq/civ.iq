@@ -6,7 +6,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 
 export interface ErrorState {
   error: Error | null;
@@ -36,7 +36,7 @@ export function useErrorHandler(componentName?: string): UseErrorHandlerReturn {
       const errorMessage = error.message || 'An unexpected error occurred';
 
       // Log error with context
-      structuredLogger.error('Component error handled', error, {
+      logger.error('Component error handled', error, {
         componentName: componentName || 'Unknown',
         context,
         userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',

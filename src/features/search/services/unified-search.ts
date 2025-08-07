@@ -4,7 +4,7 @@
  */
 
 import Fuse from 'fuse.js';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { getCongressionalDistrictFromZip } from '@/lib/census-api';
 import {
   geocodeAddress,
@@ -52,7 +52,7 @@ export async function unifiedSearch(input: string): Promise<SearchResult> {
   // Classify the input
   const classification = classifyInput(input);
 
-  structuredLogger.info('Unified search initiated', {
+  logger.info('Unified search initiated', {
     input,
     classification,
     operation: 'unifiedSearch',
@@ -84,7 +84,7 @@ export async function unifiedSearch(input: string): Promise<SearchResult> {
         };
     }
   } catch (error) {
-    structuredLogger.error('Unified search error', error as Error, {
+    logger.error('Unified search error', error as Error, {
       input,
       classification,
       duration: Date.now() - startTime,
@@ -169,7 +169,7 @@ async function handleZipSearch(classification: ClassificationResult): Promise<Se
       };
     }
   } catch (error) {
-    structuredLogger.warn('Census API fallback failed for ZIP', {
+    logger.warn('Census API fallback failed for ZIP', {
       zip,
       error: error instanceof Error ? error : String(error),
     });
@@ -355,7 +355,7 @@ export function getRecentSearches(limit: number = 5): string[] {
     const searches: string[] = JSON.parse(stored);
     return searches.slice(0, limit);
   } catch (error) {
-    structuredLogger.error('Error reading recent searches', error as Error);
+    logger.error('Error reading recent searches', error as Error);
     return [];
   }
 }
@@ -375,7 +375,7 @@ export function saveRecentSearch(search: string): void {
 
     localStorage.setItem('civiq_recent_searches', JSON.stringify(updated));
   } catch (error) {
-    structuredLogger.error('Error saving recent search', error as Error);
+    logger.error('Error saving recent search', error as Error);
   }
 }
 
@@ -388,6 +388,6 @@ export function clearRecentSearches(): void {
   try {
     localStorage.removeItem('civiq_recent_searches');
   } catch (error) {
-    structuredLogger.error('Error clearing recent searches', error as Error);
+    logger.error('Error clearing recent searches', error as Error);
   }
 }

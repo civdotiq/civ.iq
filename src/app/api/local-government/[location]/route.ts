@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface LocationInfo {
   city: string;
@@ -88,7 +88,7 @@ export async function GET(
     const localData = await cachedFetch(
       cacheKey,
       async (): Promise<LocalGovernmentData> => {
-        structuredLogger.info(
+        logger.info(
           'Fetching local government data',
           {
             location,
@@ -146,7 +146,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    structuredLogger.error(
+    logger.error(
       'Local Government API Error',
       error as Error,
       {

@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { cachedFetch } from '@/lib/cache';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import type { DistrictBoundary, StateMetadata } from '@/lib/helpers/district-boundary-utils';
 
 interface DistrictMetadataResponse {
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
           const fileContent = readFileSync(realDataPath, 'utf8');
           const parsedData = JSON.parse(fileContent);
 
-          structuredLogger.info(
+          logger.info(
             'Loaded REAL district metadata from Census data',
             {
               operation: 'district_metadata_load',
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 
           return parsedData;
         } catch (fileError) {
-          structuredLogger.warn(
+          logger.warn(
             'REAL district metadata file not found, generating fallback',
             {
               operation: 'district_metadata_fallback',
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(metadata);
   } catch (error) {
-    structuredLogger.error(
+    logger.error(
       'District metadata API error',
       error as Error,
       {

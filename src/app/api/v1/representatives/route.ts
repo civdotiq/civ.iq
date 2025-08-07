@@ -12,7 +12,7 @@ import {
   generateDataQualityReport,
   validateApiResponse,
 } from '@/lib/validation/response-schemas';
-import { structuredLogger, createRequestLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { apiConfig } from '@/config';
 
 // Simplified response interfaces
@@ -129,14 +129,11 @@ async function retryWithBackoff<T>(
         apiConfig.retry.maxDelay
       );
 
-      structuredLogger.warn(
-        `Retry attempt ${attempt + 1}/${maxRetries + 1} after ${delay}ms delay`,
-        {
-          attempt: attempt + 1,
-          maxRetries: maxRetries + 1,
-          delay,
-        }
-      );
+      logger.warn(`Retry attempt ${attempt + 1}/${maxRetries + 1} after ${delay}ms delay`, {
+        attempt: attempt + 1,
+        maxRetries: maxRetries + 1,
+        delay,
+      });
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -161,7 +158,7 @@ async function getRepresentativesByStateDistrict(
 
   try {
     // Get representatives with circuit breaker and retry
-    structuredLogger.info(`Fetching all representatives for ${state}-${district}`, {
+    logger.info(`Fetching all representatives for ${state}-${district}`, {
       state,
       district,
       operation: 'getAllRepresentatives',
@@ -256,7 +253,7 @@ async function getRepresentativesByStateDistrict(
       },
     };
   } catch (error) {
-    structuredLogger.error('Error fetching representatives by state/district', error as Error, {
+    logger.error('Error fetching representatives by state/district', error as Error, {
       state,
       district,
       operation: 'getRepresentativesByStateDistrict',
@@ -294,7 +291,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
 
   try {
     // Step 1: Get district info with circuit breaker and retry
-    structuredLogger.info(`Fetching district info for ZIP ${zipCode}`, {
+    logger.info(`Fetching district info for ZIP ${zipCode}`, {
       zipCode,
       operation: 'getDistrict',
       apiVersion: apiConfig.version,
@@ -305,7 +302,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       'Census API'
     );
 
-    structuredLogger.info(`District info retrieved successfully`, {
+    logger.info(`District info retrieved successfully`, {
       zipCode,
       state: districtInfo?.state,
       district: districtInfo?.district,
@@ -332,21 +329,21 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     // Validate district data
     const districtValidation = validateDistrictResponse(districtInfo);
     if (!districtValidation.isValid) {
-      structuredLogger.warn('District data validation failed', {
+      logger.warn('District data validation failed', {
         zipCode,
         validationErrors: districtValidation.errors,
         operation: 'validateDistrict',
       });
     }
 
-    structuredLogger.info(`District found: ${districtInfo.state}-${districtInfo.district}`, {
+    logger.info(`District found: ${districtInfo.state}-${districtInfo.district}`, {
       zipCode,
       state: districtInfo.state,
       district: districtInfo.district,
     });
 
     // Step 2: Get representatives with circuit breaker and retry
-    structuredLogger.info(`Fetching all representatives`, {
+    logger.info(`Fetching all representatives`, {
       zipCode,
       operation: 'getAllRepresentatives',
     });
@@ -354,7 +351,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       () => retryWithBackoff(() => getAllEnhancedRepresentatives()),
       'Congress Legislators'
     );
-    structuredLogger.info(`Fetched representatives from congress-legislators`, {
+    logger.info(`Fetched representatives from congress-legislators`, {
       zipCode,
       representativeCount: allRepresentatives?.length || 0,
       operation: 'getAllRepresentatives',
@@ -378,7 +375,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     }
 
     // Step 3: Filter representatives for this district
-    structuredLogger.info(`Filtering representatives for district`, {
+    logger.info(`Filtering representatives for district`, {
       zipCode,
       state: districtInfo.state,
       district: districtInfo.district,
@@ -386,7 +383,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     });
     const districtRepresentatives = allRepresentatives.filter(rep => {
       if (rep.chamber === 'Senate' && rep.state === districtInfo.state) {
-        structuredLogger.debug(`Found Senate representative`, {
+        logger.debug(`Found Senate representative`, {
           zipCode,
           representativeName: rep.name,
           state: rep.state,
@@ -404,7 +401,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
         const repDistrict = parseInt(rep.district, 10);
         const targetDistrict = parseInt(districtInfo.district, 10);
         const matches = repDistrict === targetDistrict;
-        structuredLogger.debug(`Evaluating House representative`, {
+        logger.debug(`Evaluating House representative`, {
           zipCode,
           representativeName: rep.name,
           state: rep.state,
@@ -416,7 +413,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       }
       return false;
     });
-    structuredLogger.info(`Found representatives for district`, {
+    logger.info(`Found representatives for district`, {
       zipCode,
       representativeCount: districtRepresentatives.length,
       operation: 'filterRepresentatives',
@@ -460,7 +457,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       );
 
       if (repValidation.warnings.length > 0) {
-        structuredLogger.warn(`Data quality warnings for representative`, {
+        logger.warn(`Data quality warnings for representative`, {
           zipCode,
           representativeName: rep.name,
           bioguideId: rep.bioguideId,
@@ -504,7 +501,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
 
     // Log quality issues for monitoring
     if (qualityReport.overall.issues.length > 0) {
-      structuredLogger.warn(`Data quality issues detected`, {
+      logger.warn(`Data quality issues detected`, {
         zipCode,
         qualityScore: qualityReport.overall.score,
         issues: qualityReport.overall.issues,
@@ -526,7 +523,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       },
     };
   } catch (error) {
-    structuredLogger.error('Error fetching representatives', error as Error, {
+    logger.error('Error fetching representatives', error as Error, {
       zipCode,
       operation: 'getRepresentativesByZip',
       apiVersion: apiConfig.version,
@@ -576,7 +573,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  const logger = createRequestLogger(request, `rep-v1-${Date.now()}`);
+  // Using simple logger}`);
 
   logger.info('Representatives API v1 request started');
 
@@ -683,7 +680,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    const logger = createRequestLogger(request, `rep-v1-error-${Date.now()}`);
+    // Using simple logger}`);
     logger.error('Unexpected error in Representatives API v1', error as Error, {
       hasStack: error instanceof Error && !!error.stack,
       apiVersion: apiConfig.version,

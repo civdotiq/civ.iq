@@ -8,7 +8,7 @@
 import { useState, useMemo, useEffect, useCallback, memo } from 'react';
 import Image from 'next/image';
 import { representativeApi } from '@/lib/api/representatives';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface NewsArticle {
   title: string;
@@ -54,7 +54,7 @@ export const EnhancedNewsFeed = memo(function EnhancedNewsFeed({
       setRefreshing(!showLoading);
 
       try {
-        structuredLogger.info('Fetching news data for representative', {
+        logger.info('Fetching news data for representative', {
           component: 'EnhancedNewsFeed',
           metadata: { bioguideId, showLoading },
         });
@@ -63,7 +63,7 @@ export const EnhancedNewsFeed = memo(function EnhancedNewsFeed({
         const data = await representativeApi.getNews(bioguideId);
         setNewsData(data);
 
-        structuredLogger.info('News data fetched successfully', {
+        logger.info('News data fetched successfully', {
           component: 'EnhancedNewsFeed',
           metadata: {
             bioguideId,
@@ -72,7 +72,7 @@ export const EnhancedNewsFeed = memo(function EnhancedNewsFeed({
           },
         });
       } catch (error) {
-        structuredLogger.error('Error fetching news data', {
+        logger.error('Error fetching news data', {
           component: 'EnhancedNewsFeed',
           error: error as Error,
           metadata: { bioguideId },

@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import type { BillSummary } from '@/features/legislation/services/ai/bill-summarizer';
 
@@ -223,7 +223,7 @@ export async function GET(
           throw new Error('Congress API key not configured');
         }
 
-        structuredLogger.info('Fetching comprehensive bills data', { bioguideId, limit });
+        logger.info('Fetching comprehensive bills data', { bioguideId, limit });
 
         const sponsoredUrl = `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?format=json&limit=${Math.ceil(limit * 0.7)}&api_key=${process.env.CONGRESS_API_KEY}`;
         const cosponsoredUrl = `https://api.congress.gov/v3/member/${bioguideId}/cosponsored-legislation?format=json&limit=${Math.ceil(limit * 0.3)}&api_key=${process.env.CONGRESS_API_KEY}`;
@@ -265,7 +265,7 @@ export async function GET(
           ? await cosponsoredResponse.json()
           : { cosponsoredLegislation: [] };
 
-        structuredLogger.info('Bills data retrieved', {
+        logger.info('Bills data retrieved', {
           bioguideId,
           sponsoredCount: sponsoredData.sponsoredLegislation?.length || 0,
           cosponsoredCount: cosponsoredData.cosponsoredLegislation?.length || 0,
@@ -422,7 +422,7 @@ export async function GET(
           : 0,
     };
 
-    structuredLogger.info('Bills data processed and enhanced', {
+    logger.info('Bills data processed and enhanced', {
       bioguideId,
       analytics,
       includeSummaries,
@@ -443,7 +443,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    structuredLogger.error('Bills API error', error as Error, {
+    logger.error('Bills API error', error as Error, {
       bioguideId,
       limit,
       includeSummaries,
@@ -555,7 +555,7 @@ async function addAISummariesToBills(
     // Get cached summaries in batch
     const summaries = await BillSummaryCache.getBatchSummaries(billIds);
 
-    structuredLogger.info('Retrieved AI summaries for bills', {
+    logger.info('Retrieved AI summaries for bills', {
       totalBills: bills.length,
       summariesFound: summaries.size,
       format,
@@ -598,7 +598,7 @@ async function addAISummariesToBills(
 
     return enhancedBills;
   } catch (error) {
-    structuredLogger.error('Failed to add AI summaries to bills', error as Error, {
+    logger.error('Failed to add AI summaries to bills', error as Error, {
       billCount: bills.length,
       format,
       operation: 'bills_ai_summary_integration',

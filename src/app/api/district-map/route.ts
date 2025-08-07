@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { structuredLogger } from '@/lib/logging/logger-edge';
+import { logger } from '@/lib/logging/logger-edge';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry-edge';
 
 interface DistrictBoundary {
@@ -233,7 +233,7 @@ async function getZipCoordinates(
 
     return null;
   } catch (error) {
-    structuredLogger.error('Error getting ZIP coordinates', error as Error, { zipCode });
+    logger.error('Error getting ZIP coordinates', error as Error, { zipCode });
     return null;
   }
 }
@@ -330,7 +330,7 @@ async function fetchCongressionalDistrict(
 
     if (!response.ok) {
       monitor.end(false, response.status);
-      structuredLogger.error('Census TIGER API error', new Error(`HTTP ${response.status}`), {
+      logger.error('Census TIGER API error', new Error(`HTTP ${response.status}`), {
         stateFips,
         district,
         url,
@@ -342,7 +342,7 @@ async function fetchCongressionalDistrict(
 
     if (data.features && data.features.length > 0) {
       monitor.end(true, 200);
-      structuredLogger.info('Successfully fetched congressional district', {
+      logger.info('Successfully fetched congressional district', {
         stateFips,
         district,
         featureCount: data.features.length,
@@ -350,12 +350,12 @@ async function fetchCongressionalDistrict(
       return data.features[0];
     } else {
       monitor.end(false, 200);
-      structuredLogger.warn('No congressional district found', { stateFips, district });
+      logger.warn('No congressional district found', { stateFips, district });
       return null;
     }
   } catch (error) {
     monitor.end(false, undefined, error as Error);
-    structuredLogger.error('Error fetching congressional district', error as Error, {
+    logger.error('Error fetching congressional district', error as Error, {
       stateFips,
       district,
     });
@@ -387,7 +387,7 @@ async function fetchStateLegislativeDistrict(
 
     if (!response.ok) {
       monitor.end(false, response.status);
-      structuredLogger.error('Census TIGER API error', new Error(`HTTP ${response.status}`), {
+      logger.error('Census TIGER API error', new Error(`HTTP ${response.status}`), {
         stateFips,
         chamber,
         url,
@@ -399,7 +399,7 @@ async function fetchStateLegislativeDistrict(
 
     if (data.features && data.features.length > 0) {
       monitor.end(true, 200);
-      structuredLogger.info('Successfully fetched legislative district', {
+      logger.info('Successfully fetched legislative district', {
         stateFips,
         chamber,
         featureCount: data.features.length,
@@ -407,12 +407,12 @@ async function fetchStateLegislativeDistrict(
       return data.features[0];
     } else {
       monitor.end(false, 200);
-      structuredLogger.warn('No legislative district found', { stateFips, chamber });
+      logger.warn('No legislative district found', { stateFips, chamber });
       return null;
     }
   } catch (error) {
     monitor.end(false, undefined, error as Error);
-    structuredLogger.error('Error fetching legislative district', error as Error, {
+    logger.error('Error fetching legislative district', error as Error, {
       stateFips,
       chamber,
     });
@@ -447,12 +447,12 @@ export async function GET(request: NextRequest) {
             const stateCoordinates = getApproximateStateCoordinates(state);
             if (stateCoordinates) {
               zipInfo = { ...stateCoordinates, state };
-              structuredLogger.info('Using fallback state center coordinates', { zipCode, state });
+              logger.info('Using fallback state center coordinates', { zipCode, state });
             }
           }
         }
       } catch (error) {
-        structuredLogger.warn('Fallback coordinates failed', {
+        logger.warn('Fallback coordinates failed', {
           zipCode,
           error: error instanceof Error ? error.message : 'Unknown error',
         });
@@ -487,7 +487,7 @@ export async function GET(request: NextRequest) {
       }
     } catch (error) {
       // If representatives API fails, continue with default district
-      structuredLogger.warn('Representatives API failed, using default district', {
+      logger.warn('Representatives API failed, using default district', {
         zipCode,
         defaultDistrict: district,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -497,7 +497,7 @@ export async function GET(request: NextRequest) {
     const stateFips = getStateFips(zipInfo.state);
 
     // Try to fetch real boundary data from Census TIGER
-    structuredLogger.info('Fetching district boundaries', {
+    logger.info('Fetching district boundaries', {
       zipCode,
       district,
       state: zipInfo.state,
@@ -511,7 +511,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Create boundaries (use real data if available, otherwise mock)
-    structuredLogger.info('Boundary fetch results', {
+    logger.info('Boundary fetch results', {
       zipCode,
       congressional: !!congressionalBoundary,
       stateSenate: !!stateSenateBounder,
@@ -594,7 +594,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(mapData);
   } catch (error) {
-    structuredLogger.error('District map API error', error as Error, { zipCode });
+    logger.error('District map API error', error as Error, { zipCode });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

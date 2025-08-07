@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import type { Committee, CommitteeAPIResponse, CommitteeMember } from '@/types/committee';
 import { COMMITTEE_ID_MAP } from '@/types/committee';
 import type { EnhancedRepresentative } from '@/types/representative';
@@ -60,7 +60,7 @@ async function fetchCommitteeFromCongressLegislators(
     cacheKey,
     async () => {
       try {
-        structuredLogger.info('Fetching committee data from congress-legislators', { committeeId });
+        logger.info('Fetching committee data from congress-legislators', { committeeId });
 
         // Get committees and memberships data from congress-legislators
         const [committees, memberships, allRepresentatives] = await Promise.all([
@@ -79,7 +79,7 @@ async function fetchCommitteeFromCongressLegislators(
         );
 
         if (!committee) {
-          structuredLogger.warn('Committee not found in congress-legislators data', {
+          logger.warn('Committee not found in congress-legislators data', {
             committeeId,
           });
           return null;
@@ -182,7 +182,7 @@ async function fetchCommitteeFromCongressLegislators(
           lastUpdated: new Date().toISOString(),
         };
 
-        structuredLogger.info('Successfully built committee from congress-legislators data', {
+        logger.info('Successfully built committee from congress-legislators data', {
           committeeId,
           committeeName: result.name,
           memberCount: result.members.length,
@@ -193,7 +193,7 @@ async function fetchCommitteeFromCongressLegislators(
 
         return result;
       } catch (error) {
-        structuredLogger.error('Error fetching committee from Congress.gov', error as Error, {
+        logger.error('Error fetching committee from Congress.gov', error as Error, {
           committeeId,
         });
         return null;
@@ -424,7 +424,7 @@ export async function GET(
       );
     }
 
-    structuredLogger.info('Committee API request', { committeeId });
+    logger.info('Committee API request', { committeeId });
 
     let committee: Committee | null = null;
 
@@ -438,7 +438,7 @@ export async function GET(
 
     // Fallback to mock data if real data unavailable
     if (!committee) {
-      structuredLogger.info('Using mock committee data', { committeeId });
+      logger.info('Using mock committee data', { committeeId });
       committee = generateMockCommitteeData(committeeId);
     }
 
@@ -462,7 +462,7 @@ export async function GET(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown server error';
 
-    structuredLogger.error('Committee API error', error as Error, {
+    logger.error('Committee API error', error as Error, {
       committeeId: (await params).committeeId,
     });
 

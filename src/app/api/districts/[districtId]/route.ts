@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
 
 // State names mapping for Census API
@@ -450,7 +450,7 @@ async function getDistrictDemographics(
       }
     }
   } catch (error) {
-    structuredLogger.error('Error fetching Census demographics', error as Error, {
+    logger.error('Error fetching Census demographics', error as Error, {
       state,
       district,
     });
@@ -663,7 +663,7 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
       throw new Error('Invalid district ID format');
     }
 
-    structuredLogger.info('Fetching district details', { districtId, state, district });
+    logger.info('Fetching district details', { districtId, state, district });
 
     const representatives = await getAllEnhancedRepresentatives();
 
@@ -721,7 +721,7 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
 
     return districtDetails;
   } catch (error) {
-    structuredLogger.error('Error fetching district details', error as Error, { districtId });
+    logger.error('Error fetching district details', error as Error, { districtId });
     throw error;
   }
 }
@@ -733,7 +733,7 @@ export async function GET(
   try {
     const { districtId } = await params;
 
-    structuredLogger.info('District details API request', { districtId });
+    logger.info('District details API request', { districtId });
 
     const district = await cachedFetch(
       `district-details-${districtId}`,
@@ -755,7 +755,7 @@ export async function GET(
     });
   } catch (error) {
     const resolvedParams = await params;
-    structuredLogger.error('District details API error', error as Error, {
+    logger.error('District details API error', error as Error, {
       districtId: resolvedParams.districtId,
     });
 

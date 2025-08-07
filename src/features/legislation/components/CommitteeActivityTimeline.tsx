@@ -6,7 +6,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 
 interface TimelineItem {
   id: string;
@@ -114,7 +114,7 @@ export default function CommitteeActivityTimeline({
           setStats(data.stats || initialStats);
         }
       } catch (error) {
-        structuredLogger.error('Error fetching filtered timeline:', error as Error);
+        logger.error('Error fetching filtered timeline:', error as Error);
       } finally {
         setLoading(false);
       }

@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
 /**
@@ -159,7 +159,7 @@ export class GDELTQueryBuilder {
       this.queries.push(`(${nameVariations.join(' OR ')})`);
     }
 
-    structuredLogger.debug('Added name queries', {
+    logger.debug('Added name queries', {
       bioguideId: rep.bioguideId,
       nameVariations,
       operation: 'gdelt_query_builder_name',
@@ -315,7 +315,7 @@ export class GDELTQueryBuilder {
       this.queries.push(`(${committeeTerms.join(' OR ')})`);
     }
 
-    structuredLogger.debug('Added committee filters', {
+    logger.debug('Added committee filters', {
       bioguideId: this.representative.bioguideId,
       committees: committeesToUse,
       themesAdded: committeeThemes,
@@ -486,7 +486,7 @@ export class GDELTQueryBuilder {
       finalQuery += ' sourcecountry:US';
     }
 
-    structuredLogger.info('Built GDELT query', {
+    logger.info('Built GDELT query', {
       bioguideId: this.representative.bioguideId,
       queryLength: finalQuery.length,
       componentCount: this.queries.length,

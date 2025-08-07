@@ -3,35 +3,35 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import Redis from 'ioredis'
-import { structuredLogger } from '@/lib/logging/logger'
-import { monitorCache } from '@/lib/monitoring/telemetry'
+import Redis from 'ioredis';
+import logger from '@/lib/logging/simple-logger';
+import { monitorCache } from '@/lib/monitoring/telemetry';
 
 interface CacheConfig {
-  host: string
-  port: number
-  password?: string
-  db?: number
-  maxRetriesPerRequest?: number
-  lazyConnect?: boolean
-  keyPrefix?: string
+  host: string;
+  port: number;
+  password?: string;
+  db?: number;
+  maxRetriesPerRequest?: number;
+  lazyConnect?: boolean;
+  keyPrefix?: string;
 }
 
 interface CacheEntry<T = any> {
-  data: T
-  timestamp: number
-  ttl: number
+  data: T;
+  timestamp: number;
+  ttl: number;
 }
 
 export class RedisCache {
-  private client: Redis
-  private fallbackCache: Map<string, CacheEntry>
-  private isConnected: boolean = false
-  private readonly keyPrefix: string
+  private client: Redis;
+  private fallbackCache: Map<string, CacheEntry>;
+  private isConnected: boolean = false;
+  private readonly keyPrefix: string;
 
   constructor(config?: Partial<CacheConfig>) {
-    this.keyPrefix = config?.keyPrefix || 'civiq:'
-    this.fallbackCache = new Map()
+    this.keyPrefix = config?.keyPrefix || 'civiq:';
+    this.fallbackCache = new Map();
 
     // Default Redis configuration
     const defaultConfig: CacheConfig = {
@@ -41,10 +41,10 @@ export class RedisCache {
       db: parseInt(process.env.REDIS_DB || '0'),
       maxRetriesPerRequest: 3,
       lazyConnect: true,
-      keyPrefix: this.keyPrefix
-    }
+      keyPrefix: this.keyPrefix,
+    };
 
-    const finalConfig = { ...defaultConfig, ...config }
+    const finalConfig = { ...defaultConfig, ...config };
 
     // Create Redis client
     this.client = new Redis({
@@ -55,297 +55,300 @@ export class RedisCache {
       maxRetriesPerRequest: finalConfig.maxRetriesPerRequest,
       lazyConnect: finalConfig.lazyConnect,
       keyPrefix: finalConfig.keyPrefix,
-      
+
       // Connection retry strategy
-      retryStrategy: (times) => {
-        const delay = Math.min(times * 50, 2000)
-        structuredLogger.warn('Redis connection retry', { attempt: times, delay })
-        return delay
+      retryStrategy: times => {
+        const delay = Math.min(times * 50, 2000);
+        logger.warn('Redis connection retry', { attempt: times, delay });
+        return delay;
       },
 
       // Reconnect on error
-      reconnectOnError: (err) => {
-        const targetError = 'READONLY'
-        return err.message.includes(targetError)
-      }
-    })
+      reconnectOnError: err => {
+        const targetError = 'READONLY';
+        return err.message.includes(targetError);
+      },
+    });
 
-    this.setupEventHandlers()
-    this.startCleanupTask()
+    this.setupEventHandlers();
+    this.startCleanupTask();
   }
 
   private setupEventHandlers(): void {
     this.client.on('connect', () => {
-      this.isConnected = true
-      structuredLogger.info('Redis connected successfully')
-    })
+      this.isConnected = true;
+      logger.info('Redis connected successfully');
+    });
 
     this.client.on('ready', () => {
-      structuredLogger.info('Redis client ready')
-    })
+      logger.info('Redis client ready');
+    });
 
-    this.client.on('error', (error) => {
-      this.isConnected = false
-      structuredLogger.error('Redis connection error', error, {
+    this.client.on('error', error => {
+      this.isConnected = false;
+      logger.error('Redis connection error', error, {
         redisHost: process.env.REDIS_HOST,
-        redisPort: process.env.REDIS_PORT
-      })
-    })
+        redisPort: process.env.REDIS_PORT,
+      });
+    });
 
     this.client.on('close', () => {
-      this.isConnected = false
-      structuredLogger.warn('Redis connection closed')
-    })
+      this.isConnected = false;
+      logger.warn('Redis connection closed');
+    });
 
     this.client.on('reconnecting', () => {
-      structuredLogger.info('Redis reconnecting')
-    })
+      logger.info('Redis reconnecting');
+    });
   }
 
   private startCleanupTask(): void {
     // Clean up in-memory fallback cache every 5 minutes
-    setInterval(() => {
-      this.cleanupFallbackCache()
-    }, 5 * 60 * 1000)
+    setInterval(
+      () => {
+        this.cleanupFallbackCache();
+      },
+      5 * 60 * 1000
+    );
   }
 
   private cleanupFallbackCache(): void {
-    const now = Date.now()
-    let cleaned = 0
+    const now = Date.now();
+    let cleaned = 0;
 
     for (const [key, entry] of this.fallbackCache.entries()) {
       if (now - entry.timestamp > entry.ttl) {
-        this.fallbackCache.delete(key)
-        cleaned++
+        this.fallbackCache.delete(key);
+        cleaned++;
       }
     }
 
     if (cleaned > 0) {
-      structuredLogger.debug('Cleaned up fallback cache', { entriesRemoved: cleaned })
+      logger.debug('Cleaned up fallback cache', { entriesRemoved: cleaned });
     }
   }
 
   private getFallbackKey(key: string): string {
-    return `${this.keyPrefix}${key}`
+    return `${this.keyPrefix}${key}`;
   }
 
   async get<T = any>(key: string): Promise<T | null> {
-    const monitor = monitorCache('get', key)
-    
+    const monitor = monitorCache('get', key);
+
     try {
       if (this.isConnected) {
-        const value = await this.client.get(key)
-        
+        const value = await this.client.get(key);
+
         if (value) {
-          monitor.end(true)
-          structuredLogger.cache('hit', key)
-          return JSON.parse(value)
+          monitor.end(true);
+          logger.cache('hit', key);
+          return JSON.parse(value);
         } else {
-          monitor.end(false)
-          structuredLogger.cache('miss', key)
-          return null
+          monitor.end(false);
+          logger.cache('miss', key);
+          return null;
         }
       } else {
         // Use fallback cache
-        const fallbackKey = this.getFallbackKey(key)
-        const entry = this.fallbackCache.get(fallbackKey)
-        
+        const fallbackKey = this.getFallbackKey(key);
+        const entry = this.fallbackCache.get(fallbackKey);
+
         if (entry && Date.now() - entry.timestamp < entry.ttl) {
-          monitor.end(true)
-          structuredLogger.cache('hit', key, { source: 'fallback' })
-          return entry.data
+          monitor.end(true);
+          logger.cache('hit', key, { source: 'fallback' });
+          return entry.data;
         } else {
           if (entry) {
-            this.fallbackCache.delete(fallbackKey)
+            this.fallbackCache.delete(fallbackKey);
           }
-          monitor.end(false)
-          structuredLogger.cache('miss', key, { source: 'fallback' })
-          return null
+          monitor.end(false);
+          logger.cache('miss', key, { source: 'fallback' });
+          return null;
         }
       }
     } catch (error) {
-      monitor.end(false, error as Error)
-      structuredLogger.cache('error', key, { error: (error as Error).message })
-      
+      monitor.end(false, error as Error);
+      logger.cache('error', key, { error: (error as Error).message });
+
       // Try fallback cache on Redis error
-      const fallbackKey = this.getFallbackKey(key)
-      const entry = this.fallbackCache.get(fallbackKey)
-      
+      const fallbackKey = this.getFallbackKey(key);
+      const entry = this.fallbackCache.get(fallbackKey);
+
       if (entry && Date.now() - entry.timestamp < entry.ttl) {
-        return entry.data
+        return entry.data;
       }
-      
-      return null
+
+      return null;
     }
   }
 
   async set<T = any>(key: string, value: T, ttlSeconds: number = 3600): Promise<boolean> {
-    const monitor = monitorCache('set', key)
-    
+    const monitor = monitorCache('set', key);
+
     try {
-      const serializedValue = JSON.stringify(value)
-      
+      const serializedValue = JSON.stringify(value);
+
       if (this.isConnected) {
-        await this.client.setex(key, ttlSeconds, serializedValue)
-        monitor.end()
-        structuredLogger.cache('set', key, { ttl: ttlSeconds })
+        await this.client.setex(key, ttlSeconds, serializedValue);
+        monitor.end();
+        logger.cache('set', key, { ttl: ttlSeconds });
       } else {
         // Use fallback cache
-        const fallbackKey = this.getFallbackKey(key)
+        const fallbackKey = this.getFallbackKey(key);
         this.fallbackCache.set(fallbackKey, {
           data: value,
           timestamp: Date.now(),
-          ttl: ttlSeconds * 1000 // Convert to milliseconds
-        })
-        monitor.end()
-        structuredLogger.cache('set', key, { ttl: ttlSeconds, source: 'fallback' })
+          ttl: ttlSeconds * 1000, // Convert to milliseconds
+        });
+        monitor.end();
+        logger.cache('set', key, { ttl: ttlSeconds, source: 'fallback' });
       }
-      
-      return true
+
+      return true;
     } catch (error) {
-      monitor.end(false, error as Error)
-      structuredLogger.cache('error', key, { 
+      monitor.end(false, error as Error);
+      logger.cache('error', key, {
         operation: 'set',
-        error: (error as Error).message 
-      })
-      
+        error: (error as Error).message,
+      });
+
       // Try fallback cache on Redis error
       try {
-        const fallbackKey = this.getFallbackKey(key)
+        const fallbackKey = this.getFallbackKey(key);
         this.fallbackCache.set(fallbackKey, {
           data: value,
           timestamp: Date.now(),
-          ttl: ttlSeconds * 1000
-        })
-        return true
+          ttl: ttlSeconds * 1000,
+        });
+        return true;
       } catch (fallbackError) {
-        return false
+        return false;
       }
     }
   }
 
   async delete(key: string): Promise<boolean> {
-    const monitor = monitorCache('delete', key)
-    
+    const monitor = monitorCache('delete', key);
+
     try {
       if (this.isConnected) {
-        const result = await this.client.del(key)
-        monitor.end()
-        structuredLogger.cache('delete', key, { deleted: result > 0 })
-        return result > 0
+        const result = await this.client.del(key);
+        monitor.end();
+        logger.cache('delete', key, { deleted: result > 0 });
+        return result > 0;
       } else {
         // Use fallback cache
-        const fallbackKey = this.getFallbackKey(key)
-        const existed = this.fallbackCache.has(fallbackKey)
-        this.fallbackCache.delete(fallbackKey)
-        monitor.end()
-        structuredLogger.cache('delete', key, { deleted: existed, source: 'fallback' })
-        return existed
+        const fallbackKey = this.getFallbackKey(key);
+        const existed = this.fallbackCache.has(fallbackKey);
+        this.fallbackCache.delete(fallbackKey);
+        monitor.end();
+        logger.cache('delete', key, { deleted: existed, source: 'fallback' });
+        return existed;
       }
     } catch (error) {
-      monitor.end(false, error as Error)
-      structuredLogger.cache('error', key, { 
+      monitor.end(false, error as Error);
+      logger.cache('error', key, {
         operation: 'delete',
-        error: (error as Error).message 
-      })
-      
+        error: (error as Error).message,
+      });
+
       // Try fallback cache on Redis error
-      const fallbackKey = this.getFallbackKey(key)
-      const existed = this.fallbackCache.has(fallbackKey)
-      this.fallbackCache.delete(fallbackKey)
-      return existed
+      const fallbackKey = this.getFallbackKey(key);
+      const existed = this.fallbackCache.has(fallbackKey);
+      this.fallbackCache.delete(fallbackKey);
+      return existed;
     }
   }
 
   async flush(): Promise<boolean> {
     try {
       if (this.isConnected) {
-        await this.client.flushdb()
-        structuredLogger.info('Redis cache flushed')
+        await this.client.flushdb();
+        logger.info('Redis cache flushed');
       }
-      
+
       // Clear fallback cache too
-      this.fallbackCache.clear()
-      structuredLogger.info('Fallback cache cleared')
-      
-      return true
+      this.fallbackCache.clear();
+      logger.info('Fallback cache cleared');
+
+      return true;
     } catch (error) {
-      structuredLogger.error('Failed to flush cache', error as Error)
-      
+      logger.error('Failed to flush cache', error as Error);
+
       // Clear fallback cache even if Redis fails
-      this.fallbackCache.clear()
-      return false
+      this.fallbackCache.clear();
+      return false;
     }
   }
 
   async exists(key: string): Promise<boolean> {
     try {
       if (this.isConnected) {
-        const result = await this.client.exists(key)
-        return result === 1
+        const result = await this.client.exists(key);
+        return result === 1;
       } else {
-        const fallbackKey = this.getFallbackKey(key)
-        const entry = this.fallbackCache.get(fallbackKey)
-        return entry !== undefined && Date.now() - entry.timestamp < entry.ttl
+        const fallbackKey = this.getFallbackKey(key);
+        const entry = this.fallbackCache.get(fallbackKey);
+        return entry !== undefined && Date.now() - entry.timestamp < entry.ttl;
       }
     } catch (error) {
-      structuredLogger.cache('error', key, { 
+      logger.cache('error', key, {
         operation: 'exists',
-        error: (error as Error).message 
-      })
-      
+        error: (error as Error).message,
+      });
+
       // Check fallback cache
-      const fallbackKey = this.getFallbackKey(key)
-      const entry = this.fallbackCache.get(fallbackKey)
-      return entry !== undefined && Date.now() - entry.timestamp < entry.ttl
+      const fallbackKey = this.getFallbackKey(key);
+      const entry = this.fallbackCache.get(fallbackKey);
+      return entry !== undefined && Date.now() - entry.timestamp < entry.ttl;
     }
   }
 
   async keys(pattern: string): Promise<string[]> {
     try {
       if (this.isConnected) {
-        return await this.client.keys(pattern)
+        return await this.client.keys(pattern);
       } else {
         // Search fallback cache
-        const regex = new RegExp(pattern.replace(/\*/g, '.*'))
-        return Array.from(this.fallbackCache.keys()).filter(key => regex.test(key))
+        const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+        return Array.from(this.fallbackCache.keys()).filter(key => regex.test(key));
       }
     } catch (error) {
-      structuredLogger.error('Failed to get keys', error as Error, { pattern })
-      return []
+      logger.error('Failed to get keys', error as Error, { pattern });
+      return [];
     }
   }
 
   getStatus(): {
-    isConnected: boolean
-    fallbackCacheSize: number
-    redisStatus: string
+    isConnected: boolean;
+    fallbackCacheSize: number;
+    redisStatus: string;
   } {
     return {
       isConnected: this.isConnected,
       fallbackCacheSize: this.fallbackCache.size,
-      redisStatus: this.client.status
-    }
+      redisStatus: this.client.status,
+    };
   }
 
   async disconnect(): Promise<void> {
     try {
-      await this.client.quit()
-      structuredLogger.info('Redis client disconnected')
+      await this.client.quit();
+      logger.info('Redis client disconnected');
     } catch (error) {
-      structuredLogger.error('Error disconnecting Redis', error as Error)
+      logger.error('Error disconnecting Redis', error as Error);
     }
   }
 }
 
 // Create singleton instance
-let redisCache: RedisCache | null = null
+let redisCache: RedisCache | null = null;
 
 export function getRedisCache(): RedisCache {
   if (!redisCache) {
-    redisCache = new RedisCache()
+    redisCache = new RedisCache();
   }
-  return redisCache
+  return redisCache;
 }
 
-export default RedisCache
+export default RedisCache;

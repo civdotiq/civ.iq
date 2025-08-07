@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
 import {
   geocodeAddress,
@@ -97,7 +97,7 @@ async function performAddressSearch(filters: SearchFilters): Promise<{
           }
         }
       } catch (error) {
-        structuredLogger.warn('ZIP lookup failed, falling back to geocoding', {
+        logger.warn('ZIP lookup failed, falling back to geocoding', {
           error: error as Error,
         });
       }
@@ -107,7 +107,7 @@ async function performAddressSearch(filters: SearchFilters): Promise<{
     const geocodeResult = await geocodeAddress(filters.query);
 
     if ('error' in geocodeResult) {
-      structuredLogger.warn('Address geocoding failed', {
+      logger.warn('Address geocoding failed', {
         query: filters.query,
         error: geocodeResult.error,
       });
@@ -159,7 +159,7 @@ async function performAddressSearch(filters: SearchFilters): Promise<{
       totalPages: 1,
     };
   } catch (error) {
-    structuredLogger.error('Address search error', error as Error, { query: filters.query });
+    logger.error('Address search error', error as Error, { query: filters.query });
     return { results: [], totalResults: 0, page: 1, totalPages: 0 };
   }
 }
@@ -193,7 +193,7 @@ async function performSearch(filters: SearchFilters): Promise<{
   try {
     const startTime = Date.now();
     const currentYear = new Date().getFullYear();
-    structuredLogger.info('Performing representative search', { filters });
+    logger.info('Performing representative search', { filters });
 
     // Check if query is an address
     if (filters.query && isAddressQuery(filters.query)) {
@@ -273,7 +273,7 @@ async function performSearch(filters: SearchFilters): Promise<{
       // Filtering disabled until real data integration
       if (filters.billsSponsoredMin !== undefined || filters.billsSponsoredMax !== undefined) {
         // Bills sponsored data unavailable - cannot filter by this criteria
-        structuredLogger.info('Bills sponsored filter requested but real data unavailable');
+        logger.info('Bills sponsored filter requested but real data unavailable');
       }
 
       return true;
@@ -362,7 +362,7 @@ async function performSearch(filters: SearchFilters): Promise<{
     });
 
     const executionTime = Date.now() - startTime;
-    structuredLogger.info('Search completed', {
+    logger.info('Search completed', {
       resultCount: filtered.length,
       executionTime,
       page,
@@ -376,7 +376,7 @@ async function performSearch(filters: SearchFilters): Promise<{
       totalPages: Math.ceil(filtered.length / limit),
     };
   } catch (error) {
-    structuredLogger.error('Search error', error as Error, { filters });
+    logger.error('Search error', error as Error, { filters });
     throw error;
   }
 }
@@ -439,7 +439,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    structuredLogger.error('Search API error', error as Error);
+    logger.error('Search API error', error as Error);
 
     return NextResponse.json(
       {

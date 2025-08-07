@@ -10,7 +10,7 @@ import { IndustryBreakdown } from './IndustryBreakdown';
 import { DonorAnalysis } from './DonorAnalysis';
 import { FundraisingTrends } from './FundraisingTrends';
 import { EnhancedFECData } from '@/types/fec';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 // Lobbying data interface
 interface LobbyingData {
@@ -158,7 +158,7 @@ export function CampaignFinanceVisualizer({
           return response.json();
         })
         .then((data: EnhancedFECData) => {
-          structuredLogger.debug('Enhanced FEC data fetched successfully', {
+          logger.debug('Enhanced FEC data fetched successfully', {
             component: 'CampaignFinanceVisualizer',
             metadata: {
               hasData: !!data,
@@ -168,7 +168,7 @@ export function CampaignFinanceVisualizer({
           setEnhancedData(data);
         })
         .catch(error => {
-          structuredLogger.error('Error fetching enhanced FEC data', {
+          logger.error('Error fetching enhanced FEC data', {
             component: 'CampaignFinanceVisualizer',
             error: error as Error,
             metadata: { bioguideId },
@@ -195,7 +195,7 @@ export function CampaignFinanceVisualizer({
           return response.json();
         })
         .then((data: LobbyingData) => {
-          structuredLogger.debug('Lobbying data fetched successfully', {
+          logger.debug('Lobbying data fetched successfully', {
             component: 'CampaignFinanceVisualizer',
             metadata: {
               hasData: !!data,
@@ -206,7 +206,7 @@ export function CampaignFinanceVisualizer({
           setLobbyingData(data);
         })
         .catch(error => {
-          structuredLogger.error('Error fetching lobbying data', {
+          logger.error('Error fetching lobbying data', {
             component: 'CampaignFinanceVisualizer',
             error: error as Error,
             metadata: { bioguideId },

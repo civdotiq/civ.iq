@@ -10,7 +10,7 @@
 
 import { congressApi } from './congress-api';
 import { parseRollCallXML } from '../../legislation/services/rollcall-parser';
-import { structuredLogger } from '@/lib/logging/logger-edge';
+import { logger } from '@/lib/logging/logger-edge';
 import { cachedFetch } from '@/lib/cache-edge';
 
 interface BillSummary {
@@ -104,7 +104,7 @@ export class VotingDataService {
     chamber: 'House' | 'Senate',
     limit: number = 20
   ): Promise<VotingDataResult> {
-    structuredLogger.info('Starting comprehensive voting data fetch', {
+    logger.info('Starting comprehensive voting data fetch', {
       bioguideId,
       chamber,
       limit,
@@ -115,7 +115,7 @@ export class VotingDataService {
       const billBasedVotes = await this.getBillBasedVotes(bioguideId, chamber, limit);
 
       if (billBasedVotes.length >= 5) {
-        structuredLogger.info('Bill-based approach successful', {
+        logger.info('Bill-based approach successful', {
           bioguideId,
           votesFound: billBasedVotes.length,
         });
@@ -132,7 +132,7 @@ export class VotingDataService {
       const rollCallVotes = await this.getRecentRollCallVotes(bioguideId, chamber, limit);
 
       if (rollCallVotes.length > 0) {
-        structuredLogger.info('Roll call parsing successful', {
+        logger.info('Roll call parsing successful', {
           bioguideId,
           votesFound: rollCallVotes.length,
         });
@@ -161,7 +161,7 @@ export class VotingDataService {
 
       throw new Error('No voting data available from any source');
     } catch (error) {
-      structuredLogger.warn('All voting data strategies failed', {
+      logger.warn('All voting data strategies failed', {
         bioguideId,
         error: (error as Error).message,
       });
@@ -209,7 +209,7 @@ export class VotingDataService {
             // Look for recorded votes in bill actions
             return await this.extractRecordedVotes(billDetails, bioguideId, chamber);
           } catch (billError) {
-            structuredLogger.debug('Failed to get bill details', {
+            logger.debug('Failed to get bill details', {
               billNumber: bill.number,
               error: (billError as Error).message,
             });
@@ -227,7 +227,7 @@ export class VotingDataService {
 
       return votes.slice(0, limit);
     } catch (error) {
-      structuredLogger.warn('Bill-based vote extraction failed', {
+      logger.warn('Bill-based vote extraction failed', {
         bioguideId,
         error: (error as Error).message,
       });
@@ -341,7 +341,7 @@ export class VotingDataService {
             }
           }
         } catch (rollError) {
-          structuredLogger.debug('Failed to parse roll call', {
+          logger.debug('Failed to parse roll call', {
             rollNumber,
             error: (rollError as Error).message,
           });
@@ -349,7 +349,7 @@ export class VotingDataService {
         }
       }
     } catch (error) {
-      structuredLogger.warn('Roll call vote extraction failed', {
+      logger.warn('Roll call vote extraction failed', {
         bioguideId,
         error: (error as Error).message,
       });
@@ -395,7 +395,7 @@ export class VotingDataService {
 
       return memberVote ? { memberVote: memberVote.vote } : null;
     } catch (error) {
-      structuredLogger.debug('Failed to fetch roll call data', {
+      logger.debug('Failed to fetch roll call data', {
         url,
         bioguideId,
         error: (error as Error).message,
@@ -432,14 +432,14 @@ export class VotingDataService {
       }
 
       // If no specific vote data found, return Not Voting as safe default
-      structuredLogger.warn('Could not determine vote position for member', {
+      logger.warn('Could not determine vote position for member', {
         bioguideId,
         recordedVoteUrl: vote.url,
       });
 
       return 'Not Voting';
     } catch (error) {
-      structuredLogger.error(
+      logger.error(
         'Error determining vote position',
         error instanceof Error ? error : new Error(String(error))
       );
@@ -508,7 +508,7 @@ export class VotingDataService {
 
       return await cachedFetch(cacheKey, fetchFn, 24 * 60 * 60); // 24 hour cache
     } catch (error) {
-      structuredLogger.debug('Failed to fetch roll call XML', {
+      logger.debug('Failed to fetch roll call XML', {
         url,
         error: (error as Error).message,
       });

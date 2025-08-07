@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface LazyDataOptions {
   threshold?: number;
@@ -145,7 +145,7 @@ export function useLazyData<T>(
         const error = err instanceof Error ? err : new Error('Unknown error occurred');
 
         if (attemptNumber < retryAttempts) {
-          structuredLogger.info('LazyData retry attempt', {
+          logger.info('LazyData retry attempt', {
             component: 'useLazyData',
             metadata: {
               attemptNumber: attemptNumber + 1,
@@ -159,7 +159,7 @@ export function useLazyData<T>(
           }, retryDelay * attemptNumber); // Exponential backoff
         } else {
           setError(error);
-          structuredLogger.error('All LazyData retry attempts failed', {
+          logger.error('All LazyData retry attempts failed', {
             component: 'useLazyData',
             error: error as Error,
           });

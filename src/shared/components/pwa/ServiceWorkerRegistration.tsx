@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 
 interface ServiceWorkerState {
   registration: ServiceWorkerRegistration | null;
@@ -45,7 +45,7 @@ export function ServiceWorkerRegistration() {
 
   const registerServiceWorker = async () => {
     try {
-      structuredLogger.info('Registering service worker');
+      logger.info('Registering service worker');
       setSwState(prev => ({ ...prev, installing: true }));
 
       const registration = await navigator.serviceWorker.register('/sw.js', {
@@ -58,17 +58,17 @@ export function ServiceWorkerRegistration() {
         installing: false,
       }));
 
-      structuredLogger.info('Service worker registered successfully');
+      logger.info('Service worker registered successfully');
 
       // Check for updates
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
         if (newWorker) {
-          structuredLogger.info('New service worker installing');
+          logger.info('New service worker installing');
 
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              structuredLogger.info('New service worker installed, update available');
+              logger.info('New service worker installed, update available');
               setSwState(prev => ({ ...prev, updateAvailable: true }));
             }
           });
@@ -77,7 +77,7 @@ export function ServiceWorkerRegistration() {
 
       // Handle controlling change
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        structuredLogger.info('Service worker controller changed, reloading');
+        logger.info('Service worker controller changed, reloading');
         window.location.reload();
       });
 
@@ -97,19 +97,19 @@ export function ServiceWorkerRegistration() {
           await (registration.sync as { register: (tag: string) => Promise<void> }).register(
             'background-sync-news'
           );
-          structuredLogger.info('Background sync registered');
+          logger.info('Background sync registered');
         } catch (error) {
-          structuredLogger.warn('Background sync registration failed', { error: String(error) });
+          logger.warn('Background sync registration failed', { error: String(error) });
         }
       }
 
       // Request persistent storage
       if ('storage' in navigator && 'persist' in navigator.storage) {
         const persistent = await navigator.storage.persist();
-        structuredLogger.info('Persistent storage status', { persistent });
+        logger.info('Persistent storage status', { persistent });
       }
     } catch (error) {
-      structuredLogger.error('Service worker registration failed', error as Error);
+      logger.error('Service worker registration failed', error as Error);
       setSwState(prev => ({ ...prev, installing: false }));
     }
   };
@@ -126,7 +126,7 @@ export function ServiceWorkerRegistration() {
 
       messageChannel.port1.onmessage = event => {
         if (event.data.success) {
-          structuredLogger.info('Cache cleared successfully');
+          logger.info('Cache cleared successfully');
           window.location.reload();
         }
       };
@@ -145,7 +145,7 @@ export function ServiceWorkerRegistration() {
       const messageChannel = new MessageChannel();
 
       messageChannel.port1.onmessage = event => {
-        structuredLogger.info('Cache status', { data: event.data });
+        logger.info('Cache status', { data: event.data });
       };
 
       swState.registration.active?.postMessage(
@@ -163,7 +163,7 @@ export function ServiceWorkerRegistration() {
 
       messageChannel.port1.onmessage = event => {
         if (event.data.success) {
-          structuredLogger.info('Routes prefetched successfully');
+          logger.info('Routes prefetched successfully');
         }
       };
 

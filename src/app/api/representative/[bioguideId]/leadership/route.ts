@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface LeadershipRole {
   title: string;
@@ -162,7 +162,7 @@ export async function GET(
   }
 
   try {
-    structuredLogger.info('Processing leadership data request', { bioguideId });
+    logger.info('Processing leadership data request', { bioguideId });
 
     const leadershipData = await cachedFetch(
       `leadership-${bioguideId}`,
@@ -327,7 +327,7 @@ export async function GET(
       2 * 60 * 60 * 1000 // 2 hour cache
     );
 
-    structuredLogger.info('Successfully processed leadership data', {
+    logger.info('Successfully processed leadership data', {
       bioguideId,
       currentRoles: leadershipData.analytics.currentRoles,
       influenceScore: leadershipData.analytics.influence.score,
@@ -335,7 +335,7 @@ export async function GET(
 
     return NextResponse.json(leadershipData);
   } catch (error) {
-    structuredLogger.error('Leadership data API error', error as Error, { bioguideId });
+    logger.error('Leadership data API error', error as Error, { bioguideId });
 
     // Fallback mock data
     const mockData: LeadershipData = {

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface TimelineItem {
   id: string;
@@ -51,7 +51,7 @@ async function fetchBillsData(committeeId: string) {
     const data = await response.json();
     return data.bills || [];
   } catch (error) {
-    structuredLogger.error('Error fetching bills for timeline', error as Error);
+    logger.error('Error fetching bills for timeline', error as Error);
     return [];
   }
 }
@@ -64,7 +64,7 @@ async function fetchReportsData(committeeId: string) {
     const data = await response.json();
     return data.reports || [];
   } catch (error) {
-    structuredLogger.error('Error fetching reports for timeline', error as Error);
+    logger.error('Error fetching reports for timeline', error as Error);
     return [];
   }
 }
@@ -239,7 +239,7 @@ export async function GET(
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
-    structuredLogger.info('Committee timeline API request', {
+    logger.info('Committee timeline API request', {
       committeeId,
       filter,
       limit,
@@ -285,7 +285,7 @@ export async function GET(
     // Calculate statistics
     const stats = calculateTimelineStats(allItems);
 
-    structuredLogger.info('Successfully created committee timeline', {
+    logger.info('Successfully created committee timeline', {
       committeeId,
       itemCount: timelineItems.length,
       totalItems: allItems.length,
@@ -300,7 +300,7 @@ export async function GET(
       hasMore: allItems.length > timelineItems.length,
     });
   } catch (error) {
-    structuredLogger.error('Committee timeline API error', error as Error);
+    logger.error('Committee timeline API error', error as Error);
 
     return NextResponse.json(
       {

@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ValidationResult, validateApiInput, XSSProtection } from './schemas';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 export interface ValidationConfig<T = any> {
   query?: Record<keyof T, (value: unknown) => ValidationResult>;
@@ -34,22 +34,19 @@ export type ApiHandler<T = any> = (
 /**
  * Middleware wrapper that validates and sanitizes API inputs
  */
-export function withValidation<T = any>(
-  config: ValidationConfig<T>,
-  handler: ApiHandler<T>
-) {
+export function withValidation<T = any>(config: ValidationConfig<T>, handler: ApiHandler<T>) {
   return async (
     request: NextRequest,
     context?: { params: Promise<any> }
   ): Promise<NextResponse> => {
     const startTime = Date.now();
     const { pathname } = new URL(request.url);
-    
+
     try {
       // Extract input data
       const searchParams = new URL(request.url).searchParams;
       const queryObject: Record<string, any> = {};
-      
+
       searchParams.forEach((value, key) => {
         queryObject[key] = value;
       });
@@ -67,15 +64,12 @@ export function withValidation<T = any>(
             });
           }
         } catch (error) {
-          structuredLogger.error('Failed to parse request body', error as Error, {
+          logger.error('Failed to parse request body', error as Error, {
             pathname,
-            contentType: request.headers.get('content-type')
+            contentType: request.headers.get('content-type'),
           });
-          
-          return NextResponse.json(
-            { error: 'Invalid request body format' },
-            { status: 400 }
-          );
+
+          return NextResponse.json({ error: 'Invalid request body format' }, { status: 400 });
         }
       }
 
@@ -124,20 +118,20 @@ export function withValidation<T = any>(
       // Handle validation errors
       if (hasValidationErrors) {
         if (config.logValidationErrors !== false) {
-          structuredLogger.warn('API validation failed', {
+          logger.warn('API validation failed', {
             pathname,
             method: request.method,
             errors: validationErrors,
             query: queryObject,
             body: bodyObject,
-            params: paramsObject
+            params: paramsObject,
           });
         }
 
         return NextResponse.json(
           {
             error: 'Validation failed',
-            details: validationErrors
+            details: validationErrors,
           },
           { status: 400 }
         );
@@ -147,18 +141,21 @@ export function withValidation<T = any>(
       const response = await handler(validatedRequest, context);
 
       // Sanitize response if requested
-      if (config.sanitizeResponse && response.headers.get('content-type')?.includes('application/json')) {
+      if (
+        config.sanitizeResponse &&
+        response.headers.get('content-type')?.includes('application/json')
+      ) {
         try {
           const responseData = await response.json();
           const sanitizedData = XSSProtection.sanitizeObject(responseData);
-          
+
           return NextResponse.json(sanitizedData, {
             status: response.status,
-            headers: response.headers
+            headers: response.headers,
           });
         } catch (error) {
-          structuredLogger.error('Failed to sanitize response', error as Error, {
-            pathname
+          logger.error('Failed to sanitize response', error as Error, {
+            pathname,
           });
           // Return original response if sanitization fails
           return response;
@@ -167,30 +164,26 @@ export function withValidation<T = any>(
 
       // Log successful validation
       const duration = Date.now() - startTime;
-      structuredLogger.info('API request validated successfully', {
+      logger.info('API request validated successfully', {
         pathname,
         method: request.method,
         duration,
         hasQuery: !!config.query,
         hasBody: !!config.body,
-        hasParams: !!config.params
+        hasParams: !!config.params,
       });
 
       return response;
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
-      structuredLogger.error('API validation middleware error', error as Error, {
+
+      logger.error('API validation middleware error', error as Error, {
         pathname,
         method: request.method,
-        duration
+        duration,
       });
 
-      return NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   };
 }
@@ -201,18 +194,17 @@ export function withValidation<T = any>(
 export function validateRateLimit(request: NextRequest, limit: number, windowMs: number): boolean {
   // This would typically use Redis or another store to track requests
   // For now, this is a placeholder implementation
-  const ip = request.headers.get('x-forwarded-for') || 
-            request.headers.get('x-real-ip') || 
-            'unknown';
-  
+  const ip =
+    request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+
   // Note: Rate limiting is now implemented in /src/middleware.ts
-  structuredLogger.debug('Rate limit check', {
+  logger.debug('Rate limit check', {
     ip,
     limit,
     windowMs,
-    note: 'Rate limiting is handled by Next.js middleware'
+    note: 'Rate limiting is handled by Next.js middleware',
   });
-  
+
   return true; // Allow all requests for now
 }
 
@@ -222,30 +214,39 @@ export function validateRateLimit(request: NextRequest, limit: number, windowMs:
 export function withSecurityHeaders(handler: ApiHandler) {
   return async (request: NextRequest, context?: { params: Promise<any> }) => {
     const response = await handler(request, context);
-    
+
     // Add security headers
     const headers = new Headers(response.headers);
-    
+
     // XSS Protection
     headers.set('X-Content-Type-Options', 'nosniff');
     headers.set('X-Frame-Options', 'DENY');
     headers.set('X-XSS-Protection', '1; mode=block');
     headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    
+
     // CORS headers for API routes - secure configuration
-    const allowedOrigins = process.env.NODE_ENV === 'production' 
-      ? ['https://civic-intel-hub.vercel.app', 'https://civiq.app', 'https://www.civiq.app']
-      : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'];
-    
+    const allowedOrigins =
+      process.env.NODE_ENV === 'production'
+        ? ['https://civic-intel-hub.vercel.app', 'https://civiq.app', 'https://www.civiq.app']
+        : [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:3001',
+          ];
+
     const customOrigins = process.env.CORS_ALLOWED_ORIGINS?.split(',') || [];
     const allAllowedOrigins = [...allowedOrigins, ...customOrigins];
-    
+
     headers.set('Access-Control-Allow-Origin', allAllowedOrigins.join(', '));
     headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key, X-Requested-With');
+    headers.set(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization, X-API-Key, X-Requested-With'
+    );
     headers.set('Access-Control-Allow-Credentials', 'true');
     headers.set('Access-Control-Max-Age', '86400');
-    
+
     // Cache headers
     if (request.method === 'GET') {
       headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
@@ -254,7 +255,7 @@ export function withSecurityHeaders(handler: ApiHandler) {
     return new NextResponse(response.body, {
       status: response.status,
       statusText: response.statusText,
-      headers
+      headers,
     });
   };
 }
@@ -297,7 +298,7 @@ export class InputSanitizer {
       /(--|#|\/\*|\*\/)/g,
       /(\bOR\b|\bAND\b)\s+\d+\s*=\s*\d+/gi,
       /'(\s*(OR|AND)\s*\d+\s*=\s*\d+\s*)/gi,
-      /(\b(NULL|TRUE|FALSE)\b\s*(OR|AND)\s*\b(NULL|TRUE|FALSE)\b)/gi
+      /(\b(NULL|TRUE|FALSE)\b\s*(OR|AND)\s*\b(NULL|TRUE|FALSE)\b)/gi,
     ];
 
     let cleaned = input;
@@ -314,11 +315,11 @@ export class InputSanitizer {
   static sanitizeEmail(email: string): ValidationResult<string> {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const sanitized = XSSProtection.sanitizeHtml(email.toLowerCase().trim());
-    
+
     if (!emailRegex.test(sanitized)) {
       return {
         isValid: false,
-        errors: ['Invalid email format']
+        errors: ['Invalid email format'],
       };
     }
 
@@ -326,7 +327,7 @@ export class InputSanitizer {
       isValid: true,
       data: sanitized,
       errors: [],
-      sanitized
+      sanitized,
     };
   }
 
@@ -336,7 +337,7 @@ export class InputSanitizer {
   static sanitizePhoneNumber(phone: string): ValidationResult<string> {
     // Remove all non-digit characters
     const digitsOnly = phone.replace(/\D/g, '');
-    
+
     // Check for valid US phone number length
     if (digitsOnly.length === 10) {
       const formatted = `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3, 6)}-${digitsOnly.slice(6)}`;
@@ -344,7 +345,7 @@ export class InputSanitizer {
         isValid: true,
         data: formatted,
         errors: [],
-        sanitized: formatted
+        sanitized: formatted,
       };
     } else if (digitsOnly.length === 11 && digitsOnly.startsWith('1')) {
       const formatted = `+1 (${digitsOnly.slice(1, 4)}) ${digitsOnly.slice(4, 7)}-${digitsOnly.slice(7)}`;
@@ -352,13 +353,13 @@ export class InputSanitizer {
         isValid: true,
         data: formatted,
         errors: [],
-        sanitized: formatted
+        sanitized: formatted,
       };
     }
 
     return {
       isValid: false,
-      errors: ['Invalid phone number format']
+      errors: ['Invalid phone number format'],
     };
   }
 }

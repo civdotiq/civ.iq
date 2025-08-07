@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
 interface CommitteeAssignment {
@@ -98,7 +98,7 @@ export async function GET(
   }
 
   try {
-    structuredLogger.info('Processing committee data request', { bioguideId });
+    logger.info('Processing committee data request', { bioguideId });
 
     // Get committee and leadership data
     const committeeData = await cachedFetch(
@@ -115,7 +115,7 @@ export async function GET(
             memberName = enhancedRep.fullName?.official || enhancedRep.name;
             chamber = enhancedRep.chamber;
 
-            structuredLogger.info('Using enhanced representative data for committees', {
+            logger.info('Using enhanced representative data for committees', {
               bioguideId,
               memberName,
               chamber,
@@ -123,7 +123,7 @@ export async function GET(
             });
           }
         } catch (error) {
-          structuredLogger.warn('Could not get enhanced representative data', {
+          logger.warn('Could not get enhanced representative data', {
             bioguideId,
             error: (error as Error).message,
           });
@@ -136,7 +136,7 @@ export async function GET(
         // NOTE: Direct member committees endpoint doesn't exist in Congress API v3
         // The endpoint /member/{bioguideId}/committees returns 404
         // Using congress-legislators data instead which already has committee info
-        structuredLogger.info(
+        logger.info(
           'Using congress-legislators data for committees (direct endpoint not available)',
           { bioguideId }
         );
@@ -160,7 +160,7 @@ export async function GET(
 
     return NextResponse.json(committeeData);
   } catch (error) {
-    structuredLogger.error('Error fetching committee data', error as Error, { bioguideId });
+    logger.error('Error fetching committee data', error as Error, { bioguideId });
 
     // Fallback to mock data
     const mockData = {

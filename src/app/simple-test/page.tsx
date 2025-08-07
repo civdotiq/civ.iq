@@ -5,7 +5,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 
 export default function SimpleTestPage() {
   return (
@@ -18,8 +18,8 @@ export default function SimpleTestPage() {
           onClick={() =>
             fetch('/api/test')
               .then(r => r.json())
-              .then(data => structuredLogger.info('Test API result:', { data }))
-              .catch(error => structuredLogger.error('Test API error:', error as Error))
+              .then(data => logger.info('Test API result:', { data }))
+              .catch(error => logger.error('Test API error:', error as Error))
           }
           className="px-4 py-2 bg-blue-600 text-white rounded"
         >
@@ -30,8 +30,8 @@ export default function SimpleTestPage() {
           onClick={() =>
             fetch('/api/env-check')
               .then(r => r.json())
-              .then(data => structuredLogger.info('Env check result:', { data }))
-              .catch(error => structuredLogger.error('Env check error:', error as Error))
+              .then(data => logger.info('Env check result:', { data }))
+              .catch(error => logger.error('Env check error:', error as Error))
           }
           className="px-4 py-2 bg-green-600 text-white rounded"
         >

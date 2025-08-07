@@ -8,7 +8,7 @@
  * Uses multiple algorithms to detect and remove duplicate articles
  */
 
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 export interface NewsArticle {
   url: string;
@@ -114,7 +114,7 @@ export class NewsDeduplicator {
     this.stats.duplicatesRemoved = this.stats.originalCount - this.stats.finalCount;
 
     if (this.options.logDuplicates && this.stats.duplicatesRemoved > 0) {
-      structuredLogger.info('News deduplication completed', {
+      logger.info('News deduplication completed', {
         originalCount: this.stats.originalCount,
         duplicatesRemoved: this.stats.duplicatesRemoved,
         finalCount: this.stats.finalCount,

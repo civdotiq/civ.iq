@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 /**
  * Industry Categorization System for FEC Campaign Finance Data
@@ -303,7 +303,7 @@ export class IndustryCategorizer {
     // Try to find matching pattern
     for (const mapping of EMPLOYER_MAPPINGS) {
       if (mapping.pattern.test(normalized) || mapping.pattern.test(employer)) {
-        structuredLogger.debug('Matched employer to sector', {
+        logger.debug('Matched employer to sector', {
           employer,
           normalized,
           sector: mapping.sector.name,
@@ -456,7 +456,7 @@ export class IndustryCategorizer {
       }))
       .sort((a, b) => b.amount - a.amount);
 
-    structuredLogger.info('Categorized contributions by industry', {
+    logger.info('Categorized contributions by industry', {
       totalContributions: contributions.length,
       totalAmount,
       sectorsFound: result.length,

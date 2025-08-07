@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { ErrorBoundary as APIErrorBoundary } from '@/components/common/ErrorBoundary';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 
 interface PartyAlignment {
   overall_alignment: number;
@@ -131,7 +131,7 @@ export function PartyAlignmentAnalysis({
         setAlignmentData(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
-        structuredLogger.error('Error fetching party alignment:', err as Error);
+        logger.error('Error fetching party alignment:', err as Error);
       } finally {
         setLoading(false);
       }

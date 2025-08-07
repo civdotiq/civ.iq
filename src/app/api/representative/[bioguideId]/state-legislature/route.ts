@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 interface StateLegislator {
   id: string;
@@ -160,7 +160,7 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
     const duration = Date.now() - startTime;
 
     // Log external API call
-    structuredLogger.externalApi('OpenStates', 'fetchJurisdiction', duration, response.ok, {
+    logger.externalApi('OpenStates', 'fetchJurisdiction', duration, response.ok, {
       stateAbbrev,
       statusCode: response.status,
     });
@@ -174,12 +174,12 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
     const duration = Date.now() - startTime;
 
     // Log failed external API call
-    structuredLogger.externalApi('OpenStates', 'fetchJurisdiction', duration, false, {
+    logger.externalApi('OpenStates', 'fetchJurisdiction', duration, false, {
       stateAbbrev,
       error: error instanceof Error ? error.message : String(error),
     });
 
-    structuredLogger.error('Error fetching state jurisdiction', error as Error, {
+    logger.error('Error fetching state jurisdiction', error as Error, {
       stateAbbrev,
       operation: 'state_jurisdiction_fetch',
     });
@@ -196,12 +196,12 @@ async function fetchStateLegislators(
     const districts = getStateDistrictsForArea(state, congressionalDistrict);
     const legislators: StateLegislator[] = [];
 
-    structuredLogger.info('Fetching state legislators', {
+    logger.info('Fetching state legislators', {
       state,
       congressionalDistrict,
       operation: 'state_legislators_fetch',
     });
-    structuredLogger.debug('Target state districts', {
+    logger.debug('Target state districts', {
       state,
       congressionalDistrict,
       districts,
@@ -220,7 +220,7 @@ async function fetchStateLegislators(
         // Limit to avoid too many requests
         const url = `https://v3.openstates.org/people?jurisdiction=${stateAbbrev}&current_role=true&district=${district}`;
 
-        structuredLogger.debug('Fetching legislators from district', {
+        logger.debug('Fetching legislators from district', {
           district,
           chamber,
           url: url.replace(process.env.OPENSTATES_API_KEY || '', 'API_KEY_HIDDEN'),
@@ -237,7 +237,7 @@ async function fetchStateLegislators(
         const fetchDuration = Date.now() - fetchStartTime;
 
         // Log external API call
-        structuredLogger.externalApi('OpenStates', 'fetchLegislators', fetchDuration, response.ok, {
+        logger.externalApi('OpenStates', 'fetchLegislators', fetchDuration, response.ok, {
           district,
           chamber,
           statusCode: response.status,
@@ -269,7 +269,7 @@ async function fetchStateLegislators(
             })) || [];
 
           legislators.push(...districtLegislators);
-          structuredLogger.info('Found legislators in district', {
+          logger.info('Found legislators in district', {
             district,
             legislatorCount: districtLegislators.length,
             operation: 'district_legislators_found',
@@ -280,7 +280,7 @@ async function fetchStateLegislators(
       // Fallback: fetch all current legislators for the state
       const url = `https://v3.openstates.org/people?jurisdiction=${stateAbbrev}&current_role=true&per_page=20`;
 
-      structuredLogger.info('Fetching all current legislators', {
+      logger.info('Fetching all current legislators', {
         stateAbbrev,
         url: url.replace(process.env.OPENSTATES_API_KEY || '', 'API_KEY_HIDDEN'),
         operation: 'all_legislators_fetch',
@@ -296,16 +296,10 @@ async function fetchStateLegislators(
       const fetchDuration = Date.now() - fetchStartTime;
 
       // Log external API call
-      structuredLogger.externalApi(
-        'OpenStates',
-        'fetchAllLegislators',
-        fetchDuration,
-        response.ok,
-        {
-          stateAbbrev,
-          statusCode: response.status,
-        }
-      );
+      logger.externalApi('OpenStates', 'fetchAllLegislators', fetchDuration, response.ok, {
+        stateAbbrev,
+        statusCode: response.status,
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -336,7 +330,7 @@ async function fetchStateLegislators(
       }
     }
 
-    structuredLogger.info('Total legislators found', {
+    logger.info('Total legislators found', {
       state,
       congressionalDistrict,
       legislatorCount: legislators.length,
@@ -344,7 +338,7 @@ async function fetchStateLegislators(
     });
     return legislators;
   } catch (error) {
-    structuredLogger.error('Error fetching state legislators', error as Error, {
+    logger.error('Error fetching state legislators', error as Error, {
       stateAbbrev,
       state,
       congressionalDistrict,
@@ -369,7 +363,7 @@ async function fetchRecentStateBills(stateAbbrev: string): Promise<StateBill[]> 
     const duration = Date.now() - startTime;
 
     // Log external API call
-    structuredLogger.externalApi('OpenStates', 'fetchBills', duration, response.ok, {
+    logger.externalApi('OpenStates', 'fetchBills', duration, response.ok, {
       stateAbbrev,
       statusCode: response.status,
     });
@@ -406,12 +400,12 @@ async function fetchRecentStateBills(stateAbbrev: string): Promise<StateBill[]> 
     const duration = Date.now() - startTime;
 
     // Log failed external API call
-    structuredLogger.externalApi('OpenStates', 'fetchBills', duration, false, {
+    logger.externalApi('OpenStates', 'fetchBills', duration, false, {
       stateAbbrev,
       error: error instanceof Error ? error.message : String(error),
     });
 
-    structuredLogger.error('Error fetching state bills', error as Error, {
+    logger.error('Error fetching state bills', error as Error, {
       stateAbbrev,
       operation: 'state_bills_fetch_error',
     });
@@ -577,7 +571,7 @@ export async function GET(
 
     return NextResponse.json(mockData);
   } catch (error) {
-    structuredLogger.error('State Legislature API Error', error as Error, {
+    logger.error('State Legislature API Error', error as Error, {
       bioguideId,
       operation: 'state_legislature_api_error',
     });

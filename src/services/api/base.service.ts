@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { apiConfig } from '@/config';
 
 export interface RequestOptions extends RequestInit {
@@ -61,7 +61,7 @@ export abstract class BaseService {
     const timeoutId = setTimeout(() => abortController.abort(), timeout);
 
     try {
-      structuredLogger.debug('API Request', {
+      logger.debug('API Request', {
         url,
         method: fetchOptions.method || 'GET',
         headers: this.sanitizeHeaders(headers),
@@ -77,7 +77,7 @@ export abstract class BaseService {
 
       const data = await this.parseResponse<T>(response);
 
-      structuredLogger.debug('API Response', {
+      logger.debug('API Response', {
         url,
         status: response.status,
         headers: Object.fromEntries(response.headers.entries()),
@@ -97,12 +97,12 @@ export abstract class BaseService {
 
       if (error instanceof Error && error.name === 'AbortError') {
         const timeoutError = new Error(`Request timeout: ${url}`);
-        structuredLogger.error('Request timeout', timeoutError);
+        logger.error('Request timeout', timeoutError);
         throw this.createApiError(null, null, 'Request timeout', 408);
       }
 
       const apiError = error instanceof Error ? error : new Error('Unknown error');
-      structuredLogger.error(`API Request failed: ${url}`, apiError);
+      logger.error(`API Request failed: ${url}`, apiError);
 
       throw error;
     }
@@ -259,7 +259,7 @@ export abstract class BaseService {
             apiConfig.retry.maxDelay
           );
 
-          structuredLogger.warn('Retrying request', {
+          logger.warn('Retrying request', {
             attempt: attempt + 1,
             maxRetries,
             delay,

@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/cache-helper';
 import { RollCallParser } from '@/features/legislation/services/rollcall-parser';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { structuredLogger, createRequestLogger } from '@/lib/logging/logger-edge';
+import { logger, createRequestLogger } from '@/lib/logging/logger-edge';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry-edge';
 
 interface Vote {
@@ -115,11 +115,11 @@ async function getMemberVoteFromRollCall(
     // Parse the roll call XML to extract member vote
     // Note: This would require implementation of parseVotingPositions method
     // For now, return null as we're focusing on the main voting data service
-    structuredLogger.debug('Roll call parsing not yet implemented', { rollCallUrl });
+    logger.debug('Roll call parsing not yet implemented', { rollCallUrl });
 
     return null;
   } catch (error) {
-    structuredLogger.warn('Error fetching roll call data', {
+    logger.warn('Error fetching roll call data', {
       rollCallUrl,
       error: error instanceof Error ? error.message : String(error),
     });
@@ -136,7 +136,7 @@ async function getEnhancedVotingRecords(
   return withCache(
     `house-roll-call-votes-${bioguideId}-${chamber}-${limit}`,
     async () => {
-      structuredLogger.info('Fetching real voting data from new House Roll Call Votes API', {
+      logger.info('Fetching real voting data from new House Roll Call Votes API', {
         bioguideId,
         chamber,
         limit,
@@ -152,7 +152,7 @@ async function getEnhancedVotingRecords(
           const votingData = await getVotesByMember(bioguideId);
 
           if (votingData && votingData.length > 0) {
-            structuredLogger.info('House roll call voting data retrieved', {
+            logger.info('House roll call voting data retrieved', {
               bioguideId,
               votesFound: votingData.length,
               source: 'house-vote-api',
@@ -195,12 +195,12 @@ async function getEnhancedVotingRecords(
             return transformedVotes;
           }
         } catch (error) {
-          structuredLogger.error('Failed to fetch House roll call votes', error as Error, {
+          logger.error('Failed to fetch House roll call votes', error as Error, {
             bioguideId,
           });
         }
       } else {
-        structuredLogger.info('Senate voting records not available via House Roll Call API', {
+        logger.info('Senate voting records not available via House Roll Call API', {
           bioguideId,
           chamber,
           note: 'House Roll Call Votes API only covers House of Representatives',
@@ -212,7 +212,7 @@ async function getEnhancedVotingRecords(
     },
     1800000 // 30 minutes cache for voting data
   ).catch(error => {
-    structuredLogger.warn('House roll call voting data fetch failed', {
+    logger.warn('House roll call voting data fetch failed', {
       bioguideId,
       error: (error as Error).message,
     });
@@ -225,7 +225,7 @@ export async function GET(
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const { bioguideId } = await params;
-  const logger = createRequestLogger(request, `votes-${bioguideId}`);
+  // Using simple logger
   logger.info('Votes API called', { bioguideId });
   const { searchParams } = new URL(request.url);
   const limit = parseInt(searchParams.get('limit') || '20');
@@ -235,14 +235,14 @@ export async function GET(
   }
 
   try {
-    structuredLogger.info('Processing voting records request', { bioguideId, limit });
+    logger.info('Processing voting records request', { bioguideId, limit });
 
     // Try to get enhanced representative data for better context
     let enhancedRep;
     try {
       enhancedRep = await getEnhancedRepresentative(bioguideId);
     } catch (error) {
-      structuredLogger.warn('Could not get enhanced representative data', {
+      logger.warn('Could not get enhanced representative data', {
         bioguideId,
         error: (error as Error).message,
       });
@@ -251,7 +251,7 @@ export async function GET(
     const memberChamber = enhancedRep?.chamber || 'House';
     const memberName = enhancedRep?.fullName?.official || enhancedRep?.name || '';
 
-    structuredLogger.info('Member context determined', {
+    logger.info('Member context determined', {
       bioguideId,
       chamber: memberChamber,
       memberName,
@@ -263,7 +263,7 @@ export async function GET(
       const realVotes = await getEnhancedVotingRecords(bioguideId, memberChamber, limit);
 
       if (realVotes && realVotes.length > 0) {
-        structuredLogger.info('Real voting data successfully retrieved', {
+        logger.info('Real voting data successfully retrieved', {
           bioguideId,
           votesFound: realVotes.length,
           chamber: memberChamber,
@@ -288,14 +288,14 @@ export async function GET(
         });
       }
     } catch (realDataError) {
-      structuredLogger.warn('Real voting data unavailable', {
+      logger.warn('Real voting data unavailable', {
         bioguideId,
         error: (realDataError as Error).message,
       });
     }
 
     // No mock data fallback - return empty result with clear indication
-    structuredLogger.info('No voting records available', {
+    logger.info('No voting records available', {
       bioguideId,
       reason: 'Real voting data not available from Congress.gov',
     });
@@ -315,7 +315,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    structuredLogger.error(
+    logger.error(
       'Voting records API error',
       error instanceof Error ? error : new Error(String(error)),
       {
@@ -346,7 +346,7 @@ async function _getLegacyVotingRecords(
   limit: number
 ): Promise<Vote[]> {
   try {
-    structuredLogger.info('Fetching legacy voting records', { bioguideId, chamber, limit });
+    logger.info('Fetching legacy voting records', { bioguideId, chamber, limit });
 
     // Get recent bills with recorded votes
     const billsResponse = await fetch(
@@ -359,7 +359,7 @@ async function _getLegacyVotingRecords(
     );
 
     if (!billsResponse.ok) {
-      structuredLogger.warn('Bills API request failed', { status: billsResponse.status });
+      logger.warn('Bills API request failed', { status: billsResponse.status });
       return [];
     }
 
@@ -368,7 +368,7 @@ async function _getLegacyVotingRecords(
     monitor.end(true, 200);
 
     if (!billsData.bills || billsData.bills.length === 0) {
-      structuredLogger.warn('No bills found for legacy voting records', { bioguideId });
+      logger.warn('No bills found for legacy voting records', { bioguideId });
       return [];
     }
 
@@ -427,7 +427,7 @@ async function _getLegacyVotingRecords(
                   }
                 }
               } catch (voteError) {
-                structuredLogger.warn('Error processing recorded vote', {
+                logger.warn('Error processing recorded vote', {
                   voteError,
                   rollNumber: recordedVote.rollNumber,
                 });
@@ -447,14 +447,14 @@ async function _getLegacyVotingRecords(
       }
     }
 
-    structuredLogger.info('Legacy voting records retrieved', {
+    logger.info('Legacy voting records retrieved', {
       bioguideId,
       votesFound: votes.length,
     });
 
     return votes;
   } catch (error) {
-    structuredLogger.error('Error in legacy voting records fetch', error as Error, {
+    logger.error('Error in legacy voting records fetch', error as Error, {
       bioguideId,
       chamber,
     });

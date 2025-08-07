@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
-import { createRequestLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 // Response interface for all representatives
 interface AllRepresentativesResponse {
@@ -42,7 +42,7 @@ interface AllRepresentativesResponse {
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  const logger = createRequestLogger(request, `all-reps-${Date.now()}`);
+  // Using simple logger}`);
 
   logger.info('All representatives API request started');
 

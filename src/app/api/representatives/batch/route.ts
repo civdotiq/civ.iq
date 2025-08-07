@@ -8,7 +8,7 @@ import { cachedFetch } from '@/lib/cache';
 import { ValidatedRequest } from '@/lib/validation/middleware';
 import { BaseValidator } from '@/lib/validation/schemas';
 import { withErrorHandling } from '@/lib/error-handling/error-handler';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { performanceMonitor } from '@/lib/helpers/performance';
 
 interface BatchRequest {
@@ -103,7 +103,7 @@ async function handleBatchRequest(request: ValidatedRequest<BatchRequest>): Prom
       batches.push(bioguideIds.slice(i, i + batchSize));
     }
 
-    structuredLogger.info(
+    logger.info(
       'Processing batch representative request',
       {
         totalIds: bioguideIds.length,
@@ -169,7 +169,7 @@ async function handleBatchRequest(request: ValidatedRequest<BatchRequest>): Prom
 
             results[bioguideId] = representative;
           } catch (error) {
-            structuredLogger.error(
+            logger.error(
               `Error fetching representative ${bioguideId}`,
               error as Error,
               {
@@ -192,7 +192,7 @@ async function handleBatchRequest(request: ValidatedRequest<BatchRequest>): Prom
     const successCount = Object.values(results).filter(r => r !== null).length;
     const errorCount = bioguideIds.length - successCount;
 
-    structuredLogger.info(
+    logger.info(
       'Batch representative request completed',
       {
         totalRequested: bioguideIds.length,
@@ -217,7 +217,7 @@ async function handleBatchRequest(request: ValidatedRequest<BatchRequest>): Prom
   } catch (error) {
     performanceMonitor.endTimer('batch-representatives-fetch');
 
-    structuredLogger.error(
+    logger.error(
       'Batch representatives request failed',
       error as Error,
       {
@@ -260,7 +260,7 @@ export async function POST(request: NextRequest) {
 
     return withErrorHandling(handleBatchRequest)(validatedRequest);
   } catch (error) {
-    structuredLogger.error('POST batch representatives handler error', error as Error);
+    logger.error('POST batch representatives handler error', error as Error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

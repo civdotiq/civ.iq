@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import type { EnhancedRepresentative } from '@/types/representative';
 
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const party = url.searchParams.get('party')?.toLowerCase();
     const chamber = url.searchParams.get('chamber')?.toLowerCase();
 
-    structuredLogger.info('Search representatives request', {
+    logger.info('Search representatives request', {
       query,
       state,
       party,
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
       yearsInOffice: calculateYearsInOffice(rep),
     }));
 
-    structuredLogger.info('Search representatives completed', {
+    logger.info('Search representatives completed', {
       totalCount: allRepresentatives.length,
       filteredCount: results.length,
       query,
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    structuredLogger.error('Search representatives error', error as Error);
+    logger.error('Search representatives error', error as Error);
 
     return NextResponse.json(
       {

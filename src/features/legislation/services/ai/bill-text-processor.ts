@@ -10,7 +10,7 @@
  * for AI summarization and analysis.
  */
 
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 export interface BillTextChunk {
   id: string;
@@ -62,7 +62,7 @@ export class BillTextProcessor {
     }
   ): Promise<ProcessedBillText> {
     try {
-      structuredLogger.info('Starting bill text processing', {
+      logger.info('Starting bill text processing', {
         originalLength: rawText.length,
         billNumber: billMetadata?.number,
         operation: 'bill_text_processing',
@@ -87,7 +87,7 @@ export class BillTextProcessor {
         metadata,
       };
 
-      structuredLogger.info('Bill text processing completed', {
+      logger.info('Bill text processing completed', {
         originalLength: rawText.length,
         processedLength: cleanedText.length,
         chunksGenerated: rankedChunks.length,
@@ -97,7 +97,7 @@ export class BillTextProcessor {
 
       return result;
     } catch (error) {
-      structuredLogger.error('Bill text processing failed', error as Error, {
+      logger.error('Bill text processing failed', error as Error, {
         billNumber: billMetadata?.number,
         operation: 'bill_text_processing',
       });

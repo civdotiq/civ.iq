@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { ZIP_TO_DISTRICT_MAP_119TH } from '@/lib/data/zip-district-mapping-119th';
 import type { EnhancedRepresentative } from '@/types/representative';
@@ -50,7 +50,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<Representative[
     // Get district mapping for ZIP code
     const districtMapping = ZIP_TO_DISTRICT_MAP_119TH[zipCode];
     if (!districtMapping) {
-      structuredLogger.warn('ZIP code not found in district mapping', { zipCode });
+      logger.warn('ZIP code not found in district mapping', { zipCode });
       return [];
     }
 
@@ -60,14 +60,14 @@ async function getRepresentativesByZip(zipCode: string): Promise<Representative[
       : districtMapping;
 
     if (!primaryMapping) {
-      structuredLogger.warn('No primary mapping found for ZIP code', { zipCode });
+      logger.warn('No primary mapping found for ZIP code', { zipCode });
       return [];
     }
 
     // Get all enhanced representatives
     const allRepresentatives = await getAllEnhancedRepresentatives();
     if (!allRepresentatives.length) {
-      structuredLogger.warn('No representatives data available from congress.service');
+      logger.warn('No representatives data available from congress.service');
       return [];
     }
 
@@ -94,7 +94,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<Representative[
     });
 
     if (representatives.length === 0) {
-      structuredLogger.warn('No representatives found for ZIP code', {
+      logger.warn('No representatives found for ZIP code', {
         zipCode,
         state: primaryMapping.state,
         district: primaryMapping.district,
@@ -103,7 +103,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<Representative[
 
     return representatives;
   } catch (error) {
-    structuredLogger.error('Error getting representatives by ZIP', error as Error, { zipCode });
+    logger.error('Error getting representatives by ZIP', error as Error, { zipCode });
     return [];
   }
 }
@@ -187,13 +187,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    structuredLogger.info('Fetching representatives for ZIP code', { zipCode });
+    logger.info('Fetching representatives for ZIP code', { zipCode });
 
     // Get real representatives data
     const representatives = await getRepresentativesByZip(zipCode);
 
     if (representatives.length === 0) {
-      structuredLogger.warn('No representatives found, returning empty result', { zipCode });
+      logger.warn('No representatives found, returning empty result', { zipCode });
       return NextResponse.json(
         {
           zipCode,
@@ -215,7 +215,7 @@ export async function GET(request: NextRequest) {
     const state = representatives[0]?.state || 'XX';
     const district = representatives.find(r => r.chamber === 'House')?.district || '00';
 
-    structuredLogger.info('Successfully fetched representatives', {
+    logger.info('Successfully fetched representatives', {
       zipCode,
       state,
       district,
@@ -241,7 +241,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    structuredLogger.error('Representatives API error', error as Error, { zipCode });
+    logger.error('Representatives API error', error as Error, { zipCode });
 
     return NextResponse.json(
       {

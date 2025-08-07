@@ -4,7 +4,7 @@
  */
 
 import type { Committee } from '@/types/committee';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 // Index of all House and Senate committees for the 119th Congress
 // This serves as the main registry for committee data
@@ -140,7 +140,7 @@ export async function getCommitteeData(committeeId: string): Promise<Committee |
     try {
       return await committeeRegistry.house[upperCommitteeId]();
     } catch (error) {
-      structuredLogger.error('Failed to load House committee', error as Error, {
+      logger.error('Failed to load House committee', error as Error, {
         committeeId: upperCommitteeId,
       });
       return null;
@@ -152,7 +152,7 @@ export async function getCommitteeData(committeeId: string): Promise<Committee |
     try {
       return await committeeRegistry.senate[upperCommitteeId]();
     } catch (error) {
-      structuredLogger.error('Failed to load Senate committee', error as Error, {
+      logger.error('Failed to load Senate committee', error as Error, {
         committeeId: upperCommitteeId,
       });
       return null;
@@ -164,7 +164,7 @@ export async function getCommitteeData(committeeId: string): Promise<Committee |
     try {
       return await committeeRegistry.joint[upperCommitteeId]();
     } catch (error) {
-      structuredLogger.error('Failed to load Joint committee', error as Error, {
+      logger.error('Failed to load Joint committee', error as Error, {
         committeeId: upperCommitteeId,
       });
       return null;

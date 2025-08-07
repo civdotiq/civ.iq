@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 
 interface DemographicData {
   population: {
@@ -228,7 +228,7 @@ async function fetchCensusData(state: string, district: string): Promise<Demogra
       },
     };
   } catch (error) {
-    structuredLogger.error('Error fetching census data', error as Error, { state, district });
+    logger.error('Error fetching census data', error as Error, { state, district });
     return null;
   }
 }
@@ -363,7 +363,7 @@ export async function GET(
 
     return NextResponse.json(districtInfo);
   } catch (error) {
-    structuredLogger.error('API Error', error as Error, { bioguideId });
+    logger.error('API Error', error as Error, { bioguideId });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

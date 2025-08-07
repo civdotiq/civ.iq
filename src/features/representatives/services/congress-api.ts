@@ -9,7 +9,7 @@ import type {
   CongressApiMembersResponse,
   CongressApiBill,
 } from '@/types/api-responses';
-import { structuredLogger } from '@/lib/logging/universal-logger';
+import logger from '@/lib/logging/simple-logger';
 import { getAllEnhancedRepresentatives } from './congress.service';
 
 // State code to name mapping
@@ -131,7 +131,7 @@ export function validateRepresentatives(reps: Representative[]): Representative[
   return reps.filter(rep => {
     const isValid = isValidBioguideId(rep.bioguideId);
     if (!isValid) {
-      structuredLogger.warn('Invalid bioguide ID detected, filtering out representative', {
+      logger.warn('Invalid bioguide ID detected, filtering out representative', {
         component: 'congressApi',
         bioguideId: rep.bioguideId,
         name: rep.name,
@@ -157,7 +157,7 @@ class CongressRateLimiter {
     if (this.requests.length >= this.maxRequestsPerHour) {
       const waitTime = 3600000 - (now - (this.requests[0] || 0));
       if (waitTime > 0) {
-        structuredLogger.info('Rate limit reached', {
+        logger.info('Rate limit reached', {
           component: 'congressApi',
           metadata: { waitTimeSeconds: Math.round(waitTime / 1000) },
         });
@@ -225,7 +225,7 @@ export const getCurrentMembersByState = cache(
           });
 
           if (!response.ok) {
-            structuredLogger.error('Congress API error', {
+            logger.error('Congress API error', {
               component: 'congressApi',
               error: new Error(`${response.status} ${response.statusText}`),
               metadata: {
@@ -286,7 +286,7 @@ export const getCurrentMembersByState = cache(
     } catch (_error) {
       // eslint-disable-next-line no-console
       console.error('Error fetching Congress members:', _error);
-      structuredLogger.error('Error fetching Congress members', {
+      logger.error('Error fetching Congress members', {
         component: 'congressApi',
         error: _error as Error,
       });
@@ -400,13 +400,13 @@ export async function getRepresentativesByLocation(
       });
 
     if (apiSenators.length > 0) {
-      structuredLogger.info('Adding senators from Congress.gov API', {
+      logger.info('Adding senators from Congress.gov API', {
         component: 'congressApi',
         metadata: { count: apiSenators.length, state },
       });
       representatives.push(...apiSenators);
     } else {
-      structuredLogger.info('No senators found via API - data unavailable', {
+      logger.info('No senators found via API - data unavailable', {
         component: 'congressApi',
         metadata: { state },
       });
@@ -414,7 +414,7 @@ export async function getRepresentativesByLocation(
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error getting senators from API:', error);
-    structuredLogger.error('Error getting senators from API', {
+    logger.error('Error getting senators from API', {
       component: 'congressApi',
       error: error as Error,
       metadata: { state },
@@ -428,7 +428,7 @@ export async function getRepresentativesByLocation(
       // Try to get specific member data if we can
       const members = await getCurrentMembersByState(state, apiKey);
 
-      structuredLogger.info('Processing members for state', {
+      logger.info('Processing members for state', {
         component: 'congressApi',
         metadata: { count: members.length, state },
       });
@@ -461,7 +461,7 @@ export async function getRepresentativesByLocation(
               nextElection: '2026',
             };
 
-            structuredLogger.info('Adding House member', {
+            logger.info('Adding House member', {
               component: 'congressApi',
               metadata: { name: formattedMember.name },
             });
@@ -472,7 +472,7 @@ export async function getRepresentativesByLocation(
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error getting House members:', error);
-      structuredLogger.error('Error getting House members', {
+      logger.error('Error getting House members', {
         component: 'congressApi',
         error: error as Error,
       });
@@ -481,7 +481,7 @@ export async function getRepresentativesByLocation(
 
     // If no House member found, log but don't create fake data
     if (!representatives.find(r => r.chamber === 'House')) {
-      structuredLogger.warn('No House member found for district', {
+      logger.warn('No House member found for district', {
         component: 'congressApi',
         metadata: { state, district },
       });
@@ -492,7 +492,7 @@ export async function getRepresentativesByLocation(
   // If we have no representatives or API failed, try congress-legislators fallback
   if (representatives.length === 0 || shouldUseFallback) {
     try {
-      structuredLogger.info('Using congress-legislators fallback for missing representatives', {
+      logger.info('Using congress-legislators fallback for missing representatives', {
         component: 'congressApi',
         metadata: { state, district },
       });
@@ -528,14 +528,14 @@ export async function getRepresentativesByLocation(
 
       representatives.push(...filteredReps);
 
-      structuredLogger.info('Added representatives from congress-legislators fallback', {
+      logger.info('Added representatives from congress-legislators fallback', {
         component: 'congressApi',
         metadata: { count: filteredReps.length, state, district },
       });
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error using congress-legislators fallback:', error);
-      structuredLogger.error('Error using congress-legislators fallback', {
+      logger.error('Error using congress-legislators fallback', {
         component: 'congressApi',
         error: error as Error,
         metadata: { state, district },
@@ -546,7 +546,7 @@ export async function getRepresentativesByLocation(
   // Validate all bioguide IDs before returning
   const validatedRepresentatives = validateRepresentatives(representatives);
 
-  structuredLogger.info('Returning representatives', {
+  logger.info('Returning representatives', {
     component: 'congressApi',
     metadata: {
       count: validatedRepresentatives.length,
@@ -585,7 +585,7 @@ export async function getBillsByMember(bioguideId: string, apiKey?: string): Pro
     });
 
     if (!response.ok) {
-      structuredLogger.error('Congress bills API error', {
+      logger.error('Congress bills API error', {
         component: 'congressApi',
         error: new Error(`${response.status} ${response.statusText}`),
         metadata: { status: response.status, statusText: response.statusText },
@@ -598,7 +598,7 @@ export async function getBillsByMember(bioguideId: string, apiKey?: string): Pro
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error fetching member bills:', error);
-    structuredLogger.error('Error fetching member bills', {
+    logger.error('Error fetching member bills', {
       component: 'congressApi',
       error: error as Error,
     });
@@ -616,7 +616,7 @@ export async function getVotesByMember(bioguideId: string, apiKey?: string): Pro
 
     const congressApiKey = apiKey || process.env.CONGRESS_API_KEY;
     if (!congressApiKey) {
-      structuredLogger.warn('Congress API key not available', {
+      logger.warn('Congress API key not available', {
         component: 'congressApi',
         bioguideId,
       });
@@ -639,7 +639,7 @@ export async function getVotesByMember(bioguideId: string, apiKey?: string): Pro
     });
 
     if (!response.ok) {
-      structuredLogger.error('House votes API error', {
+      logger.error('House votes API error', {
         component: 'congressApi',
         error: new Error(`${response.status} ${response.statusText}`),
         metadata: { status: response.status, statusText: response.statusText, bioguideId },
@@ -650,7 +650,7 @@ export async function getVotesByMember(bioguideId: string, apiKey?: string): Pro
     const data = await response.json();
     const rollCallVotes = data.houseRollCallVotes || [];
 
-    structuredLogger.info('House roll call votes retrieved', {
+    logger.info('House roll call votes retrieved', {
       component: 'congressApi',
       bioguideId,
       votesCount: rollCallVotes.length,
@@ -682,7 +682,7 @@ export async function getVotesByMember(bioguideId: string, apiKey?: string): Pro
             memberPosition = memberVoteResult.position;
             memberVoteData = memberVoteResult.memberData;
 
-            structuredLogger.info('Individual member vote retrieved', {
+            logger.info('Individual member vote retrieved', {
               component: 'congressApi',
               bioguideId,
               rollNumber,
@@ -690,7 +690,7 @@ export async function getVotesByMember(bioguideId: string, apiKey?: string): Pro
             });
           }
         } catch (memberVoteError) {
-          structuredLogger.warn('Could not fetch individual member vote', {
+          logger.warn('Could not fetch individual member vote', {
             component: 'congressApi',
             bioguideId,
             rollNumber,
@@ -738,7 +738,7 @@ export async function getVotesByMember(bioguideId: string, apiKey?: string): Pro
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error fetching House roll call votes:', error);
-    structuredLogger.error('Error fetching House roll call votes', {
+    logger.error('Error fetching House roll call votes', {
       component: 'congressApi',
       error: error as Error,
       metadata: { bioguideId },
@@ -773,7 +773,7 @@ export async function getVoteDetails(
 
     const congressApiKey = apiKey || process.env.CONGRESS_API_KEY;
     if (!congressApiKey) {
-      structuredLogger.warn('Congress API key not available for vote details', {
+      logger.warn('Congress API key not available for vote details', {
         component: 'congressApi',
         congress,
         chamber,
@@ -788,7 +788,7 @@ export async function getVoteDetails(
     // Handle chamber-specific endpoints
     if (chamber === 'senate') {
       // Use Senate.gov XML parsing for Senate votes
-      structuredLogger.info('Using Senate.gov XML for Senate vote details', {
+      logger.info('Using Senate.gov XML for Senate vote details', {
         component: 'congressApi',
         congress,
         chamber,
@@ -816,7 +816,7 @@ export async function getVoteDetails(
     });
 
     if (!response.ok) {
-      structuredLogger.error('Vote details API error', {
+      logger.error('Vote details API error', {
         component: 'congressApi',
         error: new Error(`${response.status} ${response.statusText}`),
         metadata: {
@@ -848,7 +848,7 @@ export async function getVoteDetails(
         };
       });
 
-      structuredLogger.info('Vote details retrieved successfully', {
+      logger.info('Vote details retrieved successfully', {
         component: 'congressApi',
         congress,
         chamber,
@@ -867,7 +867,7 @@ export async function getVoteDetails(
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error fetching vote details:', error);
-    structuredLogger.error('Error fetching vote details', {
+    logger.error('Error fetching vote details', {
       component: 'congressApi',
       error: error as Error,
       metadata: { congress, chamber, rollCallNumber, session },
@@ -902,7 +902,7 @@ export async function getMemberVotingPositions(
   const memberVote = voteDetails.memberVotes.find(vote => vote.bioguideId === bioguideId);
 
   if (memberVote) {
-    structuredLogger.info('Individual member vote found via getVoteDetails', {
+    logger.info('Individual member vote found via getVoteDetails', {
       component: 'congressApi',
       bioguideId,
       position: memberVote.position,
@@ -951,7 +951,7 @@ export async function getCommitteesByMember(
     });
 
     if (!response.ok) {
-      structuredLogger.error('Congress committees API error', {
+      logger.error('Congress committees API error', {
         component: 'congressApi',
         error: new Error(`${response.status} ${response.statusText}`),
         metadata: { status: response.status, statusText: response.statusText },
@@ -964,7 +964,7 @@ export async function getCommitteesByMember(
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error fetching member committees:', error);
-    structuredLogger.error('Error fetching member committees', {
+    logger.error('Error fetching member committees', {
       component: 'congressApi',
       error: error as Error,
     });
@@ -1001,7 +1001,7 @@ export async function getRecentBills(limit = 20, apiKey?: string): Promise<unkno
     });
 
     if (!response.ok) {
-      structuredLogger.error('Congress recent bills API error', {
+      logger.error('Congress recent bills API error', {
         component: 'congressApi',
         error: new Error(`${response.status} ${response.statusText}`),
         metadata: { status: response.status, statusText: response.statusText },
@@ -1014,7 +1014,7 @@ export async function getRecentBills(limit = 20, apiKey?: string): Promise<unkno
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error fetching recent bills:', error);
-    structuredLogger.error('Error fetching recent bills', {
+    logger.error('Error fetching recent bills', {
       component: 'congressApi',
       error: error as Error,
     });
@@ -1053,7 +1053,7 @@ export async function searchBills(query: string, limit = 20, apiKey?: string): P
     });
 
     if (!response.ok) {
-      structuredLogger.error('Congress search bills API error', {
+      logger.error('Congress search bills API error', {
         component: 'congressApi',
         error: new Error(`${response.status} ${response.statusText}`),
         metadata: { status: response.status, statusText: response.statusText },
@@ -1075,7 +1075,7 @@ export async function searchBills(query: string, limit = 20, apiKey?: string): P
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error searching bills:', error);
-    structuredLogger.error('Error searching bills', {
+    logger.error('Error searching bills', {
       component: 'congressApi',
       error: error as Error,
     });
@@ -1123,7 +1123,7 @@ export async function getBillDetails(
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error fetching bill details:', error);
-    structuredLogger.error('Error fetching bill details', {
+    logger.error('Error fetching bill details', {
       component: 'congressApi',
       error: error as Error,
     });
@@ -1158,7 +1158,7 @@ export async function getSenateVoteDetails(
   try {
     // Only support 119th Congress for now
     if (congress !== 119) {
-      structuredLogger.warn('Senate votes only supported for 119th Congress', {
+      logger.warn('Senate votes only supported for 119th Congress', {
         component: 'congressApi',
         congress,
         voteNumber,
@@ -1169,7 +1169,7 @@ export async function getSenateVoteDetails(
     // Fetch Senate XML data through our CORS proxy
     const proxyUrl = `/api/senate-votes/${voteNumber}`;
 
-    structuredLogger.info('Fetching Senate vote XML via proxy', {
+    logger.info('Fetching Senate vote XML via proxy', {
       component: 'congressApi',
       congress,
       voteNumber,
@@ -1179,7 +1179,7 @@ export async function getSenateVoteDetails(
     const response = await fetch(proxyUrl);
 
     if (!response.ok) {
-      structuredLogger.error('Senate vote proxy error', {
+      logger.error('Senate vote proxy error', {
         component: 'congressApi',
         error: new Error(`${response.status} ${response.statusText}`),
         metadata: { status: response.status, voteNumber },
@@ -1197,7 +1197,7 @@ export async function getSenateVoteDetails(
     // Check for XML parsing errors
     const parseError = xmlDoc.querySelector('parsererror');
     if (parseError) {
-      structuredLogger.error('Senate XML parsing error', {
+      logger.error('Senate XML parsing error', {
         component: 'congressApi',
         error: new Error('Invalid XML structure'),
         metadata: { voteNumber, xmlLength: xmlText.length },
@@ -1279,7 +1279,7 @@ export async function getSenateVoteDetails(
       }
     }
 
-    structuredLogger.info('Senate vote details parsed successfully', {
+    logger.info('Senate vote details parsed successfully', {
       component: 'congressApi',
       congress,
       voteNumber,
@@ -1294,7 +1294,7 @@ export async function getSenateVoteDetails(
       success: true,
     };
   } catch (error) {
-    structuredLogger.error('Error parsing Senate vote XML', {
+    logger.error('Error parsing Senate vote XML', {
       component: 'congressApi',
       error: error as Error,
       metadata: { congress, voteNumber },

@@ -9,7 +9,7 @@ import { RepresentativeProfileClient } from './client-wrapper';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { RepresentativePageSidebar } from '@/features/representatives/components/RepresentativePageSidebar';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,7 +96,7 @@ async function getRepresentativeData(bioguideId: string) {
   try {
     if (!bioguideId || typeof bioguideId !== 'string') {
       const error = 'Invalid bioguideId provided';
-      structuredLogger.error('Representative data fetch failed', new Error(error), {
+      logger.error('Representative data fetch failed', new Error(error), {
         bioguideId,
         endpoint: 'representative-batch',
         component: 'RepresentativeProfilePage',
@@ -104,7 +104,7 @@ async function getRepresentativeData(bioguideId: string) {
       throw new Error(error);
     }
 
-    structuredLogger.info('Fetching representative data', {
+    logger.info('Fetching representative data', {
       bioguideId,
       endpoint: 'representative-batch',
       component: 'RepresentativeProfilePage',
@@ -137,7 +137,7 @@ async function getRepresentativeData(bioguideId: string) {
 
     if (!response) {
       const error = 'No response received from API';
-      structuredLogger.error('Representative API fetch failed', new Error(error), {
+      logger.error('Representative API fetch failed', new Error(error), {
         bioguideId,
         endpoint: 'representative-batch',
         component: 'RepresentativeProfilePage',
@@ -146,7 +146,7 @@ async function getRepresentativeData(bioguideId: string) {
     }
 
     if (!response.ok) {
-      structuredLogger.warn('Representative API returned non-OK status', {
+      logger.warn('Representative API returned non-OK status', {
         bioguideId,
         status: response.status,
         statusText: response.statusText,
@@ -155,7 +155,7 @@ async function getRepresentativeData(bioguideId: string) {
       });
 
       if (response.status === 404) {
-        structuredLogger.info('Representative not found, triggering 404', {
+        logger.info('Representative not found, triggering 404', {
           bioguideId,
           component: 'RepresentativeProfilePage',
         });
@@ -171,7 +171,7 @@ async function getRepresentativeData(bioguideId: string) {
       data = await response.json();
     } catch (parseError) {
       const error = 'Invalid JSON response from API';
-      structuredLogger.error('Representative API JSON parse failed', parseError, {
+      logger.error('Representative API JSON parse failed', parseError, {
         bioguideId,
         endpoint: 'representative-batch',
         component: 'RepresentativeProfilePage',
@@ -181,7 +181,7 @@ async function getRepresentativeData(bioguideId: string) {
 
     if (!data) {
       const error = 'No data received from API';
-      structuredLogger.error('Representative API returned empty data', new Error(error), {
+      logger.error('Representative API returned empty data', new Error(error), {
         bioguideId,
         endpoint: 'representative-batch',
         component: 'RepresentativeProfilePage',
@@ -189,7 +189,7 @@ async function getRepresentativeData(bioguideId: string) {
       throw new Error(error);
     }
 
-    structuredLogger.info('Representative data fetched successfully', {
+    logger.info('Representative data fetched successfully', {
       bioguideId,
       success: data.success !== false,
       hasProfile: !!data.data?.profile,
@@ -207,7 +207,7 @@ async function getRepresentativeData(bioguideId: string) {
     };
   } catch (error) {
     // Log the error but return a safe error structure instead of throwing
-    structuredLogger.error('Representative data fetch completely failed', error, {
+    logger.error('Representative data fetch completely failed', error, {
       bioguideId,
       endpoint: 'representative-batch',
       component: 'RepresentativeProfilePage',

@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
-import { createRequestLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
 
 interface RepresentativeLobbyingData {
@@ -56,7 +56,7 @@ export async function GET(
 ) {
   const startTime = Date.now();
   const { bioguideId } = await params;
-  const logger = createRequestLogger(request, `lobbying-${bioguideId}`);
+  // Using simple logger
 
   logger.info('Lobbying data request started', { bioguideId });
 

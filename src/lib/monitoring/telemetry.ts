@@ -4,7 +4,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { structuredLogger } from '../logging/logger-client';
+import { logger } from '../logging/logger-client';
 
 // Simplified telemetry implementation for now
 // Note: OpenTelemetry can be re-enabled when dependencies are resolved
@@ -32,12 +32,12 @@ export class PerformanceMonitor {
         const duration = Date.now() - startTime;
         // Simple logging instead of OpenTelemetry spans
         if (error || (statusCode && statusCode >= 400)) {
-          structuredLogger.error(`${name}`, error, {
+          logger.error(`${name}`, error, {
             duration,
             statusCode: statusCode || 'Unknown',
           });
         } else {
-          structuredLogger.info(`${name}`, { duration, statusCode: statusCode || 200 });
+          logger.info(`${name}`, { duration, statusCode: statusCode || 200 });
         }
       },
     };
@@ -54,12 +54,12 @@ export class PerformanceMonitor {
 
         // Simple logging instead of OpenTelemetry spans
         if (!success || error || (statusCode && statusCode >= 400)) {
-          structuredLogger.error(`External API ${service}:${operation}`, error, {
+          logger.error(`External API ${service}:${operation}`, error, {
             duration,
             statusCode: statusCode || 'Unknown',
           });
         } else {
-          structuredLogger.info(`External API ${service}:${operation}`, {
+          logger.info(`External API ${service}:${operation}`, {
             duration,
             statusCode: statusCode || 200,
           });
@@ -79,9 +79,9 @@ export class PerformanceMonitor {
 
         // Simple logging instead of OpenTelemetry spans
         if (error) {
-          structuredLogger.error(`Cache ${operation} ${key}`, error, { duration });
+          logger.error(`Cache ${operation} ${key}`, error, { duration });
         } else {
-          structuredLogger.info(`Cache ${operation} ${key}`, {
+          logger.info(`Cache ${operation} ${key}`, {
             duration,
             result: hit ? 'HIT' : 'MISS',
           });
@@ -99,7 +99,7 @@ export class PerformanceMonitor {
     userAgent?: string
   ) {
     // Simple logging instead of metrics
-    structuredLogger.info(`API ${method} ${endpoint}`, { duration, statusCode, userAgent });
+    logger.info(`API ${method} ${endpoint}`, { duration, statusCode, userAgent });
   }
 
   // Wrap a function with tracing
@@ -118,23 +118,23 @@ export class PerformanceMonitor {
           return result
             .then(value => {
               const duration = Date.now() - startTime;
-              structuredLogger.debug(`${name}`, { duration, status: 'SUCCESS', ...attributes });
+              logger.debug(`${name}`, { duration, status: 'SUCCESS', ...attributes });
               return value;
             })
             .catch(error => {
               const duration = Date.now() - startTime;
-              structuredLogger.error(`${name}`, error, { duration, ...attributes });
+              logger.error(`${name}`, error, { duration, ...attributes });
               throw error;
             });
         }
 
         // Handle sync functions
         const duration = Date.now() - startTime;
-        structuredLogger.debug(`${name}`, { duration, status: 'SUCCESS', ...attributes });
+        logger.debug(`${name}`, { duration, status: 'SUCCESS', ...attributes });
         return result;
       } catch (error) {
         const duration = Date.now() - startTime;
-        structuredLogger.error(`${name}`, error as Error, { duration, ...attributes });
+        logger.error(`${name}`, error as Error, { duration, ...attributes });
         throw error;
       }
     }) as T;
@@ -148,7 +148,7 @@ export class PerformanceMonitor {
   // Add attributes to current span
   addToCurrentSpan(attributes: Record<string, string | number | boolean>) {
     // Simplified - no span tracking
-    structuredLogger.debug('Span attributes', { attributes });
+    logger.debug('Span attributes', { attributes });
   }
 }
 

@@ -9,7 +9,7 @@ import {
   fetchGDELTNews,
   normalizeGDELTArticle,
 } from '@/features/news/services/gdelt-api';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   const testType = searchParams.get('type') || 'basic'; // basic, optimized, or comprehensive
 
   try {
-    structuredLogger.info(
+    logger.info(
       'Testing GDELT API',
       {
         query,
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
           const articles = await fetchGDELTNews(term, 3);
           allArticles.push(...articles.map(normalizeGDELTArticle));
         } catch (error) {
-          structuredLogger.error(
+          logger.error(
             `Failed to fetch GDELT data for term: ${term}`,
             error as Error,
             {
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
       }
     }
   } catch (error) {
-    structuredLogger.error(
+    logger.error(
       'GDELT Test Error',
       error as Error,
       {

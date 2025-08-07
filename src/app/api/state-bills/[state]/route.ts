@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
 interface StateBill {
@@ -173,7 +173,7 @@ async function fetchStateBills(
 
     if (!response.ok) {
       monitor.end(false, response.status);
-      structuredLogger.error('OpenStates bills API error', new Error(`HTTP ${response.status}`), {
+      logger.error('OpenStates bills API error', new Error(`HTTP ${response.status}`), {
         stateAbbrev,
         options,
         statusCode: response.status,
@@ -184,7 +184,7 @@ async function fetchStateBills(
     monitor.end(true, 200);
     const data = await response.json();
 
-    structuredLogger.info('Successfully fetched state bills', {
+    logger.info('Successfully fetched state bills', {
       stateAbbrev,
       options,
       count: data.results?.length || 0,
@@ -194,7 +194,7 @@ async function fetchStateBills(
     return data.results?.map((bill: unknown) => transformBill(bill, stateAbbrev)) || [];
   } catch (error) {
     monitor.end(false, undefined, error as Error);
-    structuredLogger.error('Error fetching state bills', error as Error, {
+    logger.error('Error fetching state bills', error as Error, {
       stateAbbrev,
       options,
     });
@@ -397,7 +397,7 @@ export async function GET(
     const billsData = await cachedFetch(
       cacheKey,
       async (): Promise<StateBillsResponse> => {
-        structuredLogger.info(
+        logger.info(
           'Fetching state bills from OpenStates',
           {
             state: state.toUpperCase(),
@@ -420,7 +420,7 @@ export async function GET(
 
         // If no bills found, provide fallback response
         if (bills.length === 0) {
-          structuredLogger.warn('No bills found from OpenStates API', {
+          logger.warn('No bills found from OpenStates API', {
             state: state.toUpperCase(),
             stateAbbrev,
             filters: { status, chamber, subject, sponsor },
@@ -518,7 +518,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    structuredLogger.error(
+    logger.error(
       'State Bills API Error',
       error as Error,
       {

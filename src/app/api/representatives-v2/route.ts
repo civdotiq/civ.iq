@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCongressionalDistrictFromZip } from '@/lib/census-api';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 
 // Simplified response interfaces
 interface RepresentativeResponse {
@@ -115,9 +115,7 @@ async function retryWithBackoff<T>(
 
       // Exponential backoff: 1s, 2s, 4s
       const delay = baseDelay * Math.pow(2, attempt);
-      structuredLogger.info(
-        `Retry attempt ${attempt + 1}/${maxRetries + 1} after ${delay}ms delay`
-      );
+      logger.info(`Retry attempt ${attempt + 1}/${maxRetries + 1} after ${delay}ms delay`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -138,7 +136,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
 
   try {
     // Step 1: Get district info with circuit breaker and retry
-    structuredLogger.info(`Fetching district info for ZIP ${zipCode}...`);
+    logger.info(`Fetching district info for ZIP ${zipCode}...`);
 
     const districtInfo = await censusCircuitBreaker.execute(
       () => retryWithBackoff(() => getCongressionalDistrictFromZip(zipCode)),
@@ -162,7 +160,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       };
     }
 
-    structuredLogger.info(`District found: ${districtInfo.state}-${districtInfo.district}`);
+    logger.info(`District found: ${districtInfo.state}-${districtInfo.district}`);
 
     // Step 2: Get representatives with circuit breaker and retry
     const allRepresentatives = await congressCircuitBreaker.execute(
@@ -260,7 +258,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       },
     };
   } catch (error) {
-    structuredLogger.error('Error fetching representatives:', error as Error);
+    logger.error('Error fetching representatives:', error as Error);
 
     // Determine error type and provide specific messaging
     let errorCode = 'UNKNOWN_ERROR';
@@ -358,7 +356,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result, { status: httpStatus });
   } catch (error) {
-    structuredLogger.error('Unexpected error in representatives API:', error as Error);
+    logger.error('Unexpected error in representatives API:', error as Error);
 
     return NextResponse.json(
       {

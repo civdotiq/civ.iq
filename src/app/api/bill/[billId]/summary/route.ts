@@ -15,7 +15,7 @@ import { BillSummarizer } from '@/features/legislation/services/ai/bill-summariz
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
 import { BillTextProcessor } from '@/features/legislation/services/ai/bill-text-processor';
 import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import { InputValidator } from '@/lib/validation/input-validator';
 
 interface _BillSummaryRequest {
@@ -59,7 +59,7 @@ export async function GET(
     const targetReadingLevel = parseInt(searchParams.get('targetReadingLevel') || '8');
     const format = (searchParams.get('format') || 'detailed') as 'brief' | 'detailed' | 'full';
 
-    structuredLogger.info('Bill summary request received', {
+    logger.info('Bill summary request received', {
       billId,
       includeFull,
       forceRefresh,
@@ -207,7 +207,7 @@ export async function GET(
       };
     }
 
-    structuredLogger.info('Bill summary generated successfully', {
+    logger.info('Bill summary generated successfully', {
       billId,
       responseTime,
       readingLevel: summary.readingLevel,
@@ -221,7 +221,7 @@ export async function GET(
     const responseTime = Date.now() - startTime;
     const { billId: errorBillId } = await params;
 
-    structuredLogger.error('Bill summary generation failed', error as Error, {
+    logger.error('Bill summary generation failed', error as Error, {
       billId: errorBillId,
       responseTime,
       operation: 'bill_summary_api',
@@ -273,7 +273,7 @@ export async function POST(
     return response;
   } catch (error) {
     const { billId: errorBillId } = await params;
-    structuredLogger.error('Bill summary update failed', error as Error, {
+    logger.error('Bill summary update failed', error as Error, {
       billId: errorBillId,
       operation: 'bill_summary_api',
     });
@@ -300,7 +300,7 @@ export async function DELETE(
 
     await BillSummaryCache.invalidateSummary(billId);
 
-    structuredLogger.info('Bill summary deleted', {
+    logger.info('Bill summary deleted', {
       billId,
       operation: 'bill_summary_api',
     });
@@ -311,7 +311,7 @@ export async function DELETE(
     });
   } catch (error) {
     const { billId: errorBillId } = await params;
-    structuredLogger.error('Bill summary deletion failed', error as Error, {
+    logger.error('Bill summary deletion failed', error as Error, {
       billId: errorBillId,
       operation: 'bill_summary_api',
     });
@@ -397,7 +397,7 @@ async function fetchBillText(billId: string): Promise<{
       fullText,
     };
   } catch (error) {
-    structuredLogger.error('Failed to fetch bill text', error as Error, {
+    logger.error('Failed to fetch bill text', error as Error, {
       billId,
       operation: 'bill_text_fetch',
     });

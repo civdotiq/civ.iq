@@ -6,8 +6,11 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { structuredLogger } from '@/lib/logging/universal-logger';
-import { districtBoundaryService, type DistrictBoundary } from '@/lib/helpers/district-boundary-utils';
+import logger from '@/lib/logging/simple-logger';
+import {
+  districtBoundaryService,
+  type DistrictBoundary,
+} from '@/lib/helpers/district-boundary-utils';
 import type { Map, MapLayerMouseEvent } from 'maplibre-gl';
 
 interface RealDistrictMapProps {
@@ -61,7 +64,7 @@ export function RealDistrictMapContainer({
         }));
       })
       .catch(error => {
-        structuredLogger.error('Failed to initialize district boundary service', {
+        logger.error('Failed to initialize district boundary service', {
           component: 'RealDistrictMapContainer',
           error: error as Error,
         });
@@ -122,7 +125,7 @@ export function RealDistrictMapContainer({
         });
 
         map.on('error', (e: { error: Error }) => {
-          structuredLogger.error('MapLibre GL error', {
+          logger.error('MapLibre GL error', {
             component: 'RealDistrictMapContainer',
             error: e.error,
           });
@@ -132,7 +135,7 @@ export function RealDistrictMapContainer({
           }));
         });
       } catch (error) {
-        structuredLogger.error('Failed to initialize MapLibre GL', {
+        logger.error('Failed to initialize MapLibre GL', {
           component: 'RealDistrictMapContainer',
           error: error as Error,
         });
@@ -167,7 +170,7 @@ export function RealDistrictMapContainer({
       // Load REAL Census PMTiles data
       const pmtilesUrl = '/maps/congressional_districts_119_real.pmtiles';
 
-      structuredLogger.info('Loading REAL Congressional District boundaries from PMTiles', {
+      logger.info('Loading REAL Congressional District boundaries from PMTiles', {
         component: 'RealDistrictMapContainer',
         pmtilesUrl,
         source: 'Census TIGER/Line 2024 - 119th Congress',
@@ -278,7 +281,7 @@ export function RealDistrictMapContainer({
 
       setMapState(prev => ({ ...prev, loading: false }));
     } catch (error) {
-      structuredLogger.error('Failed to load district boundaries', {
+      logger.error('Failed to load district boundaries', {
         component: 'RealDistrictMapContainer',
         error: error as Error,
       });
@@ -383,7 +386,7 @@ export function RealDistrictMapContainer({
         districtCount: features.length,
       }));
     } catch (error) {
-      structuredLogger.error('Failed to load district data', {
+      logger.error('Failed to load district data', {
         component: 'RealDistrictMapContainer',
         error: error as Error,
       });

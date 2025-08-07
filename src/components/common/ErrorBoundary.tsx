@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -39,7 +39,7 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
       return;
     }
 
-    structuredLogger.error('Error Boundary caught an error:', error, {
+    logger.error('Error Boundary caught an error:', error, {
       componentStack: errorInfo.componentStack,
       errorBoundary: this.constructor.name,
     });
@@ -54,7 +54,7 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
       try {
         this.props.onError(error, errorInfo);
       } catch (handlerError) {
-        structuredLogger.error('Error in onError handler:', handlerError as Error);
+        logger.error('Error in onError handler:', handlerError as Error);
       }
     }
   }
@@ -167,7 +167,7 @@ export function APIErrorBoundary({ children }: { children: React.ReactNode }) {
       )}
       onError={(error, errorInfo) => {
         // Log API errors for monitoring
-        structuredLogger.error('API Error:', error, { componentStack: errorInfo.componentStack });
+        logger.error('API Error:', error, { componentStack: errorInfo.componentStack });
       }}
     >
       {children}

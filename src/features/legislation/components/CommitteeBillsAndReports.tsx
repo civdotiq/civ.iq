@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { structuredLogger } from '@/lib/logging/logger-client';
+import { logger } from '@/lib/logging/logger-client';
 
 interface CommitteeBill {
   billId: string;
@@ -62,7 +62,7 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
         setBills(data.bills);
       }
     } catch (error) {
-      structuredLogger.error('Error fetching bills', error as Error, {
+      logger.error('Error fetching bills', error as Error, {
         committeeId,
         operation: 'fetchBills',
       });
@@ -80,7 +80,7 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
         setReports(data.reports);
       }
     } catch (error) {
-      structuredLogger.error('Error fetching reports', error as Error, {
+      logger.error('Error fetching reports', error as Error, {
         committeeId,
         operation: 'fetchReports',
       });

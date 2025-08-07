@@ -9,7 +9,7 @@ import {
   getCongressionalDistrictFromAddress,
 } from '@/lib/census-api';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    structuredLogger.info(
+    logger.info(
       'Processing enhanced search request',
       {
         operation: 'representatives_search',
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
     const actualCount = districtRepresentatives.length;
 
     if (actualCount < expectedCount) {
-      structuredLogger.warn(
+      logger.warn(
         'Incomplete representative data',
         {
           operation: 'representatives_search',
@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    structuredLogger.info(
+    logger.info(
       'Enhanced search completed successfully',
       {
         operation: 'representatives_search',
@@ -155,7 +155,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    structuredLogger.error(
+    logger.error(
       'Enhanced search failed',
       error as Error,
       {

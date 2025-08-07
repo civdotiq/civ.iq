@@ -78,7 +78,8 @@
       "Bash(NODE_ENV=production npx next build --no-lint)",
       "Bash(git reset:*)",
       "Bash(npx lint-staged:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": []
   },

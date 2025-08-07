@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { structuredLogger } from '@/lib/logging/logger';
+import logger from '@/lib/logging/simple-logger';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
@@ -492,11 +492,11 @@ export default function DistrictsPage() {
       // Bust cache on first load to get fresh data
       const url = districts.length === 0 ? '/api/districts/all?bust=true' : '/api/districts/all';
       const response = await fetch(url);
-      structuredLogger.info('Districts API response', { status: response.status });
+      logger.info('Districts API response', { status: response.status });
 
       if (response.ok) {
         const data = await response.json();
-        structuredLogger.info('Districts API returned', { districtCount: data.districts?.length });
+        logger.info('Districts API returned', { districtCount: data.districts?.length });
         if (data.districts && data.districts.length > 0) {
           setDistricts(data.districts);
         } else {
@@ -504,7 +504,7 @@ export default function DistrictsPage() {
         }
       } else {
         const errorData = await response.json();
-        structuredLogger.error('Districts API error', new Error(errorData.error || 'API Error'), {
+        logger.error('Districts API error', new Error(errorData.error || 'API Error'), {
           errorData,
         });
         throw new Error(
@@ -512,11 +512,11 @@ export default function DistrictsPage() {
         );
       }
     } catch (error) {
-      structuredLogger.error('Error fetching districts', error as Error);
+      logger.error('Error fetching districts', error as Error);
       // Error will be handled by the error boundary
 
       // No fallback mock data - show clear unavailable state
-      structuredLogger.warn('Districts data unavailable, showing empty state');
+      logger.warn('Districts data unavailable, showing empty state');
       setDistricts([]);
     } finally {
       setLoading(false);
