@@ -4,233 +4,91 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cachedFetch } from '@/lib/cache';
-import logger from '@/lib/logging/simple-logger';
 
-interface BatchRequest {
-  endpoints: string[];
-  bioguideId: string;
-}
-
-interface BatchResponse {
-  success: boolean;
-  data: Record<string, unknown>;
-  errors: Record<string, string>;
-  metadata: {
-    timestamp: string;
-    requestedEndpoints: string[];
-    successfulEndpoints: string[];
-    failedEndpoints: string[];
-    totalTime: number;
-  };
-  executionTime: number; // Added for better performance monitoring
-}
-
-/**
- * Batch API endpoint to fetch multiple representative data endpoints in parallel
- * This reduces the number of round-trips for profile pages that need multiple data sources
- */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ bioguideId: string }> }
-) {
-  const startTime = Date.now();
-
-  try {
-    const { bioguideId } = await params;
-    const body: BatchRequest = await request.json();
-
-    const { endpoints } = body;
-
-    if (!endpoints || !Array.isArray(endpoints) || endpoints.length === 0) {
-      return NextResponse.json({ error: 'endpoints array is required' }, { status: 400 });
-    }
-
-    if (endpoints.length > 10) {
-      return NextResponse.json(
-        { error: 'Maximum 10 endpoints allowed per batch request' },
-        { status: 400 }
-      );
-    }
-
-    logger.info('Batch API request', {
-      bioguideId,
-      endpoints,
-      endpointCount: endpoints.length,
-    });
-
-    // Map of valid endpoints to their API paths
-    const validEndpoints: Record<string, string> = {
-      profile: '',
-      votes: '/votes?limit=20',
-      bills: '/bills?limit=10',
-      finance: '/finance',
-      news: '/news?limit=5',
-      committees: '/committees',
-      'party-alignment': '/party-alignment',
-      leadership: '/leadership',
-    };
-
-    // Filter and validate endpoints
-    const validRequestedEndpoints = endpoints.filter(endpoint =>
-      validEndpoints.hasOwnProperty(endpoint)
-    );
-
-    if (validRequestedEndpoints.length === 0) {
-      return NextResponse.json({ error: 'No valid endpoints requested' }, { status: 400 });
-    }
-
-    // Create batch fetch promises
-    const batchPromises = validRequestedEndpoints.map(async endpoint => {
-      try {
-        const apiPath = validEndpoints[endpoint];
-        const fullUrl = `${request.nextUrl.origin}/api/representative/${bioguideId}${apiPath}`;
-
-        // Use cached fetch with shorter cache times for batch requests
-        const cacheKey = `batch-${bioguideId}-${endpoint}`;
-        const data = await cachedFetch(
-          cacheKey,
-          async () => {
-            const response = await fetch(fullUrl, {
-              headers: {
-                'User-Agent': 'CivIQ-Hub-Batch/1.0',
-              },
-            });
-
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            return await response.json();
-          },
-          5 * 60 * 1000 // 5 minute cache for batch requests
-        );
-
-        return { endpoint, data, success: true };
-      } catch (error) {
-        logger.error(`Batch endpoint error: ${endpoint}`, error as Error, {
-          bioguideId,
-          endpoint,
-        });
-
-        return {
-          endpoint,
-          error: error instanceof Error ? error.message : 'Unknown error',
-          success: false,
-        };
-      }
-    });
-
-    // Execute all requests in parallel
-    const results = await Promise.all(batchPromises);
-
-    // Process results
-    const responseData: Record<string, unknown> = {};
-    const errors: Record<string, string> = {};
-    const successfulEndpoints: string[] = [];
-    const failedEndpoints: string[] = [];
-
-    results.forEach(result => {
-      if (result.success) {
-        // Normalize the response data to extract just the arrays we need
-        let normalizedData = result.data;
-
-        // Extract the actual data arrays from the endpoint responses
-        if (result.endpoint === 'votes' && result.data.votes) {
-          normalizedData = result.data.votes; // Extract votes array
-        } else if (result.endpoint === 'bills' && result.data.bills) {
-          normalizedData = result.data.bills; // Extract bills array
-        } else if (result.endpoint === 'news' && result.data.news) {
-          normalizedData = result.data.news; // Extract news array
-        } else if (result.endpoint === 'finance' && result.data.finance) {
-          normalizedData = result.data.finance; // Extract finance object
-        }
-
-        responseData[result.endpoint] = normalizedData;
-        successfulEndpoints.push(result.endpoint);
-      } else {
-        errors[result.endpoint] = result.error || 'Unknown error';
-        failedEndpoints.push(result.endpoint);
-      }
-    });
-
-    const totalTime = Date.now() - startTime;
-
-    const batchResponse: BatchResponse = {
-      success: successfulEndpoints.length > 0,
-      data: responseData,
-      errors,
-      metadata: {
-        timestamp: new Date().toISOString(),
-        requestedEndpoints: validRequestedEndpoints,
-        successfulEndpoints,
-        failedEndpoints,
-        totalTime,
-      },
-      executionTime: totalTime, // Added for API client compatibility
-    };
-
-    logger.info('Batch API completed', {
-      bioguideId,
-      successCount: successfulEndpoints.length,
-      errorCount: failedEndpoints.length,
-      totalTime,
-    });
-
-    return NextResponse.json(batchResponse);
-  } catch (error) {
-    const totalTime = Date.now() - startTime;
-    logger.error('Batch API error', error as Error, {
-      bioguideId: (await params).bioguideId,
-      totalTime,
-    });
-
-    return NextResponse.json(
-      {
-        error: 'Batch API failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * GET endpoint for health check and documentation
- */
+// GET endpoint for full data fetching
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const { bioguideId } = await params;
+  const upperBioguideId = bioguideId?.toUpperCase();
 
-  return NextResponse.json({
-    service: 'Representative Batch API',
-    bioguideId,
-    method: 'POST',
-    description: 'Batch endpoint to fetch multiple representative data sources in parallel',
-    availableEndpoints: [
-      'profile',
-      'votes',
-      'bills',
-      'finance',
-      'news',
-      'committees',
-      'party-alignment',
-      'leadership',
-    ],
-    usage: {
-      method: 'POST',
-      body: {
-        endpoints: ['profile', 'votes', 'bills'],
-      },
-      maxEndpoints: 10,
-    },
-    benefits: [
-      'Reduced round-trip requests',
-      'Parallel data fetching',
-      'Consistent caching strategy',
-      'Better error handling',
-    ],
-  });
+  // eslint-disable-next-line no-console
+  console.log('[BATCH API] Fetching full data for:', upperBioguideId);
+
+  const API_KEY = process.env.CONGRESS_API_KEY;
+
+  if (!API_KEY) {
+    // eslint-disable-next-line no-console
+    console.error('[BATCH API] No CONGRESS_API_KEY found');
+    return NextResponse.json({ error: 'API configuration error' }, { status: 500 });
+  }
+
+  try {
+    // Fetch all data in parallel from Congress.gov
+    const [memberRes, billsRes, votesRes] = await Promise.all([
+      fetch(`https://api.congress.gov/v3/member/${upperBioguideId}?api_key=${API_KEY}`),
+      fetch(
+        `https://api.congress.gov/v3/member/${upperBioguideId}/sponsored-legislation?api_key=${API_KEY}&limit=10`
+      ).catch(() => null),
+      fetch(
+        `https://api.congress.gov/v3/member/${upperBioguideId}/voting-record?api_key=${API_KEY}&limit=10`
+      ).catch(() => null),
+    ]);
+
+    // eslint-disable-next-line no-console
+    console.log('[BATCH API] Congress.gov responses:', {
+      member: memberRes.status,
+      bills: billsRes?.status || 'failed',
+      votes: votesRes?.status || 'failed',
+    });
+
+    if (!memberRes.ok) {
+      // eslint-disable-next-line no-console
+      console.error('[BATCH API] Member fetch failed:', memberRes.status);
+      return NextResponse.json(
+        {
+          member: { bioguideId: upperBioguideId, error: true },
+          bills: [],
+          votes: [],
+          committees: [],
+          news: [],
+          finance: null,
+          success: false,
+        },
+        { status: 404 }
+      );
+    }
+
+    const memberData = await memberRes.json();
+    const billsData = billsRes?.ok ? await billsRes.json() : { sponsoredLegislation: [] };
+    const votesData = votesRes?.ok ? await votesRes.json() : { votes: [] };
+
+    // eslint-disable-next-line no-console
+    console.log('[BATCH API] Successfully fetched data');
+
+    // Return FULL data structure
+    return NextResponse.json({
+      member: memberData.member || memberData,
+      bills: billsData.sponsoredLegislation || [],
+      votes: votesData.votes || [],
+      committees: [], // Add committee fetch if needed
+      news: [], // Add news fetch if needed
+      finance: null, // Add FEC data if needed
+      success: true,
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[BATCH API] Fetch error:', error);
+    // Return full structure even on error
+    return NextResponse.json({
+      member: { bioguideId: upperBioguideId, error: true },
+      bills: [],
+      votes: [],
+      committees: [],
+      news: [],
+      finance: null,
+      success: false,
+    });
+  }
 }
