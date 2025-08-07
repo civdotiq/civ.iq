@@ -110,8 +110,19 @@ async function getRepresentativeData(bioguideId: string) {
       component: 'RepresentativeProfilePage',
     });
 
-    // Use relative URL for API calls (works in both dev and production)
-    const response = await fetch(`/api/representative/${bioguideId}/batch`, {
+    // Use absolute URL for server-side fetches
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NODE_ENV === 'development'
+        ? 'http://localhost:3000'
+        : 'https://civdotiq.org';
+
+    const apiUrl = `${baseUrl}/api/representative/${bioguideId}/batch`;
+
+    // eslint-disable-next-line no-console
+    console.log('[SSR] Fetching from:', apiUrl);
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
