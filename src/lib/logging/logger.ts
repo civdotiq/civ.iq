@@ -24,7 +24,20 @@ const logColors = {
   debug: 'white',
 };
 
-winston.addColors(logColors);
+// Add colors only in development environment and when running in Node.js runtime
+// Skip in Edge Runtime or production to avoid winston.addColors issues
+if (
+  process.env.NODE_ENV === 'development' &&
+  typeof window === 'undefined' &&
+  !process.env.VERCEL_EDGE
+) {
+  try {
+    winston.addColors(logColors);
+  } catch {
+    // Silently ignore if addColors fails in Edge Runtime
+    // Using logger would be circular dependency, so we skip logging this
+  }
+}
 
 // Custom format for structured logging
 const structuredFormat = winston.format.combine(

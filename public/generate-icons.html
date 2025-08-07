@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CIV.IQ Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .icon-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .icon-box {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            display: block;
+            margin: 10px auto;
+        }
+        button {
+            background: #3ea2d4;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .generate-all {
+            background: #0b983c;
+            padding: 12px 24px;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏛️ CIV.IQ PWA Icon Generator</h1>
+    <p>Click "Generate All Icons" to create all PWA icons, then download them to the public folder.</p>
+    
+    <button class="generate-all" onclick="generateAllIcons()">Generate All Icons</button>
+    
+    <div id="iconContainer" class="icon-container"></div>
+
+    <script>
+        const sizes = [32, 72, 96, 128, 144, 152, 192, 384, 512];
+        
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = size;
+            canvas.height = size;
+            
+            // White background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, size, size);
+            
+            // CIV.IQ branding colors
+            const padding = size * 0.1;
+            const innerSize = size - (padding * 2);
+            
+            // Red circle (representing civic engagement)
+            ctx.fillStyle = '#e11d07';
+            ctx.globalAlpha = 0.9;
+            ctx.beginPath();
+            ctx.arc(size * 0.35, size * 0.5, innerSize * 0.35, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Green rectangle (representing government)
+            ctx.fillStyle = '#0b983c';
+            ctx.fillRect(size * 0.5, size * 0.4, innerSize * 0.3, innerSize * 0.2);
+            
+            // Blue accent (representing information)
+            ctx.fillStyle = '#3ea2d4';
+            ctx.fillRect(size * 0.45, size * 0.65, innerSize * 0.4, innerSize * 0.05);
+            
+            // Text "CIV.IQ"
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#333333';
+            ctx.font = `bold ${size * 0.12}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('CIV.IQ', size * 0.5, size * 0.85);
+        }
+        
+        function generateAllIcons() {
+            const container = document.getElementById('iconContainer');
+            container.innerHTML = '';
+            
+            sizes.forEach(size => {
+                const box = document.createElement('div');
+                box.className = 'icon-box';
+                
+                const canvas = document.createElement('canvas');
+                drawIcon(canvas, size);
+                
+                const label = document.createElement('div');
+                label.textContent = `icon-${size}x${size}.png`;
+                
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = `Download ${size}x${size}`;
+                downloadBtn.onclick = () => downloadIcon(canvas, size);
+                
+                box.appendChild(label);
+                box.appendChild(canvas);
+                box.appendChild(downloadBtn);
+                container.appendChild(box);
+            });
+            
+            // Also generate favicon
+            const faviconBox = document.createElement('div');
+            faviconBox.className = 'icon-box';
+            
+            const faviconCanvas = document.createElement('canvas');
+            drawIcon(faviconCanvas, 32);
+            
+            const faviconLabel = document.createElement('div');
+            faviconLabel.textContent = 'favicon.ico (as PNG)';
+            
+            const faviconBtn = document.createElement('button');
+            faviconBtn.textContent = 'Download favicon';
+            faviconBtn.onclick = () => downloadIcon(faviconCanvas, 32, 'favicon');
+            
+            faviconBox.appendChild(faviconLabel);
+            faviconBox.appendChild(faviconCanvas);
+            faviconBox.appendChild(faviconBtn);
+            container.appendChild(faviconBox);
+        }
+        
+        function downloadIcon(canvas, size, name = null) {
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = name ? `${name}.png` : `icon-${size}x${size}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        }
+        
+        // Auto-generate on load
+        window.addEventListener('load', generateAllIcons);
+    </script>
+</body>
+</html>
