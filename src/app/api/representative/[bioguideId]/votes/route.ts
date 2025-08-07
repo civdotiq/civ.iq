@@ -127,77 +127,92 @@ async function getMemberVoteFromRollCall(
   }
 }
 
-// Enhanced function to get recent votes using Congress.gov API with caching
+// Enhanced function to get recent votes using new House Roll Call Votes API
 async function getEnhancedVotingRecords(
   bioguideId: string,
   chamber: string,
   limit: number
 ): Promise<Vote[]> {
   return withCache(
-    `enhanced-voting-records-${bioguideId}-${chamber}-${limit}`,
+    `house-roll-call-votes-${bioguideId}-${chamber}-${limit}`,
     async () => {
-      structuredLogger.info('Attempting to fetch real voting data from Congress.gov', {
+      structuredLogger.info('Fetching real voting data from new House Roll Call Votes API', {
         bioguideId,
         chamber,
         limit,
       });
 
-      // Try to use the congress-api service for voting data
-      const { getVotesByMember } = await import('@/features/representatives/services/congress-api');
+      // Use the new House Roll Call Votes API for House members only
+      if (chamber === 'House') {
+        const { getVotesByMember } = await import(
+          '@/features/representatives/services/congress-api'
+        );
 
-      try {
-        const votingData = await getVotesByMember(bioguideId);
+        try {
+          const votingData = await getVotesByMember(bioguideId);
 
-        if (votingData && votingData.length > 0) {
-          structuredLogger.info('Voting data retrieved from congress-api', {
-            bioguideId,
-            votesFound: votingData.length,
-          });
+          if (votingData && votingData.length > 0) {
+            structuredLogger.info('House roll call voting data retrieved', {
+              bioguideId,
+              votesFound: votingData.length,
+              source: 'house-vote-api',
+            });
 
-          // Transform the data to match our Vote interface
-          const transformedVotes: Vote[] = votingData
-            .slice(0, limit)
-            .map((vote: unknown, index: number) => {
+            // Transform the House roll call data to match our Vote interface
+            const transformedVotes: Vote[] = votingData.slice(0, limit).map((vote: unknown) => {
               const voteData = vote as Record<string, unknown>;
               const billData = (voteData.bill as Record<string, unknown>) || {};
 
               return {
-                voteId: `${bioguideId}-vote-${index}`,
+                voteId: (voteData.voteId as string) || `${bioguideId}-vote-${voteData.rollNumber}`,
                 bill: {
-                  number: (billData.number as string) || 'Unknown',
-                  title:
-                    (billData.title as string) || (voteData.question as string) || 'Unknown Bill',
-                  congress: (voteData.congress as string) || '118',
-                  type: (billData.type as string) || 'Bill',
+                  number: (billData.number as string) || 'Roll Call Vote',
+                  title: (billData.title as string) || 'House Roll Call Vote',
+                  congress: (billData.congress as string) || '119',
+                  type: (billData.type as string) || 'Vote',
+                  url: billData.url as string,
                 },
-                question: (voteData.question as string) || 'On Passage',
+                question: (voteData.question as string) || 'On the Vote',
                 result: (voteData.result as string) || 'Unknown',
                 date: (voteData.date as string) ?? new Date().toISOString().split('T')[0],
-                position:
-                  (voteData.position as 'Yea' | 'Nay' | 'Not Voting' | 'Present') || 'Not Voting',
+                // Note: Individual member position not yet available from member-votes endpoint
+                position: 'Not Available' as 'Yea' | 'Nay' | 'Not Voting' | 'Present',
                 chamber: chamber as 'House' | 'Senate',
                 rollNumber: voteData.rollNumber as number,
+                isKeyVote: false, // Could be determined from bill importance
                 category: categorizeBill(
                   (billData.title as string) || (voteData.question as string) || ''
                 ),
+                metadata: {
+                  sourceUrl: voteData.sourceDataURL as string,
+                  lastUpdated: new Date().toISOString(),
+                  confidence: 'high',
+                  note: 'Individual voting position available when member-votes endpoint is ready',
+                },
               };
             });
 
-          return transformedVotes;
+            return transformedVotes;
+          }
+        } catch (error) {
+          structuredLogger.error('Failed to fetch House roll call votes', error as Error, {
+            bioguideId,
+          });
         }
-      } catch (importError) {
-        structuredLogger.warn('Failed to import congress-api voting service', {
+      } else {
+        structuredLogger.info('Senate voting records not available via House Roll Call API', {
           bioguideId,
-          error: (importError as Error).message,
+          chamber,
+          note: 'House Roll Call Votes API only covers House of Representatives',
         });
       }
 
       // Return empty array if no data found
       return [];
     },
-    300000 // 5 minutes cache for voting data
+    1800000 // 30 minutes cache for voting data
   ).catch(error => {
-    structuredLogger.warn('Real voting data fetch failed, using enhanced mock data', {
+    structuredLogger.warn('House roll call voting data fetch failed', {
       bioguideId,
       error: (error as Error).message,
     });
@@ -258,13 +273,18 @@ export async function GET(
           votes: realVotes,
           totalResults: realVotes.length,
           dataSource: 'congress.gov',
-          source: 'congress-api',
-          cacheStatus: 'Live voting data from Congress.gov',
+          source: 'house-roll-call-votes-api',
+          cacheStatus: 'Live House roll call voting data from Congress.gov (119th Congress)',
+          apiVersion: 'House Roll Call Votes API (Beta - May 2025)',
           member: {
             bioguideId,
             name: memberName,
             chamber: memberChamber,
           },
+          note:
+            memberChamber === 'House'
+              ? 'Individual member voting positions will be available when member-votes endpoint is released'
+              : 'Senate voting data not available via House Roll Call Votes API',
         });
       }
     } catch (realDataError) {

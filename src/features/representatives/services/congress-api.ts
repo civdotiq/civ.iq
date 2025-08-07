@@ -607,23 +607,204 @@ export async function getBillsByMember(bioguideId: string, apiKey?: string): Pro
 }
 
 /**
- * Get voting record for a specific member
+ * Get voting record for a specific member using the new House Roll Call Votes API (May 2025)
+ * Uses Congress.gov /house-vote endpoints introduced in beta for 119th Congress
  */
 export async function getVotesByMember(bioguideId: string, apiKey?: string): Promise<unknown[]> {
   try {
     await congressRateLimiter.waitIfNeeded();
 
     const congressApiKey = apiKey || process.env.CONGRESS_API_KEY;
-
-    // Get recent votes from current congress
-    const url = new URL(`${CONGRESS_API_BASE}/member/${bioguideId}/votes`);
-
-    url.searchParams.append('format', 'json');
-    url.searchParams.append('limit', '100');
-
-    if (congressApiKey) {
-      url.searchParams.append('api_key', congressApiKey);
+    if (!congressApiKey) {
+      structuredLogger.warn('Congress API key not available', {
+        component: 'congressApi',
+        bioguideId,
+      });
+      return [];
     }
+
+    // Get House roll call votes for 119th Congress using new API
+    const houseVotesUrl = new URL(`${CONGRESS_API_BASE}/house-vote/119`);
+    houseVotesUrl.searchParams.append('format', 'json');
+    houseVotesUrl.searchParams.append('limit', '50'); // Get recent votes
+    houseVotesUrl.searchParams.append('api_key', congressApiKey);
+
+    const response = await fetch(houseVotesUrl.toString(), {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+      },
+      // @ts-expect-error - Next.js fetch extension
+      next: { revalidate: 1800 }, // Cache for 30 minutes
+    });
+
+    if (!response.ok) {
+      structuredLogger.error('House votes API error', {
+        component: 'congressApi',
+        error: new Error(`${response.status} ${response.statusText}`),
+        metadata: { status: response.status, statusText: response.statusText, bioguideId },
+      });
+      return [];
+    }
+
+    const data = await response.json();
+    const rollCallVotes = data.houseRollCallVotes || [];
+
+    structuredLogger.info('House roll call votes retrieved', {
+      component: 'congressApi',
+      bioguideId,
+      votesCount: rollCallVotes.length,
+      metadata: { congress: 119, source: 'house-vote-api' },
+    });
+
+    // Transform the roll call votes and fetch individual member positions
+    const transformedVotes = await Promise.all(
+      rollCallVotes.slice(0, 10).map(async (vote: unknown, index: number) => {
+        const voteData = vote as Record<string, unknown>;
+        const rollNumber = voteData.rollCallNumber as number;
+        const session = voteData.sessionNumber as number;
+
+        // Fetch individual member voting position using the live API
+        let memberPosition: 'Yea' | 'Nay' | 'Present' | 'Not Voting' = 'Not Voting';
+        let memberVoteData: unknown = null;
+
+        try {
+          const memberVoteResult = await getMemberVotingPositions(
+            119, // 119th Congress only
+            session,
+            rollNumber,
+            bioguideId,
+            'house', // Chamber type
+            congressApiKey
+          );
+
+          if (memberVoteResult.position) {
+            memberPosition = memberVoteResult.position;
+            memberVoteData = memberVoteResult.memberData;
+
+            structuredLogger.info('Individual member vote retrieved', {
+              component: 'congressApi',
+              bioguideId,
+              rollNumber,
+              position: memberPosition,
+            });
+          }
+        } catch (memberVoteError) {
+          structuredLogger.warn('Could not fetch individual member vote', {
+            component: 'congressApi',
+            bioguideId,
+            rollNumber,
+            error: (memberVoteError as Error).message,
+          });
+        }
+
+        return {
+          voteId: `119-${rollNumber || index}`,
+          bill: {
+            number:
+              voteData.legislationType && voteData.legislationNumber
+                ? `${voteData.legislationType} ${voteData.legislationNumber}`
+                : 'Roll Call Vote',
+            title: (voteData.voteQuestion as string) || `Roll Call ${rollNumber}`,
+            congress: (voteData.congress as number).toString(),
+            type: (voteData.legislationType as string) || 'Vote',
+            url: voteData.legislationUrl as string,
+          },
+          question: (voteData.voteQuestion as string) || 'On the Vote',
+          result: (voteData.result as string) || 'Unknown',
+          date: voteData.startDate
+            ? new Date(voteData.startDate as string).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0],
+          // REAL individual member position from live API
+          position: memberPosition,
+          chamber: 'House' as const,
+          rollNumber,
+          voteType: voteData.voteType as string,
+          sessionNumber: session,
+          isKeyVote: false, // Could be enhanced based on bill importance
+          category: 'Other' as const, // Could be enhanced with bill categorization logic
+          metadata: {
+            sourceUrl: voteData.sourceDataURL as string,
+            lastUpdated: new Date().toISOString(),
+            confidence: 'high',
+            memberVoteData,
+            dataSource: 'live-congress-api',
+          },
+        };
+      })
+    );
+
+    return transformedVotes;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching House roll call votes:', error);
+    structuredLogger.error('Error fetching House roll call votes', {
+      component: 'congressApi',
+      error: error as Error,
+      metadata: { bioguideId },
+    });
+    return [];
+  }
+}
+
+/**
+ * Get vote details with member positions - unified function for both chambers
+ * Currently uses chamber-specific endpoints, ready for unified /vote endpoint when available
+ */
+export async function getVoteDetails(
+  congress: number,
+  chamber: 'house' | 'senate',
+  session: number,
+  rollCallNumber: number,
+  apiKey?: string
+): Promise<{
+  voteMetadata?: unknown;
+  memberVotes: Array<{
+    bioguideId: string;
+    position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
+    name: string;
+    party: string;
+    state: string;
+  }>;
+  success: boolean;
+}> {
+  try {
+    await congressRateLimiter.waitIfNeeded();
+
+    const congressApiKey = apiKey || process.env.CONGRESS_API_KEY;
+    if (!congressApiKey) {
+      structuredLogger.warn('Congress API key not available for vote details', {
+        component: 'congressApi',
+        congress,
+        chamber,
+        rollCallNumber,
+      });
+      return { memberVotes: [], success: false };
+    }
+
+    // NOTE: When Congress.gov releases unified /vote endpoint, we can use:
+    // const unifiedUrl = `${CONGRESS_API_BASE}/vote/${congress}/${chamber}/${session}/${rollCallNumber}/members`;
+
+    // Handle chamber-specific endpoints
+    if (chamber === 'senate') {
+      // Use Senate.gov XML parsing for Senate votes
+      structuredLogger.info('Using Senate.gov XML for Senate vote details', {
+        component: 'congressApi',
+        congress,
+        chamber,
+        rollCallNumber,
+        note: 'Fetching from Senate.gov XML via proxy',
+      });
+
+      return await getSenateVoteDetails(congress, session, rollCallNumber);
+    }
+
+    // House Roll Call Votes API is available
+    const membersUrl = `${CONGRESS_API_BASE}/house-vote/${congress}/${session}/${rollCallNumber}/members`;
+
+    const url = new URL(membersUrl);
+    url.searchParams.append('format', 'json');
+    url.searchParams.append('api_key', congressApiKey);
 
     const response = await fetch(url.toString(), {
       headers: {
@@ -631,29 +812,113 @@ export async function getVotesByMember(bioguideId: string, apiKey?: string): Pro
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
       },
       // @ts-expect-error - Next.js fetch extension
-      next: { revalidate: 900 }, // Cache for 15 minutes
+      next: { revalidate: 3600 }, // Cache for 1 hour since votes don't change
     });
 
     if (!response.ok) {
-      structuredLogger.error('Congress votes API error', {
+      structuredLogger.error('Vote details API error', {
         component: 'congressApi',
         error: new Error(`${response.status} ${response.statusText}`),
-        metadata: { status: response.status, statusText: response.statusText },
+        metadata: {
+          status: response.status,
+          statusText: response.statusText,
+          congress,
+          chamber,
+          rollCallNumber,
+        },
       });
-      return [];
+      return { memberVotes: [], success: false };
     }
 
     const data = await response.json();
-    return data.votes || [];
+
+    if (chamber === 'house') {
+      // Parse House vote data structure
+      const voteData = data.houseRollCallVoteMemberVotes;
+      const results = voteData?.results || [];
+
+      const memberVotes = results.map((vote: unknown) => {
+        const voteRecord = vote as Record<string, unknown>;
+        return {
+          bioguideId: voteRecord.bioguideID as string,
+          position: voteRecord.voteCast as 'Yea' | 'Nay' | 'Present' | 'Not Voting',
+          name: `${voteRecord.firstName} ${voteRecord.lastName}`,
+          party: voteRecord.voteParty as string,
+          state: voteRecord.voteState as string,
+        };
+      });
+
+      structuredLogger.info('Vote details retrieved successfully', {
+        component: 'congressApi',
+        congress,
+        chamber,
+        rollCallNumber,
+        memberCount: memberVotes.length,
+      });
+
+      return {
+        voteMetadata: voteData,
+        memberVotes,
+        success: true,
+      };
+    }
+
+    return { memberVotes: [], success: false };
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error('Error fetching member votes:', error);
-    structuredLogger.error('Error fetching member votes', {
+    console.error('Error fetching vote details:', error);
+    structuredLogger.error('Error fetching vote details', {
       component: 'congressApi',
       error: error as Error,
+      metadata: { congress, chamber, rollCallNumber, session },
     });
-    return [];
+    return { memberVotes: [], success: false };
   }
+}
+
+/**
+ * Get individual member voting position for a specific vote
+ * Uses the unified getVoteDetails function
+ */
+export async function getMemberVotingPositions(
+  congress: number,
+  session: number,
+  rollCallNumber: number,
+  bioguideId: string,
+  _chamber: 'house' | 'senate' = 'house',
+  apiKey?: string
+): Promise<{
+  position: 'Yea' | 'Nay' | 'Present' | 'Not Voting' | null;
+  memberData?: unknown;
+  voteData?: unknown;
+}> {
+  // Use the new getVoteDetails function which handles chamber logic
+  const voteDetails = await getVoteDetails(congress, 'house', session, rollCallNumber, apiKey);
+
+  if (!voteDetails.success) {
+    return { position: null };
+  }
+
+  const memberVote = voteDetails.memberVotes.find(vote => vote.bioguideId === bioguideId);
+
+  if (memberVote) {
+    structuredLogger.info('Individual member vote found via getVoteDetails', {
+      component: 'congressApi',
+      bioguideId,
+      position: memberVote.position,
+      rollCallNumber,
+      session,
+      congress,
+    });
+
+    return {
+      position: memberVote.position,
+      memberData: memberVote,
+      voteData: voteDetails.voteMetadata,
+    };
+  }
+
+  return { position: null };
 }
 
 /**
@@ -818,63 +1083,10 @@ export async function searchBills(query: string, limit = 20, apiKey?: string): P
   }
 }
 
-// This function has been removed as part of the mock data elimination project.
-// Senator data is now fetched dynamically from Congress.gov API.
-
-/**
- * Generate mock representatives for testing/fallback
- */
-function _getMockRepresentatives(state: string, district?: string): Representative[] {
-  const currentYear = new Date().getFullYear();
-  const representatives: Representative[] = [];
-
-  // Mock Senators
-  representatives.push(
-    {
-      bioguideId: `${state}001`,
-      name: `John Smith`,
-      party: 'Democratic',
-      state: state,
-      chamber: 'Senate',
-      phone: '(202) 224-0001',
-      website: `https://smith.senate.gov`,
-      yearsInOffice: 8,
-      nextElection: '2028',
-      imageUrl: '/api/placeholder/200/250',
-    },
-    {
-      bioguideId: `${state}002`,
-      name: `Jane Johnson`,
-      party: 'Republican',
-      state: state,
-      chamber: 'Senate',
-      phone: '(202) 224-0002',
-      website: `https://johnson.senate.gov`,
-      yearsInOffice: 4,
-      nextElection: '2026',
-      imageUrl: '/api/placeholder/200/250',
-    }
-  );
-
-  // Mock House Representative
-  if (district) {
-    representatives.push({
-      bioguideId: `${state}H${district}`,
-      name: `Michael Davis`,
-      party: 'Democratic',
-      state: state,
-      district: district,
-      chamber: 'House',
-      phone: '(202) 225-0001',
-      website: `https://davis.house.gov`,
-      yearsInOffice: 6,
-      nextElection: currentYear % 2 === 0 ? currentYear.toString() : (currentYear + 1).toString(),
-      imageUrl: '/api/placeholder/200/250',
-    });
-  }
-
-  return representatives;
-}
+// Mock data has been removed as part of the data integrity improvements.
+// All representative data is now fetched from real sources:
+// - Congress.gov API for federal representatives
+// - congress-legislators enhanced data for additional details
 
 /**
  * Get detailed bill information including actions and recorded votes
@@ -920,6 +1132,178 @@ export async function getBillDetails(
 }
 
 /**
+ * Get Senate vote details with member positions from Senate.gov XML data
+ * Uses the proxy route to handle CORS and parse XML voting records
+ */
+export async function getSenateVoteDetails(
+  congress: number,
+  _session: number,
+  voteNumber: number
+): Promise<{
+  voteMetadata?: {
+    question: string;
+    result: string;
+    date: string;
+    bill?: { number: string; title: string };
+  };
+  memberVotes: Array<{
+    bioguideId: string;
+    position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
+    name: string;
+    party: string;
+    state: string;
+  }>;
+  success: boolean;
+}> {
+  try {
+    // Only support 119th Congress for now
+    if (congress !== 119) {
+      structuredLogger.warn('Senate votes only supported for 119th Congress', {
+        component: 'congressApi',
+        congress,
+        voteNumber,
+      });
+      return { memberVotes: [], success: false };
+    }
+
+    // Fetch Senate XML data through our CORS proxy
+    const proxyUrl = `/api/senate-votes/${voteNumber}`;
+
+    structuredLogger.info('Fetching Senate vote XML via proxy', {
+      component: 'congressApi',
+      congress,
+      voteNumber,
+      proxyUrl,
+    });
+
+    const response = await fetch(proxyUrl);
+
+    if (!response.ok) {
+      structuredLogger.error('Senate vote proxy error', {
+        component: 'congressApi',
+        error: new Error(`${response.status} ${response.statusText}`),
+        metadata: { status: response.status, voteNumber },
+      });
+      return { memberVotes: [], success: false };
+    }
+
+    const xmlText = await response.text();
+
+    // Parse the Senate XML data
+    // Senate XML structure includes vote metadata and member votes
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
+
+    // Check for XML parsing errors
+    const parseError = xmlDoc.querySelector('parsererror');
+    if (parseError) {
+      structuredLogger.error('Senate XML parsing error', {
+        component: 'congressApi',
+        error: new Error('Invalid XML structure'),
+        metadata: { voteNumber, xmlLength: xmlText.length },
+      });
+      return { memberVotes: [], success: false };
+    }
+
+    // Extract vote metadata
+    const voteDateText = xmlDoc.querySelector('vote_date')?.textContent?.trim();
+    const voteDate = voteDateText || new Date().toISOString().split('T')[0];
+
+    const voteMetadata = {
+      question: xmlDoc.querySelector('vote_question')?.textContent?.trim() || 'Senate Vote',
+      result: xmlDoc.querySelector('vote_result')?.textContent?.trim() || 'Unknown',
+      date: voteDate as string,
+      bill: {
+        number:
+          xmlDoc.querySelector('document > document_name')?.textContent?.trim() ||
+          `Senate Vote ${voteNumber}`,
+        title:
+          xmlDoc.querySelector('vote_title')?.textContent?.trim() ||
+          xmlDoc.querySelector('vote_question')?.textContent?.trim() ||
+          `Senate Vote ${voteNumber}`,
+      },
+    };
+
+    // Extract member votes
+    const memberVotes: Array<{
+      bioguideId: string;
+      position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
+      name: string;
+      party: string;
+      state: string;
+    }> = [];
+
+    // Parse members - Senate XML has all members in a single <members> section
+    // Each member has a <vote_cast> field showing their actual vote
+    const members = xmlDoc.querySelectorAll('members > member');
+
+    for (const member of members) {
+      const memberName =
+        member.querySelector('member_full')?.textContent?.trim() ||
+        `${member.querySelector('first_name')?.textContent?.trim() || ''} ${member.querySelector('last_name')?.textContent?.trim() || ''}`.trim();
+      const state = member.querySelector('state')?.textContent?.trim() || '';
+      const party = member.querySelector('party')?.textContent?.trim() || '';
+      const voteCast = member.querySelector('vote_cast')?.textContent?.trim() || 'Not Voting';
+
+      // Map Senate vote cast to our position format
+      let position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
+      switch (voteCast.toLowerCase()) {
+        case 'yea':
+          position = 'Yea';
+          break;
+        case 'nay':
+          position = 'Nay';
+          break;
+        case 'present':
+          position = 'Present';
+          break;
+        default:
+          position = 'Not Voting';
+      }
+
+      // Try to extract LIS member ID or bioguide ID if available
+      const lisMemberId = member.querySelector('lis_member_id')?.textContent?.trim();
+      const bioguideId =
+        member.querySelector('bioguide_id')?.textContent?.trim() ||
+        lisMemberId ||
+        `${memberName?.replace(/\s+/g, '')}_${state}`.toUpperCase();
+
+      if (memberName && state) {
+        memberVotes.push({
+          bioguideId,
+          position,
+          name: memberName,
+          party,
+          state,
+        });
+      }
+    }
+
+    structuredLogger.info('Senate vote details parsed successfully', {
+      component: 'congressApi',
+      congress,
+      voteNumber,
+      memberCount: memberVotes.length,
+      question: voteMetadata.question,
+      result: voteMetadata.result,
+    });
+
+    return {
+      voteMetadata,
+      memberVotes,
+      success: true,
+    };
+  } catch (error) {
+    structuredLogger.error('Error parsing Senate vote XML', {
+      component: 'congressApi',
+      error: error as Error,
+      metadata: { congress, voteNumber },
+    });
+    return { memberVotes: [], success: false };
+  }
+}
+
+/**
  * Export consolidated congress API instance
  */
 export const congressApi = {
@@ -932,4 +1316,5 @@ export const congressApi = {
   searchBills,
   getBillDetails,
   formatCongressMember,
+  getSenateVoteDetails,
 };

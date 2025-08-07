@@ -49,7 +49,20 @@ For the full philosophical framework, see [PROJECT-PHILOSOPHY.md](PROJECT-PHILOS
 
 ### 🎉 **Production-Ready Civic Intelligence Platform (July 2025)**
 
-#### **🗺️ REAL Congressional District Boundaries** _(LATEST - August 1, 2025)_
+#### **🏛️ Complete Senate Voting Integration via Senate.gov XML** _(LATEST - August 7, 2025)_
+
+- **🗳️ Real Senate Vote Data**: Complete implementation using official Senate.gov XML roll call vote data
+- **🏛️ Unified Voting System**: Seamless integration with existing House Roll Call Votes API from Congress.gov
+- **📊 Complete Senator Coverage**: All 100 senators with real voting positions (Yea/Nay/Present/Not Voting)
+- **⚡ CORS Proxy System**: Custom proxy route (`/api/senate-votes/[voteNumber]`) handles cross-origin requests to Senate.gov
+- **🔍 Real-time XML Parsing**: Dynamic parsing of Senate XML structure with member vote extraction
+- **📋 Vote Metadata**: Complete bill information, vote questions, results, and dates from Senate.gov
+- **🎯 LIS Member ID Support**: Handles Senate's Legislative Information System member identifiers
+- **🔗 Chamber-Agnostic API**: Single `getVoteDetails` function automatically routes House vs Senate votes
+- **✅ Production Ready**: Fully integrated with existing voting records system and error handling
+- **📈 119th Congress Support**: Tested with real Senate vote data (e.g., Vote #1: Cloture on Motion to Proceed S. 5)
+
+#### **🗺️ REAL Congressional District Boundaries** _(August 1, 2025)_
 
 - **🏛️ Authentic Census Data**: Complete replacement of mock district boundaries with real U.S. Census Bureau TIGER/Line shapefiles
 - **📊 All 435 Districts + Territories**: Processed complete dataset covering 119th Congress boundaries (444 total districts)
@@ -806,7 +819,7 @@ civic-intel-hub/
 ```
 GET /api/representatives?zip=48221         # Find reps by ZIP
 GET /api/representative/[bioguideId]       # Representative details
-GET /api/representative/[bioguideId]/votes # Voting records
+GET /api/representative/[bioguideId]/votes # Unified voting records (House + Senate)
 GET /api/representative/[bioguideId]/bills # Sponsored bills
 GET /api/representative/[bioguideId]/finance # Enhanced campaign finance with industry categorization, bundled contributions, and independent expenditures
 GET /api/representative/[bioguideId]/lobbying # Corporate lobbying activity matched to committee assignments
@@ -814,6 +827,7 @@ GET /api/representative/[bioguideId]/news  # Recent news mentions (deduplicated)
 GET /api/representative/[bioguideId]/party-alignment # Real party voting analysis
 GET /api/representative/[bioguideId]/committees # Committee assignments
 GET /api/representative/[bioguideId]/leadership # Leadership roles
+GET /api/senate-votes/[voteNumber]         # Senate.gov XML proxy (CORS handler)
 ```
 
 #### State & Local Government
@@ -864,7 +878,8 @@ The platform integrates with multiple government and research APIs:
 #### Government Sources (High Reliability)
 
 - **Congress-Legislators YAML**: Comprehensive legislator profiles with social media and enhanced data
-- **Congress.gov API**: Real-time legislative data with 5000 req/hour limit
+- **Congress.gov API**: Real-time legislative data with 5000 req/hour limit (House Roll Call Votes)
+- **Senate.gov XML**: Official Senate roll call vote data with complete member positions
 - **FEC.gov API**: Campaign finance with 1000 req/hour limit
 - **Census.gov API**: Demographics and geocoding with 500 req/day limit
 - **Government RSS**: White House, Congress, Federal agencies

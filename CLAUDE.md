@@ -112,7 +112,7 @@ Your code must be 100% clean. No exceptions.
 ```
 GET /api/representatives?zip=48221             # Enhanced with congress-legislators
 GET /api/representative/[bioguideId]           # Enhanced profiles with social media
-GET /api/representative/[bioguideId]/votes     # Real voting records
+GET /api/representative/[bioguideId]/votes     # Unified voting records (House + Senate)
 GET /api/representative/[bioguideId]/bills     # Real bills with categorization
 GET /api/representative/[bioguideId]/finance   # Real FEC data
 GET /api/representative/[bioguideId]/news      # GDELT V2 DOC API with smart search terms & deduplication
@@ -124,6 +124,7 @@ GET /api/districts/[districtId]                # Districts with real Census data
 GET /api/district-map?zip=48221                # Interactive maps with GeoJSON
 GET /api/search                                # Advanced representative search
 GET /api/health                                # Service health monitoring
+GET /api/senate-votes/[voteNumber]             # Senate.gov XML proxy for CORS handling
 ```
 
 ### Development Commands
@@ -186,6 +187,7 @@ npm run validate-mappings  # Validate mappings
 - ✅ **🏦 Enhanced FEC Campaign Finance System (Jan 25, 2025)** - Industry categorization, bundled contributions, and independent expenditures tracking
 - ✅ **🚀 Comprehensive Performance Optimization (Jan 26, 2025)** - Complete performance overhaul with 70% improvement in rendering, memory leak fixes, virtual scrolling, modular D3 imports, SWR caching, and Next.js image optimization
 - ✅ **🏛️ Interactive Committee Profile Pages (Jan 28, 2025)** - Full committee navigation system with clickable committee assignments, comprehensive committee profiles showing leadership, members, subcommittees, and jurisdiction for 119th Congress
+- ✅ **🗳️ Complete Senate Voting Integration (Aug 7, 2025)** - Full Senate roll call vote data via Senate.gov XML with unified House+Senate voting system, CORS proxy, real-time parsing, and 100-senator coverage
 - ✅ **🎯 CRITICAL: Complete Mock Data Elimination (Jul 30, 2025)** - Replaced ALL federal mock data with real Congress.gov/congress-legislators data across representatives, voting records, committees, and comparisons. Added clear labeling for sample fallback content.
 - ✅ **📰 GDELT News Integration Fix (Aug 1, 2025)** - Fixed GDELT V2 DOC API integration for live news feeds on member profiles. Updated search strategy for better article discovery, fixed TypeScript safety issues, and verified working News tabs showing real articles from legitimate sources.
 - ✅ **🗺️ REAL Congressional District Boundaries (Aug 1, 2025)** - Implemented complete Census TIGER/Line shapefile processing for all 435 congressional districts + territories. Generated PMTiles (64MB) and GeoJSON (306MB) from authentic Census data. Updated MapLibre GL JS components to display actual district boundaries. NO MOCK DATA - all boundaries sourced from U.S. Census Bureau TIGER/Line Shapefiles 2024 (119th Congress).

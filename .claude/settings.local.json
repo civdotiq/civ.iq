@@ -77,7 +77,8 @@
       "Bash(export NODE_OPTIONS=\"--max-old-space-size=8192\")",
       "Bash(NODE_ENV=production npx next build --no-lint)",
       "Bash(git reset:*)",
-      "Bash(npx lint-staged:*)"
+      "Bash(npx lint-staged:*)",
+      "Bash(git log:*)"
     ],
     "deny": []
   },

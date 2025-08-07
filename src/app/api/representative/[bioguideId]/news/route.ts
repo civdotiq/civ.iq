@@ -339,54 +339,21 @@ export async function GET(
       TTL_30_MINUTES
     );
 
-    // If no real articles found, provide relevant fallback mock data
+    // Return empty result when no real news is available
     if (newsData.articles.length === 0) {
-      const representative = newsData.searchTerms[0]?.includes('Senator')
-        ? { name: `Senator for ${bioguideId}`, state: 'State', isSenator: true }
-        : { name: `Representative ${bioguideId}`, state: 'State', isSenator: false };
+      structuredLogger.info('No real news data available from GDELT', {
+        bioguideId,
+      });
 
-      const mockArticles: NewsArticle[] = [
-        {
-          title: `[SAMPLE] ${representative.name} Addresses Key Legislative Priorities`,
-          url: '#',
-          source: 'Sample - Congressional Quarterly',
-          publishedDate: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-          language: 'English',
-          domain: 'sample-cq.com',
-          summary:
-            'SAMPLE NEWS: Legislative update on current priorities and upcoming votes. This is sample content shown when real news data is unavailable.',
-        },
-        {
-          title: `[SAMPLE] Committee Hearing on Infrastructure Investment`,
-          url: '#',
-          source: 'Sample - Government Affairs Daily',
-          publishedDate: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
-          language: 'English',
-          domain: 'sample-govaffairs.com',
-          summary:
-            'SAMPLE NEWS: Congressional committee discusses infrastructure funding proposals. This is sample content shown when real news data is unavailable.',
-        },
-        {
-          title: `[SAMPLE] Bipartisan Support for Healthcare Policy Reform`,
-          url: '#',
-          source: 'Sample - Policy Review',
-          publishedDate: new Date(Date.now() - 1000 * 60 * 60 * 60).toISOString(),
-          language: 'English',
-          domain: 'sample-policyreview.com',
-          summary:
-            'SAMPLE NEWS: Cross-party collaboration on healthcare policy initiatives. This is sample content shown when real news data is unavailable.',
-        },
-      ];
-
-      const fallbackResponse: NewsResponse = {
-        articles: mockArticles,
-        totalResults: mockArticles.length,
+      const emptyResponse: NewsResponse = {
+        articles: [],
+        totalResults: 0,
         searchTerms: newsData.searchTerms,
-        dataSource: 'fallback',
-        cacheStatus: 'No live news available - showing clearly labeled sample content',
+        dataSource: 'gdelt',
+        cacheStatus: 'No news articles currently available for this representative',
       };
 
-      return NextResponse.json(fallbackResponse);
+      return NextResponse.json(emptyResponse);
     }
 
     // Add cache status to response
