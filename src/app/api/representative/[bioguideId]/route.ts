@@ -13,17 +13,87 @@ export async function GET(
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const { bioguideId } = await params;
+  const upperBioguideId = bioguideId?.toUpperCase(); // Ensure uppercase
   const { searchParams } = new URL(request.url);
   const includeCommittees = searchParams.get('includeCommittees') === 'true';
   const includeLeadership = searchParams.get('includeLeadership') === 'true';
   const includeAll = searchParams.get('includeAll') === 'true';
 
+  // Detailed logging for debugging
+  // eslint-disable-next-line no-console
+  console.log('[API] Representative route called');
+  // eslint-disable-next-line no-console
+  console.log('[API] Original bioguideId:', bioguideId);
+  // eslint-disable-next-line no-console
+  console.log('[API] Uppercase bioguideId:', upperBioguideId);
+  // eslint-disable-next-line no-console
+  console.log('[API] Environment:', process.env.NODE_ENV);
+  // eslint-disable-next-line no-console
+  console.log('[API] Has CONGRESS_API_KEY:', !!process.env.CONGRESS_API_KEY);
+  // eslint-disable-next-line no-console
+  console.log('[API] Query params:', { includeCommittees, includeLeadership, includeAll });
+
   if (!bioguideId) {
+    // eslint-disable-next-line no-console
+    console.error('[API] No bioguideId provided');
     return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
   }
 
   try {
-    logger.info('Fetching representative data', { bioguideId });
+    logger.info('Fetching representative data', { bioguideId: upperBioguideId });
+
+    // Test direct Congress.gov API call first
+    const API_KEY = process.env.CONGRESS_API_KEY;
+    if (API_KEY) {
+      const directTestUrl = `https://api.congress.gov/v3/member/${upperBioguideId}?api_key=${API_KEY}`;
+      // eslint-disable-next-line no-console
+      console.log(
+        '[API] Testing direct Congress.gov call:',
+        directTestUrl.replace(API_KEY, '[REDACTED]')
+      );
+
+      try {
+        const directResponse = await fetch(directTestUrl);
+        const directText = await directResponse.text();
+
+        // eslint-disable-next-line no-console
+        console.log('[API] Direct Congress.gov response status:', directResponse.status);
+        // eslint-disable-next-line no-console
+        console.log(
+          '[API] Direct Congress.gov response headers:',
+          Object.fromEntries(directResponse.headers.entries())
+        );
+        // eslint-disable-next-line no-console
+        console.log('[API] Direct Congress.gov response preview:', directText.substring(0, 300));
+
+        if (directResponse.ok) {
+          // eslint-disable-next-line no-console
+          console.log('[API] Direct Congress.gov call SUCCESS');
+        } else {
+          // eslint-disable-next-line no-console
+          console.error('[API] Direct Congress.gov call FAILED');
+          return NextResponse.json(
+            {
+              error: 'Representative not found in Congress.gov',
+              bioguideId: upperBioguideId,
+              status: directResponse.status,
+              details: directText.substring(0, 500),
+            },
+            { status: 404 }
+          );
+        }
+      } catch (directError) {
+        // eslint-disable-next-line no-console
+        console.error('[API] Direct Congress.gov call EXCEPTION:', directError);
+        return NextResponse.json(
+          {
+            error: 'Failed to connect to Congress.gov',
+            message: directError instanceof Error ? directError.message : String(directError),
+          },
+          { status: 500 }
+        );
+      }
+    }
 
     // First, try to get enhanced data from congress-legislators
     let enhancedData: EnhancedRepresentative | null = null;
