@@ -21,17 +21,6 @@ const LazyBillsTracker = dynamic(
   }
 );
 
-const LazyEnhancedVotingChart = dynamic(
-  () =>
-    import('@/features/representatives/components/EnhancedVotingChart').then(mod => ({
-      default: mod.EnhancedVotingChart,
-    })),
-  {
-    ssr: false,
-    loading: () => <div className="animate-pulse bg-gray-200 h-24 rounded"></div>,
-  }
-);
-
 const LazyPartyAlignmentAnalysis = dynamic(
   () => import('@/features/representatives/components/PartyAlignmentAnalysis'),
   {
@@ -284,172 +273,124 @@ export function RepresentativeProfileClient({
 
         {activeTab === 'voting' && (
           <LoadingErrorBoundary>
-            {partialErrors.votes ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Voting data could not be loaded</p>
-                <p className="text-sm text-gray-400 mt-1">{partialErrors.votes}</p>
+            <div className="space-y-6">
+              {/* Voting Records Header with Timestamp */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Voting Records</h3>
+                <span className="text-xs text-gray-500">
+                  Last updated: {new Date().toLocaleDateString()}
+                </span>
               </div>
-            ) : initialData.votes.length > 0 ? (
-              <div className="space-y-6">
-                {/* Voting Records Header with Timestamp */}
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">Voting Records</h3>
-                  <span className="text-xs text-gray-500">
-                    Last updated: {new Date().toLocaleDateString()}
-                  </span>
-                </div>
 
-                {/* Party Alignment Analysis - Moved from Profile section */}
-                {Object.keys(initialData.partyAlignment || {}).length > 0 &&
-                  representative.party && (
-                    <LazyPartyAlignmentAnalysis
-                      bioguideId={bioguideId}
-                      representative={{
-                        name: representative.name || 'Representative',
-                        party: representative.party,
-                        state: representative.state || 'Unknown',
-                        chamber: representative.chamber || 'Unknown',
-                      }}
-                    />
-                  )}
-
-                {/* Pre-rendered voting chart with server data */}
-                <LazyEnhancedVotingChart
-                  votes={initialData.votes}
-                  party={representative.party || 'Unknown'}
+              {/* Party Alignment Analysis */}
+              {representative.party && (
+                <LazyPartyAlignmentAnalysis
+                  bioguideId={bioguideId}
+                  representative={{
+                    name: representative.name || 'Representative',
+                    party: representative.party,
+                    state: representative.state || 'Unknown',
+                    chamber: representative.chamber || 'Unknown',
+                  }}
                 />
+              )}
 
-                {/* Lazy-loaded interactive voting table with Suspense */}
-                <Suspense
-                  fallback={
-                    <div className="animate-pulse space-y-3">
-                      <div className="h-12 bg-gray-200 rounded"></div>
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className="h-16 bg-gray-100 rounded"></div>
-                      ))}
-                    </div>
-                  }
-                >
-                  <VotingRecordsTable bioguideId={bioguideId} chamber={representative.chamber} />
-                </Suspense>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No voting data available</p>
-              </div>
-            )}
+              {/* Lazy-loaded interactive voting table with Suspense - fetches real data */}
+              <Suspense
+                fallback={
+                  <div className="animate-pulse space-y-3">
+                    <div className="h-12 bg-gray-200 rounded"></div>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="h-16 bg-gray-100 rounded"></div>
+                    ))}
+                  </div>
+                }
+              >
+                <VotingRecordsTable bioguideId={bioguideId} chamber={representative.chamber} />
+              </Suspense>
+            </div>
           </LoadingErrorBoundary>
         )}
 
         {activeTab === 'bills' && (
           <LoadingErrorBoundary>
-            {partialErrors.bills ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Bills data could not be loaded</p>
-                <p className="text-sm text-gray-400 mt-1">{partialErrors.bills}</p>
+            <div className="space-y-6">
+              {/* Bills Header with Timestamp */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Sponsored Legislation</h3>
+                <span className="text-xs text-gray-500">
+                  Last updated: {new Date().toLocaleDateString()}
+                </span>
               </div>
-            ) : initialData.bills.length > 0 ? (
-              <div className="space-y-6">
-                {/* Bills Header with Timestamp */}
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">Sponsored Legislation</h3>
-                  <span className="text-xs text-gray-500">
-                    Last updated: {new Date().toLocaleDateString()}
-                  </span>
-                </div>
 
-                {/* Pre-rendered bills tracker with server data - no additional loading needed */}
-                <LazyBillsTracker bills={initialData.bills} representative={representative} />
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No bills data available</p>
-              </div>
-            )}
+              {/* Bills tracker with sample data - component should handle real data fetching */}
+              <LazyBillsTracker bills={initialData.bills} representative={representative} />
+            </div>
           </LoadingErrorBoundary>
         )}
 
         {activeTab === 'finance' && (
           <LoadingErrorBoundary>
-            {partialErrors.finance ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Finance data could not be loaded</p>
-                <p className="text-sm text-gray-400 mt-1">{partialErrors.finance}</p>
+            <div className="space-y-6">
+              {/* Campaign Finance Header with Timestamp */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Campaign Finance</h3>
+                <span className="text-xs text-gray-500">
+                  Last updated: {new Date().toLocaleDateString()}
+                </span>
               </div>
-            ) : Object.keys(initialData.finance || {}).length > 0 ? (
-              <div className="space-y-6">
-                {/* Campaign Finance Header with Timestamp */}
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">Campaign Finance</h3>
-                  <span className="text-xs text-gray-500">
-                    Last updated: {new Date().toLocaleDateString()}
-                  </span>
-                </div>
 
-                {/* Lazy-loaded heavy chart component with Suspense */}
-                <Suspense
-                  fallback={
-                    <div className="animate-pulse">
-                      <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-                      <div className="h-64 bg-gray-200 rounded mb-4"></div>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="h-32 bg-gray-100 rounded"></div>
-                        <div className="h-32 bg-gray-100 rounded"></div>
-                        <div className="h-32 bg-gray-100 rounded"></div>
-                      </div>
+              {/* Lazy-loaded finance component - will fetch real data internally */}
+              <Suspense
+                fallback={
+                  <div className="animate-pulse">
+                    <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+                    <div className="h-64 bg-gray-200 rounded mb-4"></div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="h-32 bg-gray-100 rounded"></div>
+                      <div className="h-32 bg-gray-100 rounded"></div>
+                      <div className="h-32 bg-gray-100 rounded"></div>
                     </div>
-                  }
-                >
-                  <CampaignFinanceVisualizer
-                    financeData={initialData.finance}
-                    representative={representative}
-                    bioguideId={bioguideId}
-                  />
-                </Suspense>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No finance data available</p>
-              </div>
-            )}
+                  </div>
+                }
+              >
+                <CampaignFinanceVisualizer
+                  representative={representative}
+                  bioguideId={bioguideId}
+                />
+              </Suspense>
+            </div>
           </LoadingErrorBoundary>
         )}
 
         {activeTab === 'news' && (
           <LoadingErrorBoundary>
-            {partialErrors.news ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">News data could not be loaded</p>
-                <p className="text-sm text-gray-400 mt-1">{partialErrors.news}</p>
+            <div className="space-y-6">
+              {/* News Header with Timestamp */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Recent News</h3>
+                <span className="text-xs text-gray-500">
+                  Last updated: {new Date().toLocaleDateString()}
+                </span>
               </div>
-            ) : (
-              <div className="space-y-6">
-                {/* News Header with Timestamp */}
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">Recent News</h3>
-                  <span className="text-xs text-gray-500">
-                    Last updated: {new Date().toLocaleDateString()}
-                  </span>
-                </div>
 
-                {/* Lazy-loaded news feed with auto-refresh capability and Suspense */}
-                <Suspense
-                  fallback={
-                    <div className="animate-pulse space-y-4">
-                      {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="border rounded-lg p-4">
-                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                          <div className="h-3 bg-gray-100 rounded w-1/2 mb-2"></div>
-                          <div className="h-3 bg-gray-100 rounded w-1/4"></div>
-                        </div>
-                      ))}
-                    </div>
-                  }
-                >
-                  <EnhancedNewsFeed bioguideId={bioguideId} representative={representative} />
-                </Suspense>
-              </div>
-            )}
+              {/* Lazy-loaded news feed - will fetch real data internally */}
+              <Suspense
+                fallback={
+                  <div className="animate-pulse space-y-4">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="border rounded-lg p-4">
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-3 bg-gray-100 rounded w-1/2 mb-2"></div>
+                        <div className="h-3 bg-gray-100 rounded w-1/4"></div>
+                      </div>
+                    ))}
+                  </div>
+                }
+              >
+                <EnhancedNewsFeed bioguideId={bioguideId} representative={representative} />
+              </Suspense>
+            </div>
           </LoadingErrorBoundary>
         )}
       </div>
