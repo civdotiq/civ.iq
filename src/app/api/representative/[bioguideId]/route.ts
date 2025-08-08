@@ -71,26 +71,13 @@ export async function GET(
           console.log('[API] Direct Congress.gov call SUCCESS');
         } else {
           // eslint-disable-next-line no-console
-          console.error('[API] Direct Congress.gov call FAILED');
-          return NextResponse.json(
-            {
-              error: 'Representative not found in Congress.gov',
-              bioguideId: upperBioguideId,
-              status: directResponse.status,
-              details: directText.substring(0, 500),
-            },
-            { status: 404 }
-          );
+          console.error('[API] Direct Congress.gov call FAILED - will try fallback sources');
         }
       } catch (directError) {
         // eslint-disable-next-line no-console
-        console.error('[API] Direct Congress.gov call EXCEPTION:', directError);
-        return NextResponse.json(
-          {
-            error: 'Failed to connect to Congress.gov',
-            message: directError instanceof Error ? directError.message : String(directError),
-          },
-          { status: 500 }
+        console.error(
+          '[API] Direct Congress.gov call EXCEPTION - will try fallback sources:',
+          directError
         );
       }
     }
