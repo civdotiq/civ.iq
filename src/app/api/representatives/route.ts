@@ -370,6 +370,16 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       district: districtInfo.district,
       operation: 'filterRepresentatives',
     });
+
+    // Debug: Log all representatives from the target state
+    const stateReps = allRepresentatives.filter(rep => rep.state === districtInfo.state);
+    logger.info(`Representatives from ${districtInfo.state}:`, {
+      total: stateReps.length,
+      houseMembers: stateReps.filter(r => r.chamber === 'House').length,
+      senators: stateReps.filter(r => r.chamber === 'Senate').length,
+      districts: stateReps.filter(r => r.chamber === 'House').map(r => r.district),
+    });
+
     const districtRepresentatives = allRepresentatives.filter(rep => {
       if (rep.chamber === 'Senate' && rep.state === districtInfo.state) {
         logger.debug(`Found Senate representative`, {
@@ -380,22 +390,30 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
         });
         return true;
       }
-      if (
-        rep.chamber === 'House' &&
-        rep.state === districtInfo.state &&
-        rep.district &&
-        districtInfo.district
-      ) {
-        // Normalize district numbers for comparison (handle '04' vs '4')
-        const repDistrict = parseInt(rep.district, 10);
-        const targetDistrict = parseInt(districtInfo.district, 10);
-        const matches = repDistrict === targetDistrict;
+      if (rep.chamber === 'House' && rep.state === districtInfo.state) {
+        // Handle cases where district might be undefined or null
+        if (!rep.district && !districtInfo.district) {
+          // Both are at-large or undefined
+          return true;
+        }
+        if (!rep.district || !districtInfo.district) {
+          // One is undefined but not the other
+          return false;
+        }
+
+        // Normalize district numbers for comparison (handle '04' vs '4', and different types)
+        const repDistrictStr = String(rep.district).padStart(2, '0');
+        const targetDistrictStr = String(districtInfo.district).padStart(2, '0');
+        const matches = repDistrictStr === targetDistrictStr;
+
         logger.debug(`Evaluating House representative`, {
           zipCode,
           representativeName: rep.name,
           state: rep.state,
-          district: rep.district,
+          repDistrict: rep.district,
+          repDistrictNormalized: repDistrictStr,
           targetDistrict: districtInfo.district,
+          targetDistrictNormalized: targetDistrictStr,
           matches,
         });
         return matches;
