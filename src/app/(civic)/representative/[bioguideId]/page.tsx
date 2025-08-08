@@ -96,7 +96,7 @@ async function getRepresentativeData(bioguideId: string) {
       const error = 'Invalid bioguideId provided';
       logger.error('Representative data fetch failed', new Error(error), {
         bioguideId,
-        endpoint: 'representative-batch',
+        endpoint: 'representative',
         component: 'RepresentativeProfilePage',
       });
       throw new Error(error);
@@ -104,24 +104,24 @@ async function getRepresentativeData(bioguideId: string) {
 
     logger.info('Fetching representative data', {
       bioguideId,
-      endpoint: 'representative-batch',
+      endpoint: 'representative',
       component: 'RepresentativeProfilePage',
     });
 
-    // Use absolute URL for server-side fetch
+    // Use absolute URL for server-side fetch - let Next.js handle internal routing
     const baseUrl = process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
       : process.env.NODE_ENV === 'development'
-        ? 'http://localhost:3000'
+        ? `http://localhost:${process.env.PORT || 3001}`
         : 'https://civdotiq.org';
 
-    const response = await fetch(`${baseUrl}/api/representative/${bioguideId}/batch`, {
-      // Use GET method to match the current batch API implementation
+    const response = await fetch(`${baseUrl}/api/representative/${bioguideId}`, {
+      // Use GET method to match the API implementation
       method: 'GET',
       // Next.js 15 caching - cache for 5 minutes, revalidate on-demand
       next: {
         revalidate: 300,
-        tags: [`representative-${bioguideId}`, 'representative-batch'],
+        tags: [`representative-${bioguideId}`, 'representative'],
       },
     } as RequestInit & { next?: { revalidate?: number; tags?: string[] } });
 
@@ -129,7 +129,7 @@ async function getRepresentativeData(bioguideId: string) {
       const error = 'No response received from API';
       logger.error('Representative API fetch failed', new Error(error), {
         bioguideId,
-        endpoint: 'representative-batch',
+        endpoint: 'representative',
         component: 'RepresentativeProfilePage',
       });
       throw new Error(error);
@@ -140,7 +140,7 @@ async function getRepresentativeData(bioguideId: string) {
         bioguideId,
         status: response.status,
         statusText: response.statusText,
-        endpoint: 'representative-batch',
+        endpoint: 'representative',
         component: 'RepresentativeProfilePage',
       });
 
@@ -163,7 +163,7 @@ async function getRepresentativeData(bioguideId: string) {
       const error = 'Invalid JSON response from API';
       logger.error('Representative API JSON parse failed', parseError, {
         bioguideId,
-        endpoint: 'representative-batch',
+        endpoint: 'representative',
         component: 'RepresentativeProfilePage',
       });
       throw new Error(error);
@@ -173,7 +173,7 @@ async function getRepresentativeData(bioguideId: string) {
       const error = 'No data received from API';
       logger.error('Representative API returned empty data', new Error(error), {
         bioguideId,
-        endpoint: 'representative-batch',
+        endpoint: 'representative',
         component: 'RepresentativeProfilePage',
       });
       throw new Error(error);
@@ -182,24 +182,36 @@ async function getRepresentativeData(bioguideId: string) {
     logger.info('Representative data fetched successfully', {
       bioguideId,
       success: data.success !== false,
-      hasMember: !!data.member,
-      endpoint: 'representative-batch',
+      hasRepresentative: !!data.representative,
+      representativeKeys: data.representative ? Object.keys(data.representative) : [],
+      endpoint: 'representative',
       component: 'RepresentativeProfilePage',
     });
 
-    // Transform the flat API response into the expected nested structure
+    // The regular API returns { representative: {...}, success: true } - use it directly
+    const representative = data.representative || { bioguideId, error: true };
+
+    logger.info('Using representative data from API', {
+      bioguideId,
+      hasName: !!representative.name,
+      hasCommittees: !!representative.committees,
+      endpoint: 'representative',
+      component: 'RepresentativeProfilePage',
+    });
+
+    // Transform the API response into the expected nested structure for the page
     return {
       success: data.success !== false,
       data: {
         profile: {
-          representative: data.member || { bioguideId, error: true },
+          representative,
         },
-        votes: data.votes || [],
-        bills: data.bills || [],
-        finance: data.finance || {},
-        news: data.news || [],
-        'party-alignment': data.partyAlignment || {},
-        committees: data.committees || [],
+        votes: [], // Will be fetched separately if needed
+        bills: [], // Will be fetched separately if needed
+        finance: {}, // Will be fetched separately if needed
+        news: [], // Will be fetched separately if needed
+        'party-alignment': {}, // Will be fetched separately if needed
+        committees: representative.committees || [],
       },
       errors: data.errors || {},
       executionTime: 0,
@@ -208,7 +220,7 @@ async function getRepresentativeData(bioguideId: string) {
     // Log the error but return a safe error structure instead of throwing
     logger.error('Representative data fetch completely failed', error, {
       bioguideId,
-      endpoint: 'representative-batch',
+      endpoint: 'representative',
       component: 'RepresentativeProfilePage',
       errorMessage: error instanceof Error ? error.message : 'Unknown error occurred',
     });
