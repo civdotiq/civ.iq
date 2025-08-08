@@ -8,6 +8,12 @@
 import { useState, Suspense, ComponentType } from 'react';
 import { LoadingErrorBoundary } from '@/components/common/ErrorBoundary';
 import dynamic from 'next/dynamic';
+import {
+  CampaignFinanceWrapper,
+  BillsTrackerWrapper,
+  VotingRecordsWrapper,
+  NewsWrapper,
+} from './DataFetchingWrappers';
 
 // Dynamic imports for lazy loading - optimized for performance
 const LazyBillsTracker = dynamic(
@@ -147,9 +153,9 @@ interface RepresentativeProfileClientProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   VotingRecordsTable?: ComponentType<any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  CampaignFinanceVisualizer?: ComponentType<any>;
+  _CampaignFinanceVisualizer?: ComponentType<any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  EnhancedNewsFeed?: ComponentType<any>;
+  _EnhancedNewsFeed?: ComponentType<any>;
 }
 
 // Partial error display component
@@ -203,8 +209,8 @@ export function RepresentativeProfileClient({
   partialErrors,
   bioguideId,
   VotingRecordsTable = LazyVotingRecordsTable,
-  CampaignFinanceVisualizer = LazyCampaignFinanceVisualizer,
-  EnhancedNewsFeed = LazyEnhancedNewsFeed,
+  _CampaignFinanceVisualizer = LazyCampaignFinanceVisualizer,
+  _EnhancedNewsFeed = LazyEnhancedNewsFeed,
 }: RepresentativeProfileClientProps) {
   const [activeTab, setActiveTab] = useState('profile');
 
@@ -295,19 +301,12 @@ export function RepresentativeProfileClient({
                 />
               )}
 
-              {/* Lazy-loaded interactive voting table with Suspense - fetches real data */}
-              <Suspense
-                fallback={
-                  <div className="animate-pulse space-y-3">
-                    <div className="h-12 bg-gray-200 rounded"></div>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="h-16 bg-gray-100 rounded"></div>
-                    ))}
-                  </div>
-                }
-              >
-                <VotingRecordsTable bioguideId={bioguideId} chamber={representative.chamber} />
-              </Suspense>
+              {/* Voting records with real data fetching */}
+              <VotingRecordsWrapper
+                bioguideId={bioguideId}
+                chamber={representative.chamber}
+                VotingRecordsTable={VotingRecordsTable}
+              />
             </div>
           </LoadingErrorBoundary>
         )}
@@ -323,8 +322,20 @@ export function RepresentativeProfileClient({
                 </span>
               </div>
 
-              {/* Bills tracker with sample data - component should handle real data fetching */}
-              <LazyBillsTracker bills={initialData.bills} representative={representative} />
+              {/* Bills tracker with real data fetching */}
+              <BillsTrackerWrapper
+                bioguideId={bioguideId}
+                representative={{
+                  name: representative.name,
+                  chamber: representative.chamber,
+                }}
+                BillsTracker={
+                  LazyBillsTracker as React.ComponentType<{
+                    bills: unknown[];
+                    representative: { name: string; chamber: string };
+                  }>
+                }
+              />
             </div>
           </LoadingErrorBoundary>
         )}
@@ -340,25 +351,21 @@ export function RepresentativeProfileClient({
                 </span>
               </div>
 
-              {/* Lazy-loaded finance component - will fetch real data internally */}
-              <Suspense
-                fallback={
-                  <div className="animate-pulse">
-                    <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-                    <div className="h-64 bg-gray-200 rounded mb-4"></div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="h-32 bg-gray-100 rounded"></div>
-                      <div className="h-32 bg-gray-100 rounded"></div>
-                      <div className="h-32 bg-gray-100 rounded"></div>
-                    </div>
-                  </div>
+              {/* Campaign Finance with real data fetching */}
+              <CampaignFinanceWrapper
+                bioguideId={bioguideId}
+                representative={{
+                  name: representative.name,
+                  party: representative.party,
+                }}
+                CampaignFinanceVisualizer={
+                  LazyCampaignFinanceVisualizer as React.ComponentType<{
+                    financeData: unknown;
+                    representative: { name: string; party: string };
+                    bioguideId: string;
+                  }>
                 }
-              >
-                <CampaignFinanceVisualizer
-                  representative={representative}
-                  bioguideId={bioguideId}
-                />
-              </Suspense>
+              />
             </div>
           </LoadingErrorBoundary>
         )}
@@ -374,22 +381,21 @@ export function RepresentativeProfileClient({
                 </span>
               </div>
 
-              {/* Lazy-loaded news feed - will fetch real data internally */}
-              <Suspense
-                fallback={
-                  <div className="animate-pulse space-y-4">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className="border rounded-lg p-4">
-                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-gray-100 rounded w-1/2 mb-2"></div>
-                        <div className="h-3 bg-gray-100 rounded w-1/4"></div>
-                      </div>
-                    ))}
-                  </div>
+              {/* News feed with real data fetching */}
+              <NewsWrapper
+                bioguideId={bioguideId}
+                representative={{
+                  name: representative.name,
+                  party: representative.party,
+                  state: representative.state,
+                }}
+                EnhancedNewsFeed={
+                  LazyEnhancedNewsFeed as React.ComponentType<{
+                    bioguideId: string;
+                    representative: { name: string; party: string; state: string };
+                  }>
                 }
-              >
-                <EnhancedNewsFeed bioguideId={bioguideId} representative={representative} />
-              </Suspense>
+              />
             </div>
           </LoadingErrorBoundary>
         )}
