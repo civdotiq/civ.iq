@@ -78,7 +78,7 @@ const VotesList = memo(
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <Link
-                        href={`/bill/${vote.bill.number}`}
+                        href={`/bill/${vote.bill.number.replace(/\s+/g, '')}`}
                         className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
                         onClick={e => e.stopPropagation()}
                       >
@@ -91,7 +91,7 @@ const VotesList = memo(
                       )}
                     </div>
                     <Link
-                      href={`/bill/${vote.bill.number}`}
+                      href={`/bill/${vote.bill.number.replace(/\s+/g, '')}`}
                       className="block text-gray-900 font-medium mb-2 line-clamp-2 hover:text-blue-600 transition-colors"
                       onClick={e => e.stopPropagation()}
                     >

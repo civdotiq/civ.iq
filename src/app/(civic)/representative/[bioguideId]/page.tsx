@@ -170,11 +170,12 @@ export default async function RepresentativeProfilePage({
   }
 
   // Initialize with sample data to enable tab functionality (detailed data fetched client-side)
-  const votingData: unknown[] = [{ id: 'sample', title: 'Loading...', date: '2024' }];
-  const billsData: unknown[] = [{ id: 'sample', title: 'Loading...', date: '2024' }];
-  const financeData: Record<string, unknown> = { total: 'Loading...' };
-  const newsData: unknown[] = [{ id: 'sample', title: 'Loading...', date: '2024' }];
-  const partyAlignmentData: Record<string, unknown> = { alignment: 'Loading...' };
+  // Remove sample data - let components handle their own data fetching
+  const votingData: unknown[] = [];
+  const billsData: unknown[] = [];
+  const financeData: Record<string, unknown> = {};
+  const newsData: unknown[] = [];
+  const partyAlignmentData: Record<string, unknown> = {};
   const partialErrors: Record<string, string> = {};
 
   // Validate essential representative data - be more lenient
