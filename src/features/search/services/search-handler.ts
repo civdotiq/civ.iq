@@ -3,8 +3,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { unifiedSearch, SearchResult } from './unified-search';
-import { getAllEnhancedRepresentatives } from '@/lib/congress-legislators';
+import { unifiedSearch } from './unified-search';
+import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 import { EnhancedRepresentative } from '@/types/representative';
 
@@ -81,7 +81,7 @@ export async function handleSearch(input: string): Promise<SearchResponse> {
         metadata: {
           searchTime: Date.now() - startTime,
           resultCount: searchResult.results.length,
-          dataSource: searchResult.results[0].source,
+          dataSource: searchResult.results[0]?.source || 'unknown',
         },
       };
     }
@@ -89,6 +89,9 @@ export async function handleSearch(input: string): Promise<SearchResponse> {
     // Single match - fetch representatives
     if (searchResult.results && searchResult.results.length === 1) {
       const districtInfo = searchResult.results[0];
+      if (!districtInfo) {
+        throw new Error('District info not found');
+      }
       const representatives = await fetchRepresentativesForDistrict(
         districtInfo.state,
         districtInfo.district

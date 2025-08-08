@@ -98,7 +98,7 @@ export async function GET(
     // First, try to get enhanced data from congress-legislators
     let enhancedData: EnhancedRepresentative | null = null;
     try {
-      enhancedData = await getEnhancedRepresentative(bioguideId);
+      enhancedData = await getEnhancedRepresentative(upperBioguideId);
       if (enhancedData) {
         logger.info('Successfully retrieved enhanced representative data', {
           bioguideId,
@@ -151,7 +151,7 @@ export async function GET(
       if (includeCommittees || includeAll) {
         try {
           const committeeResponse = await fetch(
-            `${request.url.split('/api/')[0]}/api/representative/${bioguideId}/committees`
+            `${request.url.split('/api/')[0]}/api/representative/${upperBioguideId}/committees`
           );
           if (committeeResponse.ok) {
             additionalData.committees = await committeeResponse.json();
@@ -168,7 +168,7 @@ export async function GET(
       if (includeLeadership || includeAll) {
         try {
           const leadershipResponse = await fetch(
-            `${request.url.split('/api/')[0]}/api/representative/${bioguideId}/leadership`
+            `${request.url.split('/api/')[0]}/api/representative/${upperBioguideId}/leadership`
           );
           if (leadershipResponse.ok) {
             additionalData.leadership = await leadershipResponse.json();
@@ -210,7 +210,7 @@ export async function GET(
       logger.info('Fetching from Congress.gov API', { bioguideId });
 
       const response = await fetch(
-        `https://api.congress.gov/v3/member/${bioguideId}?format=json&api_key=${process.env.CONGRESS_API_KEY}`,
+        `https://api.congress.gov/v3/member/${upperBioguideId}?format=json&api_key=${process.env.CONGRESS_API_KEY}`,
         {
           headers: {
             'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
@@ -310,21 +310,21 @@ export async function GET(
       },
     };
 
-    const commonRep = commonReps[bioguideId];
+    const commonRep = commonReps[upperBioguideId];
 
     const mockRepresentative: EnhancedRepresentative = {
-      bioguideId,
-      name: commonRep?.name || `Representative ${bioguideId}`,
+      bioguideId: upperBioguideId,
+      name: commonRep?.name || `Representative ${upperBioguideId}`,
       firstName: commonRep?.firstName || 'John',
-      lastName: commonRep?.lastName || bioguideId,
+      lastName: commonRep?.lastName || upperBioguideId,
       party: commonRep?.party || 'Democratic',
       state: commonRep?.state || 'MI',
       district: commonRep?.chamber === 'House' ? '01' : undefined,
       chamber: commonRep?.chamber || 'House',
       title: commonRep?.title || 'U.S. Representative',
       phone: '(202) 225-0001',
-      email: `rep.${bioguideId.toLowerCase()}@house.gov`,
-      website: `https://example.house.gov/${bioguideId.toLowerCase()}`,
+      email: `rep.${upperBioguideId.toLowerCase()}@house.gov`,
+      website: `https://example.house.gov/${upperBioguideId.toLowerCase()}`,
       terms: [
         {
           congress: '118',
@@ -340,7 +340,7 @@ export async function GET(
       ],
       fullName: {
         first: commonRep?.firstName || 'John',
-        last: commonRep?.lastName || bioguideId,
+        last: commonRep?.lastName || upperBioguideId,
       },
       bio: commonRep?.bio || { gender: 'M' },
       socialMedia: commonRep?.socialMedia,
