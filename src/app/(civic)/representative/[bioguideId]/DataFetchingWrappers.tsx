@@ -7,6 +7,22 @@
 
 import useSWR from 'swr';
 import { representativeApi } from '@/lib/api/representatives';
+import logger from '@/lib/logging/simple-logger';
+import type { CampaignFinanceResponse } from '@/types/api/representatives.types';
+
+// API Response wrapper types for standardized parsing
+interface ApiResponseWrapper<T> {
+  data?: T;
+  results?: T;
+  items?: T;
+  [key: string]: unknown;
+}
+
+// Specific response types for each API endpoint
+type FinanceApiResponse =
+  | CampaignFinanceResponse
+  | ApiResponseWrapper<CampaignFinanceResponse['data']>
+  | unknown;
 
 // Campaign Finance Data Fetcher
 interface CampaignFinanceWrapperProps {
@@ -28,17 +44,40 @@ export function CampaignFinanceWrapper({
   CampaignFinanceVisualizer,
 }: CampaignFinanceWrapperProps) {
   const {
-    data: financeData,
+    data: rawFinanceData,
     error,
     isLoading,
   } = useSWR(
     `/api/representative/${bioguideId}/finance`,
-    () => representativeApi.getFinance(bioguideId),
+    async (): Promise<CampaignFinanceResponse['data'] | null> => {
+      try {
+        const response = (await representativeApi.getFinance(bioguideId)) as FinanceApiResponse;
+        // Handle different response formats
+        if (response && typeof response === 'object') {
+          // If response has a finance or data property, use that
+          if ('finance' in response) return response.finance as CampaignFinanceResponse['data'];
+          if ('data' in response) return response.data as CampaignFinanceResponse['data'];
+          // Otherwise return the response directly
+          return response as CampaignFinanceResponse['data'];
+        }
+        return null;
+      } catch (error) {
+        logger.error('Campaign finance API error', error, { bioguideId });
+        throw new Error(
+          `Failed to load campaign finance data: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+    },
     {
       revalidateOnFocus: false,
       dedupingInterval: 300000, // 5 minutes
+      errorRetryCount: 3,
+      errorRetryInterval: 2000,
     }
   );
+
+  // Standardize finance data parsing
+  const financeData = rawFinanceData && typeof rawFinanceData === 'object' ? rawFinanceData : null;
 
   if (isLoading) {
     return (
@@ -58,7 +97,9 @@ export function CampaignFinanceWrapper({
     return (
       <div className="text-center py-8">
         <p className="text-gray-500 mb-2">Unable to load campaign finance data</p>
-        <p className="text-sm text-gray-400">Please try again later</p>
+        <p className="text-sm text-gray-400">
+          {error instanceof Error ? error.message : 'Please try again later'}
+        </p>
       </div>
     );
   }
@@ -100,17 +141,42 @@ export function BillsTrackerWrapper({
   BillsTracker,
 }: BillsTrackerWrapperProps) {
   const {
-    data: billsData,
+    data: rawBillsData,
     error,
     isLoading,
   } = useSWR(
     `/api/representative/${bioguideId}/bills`,
-    () => representativeApi.getBills(bioguideId),
+    async () => {
+      try {
+        const response = await representativeApi.getBills(bioguideId);
+        // Handle different response formats
+        if (Array.isArray(response)) {
+          return response;
+        } else if (response && typeof response === 'object') {
+          // Check for common response wrapper patterns
+          if ('bills' in response) return response.bills || [];
+          if ('data' in response) return response.data || [];
+          if ('results' in response) return response.results || [];
+          if ('items' in response) return response.items || [];
+        }
+        return [];
+      } catch (error) {
+        logger.error('Bills API error', error, { bioguideId });
+        throw new Error(
+          `Failed to load bills data: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+    },
     {
       revalidateOnFocus: false,
       dedupingInterval: 300000, // 5 minutes
+      errorRetryCount: 3,
+      errorRetryInterval: 2000,
     }
   );
+
+  // Standardize bills data parsing
+  const bills = Array.isArray(rawBillsData) ? rawBillsData : [];
 
   if (isLoading) {
     return (
@@ -130,12 +196,12 @@ export function BillsTrackerWrapper({
     return (
       <div className="text-center py-8">
         <p className="text-gray-500 mb-2">Unable to load bills data</p>
-        <p className="text-sm text-gray-400">Please try again later</p>
+        <p className="text-sm text-gray-400">
+          {error instanceof Error ? error.message : 'Please try again later'}
+        </p>
       </div>
     );
   }
-
-  const bills = Array.isArray(billsData) ? billsData : billsData?.bills || [];
 
   if (!bills || bills.length === 0) {
     return (
@@ -167,18 +233,44 @@ export function VotingRecordsWrapper({
   VotingRecordsTable,
 }: VotingRecordsWrapperProps) {
   const {
-    data: _votesData,
+    data: rawVotesData,
     error,
     isLoading,
   } = useSWR(
     `/api/representative/${bioguideId}/votes`,
-    () => representativeApi.getVotes(bioguideId),
+    async () => {
+      try {
+        const response = await representativeApi.getVotes(bioguideId);
+        // Handle different response formats
+        if (Array.isArray(response)) {
+          return response;
+        } else if (response && typeof response === 'object') {
+          // Check for common response wrapper patterns
+          if ('votes' in response) return response.votes || [];
+          if ('data' in response) return response.data || [];
+          if ('results' in response) return response.results || [];
+          if ('items' in response) return response.items || [];
+        }
+        return [];
+      } catch (error) {
+        logger.error('Voting records API error', error, { bioguideId });
+        throw new Error(
+          `Failed to load voting records: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+    },
     {
       revalidateOnFocus: false,
       dedupingInterval: 300000, // 5 minutes
+      errorRetryCount: 3,
+      errorRetryInterval: 2000,
     }
   );
 
+  // Note: VotingRecordsTable component handles its own data parsing internally
+  // This wrapper just needs to ensure the API call succeeds
+  // rawVotesData is intentionally unused - VotingRecordsTable fetches data directly
+  void rawVotesData; // Explicitly mark as intentionally unused
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-3">
@@ -194,7 +286,9 @@ export function VotingRecordsWrapper({
     return (
       <div className="text-center py-8">
         <p className="text-gray-500 mb-2">Unable to load voting records</p>
-        <p className="text-sm text-gray-400">Please try again later</p>
+        <p className="text-sm text-gray-400">
+          {error instanceof Error ? error.message : 'Please try again later'}
+        </p>
       </div>
     );
   }
@@ -222,17 +316,43 @@ interface NewsWrapperProps {
 
 export function NewsWrapper({ bioguideId, representative, EnhancedNewsFeed }: NewsWrapperProps) {
   const {
-    data: newsData,
+    data: rawNewsData,
     error,
     isLoading,
   } = useSWR(
     `/api/representative/${bioguideId}/news`,
-    () => representativeApi.getNews(bioguideId),
+    async () => {
+      try {
+        const response = await representativeApi.getNews(bioguideId);
+        // Handle different response formats
+        if (Array.isArray(response)) {
+          return response;
+        } else if (response && typeof response === 'object') {
+          // Check for common response wrapper patterns
+          if ('articles' in response) return response.articles || [];
+          if ('news' in response) return response.news || [];
+          if ('data' in response) return response.data || [];
+          if ('results' in response) return response.results || [];
+          if ('items' in response) return response.items || [];
+        }
+        return [];
+      } catch (error) {
+        logger.error('News API error', error, { bioguideId });
+        throw new Error(
+          `Failed to load news articles: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+    },
     {
       revalidateOnFocus: false,
       dedupingInterval: 180000, // 3 minutes - news updates frequently
+      errorRetryCount: 3,
+      errorRetryInterval: 2000,
     }
   );
+
+  // Standardize news data parsing
+  const articles = Array.isArray(rawNewsData) ? rawNewsData : [];
 
   if (isLoading) {
     return (
@@ -252,12 +372,12 @@ export function NewsWrapper({ bioguideId, representative, EnhancedNewsFeed }: Ne
     return (
       <div className="text-center py-8">
         <p className="text-gray-500 mb-2">Unable to load news articles</p>
-        <p className="text-sm text-gray-400">Please try again later</p>
+        <p className="text-sm text-gray-400">
+          {error instanceof Error ? error.message : 'Please try again later'}
+        </p>
       </div>
     );
   }
-
-  const articles = Array.isArray(newsData) ? newsData : newsData?.articles || [];
 
   if (!articles || articles.length === 0) {
     return (
