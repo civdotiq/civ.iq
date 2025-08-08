@@ -118,6 +118,12 @@ async function getRepresentativeData(bioguideId: string) {
     const response = await fetch(`${baseUrl}/api/representative/${bioguideId}`, {
       // Use GET method to match the API implementation
       method: 'GET',
+      // Explicitly exclude credentials to prevent 401 errors
+      credentials: 'omit',
+      headers: {
+        'Content-Type': 'application/json',
+        // Explicitly remove any auth headers that might be inherited
+      },
       // Next.js 15 caching - cache for 5 minutes, revalidate on-demand
       next: {
         revalidate: 300,
