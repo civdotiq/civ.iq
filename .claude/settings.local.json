@@ -80,7 +80,10 @@
       "Bash(npx lint-staged:*)",
       "Bash(git log:*)",
       "Bash(npm uninstall:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(env)",
+      "Bash(git diff:*)",
+      "WebFetch(domain:civdotiq.org)"
     ],
     "deny": []
   },

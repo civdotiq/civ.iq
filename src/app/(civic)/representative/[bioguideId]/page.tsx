@@ -10,6 +10,7 @@ import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { RepresentativePageSidebar } from '@/features/representatives/components/RepresentativePageSidebar';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { logger } from '@/lib/logging/logger-client';
+import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,8 +90,8 @@ interface RepresentativeDetails {
   };
 }
 
-// Server-side data fetching with Next.js 15 caching
-async function getRepresentativeData(bioguideId: string) {
+// Server-side data fetching with direct service import (no HTTP networking)
+async function getRepresentativeData(bioguideId: string): Promise<RepresentativeDetails> {
   try {
     if (!bioguideId || typeof bioguideId !== 'string') {
       const error = 'Invalid bioguideId provided';
@@ -99,144 +100,45 @@ async function getRepresentativeData(bioguideId: string) {
         endpoint: 'representative',
         component: 'RepresentativeProfilePage',
       });
-      throw new Error(error);
+      notFound();
     }
 
-    logger.info('Fetching representative data', {
-      bioguideId,
+    logger.info('Fetching representative data via direct service call', {
+      bioguideId: bioguideId.toUpperCase(),
       endpoint: 'representative',
       component: 'RepresentativeProfilePage',
     });
 
-    // Use absolute URL for server-side fetch - let Next.js handle internal routing
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : process.env.NODE_ENV === 'development'
-        ? `http://localhost:${process.env.PORT || 3001}`
-        : 'https://civdotiq.org';
+    // Direct service call - no HTTP networking during SSR
+    const enhancedData = await getEnhancedRepresentative(bioguideId.toUpperCase());
 
-    const response = await fetch(`${baseUrl}/api/representative/${bioguideId}`, {
-      // Use GET method to match the API implementation
-      method: 'GET',
-      // Explicitly exclude credentials to prevent 401 errors
-      credentials: 'omit',
-      headers: {
-        'Content-Type': 'application/json',
-        // Explicitly remove any auth headers that might be inherited
-      },
-      // Next.js 15 caching - cache for 5 minutes, revalidate on-demand
-      next: {
-        revalidate: 300,
-        tags: [`representative-${bioguideId}`, 'representative'],
-      },
-    } as RequestInit & { next?: { revalidate?: number; tags?: string[] } });
-
-    if (!response) {
-      const error = 'No response received from API';
-      logger.error('Representative API fetch failed', new Error(error), {
-        bioguideId,
-        endpoint: 'representative',
+    if (!enhancedData) {
+      logger.info('Representative not found in congress-legislators data', {
+        bioguideId: bioguideId.toUpperCase(),
         component: 'RepresentativeProfilePage',
       });
-      throw new Error(error);
+      notFound();
     }
 
-    if (!response.ok) {
-      logger.warn('Representative API returned non-OK status', {
-        bioguideId,
-        status: response.status,
-        statusText: response.statusText,
-        endpoint: 'representative',
-        component: 'RepresentativeProfilePage',
-      });
-
-      if (response.status === 404) {
-        logger.info('Representative not found, triggering 404', {
-          bioguideId,
-          component: 'RepresentativeProfilePage',
-        });
-        notFound();
-      }
-      throw new Error(
-        `Failed to fetch representative data: ${response.status} ${response.statusText}`
-      );
-    }
-
-    let data;
-    try {
-      data = await response.json();
-    } catch (parseError) {
-      const error = 'Invalid JSON response from API';
-      logger.error('Representative API JSON parse failed', parseError, {
-        bioguideId,
-        endpoint: 'representative',
-        component: 'RepresentativeProfilePage',
-      });
-      throw new Error(error);
-    }
-
-    if (!data) {
-      const error = 'No data received from API';
-      logger.error('Representative API returned empty data', new Error(error), {
-        bioguideId,
-        endpoint: 'representative',
-        component: 'RepresentativeProfilePage',
-      });
-      throw new Error(error);
-    }
-
-    logger.info('Representative data fetched successfully', {
-      bioguideId,
-      success: data.success !== false,
-      hasRepresentative: !!data.representative,
-      representativeKeys: data.representative ? Object.keys(data.representative) : [],
+    logger.info('Representative data fetched successfully via direct service', {
+      bioguideId: enhancedData.bioguideId,
+      hasName: !!enhancedData.name,
+      hasCommittees: !!enhancedData.committees,
+      hasSocialMedia: !!enhancedData.socialMedia,
+      hasCurrentTerm: !!enhancedData.currentTerm,
       endpoint: 'representative',
       component: 'RepresentativeProfilePage',
     });
 
-    // The regular API returns { representative: {...}, success: true } - use it directly
-    const representative = data.representative || { bioguideId, error: true };
-
-    logger.info('Using representative data from API', {
-      bioguideId,
-      hasName: !!representative.name,
-      hasCommittees: !!representative.committees,
-      endpoint: 'representative',
-      component: 'RepresentativeProfilePage',
-    });
-
-    // Transform the API response into the expected nested structure for the page
-    return {
-      success: data.success !== false,
-      data: {
-        profile: {
-          representative,
-        },
-        votes: [], // Will be fetched separately if needed
-        bills: [], // Will be fetched separately if needed
-        finance: {}, // Will be fetched separately if needed
-        news: [], // Will be fetched separately if needed
-        'party-alignment': {}, // Will be fetched separately if needed
-        committees: representative.committees || [],
-      },
-      errors: data.errors || {},
-      executionTime: 0,
-    };
+    return enhancedData;
   } catch (error) {
-    // Log the error but return a safe error structure instead of throwing
     logger.error('Representative data fetch completely failed', error, {
       bioguideId,
       endpoint: 'representative',
       component: 'RepresentativeProfilePage',
       errorMessage: error instanceof Error ? error.message : 'Unknown error occurred',
     });
-
-    return {
-      success: false,
-      data: {},
-      errors: { fetch: error instanceof Error ? error.message : 'Unknown error occurred' },
-      executionTime: 0,
-    };
+    notFound();
   }
 }
 
@@ -260,20 +162,20 @@ export default async function RepresentativeProfilePage({
   }
 
   // Server-side data fetching - this runs on the server and streams HTML
-  const batchData = await getRepresentativeData(bioguideId);
+  const representative = await getRepresentativeData(bioguideId);
 
-  // Handle fetch errors gracefully - allow partial failures
-  if (!batchData || !batchData.data?.profile?.representative) {
+  // Handle fetch errors gracefully - representative data is required
+  if (!representative) {
     notFound();
   }
 
-  const representative = batchData.data.profile.representative as RepresentativeDetails;
-  const votingData = batchData.data.votes || [];
-  const billsData = batchData.data.bills || [];
-  const financeData = batchData.data.finance || {};
-  const newsData = batchData.data.news || [];
-  const partyAlignmentData = batchData.data['party-alignment'] || {};
-  const partialErrors = batchData.errors || {};
+  // Initialize empty data for other endpoints (these will be fetched client-side)
+  const votingData: unknown[] = [];
+  const billsData: unknown[] = [];
+  const financeData: Record<string, unknown> = {};
+  const newsData: unknown[] = [];
+  const partyAlignmentData: Record<string, unknown> = {};
+  const partialErrors: Record<string, string> = {};
 
   // Validate essential representative data - be more lenient
   if (
@@ -302,9 +204,7 @@ export default async function RepresentativeProfilePage({
                 <Link href="/representatives" className="text-sm text-gray-600 hover:text-gray-900">
                   All Representatives
                 </Link>
-                <div className="text-xs text-gray-400">
-                  Server rendered in {batchData.executionTime}ms
-                </div>
+                <div className="text-xs text-gray-400">Server rendered via direct service call</div>
               </div>
             </div>
           </div>
