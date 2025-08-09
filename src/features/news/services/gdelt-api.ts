@@ -276,6 +276,46 @@ export async function fetchGDELTNews(
     }
   }
 
+  // Try different timespans with fallback: 24h -> 7d -> 30d
+  const timespans = ['24h', '7d', '30d'];
+
+  for (const timespan of timespans) {
+    try {
+      const result = await fetchGDELTNewsWithTimespan(searchTerm, maxRecords, timespan);
+      if (result.length > 0) {
+        logger.info('GDELT news found with timespan', {
+          searchTerm: searchTerm.slice(0, 50),
+          timespan,
+          articleCount: result.length,
+          operation: 'gdelt_timespan_success',
+        });
+        return result;
+      }
+    } catch (error) {
+      logger.warn('GDELT fetch failed for timespan, trying next', {
+        searchTerm: searchTerm.slice(0, 50),
+        timespan,
+        error: error instanceof Error ? error.message : String(error),
+        operation: 'gdelt_timespan_fallback',
+      });
+    }
+  }
+
+  logger.warn('All GDELT timespans failed', {
+    searchTerm: searchTerm.slice(0, 50),
+    timespansAttempted: timespans,
+    operation: 'gdelt_all_timespans_failed',
+  });
+
+  return [];
+}
+
+// Helper function for single timespan fetch
+async function fetchGDELTNewsWithTimespan(
+  searchTerm: string,
+  maxRecords: number,
+  timespan: string
+): Promise<GDELTArticle[]> {
   return retryWithBackoff(async () => {
     const encodedQuery = encodeURIComponent(searchTerm);
 
@@ -293,13 +333,14 @@ export async function fetchGDELTNews(
       'POLITICAL_COMMUNICATIONS',
     ].join(',');
 
-    const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodedQuery}&mode=artlist&maxrecords=${maxRecords}&format=json&sort=socialimage&timespan=24h&theme=${themes}&contenttype=NEWS&dedupresults=true`;
+    const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodedQuery}&mode=artlist&maxrecords=${maxRecords}&format=json&sort=socialimage&timespan=${timespan}&theme=${themes}&contenttype=NEWS&dedupresults=true`;
 
-    logger.info('Fetching GDELT news', {
-      searchTerm: searchTerm.slice(0, 100), // Show more of the search term for debugging
+    logger.info('Fetching GDELT news with specific timespan', {
+      searchTerm: searchTerm.slice(0, 100),
       maxRecords,
+      timespan,
       operation: 'gdelt_news_fetch',
-      url: url.slice(0, 200), // Log part of the URL for debugging
+      url: url.slice(0, 200),
     });
 
     const headers = {
@@ -326,10 +367,15 @@ export async function fetchGDELTNews(
       const duration = Date.now() - startTime;
 
       // Log external API call
-      logger.externalApi('GDELT', 'fetchNews', duration, response.ok, {
+      logger.info('GDELT API call completed', {
+        service: 'GDELT',
+        operation: 'fetchNews',
+        duration,
+        success: response.ok,
         searchTerm: searchTerm.slice(0, 50),
         maxRecords,
         statusCode: response.status,
+        timespan,
       });
 
       if (!response.ok) {
@@ -409,9 +455,14 @@ export async function fetchGDELTNews(
       const duration = Date.now() - startTime;
 
       // Log failed external API call
-      logger.externalApi('GDELT', 'fetchNews', duration, false, {
+      logger.error('GDELT API call failed', {
+        service: 'GDELT',
+        operation: 'fetchNews',
+        duration,
+        success: false,
         searchTerm: searchTerm.slice(0, 50),
         maxRecords,
+        timespan,
         error: error instanceof Error ? error.message : String(error),
       });
 

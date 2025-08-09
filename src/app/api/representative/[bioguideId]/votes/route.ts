@@ -93,6 +93,24 @@ function categorizeBill(title: string): Vote['category'] {
   return 'Other';
 }
 
+// Helper function to determine if a vote is a key vote
+function isKeyVote(title: string): boolean {
+  if (!title) return false;
+  const lowerTitle = title.toLowerCase();
+
+  const keywordIndicators = [
+    'appropriation',
+    'budget',
+    'defense authorization',
+    'infrastructure',
+    'continuing resolution',
+    'debt ceiling',
+    'tax reform',
+  ];
+
+  return keywordIndicators.some(keyword => lowerTitle.includes(keyword));
+}
+
 // Enhanced function to fetch member voting position from roll call data
 async function getMemberVoteFromRollCall(
   rollCallUrl: string,
@@ -127,98 +145,22 @@ async function getMemberVoteFromRollCall(
   }
 }
 
-// Function to get Senate voting records using sample data for now
+// Function to get Senate voting records - no sample data as per policy
 async function getSenateVotingRecords(
   bioguideId: string,
   memberName: string,
   limit: number
 ): Promise<Vote[]> {
-  logger.info('Creating sample Senate voting records for testing', {
+  logger.info('Senate voting records not available - no mock data policy', {
     bioguideId,
     memberName,
     limit,
+    reason: 'Project policy prohibits mock data usage',
   });
 
-  // Create sample Senate voting records to demonstrate real data
-  const sampleVotes: Vote[] = [
-    {
-      voteId: `${bioguideId}-senate-vote-1`,
-      bill: {
-        number: 'S. 1',
-        title: 'For the People Act of 2025',
-        congress: '119',
-        type: 'S',
-        url: 'https://www.congress.gov/bill/119th-congress/senate-bill/1',
-      },
-      question: 'On Passage of the Bill',
-      result: 'Bill Passed',
-      date: '2025-07-15',
-      position: 'Yea',
-      chamber: 'Senate',
-      rollNumber: 245,
-      isKeyVote: true,
-      category: 'Other',
-      description: 'Comprehensive voting rights and election reform legislation',
-      metadata: {
-        sourceUrl:
-          'https://www.senate.gov/legislative/LIS/roll_call_votes/vote1192/vote_119_2_00245.xml',
-        lastUpdated: '2025-07-15T16:30:00Z',
-        confidence: 'high',
-      },
-    },
-    {
-      voteId: `${bioguideId}-senate-vote-2`,
-      bill: {
-        number: 'S. 2150',
-        title: 'Infrastructure Investment and Jobs Act Amendment',
-        congress: '119',
-        type: 'S',
-        url: 'https://www.congress.gov/bill/119th-congress/senate-bill/2150',
-      },
-      question: 'On the Amendment (Cruz Amdt. No. 2137)',
-      result: 'Amendment Rejected',
-      date: '2025-07-10',
-      position: 'Nay',
-      chamber: 'Senate',
-      rollNumber: 244,
-      isKeyVote: false,
-      category: 'Infrastructure',
-      description: 'Amendment to strike funding for electric vehicle charging stations',
-      metadata: {
-        sourceUrl:
-          'https://www.senate.gov/legislative/LIS/roll_call_votes/vote1192/vote_119_2_00244.xml',
-        lastUpdated: '2025-07-10T14:45:00Z',
-        confidence: 'high',
-      },
-    },
-    {
-      voteId: `${bioguideId}-senate-vote-3`,
-      bill: {
-        number: 'S. 1275',
-        title: 'Medicare for All Act of 2025',
-        congress: '119',
-        type: 'S',
-        url: 'https://www.congress.gov/bill/119th-congress/senate-bill/1275',
-      },
-      question: 'On Cloture',
-      result: 'Cloture Not Invoked',
-      date: '2025-07-08',
-      position: 'Yea',
-      chamber: 'Senate',
-      rollNumber: 243,
-      isKeyVote: true,
-      category: 'Healthcare',
-      description: 'Motion to invoke cloture on the Medicare for All Act',
-      metadata: {
-        sourceUrl:
-          'https://www.senate.gov/legislative/LIS/roll_call_votes/vote1192/vote_119_2_00243.xml',
-        lastUpdated: '2025-07-08T18:20:00Z',
-        confidence: 'high',
-      },
-    },
-  ];
-
-  return sampleVotes.slice(0, limit);
+  // Return empty array - no sample data allowed per project requirements
+  // Real Senate voting data integration is pending Senate.gov XML API implementation
+  return [];
 }
 
 // Enhanced function to get recent votes using new House Roll Call Votes API
@@ -237,52 +179,54 @@ async function getEnhancedVotingRecords(
         limit,
       });
 
-      // Use the new House Roll Call Votes API for House members only
+      // Use the new House Roll Call Votes API for House members (May 2025 Congress.gov API)
       if (chamber === 'House') {
-        const { getVotesByMember } = await import(
-          '@/features/representatives/services/congress-api'
+        const { congressRollCallAPI } = await import(
+          '@/features/representatives/services/congress-rollcall-api'
         );
 
         try {
-          const votingData = await getVotesByMember(bioguideId);
+          const votingHistory = await congressRollCallAPI.getMemberVotingHistory(
+            bioguideId,
+            119, // 119th Congress
+            1, // Session 1
+            limit
+          );
 
-          if (votingData && votingData.length > 0) {
-            logger.info('House roll call voting data retrieved', {
+          if (votingHistory && votingHistory.length > 0) {
+            logger.info('House roll call voting data retrieved with individual positions', {
               bioguideId,
-              votesFound: votingData.length,
-              source: 'house-vote-api',
+              votesFound: votingHistory.length,
+              source: 'congress-rollcall-api',
             });
 
-            // Transform the House roll call data to match our Vote interface
-            const transformedVotes: Vote[] = votingData.slice(0, limit).map((vote: unknown) => {
-              const voteData = vote as Record<string, unknown>;
-              const billData = (voteData.bill as Record<string, unknown>) || {};
-
+            // Transform the Congress.gov roll call data to match our Vote interface
+            const transformedVotes: Vote[] = votingHistory.map(vote => {
               return {
-                voteId: (voteData.voteId as string) || `${bioguideId}-vote-${voteData.rollNumber}`,
+                voteId: vote.voteId,
                 bill: {
-                  number: (billData.number as string) || 'Roll Call Vote',
-                  title: (billData.title as string) || 'House Roll Call Vote',
-                  congress: (billData.congress as string) || '119',
-                  type: (billData.type as string) || 'Vote',
-                  url: billData.url as string,
+                  number: vote.bill
+                    ? `${vote.bill.type.toUpperCase()}. ${vote.bill.number}`
+                    : `Roll Call ${vote.rollCallNumber}`,
+                  title: vote.bill?.title || vote.question,
+                  congress: vote.bill?.congress.toString() || '119',
+                  type: vote.bill?.type || 'rollcall',
+                  url: vote.bill?.url,
                 },
-                question: (voteData.question as string) || 'On the Vote',
-                result: (voteData.result as string) || 'Unknown',
-                date: (voteData.date as string) ?? new Date().toISOString().split('T')[0],
-                // Note: Individual member position not yet available from member-votes endpoint
-                position: 'Not Available' as 'Yea' | 'Nay' | 'Not Voting' | 'Present',
+                question: vote.question,
+                result: vote.result,
+                date: vote.date,
+                // REAL INDIVIDUAL VOTING POSITION from Congress.gov API
+                position: vote.position,
                 chamber: chamber as 'House' | 'Senate',
-                rollNumber: voteData.rollNumber as number,
-                isKeyVote: false, // Could be determined from bill importance
-                category: categorizeBill(
-                  (billData.title as string) || (voteData.question as string) || ''
-                ),
+                rollNumber: vote.rollCallNumber,
+                isKeyVote: isKeyVote(vote.bill?.title || vote.question),
+                category: categorizeBill(vote.bill?.title || vote.question),
                 metadata: {
-                  sourceUrl: voteData.sourceDataURL as string,
+                  sourceUrl: `https://api.congress.gov/v3/house-roll-call-vote/119/1/${vote.rollCallNumber}`,
                   lastUpdated: new Date().toISOString(),
                   confidence: 'high',
-                  note: 'Individual voting position available when member-votes endpoint is ready',
+                  note: 'Real individual voting position from Congress.gov House Roll Call Votes API (May 2025)',
                 },
               };
             });
@@ -290,9 +234,13 @@ async function getEnhancedVotingRecords(
             return transformedVotes;
           }
         } catch (error) {
-          logger.error('Failed to fetch House roll call votes', error as Error, {
-            bioguideId,
-          });
+          logger.error(
+            'Failed to fetch House roll call votes from Congress.gov API',
+            error as Error,
+            {
+              bioguideId,
+            }
+          );
         }
       } else {
         // Senate members: Try to fetch voting records from Senate.gov
