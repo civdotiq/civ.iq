@@ -228,37 +228,39 @@ async function fetchStateLegislators(
 
 // Transform OpenStates legislator data to our format
 function transformLegislator(person: unknown, stateAbbrev: string): StateLegislator {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const currentRole = (person as any).current_role;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const contactDetails = (person as any).contact_details || [];
+  const personData = person as Record<string, unknown>;
+  const currentRole = personData.current_role as Record<string, unknown> | undefined;
+  const contactDetails = (personData.contact_details as Record<string, unknown>[]) || [];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const email = contactDetails.find((c: any) => c.type === 'email')?.value;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const phone = contactDetails.find((c: any) => c.type === 'voice')?.value;
+  const email = contactDetails.find((c: Record<string, unknown>) => c.type === 'email')?.value as
+    | string
+    | undefined;
+  const phone = contactDetails.find((c: Record<string, unknown>) => c.type === 'voice')?.value as
+    | string
+    | undefined;
 
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    id: (person as any).id || `${stateAbbrev}-${currentRole?.chamber}-${currentRole?.district}`,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    name: (person as any).name || 'Unknown',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    party: normalizeParty((person as any).party) || 'Other',
+    id:
+      (personData.id as string) ||
+      `${stateAbbrev}-${currentRole?.chamber}-${currentRole?.district}`,
+    name: (personData.name as string) || 'Unknown',
+    party: normalizeParty(personData.party as string) || 'Other',
     chamber: currentRole?.chamber === 'upper' ? 'upper' : 'lower',
-    district: currentRole?.district || 'Unknown',
+    district: (currentRole?.district as string) || 'Unknown',
     email,
     phone,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    office: contactDetails.find((c: any) => c.type === 'address')?.value,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    photoUrl: (person as any).image,
+    office: contactDetails.find((c: Record<string, unknown>) => c.type === 'address')?.value as
+      | string
+      | undefined,
+    photoUrl: personData.image as string | undefined,
     committees: [], // Would need separate API call to get committee memberships
     terms: [
       {
-        startYear: currentRole?.start_date ? new Date(currentRole.start_date).getFullYear() : 2023,
+        startYear: currentRole?.start_date
+          ? new Date(currentRole.start_date as string).getFullYear()
+          : 2023,
         endYear: currentRole?.end_date
-          ? new Date(currentRole.end_date).getFullYear()
+          ? new Date(currentRole.end_date as string).getFullYear()
           : currentRole?.chamber === 'upper'
             ? 2027
             : 2025,
@@ -328,35 +330,40 @@ export async function GET(
           fetchStateLegislators(stateAbbrev, chamber || undefined),
         ]);
 
-        // If OpenStates API fails, fall back to mock data
+        // EMERGENCY FIX: Never return fake legislators - return empty results with clear message
         if (!jurisdiction || legislators.length === 0) {
-          logger.warn('OpenStates API failed, falling back to mock data', {
+          logger.warn('OpenStates API unavailable - returning empty results', {
             state: state.toUpperCase(),
             hasJurisdiction: !!jurisdiction,
             legislatorCount: legislators.length,
+            reason: 'Real state legislature data not available from OpenStates API',
           });
 
-          return await generateFallbackData(state.toUpperCase());
+          return {
+            state: state.toUpperCase(),
+            stateName: jurisdiction?.name || getBasicStateInfo(state.toUpperCase()).name,
+            lastUpdated: new Date().toISOString(),
+            session: {
+              name: 'Data Loading from OpenStates...',
+              startDate: '',
+              endDate: '',
+              type: 'regular' as const,
+            },
+            chambers: getBasicStateInfo(state.toUpperCase()).chambers,
+            legislators: [], // NEVER return fake legislators
+          };
         }
 
         // Calculate party distribution
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-        const _partyCount = legislators.reduce((acc: any, leg) => {
-          acc[leg.party] = (acc[leg.party] || 0) + 1;
-          return acc;
-        }, {});
-
         const upperLegislators = legislators.filter(leg => leg.chamber === 'upper');
         const lowerLegislators = legislators.filter(leg => leg.chamber === 'lower');
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const upperPartyCount = upperLegislators.reduce((acc: any, leg) => {
+        const upperPartyCount = upperLegislators.reduce((acc: Record<string, number>, leg) => {
           acc[leg.party] = (acc[leg.party] || 0) + 1;
           return acc;
         }, {});
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const lowerPartyCount = lowerLegislators.reduce((acc: any, leg) => {
+        const lowerPartyCount = lowerLegislators.reduce((acc: Record<string, number>, leg) => {
           acc[leg.party] = (acc[leg.party] || 0) + 1;
           return acc;
         }, {});
@@ -373,33 +380,26 @@ export async function GET(
           },
           chambers: {
             upper: {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               name:
-                jurisdiction.chambers?.find((c: any) => c.chamber === 'upper')?.name ||
-                'State Senate',
+                ((jurisdiction.chambers as Record<string, unknown>[] | undefined)?.find(
+                  (c: Record<string, unknown>) => c.chamber === 'upper'
+                )?.name as string) || 'State Senate',
               title: 'Senator',
               totalSeats: upperLegislators.length,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              democraticSeats: (upperPartyCount as any)['Democratic'] || 0,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              republicanSeats: (upperPartyCount as any)['Republican'] || 0,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              otherSeats:
-                ((upperPartyCount as any)['Independent'] || 0) +
-                ((upperPartyCount as any)['Other'] || 0),
+              democraticSeats: upperPartyCount['Democratic'] || 0,
+              republicanSeats: upperPartyCount['Republican'] || 0,
+              otherSeats: (upperPartyCount['Independent'] || 0) + (upperPartyCount['Other'] || 0),
             },
             lower: {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               name:
-                jurisdiction.chambers?.find((c: any) => c.chamber === 'lower')?.name ||
-                'House of Representatives',
+                ((jurisdiction.chambers as Record<string, unknown>[] | undefined)?.find(
+                  (c: Record<string, unknown>) => c.chamber === 'lower'
+                )?.name as string) || 'House of Representatives',
               title: 'Representative',
               totalSeats: lowerLegislators.length,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              democraticSeats: (lowerPartyCount as any)['Democratic'] || 0,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              republicanSeats: (lowerPartyCount as any)['Republican'] || 0,
-              otherSeats: lowerPartyCount['Independent'] + lowerPartyCount['Other'] || 0,
+              democraticSeats: lowerPartyCount['Democratic'] || 0,
+              republicanSeats: lowerPartyCount['Republican'] || 0,
+              otherSeats: (lowerPartyCount['Independent'] || 0) + (lowerPartyCount['Other'] || 0),
             },
           },
           legislators,
@@ -489,29 +489,8 @@ export async function GET(
   }
 }
 
-// Fallback function for when OpenStates API is unavailable
-async function generateFallbackData(state: string): Promise<StateLegislatureData> {
-  const stateInfo = getBasicStateInfo(state);
-
-  logger.info('Generating fallback mock data', {
-    state,
-    operation: 'fallback_data_generation',
-  });
-
-  return {
-    state,
-    stateName: stateInfo.name,
-    lastUpdated: new Date().toISOString(),
-    session: {
-      name: '2024 Regular Session',
-      startDate: '2024-01-08',
-      endDate: '2024-08-31',
-      type: 'regular',
-    },
-    chambers: stateInfo.chambers,
-    legislators: [], // Return empty array when API is unavailable
-  };
-}
+// EMERGENCY FIX: Removed generateFallbackData function
+// Never return fake legislators - this was generating mock data
 
 function getBasicStateInfo(state: string) {
   const stateNames: Record<string, string> = {

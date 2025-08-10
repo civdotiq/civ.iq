@@ -160,8 +160,10 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
     const duration = Date.now() - startTime;
 
     // Log external API call
-    logger.externalApi('OpenStates', 'fetchJurisdiction', duration, response.ok, {
+    logger.info('OpenStates fetchJurisdiction API call', {
       stateAbbrev,
+      duration,
+      success: response.ok,
       statusCode: response.status,
     });
 
@@ -174,9 +176,10 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
     const duration = Date.now() - startTime;
 
     // Log failed external API call
-    logger.externalApi('OpenStates', 'fetchJurisdiction', duration, false, {
+    logger.error('OpenStates fetchJurisdiction API call failed', error as Error, {
       stateAbbrev,
-      error: error instanceof Error ? error.message : String(error),
+      duration,
+      success: false,
     });
 
     logger.error('Error fetching state jurisdiction', error as Error, {
@@ -237,9 +240,11 @@ async function fetchStateLegislators(
         const fetchDuration = Date.now() - fetchStartTime;
 
         // Log external API call
-        logger.externalApi('OpenStates', 'fetchLegislators', fetchDuration, response.ok, {
+        logger.info('OpenStates fetchLegislators API call', {
           district,
           chamber,
+          duration: fetchDuration,
+          success: response.ok,
           statusCode: response.status,
         });
 
@@ -296,8 +301,10 @@ async function fetchStateLegislators(
       const fetchDuration = Date.now() - fetchStartTime;
 
       // Log external API call
-      logger.externalApi('OpenStates', 'fetchAllLegislators', fetchDuration, response.ok, {
+      logger.info('OpenStates fetchAllLegislators API call', {
         stateAbbrev,
+        duration: fetchDuration,
+        success: response.ok,
         statusCode: response.status,
       });
 
@@ -363,8 +370,10 @@ async function fetchRecentStateBills(stateAbbrev: string): Promise<StateBill[]> 
     const duration = Date.now() - startTime;
 
     // Log external API call
-    logger.externalApi('OpenStates', 'fetchBills', duration, response.ok, {
+    logger.info('OpenStates fetchBills API call', {
       stateAbbrev,
+      duration,
+      success: response.ok,
       statusCode: response.status,
     });
 
@@ -400,9 +409,10 @@ async function fetchRecentStateBills(stateAbbrev: string): Promise<StateBill[]> 
     const duration = Date.now() - startTime;
 
     // Log failed external API call
-    logger.externalApi('OpenStates', 'fetchBills', duration, false, {
+    logger.error('OpenStates fetchBills API call failed', error as Error, {
       stateAbbrev,
-      error: error instanceof Error ? error.message : String(error),
+      duration,
+      success: false,
     });
 
     logger.error('Error fetching state bills', error as Error, {
@@ -469,7 +479,16 @@ export async function GET(
     }
 
     // Fallback mock data
-    const mockData: StateLegislatureData = {
+    // EMERGENCY FIX: Never return fake state legislature data
+    // Previously returned fake legislators "State Sen. District 1", "State Rep. District A"
+    // and fake bills "SB 1234 - Infrastructure Act", "HB 5678 - Education Act"
+    logger.warn('State legislature data unavailable - OpenStates API not accessible', {
+      bioguideId,
+      state: representative.state,
+      reason: 'Cannot return fake state legislators or bills - misleads citizens',
+    });
+
+    const emptyData: StateLegislatureData = {
       jurisdiction: {
         name: representative.state,
         abbreviation: representative.state,
@@ -486,90 +505,12 @@ export async function GET(
         start_date: '2024-01-08',
         end_date: '2024-06-30',
       },
-      state_legislators: [
-        {
-          id: 'mock-1',
-          name: `State Sen. ${representative.state} District 1`,
-          party: 'Democratic',
-          chamber: 'upper',
-          district: '1',
-          email: 'senator1@state.gov',
-          phone: '(555) 123-4567',
-        },
-        {
-          id: 'mock-2',
-          name: `State Rep. ${representative.state} District A`,
-          party: 'Republican',
-          chamber: 'lower',
-          district: 'A',
-          email: 'rep-a@state.gov',
-          phone: '(555) 234-5678',
-        },
-        {
-          id: 'mock-3',
-          name: `State Sen. ${representative.state} District 2`,
-          party: 'Democratic',
-          chamber: 'upper',
-          district: '2',
-          email: 'senator2@state.gov',
-          phone: '(555) 345-6789',
-        },
-      ],
-      recent_bills: [
-        {
-          id: 'mock-bill-1',
-          identifier: 'SB 1234',
-          title: 'State Infrastructure Modernization Act',
-          subject: ['Transportation', 'Infrastructure'],
-          abstract:
-            'A bill to modernize state transportation infrastructure and improve road safety.',
-          latest_action_date: '2024-03-15',
-          latest_action_description: 'Passed Senate, sent to House',
-          classification: ['bill'],
-          sponsors: [
-            { name: `State Sen. ${representative.state} District 1`, classification: 'primary' },
-          ],
-          session: '2024',
-          created_at: '2024-02-01T00:00:00Z',
-          updated_at: '2024-03-15T00:00:00Z',
-        },
-        {
-          id: 'mock-bill-2',
-          identifier: 'HB 5678',
-          title: 'Education Funding Enhancement Act',
-          subject: ['Education', 'Budget'],
-          abstract: 'Increases funding for public education and teacher salaries.',
-          latest_action_date: '2024-03-10',
-          latest_action_description: 'Committee hearing scheduled',
-          classification: ['bill'],
-          sponsors: [
-            { name: `State Rep. ${representative.state} District A`, classification: 'primary' },
-          ],
-          session: '2024',
-          created_at: '2024-01-20T00:00:00Z',
-          updated_at: '2024-03-10T00:00:00Z',
-        },
-        {
-          id: 'mock-bill-3',
-          identifier: 'SB 9012',
-          title: 'Healthcare Access Improvement Act',
-          subject: ['Health', 'Insurance'],
-          abstract: 'Expands healthcare access in rural communities.',
-          latest_action_date: '2024-03-05',
-          latest_action_description: 'Introduced in Senate',
-          classification: ['bill'],
-          sponsors: [
-            { name: `State Sen. ${representative.state} District 2`, classification: 'primary' },
-          ],
-          session: '2024',
-          created_at: '2024-03-05T00:00:00Z',
-          updated_at: '2024-03-05T00:00:00Z',
-        },
-      ],
+      state_legislators: [], // NEVER return fake legislators
+      recent_bills: [], // NEVER return fake bills
       representative_district_bills: [],
     };
 
-    return NextResponse.json(mockData);
+    return NextResponse.json(emptyData);
   } catch (error) {
     logger.error('State Legislature API Error', error as Error, {
       bioguideId,

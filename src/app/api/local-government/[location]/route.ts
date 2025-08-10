@@ -100,7 +100,7 @@ export async function GET(
 
         // In production, this would integrate with various local government APIs
         const locationInfo = parseLocation(location);
-        const officials = generateMockLocalOfficials(locationInfo);
+        const officials: LocalOfficial[] = []; // Real local government API integration needed
 
         // Group by jurisdiction
         const jurisdictions = {
@@ -200,36 +200,28 @@ function parseLocation(location: string): LocationInfo {
 
   // Handle ZIP code format
   if (/^\\d{5}$/.test(location)) {
-    const mockCityData = getMockCityFromZip(location);
-    return mockCityData;
+    const locationData = getEmptyLocationResponse(location);
+    return locationData;
   }
 
-  return {
-    city: 'Generic City',
-    state: 'ST',
-    displayName: 'Generic City, ST',
-    county: 'Generic County',
-  };
+  return getEmptyLocationResponse(location);
 }
 
-function getMockCityFromZip(zip: string) {
-  const mockData: Record<string, unknown> = {
-    '90210': { city: 'Beverly Hills', state: 'CA', county: 'Los Angeles County' },
-    '10001': { city: 'New York', state: 'NY', county: 'New York County' },
-    '60601': { city: 'Chicago', state: 'IL', county: 'Cook County' },
-    '30301': { city: 'Atlanta', state: 'GA', county: 'Fulton County' },
-    '48201': { city: 'Detroit', state: 'MI', county: 'Wayne County' },
-  };
+function getEmptyLocationResponse(zip: string): LocationInfo {
+  // EMERGENCY FIX: Fake city/county data removed
+  // Previously returned fake "Beverly Hills, CA", "Sample City, TX" etc.
+  // that could misdirect citizens to wrong local government offices
 
-  const data = (mockData[zip] as LocationInfo) || {
-    city: 'Sample City',
-    state: 'TX',
-    county: 'Sample County',
-  };
+  logger.warn('Local government data unavailable for ZIP code', {
+    zip,
+    reason: 'Real local government API not integrated',
+  });
+
   return {
-    ...data,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    displayName: `${data.city}, ${data.state}`,
+    city: 'Location data unavailable',
+    state: '',
+    county: 'County data unavailable',
+    displayName: 'Location services temporarily unavailable',
   };
 }
 
@@ -261,210 +253,7 @@ function generateCountyName(city: string, state: string): string {
   return `${city} County`;
 }
 
-function generateMockLocalOfficials(locationInfo: unknown): LocalOfficial[] {
-  const officials: LocalOfficial[] = [];
-
-  // Name arrays removed - no longer generating fake official names
-
-  // City officials
-  const cityPositions = [
-    {
-      position: 'Mayor',
-      responsibilities: ['Executive leadership', 'Budget oversight', 'Community relations'],
-    },
-    {
-      position: 'City Council Member - District 1',
-      responsibilities: ['Legislative duties', 'Constituent services', 'Committee work'],
-    },
-    {
-      position: 'City Council Member - District 2',
-      responsibilities: ['Legislative duties', 'Constituent services', 'Committee work'],
-    },
-    {
-      position: 'City Council Member - District 3',
-      responsibilities: ['Legislative duties', 'Constituent services', 'Committee work'],
-    },
-    {
-      position: 'City Manager',
-      responsibilities: ['Daily operations', 'Staff management', 'Policy implementation'],
-      isElected: false,
-    },
-    {
-      position: 'City Clerk',
-      responsibilities: ['Record keeping', 'Election administration', 'Public records'],
-    },
-  ];
-
-  cityPositions.forEach((pos, index) => {
-    const firstName = 'Data';
-    const lastName = 'Unavailable';
-    const name = `${firstName} ${lastName}`;
-
-    officials.push({
-      id: `${(locationInfo as LocationInfo).city.replace(' ', '-').toLowerCase()}-city-${index}`,
-      name,
-      position: pos.position,
-      jurisdiction: 'city',
-      jurisdictionName: `City of ${(locationInfo as LocationInfo).city}`,
-      party:
-        pos.position === 'Mayor' || pos.position.includes('Council')
-          ? 'Independent'
-          : 'Nonpartisan',
-      email: `${firstName?.toLowerCase() || 'john'}.${lastName?.toLowerCase() || 'doe'}@${(locationInfo as LocationInfo).city.replace(' ', '').toLowerCase()}.gov`,
-      phone: 'Contact information unavailable',
-      office: `City Hall, ${(locationInfo as LocationInfo).city}`,
-      termStart: '2022-01-01',
-      termEnd: '2026-01-01',
-      isElected: pos.isElected !== false,
-      salary:
-        pos.position === 'Mayor'
-          ? 85000
-          : pos.position.includes('Council')
-            ? 45000
-            : pos.position === 'City Manager'
-              ? 120000
-              : 65000,
-      website: `https://www.${(locationInfo as LocationInfo).city.replace(' ', '').toLowerCase()}.gov`,
-      address: {
-        street: '100 Main Street',
-        city: (locationInfo as LocationInfo).city,
-        state: (locationInfo as LocationInfo).state,
-        zipCode: '12345',
-      },
-      responsibilities: pos.responsibilities,
-      contactHours: {
-        days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday'],
-        hours: '9:00 AM - 5:00 PM',
-      },
-    });
-  });
-
-  // County officials
-  const countyPositions = [
-    {
-      position: 'County Executive',
-      responsibilities: [
-        'County administration',
-        'Budget management',
-        'Inter-municipal coordination',
-      ],
-    },
-    {
-      position: 'County Commissioner - District A',
-      responsibilities: ['Policy making', 'Budget approval', 'Public services oversight'],
-    },
-    {
-      position: 'County Commissioner - District B',
-      responsibilities: ['Policy making', 'Budget approval', 'Public services oversight'],
-    },
-    {
-      position: 'Sheriff',
-      responsibilities: ['Law enforcement', 'Jail administration', 'Court security'],
-    },
-    {
-      position: 'County Clerk',
-      responsibilities: ['Elections', 'Vital records', 'Property records'],
-    },
-  ];
-
-  countyPositions.forEach((pos, index) => {
-    const firstName = 'Data';
-    const lastName = 'Unavailable';
-    const name = `${firstName} ${lastName}`;
-
-    officials.push({
-      id: `${(locationInfo as LocationInfo).county.replace(' ', '-').toLowerCase()}-${index}`,
-      name,
-      position: pos.position,
-      jurisdiction: 'county',
-      jurisdictionName: (locationInfo as LocationInfo).county,
-      party: 'Independent',
-      email: `${firstName?.toLowerCase() || 'jane'}.${lastName?.toLowerCase() || 'smith'}@${(locationInfo as LocationInfo).county.replace(' ', '').toLowerCase()}.gov`,
-      phone: 'Contact information unavailable',
-      office: `${(locationInfo as LocationInfo).county} Administration Building`,
-      termStart: '2022-01-01',
-      termEnd: '2026-01-01',
-      isElected: true,
-      salary:
-        pos.position === 'County Executive' ? 95000 : pos.position === 'Sheriff' ? 85000 : 75000,
-      responsibilities: pos.responsibilities,
-      contactHours: {
-        days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-        hours: '8:00 AM - 4:30 PM',
-      },
-    });
-  });
-
-  // School district officials
-  const schoolPositions = [
-    {
-      position: 'School Board President',
-      responsibilities: ['Educational policy', 'Budget oversight', 'Superintendent hiring'],
-    },
-    {
-      position: 'School Board Member - District 1',
-      responsibilities: ['Educational policy', 'Community representation', 'Budget approval'],
-    },
-    {
-      position: 'School Board Member - District 2',
-      responsibilities: ['Educational policy', 'Community representation', 'Budget approval'],
-    },
-    {
-      position: 'Superintendent',
-      responsibilities: ['District leadership', 'Educational programs', 'Staff management'],
-      isElected: false,
-    },
-  ];
-
-  schoolPositions.forEach((pos, index) => {
-    const firstName = 'Data';
-    const lastName = 'Unavailable';
-    const name = `${firstName} ${lastName}`;
-
-    officials.push({
-      id: `${(locationInfo as LocationInfo).city.replace(' ', '-').toLowerCase()}-school-${index}`,
-      name,
-      position: pos.position,
-      jurisdiction: 'school_district',
-      jurisdictionName: `${(locationInfo as LocationInfo).city} School District`,
-      party: 'Nonpartisan',
-      email: `${firstName?.toLowerCase() || 'alex'}.${lastName?.toLowerCase() || 'johnson'}@${(locationInfo as LocationInfo).city.replace(' ', '').toLowerCase()}schools.org`,
-      phone: 'Contact information unavailable',
-      office: `${(locationInfo as LocationInfo).city} School District Office`,
-      termStart: '2022-07-01',
-      termEnd: '2026-07-01',
-      isElected: pos.isElected !== false,
-      salary: pos.position === 'Superintendent' ? 130000 : 15000,
-      responsibilities: pos.responsibilities,
-      contactHours: {
-        days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday'],
-        hours: '9:00 AM - 3:00 PM',
-      },
-    });
-  });
-
-  return officials;
-}
-
-function generateNextElections(locationInfo: unknown) {
-  const currentYear = new Date().getFullYear();
-  const nextElectionYear = currentYear % 2 === 0 ? currentYear + 1 : currentYear;
-
-  return [
-    {
-      date: `${nextElectionYear}-11-07`,
-      offices: ['Mayor', 'City Council'],
-      jurisdiction: `City of ${(locationInfo as LocationInfo).city}`,
-    },
-    {
-      date: `${nextElectionYear + 1}-11-07`,
-      offices: ['County Executive', 'County Commissioner'],
-      jurisdiction: (locationInfo as LocationInfo).county,
-    },
-    {
-      date: `${nextElectionYear}-05-15`,
-      offices: ['School Board'],
-      jurisdiction: `${(locationInfo as LocationInfo).city} School District`,
-    },
-  ];
+function generateNextElections(_locationInfo: unknown) {
+  // Real election data would come from state/local election offices
+  return [];
 }

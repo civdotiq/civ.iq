@@ -1295,115 +1295,39 @@ export async function GET(
       }
     }
 
-    // Enhanced fallback mock data matching mockup scale
-    const mockFinanceData: CampaignFinanceData = {
+    // EMERGENCY FIX: Never return fake financial data that could mislead citizens
+    // Previously returned $2.5M+ in fake receipts, fake contributors, and fabricated PAC donations
+
+    logger.warn('FEC financial data unavailable - returning empty result', {
+      bioguideId,
+      reason: 'No FEC candidate mapping found and real financial data unavailable',
+    });
+
+    const emptyFinanceData: CampaignFinanceData = {
       candidate_info: null,
-      financial_summary: [
-        {
-          cycle: 2024,
-          total_receipts: 2500000,
-          total_disbursements: 1800000,
-          cash_on_hand_end_period: 700000,
-          individual_contributions: 1750000,
-          pac_contributions: 500000,
-          party_contributions: 150000,
-          candidate_contributions: 100000,
-        },
-        {
-          cycle: 2022,
-          total_receipts: 1950000,
-          total_disbursements: 1850000,
-          cash_on_hand_end_period: 100000,
-          individual_contributions: 1400000,
-          pac_contributions: 350000,
-          party_contributions: 125000,
-          candidate_contributions: 75000,
-        },
-      ],
-      recent_contributions: [
-        {
-          contributor_name: 'John Smith',
-          contributor_employer: 'Tech Corp',
-          contributor_occupation: 'Software Engineer',
-          contribution_receipt_amount: 2800,
-          contribution_receipt_date: '2024-01-15',
-          committee_name: `${representative.name} for Congress`,
-        },
-        {
-          contributor_name: 'Healthcare Workers PAC',
-          contribution_receipt_amount: 5000,
-          contribution_receipt_date: '2024-01-10',
-          committee_name: `${representative.name} for Congress`,
-        },
-        {
-          contributor_name: 'Mary Johnson',
-          contributor_employer: 'Local Business Inc',
-          contributor_occupation: 'Business Owner',
-          contribution_receipt_amount: 1500,
-          contribution_receipt_date: '2024-01-08',
-          committee_name: `${representative.name} for Congress`,
-        },
-      ],
-      recent_expenditures: [
-        {
-          committee_name: `${representative.name} for Congress`,
-          disbursement_description: 'Media Advertisement',
-          disbursement_amount: 15000,
-          disbursement_date: '2024-01-20',
-          recipient_name: 'Digital Media Solutions',
-        },
-        {
-          committee_name: `${representative.name} for Congress`,
-          disbursement_description: 'Office Rent',
-          disbursement_amount: 3500,
-          disbursement_date: '2024-01-15',
-          recipient_name: 'Downtown Office Complex',
-        },
-        {
-          committee_name: `${representative.name} for Congress`,
-          disbursement_description: 'Staff Salaries',
-          disbursement_amount: 12000,
-          disbursement_date: '2024-01-15',
-          recipient_name: 'Campaign Staff',
-        },
-      ],
-      top_contributors: [
-        { name: 'Education Industry', total_amount: 325000, count: 87 },
-        { name: 'Technology Companies', total_amount: 280000, count: 62 },
-        { name: 'Healthcare Professionals', total_amount: 245000, count: 134 },
-        { name: 'Labor Organizations', total_amount: 190000, count: 45 },
-        { name: 'Environmental Groups', total_amount: 165000, count: 78 },
-        { name: 'Financial Services', total_amount: 140000, count: 33 },
-        { name: 'Small Business Coalition', total_amount: 125000, count: 156 },
-        { name: "Women's Rights PAC", total_amount: 95000, count: 89 },
-      ],
-      top_expenditure_categories: [
-        { category: 'Media and Advertising', total_amount: 450000, count: 45 },
-        { category: 'Staff Salaries', total_amount: 320000, count: 24 },
-        { category: 'Digital Marketing', total_amount: 180000, count: 67 },
-        { category: 'Event Expenses', total_amount: 125000, count: 28 },
-        { category: 'Office Operations', total_amount: 95000, count: 156 },
-        { category: 'Travel and Transportation', total_amount: 75000, count: 89 },
-        { category: 'Polling and Research', total_amount: 65000, count: 12 },
-        { category: 'Legal and Compliance', total_amount: 45000, count: 18 },
-      ],
+      financial_summary: [],
+      recent_contributions: [],
+      recent_expenditures: [],
+      top_contributors: [],
+      top_expenditure_categories: [],
     };
 
     return NextResponse.json({
-      ...mockFinanceData,
+      ...emptyFinanceData,
       metadata: {
-        dataSource: 'mock' as const,
-        retrievalMethod: 'fallback',
+        dataSource: 'unavailable' as const,
+        retrievalMethod: 'none',
         mappingUsed: false,
         dataQuality: {
-          financialSummary: mockFinanceData.financial_summary.length,
-          recentContributions: mockFinanceData.recent_contributions.length,
-          recentExpenditures: mockFinanceData.recent_expenditures.length,
-          topContributors: mockFinanceData.top_contributors.length,
-          topCategories: mockFinanceData.top_expenditure_categories.length,
+          financialSummary: 0,
+          recentContributions: 0,
+          recentExpenditures: 0,
+          topContributors: 0,
+          topCategories: 0,
         },
         lastUpdated: new Date().toISOString(),
-        cacheInfo: 'Sample data for demonstration',
+        cacheInfo: 'Financial data unavailable - no FEC mapping found',
+        errorMessage: 'Campaign finance data unavailable from FEC.gov for this representative',
       },
     });
   } catch (error) {

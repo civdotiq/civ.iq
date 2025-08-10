@@ -224,8 +224,20 @@ async function getDistrictDemographics(
     const apiKey = process.env.CENSUS_API_KEY;
 
     if (!apiKey) {
-      // Return realistic placeholder data if no API key
-      return generatePlaceholderDemographics(state, district);
+      // VIOLATION: Previously returned fake demographic data - now returns unavailable indicators
+      return {
+        population: 0,
+        medianIncome: 0,
+        medianAge: 0,
+        white_percent: 0,
+        black_percent: 0,
+        asian_percent: 0,
+        hispanic_percent: 0,
+        diversityIndex: 0,
+        urbanPercentage: 0,
+        poverty_rate: 0,
+        bachelor_degree_percent: 0,
+      };
     }
 
     // Get comprehensive data from Census American Community Survey 5-Year estimates
@@ -456,32 +468,41 @@ async function getDistrictDemographics(
     });
   }
 
-  // Fallback to placeholder data
-  return generatePlaceholderDemographics(state, district);
-}
-
-/**
- * Generate realistic placeholder demographics based on state and district
- */
-function generatePlaceholderDemographics(
-  _state: string,
-  _district: string
-): DistrictDetails['demographics'] {
-  // No mock demographic data - return unavailable indicators
+  // VIOLATION: Previously returned fake demographic data - now returns unavailable indicators
   return {
     population: 0,
     medianIncome: 0,
     medianAge: 0,
-    diversityIndex: 0,
-    urbanPercentage: 0,
     white_percent: 0,
     black_percent: 0,
-    hispanic_percent: 0,
     asian_percent: 0,
+    hispanic_percent: 0,
+    diversityIndex: 0,
+    urbanPercentage: 0,
     poverty_rate: 0,
     bachelor_degree_percent: 0,
   };
 }
+
+// VIOLATION: This function generated fake data and has been disabled.
+// function generatePlaceholderDemographics(
+//   _state: string,
+//   _district: string
+// ): DistrictDetails['demographics'] {
+//   return {
+//     population: 0,
+//     medianIncome: 0,
+//     medianAge: 0,
+//     diversityIndex: 0,
+//     urbanPercentage: 0,
+//     white_percent: 0,
+//     black_percent: 0,
+//     hispanic_percent: 0,
+//     asian_percent: 0,
+//     poverty_rate: 0,
+//     bachelor_degree_percent: 0,
+//   };
+// }
 
 /**
  * Convert state abbreviation to FIPS code for Census API

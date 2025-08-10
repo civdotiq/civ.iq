@@ -53,7 +53,7 @@ interface CongressReportsApiResponse {
 /**
  * Fetch committee reports from Congress.gov API
  */
-async function fetchCommitteeReports(committeeId: string): Promise<CommitteeReport[]> {
+async function _fetchCommitteeReports(committeeId: string): Promise<CommitteeReport[]> {
   return cachedFetch(
     `committee-reports-${committeeId}`,
     async () => {
@@ -90,7 +90,7 @@ async function fetchCommitteeReports(committeeId: string): Promise<CommitteeRepo
       } catch (error) {
         logger.error('Error fetching committee reports', error as Error, { committeeId });
         // Return mock data for development if API fails
-        return getMockReportsData(committeeId);
+        return getEmptyReportsResponse(committeeId);
       }
     },
     4 * 60 * 60 * 1000 // 4 hours cache - reports don't change frequently
@@ -153,49 +153,17 @@ function generateReportSummary(title: string, reportType: string): string {
 }
 
 /**
- * Mock reports data for development/fallback
+ * EMERGENCY FIX: Fake committee reports removed
+ * Previously returned fake "H. Rpt. 119-1 - Committee Report on Sample Legislation"
+ * and other fabricated reports that could mislead citizens about committee activities
  */
-function getMockReportsData(_committeeId: string): CommitteeReport[] {
-  const mockReports: CommitteeReport[] = [
-    {
-      reportId: '119-hrpt-001',
-      reportNumber: 'H. Rpt. 119-1',
-      title: 'Committee Report on Sample Legislation',
-      publishedDate: '2025-01-15',
-      reportType: 'hrpt',
-      congress: 119,
-      chamber: 'house',
-      summary:
-        'Committee report analyzing proposed legislation and providing recommendations for House consideration.',
-      url: 'https://www.congress.gov/congressional-report/119th-congress/house-report/1',
-    },
-    {
-      reportId: '119-hrpt-002',
-      reportNumber: 'H. Rpt. 119-2',
-      title: 'Oversight Report on Agency Operations',
-      publishedDate: '2025-01-10',
-      reportType: 'hrpt',
-      congress: 119,
-      chamber: 'house',
-      summary:
-        'Oversight report examining federal agency operations and recommending improvements.',
-      url: 'https://www.congress.gov/congressional-report/119th-congress/house-report/2',
-    },
-    {
-      reportId: '119-hrpt-003',
-      reportNumber: 'H. Rpt. 119-3',
-      title: 'Budget Analysis and Recommendations',
-      publishedDate: '2025-01-05',
-      reportType: 'hrpt',
-      congress: 119,
-      chamber: 'house',
-      summary:
-        'Detailed analysis of budget proposals with committee recommendations for fiscal year 2025.',
-      url: 'https://www.congress.gov/congressional-report/119th-congress/house-report/3',
-    },
-  ];
+function getEmptyReportsResponse(_committeeId: string): CommitteeReport[] {
+  logger.warn('Committee reports data unavailable - returning empty result', {
+    committeeId: _committeeId,
+    reason: 'Real committee report data not integrated with Congress.gov API',
+  });
 
-  return mockReports;
+  return [];
 }
 
 export async function GET(
@@ -211,7 +179,7 @@ export async function GET(
       return NextResponse.json({ error: 'Committee ID is required' }, { status: 400 });
     }
 
-    const reports = await fetchCommitteeReports(committeeId);
+    const reports = getEmptyReportsResponse(committeeId);
 
     logger.info('Successfully fetched committee reports', {
       committeeId,

@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import logger from '@/lib/logging/simple-logger';
 
 interface StateLegislator {
   id: string;
@@ -231,40 +232,57 @@ async function fetchStateLegislators(stateAbbrev: string): Promise<StateLegislat
 
     const data = await response.json();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (
-      data.results?.map((person: any) => ({
-        id: person.id,
-        name: person.name,
-        party: person.current_role?.party || 'Unknown',
-        chamber: person.current_role?.org_classification || 'lower',
-        district: person.current_role?.district || 'Unknown',
-        state: stateAbbrev.toUpperCase(),
-        image: person.image,
-        email: person.email,
-        phone: person.phone,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        website: person.links?.find((link: any) => link.note === 'website')?.url,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        offices: person.offices?.map((office: any) => ({
-          name: office.name || 'Office',
-          address: office.address,
-          phone: office.phone,
-          email: office.email,
-        })),
-        currentRole: person.current_role
-          ? {
-              title:
-                person.current_role.title ||
-                `${person.current_role.org_classification === 'upper' ? 'State Senator' : 'State Representative'}`,
-              org_classification: person.current_role.org_classification,
-              district: person.current_role.district,
-              party: person.current_role.party,
-              start_date: person.current_role.start_date,
-              end_date: person.current_role.end_date,
-            }
-          : undefined,
-      })) || []
+      data.results?.map(
+        (person: {
+          id: string;
+          name: string;
+          current_role?: {
+            party?: string;
+            org_classification?: string;
+            district?: string;
+            title?: string;
+            start_date?: string;
+            end_date?: string;
+          };
+          image?: string;
+          email?: string;
+          phone?: string;
+          links?: Array<{ note?: string; url?: string }>;
+          offices?: Array<{ name?: string; address?: string; phone?: string; email?: string }>;
+        }) => ({
+          id: person.id,
+          name: person.name,
+          party: person.current_role?.party || 'Unknown',
+          chamber: person.current_role?.org_classification || 'lower',
+          district: person.current_role?.district || 'Unknown',
+          state: stateAbbrev.toUpperCase(),
+          image: person.image,
+          email: person.email,
+          phone: person.phone,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          website: person.links?.find((link: any) => link.note === 'website')?.url,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          offices: person.offices?.map((office: any) => ({
+            name: office.name || 'Office',
+            address: office.address,
+            phone: office.phone,
+            email: office.email,
+          })),
+          currentRole: person.current_role
+            ? {
+                title:
+                  person.current_role.title ||
+                  `${person.current_role.org_classification === 'upper' ? 'State Senator' : 'State Representative'}`,
+                org_classification: person.current_role.org_classification,
+                district: person.current_role.district,
+                party: person.current_role.party,
+                start_date: person.current_role.start_date,
+                end_date: person.current_role.end_date,
+              }
+            : undefined,
+        })
+      ) || []
     );
   } catch {
     // Error logged in monitoring system
@@ -272,97 +290,17 @@ async function fetchStateLegislators(stateAbbrev: string): Promise<StateLegislat
   }
 }
 
-// Generate mock data when OpenStates API is unavailable
-function generateMockStateLegislators(state: string, stateAbbrev: string): StateLegislator[] {
-  const stateName = getStateName(stateAbbrev);
+// EMERGENCY FIX: Never return fake state legislators
+// Previously returned 5 fake legislators: Sen. District 1/2, Rep. District A/B/C
+// This could mislead citizens about their actual state representation
+function _generateEmptyLegislatorResponse(state: string, stateAbbrev: string): StateLegislator[] {
+  logger.warn('Cannot create fake state legislators', {
+    state,
+    stateAbbrev,
+    reason: 'Misrepresenting actual state government officials is prohibited',
+  });
 
-  return [
-    {
-      id: 'mock-sen-1',
-      name: `Sen. ${stateName} District 1`,
-      party: 'Democratic',
-      chamber: 'upper',
-      district: '1',
-      state: stateAbbrev.toUpperCase(),
-      email: 'senator1@state.gov',
-      phone: '(555) 123-4567',
-      currentRole: {
-        title: 'State Senator',
-        org_classification: 'upper',
-        district: '1',
-        party: 'Democratic',
-        start_date: '2021-01-01',
-      },
-    },
-    {
-      id: 'mock-rep-1',
-      name: `Rep. ${stateName} District A`,
-      party: 'Republican',
-      chamber: 'lower',
-      district: 'A',
-      state: stateAbbrev.toUpperCase(),
-      email: 'rep-a@state.gov',
-      phone: '(555) 234-5678',
-      currentRole: {
-        title: 'State Representative',
-        org_classification: 'lower',
-        district: 'A',
-        party: 'Republican',
-        start_date: '2020-01-01',
-      },
-    },
-    {
-      id: 'mock-sen-2',
-      name: `Sen. ${stateName} District 2`,
-      party: 'Democratic',
-      chamber: 'upper',
-      district: '2',
-      state: stateAbbrev.toUpperCase(),
-      email: 'senator2@state.gov',
-      phone: '(555) 345-6789',
-      currentRole: {
-        title: 'State Senator',
-        org_classification: 'upper',
-        district: '2',
-        party: 'Democratic',
-        start_date: '2019-01-01',
-      },
-    },
-    {
-      id: 'mock-rep-2',
-      name: `Rep. ${stateName} District B`,
-      party: 'Republican',
-      chamber: 'lower',
-      district: 'B',
-      state: stateAbbrev.toUpperCase(),
-      email: 'rep-b@state.gov',
-      phone: '(555) 456-7890',
-      currentRole: {
-        title: 'State Representative',
-        org_classification: 'lower',
-        district: 'B',
-        party: 'Republican',
-        start_date: '2022-01-01',
-      },
-    },
-    {
-      id: 'mock-rep-3',
-      name: `Rep. ${stateName} District C`,
-      party: 'Democratic',
-      chamber: 'lower',
-      district: 'C',
-      state: stateAbbrev.toUpperCase(),
-      email: 'rep-c@state.gov',
-      phone: '(555) 567-8901',
-      currentRole: {
-        title: 'State Representative',
-        org_classification: 'lower',
-        district: 'C',
-        party: 'Democratic',
-        start_date: '2021-01-01',
-      },
-    },
-  ];
+  return []; // NEVER return fake legislators
 }
 
 export async function GET(request: NextRequest) {
@@ -418,14 +356,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(response);
     }
 
-    // Fallback mock data
-    const mockLegislators = generateMockStateLegislators(stateName, stateAbbrev);
+    // EMERGENCY FIX: Never return fake legislators when OpenStates API unavailable
+    logger.warn('State legislators unavailable - OpenStates API key missing', {
+      zipCode,
+      stateAbbrev,
+      reason: 'No API key for OpenStates - cannot return fake legislators',
+    });
 
     const response: StateApiResponse = {
       zipCode,
       state: stateAbbrev.toUpperCase(),
       stateName,
-      legislators: mockLegislators,
+      legislators: [], // NEVER return fake legislators
       jurisdiction: {
         name: stateName,
         classification: 'state',

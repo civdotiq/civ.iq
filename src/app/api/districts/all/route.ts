@@ -52,7 +52,7 @@ export async function GET(request: Request) {
 
     // Check cache
     if (!bustCache && cachedData && Date.now() - cacheTime < CACHE_DURATION) {
-      logger.cache('hit', 'districts-all');
+      logger.info('Cache hit for districts-all');
       logger.info('Returning cached districts data', {
         cacheAge: Date.now() - cacheTime,
         districtCount: cachedData.length,
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ districts: cachedData });
     }
 
-    logger.cache('miss', 'districts-all');
+    logger.info('Cache miss for districts-all');
 
     const congressApiKey = process.env.CONGRESS_API_KEY;
     const censusApiKey = process.env.CENSUS_API_KEY;
@@ -107,7 +107,10 @@ export async function GET(request: Request) {
       const membersData: CongressApiMembersResponse = await membersResponse.json();
       const members = membersData.members || [];
 
-      logger.externalApi('Congress.gov', 'fetch-members', apiDuration, true, {
+      logger.info('Congress.gov API call completed', {
+        operation: 'fetch-members',
+        duration: apiDuration,
+        success: true,
         offset,
         membersReceived: members.length,
       });
@@ -198,24 +201,23 @@ export async function GET(request: Request) {
           imageUrl: member.depiction?.imageUrl,
         },
         demographics: {
-          population: censusData.population || Math.floor(761000 + Math.random() * 50000),
-          medianIncome: censusData.medianIncome || Math.floor(50000 + Math.random() * 40000),
-          medianAge: censusData.medianAge || 35 + Math.random() * 10,
-          diversityIndex: censusData.diversityIndex || Math.random() * 100,
-          urbanPercentage: censusData.urbanPercentage || 20 + Math.random() * 60,
+          population: censusData.population || 0,
+          medianIncome: censusData.medianIncome || 0,
+          medianAge: censusData.medianAge || 0,
+          diversityIndex: censusData.diversityIndex || 0,
+          urbanPercentage: censusData.urbanPercentage || 0,
         },
         political: {
           cookPVI: getRealCookPVI(member.state, districtNumber),
           lastElection: {
             winner: member.partyName || 'Unknown',
-            margin: Math.random() * 40 + 2, // Would need FEC data for real margins
-            turnout: 50 + Math.random() * 25, // Would need real turnout data
+            margin: 0, // Data unavailable - would need FEC data
+            turnout: 0, // Data unavailable - would need real turnout data
           },
-          registeredVoters:
-            censusData.votingAgePopulation || Math.floor(450000 + Math.random() * 150000),
+          registeredVoters: censusData.votingAgePopulation || 0,
         },
         geography: {
-          area: Math.floor(1000 + Math.random() * 9000), // Would need geographic data
+          area: 0, // Data unavailable - would need geographic data
           counties: [], // Would need additional API calls
           majorCities: [], // Would need additional API calls
         },
@@ -240,7 +242,7 @@ export async function GET(request: Request) {
     // Cache the data
     cachedData = districtsArray;
     cacheTime = Date.now();
-    logger.cache('set', 'districts-all', {
+    logger.info('Cache set for districts-all', {
       districtCount: districtsArray.length,
       cacheTime: new Date(cacheTime).toISOString(),
     });

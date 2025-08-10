@@ -205,6 +205,7 @@ async function fetchStateBills(
 // Transform OpenStates bill data to our format
 function transformBill(bill: unknown, stateAbbrev: string): StateBill {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sponsors = (bill as any).sponsorships || [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const primarySponsor = sponsors.find((s: any) => s.primary) || sponsors[0];
@@ -227,13 +228,15 @@ function transformBill(bill: unknown, stateAbbrev: string): StateBill {
   // Extract voting data from actions
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const votes =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (bill as any).actions
       ?.filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (action: any) =>
           action.classification?.includes('passage') ||
           action.classification?.includes('committee-passage')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       )
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .map((action: any) => ({
         chamber: action.organization?.chamber || 'unknown',
         date: action.date,
@@ -300,7 +303,7 @@ function transformBill(bill: unknown, stateAbbrev: string): StateBill {
     votes,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     fullTextUrl: (bill as any).sources?.[0]?.url,
-    trackingCount: Math.floor(Math.random() * 100), // Mock tracking count
+    trackingCount: 0, // Data unavailable - would need citizen engagement API
   };
 }
 

@@ -222,49 +222,15 @@ async function fetchCensusData(state: string, district: string): Promise<Demogra
         median_rent: parseInt(data[9]) || 0,
       },
       geography: {
-        area_sq_miles: 500 + Math.random() * 2000, // Simulated - would need geography API
-        urban_percentage: 55 + Math.random() * 30,
-        rural_percentage: 15 + Math.random() * 30,
+        area_sq_miles: 0, // Data unavailable - would need geography API
+        urban_percentage: 0,
+        rural_percentage: 0,
       },
     };
   } catch (error) {
     logger.error('Error fetching census data', error as Error, { state, district });
     return null;
   }
-}
-
-function generateMockElectionData(_state: string, _district: string): ElectionData {
-  // Generate realistic election data based on district characteristics
-  const isCompetitive = Math.random() > 0.7;
-  const leansDemocratic = Math.random() > 0.5;
-
-  const baseMargin = isCompetitive ? 2 + Math.random() * 8 : 10 + Math.random() * 20;
-  const demPercentage = leansDemocratic ? 50 + baseMargin : 50 - baseMargin;
-  const repPercentage = 100 - demPercentage - (1 + Math.random() * 3);
-
-  const totalVotes = 200000 + Math.random() * 300000;
-  const registeredVoters = totalVotes * (1.2 + Math.random() * 0.3);
-
-  return {
-    presidential_2020: {
-      total_votes: Math.round(totalVotes),
-      democrat_percentage: Math.round(demPercentage * 10) / 10,
-      republican_percentage: Math.round(repPercentage * 10) / 10,
-      other_percentage: Math.round((100 - demPercentage - repPercentage) * 10) / 10,
-    },
-    congressional_2022: {
-      total_votes: Math.round(totalVotes * 0.85), // Lower turnout in midterms
-      incumbent_percentage: Math.round((leansDemocratic ? demPercentage : repPercentage) * 10) / 10,
-      challenger_percentage:
-        Math.round((leansDemocratic ? repPercentage : demPercentage) * 10) / 10,
-      margin: Math.round(baseMargin * 10) / 10,
-    },
-    voter_turnout: {
-      registered_voters: Math.round(registeredVoters),
-      turnout_2020: Math.round((totalVotes / registeredVoters) * 1000) / 10,
-      turnout_2022: Math.round(((totalVotes * 0.85) / registeredVoters) * 1000) / 10,
-    },
-  };
 }
 
 export async function GET(
@@ -299,11 +265,26 @@ export async function GET(
           representative.district || '00'
         );
 
-        // Generate election data (in a real implementation, this would come from election databases)
-        const elections = generateMockElectionData(
-          representative.state,
-          representative.district || '00'
-        );
+        // Real election data would come from state election offices - returning empty data
+        const elections: ElectionData = {
+          presidential_2020: {
+            total_votes: 0,
+            democrat_percentage: 0,
+            republican_percentage: 0,
+            other_percentage: 0,
+          },
+          congressional_2022: {
+            total_votes: 0,
+            incumbent_percentage: 0,
+            challenger_percentage: 0,
+            margin: 0,
+          },
+          voter_turnout: {
+            registered_voters: 0,
+            turnout_2020: 0,
+            turnout_2022: 0,
+          },
+        };
 
         return { representative, demographics, elections };
       },

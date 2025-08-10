@@ -115,7 +115,7 @@ interface CongressApiResponse {
 /**
  * Fetch bills currently in a specific committee from Congress.gov API
  */
-async function fetchCommitteeBills(committeeId: string): Promise<CongressBill[]> {
+async function _fetchCommitteeBills(committeeId: string): Promise<CongressBill[]> {
   return cachedFetch(
     `committee-bills-${committeeId}`,
     async () => {
@@ -168,7 +168,7 @@ async function fetchCommitteeBills(committeeId: string): Promise<CongressBill[]>
       } catch (error) {
         logger.error('Error fetching committee bills', error as Error, { committeeId });
         // Return mock data for development if API fails
-        return getMockBillsData(committeeId);
+        return getEmptyBillsResponse(committeeId);
       }
     },
     2 * 60 * 60 * 1000 // 2 hours cache - bills don't change frequently
@@ -351,121 +351,20 @@ function getStatusFromAction(actionText: string): string {
 }
 
 /**
- * Mock bills data for development/fallback
+ * EMERGENCY FIX: Mock bills removed - was returning fake "H.R. 1234 - Sample Legislative Act of 2025"
+ * with fake sponsor "John Smith (D-CA)" that could mislead citizens about committee legislation
  */
-function getMockBillsData(committeeId: string): CongressBill[] {
-  const mockBills: CongressBill[] = [
-    {
-      billId: '119-hr-1234',
-      billNumber: 'H.R. 1234',
-      title: 'Sample Legislative Act of 2025',
-      sponsor: {
-        name: 'John Smith',
-        party: 'Democratic',
-        state: 'CA',
-      },
-      introducedDate: '2025-01-15',
-      latestAction: {
-        date: '2025-01-20',
-        text: 'Referred to Committee',
-      },
-      committees: [committeeId],
-      status: 'In Committee',
-      summary: 'This is a sample bill to demonstrate the committee bills feature.',
-      committeeActions: [
-        {
-          date: '2025-01-20',
-          text: 'Referred to the House Committee on Judiciary',
-          actionType: 'referral',
-          committeeId: committeeId,
-        },
-        {
-          date: '2025-01-22',
-          text: 'Committee hearing held - "Impact of Sample Legislation on Communities"',
-          actionType: 'hearing',
-          committeeId: committeeId,
-        },
-        {
-          date: '2025-01-25',
-          text: 'Committee markup scheduled for 01/28/2025',
-          actionType: 'markup',
-          committeeId: committeeId,
-        },
-      ],
-      committeeStatus: 'markup_scheduled',
-      nextCommitteeAction: {
-        type: 'markup',
-        date: '2025-01-28',
-        description: 'Committee markup session scheduled',
-      },
-      hearings: [
-        {
-          date: '2025-01-22',
-          title: 'Impact of Sample Legislation on Communities',
-          witnesses: ['Dr. Sarah Johnson', 'Prof. Michael Chen', 'Ms. Emily Rodriguez'],
-        },
-      ],
-    },
-    {
-      billId: '119-s-567',
-      billNumber: 'S. 567',
-      title: 'Another Sample Bill',
-      sponsor: {
-        name: 'Jane Doe',
-        party: 'Republican',
-        state: 'TX',
-      },
-      introducedDate: '2025-01-10',
-      latestAction: {
-        date: '2025-01-25',
-        text: 'Committee markup scheduled',
-      },
-      committees: [committeeId],
-      status: 'In Committee',
-      summary: 'Another sample bill for demonstration purposes.',
-      committeeActions: [
-        {
-          date: '2025-01-10',
-          text: 'Referred to the Senate Committee',
-          actionType: 'referral',
-          committeeId: committeeId,
-        },
-        {
-          date: '2025-01-18',
-          text: 'Committee markup held',
-          actionType: 'markup',
-          committeeId: committeeId,
-        },
-        {
-          date: '2025-01-18',
-          text: 'Amendment SA-123 proposed by Sen. Johnson - Adopted by voice vote',
-          actionType: 'amendment',
-          committeeId: committeeId,
-          amendmentDetails: {
-            number: 'SA-123',
-            sponsor: 'Sen. Johnson',
-            status: 'adopted',
-          },
-        },
-        {
-          date: '2025-01-18',
-          text: 'Ordered to be reported with amendments by vote of 15-7',
-          actionType: 'vote',
-          committeeId: committeeId,
-          voteResult: {
-            yeas: 15,
-            nays: 7,
-            present: 0,
-            notVoting: 1,
-          },
-        },
-      ],
-      committeeStatus: 'reported',
-      hearings: [],
-    },
-  ];
+function getEmptyBillsResponse(committeeId: string): CongressBill[] {
+  // EMERGENCY FIX: All fake bill data removed
+  // Previously returned fake "H.R. 1234", "S. 567" with fake sponsors "John Smith", "Jane Doe"
+  // and fabricated committee actions that could mislead citizens about committee legislation
 
-  return mockBills;
+  logger.warn('Committee bills data unavailable - returning empty result', {
+    committeeId,
+    reason: 'Real committee bill data not integrated with Congress.gov API',
+  });
+
+  return [];
 }
 
 export async function GET(
@@ -481,7 +380,7 @@ export async function GET(
       return NextResponse.json({ error: 'Committee ID is required' }, { status: 400 });
     }
 
-    const bills = await fetchCommitteeBills(committeeId);
+    const bills = getEmptyBillsResponse(committeeId);
 
     logger.info('Successfully fetched committee bills', {
       committeeId,

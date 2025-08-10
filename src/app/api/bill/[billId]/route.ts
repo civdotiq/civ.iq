@@ -497,108 +497,22 @@ function mapCongressStatus(actionText?: string): BillStatus | null {
   return 'introduced';
 }
 
-// Generate mock bill data for development/fallback
-function generateMockBillData(billId: string): Bill {
-  const { type, number } = parseBillNumber(billId);
+// EMERGENCY FIX: Mock bill generation removed to prevent misrepresenting real representatives
+// Previously used REAL bioguideId T000481 (Rep. Shri Thanedar) for fake "Sample Bill" legislation
+// which could damage representative's reputation and mislead citizens about their legislative record
+function _generateEmptyBillResponse(billId: string): null {
+  // EMERGENCY FIX: All fake bill data removed
+  // Previously returned fake bill with REAL representative bioguideIds:
+  // - T000481 (Rep. Shri Thanedar) as fake sponsor
+  // - M001135 (Rep. Kweisi Mfume) as fake cosponsor
+  // This could seriously damage real representatives' reputations
 
-  const mockSponsor: EnhancedRepresentative = {
-    bioguideId: 'T000481',
-    name: 'Shri Thanedar',
-    firstName: 'Shri',
-    lastName: 'Thanedar',
-    party: 'D',
-    state: 'MI',
-    district: '13',
-    chamber: 'House',
-    title: 'Rep. Shri Thanedar',
-    phone: '(202) 225-2261',
-    website: 'https://thanedar.house.gov',
-    terms: [],
-  };
+  logger.warn('Cannot create fake bill with real representative data', {
+    billId,
+    reason: 'Misrepresenting real legislators with fake bills is prohibited',
+  });
 
-  return {
-    id: `119-${type}-${number}`,
-    number: billId,
-    title: `Sample Bill: ${billId} - Mock Legislation for Development`,
-    congress: '119',
-    session: '1',
-    type: type as Bill['type'],
-    chamber: type.startsWith('h') ? 'House' : 'Senate',
-
-    status: {
-      current: 'referred',
-      lastAction: {
-        date: '2025-01-15',
-        description: 'Referred to the Committee on Example Affairs',
-        chamber: 'House',
-      },
-      timeline: [
-        {
-          date: '2025-01-10',
-          description: 'Introduced in House',
-          chamber: 'House',
-          type: 'action',
-        },
-        {
-          date: '2025-01-15',
-          description: 'Referred to the Committee on Example Affairs',
-          chamber: 'House',
-          type: 'committee',
-        },
-      ],
-    },
-
-    sponsor: {
-      representative: mockSponsor,
-      date: '2025-01-10',
-    },
-
-    cosponsors: [
-      {
-        representative: {
-          ...mockSponsor,
-          bioguideId: 'M001135',
-          name: 'Kweisi Mfume',
-          firstName: 'Kweisi',
-          lastName: 'Mfume',
-          state: 'MD',
-          district: '7',
-          title: 'Rep. Kweisi Mfume',
-        },
-        date: '2025-01-12',
-      },
-    ],
-
-    committees: [
-      {
-        committeeId: 'HSAG',
-        name: 'House Committee on Agriculture',
-        chamber: 'House',
-        activities: [
-          {
-            date: '2025-01-15',
-            activity: 'Referred to Committee',
-          },
-        ],
-      },
-    ],
-
-    summary: {
-      text: `This is a sample bill (${billId}) created for development and testing purposes. It demonstrates the structure and content that would be displayed for real legislation.`,
-      date: '2025-01-10',
-      version: 'Introduced in House',
-    },
-
-    subjects: ['Government Operations', 'Sample Legislation', 'Development Testing'],
-
-    votes: [],
-
-    relatedBills: [],
-
-    introducedDate: '2025-01-10',
-    url: `https://www.congress.gov/bill/119th-congress/house-bill/${number}`,
-    lastUpdated: new Date().toISOString(),
-  };
+  return null;
 }
 
 export async function GET(
@@ -634,10 +548,21 @@ export async function GET(
       bill = await fetchBillFromCongress(billId);
     }
 
-    // Fallback to mock data if real data unavailable
+    // EMERGENCY FIX: Never return fake bills with real representative data
     if (!bill) {
-      logger.info('Using mock bill data', { billId });
-      bill = generateMockBillData(billId);
+      logger.warn('Bill data unavailable from Congress.gov', { billId });
+      return NextResponse.json(
+        {
+          bill: null,
+          metadata: {
+            dataSource: 'unavailable',
+            lastUpdated: new Date().toISOString(),
+            cacheInfo: 'Bill data unavailable from Congress.gov',
+            error: 'Bill not found - data unavailable from Congress.gov API',
+          },
+        } as unknown as BillAPIResponse,
+        { status: 404 }
+      );
     }
 
     const response: BillAPIResponse = {

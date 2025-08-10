@@ -45,22 +45,6 @@ interface ComparisonData {
   };
 }
 
-// Helper function to calculate effectiveness score
-function calculateEffectivenessScore(
-  billsSponsored: number,
-  billsEnacted: number,
-  amendmentsAdopted: number,
-  committeeMemberships: number
-): number {
-  // Weighted scoring system
-  const enactmentRate = billsSponsored > 0 ? (billsEnacted / billsSponsored) * 100 : 0;
-  const amendmentScore = Math.min(amendmentsAdopted * 2, 50); // Cap at 50 points
-  const committeeScore = Math.min(committeeMemberships * 5, 25); // Cap at 25 points
-  const productivityScore = Math.min(billsSponsored * 0.5, 25); // Cap at 25 points
-
-  return Math.round(enactmentRate + amendmentScore + committeeScore + productivityScore);
-}
-
 // Get real voting record data from Congress.gov
 async function getRealVotingRecord(
   bioguideId: string,
@@ -136,75 +120,30 @@ async function getRealVotingRecord(
   }
 }
 
-// MOCK DATA: Generates deterministic but fake campaign finance data for development
-// NOTE: Should be replaced with real FEC data or "data unavailable" indicators
-function generateCampaignFinance(bioguideId: string): ComparisonData['campaignFinance'] {
-  const seed = bioguideId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const random = (min: number, max: number) => min + ((seed * 11) % (max - min + 1));
-
-  const totalRaised = random(100000, 5000000);
-  const individualContributions = Math.floor(totalRaised * (0.4 + random(0, 40) / 100));
-  const pacContributions = Math.floor(totalRaised * (0.1 + random(0, 30) / 100));
-  const totalSpent = Math.floor(totalRaised * (0.7 + random(0, 25) / 100));
-  const cashOnHand = totalRaised - totalSpent;
-
-  const donorNames = [
-    'ActBlue',
-    'Club for Growth',
-    'National Association of Realtors',
-    'American Federation of Teachers',
-    'National Education Association',
-    'Boeing Company',
-    'Microsoft Corporation',
-    'Alphabet Inc',
-  ];
-
-  const topDonors = donorNames
-    .slice(0, random(3, 5))
-    .map((name, _index) => ({
-      name,
-      amount: random(5000, 50000),
-      type: (['Individual', 'PAC', 'Organization'] as const)[random(0, 2)] || 'Individual',
-    }))
-    .sort((a, b) => b.amount - a.amount);
-
+// Returns empty campaign finance data - real FEC integration would be needed
+function getEmptyCampaignFinance(): ComparisonData['campaignFinance'] {
   return {
-    totalRaised,
-    totalSpent,
-    cashOnHand,
-    individualContributions,
-    pacContributions,
-    topDonors,
+    totalRaised: 0,
+    totalSpent: 0,
+    cashOnHand: 0,
+    individualContributions: 0,
+    pacContributions: 0,
+    topDonors: [],
   };
 }
 
-// Generate mock effectiveness data
-function generateEffectiveness(bioguideId: string): ComparisonData['effectiveness'] {
-  const seed = bioguideId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const random = (min: number, max: number) => min + ((seed * 13) % (max - min + 1));
-
-  const billsSponsored = random(5, 50);
-  const billsEnacted = random(0, Math.max(1, Math.floor(billsSponsored * 0.3)));
-  const amendmentsAdopted = random(0, 15);
-  const committeeMemberships = random(1, 8);
-
-  const effectivenessScore = calculateEffectivenessScore(
-    billsSponsored,
-    billsEnacted,
-    amendmentsAdopted,
-    committeeMemberships
-  );
-
+// Returns empty effectiveness data - real legislative effectiveness data would be needed
+function getEmptyEffectiveness(): ComparisonData['effectiveness'] {
   return {
-    billsSponsored,
-    billsEnacted,
-    amendmentsAdopted,
-    committeeMemberships,
-    effectivenessScore,
+    billsSponsored: 0,
+    billsEnacted: 0,
+    amendmentsAdopted: 0,
+    committeeMemberships: 0,
+    effectivenessScore: 0,
     ranking: {
-      overall: random(1, 435),
-      party: random(1, 200),
-      state: random(1, 20),
+      overall: 0,
+      party: 0,
+      state: 0,
     },
   };
 }
@@ -237,8 +176,8 @@ export async function GET(request: NextRequest) {
     // Fetch real data using our services
     const [votingRecord, campaignFinance, effectiveness] = await Promise.all([
       getRealVotingRecord(bioguideId, chamber),
-      generateCampaignFinance(bioguideId), // Keep mock for now - would need FEC API integration
-      generateEffectiveness(bioguideId), // Keep mock for now - would need legislative effectiveness data
+      getEmptyCampaignFinance(), // Real FEC API integration needed
+      getEmptyEffectiveness(), // Real legislative effectiveness data needed
     ]);
 
     const comparisonData: ComparisonData = {

@@ -8,7 +8,6 @@ import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import type { Committee, CommitteeAPIResponse, CommitteeMember } from '@/types/committee';
 import { COMMITTEE_ID_MAP } from '@/types/committee';
-import type { EnhancedRepresentative } from '@/types/representative';
 import { getCommitteeData } from '@/lib/data/committees';
 import {
   fetchCommittees,
@@ -203,197 +202,35 @@ async function fetchCommitteeFromCongressLegislators(
   );
 }
 
-// Generate enhanced mock members based on committee type and chamber
-function generateCommitteeMockMembers(
-  committeeId: string,
-  chamber: string
-): EnhancedRepresentative[] {
-  // Committee-specific mock members based on real committee structures
-  const baseMembers: Partial<EnhancedRepresentative>[] = [
-    {
-      bioguideId: `${committeeId}_001`,
-      name: 'Committee Chair',
-      firstName: 'Chair',
-      lastName: 'Person',
-      party: chamber === 'House' ? 'D' : 'R',
-      state: 'CA',
-      district: chamber === 'House' ? '1' : undefined,
-      chamber: chamber as 'House' | 'Senate',
-    },
-    {
-      bioguideId: `${committeeId}_002`,
-      name: 'Ranking Member',
-      firstName: 'Ranking',
-      lastName: 'Member',
-      party: chamber === 'House' ? 'R' : 'D',
-      state: 'TX',
-      district: chamber === 'House' ? '2' : undefined,
-      chamber: chamber as 'House' | 'Senate',
-    },
-    {
-      bioguideId: `${committeeId}_003`,
-      name: 'Committee Member 1',
-      firstName: 'Member',
-      lastName: 'One',
-      party: 'D',
-      state: 'NY',
-      district: chamber === 'House' ? '3' : undefined,
-      chamber: chamber as 'House' | 'Senate',
-    },
-    {
-      bioguideId: `${committeeId}_004`,
-      name: 'Committee Member 2',
-      firstName: 'Member',
-      lastName: 'Two',
-      party: 'R',
-      state: 'FL',
-      district: chamber === 'House' ? '4' : undefined,
-      chamber: chamber as 'House' | 'Senate',
-    },
-  ];
+// EMERGENCY FIX: Removed all mock member generation
+// Never generate fake bioguideIds or names
 
-  return baseMembers.map(member => ({
-    ...member,
-    middleName: undefined,
-    suffix: undefined,
-    nickname: undefined,
-    directOrderName: member.name,
-    invertedOrderName: `${member.lastName}, ${member.firstName}`,
-    dateOfBirth: undefined,
-    dateOfDeath: undefined,
-    addressComplete: undefined,
-    phoneNumber: undefined,
-    twitterId: undefined,
-    facebookId: undefined,
-    youtubeName: undefined,
-    govtrackId: undefined,
-    opensecretsId: undefined,
-    lisId: undefined,
-    cspanId: undefined,
-    wikipediaId: undefined,
-    ballotpediaId: undefined,
-    washingtonPostId: undefined,
-    icpsrId: undefined,
-    photoUrl: undefined,
-    biography: undefined,
-    website: undefined,
-    contactForm: undefined,
-    rssUrl: undefined,
-    termStart: '2023-01-03',
-    termEnd: '2025-01-03',
-    leadership: [],
-    committees: [],
-    subcommittees: [],
-    caucuses: [],
-    socialMedia: {
-      twitter: undefined,
-      facebook: undefined,
-      youtube: undefined,
-      instagram: undefined,
-    },
-    officeLocations: [],
-    currentCommittees: [],
-    currentSubcommittees: [],
-    currentCaucuses: [],
-    endorsements: [],
-    votingRecord: {
-      totalVotes: 0,
-      votesWithParty: 0,
-      votesAgainstParty: 0,
-      partyUnityScore: 0,
-      abstentions: 0,
-      lastUpdated: new Date().toISOString(),
-    },
-    billsSponsored: 0,
-    billsCosponsored: 0,
-    lastUpdated: new Date().toISOString(),
-  })) as EnhancedRepresentative[];
-}
-
-// Generate mock committee data for development/fallback
-function generateMockCommitteeData(committeeId: string): Committee {
+// Generate empty committee data when real data is unavailable
+// EMERGENCY FIX: Never return fake bioguideIds or names
+function generateEmptyCommitteeData(committeeId: string): Committee {
   const metadata = getCommitteeMetadata(committeeId);
 
-  // Use enhanced mock member system
-  const mockRepresentatives = generateCommitteeMockMembers(committeeId, metadata.chamber);
-
-  // Ensure we have at least basic representatives for leadership roles
-  if (mockRepresentatives.length < 2) {
-    // Add fallback representatives if generation failed or insufficient
-    const fallbackRep: Partial<EnhancedRepresentative> = {
-      bioguideId: 'X000000',
-      name: 'Committee Chair',
-      party: 'Unknown',
-      state: 'XX',
-      district: '00',
-      chamber: metadata.chamber === 'Joint' ? 'House' : metadata.chamber,
-      title: metadata.chamber === 'House' ? 'Representative' : 'Senator',
-    };
-
-    if (mockRepresentatives.length === 0) {
-      mockRepresentatives.push(fallbackRep as EnhancedRepresentative);
-      mockRepresentatives.push({
-        ...fallbackRep,
-        name: 'Ranking Member',
-        bioguideId: 'X000001',
-      } as EnhancedRepresentative);
-    } else if (mockRepresentatives.length === 1) {
-      mockRepresentatives.push({
-        ...fallbackRep,
-        name: 'Ranking Member',
-        bioguideId: 'X000001',
-      } as EnhancedRepresentative);
-    }
-  }
+  logger.warn('Committee data unavailable - returning empty structure', {
+    committeeId,
+    reason: 'Real committee data not found in congress-legislators API',
+  });
 
   return {
     id: metadata.id,
     thomas_id: committeeId,
     name: metadata.name,
     chamber: metadata.chamber,
-    jurisdiction: 'Sample committee jurisdiction covering relevant policy areas',
+    jurisdiction: 'Committee data loading from Congress.gov...',
     type: 'Standing',
 
     leadership: {
-      chair: {
-        representative: mockRepresentatives[0]!,
-        role: 'Chair',
-        joinedDate: '2023-01-03',
-        rank: 1,
-        subcommittees: [],
-      },
-      rankingMember: {
-        representative: mockRepresentatives[1]!,
-        role: 'Ranking Member',
-        joinedDate: '2023-01-03',
-        rank: 2,
-        subcommittees: [],
-      },
+      chair: undefined,
+      rankingMember: undefined,
     },
 
-    members: mockRepresentatives.map((rep, index) => ({
-      representative: rep,
-      role: index === 0 ? 'Chair' : index === 1 ? 'Ranking Member' : 'Member',
-      joinedDate: '2023-01-03',
-      rank: index + 1,
-      subcommittees: index === 0 ? ['Nutrition, Foreign Agriculture'] : [],
-    })),
+    members: [], // NEVER return fake members with fake bioguideIds
 
-    subcommittees: [
-      {
-        id: `${committeeId}_sub1`,
-        name: 'Nutrition, Foreign Agriculture',
-        chair: mockRepresentatives[0]!,
-        focus: 'Nutrition programs and foreign agricultural trade',
-        members: [
-          {
-            representative: mockRepresentatives[0]!,
-            role: 'Chair',
-            joinedDate: '2023-01-03',
-          },
-        ],
-      },
-    ],
+    subcommittees: [], // Empty until real data available
 
     url: `https://www.congress.gov/committee/${committeeId.toLowerCase()}`,
     lastUpdated: new Date().toISOString(),
@@ -436,17 +273,16 @@ export async function GET(
       committee = await fetchCommitteeFromCongressLegislators(committeeId);
     }
 
-    // Fallback to mock data if real data unavailable
+    // EMERGENCY FIX: Return empty data instead of fake members
     if (!committee) {
-      logger.info('Using mock committee data', { committeeId });
-      committee = generateMockCommitteeData(committeeId);
+      logger.warn('Committee data unavailable from all sources', { committeeId });
+      committee = generateEmptyCommitteeData(committeeId);
     }
 
     const response: CommitteeAPIResponse = {
       committee,
       metadata: {
-        dataSource:
-          committee.url && !committee.url.includes('mock') ? 'congress-legislators' : 'mock',
+        dataSource: committee.members.length > 0 ? 'congress-legislators' : 'mock',
         lastUpdated: committee.lastUpdated,
         memberCount: committee.members.length,
         subcommitteeCount: committee.subcommittees.length,

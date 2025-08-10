@@ -86,7 +86,7 @@ export async function GET(
 
         // In production, this would integrate with official state sources
         const stateInfo = getStateInfo(state.toUpperCase());
-        const executives = generateMockExecutives(state.toUpperCase(), stateInfo);
+        const executives: StateExecutive[] = []; // Real state executive API integration needed
 
         // Calculate party breakdown
         const partyBreakdown = {
@@ -183,101 +183,4 @@ function getNextElectionDate(state: string): string {
   }
 
   return `${nextEvenYear}-11-07`;
-}
-
-function generateMockExecutives(state: string, _stateInfo: unknown): StateExecutive[] {
-  const executives: StateExecutive[] = [];
-
-  const positions: StateExecutive['position'][] = [
-    'governor',
-    'lieutenant_governor',
-    'attorney_general',
-    'secretary_of_state',
-    'treasurer',
-  ];
-
-  // No longer generating fake executive names - returning "Data Unavailable" placeholders
-
-  // Generate realistic party distributions based on state
-  const getPartyDistribution = (state: string): ('Democratic' | 'Republican')[] => {
-    const blueStates = ['CA', 'NY', 'WA', 'MA', 'MD', 'IL'];
-    const redStates = ['TX', 'FL', 'GA', 'OH', 'NC'];
-
-    if (blueStates.includes(state)) {
-      return ['Democratic', 'Democratic', 'Democratic', 'Republican', 'Democratic'];
-    } else if (redStates.includes(state)) {
-      return ['Republican', 'Republican', 'Republican', 'Democratic', 'Republican'];
-    } else {
-      return ['Republican', 'Democratic', 'Republican', 'Democratic', 'Republican'];
-    }
-  };
-
-  const partyDistribution = getPartyDistribution(state);
-
-  positions.forEach((position, index) => {
-    const firstName = 'Data';
-    const lastName = 'Unavailable';
-    const name = `${firstName} ${lastName}`;
-    const party = partyDistribution[index] || 'Independent';
-
-    const currentYear = new Date().getFullYear();
-    const termLength = position === 'governor' ? 4 : 4; // Most state executives serve 4-year terms
-
-    const initiatives = {
-      governor: [
-        'Economic Development Initiative',
-        'Education Reform Package',
-        'Healthcare Access Expansion',
-        'Infrastructure Investment Plan',
-      ],
-      lieutenant_governor: [
-        'Small Business Support Program',
-        'Veterans Affairs Coordination',
-        'Tourism Development Initiative',
-      ],
-      attorney_general: [
-        'Consumer Protection Enhancement',
-        'Criminal Justice Reform',
-        'Environmental Enforcement Program',
-      ],
-      secretary_of_state: [
-        'Election Security Modernization',
-        'Business Registration Streamlining',
-        'Digital Government Services',
-      ],
-      treasurer: [
-        'State Investment Diversification',
-        'Debt Management Strategy',
-        'Pension Fund Optimization',
-      ],
-    };
-
-    const executive: StateExecutive = {
-      id: `${state}-${position}`,
-      name,
-      position,
-      party,
-      email: `${firstName?.toLowerCase() || 'john'}.${lastName?.toLowerCase() || 'doe'}@${state.toLowerCase()}.gov`,
-      phone: 'Data unavailable',
-      office: `Office of the ${position
-        .replace('_', ' ')
-        .split(' ')
-        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ')}`,
-      termStart: `${currentYear - 1}-01-15`,
-      termEnd: `${currentYear + termLength - 1}-01-15`,
-      isIncumbent: true,
-      previousOffices: [],
-      keyInitiatives:
-        position in initiatives ? initiatives[position as keyof typeof initiatives] : [],
-      socialMedia: {
-        twitter: `@${firstName}${lastName}${state}`,
-        website: `https://www.${state.toLowerCase()}.gov/${position.replace('_', '-')}`,
-      },
-    };
-
-    executives.push(executive);
-  });
-
-  return executives;
 }

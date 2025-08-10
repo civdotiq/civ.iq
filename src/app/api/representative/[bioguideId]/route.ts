@@ -231,7 +231,7 @@ export async function GET(
     logger.info('Using fallback representative data', { bioguideId });
 
     // Ensure we always have valid fallback data
-    const commonReps: { [key: string]: Partial<EnhancedRepresentative> } = {
+    const _commonReps: { [key: string]: Partial<EnhancedRepresentative> } = {
       P000595: {
         name: 'Gary Peters',
         firstName: 'Gary',
@@ -258,103 +258,30 @@ export async function GET(
       },
     };
 
-    // Extra safety: wrap mock data creation in try-catch
-    try {
-      const commonRep = commonReps[upperBioguideId];
-
-      const mockRepresentative: EnhancedRepresentative = {
+    // EMERGENCY FIX: Never return fake representative data
+    // Previously returned fake representative with fake bioguideId, phone, email, committees
+    // This could seriously mislead citizens about their actual representation
+    logger.error(
+      'Representative data not found - cannot create fake representative',
+      new Error('Representative not found'),
+      {
         bioguideId: upperBioguideId,
-        name: commonRep?.name || `Representative ${upperBioguideId}`,
-        firstName: commonRep?.firstName || 'John',
-        lastName: commonRep?.lastName || upperBioguideId || 'Unknown',
-        party: commonRep?.party || 'Democratic',
-        state: commonRep?.state || 'MI',
-        district: commonRep?.chamber === 'House' ? '01' : undefined,
-        chamber: commonRep?.chamber || 'House',
-        title: commonRep?.title || 'U.S. Representative',
-        phone: '(202) 225-0001',
-        email: `rep.${(upperBioguideId || 'unknown').toLowerCase()}@house.gov`,
-        website: `https://example.house.gov/${(upperBioguideId || 'unknown').toLowerCase()}`,
-        terms: [
-          {
-            congress: '118',
-            startYear: '2023',
-            endYear: '2025',
-          },
-        ],
-        committees: [
-          {
-            name: 'Committee on Energy and Commerce',
-            role: 'Member',
-          },
-        ],
-        fullName: {
-          first: commonRep?.firstName || 'John',
-          last: commonRep?.lastName || upperBioguideId || 'Unknown',
-        },
-        bio: commonRep?.bio || { gender: 'M' },
-        socialMedia: commonRep?.socialMedia,
-        metadata: {
-          lastUpdated: new Date().toISOString(),
-          dataSources: ['congress.gov'],
-          completeness: {
-            basicInfo: true,
-            socialMedia: !!commonRep?.socialMedia,
-            contact: true,
-            committees: true,
-            finance: false,
-          },
-        },
-      };
+        reason: 'Real representative data required - cannot return fake contact info or committees',
+      }
+    );
 
-      return NextResponse.json({
-        representative: mockRepresentative,
-        success: true,
-        metadata: {
-          dataSource: 'fallback',
-          cacheHit: false,
-          responseTime: Date.now(),
-        },
-      });
-    } catch (mockError) {
-      // Ultimate fallback - if even mock data fails, return minimal data
-      logger.error('Even mock data creation failed', mockError as Error, { bioguideId });
-
-      return NextResponse.json({
-        representative: {
-          bioguideId: upperBioguideId || 'UNKNOWN',
-          name: `Representative ${upperBioguideId || 'Unknown'}`,
-          firstName: 'Unknown',
-          lastName: 'Representative',
-          party: 'Unknown',
-          state: 'Unknown',
-          chamber: 'House',
-          title: 'U.S. Representative',
-          phone: '(202) 225-0000',
-          terms: [{ congress: '118', startYear: '2023', endYear: '2025' }],
-          committees: [],
-          metadata: {
-            lastUpdated: new Date().toISOString(),
-            dataSources: ['emergency-fallback'],
-            completeness: {
-              basicInfo: true,
-              socialMedia: false,
-              contact: false,
-              committees: false,
-              finance: false,
-            },
-          },
-        },
-        success: true,
-        metadata: {
-          dataSource: 'emergency-fallback',
-          cacheHit: false,
-          responseTime: Date.now(),
-        },
-      });
-    }
+    return NextResponse.json({
+      representative: null,
+      success: false,
+      error: 'Representative not found',
+      metadata: {
+        dataSource: 'unavailable',
+        cacheHit: false,
+        responseTime: Date.now(),
+      },
+    });
   } catch (error) {
-    logger.error('Representative API error', error as Error, { bioguideId });
+    logger.error('Representative API error', error as Error, { bioguideId: bioguideId });
     return NextResponse.json(
       {
         error: 'Internal server error',

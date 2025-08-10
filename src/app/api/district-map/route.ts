@@ -238,46 +238,6 @@ async function getZipCoordinates(
   }
 }
 
-// Simplified function to create mock boundary data
-function createMockBoundary(
-  type: 'congressional' | 'state_senate' | 'state_house',
-  district: string,
-  state: string,
-  centerLat: number,
-  centerLng: number
-): DistrictBoundary {
-  // Create a simple rectangular boundary around the center point
-  const offset = 0.05; // ~3.5 miles
-
-  const coordinates = [
-    [
-      [centerLng - offset, centerLat - offset],
-      [centerLng + offset, centerLat - offset],
-      [centerLng + offset, centerLat + offset],
-      [centerLng - offset, centerLat + offset],
-      [centerLng - offset, centerLat - offset],
-    ],
-  ];
-
-  const names = {
-    congressional: `Congressional District ${district}`,
-    state_senate: `State Senate District ${district}`,
-    state_house: `State House District ${district}`,
-  };
-
-  return {
-    type: 'Polygon',
-    coordinates,
-    properties: {
-      district,
-      state,
-      name: names[type],
-      type,
-      source: 'mock',
-    },
-  };
-}
-
 // Calculate bounding box from coordinates
 function calculateBoundingBox(
   coordinates: number[][][],
@@ -531,7 +491,7 @@ export async function GET(request: NextRequest) {
               source: 'census-tiger',
             },
           }
-        : createMockBoundary('congressional', district, zipInfo.state, zipInfo.lat, zipInfo.lng),
+        : null,
 
       state_senate: stateSenateBounder
         ? {
@@ -550,7 +510,7 @@ export async function GET(request: NextRequest) {
               source: 'census-tiger',
             },
           }
-        : createMockBoundary('state_senate', '1', zipInfo.state, zipInfo.lat, zipInfo.lng),
+        : null,
 
       state_house: stateHouseBoundary
         ? {
@@ -569,17 +529,31 @@ export async function GET(request: NextRequest) {
               source: 'census-tiger',
             },
           }
-        : createMockBoundary('state_house', 'A', zipInfo.state, zipInfo.lat, zipInfo.lng),
+        : null,
     };
 
-    // Calculate bounding box from all boundaries
-    const allCoordinates = [
-      ...boundaries.congressional.coordinates,
-      ...boundaries.state_senate.coordinates,
-      ...boundaries.state_house.coordinates,
-    ];
+    // Calculate bounding box from available boundaries
+    const allCoordinates: number[][][] = [];
+    if (boundaries.congressional?.coordinates) {
+      allCoordinates.push(...boundaries.congressional.coordinates);
+    }
+    if (boundaries.state_senate?.coordinates) {
+      allCoordinates.push(...boundaries.state_senate.coordinates);
+    }
+    if (boundaries.state_house?.coordinates) {
+      allCoordinates.push(...boundaries.state_house.coordinates);
+    }
 
-    const bbox = calculateBoundingBox(allCoordinates);
+    // Use coordinates if available, otherwise create small bounding box around ZIP coordinates
+    const bbox =
+      allCoordinates.length > 0
+        ? calculateBoundingBox(allCoordinates)
+        : {
+            minLat: zipInfo.lat - 0.01,
+            maxLat: zipInfo.lat + 0.01,
+            minLng: zipInfo.lng - 0.01,
+            maxLng: zipInfo.lng + 0.01,
+          };
 
     const mapData: MapData = {
       zipCode,

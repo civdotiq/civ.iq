@@ -339,7 +339,7 @@ async function fetchBillText(billId: string): Promise<{
   try {
     // Extract congress and bill number from billId
     const [billNumber, congressStr] = billId.split('-');
-    const congress = parseInt(congressStr || '118') || 118;
+    const congress = parseInt(congressStr || '119') || 119;
 
     if (!billNumber) {
       throw new Error('Invalid bill ID format');
