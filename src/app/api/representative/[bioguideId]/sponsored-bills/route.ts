@@ -41,9 +41,12 @@ export async function GET(
         {
           bioguideId,
           status: response.status,
+          congress,
         }
       );
-      return new NextResponse('Failed to fetch from Congress.gov', { status: 500 });
+      return new NextResponse('Failed to fetch sponsored bills from Congress.gov', {
+        status: 500,
+      });
     }
 
     const data = await response.json();
@@ -53,7 +56,7 @@ export async function GET(
       (bill: { congress?: number | string }) => bill.congress?.toString() === congress
     );
 
-    logger.info('Successfully fetched sponsored legislation from Congress.gov', {
+    logger.info('Successfully fetched sponsored bills from Congress.gov', {
       bioguideId,
       congress,
       billCount: currentCongressBills?.length || 0,
@@ -71,10 +74,10 @@ export async function GET(
       },
     });
   } catch (error) {
-    logger.error('Representative bills API error', error as Error, {
+    logger.error('Representative sponsored bills API error', error as Error, {
       bioguideId: (await params).bioguideId,
     });
 
-    return new NextResponse('Congress.gov failed', { status: 500 });
+    return new NextResponse('Failed to fetch sponsored bills', { status: 500 });
   }
 }

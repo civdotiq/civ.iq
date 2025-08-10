@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { getFECIdFromBioguide, hasFECMapping } from '@/lib/data/bioguide-fec-mapping';
+import { bioguideToFEC } from '@/lib/data/legislator-mappings';
 import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 import { FECUtils } from '@/lib/fec-api';
@@ -903,9 +903,12 @@ export async function GET(
       let fecCandidate: FECCandidate | null = null;
       let dataSource = 'fallback';
 
+      // Get FEC IDs using the new legislator mapping service
+      const fecIds = await bioguideToFEC(bioguideId);
+
       try {
         // Strategy 1: Enhanced direct mapping using congress-legislators data
-        let mappedFECId = getFECIdFromBioguide(bioguideId);
+        let mappedFECId = fecIds.length > 0 ? fecIds[0] : null;
 
         // Try to get enhanced representative data for better FEC matching
         try {
@@ -1271,7 +1274,7 @@ export async function GET(
           metadata: {
             dataSource: 'fec.gov',
             retrievalMethod: dataSource,
-            mappingUsed: hasFECMapping(bioguideId),
+            mappingUsed: fecIds.length > 0,
             enhancedDataUsed: !!enhancedRep,
             candidateInfo: {
               fecId: fecCandidate.candidate_id,

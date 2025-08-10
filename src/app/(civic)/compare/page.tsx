@@ -1004,72 +1004,12 @@ function ComparePageContent() {
 
       setRepresentatives(transformedReps);
     } catch {
-      // Error will be handled by the error boundary
-      // FALLBACK DATA: Used when representatives API is unavailable
-      // All data is clearly labeled as "unavailable" to avoid confusion
-      const mockReps: Representative[] = Array.from({ length: 20 }, (_, i) => ({
-        bioguideId: `B00${1000 + i}`,
-        name: 'Representative Data Unavailable',
-        party: i % 3 === 0 ? 'Democratic' : 'Republican',
-        state: ['CA', 'TX', 'NY', 'FL', 'IL'][i % 5] || 'Unknown',
-        district: i % 2 === 0 ? undefined : String((i % 10) + 1),
-        chamber: i % 2 === 0 ? 'Senate' : 'House',
-        title: i % 2 === 0 ? 'U.S. Senator' : 'U.S. Representative',
-        yearsInOffice: 0, // Real data unavailable
-        startDate: new Date().toISOString(), // Real data unavailable
-        imageUrl: undefined,
-        committees: [
-          { name: 'Ways and Means', role: i % 3 === 0 ? 'Chair' : undefined },
-          { name: 'Foreign Affairs' },
-          { name: 'Energy and Commerce' },
-        ].slice(0, 1), // Single committee assignment when data unavailable
-        votingRecord: {
-          totalVotes: 0, // Real data unavailable
-          partyLineVotes: 0, // Real data unavailable
-          missedVotes: 0, // Real data unavailable
-          keyVotes: {
-            healthcare: 'Not Voting', // Real data unavailable
-            environment: 'Not Voting', // Real data unavailable
-            economy: 'Not Voting', // Real data unavailable
-            defense: 'Not Voting', // Real data unavailable
-            immigration: 'Not Voting', // Real data unavailable
-          },
-        },
-        legislation: {
-          billsSponsored: 0, // Real data unavailable
-          billsCoSponsored: 0, // Real data unavailable
-          billsPassedHouse: 0, // Real data unavailable
-          billsPassedSenate: 0, // Real data unavailable
-          billsBecameLaw: 0, // Real data unavailable
-        },
-        finance: {
-          totalRaised: 0, // Real data unavailable
-          individualContributions: 0, // Real data unavailable
-          pacContributions: 0, // Real data unavailable
-          selfFunded: 0, // Real data unavailable
-          topContributors: [], // Real data unavailable
-        },
-        ratings: {
-          conservativeScore: 0, // Real data unavailable
-          liberalScore: 0, // Real data unavailable
-          bipartisanScore: 0, // Real data unavailable
-          effectivenessScore: 0, // Real data unavailable
-        },
-        newsMetrics: {
-          totalMentions: 0, // Real data unavailable
-          positiveSentiment: 0, // Real data unavailable
-          negativeSentiment: 0, // Real data unavailable
-          neutralSentiment: 0, // Real data unavailable
-        },
-        districtDemographics: {
-          population: 0, // Real data unavailable
-          medianIncome: 0, // Real data unavailable
-          educationBachelor: 0, // Real data unavailable
-          unemploymentRate: 0, // Real data unavailable
-          urbanPercentage: 0, // Real data unavailable
-        },
-      }));
-      setRepresentatives(mockReps);
+      // REMOVED: All fake representative data that could mislead citizens
+      // Previously contained 20 fake representatives with fake bioguideIds, parties, and voting records
+
+      // Set empty array - the UI will show proper error state when Congress.gov API is unavailable
+      setRepresentatives([]);
+      setLoading(false);
     } finally {
       setLoading(false);
     }

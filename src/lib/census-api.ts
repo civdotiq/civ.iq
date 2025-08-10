@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { cache } from 'react';
+// Remove React cache import - not available in current Next.js version
 import { ZIP_TO_DISTRICT_MAP, getStateFromZip } from './data/zip-district-mapping';
 import logger from '@/lib/logging/simple-logger';
 
@@ -131,7 +131,9 @@ const createRateLimiter = (): RateLimiter => ({
     this.requests = this.requests.filter(time => time > oneSecondAgo);
 
     if (this.requests.length >= this.maxRequestsPerSecond) {
-      const waitTime = 1000 - (now - this.requests[0]);
+      const firstRequest = this.requests[0];
+      if (!firstRequest) return;
+      const waitTime = 1000 - (now - firstRequest);
       if (waitTime > 0) {
         await new Promise(resolve => setTimeout(resolve, waitTime));
       }
@@ -180,10 +182,9 @@ async function fetchFromCensusAPI(zipCode: string): Promise<CensusAPIResponse> {
       const coordinates = match.coordinates;
       const geographies = match.geographies;
 
-      // Extract congressional district info
+      // Extract congressional district info - 119th Congress only
       const congressionalDistricts =
         geographies['119th Congressional Districts'] ||
-        geographies['118th Congressional Districts'] ||
         geographies['Congressional Districts'] ||
         [];
 
@@ -314,173 +315,173 @@ async function fetchDemographics(
  * Get congressional district from ZIP code using live Census API
  * Falls back to hardcoded mapping if API fails
  */
-export const getCongressionalDistrictFromZip = cache(
-  async (zipCode: string): Promise<CongressionalDistrict | null> => {
-    // First try our comprehensive mapping
-    const mapping = ZIP_TO_DISTRICT_MAP[zipCode];
-    if (mapping) {
-      const stateName = STATE_NAMES[mapping.state] || mapping.state;
-      const districtNumber =
-        mapping.district === '00' ? 'At-Large' : parseInt(mapping.district, 10).toString();
+export const getCongressionalDistrictFromZip = async (
+  zipCode: string
+): Promise<CongressionalDistrict | null> => {
+  // First try our comprehensive mapping
+  const mapping = ZIP_TO_DISTRICT_MAP[zipCode];
+  if (mapping) {
+    const stateName = STATE_NAMES[mapping.state] || mapping.state;
+    const districtNumber =
+      mapping.district === '00' ? 'At-Large' : parseInt(mapping.district, 10).toString();
 
-      return {
-        state: mapping.state,
-        stateCode: mapping.state,
-        district: mapping.district,
-        districtName: `${stateName} ${districtNumber === 'At-Large' ? 'At-Large' : `District ${districtNumber}`}`,
-      };
-    }
-
-    // Try the live Census API as fallback (may not work for ZIP-only queries)
-    const liveResult = await fetchFromCensusAPI(zipCode);
-    if (liveResult.success && liveResult.data) {
-      return liveResult.data as CongressionalDistrict;
-    }
-
-    // Fall back to legacy hardcoded mapping
-    const legacyMapping = ZIP_TO_DISTRICT[zipCode];
-    if (legacyMapping) {
-      const stateName = STATE_NAMES[legacyMapping.state] || legacyMapping.state;
-      const districtNumber =
-        legacyMapping.district === '00'
-          ? 'At-Large'
-          : parseInt(legacyMapping.district, 10).toString();
-
-      return {
-        state: legacyMapping.state,
-        stateCode: legacyMapping.state,
-        district: legacyMapping.district,
-        districtName: `${stateName} ${districtNumber === 'At-Large' ? 'At-Large' : `District ${districtNumber}`}`,
-      };
-    }
-
-    // For MVP, if ZIP not in our mapping, try to extract state from ZIP ranges
-    const state = getStateFromZip(zipCode);
-    if (state) {
-      const stateName = STATE_NAMES[state] || state;
-      // For unknown districts, default to district 1 - this is a fallback only
-      const district = '01';
-
-      return {
-        state: state,
-        stateCode: state,
-        district: district,
-        districtName: `${stateName} District 1`,
-      };
-    }
-
-    return null;
+    return {
+      state: mapping.state,
+      stateCode: mapping.state,
+      district: mapping.district,
+      districtName: `${stateName} ${districtNumber === 'At-Large' ? 'At-Large' : `District ${districtNumber}`}`,
+    };
   }
-);
+
+  // Try the live Census API as fallback (may not work for ZIP-only queries)
+  const liveResult = await fetchFromCensusAPI(zipCode);
+  if (liveResult.success && liveResult.data) {
+    return liveResult.data as CongressionalDistrict;
+  }
+
+  // Fall back to legacy hardcoded mapping
+  const legacyMapping = ZIP_TO_DISTRICT[zipCode];
+  if (legacyMapping) {
+    const stateName = STATE_NAMES[legacyMapping.state] || legacyMapping.state;
+    const districtNumber =
+      legacyMapping.district === '00'
+        ? 'At-Large'
+        : parseInt(legacyMapping.district, 10).toString();
+
+    return {
+      state: legacyMapping.state,
+      stateCode: legacyMapping.state,
+      district: legacyMapping.district,
+      districtName: `${stateName} ${districtNumber === 'At-Large' ? 'At-Large' : `District ${districtNumber}`}`,
+    };
+  }
+
+  // For MVP, if ZIP not in our mapping, try to extract state from ZIP ranges
+  const state = getStateFromZip(zipCode);
+  if (state) {
+    const stateName = STATE_NAMES[state] || state;
+    // For unknown districts, default to district 1 - this is a fallback only
+    const district = '01';
+
+    return {
+      state: state,
+      stateCode: state,
+      district: district,
+      districtName: `${stateName} District 1`,
+    };
+  }
+
+  return null;
+};
 
 /**
  * Alternative method using one-line address endpoint
  * For future implementation with full Census API integration
  */
-export const getCongressionalDistrictFromAddress = cache(
-  async (address: string): Promise<CongressionalDistrict | null> => {
-    try {
-      await rateLimiter.waitIfNeeded();
+export const getCongressionalDistrictFromAddress = async (
+  address: string
+): Promise<CongressionalDistrict | null> => {
+  try {
+    await rateLimiter.waitIfNeeded();
 
-      // Clean and format the address
-      const cleanAddress = address.trim().replace(/\s+/g, ' ');
+    // Clean and format the address
+    const cleanAddress = address.trim().replace(/\s+/g, ' ');
 
-      // Use Census Geocoding API for address lookup
-      const params = new URLSearchParams({
-        address: cleanAddress,
-        benchmark: 'Public_AR_Current',
-        vintage: 'Current_Current',
-        layers: '54', // Congressional Districts layer (119th Congress)
-        format: 'json',
-      });
+    // Use Census Geocoding API for address lookup
+    const params = new URLSearchParams({
+      address: cleanAddress,
+      benchmark: 'Public_AR_Current',
+      vintage: 'Current_Current',
+      layers: '54', // Congressional Districts layer (119th Congress)
+      format: 'json',
+    });
 
-      const url = `https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?${params}`;
+    const url = `https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?${params}`;
 
-      logger.info('Geocoding address via Census API', {
-        address: cleanAddress,
-        url: url.replace(/address=[^&]+/, 'address=REDACTED'),
-      });
+    logger.info('Geocoding address via Census API', {
+      address: cleanAddress,
+      url: url.replace(/address=[^&]+/, 'address=REDACTED'),
+    });
 
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'CIV.IQ/1.0 (https://civiq.org; contact@civiq.org)',
-          Accept: 'application/json',
-        },
-      });
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'CIV.IQ/1.0 (https://civiq.org; contact@civiq.org)',
+        Accept: 'application/json',
+      },
+    });
 
-      if (!response.ok) {
-        throw new Error(`Census API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      // Check if we have address matches
-      if (data.result?.addressMatches?.length > 0) {
-        const match = data.result.addressMatches[0];
-        const coordinates = match.coordinates;
-        const geographies = match.geographies;
-
-        // Extract congressional district info
-        const congressionalDistricts =
-          geographies['119th Congressional Districts'] ||
-          geographies['118th Congressional Districts'] ||
-          geographies['Congressional Districts'] ||
-          [];
-
-        if (congressionalDistricts.length > 0) {
-          const district = congressionalDistricts[0];
-          const stateCode = district.STATE || '';
-          const districtCode =
-            district.CD119 || district.CD118 || district.CD || district.DISTRICT || '';
-          const stateName = STATE_NAMES[stateCode] || stateCode;
-
-          // Get additional demographic data from ACS API if API key is available
-          const apiKey = process.env.CENSUS_API_KEY;
-          const demographics = apiKey
-            ? await fetchDemographics(stateCode, districtCode, apiKey)
-            : undefined;
-
-          const result: CongressionalDistrict = {
-            state: stateCode,
-            stateCode: stateCode,
-            district: districtCode,
-            districtName: `${stateName} ${districtCode === '00' || districtCode === '98' ? 'At-Large' : `District ${parseInt(districtCode, 10)}`}`,
-            geography: {
-              coordinates: {
-                latitude: coordinates.y,
-                longitude: coordinates.x,
-              },
-              area_sqmi: parseFloat(district.AREALAND) / 2589988.11 || 0, // Convert sq meters to sq miles
-            },
-            demographics,
-            matchedAddress: match.matchedAddress,
-          };
-
-          return result;
-        }
-      }
-
-      // If no congressional district found, try to extract ZIP and use ZIP lookup
-      const zipMatch = address.match(/\b\d{5}\b/);
-      if (zipMatch) {
-        return getCongressionalDistrictFromZip(zipMatch[0]);
-      }
-
-      return null;
-    } catch (error) {
-      logger.error('Error geocoding address', {
-        component: 'censusApi',
-        error: error as Error,
-        metadata: { address },
-      });
-
-      // Fallback: try to extract ZIP and use ZIP lookup
-      const zipMatch = address.match(/\b\d{5}\b/);
-      if (zipMatch) {
-        return getCongressionalDistrictFromZip(zipMatch[0]);
-      }
-
-      return null;
+    if (!response.ok) {
+      throw new Error(`Census API error: ${response.status}`);
     }
+
+    const data = await response.json();
+
+    // Check if we have address matches
+    if (data.result?.addressMatches?.length > 0) {
+      const match = data.result.addressMatches[0];
+      const coordinates = match.coordinates;
+      const geographies = match.geographies;
+
+      // Extract congressional district info
+      const congressionalDistricts =
+        geographies['119th Congressional Districts'] ||
+        geographies['118th Congressional Districts'] ||
+        geographies['Congressional Districts'] ||
+        [];
+
+      if (congressionalDistricts.length > 0) {
+        const district = congressionalDistricts[0];
+        const stateCode = district.STATE || '';
+        const districtCode =
+          district.CD119 || district.CD118 || district.CD || district.DISTRICT || '';
+        const stateName = STATE_NAMES[stateCode] || stateCode;
+
+        // Get additional demographic data from ACS API if API key is available
+        const apiKey = process.env.CENSUS_API_KEY;
+        const demographics = apiKey
+          ? await fetchDemographics(stateCode, districtCode, apiKey)
+          : undefined;
+
+        const result: CongressionalDistrict = {
+          state: stateCode,
+          stateCode: stateCode,
+          district: districtCode,
+          districtName: `${stateName} ${districtCode === '00' || districtCode === '98' ? 'At-Large' : `District ${parseInt(districtCode, 10)}`}`,
+          geography: {
+            coordinates: {
+              latitude: coordinates.y,
+              longitude: coordinates.x,
+            },
+            area_sqmi: parseFloat(district.AREALAND) / 2589988.11 || 0, // Convert sq meters to sq miles
+          },
+          demographics,
+          matchedAddress: match.matchedAddress,
+        };
+
+        return result;
+      }
+    }
+
+    // If no congressional district found, try to extract ZIP and use ZIP lookup
+    const zipMatch = address.match(/\b\d{5}\b/);
+    if (zipMatch) {
+      return getCongressionalDistrictFromZip(zipMatch[0]);
+    }
+
+    return null;
+  } catch (error) {
+    logger.error('Error geocoding address', {
+      component: 'censusApi',
+      error: error as Error,
+      metadata: { address },
+    });
+
+    // Fallback: try to extract ZIP and use ZIP lookup
+    const zipMatch = address.match(/\b\d{5}\b/);
+    if (zipMatch) {
+      return getCongressionalDistrictFromZip(zipMatch[0]);
+    }
+
+    return null;
   }
-);
+};

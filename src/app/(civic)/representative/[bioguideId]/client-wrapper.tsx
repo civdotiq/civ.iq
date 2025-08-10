@@ -205,7 +205,7 @@ function PartialErrorDisplay({ partialErrors }: { partialErrors: Record<string, 
 // Client component for interactive tab functionality
 export function RepresentativeProfileClient({
   representative,
-  initialData,
+  initialData: _initialData,
   partialErrors,
   bioguideId,
   VotingRecordsTable = LazyVotingRecordsTable,
@@ -224,32 +224,23 @@ export function RepresentativeProfileClient({
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8 px-6">
             {[
-              { id: 'profile', label: 'Profile', disabled: false },
-              { id: 'voting', label: 'Voting Record', disabled: initialData.votes.length === 0 },
-              { id: 'bills', label: 'Legislation', disabled: initialData.bills.length === 0 },
-              {
-                id: 'finance',
-                label: 'Campaign Finance',
-                disabled: Object.keys(initialData.finance || {}).length === 0,
-              },
-              { id: 'news', label: 'News', disabled: initialData.news.length === 0 },
+              { id: 'profile', label: 'Profile' },
+              { id: 'voting', label: 'Voting Record' },
+              { id: 'bills', label: 'Legislation' },
+              { id: 'finance', label: 'Campaign Finance' },
+              { id: 'news', label: 'News' },
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                disabled={tab.disabled}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
-                    : tab.disabled
-                      ? 'border-transparent text-gray-400 cursor-not-allowed'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 cursor-pointer'
                 }`}
               >
                 {tab.label}
-                {tab.disabled && partialErrors[tab.id] && (
-                  <span className="ml-1 text-xs text-red-500">⚠</span>
-                )}
+                {partialErrors[tab.id] && <span className="ml-1 text-xs text-red-500">⚠</span>}
               </button>
             ))}
           </nav>

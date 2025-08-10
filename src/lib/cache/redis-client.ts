@@ -141,11 +141,11 @@ export class RedisCache {
 
         if (value) {
           monitor.end(true);
-          logger.cache('hit', key);
+          logger.debug('[Cache] hit', key);
           return JSON.parse(value);
         } else {
           monitor.end(false);
-          logger.cache('miss', key);
+          logger.debug('[Cache] miss', key);
           return null;
         }
       } else {
@@ -155,20 +155,20 @@ export class RedisCache {
 
         if (entry && Date.now() - entry.timestamp < entry.ttl) {
           monitor.end(true);
-          logger.cache('hit', key, { source: 'fallback' });
+          logger.debug('[Cache] hit', key, { source: 'fallback' });
           return entry.data;
         } else {
           if (entry) {
             this.fallbackCache.delete(fallbackKey);
           }
           monitor.end(false);
-          logger.cache('miss', key, { source: 'fallback' });
+          logger.debug('[Cache] miss', key, { source: 'fallback' });
           return null;
         }
       }
     } catch (error) {
       monitor.end(false, error as Error);
-      logger.cache('error', key, { error: (error as Error).message });
+      logger.error('[Cache] error', key, { error: (error as Error).message });
 
       // Try fallback cache on Redis error
       const fallbackKey = this.getFallbackKey(key);
@@ -191,7 +191,7 @@ export class RedisCache {
       if (this.isConnected) {
         await this.client.setex(key, ttlSeconds, serializedValue);
         monitor.end();
-        logger.cache('set', key, { ttl: ttlSeconds });
+        logger.debug('[Cache] set', key, { ttl: ttlSeconds });
       } else {
         // Use fallback cache
         const fallbackKey = this.getFallbackKey(key);
@@ -201,13 +201,13 @@ export class RedisCache {
           ttl: ttlSeconds * 1000, // Convert to milliseconds
         });
         monitor.end();
-        logger.cache('set', key, { ttl: ttlSeconds, source: 'fallback' });
+        logger.debug('[Cache] set', key, { ttl: ttlSeconds, source: 'fallback' });
       }
 
       return true;
     } catch (error) {
       monitor.end(false, error as Error);
-      logger.cache('error', key, {
+      logger.error('[Cache] error', key, {
         operation: 'set',
         error: (error as Error).message,
       });
@@ -234,7 +234,7 @@ export class RedisCache {
       if (this.isConnected) {
         const result = await this.client.del(key);
         monitor.end();
-        logger.cache('delete', key, { deleted: result > 0 });
+        logger.debug('[Cache] delete', key, { deleted: result > 0 });
         return result > 0;
       } else {
         // Use fallback cache
@@ -242,12 +242,12 @@ export class RedisCache {
         const existed = this.fallbackCache.has(fallbackKey);
         this.fallbackCache.delete(fallbackKey);
         monitor.end();
-        logger.cache('delete', key, { deleted: existed, source: 'fallback' });
+        logger.debug('[Cache] delete', key, { deleted: existed, source: 'fallback' });
         return existed;
       }
     } catch (error) {
       monitor.end(false, error as Error);
-      logger.cache('error', key, {
+      logger.error('[Cache] error', key, {
         operation: 'delete',
         error: (error as Error).message,
       });
@@ -292,7 +292,7 @@ export class RedisCache {
         return entry !== undefined && Date.now() - entry.timestamp < entry.ttl;
       }
     } catch (error) {
-      logger.cache('error', key, {
+      logger.error('[Cache] error', key, {
         operation: 'exists',
         error: (error as Error).message,
       });

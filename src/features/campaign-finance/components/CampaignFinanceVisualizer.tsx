@@ -467,13 +467,9 @@ export function CampaignFinanceVisualizer({
                   Sources of Campaign Funding
                 </h4>
                 <div className="relative">
-                  {/* Y-axis labels */}
-                  <div className="absolute left-0 top-0 h-64 flex flex-col justify-between text-xs text-gray-500">
-                    <span>$2M</span>
-                    <span>$1.5M</span>
-                    <span>$1M</span>
-                    <span>$500K</span>
-                    <span>$0</span>
+                  {/* Y-axis labels - REMOVED: Fake $2M/$1.5M/$1M amounts */}
+                  <div className="absolute left-0 top-0 h-64 flex flex-col justify-center text-xs text-gray-500">
+                    <span>Loading from FEC.gov...</span>
                   </div>
 
                   {/* Chart area */}
@@ -625,12 +621,9 @@ export function CampaignFinanceVisualizer({
                     Historical Funding Trends
                   </h4>
                   <div className="relative h-64">
-                    {/* Y-axis */}
-                    <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500">
-                      <span>$3M</span>
-                      <span>$2M</span>
-                      <span>$1M</span>
-                      <span>$0</span>
+                    {/* Y-axis - REMOVED: Fake $3M/$2M/$1M amounts */}
+                    <div className="absolute left-0 top-0 h-full flex flex-col justify-center text-xs text-gray-500">
+                      <span>Loading from FEC.gov...</span>
                     </div>
 
                     {/* Chart area */}

@@ -114,7 +114,7 @@ export function ZustandExample() {
   const handleAddBill = useCallback(() => {
     const newBill = {
       id: `bill-${Date.now()}`,
-      congress: 118,
+      congress: 119,
       type: 'H.R.',
       number: '1234',
       title: 'Example Bill for Testing Zustand',

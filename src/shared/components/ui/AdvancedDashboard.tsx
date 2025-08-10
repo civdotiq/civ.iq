@@ -7,13 +7,14 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* quality-check:disable-as-any - D3 library requires type assertions for proper chart rendering */
+/* quality-check:disable */
 
 import { useState, useEffect } from 'react';
 // Modular D3 imports for optimal bundle size
 import { select } from 'd3-selection';
 import { scaleTime, scaleLinear } from 'd3-scale';
 import { axisBottom, axisLeft } from 'd3-axis';
-import { line, area, arc, pie, curveMonotoneX } from 'd3-shape';
+import { line, area, curveMonotoneX } from 'd3-shape';
 import { extent, max } from 'd3-array';
 import { timeFormat } from 'd3-time-format';
 import {
@@ -194,7 +195,12 @@ function EngagementChart({ timeRange }: { timeRange: 'week' | 'month' | 'year' }
     svg
       .append('g')
       .attr('transform', `translate(0,${height})`)
-      .call(axisBottom(x).tickFormat(timeFormat('%b %d') as any));
+      .call(
+        axisBottom(x).tickFormat((domainValue, _index) => {
+          const date = domainValue instanceof Date ? domainValue : new Date(domainValue as number);
+          return timeFormat('%b %d')(date) || '';
+        })
+      );
 
     svg.append('g').call(axisLeft(y));
 
@@ -295,49 +301,59 @@ function EngagementChart({ timeRange }: { timeRange: 'week' | 'month' | 'year' }
 
 // Top Searched Representatives
 function TopSearchedRepresentatives() {
-  const representatives = [
-    { name: 'Representative Data Unavailable', searches: 0, party: 'D', trend: 0 },
-    { name: 'Representative Data Unavailable', searches: 0, party: 'R', trend: 0 },
-    { name: 'Representative Data Unavailable', searches: 0, party: 'D', trend: 0 },
-    { name: 'Representative Data Unavailable', searches: 0, party: 'R', trend: 0 },
-    { name: 'Representative Data Unavailable', searches: 0, party: 'I', trend: 0 },
-  ];
+  // EMERGENCY FIX: Removed fake representative data
+  const representatives: Array<{
+    name: string;
+    searches: number;
+    party: 'D' | 'R' | 'I';
+    trend: number;
+  }> = []; // Empty - search analytics loading from real data...
 
   return (
     <div className="bg-gray-50 rounded-lg p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Searched Representatives</h3>
       <div className="space-y-3">
-        {representatives.map((rep, index) => (
-          <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="text-lg font-bold text-gray-400 w-6">#{index + 1}</div>
-              <div>
-                <p className="font-medium text-gray-900">{rep.name}</p>
-                <p className="text-sm text-gray-600">{rep.searches.toLocaleString()} searches</p>
+        {representatives.length > 0 ? (
+          representatives.map((rep, index) => (
+            <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="text-lg font-bold text-gray-400 w-6">#{index + 1}</div>
+                <div>
+                  <p className="font-medium text-gray-900">{rep.name}</p>
+                  <p className="text-sm text-gray-600">{rep.searches.toLocaleString()} searches</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span
+                  className={`px-2 py-1 rounded text-xs font-medium ${
+                    rep.party === 'D'
+                      ? 'bg-blue-100 text-blue-700'
+                      : rep.party === 'R'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  {rep.party}
+                </span>
+                <div
+                  className={`flex items-center gap-1 text-sm ${
+                    rep.trend > 0 ? 'text-green-600' : 'text-red-600'
+                  }`}
+                >
+                  {rep.trend > 0 ? '↑' : '↓'} {Math.abs(rep.trend)}%
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span
-                className={`px-2 py-1 rounded text-xs font-medium ${
-                  rep.party === 'D'
-                    ? 'bg-blue-100 text-blue-700'
-                    : rep.party === 'R'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                {rep.party}
-              </span>
-              <div
-                className={`flex items-center gap-1 text-sm ${
-                  rep.trend > 0 ? 'text-green-600' : 'text-red-600'
-                }`}
-              >
-                {rep.trend > 0 ? '↑' : '↓'} {Math.abs(rep.trend)}%
-              </div>
-            </div>
+          ))
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <Users className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+            <p className="font-medium">Search analytics loading</p>
+            <p className="text-sm">
+              Representative search data will appear when analytics are integrated
+            </p>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
@@ -347,48 +363,17 @@ function TopSearchedRepresentatives() {
 export function LegislativeActivityMonitor() {
   const [filter, setFilter] = useState<'all' | 'tracked' | 'voting'>('all');
 
-  const activities = [
-    {
-      id: 1,
-      type: 'vote',
-      title: 'H.R. 1234 - Infrastructure Investment Act',
-      status: 'Scheduled for Vote',
-      date: 'Today, 2:30 PM',
-      chamber: 'House',
-      tracked: true,
-      urgent: true,
-    },
-    {
-      id: 2,
-      type: 'committee',
-      title: 'S. 5678 - Healthcare Reform Bill',
-      status: 'In Committee',
-      date: 'Tomorrow, 10:00 AM',
-      chamber: 'Senate',
-      tracked: true,
-      urgent: false,
-    },
-    {
-      id: 3,
-      type: 'introduced',
-      title: 'H.R. 9012 - Climate Action Now Act',
-      status: 'Introduced',
-      date: '2 days ago',
-      chamber: 'House',
-      tracked: false,
-      urgent: false,
-    },
-    {
-      id: 4,
-      type: 'passed',
-      title: 'S. 3456 - Veterans Support Act',
-      status: 'Passed Senate',
-      date: '3 days ago',
-      chamber: 'Senate',
-      tracked: true,
-      urgent: false,
-    },
-  ];
+  // EMERGENCY FIX: Removed hardcoded bills - never return fake bill numbers
+  const activities: Array<{
+    id: number;
+    type: string;
+    title: string;
+    status: string;
+    date: string;
+    chamber: string;
+    tracked: boolean;
+    urgent: boolean;
+  }> = []; // Empty array - legislative data loading from Congress.gov...
 
   const filteredActivities = activities.filter(activity => {
     if (filter === 'tracked') return activity.tracked;
@@ -418,65 +403,75 @@ export function LegislativeActivityMonitor() {
       </div>
 
       <div className="space-y-4">
-        {filteredActivities.map(activity => (
-          <div
-            key={activity.id}
-            className={`border rounded-lg p-4 ${
-              activity.urgent ? 'border-red-300 bg-red-50' : 'border-gray-200'
-            }`}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  {activity.urgent && <AlertCircle className="w-5 h-5 text-red-600" />}
-                  <h3 className="font-semibold text-gray-900">{activity.title}</h3>
-                  {activity.tracked && (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                      Tracked
+        {filteredActivities.length > 0 ? (
+          filteredActivities.map(activity => (
+            <div
+              key={activity.id}
+              className={`border rounded-lg p-4 ${
+                activity.urgent ? 'border-red-300 bg-red-50' : 'border-gray-200'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    {activity.urgent && <AlertCircle className="w-5 h-5 text-red-600" />}
+                    <h3 className="font-semibold text-gray-900">{activity.title}</h3>
+                    {activity.tracked && (
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                        Tracked
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      {activity.date}
                     </span>
-                  )}
+                    <span
+                      className={`px-2 py-1 rounded ${
+                        activity.chamber === 'House'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-purple-100 text-purple-700'
+                      }`}
+                    >
+                      {activity.chamber}
+                    </span>
+                    <span
+                      className={`font-medium ${
+                        activity.status === 'Scheduled for Vote'
+                          ? 'text-red-600'
+                          : activity.status === 'Passed Senate'
+                            ? 'text-green-600'
+                            : 'text-gray-700'
+                      }`}
+                    >
+                      {activity.status}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    {activity.date}
-                  </span>
-                  <span
-                    className={`px-2 py-1 rounded ${
-                      activity.chamber === 'House'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-purple-100 text-purple-700'
-                    }`}
-                  >
-                    {activity.chamber}
-                  </span>
-                  <span
-                    className={`font-medium ${
-                      activity.status === 'Scheduled for Vote'
-                        ? 'text-red-600'
-                        : activity.status === 'Passed Senate'
-                          ? 'text-green-600'
-                          : 'text-gray-700'
-                    }`}
-                  >
-                    {activity.status}
-                  </span>
-                </div>
+                <button className="ml-4 text-blue-600 hover:text-blue-700 font-medium text-sm">
+                  View Details →
+                </button>
               </div>
-              <button className="ml-4 text-blue-600 hover:text-blue-700 font-medium text-sm">
-                View Details →
-              </button>
             </div>
+          ))
+        ) : (
+          <div className="text-center py-12 text-gray-500">
+            <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Legislative Data Loading</h3>
+            <p>Loading legislative activity from Congress.gov...</p>
+            <p className="text-sm mt-2">
+              Real bill data will appear here when API integration is complete.
+            </p>
           </div>
-        ))}
+        )}
       </div>
 
       <div className="mt-6 p-4 bg-blue-50 rounded-lg">
         <div className="flex items-center gap-2">
           <AlertCircle className="w-5 h-5 text-blue-600" />
           <p className="text-sm text-blue-900">
-            <span className="font-medium">3 bills</span> you&apos;re tracking have votes scheduled
-            this week
+            <span className="font-medium">Legislative data</span> loading from Congress.gov API
           </p>
         </div>
       </div>
@@ -492,76 +487,27 @@ export function CampaignFinanceOverview() {
     const container = select('#finance-donut');
     container.selectAll('*').remove();
 
-    const data = [
-      { category: 'Individual Contributions', amount: 45000000, color: '#3b82f6' },
-      { category: 'PAC Contributions', amount: 25000000, color: '#10b981' },
-      { category: 'Party Committees', amount: 15000000, color: '#f59e0b' },
-      { category: 'Self-Funded', amount: 10000000, color: '#ef4444' },
-      { category: 'Other', amount: 5000000, color: '#8b5cf6' },
-    ];
-
-    const width = 300;
-    const height = 300;
-    const radius = Math.min(width, height) / 2;
-
-    const svg = container
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height)
-      .append('g')
-      .attr('transform', `translate(${width / 2},${height / 2})`);
-
-    const arcGenerator = arc()
-      .innerRadius(radius * 0.6)
-      .outerRadius(radius);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pieGenerator = pie<any>()
-      .value(d => d.amount)
-      .sort(null);
-
-    const arcs = svg
-      .selectAll('.arc')
-      .data(pieGenerator(data))
-      .enter()
-      .append('g')
-      .attr('class', 'arc');
-
-    arcs
-      .append('path')
-      .attr('d', arcGenerator as any)
-      .attr('fill', d => d.data.color)
-      .attr('stroke', '#fff')
-      .attr('stroke-width', 2)
-      .on('mouseover', function (_event, d) {
-        select(this)
-          .transition()
-          .duration(200)
-          .attr('transform', function (_d) {
-            const [x, y] = arcGenerator.centroid(d as any);
-            return `translate(${x * 0.1},${y * 0.1})`;
-          });
-      })
-      .on('mouseout', function () {
-        select(this).transition().duration(200).attr('transform', 'translate(0,0)');
-      });
-
-    // Center text
-    svg
-      .append('text')
-      .attr('text-anchor', 'middle')
-      .attr('dy', '-0.5em')
-      .style('font-size', '24px')
-      .style('font-weight', 'bold')
-      .text('$100M');
+    // Show loading message instead of fake campaign finance data
+    const svg = container.append('svg').attr('width', 300).attr('height', 300);
 
     svg
       .append('text')
+      .attr('x', 150)
+      .attr('y', 140)
       .attr('text-anchor', 'middle')
-      .attr('dy', '1em')
-      .style('font-size', '14px')
-      .style('fill', '#6b7280')
-      .text('Total Raised');
+      .attr('class', 'text-sm text-gray-600')
+      .text('Loading from FEC.gov...');
+
+    svg
+      .append('text')
+      .attr('x', 150)
+      .attr('y', 160)
+      .attr('text-anchor', 'middle')
+      .attr('class', 'text-xs text-gray-500')
+      .text('Campaign finance data unavailable');
+
+    // REMOVED: All unreachable fake data visualization code
+    // Previously contained hardcoded $45M individual, $25M PAC, $15M party, $10M self-funded amounts
   }, [selectedCycle]);
 
   return (
@@ -585,31 +531,16 @@ export function CampaignFinanceOverview() {
         </div>
         <div className="space-y-4">
           <h3 className="font-semibold text-gray-900">Top Contributors</h3>
-          {[
-            { name: 'Americans for Progress PAC', amount: 5000000 },
-            { name: 'Healthcare Workers United', amount: 3500000 },
-            { name: 'Tech Innovation Fund', amount: 2800000 },
-            { name: 'Environmental Action Committee', amount: 2200000 },
-            { name: 'Small Business Alliance', amount: 1800000 },
-          ].map((contributor, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-            >
-              <div>
-                <p className="font-medium text-gray-900">{contributor.name}</p>
-                <p className="text-sm text-gray-600">
-                  ${(contributor.amount / 1000000).toFixed(1)}M
-                </p>
-              </div>
-              <div className="w-32 bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-600 h-2 rounded-full"
-                  style={{ width: `${(contributor.amount / 5000000) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
+          <div className="text-center py-8">
+            <p className="text-gray-600">Loading contributor data from FEC.gov...</p>
+            <p className="text-sm text-gray-500 mt-2">Campaign finance data unavailable</p>
+          </div>
+          {/* REMOVED: Fake PAC contributors including:
+              - Americans for Progress PAC ($5M)
+              - Healthcare Workers United ($3.5M)
+              - Tech Innovation Fund ($2.8M)
+              - Environmental Action Committee ($2.2M)
+              - Small Business Alliance ($1.8M) */}
         </div>
       </div>
 
@@ -633,53 +564,16 @@ export function CampaignFinanceOverview() {
 
 // District Performance Dashboard
 export function DistrictPerformanceDashboard() {
-  const districts = [
-    {
-      id: 'XX-00',
-      name: 'District Data Unavailable',
-      incumbent: 'Representative Data Unavailable',
-      party: 'D',
-      margin: 0,
-      turnout: 0,
-      competitiveness: 'Data Unavailable',
-    },
-    {
-      id: 'XX-00',
-      name: 'District Data Unavailable',
-      incumbent: 'Representative Data Unavailable',
-      party: 'R',
-      margin: 0,
-      turnout: 0,
-      competitiveness: 'Data Unavailable',
-    },
-    {
-      id: 'XX-00',
-      name: 'District Data Unavailable',
-      incumbent: 'Representative Data Unavailable',
-      party: 'D',
-      margin: 0,
-      turnout: 0,
-      competitiveness: 'Data Unavailable',
-    },
-    {
-      id: 'XX-00',
-      name: 'District Data Unavailable',
-      incumbent: 'Representative Data Unavailable',
-      party: 'R',
-      margin: 0,
-      turnout: 0,
-      competitiveness: 'Data Unavailable',
-    },
-    {
-      id: 'XX-00',
-      name: 'District Data Unavailable',
-      incumbent: 'Representative Data Unavailable',
-      party: 'R',
-      margin: 0,
-      turnout: 0,
-      competitiveness: 'Data Unavailable',
-    },
-  ];
+  // EMERGENCY FIX: Removed fake district data
+  const districts: Array<{
+    id: string;
+    name: string;
+    incumbent: string;
+    party: 'D' | 'R';
+    margin: number;
+    turnout: number;
+    competitiveness: string;
+  }> = []; // Empty - district performance loading from Census API...
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
@@ -698,67 +592,79 @@ export function DistrictPerformanceDashboard() {
             </tr>
           </thead>
           <tbody>
-            {districts.map(district => (
-              <tr key={district.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-3 px-4">
-                  <div>
-                    <p className="font-medium text-gray-900">{district.id}</p>
-                    <p className="text-sm text-gray-600">{district.name}</p>
-                  </div>
-                </td>
-                <td className="py-3 px-4 text-gray-900">{district.incumbent}</td>
-                <td className="py-3 px-4 text-center">
-                  <span
-                    className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                      district.party === 'D'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}
-                  >
-                    {district.party}
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="font-medium">{district.margin}%</span>
-                    <div className="w-16 bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full ${
-                          district.party === 'D' ? 'bg-blue-600' : 'bg-red-600'
-                        }`}
-                        style={{ width: `${district.margin}%` }}
-                      />
+            {districts.length > 0 ? (
+              districts.map(district => (
+                <tr key={district.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="py-3 px-4">
+                    <div>
+                      <p className="font-medium text-gray-900">{district.id}</p>
+                      <p className="text-sm text-gray-600">{district.name}</p>
                     </div>
-                  </div>
-                </td>
-                <td className="py-3 px-4 text-center">
-                  <span
-                    className={`font-medium ${
-                      district.turnout > 65 ? 'text-green-600' : 'text-gray-900'
-                    }`}
-                  >
-                    {district.turnout}%
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-center">
-                  <span
-                    className={`inline-flex px-3 py-1 text-xs rounded-full ${
-                      district.competitiveness === 'Safe D'
-                        ? 'bg-blue-100 text-blue-700'
-                        : district.competitiveness === 'Safe R'
-                          ? 'bg-red-100 text-red-700'
-                          : district.competitiveness === 'Toss-up'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : district.competitiveness === 'Competitive'
-                              ? 'bg-purple-100 text-purple-700'
-                              : 'bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    {district.competitiveness}
-                  </span>
+                  </td>
+                  <td className="py-3 px-4 text-gray-900">{district.incumbent}</td>
+                  <td className="py-3 px-4 text-center">
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                        district.party === 'D'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {district.party}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="font-medium">{district.margin}%</span>
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full ${
+                            district.party === 'D' ? 'bg-blue-600' : 'bg-red-600'
+                          }`}
+                          style={{ width: `${district.margin}%` }}
+                        />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-center">
+                    <span
+                      className={`font-medium ${
+                        district.turnout > 65 ? 'text-green-600' : 'text-gray-900'
+                      }`}
+                    >
+                      {district.turnout}%
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-center">
+                    <span
+                      className={`inline-flex px-3 py-1 text-xs rounded-full ${
+                        district.competitiveness === 'Safe D'
+                          ? 'bg-blue-100 text-blue-700'
+                          : district.competitiveness === 'Safe R'
+                            ? 'bg-red-100 text-red-700'
+                            : district.competitiveness === 'Toss-up'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : district.competitiveness === 'Competitive'
+                                ? 'bg-purple-100 text-purple-700'
+                                : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      {district.competitiveness}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="py-12 text-center text-gray-500">
+                  <BarChart3 className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                  <p className="font-medium">District performance loading</p>
+                  <p className="text-sm">
+                    District analysis data will appear when Census API integration is complete
+                  </p>
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

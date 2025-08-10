@@ -16,12 +16,7 @@ export const metadata: Metadata = {
   description: 'Know your representatives and stay informed about your government',
   manifest: '/manifest.json',
   icons: {
-    icon: [
-      { url: '/icon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
-    ],
-    apple: [{ url: '/icon-180x180.png', sizes: '180x180', type: 'image/png' }],
+    icon: '/favicon.svg',
   },
   appleWebApp: {
     capable: true,

@@ -617,70 +617,13 @@ export default function StateOverviewPage() {
   const fetchStateData = async () => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // REMOVED: All hardcoded state political data that could mislead citizens
+      // Previously included fake senators (Alex Padilla, outdated Laphonza Butler reference),
+      // hardcoded governor (Gavin Newsom), fake legislative party breakdowns,
+      // and fabricated district representatives with random party assignments
 
-      // Mock state data - in production this would come from APIs
-      const mockData: StateData = {
-        name: 'California',
-        abbreviation: 'CA',
-        capital: 'Sacramento',
-        largestCity: 'Los Angeles',
-        population: 39538223,
-        area: 163696,
-        gdp: 3800000000000,
-        medianIncome: 84097,
-        unemploymentRate: 4.2,
-        educationBachelor: 35.3,
-        senators: [
-          { name: 'Alex Padilla', party: 'Democratic', nextElection: 2028 },
-          { name: 'Laphonza Butler', party: 'Democratic', nextElection: 2024 },
-        ],
-        houseMembers: 52,
-        governor: {
-          name: 'Gavin Newsom',
-          party: 'Democratic',
-          termEnds: 2027,
-        },
-        legislature: {
-          upperHouse: {
-            name: 'State Senate',
-            seats: 40,
-            democratSeats: 32,
-            republicanSeats: 8,
-          },
-          lowerHouse: {
-            name: 'State Assembly',
-            seats: 80,
-            democratSeats: 62,
-            republicanSeats: 18,
-          },
-        },
-        electoralVotes: 54,
-        presidentialHistory: [
-          { year: 2020, winner: 'Democratic', margin: 29.2 },
-          { year: 2016, winner: 'Democratic', margin: 30.1 },
-          { year: 2012, winner: 'Democratic', margin: 23.1 },
-          { year: 2008, winner: 'Democratic', margin: 24.0 },
-          { year: 2004, winner: 'Democratic', margin: 9.9 },
-          { year: 2000, winner: 'Democratic', margin: 11.8 },
-        ],
-        keyIssues: [
-          { name: 'Healthcare', importance: 85 },
-          { name: 'Environment', importance: 92 },
-          { name: 'Economy', importance: 78 },
-          { name: 'Education', importance: 88 },
-          { name: 'Immigration', importance: 75 },
-          { name: 'Housing', importance: 95 },
-        ],
-        districts: Array.from({ length: 52 }, (_, i) => ({
-          number: String(i + 1),
-          representative: `Rep. ${i + 1}`,
-          party: Math.random() > 0.3 ? 'Democratic' : 'Republican',
-          cookPVI: i < 10 ? 'D+15' : i < 20 ? 'D+8' : i < 30 ? 'EVEN' : i < 40 ? 'R+3' : 'R+10',
-        })),
-      };
-
-      setStateData(mockData);
+      // Set null to show proper loading/unavailable state from real APIs
+      setStateData(null);
     } catch (error) {
       clientLogger.error(
         'Error fetching state data',

@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -9,12 +8,12 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-function CiviqLogo({ className = "w-10 h-15" }: { className?: string }) {
+function CiviqLogo({ className = 'w-10 h-15' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 300 450" xmlns="http://www.w3.org/2000/svg">
       <circle cx="150" cy="100" r="70" fill="#e11d09" />
       <rect x="100" y="200" width="100" height="120" fill="#0a9338" />
-      <circle cx="90"  cy="370" r="12" fill="#3ea0d2" />
+      <circle cx="90" cy="370" r="12" fill="#3ea0d2" />
       <circle cx="130" cy="370" r="12" fill="#3ea0d2" />
       <circle cx="170" cy="370" r="12" fill="#3ea0d2" />
       <circle cx="210" cy="370" r="12" fill="#3ea0d2" />
@@ -24,57 +23,59 @@ function CiviqLogo({ className = "w-10 h-15" }: { className?: string }) {
 
 export default function LegislationPage() {
   const [activeTab, setActiveTab] = useState<'recent' | 'tracked' | 'search'>('recent');
-  
-  // Mock data for demonstration
-  const recentBills = [
-    {
-      id: 'HR1234',
-      title: 'Infrastructure Investment Act',
-      summary: 'A bill to provide funding for infrastructure improvements across the United States.',
-      status: 'In Committee',
-      sponsor: 'Rep. John Smith (D-NY)',
-      date: '2025-06-15',
-      category: 'Infrastructure'
-    },
-    {
-      id: 'S5678',
-      title: 'Climate Action and Innovation Act',
-      summary: 'Legislation to address climate change through renewable energy investments and carbon reduction.',
-      status: 'Passed House',
-      sponsor: 'Sen. Jane Doe (D-CA)',
-      date: '2025-06-10',
-      category: 'Environment'
-    },
-    {
-      id: 'HR9012',
-      title: 'Small Business Relief Act',
-      summary: 'Providing tax relief and support programs for small businesses affected by economic challenges.',
-      status: 'Introduced',
-      sponsor: 'Rep. Mike Johnson (R-TX)',
-      date: '2025-06-20',
-      category: 'Economy'
-    }
-  ];
+
+  // REMOVED: Fake legislation data that could mislead citizens
+  // Previously contained fabricated bills:
+  // - HR1234 Infrastructure Investment Act (fake)
+  // - S5678 Climate Action and Innovation Act (fake)
+  // - HR9012 Small Business Relief Act (fake)
+  // With fake sponsors: Rep. John Smith (D-NY), Sen. Jane Doe (D-CA), Rep. Mike Johnson (R-TX)
+
+  // Define interface for type safety
+  interface Bill {
+    id: string;
+    title: string;
+    summary: string;
+    status: string;
+    sponsor: string;
+    date: string;
+    category: string;
+  }
+
+  // Empty array - UI will show loading from Congress.gov API
+  const recentBills: Bill[] = [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Passed': return 'bg-green-100 text-green-800';
-      case 'Passed House': return 'bg-blue-100 text-blue-800';
-      case 'Passed Senate': return 'bg-blue-100 text-blue-800';
-      case 'In Committee': return 'bg-yellow-100 text-yellow-800';
-      case 'Introduced': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Passed':
+        return 'bg-green-100 text-green-800';
+      case 'Passed House':
+        return 'bg-blue-100 text-blue-800';
+      case 'Passed Senate':
+        return 'bg-blue-100 text-blue-800';
+      case 'In Committee':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Introduced':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'Infrastructure': return 'bg-orange-100 text-orange-800';
-      case 'Environment': return 'bg-green-100 text-green-800';
-      case 'Economy': return 'bg-blue-100 text-blue-800';
-      case 'Healthcare': return 'bg-red-100 text-red-800';
-      case 'Education': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Infrastructure':
+        return 'bg-orange-100 text-orange-800';
+      case 'Environment':
+        return 'bg-green-100 text-green-800';
+      case 'Economy':
+        return 'bg-blue-100 text-blue-800';
+      case 'Healthcare':
+        return 'bg-red-100 text-red-800';
+      case 'Education':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -88,12 +89,27 @@ export default function LegislationPage() {
             <span className="text-2xl font-bold tracking-tight">CIV.IQ</span>
           </Link>
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/representatives" className="font-medium hover:text-civiq-blue transition-colors">Representatives</Link>
-            <Link href="/districts" className="font-medium hover:text-civiq-blue transition-colors">Districts</Link>
-            <Link href="/states" className="font-medium hover:text-civiq-blue transition-colors">States</Link>
-            <Link href="/local" className="font-medium hover:text-civiq-blue transition-colors">Local</Link>
-            <Link href="/legislation" className="font-medium text-civiq-blue transition-colors">Legislation</Link>
-            <Link href="/about" className="font-medium hover:text-civiq-blue transition-colors">About</Link>
+            <Link
+              href="/representatives"
+              className="font-medium hover:text-civiq-blue transition-colors"
+            >
+              Representatives
+            </Link>
+            <Link href="/districts" className="font-medium hover:text-civiq-blue transition-colors">
+              Districts
+            </Link>
+            <Link href="/states" className="font-medium hover:text-civiq-blue transition-colors">
+              States
+            </Link>
+            <Link href="/local" className="font-medium hover:text-civiq-blue transition-colors">
+              Local
+            </Link>
+            <Link href="/legislation" className="font-medium text-civiq-blue transition-colors">
+              Legislation
+            </Link>
+            <Link href="/about" className="font-medium hover:text-civiq-blue transition-colors">
+              About
+            </Link>
           </nav>
         </div>
       </header>
@@ -102,9 +118,10 @@ export default function LegislationPage() {
       <main className="min-h-screen pt-24 px-4 pb-16 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl font-bold text-center mb-8">Track Legislation</h1>
-          
+
           <p className="text-xl text-gray-600 text-center max-w-3xl mx-auto mb-12">
-            Follow bills through Congress, from introduction to law. See how your representatives vote on issues that matter to you.
+            Follow bills through Congress, from introduction to law. See how your representatives
+            vote on issues that matter to you.
           </p>
 
           {/* Tabs */}
@@ -148,33 +165,49 @@ export default function LegislationPage() {
           {/* Content based on active tab */}
           {activeTab === 'recent' && (
             <div className="space-y-6">
-              {recentBills.map(bill => (
-                <div key={bill.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-semibold">{bill.id}</h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(bill.status)}`}>
-                          {bill.status}
-                        </span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(bill.category)}`}>
-                          {bill.category}
-                        </span>
+              {recentBills.length > 0 ? (
+                recentBills.map(bill => (
+                  <div
+                    key={bill.id}
+                    className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-xl font-semibold">{bill.id}</h3>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(bill.status)}`}
+                          >
+                            {bill.status}
+                          </span>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(bill.category)}`}
+                          >
+                            {bill.category}
+                          </span>
+                        </div>
+                        <h4 className="text-lg font-medium mb-2">{bill.title}</h4>
+                        <p className="text-gray-600 mb-3">{bill.summary}</p>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <span>Sponsor: {bill.sponsor}</span>
+                          <span>•</span>
+                          <span>Introduced: {bill.date}</span>
+                        </div>
                       </div>
-                      <h4 className="text-lg font-medium mb-2">{bill.title}</h4>
-                      <p className="text-gray-600 mb-3">{bill.summary}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>Sponsor: {bill.sponsor}</span>
-                        <span>•</span>
-                        <span>Introduced: {bill.date}</span>
-                      </div>
+                      <button className="ml-4 px-4 py-2 border border-civiq-blue text-civiq-blue rounded hover:bg-civiq-blue hover:text-white transition-colors">
+                        Track Bill
+                      </button>
                     </div>
-                    <button className="ml-4 px-4 py-2 border border-civiq-blue text-civiq-blue rounded hover:bg-civiq-blue hover:text-white transition-colors">
-                      Track Bill
-                    </button>
                   </div>
+                ))
+              ) : (
+                <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Loading from Congress.gov...
+                  </h3>
+                  <p className="text-gray-600">Recent legislation data unavailable</p>
                 </div>
-              ))}
+              )}
             </div>
           )}
 
@@ -182,9 +215,10 @@ export default function LegislationPage() {
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
               <h3 className="text-2xl font-semibold mb-4">Track Bills That Matter to You</h3>
               <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                Start tracking bills to receive updates on their progress, committee actions, and how your representatives vote.
+                Start tracking bills to receive updates on their progress, committee actions, and
+                how your representatives vote.
               </p>
-              <Link 
+              <Link
                 href="/"
                 className="inline-block bg-civiq-blue text-white px-6 py-3 rounded hover:bg-blue-700 transition-colors"
               >

@@ -5,7 +5,7 @@
 
 /**
  * Data Validation and Source Attribution System
- * 
+ *
  * This module provides utilities for validating data quality,
  * ensuring accuracy, and tracking data sources across all APIs.
  */
@@ -60,7 +60,7 @@ const DATA_SOURCES: Record<string, DataSource> = {
     lastUpdated: '2024-01-01',
     updateFrequency: 'daily',
     coverage: ['demographics', 'congressional-districts', 'geographic-data'],
-    limitations: ['Rate limited', 'Some historical data gaps']
+    limitations: ['Rate limited', 'Some historical data gaps'],
   },
   'congress-api': {
     name: 'Congress.gov API',
@@ -70,7 +70,7 @@ const DATA_SOURCES: Record<string, DataSource> = {
     lastUpdated: '2024-01-01',
     updateFrequency: 'real-time',
     coverage: ['members', 'bills', 'votes', 'committees'],
-    limitations: ['119th Congress focus', 'Some member details incomplete']
+    limitations: ['119th Congress focus', 'Some member details incomplete'],
   },
   'fec-api': {
     name: 'Federal Election Commission API',
@@ -80,7 +80,7 @@ const DATA_SOURCES: Record<string, DataSource> = {
     lastUpdated: '2024-01-01',
     updateFrequency: 'daily',
     coverage: ['campaign-finance', 'candidates', 'committees', 'contributions'],
-    limitations: ['Reporting delays', 'Large contributor focus']
+    limitations: ['Reporting delays', 'Large contributor focus'],
   },
   'gdelt-api': {
     name: 'GDELT Project API',
@@ -90,7 +90,7 @@ const DATA_SOURCES: Record<string, DataSource> = {
     lastUpdated: '2024-01-01',
     updateFrequency: 'real-time',
     coverage: ['news-articles', 'events', 'trends'],
-    limitations: ['English language bias', 'Coverage varies by topic']
+    limitations: ['English language bias', 'Coverage varies by topic'],
   },
   'openstates-api': {
     name: 'OpenStates.org API',
@@ -100,7 +100,7 @@ const DATA_SOURCES: Record<string, DataSource> = {
     lastUpdated: '2024-01-01',
     updateFrequency: 'daily',
     coverage: ['state-legislature', 'state-bills', 'state-votes'],
-    limitations: ['State data completeness varies', 'API key required']
+    limitations: ['State data completeness varies', 'API key required'],
   },
   'government-rss': {
     name: 'Government RSS Feeds',
@@ -110,8 +110,8 @@ const DATA_SOURCES: Record<string, DataSource> = {
     lastUpdated: '2024-01-01',
     updateFrequency: 'real-time',
     coverage: ['press-releases', 'announcements', 'official-statements'],
-    limitations: ['Feed availability varies', 'Update frequency inconsistent']
-  }
+    limitations: ['Feed availability varies', 'Update frequency inconsistent'],
+  },
 };
 
 class DataValidator {
@@ -182,7 +182,7 @@ class DataValidator {
       completeness: Math.max(0, completeness),
       accuracy: Math.max(0, 100 - errors.length * 10),
       timeliness: this.calculateTimeliness(sourceInfo),
-      consistency: Math.max(0, 100 - warnings.length * 5)
+      consistency: Math.max(0, 100 - warnings.length * 5),
     };
 
     const result: ValidationResult = {
@@ -192,7 +192,7 @@ class DataValidator {
       warnings,
       source: sourceInfo,
       timestamp: new Date().toISOString(),
-      checks
+      checks,
     };
 
     this.recordValidation(source, result);
@@ -228,7 +228,7 @@ class DataValidator {
     if (data.total_receipts && data.total_disbursements && data.cash_on_hand) {
       const expectedCash = data.total_receipts - data.total_disbursements;
       const cashDifference = Math.abs(expectedCash - data.cash_on_hand);
-      
+
       // Allow for reasonable variance due to timing differences
       if (cashDifference > data.total_receipts * 0.1) {
         warnings.push('Cash on hand may not match receipts and disbursements');
@@ -240,7 +240,7 @@ class DataValidator {
     if (data.coverage_start_date && data.coverage_end_date) {
       const startDate = new Date(data.coverage_start_date);
       const endDate = new Date(data.coverage_end_date);
-      
+
       if (startDate >= endDate) {
         errors.push('Coverage start date must be before end date');
         confidence -= 15;
@@ -251,7 +251,7 @@ class DataValidator {
       completeness: this.calculateFinanceCompleteness(data),
       accuracy: Math.max(0, 100 - errors.length * 15),
       timeliness: this.calculateTimeliness(sourceInfo),
-      consistency: Math.max(0, 100 - warnings.length * 8)
+      consistency: Math.max(0, 100 - warnings.length * 8),
     };
 
     const result: ValidationResult = {
@@ -261,7 +261,7 @@ class DataValidator {
       warnings,
       source: sourceInfo,
       timestamp: new Date().toISOString(),
-      checks
+      checks,
     };
 
     this.recordValidation(source, result);
@@ -295,7 +295,7 @@ class DataValidator {
       const pubDate = new Date(data.publishedDate);
       const now = new Date();
       const daysDiff = (now.getTime() - pubDate.getTime()) / (1000 * 60 * 60 * 24);
-      
+
       if (daysDiff > 365) {
         warnings.push('Article is over a year old');
         confidence -= 5;
@@ -323,7 +323,7 @@ class DataValidator {
       completeness: this.calculateNewsCompleteness(data),
       accuracy: Math.max(0, 100 - errors.length * 12),
       timeliness: this.calculateNewsTimeliness(data),
-      consistency: Math.max(0, 100 - warnings.length * 6)
+      consistency: Math.max(0, 100 - warnings.length * 6),
     };
 
     const result: ValidationResult = {
@@ -333,7 +333,7 @@ class DataValidator {
       warnings,
       source: sourceInfo,
       timestamp: new Date().toISOString(),
-      checks
+      checks,
     };
 
     this.recordValidation(source, result);
@@ -365,16 +365,16 @@ class DataValidator {
     // Identify conflicts and build consensus
     fieldValues.forEach((values, field) => {
       const uniqueValues = [...new Set(values.map(v => JSON.stringify(v.value)))];
-      
+
       if (uniqueValues.length > 1) {
         // Conflict detected
         conflicts.push({
           field,
-          values: values.map(v => ({ source: v.source, value: v.value }))
+          values: values.map(v => ({ source: v.source, value: v.value })),
         });
 
         // Use most reliable source for consensus
-        const sortedBySources = values.sort((a, b) => 
+        const sortedBySources = values.sort((a, b) =>
           DATA_SOURCES[b.source]?.reliability === 'high' ? 1 : -1
         );
         consensus[field] = sortedBySources[0].value;
@@ -390,7 +390,7 @@ class DataValidator {
     return {
       consensus,
       conflicts,
-      reliability: reliabilityScore
+      reliability: reliabilityScore,
     };
   }
 
@@ -406,7 +406,7 @@ class DataValidator {
       averageConfidence: 0,
       sourceReliability: {},
       lastValidation: new Date().toISOString(),
-      commonIssues: []
+      commonIssues: [],
     };
 
     const allIssues = new Map<string, number>();
@@ -416,10 +416,10 @@ class DataValidator {
     targetSources.forEach(source => {
       const validations = this.validationHistory.get(source) || [];
       const validCount = validations.filter(v => v.isValid).length;
-      
+
       aggregatedMetrics.totalRecords += validations.length;
       aggregatedMetrics.validRecords += validCount;
-      
+
       validations.forEach(validation => {
         totalConfidence += validation.confidence;
         confidenceCount++;
@@ -441,13 +441,15 @@ class DataValidator {
       }
     });
 
-    aggregatedMetrics.errorRate = aggregatedMetrics.totalRecords > 0 
-      ? ((aggregatedMetrics.totalRecords - aggregatedMetrics.validRecords) / aggregatedMetrics.totalRecords) * 100
-      : 0;
+    aggregatedMetrics.errorRate =
+      aggregatedMetrics.totalRecords > 0
+        ? ((aggregatedMetrics.totalRecords - aggregatedMetrics.validRecords) /
+            aggregatedMetrics.totalRecords) *
+          100
+        : 0;
 
-    aggregatedMetrics.averageConfidence = confidenceCount > 0 
-      ? totalConfidence / confidenceCount 
-      : 0;
+    aggregatedMetrics.averageConfidence =
+      confidenceCount > 0 ? totalConfidence / confidenceCount : 0;
 
     // Sort and format common issues
     aggregatedMetrics.commonIssues = Array.from(allIssues.entries())
@@ -456,7 +458,7 @@ class DataValidator {
       .map(([type, count]) => ({
         type,
         count,
-        examples: this.getIssueExamples(type)
+        examples: this.getIssueExamples(type),
       }));
 
     return aggregatedMetrics;
@@ -469,10 +471,10 @@ class DataValidator {
     if (!this.validationHistory.has(source)) {
       this.validationHistory.set(source, []);
     }
-    
+
     const history = this.validationHistory.get(source)!;
     history.push(result);
-    
+
     // Keep only last 1000 validations per source
     if (history.length > 1000) {
       history.splice(0, history.length - 1000);
@@ -483,22 +485,33 @@ class DataValidator {
     const now = new Date();
     const lastUpdate = new Date(source.lastUpdated);
     const hoursSinceUpdate = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60);
-    
+
     switch (source.updateFrequency) {
-      case 'real-time': return hoursSinceUpdate < 1 ? 100 : Math.max(0, 100 - hoursSinceUpdate * 5);
-      case 'daily': return hoursSinceUpdate < 24 ? 100 : Math.max(0, 100 - (hoursSinceUpdate - 24) * 2);
-      case 'weekly': return hoursSinceUpdate < 168 ? 100 : Math.max(0, 100 - (hoursSinceUpdate - 168) * 0.5);
-      case 'monthly': return hoursSinceUpdate < 720 ? 100 : Math.max(0, 100 - (hoursSinceUpdate - 720) * 0.1);
-      default: return 50;
+      case 'real-time':
+        return hoursSinceUpdate < 1 ? 100 : Math.max(0, 100 - hoursSinceUpdate * 5);
+      case 'daily':
+        return hoursSinceUpdate < 24 ? 100 : Math.max(0, 100 - (hoursSinceUpdate - 24) * 2);
+      case 'weekly':
+        return hoursSinceUpdate < 168 ? 100 : Math.max(0, 100 - (hoursSinceUpdate - 168) * 0.5);
+      case 'monthly':
+        return hoursSinceUpdate < 720 ? 100 : Math.max(0, 100 - (hoursSinceUpdate - 720) * 0.1);
+      default:
+        return 50;
     }
   }
 
   private calculateFinanceCompleteness(data: unknown): number {
     const expectedFields = [
-      'candidate_id', 'total_receipts', 'total_disbursements', 'cash_on_hand',
-      'individual_contributions', 'pac_contributions', 'coverage_start_date', 'coverage_end_date'
+      'candidate_id',
+      'total_receipts',
+      'total_disbursements',
+      'cash_on_hand',
+      'individual_contributions',
+      'pac_contributions',
+      'coverage_start_date',
+      'coverage_end_date',
     ];
-    
+
     const presentFields = expectedFields.filter(field => data[field] != null);
     return (presentFields.length / expectedFields.length) * 100;
   }
@@ -511,16 +524,16 @@ class DataValidator {
 
   private calculateNewsTimeliness(data: unknown): number {
     if (!data.publishedDate) return 0;
-    
+
     const pubDate = new Date(data.publishedDate);
     const now = new Date();
     const hoursSincePublish = (now.getTime() - pubDate.getTime()) / (1000 * 60 * 60);
-    
+
     // Newer articles are more timely
     if (hoursSincePublish < 24) return 100;
     if (hoursSincePublish < 168) return 90; // 1 week
     if (hoursSincePublish < 720) return 70; // 1 month
-    return Math.max(0, 50 - hoursSincePublish / 720 * 50);
+    return Math.max(0, 50 - (hoursSincePublish / 720) * 50);
   }
 
   private isValidURL(url: string): boolean {
@@ -538,22 +551,17 @@ class DataValidator {
       /you won't believe/i,
       /shocking/i,
       /this one weird trick/i,
-      /doctors hate/i
+      /doctors hate/i,
     ];
-    
+
     return suspiciousPatterns.some(pattern => pattern.test(text));
   }
 
   private isKnownUnreliableSource(source: string): boolean {
     // This would be a curated list of unreliable sources
-    const unreliableSources = [
-      'example-fake-news.com',
-      'unreliable-blog.net'
-    ];
-    
-    return unreliableSources.some(unreliable => 
-      source.toLowerCase().includes(unreliable)
-    );
+    const unreliableSources = ['example-fake-news.com', 'unreliable-blog.net'];
+
+    return unreliableSources.some(unreliable => source.toLowerCase().includes(unreliable));
   }
 
   private calculateCrossValidationReliability(
@@ -569,10 +577,10 @@ class DataValidator {
     const reliabilityScore = Math.max(0, 100 - conflictRate * 50);
 
     // Boost score if high-reliability sources agree
-    const highReliabilitySources = dataPoints.filter(dp => 
-      DATA_SOURCES[dp.source]?.reliability === 'high'
+    const highReliabilitySources = dataPoints.filter(
+      dp => DATA_SOURCES[dp.source]?.reliability === 'high'
     );
-    
+
     if (highReliabilitySources.length >= 2) {
       return Math.min(100, reliabilityScore + 10);
     }
@@ -595,10 +603,80 @@ class DataValidator {
       'Format Error': ['Invalid phone format', 'Invalid email format', 'Invalid date format'],
       'Invalid Value': ['Invalid state code', 'Invalid chamber', 'Negative amount'],
       'Date Error': ['Future date', 'Invalid date range', 'Missing publication date'],
-      'Data Inconsistency': ['Cash on hand mismatch', 'Party affiliation conflict', 'Term date overlap']
+      'Data Inconsistency': [
+        'Cash on hand mismatch',
+        'Party affiliation conflict',
+        'Term date overlap',
+      ],
     };
-    
+
     return examples[issueType] || ['Various issues'];
+  }
+
+  /**
+   * Validate data specifically for 119th Congress
+   */
+  validate119thCongress(data: unknown): ValidationResult {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    let confidence = 100;
+
+    if (!data || typeof data !== 'object') {
+      errors.push('Invalid data: must be an object');
+      confidence = 0;
+    } else {
+      const obj = data as Record<string, unknown>;
+
+      // Check for congress number
+      if (obj.congress && obj.congress !== 119 && obj.congress !== '119') {
+        errors.push(`Invalid Congress ${obj.congress}, must be 119`);
+        confidence -= 30;
+      }
+
+      // Check for terms with wrong congress
+      if (obj.terms && Array.isArray(obj.terms)) {
+        for (const term of obj.terms) {
+          if (typeof term === 'object' && term !== null) {
+            const termObj = term as Record<string, unknown>;
+            if (termObj.congress && termObj.congress !== 119 && termObj.congress !== '119') {
+              errors.push(`Invalid term congress ${termObj.congress}, must be 119`);
+              confidence -= 20;
+            }
+          }
+        }
+      }
+
+      // Check for outdated years
+      const dataStr = JSON.stringify(data).toLowerCase();
+      if (dataStr.includes('2023') || dataStr.includes('2024')) {
+        warnings.push('Data contains 2023/2024 dates - verify this is historical data');
+        confidence -= 5;
+      }
+
+      // Check for test data patterns
+      const testPatterns = ['john doe', 'jane smith', 'test district', 'sample', 'mock', 'fake'];
+      for (const pattern of testPatterns) {
+        if (dataStr.includes(pattern)) {
+          errors.push(`Test data detected: ${pattern}`);
+          confidence -= 25;
+        }
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      confidence: Math.max(0, confidence),
+      errors,
+      warnings,
+      source: DATA_SOURCES['congress-api'],
+      timestamp: new Date().toISOString(),
+      checks: {
+        completeness: errors.length === 0 ? 100 : 50,
+        accuracy: Math.max(0, 100 - errors.length * 20),
+        timeliness: 100,
+        consistency: Math.max(0, 100 - warnings.length * 10),
+      },
+    };
   }
 
   /**
@@ -630,7 +708,7 @@ class DataValidator {
     return {
       totalValidations,
       sourceBreakdown,
-      averageConfidence: totalValidations > 0 ? totalConfidence / totalValidations : 0
+      averageConfidence: totalValidations > 0 ? totalConfidence / totalValidations : 0,
     };
   }
 }
@@ -639,11 +717,7 @@ class DataValidator {
 export const dataValidator = new DataValidator();
 
 // Export types
-export type {
-  DataSource,
-  ValidationResult,
-  DataQualityMetrics
-};
+export type { DataSource, ValidationResult, DataQualityMetrics };
 
 // Export class and data sources
 export { DataValidator, DATA_SOURCES };
@@ -658,7 +732,7 @@ export const ValidationUtils = {
   getSourceAttribution(sourceKey: string): string {
     const source = DATA_SOURCES[sourceKey];
     if (!source) return 'Unknown source';
-    
+
     return `Data from ${source.name} (${source.type}, ${source.reliability} reliability)`;
   },
 
@@ -687,5 +761,5 @@ export const ValidationUtils = {
     if (hoursDiff < 24) return `${Math.floor(hoursDiff)} hours ago`;
     const daysDiff = Math.floor(hoursDiff / 24);
     return `${daysDiff} day${daysDiff !== 1 ? 's' : ''} ago`;
-  }
+  },
 };
