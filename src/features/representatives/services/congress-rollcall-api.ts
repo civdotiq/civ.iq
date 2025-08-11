@@ -247,63 +247,8 @@ export class CongressRollCallAPI {
         limit,
       });
 
-      // TEMPORARY: Demo mode while Congress.gov Roll Call API is being deployed
-      // The May 2025 announcement suggests the API is rolling out in phases
-      if (process.env.NODE_ENV === 'development' && bioguideId === 'P000197') {
-        logger.info('Using demonstration data for Congress.gov Roll Call API integration', {
-          bioguideId,
-          note: 'Real API will replace this once Congress.gov endpoint is fully available',
-        });
-
-        // Sample data showing what the real Congress.gov API would return
-        return [
-          {
-            voteId: 'congress-119-1-36',
-            rollCallNumber: 36,
-            date: '2025-01-14',
-            question: 'On Passage',
-            result: 'Passed',
-            position: 'Nay' as const, // Pelosi typically opposes Republican bills
-            bill: {
-              congress: 119,
-              type: 'hr',
-              number: 36,
-              title: 'Defund the IRS Act',
-              url: 'https://api.congress.gov/v3/bill/119/house-bill/36',
-            },
-          },
-          {
-            voteId: 'congress-119-1-42',
-            rollCallNumber: 42,
-            date: '2025-01-17',
-            question: 'On Passage',
-            result: 'Passed',
-            position: 'Yea' as const, // Bipartisan infrastructure
-            bill: {
-              congress: 119,
-              type: 'hr',
-              number: 276,
-              title: 'Enhancing Geothermal Production on Federal Lands Act',
-              url: 'https://api.congress.gov/v3/bill/119/house-bill/276',
-            },
-          },
-          {
-            voteId: 'congress-119-1-28',
-            rollCallNumber: 28,
-            date: '2025-01-10',
-            question: 'On Motion to Recommit',
-            result: 'Failed',
-            position: 'Present' as const, // Procedural vote
-            bill: {
-              congress: 119,
-              type: 'hr',
-              number: 140,
-              title: 'Born-Alive Abortion Survivors Protection Act',
-              url: 'https://api.congress.gov/v3/bill/119/house-bill/140',
-            },
-          },
-        ].slice(0, limit);
-      }
+      // NOTE: Congress.gov House Roll Call API is now available (May 2025)
+      // Processing all House members with real API data
 
       // First, get the list of recent roll call votes
       const rollCallList = await this.getRecentHouseRollCallVotes(congress, session, limit * 2); // Get more to account for member absences
