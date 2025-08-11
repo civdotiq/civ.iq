@@ -84,7 +84,8 @@
       "Bash(env)",
       "Bash(git diff:*)",
       "WebFetch(domain:civdotiq.org)",
-      "Bash(npm run migrate:*)"
+      "Bash(npm run migrate:*)",
+      "Bash(npm run diagnose:apis:*)"
     ],
     "deny": []
   },

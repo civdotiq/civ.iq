@@ -6,8 +6,18 @@
 import { cache } from '@/lib/cache';
 import { RepresentativeProfile, BatchApiResponse } from '@/types/representative';
 
-// Base API configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+// Base API configuration - FIXED to work with Next.js API routes
+const getApiBaseUrl = () => {
+  // For client-side requests
+  if (typeof window !== 'undefined') {
+    // Use relative URLs for same-origin requests (your API routes)
+    // This ensures requests go to /api/... on the same domain
+    return '';
+  }
+  // For server-side requests (if needed)
+  return process.env.NEXT_PUBLIC_API_URL || '';
+};
+
 const DEFAULT_TIMEOUT = 30000; // 30 seconds for batch requests
 
 // Error types for better error handling
@@ -26,38 +36,52 @@ export class RepresentativeApiError extends Error {
 // Next.js 15 optimized fetch wrapper with built-in caching and deduplication
 async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit & { 
+  options: RequestInit & {
     cacheTime?: number;
     tags?: string[];
     revalidate?: number | false;
   } = {}
 ): Promise<T> {
   const { cacheTime = 300, tags = [], revalidate, ...fetchOptions } = options;
-  const url = `${API_BASE_URL}${endpoint}`;
-  
+
+  // FIXED: Ensure endpoint starts with / for relative URLs
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}${normalizedEndpoint}`;
+
   console.log(`[CIV.IQ-DEBUG] API Request: ${fetchOptions.method || 'GET'} ${url}`);
-  
+  console.log(`[CIV.IQ-DEBUG] Base URL: "${baseUrl}", Endpoint: "${normalizedEndpoint}"`);
+
   try {
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT);
+
     const response = await fetch(url, {
       ...fetchOptions,
       headers: {
         'Content-Type': 'application/json',
         ...fetchOptions.headers,
       },
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
+      signal: controller.signal,
       // Next.js 15 caching with automatic deduplication
-      next: {
-        revalidate: revalidate !== undefined ? revalidate : cacheTime,
-        tags: [...tags, `api-${endpoint.split('/').join('-')}`]
-      }
+      next:
+        revalidate !== undefined
+          ? {
+              revalidate: revalidate !== false ? revalidate : cacheTime,
+              tags: [...tags, `api-${endpoint.split('/').join('-')}`],
+            }
+          : undefined,
     });
+
+    clearTimeout(timeoutId);
 
     console.log(`[CIV.IQ-DEBUG] API Response: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
-      const errorText = await response.text();
+      const errorText = await response.text().catch(() => 'No error details');
       console.error(`[CIV.IQ-DEBUG] API Error Response:`, errorText);
-      
+
       throw new RepresentativeApiError(
         `API request failed: ${response.status} ${response.statusText}`,
         response.status,
@@ -67,25 +91,29 @@ async function apiRequest<T>(
     }
 
     const data = await response.json();
-    console.log(`[CIV.IQ-DEBUG] API Success Response:`, data);
+    console.log(`[CIV.IQ-DEBUG] API Success Response:`, {
+      endpoint,
+      hasData: !!data,
+      dataKeys: data ? Object.keys(data).slice(0, 5) : [],
+    });
+
     return data;
   } catch (error) {
-    console.error(`[CIV.IQ-DEBUG] API Request Error:`, error);
-    
+    console.error(`[CIV.IQ-DEBUG] API Request Error:`, {
+      endpoint,
+      error: error instanceof Error ? error.message : String(error),
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
+    });
+
     if (error instanceof RepresentativeApiError) {
       throw error;
     }
-    
-    // Handle timeout and network errors
-    if (error instanceof DOMException && error.name === 'TimeoutError') {
-      throw new RepresentativeApiError(
-        'Request timeout - please try again',
-        408,
-        endpoint,
-        error
-      );
+
+    // Handle abort/timeout errors
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new RepresentativeApiError('Request timeout - please try again', 408, endpoint, error);
     }
-    
+
     throw new RepresentativeApiError(
       `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
       500,
@@ -115,7 +143,7 @@ export const representativeApi = {
   ): Promise<BatchApiResponse> {
     // Build endpoint list based on options
     const endpoints: string[] = ['profile']; // Always include basic profile
-    
+
     if (options.includeVotes) endpoints.push('votes');
     if (options.includeBills) endpoints.push('bills');
     if (options.includeFinance) endpoints.push('finance');
@@ -127,23 +155,35 @@ export const representativeApi = {
 
     console.log(`[CIV.IQ-DEBUG] Batch request for ${bioguideId} with endpoints:`, endpoints);
 
-    const response = await apiRequest<BatchApiResponse>(
-      `/api/representative/${bioguideId}/batch`,
-      {
-        method: 'POST',
-        body: JSON.stringify({ endpoints }),
-      }
-    );
+    try {
+      const response = await apiRequest<BatchApiResponse>(
+        `/api/representative/${bioguideId}/batch`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ endpoints }),
+        }
+      );
 
-    console.log(`[CIV.IQ-DEBUG] Batch response processed successfully:`, {
-      bioguideId,
-      endpointsRequested: endpoints.length,
-      successfulEndpoints: Object.keys(response.data || {}).length,
-      hasErrors: response.errors && Object.keys(response.errors).length > 0,
-      executionTime: response.executionTime,
-    });
+      console.log(`[CIV.IQ-DEBUG] Batch response processed successfully:`, {
+        bioguideId,
+        endpointsRequested: endpoints.length,
+        successfulEndpoints: Object.keys(response.data || {}).length,
+        hasErrors: response.errors && Object.keys(response.errors).length > 0,
+        executionTime: response.executionTime,
+      });
 
-    return response;
+      return response;
+    } catch (error) {
+      console.error(`[CIV.IQ-DEBUG] Batch API failed, falling back to individual calls`, error);
+      // Return empty batch response on error
+      return {
+        data: {},
+        errors: {
+          batch: error instanceof Error ? error.message : 'Batch API failed',
+        },
+        executionTime: 0,
+      };
+    }
   },
 
   /**
@@ -152,7 +192,7 @@ export const representativeApi = {
   async getProfile(bioguideId: string): Promise<RepresentativeProfile> {
     return apiRequest<RepresentativeProfile>(`/api/representative/${bioguideId}`, {
       cacheTime: 600, // 10 minutes - profile data changes infrequently
-      tags: [`representative-${bioguideId}`, 'representative-profile']
+      tags: [`representative-${bioguideId}`, 'representative-profile'],
     });
   },
 
@@ -162,7 +202,7 @@ export const representativeApi = {
   async getVotes(bioguideId: string): Promise<any> {
     return apiRequest(`/api/representative/${bioguideId}/votes`, {
       cacheTime: 300, // 5 minutes - voting data updates frequently
-      tags: [`representative-${bioguideId}`, 'representative-votes']
+      tags: [`representative-${bioguideId}`, 'representative-votes'],
     });
   },
 
@@ -172,7 +212,7 @@ export const representativeApi = {
   async getBills(bioguideId: string): Promise<any> {
     return apiRequest(`/api/representative/${bioguideId}/bills`, {
       cacheTime: 600, // 10 minutes - bill data changes moderately
-      tags: [`representative-${bioguideId}`, 'representative-bills']
+      tags: [`representative-${bioguideId}`, 'representative-bills'],
     });
   },
 
@@ -182,7 +222,7 @@ export const representativeApi = {
   async getFinance(bioguideId: string): Promise<any> {
     return apiRequest(`/api/representative/${bioguideId}/finance`, {
       cacheTime: 1800, // 30 minutes - finance data changes less frequently
-      tags: [`representative-${bioguideId}`, 'representative-finance']
+      tags: [`representative-${bioguideId}`, 'representative-finance'],
     });
   },
 
@@ -192,7 +232,7 @@ export const representativeApi = {
   async getNews(bioguideId: string): Promise<any> {
     return apiRequest(`/api/representative/${bioguideId}/news`, {
       cacheTime: 180, // 3 minutes - news updates frequently
-      tags: [`representative-${bioguideId}`, 'representative-news']
+      tags: [`representative-${bioguideId}`, 'representative-news'],
     });
   },
 
@@ -202,7 +242,7 @@ export const representativeApi = {
   async getPartyAlignment(bioguideId: string): Promise<any> {
     return apiRequest(`/api/representative/${bioguideId}/party-alignment`, {
       cacheTime: 1800, // 30 minutes - alignment data changes slowly
-      tags: [`representative-${bioguideId}`, 'representative-party-alignment']
+      tags: [`representative-${bioguideId}`, 'representative-party-alignment'],
     });
   },
 
@@ -212,7 +252,7 @@ export const representativeApi = {
   async getCommittees(bioguideId: string): Promise<any> {
     return apiRequest(`/api/representative/${bioguideId}/committees`, {
       cacheTime: 3600, // 1 hour - committee assignments change infrequently
-      tags: [`representative-${bioguideId}`, 'representative-committees']
+      tags: [`representative-${bioguideId}`, 'representative-committees'],
     });
   },
 
@@ -222,7 +262,7 @@ export const representativeApi = {
   async getLeadership(bioguideId: string): Promise<any> {
     return apiRequest(`/api/representative/${bioguideId}/leadership`, {
       cacheTime: 3600, // 1 hour - leadership positions change infrequently
-      tags: [`representative-${bioguideId}`, 'representative-leadership']
+      tags: [`representative-${bioguideId}`, 'representative-leadership'],
     });
   },
 
@@ -232,7 +272,7 @@ export const representativeApi = {
   async getDistrict(bioguideId: string): Promise<any> {
     return apiRequest(`/api/representative/${bioguideId}/district`, {
       cacheTime: 3600, // 1 hour - district info changes rarely
-      tags: [`representative-${bioguideId}`, 'representative-district']
+      tags: [`representative-${bioguideId}`, 'representative-district'],
     });
   },
 
@@ -248,16 +288,19 @@ export const representativeApi = {
     query?: string;
   }): Promise<RepresentativeProfile[]> {
     const searchParams = new URLSearchParams();
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value) searchParams.append(key, value);
     });
 
     const queryString = searchParams.toString();
-    return apiRequest<RepresentativeProfile[]>(`/api/representatives${queryString ? `?${queryString}` : ''}`, {
-      cacheTime: 300, // 5 minutes for search results
-      tags: ['representatives-search', `search-${queryString}`]
-    });
+    return apiRequest<RepresentativeProfile[]>(
+      `/api/representatives${queryString ? `?${queryString}` : ''}`,
+      {
+        cacheTime: 300, // 5 minutes for search results
+        tags: ['representatives-search', `search-${queryString}`],
+      }
+    );
   },
 
   /**
@@ -266,7 +309,7 @@ export const representativeApi = {
   async getByZip(zipCode: string): Promise<RepresentativeProfile[]> {
     return apiRequest<RepresentativeProfile[]>(`/api/representatives?zip=${zipCode}`, {
       cacheTime: 600, // 10 minutes - ZIP lookups are expensive
-      tags: ['representatives-zip', `zip-${zipCode}`]
+      tags: ['representatives-zip', `zip-${zipCode}`],
     });
   },
 };
