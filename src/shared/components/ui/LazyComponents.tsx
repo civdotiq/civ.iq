@@ -160,9 +160,9 @@ export const LazyEffectivenessChart = lazy(() =>
 
 // Campaign Finance Visualizer - Large component with D3
 export const LazyCampaignFinanceVisualizer = lazy(() =>
-  import(/* webpackChunkName: "campaign-finance-viz" */ './CampaignFinanceVisualizer').then(
-    module => ({ default: module.CampaignFinanceVisualizer })
-  )
+  import(
+    /* webpackChunkName: "campaign-finance-viz" */ '@/features/campaign-finance/components/CampaignFinanceVisualizer'
+  ).then(module => ({ default: module.CampaignFinanceVisualizer }))
 );
 
 // Interactive Visualizations - Heavy D3 component

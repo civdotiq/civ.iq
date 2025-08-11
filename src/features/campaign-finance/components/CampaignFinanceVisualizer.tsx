@@ -92,6 +92,38 @@ interface CampaignFinanceData {
     total_amount: number;
     count: number;
   }>;
+  // Enhanced features that are included in the main finance data
+  industry_breakdown?: Array<{
+    sector: string;
+    amount: number;
+    percentage: number;
+    contributors: number;
+  }>;
+  bundled_contributions?: Array<{
+    bundler: string;
+    total_amount: number;
+    contributor_count: number;
+    employer: string;
+  }>;
+  independent_expenditures?: {
+    supporting: Array<{
+      committee_name: string;
+      expenditure_amount: number;
+      purpose: string;
+    }>;
+    opposing: Array<{
+      committee_name: string;
+      expenditure_amount: number;
+      purpose: string;
+    }>;
+    total_supporting: number;
+    total_opposing: number;
+  };
+  funding_diversity?: {
+    sector_count: number;
+    top_sector_percentage: number;
+    herfindahl_index: number;
+  };
   metadata?: {
     dataSource: 'fec.gov' | 'mock';
     retrievalMethod?: 'direct-mapping' | 'name-search' | 'fallback';
@@ -144,53 +176,125 @@ export function CampaignFinanceVisualizer({
     'all' | 'individual' | 'pac' | 'party'
   >('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [enhancedData, setEnhancedData] = useState<EnhancedFECData | null>(null);
-  const [isLoadingEnhanced, setIsLoadingEnhanced] = useState(false);
   const [lobbyingData, setLobbyingData] = useState<LobbyingData | null>(null);
   const [isLoadingLobbying, setIsLoadingLobbying] = useState(false);
 
-  // Fetch enhanced data from the new endpoint
-  useEffect(() => {
-    if (
-      bioguideId &&
-      (activeTab === 'insights' ||
-        activeTab === 'industry' ||
-        activeTab === 'donors' ||
-        activeTab === 'trends')
-    ) {
-      setIsLoadingEnhanced(true);
+  // Transform financeData to EnhancedFECData format for child components
+  const enhancedData: EnhancedFECData | null = useMemo(() => {
+    if (!financeData || !financeData.industry_breakdown) return null;
 
-      fetch(`/api/representative/${bioguideId}/finance/enhanced`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then((data: EnhancedFECData) => {
-          logger.debug('Enhanced FEC data fetched successfully', {
-            component: 'CampaignFinanceVisualizer',
-            metadata: {
-              hasData: !!data,
-              dataKeys: Object.keys(data || {}),
-            },
-          });
-          setEnhancedData(data);
-        })
-        .catch(error => {
-          logger.error('Error fetching enhanced FEC data', {
-            component: 'CampaignFinanceVisualizer',
-            error: error as Error,
-            metadata: { bioguideId },
-          });
-          // Fall back to transformed data if fetch fails
-          setEnhancedData(null);
-        })
-        .finally(() => {
-          setIsLoadingEnhanced(false);
-        });
-    }
-  }, [bioguideId, activeTab]);
+    const currentCycleData = financeData.financial_summary[0];
+    if (!currentCycleData) return null;
+
+    // Transform the data structure to match EnhancedFECData
+    return {
+      summary: {
+        totalRaised: currentCycleData.total_receipts,
+        totalSpent: currentCycleData.total_disbursements,
+        cashOnHand: currentCycleData.cash_on_hand_end_period,
+        burnRate:
+          currentCycleData.total_receipts > 0
+            ? (currentCycleData.total_disbursements / currentCycleData.total_receipts) * 100
+            : 0,
+        quarterlyAverage: currentCycleData.total_receipts / 4,
+        efficiency:
+          currentCycleData.total_receipts > 0
+            ? ((currentCycleData.total_receipts - currentCycleData.total_disbursements) /
+                currentCycleData.total_receipts) *
+              100
+            : 0,
+      },
+      breakdown: {
+        individual: {
+          amount: currentCycleData.individual_contributions,
+          percent:
+            currentCycleData.total_receipts > 0
+              ? (currentCycleData.individual_contributions / currentCycleData.total_receipts) * 100
+              : 0,
+        },
+        pac: {
+          amount: currentCycleData.pac_contributions,
+          percent:
+            currentCycleData.total_receipts > 0
+              ? (currentCycleData.pac_contributions / currentCycleData.total_receipts) * 100
+              : 0,
+        },
+        party: {
+          amount: currentCycleData.party_contributions,
+          percent:
+            currentCycleData.total_receipts > 0
+              ? (currentCycleData.party_contributions / currentCycleData.total_receipts) * 100
+              : 0,
+        },
+        candidate: {
+          amount: currentCycleData.candidate_contributions,
+          percent:
+            currentCycleData.total_receipts > 0
+              ? (currentCycleData.candidate_contributions / currentCycleData.total_receipts) * 100
+              : 0,
+        },
+        smallDonors: { amount: 0, percent: 0, count: 0 },
+        largeDonors: { amount: 0, percent: 0, count: 0 },
+      },
+      industries: (financeData.industry_breakdown || []).map(industry => ({
+        name: industry.sector || 'Unknown',
+        amount: industry.amount || 0,
+        percentage: industry.percentage || 0,
+        contributorCount: industry.contributors || 0,
+        topEmployers: [],
+        trend: 'stable' as const,
+      })),
+      geography: {
+        inState: { amount: 0, percent: 0, count: 0 },
+        outOfState: { amount: 0, percent: 0, count: 0 },
+        topStates: [],
+        diversityScore: 0,
+      },
+      timeline: financeData.financial_summary.map((cycle, index) => ({
+        period: `${cycle.cycle}`,
+        quarter: `Q${index + 1}`,
+        raised: cycle.total_receipts,
+        spent: cycle.total_disbursements,
+        netChange: cycle.total_receipts - cycle.total_disbursements,
+        cashOnHand: cycle.cash_on_hand_end_period,
+        burnRate:
+          cycle.total_receipts > 0 ? (cycle.total_disbursements / cycle.total_receipts) * 100 : 0,
+        contributorCount: 0,
+      })),
+      donors: {
+        smallDonorMetrics: { averageAmount: 0, count: 0, percentage: 0, grassrootsScore: 0 },
+        largeDonorMetrics: { averageAmount: 0, count: 0, percentage: 0, dependencyScore: 0 },
+        repeatDonors: { count: 0, percentage: 0, averageTotal: 0 },
+      },
+      expenditures: {
+        categories: financeData.top_expenditure_categories.map(cat => ({
+          name: cat.category,
+          amount: cat.total_amount,
+          percentage:
+            currentCycleData.total_disbursements > 0
+              ? (cat.total_amount / currentCycleData.total_disbursements) * 100
+              : 0,
+          count: cat.count,
+          trend: 'stable' as const,
+        })),
+        efficiency: {
+          adminCosts: 0,
+          fundraisingCosts: 0,
+          programCosts: 0,
+          efficiencyRatio: 0,
+        },
+      },
+      metadata: {
+        dataSource: financeData.metadata?.dataSource || 'fec.gov',
+        lastUpdated: financeData.metadata?.lastUpdated || new Date().toISOString(),
+        coverage: 100,
+        dataQuality: 'high' as const,
+        cyclesCovered: financeData.financial_summary.map(cycle => cycle.cycle),
+      },
+    };
+  }, [financeData]);
+
+  const isLoadingEnhanced = false; // Data is already loaded with financeData
 
   // Fetch lobbying data from the new endpoint
   useEffect(() => {
