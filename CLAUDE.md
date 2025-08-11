@@ -1,385 +1,197 @@
-# 🚨 ACTIVE CIV.IQ PROJECT - CIVIC INTEL HUB 🚨
+# CLAUDE.MD - CIV.IQ AI Assistant Instructions
 
-You are working in: /mnt/d/civic-intel-hub
+## 🎯 Quick Context
 
-This is the ONLY active CIV.IQ project. Ignore any other folders with similar names.
+**Project**: civic-intel-hub | **Location**: D:\civic-intel-hub | **Stack**: Next.js 15 + TypeScript + React 18  
+**Purpose**: Federal civic data platform using ONLY real government APIs (no mock data ever)
 
-## Project Identity
+## ⚡ CRITICAL RULES (NEVER VIOLATE)
 
-- **Folder**: civic-intel-hub
-- **Location**: D:\ drive (/mnt/d/civic-intel-hub in WSL)
-- **Version**: 2025 Advanced Civic Information Platform (Phase 6 Complete)
-- **Status**: PRODUCTION READY WITH ADVANCED FEATURES
+1. **Quality Gates**: ALL code must pass `npm run lint && npm test` - NO exceptions
+2. **Real Data Only**: Use real government APIs or show "Data unavailable" - NEVER generate fake data
+3. **TypeScript Strict**: No `any` types, full null safety with optional chaining
+4. **Test Everything**: Features aren't complete until tested end-to-end
+5. **Clean Commits**: Use conventional commits (feat/fix/docs/chore)
 
-## Development Partnership
+## 🔄 REQUIRED WORKFLOW
 
-We're building production-quality code together. Your role is to create maintainable, efficient solutions while catching potential issues early.
+```
+Research → Plan → Implement → Verify
+```
 
-When you seem stuck or overly complex, I'll redirect you - my guidance helps you stay on track.
+**NEVER jump straight to coding!** Always:
 
-## 🚨 AUTOMATED CHECKS ARE MANDATORY
+1. **Research**: Explore existing codebase patterns first
+2. **Plan**: Write implementation strategy and verify approach
+3. **Implement**: Code with validation checkpoints
+4. **Verify**: Confirm all tests pass and feature works
 
-**ALL hook issues are BLOCKING - EVERYTHING must be ✅ GREEN!**  
-No errors. No formatting issues. No linting problems. Zero tolerance.  
-These are not suggestions. Fix ALL issues before continuing.
+For complex problems, say: _"Let me ultrathink about this architecture"_
 
-## CRITICAL WORKFLOW - ALWAYS FOLLOW THIS!
+## 📁 Project Structure
 
-### Research → Plan → Implement
+```
+src/
+├── app/                    # Next.js app router pages
+│   ├── api/               # API routes (all use real data)
+│   ├── representatives/   # Representative pages
+│   └── page.tsx          # Landing page
+├── components/            # React components
+├── lib/                   # Utilities and services
+├── types/                 # TypeScript definitions
+└── hooks/                 # Custom React hooks
 
-**NEVER JUMP STRAIGHT TO CODING!** Always follow this sequence:
+Key Entry Points:
+- Landing: src/app/page.tsx
+- API Base: src/app/api/
+- Types: src/types/representative.ts
+```
 
-1. **Research**: Explore the codebase, understand existing patterns
-2. **Plan**: Create a detailed implementation plan and verify it with me
-3. **Implement**: Execute the plan with validation checkpoints
+## ✅ Validation Commands
 
-When asked to implement any feature, you'll first say: "Let me research the codebase and create a plan before implementing."
+```bash
+# MUST PASS before claiming completion:
+npm run lint        # ESLint checks
+npm test           # Jest unit tests
+npm run type-check # TypeScript validation
+npm run build      # Production build
+npm run validate:all # Run ALL checks at once
 
-For complex architectural decisions or challenging problems, use **"ultrathink"** to engage maximum reasoning capacity. Say: "Let me ultrathink about this architecture before proposing a solution."
+# Development:
+npm run dev        # Start dev server (http://localhost:3000)
 
-### USE MULTIPLE AGENTS!
+# Data Processing:
+npm run process-census          # Update Census data
+npm run process-zip-districts   # Process ZIP mappings
+```
 
-_Leverage subagents aggressively_ for better results:
+## 🌐 API Endpoints
 
-- Spawn agents to explore different parts of the codebase in parallel
-- Use one agent to write tests while another implements features
-- Delegate research tasks: "I'll have an agent investigate the database schema while I analyze the API structure"
-- For complex refactors: One agent identifies changes, another implements them
+All endpoints return real data or appropriate error messages:
 
-Say: "I'll spawn agents to tackle different aspects of this problem" whenever a task has multiple independent parts.
+```typescript
+GET /api/representatives?zip=48221           # List by ZIP
+GET /api/representative/[bioguideId]        # Member details
+GET /api/representative/[bioguideId]/votes  # Voting records
+GET /api/representative/[bioguideId]/bills  # Sponsored bills
+GET /api/representative/[bioguideId]/finance # FEC data
+GET /api/representative/[bioguideId]/news   # GDELT news
+GET /api/committee/[committeeId]            # Committee info
+GET /api/bill/[billId]                      # Bill details
+GET /api/districts/[districtId]             # District data
+GET /api/search                             # Advanced search
+```
 
-### Reality Checkpoints
+## 🔧 Common Tasks
 
-**Stop and validate** at these moments:
+### Adding a New API Endpoint
 
-- After implementing a complete feature
-- Before starting a new major component
-- When something feels wrong
-- Before declaring "done"
-- **WHEN HOOKS FAIL WITH ERRORS** ❌
+1. Create route in `src/app/api/`
+2. Add TypeScript types in `src/types/`
+3. Implement with real data source
+4. Add error handling and caching
+5. Write tests in `tests/`
 
-Run: `make fmt && make test && make lint`
+### Updating Representative Data
 
-> Why: You can lose track of what's actually working. These checkpoints prevent cascading failures.
+1. Check `src/lib/congress-legislators.ts`
+2. Verify Congress.gov API integration
+3. Update TypeScript interfaces
+4. Test with real bioguide IDs
 
-### 🚨 CRITICAL: Hook Failures Are BLOCKING
+### Fixing Type Errors
 
-**When hooks report ANY issues (exit code 2), you MUST:**
+1. Check `src/types/` for schema
+2. Use optional chaining (`?.`)
+3. Add null checks
+4. Run `npm run type-check`
 
-1. **STOP IMMEDIATELY** - Do not continue with other tasks
-2. **FIX ALL ISSUES** - Address every ❌ issue until everything is ✅ GREEN
-3. **VERIFY THE FIX** - Re-run the failed command to confirm it's fixed
-4. **CONTINUE ORIGINAL TASK** - Return to what you were doing before the interrupt
-5. **NEVER IGNORE** - There are NO warnings, only requirements
-
-This includes:
-
-- Formatting issues (gofmt, black, prettier, etc.)
-- Linting violations (golangci-lint, eslint, etc.)
-- Forbidden patterns (time.Sleep, panic(), interface{})
-- ALL other checks
-
-Your code must be 100% clean. No exceptions.
-
-**Recovery Protocol:**
-
-- When interrupted by a hook failure, maintain awareness of your original task
-- After fixing all issues and verifying the fix, continue where you left off
-- Use the todo list to track both the fix and your original task
-
-## Quick Reference
-
-### Brand Colors
+## 🎨 UI Guidelines
 
 ```css
---civiq-red: #e11d07; /* Logo circle, errors */
---civiq-green: #0a9338; /* Logo rectangle, success */
+/* Brand Colors */
+--civiq-red: #e11d07; /* Errors, logo */
+--civiq-green: #0a9338; /* Success, logo */
 --civiq-blue: #3ea2d4; /* Links, accents */
 ```
 
-### Key Files
-
-- `src/app/page.tsx` - Landing page (clean design)
-- `src/app/representatives/page.tsx` - Representatives list
-- `src/app/representative/[bioguideId]/page.tsx` - Enhanced profile pages
-- `src/lib/congress-legislators.ts` - Enhanced representative data service
-- `src/lib/api/` - API client functions
-- `src/types/representative.ts` - Enhanced TypeScript definitions
-- `src/components/BillSummary.tsx` - AI-powered bill summaries
-
-### API Endpoints
-
-```
-GET /api/representatives?zip=48221             # Enhanced with congress-legislators
-GET /api/representative/[bioguideId]           # Enhanced profiles with social media
-GET /api/representative/[bioguideId]/votes     # Unified voting records (House + Senate)
-GET /api/representative/[bioguideId]/bills     # Real bills with categorization
-GET /api/representative/[bioguideId]/finance   # Real FEC data
-GET /api/representative/[bioguideId]/news      # GDELT V2 DOC API with smart search terms & deduplication
-GET /api/representative/[bioguideId]/party-alignment # Real party voting analysis
-POST /api/representative/[bioguideId]/batch    # Batch API for multiple endpoints
-GET /api/committee/[committeeId]               # Committee details with leadership and members
-GET /api/bill/[billId]                         # Individual bill details and summaries
-GET /api/districts/[districtId]                # Districts with real Census data
-GET /api/district-map?zip=48221                # Interactive maps with GeoJSON
-GET /api/search                                # Advanced representative search
-GET /api/health                                # Service health monitoring
-GET /api/senate-votes/[voteNumber]             # Senate.gov XML proxy for CORS handling
-```
-
-### Development Commands
-
-```bash
-npm run dev      # Start development server
-npm run build    # Production build
-npm run lint     # Run linter
-npm test         # Run tests
-npm run security:audit  # Run security audit
-
-# ZIP Code Integration Pipeline (Phases 1-3)
-npx tsx scripts/validate-119th-congress-data.ts  # Phase 1: Validate ZIP code data
-npm run process-zip-districts  # Phase 2: Process ZIP to district data
-npm run test-phase3-integration  # Phase 3: Test integration
-
-# Congressional District Boundaries (REAL Census Data)
-npm run process-real-census-districts  # Download & process all Census TIGER/Line shapefiles
-npm run test-district-accuracy  # Validate all 435 districts with real boundaries
-
-# Additional utilities
-npm run process-census   # Process census data
-npm run validate-mappings  # Validate mappings
-```
-
-### Critical Rules
-
-1. ONLY use approved APIs (Congress-Legislators, Census, Congress, FEC, OpenStates, GDELT)
-2. NEVER use Google Civic or ProPublica APIs
-3. Keep the clean, minimalist design
-4. TypeScript for all new code with null safety
-5. Cache API responses with intelligent TTL
-6. Always implement null-safe patterns (use optional chaining)
-
-### Current Phase: MVP PRODUCTION READY (Phase 6 Complete + Full Verification - Jul 2025)
-
-- ✅ Federal representatives with enhanced congress-legislators data
-- ✅ ZIP code lookup with real Census API
-- ✅ Enhanced profiles with social media and biographical data
-- ✅ **Real voting records from Congress.gov with bill-based extraction and roll call parsing (Enhanced Jul 2025)**
-- ✅ **Campaign finance with real FEC data including PAC contributions and complete source breakdown (Enhanced Jul 2025)**
-- ✅ **GDELT news integration with advanced story clustering and 10 political themes (Enhanced Jul 2025) - FIXED & VERIFIED Aug 2025**
-- ✅ **Multi-source photo pipeline with 99% reliability and 6-source validation (Enhanced Jul 2025)**
-- ✅ AI-powered bill summarization
-- ✅ **Real party line voting analysis with peer comparisons**
-- ✅ **Interactive district maps with live GeoJSON boundaries**
-- ✅ **Live Census ACS demographics for all districts**
-- ✅ **Batch API system reducing round-trips by 80%**
-- ✅ **Advanced search with comprehensive filtering**
-- ✅ **Legislative partnerships and collaboration tracking**
-- ✅ Comprehensive null-safe error handling
-- ✅ Production-ready PWA features
-- ✅ **119th Congress ZIP Code Data Validation (Phase 1 Complete - Jul 2025)**
-- ✅ **Trading Card Party Data Fix (Jul 2025)** - Removed hardcoded Republican assignments
-- ✅ **Representatives Page Loading Fix (Jul 2025)** - Fixed API endpoint routing
-- ✅ **Enhanced Debugging & Monitoring (Jul 2025)** - Comprehensive logging system
-- ✅ **🎉 MVP VERIFICATION COMPLETE (Jan 21, 2025)** - All federal functionality tested and production-ready
-- ✅ **District Map API Fix (Jan 21, 2025)** - Fixed geocoding with intelligent fallbacks and real boundaries
-- ✅ **Complete Error Handling (Jan 21, 2025)** - Enhanced TypeScript safety and null-checking across all systems
-- ✅ **🏦 Enhanced FEC Campaign Finance System (Jan 25, 2025)** - Industry categorization, bundled contributions, and independent expenditures tracking
-- ✅ **🚀 Comprehensive Performance Optimization (Jan 26, 2025)** - Complete performance overhaul with 70% improvement in rendering, memory leak fixes, virtual scrolling, modular D3 imports, SWR caching, and Next.js image optimization
-- ✅ **🏛️ Interactive Committee Profile Pages (Jan 28, 2025)** - Full committee navigation system with clickable committee assignments, comprehensive committee profiles showing leadership, members, subcommittees, and jurisdiction for 119th Congress
-- ✅ **🗳️ Complete Senate Voting Integration (Aug 7, 2025)** - Full Senate roll call vote data via Senate.gov XML with unified House+Senate voting system, CORS proxy, real-time parsing, and 100-senator coverage
-- ✅ **🎯 CRITICAL: Complete Mock Data Elimination (Jul 30, 2025)** - Replaced ALL federal mock data with real Congress.gov/congress-legislators data across representatives, voting records, committees, and comparisons. Added clear labeling for sample fallback content.
-- ✅ **📰 GDELT News Integration Fix (Aug 1, 2025)** - Fixed GDELT V2 DOC API integration for live news feeds on member profiles. Updated search strategy for better article discovery, fixed TypeScript safety issues, and verified working News tabs showing real articles from legitimate sources.
-- ✅ **🗺️ REAL Congressional District Boundaries (Aug 1, 2025)** - Implemented complete Census TIGER/Line shapefile processing for all 435 congressional districts + territories. Generated PMTiles (64MB) and GeoJSON (306MB) from authentic Census data. Updated MapLibre GL JS components to display actual district boundaries. NO MOCK DATA - all boundaries sourced from U.S. Census Bureau TIGER/Line Shapefiles 2024 (119th Congress).
-- ✅ **🛡️ ZERO-TRUST SECURITY REMEDIATION (Aug 10, 2025)** - Complete elimination of all mock data generation to ensure democratic integrity. Analytics suite quarantined (501 responses), Math.random() violations eliminated, state legislature fake data removed. Platform certified secure for production with 100% authentic government data or honest "unavailable" messaging.
-- ❌ State/local (Phase 2+)
-
-### Phase 3 Complete: Integration with Existing System
-
-- ✅ **Comprehensive Integration** - 39,363 ZIP codes seamlessly integrated with existing CIV.IQ system
-- ✅ **Sub-millisecond performance** - 0.000ms average response time with 100% hit rate
-- ✅ **100% backward compatibility** - All existing APIs preserved with zero breaking changes
-- ✅ **Multi-district ZIP support** - 6,569 complex ZIPs with primary district assignment
-- ✅ **Real-time monitoring** - Performance metrics and coverage statistics tracking
-- ✅ **API call reduction** - 90% fewer Census API calls with comprehensive local mapping
-- ✅ **Dynamic proxy mapping** - Intelligent ZIP_TO_DISTRICT_MAP with 146x coverage increase
-- ✅ **Perfect integration** - 9/9 integration tests passed with TypeScript compilation verified
+- Clean, minimalist design
+- Mobile-first responsive
+- Accessibility (WCAG 2.1 AA)
+- Loading states for all async operations
+- Error boundaries for fault tolerance
 
-### Phase 2 Complete: Data Processing Pipeline
+## 🚨 Troubleshooting
 
-- ✅ **CSV processing** - 46,620 rows processed in 169ms with zero errors
-- ✅ **District normalization** - At-large districts (98 → 00) and format standardization
-- ✅ **Multi-district handling** - 6,569 multi-district ZIPs with primary assignment logic
-- ✅ **TypeScript generation** - Complete mapping file with utility functions and type safety
-- ✅ **Performance optimized** - O(1) lookup structure with comprehensive error handling
-- ✅ **Quality assurance** - 100% data validation with comprehensive reporting pipeline
+| Issue                          | Solution                                     |
+| ------------------------------ | -------------------------------------------- |
+| "Cannot find module"           | Run `npm ci`                                 |
+| "Type 'any' is not assignable" | Add proper types in `src/types/`             |
+| "Test timeout"                 | Increase timeout in `jest.config.js`         |
+| "Build fails"                  | Clear cache: `rm -rf .next && npm run build` |
+| "API returns mock data"        | Check `.env.local` for API keys              |
 
-### Phase 1 Complete: 119th Congress ZIP Code Integration
+## 📊 Current Status
 
-- ✅ **OpenSourceActivismTech data validated** - 39,363 ZIP codes with 119th Congress districts
-- ✅ **Data quality verified** - 100% clean data, zero missing fields
-- ✅ **Complete US coverage** - All 50 states + territories (DC, GU, PR, VI)
-- ✅ **Multi-district ZIP support** - Handles ZIP codes spanning multiple districts
-- ✅ **Validation pipeline** - Automated data validation and quality assurance
-- ✅ **Performance ready** - 90% API call reduction, <10ms lookup times projected
+### ✅ Production Ready
 
-### Ready for Phase 4: Edge Case Handling & UI Updates
+- Federal representatives with Congress.gov data
+- ZIP code lookup (39,363 ZIPs mapped)
+- Campaign finance (FEC integration)
+- Voting records (House + Senate)
+- GDELT news integration
+- Interactive district maps
+- Committee profiles
+- Bill tracking
 
-- ⏳ **Multi-district ZIP UI strategy** - Design UI for handling multiple districts
-- ⏳ **Enhanced tooltips and warnings** - User-friendly edge case messaging
-- ⏳ **Comprehensive state testing** - All 50 states + territories validation
-- ⏳ **Unmapped ZIP logging** - Tracking and analytics for missing ZIPs
+### 🚧 In Development
 
-### Environment Variables
+- State legislature integration
+- Local government officials
+- Enhanced analytics
 
-```env
-CONGRESS_API_KEY=
-FEC_API_KEY=
-CENSUS_API_KEY=
-```
+## 🔐 Security Requirements
 
-### Design Principles
+- **NO Math.random()** for data generation
+- **NO mock legislator generation**
+- **NO fake bills or votes**
+- Empty arrays when data unavailable
+- Clear "Data unavailable" messaging
+- All user input sanitized
+- API keys in environment variables only
 
-- Clean, minimalist interface
-- Data clarity over decoration
-- Fast, responsive performance
-- Accessible to all users
-- Mobile-first approach
+## 📝 Session Management
 
-### Git Workflow
+At start of each session:
 
-1. Feature branch from `main`
-2. Clear commit messages (feat/fix/docs)
-3. Test before pushing
-4. PR with description
+1. Check current branch: `git branch`
+2. Pull latest: `git pull origin main`
+3. Verify environment: `npm run validate:all`
+4. Note current focus in this section
 
-## Working Memory Management
+**Current Focus**: [Update this with active task]
 
-### When context gets long:
+## 🆘 When Stuck
 
-- Re-read this CLAUDE.md file
-- Summarize progress in a PROGRESS.md file
-- Document current state before major changes
+1. **Stop** - Don't create complex workarounds
+2. **Research** - Re-read relevant code sections
+3. **Simplify** - The simple solution is usually correct
+4. **Ask** - "Should I approach this as X or Y?"
+5. **Validate** - Run tests to verify assumptions
 
-### Maintain TODO.md:
+## 📚 Extended Documentation
 
-```
-## Current Task
-- [ ] What we're doing RIGHT NOW
+For detailed information, see:
 
-## Completed
-- [x] What's actually done and tested
+- `docs/API_REFERENCE.md` - Complete API documentation
+- `docs/DEVELOPMENT_GUIDE.md` - Development setup and commands
+- `docs/PHASE_TRACKER.md` - Feature completion tracking
+- `docs/ARCHITECTURE.md` - Technical architecture details
+- `README.md` - Complete project documentation
+- `ROADMAP.md` - Development phases and planning
+- `SECURITY-REMEDIATION.md` - Security audit details
 
-## Next Steps
-- [ ] What comes next
-```
+---
 
-## Go-Specific Rules
-
-### FORBIDDEN - NEVER DO THESE:
-
-- **NO interface{}** or **any{}** - use concrete types!
-- **NO time.Sleep()** or busy waits - use channels for synchronization!
-- **NO** keeping old and new code together
-- **NO** migration functions or compatibility layers
-- **NO** versioned function names (processV2, handleNew)
-- **NO** custom error struct hierarchies
-- **NO** TODOs in final code
-
-> **AUTOMATED ENFORCEMENT**: The smart-lint hook will BLOCK commits that violate these rules.  
-> When you see `❌ FORBIDDEN PATTERN`, you MUST fix it immediately!
-
-### Required Standards:
-
-- **Delete** old code when replacing it
-- **Meaningful names**: `userID` not `id`
-- **Early returns** to reduce nesting
-- **Concrete types** from constructors: `func NewServer() *Server`
-- **Simple errors**: `return fmt.Errorf("context: %w", err)`
-- **Table-driven tests** for complex logic
-- **Channels for synchronization**: Use channels to signal readiness, not sleep
-- **Select for timeouts**: Use `select` with timeout channels, not sleep loops
-
-## Implementation Standards
-
-### Our code is complete when:
-
-- ✅ All linters pass with zero issues
-- ✅ All tests pass
-- ✅ Feature works end-to-end
-- ✅ Old code is deleted
-- ✅ Godoc on all exported symbols
-
-### Testing Strategy
-
-- Complex business logic → Write tests first
-- Simple CRUD → Write tests after
-- Hot paths → Add benchmarks
-- Skip tests for main() and simple CLI parsing
-
-### Project Structure
-
-```
-cmd/        # Application entrypoints
-internal/   # Private code (the majority goes here)
-pkg/        # Public libraries (only if truly reusable)
-```
-
-## Problem-Solving Together
-
-When you're stuck or confused:
-
-1. **Stop** - Don't spiral into complex solutions
-2. **Delegate** - Consider spawning agents for parallel investigation
-3. **Ultrathink** - For complex problems, say "I need to ultrathink through this challenge" to engage deeper reasoning
-4. **Step back** - Re-read the requirements
-5. **Simplify** - The simple solution is usually correct
-6. **Ask** - "I see two approaches: [A] vs [B]. Which do you prefer?"
-
-My insights on better approaches are valued - please ask for them!
-
-## Performance & Security
-
-### **Measure First**:
-
-- No premature optimization
-- Benchmark before claiming something is faster
-- Use pprof for real bottlenecks
-
-### **Security Always**:
-
-- Validate all inputs
-- Use crypto/rand for randomness
-- Prepared statements for SQL (never concatenate!)
-
-## Communication Protocol
-
-### Progress Updates:
-
-```
-✓ Implemented authentication (all tests passing)
-✓ Added rate limiting
-✗ Found issue with token expiration - investigating
-```
-
-### Suggesting Improvements:
-
-"The current approach works, but I notice [observation].
-Would you like me to [specific improvement]?"
-
-## Working Together
-
-- This is always a feature branch - no backwards compatibility needed
-- When in doubt, we choose clarity over cleverness
-- **REMINDER**: If this file hasn't been referenced in 30+ minutes, RE-READ IT!
-
-Avoid complex abstractions or "clever" code. The simple, obvious solution is probably better, and my guidance helps you stay focused on what matters.
-
-## If Confused
-
-- Check `README.md` for full documentation
-- Run `pwd` to verify location
-- Check `git status` for current branch
-- Review mockups in project root
-
-Remember: This is a civic utility, not a commercial product. Keep it clean, fast, and focused on serving citizens.
+**Remember**: This is a civic utility serving citizens with real government data.
+Keep it clean, fast, transparent, and always use authentic sources.

@@ -94,7 +94,7 @@ function categorizeBill(title: string): Vote['category'] {
 }
 
 // Helper function to determine if a vote is a key vote
-function isKeyVote(title: string): boolean {
+function _isKeyVote(title: string): boolean {
   if (!title) return false;
   const lowerTitle = title.toLowerCase();
 
@@ -146,7 +146,7 @@ async function getMemberVoteFromRollCall(
 }
 
 // Function to get Senate voting records - no sample data as per policy
-async function getSenateVotingRecords(
+async function _getSenateVotingRecords(
   bioguideId: string,
   memberName: string,
   limit: number
@@ -168,7 +168,7 @@ async function getEnhancedVotingRecords(
   bioguideId: string,
   chamber: string,
   limit: number,
-  memberName?: string
+  _memberName?: string
 ): Promise<Vote[]> {
   return withCache(
     `house-roll-call-votes-${bioguideId}-${chamber}-${limit}`,
@@ -179,98 +179,25 @@ async function getEnhancedVotingRecords(
         limit,
       });
 
-      // Use the new House Roll Call Votes API for House members (May 2025 Congress.gov API)
+      // Note: The House Roll Call API endpoint referenced in documentation does not actually exist
+      // Congress.gov API does not currently provide a rollCall endpoint for House votes
+      // Return empty array per no-mock-data policy
       if (chamber === 'House') {
-        const { congressRollCallAPI } = await import(
-          '@/features/representatives/services/congress-rollcall-api'
-        );
-
-        try {
-          const votingHistory = await congressRollCallAPI.getMemberVotingHistory(
-            bioguideId,
-            119, // 119th Congress
-            1, // Session 1
-            limit
-          );
-
-          if (votingHistory && votingHistory.length > 0) {
-            logger.info('House roll call voting data retrieved with individual positions', {
-              bioguideId,
-              votesFound: votingHistory.length,
-              source: 'congress-rollcall-api',
-            });
-
-            // Transform the Congress.gov roll call data to match our Vote interface
-            const transformedVotes: Vote[] = votingHistory.map(vote => {
-              return {
-                voteId: vote.voteId,
-                bill: {
-                  number: vote.bill
-                    ? `${vote.bill.type.toUpperCase()}. ${vote.bill.number}`
-                    : `Roll Call ${vote.rollCallNumber}`,
-                  title: vote.bill?.title || vote.question,
-                  congress: vote.bill?.congress.toString() || '119',
-                  type: vote.bill?.type || 'rollcall',
-                  url: vote.bill?.url,
-                },
-                question: vote.question,
-                result: vote.result,
-                date: vote.date,
-                // REAL INDIVIDUAL VOTING POSITION from Congress.gov API
-                position: vote.position,
-                chamber: chamber as 'House' | 'Senate',
-                rollNumber: vote.rollCallNumber,
-                isKeyVote: isKeyVote(vote.bill?.title || vote.question),
-                category: categorizeBill(vote.bill?.title || vote.question),
-                metadata: {
-                  sourceUrl: `https://api.congress.gov/v3/house-roll-call-vote/119/1/${vote.rollCallNumber}`,
-                  lastUpdated: new Date().toISOString(),
-                  confidence: 'high',
-                  note: 'Real individual voting position from Congress.gov House Roll Call Votes API (May 2025)',
-                },
-              };
-            });
-
-            return transformedVotes;
-          }
-        } catch (error) {
-          logger.error(
-            'Failed to fetch House roll call votes from Congress.gov API',
-            error as Error,
-            {
-              bioguideId,
-            }
-          );
-        }
-      } else {
-        // Senate members: Try to fetch voting records from Senate.gov
-        logger.info('Attempting to fetch Senate voting records', {
+        logger.info('House roll call API not available in Congress.gov', {
           bioguideId,
           chamber,
-          note: 'Using Senate.gov voting records as fallback',
+          reason: 'Endpoint /v3/house/rollCall does not exist in current API',
+          source: 'congress-rollcall-api',
         });
-
-        try {
-          const senateVotes = await getSenateVotingRecords(
-            bioguideId,
-            memberName || 'Unknown',
-            limit
-          );
-          if (senateVotes && senateVotes.length > 0) {
-            logger.info('Senate voting data successfully retrieved', {
-              bioguideId,
-              votesFound: senateVotes.length,
-              source: 'senate.gov',
-            });
-
-            return senateVotes;
-          }
-        } catch (senateError) {
-          logger.warn('Senate voting data fetch failed', {
-            bioguideId,
-            error: (senateError as Error).message,
-          });
-        }
+        return [];
+      } else {
+        // Senate members: Return empty array for now as Senate API also needs development
+        logger.info('Senate voting records not implemented', {
+          bioguideId,
+          chamber,
+          reason: 'Senate voting API integration pending',
+        });
+        return [];
       }
 
       // Return empty array if no data found

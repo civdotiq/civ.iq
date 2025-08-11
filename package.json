@@ -32,6 +32,7 @@
     "test-district-accuracy": "node scripts/test-district-accuracy.mjs",
     "migrate:119th": "npx tsx src/scripts/migrate-119th.ts",
     "validate:data": "npx tsx src/scripts/validate-data.ts",
+    "validate:all": "node scripts/validation/validate-all.js",
     "security:audit": "npm audit --audit-level=moderate",
     "security:full": "npm run security:audit",
     "preinstall": "npx audit-ci --moderate",

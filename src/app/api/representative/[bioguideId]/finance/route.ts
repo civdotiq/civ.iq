@@ -561,9 +561,11 @@ async function getFinancialSummary(candidateId: string): Promise<FinancialSummar
   );
 }
 
-async function getContributions(candidateId: string, limit = 200): Promise<ContributionData[]> {
+async function getContributions(candidateId: string, limit = 100): Promise<ContributionData[]> {
+  // FEC API has a maximum per_page of 100
+  const safeLimit = Math.min(limit, 100);
   const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
-  const cacheKey = `fec-contributions-${candidateId}-${limit}-${new Date().toISOString().split('T')[0]}`; // Daily cache
+  const cacheKey = `fec-contributions-${candidateId}-${safeLimit}-${new Date().toISOString().split('T')[0]}`; // Daily cache
 
   // Validate candidate ID format
   const normalizedId = FECUtils.normalizeCandidateId(candidateId);
@@ -585,7 +587,7 @@ async function getContributions(candidateId: string, limit = 200): Promise<Contr
         logger.info('Fetching contributions from FEC', { candidateId, currentCycle });
 
         const response = await fetch(
-          `https://api.open.fec.gov/v1/schedules/schedule_a/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&two_year_transaction_period=${currentCycle}&sort=-contribution_receipt_date&per_page=${limit}`,
+          `https://api.open.fec.gov/v1/schedules/schedule_a/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&two_year_transaction_period=${currentCycle}&sort=-contribution_receipt_date&per_page=${safeLimit}`,
           {
             headers: {
               'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
@@ -1042,7 +1044,7 @@ export async function GET(
           independentExpenditures,
         ] = await Promise.all([
           getFinancialSummary(fecCandidate.candidate_id),
-          getContributions(fecCandidate.candidate_id, 500), // Get more for analysis
+          getContributions(fecCandidate.candidate_id, 100), // FEC API max per_page is 100
           getExpenditures(fecCandidate.candidate_id),
           getPACContributions(fecCandidate.candidate_id),
           getIndependentExpenditures(fecCandidate.candidate_id),

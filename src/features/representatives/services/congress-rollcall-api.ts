@@ -78,7 +78,8 @@ export class CongressRollCallAPI {
     session: number = 1,
     limit: number = 20
   ): Promise<HouseRollCallListResponse> {
-    const url = `${this.baseUrl}/house-roll-call-vote/${congress}/${session}`;
+    // Fixed URL format based on actual Congress.gov API structure
+    const url = `${this.baseUrl}/house/rollCall/${congress}/${session}`;
     const params = new URLSearchParams({
       format: 'json',
       limit: limit.toString(),
@@ -125,7 +126,8 @@ export class CongressRollCallAPI {
     session: number,
     rollCallNumber: number
   ): Promise<HouseRollCallVoteResponse> {
-    const url = `${this.baseUrl}/house-roll-call-vote/${congress}/${session}/${rollCallNumber}`;
+    // Fixed URL format based on actual Congress.gov API structure
+    const url = `${this.baseUrl}/house/rollCall/${congress}/${session}/${rollCallNumber}`;
     const params = new URLSearchParams({
       format: 'json',
     });

@@ -166,26 +166,28 @@ export function generateOptimizedSearchTerms(
     // House Representative specific searches
     // 2. Name with state for Representatives
     if (state) {
-      searchTerms.push(`"${cleanName}" AND "${state}"`);
+      searchTerms.push(`"${cleanName}" "${state}"`);
     }
 
-    // 3. Representative title with name
-    searchTerms.push(`"Representative ${cleanName}" OR "Rep. ${cleanName}"`);
+    // 3. Representative title with name (simplified - no OR statements)
+    searchTerms.push(`"Representative ${cleanName}"`);
+    searchTerms.push(`"Rep. ${cleanName}"`);
 
-    // 4. Name with Congress/House context
-    searchTerms.push(`"${cleanName}" AND (Congress OR House)`);
+    // 4. Name with Congress context (simplified - no parentheses)
+    searchTerms.push(`"${cleanName}" Congress`);
   } else {
     // Senator specific searches
-    // 2. Senator title with name (very specific for senators)
-    searchTerms.push(`"Senator ${cleanName}" OR "Sen. ${cleanName}"`);
+    // 2. Senator title with name (simplified - no OR statements)
+    searchTerms.push(`"Senator ${cleanName}"`);
+    searchTerms.push(`"Sen. ${cleanName}"`);
 
     // 3. Name with state for Senators
     if (state) {
-      searchTerms.push(`"${cleanName}" AND "${state}"`);
+      searchTerms.push(`"${cleanName}" "${state}"`);
     }
 
     // 4. Name with Senate context
-    searchTerms.push(`"${cleanName}" AND Senate`);
+    searchTerms.push(`"${cleanName}" Senate`);
   }
 
   // Add fallback with just last name if we have a multi-word name
