@@ -131,8 +131,15 @@ export function CampaignFinanceVisualizer({
 }: CampaignFinanceVisualizerProps) {
   const [selectedCycle, setSelectedCycle] = useState<number | 'all'>('all');
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'industry' | 'donors' | 'trends' | 'contributions' | 'expenditures' | 'lobbying'
-  >('overview');
+    | 'insights'
+    | 'industry'
+    | 'donors'
+    | 'trends'
+    | 'lobbying'
+    | 'contributions'
+    | 'expenditures'
+    | 'overview'
+  >('insights');
   const [_contributorFilter, _setContributorFilter] = useState<
     'all' | 'individual' | 'pac' | 'party'
   >('all');
@@ -146,7 +153,10 @@ export function CampaignFinanceVisualizer({
   useEffect(() => {
     if (
       bioguideId &&
-      (activeTab === 'industry' || activeTab === 'donors' || activeTab === 'trends')
+      (activeTab === 'insights' ||
+        activeTab === 'industry' ||
+        activeTab === 'donors' ||
+        activeTab === 'trends')
     ) {
       setIsLoadingEnhanced(true);
 
@@ -423,33 +433,39 @@ export function CampaignFinanceVisualizer({
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6" aria-label="Tabs">
             {[
-              { id: 'overview', name: 'Overview' },
-              { id: 'industry', name: 'Industry Analysis' },
-              { id: 'donors', name: 'Donor Analysis' },
-              { id: 'trends', name: 'Fundraising Trends' },
+              { id: 'insights', name: '🎯 Enhanced Insights', featured: true },
+              { id: 'industry', name: 'Industry Analysis', featured: true },
+              { id: 'donors', name: 'Donor Analysis', featured: true },
+              { id: 'trends', name: 'Fundraising Trends', featured: true },
+              { id: 'lobbying', name: 'Corporate Lobbying', featured: true },
               { id: 'contributions', name: 'Contributions' },
               { id: 'expenditures', name: 'Expenditures' },
-              { id: 'lobbying', name: 'Corporate Lobbying' },
+              { id: 'overview', name: 'Basic Overview' },
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() =>
                   setActiveTab(
                     tab.id as
-                      | 'overview'
+                      | 'insights'
                       | 'industry'
                       | 'donors'
                       | 'trends'
+                      | 'lobbying'
                       | 'contributions'
                       | 'expenditures'
-                      | 'lobbying'
+                      | 'overview'
                   )
                 }
                 className={`${
                   activeTab === tab.id
-                    ? 'border-civiq-blue text-civiq-blue'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                    ? tab.featured
+                      ? 'border-civiq-green text-civiq-green bg-green-50'
+                      : 'border-civiq-blue text-civiq-blue'
+                    : tab.featured
+                      ? 'border-transparent text-green-700 hover:text-civiq-green hover:border-green-300 font-semibold'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm relative`}
               >
                 {tab.name}
               </button>
@@ -458,7 +474,202 @@ export function CampaignFinanceVisualizer({
         </div>
 
         <div className="p-6">
-          {/* Overview Tab */}
+          {/* Enhanced Insights Tab - The Most Important Content */}
+          {activeTab === 'insights' && (
+            <div className="space-y-8">
+              {/* Hero Section for Enhanced Insights */}
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-8 border border-green-200">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                    🎯 Enhanced Campaign Finance Insights
+                  </h2>
+                  <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                    Advanced analysis revealing funding sources, industry influence, and financial
+                    patterns that matter most to voters.
+                  </p>
+                </div>
+
+                {isLoadingEnhanced ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+                    <span className="ml-4 text-xl text-gray-600">
+                      Loading comprehensive analysis...
+                    </span>
+                  </div>
+                ) : enhancedData ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Industry Influence Preview */}
+                    <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                        🏭 Industry Influence
+                        <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                          ENHANCED
+                        </span>
+                      </h3>
+                      <IndustryBreakdown data={enhancedData} />
+                      <div className="mt-4">
+                        <button
+                          onClick={() => setActiveTab('industry')}
+                          className="text-sm text-civiq-green hover:text-green-700 font-medium"
+                        >
+                          View Full Industry Analysis →
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Donor Analysis Preview */}
+                    <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                        👥 Donor Patterns
+                        <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                          ENHANCED
+                        </span>
+                      </h3>
+                      <DonorAnalysis data={enhancedData} />
+                      <div className="mt-4">
+                        <button
+                          onClick={() => setActiveTab('donors')}
+                          className="text-sm text-civiq-blue hover:text-blue-700 font-medium"
+                        >
+                          View Full Donor Analysis →
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Funding Diversity Metrics */}
+                    <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                        📊 Funding Diversity
+                        <span className="ml-2 bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                          NEW
+                        </span>
+                      </h3>
+                      <FundraisingTrends data={enhancedData} />
+                      <div className="mt-4">
+                        <button
+                          onClick={() => setActiveTab('trends')}
+                          className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                        >
+                          View Fundraising Trends →
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Lobbying Influence Preview */}
+                    <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                        🏛️ Corporate Lobbying
+                        <span className="ml-2 bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">
+                          ENHANCED
+                        </span>
+                      </h3>
+                      {lobbyingData && lobbyingData.lobbyingData.totalRelevantSpending > 0 ? (
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-orange-600">
+                                {formatCurrency(lobbyingData.lobbyingData.totalRelevantSpending)}
+                              </div>
+                              <div className="text-sm text-gray-600">Total Lobbying</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-purple-600">
+                                {lobbyingData.lobbyingData.topCompanies.length}
+                              </div>
+                              <div className="text-sm text-gray-600">Active Companies</div>
+                            </div>
+                          </div>
+                          <div className="mt-4">
+                            <button
+                              onClick={() => setActiveTab('lobbying')}
+                              className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                            >
+                              View Full Lobbying Analysis →
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center text-gray-500 py-4">
+                          <p>No significant lobbying activity detected</p>
+                          <div className="mt-2">
+                            <button
+                              onClick={() => setActiveTab('lobbying')}
+                              className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                            >
+                              View Details →
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="text-yellow-600 mb-4">
+                      <svg
+                        className="w-16 h-16 mx-auto"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Enhanced Insights Unavailable
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                      Advanced campaign finance analysis requires FEC candidate mapping.
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Basic financial data may be available in other tabs.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Access to Basic Data */}
+              {currentCycleData && (
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Quick Financial Summary
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white rounded p-4 text-center">
+                      <div className="text-2xl font-bold text-civiq-green mb-1">
+                        {formatCurrency(currentCycleData.total_receipts)}
+                      </div>
+                      <div className="text-sm text-gray-600">Total Raised</div>
+                    </div>
+                    <div className="bg-white rounded p-4 text-center">
+                      <div className="text-2xl font-bold text-civiq-red mb-1">
+                        {formatCurrency(currentCycleData.total_disbursements)}
+                      </div>
+                      <div className="text-sm text-gray-600">Total Spent</div>
+                    </div>
+                    <div className="bg-white rounded p-4 text-center">
+                      <div className="text-2xl font-bold text-civiq-blue mb-1">
+                        {Math.round(
+                          (currentCycleData.individual_contributions /
+                            currentCycleData.total_receipts) *
+                            100
+                        )}
+                        %
+                      </div>
+                      <div className="text-sm text-gray-600">From Individuals</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Basic Overview Tab - Moved to Bottom Priority */}
           {activeTab === 'overview' && currentCycleData && (
             <div className="space-y-8">
               {/* Sources of Campaign Funding Chart */}
