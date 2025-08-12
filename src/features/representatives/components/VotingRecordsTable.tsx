@@ -9,7 +9,6 @@ import { useState, useMemo, useTransition, useCallback, CSSProperties, memo } fr
 import { VariableSizeList as List } from 'react-window';
 import Link from 'next/link';
 import useSWR from 'swr';
-import { representativeApi } from '@/lib/api/representatives';
 import { TouchPagination } from '@/shared/components/ui/ResponsiveTable';
 import { VotingRecordsSkeleton } from '@/shared/components/ui/SkeletonComponents';
 import { LoadingStateWrapper } from '@/shared/components/ui/LoadingStates';
@@ -199,10 +198,14 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
     isLoading,
   } = useSWR(
     `/api/representative/${bioguideId}/votes`,
-    async () => {
+    async (url: string) => {
       try {
-        logger.debug('VotingRecordsTable fetching votes', { bioguideId });
-        const data = await representativeApi.getVotes(bioguideId);
+        logger.debug('VotingRecordsTable fetching votes', { bioguideId, url });
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
         // Handle different response formats
         if (Array.isArray(data)) {
           return data;

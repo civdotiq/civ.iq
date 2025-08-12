@@ -6,7 +6,6 @@
  */
 
 import useSWR from 'swr';
-import { representativeApi } from '@/lib/api/representatives';
 import logger from '@/lib/logging/simple-logger';
 import type { CampaignFinanceResponse } from '@/types/api/representatives.types';
 
@@ -49,16 +48,20 @@ export function CampaignFinanceWrapper({
     isLoading,
   } = useSWR(
     `/api/representative/${bioguideId}/finance`,
-    async (): Promise<CampaignFinanceResponse['data'] | null> => {
+    async (url: string): Promise<CampaignFinanceResponse['data'] | null> => {
       try {
-        const response = (await representativeApi.getFinance(bioguideId)) as FinanceApiResponse;
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+        }
+        const data = (await response.json()) as FinanceApiResponse;
         // Handle different response formats
-        if (response && typeof response === 'object') {
+        if (data && typeof data === 'object') {
           // If response has a finance or data property, use that
-          if ('finance' in response) return response.finance as CampaignFinanceResponse['data'];
-          if ('data' in response) return response.data as CampaignFinanceResponse['data'];
+          if ('finance' in data) return data.finance as CampaignFinanceResponse['data'];
+          if ('data' in data) return data.data as CampaignFinanceResponse['data'];
           // Otherwise return the response directly
-          return response as CampaignFinanceResponse['data'];
+          return data as CampaignFinanceResponse['data'];
         }
         return null;
       } catch (error) {
@@ -146,18 +149,22 @@ export function BillsTrackerWrapper({
     isLoading,
   } = useSWR(
     `/api/representative/${bioguideId}/bills`,
-    async () => {
+    async (url: string) => {
       try {
-        const response = await representativeApi.getBills(bioguideId);
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
         // Handle different response formats
-        if (Array.isArray(response)) {
-          return response;
-        } else if (response && typeof response === 'object') {
+        if (Array.isArray(data)) {
+          return data;
+        } else if (data && typeof data === 'object') {
           // Check for common response wrapper patterns
-          if ('bills' in response) return response.bills || [];
-          if ('data' in response) return response.data || [];
-          if ('results' in response) return response.results || [];
-          if ('items' in response) return response.items || [];
+          if ('bills' in data) return data.bills || [];
+          if ('data' in data) return data.data || [];
+          if ('results' in data) return data.results || [];
+          if ('items' in data) return data.items || [];
         }
         return [];
       } catch (error) {
@@ -238,18 +245,22 @@ export function VotingRecordsWrapper({
     isLoading,
   } = useSWR(
     `/api/representative/${bioguideId}/votes`,
-    async () => {
+    async (url: string) => {
       try {
-        const response = await representativeApi.getVotes(bioguideId);
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
         // Handle different response formats
-        if (Array.isArray(response)) {
-          return response;
-        } else if (response && typeof response === 'object') {
+        if (Array.isArray(data)) {
+          return data;
+        } else if (data && typeof data === 'object') {
           // Check for common response wrapper patterns
-          if ('votes' in response) return response.votes || [];
-          if ('data' in response) return response.data || [];
-          if ('results' in response) return response.results || [];
-          if ('items' in response) return response.items || [];
+          if ('votes' in data) return data.votes || [];
+          if ('data' in data) return data.data || [];
+          if ('results' in data) return data.results || [];
+          if ('items' in data) return data.items || [];
         }
         return [];
       } catch (error) {

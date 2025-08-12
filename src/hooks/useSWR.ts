@@ -4,7 +4,7 @@
  */
 
 import useSWR, { SWRConfiguration, mutate } from 'swr';
-import { representativeApi, RepresentativeApiError } from '@/lib/api/representatives';
+import { RepresentativeApiError } from '@/lib/api/representatives';
 import logger from '@/lib/logging/simple-logger';
 import { RepresentativeProfile } from '@/types/representative';
 
@@ -37,49 +37,30 @@ const defaultConfig: SWRConfiguration = {
   },
 };
 
-// Fetcher function that uses our existing API client
+// FIXED: Direct fetch fetcher that doesn't call representativeApi (which would create circular dependency)
 const fetcher = async (url: string) => {
-  // Extract the endpoint from the URL for our API client
-  if (url.startsWith('/api/representative/')) {
-    const bioguideId = url.split('/')[3];
-    const endpoint = url.split('/').slice(4).join('/');
+  logger.info(`SWR Fetcher request: ${url}`);
 
-    switch (endpoint) {
-      case '':
-        return representativeApi.getProfile(bioguideId);
-      case 'votes':
-        return representativeApi.getVotes(bioguideId);
-      case 'bills':
-        return representativeApi.getBills(bioguideId);
-      case 'finance':
-        return representativeApi.getFinance(bioguideId);
-      case 'news':
-        return representativeApi.getNews(bioguideId);
-      case 'party-alignment':
-        return representativeApi.getPartyAlignment(bioguideId);
-      case 'committees':
-        return representativeApi.getCommittees(bioguideId);
-      case 'leadership':
-        return representativeApi.getLeadership(bioguideId);
-      case 'district':
-        return representativeApi.getDistrict(bioguideId);
-      default:
-        throw new Error(`Unknown endpoint: ${endpoint}`);
-    }
+  // Use direct fetch for SWR - no API client to avoid circular dependency
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    const error = new RepresentativeApiError(
+      `SWR fetch failed: ${response.status} ${response.statusText}`,
+      response.status,
+      url
+    );
+    throw error;
   }
 
-  if (url.startsWith('/api/representatives')) {
-    const urlObj = new URL(url, 'http://localhost');
-    const searchParams = Object.fromEntries(urlObj.searchParams.entries());
+  const data = await response.json();
+  logger.info('SWR Success:', {
+    url,
+    hasData: !!data,
+    dataKeys: data ? Object.keys(data).slice(0, 5) : [],
+  });
 
-    if (searchParams.zip) {
-      return representativeApi.getByZip(searchParams.zip);
-    } else {
-      return representativeApi.search(searchParams);
-    }
-  }
-
-  throw new Error(`Unsupported URL: ${url}`);
+  return data;
 };
 
 // Custom hooks for different data types with optimized caching strategies
