@@ -161,6 +161,7 @@ export function BillsTrackerWrapper({
           return data;
         } else if (data && typeof data === 'object') {
           // Check for common response wrapper patterns
+          if ('sponsoredLegislation' in data) return data.sponsoredLegislation || [];
           if ('bills' in data) return data.bills || [];
           if ('data' in data) return data.data || [];
           if ('results' in data) return data.results || [];

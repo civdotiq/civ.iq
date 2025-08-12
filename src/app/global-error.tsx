@@ -6,7 +6,6 @@
  */
 
 import { useEffect } from 'react';
-import { logger } from '@/lib/logging/logger-client';
 
 export default function GlobalError({
   error,
@@ -16,10 +15,12 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log global error details for debugging
-    logger.error('Global Error:', error, {
+    // Use console.error directly to avoid circular dependencies with logger
+    console.error('Global Error:', {
+      message: error.message,
       digest: error.digest,
       component: 'app/global-error.tsx',
+      stack: error.stack,
     });
   }, [error]);
 

@@ -34,9 +34,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Enhanced webpack configuration for code splitting and optimization
+  // Simplified webpack configuration for better development experience
   webpack: (config, { isServer, dev }) => {
-    // Handle server-only dependencies and Leaflet on the client side only
+    // Handle server-only dependencies on client side
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -45,7 +45,7 @@ const nextConfig: NextConfig = {
         tls: false,
       };
 
-      // Exclude server-only dependencies from client bundle for better performance
+      // Exclude server-only dependencies from client bundle
       config.resolve.alias = {
         ...config.resolve.alias,
         '@opentelemetry/api': false,
@@ -56,109 +56,29 @@ const nextConfig: NextConfig = {
         ioredis: false,
         redis: false,
         winston: false,
-        'fast-xml-parser': false,
       };
     }
 
-    // Enhanced code splitting and optimization
+    // Only apply complex splitting in production
     if (!dev) {
-      config.optimization.minimize = true;
-      config.optimization.usedExports = true;
-      config.optimization.sideEffects = false;
-
-      // Improved chunk splitting strategy
+      // Let Next.js handle default optimization for production
       config.optimization.splitChunks = {
         chunks: 'all',
-        minSize: 20000,
-        maxSize: 244000,
         cacheGroups: {
-          // Vendor libraries
           vendor: {
             test: /[\\/]node_modules[\\/]/,
             name: 'vendors',
-            priority: 10,
-            reuseExistingChunk: true,
             chunks: 'all',
-          },
-          // D3 and visualization libraries
-          d3: {
-            test: /[\\/]node_modules[\\/](d3|@types\/d3)[\\/]/,
-            name: 'd3-vendor',
-            priority: 15,
-            reuseExistingChunk: true,
-            chunks: 'all',
-          },
-          // Leaflet and mapping libraries
-          leaflet: {
-            test: /[\\/]node_modules[\\/](leaflet|react-leaflet)[\\/]/,
-            name: 'leaflet-vendor',
-            priority: 15,
-            reuseExistingChunk: true,
-            chunks: 'all',
-          },
-          // Chart libraries
-          charts: {
-            test: /[\\/]node_modules[\\/](recharts|react-window)[\\/]/,
-            name: 'charts-vendor',
-            priority: 15,
-            reuseExistingChunk: true,
-            chunks: 'all',
-          },
-          // Server-only dependencies (exclude from client bundle)
-          serverOnly: {
-            test: /[\\/]node_modules[\\/](@opentelemetry|@redis|redis|ioredis|winston)[\\/]/,
-            name: false, // Don't create a chunk for server-only deps
-            chunks: () => false, // Exclude from client bundle
-          },
-          // React ecosystem
-          react: {
-            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-            name: 'react-vendor',
-            priority: 20,
-            reuseExistingChunk: true,
-            chunks: 'all',
-          },
-          // Common utilities
-          utils: {
-            test: /[\\/]node_modules[\\/](clsx|tailwind-merge|lucide-react)[\\/]/,
-            name: 'utils-vendor',
-            priority: 12,
-            reuseExistingChunk: true,
-            chunks: 'all',
-          },
-          // Default group for remaining modules
-          default: {
-            minChunks: 2,
-            priority: -10,
-            reuseExistingChunk: true,
           },
         },
       };
-
-      // Enhanced minification already handled by Next.js built-in optimization
-      // Console statements will be removed automatically in production builds
     }
-
-    // Optimize module resolution - handled by Next.js internally
-    // React deduplication is managed by the framework
 
     return config;
   },
-  // Enable experimental features for better optimization
+  // Simplified experimental features
   experimental: {
-    optimizePackageImports: [
-      'leaflet',
-      'react-leaflet',
-      'd3',
-      'recharts',
-      'lucide-react',
-      'clsx',
-      'tailwind-merge',
-      'swr',
-      'react-window',
-    ],
-    // Tree shaking optimization for unused code
-    optimizeCss: true,
+    optimizePackageImports: ['lucide-react', 'clsx', 'tailwind-merge'],
   },
   async headers() {
     // Define secure CORS origins based on environment

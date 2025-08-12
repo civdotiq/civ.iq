@@ -284,18 +284,17 @@ export function CampaignFinanceVisualizer({
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-200">
-                            {lobbyingData.lobbyingData.topCompanies
-                              .slice(0, 10)
-                              .map((company, index) => (
-                                <tr key={index} className="hover:bg-gray-50">
-                                  <td className="px-4 py-2 text-sm text-gray-900">
-                                    {company.name}
-                                  </td>
-                                  <td className="px-4 py-2 text-sm text-gray-900">
-                                    {formatCurrency(company.totalSpending)}
-                                  </td>
-                                </tr>
-                              ))}
+                            {lobbyingData.lobbyingData.topCompanies.slice(0, 10).map(company => (
+                              <tr
+                                key={`company-${company.name}-${company.totalSpending}`}
+                                className="hover:bg-gray-50"
+                              >
+                                <td className="px-4 py-2 text-sm text-gray-900">{company.name}</td>
+                                <td className="px-4 py-2 text-sm text-gray-900">
+                                  {formatCurrency(company.totalSpending)}
+                                </td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
                       </div>
@@ -338,8 +337,11 @@ export function CampaignFinanceVisualizer({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {financeData.recent_expenditures.slice(0, 10).map((expenditure, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
+                      {financeData.recent_expenditures.slice(0, 10).map(expenditure => (
+                        <tr
+                          key={`exp-${expenditure.disbursement_date}-${expenditure.recipient_name}-${expenditure.disbursement_amount}`}
+                          className="hover:bg-gray-50"
+                        >
                           <td className="px-4 py-2 text-sm text-gray-900">
                             {new Date(expenditure.disbursement_date).toLocaleDateString()}
                           </td>
@@ -390,8 +392,11 @@ export function CampaignFinanceVisualizer({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {financeData.recent_contributions.slice(0, 10).map((contribution, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
+                      {financeData.recent_contributions.slice(0, 10).map(contribution => (
+                        <tr
+                          key={`cont-${contribution.contributor_name}-${contribution.contribution_receipt_amount}`}
+                          className="hover:bg-gray-50"
+                        >
                           <td className="px-4 py-2 text-sm text-gray-900">
                             {new Date(contribution.contribution_receipt_date).toLocaleDateString()}
                           </td>

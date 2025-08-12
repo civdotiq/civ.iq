@@ -12,6 +12,7 @@ import { FECUtils } from '@/lib/fec-api';
 import { industryCategorizer } from '@/lib/fec/industry-categorizer';
 import { bundledContributionsAnalyzer } from '@/lib/fec/bundled-contributions';
 import { independentExpendituresAnalyzer } from '@/lib/fec/independent-expenditures';
+import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import type { ContributionsBySector } from '@/lib/fec/industry-categorizer';
 import type { BundledContributor } from '@/lib/fec/bundled-contributions';
 import type { IndependentExpenditureAnalysis } from '@/lib/fec/independent-expenditures';
@@ -914,9 +915,6 @@ export async function GET(
 
         // Try to get enhanced representative data for better FEC matching
         try {
-          const { getEnhancedRepresentative } = await import(
-            '@/features/representatives/services/congress.service'
-          );
           enhancedRep = await getEnhancedRepresentative(bioguideId);
 
           // Use FEC IDs from congress-legislators if available

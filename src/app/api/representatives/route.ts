@@ -14,6 +14,13 @@ import {
 } from '@/lib/validation/response-schemas';
 import logger from '@/lib/logging/simple-logger';
 
+// At-large states for 119th Congress (states with only 1 House district)
+const AT_LARGE_STATES_119TH = ['AK', 'DE', 'ND', 'SD', 'VT', 'WY'];
+
+function isAtLargeState(state: string): boolean {
+  return AT_LARGE_STATES_119TH.includes(state.toUpperCase());
+}
+
 // Simplified response interfaces
 interface RepresentativeResponse {
   bioguideId: string;
@@ -183,10 +190,12 @@ async function getRepresentativesByStateDistrict(
       if (rep.chamber === 'Senate' && rep.state === state) {
         return true;
       }
-      if (rep.chamber === 'House' && rep.state === state && rep.district) {
-        // Normalize district numbers for comparison
-        const repDistrict = parseInt(rep.district, 10);
-        const targetDistrict = parseInt(district, 10);
+      if (rep.chamber === 'House' && rep.state === state) {
+        if (isAtLargeState(state)) {
+          return true; // Always include for at-large states
+        }
+        const repDistrict = parseInt(rep.district || '0', 10);
+        const targetDistrict = parseInt(district || '0', 10);
         return repDistrict === targetDistrict;
       }
       return false;
@@ -390,32 +399,31 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
         });
         return true;
       }
+
       if (rep.chamber === 'House' && rep.state === districtInfo.state) {
-        // Handle cases where district might be undefined or null
-        if (!rep.district && !districtInfo.district) {
-          // Both are at-large or undefined
+        if (isAtLargeState(districtInfo.state)) {
+          logger.info(`At-large state ${districtInfo.state}: including ${rep.name}`);
           return true;
         }
-        if (!rep.district || !districtInfo.district) {
-          // One is undefined but not the other
-          return false;
-        }
 
-        // Normalize district numbers for comparison (handle '04' vs '4', and different types)
-        const repDistrictStr = String(rep.district).padStart(2, '0');
-        const targetDistrictStr = String(districtInfo.district).padStart(2, '0');
-        const matches = repDistrictStr === targetDistrictStr;
+        // Handle null/undefined/empty as "00" for both
+        const normalizeDistrict = (d: string | undefined) => {
+          if (!d || d === '' || d === '0' || d === '00') return '00';
+          return d.padStart(2, '0');
+        };
 
-        logger.debug(`Evaluating House representative`, {
+        const repNorm = normalizeDistrict(rep.district);
+        const targetNorm = normalizeDistrict(districtInfo.district);
+        const matches = repNorm === targetNorm;
+
+        logger.debug(`House representative evaluation`, {
           zipCode,
-          representativeName: rep.name,
-          state: rep.state,
+          name: rep.name,
           repDistrict: rep.district,
-          repDistrictNormalized: repDistrictStr,
           targetDistrict: districtInfo.district,
-          targetDistrictNormalized: targetDistrictStr,
           matches,
         });
+
         return matches;
       }
       return false;
@@ -425,6 +433,13 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       representativeCount: districtRepresentatives.length,
       operation: 'filterRepresentatives',
     });
+
+    if (isAtLargeState(districtInfo.state)) {
+      const houseCount = districtRepresentatives.filter(r => r.chamber === 'House').length;
+      if (houseCount === 0) {
+        logger.error(`No House rep found for at-large state ${districtInfo.state}`, { zipCode });
+      }
+    }
 
     if (districtRepresentatives.length === 0) {
       return {

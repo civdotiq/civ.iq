@@ -5,6 +5,52 @@ All notable changes to CIV.IQ will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025.08.12] - Frontend Data Loading Fixes & Performance Improvements 🔧
+
+### Fixed
+
+- **Webpack chunk loading errors**: Simplified webpack configuration in `next.config.ts` to prevent development server errors
+  - Removed complex chunk splitting rules causing issues in dev mode
+  - Fixed circular dependency in `global-error.tsx` by removing logger import
+- **Loading state stuck on "Finalizing results..."**: Fixed multi-stage loading hook in results page
+  - Added `completeLoading()` calls to all code paths in `fetchRepresentatives` function
+  - Implemented 15-second failsafe timeout to prevent infinite loading states
+- **Missing House representatives for at-large states**: Fixed filtering for single-district states
+  - Added `AT_LARGE_STATES_119TH` constant for WY, AK, DE, ND, SD, VT
+  - Updated API route to always include House members for at-large states
+- **BillsTracker useMemo crashes**: Fixed multiple React hooks with defensive null checks
+  - Added null safety for `bills` array and `bill.latestAction` properties
+  - Prevents crashes when data is undefined during component rendering
+- **Bills API showing 0 results**: Expanded congress filter from 119th only to last 3 congresses
+  - Changed filter to include 117th, 118th, and 119th congresses
+  - Nancy Pelosi bills increased from 0 to 24 after fix
+- **Campaign Finance HTTP 500 errors**: Fixed dynamic import compilation issues
+  - Converted problematic dynamic import to static import in finance route
+  - All FEC API endpoints now return HTTP 200 status
+
+### Enhanced
+
+- **At-large states support**: Comprehensive handling for states with single House representatives
+  - Improved ZIP code lookup accuracy for WY, AK, DE, ND, SD, VT
+  - Better district filtering logic in representatives API
+- **Bills data coverage**: Extended from current congress to multi-congress view
+  - Shows legislative history across recent congressional sessions
+  - Provides more comprehensive view of representative activity
+- **Error boundaries and null safety**: Improved frontend resilience
+  - Better handling of undefined data in React components
+  - Defensive programming patterns throughout bills tracking
+
+### Technical Improvements
+
+- **OODA methodology debugging**: Systematic approach to frontend data issues
+  - Observe: Identified loading state and data filtering problems
+  - Orient: Understood root causes in API routes and React components
+  - Decide: Planned targeted fixes for each issue
+  - Act: Implemented and validated solutions
+- **Multi-stage loading optimization**: Better user experience during data fetching
+  - Clear loading indicators and failsafe mechanisms
+  - Proper cleanup of loading timeouts and state management
+
 ## [2025.01.29] - Enhanced TypeScript & Testing Infrastructure 🧪
 
 ### Added

@@ -277,7 +277,7 @@ export const EnhancedNewsFeed = memo(function EnhancedNewsFeed({
                 Searching for news about {representative.name}
               </summary>
               <div className="mt-2 space-y-1">
-                {newsData.searchTerms.map((term, index) => {
+                {newsData.searchTerms.map(term => {
                   // Make search terms more readable
                   const readableTerm = term
                     .replace(/AND/g, '&')
@@ -287,7 +287,10 @@ export const EnhancedNewsFeed = memo(function EnhancedNewsFeed({
                     .replace(/\)/g, ')');
 
                   return (
-                    <div key={index} className="text-xs bg-gray-50 px-2 py-1 rounded font-mono">
+                    <div
+                      key={`search-term-${term.slice(0, 50)}`}
+                      className="text-xs bg-gray-50 px-2 py-1 rounded font-mono"
+                    >
                       {readableTerm}
                     </div>
                   );

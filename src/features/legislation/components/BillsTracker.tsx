@@ -69,7 +69,9 @@ const BillsList = ({
   const BillRow = useCallback(
     ({ index, style }: { index: number; style: CSSProperties }) => {
       const bill = bills[index];
-      const { stage, progress, label } = getProgressStage(bill.status, bill.latestAction.text);
+      if (!bill) return null;
+      const latestActionText = bill.latestAction?.text || '';
+      const { stage, progress, label } = getProgressStage(bill.status, latestActionText);
       const isSelected = selectedBill === bill.billId;
 
       return (
@@ -110,7 +112,7 @@ const BillsList = ({
                     {bill.committees &&
                       bill.committees.slice(0, 2).map((committee, idx) => (
                         <span
-                          key={idx}
+                          key={`${bill.billId}-committee-${committee}-${idx}`}
                           className="px-3 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full"
                         >
                           {committee}
@@ -119,7 +121,7 @@ const BillsList = ({
                     {bill.subjects &&
                       bill.subjects.slice(0, 3).map((subject, idx) => (
                         <span
-                          key={idx}
+                          key={`${bill.billId}-subject-${subject}-${idx}`}
                           className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
                         >
                           {subject}
@@ -166,9 +168,12 @@ const BillsList = ({
 
               {/* Latest Action */}
               <div className="text-sm text-gray-600 mb-3">
-                <span className="font-medium">Latest Action:</span> {bill.latestAction.text}
+                <span className="font-medium">Latest Action:</span>{' '}
+                {bill.latestAction?.text || 'No action recorded'}
                 <span className="text-gray-500 ml-2">
-                  ({new Date(bill.latestAction.date).toLocaleDateString()})
+                  {bill.latestAction?.date
+                    ? `(${new Date(bill.latestAction.date).toLocaleDateString()})`
+                    : ''}
                 </span>
               </div>
 
@@ -243,6 +248,7 @@ const BillsList = ({
   // Calculate item height based on whether it's expanded
   const getItemSize = (index: number) => {
     const bill = bills[index];
+    if (!bill) return 300;
     const isSelected = selectedBill === bill.billId;
     return isSelected ? 400 : 300; // Approximate heights
   };
@@ -271,34 +277,53 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
   const [showTimelineView, setShowTimelineView] = useState(false);
 
   const categories = useMemo(() => {
-    const areas = bills.map(bill => bill.policyArea).filter(Boolean) as string[];
+    if (!bills || !Array.isArray(bills)) {
+      return ['all'];
+    }
+    const areas = bills.map(bill => bill?.policyArea).filter(Boolean) as string[];
     return ['all', ...Array.from(new Set(areas))];
   }, [bills]);
 
   const statuses = useMemo(() => {
-    const statusList = bills.map(bill => {
-      const status = bill.latestAction.text;
-      if (status.toLowerCase().includes('introduced')) return 'Introduced';
-      if (status.toLowerCase().includes('committee')) return 'In Committee';
-      if (status.toLowerCase().includes('passed')) return 'Passed Chamber';
-      if (status.toLowerCase().includes('enacted') || status.toLowerCase().includes('signed'))
-        return 'Enacted';
-      return 'Other';
-    });
+    if (!bills || !Array.isArray(bills)) {
+      return ['all'];
+    }
+    const statusList = bills
+      .map(bill => {
+        // Add defensive checks for bill and latestAction
+        if (!bill || !bill.latestAction || !bill.latestAction.text) {
+          return 'Other';
+        }
+        const status = bill.latestAction.text;
+        if (status.toLowerCase().includes('introduced')) return 'Introduced';
+        if (status.toLowerCase().includes('committee')) return 'In Committee';
+        if (status.toLowerCase().includes('passed')) return 'Passed Chamber';
+        if (status.toLowerCase().includes('enacted') || status.toLowerCase().includes('signed'))
+          return 'Enacted';
+        return 'Other';
+      })
+      .filter(Boolean); // Remove any null/undefined values
     return ['all', ...Array.from(new Set(statusList))];
   }, [bills]);
 
   const filteredAndSortedBills = useMemo(() => {
+    if (!bills || !Array.isArray(bills)) {
+      return [];
+    }
     let filtered = bills;
 
     // Category filter
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(bill => bill.policyArea === selectedCategory);
+      filtered = filtered.filter(bill => bill?.policyArea === selectedCategory);
     }
 
     // Status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(bill => {
+        // Add defensive check for latestAction
+        if (!bill || !bill.latestAction || !bill.latestAction.text) {
+          return false;
+        }
         const status = bill.latestAction.text;
         if (statusFilter === 'Introduced') return status.toLowerCase().includes('introduced');
         if (statusFilter === 'In Committee') return status.toLowerCase().includes('committee');
@@ -313,7 +338,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
 
     // Sponsorship type filter
     if (sponsorshipFilter !== 'all') {
-      filtered = filtered.filter(bill => bill.sponsorshipType === sponsorshipFilter);
+      filtered = filtered.filter(bill => bill?.sponsorshipType === sponsorshipFilter);
     }
 
     // Search filter
@@ -321,20 +346,26 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         bill =>
-          bill.title.toLowerCase().includes(query) ||
-          bill.number.toLowerCase().includes(query) ||
-          (bill.policyArea && bill.policyArea.toLowerCase().includes(query))
+          bill &&
+          ((bill.title && bill.title.toLowerCase().includes(query)) ||
+            (bill.number && bill.number.toLowerCase().includes(query)) ||
+            (bill.policyArea && bill.policyArea.toLowerCase().includes(query)))
       );
     }
 
     return filtered.sort((a, b) => {
+      if (!a || !b) return 0;
       switch (sortBy) {
         case 'date':
-          return new Date(b.introducedDate).getTime() - new Date(a.introducedDate).getTime();
+          const aDate = a.introducedDate ? new Date(a.introducedDate).getTime() : 0;
+          const bDate = b.introducedDate ? new Date(b.introducedDate).getTime() : 0;
+          return bDate - aDate;
         case 'cosponsors':
           return (b.cosponsors || 0) - (a.cosponsors || 0);
         case 'status':
-          return a.status.localeCompare(b.status);
+          const aStatus = a.status || '';
+          const bStatus = b.status || '';
+          return aStatus.localeCompare(bStatus);
         default:
           return 0;
       }
@@ -402,7 +433,11 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
     const total = filteredAndSortedBills.length;
     const byStage = filteredAndSortedBills.reduce(
       (acc, bill) => {
-        const { stage } = getProgressStage(bill.status, bill.latestAction.text);
+        if (!bill || !bill.status) {
+          return acc;
+        }
+        const latestActionText = bill.latestAction?.text || '';
+        const { stage } = getProgressStage(bill.status, latestActionText);
         acc[stage] = (acc[stage] || 0) + 1;
         return acc;
       },
@@ -410,7 +445,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
     );
 
     const totalCosponsors = filteredAndSortedBills.reduce(
-      (sum, bill) => sum + (bill.cosponsors || 0),
+      (sum, bill) => sum + ((bill && bill.cosponsors) || 0),
       0
     );
     const avgCosponsors = total > 0 ? Math.round(totalCosponsors / total) : 0;
@@ -572,7 +607,8 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
 
             <div className="space-y-8">
               {filteredAndSortedBills.map(bill => {
-                const { stage, progress } = getProgressStage(bill.status, bill.latestAction.text);
+                const latestActionText = bill.latestAction?.text || '';
+                const { stage, progress } = getProgressStage(bill.status, latestActionText);
                 return (
                   <div key={bill.billId} className="relative flex items-start">
                     {/* Timeline dot */}
@@ -630,9 +666,12 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
                         </div>
 
                         <div className="text-sm text-gray-600">
-                          <span className="font-medium">Latest:</span> {bill.latestAction.text}
+                          <span className="font-medium">Latest:</span>{' '}
+                          {bill.latestAction?.text || 'No action recorded'}
                           <span className="text-gray-500 ml-2">
-                            ({new Date(bill.latestAction.date).toLocaleDateString()})
+                            {bill.latestAction?.date
+                              ? `(${new Date(bill.latestAction.date).toLocaleDateString()})`
+                              : ''}
                           </span>
                         </div>
                       </div>
@@ -660,10 +699,8 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
       {!showTimelineView && false && (
         <div className="space-y-4">
           {filteredAndSortedBills.map(bill => {
-            const { stage, progress, label } = getProgressStage(
-              bill.status,
-              bill.latestAction.text
-            );
+            const latestActionText = bill.latestAction?.text || '';
+            const { stage, progress, label } = getProgressStage(bill.status, latestActionText);
             const isSelected = selectedBill === bill.billId;
 
             return (
@@ -762,9 +799,12 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
 
                   {/* Latest Action */}
                   <div className="text-sm text-gray-600 mb-3">
-                    <span className="font-medium">Latest Action:</span> {bill.latestAction.text}
+                    <span className="font-medium">Latest Action:</span>{' '}
+                    {bill.latestAction?.text || 'No action recorded'}
                     <span className="text-gray-500 ml-2">
-                      ({new Date(bill.latestAction.date).toLocaleDateString()})
+                      {bill.latestAction?.date
+                        ? `(${new Date(bill.latestAction.date).toLocaleDateString()})`
+                        : ''}
                     </span>
                   </div>
 

@@ -169,7 +169,20 @@ At start of each session:
 3. Verify environment: `npm run validate:all`
 4. Note current focus in this section
 
-**Current Focus**: [Update this with active task]
+**Current Focus**: Recently fixed major frontend data loading issues:
+
+- ✅ BillsTracker useMemo errors causing React mounting issues
+- ✅ Bills API congress filtering (expanded from 119th to 117th-119th congresses)
+- ✅ Campaign Finance FEC data HTTP 500 errors (fixed dynamic import issues)
+- ✅ At-large states House representatives now showing (WY, AK, DE, ND, SD, VT)
+
+**Recent Fixes Applied (2025-08-12)**:
+
+- Fixed useMemo null checks in BillsTracker.tsx for defensive programming
+- Expanded bills API to show last 3 congresses instead of current only
+- Fixed at-large states filtering in representatives route
+- Resolved Campaign Finance API build issues via static imports
+- All profile page tabs now display data correctly
 
 ## 🆘 When Stuck
 

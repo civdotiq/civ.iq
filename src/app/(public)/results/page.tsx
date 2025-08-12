@@ -18,7 +18,10 @@ import { useMultiStageLoading } from '@/hooks/useSmartLoading';
 import { DistrictMap } from '@/features/districts/components/DistrictMap';
 import { InteractiveDistrictMap } from '@/features/districts/components/InteractiveDistrictMap';
 import { DataQualityIndicator, DataSourceBadge } from '@/components/ui/DataQualityIndicator';
-import { InlineQualityScore, DataTrustIndicator } from '@/shared/components/ui/DataQualityDashboard';
+import {
+  InlineQualityScore,
+  DataTrustIndicator,
+} from '@/shared/components/ui/DataQualityDashboard';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { DistrictSelector } from '@/features/districts/components/DistrictSelector';
 import { AddressRefinement } from '@/features/districts/components/AddressRefinement';
@@ -569,8 +572,14 @@ function ResultsContent() {
       const searchQuery = query || zipCode || address;
       if (!searchQuery) {
         setLoadingError(new Error('No search query provided'));
+        completeLoading(); // ADD: Complete loading when no search query
         return;
       }
+
+      // Failsafe timeout to prevent infinite loading
+      const loadingTimeout = setTimeout(() => {
+        completeLoading();
+      }, 15000); // 15 second failsafe
 
       try {
         startLoading();
@@ -589,6 +598,7 @@ function ResultsContent() {
           if (multiDistrictCheck.success && multiDistrictCheck.isMultiDistrict) {
             // Multi-district ZIP - show district selector
             setMultiDistrictData(multiDistrictCheck);
+            clearTimeout(loadingTimeout); // Clear timeout before completing
             completeLoading();
             return;
           } else if (multiDistrictCheck.success && !multiDistrictCheck.isMultiDistrict) {
@@ -648,6 +658,13 @@ function ResultsContent() {
                 });
               }
 
+              clearTimeout(loadingTimeout); // Clear timeout before completing
+              completeLoading();
+              return;
+            } else {
+              // API failed or no representatives found
+              setError(apiData.error?.message || 'No representatives found');
+              clearTimeout(loadingTimeout);
               completeLoading();
               return;
             }
@@ -710,6 +727,15 @@ function ResultsContent() {
               district: selectedDistrictOverride.district,
             });
 
+            clearTimeout(loadingTimeout); // Clear timeout before completing
+            completeLoading();
+            return;
+          } else {
+            // API failed for selected district
+            setError(
+              apiData.error?.message || 'Failed to fetch representatives for selected district'
+            );
+            clearTimeout(loadingTimeout);
             completeLoading();
             return;
           }
@@ -730,7 +756,7 @@ function ResultsContent() {
 
         setData(apiData);
 
-        if (apiData.success && apiData.representatives) {
+        if (apiData.success && apiData.representatives && apiData.representatives.length > 0) {
           setError(null);
 
           // Extract district info from first representative
@@ -747,11 +773,17 @@ function ResultsContent() {
               SearchHistory.updateSearchDisplayName(query || '', displayName);
             }
           }
+          clearTimeout(loadingTimeout); // Clear timeout before completing
+          completeLoading();
         } else {
-          // Handle API error transparently
-          setError(apiData.error?.message || 'Failed to fetch representatives');
+          // Handle API error or empty results
+          setError(apiData.error?.message || 'No representatives found for this location');
+          clearTimeout(loadingTimeout);
+          completeLoading();
         }
       } catch (err) {
+        clearTimeout(loadingTimeout); // Clear timeout first
+        completeLoading(); // Complete loading before setting error
         setLoadingError(err instanceof Error ? err : new Error('Network error occurred'));
         setData({
           success: false,
@@ -767,6 +799,9 @@ function ResultsContent() {
             cacheable: false,
           },
         });
+      } finally {
+        // Failsafe: ensure timeout is always cleared
+        clearTimeout(loadingTimeout);
       }
     },
     [

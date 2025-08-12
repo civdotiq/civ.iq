@@ -21,53 +21,69 @@ export async function GET(
       return new NextResponse('Congress.gov API key required', { status: 500 });
     }
 
-    // Use current Congress (119th - 2025-2027)
-    const congress = process.env.CURRENT_CONGRESS || '119';
+    // Use last 3 congresses (117th - 2021-2023, 118th - 2023-2025, 119th - 2025-2027)
+    const currentCongress = parseInt(process.env.CURRENT_CONGRESS || '119');
+    const congressesToFetch = [currentCongress - 2, currentCongress - 1, currentCongress]; // 117, 118, 119
 
-    const response = await fetch(
-      `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?api_key=${process.env.CONGRESS_API_KEY}&limit=100&congress=${congress}`,
-      {
-        headers: {
-          Accept: 'application/json',
-          'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
-        },
-      }
+    // Fetch bills from multiple congresses
+    const fetchPromises = congressesToFetch.map(congress =>
+      fetch(
+        `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?api_key=${process.env.CONGRESS_API_KEY}&limit=100&congress=${congress}`,
+        {
+          headers: {
+            Accept: 'application/json',
+            'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
+          },
+        }
+      )
     );
 
-    if (!response.ok) {
+    const responses = await Promise.all(fetchPromises);
+
+    // Check if any requests failed
+    const failedResponses = responses.filter(response => !response.ok);
+    if (failedResponses.length > 0) {
+      const firstFailed = failedResponses[0];
       logger.error(
         'Congress.gov sponsored legislation API failed',
-        new Error(`HTTP ${response.status}`),
+        new Error(`HTTP ${firstFailed?.status || 'unknown'}`),
         {
           bioguideId,
-          status: response.status,
+          status: firstFailed?.status || 'unknown',
+          failedCount: failedResponses.length,
         }
       );
       return new NextResponse('Failed to fetch from Congress.gov', { status: 500 });
     }
 
-    const data = await response.json();
+    // Process all responses and combine bills
+    const allBillsData = await Promise.all(responses.map(response => response.json()));
+    const allBills = allBillsData.flatMap(data => data.sponsoredLegislation || []);
 
-    // Filter for 119th Congress bills only
-    const currentCongressBills = data.sponsoredLegislation?.filter(
-      (bill: { congress?: number | string }) => bill.congress?.toString() === congress
+    // Filter for the target congresses (117th, 118th, 119th)
+    const targetCongressBills = allBills.filter((bill: { congress?: number | string }) =>
+      congressesToFetch.includes(parseInt(bill.congress?.toString() || '0'))
     );
 
     logger.info('Successfully fetched sponsored legislation from Congress.gov', {
       bioguideId,
-      congress,
-      billCount: currentCongressBills?.length || 0,
-      totalFetched: data.sponsoredLegislation?.length || 0,
+      congresses: congressesToFetch,
+      billCount: targetCongressBills?.length || 0,
+      totalFetched: allBills?.length || 0,
     });
 
     return NextResponse.json({
-      ...data,
-      sponsoredLegislation: currentCongressBills,
+      sponsoredLegislation: targetCongressBills,
       metadata: {
-        congress: parseInt(congress),
-        totalBills: currentCongressBills?.length || 0,
+        congresses: congressesToFetch,
+        totalBills: targetCongressBills?.length || 0,
         source: 'Congress.gov API',
         generatedAt: new Date().toISOString(),
+        congressLabels: {
+          117: '117th Congress (2021-2023)',
+          118: '118th Congress (2023-2025)',
+          119: '119th Congress (2025-2027)',
+        },
       },
     });
   } catch (error) {

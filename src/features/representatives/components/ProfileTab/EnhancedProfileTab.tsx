@@ -366,12 +366,15 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
 
               // Skip if no valid committee ID
               if (!routingId) {
-                console.warn('Committee missing ID:', committee);
+                // Committee missing ID - skip rendering
                 return null;
               }
 
               return (
-                <div key={idx} className="bg-gray-50 p-4 rounded-lg">
+                <div
+                  key={`committee-${committee.name}-${committee.id || idx}`}
+                  className="bg-gray-50 p-4 rounded-lg"
+                >
                   <div className="flex items-center justify-between">
                     <Link
                       href={`/committee/${routingId}`}
