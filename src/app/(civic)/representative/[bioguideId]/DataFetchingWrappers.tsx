@@ -42,30 +42,49 @@ export function CampaignFinanceWrapper({
   representative,
   CampaignFinanceVisualizer,
 }: CampaignFinanceWrapperProps) {
+  const url = `/api/representative/${bioguideId}/finance`;
+  // eslint-disable-next-line no-console
+  console.log('🔵 SWR attempting fetch for', url);
   const {
     data: rawFinanceData,
     error,
     isLoading,
   } = useSWR(
-    `/api/representative/${bioguideId}/finance`,
+    url,
     async (url: string): Promise<CampaignFinanceResponse['data'] | null> => {
       try {
+        logger.info('Finance SWR fetching', { bioguideId, url });
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
         }
         const data = (await response.json()) as FinanceApiResponse;
+        logger.info('Finance SWR raw response', {
+          bioguideId,
+          dataType: typeof data,
+          hasFinance: data && typeof data === 'object' && 'finance' in data,
+          hasData: data && typeof data === 'object' && 'data' in data,
+        });
+
         // Handle different response formats
+        let processedData: CampaignFinanceResponse['data'] | null = null;
         if (data && typeof data === 'object') {
           // If response has a finance or data property, use that
-          if ('finance' in data) return data.finance as CampaignFinanceResponse['data'];
-          if ('data' in data) return data.data as CampaignFinanceResponse['data'];
+          if ('finance' in data) processedData = data.finance as CampaignFinanceResponse['data'];
+          else if ('data' in data) processedData = data.data as CampaignFinanceResponse['data'];
           // Otherwise return the response directly
-          return data as CampaignFinanceResponse['data'];
+          else processedData = data as CampaignFinanceResponse['data'];
         }
-        return null;
+
+        logger.info('Finance SWR processed data', {
+          bioguideId,
+          hasProcessedData: !!processedData,
+          dataKeys:
+            processedData && typeof processedData === 'object' ? Object.keys(processedData) : [],
+        });
+        return processedData;
       } catch (error) {
-        logger.error('Campaign finance API error', error, { bioguideId });
+        logger.error('Finance SWR error', error, { bioguideId });
         throw new Error(
           `Failed to load campaign finance data: ${error instanceof Error ? error.message : 'Unknown error'}`
         );
@@ -81,6 +100,60 @@ export function CampaignFinanceWrapper({
 
   // Standardize finance data parsing
   const financeData = rawFinanceData && typeof rawFinanceData === 'object' ? rawFinanceData : null;
+
+  // Comprehensive data lifecycle logging
+  // eslint-disable-next-line no-console
+  console.log('📊 DATA STATE:', {
+    url,
+    isLoading,
+    hasError: !!error,
+    dataLength: Array.isArray(rawFinanceData) ? rawFinanceData.length : 'not array',
+    firstItem: Array.isArray(rawFinanceData) ? rawFinanceData[0] : rawFinanceData,
+    rawData: rawFinanceData,
+  });
+
+  // Track SWR states globally
+  if (typeof window !== 'undefined') {
+    (window as unknown as { SWR_STATES: Record<string, unknown> }).SWR_STATES =
+      (window as unknown as { SWR_STATES: Record<string, unknown> }).SWR_STATES || {};
+    (window as unknown as { SWR_STATES: Record<string, unknown> }).SWR_STATES['finance'] = {
+      loading: isLoading,
+      data: !!rawFinanceData,
+      error: !!error,
+    };
+  }
+
+  // Data structure analysis
+  // eslint-disable-next-line no-console
+  console.log('Data structure:', {
+    direct: Array.isArray(rawFinanceData) ? rawFinanceData.length : typeof rawFinanceData,
+    wrapped_data:
+      rawFinanceData && typeof rawFinanceData === 'object' && 'data' in rawFinanceData
+        ? Object.keys((rawFinanceData as { data: unknown }).data as object).length
+        : 'no data prop',
+    wrapped_items:
+      rawFinanceData && typeof rawFinanceData === 'object' && 'items' in rawFinanceData
+        ? (rawFinanceData as { items: unknown[] }).items?.length || 0
+        : 'no items prop',
+  });
+
+  // Render verification logging
+  if (financeData && Object.keys(financeData).length > 0) {
+    // eslint-disable-next-line no-console
+    console.log('✅ RENDERING finance data with', Object.keys(financeData).length, 'properties');
+  } else {
+    // eslint-disable-next-line no-console
+    console.log('❌ NOT RENDERING finance, data:', financeData);
+  }
+
+  // Force display test data if real data exists
+  if (rawFinanceData) {
+    return (
+      <div className="bg-green-500 text-white p-4 mb-4">
+        FINANCE DATA EXISTS: {JSON.stringify(rawFinanceData).slice(0, 100)}...
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -143,33 +216,46 @@ export function BillsTrackerWrapper({
   representative,
   BillsTracker,
 }: BillsTrackerWrapperProps) {
+  const url = `/api/representative/${bioguideId}/bills`;
+  // eslint-disable-next-line no-console
+  console.log('🔵 SWR attempting fetch for', url);
   const {
     data: rawBillsData,
     error,
     isLoading,
   } = useSWR(
-    `/api/representative/${bioguideId}/bills`,
+    url,
     async (url: string) => {
       try {
+        logger.info('Bills SWR fetching', { bioguideId, url });
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
         }
         const data = await response.json();
+        logger.info('Bills SWR raw response', {
+          bioguideId,
+          dataType: typeof data,
+          isArray: Array.isArray(data),
+        });
+
         // Handle different response formats
+        let processedData: unknown[] = [];
         if (Array.isArray(data)) {
-          return data;
+          processedData = data;
         } else if (data && typeof data === 'object') {
           // Check for common response wrapper patterns
-          if ('sponsoredLegislation' in data) return data.sponsoredLegislation || [];
-          if ('bills' in data) return data.bills || [];
-          if ('data' in data) return data.data || [];
-          if ('results' in data) return data.results || [];
-          if ('items' in data) return data.items || [];
+          if ('sponsoredLegislation' in data) processedData = data.sponsoredLegislation || [];
+          else if ('bills' in data) processedData = data.bills || [];
+          else if ('data' in data) processedData = data.data || [];
+          else if ('results' in data) processedData = data.results || [];
+          else if ('items' in data) processedData = data.items || [];
         }
-        return [];
+
+        logger.info('Bills SWR processed data', { bioguideId, billsCount: processedData.length });
+        return processedData;
       } catch (error) {
-        logger.error('Bills API error', error, { bioguideId });
+        logger.error('Bills SWR error', error, { bioguideId });
         throw new Error(
           `Failed to load bills data: ${error instanceof Error ? error.message : 'Unknown error'}`
         );
@@ -185,6 +271,60 @@ export function BillsTrackerWrapper({
 
   // Standardize bills data parsing
   const bills = Array.isArray(rawBillsData) ? rawBillsData : [];
+
+  // Comprehensive data lifecycle logging
+  // eslint-disable-next-line no-console
+  console.log('📊 DATA STATE:', {
+    url,
+    isLoading,
+    hasError: !!error,
+    dataLength: Array.isArray(rawBillsData) ? rawBillsData.length : 'not array',
+    firstItem: Array.isArray(rawBillsData) ? rawBillsData[0] : rawBillsData,
+    rawData: rawBillsData,
+  });
+
+  // Track SWR states globally
+  if (typeof window !== 'undefined') {
+    (window as unknown as { SWR_STATES: Record<string, unknown> }).SWR_STATES =
+      (window as unknown as { SWR_STATES: Record<string, unknown> }).SWR_STATES || {};
+    (window as unknown as { SWR_STATES: Record<string, unknown> }).SWR_STATES['bills'] = {
+      loading: isLoading,
+      data: !!rawBillsData,
+      error: !!error,
+    };
+  }
+
+  // Data structure analysis
+  // eslint-disable-next-line no-console
+  console.log('Data structure:', {
+    direct: Array.isArray(rawBillsData) ? rawBillsData.length : typeof rawBillsData,
+    wrapped_data:
+      rawBillsData && typeof rawBillsData === 'object' && 'data' in rawBillsData
+        ? Object.keys((rawBillsData as { data: unknown }).data as object).length
+        : 'no data prop',
+    wrapped_items:
+      rawBillsData && typeof rawBillsData === 'object' && 'items' in rawBillsData
+        ? (rawBillsData as { items: unknown[] }).items?.length || 0
+        : 'no items prop',
+  });
+
+  // Render verification logging
+  if (bills && bills.length > 0) {
+    // eslint-disable-next-line no-console
+    console.log('✅ RENDERING bills data with', bills.length, 'items');
+  } else {
+    // eslint-disable-next-line no-console
+    console.log('❌ NOT RENDERING bills, data:', bills);
+  }
+
+  // Force display test data if real data exists
+  if (rawBillsData) {
+    return (
+      <div className="bg-green-500 text-white p-4 mb-4">
+        BILLS DATA EXISTS: {JSON.stringify(rawBillsData).slice(0, 100)}...
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -240,71 +380,9 @@ export function VotingRecordsWrapper({
   chamber,
   VotingRecordsTable,
 }: VotingRecordsWrapperProps) {
-  const {
-    data: rawVotesData,
-    error,
-    isLoading,
-  } = useSWR(
-    `/api/representative/${bioguideId}/votes`,
-    async (url: string) => {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
-        }
-        const data = await response.json();
-        // Handle different response formats
-        if (Array.isArray(data)) {
-          return data;
-        } else if (data && typeof data === 'object') {
-          // Check for common response wrapper patterns
-          if ('votes' in data) return data.votes || [];
-          if ('data' in data) return data.data || [];
-          if ('results' in data) return data.results || [];
-          if ('items' in data) return data.items || [];
-        }
-        return [];
-      } catch (error) {
-        logger.error('Voting records API error', error, { bioguideId });
-        throw new Error(
-          `Failed to load voting records: ${error instanceof Error ? error.message : 'Unknown error'}`
-        );
-      }
-    },
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 300000, // 5 minutes
-      errorRetryCount: 3,
-      errorRetryInterval: 2000,
-    }
-  );
-
-  // Note: VotingRecordsTable component handles its own data parsing internally
-  // This wrapper just needs to ensure the API call succeeds
-  // rawVotesData is intentionally unused - VotingRecordsTable fetches data directly
-  void rawVotesData; // Explicitly mark as intentionally unused
-  if (isLoading) {
-    return (
-      <div className="animate-pulse space-y-3">
-        <div className="h-12 bg-gray-200 rounded"></div>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-16 bg-gray-100 rounded"></div>
-        ))}
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-500 mb-2">Unable to load voting records</p>
-        <p className="text-sm text-gray-400">
-          {error instanceof Error ? error.message : 'Please try again later'}
-        </p>
-      </div>
-    );
-  }
-
+  // Note: VotingRecordsTable component handles its own data fetching internally
+  // No need for duplicate SWR call here - removing to prevent cache conflicts and redundant API requests
+  // Loading states and error handling are managed by the VotingRecordsTable component itself
   return <VotingRecordsTable bioguideId={bioguideId} chamber={chamber} />;
 }
 

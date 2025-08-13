@@ -5,8 +5,9 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useState, Suspense, ComponentType } from 'react';
+import { useState, useEffect, Suspense, ComponentType } from 'react';
 import { LoadingErrorBoundary } from '@/components/common/ErrorBoundary';
+import { DebugPanel } from '@/components/debug/DebugPanel';
 import dynamic from 'next/dynamic';
 import {
   CampaignFinanceWrapper,
@@ -212,12 +213,64 @@ export function RepresentativeProfileClient({
   _CampaignFinanceVisualizer = LazyCampaignFinanceVisualizer,
   _EnhancedNewsFeed = LazyEnhancedNewsFeed,
 }: RepresentativeProfileClientProps) {
+  // eslint-disable-next-line no-console
+  console.log('🔴 CLIENT MOUNTED at', new Date().toISOString());
   const [activeTab, setActiveTab] = useState('profile');
+
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log('🟢 useEffect ran');
+    document.title = 'JS WORKING';
+
+    // Initialize global SWR states tracking
+    if (typeof window !== 'undefined') {
+      (window as unknown as { SWR_STATES: Record<string, unknown> }).SWR_STATES = {};
+    }
+  }, []);
+
+  // PHASE 2 DEBUG: Development-only data flow tracking (removed from production builds)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      const debugInfo = {
+        representative: {
+          bioguideId: representative.bioguideId,
+          name: representative.name,
+          chamber: representative.chamber,
+          hasCommittees: !!representative.committees,
+          committeesCount: representative.committees?.length || 0,
+        },
+        initialData: {
+          votes: Array.isArray(_initialData.votes) ? _initialData.votes.length : 'not array',
+          bills: Array.isArray(_initialData.bills) ? _initialData.bills.length : 'not array',
+          finance:
+            typeof _initialData.finance === 'object'
+              ? Object.keys(_initialData.finance).length
+              : 'not object',
+          news: Array.isArray(_initialData.news) ? _initialData.news.length : 'not array',
+        },
+        partialErrors: Object.keys(partialErrors).length,
+        bioguideId,
+        activeTab,
+        timestamp: new Date().toISOString(),
+      };
+
+      // Expose debug info to window for browser console access
+      if (typeof window !== 'undefined') {
+        (window as unknown as { CLIENT_DEBUG_INFO: typeof debugInfo }).CLIENT_DEBUG_INFO =
+          debugInfo;
+        // Add hydration test
+        (window as unknown as { HYDRATION_TEST: boolean }).HYDRATION_TEST = true;
+      }
+    }
+  }, [representative, _initialData, partialErrors, bioguideId, activeTab]);
 
   return (
     <>
       {/* Show partial errors if any */}
       <PartialErrorDisplay partialErrors={partialErrors} />
+
+      {/* JavaScript Test Indicator */}
+      <div className="bg-red-500 text-white p-4 mb-4 rounded">CLIENT RENDERED</div>
 
       {/* Navigation Tabs */}
       <div className="bg-white rounded-lg shadow-sm mb-6">
@@ -250,147 +303,170 @@ export function RepresentativeProfileClient({
       {/* Tab Content with Suspense boundaries for optimal loading */}
       <div className="bg-white rounded-lg shadow-sm p-6">
         {activeTab === 'profile' && (
-          <LoadingErrorBoundary>
-            <Suspense
-              fallback={
-                <div className="animate-pulse space-y-4">
-                  <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-                  <div className="h-64 bg-gray-200 rounded"></div>
-                  <div className="h-32 bg-gray-200 rounded"></div>
-                </div>
-              }
-            >
-              <EnhancedProfileTab
-                representative={representative}
-                committees={representative.committees}
-              />
-            </Suspense>
-          </LoadingErrorBoundary>
+          <>
+            {/* eslint-disable-next-line no-console */}
+            {console.log('Active tab:', activeTab, 'Rendering:', 'profile')}
+            <LoadingErrorBoundary>
+              <Suspense
+                fallback={
+                  <div className="animate-pulse space-y-4">
+                    <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+                    <div className="h-64 bg-gray-200 rounded"></div>
+                    <div className="h-32 bg-gray-200 rounded"></div>
+                  </div>
+                }
+              >
+                <EnhancedProfileTab
+                  representative={representative}
+                  committees={representative.committees}
+                />
+              </Suspense>
+            </LoadingErrorBoundary>
+          </>
         )}
 
         {activeTab === 'voting' && (
-          <LoadingErrorBoundary>
-            <div className="space-y-6">
-              {/* Voting Records Header with Timestamp */}
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Voting Records</h3>
-                <span className="text-xs text-gray-500">
-                  Last updated: {new Date().toLocaleDateString()}
-                </span>
-              </div>
+          <>
+            {/* eslint-disable-next-line no-console */}
+            {console.log('Active tab:', activeTab, 'Rendering:', 'voting')}
+            <LoadingErrorBoundary>
+              <div className="space-y-6">
+                {/* Voting Records Header with Timestamp */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">Voting Records</h3>
+                  <span className="text-xs text-gray-500">
+                    Last updated: {new Date().toLocaleDateString()}
+                  </span>
+                </div>
 
-              {/* Party Alignment Analysis */}
-              {representative.party && (
-                <LazyPartyAlignmentAnalysis
+                {/* Party Alignment Analysis */}
+                {representative.party && (
+                  <LazyPartyAlignmentAnalysis
+                    bioguideId={bioguideId}
+                    representative={{
+                      name: representative.name || 'Representative',
+                      party: representative.party,
+                      state: representative.state || 'Unknown',
+                      chamber: representative.chamber || 'Unknown',
+                    }}
+                  />
+                )}
+
+                {/* Voting records with real data fetching */}
+                <VotingRecordsWrapper
                   bioguideId={bioguideId}
-                  representative={{
-                    name: representative.name || 'Representative',
-                    party: representative.party,
-                    state: representative.state || 'Unknown',
-                    chamber: representative.chamber || 'Unknown',
-                  }}
+                  chamber={representative.chamber}
+                  VotingRecordsTable={VotingRecordsTable}
                 />
-              )}
-
-              {/* Voting records with real data fetching */}
-              <VotingRecordsWrapper
-                bioguideId={bioguideId}
-                chamber={representative.chamber}
-                VotingRecordsTable={VotingRecordsTable}
-              />
-            </div>
-          </LoadingErrorBoundary>
+              </div>
+            </LoadingErrorBoundary>
+          </>
         )}
 
         {activeTab === 'bills' && (
-          <LoadingErrorBoundary>
-            <div className="space-y-6">
-              {/* Bills Header with Timestamp */}
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Sponsored Legislation</h3>
-                <span className="text-xs text-gray-500">
-                  Last updated: {new Date().toLocaleDateString()}
-                </span>
-              </div>
+          <>
+            {/* eslint-disable-next-line no-console */}
+            {console.log('Active tab:', activeTab, 'Rendering:', 'bills')}
+            <LoadingErrorBoundary>
+              <div className="space-y-6">
+                {/* Bills Header with Timestamp */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">Sponsored Legislation</h3>
+                  <span className="text-xs text-gray-500">
+                    Last updated: {new Date().toLocaleDateString()}
+                  </span>
+                </div>
 
-              {/* Bills tracker with real data fetching */}
-              <BillsTrackerWrapper
-                bioguideId={bioguideId}
-                representative={{
-                  name: representative.name,
-                  chamber: representative.chamber,
-                }}
-                BillsTracker={
-                  LazyBillsTracker as React.ComponentType<{
-                    bills: unknown[];
-                    representative: { name: string; chamber: string };
-                  }>
-                }
-              />
-            </div>
-          </LoadingErrorBoundary>
+                {/* Bills tracker with real data fetching - now renders immediately */}
+                <BillsTrackerWrapper
+                  bioguideId={bioguideId}
+                  representative={{
+                    name: representative.name,
+                    chamber: representative.chamber,
+                  }}
+                  BillsTracker={
+                    LazyBillsTracker as React.ComponentType<{
+                      bills: unknown[];
+                      representative: { name: string; chamber: string };
+                    }>
+                  }
+                />
+              </div>
+            </LoadingErrorBoundary>
+          </>
         )}
 
         {activeTab === 'finance' && (
-          <LoadingErrorBoundary>
-            <div className="space-y-6">
-              {/* Campaign Finance Header with Timestamp */}
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Campaign Finance</h3>
-                <span className="text-xs text-gray-500">
-                  Last updated: {new Date().toLocaleDateString()}
-                </span>
-              </div>
+          <>
+            {/* eslint-disable-next-line no-console */}
+            {console.log('Active tab:', activeTab, 'Rendering:', 'finance')}
+            <LoadingErrorBoundary>
+              <div className="space-y-6">
+                {/* Campaign Finance Header with Timestamp */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">Campaign Finance</h3>
+                  <span className="text-xs text-gray-500">
+                    Last updated: {new Date().toLocaleDateString()}
+                  </span>
+                </div>
 
-              {/* Campaign Finance with real data fetching */}
-              <CampaignFinanceWrapper
-                bioguideId={bioguideId}
-                representative={{
-                  name: representative.name,
-                  party: representative.party,
-                }}
-                CampaignFinanceVisualizer={
-                  LazyCampaignFinanceVisualizer as React.ComponentType<{
-                    financeData: unknown;
-                    representative: { name: string; party: string };
-                    bioguideId: string;
-                  }>
-                }
-              />
-            </div>
-          </LoadingErrorBoundary>
+                {/* Campaign Finance with real data fetching - now renders immediately */}
+                <CampaignFinanceWrapper
+                  bioguideId={bioguideId}
+                  representative={{
+                    name: representative.name,
+                    party: representative.party,
+                  }}
+                  CampaignFinanceVisualizer={
+                    LazyCampaignFinanceVisualizer as React.ComponentType<{
+                      financeData: unknown;
+                      representative: { name: string; party: string };
+                      bioguideId: string;
+                    }>
+                  }
+                />
+              </div>
+            </LoadingErrorBoundary>
+          </>
         )}
 
         {activeTab === 'news' && (
-          <LoadingErrorBoundary>
-            <div className="space-y-6">
-              {/* News Header with Timestamp */}
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Recent News</h3>
-                <span className="text-xs text-gray-500">
-                  Last updated: {new Date().toLocaleDateString()}
-                </span>
-              </div>
+          <>
+            {/* eslint-disable-next-line no-console */}
+            {console.log('Active tab:', activeTab, 'Rendering:', 'news')}
+            <LoadingErrorBoundary>
+              <div className="space-y-6">
+                {/* News Header with Timestamp */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">Recent News</h3>
+                  <span className="text-xs text-gray-500">
+                    Last updated: {new Date().toLocaleDateString()}
+                  </span>
+                </div>
 
-              {/* News feed with real data fetching */}
-              <NewsWrapper
-                bioguideId={bioguideId}
-                representative={{
-                  name: representative.name,
-                  party: representative.party,
-                  state: representative.state,
-                }}
-                EnhancedNewsFeed={
-                  LazyEnhancedNewsFeed as React.ComponentType<{
-                    bioguideId: string;
-                    representative: { name: string; party: string; state: string };
-                  }>
-                }
-              />
-            </div>
-          </LoadingErrorBoundary>
+                {/* News feed with real data fetching */}
+                <NewsWrapper
+                  bioguideId={bioguideId}
+                  representative={{
+                    name: representative.name,
+                    party: representative.party,
+                    state: representative.state,
+                  }}
+                  EnhancedNewsFeed={
+                    LazyEnhancedNewsFeed as React.ComponentType<{
+                      bioguideId: string;
+                      representative: { name: string; party: string; state: string };
+                    }>
+                  }
+                />
+              </div>
+            </LoadingErrorBoundary>
+          </>
         )}
       </div>
+
+      {/* Phase 2 Debug Panel - Toggle with Ctrl+Shift+D */}
+      <DebugPanel />
     </>
   );
 }
