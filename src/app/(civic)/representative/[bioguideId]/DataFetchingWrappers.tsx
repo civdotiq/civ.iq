@@ -272,22 +272,28 @@ interface BillsTrackerWrapperProps {
     bills: SponsoredBill[];
     representative: { name: string; chamber: string };
   }>;
+  initialData?: unknown[]; // Server-fetched bills data
 }
 
 export function BillsTrackerWrapper({
   bioguideId,
   representative,
   BillsTracker,
+  initialData,
 }: BillsTrackerWrapperProps) {
-  const url = `/api/representative/${bioguideId}/bills`;
   // eslint-disable-next-line no-console
-  console.log('🔵 SWR attempting fetch for', url);
+  console.log('🔵 BillsWrapper - Initial data received:', initialData?.length || 0, 'bills');
+
+  const url = `/api/representative/${bioguideId}/bills`;
+  const hasInitialData = initialData && Array.isArray(initialData) && initialData.length > 0;
+
+  // Always call useSWR but conditionally disable it when we have initial data
   const {
     data: rawBillsData,
     error,
     isLoading,
   } = useSWR(
-    url,
+    hasInitialData ? null : url, // Skip SWR fetch if we have initial data
     async (url: string): Promise<SponsoredBill[]> => {
       try {
         logger.info('Bills SWR fetching', { bioguideId, url });
@@ -335,8 +341,8 @@ export function BillsTrackerWrapper({
     }
   );
 
-  // Use processed bills data directly
-  const bills = rawBillsData || [];
+  // Use initial data if available, otherwise use SWR data
+  const bills = hasInitialData ? (initialData as SponsoredBill[]) : rawBillsData || [];
 
   // Comprehensive data lifecycle logging
   // eslint-disable-next-line no-console
@@ -386,7 +392,7 @@ export function BillsTrackerWrapper({
   // Remove debug div - data should flow to component
   // Debug logging already shows data exists
 
-  if (isLoading) {
+  if (isLoading && !hasInitialData) {
     return (
       <div className="animate-pulse space-y-4">
         <div className="h-6 bg-gray-200 rounded w-1/4"></div>
@@ -400,7 +406,7 @@ export function BillsTrackerWrapper({
     );
   }
 
-  if (error) {
+  if (error && !hasInitialData) {
     return (
       <div className="text-center py-8">
         <p className="text-gray-500 mb-2">Unable to load bills data</p>

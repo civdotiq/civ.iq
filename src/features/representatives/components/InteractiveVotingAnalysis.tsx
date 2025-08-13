@@ -48,7 +48,7 @@ export function InteractiveVotingAnalysis({
   } = useSWR(`/api/representative/${bioguideId}/party-alignment`, fetcher, {
     revalidateOnFocus: false,
     revalidateOnReconnect: true,
-    dedupingInterval: 60000, // 1 minute
+    dedupingInterval: 300000, // 5 minutes - standardized across all profile components
     errorRetryCount: 2,
     errorRetryInterval: 5000,
     onError: err => {

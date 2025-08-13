@@ -268,6 +268,16 @@ const BillsList = ({
 };
 
 export function BillsTracker({ bills, representative: _representative }: BillsTrackerProps) {
+  // VERIFICATION: Add console logs to trace data flow
+  // eslint-disable-next-line no-console
+  console.log('🔍 BILLS TO RENDER:', {
+    bills: bills?.slice(0, 2),
+    billsLength: bills?.length,
+    billsType: typeof bills,
+    isArray: Array.isArray(bills),
+    firstBill: bills?.[0],
+  });
+
   const [selectedCategory, setSelectedCategory] = useState<'all' | string>('all');
   const [sortBy, setSortBy] = useState<SortByType>('date');
   const [selectedBill, setSelectedBill] = useState<string | null>(null);
@@ -275,6 +285,30 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
   const [statusFilter, setStatusFilter] = useState<'all' | string>('all');
   const [sponsorshipFilter, setSponsorshipFilter] = useState<SponsorshipFilterType>('all');
   const [showTimelineView, setShowTimelineView] = useState(false);
+
+  // PHASE 2 DEBUG: Development-only debug info (removed from production builds)
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+    (window as unknown as { BILLS_COMPONENT_DATA: unknown }).BILLS_COMPONENT_DATA = {
+      billsData: {
+        isArray: Array.isArray(bills),
+        length: Array.isArray(bills) ? bills.length : 'not array',
+        firstBill:
+          Array.isArray(bills) && bills.length > 0 && bills[0]
+            ? {
+                billId: bills[0]?.billId || 'unknown',
+                number: bills[0]?.number || 'unknown',
+                title: bills[0]?.title?.substring(0, 50) + '...' || 'no title',
+                hasLatestAction: !!bills[0]?.latestAction,
+              }
+            : 'no bills',
+      },
+      representative: {
+        name: _representative.name,
+        chamber: _representative.chamber,
+      },
+      timestamp: new Date().toISOString(),
+    };
+  }
 
   const categories = useMemo(() => {
     if (!bills || !Array.isArray(bills)) {
@@ -452,6 +486,14 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
 
     return { total, byStage, avgCosponsors, totalCosponsors };
   }, [filteredAndSortedBills]);
+
+  // VERIFICATION: Log before rendering
+  // eslint-disable-next-line no-console
+  console.log('🚀 RENDERING NOW with filteredAndSortedBills:', {
+    count: filteredAndSortedBills.length,
+    showTimelineView,
+    firstFilteredBill: filteredAndSortedBills[0],
+  });
 
   return (
     <div className="space-y-6">
@@ -743,7 +785,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
                         {bill.committees &&
                           bill.committees.slice(0, 2).map((committee, idx) => (
                             <span
-                              key={idx}
+                              key={`${bill.billId}-committee-${committee}-${idx}`}
                               className="px-3 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full"
                             >
                               {committee}
@@ -752,7 +794,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
                         {bill.subjects &&
                           bill.subjects.slice(0, 3).map((subject, idx) => (
                             <span
-                              key={idx}
+                              key={`${bill.billId}-subject-${subject}-${idx}`}
                               className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
                             >
                               {subject}

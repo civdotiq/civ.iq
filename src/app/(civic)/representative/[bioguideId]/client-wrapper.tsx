@@ -6,6 +6,53 @@
  */
 
 import { useState, useEffect, Suspense, ComponentType } from 'react';
+
+// Import types for proper type checking
+interface CampaignFinanceData {
+  financial_summary: Array<{
+    cycle: number;
+    total_receipts: number;
+    total_disbursements: number;
+    cash_on_hand_end_period: number;
+    individual_contributions: number;
+    pac_contributions: number;
+    party_contributions: number;
+    candidate_contributions: number;
+  }>;
+  recent_contributions: Array<{
+    contributor_name: string;
+    contributor_employer?: string;
+    contribution_receipt_amount: number;
+    contribution_receipt_date: string;
+  }>;
+  recent_expenditures: Array<{
+    recipient_name: string;
+    disbursement_description: string;
+    disbursement_amount: number;
+    disbursement_date: string;
+  }>;
+}
+
+interface SponsoredBill {
+  billId: string;
+  number: string;
+  title: string;
+  congress: string;
+  introducedDate: string;
+  latestAction: {
+    date: string;
+    text: string;
+  };
+  type: string;
+  chamber: 'House' | 'Senate';
+  status: string;
+  policyArea?: string;
+  cosponsors?: number;
+  sponsorshipType?: 'sponsored' | 'cosponsored';
+  committees?: string[];
+  subjects?: string[];
+  url?: string;
+}
 import { LoadingErrorBoundary } from '@/components/common/ErrorBoundary';
 import dynamic from 'next/dynamic';
 import {
@@ -367,7 +414,14 @@ export function RepresentativeProfileClient({
         {activeTab === 'bills' && (
           <>
             {/* eslint-disable-next-line no-console */}
-            {console.log('Active tab:', activeTab, 'Rendering:', 'bills')}
+            {console.log(
+              'Active tab:',
+              activeTab,
+              'Rendering:',
+              'bills',
+              'Initial bills data:',
+              Array.isArray(_initialData.bills) ? _initialData.bills.length : 'not array'
+            )}
             <LoadingErrorBoundary>
               <div className="space-y-6">
                 {/* Bills Header with Timestamp */}
@@ -387,10 +441,11 @@ export function RepresentativeProfileClient({
                   }}
                   BillsTracker={
                     LazyBillsTracker as React.ComponentType<{
-                      bills: unknown[];
+                      bills: SponsoredBill[];
                       representative: { name: string; chamber: string };
                     }>
                   }
+                  initialData={_initialData.bills}
                 />
               </div>
             </LoadingErrorBoundary>
@@ -420,7 +475,7 @@ export function RepresentativeProfileClient({
                   }}
                   CampaignFinanceVisualizer={
                     LazyCampaignFinanceVisualizer as React.ComponentType<{
-                      financeData: unknown;
+                      financeData: CampaignFinanceData;
                       representative: { name: string; party: string };
                       bioguideId: string;
                     }>

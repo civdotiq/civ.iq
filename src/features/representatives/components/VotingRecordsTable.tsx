@@ -232,12 +232,30 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
     }
   );
 
+  // 1️⃣ CHECKPOINT: SWR returned data
+  // eslint-disable-next-line no-console
+  console.log('1️⃣ VOTING: useSWR returned:', {
+    hasData: !!votesData,
+    dataLength: Array.isArray(votesData) ? votesData.length : 'not array',
+    firstItem: Array.isArray(votesData) ? votesData[0] : votesData,
+    isLoading,
+    error: !!error,
+  });
+
   // Ensure votes is always an array
   const votes = useMemo(() => {
     if (!votesData) return [];
     if (Array.isArray(votesData)) return votesData;
     return [];
   }, [votesData]);
+
+  // 2️⃣ CHECKPOINT: After processing data
+  // eslint-disable-next-line no-console
+  console.log('2️⃣ VOTING: Processed votes:', {
+    votesLength: votes.length,
+    isLoading,
+    error: !!error,
+  });
 
   const filteredAndSortedVotes = useMemo(() => {
     let filtered = [...votes];
@@ -344,6 +362,16 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
     );
   }
 
+  // 3️⃣ CHECKPOINT: About to render LoadingStateWrapper
+  // eslint-disable-next-line no-console
+  console.log('3️⃣ VOTING: About to render LoadingStateWrapper:', {
+    isLoading,
+    hasError: !!error,
+    errorMessage: error?.message,
+    votesLength: votes.length,
+    willShowContent: !isLoading && !error,
+  });
+
   return (
     <LoadingStateWrapper
       loading={isLoading}
@@ -353,95 +381,104 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
       loadingMessage="Loading voting records..."
       timeoutMessage="Voting records are taking longer than usual to load"
     >
-      {votes.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-          <p className="text-gray-600">No voting records available at this time.</p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          {/* Header with filters */}
-          <div className="p-4 border-b border-gray-200 bg-gray-50">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <h3 className="text-lg font-semibold text-gray-900">Recent Votes</h3>
-              <div className="flex flex-wrap gap-2">
-                <span className="text-sm text-gray-600">Filter by Category:</span>
-                <button
-                  onClick={() => handleFilterChange('all')}
-                  className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                    filterCategory === 'all'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  All Categories
-                </button>
-                <button
-                  onClick={() => handleFilterChange('key')}
-                  className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                    filterCategory === 'key'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Key Votes
-                </button>
-                <button
-                  onClick={() => handleFilterChange('passed')}
-                  className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                    filterCategory === 'passed'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Passed
-                </button>
-                <button
-                  onClick={() => handleFilterChange('failed')}
-                  className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                    filterCategory === 'failed'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Failed
-                </button>
-              </div>
-            </div>
+      {(() => {
+        // 4️⃣ CHECKPOINT: Inside LoadingStateWrapper children
+        // eslint-disable-next-line no-console
+        console.log('4️⃣ VOTING: LoadingStateWrapper children rendering:', {
+          votesLength: votes.length,
+          willShowNoData: votes.length === 0,
+        });
+
+        return votes.length === 0 ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <p className="text-gray-600">No voting records available at this time.</p>
           </div>
-
-          {/* Show pending indicator during transitions */}
-          {isPending && (
-            <div className="absolute top-0 left-0 right-0 bg-blue-50 border-b border-blue-200 py-2 px-4 z-10">
-              <div className="flex items-center gap-2 text-sm text-blue-700">
-                <div className="animate-spin w-4 h-4 border-2 border-blue-700 border-t-transparent rounded-full"></div>
-                Updating results...
+        ) : (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            {/* Header with filters */}
+            <div className="p-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h3 className="text-lg font-semibold text-gray-900">Recent Votes</h3>
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-sm text-gray-600">Filter by Category:</span>
+                  <button
+                    onClick={() => handleFilterChange('all')}
+                    className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                      filterCategory === 'all'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    All Categories
+                  </button>
+                  <button
+                    onClick={() => handleFilterChange('key')}
+                    className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                      filterCategory === 'key'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    Key Votes
+                  </button>
+                  <button
+                    onClick={() => handleFilterChange('passed')}
+                    className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                      filterCategory === 'passed'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    Passed
+                  </button>
+                  <button
+                    onClick={() => handleFilterChange('failed')}
+                    className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                      filterCategory === 'failed'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    Failed
+                  </button>
+                </div>
               </div>
             </div>
-          )}
 
-          {/* Virtual Scrolling Votes List */}
-          {paginatedVotes.length > 0 && (
-            <VotesList
-              votes={paginatedVotes}
-              expandedRows={expandedRows}
-              toggleRowExpansion={toggleRowExpansion}
-              getPositionColor={getPositionColor}
-              getResultColor={getResultColor}
-            />
-          )}
+            {/* Show pending indicator during transitions */}
+            {isPending && (
+              <div className="absolute top-0 left-0 right-0 bg-blue-50 border-b border-blue-200 py-2 px-4 z-10">
+                <div className="flex items-center gap-2 text-sm text-blue-700">
+                  <div className="animate-spin w-4 h-4 border-2 border-blue-700 border-t-transparent rounded-full"></div>
+                  Updating results...
+                </div>
+              </div>
+            )}
 
-          {/* Touch-Friendly Pagination */}
-          {totalPages > 1 && (
-            <TouchPagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              itemsShown={`Showing ${(page - 1) * votesPerPage + 1} to ${Math.min(page * votesPerPage, filteredAndSortedVotes.length)} of ${filteredAndSortedVotes.length} votes`}
-              totalItems={filteredAndSortedVotes.length}
-            />
-          )}
-        </div>
-      )}
+            {/* Virtual Scrolling Votes List */}
+            {paginatedVotes.length > 0 && (
+              <VotesList
+                votes={paginatedVotes}
+                expandedRows={expandedRows}
+                toggleRowExpansion={toggleRowExpansion}
+                getPositionColor={getPositionColor}
+                getResultColor={getResultColor}
+              />
+            )}
+
+            {/* Touch-Friendly Pagination */}
+            {totalPages > 1 && (
+              <TouchPagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                itemsShown={`Showing ${(page - 1) * votesPerPage + 1} to ${Math.min(page * votesPerPage, filteredAndSortedVotes.length)} of ${filteredAndSortedVotes.length} votes`}
+                totalItems={filteredAndSortedVotes.length}
+              />
+            )}
+          </div>
+        );
+      })()}
     </LoadingStateWrapper>
   );
 });

@@ -85,7 +85,17 @@
       "Bash(git diff:*)",
       "WebFetch(domain:civdotiq.org)",
       "Bash(npm run migrate:*)",
-      "Bash(npm run diagnose:apis:*)"
+      "Bash(npm run diagnose:apis:*)",
+      "Bash(npm ci:*)",
+      "Bash(npm:*)",
+      "Bash(pgrep:*)",
+      "WebFetch(domain:localhost)",
+      "WebFetch(domain:api.open.fec.gov)",
+      "Bash(NODE_OPTIONS=\"-r ./scripts/polyfill-self.js\" npm run build)",
+      "WebFetch(domain:www.fec.gov)",
+      "Bash(source:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npm run dev --port 3002)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx next dev --port 3002)"
     ],
     "deny": []
   },

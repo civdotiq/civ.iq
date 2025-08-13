@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { EnhancedFECData } from '@/types/fec';
 
 interface DonorAnalysisProps {
@@ -18,17 +18,13 @@ type ViewMode = 'size' | 'geography' | 'type';
 const VIEW_MODES = [
   { value: 'size' as const, label: 'Donor Size', icon: '💰' },
   { value: 'geography' as const, label: 'Geography', icon: '🗺️' },
-  { value: 'type' as const, label: 'Donor Type', icon: '👥' }
+  { value: 'type' as const, label: 'Donor Type', icon: '👥' },
 ];
 
 export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
   const [activeView, setActiveView] = useState<ViewMode>('size');
 
-  // Debug logging to check data structure
-  console.log('DonorAnalysis received data:', data);
-  console.log('Donor data structure:', data?.donors);
-  console.log('Geography data:', data?.geography);
-  console.log('Breakdown data:', data?.breakdown);
+  // Debug logging to check data structure - removed to prevent React object rendering errors
 
   const formatCurrency = (amount: number): string => {
     if (amount >= 1000000) {
@@ -84,19 +80,27 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Count:</span>
-                <span className="font-medium">{data.breakdown.smallDonors.count.toLocaleString()}</span>
+                <span className="font-medium">
+                  {data.breakdown.smallDonors.count.toLocaleString()}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Amount:</span>
-                <span className="font-medium">{formatCurrency(data.breakdown.smallDonors.amount)}</span>
+                <span className="font-medium">
+                  {formatCurrency(data.breakdown.smallDonors.amount)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Percentage:</span>
-                <span className="font-medium">{formatPercent(data.breakdown.smallDonors.percent)}</span>
+                <span className="font-medium">
+                  {formatPercent(data.breakdown.smallDonors.percent)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Avg Amount:</span>
-                <span className="font-medium">{formatCurrency(data.donors.smallDonorMetrics.averageAmount)}</span>
+                <span className="font-medium">
+                  {formatCurrency(data.donors.smallDonorMetrics.averageAmount)}
+                </span>
               </div>
             </div>
           </div>
@@ -109,19 +113,27 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Count:</span>
-                <span className="font-medium">{data.breakdown.largeDonors.count.toLocaleString()}</span>
+                <span className="font-medium">
+                  {data.breakdown.largeDonors.count.toLocaleString()}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Amount:</span>
-                <span className="font-medium">{formatCurrency(data.breakdown.largeDonors.amount)}</span>
+                <span className="font-medium">
+                  {formatCurrency(data.breakdown.largeDonors.amount)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Percentage:</span>
-                <span className="font-medium">{formatPercent(data.breakdown.largeDonors.percent)}</span>
+                <span className="font-medium">
+                  {formatPercent(data.breakdown.largeDonors.percent)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Avg Amount:</span>
-                <span className="font-medium">{formatCurrency(data.donors.largeDonorMetrics.averageAmount)}</span>
+                <span className="font-medium">
+                  {formatCurrency(data.donors.largeDonorMetrics.averageAmount)}
+                </span>
               </div>
             </div>
           </div>
@@ -248,12 +260,8 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             {topStates.slice(0, 10).map((state, index) => (
               <div key={state.state} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-500 w-6">
-                    #{index + 1}
-                  </span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {state.state}
-                  </span>
+                  <span className="text-sm font-medium text-gray-500 w-6">#{index + 1}</span>
+                  <span className="text-sm font-medium text-gray-900">{state.state}</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="w-24 bg-gray-200 rounded-full h-2">
@@ -425,9 +433,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Donor Analysis</h3>
-          <p className="text-sm text-gray-600">
-            Comprehensive breakdown of funding sources
-          </p>
+          <p className="text-sm text-gray-600">Comprehensive breakdown of funding sources</p>
         </div>
       </div>
 
