@@ -219,10 +219,12 @@ export function RepresentativeProfileClient({
   useEffect(() => {
     // eslint-disable-next-line no-console
     console.log('🟢 useEffect ran');
-    document.title = 'JS WORKING';
 
-    // Initialize global SWR states tracking
-    if (typeof window !== 'undefined') {
+    // Guard browser-only code
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      document.title = 'JS WORKING';
+
+      // Initialize global SWR states tracking
       (window as unknown as { SWR_STATES: Record<string, unknown> }).SWR_STATES = {};
     }
   }, []);
