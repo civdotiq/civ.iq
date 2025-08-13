@@ -9,7 +9,8 @@ import { RepresentativeProfileClient } from './client-wrapper';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { RepresentativePageSidebar } from '@/features/representatives/components/RepresentativePageSidebar';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
-import { logger } from '@/lib/logging/logger-client';
+// Note: Using console directly in Server Components to avoid React rendering issues
+// import { logger } from '@/lib/logging/logger-client';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 
 export const dynamic = 'force-dynamic';
@@ -95,49 +96,65 @@ async function getRepresentativeData(bioguideId: string): Promise<Representative
   try {
     if (!bioguideId || typeof bioguideId !== 'string') {
       const error = 'Invalid bioguideId provided';
-      logger.error('Representative data fetch failed', new Error(error), {
-        bioguideId,
-        endpoint: 'representative',
-        component: 'RepresentativeProfilePage',
-      });
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Representative data fetch failed:', error, {
+          bioguideId,
+          endpoint: 'representative',
+          component: 'RepresentativeProfilePage',
+        });
+      }
       notFound();
     }
 
-    logger.info('Fetching representative data via direct service call', {
-      bioguideId: bioguideId.toUpperCase(),
-      endpoint: 'representative',
-      component: 'RepresentativeProfilePage',
-    });
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('Fetching representative data via direct service call', {
+        bioguideId: bioguideId.toUpperCase(),
+        endpoint: 'representative',
+        component: 'RepresentativeProfilePage',
+      });
+    }
 
     // Direct service call - no HTTP networking during SSR
     const enhancedData = await getEnhancedRepresentative(bioguideId.toUpperCase());
 
     if (!enhancedData) {
-      logger.info('Representative not found in congress-legislators data', {
-        bioguideId: bioguideId.toUpperCase(),
-        component: 'RepresentativeProfilePage',
-      });
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('Representative not found in congress-legislators data', {
+          bioguideId: bioguideId.toUpperCase(),
+          component: 'RepresentativeProfilePage',
+        });
+      }
       notFound();
     }
 
-    logger.info('Representative data fetched successfully via direct service', {
-      bioguideId: enhancedData.bioguideId,
-      hasName: !!enhancedData.name,
-      hasCommittees: !!enhancedData.committees,
-      hasSocialMedia: !!enhancedData.socialMedia,
-      hasCurrentTerm: !!enhancedData.currentTerm,
-      endpoint: 'representative',
-      component: 'RepresentativeProfilePage',
-    });
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('Representative data fetched successfully via direct service', {
+        bioguideId: enhancedData.bioguideId,
+        hasName: !!enhancedData.name,
+        hasCommittees: !!enhancedData.committees,
+        hasSocialMedia: !!enhancedData.socialMedia,
+        hasCurrentTerm: !!enhancedData.currentTerm,
+        endpoint: 'representative',
+        component: 'RepresentativeProfilePage',
+      });
+    }
 
     return enhancedData;
   } catch (error) {
-    logger.error('Representative data fetch completely failed', error, {
-      bioguideId,
-      endpoint: 'representative',
-      component: 'RepresentativeProfilePage',
-      errorMessage: error instanceof Error ? error.message : 'Unknown error occurred',
-    });
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.error('Representative data fetch completely failed', {
+        bioguideId,
+        endpoint: 'representative',
+        component: 'RepresentativeProfilePage',
+        errorMessage: error instanceof Error ? error.message : 'Unknown error occurred',
+        error,
+      });
+    }
     notFound();
   }
 }
@@ -176,7 +193,10 @@ export default async function RepresentativeProfilePage({
   let billsData: unknown[] = [];
   try {
     const billsUrl = `${baseUrl}/api/representative/${bioguideId}/bills`;
-    logger.info('SERVER FETCH URL', { billsUrl });
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('SERVER FETCH URL:', billsUrl);
+    }
 
     const billsResponse = await fetch(billsUrl, {
       headers: {
@@ -184,10 +204,13 @@ export default async function RepresentativeProfilePage({
       },
     });
 
-    logger.info('SERVER FETCH RESPONSE', {
-      status: billsResponse.status,
-      statusText: billsResponse.statusText,
-    });
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('SERVER FETCH RESPONSE:', {
+        status: billsResponse.status,
+        statusText: billsResponse.statusText,
+      });
+    }
 
     if (billsResponse.ok) {
       const billsResponseData = await billsResponse.json();
@@ -196,16 +219,23 @@ export default async function RepresentativeProfilePage({
         billsResponseData.bills ||
         billsResponseData ||
         [];
-      logger.info('SERVER BILLS RECEIVED', {
-        count: Array.isArray(billsData) ? billsData.length : 'not array',
-      });
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('SERVER BILLS RECEIVED:', {
+          count: Array.isArray(billsData) ? billsData.length : 'not array',
+        });
+      }
     } else {
-      logger.error('Bills fetch failed', new Error(`HTTP ${billsResponse.status}`), {
-        status: billsResponse.status,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Bills fetch failed:', `HTTP ${billsResponse.status}`);
+      }
     }
   } catch (error) {
-    logger.error('Bills fetch error', error as Error);
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.error('Bills fetch error:', error);
+    }
     billsData = [];
   }
 
@@ -230,48 +260,52 @@ export default async function RepresentativeProfilePage({
   }
 
   // DEBUG: Log actual data values being passed to client
-  logger.info('PAGE_DATA - Data being passed to RepresentativeProfileClient', {
-    representative: {
-      bioguideId: representative.bioguideId,
-      name: representative.name,
-      chamber: representative.chamber,
-      hasCommittees: !!representative.committees,
-      committeesCount: representative.committees?.length || 0,
-    },
-    initialData: {
-      votes: Array.isArray(votingData) ? votingData.length : 'not array',
-      bills: Array.isArray(billsData) ? billsData.length : 'not array',
-      finance: typeof financeData === 'object' ? Object.keys(financeData).length : 'not object',
-      news: Array.isArray(newsData) ? newsData.length : 'not array',
-    },
-    actualDataSample: {
-      firstBill:
-        Array.isArray(billsData) && billsData.length > 0
-          ? {
-              title: (billsData[0] as unknown as { title?: string })?.title || 'no title',
-              number: (billsData[0] as unknown as { number?: string })?.number || 'no number',
-              congress:
-                (billsData[0] as unknown as { congress?: number })?.congress || 'no congress',
-            }
-          : 'no bills',
-      firstVote:
-        Array.isArray(votingData) && votingData.length > 0
-          ? {
-              position:
-                (votingData[0] as unknown as { position?: string })?.position || 'no position',
-              question:
-                (votingData[0] as unknown as { question?: string })?.question?.substring?.(0, 50) ||
-                'no question',
-            }
-          : 'no votes',
-      financeContributions:
-        (financeData as unknown as { recent_contributions?: unknown[] })?.recent_contributions
-          ?.length || 0,
-      newsCount: Array.isArray(newsData) ? newsData.length : 0,
-    },
-    partialErrors: Object.keys(partialErrors).length,
-    timestamp: new Date().toISOString(),
-  });
+  // Note: Using console.log directly in development to avoid React Server Component issues
+  if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
+    console.log('PAGE_DATA - Data being passed to RepresentativeProfileClient', JSON.stringify({
+      representative: {
+        bioguideId: representative.bioguideId,
+        name: representative.name,
+        chamber: representative.chamber,
+        hasCommittees: !!representative.committees,
+        committeesCount: representative.committees?.length || 0,
+      },
+      initialData: {
+        votes: Array.isArray(votingData) ? votingData.length : 'not array',
+        bills: Array.isArray(billsData) ? billsData.length : 'not array',
+        finance: typeof financeData === 'object' ? Object.keys(financeData).length : 'not object',
+        news: Array.isArray(newsData) ? newsData.length : 'not array',
+      },
+      actualDataSample: {
+        firstBill:
+          Array.isArray(billsData) && billsData.length > 0
+            ? {
+                title: (billsData[0] as unknown as { title?: string })?.title || 'no title',
+                number: (billsData[0] as unknown as { number?: string })?.number || 'no number',
+                congress:
+                  (billsData[0] as unknown as { congress?: number })?.congress || 'no congress',
+              }
+            : 'no bills',
+        firstVote:
+          Array.isArray(votingData) && votingData.length > 0
+            ? {
+                position:
+                  (votingData[0] as unknown as { position?: string })?.position || 'no position',
+                question:
+                  (votingData[0] as unknown as { question?: string })?.question?.substring?.(0, 50) ||
+                  'no question',
+              }
+            : 'no votes',
+        financeContributions:
+          (financeData as unknown as { recent_contributions?: unknown[] })?.recent_contributions
+            ?.length || 0,
+        newsCount: Array.isArray(newsData) ? newsData.length : 0,
+      },
+      partialErrors: Object.keys(partialErrors).length,
+      timestamp: new Date().toISOString(),
+    }, null, 2));
+  }
 
   return (
     <ErrorBoundary>
