@@ -25,25 +25,57 @@ export async function GET(
     const currentCongress = parseInt(process.env.CURRENT_CONGRESS || '119');
     const congressesToFetch = [currentCongress - 2, currentCongress - 1, currentCongress]; // 117, 118, 119
 
+    // Debug logging for API investigation
+    // eslint-disable-next-line no-console
+    console.log('=== BILLS API DEBUG ===');
+    // eslint-disable-next-line no-console
+    console.log('BioguideId:', bioguideId);
+    // eslint-disable-next-line no-console
+    console.log('API Key exists:', !!process.env.CONGRESS_API_KEY);
+    // eslint-disable-next-line no-console
+    console.log('API Key prefix:', process.env.CONGRESS_API_KEY?.slice(0, 8) + '...');
+    // eslint-disable-next-line no-console
+    console.log('Congresses to fetch:', congressesToFetch);
+
     // Fetch bills from multiple congresses
-    const fetchPromises = congressesToFetch.map(congress =>
-      fetch(
-        `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?api_key=${process.env.CONGRESS_API_KEY}&limit=100&congress=${congress}`,
-        {
-          headers: {
-            Accept: 'application/json',
-            'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
-          },
-        }
-      )
-    );
+    const fetchPromises = congressesToFetch.map(congress => {
+      const url = `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?api_key=${process.env.CONGRESS_API_KEY}&limit=100&congress=${congress}`;
+      // eslint-disable-next-line no-console
+      console.log('Congress API URL:', url.replace(/api_key=[^&]+/, 'api_key=***'));
+
+      return fetch(url, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
+        },
+      });
+    });
 
     const responses = await Promise.all(fetchPromises);
+
+    // Debug response details
+    responses.forEach((response, index) => {
+      // eslint-disable-next-line no-console
+      console.log(`Response ${index + 1} (Congress ${congressesToFetch[index]}):`);
+      // eslint-disable-next-line no-console
+      console.log('  Status:', response.status, response.statusText);
+      // eslint-disable-next-line no-console
+      console.log('  Headers:', Object.fromEntries(response.headers.entries()));
+    });
 
     // Check if any requests failed
     const failedResponses = responses.filter(response => !response.ok);
     if (failedResponses.length > 0) {
       const firstFailed = failedResponses[0];
+      if (firstFailed) {
+        // eslint-disable-next-line no-console
+        console.log('Failed response details:', {
+          status: firstFailed.status,
+          statusText: firstFailed.statusText,
+          headers: Object.fromEntries(firstFailed.headers.entries()),
+        });
+      }
+
       logger.error(
         'Congress.gov sponsored legislation API failed',
         new Error(`HTTP ${firstFailed?.status || 'unknown'}`),
@@ -58,12 +90,33 @@ export async function GET(
 
     // Process all responses and combine bills
     const allBillsData = await Promise.all(responses.map(response => response.json()));
+
+    // Debug raw response data
+    allBillsData.forEach((data, index) => {
+      // eslint-disable-next-line no-console
+      console.log(`Raw response ${index + 1} data:`, {
+        congress: congressesToFetch[index],
+        hasSponsored: !!data.sponsoredLegislation,
+        sponsoredCount: data.sponsoredLegislation?.length || 0,
+        dataKeys: Object.keys(data),
+        firstBill: data.sponsoredLegislation?.[0] || 'none',
+      });
+    });
+
     const allBills = allBillsData.flatMap(data => data.sponsoredLegislation || []);
 
     // Filter for the target congresses (117th, 118th, 119th)
     const targetCongressBills = allBills.filter((bill: { congress?: number | string }) =>
       congressesToFetch.includes(parseInt(bill.congress?.toString() || '0'))
     );
+
+    // eslint-disable-next-line no-console
+    console.log('Final processing results:', {
+      totalApiResponses: allBillsData.length,
+      totalBillsFromAllResponses: allBills.length,
+      targetCongressBills: targetCongressBills.length,
+      congressesToFetch,
+    });
 
     logger.info('Successfully fetched sponsored legislation from Congress.gov', {
       bioguideId,
