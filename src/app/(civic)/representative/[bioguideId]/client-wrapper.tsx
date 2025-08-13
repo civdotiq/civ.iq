@@ -7,7 +7,6 @@
 
 import { useState, useEffect, Suspense, ComponentType } from 'react';
 import { LoadingErrorBoundary } from '@/components/common/ErrorBoundary';
-import { DebugPanel } from '@/components/debug/DebugPanel';
 import dynamic from 'next/dynamic';
 import {
   CampaignFinanceWrapper,
@@ -464,9 +463,6 @@ export function RepresentativeProfileClient({
           </>
         )}
       </div>
-
-      {/* Phase 2 Debug Panel - Toggle with Ctrl+Shift+D */}
-      <DebugPanel />
     </>
   );
 }
