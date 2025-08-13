@@ -7,21 +7,67 @@
 
 import useSWR from 'swr';
 import logger from '@/lib/logging/simple-logger';
-import type { CampaignFinanceResponse } from '@/types/api/representatives.types';
 
-// API Response wrapper types for standardized parsing
-interface ApiResponseWrapper<T> {
-  data?: T;
-  results?: T;
-  items?: T;
+// Import proper types for component props
+interface CampaignFinanceData {
+  financial_summary: Array<{
+    cycle: number;
+    total_receipts: number;
+    total_disbursements: number;
+    cash_on_hand_end_period: number;
+    individual_contributions: number;
+    pac_contributions: number;
+    party_contributions: number;
+    candidate_contributions: number;
+  }>;
+  recent_contributions: Array<{
+    contributor_name: string;
+    contributor_employer?: string;
+    contribution_receipt_amount: number;
+    contribution_receipt_date: string;
+  }>;
+  recent_expenditures: Array<{
+    recipient_name: string;
+    disbursement_description: string;
+    disbursement_amount: number;
+    disbursement_date: string;
+  }>;
+}
+
+interface SponsoredBill {
+  billId: string;
+  number: string;
+  title: string;
+  congress: string;
+  introducedDate: string;
+  latestAction: {
+    date: string;
+    text: string;
+  };
+  type: string;
+  chamber: 'House' | 'Senate';
+  status: string;
+  policyArea?: string;
+  cosponsors?: number;
+  sponsorshipType?: 'sponsored' | 'cosponsored';
+  committees?: string[];
+  subjects?: string[];
+  url?: string;
+}
+
+// API Response types that match actual API responses
+interface FinanceApiResponse {
+  candidate_info?: unknown;
+  financial_summary?: CampaignFinanceData['financial_summary'];
+  recent_contributions?: CampaignFinanceData['recent_contributions'];
+  recent_expenditures?: CampaignFinanceData['recent_expenditures'];
   [key: string]: unknown;
 }
 
-// Specific response types for each API endpoint
-type FinanceApiResponse =
-  | CampaignFinanceResponse
-  | ApiResponseWrapper<CampaignFinanceResponse['data']>
-  | unknown;
+interface BillsApiResponse {
+  sponsoredLegislation?: SponsoredBill[];
+  [key: string]: unknown;
+}
 
 // Campaign Finance Data Fetcher
 interface CampaignFinanceWrapperProps {
@@ -31,7 +77,7 @@ interface CampaignFinanceWrapperProps {
     party: string;
   };
   CampaignFinanceVisualizer: React.ComponentType<{
-    financeData: unknown;
+    financeData: CampaignFinanceData;
     representative: { name: string; party: string };
     bioguideId: string;
   }>;
@@ -51,7 +97,7 @@ export function CampaignFinanceWrapper({
     isLoading,
   } = useSWR(
     url,
-    async (url: string): Promise<CampaignFinanceResponse['data'] | null> => {
+    async (url: string): Promise<CampaignFinanceData | null> => {
       try {
         logger.info('Finance SWR fetching', { bioguideId, url });
         const response = await fetch(url);
@@ -62,18 +108,24 @@ export function CampaignFinanceWrapper({
         logger.info('Finance SWR raw response', {
           bioguideId,
           dataType: typeof data,
-          hasFinance: data && typeof data === 'object' && 'finance' in data,
-          hasData: data && typeof data === 'object' && 'data' in data,
+          hasFinancialSummary: data && typeof data === 'object' && 'financial_summary' in data,
+          hasContributions: data && typeof data === 'object' && 'recent_contributions' in data,
         });
 
-        // Handle different response formats
-        let processedData: CampaignFinanceResponse['data'] | null = null;
-        if (data && typeof data === 'object') {
-          // If response has a finance or data property, use that
-          if ('finance' in data) processedData = data.finance as CampaignFinanceResponse['data'];
-          else if ('data' in data) processedData = data.data as CampaignFinanceResponse['data'];
-          // Otherwise return the response directly
-          else processedData = data as CampaignFinanceResponse['data'];
+        // Process the finance data - API returns flat object with finance properties
+        let processedData: CampaignFinanceData | null = null;
+        if (
+          data &&
+          typeof data === 'object' &&
+          ('financial_summary' in data ||
+            'recent_contributions' in data ||
+            'recent_expenditures' in data)
+        ) {
+          processedData = {
+            financial_summary: data.financial_summary || [],
+            recent_contributions: data.recent_contributions || [],
+            recent_expenditures: data.recent_expenditures || [],
+          };
         }
 
         logger.info('Finance SWR processed data', {
@@ -98,8 +150,8 @@ export function CampaignFinanceWrapper({
     }
   );
 
-  // Standardize finance data parsing
-  const financeData = rawFinanceData && typeof rawFinanceData === 'object' ? rawFinanceData : null;
+  // Use processed finance data directly
+  const financeData = rawFinanceData;
 
   // Comprehensive data lifecycle logging
   // eslint-disable-next-line no-console
@@ -138,22 +190,28 @@ export function CampaignFinanceWrapper({
   });
 
   // Render verification logging
-  if (financeData && Object.keys(financeData).length > 0) {
+  if (
+    financeData &&
+    (financeData.financial_summary?.length ||
+      financeData.recent_contributions?.length ||
+      financeData.recent_expenditures?.length)
+  ) {
     // eslint-disable-next-line no-console
-    console.log('✅ RENDERING finance data with', Object.keys(financeData).length, 'properties');
+    console.log(
+      '✅ RENDERING finance data with summary:',
+      financeData.financial_summary?.length || 0,
+      'contributions:',
+      financeData.recent_contributions?.length || 0,
+      'expenditures:',
+      financeData.recent_expenditures?.length || 0
+    );
   } else {
     // eslint-disable-next-line no-console
     console.log('❌ NOT RENDERING finance, data:', financeData);
   }
 
-  // Force display test data if real data exists
-  if (rawFinanceData) {
-    return (
-      <div className="bg-green-500 text-white p-4 mb-4">
-        FINANCE DATA EXISTS: {JSON.stringify(rawFinanceData).slice(0, 100)}...
-      </div>
-    );
-  }
+  // Remove debug div - data should flow to component
+  // Debug logging already shows data exists
 
   if (isLoading) {
     return (
@@ -180,7 +238,12 @@ export function CampaignFinanceWrapper({
     );
   }
 
-  if (!financeData || Object.keys(financeData).length === 0) {
+  if (
+    !financeData ||
+    (!financeData.financial_summary?.length &&
+      !financeData.recent_contributions?.length &&
+      !financeData.recent_expenditures?.length)
+  ) {
     return (
       <div className="text-center py-8">
         <p className="text-gray-500">No campaign finance data available</p>
@@ -206,7 +269,7 @@ interface BillsTrackerWrapperProps {
     chamber: string;
   };
   BillsTracker: React.ComponentType<{
-    bills: unknown[];
+    bills: SponsoredBill[];
     representative: { name: string; chamber: string };
   }>;
 }
@@ -225,31 +288,34 @@ export function BillsTrackerWrapper({
     isLoading,
   } = useSWR(
     url,
-    async (url: string) => {
+    async (url: string): Promise<SponsoredBill[]> => {
       try {
         logger.info('Bills SWR fetching', { bioguideId, url });
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
         }
-        const data = await response.json();
+        const data = (await response.json()) as BillsApiResponse;
         logger.info('Bills SWR raw response', {
           bioguideId,
           dataType: typeof data,
-          isArray: Array.isArray(data),
+          hasSponsoredLegislation:
+            data && typeof data === 'object' && 'sponsoredLegislation' in data,
+          billsCount: data?.sponsoredLegislation?.length || 0,
         });
 
-        // Handle different response formats
-        let processedData: unknown[] = [];
-        if (Array.isArray(data)) {
+        // Process the bills data - API returns object with sponsoredLegislation array
+        let processedData: SponsoredBill[] = [];
+        if (
+          data &&
+          typeof data === 'object' &&
+          'sponsoredLegislation' in data &&
+          Array.isArray(data.sponsoredLegislation)
+        ) {
+          processedData = data.sponsoredLegislation;
+        } else if (Array.isArray(data)) {
+          // Fallback for direct array response
           processedData = data;
-        } else if (data && typeof data === 'object') {
-          // Check for common response wrapper patterns
-          if ('sponsoredLegislation' in data) processedData = data.sponsoredLegislation || [];
-          else if ('bills' in data) processedData = data.bills || [];
-          else if ('data' in data) processedData = data.data || [];
-          else if ('results' in data) processedData = data.results || [];
-          else if ('items' in data) processedData = data.items || [];
         }
 
         logger.info('Bills SWR processed data', { bioguideId, billsCount: processedData.length });
@@ -269,8 +335,8 @@ export function BillsTrackerWrapper({
     }
   );
 
-  // Standardize bills data parsing
-  const bills = Array.isArray(rawBillsData) ? rawBillsData : [];
+  // Use processed bills data directly
+  const bills = rawBillsData || [];
 
   // Comprehensive data lifecycle logging
   // eslint-disable-next-line no-console
@@ -317,14 +383,8 @@ export function BillsTrackerWrapper({
     console.log('❌ NOT RENDERING bills, data:', bills);
   }
 
-  // Force display test data if real data exists
-  if (rawBillsData) {
-    return (
-      <div className="bg-green-500 text-white p-4 mb-4">
-        BILLS DATA EXISTS: {JSON.stringify(rawBillsData).slice(0, 100)}...
-      </div>
-    );
-  }
+  // Remove debug div - data should flow to component
+  // Debug logging already shows data exists
 
   if (isLoading) {
     return (
