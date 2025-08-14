@@ -317,9 +317,6 @@ export function RepresentativeProfileClient({
       {/* Show partial errors if any */}
       <PartialErrorDisplay partialErrors={partialErrors} />
 
-      {/* JavaScript Test Indicator */}
-      <div className="bg-red-500 text-white p-4 mb-4 rounded">CLIENT RENDERED</div>
-
       {/* Navigation Tabs */}
       <div className="bg-white rounded-lg shadow-sm mb-6">
         <div className="border-b border-gray-200">

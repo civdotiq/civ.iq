@@ -5,7 +5,8 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { RepresentativeProfileClient } from './client-wrapper';
+// import { RepresentativeProfileClient } from './client-wrapper';
+import { SimpleClientWrapper } from './simple-client-wrapper';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { RepresentativePageSidebar } from '@/features/representatives/components/RepresentativePageSidebar';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
@@ -187,16 +188,15 @@ export default async function RepresentativeProfilePage({
   }
 
   // Server-side data fetching for initial load performance
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002';
+  // Construct absolute URL for server-side fetch (Node.js requires absolute URLs)
+  // Use localhost for development, but this will be replaced with proper base URL in production
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const billsUrl = `${baseUrl}/api/representative/${bioguideId}/bills`;
 
   // Fetch bills data server-side
   let billsData: unknown[] = [];
   try {
-    const billsUrl = `${baseUrl}/api/representative/${bioguideId}/bills`;
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.log('SERVER FETCH URL:', billsUrl);
-    }
+    // Debug logging removed - was causing RSC issues
 
     const billsResponse = await fetch(billsUrl, {
       headers: {
@@ -204,13 +204,7 @@ export default async function RepresentativeProfilePage({
       },
     });
 
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.log('SERVER FETCH RESPONSE:', {
-        status: billsResponse.status,
-        statusText: billsResponse.statusText,
-      });
-    }
+    // Debug logging removed - was causing RSC issues
 
     if (billsResponse.ok) {
       const billsResponseData = await billsResponse.json();
@@ -219,12 +213,7 @@ export default async function RepresentativeProfilePage({
         billsResponseData.bills ||
         billsResponseData ||
         [];
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.log('SERVER BILLS RECEIVED:', {
-          count: Array.isArray(billsData) ? billsData.length : 'not array',
-        });
-      }
+      // Successfully fetched bills data
     } else {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
@@ -259,53 +248,7 @@ export default async function RepresentativeProfilePage({
     representative.name = `${representative.firstName} ${representative.lastName}`;
   }
 
-  // DEBUG: Log actual data values being passed to client
-  // Note: Using console.log directly in development to avoid React Server Component issues
-  if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
-    console.log('PAGE_DATA - Data being passed to RepresentativeProfileClient', JSON.stringify({
-      representative: {
-        bioguideId: representative.bioguideId,
-        name: representative.name,
-        chamber: representative.chamber,
-        hasCommittees: !!representative.committees,
-        committeesCount: representative.committees?.length || 0,
-      },
-      initialData: {
-        votes: Array.isArray(votingData) ? votingData.length : 'not array',
-        bills: Array.isArray(billsData) ? billsData.length : 'not array',
-        finance: typeof financeData === 'object' ? Object.keys(financeData).length : 'not object',
-        news: Array.isArray(newsData) ? newsData.length : 'not array',
-      },
-      actualDataSample: {
-        firstBill:
-          Array.isArray(billsData) && billsData.length > 0
-            ? {
-                title: (billsData[0] as unknown as { title?: string })?.title || 'no title',
-                number: (billsData[0] as unknown as { number?: string })?.number || 'no number',
-                congress:
-                  (billsData[0] as unknown as { congress?: number })?.congress || 'no congress',
-              }
-            : 'no bills',
-        firstVote:
-          Array.isArray(votingData) && votingData.length > 0
-            ? {
-                position:
-                  (votingData[0] as unknown as { position?: string })?.position || 'no position',
-                question:
-                  (votingData[0] as unknown as { question?: string })?.question?.substring?.(0, 50) ||
-                  'no question',
-              }
-            : 'no votes',
-        financeContributions:
-          (financeData as unknown as { recent_contributions?: unknown[] })?.recent_contributions
-            ?.length || 0,
-        newsCount: Array.isArray(newsData) ? newsData.length : 0,
-      },
-      partialErrors: Object.keys(partialErrors).length,
-      timestamp: new Date().toISOString(),
-    }, null, 2));
-  }
+  // Debug logging removed - was causing RSC serialization issues
 
   return (
     <ErrorBoundary>
@@ -428,18 +371,7 @@ export default async function RepresentativeProfilePage({
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Main Content Area */}
             <div className="lg:col-span-3">
-              <RepresentativeProfileClient
-                representative={representative}
-                initialData={{
-                  votes: votingData,
-                  bills: billsData,
-                  finance: financeData,
-                  news: newsData,
-                  partyAlignment: partyAlignmentData,
-                }}
-                partialErrors={partialErrors}
-                bioguideId={bioguideId}
-              />
+              <SimpleClientWrapper representative={representative} bioguideId={bioguideId} />
             </div>
 
             {/* Sidebar */}

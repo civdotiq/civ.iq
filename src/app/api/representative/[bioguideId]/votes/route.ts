@@ -7,8 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withCache } from '@/lib/cache-helper';
 import { RollCallParser } from '@/features/legislation/services/rollcall-parser';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { logger } from '@/lib/logging/logger-edge';
-import { monitorExternalApi } from '@/lib/monitoring/telemetry-edge';
+import logger from '@/lib/logging/simple-logger';
+import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
 interface Vote {
   voteId: string;
@@ -163,7 +163,7 @@ async function _getSenateVotingRecords(
   return [];
 }
 
-// Enhanced function to get recent votes using new House Roll Call Votes API
+// Enhanced function to get recent votes using correct Congress.gov member voting record API
 async function getEnhancedVotingRecords(
   bioguideId: string,
   chamber: string,
@@ -171,41 +171,102 @@ async function getEnhancedVotingRecords(
   _memberName?: string
 ): Promise<Vote[]> {
   return withCache(
-    `house-roll-call-votes-${bioguideId}-${chamber}-${limit}`,
+    `member-voting-record-${bioguideId}-${chamber}-${limit}`,
     async () => {
-      logger.info('Fetching real voting data from new House Roll Call Votes API', {
+      logger.info('Fetching real voting data from Congress.gov member voting record API', {
         bioguideId,
         chamber,
         limit,
       });
 
-      // Note: The House Roll Call API endpoint referenced in documentation does not actually exist
-      // Congress.gov API does not currently provide a rollCall endpoint for House votes
-      // Return empty array per no-mock-data policy
-      if (chamber === 'House') {
-        logger.info('House roll call API not available in Congress.gov', {
-          bioguideId,
-          chamber,
-          reason: 'Endpoint /v3/house/rollCall does not exist in current API',
-          source: 'congress-rollcall-api',
+      const monitor = monitorExternalApi('congress.gov', 'member-voting-record');
+
+      try {
+        // Use the correct Congress.gov endpoint for member voting records
+        const votingRecordUrl = `https://api.congress.gov/v3/member/${bioguideId}/voting-record?api_key=${process.env.CONGRESS_API_KEY}&limit=${limit}&format=json`;
+
+        const response = await fetch(votingRecordUrl, {
+          headers: {
+            Accept: 'application/json',
+          },
         });
-        return [];
-      } else {
-        // Senate members: Return empty array for now as Senate API also needs development
-        logger.info('Senate voting records not implemented', {
+
+        if (!response.ok) {
+          monitor.end(false, response.status);
+          logger.warn('Member voting record API request failed', {
+            bioguideId,
+            status: response.status,
+            statusText: response.statusText,
+          });
+          return [];
+        }
+
+        const data = await response.json();
+        monitor.end(true, 200);
+
+        // Congress.gov returns votes in a 'votes' array
+        const votes = data.votes || [];
+
+        logger.info('Member voting record data retrieved', {
+          bioguideId,
+          votesFound: votes.length,
+          chamber,
+        });
+
+        // Transform Congress.gov voting data to our Vote interface
+        const transformedVotes: Vote[] = votes.map((vote: unknown) => {
+          const voteData = vote as Record<string, unknown>;
+          const rollCall = voteData.rollCall as Record<string, unknown> | undefined;
+          const bill = voteData.bill as Record<string, unknown> | undefined;
+
+          return {
+            voteId: rollCall?.rollNumber
+              ? `${rollCall.congress}-${rollCall.rollNumber}`
+              : `vote-${Date.now()}`,
+            bill: {
+              number: (bill?.number as string) || 'Unknown',
+              title: (bill?.title as string) || (voteData.description as string) || 'Unknown Bill',
+              congress: rollCall?.congress?.toString() || '119',
+              type: (bill?.type as string) || 'Unknown',
+              url: bill?.url as string,
+            },
+            question:
+              (voteData.question as string) ||
+              (voteData.description as string) ||
+              'Unknown Question',
+            result: (voteData.result as string) || 'Unknown',
+            date:
+              (voteData.date as string) ||
+              (rollCall?.date as string) ||
+              new Date().toISOString().split('T')[0],
+            position:
+              (voteData.position as 'Yea' | 'Nay' | 'Not Voting' | 'Present') || 'Not Voting',
+            chamber: chamber as 'House' | 'Senate',
+            rollNumber: rollCall?.rollNumber as number,
+            isKeyVote: false, // Could be enhanced with additional logic
+            category: bill?.title ? categorizeBill(bill.title as string) : 'Other',
+            description: (voteData.description as string) || (voteData.question as string),
+            metadata: {
+              sourceUrl: rollCall?.url as string,
+              lastUpdated: new Date().toISOString(),
+              confidence: 'high' as const,
+            },
+          };
+        });
+
+        return transformedVotes;
+      } catch (error) {
+        monitor.end(false, 500);
+        logger.error('Error fetching member voting record', error as Error, {
           bioguideId,
           chamber,
-          reason: 'Senate voting API integration pending',
         });
         return [];
       }
-
-      // Return empty array if no data found
-      return [];
     },
     1800000 // 30 minutes cache for voting data
   ).catch(error => {
-    logger.warn('House roll call voting data fetch failed', {
+    logger.warn('Member voting record fetch failed', {
       bioguideId,
       error: (error as Error).message,
     });

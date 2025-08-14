@@ -16,6 +16,7 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     // Use console.error directly to avoid circular dependencies with logger
+    // eslint-disable-next-line no-console
     console.error('Global Error:', {
       message: error.message,
       digest: error.digest,
@@ -33,7 +34,7 @@ export default function GlobalError({
             <p className="text-gray-600 mb-4">
               Something went wrong with the application. Please try refreshing the page.
             </p>
-            {typeof process !== 'undefined' && process.env?.NODE_ENV === 'development' && (
+            {process.env?.NODE_ENV === 'development' && (
               <details className="text-left mb-4">
                 <summary className="cursor-pointer text-sm text-gray-500">Error details</summary>
                 <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
