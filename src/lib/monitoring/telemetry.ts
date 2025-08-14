@@ -4,7 +4,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { logger } from '../logging/logger-client';
+import logger from '../logging/simple-logger';
 
 // Simplified telemetry implementation for now
 // Note: OpenTelemetry can be re-enabled when dependencies are resolved

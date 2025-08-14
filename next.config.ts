@@ -48,10 +48,6 @@ const nextConfig: NextConfig = {
       // Exclude server-only dependencies from client bundle
       config.resolve.alias = {
         ...config.resolve.alias,
-        '@opentelemetry/api': false,
-        '@opentelemetry/auto-instrumentations-node': false,
-        '@opentelemetry/instrumentation-fs': false,
-        '@opentelemetry/instrumentation-http': false,
         '@redis/client': false,
         ioredis: false,
         redis: false,

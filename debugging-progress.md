@@ -250,3 +250,69 @@ Based on findings, Phase 3 (Data Structure Alignment) should focus on:
 ✅ Client-side rendering works without loading skeleton  
 ✅ Server-side data flows properly to all tabs  
 ✅ No more "Loading failed" or empty data states
+
+## CRITICAL INFRASTRUCTURE FIX - 2025-08-14 ✅
+
+### OpenTelemetry RSC Bundling Issue Resolution
+
+**Problem**: After the initial data flow fixes, client components stopped mounting entirely due to React Server Components (RSC) bundling failures.
+
+**Symptoms**:
+
+- Console error: `"Could not find the module in React Client Manifest"`
+- Server error: `"Cannot find module './vendor-chunks/@opentelemetry.js'"`
+- Client components failed to hydrate
+- Pages showed only loading skeletons
+
+**Root Cause Analysis**:
+OpenTelemetry packages were incompatible with Next.js 15 RSC bundling:
+
+- `@opentelemetry/api`
+- `@opentelemetry/auto-instrumentations-node`
+- `@opentelemetry/instrumentation-fs`
+- `@opentelemetry/instrumentation-http`
+- `@opentelemetry/resources`
+- `@opentelemetry/sdk-node`
+- `@opentelemetry/semantic-conventions`
+
+**Solution Applied**:
+
+1. **Removed OpenTelemetry Dependencies**:
+
+   ```bash
+   npm uninstall @opentelemetry/api @opentelemetry/auto-instrumentations-node \
+     @opentelemetry/instrumentation-fs @opentelemetry/instrumentation-http \
+     @opentelemetry/resources @opentelemetry/sdk-node @opentelemetry/semantic-conventions
+   ```
+
+2. **Simplified Telemetry Implementation** (`src/lib/monitoring/telemetry.ts`):
+   - Replaced OpenTelemetry spans with simple logging
+   - Maintained same API interface for backward compatibility
+   - Used `simple-logger` for performance monitoring
+
+3. **Cleaned Webpack Configuration** (`next.config.ts`):
+   - Removed OpenTelemetry package aliases from client bundle exclusions
+   - Kept other server-only dependency exclusions (Redis, winston)
+
+**Verification Results**:
+
+- ✅ `🔴 CLIENT MOUNTED at 2025-08-14T01:17:40.967Z`
+- ✅ Representative pages load with 200 OK
+- ✅ React hydration successful
+- ✅ No more bundling errors
+
+**Impact**:
+This fix resolved the fundamental infrastructure issue preventing client-side React components from mounting, ensuring the data flow improvements from Phase 2 could function properly.
+
+**Files Modified**:
+
+- `/package.json` - Removed OpenTelemetry dependencies
+- `/next.config.ts` - Cleaned webpack aliases
+- `/src/lib/monitoring/telemetry.ts` - Simplified implementation
+
+## Infrastructure Status - FINAL ✅
+
+- [x] React Server Components bundling ✅ **FIXED**
+- [x] Client component mounting ✅ **WORKING**
+- [x] OpenTelemetry compatibility ✅ **RESOLVED**
+- [x] Next.js 15 stability ✅ **STABLE**

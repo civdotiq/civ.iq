@@ -184,18 +184,18 @@ curl http://localhost:3000/api/representative/K000367 | jq '{name, party, state,
  * SESSION: [Date] [Time]
  * GOAL: [Specific objective]
  * CONTEXT: [Issue/Feature link]
- * 
+ *
  * CHECKPOINTS:
  * [ ] Environment validated (npm run validate:all)
  * [ ] Branch created/checked out
  * [ ] Related files identified
  * [ ] Tests identified/created
  * [ ] Documentation updated
- * 
+ *
  * FILES TO MODIFY:
  * - [ ] src/[specific/file/path.tsx]
  * - [ ] src/types/[interface.ts]
- * 
+ *
  * SUCCESS CRITERIA:
  * - [ ] [Measurable outcome]
  * - [ ] All tests passing
@@ -408,15 +408,15 @@ npx tsc --noEmit [fixed-file]
 
 ## 🚨 Troubleshooting Quick Reference
 
-| Issue                          | Quick Fix                                          | Validation                        |
-| ------------------------------ | -------------------------------------------------- | --------------------------------- |
-| "Cannot find module"           | `npm ci`                                           | `npm run build`                   |
-| "Type 'any' is not assignable" | Add types in `src/types/`                         | `npm run type-check`              |
-| "Test timeout"                 | Increase timeout in `jest.config.js`              | `npm test -- --verbose`           |
-| "Build fails"                  | `rm -rf .next && npm run build`                   | Check build-error.log             |
-| "API returns no data"          | Check `.env.local` for API keys                   | `npm run diagnose:apis`           |
-| "SWR not updating"             | Check cache keys and mutate                       | Browser DevTools Network tab      |
-| "Hydration mismatch"           | Wrap dynamic content in `Suspense`                | Check server vs client logs       |
+| Issue                          | Quick Fix                            | Validation                   |
+| ------------------------------ | ------------------------------------ | ---------------------------- |
+| "Cannot find module"           | `npm ci`                             | `npm run build`              |
+| "Type 'any' is not assignable" | Add types in `src/types/`            | `npm run type-check`         |
+| "Test timeout"                 | Increase timeout in `jest.config.js` | `npm test -- --verbose`      |
+| "Build fails"                  | `rm -rf .next && npm run build`      | Check build-error.log        |
+| "API returns no data"          | Check `.env.local` for API keys      | `npm run diagnose:apis`      |
+| "SWR not updating"             | Check cache keys and mutate          | Browser DevTools Network tab |
+| "Hydration mismatch"           | Wrap dynamic content in `Suspense`   | Check server vs client logs  |
 
 ## 📊 Current Status
 
@@ -478,7 +478,18 @@ echo "GOAL: [What you're implementing]" >> .session.log
 # 5. Note current focus below
 ```
 
-**Current Focus**: Claude Code Pattern Integration (2025-08-13):
+**Current Focus**: Infrastructure Stability & OpenTelemetry Resolution (2025-08-14):
+
+**CRITICAL FIX COMPLETED** ✅: OpenTelemetry RSC Bundling Issue
+
+- ✅ **Root Cause**: OpenTelemetry packages incompatible with Next.js 15 RSC bundling
+- ✅ **Error**: "Cannot find module './vendor-chunks/@opentelemetry.js'"
+- ✅ **Solution**: Removed all @opentelemetry/\* dependencies from package.json
+- ✅ **Telemetry**: Simplified implementation using `simple-logger` in telemetry.ts
+- ✅ **Verification**: Client components now mount (🔴 CLIENT MOUNTED)
+- ✅ **Status**: Representative pages load 200 OK, React hydration successful
+
+**Previous Focus**: Claude Code Pattern Integration (2025-08-13):
 
 - ✅ **CLAUDE.MD Enhanced**: Integrated Claude Code best practices
 - ✅ **Task Decomposition**: Added granular breakdown protocol
@@ -521,23 +532,27 @@ npm run validate:all
 ## 📚 Extended Documentation
 
 ### Core Documentation:
+
 - `CLAUDE.md` - THIS FILE - AI assistant instructions
 - `README.md` - Project overview and setup
 - `ROADMAP.md` - Development phases and planning
 
 ### Technical Guides:
+
 - `docs/API_REFERENCE.md` - Complete API documentation
 - `docs/ARCHITECTURE.md` - System design and patterns
 - `docs/DEVELOPMENT_GUIDE.md` - Development setup and commands
 - `docs/development/OODA_DEBUGGING_METHODOLOGY.md` - Advanced debugging
 
 ### Implementation Docs:
+
 - `docs/PHASE_TRACKER.md` - Feature completion tracking
 - `docs/ZIP_CODE_MAPPING_SYSTEM.md` - ZIP to district mapping
 - `docs/development/GDELT_NEWS_INTEGRATION.md` - News API setup
 - `docs/development/CAMPAIGN_FINANCE_FIX.md` - FEC integration
 
 ### Security & Deployment:
+
 - `SECURITY.md` - Security policies
 - `SECURITY-REMEDIATION.md` - Security audit details
 - `docs/deployment/` - Deployment guides
