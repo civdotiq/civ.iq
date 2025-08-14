@@ -138,18 +138,99 @@ export async function GET(
         hasAdditionalData: Object.keys(additionalData).length > 0,
       });
 
-      return NextResponse.json({
+      // Enhanced response structure with all required fields
+      const enhancedResponse = {
+        // Legacy format (keep for backward compatibility)
         representative,
         ...additionalData,
         success: true,
+
+        // Enhanced format with structured data
+        profile: {
+          basic: {
+            bioguideId: representative.bioguideId,
+            name: representative.name,
+            firstName: representative.firstName,
+            lastName: representative.lastName,
+            title: representative.title,
+            party: representative.party,
+            state: representative.state,
+            district: representative.district,
+            chamber: representative.chamber,
+          },
+          contact: {
+            phone: representative.phone || null,
+            email: representative.email || null,
+            website: representative.website || null,
+            officeAddress: representative.currentTerm?.address || null,
+          },
+          terms: representative.terms || [],
+          imageUrl: representative.imageUrl || null,
+        },
+        committees: {
+          count: (representative.committees || []).length,
+          memberships: (representative.committees || []).map(c => ({
+            name: c.name,
+            role: c.role || 'Member',
+            type: 'committee',
+            position: c.role || 'Member',
+            chamber: representative.chamber,
+            jurisdiction: 'Not specified',
+            website: null,
+          })),
+          leadership: (representative.committees || []).filter(c => c.role && c.role !== 'Member'),
+        },
+        biography: {
+          gender: representative.bio?.gender || null,
+          birthday: representative.bio?.birthday || null,
+          religion: representative.bio?.religion || null,
+          education: [],
+          profession: 'Not specified',
+          birthDate: representative.bio?.birthday || null,
+          birthPlace: 'Not specified',
+          familyStatus: 'Not specified',
+          militaryService: null,
+        },
+        socialMedia: {
+          ...(representative.socialMedia || {}),
+          platforms: {
+            twitter: representative.socialMedia?.twitter || null,
+            facebook: representative.socialMedia?.facebook || null,
+            instagram: representative.socialMedia?.instagram || null,
+            youtube: representative.socialMedia?.youtube || null,
+            mastodon: representative.socialMedia?.mastodon || null,
+          },
+          verified: {
+            twitter: !!representative.socialMedia?.twitter,
+            facebook: !!representative.socialMedia?.facebook,
+            instagram: !!representative.socialMedia?.instagram,
+            youtube: !!representative.socialMedia?.youtube,
+            mastodon: !!representative.socialMedia?.mastodon,
+          },
+          lastUpdated: new Date().toISOString(),
+        },
+        identifiers: {
+          bioguideId: representative.bioguideId,
+          fecId: representative.ids?.fec?.[0] || null,
+          openSecretsId: representative.ids?.opensecrets || null,
+          govtrackId: representative.ids?.govtrack || null,
+          ballotpediaId: representative.ids?.ballotpedia || null,
+          wikipediaId: representative.ids?.wikipedia || null,
+        },
         metadata: {
           dataSource: 'congress-legislators',
           cacheHit: false,
           responseTime: Date.now(),
           includeCommittees,
           includeLeadership,
+          lastUpdated: new Date().toISOString(),
+          dataSources: representative.metadata?.dataSources || ['congress-legislators'],
+          completeness: representative.metadata?.completeness,
+          dataStructure: 'enhanced',
         },
-      });
+      };
+
+      return NextResponse.json(enhancedResponse);
     }
 
     // Fallback: Check if we have Congress.gov API key
@@ -210,15 +291,97 @@ export async function GET(
         };
 
         logger.info('Successfully retrieved Congress.gov data', { bioguideId });
-        return NextResponse.json({
+        // Enhanced Congress.gov response structure
+        const enhancedResponse = {
+          // Legacy format (keep for backward compatibility)
           representative,
           success: true,
+
+          // Enhanced format with structured data
+          profile: {
+            basic: {
+              bioguideId: representative.bioguideId,
+              name: representative.name,
+              firstName: representative.firstName,
+              lastName: representative.lastName,
+              title: representative.title,
+              party: representative.party,
+              state: representative.state,
+              district: representative.district,
+              chamber: representative.chamber,
+            },
+            contact: {
+              phone: representative.phone || null,
+              email: representative.email || null,
+              website: representative.website || null,
+              officeAddress: null,
+            },
+            terms: representative.terms || [],
+            imageUrl: representative.imageUrl || null,
+          },
+          committees: {
+            count: (representative.committees || []).length,
+            memberships: (representative.committees || []).map(c => ({
+              name: c.name,
+              role: c.role || 'Member',
+              type: 'leadership',
+              position: c.role || 'Member',
+              chamber: representative.chamber,
+              jurisdiction: 'Not specified',
+              website: null,
+            })),
+            leadership: (representative.committees || []).filter(
+              c => c.role && c.role !== 'Member'
+            ),
+          },
+          biography: {
+            gender: null,
+            birthday: null,
+            religion: null,
+            education: [],
+            profession: 'Not specified',
+            birthDate: null,
+            birthPlace: 'Not specified',
+            familyStatus: 'Not specified',
+            militaryService: null,
+          },
+          socialMedia: {
+            platforms: {
+              twitter: null,
+              facebook: null,
+              instagram: null,
+              youtube: null,
+              mastodon: null,
+            },
+            verified: {
+              twitter: false,
+              facebook: false,
+              instagram: false,
+              youtube: false,
+              mastodon: false,
+            },
+            lastUpdated: new Date().toISOString(),
+          },
+          identifiers: {
+            bioguideId: representative.bioguideId,
+            fecId: null,
+            openSecretsId: null,
+            govtrackId: null,
+            ballotpediaId: null,
+            wikipediaId: null,
+          },
           metadata: {
             dataSource: 'congress.gov',
             cacheHit: false,
             responseTime: Date.now(),
+            lastUpdated: new Date().toISOString(),
+            dataSources: ['congress.gov'],
+            completeness: representative.metadata?.completeness,
+            dataStructure: 'enhanced',
           },
-        });
+        };
+
+        return NextResponse.json(enhancedResponse);
       } else {
         logger.warn('Congress.gov API request failed', {
           bioguideId,

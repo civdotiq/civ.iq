@@ -125,8 +125,48 @@ export async function GET(
       totalFetched: allBills?.length || 0,
     });
 
-    return NextResponse.json({
+    // Transform bills to include required fields for frontend
+    const transformedBills = targetCongressBills.map((bill: unknown) => {
+      const billData = bill as Record<string, unknown>;
+      const latestAction = billData.latestAction as Record<string, unknown> | undefined;
+      const policyArea = billData.policyArea as Record<string, unknown> | undefined;
+
+      return {
+        id: `${billData.congress}-${billData.type}-${billData.number}`,
+        number: `${billData.type} ${billData.number}`,
+        title: billData.title as string,
+        introducedDate: billData.introducedDate as string,
+        status: (latestAction?.text as string) || 'Unknown',
+        lastAction: (latestAction?.text as string) || 'No recent action',
+        congress: billData.congress as number,
+        type: billData.type as string,
+        policyArea: (policyArea?.name as string) || 'Unspecified',
+        url: billData.url as string,
+      };
+    });
+
+    // NOTE: Congress.gov API doesn't currently distinguish between sponsored vs cosponsored
+    // All bills returned from member/{bioguideId}/sponsored-legislation are sponsored bills
+    // Enhanced response structure for frontend compatibility
+    const enhancedResponse = {
+      // Legacy format (keep for backward compatibility)
       sponsoredLegislation: targetCongressBills,
+
+      // Enhanced format with counts and structure
+      sponsored: {
+        count: transformedBills.length,
+        bills: transformedBills,
+      },
+      cosponsored: {
+        count: 0, // NOTE: Would need separate API call to get cosponsored bills
+        bills: [], // NOTE: Implement cosponsored bills fetch when needed
+      },
+
+      // Summary
+      totalSponsored: transformedBills.length,
+      totalCosponsored: 0,
+      totalBills: transformedBills.length,
+
       metadata: {
         congresses: congressesToFetch,
         totalBills: targetCongressBills?.length || 0,
@@ -137,8 +177,12 @@ export async function GET(
           118: '118th Congress (2023-2025)',
           119: '119th Congress (2025-2027)',
         },
+        dataStructure: 'enhanced',
+        note: 'Cosponsored bills require separate API implementation',
       },
-    });
+    };
+
+    return NextResponse.json(enhancedResponse);
   } catch (error) {
     logger.error('Representative bills API error', error as Error, {
       bioguideId: (await params).bioguideId,
