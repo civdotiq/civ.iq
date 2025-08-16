@@ -10,6 +10,12 @@ import { SimpleClientWrapper } from './simple-client-wrapper';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { RepresentativePageSidebar } from '@/features/representatives/components/RepresentativePageSidebar';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
+import {
+  DataSourceBadge,
+  DataTransparencyPanel,
+  extractTransparencyMetadata,
+  type DataMetadata,
+} from '@/components/ui/DataTransparency';
 // Note: Using console directly in Server Components to avoid React rendering issues
 // import { logger } from '@/lib/logging/logger-client';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
@@ -192,28 +198,48 @@ export default async function RepresentativeProfilePage({
   // Use localhost for development, but this will be replaced with proper base URL in production
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const billsUrl = `${baseUrl}/api/representative/${bioguideId}/bills`;
+  const votesUrl = `${baseUrl}/api/representative/${bioguideId}/votes`;
 
   // Fetch bills data server-side
   let billsData: unknown[] = [];
+  let billsResponseData: unknown = null;
+  let billsMetadata: DataMetadata | null = null;
   try {
-    // Debug logging removed - was causing RSC issues
-
     const billsResponse = await fetch(billsUrl, {
       headers: {
         Accept: 'application/json',
       },
     });
 
-    // Debug logging removed - was causing RSC issues
-
     if (billsResponse.ok) {
-      const billsResponseData = await billsResponse.json();
-      billsData =
-        billsResponseData.sponsoredLegislation ||
-        billsResponseData.bills ||
-        billsResponseData ||
-        [];
-      // Successfully fetched bills data
+      billsResponseData = await billsResponse.json();
+      const responseObj = billsResponseData as Record<string, unknown>;
+
+      // Extract metadata for transparency
+      billsMetadata = extractTransparencyMetadata(responseObj);
+
+      billsData = Array.isArray(responseObj?.sponsoredLegislation)
+        ? responseObj.sponsoredLegislation
+        : Array.isArray(responseObj?.bills)
+          ? responseObj.bills
+          : Array.isArray(billsResponseData)
+            ? billsResponseData
+            : [];
+
+      // STEP 1 DEBUG: Server component bills data structure
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('\n=== STEP 1: SERVER COMPONENT BILLS DATA ===');
+        // eslint-disable-next-line no-console
+        console.log('🔍 Raw bills response:', JSON.stringify(billsResponseData, null, 2));
+        // eslint-disable-next-line no-console
+        console.log('🔍 Extracted bills array:', billsData);
+        // eslint-disable-next-line no-console
+        console.log(
+          '🔍 Bills count:',
+          Array.isArray(billsData) ? billsData.length : 'Not an array'
+        );
+      }
     } else {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
@@ -228,8 +254,53 @@ export default async function RepresentativeProfilePage({
     billsData = [];
   }
 
-  // Initialize other data as empty for now (can be filled server-side later)
-  const votingData: unknown[] = [];
+  // Fetch votes data server-side
+  let votingData: unknown[] = [];
+  let votesResponseData: unknown = null;
+  let votesMetadata: DataMetadata | null = null;
+  try {
+    const votesResponse = await fetch(votesUrl, {
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+
+    if (votesResponse.ok) {
+      votesResponseData = await votesResponse.json();
+      const votesObj = votesResponseData as Record<string, unknown>;
+
+      // Extract metadata for transparency
+      votesMetadata = extractTransparencyMetadata(votesObj);
+
+      votingData = Array.isArray(votesObj?.votes) ? votesObj.votes : [];
+
+      // STEP 1 DEBUG: Server component votes data structure
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('\n=== STEP 1: SERVER COMPONENT VOTES DATA ===');
+        // eslint-disable-next-line no-console
+        console.log('🔍 Raw votes response:', JSON.stringify(votesResponseData, null, 2));
+        // eslint-disable-next-line no-console
+        console.log('🔍 Extracted votes array:', votingData);
+        // eslint-disable-next-line no-console
+        console.log(
+          '🔍 Votes count:',
+          Array.isArray(votingData) ? votingData.length : 'Not an array'
+        );
+      }
+    } else {
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Votes fetch failed:', `HTTP ${votesResponse.status}`);
+      }
+    }
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.error('Votes fetch error:', error);
+    }
+    votingData = [];
+  }
   const financeData: Record<string, unknown> = {};
   const newsData: unknown[] = [];
   const partyAlignmentData: Record<string, unknown> = {};
@@ -332,6 +403,39 @@ export default async function RepresentativeProfilePage({
                 </div>
               </div>
             </div>
+
+            {/* Data Transparency Section */}
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="text-sm text-gray-600 mb-3 font-medium">Data Sources</div>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs text-gray-500 font-medium">Representative Info</span>
+                  <DataSourceBadge source="congress-legislators" size="sm" />
+                </div>
+                {billsMetadata && (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs text-gray-500 font-medium">Bills & Legislation</span>
+                    <DataTransparencyPanel
+                      metadata={billsMetadata}
+                      layout="horizontal"
+                      showAll={false}
+                      className="text-xs"
+                    />
+                  </div>
+                )}
+                {votesMetadata && (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs text-gray-500 font-medium">Voting Records</span>
+                    <DataTransparencyPanel
+                      metadata={votesMetadata}
+                      layout="horizontal"
+                      showAll={false}
+                      className="text-xs"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Error Display for Partial Failures */}
@@ -371,7 +475,16 @@ export default async function RepresentativeProfilePage({
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Main Content Area */}
             <div className="lg:col-span-3">
-              <SimpleClientWrapper representative={representative} bioguideId={bioguideId} />
+              <SimpleClientWrapper
+                representative={representative}
+                bioguideId={bioguideId}
+                serverData={{
+                  bills: billsData,
+                  votes: votingData,
+                  finance: financeData,
+                  news: newsData,
+                }}
+              />
             </div>
 
             {/* Sidebar */}

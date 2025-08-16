@@ -9,10 +9,16 @@ import { useState, useRef, useCallback, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Representative } from '@/features/representatives/services/congress-api';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
+import { DataSourceBadge, CacheStatusIndicator } from '@/components/ui/DataTransparency';
 
 interface RepresentativeGridProps {
   representatives: Representative[];
   compareIds: string[];
+  metadata?: {
+    source?: string;
+    cached?: boolean;
+    dataQuality?: 'high' | 'medium' | 'low' | 'unavailable';
+  };
 }
 
 // Virtual scrolling component for performance
@@ -93,9 +99,15 @@ const VirtualizedGrid = memo(function VirtualizedGrid({
 const RepresentativeCard = memo(function RepresentativeCard({
   rep,
   compareIds,
+  metadata,
 }: {
   rep: Representative;
   compareIds: string[];
+  metadata?: {
+    source?: string;
+    cached?: boolean;
+    dataQuality?: 'high' | 'medium' | 'low' | 'unavailable';
+  };
 }) {
   const router = useRouter();
 
@@ -138,6 +150,16 @@ const RepresentativeCard = memo(function RepresentativeCard({
             </div>
           </div>
         </div>
+
+        {/* Data Transparency Section */}
+        {metadata && (
+          <div className="flex flex-wrap items-center gap-2 mb-3 pb-3 border-b border-gray-100">
+            {metadata.source && <DataSourceBadge source={metadata.source} size="sm" />}
+            {typeof metadata.cached === 'boolean' && (
+              <CacheStatusIndicator cached={metadata.cached} showLabel={false} />
+            )}
+          </div>
+        )}
 
         <div className="space-y-3 mb-4">
           {rep.phone && (
@@ -227,12 +249,18 @@ const RepresentativeCard = memo(function RepresentativeCard({
   );
 });
 
-export function RepresentativeGrid({ representatives, compareIds }: RepresentativeGridProps) {
+export function RepresentativeGrid({
+  representatives,
+  compareIds,
+  metadata,
+}: RepresentativeGridProps) {
   return (
     <VirtualizedGrid
       items={representatives}
-      renderItem={rep => <RepresentativeCard rep={rep} compareIds={compareIds} />}
-      itemHeight={220}
+      renderItem={rep => (
+        <RepresentativeCard rep={rep} compareIds={compareIds} metadata={metadata} />
+      )}
+      itemHeight={metadata ? 250 : 220} // Increase height when showing metadata
       containerHeight={800}
       columnsPerRow={3}
     />
