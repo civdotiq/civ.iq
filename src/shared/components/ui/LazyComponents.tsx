@@ -28,7 +28,7 @@ const ChartSkeleton = () => (
   </div>
 );
 
-const MapSkeleton = () => (
+const _MapSkeleton = () => (
   <div className="relative bg-gray-100 rounded-lg overflow-hidden" style={{ minHeight: '400px' }}>
     <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-green-100 animate-pulse">
       <div className="absolute top-4 left-4 bg-white rounded-lg p-3 shadow-sm">
@@ -50,7 +50,7 @@ const MapSkeleton = () => (
   </div>
 );
 
-const NewsFeedSkeleton = () => (
+const _NewsFeedSkeleton = () => (
   <div className="space-y-4">
     {[...Array(3)].map((_, i) => (
       <div key={i} className="bg-white rounded-lg border border-gray-200 p-6">
@@ -83,17 +83,19 @@ const AnalyticsSkeleton = () => (
 );
 
 // Enhanced lazy loaded components with better error handling and chunking
-export const LazyDistrictMap = lazy(() =>
-  import(/* webpackChunkName: "district-map" */ './DistrictMap').then(module => ({
-    default: module.DistrictMap,
-  }))
-);
+// TODO: Implement DistrictMap component
+// export const LazyDistrictMap = lazy(() =>
+//   import(/* webpackChunkName: "district-map" */ './DistrictMap').then(module => ({
+//     default: module.DistrictMap,
+//   }))
+// );
 
-export const LazyInteractiveDistrictMap = lazy(() =>
-  import(/* webpackChunkName: "interactive-map" */ './InteractiveDistrictMap').then(module => ({
-    default: module.InteractiveDistrictMap,
-  }))
-);
+// TODO: Implement InteractiveDistrictMap component
+// export const LazyInteractiveDistrictMap = lazy(() =>
+//   import(/* webpackChunkName: "interactive-map" */ './InteractiveDistrictMap').then(module => ({
+//     default: module.InteractiveDistrictMap,
+//   }))
+// );
 
 // Charts with individual chunk names for better caching
 export const LazyBarChart = lazy(() =>
@@ -115,48 +117,53 @@ export const LazyDonutChart = lazy(() =>
 );
 
 // Heavy visualization components
-export const LazyEnhancedNewsFeed = lazy(() =>
-  import(/* webpackChunkName: "news-feed" */ '../features/news/components/EnhancedNewsFeed').then(
-    module => ({
-      default: module.EnhancedNewsFeed,
-    })
-  )
-);
+// TODO: Create EnhancedNewsFeed component
+// export const LazyEnhancedNewsFeed = lazy(() =>
+//   import(/* webpackChunkName: "news-feed" */ '../features/news/components/EnhancedNewsFeed').then(
+//     module => ({
+//       default: module.EnhancedNewsFeed,
+//     })
+//   )
+// );
 
 export const LazyBillsTracker = lazy(() =>
   import(
-    /* webpackChunkName: "bills-tracker" */ '../features/legislation/components/BillsTracker'
+    /* webpackChunkName: "bills-tracker" */ '@/features/legislation/components/BillsTracker'
   ).then(module => ({
     default: module.BillsTracker,
   }))
 );
 
-export const LazyPartyAlignmentAnalysis = lazy(() =>
-  import(/* webpackChunkName: "party-alignment" */ './PartyAlignmentAnalysis').then(module => ({
-    default: module.PartyAlignmentAnalysis,
-  }))
-);
+// TODO: Create PartyAlignmentAnalysis component
+// export const LazyPartyAlignmentAnalysis = lazy(() =>
+//   import(/* webpackChunkName: "party-alignment" */ './PartyAlignmentAnalysis').then(module => ({
+//     default: module.PartyAlignmentAnalysis,
+//   }))
+// );
 
 // Analytics components
 export const LazyVotingTrendsChart = lazy(() =>
-  import(/* webpackChunkName: "voting-trends" */ './analytics/VotingTrendsChart').then(module => ({
+  import(
+    /* webpackChunkName: "voting-trends" */ '@/features/analytics/components/VotingTrendsChart'
+  ).then(module => ({
     default: module.VotingTrendsChart,
   }))
 );
 
 export const LazyCampaignFinanceChart = lazy(() =>
-  import(/* webpackChunkName: "campaign-finance-chart" */ './analytics/CampaignFinanceChart').then(
-    module => ({
-      default: module.CampaignFinanceChart,
-    })
-  )
+  import(
+    /* webpackChunkName: "campaign-finance-chart" */ '@/features/analytics/components/CampaignFinanceChart'
+  ).then(module => ({
+    default: module.CampaignFinanceChart,
+  }))
 );
 
-export const LazyEffectivenessChart = lazy(() =>
-  import(/* webpackChunkName: "effectiveness-chart" */ './analytics/EffectivenessChart').then(
-    module => ({ default: module.EffectivenessChart })
-  )
-);
+// TODO: Create EffectivenessChart component
+// export const LazyEffectivenessChart = lazy(() =>
+//   import(/* webpackChunkName: "effectiveness-chart" */ './analytics/EffectivenessChart').then(
+//     module => ({ default: module.EffectivenessChart })
+//   )
+// );
 
 // Campaign Finance Visualizer - Large component with D3
 export const LazyCampaignFinanceVisualizer = lazy(() =>
@@ -197,100 +204,107 @@ export const LazyInteractiveDistrictMapViz = lazy(() =>
 );
 
 // Dashboard components
-export const LazyCivicEngagementDashboard = lazy(() =>
-  import(/* webpackChunkName: "dashboard" */ './dashboard/AdvancedDashboard').then(module => ({
-    default: module.CivicEngagementDashboard,
-  }))
-);
+// TODO: Create AdvancedDashboard component
+// export const LazyCivicEngagementDashboard = lazy(() =>
+//   import(/* webpackChunkName: "dashboard" */ './dashboard/AdvancedDashboard').then(module => ({
+//     default: module.CivicEngagementDashboard,
+//   }))
+// );
 
 export const LazyStateDataVisualizations = lazy(
   () => import(/* webpackChunkName: "state-data-viz" */ './StateDataVisualizations')
 );
 
-export const LazyAdvancedSearch = lazy(() =>
-  import(
-    /* webpackChunkName: "advanced-search" */ '../features/search/components/AdvancedSearch'
-  ).then(module => ({
-    default: module.AdvancedSearch,
-  }))
-);
+// TODO: Create AdvancedSearch component
+// export const LazyAdvancedSearch = lazy(() =>
+//   import(
+//     /* webpackChunkName: "advanced-search" */ '../features/search/components/AdvancedSearch'
+//   ).then(module => ({
+//     default: module.AdvancedSearch,
+//   }))
+// );
 
 // Campaign Finance Analysis Components
-export const LazyIndustryBreakdown = lazy(() =>
-  import(
-    /* webpackChunkName: "campaign-finance-components" */ './campaign-finance/IndustryBreakdown'
-  ).then(module => ({ default: module.IndustryBreakdown }))
-);
+// TODO: Create campaign finance components
+// export const LazyIndustryBreakdown = lazy(() =>
+//   import(
+//     /* webpackChunkName: "campaign-finance-components" */ './campaign-finance/IndustryBreakdown'
+//   ).then(module => ({ default: module.IndustryBreakdown }))
+// );
 
-export const LazyDonorAnalysis = lazy(() =>
-  import(
-    /* webpackChunkName: "campaign-finance-components" */ './campaign-finance/DonorAnalysis'
-  ).then(module => ({ default: module.DonorAnalysis }))
-);
+// export const LazyDonorAnalysis = lazy(() =>
+//   import(
+//     /* webpackChunkName: "campaign-finance-components" */ './campaign-finance/DonorAnalysis'
+//   ).then(module => ({ default: module.DonorAnalysis }))
+// );
 
-export const LazyFundraisingTrends = lazy(() =>
-  import(
-    /* webpackChunkName: "campaign-finance-components" */ './campaign-finance/FundraisingTrends'
-  ).then(module => ({ default: module.FundraisingTrends }))
-);
+// export const LazyFundraisingTrends = lazy(() =>
+//   import(
+//     /* webpackChunkName: "campaign-finance-components" */ './campaign-finance/FundraisingTrends'
+//   ).then(module => ({ default: module.FundraisingTrends }))
+// );
 
 // Enhanced Voting and Analysis Components
-export const LazyEnhancedVotingChart = lazy(() =>
-  import(/* webpackChunkName: "voting-analysis" */ './EnhancedVotingChart').then(module => ({
-    default: module.EnhancedVotingChart,
-  }))
-);
+// TODO: Create voting analysis components
+// export const LazyEnhancedVotingChart = lazy(() =>
+//   import(/* webpackChunkName: "voting-analysis" */ './EnhancedVotingChart').then(module => ({
+//     default: module.EnhancedVotingChart,
+//   }))
+// );
 
-export const LazyVotingPatternAnalysis = lazy(() =>
-  import(/* webpackChunkName: "voting-analysis" */ './VotingPatternAnalysis').then(module => ({
-    default: module.VotingPatternAnalysis,
-  }))
-);
+// export const LazyVotingPatternAnalysis = lazy(() =>
+//   import(/* webpackChunkName: "voting-analysis" */ './VotingPatternAnalysis').then(module => ({
+//     default: module.VotingPatternAnalysis,
+//   }))
+// );
 
-export const LazyVotingRecordsTable = lazy(() =>
-  import(/* webpackChunkName: "voting-analysis" */ './VotingRecordsTable').then(module => ({
-    default: module.VotingRecordsTable,
-  }))
-);
+// export const LazyVotingRecordsTable = lazy(() =>
+//   import(/* webpackChunkName: "voting-analysis" */ './VotingRecordsTable').then(module => ({
+//     default: module.VotingRecordsTable,
+//   }))
+// );
 
 // Committee and Timeline Components
-export const LazyCommitteeActivityTimeline = lazy(
-  () => import(/* webpackChunkName: "committee-components" */ './CommitteeActivityTimeline')
-);
+// TODO: Create committee components
+// export const LazyCommitteeActivityTimeline = lazy(
+//   () => import(/* webpackChunkName: "committee-components" */ './CommitteeActivityTimeline')
+// );
 
-export const LazyCommitteeBillsAndReports = lazy(
-  () =>
-    import(
-      /* webpackChunkName: "committee-components" */ '../features/legislation/components/CommitteeBillsAndReports'
-    )
-);
+// export const LazyCommitteeBillsAndReports = lazy(
+//   () =>
+//     import(
+//       /* webpackChunkName: "committee-components" */ '../features/legislation/components/CommitteeBillsAndReports'
+//     )
+// );
 
 // Third-party heavy components
 export const LazyLeafletMap = lazy(
   () => import(/* webpackChunkName: "leaflet-components" */ './MapComponent')
 );
 
-export const LazyDistrictBoundaryMap = lazy(
-  () => import(/* webpackChunkName: "leaflet-components" */ './DistrictBoundaryMap')
-);
+// TODO: Create DistrictBoundaryMap component
+// export const LazyDistrictBoundaryMap = lazy(
+//   () => import(/* webpackChunkName: "leaflet-components" */ './DistrictBoundaryMap')
+// );
 
 // Generic component props type (for future use)
 // type ComponentProps = Record<string, unknown>;
 
 // Wrapper components with appropriate loading states
+// TODO: Re-enable when components are created
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const DistrictMapWithSuspense = (props: any) => (
-  <Suspense fallback={<MapSkeleton />}>
-    <LazyDistrictMap {...props} />
-  </Suspense>
-);
+// export const DistrictMapWithSuspense = (props: any) => (
+//   <Suspense fallback={<MapSkeleton />}>
+//     <LazyDistrictMap {...props} />
+//   </Suspense>
+// );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const InteractiveDistrictMapWithSuspense = (props: any) => (
-  <Suspense fallback={<MapSkeleton />}>
-    <LazyInteractiveDistrictMap {...props} />
-  </Suspense>
-);
+// export const InteractiveDistrictMapWithSuspense = (props: any) => (
+//   <Suspense fallback={<MapSkeleton />}>
+//     <LazyInteractiveDistrictMap {...props} />
+//   </Suspense>
+// );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ChartsWithSuspense = (props: any) => (
@@ -299,12 +313,13 @@ export const ChartsWithSuspense = (props: any) => (
   </Suspense>
 );
 
+// TODO: Re-enable when component is created
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const EnhancedNewsFeedWithSuspense = (props: any) => (
-  <Suspense fallback={<NewsFeedSkeleton />}>
-    <LazyEnhancedNewsFeed {...props} />
-  </Suspense>
-);
+// export const EnhancedNewsFeedWithSuspense = (props: any) => (
+//   <Suspense fallback={<NewsFeedSkeleton />}>
+//     <LazyEnhancedNewsFeed {...props} />
+//   </Suspense>
+// );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const BillsTrackerWithSuspense = (props: any) => (
@@ -313,12 +328,13 @@ export const BillsTrackerWithSuspense = (props: any) => (
   </Suspense>
 );
 
+// TODO: Re-enable when component is created
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const PartyAlignmentAnalysisWithSuspense = (props: any) => (
-  <Suspense fallback={<ChartSkeleton />}>
-    <LazyPartyAlignmentAnalysis {...props} />
-  </Suspense>
-);
+// export const PartyAlignmentAnalysisWithSuspense = (props: any) => (
+//   <Suspense fallback={<ChartSkeleton />}>
+//     <LazyPartyAlignmentAnalysis {...props} />
+//   </Suspense>
+// );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const VotingTrendsChartWithSuspense = (props: any) => (
@@ -334,12 +350,13 @@ export const CampaignFinanceChartWithSuspense = (props: any) => (
   </Suspense>
 );
 
+// TODO: Re-enable when component is created
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const EffectivenessChartWithSuspense = (props: any) => (
-  <Suspense fallback={<ChartSkeleton />}>
-    <LazyEffectivenessChart {...props} />
-  </Suspense>
-);
+// export const EffectivenessChartWithSuspense = (props: any) => (
+//   <Suspense fallback={<ChartSkeleton />}>
+//     <LazyEffectivenessChart {...props} />
+//   </Suspense>
+// );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const AdvancedDashboardWithSuspense = (_props: any) => (
@@ -362,12 +379,13 @@ export const StateDataVisualizationsWithSuspense = (props: any) => (
   </Suspense>
 );
 
+// TODO: Re-enable when component is created
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const AdvancedSearchWithSuspense = (props: any) => (
-  <Suspense fallback={<div className="animate-pulse bg-gray-200 h-12 rounded" />}>
-    <LazyAdvancedSearch {...props} />
-  </Suspense>
-);
+// export const AdvancedSearchWithSuspense = (props: any) => (
+//   <Suspense fallback={<div className="animate-pulse bg-gray-200 h-12 rounded" />}>
+//     <LazyAdvancedSearch {...props} />
+//   </Suspense>
+// );
 
 // Campaign Finance Components with Suspense
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -377,41 +395,43 @@ export const CampaignFinanceVisualizerWithSuspense = (props: any) => (
   </Suspense>
 );
 
+// TODO: Re-enable when components are created
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const IndustryBreakdownWithSuspense = (props: any) => (
-  <Suspense fallback={<ChartSkeleton />}>
-    <LazyIndustryBreakdown {...props} />
-  </Suspense>
-);
+// export const IndustryBreakdownWithSuspense = (props: any) => (
+//   <Suspense fallback={<ChartSkeleton />}>
+//     <LazyIndustryBreakdown {...props} />
+//   </Suspense>
+// );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const DonorAnalysisWithSuspense = (props: any) => (
-  <Suspense fallback={<ChartSkeleton />}>
-    <LazyDonorAnalysis {...props} />
-  </Suspense>
-);
+// export const DonorAnalysisWithSuspense = (props: any) => (
+//   <Suspense fallback={<ChartSkeleton />}>
+//     <LazyDonorAnalysis {...props} />
+//   </Suspense>
+// );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const FundraisingTrendsWithSuspense = (props: any) => (
-  <Suspense fallback={<ChartSkeleton />}>
-    <LazyFundraisingTrends {...props} />
-  </Suspense>
-);
+// export const FundraisingTrendsWithSuspense = (props: any) => (
+//   <Suspense fallback={<ChartSkeleton />}>
+//     <LazyFundraisingTrends {...props} />
+//   </Suspense>
+// );
 
 // Committee Components with Suspense
+// TODO: Re-enable when components are created
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const CommitteeActivityTimelineWithSuspense = (props: any) => (
-  <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded" />}>
-    <LazyCommitteeActivityTimeline {...props} />
-  </Suspense>
-);
+// export const CommitteeActivityTimelineWithSuspense = (props: any) => (
+//   <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded" />}>
+//     <LazyCommitteeActivityTimeline {...props} />
+//   </Suspense>
+// );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const CommitteeBillsAndReportsWithSuspense = (props: any) => (
-  <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded" />}>
-    <LazyCommitteeBillsAndReports {...props} />
-  </Suspense>
-);
+// export const CommitteeBillsAndReportsWithSuspense = (props: any) => (
+//   <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded" />}>
+//     <LazyCommitteeBillsAndReports {...props} />
+//   </Suspense>
+// );
 
 // Higher-order component for lazy loading with intersection observer
 export function withLazyLoading<P extends object>(

@@ -5,10 +5,10 @@
 
 /**
  * OpenStates.org API Integration
- * 
+ *
  * This module provides utilities for integrating with the OpenStates.org API
  * to fetch real state legislature and bill data.
- * 
+ *
  * API Documentation: https://docs.openstates.org/
  */
 
@@ -17,6 +17,140 @@ interface OpenStatesConfig {
   baseUrl: string;
   timeout: number;
   retryAttempts: number;
+}
+
+// GraphQL Response Types
+interface GraphQLError {
+  message: string;
+  locations?: Array<{ line: number; column: number }>;
+  path?: string[];
+}
+
+interface GraphQLResponse<T = unknown> {
+  data?: T;
+  errors?: GraphQLError[];
+}
+
+// GraphQL Edge/Node Pattern Types
+interface GraphQLEdge<T> {
+  node: T;
+  cursor?: string;
+}
+
+interface GraphQLConnection<T> {
+  edges: GraphQLEdge<T>[];
+  pageInfo?: {
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    startCursor?: string;
+    endCursor?: string;
+  };
+}
+
+// Raw GraphQL Node Types (before transformation)
+interface RawLegislatorNode {
+  id: string;
+  name: string;
+  party?: string;
+  currentMemberships?: Array<{
+    organization?: {
+      chamber?: string;
+      name?: string;
+      jurisdiction?: {
+        name?: string;
+      };
+    };
+    post?: {
+      label?: string;
+    };
+    startDate?: string;
+    endDate?: string;
+  }>;
+  contactDetails?: Array<{
+    type: string;
+    value: string;
+    note?: string;
+  }>;
+  image?: string;
+  links?: Array<{
+    url: string;
+    note?: string;
+  }>;
+  extras?: Record<string, unknown>;
+}
+
+interface RawBillNode {
+  id: string;
+  identifier: string;
+  title: string;
+  abstract?: string;
+  fromOrganization?: {
+    chamber?: string;
+    name?: string;
+  };
+  classification?: string[];
+  subject?: string[];
+  sponsorships?: Array<{
+    name: string;
+    entityType: string;
+    classification: string;
+    primary: boolean;
+  }>;
+  actions?: Array<{
+    date: string;
+    description: string;
+    organization?: {
+      name?: string;
+    };
+    classification?: string[];
+  }>;
+  votes?: Array<{
+    identifier: string;
+    motionText: string;
+    startDate: string;
+    result: string;
+    counts?: Array<{
+      option: string;
+      value: number;
+    }>;
+  }>;
+  sources?: Array<{
+    url: string;
+    note?: string;
+  }>;
+  extras?: Record<string, unknown>;
+}
+
+interface RawJurisdictionNode {
+  id: string;
+  name: string;
+  classification: string;
+  divisionId: string;
+  url: string;
+  organizations?: Array<{
+    name: string;
+    chamber?: string;
+    classification: string;
+  }>;
+  legislativeSessions?: Array<{
+    name: string;
+    startDate: string;
+    endDate: string;
+    active: boolean;
+  }>;
+}
+
+// Response Data Types
+interface LegislatorsResponse {
+  people: GraphQLConnection<RawLegislatorNode>;
+}
+
+interface BillsResponse {
+  bills: GraphQLConnection<RawBillNode>;
+}
+
+interface JurisdictionResponse {
+  jurisdiction: RawJurisdictionNode;
 }
 
 interface OpenStatesLegislator {
@@ -38,9 +172,9 @@ interface OpenStatesLegislator {
   }>;
   links?: Array<{
     url: string;
-    note: string;
+    note?: string;
   }>;
-  extras?: Record<string, any>;
+  extras?: Record<string, unknown>;
 }
 
 interface OpenStatesBill {
@@ -78,7 +212,7 @@ interface OpenStatesBill {
     url: string;
     note?: string;
   }>;
-  extras?: Record<string, any>;
+  extras?: Record<string, unknown>;
 }
 
 interface OpenStatesJurisdiction {
@@ -87,10 +221,13 @@ interface OpenStatesJurisdiction {
   classification: string;
   division_id: string;
   url: string;
-  chambers: Record<string, {
-    name: string;
-    title: string;
-  }>;
+  chambers: Record<
+    string,
+    {
+      name: string;
+      title: string;
+    }
+  >;
   session?: {
     name: string;
     start_date: string;
@@ -108,29 +245,32 @@ class OpenStatesAPI {
       baseUrl: 'https://openstates.org/graphql',
       timeout: 30000,
       retryAttempts: 3,
-      ...config
+      ...config,
     };
-    
+
     this.cache = new Map();
   }
 
-  private async makeRequest(query: string, variables?: Record<string, any>): Promise<any> {
+  private async makeRequest<T = unknown>(
+    query: string,
+    variables?: Record<string, unknown>
+  ): Promise<T> {
     const cacheKey = JSON.stringify({ query, variables });
     const cached = this.cache.get(cacheKey);
-    
+
     // Check cache first
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
-      return cached.data;
+      return cached.data as T;
     }
 
     const requestBody = {
       query,
-      variables: variables || {}
+      variables: variables || {},
     };
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'User-Agent': 'CivIQ-Hub/1.0'
+      'User-Agent': 'CivIQ-Hub/1.0',
     };
 
     if (this.config.apiKey) {
@@ -148,7 +288,7 @@ class OpenStatesAPI {
           method: 'POST',
           headers,
           body: JSON.stringify(requestBody),
-          signal: controller.signal
+          signal: controller.signal,
         });
 
         clearTimeout(timeoutId);
@@ -157,24 +297,29 @@ class OpenStatesAPI {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        const data = await response.json();
+        const data: GraphQLResponse<T> = await response.json();
 
         if (data.errors) {
-          throw new Error(`GraphQL Error: ${data.errors.map((e: unknown) => e.message).join(', ')}`);
+          throw new Error(
+            `GraphQL Error: ${data.errors.map((e: GraphQLError) => e.message).join(', ')}`
+          );
         }
 
         // Cache successful response for 30 minutes
         this.cache.set(cacheKey, {
           data: data.data,
           timestamp: Date.now(),
-          ttl: 30 * 60 * 1000
+          ttl: 30 * 60 * 1000,
         });
 
-        return data.data;
+        if (!data.data) {
+          throw new Error('No data returned from GraphQL API');
+        }
 
+        return data.data;
       } catch (error) {
         lastError = error as Error;
-        
+
         if (attempt < this.config.retryAttempts) {
           // Wait before retry with exponential backoff
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
@@ -188,7 +333,10 @@ class OpenStatesAPI {
   /**
    * Get legislators for a specific state
    */
-  async getLegislators(state: string, chamber?: 'upper' | 'lower'): Promise<OpenStatesLegislator[]> {
+  async getLegislators(
+    state: string,
+    chamber?: 'upper' | 'lower'
+  ): Promise<OpenStatesLegislator[]> {
     const query = `
       query GetLegislators($state: String!, $chamber: String) {
         people(jurisdiction: $state, memberOf: $chamber) {
@@ -226,16 +374,18 @@ class OpenStatesAPI {
     `;
 
     const variables = { state: state.toLowerCase(), chamber };
-    const result = await this.makeRequest(query, variables);
-    
-    return result.people.edges.map((edge: unknown) => this.transformLegislator(edge.node, state));
+    const result = await this.makeRequest<LegislatorsResponse>(query, variables);
+
+    return result.people.edges.map((edge: GraphQLEdge<RawLegislatorNode>) =>
+      this.transformLegislator(edge.node, state)
+    );
   }
 
   /**
    * Get bills for a specific state and session
    */
   async getBills(
-    state: string, 
+    state: string,
     session?: string,
     chamber?: 'upper' | 'lower',
     subject?: string,
@@ -297,17 +447,19 @@ class OpenStatesAPI {
       }
     `;
 
-    const variables = { 
-      state: state.toLowerCase(), 
-      session, 
-      chamber, 
+    const variables = {
+      state: state.toLowerCase(),
+      session,
+      chamber,
       subject,
-      first: limit 
+      first: limit,
     };
-    
-    const result = await this.makeRequest(query, variables);
-    
-    return result.bills.edges.map((edge: unknown) => this.transformBill(edge.node, state));
+
+    const result = await this.makeRequest<BillsResponse>(query, variables);
+
+    return result.bills.edges.map((edge: GraphQLEdge<RawBillNode>) =>
+      this.transformBill(edge.node, state)
+    );
   }
 
   /**
@@ -337,7 +489,9 @@ class OpenStatesAPI {
       }
     `;
 
-    const result = await this.makeRequest(query, { state: state.toLowerCase() });
+    const result = await this.makeRequest<JurisdictionResponse>(query, {
+      state: state.toLowerCase(),
+    });
     return this.transformJurisdiction(result.jurisdiction);
   }
 
@@ -376,86 +530,95 @@ class OpenStatesAPI {
       }
     `;
 
-    const result = await this.makeRequest(query, { name, state: state?.toLowerCase() });
-    return result.people.edges.map((edge: unknown) => this.transformLegislator(edge.node, state || 'unknown'));
+    const result = await this.makeRequest<LegislatorsResponse>(query, {
+      name,
+      state: state?.toLowerCase(),
+    });
+    return result.people.edges.map((edge: GraphQLEdge<RawLegislatorNode>) =>
+      this.transformLegislator(edge.node, state || 'unknown')
+    );
   }
 
-  private transformLegislator(node: unknown, state: string): OpenStatesLegislator {
+  private transformLegislator(node: RawLegislatorNode, state: string): OpenStatesLegislator {
     const membership = node.currentMemberships?.[0];
     const contactDetails = node.contactDetails || [];
-    
-    const email = contactDetails.find((c: unknown) => c.type === 'email')?.value;
-    const phone = contactDetails.find((c: unknown) => c.type === 'voice')?.value;
+
+    const email = contactDetails.find(c => c.type === 'email')?.value;
+    const phone = contactDetails.find(c => c.type === 'voice')?.value;
 
     return {
       id: node.id,
       name: node.name,
       party: node.party || 'Unknown',
-      chamber: membership?.organization?.chamber || 'unknown',
+      chamber: (membership?.organization?.chamber as 'upper' | 'lower') || 'upper',
       district: membership?.post?.label || 'Unknown',
       state: state.toUpperCase(),
       email,
       phone,
       photo_url: node.image,
-      roles: node.currentMemberships?.map((m: unknown) => ({
-        type: 'legislator',
-        chamber: m.organization?.chamber,
-        district: m.post?.label,
-        start_date: m.startDate,
-        end_date: m.endDate
-      })) || [],
+      roles:
+        node.currentMemberships?.map(m => ({
+          type: 'legislator',
+          chamber: m.organization?.chamber || 'unknown',
+          district: m.post?.label || 'unknown',
+          start_date: m.startDate || '',
+          end_date: m.endDate,
+        })) || [],
       links: node.links || [],
-      extras: node.extras || {}
+      extras: node.extras || {},
     };
   }
 
-  private transformBill(node: unknown, state: string): OpenStatesBill {
+  private transformBill(node: RawBillNode, _state: string): OpenStatesBill {
     return {
       id: node.id,
       identifier: node.identifier,
       title: node.title,
       abstract: node.abstract,
-      chamber: node.fromOrganization?.chamber || 'unknown',
+      chamber: (node.fromOrganization?.chamber as 'upper' | 'lower') || 'upper',
       classification: node.classification || [],
       subject: node.subject || [],
       from_organization: node.fromOrganization?.name || 'Unknown',
-      sponsorships: node.sponsorships?.map((s: unknown) => ({
-        name: s.name,
-        entity_type: s.entityType,
-        classification: s.classification,
-        primary: s.primary
-      })) || [],
-      actions: node.actions?.map((a: unknown) => ({
-        date: a.date,
-        description: a.description,
-        organization: a.organization?.name || 'Unknown',
-        classification: a.classification || []
-      })) || [],
-      votes: node.votes?.map((v: unknown) => ({
-        identifier: v.identifier,
-        motion_text: v.motionText,
-        start_date: v.startDate,
-        result: v.result,
-        counts: v.counts || []
-      })) || [],
+      sponsorships:
+        node.sponsorships?.map(s => ({
+          name: s.name,
+          entity_type: s.entityType,
+          classification: s.classification,
+          primary: s.primary,
+        })) || [],
+      actions:
+        node.actions?.map(a => ({
+          date: a.date,
+          description: a.description,
+          organization: a.organization?.name || 'Unknown',
+          classification: a.classification || [],
+        })) || [],
+      votes:
+        node.votes?.map(v => ({
+          identifier: v.identifier,
+          motion_text: v.motionText,
+          start_date: v.startDate,
+          result: v.result,
+          counts: v.counts || [],
+        })) || [],
       sources: node.sources || [],
-      extras: node.extras || {}
+      extras: node.extras || {},
     };
   }
 
-  private transformJurisdiction(node: unknown): OpenStatesJurisdiction {
-    const chambers: Record<string, any> = {};
-    
-    node.organizations?.forEach((org: unknown) => {
+  private transformJurisdiction(node: RawJurisdictionNode): OpenStatesJurisdiction {
+    const chambers: Record<string, { name: string; title: string }> = {};
+
+    node.organizations?.forEach(org => {
       if (org.chamber) {
         chambers[org.chamber] = {
           name: org.name,
-          title: org.chamber === 'upper' ? 'Senator' : 'Representative'
+          title: org.chamber === 'upper' ? 'Senator' : 'Representative',
         };
       }
     });
 
-    const currentSession = node.legislativeSessions?.find((s: unknown) => s.active);
+    const currentSession = node.legislativeSessions?.find(s => s.active);
 
     return {
       id: node.id,
@@ -464,11 +627,13 @@ class OpenStatesAPI {
       division_id: node.divisionId,
       url: node.url,
       chambers,
-      session: currentSession ? {
-        name: currentSession.name,
-        start_date: currentSession.startDate,
-        end_date: currentSession.endDate
-      } : undefined
+      session: currentSession
+        ? {
+            name: currentSession.name,
+            start_date: currentSession.startDate,
+            end_date: currentSession.endDate,
+          }
+        : undefined,
     };
   }
 
@@ -485,7 +650,7 @@ class OpenStatesAPI {
   getCacheStats(): { size: number; keys: string[] } {
     return {
       size: this.cache.size,
-      keys: Array.from(this.cache.keys())
+      keys: Array.from(this.cache.keys()),
     };
   }
 }
@@ -494,12 +659,7 @@ class OpenStatesAPI {
 export const openStatesAPI = new OpenStatesAPI();
 
 // Export types
-export type {
-  OpenStatesLegislator,
-  OpenStatesBill,
-  OpenStatesJurisdiction,
-  OpenStatesConfig
-};
+export type { OpenStatesLegislator, OpenStatesBill, OpenStatesJurisdiction, OpenStatesConfig };
 
 // Export class for custom instances
 export { OpenStatesAPI };
@@ -520,21 +680,58 @@ export const OpenStatesUtils = {
    */
   getStateAbbreviation(stateName: string): string | null {
     const stateMap: Record<string, string> = {
-      'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR',
-      'california': 'CA', 'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE',
-      'florida': 'FL', 'georgia': 'GA', 'hawaii': 'HI', 'idaho': 'ID',
-      'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA', 'kansas': 'KS',
-      'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD',
-      'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN', 'mississippi': 'MS',
-      'missouri': 'MO', 'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV',
-      'new hampshire': 'NH', 'new jersey': 'NJ', 'new mexico': 'NM', 'new york': 'NY',
-      'north carolina': 'NC', 'north dakota': 'ND', 'ohio': 'OH', 'oklahoma': 'OK',
-      'oregon': 'OR', 'pennsylvania': 'PA', 'rhode island': 'RI', 'south carolina': 'SC',
-      'south dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT',
-      'vermont': 'VT', 'virginia': 'VA', 'washington': 'WA', 'west virginia': 'WV',
-      'wisconsin': 'WI', 'wyoming': 'WY'
+      alabama: 'AL',
+      alaska: 'AK',
+      arizona: 'AZ',
+      arkansas: 'AR',
+      california: 'CA',
+      colorado: 'CO',
+      connecticut: 'CT',
+      delaware: 'DE',
+      florida: 'FL',
+      georgia: 'GA',
+      hawaii: 'HI',
+      idaho: 'ID',
+      illinois: 'IL',
+      indiana: 'IN',
+      iowa: 'IA',
+      kansas: 'KS',
+      kentucky: 'KY',
+      louisiana: 'LA',
+      maine: 'ME',
+      maryland: 'MD',
+      massachusetts: 'MA',
+      michigan: 'MI',
+      minnesota: 'MN',
+      mississippi: 'MS',
+      missouri: 'MO',
+      montana: 'MT',
+      nebraska: 'NE',
+      nevada: 'NV',
+      'new hampshire': 'NH',
+      'new jersey': 'NJ',
+      'new mexico': 'NM',
+      'new york': 'NY',
+      'north carolina': 'NC',
+      'north dakota': 'ND',
+      ohio: 'OH',
+      oklahoma: 'OK',
+      oregon: 'OR',
+      pennsylvania: 'PA',
+      'rhode island': 'RI',
+      'south carolina': 'SC',
+      'south dakota': 'SD',
+      tennessee: 'TN',
+      texas: 'TX',
+      utah: 'UT',
+      vermont: 'VT',
+      virginia: 'VA',
+      washington: 'WA',
+      'west virginia': 'WV',
+      wisconsin: 'WI',
+      wyoming: 'WY',
     };
-    
+
     return stateMap[stateName.toLowerCase()] || null;
   },
 
@@ -550,10 +747,14 @@ export const OpenStatesUtils = {
    */
   getPartyColor(party: string): string {
     switch (party.toLowerCase()) {
-      case 'democratic': return '#3B82F6'; // Blue
-      case 'republican': return '#EF4444'; // Red
-      case 'independent': return '#8B5CF6'; // Purple
-      default: return '#6B7280'; // Gray
+      case 'democratic':
+        return '#3B82F6'; // Blue
+      case 'republican':
+        return '#EF4444'; // Red
+      case 'independent':
+        return '#8B5CF6'; // Purple
+      default:
+        return '#6B7280'; // Gray
     }
-  }
+  },
 };

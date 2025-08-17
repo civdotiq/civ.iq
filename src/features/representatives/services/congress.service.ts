@@ -40,9 +40,12 @@ class RateLimiter {
     this.requests = this.requests.filter(time => time > oneSecondAgo);
 
     if (this.requests.length >= this.maxRequestsPerSecond) {
-      const waitTime = 1000 - (now - this.requests[0]);
-      if (waitTime > 0) {
-        await new Promise(resolve => setTimeout(resolve, waitTime));
+      const firstRequest = this.requests[0];
+      if (firstRequest !== undefined) {
+        const waitTime = 1000 - (now - firstRequest);
+        if (waitTime > 0) {
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
       }
     }
 
@@ -553,6 +556,12 @@ export async function getEnhancedRepresentative(
     // Get current term (most recent)
     const currentTerm = legislator.terms[legislator.terms.length - 1];
 
+    // Ensure we have a current term before proceeding
+    if (!currentTerm) {
+      logger.warn('No current term found for legislator', { bioguideId });
+      return null;
+    }
+
     // Build enhanced representative object
     const enhanced: EnhancedRepresentative = {
       bioguideId: legislator.id.bioguide,
@@ -569,8 +578,8 @@ export async function getEnhancedRepresentative(
       terms: [
         {
           congress: '119', // Current congress
-          startYear: currentTerm.start.split('-')[0],
-          endYear: currentTerm.end.split('-')[0],
+          startYear: currentTerm.start.split('-')[0] || 'Unknown',
+          endYear: currentTerm.end.split('-')[0] || 'Unknown',
         },
       ],
       committees: representativeCommittees,
@@ -666,82 +675,90 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
       filteredOut: legislators.length - currentLegislators.length,
     });
 
-    const enhanced: EnhancedRepresentative[] = currentLegislators.map(legislator => {
-      const bioguideId = legislator.id.bioguide;
-      const social = socialMedia.find(s => s.bioguide === bioguideId);
-      const currentTerm = legislator.terms[legislator.terms.length - 1];
+    const enhanced: EnhancedRepresentative[] = currentLegislators
+      .map(legislator => {
+        const bioguideId = legislator.id.bioguide;
+        const social = socialMedia.find(s => s.bioguide === bioguideId);
+        const currentTerm = legislator.terms[legislator.terms.length - 1];
 
-      return {
-        bioguideId: legislator.id.bioguide,
-        name: `${legislator.name.first} ${legislator.name.last}`,
-        firstName: legislator.name.first,
-        lastName: legislator.name.last,
-        party: currentTerm.party,
-        state: currentTerm.state,
-        district: currentTerm.district?.toString(),
-        chamber: currentTerm.type === 'sen' ? 'Senate' : 'House',
-        title: currentTerm.type === 'sen' ? 'U.S. Senator' : 'U.S. Representative',
-        terms: [
-          {
-            congress: '119', // Current congress
-            startYear: currentTerm.start.split('-')[0],
-            endYear: currentTerm.end.split('-')[0],
+        // Skip legislators without a current term
+        if (!currentTerm) {
+          logger.warn('No current term found for legislator in bulk processing', { bioguideId });
+          return null;
+        }
+
+        return {
+          bioguideId: legislator.id.bioguide,
+          name: `${legislator.name.first} ${legislator.name.last}`,
+          firstName: legislator.name.first,
+          lastName: legislator.name.last,
+          party: currentTerm.party,
+          state: currentTerm.state,
+          district: currentTerm.district?.toString(),
+          chamber: currentTerm.type === 'sen' ? 'Senate' : 'House',
+          title: currentTerm.type === 'sen' ? 'U.S. Senator' : 'U.S. Representative',
+          terms: [
+            {
+              congress: '119', // Current congress
+              startYear: currentTerm.start.split('-')[0],
+              endYear: currentTerm.end.split('-')[0],
+            },
+          ],
+          committees: [],
+
+          fullName: {
+            first: legislator.name.first,
+            middle: legislator.name.middle,
+            last: legislator.name.last,
+            suffix: legislator.name.suffix,
+            nickname: legislator.name.nickname,
+            official: legislator.name.official_full,
           },
-        ],
-        committees: [],
 
-        fullName: {
-          first: legislator.name.first,
-          middle: legislator.name.middle,
-          last: legislator.name.last,
-          suffix: legislator.name.suffix,
-          nickname: legislator.name.nickname,
-          official: legislator.name.official_full,
-        },
+          bio: {
+            birthday: legislator.bio.birthday,
+            gender: legislator.bio.gender,
+            religion: legislator.bio.religion,
+          },
 
-        bio: {
-          birthday: legislator.bio.birthday,
-          gender: legislator.bio.gender,
-          religion: legislator.bio.religion,
-        },
+          currentTerm: {
+            start: currentTerm.start,
+            end: currentTerm.end,
+            office: currentTerm.office,
+            phone: currentTerm.phone,
+            address: currentTerm.address,
+            website: currentTerm.url,
+            contactForm: currentTerm.contact_form,
+            rssUrl: currentTerm.rss_url,
+            stateRank: currentTerm.state_rank,
+            class: currentTerm.class,
+          },
 
-        currentTerm: {
-          start: currentTerm.start,
-          end: currentTerm.end,
-          office: currentTerm.office,
-          phone: currentTerm.phone,
-          address: currentTerm.address,
-          website: currentTerm.url,
-          contactForm: currentTerm.contact_form,
-          rssUrl: currentTerm.rss_url,
-          stateRank: currentTerm.state_rank,
-          class: currentTerm.class,
-        },
+          socialMedia: social?.social
+            ? {
+                twitter: social.social.twitter,
+                facebook: social.social.facebook,
+                youtube: social.social.youtube,
+                instagram: social.social.instagram,
+                mastodon: social.social.mastodon,
+              }
+            : undefined,
 
-        socialMedia: social?.social
-          ? {
-              twitter: social.social.twitter,
-              facebook: social.social.facebook,
-              youtube: social.social.youtube,
-              instagram: social.social.instagram,
-              mastodon: social.social.mastodon,
-            }
-          : undefined,
+          ids: {
+            govtrack: legislator.id.govtrack,
+            opensecrets: legislator.id.opensecrets,
+            votesmart: legislator.id.votesmart,
+            fec: legislator.id.fec,
+            cspan: legislator.id.cspan,
+            wikipedia: legislator.id.wikipedia,
+            wikidata: legislator.id.wikidata,
+            ballotpedia: legislator.id.ballotpedia,
+          },
 
-        ids: {
-          govtrack: legislator.id.govtrack,
-          opensecrets: legislator.id.opensecrets,
-          votesmart: legislator.id.votesmart,
-          fec: legislator.id.fec,
-          cspan: legislator.id.cspan,
-          wikipedia: legislator.id.wikipedia,
-          wikidata: legislator.id.wikidata,
-          ballotpedia: legislator.id.ballotpedia,
-        },
-
-        leadershipRoles: legislator.leadership_roles,
-      } as EnhancedRepresentative;
-    });
+          leadershipRoles: legislator.leadership_roles,
+        } as EnhancedRepresentative;
+      })
+      .filter((rep): rep is EnhancedRepresentative => rep !== null);
 
     logger.debug('Successfully processed enhanced representatives', {
       count: enhanced.length,

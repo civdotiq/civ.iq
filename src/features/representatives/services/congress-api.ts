@@ -220,7 +220,7 @@ export const getCurrentMembersByState = cache(
               Accept: 'application/json',
               'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
             },
-            // @ts-expect-error - Next.js fetch extension
+            // Next.js fetch extension with revalidate
             next: { revalidate: 3600 }, // Cache for 1 hour
           });
 
@@ -580,7 +580,7 @@ export async function getBillsByMember(bioguideId: string, apiKey?: string): Pro
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
       },
-      // @ts-expect-error - Next.js fetch extension
+      // Next.js fetch extension with revalidate
       next: { revalidate: 1800 }, // Cache for 30 minutes
     });
 
@@ -634,7 +634,7 @@ export async function getVotesByMember(bioguideId: string, apiKey?: string): Pro
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
       },
-      // @ts-expect-error - Next.js fetch extension
+      // Next.js fetch extension with revalidate
       next: { revalidate: 1800 }, // Cache for 30 minutes
     });
 
@@ -811,7 +811,7 @@ export async function getVoteDetails(
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
       },
-      // @ts-expect-error - Next.js fetch extension
+      // Next.js fetch extension with revalidate
       next: { revalidate: 3600 }, // Cache for 1 hour since votes don't change
     });
 
@@ -946,7 +946,7 @@ export async function getCommitteesByMember(
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
       },
-      // @ts-expect-error - Next.js fetch extension
+      // Next.js fetch extension with revalidate
       next: { revalidate: 3600 }, // Cache for 1 hour
     });
 
@@ -996,7 +996,7 @@ export async function getRecentBills(limit = 20, apiKey?: string): Promise<unkno
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
       },
-      // @ts-expect-error - Next.js fetch extension
+      // Next.js fetch extension with revalidate
       next: { revalidate: 1800 }, // Cache for 30 minutes
     });
 
@@ -1048,7 +1048,7 @@ export async function searchBills(query: string, limit = 20, apiKey?: string): P
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
       },
-      // @ts-expect-error - Next.js fetch extension
+      // Next.js fetch extension with revalidate
       next: { revalidate: 1800 }, // Cache for 30 minutes
     });
 

@@ -86,7 +86,8 @@ export function recognizeEntities(
     .sort((a, b) => a.startIndex - b.startIndex)
     .filter((match, index, arr) => {
       if (index === 0) return true;
-      return match.startIndex >= arr[index - 1].endIndex;
+      const prevMatch = arr[index - 1];
+      return prevMatch ? match.startIndex >= prevMatch.endIndex : true;
     });
 }
 
@@ -96,7 +97,7 @@ export function recognizeEntities(
 function processMatch(
   match: RegExpExecArray,
   type: EntityMatch['type'],
-  fullText: string
+  _fullText: string
 ): EntityMatch | null {
   const text = match[0];
   let id = '';
@@ -106,40 +107,50 @@ function processMatch(
     case 'representative': {
       if (match[0].includes('(')) {
         // Format: "John Smith (R-TX)"
-        const name = match[1];
+        const name = match[1] || '';
         const party = match[2];
         const state = match[3];
-        id = generateRepresentativeId(name, party, state);
-        confidence = 0.9;
+        if (name) {
+          id = generateRepresentativeId(name, party, state);
+          confidence = 0.9;
+        }
       } else {
         // Format: "Rep. John Smith"
-        const title = match[1];
-        const name = match[2];
-        id = generateRepresentativeId(name);
-        confidence = 0.7; // Lower confidence without party/state
+        const _title = match[1];
+        const name = match[2] || '';
+        if (name) {
+          id = generateRepresentativeId(name);
+          confidence = 0.7; // Lower confidence without party/state
+        }
       }
       break;
     }
 
     case 'bill': {
-      const billType = match[1].replace(/\./g, '').toUpperCase();
+      const billType = match[1]?.replace(/\./g, '').toUpperCase();
       const billNumber = match[2];
-      id = `${billType.toLowerCase()}${billNumber}-119`; // Assuming 119th Congress
-      confidence = 0.95;
+      if (billType && billNumber) {
+        id = `${billType.toLowerCase()}${billNumber}-119`; // Assuming 119th Congress
+        confidence = 0.95;
+      }
       break;
     }
 
     case 'committee': {
-      const committeeName = match[1] || match[2];
-      id = generateCommitteeId(committeeName);
-      confidence = 0.8;
+      const committeeName = match[1] || match[2] || '';
+      if (committeeName) {
+        id = generateCommitteeId(committeeName);
+        confidence = 0.8;
+      }
       break;
     }
 
     case 'donor': {
-      const donorName = match[1];
-      id = generateDonorId(donorName);
-      confidence = 0.7;
+      const donorName = match[1] || '';
+      if (donorName) {
+        id = generateDonorId(donorName);
+        confidence = 0.7;
+      }
       break;
     }
   }
@@ -226,7 +237,7 @@ function generateDonorId(name: string): string {
 export async function preloadEntityData(entityIds: string[]): Promise<void> {
   // In production, this would batch-fetch entity data
   // and populate the cache
-  console.log('Preloading entities:', entityIds);
+  void entityIds; // Suppress unused parameter warning
 }
 
 /**

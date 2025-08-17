@@ -185,13 +185,22 @@ export class NewsDeduplicator {
     const result: NewsArticle[] = [];
 
     for (let i = 0; i < articles.length; i++) {
+      const currentArticle = articles[i];
+      if (!currentArticle) continue;
+
       let isDuplicate = false;
 
       for (let j = 0; j < result.length; j++) {
-        const jaccardSimilarity = this.calculateTitleSimilarity(articles[i].title, result[j].title);
+        const resultArticle = result[j];
+        if (!resultArticle) continue;
+
+        const jaccardSimilarity = this.calculateTitleSimilarity(
+          currentArticle.title,
+          resultArticle.title
+        );
         const editDistanceSimilarity = this.calculateEditDistanceSimilarity(
-          articles[i].title,
-          result[j].title
+          currentArticle.title,
+          resultArticle.title
         );
 
         // Consider it a duplicate if either similarity check passes
@@ -200,17 +209,20 @@ export class NewsDeduplicator {
         if (maxSimilarity >= this.options.titleSimilarityThreshold) {
           this.stats.duplicatesDetected.push({
             method: 'title_similarity',
-            originalIndex: articles.indexOf(result[j]),
+            originalIndex: articles.indexOf(resultArticle),
             duplicateIndex: i,
             similarity: maxSimilarity,
           });
 
           // Keep the newer article if preserveNewestArticles is enabled
+          const currentArticle = articles[i];
           if (
             this.options.preserveNewestArticles &&
-            new Date(articles[i].seendate) > new Date(result[j].seendate)
+            currentArticle &&
+            resultArticle &&
+            new Date(currentArticle.seendate) > new Date(resultArticle.seendate)
           ) {
-            result[j] = articles[i];
+            result[j] = currentArticle;
           }
 
           isDuplicate = true;
@@ -219,7 +231,10 @@ export class NewsDeduplicator {
       }
 
       if (!isDuplicate) {
-        result.push(articles[i]);
+        const currentArticle = articles[i];
+        if (currentArticle) {
+          result.push(currentArticle);
+        }
       }
     }
 
@@ -234,6 +249,7 @@ export class NewsDeduplicator {
 
     for (let i = 0; i < articles.length; i++) {
       const article = articles[i];
+      if (!article) continue;
 
       // Skip if no content available
       if (!article.content && !article.summary) {
@@ -245,6 +261,7 @@ export class NewsDeduplicator {
 
       for (let j = 0; j < result.length; j++) {
         const existingArticle = result[j];
+        if (!existingArticle) continue;
 
         // Skip if no content available for comparison
         if (!existingArticle.content && !existingArticle.summary) {
@@ -290,17 +307,17 @@ export class NewsDeduplicator {
 
     // Group articles by domain
     for (const article of articles) {
-      const domain = article.domain.toLowerCase();
-      if (!domainGroups.has(domain)) {
-        domainGroups.set(domain, []);
+      const _domain = article.domain.toLowerCase();
+      if (!domainGroups.has(_domain)) {
+        domainGroups.set(_domain, []);
       }
-      domainGroups.get(domain)!.push(article);
+      domainGroups.get(_domain)!.push(article);
     }
 
     const result: NewsArticle[] = [];
 
     // Limit articles per domain
-    for (const [domain, domainArticles] of domainGroups.entries()) {
+    for (const [_domain, domainArticles] of domainGroups.entries()) {
       // Sort by date (newest first) if preserveNewestArticles is enabled
       let sortedArticles = domainArticles;
       if (this.options.preserveNewestArticles) {
@@ -314,12 +331,15 @@ export class NewsDeduplicator {
 
       // Log removed articles
       for (const removedArticle of articlesToRemove) {
-        this.stats.duplicatesDetected.push({
-          method: 'domain_clustering',
-          originalIndex: articles.indexOf(articlesToKeep[0]),
-          duplicateIndex: articles.indexOf(removedArticle),
-          similarity: 0.0, // Not based on similarity
-        });
+        const firstKeptArticle = articlesToKeep[0];
+        if (firstKeptArticle) {
+          this.stats.duplicatesDetected.push({
+            method: 'domain_clustering',
+            originalIndex: articles.indexOf(firstKeptArticle),
+            duplicateIndex: articles.indexOf(removedArticle),
+            similarity: 0.0, // Not based on similarity
+          });
+        }
       }
 
       result.push(...articlesToKeep);
@@ -365,21 +385,39 @@ export class NewsDeduplicator {
       .fill(null)
       .map(() => Array(str1.length + 1).fill(null));
 
-    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
-    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+    for (let i = 0; i <= str1.length; i++) {
+      const row = matrix[0];
+      if (row) row[i] = i;
+    }
+    for (let j = 0; j <= str2.length; j++) {
+      const row = matrix[j];
+      if (row) row[0] = j;
+    }
 
     for (let j = 1; j <= str2.length; j++) {
       for (let i = 1; i <= str1.length; i++) {
         const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-        matrix[j][i] = Math.min(
-          matrix[j][i - 1] + 1, // deletion
-          matrix[j - 1][i] + 1, // insertion
-          matrix[j - 1][i - 1] + indicator // substitution
-        );
+        const currentRow = matrix[j];
+        const prevRow = matrix[j - 1];
+
+        if (currentRow && prevRow) {
+          const currentVal = currentRow[i - 1];
+          const prevVal = prevRow[i];
+          const diagVal = prevRow[i - 1];
+
+          if (currentVal !== undefined && prevVal !== undefined && diagVal !== undefined) {
+            currentRow[i] = Math.min(
+              currentVal + 1, // deletion
+              prevVal + 1, // insertion
+              diagVal + indicator // substitution
+            );
+          }
+        }
       }
     }
 
-    return matrix[str2.length][str1.length];
+    const finalRow = matrix[str2.length];
+    return finalRow?.[str1.length] ?? 0;
   }
 
   /**
@@ -589,7 +627,7 @@ export function deduplicateMultiSourceNews(
 
   // Remove the originalSource field from final results
   const cleanedArticles = deduplicatedArticles.map(article => {
-    const { originalSource, ...cleanArticle } = article as NewsArticle & {
+    const { originalSource: _originalSource, ...cleanArticle } = article as NewsArticle & {
       originalSource?: string;
     };
     return cleanArticle;

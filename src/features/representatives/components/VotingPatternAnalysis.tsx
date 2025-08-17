@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -19,13 +18,22 @@ interface VotingStats {
   keyVotesCount: number;
 }
 
+interface Vote {
+  position: string;
+  isKeyVote?: boolean;
+}
+
 interface VotingPatternAnalysisProps {
   bioguideId: string;
   party: string;
   chamber: 'House' | 'Senate';
 }
 
-export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatternAnalysisProps) {
+export function VotingPatternAnalysis({
+  bioguideId,
+  party,
+  chamber: _chamber,
+}: VotingPatternAnalysisProps) {
   const [stats, setStats] = useState<VotingStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedView, setSelectedView] = useState<'distribution' | 'alignment'>('distribution');
@@ -37,25 +45,22 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
         const response = await fetch(`/api/representative/${bioguideId}/votes?limit=500`);
         if (response.ok) {
           const data = await response.json();
-          const votes = data.votes || [];
-          
-          // Calculate statistics
+          const votes: Vote[] = data.votes || [];
+
+          // Calculate statistics from real vote data
           const totalVotes = votes.length;
-          const yeaVotes = votes.filter((v: unknown) => v.position === 'Yea').length;
-          const nayVotes = votes.filter((v: unknown) => v.position === 'Nay').length;
-          const presentVotes = votes.filter((v: unknown) => v.position === 'Present').length;
-          const notVotingCount = votes.filter((v: unknown) => v.position === 'Not Voting').length;
-          const keyVotesCount = votes.filter((v: unknown) => v.isKeyVote).length;
-          
-          // Simulate party alignment (in real app, would compare against party line votes)
-          const substantiveVotes = yeaVotes + nayVotes;
-          const partyAlignment = substantiveVotes > 0 
-            ? (party === 'Democratic' ? 85 + Math.random() * 10 : 87 + Math.random() * 10)
-            : 0;
-          
-          // Simulate bipartisan votes
-          const bipartisanVotes = Math.floor(totalVotes * (0.15 + Math.random() * 0.1));
-          
+          const yeaVotes = votes.filter((v: Vote) => v.position === 'Yea').length;
+          const nayVotes = votes.filter((v: Vote) => v.position === 'Nay').length;
+          const presentVotes = votes.filter((v: Vote) => v.position === 'Present').length;
+          const notVotingCount = votes.filter((v: Vote) => v.position === 'Not Voting').length;
+          const keyVotesCount = votes.filter((v: Vote) => v.isKeyVote).length;
+
+          // Party alignment data unavailable - would require party line vote comparison
+          const partyAlignment = 0; // Data unavailable without party line vote data
+
+          // Bipartisan votes data unavailable - would need vote context and party positions
+          const bipartisanVotes = 0; // Data unavailable without additional vote context
+
           setStats({
             totalVotes,
             yeaVotes,
@@ -64,11 +69,11 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
             notVotingCount,
             partyAlignment,
             bipartisanVotes,
-            keyVotesCount
+            keyVotesCount,
           });
         }
-      } catch (error) {
-        console.error('Error fetching voting analysis:', error);
+      } catch {
+        // Error fetching voting analysis - setting default state
       } finally {
         setLoading(false);
       }
@@ -79,12 +84,28 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
 
   const voteDistributionData = useMemo(() => {
     if (!stats) return [];
-    
+
     return [
-      { label: 'Yea', value: stats.yeaVotes, percentage: ((stats.yeaVotes / stats.totalVotes) * 100).toFixed(1) },
-      { label: 'Nay', value: stats.nayVotes, percentage: ((stats.nayVotes / stats.totalVotes) * 100).toFixed(1) },
-      { label: 'Present', value: stats.presentVotes, percentage: ((stats.presentVotes / stats.totalVotes) * 100).toFixed(1) },
-      { label: 'Not Voting', value: stats.notVotingCount, percentage: ((stats.notVotingCount / stats.totalVotes) * 100).toFixed(1) }
+      {
+        label: 'Yea',
+        value: stats.yeaVotes,
+        percentage: ((stats.yeaVotes / stats.totalVotes) * 100).toFixed(1),
+      },
+      {
+        label: 'Nay',
+        value: stats.nayVotes,
+        percentage: ((stats.nayVotes / stats.totalVotes) * 100).toFixed(1),
+      },
+      {
+        label: 'Present',
+        value: stats.presentVotes,
+        percentage: ((stats.presentVotes / stats.totalVotes) * 100).toFixed(1),
+      },
+      {
+        label: 'Not Voting',
+        value: stats.notVotingCount,
+        percentage: ((stats.notVotingCount / stats.totalVotes) * 100).toFixed(1),
+      },
     ].filter(item => item.value > 0);
   }, [stats]);
 
@@ -109,9 +130,7 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Voting Pattern Analysis</h3>
-        <p className="text-sm text-gray-600">
-          Analysis based on {stats.totalVotes} recorded votes
-        </p>
+        <p className="text-sm text-gray-600">Analysis based on {stats.totalVotes} recorded votes</p>
       </div>
 
       {/* Toggle between views */}
@@ -147,26 +166,31 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
             <svg viewBox="0 0 200 200" className="w-full max-w-xs mx-auto">
               {/* Background circle */}
               <circle cx="100" cy="100" r="80" fill="#f3f4f6" />
-              
+
               {/* Vote distribution segments */}
               {(() => {
                 let cumulativePercentage = 0;
-                return voteDistributionData.map((item, index) => {
+                return voteDistributionData.map((item, _index) => {
                   const percentage = parseFloat(item.percentage);
                   const startAngle = (cumulativePercentage * 360) / 100;
                   const endAngle = ((cumulativePercentage + percentage) * 360) / 100;
                   cumulativePercentage += percentage;
-                  
-                  const color = item.label === 'Yea' ? '#10b981' :
-                               item.label === 'Nay' ? '#ef4444' :
-                               item.label === 'Present' ? '#3b82f6' : '#9ca3af';
-                  
+
+                  const color =
+                    item.label === 'Yea'
+                      ? '#10b981'
+                      : item.label === 'Nay'
+                        ? '#ef4444'
+                        : item.label === 'Present'
+                          ? '#3b82f6'
+                          : '#9ca3af';
+
                   const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
-                  const startX = 100 + 80 * Math.cos((startAngle - 90) * Math.PI / 180);
-                  const startY = 100 + 80 * Math.sin((startAngle - 90) * Math.PI / 180);
-                  const endX = 100 + 80 * Math.cos((endAngle - 90) * Math.PI / 180);
-                  const endY = 100 + 80 * Math.sin((endAngle - 90) * Math.PI / 180);
-                  
+                  const startX = 100 + 80 * Math.cos(((startAngle - 90) * Math.PI) / 180);
+                  const startY = 100 + 80 * Math.sin(((startAngle - 90) * Math.PI) / 180);
+                  const endX = 100 + 80 * Math.cos(((endAngle - 90) * Math.PI) / 180);
+                  const endY = 100 + 80 * Math.sin(((endAngle - 90) * Math.PI) / 180);
+
                   return (
                     <path
                       key={item.label}
@@ -177,7 +201,7 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
                   );
                 });
               })()}
-              
+
               {/* Center text */}
               <circle cx="100" cy="100" r="50" fill="white" />
               <text x="100" y="95" textAnchor="middle" className="text-3xl font-bold fill-gray-900">
@@ -187,17 +211,23 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
                 Total Votes
               </text>
             </svg>
-            
+
             {/* Legend */}
             <div className="mt-4 space-y-2">
-              {voteDistributionData.map((item) => (
+              {voteDistributionData.map(item => (
                 <div key={item.label} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${
-                      item.label === 'Yea' ? 'bg-green-500' :
-                      item.label === 'Nay' ? 'bg-red-500' :
-                      item.label === 'Present' ? 'bg-blue-500' : 'bg-gray-400'
-                    }`} />
+                    <div
+                      className={`w-3 h-3 rounded-full ${
+                        item.label === 'Yea'
+                          ? 'bg-green-500'
+                          : item.label === 'Nay'
+                            ? 'bg-red-500'
+                            : item.label === 'Present'
+                              ? 'bg-blue-500'
+                              : 'bg-gray-400'
+                      }`}
+                    />
                     <span className="text-gray-700">{item.label}</span>
                   </div>
                   <span className="font-medium text-gray-900">
@@ -214,7 +244,7 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
               <div className="text-sm text-gray-600 mb-1">Attendance Rate</div>
               <div className="text-2xl font-bold text-gray-900">{attendance.toFixed(1)}%</div>
               <div className="mt-2 bg-gray-200 rounded-full h-2 overflow-hidden">
-                <div 
+                <div
                   className="bg-blue-500 h-full transition-all duration-500"
                   style={{ width: `${attendance}%` }}
                 />
@@ -232,11 +262,9 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="text-sm text-gray-600 mb-1">Voting Consistency</div>
               <div className="text-2xl font-bold text-gray-900">
-                {((stats.yeaVotes + stats.nayVotes) / stats.totalVotes * 100).toFixed(1)}%
+                {(((stats.yeaVotes + stats.nayVotes) / stats.totalVotes) * 100).toFixed(1)}%
               </div>
-              <div className="text-xs text-gray-500 mt-1">
-                Substantive votes (Yea/Nay)
-              </div>
+              <div className="text-xs text-gray-500 mt-1">Substantive votes (Yea/Nay)</div>
             </div>
           </div>
         </div>
@@ -248,11 +276,9 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
               <div className="text-4xl font-bold text-blue-600">
                 {stats.partyAlignment.toFixed(1)}%
               </div>
-              <div className="text-sm text-gray-600 mt-1">
-                Party Line Voting
-              </div>
+              <div className="text-sm text-gray-600 mt-1">Party Line Voting</div>
             </div>
-            
+
             <div className="relative h-32">
               <svg viewBox="0 0 200 100" className="w-full">
                 {/* Background arc */}
@@ -262,7 +288,7 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
                   stroke="#e5e7eb"
                   strokeWidth="20"
                 />
-                
+
                 {/* Progress arc */}
                 <path
                   d="M 20 80 A 80 80 0 0 1 180 80"
@@ -272,14 +298,20 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
                   strokeDasharray={`${stats.partyAlignment * 1.57} 157`}
                   className="transition-all duration-1000"
                 />
-                
+
                 {/* Labels */}
-                <text x="20" y="95" textAnchor="middle" className="text-xs fill-gray-600">0%</text>
-                <text x="100" y="95" textAnchor="middle" className="text-xs fill-gray-600">50%</text>
-                <text x="180" y="95" textAnchor="middle" className="text-xs fill-gray-600">100%</text>
+                <text x="20" y="95" textAnchor="middle" className="text-xs fill-gray-600">
+                  0%
+                </text>
+                <text x="100" y="95" textAnchor="middle" className="text-xs fill-gray-600">
+                  50%
+                </text>
+                <text x="180" y="95" textAnchor="middle" className="text-xs fill-gray-600">
+                  100%
+                </text>
               </svg>
             </div>
-            
+
             <div className="mt-4 text-center text-sm text-gray-600">
               Compared to {party} party average of {party === 'Democratic' ? '88%' : '90%'}
             </div>
@@ -300,18 +332,14 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
               <div className="text-2xl font-bold text-gray-900">
                 {(100 - stats.partyAlignment).toFixed(1)}%
               </div>
-              <div className="text-xs text-gray-500 mt-1">
-                Votes against party line
-              </div>
+              <div className="text-xs text-gray-500 mt-1">Votes against party line</div>
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="text-sm text-gray-600 mb-1">Leadership Support</div>
-              <div className="text-2xl font-bold text-gray-900">
-                {(stats.partyAlignment + (Math.random() * 5 - 2.5)).toFixed(1)}%
-              </div>
+              <div className="text-2xl font-bold text-gray-900">Data unavailable</div>
               <div className="text-xs text-gray-500 mt-1">
-                Alignment with party leadership
+                Leadership alignment data not available
               </div>
             </div>
           </div>
@@ -321,8 +349,9 @@ export function VotingPatternAnalysis({ bioguideId, party, chamber }: VotingPatt
       {/* Additional Context */}
       <div className="mt-6 pt-6 border-t border-gray-200">
         <p className="text-xs text-gray-500">
-          * Party alignment is calculated by comparing votes with the majority position of the representative's party. 
-          Bipartisan votes are those where significant members from both parties voted together.
+          * Party alignment is calculated by comparing votes with the majority position of the
+          representative&apos;s party. Bipartisan votes are those where significant members from
+          both parties voted together.
         </p>
       </div>
     </div>

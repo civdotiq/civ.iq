@@ -12,9 +12,44 @@ interface SimpleClientWrapperProps {
     district?: string;
   };
   bioguideId: string;
+  serverData?: {
+    bills?: unknown[];
+    votes?: unknown[];
+    finance?: Record<string, unknown>;
+    news?: unknown[];
+  };
 }
 
-export function SimpleClientWrapper({ representative, bioguideId }: SimpleClientWrapperProps) {
+export function SimpleClientWrapper({
+  representative,
+  bioguideId,
+  serverData,
+}: SimpleClientWrapperProps) {
+  // STEP 2 DEBUG: Client wrapper data reception
+  if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
+    console.log('\n=== STEP 2: CLIENT WRAPPER DATA RECEPTION ===');
+    // eslint-disable-next-line no-console
+    console.log('🔍 Representative prop:', representative);
+    // eslint-disable-next-line no-console
+    console.log('🔍 BioguideId prop:', bioguideId);
+    // eslint-disable-next-line no-console
+    console.log('🔍 Server data prop:', serverData);
+    // eslint-disable-next-line no-console
+    console.log('🔍 Bills from server:', serverData?.bills);
+    // eslint-disable-next-line no-console
+    console.log('🔍 Votes from server:', serverData?.votes);
+    // eslint-disable-next-line no-console
+    console.log(
+      '🔍 Bills count:',
+      Array.isArray(serverData?.bills) ? serverData.bills.length : 'Not an array'
+    );
+    // eslint-disable-next-line no-console
+    console.log(
+      '🔍 Votes count:',
+      Array.isArray(serverData?.votes) ? serverData.votes.length : 'Not an array'
+    );
+  }
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-sm p-6">
@@ -33,6 +68,7 @@ export function SimpleClientWrapper({ representative, bioguideId }: SimpleClient
           party: representative.party,
           state: representative.state,
         }}
+        serverData={serverData}
       />
     </div>
   );

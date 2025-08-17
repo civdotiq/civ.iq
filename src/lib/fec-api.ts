@@ -126,7 +126,7 @@ class FECRateLimiter {
     this.requests = this.requests.filter(time => time > oneHourAgo);
 
     if (this.requests.length >= this.maxRequestsPerHour) {
-      const waitTime = 3600000 - (now - this.requests[0]);
+      const waitTime = 3600000 - (now - (this.requests[0] || now));
       if (waitTime > 0) {
         logger.warn(`FEC API rate limit reached, waiting ${Math.round(waitTime / 1000)} seconds`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
@@ -405,7 +405,7 @@ class FECAPI {
       const primaryCommittee = committees[0];
 
       const params: Record<string, string> = {
-        committee_id: primaryCommittee.committee_id,
+        committee_id: primaryCommittee?.committee_id || '',
         sort: '-disbursement_date',
         per_page: limit.toString(),
       };
@@ -682,7 +682,9 @@ class FECAPI {
         },
         lastUpdated: new Date().toISOString(),
         filingStatus:
-          committees.length > 0 ? committees[0].filing_frequency || 'Unknown' : 'No committee data',
+          committees.length > 0
+            ? committees[0]?.filing_frequency || 'Unknown'
+            : 'No committee data',
       };
     } catch (error) {
       logger.error('Error fetching comprehensive funding', error as Error, {

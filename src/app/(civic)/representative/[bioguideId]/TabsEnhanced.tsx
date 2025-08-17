@@ -24,6 +24,12 @@ interface TabsEnhancedProps {
     state: string;
     district?: string;
   };
+  serverData?: {
+    bills?: unknown[];
+    votes?: unknown[];
+    finance?: Record<string, unknown>;
+    news?: unknown[];
+  };
 }
 
 // Enhanced component for Profile tab
@@ -442,7 +448,7 @@ function NewsContent({ data }: { data: Record<string, any> }) {
   );
 }
 
-export function TabsEnhanced({ bioguideId, representative }: TabsEnhancedProps) {
+export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnhancedProps) {
   const [activeTab, setActiveTab] = useState('profile');
   const [data, setData] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -453,6 +459,18 @@ export function TabsEnhanced({ bioguideId, representative }: TabsEnhancedProps) 
       setLoading(true);
       setError(null);
       setData(null);
+
+      // STEP 3 DEBUG: Individual tab component data structure
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('\n=== STEP 3: TABS ENHANCED COMPONENT DATA ===');
+        // eslint-disable-next-line no-console
+        console.log(`🔍 Current tab: ${activeTab}`);
+        // eslint-disable-next-line no-console
+        console.log('🔍 Server data available:', !!serverData);
+        // eslint-disable-next-line no-console
+        console.log('🔍 Server data structure:', serverData);
+      }
 
       try {
         let url = '';
@@ -467,27 +485,81 @@ export function TabsEnhanced({ bioguideId, representative }: TabsEnhancedProps) 
             setData(representative);
             setLoading(false);
             return;
+
           case 'bills':
+            // Check for server-provided bills data first
+            if (
+              serverData?.bills &&
+              Array.isArray(serverData.bills) &&
+              serverData.bills.length > 0
+            ) {
+              if (process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
+                console.log('🚀 Using SERVER bills data:', serverData.bills);
+              }
+              setData({ bills: serverData.bills, sponsoredLegislation: serverData.bills });
+              setLoading(false);
+              return;
+            }
             url = `/api/representative/${bioguideId}/bills`;
             break;
+
           case 'votes':
+            // Check for server-provided votes data first
+            if (
+              serverData?.votes &&
+              Array.isArray(serverData.votes) &&
+              serverData.votes.length > 0
+            ) {
+              if (process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
+                console.log('🚀 Using SERVER votes data:', serverData.votes);
+              }
+              setData({ votes: serverData.votes });
+              setLoading(false);
+              return;
+            }
             url = `/api/representative/${bioguideId}/votes`;
             break;
+
           case 'finance':
+            // Check for server-provided finance data first
+            if (serverData?.finance && Object.keys(serverData.finance).length > 0) {
+              if (process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
+                console.log('🚀 Using SERVER finance data:', serverData.finance);
+              }
+              setData(serverData.finance);
+              setLoading(false);
+              return;
+            }
             url = `/api/representative/${bioguideId}/finance`;
             break;
+
           case 'news':
+            // Check for server-provided news data first
+            if (serverData?.news && Array.isArray(serverData.news) && serverData.news.length > 0) {
+              if (process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
+                console.log('🚀 Using SERVER news data:', serverData.news);
+              }
+              setData({ articles: serverData.news });
+              setLoading(false);
+              return;
+            }
             url = `/api/representative/${bioguideId}/news`;
             break;
+
           default:
             setData({ message: 'Select a tab' });
             setLoading(false);
             return;
         }
 
+        // Fallback to API fetch if no server data available
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
-          console.log(`🔍 Fetching ${activeTab} data from:`, url);
+          console.log(`🔍 No server data for ${activeTab}, fetching from API:`, url);
         }
         const response = await fetch(url);
 
@@ -498,7 +570,7 @@ export function TabsEnhanced({ bioguideId, representative }: TabsEnhancedProps) 
         const jsonData = await response.json();
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
-          console.log(`✅ ${activeTab} data received:`, jsonData);
+          console.log(`✅ ${activeTab} API data received:`, jsonData);
         }
         setData(jsonData);
       } catch (err) {
@@ -514,7 +586,7 @@ export function TabsEnhanced({ bioguideId, representative }: TabsEnhancedProps) 
     };
 
     fetchData();
-  }, [activeTab, bioguideId, representative]);
+  }, [activeTab, bioguideId, representative, serverData]);
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },

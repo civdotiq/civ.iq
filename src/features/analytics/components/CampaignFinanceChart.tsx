@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -8,7 +7,6 @@
 
 import { useState, useEffect } from 'react';
 import {
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -16,14 +14,13 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  BarChart,
   Bar,
   Area,
   AreaChart,
   PieChart,
   Pie,
   Cell,
-  ComposedChart
+  ComposedChart,
 } from 'recharts';
 
 interface CampaignFinanceData {
@@ -74,7 +71,11 @@ interface CampaignFinanceChartProps {
   className?: string;
 }
 
-export function CampaignFinanceChart({ bioguideId, years = 6, className = '' }: CampaignFinanceChartProps) {
+export function CampaignFinanceChart({
+  bioguideId,
+  years = 6,
+  className = '',
+}: CampaignFinanceChartProps) {
   const [data, setData] = useState<CampaignFinanceResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,12 +85,14 @@ export function CampaignFinanceChart({ bioguideId, years = 6, className = '' }: 
     const fetchCampaignFinance = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/analytics/campaign-finance?bioguideId=${bioguideId}&years=${years}`);
-        
+        const response = await fetch(
+          `/api/analytics/campaign-finance?bioguideId=${bioguideId}&years=${years}`
+        );
+
         if (!response.ok) {
           throw new Error('Failed to fetch campaign finance data');
         }
-        
+
         const financeData = await response.json();
         setData(financeData);
         setError(null);
@@ -122,34 +125,34 @@ export function CampaignFinanceChart({ bioguideId, years = 6, className = '' }: 
       spent: item.totalSpent,
       cashOnHand: item.cashOnHand,
       individual: item.individualContributions,
-      pac: item.pacContributions
+      pac: item.pacContributions,
     }));
 
     return (
       <ComposedChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
         <XAxis dataKey="period" stroke="#666" fontSize={12} />
-        <YAxis 
-          stroke="#666" 
+        <YAxis
+          stroke="#666"
           fontSize={12}
           tickFormatter={formatCurrency}
           label={{ value: 'Amount ($)', angle: -90, position: 'insideLeft' }}
         />
-        <Tooltip 
+        <Tooltip
           formatter={(value: number) => formatCurrency(value)}
           contentStyle={{
             backgroundColor: 'white',
             border: '1px solid #ccc',
-            borderRadius: '4px'
+            borderRadius: '4px',
           }}
         />
         <Legend />
         <Bar dataKey="raised" fill="#0b983c" name="Raised" />
         <Bar dataKey="spent" fill="#e11d07" name="Spent" />
-        <Line 
-          type="monotone" 
-          dataKey="cashOnHand" 
-          stroke="#3ea2d4" 
+        <Line
+          type="monotone"
+          dataKey="cashOnHand"
+          stroke="#3ea2d4"
           strokeWidth={3}
           name="Cash on Hand"
         />
@@ -166,18 +169,33 @@ export function CampaignFinanceChart({ bioguideId, years = 6, className = '' }: 
     const sourceData = [
       { name: 'Individual', value: latestData.individualContributions, color: '#0b983c' },
       { name: 'PAC', value: latestData.pacContributions, color: '#e11d07' },
-      { name: 'Other', value: latestData.totalRaised - latestData.individualContributions - latestData.pacContributions, color: '#3ea2d4' }
+      {
+        name: 'Other',
+        value:
+          latestData.totalRaised - latestData.individualContributions - latestData.pacContributions,
+        color: '#3ea2d4',
+      },
     ].filter(item => item.value > 0);
 
     const smallVsLargeData = [
-      { name: 'Small Dollar (<$200)', value: latestData.smallDollarContributions, color: '#0b983c' },
-      { name: 'Large Dollar (>$2000)', value: latestData.largeDollarContributions, color: '#e11d07' }
+      {
+        name: 'Small Dollar (<$200)',
+        value: latestData.smallDollarContributions,
+        color: '#0b983c',
+      },
+      {
+        name: 'Large Dollar (>$2000)',
+        value: latestData.largeDollarContributions,
+        color: '#e11d07',
+      },
     ];
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <h4 className="text-sm font-medium text-gray-900 mb-4 text-center">Contribution Sources</h4>
+          <h4 className="text-sm font-medium text-gray-900 mb-4 text-center">
+            Contribution Sources
+          </h4>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
@@ -198,7 +216,9 @@ export function CampaignFinanceChart({ bioguideId, years = 6, className = '' }: 
         </div>
 
         <div>
-          <h4 className="text-sm font-medium text-gray-900 mb-4 text-center">Small vs Large Dollar</h4>
+          <h4 className="text-sm font-medium text-gray-900 mb-4 text-center">
+            Small vs Large Dollar
+          </h4>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
@@ -207,7 +227,7 @@ export function CampaignFinanceChart({ bioguideId, years = 6, className = '' }: 
                 cy="50%"
                 outerRadius={80}
                 dataKey="value"
-                label={({ name, percent }) => `${((percent || 0) * 100).toFixed(0)}%`}
+                label={({ name: _name, percent }) => `${((percent || 0) * 100).toFixed(0)}%`}
               >
                 {smallVsLargeData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
@@ -230,26 +250,61 @@ export function CampaignFinanceChart({ bioguideId, years = 6, className = '' }: 
       staff: item.expenditures.staffSalaries,
       travel: item.expenditures.travelAndEvents,
       consultants: item.expenditures.consultants,
-      other: item.expenditures.other
+      other: item.expenditures.other,
     }));
 
     return (
       <AreaChart data={spendingData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
         <XAxis dataKey="period" stroke="#666" fontSize={12} />
-        <YAxis 
-          stroke="#666" 
+        <YAxis
+          stroke="#666"
           fontSize={12}
           tickFormatter={formatCurrency}
           label={{ value: 'Spending ($)', angle: -90, position: 'insideLeft' }}
         />
         <Tooltip formatter={(value: number) => formatCurrency(value)} />
         <Legend />
-        <Area type="monotone" dataKey="media" stackId="1" stroke="#e11d07" fill="#e11d07" name="Media/Advertising" />
-        <Area type="monotone" dataKey="staff" stackId="1" stroke="#0b983c" fill="#0b983c" name="Staff Salaries" />
-        <Area type="monotone" dataKey="consultants" stackId="1" stroke="#3ea2d4" fill="#3ea2d4" name="Consultants" />
-        <Area type="monotone" dataKey="travel" stackId="1" stroke="#f59e0b" fill="#f59e0b" name="Travel/Events" />
-        <Area type="monotone" dataKey="other" stackId="1" stroke="#6b7280" fill="#6b7280" name="Other" />
+        <Area
+          type="monotone"
+          dataKey="media"
+          stackId="1"
+          stroke="#e11d07"
+          fill="#e11d07"
+          name="Media/Advertising"
+        />
+        <Area
+          type="monotone"
+          dataKey="staff"
+          stackId="1"
+          stroke="#0b983c"
+          fill="#0b983c"
+          name="Staff Salaries"
+        />
+        <Area
+          type="monotone"
+          dataKey="consultants"
+          stackId="1"
+          stroke="#3ea2d4"
+          fill="#3ea2d4"
+          name="Consultants"
+        />
+        <Area
+          type="monotone"
+          dataKey="travel"
+          stackId="1"
+          stroke="#f59e0b"
+          fill="#f59e0b"
+          name="Travel/Events"
+        />
+        <Area
+          type="monotone"
+          dataKey="other"
+          stackId="1"
+          stroke="#6b7280"
+          fill="#6b7280"
+          name="Other"
+        />
       </AreaChart>
     );
   };
@@ -270,7 +325,9 @@ export function CampaignFinanceChart({ bioguideId, years = 6, className = '' }: 
       <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Campaign Finance</h3>
         <div className="text-center py-8">
-          <div className="text-gray-500 mb-2">{error || 'Unable to load campaign finance data'}</div>
+          <div className="text-gray-500 mb-2">
+            {error || 'Unable to load campaign finance data'}
+          </div>
           <p className="text-sm text-gray-400">Please try again later</p>
         </div>
       </div>
@@ -283,7 +340,7 @@ export function CampaignFinanceChart({ bioguideId, years = 6, className = '' }: 
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Campaign Finance</h3>
           <div className="flex border border-gray-300 rounded overflow-hidden">
-            {(['trends', 'sources', 'spending'] as const).map((viewType) => (
+            {(['trends', 'sources', 'spending'] as const).map(viewType => (
               <button
                 key={viewType}
                 onClick={() => setView(viewType)}
@@ -352,14 +409,18 @@ export function CampaignFinanceChart({ bioguideId, years = 6, className = '' }: 
               <div>
                 <span className="text-gray-600">Latest Quarter:</span>
                 <span className="ml-2 font-medium">
-                  {formatCurrency(data.data[data.data.length - 1].totalRaised)} raised
+                  {formatCurrency(data.data[data.data.length - 1]?.totalRaised || 0)} raised
                 </span>
               </div>
               <div>
                 <span className="text-gray-600">Fundraising Trend:</span>
-                <span className={`ml-2 font-medium ${
-                  data.summary.fundraisingTrend === 'increasing' ? 'text-civiq-green' : 'text-civiq-red'
-                }`}>
+                <span
+                  className={`ml-2 font-medium ${
+                    data.summary.fundraisingTrend === 'increasing'
+                      ? 'text-civiq-green'
+                      : 'text-civiq-red'
+                  }`}
+                >
                   {data.summary.fundraisingTrend}
                 </span>
               </div>

@@ -21,7 +21,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { withCache } from '@/lib/cache-helper';
+import { govCache } from '@/services/cache/simple-government-cache';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 import { XMLParser } from 'fast-xml-parser';
@@ -348,22 +348,42 @@ async function getMemberChamber(
  */
 async function getVoteListWithXMLUrls(
   chamber: string,
-  limit: number = 20
+  limit: number = 20,
+  bioguideId?: string
 ): Promise<CongressVoteListItem[]> {
   try {
-    logger.info('Fetching vote list with XML URLs from Congress.gov', { chamber, limit });
+    const isT000481Debug = bioguideId === 'T000481';
+
+    if (isT000481Debug) {
+      // eslint-disable-next-line no-console
+      console.log('\n=== ROOT CAUSE ANALYSIS: T000481 VOTE DEBUGGING ===');
+      // eslint-disable-next-line no-console
+      console.log(`🔍 Fetching vote list for ${bioguideId} (Rep. Rashida Tlaib)`);
+      // eslint-disable-next-line no-console
+      console.log(`Chamber: ${chamber}, Limit: ${limit}`);
+    }
+
+    logger.info('Fetching vote list with XML URLs from Congress.gov', {
+      chamber,
+      limit,
+      bioguideId,
+    });
 
     // Use the correct Congress.gov endpoints: /house-vote or /senate-vote
     const endpoint = chamber === 'House' ? 'house-vote' : 'senate-vote';
 
-    const response = await fetch(
-      `https://api.congress.gov/v3/${endpoint}?format=json&api_key=${process.env.CONGRESS_API_KEY}&limit=${limit}`,
-      {
-        headers: {
-          'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-        },
-      }
-    );
+    const apiUrl = `https://api.congress.gov/v3/${endpoint}?format=json&api_key=${process.env.CONGRESS_API_KEY}&limit=${limit}`;
+
+    if (isT000481Debug) {
+      // eslint-disable-next-line no-console
+      console.log(`📡 API URL: ${apiUrl.replace(process.env.CONGRESS_API_KEY || '', '***')}`);
+    }
+
+    const response = await fetch(apiUrl, {
+      headers: {
+        'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+      },
+    });
 
     if (!response.ok) {
       logger.warn('Failed to fetch vote list from Congress.gov', {
@@ -379,24 +399,98 @@ async function getVoteListWithXMLUrls(
     // House votes are in houseRollCallVotes, Senate votes in senateRollCallVotes
     const votes = data.houseRollCallVotes || data.senateRollCallVotes || [];
 
+    if (isT000481Debug) {
+      // eslint-disable-next-line no-console
+      console.log(`📊 Raw votes fetched: ${votes.length}`);
+      // eslint-disable-next-line no-console
+      console.log('📅 Sample vote dates and congresses:');
+      votes.slice(0, 5).forEach((vote: Record<string, unknown>, i: number) => {
+        // eslint-disable-next-line no-console
+        console.log(
+          `   ${i + 1}. Congress ${vote.congress} - ${vote.startDate} - Roll #${vote.rollCallNumber}`
+        );
+      });
+    }
+
+    // Track filtering for T000481 debugging
+    const allVotesDetails: Array<{
+      congress: number;
+      date: string;
+      rollCall: number;
+      filtered: boolean;
+      reason?: string;
+    }> = [];
+
     // Filter to 119th Congress only and extract essential data including XML URLs
     const congress119Votes = votes
-      .filter((vote: Record<string, unknown>) => {
-        return vote.congress === 119;
-      })
       .map((vote: Record<string, unknown>) => {
+        const congress = vote.congress as number;
+        const date = vote.startDate as string;
+        const rollCall = vote.rollCallNumber as number;
+        const is119thCongress = congress === 119;
+
+        if (isT000481Debug) {
+          allVotesDetails.push({
+            congress,
+            date,
+            rollCall,
+            filtered: !is119thCongress,
+            reason: !is119thCongress ? `Congress ${congress} (not 119th)` : undefined,
+          });
+        }
+
         return {
-          congress: vote.congress as number,
+          congress,
           chamber: chamber,
-          rollCallNumber: vote.rollCallNumber as number,
+          rollCallNumber: rollCall,
           sessionNumber: (vote.sessionNumber as number) || 1,
-          date: vote.startDate as string,
+          date,
           question: (vote.voteQuestion as string) || 'Unknown Question',
           result: vote.result as string,
           url: vote.url as string,
           sourceDataURL: vote.sourceDataURL as string | undefined, // Often missing for recent votes
+          _isFiltered: !is119thCongress,
         };
-      });
+      })
+      .filter((vote: CongressVoteListItem & { _isFiltered?: boolean }) => !vote._isFiltered);
+
+    if (isT000481Debug) {
+      // eslint-disable-next-line no-console
+      console.log('\n🚨 FILTERING ANALYSIS:');
+      const filtered118th = allVotesDetails.filter(v => v.congress === 118).length;
+      const filtered117th = allVotesDetails.filter(v => v.congress === 117).length;
+      const kept119th = allVotesDetails.filter(v => v.congress === 119).length;
+      // eslint-disable-next-line no-console
+      console.log(`   📈 119th Congress votes (KEPT): ${kept119th}`);
+      // eslint-disable-next-line no-console
+      console.log(`   📉 118th Congress votes (FILTERED OUT): ${filtered118th}`);
+      // eslint-disable-next-line no-console
+      console.log(`   📉 117th Congress votes (FILTERED OUT): ${filtered117th}`);
+
+      if (congress119Votes.length === 0) {
+        // eslint-disable-next-line no-console
+        console.log('\n❌ ROOT CAUSE IDENTIFIED: All votes filtered out!');
+        // eslint-disable-next-line no-console
+        console.log('   Recent votes by congress:');
+        allVotesDetails.slice(0, 10).forEach((v, i) => {
+          // eslint-disable-next-line no-console
+          console.log(
+            `   ${i + 1}. Congress ${v.congress} (${v.date}) - ${v.filtered ? 'FILTERED' : 'KEPT'} ${v.reason ? '- ' + v.reason : ''}`
+          );
+        });
+      } else {
+        // eslint-disable-next-line no-console
+        console.log(`\n✅ Found ${congress119Votes.length} valid 119th Congress votes`);
+        // eslint-disable-next-line no-console
+        console.log('   Recent 119th Congress votes:');
+        congress119Votes.slice(0, 3).forEach((v: CongressVoteListItem, i: number) => {
+          // eslint-disable-next-line no-console
+          console.log(
+            `   ${i + 1}. ${v.date} - Roll #${v.rollCallNumber} - ${v.question.slice(0, 50)}...`
+          );
+        });
+      }
+    }
 
     logger.info('Successfully fetched vote list from Congress.gov', {
       chamber,
@@ -652,129 +746,179 @@ function transformXMLVoteData(
  * Implements the complete XML fetching and parsing strategy
  */
 async function getOfficialVotingRecordsFromXML(bioguideId: string, limit: number): Promise<Vote[]> {
-  return withCache(
-    `xml-voting-records-119th-${bioguideId}-${limit}`,
-    async () => {
-      logger.info('Starting XML parsing pipeline for 100% accurate voting records', {
-        bioguideId,
-        limit,
-      });
+  const cacheKey = `xml-voting-records-119th-${bioguideId}-${limit}`;
 
-      // Step 1: Get member's chamber from congress-legislators (source of truth for biographical data)
-      const memberInfo = await getMemberChamber(bioguideId);
-      if (!memberInfo) {
-        logger.warn('Could not determine member chamber, returning empty results', { bioguideId });
-        return [];
-      }
+  // Check cache first
+  const cached = govCache.get<Vote[]>(cacheKey);
+  if (cached) {
+    logger.info('Cache hit for XML voting records', {
+      bioguideId,
+      limit,
+      cacheKey,
+      voteCount: cached.length,
+    });
+    return cached;
+  }
 
-      const { chamber, memberName } = memberInfo;
+  try {
+    logger.info('Starting XML parsing pipeline for 100% accurate voting records', {
+      bioguideId,
+      limit,
+    });
 
-      // Step 2: Get list of recent votes from Congress.gov JSON API
-      const recentVotes = await getVoteListWithXMLUrls(chamber, limit);
-      if (recentVotes.length === 0) {
-        logger.warn('No recent 119th Congress votes found for chamber', { chamber, bioguideId });
-        return [];
-      }
+    // Step 1: Get member's chamber from congress-legislators (source of truth for biographical data)
+    const memberInfo = await getMemberChamber(bioguideId);
+    if (!memberInfo) {
+      logger.warn('Could not determine member chamber, returning empty results', { bioguideId });
+      return [];
+    }
 
-      // Step 3: Resolve XML URLs using resilient strategy
-      logger.info('Resolving XML URLs using resilient strategy', {
-        totalVotes: recentVotes.length,
-        chamber,
-        bioguideId,
-      });
+    const { chamber, memberName } = memberInfo;
 
-      const votesWithResolvedUrls: Array<{ vote: CongressVoteListItem; xmlUrl: string }> = [];
+    // Step 2: Get list of recent votes from Congress.gov JSON API with RESILIENT SEARCH
+    let recentVotes = await getVoteListWithXMLUrls(chamber, limit, bioguideId);
+    let searchExpanded = false;
 
-      for (const vote of recentVotes) {
-        const xmlUrl = await findValidXMLUrl(vote, chamber);
-        if (xmlUrl) {
-          votesWithResolvedUrls.push({ vote, xmlUrl });
-        }
-      }
-
-      if (votesWithResolvedUrls.length === 0) {
-        logger.warn('No votes with resolvable XML URLs found', {
-          chamber,
-          bioguideId,
-          triedVotes: recentVotes.length,
-        });
-        return [];
-      }
-
-      logger.info('Preparing parallel XML fetching and parsing', {
+    // RESILIENCE IMPROVEMENT: If no 119th Congress votes found with initial limit,
+    // expand search to 100 most recent votes automatically
+    if (recentVotes.length === 0 && limit < 100) {
+      logger.info('No 119th Congress votes found, expanding search to 100 most recent votes', {
         bioguideId,
         chamber,
-        votesToFetch: votesWithResolvedUrls.length,
-        urlResolutionMethod: 'resilient-3-step',
+        originalLimit: limit,
+        expandedLimit: 100,
       });
 
-      // Step 4: Fetch XML files in parallel using Promise.allSettled for resilience
-      const xmlFetchPromises = votesWithResolvedUrls.map(({ xmlUrl }) => fetchXMLContent(xmlUrl));
-      const xmlFetchResults = await Promise.allSettled(xmlFetchPromises);
+      recentVotes = await getVoteListWithXMLUrls(chamber, 100, bioguideId);
+      searchExpanded = true;
+    }
 
-      // Step 5: Parse XML data and extract official vote positions
-      const officialVotes: Vote[] = [];
-      let successfulXMLFetches = 0;
-      let successfulXMLParses = 0;
-      let officialPositionsFound = 0;
+    if (recentVotes.length === 0) {
+      const message = searchExpanded
+        ? 'No 119th Congress votes found even after expanding search to 100 most recent votes'
+        : 'No recent 119th Congress votes found for chamber';
 
-      for (let i = 0; i < xmlFetchResults.length; i++) {
-        const result = xmlFetchResults[i];
-        const resolvedData = votesWithResolvedUrls[i];
+      logger.warn(message, {
+        chamber,
+        bioguideId,
+        searchExpanded,
+        finalLimit: searchExpanded ? 100 : limit,
+      });
 
-        if (!result || !resolvedData) {
-          continue;
-        }
+      return [];
+    }
 
-        const { vote: voteMetadata, xmlUrl } = resolvedData;
+    // Step 3: Resolve XML URLs using resilient strategy
+    logger.info('Resolving XML URLs using resilient strategy', {
+      totalVotes: recentVotes.length,
+      chamber,
+      bioguideId,
+    });
 
-        if (result.status === 'fulfilled' && result.value) {
-          successfulXMLFetches++;
-          const xmlContent = result.value;
+    const votesWithResolvedUrls: Array<{ vote: CongressVoteListItem; xmlUrl: string }> = [];
 
-          // Parse the XML content
-          const parsedVoteData = parseVoteXML(xmlContent, voteMetadata);
-          if (parsedVoteData) {
-            successfulXMLParses++;
+    for (const vote of recentVotes) {
+      const xmlUrl = await findValidXMLUrl(vote, chamber);
+      if (xmlUrl) {
+        votesWithResolvedUrls.push({ vote, xmlUrl });
+      }
+    }
 
-            // Extract the official vote position for this specific member
-            const officialPosition = extractOfficialPositionFromXML(parsedVoteData, bioguideId);
+    if (votesWithResolvedUrls.length === 0) {
+      logger.warn('No votes with resolvable XML URLs found', {
+        chamber,
+        bioguideId,
+        triedVotes: recentVotes.length,
+      });
+      return [];
+    }
 
-            if (officialPosition) {
-              officialPositionsFound++;
-              const transformedVote = transformXMLVoteData(
-                parsedVoteData,
-                officialPosition,
-                xmlUrl
-              );
-              officialVotes.push(transformedVote);
-            }
+    logger.info('Preparing parallel XML fetching and parsing', {
+      bioguideId,
+      chamber,
+      votesToFetch: votesWithResolvedUrls.length,
+      urlResolutionMethod: 'resilient-3-step',
+    });
+
+    // Step 4: Fetch XML files in parallel using Promise.allSettled for resilience
+    const xmlFetchPromises = votesWithResolvedUrls.map(({ xmlUrl }) => fetchXMLContent(xmlUrl));
+    const xmlFetchResults = await Promise.allSettled(xmlFetchPromises);
+
+    // Step 5: Parse XML data and extract official vote positions
+    const officialVotes: Vote[] = [];
+    let successfulXMLFetches = 0;
+    let successfulXMLParses = 0;
+    let officialPositionsFound = 0;
+
+    for (let i = 0; i < xmlFetchResults.length; i++) {
+      const result = xmlFetchResults[i];
+      const resolvedData = votesWithResolvedUrls[i];
+
+      if (!result || !resolvedData) {
+        continue;
+      }
+
+      const { vote: voteMetadata, xmlUrl } = resolvedData;
+
+      if (result.status === 'fulfilled' && result.value) {
+        successfulXMLFetches++;
+        const xmlContent = result.value;
+
+        // Parse the XML content
+        const parsedVoteData = parseVoteXML(xmlContent, voteMetadata);
+        if (parsedVoteData) {
+          successfulXMLParses++;
+
+          // Extract the official vote position for this specific member
+          const officialPosition = extractOfficialPositionFromXML(parsedVoteData, bioguideId);
+
+          if (officialPosition) {
+            officialPositionsFound++;
+            const transformedVote = transformXMLVoteData(parsedVoteData, officialPosition, xmlUrl);
+            officialVotes.push(transformedVote);
           }
         }
       }
+    }
 
-      logger.info('XML parsing pipeline complete', {
-        bioguideId,
-        memberName,
-        chamber,
-        totalVotesRequested: recentVotes.length,
-        votesWithResolvedXML: votesWithResolvedUrls.length,
-        successfulXMLFetches,
-        successfulXMLParses,
-        officialPositionsFound,
-        finalResultCount: officialVotes.length,
-        dataAccuracy: '100% official from House/Senate Clerk XML files',
-        urlResolutionStrategy: 'resilient-3-step (construct->validate->fallback)',
+    logger.info('XML parsing pipeline complete', {
+      bioguideId,
+      memberName,
+      chamber,
+      totalVotesRequested: recentVotes.length,
+      votesWithResolvedXML: votesWithResolvedUrls.length,
+      successfulXMLFetches,
+      successfulXMLParses,
+      officialPositionsFound,
+      finalResultCount: officialVotes.length,
+      dataAccuracy: '100% official from House/Senate Clerk XML files',
+      urlResolutionStrategy: 'resilient-3-step (construct->validate->fallback)',
+    });
+
+    // Sort by date (most recent first)
+    const sortedVotes = officialVotes.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    // Cache the successful result with 15-minute TTL for voting data
+    if (sortedVotes.length > 0) {
+      govCache.set(cacheKey, sortedVotes, {
+        ttl: 15 * 60 * 1000, // 15 minutes for voting data
+        source: 'house-senate-clerk-xml',
+        dataType: 'voting',
       });
+      logger.info('Cached XML voting records', {
+        bioguideId,
+        cacheKey,
+        voteCount: sortedVotes.length,
+      });
+    }
 
-      // Sort by date (most recent first)
-      return officialVotes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    },
-    1800000 // 30 minute cache
-  ).catch(error => {
+    return sortedVotes;
+  } catch (error) {
     logger.error('Error in XML voting records pipeline', error as Error, { bioguideId });
     return [];
-  });
+  }
 }
 
 /**
@@ -787,7 +931,7 @@ export async function GET(
 ) {
   const { bioguideId } = await params;
   const { searchParams } = new URL(request.url);
-  const limit = parseInt(searchParams.get('limit') || '20');
+  const limit = parseInt(searchParams.get('limit') || '25'); // Increased default from 20 to 25
 
   logger.info('XML-based voting records API called', { bioguideId, limit });
 
@@ -803,6 +947,30 @@ export async function GET(
   try {
     // Execute the complete XML parsing pipeline for 100% accurate voting records
     const votes = await getOfficialVotingRecordsFromXML(bioguideId, limit);
+
+    const isT000481Debug = bioguideId === 'T000481';
+
+    if (isT000481Debug) {
+      // eslint-disable-next-line no-console
+      console.log(`\n📊 FINAL AGGREGATION RESULTS FOR T000481:`);
+      // eslint-disable-next-line no-console
+      console.log(`   Final votes array length: ${votes.length}`);
+      if (votes.length > 0) {
+        // eslint-disable-next-line no-console
+        console.log(`   Sample votes:`);
+        votes.slice(0, 3).forEach((v, i) => {
+          // eslint-disable-next-line no-console
+          console.log(
+            `     ${i + 1}. ${v.date} - ${v.position} - Roll #${v.rollNumber} - ${v.question.slice(0, 50)}...`
+          );
+        });
+      } else {
+        // eslint-disable-next-line no-console
+        console.log('   ❌ EMPTY VOTES ARRAY - THIS IS THE ISSUE!');
+      }
+      // eslint-disable-next-line no-console
+      console.log('🎯 === ROOT CAUSE ANALYSIS END ===\n\n');
+    }
 
     // Calculate voting patterns from 100% official data
     const votingPattern = {

@@ -7,17 +7,11 @@ import {
   EnhancedFECData,
   ContributionDetail,
   ExpenditureDetail,
-  DonorAnalysisData,
-  FundraisingTrendsData,
   FECScheduleAResponse,
   FECScheduleBResponse,
   FECCandidateTotalsResponse,
 } from '@/types/fec';
-import {
-  categorizeContributionsByIndustry,
-  calculateIndustryStats,
-  calculateIndustryDiversityScore,
-} from './industryMapper';
+import { categorizeContributionsByIndustry, calculateIndustryStats } from './industryMapper';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 
@@ -205,16 +199,53 @@ async function fetchAllExpenditures(candidateId: string): Promise<ExpenditureDet
 }
 
 /**
+ * Type guard for FEC contribution data
+ */
+function isFECContribution(obj: unknown): obj is {
+  sub_id: string;
+  contributor_name?: string;
+  contributor_employer?: string;
+  contributor_occupation?: string;
+  contribution_receipt_amount?: number;
+  contribution_receipt_date?: string;
+  contributor_city?: string;
+  contributor_state?: string;
+  contributor_zip?: string;
+  is_individual?: boolean;
+} {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof (obj as unknown as { sub_id?: unknown }).sub_id === 'string'
+  );
+}
+
+/**
  * Map FEC contribution to our format
  */
 function mapFECContribution(fecContrib: unknown): ContributionDetail {
+  if (!isFECContribution(fecContrib)) {
+    return {
+      id: 'unknown',
+      contributorName: 'Unknown',
+      employerName: undefined,
+      occupation: undefined,
+      amount: 0,
+      date: new Date().toISOString(),
+      city: undefined,
+      state: undefined,
+      zipCode: undefined,
+      contributionType: 'individual',
+      isSmallDonor: true,
+    };
+  }
   return {
     id: fecContrib.sub_id,
     contributorName: fecContrib.contributor_name || 'Unknown',
     employerName: fecContrib.contributor_employer,
     occupation: fecContrib.contributor_occupation,
     amount: fecContrib.contribution_receipt_amount || 0,
-    date: fecContrib.contribution_receipt_date,
+    date: fecContrib.contribution_receipt_date || new Date().toISOString(),
     city: fecContrib.contributor_city,
     state: fecContrib.contributor_state,
     zipCode: fecContrib.contributor_zip,
@@ -224,9 +255,44 @@ function mapFECContribution(fecContrib: unknown): ContributionDetail {
 }
 
 /**
+ * Type guard for FEC expenditure data
+ */
+function isFECExpenditure(obj: unknown): obj is {
+  sub_id: string;
+  recipient_name?: string;
+  disbursement_description?: string;
+  disbursement_amount?: number;
+  disbursement_date?: string;
+  category_code_full?: string;
+  purpose_code?: string;
+} {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof (obj as unknown as { sub_id?: unknown }).sub_id === 'string'
+  );
+}
+
+/**
  * Map FEC expenditure to our format
  */
 function mapFECExpenditure(fecExp: unknown): ExpenditureDetail {
+  if (!isFECExpenditure(fecExp)) {
+    return {
+      id: 'unknown',
+      recipientName: 'Unknown',
+      description: 'Unknown',
+      amount: 0,
+      date: new Date().toISOString(),
+      category: 'Other',
+      subcategory: undefined,
+      purpose: undefined,
+      isMedia: false,
+      isStaff: false,
+      isAdmin: false,
+    };
+  }
+
   const description = fecExp.disbursement_description || 'Unknown';
   const category = categorizeExpenditure(fecExp);
 
@@ -235,7 +301,7 @@ function mapFECExpenditure(fecExp: unknown): ExpenditureDetail {
     recipientName: fecExp.recipient_name || 'Unknown',
     description,
     amount: fecExp.disbursement_amount || 0,
-    date: fecExp.disbursement_date,
+    date: fecExp.disbursement_date || new Date().toISOString(),
     category,
     subcategory: fecExp.category_code_full,
     purpose: fecExp.purpose_code,
@@ -249,8 +315,13 @@ function mapFECExpenditure(fecExp: unknown): ExpenditureDetail {
  * Categorize expenditure based on description and codes
  */
 function categorizeExpenditure(exp: unknown): string {
-  const desc = (exp.disbursement_description || '').toLowerCase();
-  const category = (exp.category_code_full || '').toLowerCase();
+  if (typeof exp !== 'object' || exp === null) {
+    return 'Other';
+  }
+
+  const expObj = exp as { disbursement_description?: string; category_code_full?: string };
+  const desc = (expObj.disbursement_description || '').toLowerCase();
+  const category = (expObj.category_code_full || '').toLowerCase();
 
   // Media and advertising
   if (
@@ -379,6 +450,17 @@ async function processRawFECData(
 }
 
 /**
+ * Type guard for FEC totals data
+ */
+function isFECTotal(obj: unknown): obj is {
+  coverage_end_date?: string;
+  disbursements?: number;
+  receipts?: number;
+} {
+  return typeof obj === 'object' && obj !== null;
+}
+
+/**
  * Calculate burn rate from financial totals
  */
 function calculateBurnRate(totals: unknown[]): number {
@@ -387,13 +469,22 @@ function calculateBurnRate(totals: unknown[]): number {
   const latest = totals[0];
   const previous = totals[1];
 
-  const timeDiff =
-    new Date(latest.coverage_end_date).getTime() - new Date(previous.coverage_end_date).getTime();
+  if (!isFECTotal(latest) || !isFECTotal(previous)) return 0;
+
+  const latestDate = latest.coverage_end_date;
+  const previousDate = previous.coverage_end_date;
+
+  if (!latestDate || !previousDate) return 0;
+
+  const timeDiff = new Date(latestDate).getTime() - new Date(previousDate).getTime();
   const monthsDiff = timeDiff / (1000 * 60 * 60 * 24 * 30);
 
   if (monthsDiff <= 0) return 0;
 
-  return (latest.disbursements - previous.disbursements) / monthsDiff;
+  const latestDisbursements = latest.disbursements || 0;
+  const previousDisbursements = previous.disbursements || 0;
+
+  return (latestDisbursements - previousDisbursements) / monthsDiff;
 }
 
 /**
@@ -402,7 +493,12 @@ function calculateBurnRate(totals: unknown[]): number {
 function calculateQuarterlyAverage(totals: unknown[]): number {
   if (totals.length === 0) return 0;
 
-  const totalReceipts = totals.reduce((sum, total) => sum + (total.receipts || 0), 0);
+  const totalReceipts = totals.reduce((sum: number, total) => {
+    if (isFECTotal(total)) {
+      return sum + (total.receipts || 0);
+    }
+    return sum;
+  }, 0);
   const quarters = totals.length;
 
   return quarters > 0 ? totalReceipts / quarters : 0;
@@ -420,6 +516,14 @@ function calculateEfficiency(raised: number, spent: number): number {
  * Calculate contribution breakdown
  */
 function calculateBreakdown(contributions: ContributionDetail[], totals: unknown) {
+  // Type guard for totals object
+  const totalsObj =
+    typeof totals === 'object' && totals !== null
+      ? (totals as {
+          political_party_committee_contributions?: number;
+          candidate_contribution?: number;
+        })
+      : {};
   const totalAmount = contributions.reduce((sum, contrib) => sum + contrib.amount, 0);
 
   const individual = contributions.filter(c => c.contributionType === 'individual');
@@ -441,15 +545,15 @@ function calculateBreakdown(contributions: ContributionDetail[], totals: unknown
         totalAmount > 0 ? (pac.reduce((sum, c) => sum + c.amount, 0) / totalAmount) * 100 : 0,
     },
     party: {
-      amount: totals?.political_party_committee_contributions || 0,
+      amount: totalsObj.political_party_committee_contributions || 0,
       percent:
         totalAmount > 0
-          ? ((totals?.political_party_committee_contributions || 0) / totalAmount) * 100
+          ? ((totalsObj.political_party_committee_contributions || 0) / totalAmount) * 100
           : 0,
     },
     candidate: {
-      amount: totals?.candidate_contribution || 0,
-      percent: totalAmount > 0 ? ((totals?.candidate_contribution || 0) / totalAmount) * 100 : 0,
+      amount: totalsObj.candidate_contribution || 0,
+      percent: totalAmount > 0 ? ((totalsObj.candidate_contribution || 0) / totalAmount) * 100 : 0,
     },
     smallDonors: {
       amount: smallDonors.reduce((sum, c) => sum + c.amount, 0),
@@ -475,7 +579,7 @@ function calculateBreakdown(contributions: ContributionDetail[], totals: unknown
  */
 function calculateGeography(contributions: ContributionDetail[]) {
   const totalAmount = contributions.reduce((sum, contrib) => sum + contrib.amount, 0);
-  const totalCount = contributions.length;
+  const _totalCount = contributions.length;
 
   // Note: This requires knowing the candidate's state
   // For now, we'll use a placeholder implementation
@@ -529,7 +633,7 @@ function calculateGeography(contributions: ContributionDetail[]) {
 /**
  * Calculate geographic diversity score
  */
-function calculateGeographicDiversity(topStates: unknown[]): number {
+function calculateGeographicDiversity(topStates: Array<{ amount: number }>): number {
   if (topStates.length === 0) return 0;
 
   // Use entropy calculation for diversity
@@ -553,16 +657,41 @@ function calculateGeographicDiversity(topStates: unknown[]): number {
  * Calculate timeline from totals
  */
 function calculateTimeline(totals: unknown[], contributions: ContributionDetail[] = []) {
-  return totals.map(total => ({
-    period: `${total.cycle}`,
-    quarter: `Q${Math.ceil(new Date(total.coverage_end_date).getMonth() / 3)}`,
-    raised: total.receipts || 0,
-    spent: total.disbursements || 0,
-    netChange: (total.receipts || 0) - (total.disbursements || 0),
-    cashOnHand: total.cash_on_hand_end_period || 0,
-    burnRate: calculateBurnRate(contributions),
-    contributorCount: calculateContributorCount(contributions),
-  }));
+  return totals.map(total => {
+    if (!isFECTotal(total)) {
+      return {
+        period: 'Unknown',
+        quarter: 'Q1',
+        raised: 0,
+        spent: 0,
+        netChange: 0,
+        cashOnHand: 0,
+        burnRate: 0,
+        contributorCount: 0,
+      };
+    }
+
+    const totalObj = total as {
+      cycle?: number;
+      coverage_end_date?: string;
+      receipts?: number;
+      disbursements?: number;
+      cash_on_hand_end_period?: number;
+    };
+
+    const endDate = totalObj.coverage_end_date ? new Date(totalObj.coverage_end_date) : new Date();
+
+    return {
+      period: `${totalObj.cycle || 'Unknown'}`,
+      quarter: `Q${Math.ceil((endDate.getMonth() + 1) / 3)}`,
+      raised: totalObj.receipts || 0,
+      spent: totalObj.disbursements || 0,
+      netChange: (totalObj.receipts || 0) - (totalObj.disbursements || 0),
+      cashOnHand: totalObj.cash_on_hand_end_period || 0,
+      burnRate: calculateBurnRate(totals),
+      contributorCount: calculateContributorCount(contributions),
+    };
+  });
 }
 
 /**
@@ -728,7 +857,7 @@ function calculateRepeatDonors(contributions: ContributionDetail[]): number {
 /**
  * Calculate admin costs (estimated)
  */
-function calculateAdminCosts(contributions: ContributionDetail[]): number {
+function _calculateAdminCosts(contributions: ContributionDetail[]): number {
   const totalRaised = contributions.reduce((sum, c) => sum + c.amount, 0);
   // Estimate admin costs as 15% of total raised
   return totalRaised * 0.15;
@@ -737,7 +866,7 @@ function calculateAdminCosts(contributions: ContributionDetail[]): number {
 /**
  * Calculate fundraising costs (estimated)
  */
-function calculateFundraisingCosts(contributions: ContributionDetail[]): number {
+function _calculateFundraisingCosts(contributions: ContributionDetail[]): number {
   const totalRaised = contributions.reduce((sum, c) => sum + c.amount, 0);
   // Estimate fundraising costs as 20% of total raised
   return totalRaised * 0.2;
@@ -746,7 +875,7 @@ function calculateFundraisingCosts(contributions: ContributionDetail[]): number 
 /**
  * Calculate program costs (estimated)
  */
-function calculateProgramCosts(contributions: ContributionDetail[]): number {
+function _calculateProgramCosts(contributions: ContributionDetail[]): number {
   const totalRaised = contributions.reduce((sum, c) => sum + c.amount, 0);
   // Estimate program costs as 65% of total raised
   return totalRaised * 0.65;
@@ -755,10 +884,10 @@ function calculateProgramCosts(contributions: ContributionDetail[]): number {
 /**
  * Calculate efficiency ratio
  */
-function calculateEfficiencyRatio(contributions: ContributionDetail[]): number {
+function _calculateEfficiencyRatio(contributions: ContributionDetail[]): number {
   const totalRaised = contributions.reduce((sum, c) => sum + c.amount, 0);
-  const adminCosts = calculateAdminCosts(contributions);
-  const fundraisingCosts = calculateFundraisingCosts(contributions);
+  const adminCosts = _calculateAdminCosts(contributions);
+  const fundraisingCosts = _calculateFundraisingCosts(contributions);
   const overhead = adminCosts + fundraisingCosts;
 
   if (totalRaised === 0) return 0;
@@ -768,7 +897,7 @@ function calculateEfficiencyRatio(contributions: ContributionDetail[]): number {
 /**
  * Get date range from contributions
  */
-function getDateRange(contributions: ContributionDetail[]): {
+function _getDateRange(contributions: ContributionDetail[]): {
   months: number;
   start: Date;
   end: Date;
@@ -777,9 +906,17 @@ function getDateRange(contributions: ContributionDetail[]): {
     return { months: 1, start: new Date(), end: new Date() };
   }
 
-  const dates = contributions.map(c => new Date(c.date)).sort((a, b) => a.getTime() - b.getTime());
-  const start = dates[0];
-  const end = dates[dates.length - 1];
+  const dates = contributions
+    .map(c => new Date(c.date))
+    .filter(date => !isNaN(date.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  if (dates.length === 0) {
+    return { months: 1, start: new Date(), end: new Date() };
+  }
+
+  const start = dates[0]!; // We know this exists because we checked dates.length > 0
+  const end = dates[dates.length - 1]!; // We know this exists because we checked dates.length > 0
 
   const monthsDiff =
     (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
@@ -791,7 +928,9 @@ function getDateRange(contributions: ContributionDetail[]): {
   };
 }
 
-export default {
+const dataProcessorExports = {
   fetchComprehensiveFECData,
   processRawFECData,
 };
+
+export default dataProcessorExports;

@@ -5,7 +5,7 @@
 
 /**
  * Enhanced Representative Types
- * 
+ *
  * This file defines comprehensive types for representative data,
  * combining our existing structure with congress-legislators enhancements.
  * Includes error handling and batch API response types.
@@ -48,14 +48,14 @@ export interface EnhancedRepresentative extends BaseRepresentative {
     nickname?: string;
     official?: string;
   };
-  
+
   // Biographical information
   bio?: {
     birthday?: string;
     gender?: 'M' | 'F';
     religion?: string;
   };
-  
+
   // Current term details
   currentTerm?: {
     start: string;
@@ -69,7 +69,7 @@ export interface EnhancedRepresentative extends BaseRepresentative {
     stateRank?: 'junior' | 'senior';
     class?: number; // Senate class
   };
-  
+
   // Social media presence
   socialMedia?: {
     twitter?: string;
@@ -78,7 +78,7 @@ export interface EnhancedRepresentative extends BaseRepresentative {
     instagram?: string;
     mastodon?: string;
   };
-  
+
   // Cross-platform IDs
   ids?: {
     govtrack?: number;
@@ -90,14 +90,14 @@ export interface EnhancedRepresentative extends BaseRepresentative {
     wikidata?: string;
     ballotpedia?: string;
   };
-  
+
   // Leadership roles
   leadershipRoles?: Array<{
     title: string;
     start: string;
     end?: string;
   }>;
-  
+
   // Enhanced contact information
   contact?: {
     dcOffice?: {
@@ -115,7 +115,7 @@ export interface EnhancedRepresentative extends BaseRepresentative {
     contactForm?: string;
     schedulingUrl?: string;
   };
-  
+
   // Data source metadata
   metadata?: {
     lastUpdated: string;
@@ -229,11 +229,27 @@ export interface ZipCodeRepresentatives {
 
 // Type guards
 export function isEnhancedRepresentative(rep: unknown): rep is EnhancedRepresentative {
-  return rep && typeof rep.bioguideId === 'string' && typeof rep.name === 'string';
+  return (
+    typeof rep === 'object' &&
+    rep !== null &&
+    'bioguideId' in rep &&
+    'name' in rep &&
+    typeof (rep as Record<string, unknown>).bioguideId === 'string' &&
+    typeof (rep as Record<string, unknown>).name === 'string'
+  );
 }
 
 export function isRepresentativeSummary(rep: unknown): rep is RepresentativeSummary {
-  return rep && typeof rep.bioguideId === 'string' && typeof rep.name === 'string' && typeof rep.party === 'string';
+  return (
+    typeof rep === 'object' &&
+    rep !== null &&
+    'bioguideId' in rep &&
+    'name' in rep &&
+    'party' in rep &&
+    typeof (rep as Record<string, unknown>).bioguideId === 'string' &&
+    typeof (rep as Record<string, unknown>).name === 'string' &&
+    typeof (rep as Record<string, unknown>).party === 'string'
+  );
 }
 
 // Utility types
@@ -293,10 +309,51 @@ export interface APIError {
   requestId?: string;
 }
 
+// Specific data types for batch responses
+export interface VoteData {
+  vote_id: string;
+  position: string;
+  date: string;
+  bill: {
+    title: string;
+    number: string;
+  };
+}
+
+export interface BillData {
+  bill_id: string;
+  title: string;
+  number: string;
+  congress: number;
+  introduced_date: string;
+  status: string;
+}
+
+export interface FinanceData {
+  total_receipts?: number;
+  total_disbursements?: number;
+  cash_on_hand?: number;
+  cycle: string;
+}
+
+export interface NewsData {
+  title: string;
+  url: string;
+  published_date: string;
+  source: string;
+}
+
 // Batch API response types
 export interface BatchApiResponse {
   success: boolean;
-  data: Record<string, any>;
+  data: {
+    votes?: VoteData[];
+    bills?: BillData[];
+    finance?: FinanceData;
+    news?: NewsData[];
+    profile?: EnhancedRepresentative;
+    [key: string]: unknown;
+  };
   errors: Record<string, string>;
   metadata: {
     timestamp: string;
@@ -310,7 +367,14 @@ export interface BatchApiResponse {
 
 // Enhanced type for batch API hook
 export interface BatchApiHookResult {
-  data: Record<string, any>;
+  data: {
+    votes?: VoteData[];
+    bills?: BillData[];
+    finance?: FinanceData;
+    news?: NewsData[];
+    profile?: EnhancedRepresentative;
+    [key: string]: unknown;
+  };
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -321,18 +385,29 @@ export interface BatchApiHookResult {
 // Profile data structure for batch response
 export interface RepresentativeProfile {
   profile: EnhancedRepresentative;
-  votes?: unknown[];
-  bills?: unknown[];
-  finance?: unknown;
-  news?: unknown[];
-  'party-alignment'?: unknown;
-  committees?: unknown[];
-  leadership?: unknown;
-  district?: unknown;
+  votes?: VoteData[];
+  bills?: BillData[];
+  finance?: FinanceData;
+  news?: NewsData[];
+  'party-alignment'?: {
+    score: number;
+    total_votes: number;
+    party_line_votes: number;
+  };
+  committees?: CommitteeMembership[];
+  leadership?: {
+    positions: string[];
+    current_role?: string;
+  };
+  district?: {
+    id: string;
+    state: string;
+    number: string;
+  };
 }
 
 // Individual endpoint response wrapper
-export interface EndpointResponse<T = any> {
+export interface EndpointResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;

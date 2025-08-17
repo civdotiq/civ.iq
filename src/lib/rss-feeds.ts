@@ -5,7 +5,7 @@
 
 /**
  * Government RSS Feeds Integration
- * 
+ *
  * This module provides utilities for fetching and parsing RSS feeds
  * from official government sources and news organizations.
  */
@@ -45,77 +45,77 @@ const RSS_FEEDS = {
       name: 'White House Press Releases',
       url: 'https://www.whitehouse.gov/feed/',
       category: 'executive' as const,
-      priority: 'high'
+      priority: 'high',
     },
     {
       name: 'Federal Register',
       url: 'https://www.federalregister.gov/documents/search.rss',
       category: 'government' as const,
-      priority: 'medium'
+      priority: 'medium',
     },
     {
       name: 'U.S. Senate Press Releases',
       url: 'https://www.senate.gov/rss/feeds/news.xml',
       category: 'congress' as const,
-      priority: 'high'
+      priority: 'high',
     },
     {
       name: 'House of Representatives News',
       url: 'https://www.house.gov/rss/press-releases.xml',
       category: 'congress' as const,
-      priority: 'high'
+      priority: 'high',
     },
     {
       name: 'Supreme Court News',
       url: 'https://www.supremecourt.gov/rss/news.xml',
       category: 'judicial' as const,
-      priority: 'medium'
+      priority: 'medium',
     },
     {
       name: 'GAO Reports',
       url: 'https://www.gao.gov/rss/reports.xml',
       category: 'government' as const,
-      priority: 'low'
+      priority: 'low',
     },
     {
       name: 'CBO Publications',
       url: 'https://www.cbo.gov/rss/publications.xml',
       category: 'government' as const,
-      priority: 'low'
-    }
+      priority: 'low',
+    },
   ],
   news: [
     {
       name: 'Politico Congress',
       url: 'https://www.politico.com/rss/congress.xml',
       category: 'news' as const,
-      priority: 'high'
+      priority: 'high',
     },
     {
       name: 'The Hill Congress',
       url: 'https://thehill.com/news/house/feed/',
       category: 'news' as const,
-      priority: 'high'
+      priority: 'high',
     },
     {
       name: 'Roll Call News',
       url: 'https://rollcall.com/feed/',
       category: 'news' as const,
-      priority: 'high'
+      priority: 'high',
     },
     {
       name: 'Congress.gov Blog',
       url: 'https://blogs.loc.gov/law/category/congress/feed/',
       category: 'government' as const,
-      priority: 'medium'
+      priority: 'medium',
     },
     {
       name: 'Federal News Network Congress',
       url: 'https://federalnewsnetwork.com/category/congress/feed/',
       category: 'news' as const,
-      priority: 'medium'
-    }
-  ]
+      priority: 'medium',
+    },
+  ],
 };
 
 // Rate limiter for RSS feeds
@@ -126,16 +126,19 @@ class RSSRateLimiter {
   async waitIfNeeded(): Promise<void> {
     const now = Date.now();
     const oneMinuteAgo = now - 60000;
-    
+
     this.requests = this.requests.filter(time => time > oneMinuteAgo);
-    
+
     if (this.requests.length >= this.maxRequestsPerMinute) {
-      const waitTime = 60000 - (now - this.requests[0]);
-      if (waitTime > 0) {
-        await new Promise(resolve => setTimeout(resolve, waitTime));
+      const firstRequest = this.requests[0];
+      if (firstRequest) {
+        const waitTime = 60000 - (now - firstRequest);
+        if (waitTime > 0) {
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
       }
     }
-    
+
     this.requests.push(now);
   }
 }
@@ -150,9 +153,9 @@ class GovernmentRSSFetcher {
       timeout: 15000,
       maxItems: 50,
       cacheTimeout: 30 * 60 * 1000, // 30 minutes
-      ...config
+      ...config,
     };
-    
+
     this.cache = new Map();
     this.rateLimiter = new RSSRateLimiter();
   }
@@ -161,13 +164,13 @@ class GovernmentRSSFetcher {
    * Fetch and parse an RSS feed
    */
   async fetchRSSFeed(
-    feedUrl: string, 
-    feedName: string, 
+    feedUrl: string,
+    feedName: string,
     category: RSSFeed['category']
   ): Promise<RSSFeed | null> {
     const cacheKey = feedUrl;
     const cached = this.cache.get(cacheKey);
-    
+
     // Check cache first
     if (cached && Date.now() - cached.timestamp < this.config.cacheTimeout) {
       return cached.data;
@@ -177,16 +180,16 @@ class GovernmentRSSFetcher {
 
     try {
       console.log(`Fetching RSS feed: ${feedName}`);
-      
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
       const response = await fetch(feedUrl, {
         headers: {
           'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-          'Accept': 'application/rss+xml, application/xml, text/xml'
+          Accept: 'application/rss+xml, application/xml, text/xml',
         },
-        signal: controller.signal
+        signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
@@ -202,12 +205,11 @@ class GovernmentRSSFetcher {
         // Cache the result
         this.cache.set(cacheKey, {
           data: feed,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
 
       return feed;
-
     } catch (error) {
       console.error(`Error fetching RSS feed ${feedName}:`, error);
       return null;
@@ -218,9 +220,9 @@ class GovernmentRSSFetcher {
    * Parse RSS XML into structured data
    */
   private async parseRSSXML(
-    xmlText: string, 
-    feedName: string, 
-    feedUrl: string, 
+    xmlText: string,
+    feedName: string,
+    feedUrl: string,
     category: RSSFeed['category']
   ): Promise<RSSFeed | null> {
     try {
@@ -243,9 +245,10 @@ class GovernmentRSSFetcher {
       const title = this.getTextContent(channel, 'title') || feedName;
       const description = this.getTextContent(channel, 'description') || '';
       const link = this.getTextContent(channel, 'link') || feedUrl;
-      const lastBuildDate = this.getTextContent(channel, 'lastBuildDate') || 
-                           this.getTextContent(channel, 'pubDate') || 
-                           new Date().toISOString();
+      const lastBuildDate =
+        this.getTextContent(channel, 'lastBuildDate') ||
+        this.getTextContent(channel, 'pubDate') ||
+        new Date().toISOString();
 
       // Extract items
       const itemElements = Array.from(channel.querySelectorAll('item'));
@@ -263,13 +266,10 @@ class GovernmentRSSFetcher {
         description,
         link,
         lastBuildDate: this.normalizeDate(lastBuildDate),
-        items: items.sort((a, b) => 
-          new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()
-        ),
+        items: items.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()),
         source: feedName,
-        category
+        category,
       };
-
     } catch (error) {
       console.error(`Error parsing RSS XML for ${feedName}:`, error);
       return null;
@@ -282,14 +282,13 @@ class GovernmentRSSFetcher {
   private parseRSSItem(item: Element, source: string, feedUrl: string): RSSItem | null {
     try {
       const title = this.getTextContent(item, 'title');
-      const description = this.getTextContent(item, 'description') || 
-                         this.getTextContent(item, 'summary');
+      const description =
+        this.getTextContent(item, 'description') || this.getTextContent(item, 'summary');
       const link = this.getTextContent(item, 'link');
-      const pubDate = this.getTextContent(item, 'pubDate') || 
-                     this.getTextContent(item, 'published');
+      const pubDate =
+        this.getTextContent(item, 'pubDate') || this.getTextContent(item, 'published');
       const guid = this.getTextContent(item, 'guid') || link;
-      const author = this.getTextContent(item, 'author') || 
-                    this.getTextContent(item, 'dc:creator');
+      const author = this.getTextContent(item, 'author') || this.getTextContent(item, 'dc:creator');
 
       if (!title || !link) {
         return null;
@@ -297,7 +296,9 @@ class GovernmentRSSFetcher {
 
       // Extract categories
       const categoryElements = Array.from(item.querySelectorAll('category'));
-      const categories = categoryElements.map(cat => cat.textContent?.trim()).filter(Boolean) as string[];
+      const categories = categoryElements
+        .map(cat => cat.textContent?.trim())
+        .filter(Boolean) as string[];
 
       return {
         title: this.cleanText(title),
@@ -308,9 +309,8 @@ class GovernmentRSSFetcher {
         author: author ? this.cleanText(author) : undefined,
         category: categories.length > 0 ? categories : undefined,
         source,
-        feedUrl
+        feedUrl,
       };
-
     } catch (error) {
       console.error('Error parsing RSS item:', error);
       return null;
@@ -373,17 +373,18 @@ class GovernmentRSSFetcher {
 
     // Process in priority order
     for (const feedGroup of [highPriorityFeeds, mediumPriorityFeeds, lowPriorityFeeds]) {
-      const promises = feedGroup.map(feed => 
-        this.fetchRSSFeed(feed.url, feed.name, feed.category)
-      );
-      
+      const promises = feedGroup.map(feed => this.fetchRSSFeed(feed.url, feed.name, feed.category));
+
       const results = await Promise.allSettled(promises);
-      
+
       results.forEach((result, index) => {
         if (result.status === 'fulfilled' && result.value) {
           feeds.push(result.value);
         } else {
-          console.warn(`Failed to fetch feed: ${feedGroup[index].name}`);
+          const feedConfig = feedGroup[index];
+          if (feedConfig) {
+            console.warn(`Failed to fetch feed: ${feedConfig.name}`);
+          }
         }
       });
 
@@ -403,15 +404,16 @@ class GovernmentRSSFetcher {
     const allFeeds = [...RSS_FEEDS.government, ...RSS_FEEDS.news];
     const categoryFeeds = allFeeds.filter(feed => feed.category === category);
 
-    const promises = categoryFeeds.map(feed => 
+    const promises = categoryFeeds.map(feed =>
       this.fetchRSSFeed(feed.url, feed.name, feed.category)
     );
 
     const results = await Promise.allSettled(promises);
-    
+
     return results
-      .filter((result): result is PromiseFulfilledResult<RSSFeed> => 
-        result.status === 'fulfilled' && result.value !== null
+      .filter(
+        (result): result is PromiseFulfilledResult<RSSFeed> =>
+          result.status === 'fulfilled' && result.value !== null
       )
       .map(result => result.value);
   }
@@ -419,16 +421,13 @@ class GovernmentRSSFetcher {
   /**
    * Search RSS items by keyword
    */
-  async searchRSSItems(
-    keyword: string, 
-    category?: RSSFeed['category']
-  ): Promise<RSSItem[]> {
-    const feeds = category 
+  async searchRSSItems(keyword: string, category?: RSSFeed['category']): Promise<RSSItem[]> {
+    const feeds = category
       ? await this.fetchFeedsByCategory(category)
       : await this.fetchAllGovernmentFeeds();
 
     const allItems: RSSItem[] = [];
-    
+
     feeds.forEach(feed => {
       feed.items.forEach(item => {
         const searchText = `${item.title} ${item.description}`.toLowerCase();
@@ -439,23 +438,18 @@ class GovernmentRSSFetcher {
     });
 
     // Sort by publication date (newest first)
-    return allItems.sort((a, b) => 
-      new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()
-    );
+    return allItems.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
   }
 
   /**
    * Get recent items across all feeds
    */
-  async getRecentItems(
-    limit = 20, 
-    hoursAgo = 24
-  ): Promise<RSSItem[]> {
+  async getRecentItems(limit = 20, hoursAgo = 24): Promise<RSSItem[]> {
     const feeds = await this.fetchAllGovernmentFeeds();
     const cutoffTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
-    
+
     const recentItems: RSSItem[] = [];
-    
+
     feeds.forEach(feed => {
       feed.items.forEach(item => {
         if (new Date(item.pubDate) > cutoffTime) {
@@ -482,7 +476,7 @@ class GovernmentRSSFetcher {
   getCacheStats(): { size: number; keys: string[] } {
     return {
       size: this.cache.size,
-      keys: Array.from(this.cache.keys())
+      keys: Array.from(this.cache.keys()),
     };
   }
 }
@@ -491,11 +485,7 @@ class GovernmentRSSFetcher {
 export const rssReader = new GovernmentRSSFetcher();
 
 // Export types
-export type {
-  RSSItem,
-  RSSFeed,
-  GovernmentRSSConfig
-};
+export type { RSSItem, RSSFeed, GovernmentRSSConfig };
 
 // Export class for custom instances
 export { GovernmentRSSFetcher };
@@ -511,11 +501,11 @@ export const RSSUtils = {
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
-    
+
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffMinutes < 60) {
       return `${diffMinutes} minutes ago`;
     } else if (diffHours < 24) {
@@ -551,26 +541,35 @@ export const RSSUtils = {
     const text = `${title} ${description}`;
 
     // Determine type
-    let type: 'press_release' | 'legislation' | 'hearing' | 'report' | 'announcement' | 'other' = 'other';
-    
+    let type: 'press_release' | 'legislation' | 'hearing' | 'report' | 'announcement' | 'other' =
+      'other';
+
     if (text.includes('press release') || text.includes('statement')) {
       type = 'press_release';
     } else if (text.includes('bill') || text.includes('legislation') || text.includes('act')) {
       type = 'legislation';
-    } else if (text.includes('hearing') || text.includes('testimony') || text.includes('committee')) {
+    } else if (
+      text.includes('hearing') ||
+      text.includes('testimony') ||
+      text.includes('committee')
+    ) {
       type = 'hearing';
     } else if (text.includes('report') || text.includes('study') || text.includes('analysis')) {
       type = 'report';
-    } else if (text.includes('announce') || text.includes('nomination') || text.includes('appointment')) {
+    } else if (
+      text.includes('announce') ||
+      text.includes('nomination') ||
+      text.includes('appointment')
+    ) {
       type = 'announcement';
     }
 
     // Determine urgency
     let urgency: 'low' | 'medium' | 'high' = 'low';
-    
+
     const highUrgencyTerms = ['breaking', 'urgent', 'emergency', 'crisis', 'resign'];
     const mediumUrgencyTerms = ['announces', 'introduces', 'passes', 'votes', 'hearing'];
-    
+
     if (highUrgencyTerms.some(term => text.includes(term))) {
       urgency = 'high';
     } else if (mediumUrgencyTerms.some(term => text.includes(term))) {
@@ -578,5 +577,5 @@ export const RSSUtils = {
     }
 
     return { type, urgency };
-  }
+  },
 };

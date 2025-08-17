@@ -116,42 +116,10 @@ const generateIncomeDistribution = (medianIncome: number) => {
 };
 
 // Generate election history
-const generateElectionHistory = (currentPVI: string, _currentMargin: number) => {
-  const _currentYear = 2024;
-  const isPVIRepublican = currentPVI.startsWith('R+');
-  const isPVIDemocratic = currentPVI.startsWith('D+');
-
-  return [
-    {
-      year: 2016,
-      democratic: isPVIDemocratic ? 58 + Math.random() * 10 : 35 + Math.random() * 15,
-      republican: isPVIRepublican ? 62 + Math.random() * 10 : 45 + Math.random() * 15,
-      turnout: 68 + Math.random() * 8,
-    },
-    {
-      year: 2018,
-      democratic: isPVIDemocratic ? 61 + Math.random() * 8 : 38 + Math.random() * 12,
-      republican: isPVIRepublican ? 59 + Math.random() * 8 : 42 + Math.random() * 12,
-      turnout: 51 + Math.random() * 6,
-    },
-    {
-      year: 2020,
-      democratic: isPVIDemocratic ? 63 + Math.random() * 7 : 40 + Math.random() * 10,
-      republican: isPVIRepublican ? 57 + Math.random() * 7 : 40 + Math.random() * 10,
-      turnout: 72 + Math.random() * 8,
-    },
-    {
-      year: 2022,
-      democratic: isPVIDemocratic ? 59 + Math.random() * 6 : 37 + Math.random() * 8,
-      republican: isPVIRepublican ? 61 + Math.random() * 6 : 43 + Math.random() * 8,
-      turnout: 48 + Math.random() * 5,
-    },
-  ].map(election => ({
-    ...election,
-    democratic: Math.round(election.democratic),
-    republican: Math.round(election.republican),
-    turnout: Math.round(election.turnout),
-  }));
+const generateElectionHistory = (_currentPVI: string, _currentMargin: number) => {
+  // Election data unavailable - would require real election results from state/federal sources
+  // Returning empty array until real election data is available
+  return [];
 };
 
 // Generate employment by industry

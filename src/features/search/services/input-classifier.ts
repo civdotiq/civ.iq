@@ -298,7 +298,7 @@ function extractAddressComponents(input: string): ClassificationResult['componen
   // Extract state
   const words = input.split(/[\s,]+/);
   const stateIndex = words.findIndex(word => STATE_ABBREVIATIONS.includes(word.toUpperCase()));
-  if (stateIndex !== -1) {
+  if (stateIndex !== -1 && words[stateIndex]) {
     components.state = words[stateIndex].toUpperCase();
   }
 

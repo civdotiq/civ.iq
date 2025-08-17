@@ -1163,12 +1163,7 @@ export default function DistrictDetailPage() {
                               {district.representative.party === 'D' ? 'Democratic' : 'Republican'}
                             </span>
                             <span className="text-sm font-medium">
-                              {(
-                                district.political.lastElection.margin +
-                                Math.random() * 4 -
-                                2
-                              ).toFixed(1)}
-                              %
+                              {(district.political.lastElection.margin + 0).toFixed(1)}%
                             </span>
                           </div>
                         </div>
@@ -1177,20 +1172,13 @@ export default function DistrictDetailPage() {
                           <div className="flex items-center space-x-2">
                             <span
                               className={`px-2 py-1 rounded text-xs font-medium ${
-                                Math.random() > 0.6
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-red-100 text-red-800'
+                                false ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
                               }`}
                             >
-                              {Math.random() > 0.6 ? 'Democratic' : 'Republican'}
+                              {false ? 'Democratic' : 'Republican'}
                             </span>
                             <span className="text-sm font-medium">
-                              {(
-                                district.political.lastElection.margin +
-                                Math.random() * 6 -
-                                3
-                              ).toFixed(1)}
-                              %
+                              {(district.political.lastElection.margin + 0).toFixed(1)}%
                             </span>
                           </div>
                         </div>
@@ -1427,14 +1415,7 @@ export default function DistrictDetailPage() {
                               {district.representative.party === 'D' ? 'Democratic' : 'Republican'}
                             </span>
                           </td>
-                          <td className="py-2 px-3">
-                            {(
-                              district.political.lastElection.margin +
-                              Math.random() * 4 -
-                              2
-                            ).toFixed(1)}
-                            %
-                          </td>
+                          <td className="py-2 px-3">{0}%</td>
                           <td className="py-2 px-3">
                             {Math.min(district.political.lastElection.turnout + 15, 85)}%
                           </td>
@@ -1445,22 +1426,13 @@ export default function DistrictDetailPage() {
                           <td className="py-2 px-3">
                             <span
                               className={`px-2 py-1 rounded text-xs font-medium ${
-                                Math.random() > 0.6
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-red-100 text-red-800'
+                                false ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
                               }`}
                             >
-                              {Math.random() > 0.6 ? 'Democratic' : 'Republican'}
+                              {false ? 'Democratic' : 'Republican'}
                             </span>
                           </td>
-                          <td className="py-2 px-3">
-                            {(
-                              district.political.lastElection.margin +
-                              Math.random() * 6 -
-                              3
-                            ).toFixed(1)}
-                            %
-                          </td>
+                          <td className="py-2 px-3">{0}%</td>
                           <td className="py-2 px-3">
                             {Math.max(district.political.lastElection.turnout - 8, 45)}%
                           </td>

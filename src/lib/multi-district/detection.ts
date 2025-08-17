@@ -147,14 +147,18 @@ export function formatDistrictName(district: DistrictInfo): string {
  */
 export function formatMultiDistrictSummary(districts: DistrictInfo[]): string {
   if (districts.length === 0) return 'No districts found';
-  if (districts.length === 1) return formatDistrictName(districts[0]);
+
+  const firstDistrict = districts[0];
+  if (districts.length === 1 && firstDistrict) {
+    return formatDistrictName(firstDistrict);
+  }
 
   const stateGroups = districts.reduce(
     (acc, district) => {
       if (!acc[district.state]) {
         acc[district.state] = [];
       }
-      acc[district.state].push(district.district);
+      acc[district.state]?.push(district.district);
       return acc;
     },
     {} as Record<string, string[]>
@@ -176,7 +180,11 @@ export function formatMultiDistrictSummary(districts: DistrictInfo[]): string {
  */
 export function suggestPrimaryDistrict(districts: DistrictInfo[]): DistrictInfo | null {
   if (districts.length === 0) return null;
-  if (districts.length === 1) return districts[0];
+
+  const firstDistrict = districts[0];
+  if (districts.length === 1) {
+    return firstDistrict || null;
+  }
 
   // First, check if there's already a primary district marked
   const markedPrimary = districts.find(d => d.primary === true);
@@ -184,10 +192,11 @@ export function suggestPrimaryDistrict(districts: DistrictInfo[]): DistrictInfo 
 
   // Then, prefer districts with higher confidence
   const highConfidence = districts.filter(d => d.confidence === 'high');
-  if (highConfidence.length > 0) return highConfidence[0];
+  const firstHighConfidence = highConfidence[0];
+  if (firstHighConfidence) return firstHighConfidence;
 
   // Finally, just return the first district
-  return districts[0];
+  return firstDistrict || null;
 }
 
 /**

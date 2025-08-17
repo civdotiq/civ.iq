@@ -21,42 +21,32 @@ const createRepresentative = (
 ): EnhancedRepresentative => ({
   bioguideId,
   name,
-  firstName: name.split(' ')[0],
-  lastName: name.split(' ').slice(-1)[0],
+  firstName: name.split(' ')[0] || name,
+  lastName: name.split(' ').slice(-1)[0] || name,
   party,
   state,
   district,
   chamber: district ? 'House' : 'Senate', // Adjust based on committee type
-  directOrderName: name,
-  invertedOrderName: `${name.split(' ').slice(-1)[0]}, ${name.split(' ')[0]}`,
-  termStart: '2025-01-03',
-  termEnd: district ? '2027-01-03' : '2031-01-03', // House: 2 years, Senate: 6 years
-  votingRecord: {
-    totalVotes: 0,
-    votesWithParty: 0,
-    votesAgainstParty: 0,
-    partyUnityScore: 0,
-    abstentions: 0,
-    lastUpdated: new Date().toISOString(),
-  },
-  billsSponsored: 0,
-  billsCosponsored: 0,
-  lastUpdated: new Date().toISOString(),
-  committees: [],
-  subcommittees: [],
-  caucuses: [],
-  socialMedia: {},
-  officeLocations: [],
-  currentCommittees: ['[Committee Name]'],
-  currentSubcommittees: [],
-  currentCaucuses: [],
-  endorsements: [],
+  title: district ? `Representative for ${state}-${district}` : `Senator for ${state}`,
+  terms: [
+    {
+      congress: '119',
+      startYear: '2025',
+      endYear: district ? '2027' : '2031',
+    },
+  ],
+  committees: [
+    {
+      name: '[Committee Name]',
+      role: 'Member',
+    },
+  ],
 });
 
 // Helper to create committee member
 const createCommitteeMember = (
   rep: EnhancedRepresentative,
-  role: string,
+  role: 'Chair' | 'Ranking Member' | 'Vice Chair' | 'Member',
   rank: number,
   joinedDate: string = '2025-01-03'
 ): CommitteeMember => ({
@@ -69,7 +59,13 @@ const createCommitteeMember = (
 
 // TEMPLATE: Update committee leadership
 const chairman = createRepresentative('[BIOGUIDE_ID]', '[Full Name]', 'R', '[STATE]', '[DISTRICT]');
-const rankingMember = createRepresentative('[BIOGUIDE_ID]', '[Full Name]', 'D', '[STATE]', '[DISTRICT]');
+const rankingMember = createRepresentative(
+  '[BIOGUIDE_ID]',
+  '[Full Name]',
+  'D',
+  '[STATE]',
+  '[DISTRICT]'
+);
 
 // TEMPLATE: Add all Republican members
 const republicanMembers: EnhancedRepresentative[] = [
@@ -91,7 +87,7 @@ export const templateCommittee: Committee = {
   chamber: 'House', // or 'Senate' or 'Joint'
   type: 'Standing', // or 'Select' or 'Special'
   jurisdiction: '[Committee jurisdiction description]',
-  
+
   leadership: {
     chair: createCommitteeMember(chairman, 'Chair', 1),
     rankingMember: createCommitteeMember(rankingMember, 'Ranking Member', 2),
@@ -101,16 +97,18 @@ export const templateCommittee: Committee = {
     // Leadership
     createCommitteeMember(chairman, 'Chair', 1),
     createCommitteeMember(rankingMember, 'Ranking Member', 2),
-    
+
     // Republican members (excluding chair)
-    ...republicanMembers.slice(1).map((rep, index) => 
-      createCommitteeMember(rep, 'Member', index + 3)
-    ),
-    
+    ...republicanMembers
+      .slice(1)
+      .map((rep, index) => createCommitteeMember(rep, 'Member', index + 3)),
+
     // Democratic members (excluding ranking member)
-    ...democraticMembers.slice(1).map((rep, index) => 
-      createCommitteeMember(rep, 'Member', republicanMembers.length + index + 2)
-    ),
+    ...democraticMembers
+      .slice(1)
+      .map((rep, index) =>
+        createCommitteeMember(rep, 'Member', republicanMembers.length + index + 2)
+      ),
   ],
 
   subcommittees: [

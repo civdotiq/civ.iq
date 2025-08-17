@@ -22,36 +22,26 @@ const createRepresentative = (
 ): EnhancedRepresentative => ({
   bioguideId,
   name,
-  firstName: name.split(' ')[0],
-  lastName: name.split(' ').slice(-1)[0],
+  firstName: name.split(' ')[0] || name,
+  lastName: name.split(' ').slice(-1)[0] || name,
   party,
   state,
   district,
   chamber: 'House',
-  directOrderName: name,
-  invertedOrderName: `${name.split(' ').slice(-1)[0]}, ${name.split(' ')[0]}`,
-  termStart: '2025-01-03',
-  termEnd: '2027-01-03',
-  votingRecord: {
-    totalVotes: 0,
-    votesWithParty: 0,
-    votesAgainstParty: 0,
-    partyUnityScore: 0,
-    abstentions: 0,
-    lastUpdated: new Date().toISOString(),
-  },
-  billsSponsored: 0,
-  billsCosponsored: 0,
-  lastUpdated: new Date().toISOString(),
-  committees: [],
-  subcommittees: [],
-  caucuses: [],
-  socialMedia: {},
-  officeLocations: [],
-  currentCommittees: ['House Committee on Agriculture'],
-  currentSubcommittees: [],
-  currentCaucuses: [],
-  endorsements: [],
+  title: `Representative for ${state}-${district}`,
+  terms: [
+    {
+      congress: '119',
+      startYear: '2025',
+      endYear: '2027',
+    },
+  ],
+  committees: [
+    {
+      name: 'House Committee on Agriculture',
+      role: 'Member',
+    },
+  ],
 });
 
 // Committee leadership - verified from official sources
@@ -118,7 +108,7 @@ const democraticMembers: EnhancedRepresentative[] = [
 // Convert to CommitteeMembers
 const createCommitteeMember = (
   rep: EnhancedRepresentative,
-  role: string,
+  role: 'Chair' | 'Ranking Member' | 'Vice Chair' | 'Member',
   rank: number,
   joinedDate: string = '2025-01-03'
 ): CommitteeMember => ({
@@ -136,7 +126,8 @@ export const houseAgricultureCommittee: Committee = {
   name: 'House Committee on Agriculture',
   chamber: 'House',
   type: 'Standing',
-  jurisdiction: 'The House Committee on Agriculture has jurisdiction over federal agriculture policy and oversight of some federal agencies, and it can recommend funding appropriations for various governmental agencies. The Committee has jurisdiction over: ' +
+  jurisdiction:
+    'The House Committee on Agriculture has jurisdiction over federal agriculture policy and oversight of some federal agencies, and it can recommend funding appropriations for various governmental agencies. The Committee has jurisdiction over: ' +
     'adulteration of seeds, insect pests, and protection of birds and animals in forest reserves; ' +
     'agriculture generally; agricultural and industrial chemistry; agricultural colleges and experiment stations; ' +
     'agricultural economics and research; agricultural education extension services; ' +
@@ -147,7 +138,7 @@ export const houseAgricultureCommittee: Committee = {
     'human nutrition and home economics; inspection of livestock, poultry, meat products, and seafood and seafood products; ' +
     'plant industry, soils, and agricultural engineering; rural electrification; ' +
     'rural development; water conservation related to activities of the Department of Agriculture.',
-  
+
   leadership: {
     chair: createCommitteeMember(chairman, 'Chair', 1),
     rankingMember: createCommitteeMember(rankingMember, 'Ranking Member', 2),
@@ -157,16 +148,18 @@ export const houseAgricultureCommittee: Committee = {
     // Leadership
     createCommitteeMember(chairman, 'Chair', 1),
     createCommitteeMember(rankingMember, 'Ranking Member', 2),
-    
+
     // Republican members (excluding chair)
-    ...republicanMembers.slice(1).map((rep, index) => 
-      createCommitteeMember(rep, 'Member', index + 3)
-    ),
-    
+    ...republicanMembers
+      .slice(1)
+      .map((rep, index) => createCommitteeMember(rep, 'Member', index + 3)),
+
     // Democratic members (excluding ranking member)
-    ...democraticMembers.slice(1).map((rep, index) => 
-      createCommitteeMember(rep, 'Member', republicanMembers.length + index + 2)
-    ),
+    ...democraticMembers
+      .slice(1)
+      .map((rep, index) =>
+        createCommitteeMember(rep, 'Member', republicanMembers.length + index + 2)
+      ),
   ],
 
   subcommittees: [
@@ -175,15 +168,28 @@ export const houseAgricultureCommittee: Committee = {
       name: 'Conservation, Research, and Biotechnology',
       chair: republicanMembers.find(m => m.name === 'Doug LaMalfa'),
       rankingMember: democraticMembers.find(m => m.name === 'Ro Khanna'),
-      focus: 'Conservation on farms and ranches, agricultural credit, crop insurance, agricultural research and biotechnology, and general forestry issues.',
+      focus:
+        'Conservation on farms and ranches, agricultural credit, crop insurance, agricultural research and biotechnology, and general forestry issues.',
       members: [
         createCommitteeMember(republicanMembers.find(m => m.name === 'Doug LaMalfa')!, 'Chair', 1),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Ro Khanna')!, 'Ranking Member', 2),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Ro Khanna')!,
+          'Ranking Member',
+          2
+        ),
         createCommitteeMember(republicanMembers.find(m => m.name === 'Jim Baird')!, 'Member', 3),
         createCommitteeMember(republicanMembers.find(m => m.name === 'Dan Newhouse')!, 'Member', 4),
         createCommitteeMember(republicanMembers.find(m => m.name === 'Trent Kelly')!, 'Member', 5),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Chellie Pingree')!, 'Member', 6),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Salud Carbajal')!, 'Member', 7),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Chellie Pingree')!,
+          'Member',
+          6
+        ),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Salud Carbajal')!,
+          'Member',
+          7
+        ),
         createCommitteeMember(democraticMembers.find(m => m.name === 'Kim Schrier')!, 'Member', 8),
       ],
     },
@@ -192,16 +198,37 @@ export const houseAgricultureCommittee: Committee = {
       name: 'General Farm Commodities and Risk Management',
       chair: republicanMembers.find(m => m.name === 'Austin Scott'),
       rankingMember: democraticMembers.find(m => m.name === 'Sharice Davids'),
-      focus: 'Farm commodities, marketing, crop insurance and risk management, and agricultural credit.',
+      focus:
+        'Farm commodities, marketing, crop insurance and risk management, and agricultural credit.',
       members: [
         createCommitteeMember(republicanMembers.find(m => m.name === 'Austin Scott')!, 'Chair', 1),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Sharice Davids')!, 'Ranking Member', 2),
-        createCommitteeMember(republicanMembers.find(m => m.name === 'Rick Crawford')!, 'Member', 3),
-        createCommitteeMember(republicanMembers.find(m => m.name === 'Dusty Johnson')!, 'Member', 4),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Sharice Davids')!,
+          'Ranking Member',
+          2
+        ),
+        createCommitteeMember(
+          republicanMembers.find(m => m.name === 'Rick Crawford')!,
+          'Member',
+          3
+        ),
+        createCommitteeMember(
+          republicanMembers.find(m => m.name === 'Dusty Johnson')!,
+          'Member',
+          4
+        ),
         createCommitteeMember(republicanMembers.find(m => m.name === 'Mary Miller')!, 'Member', 5),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Eric Sorensen')!, 'Member', 6),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Eric Sorensen')!,
+          'Member',
+          6
+        ),
         createCommitteeMember(democraticMembers.find(m => m.name === 'Josh Riley')!, 'Member', 7),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Nikki Budzinski')!, 'Member', 8),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Nikki Budzinski')!,
+          'Member',
+          8
+        ),
       ],
     },
     {
@@ -209,16 +236,33 @@ export const houseAgricultureCommittee: Committee = {
       name: 'Nutrition, Foreign Agriculture, and Horticulture',
       chair: republicanMembers.find(m => m.name === 'Mike Bost'),
       rankingMember: democraticMembers.find(m => m.name === 'Jim McGovern'),
-      focus: 'Domestic and international food assistance and nutrition programs, foreign agricultural trade and assistance, and horticulture.',
+      focus:
+        'Domestic and international food assistance and nutrition programs, foreign agricultural trade and assistance, and horticulture.',
       members: [
         createCommitteeMember(republicanMembers.find(m => m.name === 'Mike Bost')!, 'Chair', 1),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Jim McGovern')!, 'Ranking Member', 2),
-        createCommitteeMember(republicanMembers.find(m => m.name === 'Scott DesJarlais')!, 'Member', 3),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Jim McGovern')!,
+          'Ranking Member',
+          2
+        ),
+        createCommitteeMember(
+          republicanMembers.find(m => m.name === 'Scott DesJarlais')!,
+          'Member',
+          3
+        ),
         createCommitteeMember(republicanMembers.find(m => m.name === 'Kat Cammack')!, 'Member', 4),
         createCommitteeMember(republicanMembers.find(m => m.name === 'Max Miller')!, 'Member', 5),
         createCommitteeMember(democraticMembers.find(m => m.name === 'Alma Adams')!, 'Member', 6),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Jimmy Panetta')!, 'Member', 7),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Ann McLane Kuster')!, 'Member', 8),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Jimmy Panetta')!,
+          'Member',
+          7
+        ),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Ann McLane Kuster')!,
+          'Member',
+          8
+        ),
       ],
     },
     {
@@ -229,13 +273,33 @@ export const houseAgricultureCommittee: Committee = {
       focus: 'Futures markets, renewable energy production on farmland, and rural development.',
       members: [
         createCommitteeMember(republicanMembers.find(m => m.name === 'Frank Lucas')!, 'Chair', 1),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Robin Kelly')!, 'Ranking Member', 2),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Robin Kelly')!,
+          'Ranking Member',
+          2
+        ),
         createCommitteeMember(republicanMembers.find(m => m.name === 'Don Bacon')!, 'Member', 3),
         createCommitteeMember(republicanMembers.find(m => m.name === 'John James')!, 'Member', 4),
-        createCommitteeMember(republicanMembers.find(m => m.name === 'Michael Cloud')!, 'Member', 5),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Shontel Brown')!, 'Member', 6),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Yvette Clarke')!, 'Member', 7),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Nydia Velázquez')!, 'Member', 8),
+        createCommitteeMember(
+          republicanMembers.find(m => m.name === 'Michael Cloud')!,
+          'Member',
+          5
+        ),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Shontel Brown')!,
+          'Member',
+          6
+        ),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Yvette Clarke')!,
+          'Member',
+          7
+        ),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Nydia Velázquez')!,
+          'Member',
+          8
+        ),
       ],
     },
     {
@@ -243,16 +307,33 @@ export const houseAgricultureCommittee: Committee = {
       name: 'Livestock, Dairy, and Poultry',
       chair: republicanMembers.find(m => m.name === 'Rick Crawford'),
       rankingMember: democraticMembers.find(m => m.name === 'Jim Costa'),
-      focus: 'All aspects of livestock, dairy, poultry, meat science and research, aquaculture, and seafood.',
+      focus:
+        'All aspects of livestock, dairy, poultry, meat science and research, aquaculture, and seafood.',
       members: [
         createCommitteeMember(republicanMembers.find(m => m.name === 'Rick Crawford')!, 'Chair', 1),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Jim Costa')!, 'Ranking Member', 2),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Jim Costa')!,
+          'Ranking Member',
+          2
+        ),
         createCommitteeMember(republicanMembers.find(m => m.name === 'Trent Kelly')!, 'Member', 3),
         createCommitteeMember(republicanMembers.find(m => m.name === 'John Rose')!, 'Member', 4),
-        createCommitteeMember(republicanMembers.find(m => m.name === 'Monica De La Cruz')!, 'Member', 5),
+        createCommitteeMember(
+          republicanMembers.find(m => m.name === 'Monica De La Cruz')!,
+          'Member',
+          5
+        ),
         createCommitteeMember(democraticMembers.find(m => m.name === 'Donald Davis')!, 'Member', 6),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Kristen McDonald Rivet')!, 'Member', 7),
-        createCommitteeMember(democraticMembers.find(m => m.name === 'Eugene Vindman')!, 'Member', 8),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Kristen McDonald Rivet')!,
+          'Member',
+          7
+        ),
+        createCommitteeMember(
+          democraticMembers.find(m => m.name === 'Eugene Vindman')!,
+          'Member',
+          8
+        ),
       ],
     },
   ],

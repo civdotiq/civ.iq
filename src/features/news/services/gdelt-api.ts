@@ -416,6 +416,14 @@ async function fetchGDELTNewsWithTimespan(
         if (text.trim().startsWith('<')) {
           throw new GDELTAPIError('GDELT API returned HTML error page', undefined, false);
         }
+
+        // Return empty result for non-JSON content to prevent JSON.parse() crash
+        logger.error('GDELT API returned non-JSON content, returning empty result', undefined, {
+          searchTerm: searchTerm.slice(0, 50),
+          contentType,
+          operation: 'gdelt_non_json_content_skip',
+        });
+        return [];
       }
 
       let data: GDELTResponse;

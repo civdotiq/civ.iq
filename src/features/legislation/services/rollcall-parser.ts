@@ -3,6 +3,9 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // Roll call XML parser for Senate and House voting data
 import { XMLParser } from 'fast-xml-parser';
 
@@ -73,9 +76,11 @@ export class RollCallParser {
     }
   }
 
-  private parseSenateRollCall(parsed: unknown, url: string): RollCallData | null {
+  private parseSenateRollCall(parsed: unknown, _url: string): RollCallData | null {
     try {
-      const vote = parsed.roll_call_vote;
+      if (!parsed || typeof parsed !== 'object') return null;
+      const parsedObj = parsed as any;
+      const vote = parsedObj.roll_call_vote;
       if (!vote) return null;
 
       // Extract metadata
@@ -130,9 +135,11 @@ export class RollCallParser {
     }
   }
 
-  private parseHouseRollCall(parsed: unknown, url: string): RollCallData | null {
+  private parseHouseRollCall(parsed: unknown, _url: string): RollCallData | null {
     try {
-      const rollCall = parsed['rollcall-vote'];
+      if (!parsed || typeof parsed !== 'object') return null;
+      const parsedObj = parsed as any;
+      const rollCall = parsedObj['rollcall-vote'];
       if (!rollCall) return null;
 
       const metadata = rollCall['vote-metadata'];
@@ -236,6 +243,10 @@ export class RollCallParser {
     // For now, try name-based matching
     const nameParts = memberName.toLowerCase().split(' ');
     const lastName = nameParts[nameParts.length - 1];
+
+    if (!lastName) {
+      return rollCallData.votes.find(vote => vote.memberId === bioguideId) || null;
+    }
 
     return (
       rollCallData.votes.find(

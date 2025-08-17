@@ -95,7 +95,7 @@ export function Pagination({
         </button>
 
         {/* First page */}
-        {visiblePages[0] > 1 && (
+        {visiblePages[0] && visiblePages[0] > 1 && (
           <>
             <button
               onClick={() => onPageChange(1)}
@@ -112,7 +112,9 @@ export function Pagination({
             >
               1
             </button>
-            {visiblePages[0] > 2 && <span className="px-2 py-2 text-gray-500">...</span>}
+            {visiblePages[0] && visiblePages[0] > 2 && (
+              <span className="px-2 py-2 text-gray-500">...</span>
+            )}
           </>
         )}
 
@@ -137,9 +139,9 @@ export function Pagination({
         ))}
 
         {/* Last page */}
-        {visiblePages[visiblePages.length - 1] < totalPages && (
+        {visiblePages.length > 0 && visiblePages[visiblePages.length - 1]! < totalPages && (
           <>
-            {visiblePages[visiblePages.length - 1] < totalPages - 1 && (
+            {visiblePages.length > 0 && visiblePages[visiblePages.length - 1]! < totalPages - 1 && (
               <span className="px-2 py-2 text-gray-500">...</span>
             )}
             <button

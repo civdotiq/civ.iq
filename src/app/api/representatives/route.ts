@@ -13,6 +13,7 @@ import {
   validateApiResponse,
 } from '@/lib/validation/response-schemas';
 import logger from '@/lib/logging/simple-logger';
+import { govCache } from '@/services/cache/simple-government-cache';
 
 // At-large states for 119th Congress (states with only 1 House district)
 const AT_LARGE_STATES_119TH = ['AK', 'DE', 'ND', 'SD', 'VT', 'WY'];
@@ -156,6 +157,26 @@ async function getRepresentativesByStateDistrict(
     cacheable: false,
   };
 
+  // Check cache first
+  const cacheKey = `representatives:${state}-${district}`;
+  const cached = govCache.get<ApiResponse>(cacheKey);
+  if (cached && cached.success) {
+    logger.info(`Cache hit for state/district representatives lookup`, {
+      state,
+      district,
+      cacheKey,
+      representativeCount: cached.representatives?.length || 0,
+    });
+    return {
+      ...cached,
+      metadata: {
+        ...cached.metadata,
+        freshness: `Cached (retrieved in ${Date.now() - startTime}ms)`,
+        dataSource: `${cached.metadata.dataSource} (cached)`,
+      },
+    };
+  }
+
   try {
     // Get representatives with circuit breaker and retry
     logger.info(`Fetching all representatives for ${state}-${district}`, {
@@ -240,7 +261,7 @@ async function getRepresentativesByStateDistrict(
       },
     }));
 
-    return {
+    const result: ApiResponse = {
       success: true,
       representatives,
       metadata: {
@@ -253,6 +274,22 @@ async function getRepresentativesByStateDistrict(
         validationStatus: 'excellent',
       },
     };
+
+    // Cache the successful result
+    if (result.success && representatives.length > 0) {
+      govCache.set(cacheKey, result, {
+        ttl: 30 * 60 * 1000, // 30 minutes for representatives
+        source: 'congress-legislators',
+      });
+      logger.info(`Cached representatives for state/district`, {
+        state,
+        district,
+        cacheKey,
+        representativeCount: representatives.length,
+      });
+    }
+
+    return result;
   } catch (error) {
     logger.error('Error fetching representatives by state/district', error as Error, {
       state,
@@ -287,6 +324,25 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     dataSource: 'none',
     cacheable: false,
   };
+
+  // Check cache first
+  const cacheKey = `representatives:${zipCode}`;
+  const cached = govCache.get<ApiResponse>(cacheKey);
+  if (cached && cached.success) {
+    logger.info(`Cache hit for representatives lookup`, {
+      zipCode,
+      cacheKey,
+      representativeCount: cached.representatives?.length || 0,
+    });
+    return {
+      ...cached,
+      metadata: {
+        ...cached.metadata,
+        freshness: `Cached (retrieved in ${Date.now() - startTime}ms)`,
+        dataSource: `${cached.metadata.dataSource} (cached)`,
+      },
+    };
+  }
 
   try {
     // Step 1: Get district info with circuit breaker and retry
@@ -531,7 +587,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       });
     }
 
-    return {
+    const result: ApiResponse = {
       success: true,
       representatives,
       metadata: {
@@ -544,6 +600,21 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
         validationStatus: qualityReport.overall.status,
       },
     };
+
+    // Cache the successful result
+    if (result.success && representatives.length > 0) {
+      govCache.set(cacheKey, result, {
+        ttl: 30 * 60 * 1000, // 30 minutes for representatives
+        source: 'congress-legislators + census',
+      });
+      logger.info(`Cached representatives for ZIP ${zipCode}`, {
+        zipCode,
+        cacheKey,
+        representativeCount: representatives.length,
+      });
+    }
+
+    return result;
   } catch (error) {
     logger.error('Error fetching representatives', error as Error, {
       zipCode,

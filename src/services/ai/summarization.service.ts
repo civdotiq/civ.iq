@@ -201,7 +201,16 @@ class SummarizationService extends BaseService {
         return result.value;
       } else {
         // Return fallback summary for failed bills
-        return this.generateFallbackSummary(bills[index].metadata);
+        const bill = bills[index];
+        if (bill) {
+          return this.generateFallbackSummary(bill.metadata);
+        }
+        return this.generateFallbackSummary({
+          number: 'Unknown',
+          title: 'Unknown Bill',
+          congress: 0,
+          chamber: 'Unknown',
+        });
       }
     });
   }

@@ -65,13 +65,14 @@ async function apiRequest<T>(
       },
       signal: controller.signal,
       // Next.js 15 caching with automatic deduplication
-      next:
-        revalidate !== undefined
-          ? {
+      ...(revalidate !== undefined
+        ? {
+            next: {
               revalidate: revalidate !== false ? revalidate : cacheTime,
               tags: [...tags, `api-${endpoint.split('/').join('-')}`],
-            }
-          : undefined,
+            },
+          }
+        : {}),
     });
 
     clearTimeout(timeoutId);
@@ -177,9 +178,17 @@ export const representativeApi = {
       console.error(`[CIV.IQ-DEBUG] Batch API failed, falling back to individual calls`, error);
       // Return empty batch response on error
       return {
+        success: false,
         data: {},
         errors: {
           batch: error instanceof Error ? error.message : 'Batch API failed',
+        },
+        metadata: {
+          timestamp: new Date().toISOString(),
+          requestedEndpoints: endpoints,
+          successfulEndpoints: [],
+          failedEndpoints: endpoints,
+          totalTime: 0,
         },
         executionTime: 0,
       };

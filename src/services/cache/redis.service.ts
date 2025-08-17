@@ -159,7 +159,7 @@ class RedisService {
 
         if (value) {
           monitor.end(true);
-          logger.cache('hit', key);
+          logger.debug('Cache hit', { key });
           return {
             success: true,
             data: JSON.parse(value),
@@ -167,7 +167,7 @@ class RedisService {
           };
         } else {
           monitor.end(false);
-          logger.cache('miss', key);
+          logger.debug('Cache miss', { key });
           return {
             success: true,
             data: undefined,
@@ -181,7 +181,7 @@ class RedisService {
 
         if (entry && Date.now() - entry.timestamp < entry.ttl) {
           monitor.end(true);
-          logger.cache('hit', key, { source: 'fallback' });
+          logger.debug('Cache hit', { key, source: 'fallback' });
           return {
             success: true,
             data: entry.data as T,
@@ -192,7 +192,7 @@ class RedisService {
             this.fallbackCache.delete(fallbackKey);
           }
           monitor.end(false);
-          logger.cache('miss', key, { source: 'fallback' });
+          logger.debug('Cache miss', { key, source: 'fallback' });
           return {
             success: true,
             data: undefined,
@@ -202,7 +202,7 @@ class RedisService {
       }
     } catch (error) {
       monitor.end(false, error as Error);
-      logger.cache('error', key, { error: (error as Error).message });
+      logger.error('Cache operation error', error as Error, { key, operation: 'get' });
 
       // Try fallback cache on Redis error
       const fallbackKey = this.getFallbackKey(key);
@@ -239,7 +239,7 @@ class RedisService {
       if (this.isConnected) {
         await this.client.setex(key, ttlSeconds, serializedValue);
         monitor.end();
-        logger.cache('set', key, { ttl: ttlSeconds });
+        logger.debug('Cache set', { key, ttl: ttlSeconds });
         return {
           success: true,
           source: 'redis',
@@ -253,7 +253,7 @@ class RedisService {
           ttl: ttlSeconds * 1000, // Convert to milliseconds
         });
         monitor.end();
-        logger.cache('set', key, { ttl: ttlSeconds, source: 'fallback' });
+        logger.debug('Cache set', { key, ttl: ttlSeconds, source: 'fallback' });
         return {
           success: true,
           source: 'fallback',
@@ -261,9 +261,9 @@ class RedisService {
       }
     } catch (error) {
       monitor.end(false, error as Error);
-      logger.cache('error', key, {
+      logger.error('Cache operation error', error as Error, {
+        key,
         operation: 'set',
-        error: (error as Error).message,
       });
 
       // Try fallback cache on Redis error
@@ -297,7 +297,7 @@ class RedisService {
       if (this.isConnected) {
         const result = await this.client.del(key);
         monitor.end();
-        logger.cache('delete', key, { deleted: result > 0 });
+        logger.debug('Cache delete', { key, deleted: result > 0 });
         return {
           success: true,
           data: result > 0,
@@ -309,7 +309,7 @@ class RedisService {
         const existed = this.fallbackCache.has(fallbackKey);
         this.fallbackCache.delete(fallbackKey);
         monitor.end();
-        logger.cache('delete', key, { deleted: existed, source: 'fallback' });
+        logger.debug('Cache delete', { key, deleted: existed, source: 'fallback' });
         return {
           success: true,
           data: existed,
@@ -318,9 +318,9 @@ class RedisService {
       }
     } catch (error) {
       monitor.end(false, error as Error);
-      logger.cache('error', key, {
+      logger.error('Cache operation error', error as Error, {
+        key,
         operation: 'delete',
-        error: (error as Error).message,
       });
 
       // Try fallback cache on Redis error
@@ -387,9 +387,9 @@ class RedisService {
         };
       }
     } catch (error) {
-      logger.cache('error', key, {
+      logger.error('Cache operation error', error as Error, {
+        key,
         operation: 'exists',
-        error: (error as Error).message,
       });
 
       // Check fallback cache

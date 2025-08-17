@@ -6,6 +6,65 @@
 // Response validation schemas for ensuring API data integrity
 // This is complementary to the input validation in schemas.ts
 
+// Type guard interfaces for unknown data
+interface DistrictData {
+  state?: unknown;
+  district?: unknown;
+}
+
+interface RepresentativeData {
+  bioguideId?: unknown;
+  name?: unknown;
+  party?: unknown;
+  state?: unknown;
+  chamber?: unknown;
+  title?: unknown;
+  district?: unknown;
+  phone?: unknown;
+  website?: unknown;
+  email?: unknown;
+  socialMedia?: unknown;
+  currentTerm?: unknown;
+}
+
+interface CongressApiData {
+  members?: unknown;
+  bills?: unknown;
+  pagination?: unknown;
+}
+
+interface FecApiData {
+  results?: unknown;
+  pagination?: unknown;
+}
+
+interface MemberData {
+  bioguideId?: unknown;
+  name?: unknown;
+  state?: unknown;
+}
+
+interface BillData {
+  number?: unknown;
+  title?: unknown;
+  congress?: unknown;
+  type?: unknown;
+}
+
+interface FecResultData {
+  candidate_id?: unknown;
+  committee_id?: unknown;
+  candidate_name?: unknown;
+  total_receipts?: unknown;
+  total_disbursements?: unknown;
+}
+
+interface PaginationData {
+  count?: unknown;
+  pages?: unknown;
+  per_page?: unknown;
+}
+
 export interface ResponseValidationResult<T> {
   isValid: boolean;
   data?: T;
@@ -25,33 +84,61 @@ export function validateDistrictResponse(data: unknown): ResponseValidationResul
   const errors: string[] = [];
   const warnings: string[] = [];
 
+  // Type guard for data
+  if (!data || typeof data !== 'object') {
+    errors.push('Response is not a valid object');
+    return {
+      isValid: false,
+      errors,
+      warnings,
+      completeness: 0,
+      lastValidated: new Date().toISOString(),
+    };
+  }
+
+  const districtData = data as DistrictData;
+
   // Required fields
-  if (!data?.state || typeof data.state !== 'string') {
+  if (!districtData.state || typeof districtData.state !== 'string') {
     errors.push('Missing or invalid state field');
   }
-  
-  if (!data?.district || typeof data.district !== 'string') {
+
+  if (!districtData.district || typeof districtData.district !== 'string') {
     errors.push('Missing or invalid district field');
   }
 
   // Warnings for unexpected values
-  if (data?.state && data.state.length !== 2) {
+  if (
+    districtData.state &&
+    typeof districtData.state === 'string' &&
+    districtData.state.length !== 2
+  ) {
     warnings.push('State should be 2-letter abbreviation');
   }
 
-  if (data?.district && !/^\d{1,2}$/.test(data.district)) {
+  if (
+    districtData.district &&
+    typeof districtData.district === 'string' &&
+    !/^\d{1,2}$/.test(districtData.district)
+  ) {
     warnings.push('District should be 1-2 digit number');
   }
 
-  const completeness = data?.state && data?.district ? 100 : 50;
+  const completeness = districtData.state && districtData.district ? 100 : 50;
 
   return {
     isValid: errors.length === 0,
-    data: errors.length === 0 ? { state: data.state, district: data.district } : undefined,
+    data:
+      errors.length === 0
+        ? {
+            state: districtData.state as string,
+            district: districtData.district as string,
+          }
+        : undefined,
     errors,
     warnings,
     completeness,
-    lastValidated: new Date().toISOString()
+    lastValidated: new Date().toISOString(),
   };
 }
 
@@ -81,87 +168,111 @@ export interface RepresentativeSchema {
   };
 }
 
-export function validateRepresentativeResponse(data: unknown): ResponseValidationResult<RepresentativeSchema> {
+export function validateRepresentativeResponse(
+  data: unknown
+): ResponseValidationResult<RepresentativeSchema> {
   const errors: string[] = [];
   const warnings: string[] = [];
   let completeness = 0;
 
+  // Type guard for data
+  if (!data || typeof data !== 'object') {
+    errors.push('Response is not a valid object');
+    return {
+      isValid: false,
+      errors,
+      warnings,
+      completeness: 0,
+      lastValidated: new Date().toISOString(),
+    };
+  }
+
+  const repData = data as RepresentativeData;
+
   // Required fields (60% of score)
-  if (!data?.bioguideId || typeof data.bioguideId !== 'string') {
+  if (!repData.bioguideId || typeof repData.bioguideId !== 'string') {
     errors.push('Missing or invalid bioguideId');
   } else {
     completeness += 15;
-    if (!/^[A-Z]\d{6}$/.test(data.bioguideId)) {
+    if (!/^[A-Z]\d{6}$/.test(repData.bioguideId)) {
       warnings.push('Bioguide ID format may be invalid (should be letter + 6 digits)');
     }
   }
 
-  if (!data?.name || typeof data.name !== 'string') {
+  if (!repData.name || typeof repData.name !== 'string') {
     errors.push('Missing or invalid name');
   } else {
     completeness += 15;
   }
 
-  if (!data?.party || typeof data.party !== 'string') {
+  if (!repData.party || typeof repData.party !== 'string') {
     errors.push('Missing or invalid party');
   } else {
     completeness += 10;
   }
 
-  if (!data?.state || typeof data.state !== 'string') {
+  if (!repData.state || typeof repData.state !== 'string') {
     errors.push('Missing or invalid state');
   } else {
     completeness += 10;
   }
 
-  if (!data?.chamber || !['House', 'Senate'].includes(data.chamber)) {
+  if (!repData.chamber || !['House', 'Senate'].includes(repData.chamber as string)) {
     errors.push('Missing or invalid chamber (must be House or Senate)');
   } else {
     completeness += 10;
   }
 
   // Optional but valuable fields (40% of score)
-  if (data?.title && typeof data.title === 'string') completeness += 5;
-  if (data?.phone && typeof data.phone === 'string') completeness += 10;
-  if (data?.website && typeof data.website === 'string') completeness += 10;
-  if (data?.email && typeof data.email === 'string') completeness += 5;
-  if (data?.currentTerm && typeof data.currentTerm === 'object') completeness += 10;
+  if (repData.title && typeof repData.title === 'string') completeness += 5;
+  if (repData.phone && typeof repData.phone === 'string') completeness += 10;
+  if (repData.website && typeof repData.website === 'string') completeness += 10;
+  if (repData.email && typeof repData.email === 'string') completeness += 5;
+  if (repData.currentTerm && typeof repData.currentTerm === 'object') completeness += 10;
 
   // Business logic warnings
-  if (data?.chamber === 'House' && !data?.district) {
+  if (repData.chamber === 'House' && !repData.district) {
     warnings.push('House representative missing district number');
   }
 
-  if (data?.chamber === 'Senate' && data?.district) {
+  if (repData.chamber === 'Senate' && repData.district) {
     warnings.push('Senate member should not have district number');
   }
 
   // Validate contact info format
-  if (data?.phone && !/\d{3}[.-]?\d{3}[.-]?\d{4}/.test(data.phone)) {
+  if (
+    repData.phone &&
+    typeof repData.phone === 'string' &&
+    !/\d{3}[.-]?\d{3}[.-]?\d{4}/.test(repData.phone)
+  ) {
     warnings.push('Phone number format may be inconsistent');
   }
 
-  if (data?.website && !data.website.startsWith('http')) {
+  if (
+    repData.website &&
+    typeof repData.website === 'string' &&
+    !repData.website.startsWith('http')
+  ) {
     warnings.push('Website URL should start with http/https');
   }
 
-  if (data?.email && !data.email.includes('@')) {
+  if (repData.email && typeof repData.email === 'string' && !repData.email.includes('@')) {
     warnings.push('Email format appears invalid');
   }
 
   const validatedData: RepresentativeSchema = {
-    bioguideId: data?.bioguideId || '',
-    name: data?.name || '',
-    party: data?.party || '',
-    state: data?.state || '',
-    chamber: data?.chamber || 'House',
-    title: data?.title || '',
-    district: data?.district,
-    phone: data?.phone,
-    website: data?.website,
-    email: data?.email,
-    socialMedia: data?.socialMedia,
-    currentTerm: data?.currentTerm
+    bioguideId: (repData.bioguideId as string) || '',
+    name: (repData.name as string) || '',
+    party: (repData.party as string) || '',
+    state: (repData.state as string) || '',
+    chamber: (repData.chamber as 'House' | 'Senate') || 'House',
+    title: (repData.title as string) || '',
+    district: repData.district as string,
+    phone: repData.phone as string,
+    website: repData.website as string,
+    email: repData.email as string,
+    socialMedia: repData.socialMedia as RepresentativeSchema['socialMedia'],
+    currentTerm: repData.currentTerm as RepresentativeSchema['currentTerm'],
   };
 
   return {
@@ -170,7 +281,7 @@ export function validateRepresentativeResponse(data: unknown): ResponseValidatio
     errors,
     warnings,
     completeness: Math.min(completeness, 100),
-    lastValidated: new Date().toISOString()
+    lastValidated: new Date().toISOString(),
   };
 }
 
@@ -194,7 +305,10 @@ export interface CongressApiSchema {
   };
 }
 
-export function validateCongressApiResponse(data: unknown, expectedType: 'members' | 'bills'): ResponseValidationResult<CongressApiSchema> {
+export function validateCongressApiResponse(
+  data: unknown,
+  expectedType: 'members' | 'bills'
+): ResponseValidationResult<CongressApiSchema> {
   const errors: string[] = [];
   const warnings: string[] = [];
   let completeness = 0;
@@ -207,64 +321,73 @@ export function validateCongressApiResponse(data: unknown, expectedType: 'member
       errors,
       warnings,
       completeness: 0,
-      lastValidated: new Date().toISOString()
+      lastValidated: new Date().toISOString(),
     };
   }
 
+  const congressData = data as CongressApiData;
+
   // Validate based on expected type
   if (expectedType === 'members') {
-    if (!Array.isArray(data.members)) {
+    if (!Array.isArray(congressData.members)) {
       errors.push('Missing or invalid members array');
     } else {
       completeness += 50;
-      
+
       // Validate each member
-      data.members.forEach((member: unknown, index: number) => {
-        if (!member.bioguideId) {
+      congressData.members.forEach((member: unknown, index: number) => {
+        const memberData = member as MemberData;
+        if (!memberData.bioguideId) {
           warnings.push(`Member ${index} missing bioguideId`);
         }
-        if (!member.name) {
+        if (!memberData.name) {
           warnings.push(`Member ${index} missing name`);
         }
-        if (!member.state) {
+        if (!memberData.state) {
           warnings.push(`Member ${index} missing state`);
         }
-        if (member.bioguideId && !/^[A-Z]\d{6}$/.test(member.bioguideId)) {
+        if (
+          memberData.bioguideId &&
+          typeof memberData.bioguideId === 'string' &&
+          !/^[A-Z]\d{6}$/.test(memberData.bioguideId)
+        ) {
           warnings.push(`Member ${index} has invalid bioguide ID format`);
         }
       });
-      
-      if (data.members.length > 0) completeness += 30;
+
+      if (congressData.members.length > 0) completeness += 30;
     }
   } else if (expectedType === 'bills') {
-    if (!Array.isArray(data.bills)) {
+    if (!Array.isArray(congressData.bills)) {
       errors.push('Missing or invalid bills array');
     } else {
       completeness += 50;
-      
+
       // Validate each bill
-      data.bills.forEach((bill: unknown, index: number) => {
-        if (!bill.number) {
+      congressData.bills.forEach((bill: unknown, index: number) => {
+        const billData = bill as BillData;
+        if (!billData.number) {
           warnings.push(`Bill ${index} missing number`);
         }
-        if (!bill.title) {
+        if (!billData.title) {
           warnings.push(`Bill ${index} missing title`);
         }
-        if (!bill.congress) {
+        if (!billData.congress) {
           warnings.push(`Bill ${index} missing congress number`);
         }
-        if (!bill.type) {
+        if (!billData.type) {
           warnings.push(`Bill ${index} missing type`);
         }
       });
-      
-      if (data.bills.length > 0) completeness += 30;
+
+      if (congressData.bills.length > 0) completeness += 30;
     }
   }
 
   // Check pagination
-  if (data.pagination) {
-    if (typeof data.pagination.count === 'number') {
+  if (congressData.pagination) {
+    const paginationData = congressData.pagination as PaginationData;
+    if (typeof paginationData.count === 'number') {
       completeness += 20;
     } else {
       warnings.push('Pagination count is not a number');
@@ -273,11 +396,11 @@ export function validateCongressApiResponse(data: unknown, expectedType: 'member
 
   return {
     isValid: errors.length === 0,
-    data: errors.length === 0 ? data : undefined,
+    data: errors.length === 0 ? (congressData as CongressApiSchema) : undefined,
     errors,
     warnings,
     completeness: Math.min(completeness, 100),
-    lastValidated: new Date().toISOString()
+    lastValidated: new Date().toISOString(),
   };
 }
 
@@ -310,50 +433,62 @@ export function validateFecApiResponse(data: unknown): ResponseValidationResult<
       errors,
       warnings,
       completeness: 0,
-      lastValidated: new Date().toISOString()
+      lastValidated: new Date().toISOString(),
     };
   }
 
-  if (!Array.isArray(data.results)) {
+  const fecData = data as FecApiData;
+
+  if (!Array.isArray(fecData.results)) {
     errors.push('Missing or invalid results array');
   } else {
     completeness += 60;
-    
+
     // Check each result
-    data.results.forEach((result: unknown, index: number) => {
-      if (!result.candidate_id && !result.committee_id) {
+    fecData.results.forEach((result: unknown, index: number) => {
+      const resultData = result as FecResultData;
+      if (!resultData.candidate_id && !resultData.committee_id) {
         warnings.push(`Result ${index} missing both candidate_id and committee_id`);
       }
-      
-      if (result.total_receipts !== undefined && typeof result.total_receipts !== 'number') {
+
+      if (
+        resultData.total_receipts !== undefined &&
+        typeof resultData.total_receipts !== 'number'
+      ) {
         warnings.push(`Result ${index} total_receipts is not a number`);
       }
-      
-      if (result.total_disbursements !== undefined && typeof result.total_disbursements !== 'number') {
+
+      if (
+        resultData.total_disbursements !== undefined &&
+        typeof resultData.total_disbursements !== 'number'
+      ) {
         warnings.push(`Result ${index} total_disbursements is not a number`);
       }
-      
-      if (result.candidate_name && typeof result.candidate_name !== 'string') {
+
+      if (resultData.candidate_name && typeof resultData.candidate_name !== 'string') {
         warnings.push(`Result ${index} candidate_name is not a string`);
       }
     });
-    
-    if (data.results.length > 0) completeness += 20;
+
+    if (fecData.results.length > 0) completeness += 20;
   }
 
-  if (data.pagination && typeof data.pagination.count === 'number') {
-    completeness += 20;
-  } else if (data.pagination) {
-    warnings.push('Pagination object exists but count is not a number');
+  if (fecData.pagination) {
+    const paginationData = fecData.pagination as PaginationData;
+    if (typeof paginationData.count === 'number') {
+      completeness += 20;
+    } else {
+      warnings.push('Pagination object exists but count is not a number');
+    }
   }
 
   return {
     isValid: errors.length === 0,
-    data: errors.length === 0 ? data : undefined,
+    data: errors.length === 0 ? (fecData as FecApiSchema) : undefined,
     errors,
     warnings,
     completeness: Math.min(completeness, 100),
-    lastValidated: new Date().toISOString()
+    lastValidated: new Date().toISOString(),
   };
 }
 
@@ -379,17 +514,19 @@ export interface DataQualityReport {
   timestamp: string;
 }
 
-export function generateDataQualityReport(validationResults: Array<{ 
-  source: string; 
-  result: ResponseValidationResult<any>;
-  freshness?: string; 
-}>): DataQualityReport {
+export function generateDataQualityReport(
+  validationResults: Array<{
+    source: string;
+    result: ResponseValidationResult<unknown>;
+    freshness?: string;
+  }>
+): DataQualityReport {
   const totalScore = validationResults.reduce((sum, { result }) => sum + result.completeness, 0);
   const averageScore = validationResults.length > 0 ? totalScore / validationResults.length : 0;
-  
+
   const allErrors = validationResults.flatMap(({ result }) => result.errors);
   const allWarnings = validationResults.flatMap(({ result }) => result.warnings);
-  
+
   let status: 'excellent' | 'good' | 'fair' | 'poor';
   if (averageScore >= 90) status = 'excellent';
   else if (averageScore >= 75) status = 'good';
@@ -404,7 +541,7 @@ export function generateDataQualityReport(validationResults: Array<{
       freshness: freshness || 'unknown',
       lastValidated: result.lastValidated,
       errors: result.errors,
-      warnings: result.warnings
+      warnings: result.warnings,
     };
   });
 
@@ -419,10 +556,12 @@ export function generateDataQualityReport(validationResults: Array<{
   if (allWarnings.length > 5) {
     recommendations.push('Multiple data quality warnings - review API response formats');
   }
-  
+
   const failedSources = Object.values(sources).filter(s => s.status === 'failed').length;
   if (failedSources > 0) {
-    recommendations.push(`${failedSources} data source(s) failing validation - implement fallback strategies`);
+    recommendations.push(
+      `${failedSources} data source(s) failing validation - implement fallback strategies`
+    );
   }
 
   return {
@@ -430,26 +569,26 @@ export function generateDataQualityReport(validationResults: Array<{
       score: Math.round(averageScore),
       status,
       issues: [...allErrors, ...allWarnings],
-      sources: validationResults.length
+      sources: validationResults.length,
     },
     sources,
     recommendations,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 }
 
 // Utility function to validate a complete API response
 export function validateApiResponse<T>(
-  data: unknown, 
+  data: unknown,
   validator: (data: unknown) => ResponseValidationResult<T>,
   source: string,
   freshness?: string
 ): { source: string; result: ResponseValidationResult<T>; freshness?: string } {
   const result = validator(data);
-  
+
   return {
     source,
     result,
-    freshness
+    freshness,
   };
 }

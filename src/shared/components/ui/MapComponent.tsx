@@ -7,10 +7,46 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+// GeoJSON types for district boundaries
+interface DistrictProperties {
+  GEOID: string;
+  NAME: string;
+  STATEFP: string;
+  CD118FP: string;
+  [key: string]: any;
+}
+
+interface DistrictFeature {
+  type: 'Feature';
+  properties: DistrictProperties;
+  geometry: any;
+}
+
+interface BoundaryData {
+  type: 'FeatureCollection';
+  features: DistrictFeature[];
+}
+
+// Leaflet type interfaces
+interface LeafletMap {
+  remove(): void;
+  fitBounds(bounds: any, options?: any): void;
+  invalidateSize(): void;
+  [key: string]: any;
+}
+
+interface LeafletLayer {
+  bindPopup(content: string): void;
+  on(event: string, handler: (...args: unknown[]) => void): void;
+  setStyle(style: any): void;
+  getBounds(): any;
+  [key: string]: any;
+}
+
 interface MapComponentProps {
   center: [number, number];
   zoom: number;
-  boundaryData: unknown;
+  boundaryData: BoundaryData | null;
   width: number | string;
   height: number | string;
 }
@@ -22,7 +58,7 @@ export default function MapComponent({
   width,
   height,
 }: MapComponentProps) {
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<LeafletMap | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -33,15 +69,17 @@ export default function MapComponent({
   useEffect(() => {
     if (!isClient || !containerRef.current) return;
 
-    let map: unknown = null;
-    let geoJsonLayer: unknown = null;
+    let map: LeafletMap | null = null;
+    let geoJsonLayer: LeafletLayer | null = null;
 
     const initializeMap = async () => {
       try {
         // Dynamic import of Leaflet to avoid SSR issues
         const L = await import('leaflet');
 
-        // Import Leaflet CSS
+        // Import Leaflet CSS - dynamic import for SSR compatibility
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         await import('leaflet/dist/leaflet.css');
 
         // Fix for default markers
@@ -103,10 +141,11 @@ export default function MapComponent({
                 fillOpacity: isMainDistrict ? 0.3 : 0.1,
               };
             },
-            onEachFeature: (feature: unknown, layer: unknown) => {
+            onEachFeature: (feature: any, layer: any) => {
+              const firstFeature = boundaryData.features[0];
               const isMainDistrict =
-                feature.properties.GEOID ===
-                `${boundaryData.features[0].properties.STATEFP}${boundaryData.features[0].properties.CD118FP}`;
+                feature?.properties?.GEOID ===
+                `${firstFeature?.properties?.STATEFP || ''}${firstFeature?.properties?.CD118FP || ''}`;
 
               // Enhanced popup with more district information
               layer.bindPopup(`
@@ -127,14 +166,14 @@ export default function MapComponent({
               `);
 
               // Add hover effects
-              layer.on('mouseover', function (this: unknown) {
+              layer.on('mouseover', function (this: any) {
                 this.setStyle({
                   weight: isMainDistrict ? 6 : 4,
                   fillOpacity: isMainDistrict ? 0.5 : 0.3,
                 });
               });
 
-              layer.on('mouseout', function (this: unknown) {
+              layer.on('mouseout', function (this: any) {
                 this.setStyle({
                   weight: isMainDistrict ? 4 : 2,
                   fillOpacity: isMainDistrict ? 0.3 : 0.1,
@@ -149,7 +188,7 @@ export default function MapComponent({
                 }
               });
             },
-          }).addTo(map);
+          }).addTo(map as any) as LeafletLayer;
 
           // Fit map to bounds
           try {
@@ -190,7 +229,7 @@ export default function MapComponent({
   useEffect(() => {
     if (mapRef.current) {
       setTimeout(() => {
-        mapRef.current.invalidateSize();
+        mapRef.current?.invalidateSize();
       }, 100);
     }
   }, [width, height]);

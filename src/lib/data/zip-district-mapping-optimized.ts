@@ -1,15 +1,12 @@
 /*
  * CIV.IQ - Civic Information Hub
  * Phase 6: Performance Optimized ZIP Code Mapping
- * 
+ *
  * High-performance ZIP code to congressional district mapping with sub-millisecond lookups
  * Optimized for production deployment with caching and memory efficiency
  */
 
-import { 
-  ZIP_TO_DISTRICT_MAP_119TH, 
-  type ZipDistrictMapping 
-} from './zip-district-mapping-119th';
+import { ZIP_TO_DISTRICT_MAP_119TH } from './zip-district-mapping-119th';
 
 // Optimized interfaces
 export interface OptimizedZipMapping {
@@ -37,7 +34,7 @@ class OptimizedZipLookupService {
     cacheHits: 0,
     averageResponseTime: 0,
     multiDistrictLookups: 0,
-    lastResetTime: Date.now()
+    lastResetTime: Date.now(),
   };
 
   // Pre-compile frequently accessed ZIP codes for instant lookup
@@ -52,16 +49,56 @@ class OptimizedZipLookupService {
    */
   private initializeHotCache(): void {
     const commonZips = [
-      '10001', '10002', '10003', '10004', '10005', // NYC
-      '90210', '90211', '90212', '90213', '90214', // LA
-      '60601', '60602', '60603', '60604', '60605', // Chicago
-      '77001', '77002', '77003', '77004', '77005', // Houston
-      '85001', '85002', '85003', '85004', '85005', // Phoenix
-      '19101', '19102', '19103', '19104', '19105', // Philadelphia
-      '78701', '78702', '78703', '78704', '78705', // Austin
-      '48201', '48202', '48203', '48204', '48205', // Detroit
-      '02101', '02102', '02103', '02104', '02105', // Boston
-      '20001', '20002', '20003', '20004', '20005'  // Washington DC
+      '10001',
+      '10002',
+      '10003',
+      '10004',
+      '10005', // NYC
+      '90210',
+      '90211',
+      '90212',
+      '90213',
+      '90214', // LA
+      '60601',
+      '60602',
+      '60603',
+      '60604',
+      '60605', // Chicago
+      '77001',
+      '77002',
+      '77003',
+      '77004',
+      '77005', // Houston
+      '85001',
+      '85002',
+      '85003',
+      '85004',
+      '85005', // Phoenix
+      '19101',
+      '19102',
+      '19103',
+      '19104',
+      '19105', // Philadelphia
+      '78701',
+      '78702',
+      '78703',
+      '78704',
+      '78705', // Austin
+      '48201',
+      '48202',
+      '48203',
+      '48204',
+      '48205', // Detroit
+      '02101',
+      '02102',
+      '02103',
+      '02104',
+      '02105', // Boston
+      '20001',
+      '20002',
+      '20003',
+      '20004',
+      '20005', // Washington DC
     ];
 
     for (const zip of commonZips) {
@@ -69,17 +106,19 @@ class OptimizedZipLookupService {
       if (mapping) {
         if (Array.isArray(mapping)) {
           const primary = mapping.find(d => d.primary) || mapping[0];
-          this.hotCache.set(zip, {
-            state: primary.state,
-            district: primary.district,
-            primary: true,
-            cached: true
-          });
+          if (primary) {
+            this.hotCache.set(zip, {
+              state: primary.state,
+              district: primary.district,
+              primary: true,
+              cached: true,
+            });
+          }
         } else {
           this.hotCache.set(zip, {
             state: mapping.state,
             district: mapping.district,
-            cached: true
+            cached: true,
           });
         }
       }
@@ -107,53 +146,56 @@ class OptimizedZipLookupService {
       if (cached) {
         this.metrics.cacheHits++;
         this.metrics.directHits++;
-        return Array.isArray(cached) ? cached[0] : cached;
+        return Array.isArray(cached) ? cached[0] || null : cached;
       }
 
       // Layer 3: Direct lookup from comprehensive mapping
       const mapping = ZIP_TO_DISTRICT_MAP_119TH[zipCode];
       if (mapping) {
         this.metrics.directHits++;
-        
+
         let result: OptimizedZipMapping;
-        
+
         if (Array.isArray(mapping)) {
           this.metrics.multiDistrictLookups++;
           const primary = mapping.find(d => d.primary) || mapping[0];
+          if (!primary) return null;
           result = {
             state: primary.state,
             district: primary.district,
-            primary: true
+            primary: true,
           };
-          
+
           // Cache all districts for this ZIP
-          this.cache.set(zipCode, mapping.map(d => ({
-            state: d.state,
-            district: d.district,
-            primary: d.primary
-          })));
+          this.cache.set(
+            zipCode,
+            mapping.map(d => ({
+              state: d.state,
+              district: d.district,
+              primary: d.primary,
+            }))
+          );
         } else {
           result = {
             state: mapping.state,
-            district: mapping.district
+            district: mapping.district,
           };
-          
+
           // Cache single district
           this.cache.set(zipCode, result);
         }
 
         // Cache state for faster state lookups
         this.stateCache.set(zipCode, result.state);
-        
+
         return result;
       }
 
       // No mapping found
       return null;
-
     } finally {
       const responseTime = performance.now() - startTime;
-      
+
       // Optimized rolling average calculation
       const totalTime = this.metrics.averageResponseTime * (this.metrics.totalLookups - 1);
       this.metrics.averageResponseTime = (totalTime + responseTime) / this.metrics.totalLookups;
@@ -179,32 +221,35 @@ class OptimizedZipLookupService {
       const mapping = ZIP_TO_DISTRICT_MAP_119TH[zipCode];
       if (mapping) {
         this.metrics.directHits++;
-        
+
         if (Array.isArray(mapping)) {
           this.metrics.multiDistrictLookups++;
           const result = mapping.map(d => ({
             state: d.state,
             district: d.district,
-            primary: d.primary
+            primary: d.primary,
           }));
-          
+
           // Cache result
           this.cache.set(zipCode, result);
           return result;
         } else {
-          const result = [{
-            state: mapping.state,
-            district: mapping.district
-          }];
-          
+          const result = [
+            {
+              state: mapping.state,
+              district: mapping.district,
+            },
+          ];
+
           // Cache result
-          this.cache.set(zipCode, result[0]);
+          if (result[0]) {
+            this.cache.set(zipCode, result[0]);
+          }
           return result;
         }
       }
 
       return [];
-
     } finally {
       const responseTime = performance.now() - startTime;
       const totalTime = this.metrics.averageResponseTime * (this.metrics.totalLookups - 1);
@@ -272,7 +317,7 @@ class OptimizedZipLookupService {
       cacheHits: 0,
       averageResponseTime: 0,
       multiDistrictLookups: 0,
-      lastResetTime: Date.now()
+      lastResetTime: Date.now(),
     };
   }
 
@@ -289,8 +334,10 @@ class OptimizedZipLookupService {
       runtimeCacheSize: this.cache.size,
       stateCacheSize: this.stateCache.size,
       hotCacheSize: this.hotCache.size,
-      cacheHitRate: this.metrics.totalLookups > 0 ? 
-        (this.metrics.cacheHits / this.metrics.totalLookups) * 100 : 0
+      cacheHitRate:
+        this.metrics.totalLookups > 0
+          ? (this.metrics.cacheHits / this.metrics.totalLookups) * 100
+          : 0,
     };
   }
 

@@ -208,7 +208,7 @@ export function parseBillNumber(billNumber: string): {
 
   // Parse "congress-type-number" format (e.g., "119-hr-1234")
   const apiMatch = cleanBillNumber.match(/^(\d+)-([a-z]+)-(\d+)$/i);
-  if (apiMatch) {
+  if (apiMatch && apiMatch[1] && apiMatch[2] && apiMatch[3]) {
     return {
       type: apiMatch[2].toLowerCase(),
       number: apiMatch[3],
@@ -218,7 +218,7 @@ export function parseBillNumber(billNumber: string): {
 
   // Parse "H.R. 1234" or "S. 567" display format
   const displayMatch = cleanBillNumber.match(/^([A-Z]+\.?[A-Z]*?)\.?\s+(\d+)$/i);
-  if (displayMatch) {
+  if (displayMatch && displayMatch[1] && displayMatch[2]) {
     return {
       type: displayMatch[1].toLowerCase().replace(/\./g, ''),
       number: displayMatch[2],

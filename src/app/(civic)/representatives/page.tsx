@@ -50,9 +50,8 @@ async function getInitialRepresentatives(zip?: string, state?: string, district?
     console.log('Fetching all representatives from:', `${baseUrl}/api/representatives/all`);
 
     const response = await fetch(`${baseUrl}/api/representatives/all`, {
-      // @ts-expect-error - Next.js fetch extension
       next: { revalidate: 300 }, // Cache for 5 minutes
-    });
+    } as RequestInit & { next: { revalidate: number } });
 
     if (!response.ok) {
       // eslint-disable-next-line no-console

@@ -239,7 +239,7 @@ export class BundledContributionsAnalyzer {
 
     // For each employer, find matching PACs
     for (const [normalizedEmployer, contribs] of employerGroups) {
-      const originalEmployer = contribs[0].contributor_employer || 'Individual/Unemployed';
+      const originalEmployer = contribs[0]?.contributor_employer || 'Individual/Unemployed';
       const relatedPACs = this.findRelatedPACs(originalEmployer);
       const matchedPACs: PACRecord[] = [];
 

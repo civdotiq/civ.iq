@@ -178,13 +178,15 @@ export class BillTextProcessor {
       const match = sectionMatches[i];
       const nextMatch = sectionMatches[i + 1];
 
+      if (!match) continue;
+
       const sectionStart = match.index || 0;
       const sectionEnd = nextMatch ? nextMatch.index || text.length : text.length;
 
       const sectionContent = text.substring(sectionStart, sectionEnd);
 
       sections.push({
-        number: match[2],
+        number: match[2] || 'Unknown',
         title: match[3]?.trim() || '',
         content: sectionContent,
       });

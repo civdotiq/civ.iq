@@ -123,54 +123,101 @@ class DataValidator {
    */
   validateRepresentativeData(data: unknown, source: string): ValidationResult {
     const sourceInfo = DATA_SOURCES[source];
+    if (!sourceInfo) {
+      throw new Error(`Unknown data source: ${source}`);
+    }
+
     const errors: string[] = [];
     const warnings: string[] = [];
     let confidence = 100;
 
+    // Type guard to check if data is an object
+    if (!data || typeof data !== 'object') {
+      errors.push('Invalid data: must be an object');
+      confidence = 0;
+
+      return {
+        isValid: false,
+        confidence: 0,
+        errors,
+        warnings,
+        source: sourceInfo,
+        timestamp: new Date().toISOString(),
+        checks: {
+          completeness: 0,
+          accuracy: 0,
+          timeliness: this.calculateTimeliness(sourceInfo),
+          consistency: 0,
+        },
+      };
+    }
+
+    const dataObj = data as Record<string, unknown>;
+
     // Required fields validation
     const requiredFields = ['bioguideId', 'name', 'party', 'state', 'chamber'];
     for (const field of requiredFields) {
-      if (!data[field]) {
+      if (!dataObj[field]) {
         errors.push(`Missing required field: ${field}`);
         confidence -= 20;
       }
     }
 
     // Data format validation
-    if (data.bioguideId && !/^[A-Z]\d{6}$/.test(data.bioguideId)) {
+    if (
+      dataObj.bioguideId &&
+      typeof dataObj.bioguideId === 'string' &&
+      !/^[A-Z]\d{6}$/.test(dataObj.bioguideId)
+    ) {
       warnings.push('Bioguide ID format may be incorrect');
       confidence -= 5;
     }
 
-    if (data.state && data.state.length !== 2) {
+    if (dataObj.state && typeof dataObj.state === 'string' && dataObj.state.length !== 2) {
       errors.push('State code must be 2 characters');
       confidence -= 10;
     }
 
-    if (data.party && !['Democratic', 'Republican', 'Independent'].includes(data.party)) {
-      warnings.push(`Unusual party affiliation: ${data.party}`);
+    if (
+      dataObj.party &&
+      typeof dataObj.party === 'string' &&
+      !['Democratic', 'Republican', 'Independent'].includes(dataObj.party)
+    ) {
+      warnings.push(`Unusual party affiliation: ${dataObj.party}`);
       confidence -= 5;
     }
 
-    if (data.chamber && !['House', 'Senate'].includes(data.chamber)) {
-      errors.push(`Invalid chamber: ${data.chamber}`);
+    if (
+      dataObj.chamber &&
+      typeof dataObj.chamber === 'string' &&
+      !['House', 'Senate'].includes(dataObj.chamber)
+    ) {
+      errors.push(`Invalid chamber: ${dataObj.chamber}`);
       confidence -= 15;
     }
 
     // Contact information validation
-    if (data.phone && !/^\(\d{3}\) \d{3}-\d{4}$/.test(data.phone)) {
+    if (
+      dataObj.phone &&
+      typeof dataObj.phone === 'string' &&
+      !/^\(\d{3}\) \d{3}-\d{4}$/.test(dataObj.phone)
+    ) {
       warnings.push('Phone number format may be incorrect');
       confidence -= 3;
     }
 
-    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    if (
+      dataObj.email &&
+      typeof dataObj.email === 'string' &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dataObj.email)
+    ) {
       warnings.push('Email format may be incorrect');
       confidence -= 3;
     }
 
     // Data completeness check
     const optionalFields = ['phone', 'email', 'website', 'committees', 'terms'];
-    const presentOptionalFields = optionalFields.filter(field => data[field]);
+    const presentOptionalFields = optionalFields.filter(field => dataObj[field]);
     const completeness = (presentOptionalFields.length / optionalFields.length) * 100;
 
     if (completeness < 50) {
@@ -204,42 +251,79 @@ class DataValidator {
    */
   validateFinanceData(data: unknown, source: string): ValidationResult {
     const sourceInfo = DATA_SOURCES[source];
+    if (!sourceInfo) {
+      throw new Error(`Unknown data source: ${source}`);
+    }
+
     const errors: string[] = [];
     const warnings: string[] = [];
     let confidence = 100;
 
+    // Type guard to check if data is an object
+    if (!data || typeof data !== 'object') {
+      errors.push('Invalid data: must be an object');
+      confidence = 0;
+
+      return {
+        isValid: false,
+        confidence: 0,
+        errors,
+        warnings,
+        source: sourceInfo,
+        timestamp: new Date().toISOString(),
+        checks: {
+          completeness: 0,
+          accuracy: 0,
+          timeliness: this.calculateTimeliness(sourceInfo),
+          consistency: 0,
+        },
+      };
+    }
+
+    const dataObj = data as Record<string, unknown>;
+
     // Required fields for financial data
-    if (!data.candidate_id) {
+    if (!dataObj.candidate_id) {
       errors.push('Missing candidate ID');
       confidence -= 25;
     }
 
-    if (typeof data.total_receipts !== 'number' || data.total_receipts < 0) {
+    if (
+      typeof dataObj.total_receipts !== 'number' ||
+      (typeof dataObj.total_receipts === 'number' && dataObj.total_receipts < 0)
+    ) {
       errors.push('Invalid total receipts amount');
       confidence -= 20;
     }
 
-    if (typeof data.total_disbursements !== 'number' || data.total_disbursements < 0) {
+    if (
+      typeof dataObj.total_disbursements !== 'number' ||
+      (typeof dataObj.total_disbursements === 'number' && dataObj.total_disbursements < 0)
+    ) {
       errors.push('Invalid total disbursements amount');
       confidence -= 20;
     }
 
     // Logical consistency checks
-    if (data.total_receipts && data.total_disbursements && data.cash_on_hand) {
-      const expectedCash = data.total_receipts - data.total_disbursements;
-      const cashDifference = Math.abs(expectedCash - data.cash_on_hand);
+    if (
+      typeof dataObj.total_receipts === 'number' &&
+      typeof dataObj.total_disbursements === 'number' &&
+      typeof dataObj.cash_on_hand === 'number'
+    ) {
+      const expectedCash = dataObj.total_receipts - dataObj.total_disbursements;
+      const cashDifference = Math.abs(expectedCash - dataObj.cash_on_hand);
 
       // Allow for reasonable variance due to timing differences
-      if (cashDifference > data.total_receipts * 0.1) {
+      if (cashDifference > dataObj.total_receipts * 0.1) {
         warnings.push('Cash on hand may not match receipts and disbursements');
         confidence -= 10;
       }
     }
 
     // Date validation
-    if (data.coverage_start_date && data.coverage_end_date) {
-      const startDate = new Date(data.coverage_start_date);
-      const endDate = new Date(data.coverage_end_date);
+    if (dataObj.coverage_start_date && dataObj.coverage_end_date) {
+      const startDate = new Date(dataObj.coverage_start_date as string);
+      const endDate = new Date(dataObj.coverage_end_date as string);
 
       if (startDate >= endDate) {
         errors.push('Coverage start date must be before end date');
@@ -248,7 +332,7 @@ class DataValidator {
     }
 
     const checks = {
-      completeness: this.calculateFinanceCompleteness(data),
+      completeness: this.calculateFinanceCompleteness(dataObj),
       accuracy: Math.max(0, 100 - errors.length * 15),
       timeliness: this.calculateTimeliness(sourceInfo),
       consistency: Math.max(0, 100 - warnings.length * 8),
@@ -273,26 +357,53 @@ class DataValidator {
    */
   validateNewsData(data: unknown, source: string): ValidationResult {
     const sourceInfo = DATA_SOURCES[source];
+    if (!sourceInfo) {
+      throw new Error(`Unknown data source: ${source}`);
+    }
+
     const errors: string[] = [];
     const warnings: string[] = [];
     let confidence = 100;
 
+    // Type guard to check if data is an object
+    if (!data || typeof data !== 'object') {
+      errors.push('Invalid data: must be an object');
+      confidence = 0;
+
+      return {
+        isValid: false,
+        confidence: 0,
+        errors,
+        warnings,
+        source: sourceInfo,
+        timestamp: new Date().toISOString(),
+        checks: {
+          completeness: 0,
+          accuracy: 0,
+          timeliness: this.calculateTimeliness(sourceInfo),
+          consistency: 0,
+        },
+      };
+    }
+
+    const dataObj = data as Record<string, unknown>;
+
     // Required fields
-    if (!data.title || data.title.length < 10) {
+    if (!dataObj.title || (typeof dataObj.title === 'string' && dataObj.title.length < 10)) {
       errors.push('Title is missing or too short');
       confidence -= 20;
     }
 
-    if (!data.url || !this.isValidURL(data.url)) {
+    if (!dataObj.url || (typeof dataObj.url === 'string' && !this.isValidURL(dataObj.url))) {
       errors.push('Invalid or missing URL');
       confidence -= 25;
     }
 
-    if (!data.publishedDate) {
+    if (!dataObj.publishedDate) {
       errors.push('Missing publication date');
       confidence -= 15;
     } else {
-      const pubDate = new Date(data.publishedDate);
+      const pubDate = new Date(dataObj.publishedDate as string);
       const now = new Date();
       const daysDiff = (now.getTime() - pubDate.getTime()) / (1000 * 60 * 60 * 24);
 
@@ -303,26 +414,38 @@ class DataValidator {
     }
 
     // Content quality checks
-    if (data.title && this.containsSuspiciousContent(data.title)) {
+    if (
+      dataObj.title &&
+      typeof dataObj.title === 'string' &&
+      this.containsSuspiciousContent(dataObj.title)
+    ) {
       warnings.push('Title contains potentially unreliable indicators');
       confidence -= 10;
     }
 
-    if (data.source && this.isKnownUnreliableSource(data.source)) {
+    if (
+      dataObj.source &&
+      typeof dataObj.source === 'string' &&
+      this.isKnownUnreliableSource(dataObj.source)
+    ) {
       warnings.push('Source has questionable reliability');
       confidence -= 15;
     }
 
     // Language and content validation
-    if (data.language && data.language !== 'English') {
+    if (
+      dataObj.language &&
+      typeof dataObj.language === 'string' &&
+      dataObj.language !== 'English'
+    ) {
       warnings.push('Non-English content may have translation issues');
       confidence -= 5;
     }
 
     const checks = {
-      completeness: this.calculateNewsCompleteness(data),
+      completeness: this.calculateNewsCompleteness(dataObj),
       accuracy: Math.max(0, 100 - errors.length * 12),
-      timeliness: this.calculateNewsTimeliness(data),
+      timeliness: this.calculateNewsTimeliness(dataObj),
       consistency: Math.max(0, 100 - warnings.length * 6),
     };
 
@@ -344,22 +467,26 @@ class DataValidator {
    * Cross-validate data from multiple sources
    */
   crossValidateData(dataPoints: Array<{ data: unknown; source: string; type: string }>): {
-    consensus: unknown;
+    consensus: Record<string, unknown>;
     conflicts: Array<{ field: string; values: Array<{ source: string; value: unknown }> }>;
     reliability: number;
   } {
-    const conflicts: unknown[] = [];
-    const consensus: unknown = {};
+    const conflicts: Array<{ field: string; values: Array<{ source: string; value: unknown }> }> =
+      [];
+    const consensus: Record<string, unknown> = {};
     const fieldValues = new Map<string, Array<{ source: string; value: unknown }>>();
 
     // Collect all field values from different sources
     dataPoints.forEach(({ data, source }) => {
-      Object.entries(data).forEach(([field, value]) => {
-        if (!fieldValues.has(field)) {
-          fieldValues.set(field, []);
-        }
-        fieldValues.get(field)!.push({ source, value });
-      });
+      if (data && typeof data === 'object') {
+        const dataObj = data as Record<string, unknown>;
+        Object.entries(dataObj).forEach(([field, value]) => {
+          if (!fieldValues.has(field)) {
+            fieldValues.set(field, []);
+          }
+          fieldValues.get(field)!.push({ source, value });
+        });
+      }
     });
 
     // Identify conflicts and build consensus
@@ -377,10 +504,14 @@ class DataValidator {
         const sortedBySources = values.sort((a, b) =>
           DATA_SOURCES[b.source]?.reliability === 'high' ? 1 : -1
         );
-        consensus[field] = sortedBySources[0].value;
+        if (sortedBySources.length > 0) {
+          consensus[field] = sortedBySources[0]!.value;
+        }
       } else {
         // No conflict, use common value
-        consensus[field] = values[0].value;
+        if (values.length > 0) {
+          consensus[field] = values[0]!.value;
+        }
       }
     });
 
@@ -501,6 +632,11 @@ class DataValidator {
   }
 
   private calculateFinanceCompleteness(data: unknown): number {
+    if (!data || typeof data !== 'object') {
+      return 0;
+    }
+
+    const dataObj = data as Record<string, unknown>;
     const expectedFields = [
       'candidate_id',
       'total_receipts',
@@ -512,20 +648,30 @@ class DataValidator {
       'coverage_end_date',
     ];
 
-    const presentFields = expectedFields.filter(field => data[field] != null);
+    const presentFields = expectedFields.filter(field => dataObj[field] != null);
     return (presentFields.length / expectedFields.length) * 100;
   }
 
   private calculateNewsCompleteness(data: unknown): number {
+    if (!data || typeof data !== 'object') {
+      return 0;
+    }
+
+    const dataObj = data as Record<string, unknown>;
     const expectedFields = ['title', 'url', 'source', 'publishedDate', 'description'];
-    const presentFields = expectedFields.filter(field => data[field] != null);
+    const presentFields = expectedFields.filter(field => dataObj[field] != null);
     return (presentFields.length / expectedFields.length) * 100;
   }
 
   private calculateNewsTimeliness(data: unknown): number {
-    if (!data.publishedDate) return 0;
+    if (!data || typeof data !== 'object') {
+      return 0;
+    }
 
-    const pubDate = new Date(data.publishedDate);
+    const dataObj = data as Record<string, unknown>;
+    if (!dataObj.publishedDate) return 0;
+
+    const pubDate = new Date(dataObj.publishedDate as string);
     const now = new Date();
     const hoursSincePublish = (now.getTime() - pubDate.getTime()) / (1000 * 60 * 60);
 
@@ -566,11 +712,14 @@ class DataValidator {
 
   private calculateCrossValidationReliability(
     dataPoints: Array<{ data: unknown; source: string; type: string }>,
-    conflicts: unknown[]
+    conflicts: Array<{ field: string; values: Array<{ source: string; value: unknown }> }>
   ): number {
     const totalFields = new Set();
     dataPoints.forEach(({ data }) => {
-      Object.keys(data).forEach(field => totalFields.add(field));
+      if (data && typeof data === 'object') {
+        const dataObj = data as Record<string, unknown>;
+        Object.keys(dataObj).forEach(field => totalFields.add(field));
+      }
     });
 
     const conflictRate = conflicts.length / totalFields.size;
@@ -668,7 +817,7 @@ class DataValidator {
       confidence: Math.max(0, confidence),
       errors,
       warnings,
-      source: DATA_SOURCES['congress-api'],
+      source: DATA_SOURCES['congress-api']!,
       timestamp: new Date().toISOString(),
       checks: {
         completeness: errors.length === 0 ? 100 : 50,

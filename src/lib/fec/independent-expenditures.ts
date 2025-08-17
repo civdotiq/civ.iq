@@ -434,7 +434,7 @@ export class IndependentExpendituresAnalyzer {
     const amounts = expenditures.map(exp => exp.expenditure_amount).sort((a, b) => a - b);
     const totalAmount = amounts.reduce((sum, amount) => sum + amount, 0);
     const averageExpenditure = totalAmount / expenditures.length;
-    const medianExpenditure = amounts[Math.floor(amounts.length / 2)];
+    const medianExpenditure = amounts[Math.floor(amounts.length / 2)] || 0;
     const largestExpenditure = Math.max(...amounts);
 
     const uniqueCommittees = new Set(expenditures.map(exp => exp.committee_id)).size;

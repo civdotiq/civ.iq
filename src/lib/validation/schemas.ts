@@ -12,18 +12,63 @@ import DOMPurify from 'isomorphic-dompurify';
 
 // State abbreviation validation
 export const STATE_ABBREVIATIONS = [
-  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
-  'DC'
+  'AL',
+  'AK',
+  'AZ',
+  'AR',
+  'CA',
+  'CO',
+  'CT',
+  'DE',
+  'FL',
+  'GA',
+  'HI',
+  'ID',
+  'IL',
+  'IN',
+  'IA',
+  'KS',
+  'KY',
+  'LA',
+  'ME',
+  'MD',
+  'MA',
+  'MI',
+  'MN',
+  'MS',
+  'MO',
+  'MT',
+  'NE',
+  'NV',
+  'NH',
+  'NJ',
+  'NM',
+  'NY',
+  'NC',
+  'ND',
+  'OH',
+  'OK',
+  'OR',
+  'PA',
+  'RI',
+  'SC',
+  'SD',
+  'TN',
+  'TX',
+  'UT',
+  'VT',
+  'VA',
+  'WA',
+  'WV',
+  'WI',
+  'WY',
+  'DC',
 ] as const;
 
-export type StateAbbreviation = typeof STATE_ABBREVIATIONS[number];
+export type StateAbbreviation = (typeof STATE_ABBREVIATIONS)[number];
 
 // Validation result type
-export interface ValidationResult<T = any> {
+export interface ValidationResult<T = unknown> {
   isValid: boolean;
   data?: T;
   errors: string[];
@@ -32,16 +77,15 @@ export interface ValidationResult<T = any> {
 
 // Base validation class
 export class BaseValidator {
-  static sanitizeString(input: string, options: {
-    maxLength?: number;
-    allowHtml?: boolean;
-    trimWhitespace?: boolean;
-  } = {}): string {
-    const {
-      maxLength = 1000,
-      allowHtml = false,
-      trimWhitespace = true
-    } = options;
+  static sanitizeString(
+    input: string,
+    options: {
+      maxLength?: number;
+      allowHtml?: boolean;
+      trimWhitespace?: boolean;
+    } = {}
+  ): string {
+    const { maxLength = 1000, allowHtml = false, trimWhitespace = true } = options;
 
     if (typeof input !== 'string') {
       throw new Error('Input must be a string');
@@ -62,7 +106,7 @@ export class BaseValidator {
       // Sanitize but allow safe HTML
       sanitized = DOMPurify.sanitize(sanitized, {
         ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br'],
-        ALLOWED_ATTR: []
+        ALLOWED_ATTR: [],
       });
     }
 
@@ -76,29 +120,27 @@ export class BaseValidator {
 
   static validateRequired(value: unknown, fieldName: string): string[] {
     const errors: string[] = [];
-    
+
     if (value === undefined || value === null || value === '') {
       errors.push(`${fieldName} is required`);
     }
-    
+
     return errors;
   }
 
-  static validateString(value: unknown, fieldName: string, options: {
-    required?: boolean;
-    minLength?: number;
-    maxLength?: number;
-    pattern?: RegExp;
-    allowedValues?: string[];
-  } = {}): ValidationResult<string> {
+  static validateString(
+    value: unknown,
+    fieldName: string,
+    options: {
+      required?: boolean;
+      minLength?: number;
+      maxLength?: number;
+      pattern?: RegExp;
+      allowedValues?: string[];
+    } = {}
+  ): ValidationResult<string> {
     const errors: string[] = [];
-    const {
-      required = false,
-      minLength = 0,
-      maxLength = 1000,
-      pattern,
-      allowedValues
-    } = options;
+    const { required = false, minLength = 0, maxLength = 1000, pattern, allowedValues } = options;
 
     // Check if required
     if (required) {
@@ -145,22 +187,26 @@ export class BaseValidator {
       isValid: errors.length === 0,
       data: sanitized,
       errors,
-      sanitized
+      sanitized,
     };
   }
 
-  static validateNumber(value: unknown, fieldName: string, options: {
-    required?: boolean;
-    min?: number;
-    max?: number;
-    integer?: boolean;
-  } = {}): ValidationResult<number> {
+  static validateNumber(
+    value: unknown,
+    fieldName: string,
+    options: {
+      required?: boolean;
+      min?: number;
+      max?: number;
+      integer?: boolean;
+    } = {}
+  ): ValidationResult<number> {
     const errors: string[] = [];
     const {
       required = false,
       min = Number.MIN_SAFE_INTEGER,
       max = Number.MAX_SAFE_INTEGER,
-      integer = false
+      integer = false,
     } = options;
 
     // Check if required
@@ -202,11 +248,15 @@ export class BaseValidator {
       isValid: errors.length === 0,
       data: numValue,
       errors,
-      sanitized: numValue
+      sanitized: numValue,
     };
   }
 
-  static validateBoolean(value: unknown, fieldName: string, required = false): ValidationResult<boolean> {
+  static validateBoolean(
+    value: unknown,
+    fieldName: string,
+    required = false
+  ): ValidationResult<boolean> {
     const errors: string[] = [];
 
     // Check if required
@@ -224,7 +274,7 @@ export class BaseValidator {
 
     // Convert to boolean
     let boolValue: boolean;
-    
+
     if (typeof value === 'boolean') {
       boolValue = value;
     } else if (typeof value === 'string') {
@@ -248,7 +298,7 @@ export class BaseValidator {
       isValid: true,
       data: boolValue,
       errors: [],
-      sanitized: boolValue
+      sanitized: boolValue,
     };
   }
 }
@@ -261,7 +311,7 @@ export class StateValidator extends BaseValidator {
       minLength: 2,
       maxLength: 2,
       pattern: /^[A-Z]{2}$/,
-      allowedValues: [...STATE_ABBREVIATIONS]
+      allowedValues: [...STATE_ABBREVIATIONS],
     });
 
     if (!stringResult.isValid) {
@@ -272,7 +322,7 @@ export class StateValidator extends BaseValidator {
       isValid: true,
       data: stringResult.data?.toUpperCase() as StateAbbreviation,
       errors: [],
-      sanitized: stringResult.data?.toUpperCase() as StateAbbreviation
+      sanitized: stringResult.data?.toUpperCase() as StateAbbreviation,
     };
   }
 }
@@ -283,7 +333,7 @@ export class ZipCodeValidator extends BaseValidator {
       required: true,
       minLength: 5,
       maxLength: 10,
-      pattern: /^\d{5}(-\d{4})?$/
+      pattern: /^\d{5}(-\d{4})?$/,
     });
 
     if (!stringResult.isValid) {
@@ -297,7 +347,7 @@ export class ZipCodeValidator extends BaseValidator {
       isValid: true,
       data: sanitized,
       errors: [],
-      sanitized
+      sanitized,
     };
   }
 }
@@ -308,7 +358,7 @@ export class BioguideIdValidator extends BaseValidator {
       required: true,
       minLength: 7,
       maxLength: 7,
-      pattern: /^[A-Z]\d{6}$/
+      pattern: /^[A-Z]\d{6}$/,
     });
   }
 }
@@ -319,7 +369,7 @@ export class PaginationValidator extends BaseValidator {
       required: false,
       min: 1,
       max: 1000,
-      integer: true
+      integer: true,
     });
   }
 
@@ -328,7 +378,7 @@ export class PaginationValidator extends BaseValidator {
       required: false,
       min: 1,
       max: 100,
-      integer: true
+      integer: true,
     });
   }
 }
@@ -339,7 +389,7 @@ export class SearchValidator extends BaseValidator {
       required: false,
       minLength: 1,
       maxLength: 200,
-      pattern: /^[a-zA-Z0-9\s\-_.,!?'"()]+$/
+      pattern: /^[a-zA-Z0-9\s\-_.,!?'"()]+$/,
     });
   }
 }
@@ -349,59 +399,68 @@ export class XSSProtection {
   static sanitizeHtml(html: string): string {
     return DOMPurify.sanitize(html, {
       ALLOWED_TAGS: [],
-      ALLOWED_ATTR: []
+      ALLOWED_ATTR: [],
     });
   }
 
   static sanitizeUrl(url: string): string {
     try {
       const parsed = new URL(url);
-      
+
       // Only allow http and https protocols
       if (!['http:', 'https:'].includes(parsed.protocol)) {
         throw new Error('Invalid protocol');
       }
-      
+
       return parsed.toString();
     } catch {
       return '';
     }
   }
 
-  static sanitizeObject<T extends Record<string, any>>(obj: T): T {
+  static sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
     // Handle arrays separately to preserve their structure
     if (Array.isArray(obj)) {
-      return (obj as any[]).map(item => {
+      return (obj as unknown[]).map(item => {
         if (typeof item === 'string') {
           return this.sanitizeHtml(item);
-        } else if (typeof item === 'object' && item !== null) {
-          return this.sanitizeObject(item);
+        } else if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
+          return this.sanitizeObject(item as Record<string, unknown>);
         }
         return item;
       }) as unknown as T;
     }
-    
+
     const sanitized = {} as T;
-    
+
     for (const [key, value] of Object.entries(obj)) {
       if (typeof value === 'string') {
         sanitized[key as keyof T] = this.sanitizeHtml(value) as T[keyof T];
       } else if (Array.isArray(value)) {
-        sanitized[key as keyof T] = this.sanitizeObject(value) as T[keyof T];
+        sanitized[key as keyof T] = value.map(item => {
+          if (typeof item === 'string') {
+            return this.sanitizeHtml(item);
+          } else if (typeof item === 'object' && item !== null) {
+            return this.sanitizeObject(item as Record<string, unknown>);
+          }
+          return item;
+        }) as T[keyof T];
       } else if (typeof value === 'object' && value !== null) {
-        sanitized[key as keyof T] = this.sanitizeObject(value) as T[keyof T];
+        sanitized[key as keyof T] = this.sanitizeObject(
+          value as Record<string, unknown>
+        ) as T[keyof T];
       } else {
-        sanitized[key as keyof T] = value;
+        sanitized[key as keyof T] = value as T[keyof T];
       }
     }
-    
+
     return sanitized;
   }
 }
 
 // API input validation wrapper
 export function validateApiInput<T>(
-  input: Record<string, any>,
+  input: Record<string, unknown>,
   validators: Record<keyof T, (value: unknown) => ValidationResult>
 ): ValidationResult<T> {
   const errors: string[] = [];
@@ -409,13 +468,14 @@ export function validateApiInput<T>(
   const data = {} as T;
 
   for (const [field, validator] of Object.entries(validators)) {
-    const result = (validator as any)(input[field]);
-    
+    const validatorFunc = validator as (value: unknown) => ValidationResult;
+    const result = validatorFunc(input[field]);
+
     if (!result.isValid) {
       errors.push(...result.errors);
     } else if (result.data !== undefined) {
-      data[field as keyof T] = result.data;
-      sanitized[field as keyof T] = result.sanitized ?? result.data;
+      data[field as keyof T] = result.data as T[keyof T];
+      sanitized[field as keyof T] = (result.sanitized ?? result.data) as T[keyof T];
     }
   }
 
@@ -423,6 +483,6 @@ export function validateApiInput<T>(
     isValid: errors.length === 0,
     data: errors.length === 0 ? data : undefined,
     errors,
-    sanitized: errors.length === 0 ? sanitized : undefined
+    sanitized: errors.length === 0 ? sanitized : undefined,
   };
 }

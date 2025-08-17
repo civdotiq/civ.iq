@@ -86,7 +86,7 @@ export function checkRateLimit(options: RateLimitOptions): RateLimitResult {
 
   // Log rate limit events
   if (!allowed) {
-    logger.security('rate_limit', {
+    logger.warn('rate_limit', {
       ip,
       endpoint,
       userAgent,
@@ -159,7 +159,10 @@ function getClientIP(request: Request): string {
   // Check various headers for client IP
   const forwardedFor = headers.get('x-forwarded-for');
   if (forwardedFor) {
-    return forwardedFor.split(',')[0].trim();
+    const firstIp = forwardedFor.split(',')[0];
+    if (firstIp) {
+      return firstIp.trim();
+    }
   }
 
   const realIP = headers.get('x-real-ip');

@@ -5,11 +5,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { govCache } from '@/services/cache/simple-government-cache';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ bioguideId: string }> }
 ): Promise<NextResponse> {
+  // ROBUST ERROR HANDLING: Wrap entire logic in try-catch to prevent crashes
   try {
     const { bioguideId } = await params;
 
@@ -18,12 +20,31 @@ export async function GET(
     }
 
     if (!process.env.CONGRESS_API_KEY) {
-      return new NextResponse('Congress.gov API key required', { status: 500 });
+      return NextResponse.json({ error: 'Congress.gov API key required' }, { status: 500 });
     }
 
-    // Use last 3 congresses (117th - 2021-2023, 118th - 2023-2025, 119th - 2025-2027)
-    const currentCongress = parseInt(process.env.CURRENT_CONGRESS || '119');
-    const congressesToFetch = [currentCongress - 2, currentCongress - 1, currentCongress]; // 117, 118, 119
+    // SIMPLIFIED DATA FETCHING: Only fetch 119th Congress data (current congress)
+    const currentCongress = 119; // Only fetch current congress data
+
+    // Check cache first
+    const cacheKey = `bills:${bioguideId}:${currentCongress}`;
+    const cached = govCache.get<Record<string, unknown>>(cacheKey);
+    if (cached) {
+      logger.info('Cache hit for bills lookup', {
+        bioguideId,
+        currentCongress,
+        cacheKey,
+        billCount: (cached.totalBills as number) || 0,
+      });
+      const cachedMetadata = (cached.metadata as Record<string, unknown>) || {};
+      return NextResponse.json({
+        ...cached,
+        metadata: {
+          ...cachedMetadata,
+          cached: true,
+        },
+      });
+    }
 
     // Debug logging for API investigation
     // eslint-disable-next-line no-console
@@ -35,98 +56,76 @@ export async function GET(
     // eslint-disable-next-line no-console
     console.log('API Key prefix:', process.env.CONGRESS_API_KEY?.slice(0, 8) + '...');
     // eslint-disable-next-line no-console
-    console.log('Congresses to fetch:', congressesToFetch);
+    console.log('Congress to fetch:', currentCongress);
 
-    // Fetch bills from multiple congresses
-    const fetchPromises = congressesToFetch.map(congress => {
-      const url = `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?api_key=${process.env.CONGRESS_API_KEY}&limit=100&congress=${congress}`;
-      // eslint-disable-next-line no-console
-      console.log('Congress API URL:', url.replace(/api_key=[^&]+/, 'api_key=***'));
+    // SIMPLIFIED: Single API call instead of multiple congress loop
+    const url = `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?api_key=${process.env.CONGRESS_API_KEY}&limit=100&congress=${currentCongress}`;
+    // eslint-disable-next-line no-console
+    console.log('Congress API URL:', url.replace(/api_key=[^&]+/, 'api_key=***'));
 
-      return fetch(url, {
-        headers: {
-          Accept: 'application/json',
-          'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
-        },
-      });
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
+      },
     });
-
-    const responses = await Promise.all(fetchPromises);
 
     // Debug response details
-    responses.forEach((response, index) => {
-      // eslint-disable-next-line no-console
-      console.log(`Response ${index + 1} (Congress ${congressesToFetch[index]}):`);
-      // eslint-disable-next-line no-console
-      console.log('  Status:', response.status, response.statusText);
-      // eslint-disable-next-line no-console
-      console.log('  Headers:', Object.fromEntries(response.headers.entries()));
-    });
+    // eslint-disable-next-line no-console
+    console.log('Response Status:', response.status, response.statusText);
+    // eslint-disable-next-line no-console
+    console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
 
-    // Check if any requests failed
-    const failedResponses = responses.filter(response => !response.ok);
-    if (failedResponses.length > 0) {
-      const firstFailed = failedResponses[0];
-      if (firstFailed) {
-        // eslint-disable-next-line no-console
-        console.log('Failed response details:', {
-          status: firstFailed.status,
-          statusText: firstFailed.statusText,
-          headers: Object.fromEntries(firstFailed.headers.entries()),
-        });
-      }
+    // Check if request failed
+    if (!response.ok) {
+      // eslint-disable-next-line no-console
+      console.log('Failed response details:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
 
       logger.error(
         'Congress.gov sponsored legislation API failed',
-        new Error(`HTTP ${firstFailed?.status || 'unknown'}`),
+        new Error(`HTTP ${response.status}`),
         {
           bioguideId,
-          status: firstFailed?.status || 'unknown',
-          failedCount: failedResponses.length,
+          status: response.status,
+          congress: currentCongress,
         }
       );
-      return new NextResponse('Failed to fetch from Congress.gov', { status: 500 });
+      return NextResponse.json({ error: 'Failed to fetch from Congress.gov' }, { status: 500 });
     }
 
-    // Process all responses and combine bills
-    const allBillsData = await Promise.all(responses.map(response => response.json()));
+    // Process single response
+    const billsData = await response.json();
 
     // Debug raw response data
-    allBillsData.forEach((data, index) => {
-      // eslint-disable-next-line no-console
-      console.log(`Raw response ${index + 1} data:`, {
-        congress: congressesToFetch[index],
-        hasSponsored: !!data.sponsoredLegislation,
-        sponsoredCount: data.sponsoredLegislation?.length || 0,
-        dataKeys: Object.keys(data),
-        firstBill: data.sponsoredLegislation?.[0] || 'none',
-      });
+    // eslint-disable-next-line no-console
+    console.log('Raw response data:', {
+      congress: currentCongress,
+      hasSponsored: !!billsData.sponsoredLegislation,
+      sponsoredCount: billsData.sponsoredLegislation?.length || 0,
+      dataKeys: Object.keys(billsData),
+      firstBill: billsData.sponsoredLegislation?.[0] || 'none',
     });
 
-    const allBills = allBillsData.flatMap(data => data.sponsoredLegislation || []);
-
-    // Filter for the target congresses (117th, 118th, 119th)
-    const targetCongressBills = allBills.filter((bill: { congress?: number | string }) =>
-      congressesToFetch.includes(parseInt(bill.congress?.toString() || '0'))
-    );
+    const bills = billsData.sponsoredLegislation || [];
 
     // eslint-disable-next-line no-console
     console.log('Final processing results:', {
-      totalApiResponses: allBillsData.length,
-      totalBillsFromAllResponses: allBills.length,
-      targetCongressBills: targetCongressBills.length,
-      congressesToFetch,
+      congress: currentCongress,
+      billCount: bills.length,
     });
 
     logger.info('Successfully fetched sponsored legislation from Congress.gov', {
       bioguideId,
-      congresses: congressesToFetch,
-      billCount: targetCongressBills?.length || 0,
-      totalFetched: allBills?.length || 0,
+      congress: currentCongress,
+      billCount: bills.length,
     });
 
     // Transform bills to include required fields for frontend
-    const transformedBills = targetCongressBills.map((bill: unknown) => {
+    const transformedBills = bills.map((bill: unknown) => {
       const billData = bill as Record<string, unknown>;
       const latestAction = billData.latestAction as Record<string, unknown> | undefined;
       const policyArea = billData.policyArea as Record<string, unknown> | undefined;
@@ -150,7 +149,7 @@ export async function GET(
     // Enhanced response structure for frontend compatibility
     const enhancedResponse = {
       // Legacy format (keep for backward compatibility)
-      sponsoredLegislation: targetCongressBills,
+      sponsoredLegislation: bills,
 
       // Enhanced format with counts and structure
       sponsored: {
@@ -168,26 +167,48 @@ export async function GET(
       totalBills: transformedBills.length,
 
       metadata: {
-        congresses: congressesToFetch,
-        totalBills: targetCongressBills?.length || 0,
+        congress: currentCongress,
+        totalBills: bills.length,
         source: 'Congress.gov API',
         generatedAt: new Date().toISOString(),
-        congressLabels: {
-          117: '117th Congress (2021-2023)',
-          118: '118th Congress (2023-2025)',
-          119: '119th Congress (2025-2027)',
-        },
+        congressLabel: '119th Congress (2025-2027)',
         dataStructure: 'enhanced',
         note: 'Cosponsored bills require separate API implementation',
       },
     };
 
+    // Cache the successful result with appropriate TTL for bill data
+    if (transformedBills.length > 0) {
+      govCache.set(cacheKey, enhancedResponse, {
+        ttl: 60 * 60 * 1000, // 1 hour for bill data
+        source: 'congress.gov',
+        dataType: 'committees', // Using committees TTL (1 hour) for bills
+      });
+      logger.info('Cached bills data', {
+        bioguideId,
+        cacheKey,
+        billCount: transformedBills.length,
+      });
+    }
+
     return NextResponse.json(enhancedResponse);
   } catch (error) {
-    logger.error('Representative bills API error', error as Error, {
-      bioguideId: (await params).bioguideId,
+    // ROBUST ERROR HANDLING: Log specific error and return proper JSON response
+    // eslint-disable-next-line no-console
+    console.error('Bills API Route Error:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      bioguideId: 'unavailable',
     });
 
-    return new NextResponse('Congress.gov failed', { status: 500 });
+    logger.error('Representative bills API error', error as Error, {
+      bioguideId: 'unavailable',
+      component: 'bills-api-route',
+    });
+
+    return NextResponse.json(
+      { error: 'Internal server error while fetching bills' },
+      { status: 500 }
+    );
   }
 }

@@ -53,6 +53,9 @@ export function AddressRefinement({
 
       // Use the first (most confident) result
       const match = result[0];
+      if (!match) {
+        throw new Error('No geocoding result available');
+      }
       const districtInfo = extractDistrictFromResult(match);
 
       if (!districtInfo) {
@@ -199,6 +202,9 @@ export function InlineAddressRefinement({
       }
 
       const match = result[0];
+      if (!match) {
+        throw new Error('No geocoding result available');
+      }
       const districtInfo = extractDistrictFromResult(match);
 
       if (!districtInfo) {

@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -19,7 +18,7 @@ import {
   BarChart,
   Bar,
   Area,
-  AreaChart
+  AreaChart,
 } from 'recharts';
 
 interface VotingTrendData {
@@ -62,7 +61,11 @@ interface VotingTrendsChartProps {
   className?: string;
 }
 
-export function VotingTrendsChart({ bioguideId, years = 5, className = '' }: VotingTrendsChartProps) {
+export function VotingTrendsChart({
+  bioguideId,
+  years = 5,
+  className = '',
+}: VotingTrendsChartProps) {
   const [data, setData] = useState<VotingTrendsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,12 +76,14 @@ export function VotingTrendsChart({ bioguideId, years = 5, className = '' }: Vot
     const fetchVotingTrends = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/analytics/voting-trends?bioguideId=${bioguideId}&years=${years}`);
-        
+        const response = await fetch(
+          `/api/analytics/voting-trends?bioguideId=${bioguideId}&years=${years}`
+        );
+
         if (!response.ok) {
           throw new Error('Failed to fetch voting trends data');
         }
-        
+
         const trendsData = await response.json();
         setData(trendsData);
         setError(null);
@@ -105,12 +110,12 @@ export function VotingTrendsChart({ bioguideId, years = 5, className = '' }: Vot
       votesAgainstParty: trend.votesAgainstParty,
       abstentions: trend.abstentions,
       billsSupported: trend.keyLegislation.billsSupported,
-      billsOpposed: trend.keyLegislation.billsOpposed
+      billsOpposed: trend.keyLegislation.billsOpposed,
     }));
 
     const chartProps = {
       data: chartData,
-      margin: { top: 5, right: 30, left: 20, bottom: 5 }
+      margin: { top: 5, right: 30, left: 20, bottom: 5 },
     };
 
     if (metric === 'loyalty') {
@@ -118,32 +123,27 @@ export function VotingTrendsChart({ bioguideId, years = 5, className = '' }: Vot
         return (
           <LineChart {...chartProps}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis 
-              dataKey="period" 
-              stroke="#666"
-              fontSize={12}
-              tick={{ fill: '#666' }}
-            />
-            <YAxis 
+            <XAxis dataKey="period" stroke="#666" fontSize={12} tick={{ fill: '#666' }} />
+            <YAxis
               domain={[0, 100]}
               stroke="#666"
               fontSize={12}
               tick={{ fill: '#666' }}
               label={{ value: 'Party Loyalty %', angle: -90, position: 'insideLeft' }}
             />
-            <Tooltip 
+            <Tooltip
               contentStyle={{
                 backgroundColor: 'white',
                 border: '1px solid #ccc',
-                borderRadius: '4px'
+                borderRadius: '4px',
               }}
               formatter={(value: number) => [`${value}%`, 'Party Loyalty']}
             />
             <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="partyLoyalty" 
-              stroke="#3ea2d4" 
+            <Line
+              type="monotone"
+              dataKey="partyLoyalty"
+              stroke="#3ea2d4"
               strokeWidth={3}
               dot={{ fill: '#3ea2d4', strokeWidth: 2, r: 4 }}
               activeDot={{ r: 6, stroke: '#3ea2d4', strokeWidth: 2 }}
@@ -159,11 +159,11 @@ export function VotingTrendsChart({ bioguideId, years = 5, className = '' }: Vot
             <YAxis domain={[0, 100]} stroke="#666" fontSize={12} />
             <Tooltip formatter={(value: number) => [`${value}%`, 'Party Loyalty']} />
             <Legend />
-            <Area 
-              type="monotone" 
-              dataKey="partyLoyalty" 
-              stroke="#3ea2d4" 
-              fill="#3ea2d4" 
+            <Area
+              type="monotone"
+              dataKey="partyLoyalty"
+              stroke="#3ea2d4"
+              fill="#3ea2d4"
               fillOpacity={0.3}
               name="Party Loyalty Score"
             />
@@ -175,7 +175,11 @@ export function VotingTrendsChart({ bioguideId, years = 5, className = '' }: Vot
         <BarChart {...chartProps}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="period" stroke="#666" fontSize={12} />
-          <YAxis stroke="#666" fontSize={12} label={{ value: 'Votes', angle: -90, position: 'insideLeft' }} />
+          <YAxis
+            stroke="#666"
+            fontSize={12}
+            label={{ value: 'Votes', angle: -90, position: 'insideLeft' }}
+          />
           <Tooltip />
           <Legend />
           <Bar dataKey="totalVotes" fill="#0b983c" name="Total Votes" />
@@ -189,28 +193,28 @@ export function VotingTrendsChart({ bioguideId, years = 5, className = '' }: Vot
           <YAxis stroke="#666" fontSize={12} />
           <Tooltip />
           <Legend />
-          <Area 
-            type="monotone" 
-            dataKey="votesWithParty" 
-            stackId="1" 
-            stroke="#0b983c" 
-            fill="#0b983c" 
+          <Area
+            type="monotone"
+            dataKey="votesWithParty"
+            stackId="1"
+            stroke="#0b983c"
+            fill="#0b983c"
             name="With Party"
           />
-          <Area 
-            type="monotone" 
-            dataKey="votesAgainstParty" 
-            stackId="1" 
-            stroke="#e11d07" 
-            fill="#e11d07" 
+          <Area
+            type="monotone"
+            dataKey="votesAgainstParty"
+            stackId="1"
+            stroke="#e11d07"
+            fill="#e11d07"
             name="Against Party"
           />
-          <Area 
-            type="monotone" 
-            dataKey="abstentions" 
-            stackId="1" 
-            stroke="#gray" 
-            fill="#gray" 
+          <Area
+            type="monotone"
+            dataKey="abstentions"
+            stackId="1"
+            stroke="#gray"
+            fill="#gray"
             name="Abstentions"
           />
         </AreaChart>
@@ -252,17 +256,17 @@ export function VotingTrendsChart({ bioguideId, years = 5, className = '' }: Vot
             {/* Metric Selector */}
             <select
               value={metric}
-              onChange={(e) => setMetric(e.target.value as 'loyalty' | 'activity' | 'positions')}
+              onChange={e => setMetric(e.target.value as 'loyalty' | 'activity' | 'positions')}
               className="px-3 py-1 border border-gray-300 rounded text-sm"
             >
               <option value="loyalty">Party Loyalty</option>
               <option value="activity">Voting Activity</option>
               <option value="positions">Vote Positions</option>
             </select>
-            
+
             {/* Chart Type Selector */}
             <div className="flex border border-gray-300 rounded overflow-hidden">
-              {(['line', 'area', 'bar'] as const).map((type) => (
+              {(['line', 'area', 'bar'] as const).map(type => (
                 <button
                   key={type}
                   onClick={() => setChartType(type)}
@@ -284,11 +288,15 @@ export function VotingTrendsChart({ bioguideId, years = 5, className = '' }: Vot
         {/* Summary Statistics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="text-center">
-            <div className="text-2xl font-bold text-civiq-blue">{data.summary.averagePartyLoyalty}%</div>
+            <div className="text-2xl font-bold text-civiq-blue">
+              {data.summary.averagePartyLoyalty}%
+            </div>
             <div className="text-sm text-gray-600">Avg Party Loyalty</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-civiq-green">{data.summary.averageVotesPerPeriod}</div>
+            <div className="text-2xl font-bold text-civiq-green">
+              {data.summary.averageVotesPerPeriod}
+            </div>
             <div className="text-sm text-gray-600">Avg Votes/Quarter</div>
           </div>
           <div className="text-center">
@@ -296,12 +304,20 @@ export function VotingTrendsChart({ bioguideId, years = 5, className = '' }: Vot
             <div className="text-sm text-gray-600">Quarters Tracked</div>
           </div>
           <div className="text-center">
-            <div className={`text-2xl font-bold ${
-              data.summary.trendDirection === 'increasing' ? 'text-civiq-green' : 
-              data.summary.trendDirection === 'decreasing' ? 'text-civiq-red' : 'text-gray-600'
-            }`}>
-              {data.summary.trendDirection === 'increasing' ? '↗' : 
-               data.summary.trendDirection === 'decreasing' ? '↘' : '→'}
+            <div
+              className={`text-2xl font-bold ${
+                data.summary.trendDirection === 'increasing'
+                  ? 'text-civiq-green'
+                  : data.summary.trendDirection === 'decreasing'
+                    ? 'text-civiq-red'
+                    : 'text-gray-600'
+              }`}
+            >
+              {data.summary.trendDirection === 'increasing'
+                ? '↗'
+                : data.summary.trendDirection === 'decreasing'
+                  ? '↘'
+                  : '→'}
             </div>
             <div className="text-sm text-gray-600">Trend Direction</div>
           </div>
@@ -322,16 +338,18 @@ export function VotingTrendsChart({ bioguideId, years = 5, className = '' }: Vot
               <div>
                 <span className="text-gray-600">Latest Quarter:</span>
                 <span className="ml-2 font-medium">
-                  {data.trends[data.trends.length - 1].period} - 
-                  {data.trends[data.trends.length - 1].partyLoyaltyScore}% loyalty
+                  {data.trends[data.trends.length - 1]?.period} -
+                  {data.trends[data.trends.length - 1]?.partyLoyaltyScore}% loyalty
                 </span>
               </div>
               <div>
                 <span className="text-gray-600">Most Active Period:</span>
                 <span className="ml-2 font-medium">
-                  {data.trends.reduce((max, current) => 
-                    current.totalVotes > max.totalVotes ? current : max
-                  ).period}
+                  {
+                    data.trends.reduce((max, current) =>
+                      current.totalVotes > max.totalVotes ? current : max
+                    ).period
+                  }
                 </span>
               </div>
             </div>

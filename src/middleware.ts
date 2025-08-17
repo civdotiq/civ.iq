@@ -3,9 +3,9 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { logger } from '@/lib/logging/logger-edge'
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { logger } from '@/lib/logging/logger-edge';
 
 // Rate limiting store (in-memory for Edge Runtime)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -18,7 +18,8 @@ const SECURITY_HEADERS = {
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'geolocation=(), microphone=(), camera=(), payment=()',
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';",
+  'Content-Security-Policy':
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';",
 } as const;
 
 // Rate limiting configuration
@@ -48,7 +49,7 @@ export function middleware(request: NextRequest) {
         url: request.url,
         userAgent: clientInfo.userAgent,
         ip: clientInfo.ip,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -58,10 +59,13 @@ export function middleware(request: NextRequest) {
       logger.warn('Request validation failed', {
         url: request.url,
         reason: validationResult.reason,
-        ip: clientInfo.ip
+        ip: clientInfo.ip,
       });
 
-      return createErrorResponse(validationResult.statusCode || 400, validationResult.reason || 'Invalid request');
+      return createErrorResponse(
+        validationResult.statusCode || 400,
+        validationResult.reason || 'Invalid request'
+      );
     }
 
     // Apply rate limiting
@@ -71,14 +75,17 @@ export function middleware(request: NextRequest) {
         url: request.url,
         ip: clientInfo.ip,
         limit: rateLimitResult.limit,
-        current: rateLimitResult.current
+        current: rateLimitResult.current,
       });
 
       return createErrorResponse(429, 'Too Many Requests', {
         'X-RateLimit-Limit': rateLimitResult.limit.toString(),
-        'X-RateLimit-Remaining': Math.max(0, rateLimitResult.limit - rateLimitResult.current).toString(),
+        'X-RateLimit-Remaining': Math.max(
+          0,
+          rateLimitResult.limit - rateLimitResult.current
+        ).toString(),
         'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-        'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000).toString()
+        'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000).toString(),
       });
     }
 
@@ -92,7 +99,10 @@ export function middleware(request: NextRequest) {
 
     // Add rate limit headers
     response.headers.set('X-RateLimit-Limit', rateLimitResult.limit.toString());
-    response.headers.set('X-RateLimit-Remaining', Math.max(0, rateLimitResult.limit - rateLimitResult.current).toString());
+    response.headers.set(
+      'X-RateLimit-Remaining',
+      Math.max(0, rateLimitResult.limit - rateLimitResult.current).toString()
+    );
     response.headers.set('X-RateLimit-Reset', rateLimitResult.resetTime.toString());
 
     // Add performance headers
@@ -106,20 +116,19 @@ export function middleware(request: NextRequest) {
         method: request.method,
         url: request.url,
         statusCode: response.status,
-        duration: `${duration}ms`,
-        ip: clientInfo.ip
+        duration: duration,
+        ip: clientInfo.ip,
       });
     }
 
     return response;
-
   } catch (error) {
     const duration = Date.now() - startTime;
 
     logger.error('Middleware error', error as Error, {
       url: request.url,
       method: request.method,
-      duration: `${duration}ms`
+      duration: duration,
     });
 
     // Return generic error response
@@ -136,21 +145,25 @@ function extractClientInfo(request: NextRequest) {
   return {
     ip: ip.trim(),
     userAgent: request.headers.get('user-agent') || 'unknown',
-    origin: request.headers.get('origin') || 'unknown'
+    origin: request.headers.get('origin') || 'unknown',
   };
 }
 
-function validateRequest(request: NextRequest): { isValid: boolean; reason?: string; statusCode?: number } {
+function validateRequest(request: NextRequest): {
+  isValid: boolean;
+  reason?: string;
+  statusCode?: number;
+} {
   const url = new URL(request.url);
 
   // Check for malicious patterns
   const maliciousPatterns = [
-    /\.\./,                    // Path traversal
-    /<script/i,                // XSS attempts
-    /eval\(/i,                 // Code injection
-    /union.*select/i,          // SQL injection
-    /%00/,                     // Null byte injection
-    /\${/,                     // Template injection
+    /\.\./, // Path traversal
+    /<script/i, // XSS attempts
+    /eval\(/i, // Code injection
+    /union.*select/i, // SQL injection
+    /%00/, // Null byte injection
+    /\${/, // Template injection
   ];
 
   const fullPath = url.pathname + url.search;
@@ -163,7 +176,8 @@ function validateRequest(request: NextRequest): { isValid: boolean; reason?: str
   // Validate content length for POST/PUT requests
   if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
     const contentLength = request.headers.get('content-length');
-    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) { // 10MB limit
+    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
+      // 10MB limit
       return { isValid: false, reason: 'Request too large', statusCode: 413 };
     }
   }
@@ -179,7 +193,10 @@ function validateRequest(request: NextRequest): { isValid: boolean; reason?: str
   return { isValid: true };
 }
 
-function checkRateLimit(request: NextRequest, clientIp: string): {
+function checkRateLimit(
+  request: NextRequest,
+  clientIp: string
+): {
   allowed: boolean;
   limit: number;
   current: number;
@@ -189,12 +206,19 @@ function checkRateLimit(request: NextRequest, clientIp: string): {
   const now = Date.now();
 
   // Determine rate limit configuration
-  let config = RATE_LIMITS.default;
+  const defaultConfig: RateLimitConfig = { requests: 200, windowMs: 60000 };
+  let config: RateLimitConfig = RATE_LIMITS.default || defaultConfig;
+
   for (const [path, limit] of Object.entries(RATE_LIMITS)) {
     if (path !== 'default' && url.pathname.startsWith(path)) {
       config = limit;
       break;
     }
+  }
+
+  // Ensure config is not undefined (defensive programming)
+  if (!config) {
+    config = defaultConfig;
   }
 
   const key = `${clientIp}:${url.pathname}`;
@@ -204,7 +228,8 @@ function checkRateLimit(request: NextRequest, clientIp: string): {
   let entry = rateLimitStore.get(key);
 
   // Clean up expired entries periodically
-  if (Math.random() < 0.01) { // 1% chance to cleanup
+  if (Math.random() < 0.01) {
+    // 1% chance to cleanup
     cleanupRateLimitStore();
   }
 
@@ -219,7 +244,7 @@ function checkRateLimit(request: NextRequest, clientIp: string): {
     allowed: entry.count <= config.requests,
     limit: config.requests,
     current: entry.count,
-    resetTime: entry.resetTime
+    resetTime: entry.resetTime,
   };
 }
 
@@ -242,8 +267,8 @@ function createErrorResponse(
       error: {
         code: status,
         message,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     },
     { status }
   );
@@ -271,4 +296,4 @@ export const config = {
     // Skip internal Next.js paths and static files, but include API routes
     '/((?!_next/static|_next/image|favicon.ico|icon-|manifest.json).*)',
   ],
-}
+};

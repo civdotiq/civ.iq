@@ -16,6 +16,20 @@ interface ChunkErrorDetails {
   pathname: string;
 }
 
+interface SentryInterface {
+  captureException: (
+    error: Error,
+    options?: {
+      tags?: Record<string, string | number>;
+      extra?: Record<string, unknown>;
+    }
+  ) => void;
+}
+
+interface WindowWithSentry extends Window {
+  Sentry?: SentryInterface;
+}
+
 class ChunkErrorHandler {
   private static instance: ChunkErrorHandler;
   private errorCount = 0;
@@ -40,7 +54,7 @@ class ChunkErrorHandler {
    */
   private setupGlobalErrorHandlers(): void {
     // Handle unhandled errors
-    window.addEventListener('error', (event) => {
+    window.addEventListener('error', event => {
       if (this.isChunkLoadError(event.error)) {
         event.preventDefault();
         this.handleChunkError({
@@ -48,20 +62,20 @@ class ChunkErrorHandler {
           timestamp: Date.now(),
           url: event.filename,
           userAgent: navigator.userAgent,
-          pathname: window.location.pathname
+          pathname: window.location.pathname,
         });
       }
     });
 
     // Handle unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event) => {
+    window.addEventListener('unhandledrejection', event => {
       if (this.isChunkLoadError(event.reason)) {
         event.preventDefault();
         this.handleChunkError({
           error: event.reason,
           timestamp: Date.now(),
           userAgent: navigator.userAgent,
-          pathname: window.location.pathname
+          pathname: window.location.pathname,
         });
       }
     });
@@ -72,7 +86,7 @@ class ChunkErrorHandler {
    */
   private setupServiceWorkerMessageListener(): void {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', (event) => {
+      navigator.serviceWorker.addEventListener('message', event => {
         const { type, action } = event.data;
 
         if (type === 'CHUNK_ERROR_RECOVERY' && action === 'reload') {
@@ -93,8 +107,18 @@ class ChunkErrorHandler {
   private isChunkLoadError(error: unknown): boolean {
     if (!error) return false;
 
+    // Type guard to check if error has the expected properties
+    const isErrorLike = (
+      obj: unknown
+    ): obj is { message?: string; stack?: string; name?: string } => {
+      return typeof obj === 'object' && obj !== null;
+    };
+
+    if (!isErrorLike(error)) return false;
+
     const errorMessage = error.message || '';
     const errorStack = error.stack || '';
+    const errorName = error.name || '';
 
     return (
       errorMessage.includes('ChunkLoadError') ||
@@ -103,7 +127,7 @@ class ChunkErrorHandler {
       errorMessage.includes('failed to import') ||
       errorStack.includes('ChunkLoadError') ||
       errorStack.includes('__webpack_require__') ||
-      error.name === 'ChunkLoadError' ||
+      errorName === 'ChunkLoadError' ||
       false
     );
   }
@@ -123,7 +147,7 @@ class ChunkErrorHandler {
     console.error('[CIV.IQ-CHUNK] ChunkLoadError detected:', {
       count: this.errorCount,
       maxRetries: this.maxRetries,
-      ...details
+      ...details,
     });
 
     // Log error for monitoring
@@ -147,7 +171,6 @@ class ChunkErrorHandler {
 
       // Reload the page
       window.location.reload();
-
     } catch (error) {
       console.error('[CIV.IQ-CHUNK] Error during chunk error recovery:', error);
       this.isHandling = false;
@@ -179,11 +202,10 @@ class ChunkErrorHandler {
         const registration = await navigator.serviceWorker.ready;
         if (registration.active) {
           registration.active.postMessage({
-            type: 'HANDLE_CHUNK_ERROR'
+            type: 'HANDLE_CHUNK_ERROR',
           });
         }
       }
-
     } catch (error) {
       console.error('[CIV.IQ-CHUNK] Error clearing caches:', error);
     }
@@ -305,22 +327,25 @@ class ChunkErrorHandler {
       error: {
         message: details.error.message,
         stack: details.error.stack,
-        name: details.error.name
-      }
+        name: details.error.name,
+      },
     };
 
     // Log to console
     console.error('[CIV.IQ-CHUNK] Error details:', errorData);
 
     // Send to monitoring service if available
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
-      (window as any).Sentry.captureException(details.error, {
-        tags: {
-          errorType: 'ChunkLoadError',
-          errorCount: this.errorCount
-        },
-        extra: errorData
-      });
+    if (typeof window !== 'undefined' && (window as WindowWithSentry).Sentry) {
+      const sentry = (window as WindowWithSentry).Sentry;
+      if (sentry) {
+        sentry.captureException(details.error, {
+          tags: {
+            errorType: 'ChunkLoadError',
+            errorCount: this.errorCount,
+          },
+          extra: errorData,
+        });
+      }
     }
   }
 

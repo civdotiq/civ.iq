@@ -232,6 +232,9 @@ export class BillSummaryFallbacks {
 
       // Generate summary from key actions
       const mainAction = keyActions[0];
+      if (!mainAction) {
+        return null;
+      }
       const summary = `This bill ${mainAction.toLowerCase()}. ${keyActions
         .slice(1, 3)
         .map(action => `It also ${action.toLowerCase()}`)
@@ -245,7 +248,7 @@ export class BillSummaryFallbacks {
         summary: simplifiedSummary,
         keyPoints: keyActions.slice(0, 5).map(action => `The bill ${action.toLowerCase()}`),
         whoItAffects: this.identifyAffectedGroups(billText),
-        whatItDoes: mainAction,
+        whatItDoes: mainAction || 'has provisions affecting various areas',
         whyItMatters: 'This legislation could change current laws and affect various groups',
         readingLevel: 8,
         confidence: 0.6,
@@ -424,6 +427,9 @@ export class BillSummaryFallbacks {
 
     // Fallback to first sentence
     const firstSentence = text.split(/[.!?]/)[0];
+    if (!firstSentence) {
+      return 'This bill contains legislative provisions.';
+    }
     return firstSentence.length > 100 ? firstSentence.substring(0, 97) + '...' : firstSentence;
   }
 

@@ -114,6 +114,13 @@ class ZipLookupLogger {
     });
   }
 
+  error(message: string, metadata?: unknown): void {
+    logger.error(message, {
+      component: 'multiDistrictApi',
+      metadata,
+    });
+  }
+
   logEdgeCase(
     zipCode: string,
     caseType: 'territory' | 'dc' | 'split_state' | 'invalid',

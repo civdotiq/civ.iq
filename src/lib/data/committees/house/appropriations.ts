@@ -18,41 +18,31 @@ const createRepresentative = (
 ): EnhancedRepresentative => ({
   bioguideId,
   name,
-  firstName: name.split(' ')[0],
-  lastName: name.split(' ').slice(-1)[0],
+  firstName: name.split(' ')[0] || name,
+  lastName: name.split(' ').slice(-1)[0] || name,
   party,
   state,
   district,
   chamber: 'House',
-  directOrderName: name,
-  invertedOrderName: `${name.split(' ').slice(-1)[0]}, ${name.split(' ')[0]}`,
-  termStart: '2025-01-03',
-  termEnd: '2027-01-03',
-  votingRecord: {
-    totalVotes: 0,
-    votesWithParty: 0,
-    votesAgainstParty: 0,
-    partyUnityScore: 0,
-    abstentions: 0,
-    lastUpdated: new Date().toISOString(),
-  },
-  billsSponsored: 0,
-  billsCosponsored: 0,
-  lastUpdated: new Date().toISOString(),
-  committees: [],
-  subcommittees: [],
-  caucuses: [],
-  socialMedia: {},
-  officeLocations: [],
-  currentCommittees: ['House Committee on Appropriations'],
-  currentSubcommittees: [],
-  currentCaucuses: [],
-  endorsements: [],
+  title: `Representative for ${state}-${district}`,
+  terms: [
+    {
+      congress: '119',
+      startYear: '2025',
+      endYear: '2027',
+    },
+  ],
+  committees: [
+    {
+      name: 'House Committee on Appropriations',
+      role: 'Member',
+    },
+  ],
 });
 
 const createCommitteeMember = (
   rep: EnhancedRepresentative,
-  role: string,
+  role: 'Chair' | 'Ranking Member' | 'Vice Chair' | 'Member',
   rank: number,
   joinedDate: string = '2025-01-03'
 ): CommitteeMember => ({
@@ -149,8 +139,9 @@ export const houseAppropriationsCommittee: Committee = {
   name: 'House Committee on Appropriations',
   chamber: 'House',
   type: 'Standing',
-  jurisdiction: 'The House Committee on Appropriations is responsible for passing appropriation bills along with its Senate counterpart. The bills passed by the Appropriations Committee regulate expenditures of money by the government of the United States. As such, it is one of the most powerful committees in the House. The committee is responsible for appropriating funding for the federal government\'s discretionary spending.',
-  
+  jurisdiction:
+    "The House Committee on Appropriations is responsible for passing appropriation bills along with its Senate counterpart. The bills passed by the Appropriations Committee regulate expenditures of money by the government of the United States. As such, it is one of the most powerful committees in the House. The committee is responsible for appropriating funding for the federal government's discretionary spending.",
+
   leadership: {
     chair: createCommitteeMember(chairman, 'Chair', 1),
     rankingMember: createCommitteeMember(rankingMember, 'Ranking Member', 2),
@@ -160,16 +151,18 @@ export const houseAppropriationsCommittee: Committee = {
     // Leadership
     createCommitteeMember(chairman, 'Chair', 1),
     createCommitteeMember(rankingMember, 'Ranking Member', 2),
-    
+
     // Republican members (excluding chair)
-    ...republicanMembers.slice(1).map((rep, index) => 
-      createCommitteeMember(rep, 'Member', index + 3)
-    ),
-    
+    ...republicanMembers
+      .slice(1)
+      .map((rep, index) => createCommitteeMember(rep, 'Member', index + 3)),
+
     // Democratic members (excluding ranking member)
-    ...democraticMembers.slice(1).map((rep, index) => 
-      createCommitteeMember(rep, 'Member', republicanMembers.length + index + 2)
-    ),
+    ...democraticMembers
+      .slice(1)
+      .map((rep, index) =>
+        createCommitteeMember(rep, 'Member', republicanMembers.length + index + 2)
+      ),
   ],
 
   subcommittees: [

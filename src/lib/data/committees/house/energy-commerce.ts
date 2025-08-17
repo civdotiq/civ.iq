@@ -18,41 +18,31 @@ const createRepresentative = (
 ): EnhancedRepresentative => ({
   bioguideId,
   name,
-  firstName: name.split(' ')[0],
-  lastName: name.split(' ').slice(-1)[0],
+  firstName: name.split(' ')[0] || name,
+  lastName: name.split(' ').slice(-1)[0] || name,
   party,
   state,
   district,
   chamber: 'House',
-  directOrderName: name,
-  invertedOrderName: `${name.split(' ').slice(-1)[0]}, ${name.split(' ')[0]}`,
-  termStart: '2025-01-03',
-  termEnd: '2027-01-03',
-  votingRecord: {
-    totalVotes: 0,
-    votesWithParty: 0,
-    votesAgainstParty: 0,
-    partyUnityScore: 0,
-    abstentions: 0,
-    lastUpdated: new Date().toISOString(),
-  },
-  billsSponsored: 0,
-  billsCosponsored: 0,
-  lastUpdated: new Date().toISOString(),
-  committees: [],
-  subcommittees: [],
-  caucuses: [],
-  socialMedia: {},
-  officeLocations: [],
-  currentCommittees: ['House Committee on Energy and Commerce'],
-  currentSubcommittees: [],
-  currentCaucuses: [],
-  endorsements: [],
+  title: `Representative for ${state}-${district}`,
+  terms: [
+    {
+      congress: '119',
+      startYear: '2025',
+      endYear: '2027',
+    },
+  ],
+  committees: [
+    {
+      name: 'House Committee on Energy and Commerce',
+      role: 'Member',
+    },
+  ],
 });
 
 const createCommitteeMember = (
   rep: EnhancedRepresentative,
-  role: string,
+  role: 'Chair' | 'Ranking Member' | 'Vice Chair' | 'Member',
   rank: number,
   joinedDate: string = '2025-01-03'
 ): CommitteeMember => ({
@@ -120,7 +110,7 @@ const democraticMembers: EnhancedRepresentative[] = [
   createRepresentative('K000385', 'Robin Kelly', 'D', 'IL', '02'),
   createRepresentative('B001303', 'Lisa Blunt Rochester', 'D', 'DE', 'AL'),
   createRepresentative('S001168', 'Darren Soto', 'D', 'FL', '09'),
-  createRepresentative('O000173', 'Tom O\'Halleran', 'D', 'AZ', '02'),
+  createRepresentative('O000173', "Tom O'Halleran", 'D', 'AZ', '02'),
   createRepresentative('B001318', 'Lori Trahan', 'D', 'MA', '03'),
   createRepresentative('F000468', 'Lizzie Fletcher', 'D', 'TX', '07'),
   createRepresentative('B001306', 'Troy Carter', 'D', 'LA', '02'),
@@ -140,7 +130,8 @@ export const houseEnergyCommerceCommittee: Committee = {
   name: 'House Committee on Energy and Commerce',
   chamber: 'House',
   type: 'Standing',
-  jurisdiction: 'The House Committee on Energy and Commerce has one of the broadest jurisdictions of any congressional committee, covering: ' +
+  jurisdiction:
+    'The House Committee on Energy and Commerce has one of the broadest jurisdictions of any congressional committee, covering: ' +
     'Interstate and foreign commerce generally; ' +
     'National energy policy generally; ' +
     'Exploration, production, storage, supply, marketing, pricing, and regulation of energy resources; ' +
@@ -156,7 +147,7 @@ export const houseEnergyCommerceCommittee: Committee = {
     'Interstate and foreign communications; ' +
     'Travel and tourism; ' +
     'Motor vehicle safety.',
-  
+
   leadership: {
     chair: createCommitteeMember(chairman, 'Chair', 1),
     rankingMember: createCommitteeMember(rankingMember, 'Ranking Member', 2),
@@ -166,16 +157,18 @@ export const houseEnergyCommerceCommittee: Committee = {
     // Leadership
     createCommitteeMember(chairman, 'Chair', 1),
     createCommitteeMember(rankingMember, 'Ranking Member', 2),
-    
+
     // Republican members (excluding chair)
-    ...republicanMembers.slice(1).map((rep, index) => 
-      createCommitteeMember(rep, 'Member', index + 3)
-    ),
-    
+    ...republicanMembers
+      .slice(1)
+      .map((rep, index) => createCommitteeMember(rep, 'Member', index + 3)),
+
     // Democratic members (excluding ranking member)
-    ...democraticMembers.slice(1).map((rep, index) => 
-      createCommitteeMember(rep, 'Member', republicanMembers.length + index + 2)
-    ),
+    ...democraticMembers
+      .slice(1)
+      .map((rep, index) =>
+        createCommitteeMember(rep, 'Member', republicanMembers.length + index + 2)
+      ),
   ],
 
   subcommittees: [

@@ -97,6 +97,8 @@ export class NewsClusteringService {
         const article = sortedArticles[j];
 
         if (
+          article &&
+          primaryArticle &&
           this.areArticlesRelated(primaryArticle, article, {
             titleSimilarity: titleSimilarityThreshold,
             timespanHours,
@@ -108,7 +110,7 @@ export class NewsClusteringService {
       }
 
       // Create cluster if we have enough articles
-      if (relatedArticles.length >= minClusterSize - 1) {
+      if (relatedArticles.length >= minClusterSize - 1 && primaryArticle) {
         const cluster = this.createCluster(primaryArticle, relatedArticles);
         clusters.push(cluster);
         clustered.add(i);
@@ -353,7 +355,14 @@ export class NewsClusteringService {
    */
   private generateClusterTitle(articles: NewsArticle[]): string {
     // Find the title with the most keywords in common with others
-    let bestTitle = articles[0].title;
+    if (articles.length === 0) {
+      return 'News Cluster';
+    }
+    const firstArticle = articles[0];
+    if (!firstArticle) {
+      return 'News Cluster';
+    }
+    let bestTitle = firstArticle.title;
     let bestScore = 0;
 
     articles.forEach(article => {

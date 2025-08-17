@@ -59,6 +59,7 @@ export function ErrorDisplay({
 
       return () => clearInterval(timer);
     }
+    return undefined;
   }, [showTimer, civiqError?.context?.retryAfter]);
 
   const getSeverityStyles = (severity: string) => {
@@ -430,7 +431,7 @@ export function NetworkStatusIndicator() {
             d="M18.364 5.636l-12.728 12.728m0-12.728l12.728 12.728"
           />
         </svg>
-        You're offline. Some features may not work.
+        You&apos;re offline. Some features may not work.
       </div>
     </div>
   );

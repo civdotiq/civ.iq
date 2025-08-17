@@ -281,7 +281,7 @@ export class ReadingLevelValidator {
   /**
    * Identify complex words that might be difficult for target grade level
    */
-  private static identifyComplexWords(text: string, targetGrade: number): string[] {
+  private static identifyComplexWords(text: string, _targetGrade: number): string[] {
     const words = text
       .toLowerCase()
       .split(/\s+/)
@@ -455,8 +455,9 @@ export class ReadingLevelValidator {
     const suggestions: Record<string, string> = {};
 
     for (const word of complexWords) {
-      if (this.WORD_SIMPLIFICATIONS[word.toLowerCase()]) {
-        suggestions[word] = this.WORD_SIMPLIFICATIONS[word.toLowerCase()];
+      const simplified = this.WORD_SIMPLIFICATIONS[word.toLowerCase()];
+      if (simplified) {
+        suggestions[word] = simplified;
       }
     }
 

@@ -18,41 +18,31 @@ const createRepresentative = (
 ): EnhancedRepresentative => ({
   bioguideId,
   name,
-  firstName: name.split(' ')[0],
-  lastName: name.split(' ').slice(-1)[0],
+  firstName: name.split(' ')[0] || name,
+  lastName: name.split(' ').slice(-1)[0] || name,
   party,
   state,
   district,
   chamber: 'House',
-  directOrderName: name,
-  invertedOrderName: `${name.split(' ').slice(-1)[0]}, ${name.split(' ')[0]}`,
-  termStart: '2025-01-03',
-  termEnd: '2027-01-03',
-  votingRecord: {
-    totalVotes: 0,
-    votesWithParty: 0,
-    votesAgainstParty: 0,
-    partyUnityScore: 0,
-    abstentions: 0,
-    lastUpdated: new Date().toISOString(),
-  },
-  billsSponsored: 0,
-  billsCosponsored: 0,
-  lastUpdated: new Date().toISOString(),
-  committees: [],
-  subcommittees: [],
-  caucuses: [],
-  socialMedia: {},
-  officeLocations: [],
-  currentCommittees: ['House Committee on the Judiciary'],
-  currentSubcommittees: [],
-  currentCaucuses: [],
-  endorsements: [],
+  title: `Representative for ${state}-${district}`,
+  terms: [
+    {
+      congress: '119',
+      startYear: '2025',
+      endYear: '2027',
+    },
+  ],
+  committees: [
+    {
+      name: 'House Committee on the Judiciary',
+      role: 'Member',
+    },
+  ],
 });
 
 const createCommitteeMember = (
   rep: EnhancedRepresentative,
-  role: string,
+  role: 'Chair' | 'Ranking Member' | 'Vice Chair' | 'Member',
   rank: number,
   joinedDate: string = '2025-01-03'
 ): CommitteeMember => ({
@@ -126,7 +116,8 @@ export const houseJudiciaryCommittee: Committee = {
   name: 'House Committee on the Judiciary',
   chamber: 'House',
   type: 'Standing',
-  jurisdiction: 'The House Committee on the Judiciary has jurisdiction over matters relating to the administration of justice in federal courts, administrative bodies, and law enforcement agencies. Its jurisdiction includes: ' +
+  jurisdiction:
+    'The House Committee on the Judiciary has jurisdiction over matters relating to the administration of justice in federal courts, administrative bodies, and law enforcement agencies. Its jurisdiction includes: ' +
     'The judiciary and judicial proceedings, civil and criminal; ' +
     'Administrative practice and procedure; ' +
     'Apportionment of Representatives; ' +
@@ -146,28 +137,30 @@ export const houseJudiciaryCommittee: Committee = {
     'Revision and codification of the Statutes of the United States; ' +
     'State and territorial boundary lines; ' +
     'Subversive activities affecting the internal security of the United States.',
-  
+
   leadership: {
     chair: createCommitteeMember(chairman, 'Chair', 1),
     rankingMember: createCommitteeMember(rankingMember, 'Ranking Member', 2),
-    viceChair: createCommitteeMember(viceRankingMember, 'Vice Ranking Member', 3),
+    vice_chair: createCommitteeMember(viceRankingMember, 'Vice Chair', 3),
   },
 
   members: [
     // Leadership
     createCommitteeMember(chairman, 'Chair', 1),
     createCommitteeMember(rankingMember, 'Ranking Member', 2),
-    createCommitteeMember(viceRankingMember, 'Vice Ranking Member', 3),
-    
+    createCommitteeMember(viceRankingMember, 'Vice Chair', 3),
+
     // Republican members (excluding chair)
-    ...republicanMembers.slice(1).map((rep, index) => 
-      createCommitteeMember(rep, 'Member', index + 4)
-    ),
-    
+    ...republicanMembers
+      .slice(1)
+      .map((rep, index) => createCommitteeMember(rep, 'Member', index + 4)),
+
     // Democratic members (excluding ranking member and vice ranking)
-    ...democraticMembers.slice(2).map((rep, index) => 
-      createCommitteeMember(rep, 'Member', republicanMembers.length + index + 3)
-    ),
+    ...democraticMembers
+      .slice(2)
+      .map((rep, index) =>
+        createCommitteeMember(rep, 'Member', republicanMembers.length + index + 3)
+      ),
   ],
 
   subcommittees: [

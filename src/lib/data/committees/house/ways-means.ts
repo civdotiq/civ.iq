@@ -18,41 +18,31 @@ const createRepresentative = (
 ): EnhancedRepresentative => ({
   bioguideId,
   name,
-  firstName: name.split(' ')[0],
-  lastName: name.split(' ').slice(-1)[0],
+  firstName: name.split(' ')[0] || name,
+  lastName: name.split(' ').slice(-1)[0] || name,
   party,
   state,
   district,
   chamber: 'House',
-  directOrderName: name,
-  invertedOrderName: `${name.split(' ').slice(-1)[0]}, ${name.split(' ')[0]}`,
-  termStart: '2025-01-03',
-  termEnd: '2027-01-03',
-  votingRecord: {
-    totalVotes: 0,
-    votesWithParty: 0,
-    votesAgainstParty: 0,
-    partyUnityScore: 0,
-    abstentions: 0,
-    lastUpdated: new Date().toISOString(),
-  },
-  billsSponsored: 0,
-  billsCosponsored: 0,
-  lastUpdated: new Date().toISOString(),
-  committees: [],
-  subcommittees: [],
-  caucuses: [],
-  socialMedia: {},
-  officeLocations: [],
-  currentCommittees: ['House Committee on Ways and Means'],
-  currentSubcommittees: [],
-  currentCaucuses: [],
-  endorsements: [],
+  title: `Representative for ${state}-${district}`,
+  terms: [
+    {
+      congress: '119',
+      startYear: '2025',
+      endYear: '2027',
+    },
+  ],
+  committees: [
+    {
+      name: 'House Committee on Ways and Means',
+      role: 'Member',
+    },
+  ],
 });
 
 const createCommitteeMember = (
   rep: EnhancedRepresentative,
-  role: string,
+  role: 'Chair' | 'Ranking Member' | 'Vice Chair' | 'Member',
   rank: number,
   joinedDate: string = '2025-01-03'
 ): CommitteeMember => ({
@@ -125,7 +115,8 @@ export const houseWaysMeansCommittee: Committee = {
   name: 'House Committee on Ways and Means',
   chamber: 'House',
   type: 'Standing',
-  jurisdiction: 'The House Committee on Ways and Means has jurisdiction over: ' +
+  jurisdiction:
+    'The House Committee on Ways and Means has jurisdiction over: ' +
     'Revenue measures generally; ' +
     'Reciprocal trade agreements; ' +
     'Revenue measures relating to insular possessions; ' +
@@ -134,7 +125,7 @@ export const houseWaysMeansCommittee: Committee = {
     'Transportation of dutiable goods; ' +
     'Tax exempt foundations and charitable trusts; ' +
     'National social security (except health care and facilities programs that are supported from general revenues as opposed to payroll deductions and except work incentive programs).',
-  
+
   leadership: {
     chair: createCommitteeMember(chairman, 'Chair', 1),
     rankingMember: createCommitteeMember(rankingMember, 'Ranking Member', 2),
@@ -144,16 +135,18 @@ export const houseWaysMeansCommittee: Committee = {
     // Leadership
     createCommitteeMember(chairman, 'Chair', 1),
     createCommitteeMember(rankingMember, 'Ranking Member', 2),
-    
+
     // Republican members (excluding chair)
-    ...republicanMembers.slice(1).map((rep, index) => 
-      createCommitteeMember(rep, 'Member', index + 3)
-    ),
-    
+    ...republicanMembers
+      .slice(1)
+      .map((rep, index) => createCommitteeMember(rep, 'Member', index + 3)),
+
     // Democratic members (excluding ranking member)
-    ...democraticMembers.slice(1).map((rep, index) => 
-      createCommitteeMember(rep, 'Member', republicanMembers.length + index + 2)
-    ),
+    ...democraticMembers
+      .slice(1)
+      .map((rep, index) =>
+        createCommitteeMember(rep, 'Member', republicanMembers.length + index + 2)
+      ),
   ],
 
   subcommittees: [

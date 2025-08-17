@@ -8,16 +8,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  ChevronDown,
-  ChevronUp,
-  BookOpen,
-  Brain,
-  AlertCircle,
-  Clock,
-  Users,
-  Target,
-} from 'lucide-react';
+import { ChevronDown, ChevronUp, BookOpen, Brain, Clock, Users, Target } from 'lucide-react';
 import type { BillSummary } from '@/features/legislation/services/ai/bill-summarizer';
 import { EntityLinkWrapper } from '@/shared/components/ui/EntityLinkWrapper';
 
@@ -140,19 +131,19 @@ export function BillSummaryWithLinks({
             {activeTab === 'summary' && (
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Plain English Summary</h4>
-                  {/* UPDATED: Link entities in plain summary */}
+                  <h4 className="font-medium text-gray-900 mb-2">Summary</h4>
+                  {/* UPDATED: Link entities in summary */}
                   <p className="text-gray-700">
-                    <EntityLinkWrapper text={summary.plainEnglishSummary} />
+                    <EntityLinkWrapper text={summary.summary} />
                   </p>
                 </div>
 
-                {summary.technicalSummary && (
+                {summary.whatItDoes && (
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Technical Details</h4>
-                    {/* UPDATED: Link entities in technical summary */}
+                    <h4 className="font-medium text-gray-900 mb-2">What It Does</h4>
+                    {/* UPDATED: Link entities in what it does */}
                     <p className="text-gray-700">
-                      <EntityLinkWrapper text={summary.technicalSummary} />
+                      <EntityLinkWrapper text={summary.whatItDoes} />
                     </p>
                   </div>
                 )}
@@ -175,12 +166,12 @@ export function BillSummaryWithLinks({
 
             {activeTab === 'impact' && (
               <div className="space-y-4">
-                {summary.impactAnalysis && (
+                {summary.whoItAffects && summary.whoItAffects.length > 0 && (
                   <>
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">Who This Affects</h4>
                       <div className="flex flex-wrap gap-2">
-                        {summary.impactAnalysis.affectedGroups.map((group, index) => (
+                        {summary.whoItAffects.map((group: string, index: number) => (
                           <span
                             key={index}
                             className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm"
@@ -194,10 +185,10 @@ export function BillSummaryWithLinks({
                     </div>
 
                     <div>
-                      <h4 className="font-medium text-gray-900 mb-2">Estimated Impact</h4>
-                      {/* UPDATED: Link entities in impact description */}
+                      <h4 className="font-medium text-gray-900 mb-2">Why It Matters</h4>
+                      {/* UPDATED: Link entities in why it matters */}
                       <p className="text-gray-700">
-                        <EntityLinkWrapper text={summary.impactAnalysis.estimatedImpact} />
+                        <EntityLinkWrapper text={summary.whyItMatters} />
                       </p>
                     </div>
                   </>

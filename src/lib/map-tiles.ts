@@ -71,7 +71,11 @@ class TileService {
    * Get the current working tile provider
    */
   getCurrentProvider(): TileProvider {
-    return TILE_PROVIDERS[this.currentProviderIndex];
+    const provider = TILE_PROVIDERS[this.currentProviderIndex];
+    if (!provider) {
+      throw new Error(`Invalid provider index: ${this.currentProviderIndex}`);
+    }
+    return provider;
   }
 
   /**
@@ -140,6 +144,7 @@ class TileService {
       if (i === this.currentProviderIndex) continue; // Already tried
 
       const provider = TILE_PROVIDERS[i];
+      if (!provider) continue; // Skip invalid indices
       if (this.failedProviders.has(provider.name)) continue; // Known failure
 
       if (await this.testProvider(provider)) {
@@ -154,7 +159,11 @@ class TileService {
     // (sometimes network issues are temporary)
     this.failedProviders.clear();
     this.currentProviderIndex = 0;
-    return TILE_PROVIDERS[0];
+    const fallbackProvider = TILE_PROVIDERS[0];
+    if (!fallbackProvider) {
+      throw new Error('No tile providers available');
+    }
+    return fallbackProvider;
   }
 
   /**

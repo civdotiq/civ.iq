@@ -7,14 +7,14 @@
 // Phase 3: Integration with Existing System
 // Combines comprehensive 119th Congress data with existing system compatibility
 
-import { 
-  ZIP_TO_DISTRICT_MAP_119TH, 
+import {
+  ZIP_TO_DISTRICT_MAP_119TH,
   getDistrictForZip,
   getPrimaryDistrictForZip,
   isMultiDistrictZip,
   getAllDistrictsForZip,
   ZIP_MAPPING_STATS,
-  type ZipDistrictMapping 
+  type ZipDistrictMapping,
 } from './zip-district-mapping-119th';
 
 // Legacy interface for backward compatibility
@@ -39,7 +39,7 @@ class ZipDistrictLookupService {
     directHits: 0,
     fallbackUses: 0,
     averageResponseTime: 0,
-    multiDistrictLookups: 0
+    multiDistrictLookups: 0,
   };
 
   /**
@@ -53,38 +53,38 @@ class ZipDistrictLookupService {
     try {
       // Use comprehensive 119th Congress mapping
       const result = getDistrictForZip(zipCode);
-      
+
       if (result) {
         this.metrics.directHits++;
-        
+
         // Handle multi-district ZIPs by returning primary district
         if (Array.isArray(result)) {
           this.metrics.multiDistrictLookups++;
           const primaryDistrict = result.find(d => d.primary) || result[0];
+          if (!primaryDistrict) return null;
           return {
             state: primaryDistrict.state,
             district: primaryDistrict.district,
-            primary: true
+            primary: true,
           };
         }
-        
+
         // Single district ZIP
         return {
           state: result.state,
-          district: result.district
+          district: result.district,
         };
       }
-      
+
       // No mapping found
       return null;
-      
     } finally {
       const endTime = performance.now();
       const responseTime = endTime - startTime;
-      
+
       // Update average response time
-      this.metrics.averageResponseTime = 
-        ((this.metrics.averageResponseTime * (this.metrics.totalLookups - 1)) + responseTime) / 
+      this.metrics.averageResponseTime =
+        (this.metrics.averageResponseTime * (this.metrics.totalLookups - 1) + responseTime) /
         this.metrics.totalLookups;
     }
   }
@@ -98,24 +98,23 @@ class ZipDistrictLookupService {
 
     try {
       const result = getPrimaryDistrictForZip(zipCode);
-      
+
       if (result) {
         this.metrics.directHits++;
         return {
           state: result.state,
           district: result.district,
-          primary: result.primary
+          primary: result.primary,
         };
       }
-      
+
       return null;
-      
     } finally {
       const endTime = performance.now();
       const responseTime = endTime - startTime;
-      
-      this.metrics.averageResponseTime = 
-        ((this.metrics.averageResponseTime * (this.metrics.totalLookups - 1)) + responseTime) / 
+
+      this.metrics.averageResponseTime =
+        (this.metrics.averageResponseTime * (this.metrics.totalLookups - 1) + responseTime) /
         this.metrics.totalLookups;
     }
   }
@@ -129,29 +128,28 @@ class ZipDistrictLookupService {
 
     try {
       const result = getAllDistrictsForZip(zipCode);
-      
+
       if (result.length > 0) {
         this.metrics.directHits++;
-        
+
         if (result.length > 1) {
           this.metrics.multiDistrictLookups++;
         }
-        
+
         return result.map(d => ({
           state: d.state,
           district: d.district,
-          primary: d.primary
+          primary: d.primary,
         }));
       }
-      
+
       return [];
-      
     } finally {
       const endTime = performance.now();
       const responseTime = endTime - startTime;
-      
-      this.metrics.averageResponseTime = 
-        ((this.metrics.averageResponseTime * (this.metrics.totalLookups - 1)) + responseTime) / 
+
+      this.metrics.averageResponseTime =
+        (this.metrics.averageResponseTime * (this.metrics.totalLookups - 1) + responseTime) /
         this.metrics.totalLookups;
     }
   }
@@ -179,7 +177,7 @@ class ZipDistrictLookupService {
       directHits: 0,
       fallbackUses: 0,
       averageResponseTime: 0,
-      multiDistrictLookups: 0
+      multiDistrictLookups: 0,
     };
   }
 
@@ -189,11 +187,15 @@ class ZipDistrictLookupService {
   getCoverageStats() {
     return {
       ...ZIP_MAPPING_STATS,
-      hitRate: this.metrics.totalLookups > 0 ? 
-        (this.metrics.directHits / this.metrics.totalLookups) * 100 : 0,
+      hitRate:
+        this.metrics.totalLookups > 0
+          ? (this.metrics.directHits / this.metrics.totalLookups) * 100
+          : 0,
       averageResponseTime: this.metrics.averageResponseTime,
-      multiDistrictPercentage: this.metrics.totalLookups > 0 ?
-        (this.metrics.multiDistrictLookups / this.metrics.totalLookups) * 100 : 0
+      multiDistrictPercentage:
+        this.metrics.totalLookups > 0
+          ? (this.metrics.multiDistrictLookups / this.metrics.totalLookups) * 100
+          : 0,
     };
   }
 }
@@ -215,7 +217,7 @@ export const ZIP_TO_DISTRICT_MAP = new Proxy({} as Record<string, LegacyZipDistr
     }
     return false;
   },
-  ownKeys(target) {
+  ownKeys(_target) {
     // Return all ZIP codes for enumeration
     return Object.keys(ZIP_TO_DISTRICT_MAP_119TH);
   },
@@ -226,18 +228,16 @@ export const ZIP_TO_DISTRICT_MAP = new Proxy({} as Record<string, LegacyZipDistr
         return {
           enumerable: true,
           configurable: true,
-          value
+          value,
         };
       }
     }
     return undefined;
-  }
+  },
 });
 
 // Export service functions and types
-export {
-  zipLookupService
-};
+export { zipLookupService };
 
 // Export types with clear names
 export type { ZipDistrictMapping };
@@ -249,7 +249,9 @@ export function getCongressionalDistrictForZip(zipCode: string): LegacyZipDistri
   return zipLookupService.getDistrictForZip(zipCode);
 }
 
-export function getPrimaryCongressionalDistrictForZip(zipCode: string): LegacyZipDistrictMapping | null {
+export function getPrimaryCongressionalDistrictForZip(
+  zipCode: string
+): LegacyZipDistrictMapping | null {
   return zipLookupService.getPrimaryDistrictForZip(zipCode);
 }
 
@@ -280,7 +282,7 @@ export function resetZipLookupMetrics(): void {
 // State-level fallback for ZIP codes not in our mapping
 export function getStateFromZip(zip: string): string | null {
   const zipNum = parseInt(zip.substring(0, 3));
-  
+
   if (zipNum >= 100 && zipNum <= 149) return 'NY';
   if (zipNum >= 150 && zipNum <= 196) return 'PA';
   if (zipNum >= 197 && zipNum <= 199) return 'DE';
@@ -324,13 +326,13 @@ export function getStateFromZip(zip: string): string | null {
   if (zipNum >= 970 && zipNum <= 979) return 'OR';
   if (zipNum >= 980 && zipNum <= 994) return 'WA';
   if (zipNum >= 995 && zipNum <= 999) return 'AK';
-  
+
   return null;
 }
 
 // Migration helper - log when legacy patterns are used
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  console.log('🎯 CIV.IQ ZIP District Mapping: 119th Congress comprehensive data loaded');
-  console.log(`📊 Coverage: ${ZIP_MAPPING_STATS.totalZips.toLocaleString()} ZIP codes`);
-  console.log(`🗺️ Multi-district ZIPs: ${ZIP_MAPPING_STATS.multiDistrictZips.toLocaleString()}`);
+  // ZIP District Mapping: 119th Congress comprehensive data loaded
+  // Coverage: ZIP_MAPPING_STATS.totalZips ZIP codes
+  // Multi-district ZIPs: ZIP_MAPPING_STATS.multiDistrictZips
 }

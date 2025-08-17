@@ -172,20 +172,9 @@ export function RepresentativesClient({
   };
 
   const generateVotingData = () => {
-    const bills = ['HR 1234', 'S 5678', 'HR 9012', 'S 3456', 'HR 7890', 'S 2345'];
-    return filteredReps.slice(0, 10).flatMap(rep =>
-      bills.map(bill => ({
-        representative: rep.name,
-        bill,
-        vote: ['Yes', 'No', 'Not Voting'][Math.floor(Math.random() * 3)] as
-          | 'Yes'
-          | 'No'
-          | 'Not Voting',
-        category:
-          ['Healthcare', 'Defense', 'Economy', 'Environment'][Math.floor(Math.random() * 4)] ||
-          'Unknown',
-      }))
-    );
+    // Voting data unavailable - would require real voting records from Congress.gov
+    // Returning empty array until real vote data is available
+    return [];
   };
 
   if (isLoading) {

@@ -220,10 +220,10 @@ export class BillSummaryCache {
         const billId = billIds[i];
         const entry = cachedEntries[i];
 
-        if (entry?.summary) {
+        if (billId && entry?.summary) {
           results.set(billId, entry.summary);
           // Update access metadata asynchronously
-          this.updateAccessMetadata(billId).catch(err =>
+          this.updateAccessMetadata(billId, entry.metadata).catch(err =>
             logger.warn('Failed to update access metadata', { billId, error: err })
           );
         }
@@ -350,8 +350,8 @@ export class BillSummaryCache {
         const metadata = metadataEntries[i];
         const summary = summaryEntries[i];
 
-        if (!metadata || !summary) {
-          toRemove.push(billId);
+        if (!billId || !metadata || !summary) {
+          if (billId) toRemove.push(billId);
           continue;
         }
 
@@ -368,7 +368,7 @@ export class BillSummaryCache {
       if (billIds.length - toRemove.length > maxEntries) {
         const remaining = billIds.filter(id => !toRemove.includes(id));
         const remainingWithMetadata = remaining
-          .map((id, index) => ({
+          .map((id, _index) => ({
             id,
             metadata: metadataEntries[billIds.indexOf(id)],
           }))

@@ -99,7 +99,7 @@ export function useLazyData<T>(
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry && entry.isIntersecting) {
           setIsVisible(true);
           observer.disconnect();
         }
@@ -182,6 +182,7 @@ export function useLazyData<T>(
     if (isVisible && enabled && !loading && !hasFetched) {
       fetchWithRetry();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVisible, enabled, loading, hasFetched, fetchWithRetry, ...dependencies]);
 
   // Clear retry timeout on unmount
@@ -234,7 +235,7 @@ export function useLazyDataBatch<T extends Record<string, unknown>>(
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry && entry.isIntersecting) {
           setIsVisible(true);
           observer.disconnect();
         }
@@ -285,18 +286,20 @@ export function useLazyDataBatch<T extends Record<string, unknown>>(
 
     results.forEach((result, index) => {
       const key = keys[index];
-      newLoading[key] = false;
+      if (key !== undefined) {
+        newLoading[key] = false;
 
-      if (result.status === 'fulfilled') {
-        const { success, result: resultData, error } = result.value;
-        if (success) {
-          newData[key] = resultData;
-          newErrors[key] = null;
+        if (result.status === 'fulfilled') {
+          const { success, result: resultData, error } = result.value;
+          if (success) {
+            newData[key] = resultData;
+            newErrors[key] = null;
+          } else {
+            newErrors[key] = error instanceof Error ? error : new Error('Unknown error');
+          }
         } else {
-          newErrors[key] = error instanceof Error ? error : new Error('Unknown error');
+          newErrors[key] = new Error(result.reason);
         }
-      } else {
-        newErrors[key] = new Error(result.reason);
       }
     });
 
@@ -317,6 +320,7 @@ export function useLazyDataBatch<T extends Record<string, unknown>>(
     if (isVisible && options.enabled !== false) {
       fetchAll();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVisible, options.enabled, fetchAll, ...dependencies]);
 
   return {
@@ -372,7 +376,7 @@ export function useInfiniteScroll<T>(
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && hasMore && !loading) {
+        if (entry && entry.isIntersecting && hasMore && !loading) {
           loadMore();
         }
       },

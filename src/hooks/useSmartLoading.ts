@@ -196,7 +196,10 @@ export function useMultiStageLoading(stages: string[]) {
     if (currentStageIndex < stages.length - 1) {
       const nextIndex = currentStageIndex + 1;
       setCurrentStageIndex(nextIndex);
-      loading.setStage(stages[nextIndex]);
+      const nextStageValue = stages[nextIndex];
+      if (nextStageValue) {
+        loading.setStage(nextStageValue);
+      }
       loading.setProgress((nextIndex / (stages.length - 1)) * 100);
     }
   }, [currentStageIndex, stages, loading]);

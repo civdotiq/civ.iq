@@ -11,6 +11,33 @@ export interface ValidationError {
   value?: unknown;
 }
 
+// Type definitions for validation
+export interface RepresentativeDataInput {
+  bioguideId?: string;
+  name?: string;
+  party?: string;
+  state?: string;
+  district?: string | number;
+  chamber?: string;
+  [key: string]: unknown;
+}
+
+export interface FinancialDataInput {
+  contribution_receipt_amount?: string | number;
+  contribution_receipt_date?: string;
+  [key: string]: unknown;
+}
+
+export interface VoteDataInput {
+  position?: string;
+  date?: string;
+  bill?: {
+    number?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 export class ValidationResult {
   public errors: ValidationError[] = [];
   public warnings: string[] = [];
@@ -35,19 +62,19 @@ export class ValidationResult {
 }
 
 // ZIP code validation
-export function validateZipCode(zipCode: string): ValidationResult {
+export function validateZipCode(zipCode: string | undefined): ValidationResult {
   const result = new ValidationResult(zipCode);
-  
-  if (!zipCode) {
+
+  if (!zipCode || typeof zipCode !== 'string') {
     result.addError('zipCode', 'ZIP code is required');
     return result;
   }
 
   const sanitizedZip = zipCode.trim().replace(/\s+/g, '');
-  
+
   // US ZIP code formats: 12345 or 12345-6789
   const zipRegex = /^(\d{5})(-\d{4})?$/;
-  
+
   if (!zipRegex.test(sanitizedZip)) {
     result.addError('zipCode', 'Invalid ZIP code format. Use 12345 or 12345-6789');
     return result;
@@ -55,6 +82,11 @@ export function validateZipCode(zipCode: string): ValidationResult {
 
   // Extract 5-digit ZIP for basic validation
   const basicZip = sanitizedZip.split('-')[0];
+  if (!basicZip) {
+    result.addError('zipCode', 'Invalid ZIP code format');
+    return result;
+  }
+
   const zipNum = parseInt(basicZip);
 
   // Basic range check (US ZIP codes range from 00501 to 99950)
@@ -64,7 +96,18 @@ export function validateZipCode(zipCode: string): ValidationResult {
   }
 
   // Known invalid ZIP codes
-  const invalidZips = ['00000', '11111', '22222', '33333', '44444', '55555', '66666', '77777', '88888', '99999'];
+  const invalidZips = [
+    '00000',
+    '11111',
+    '22222',
+    '33333',
+    '44444',
+    '55555',
+    '66666',
+    '77777',
+    '88888',
+    '99999',
+  ];
   if (invalidZips.includes(basicZip)) {
     result.addError('zipCode', 'Invalid ZIP code');
     return result;
@@ -75,19 +118,19 @@ export function validateZipCode(zipCode: string): ValidationResult {
 }
 
 // Bioguide ID validation
-export function validateBioguideId(bioguideId: string): ValidationResult {
+export function validateBioguideId(bioguideId: string | undefined): ValidationResult {
   const result = new ValidationResult(bioguideId);
-  
-  if (!bioguideId) {
+
+  if (!bioguideId || typeof bioguideId !== 'string') {
     result.addError('bioguideId', 'Bioguide ID is required');
     return result;
   }
 
   const sanitized = bioguideId.trim().toUpperCase();
-  
+
   // Bioguide ID format: 1 letter + 6 digits + optional 2 digits
   const bioguideRegex = /^[A-Z]\d{6}(\d{2})?$/;
-  
+
   if (!bioguideRegex.test(sanitized)) {
     result.addError('bioguideId', 'Invalid Bioguide ID format');
     return result;
@@ -100,114 +143,223 @@ export function validateBioguideId(bioguideId: string): ValidationResult {
 // Representative data validation
 export function validateRepresentativeData(data: unknown): ValidationResult {
   const result = new ValidationResult(data);
-  
+
   if (!data || typeof data !== 'object') {
     result.addError('data', 'Representative data must be an object');
     return result;
   }
 
+  const repData = data as RepresentativeDataInput;
+
   // Required fields
-  const requiredFields = ['bioguideId', 'name', 'party', 'state'];
-  
+  const requiredFields = ['bioguideId', 'name', 'party', 'state'] as const;
+
   for (const field of requiredFields) {
-    if (!data[field] || typeof data[field] !== 'string' || data[field].trim() === '') {
+    const value = repData[field];
+    if (!value || typeof value !== 'string' || value.trim() === '') {
       result.addError(field, `${field} is required and must be a non-empty string`);
     }
   }
 
   // Validate bioguideId format
-  if (data.bioguideId) {
-    const bioguideValidation = validateBioguideId(data.bioguideId);
+  if (repData.bioguideId && typeof repData.bioguideId === 'string') {
+    const bioguideValidation = validateBioguideId(repData.bioguideId);
     if (!bioguideValidation.isValid) {
       result.errors.push(...bioguideValidation.errors);
     } else {
-      data.bioguideId = bioguideValidation.data;
+      repData.bioguideId = bioguideValidation.data as string;
     }
   }
 
   // Validate party
   const validParties = ['Democratic', 'Republican', 'Independent', 'Libertarian', 'Green'];
-  if (data.party && !validParties.includes(data.party)) {
-    result.addWarning(`Unusual party affiliation: ${data.party}`);
+  if (repData.party && typeof repData.party === 'string' && !validParties.includes(repData.party)) {
+    result.addWarning(`Unusual party affiliation: ${repData.party}`);
   }
 
   // Validate state (should be full name or abbreviation)
   const stateAbbreviations = [
-    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY', 'DC'
-  ];
-  
-  const stateNames = [
-    'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado',
-    'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho',
-    'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
-    'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
-    'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada',
-    'New Hampshire', 'New Jersey', 'New Mexico', 'New York',
-    'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon',
-    'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
-    'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington',
-    'West Virginia', 'Wisconsin', 'Wyoming', 'District of Columbia'
+    'AL',
+    'AK',
+    'AZ',
+    'AR',
+    'CA',
+    'CO',
+    'CT',
+    'DE',
+    'FL',
+    'GA',
+    'HI',
+    'ID',
+    'IL',
+    'IN',
+    'IA',
+    'KS',
+    'KY',
+    'LA',
+    'ME',
+    'MD',
+    'MA',
+    'MI',
+    'MN',
+    'MS',
+    'MO',
+    'MT',
+    'NE',
+    'NV',
+    'NH',
+    'NJ',
+    'NM',
+    'NY',
+    'NC',
+    'ND',
+    'OH',
+    'OK',
+    'OR',
+    'PA',
+    'RI',
+    'SC',
+    'SD',
+    'TN',
+    'TX',
+    'UT',
+    'VT',
+    'VA',
+    'WA',
+    'WV',
+    'WI',
+    'WY',
+    'DC',
   ];
 
-  if (data.state && !stateAbbreviations.includes(data.state) && !stateNames.includes(data.state)) {
+  const stateNames = [
+    'Alabama',
+    'Alaska',
+    'Arizona',
+    'Arkansas',
+    'California',
+    'Colorado',
+    'Connecticut',
+    'Delaware',
+    'Florida',
+    'Georgia',
+    'Hawaii',
+    'Idaho',
+    'Illinois',
+    'Indiana',
+    'Iowa',
+    'Kansas',
+    'Kentucky',
+    'Louisiana',
+    'Maine',
+    'Maryland',
+    'Massachusetts',
+    'Michigan',
+    'Minnesota',
+    'Mississippi',
+    'Missouri',
+    'Montana',
+    'Nebraska',
+    'Nevada',
+    'New Hampshire',
+    'New Jersey',
+    'New Mexico',
+    'New York',
+    'North Carolina',
+    'North Dakota',
+    'Ohio',
+    'Oklahoma',
+    'Oregon',
+    'Pennsylvania',
+    'Rhode Island',
+    'South Carolina',
+    'South Dakota',
+    'Tennessee',
+    'Texas',
+    'Utah',
+    'Vermont',
+    'Virginia',
+    'Washington',
+    'West Virginia',
+    'Wisconsin',
+    'Wyoming',
+    'District of Columbia',
+  ];
+
+  if (
+    repData.state &&
+    typeof repData.state === 'string' &&
+    !stateAbbreviations.includes(repData.state) &&
+    !stateNames.includes(repData.state)
+  ) {
     result.addError('state', 'Invalid state name or abbreviation');
   }
 
   // Validate district (if present)
-  if (data.district !== undefined && data.district !== null) {
-    const district = parseInt(data.district);
+  if (repData.district !== undefined && repData.district !== null) {
+    const district = parseInt(String(repData.district));
     if (isNaN(district) || district < 0 || district > 53) {
       result.addError('district', 'District must be a number between 0 and 53');
     }
   }
 
   // Validate chamber
-  if (data.chamber && !['House', 'Senate'].includes(data.chamber)) {
+  if (
+    repData.chamber &&
+    typeof repData.chamber === 'string' &&
+    !['House', 'Senate'].includes(repData.chamber)
+  ) {
     result.addError('chamber', 'Chamber must be either "House" or "Senate"');
   }
 
   // Sanitize strings
-  if (data.name) data.name = sanitizeString(data.name);
-  if (data.party) data.party = sanitizeString(data.party);
-  if (data.state) data.state = sanitizeString(data.state);
+  if (repData.name && typeof repData.name === 'string') repData.name = sanitizeString(repData.name);
+  if (repData.party && typeof repData.party === 'string')
+    repData.party = sanitizeString(repData.party);
+  if (repData.state && typeof repData.state === 'string')
+    repData.state = sanitizeString(repData.state);
 
-  result.data = data;
+  result.data = repData;
   return result;
 }
 
 // Financial data validation
 export function validateFinancialData(data: unknown): ValidationResult {
   const result = new ValidationResult(data);
-  
+
   if (!data || typeof data !== 'object') {
     result.addError('data', 'Financial data must be an object');
     return result;
   }
 
+  const finData = data as FinancialDataInput;
+
   // Validate contribution amounts
-  if (data.contribution_receipt_amount !== undefined) {
-    const amount = parseFloat(data.contribution_receipt_amount);
+  if (finData.contribution_receipt_amount !== undefined) {
+    const amount = parseFloat(String(finData.contribution_receipt_amount));
     if (isNaN(amount) || amount < 0) {
-      result.addError('contribution_receipt_amount', 'Contribution amount must be a positive number');
+      result.addError(
+        'contribution_receipt_amount',
+        'Contribution amount must be a positive number'
+      );
     } else if (amount > 1000000) {
       result.addWarning(`Unusually large contribution amount: $${amount.toLocaleString()}`);
     }
   }
 
   // Validate dates
-  if (data.contribution_receipt_date) {
-    const date = new Date(data.contribution_receipt_date);
+  if (finData.contribution_receipt_date && typeof finData.contribution_receipt_date === 'string') {
+    const date = new Date(finData.contribution_receipt_date);
     if (isNaN(date.getTime())) {
       result.addError('contribution_receipt_date', 'Invalid date format');
     } else {
       const currentYear = new Date().getFullYear();
       const contributionYear = date.getFullYear();
       if (contributionYear < 1990 || contributionYear > currentYear + 1) {
-        result.addError('contribution_receipt_date', 'Contribution date is outside reasonable range');
+        result.addError(
+          'contribution_receipt_date',
+          'Contribution date is outside reasonable range'
+        );
       }
     }
   }
@@ -218,31 +370,40 @@ export function validateFinancialData(data: unknown): ValidationResult {
 // Vote data validation
 export function validateVoteData(data: unknown): ValidationResult {
   const result = new ValidationResult(data);
-  
+
   if (!data || typeof data !== 'object') {
     result.addError('data', 'Vote data must be an object');
     return result;
   }
 
+  const voteData = data as VoteDataInput;
+
   // Validate vote position
   const validPositions = ['Yea', 'Nay', 'Present', 'Not Voting'];
-  if (data.position && !validPositions.includes(data.position)) {
-    result.addError('position', `Invalid vote position. Must be one of: ${validPositions.join(', ')}`);
+  if (
+    voteData.position &&
+    typeof voteData.position === 'string' &&
+    !validPositions.includes(voteData.position)
+  ) {
+    result.addError(
+      'position',
+      `Invalid vote position. Must be one of: ${validPositions.join(', ')}`
+    );
   }
 
   // Validate date
-  if (data.date) {
-    const date = new Date(data.date);
+  if (voteData.date && typeof voteData.date === 'string') {
+    const date = new Date(voteData.date);
     if (isNaN(date.getTime())) {
       result.addError('date', 'Invalid date format');
     }
   }
 
   // Validate bill number format
-  if (data.bill?.number) {
+  if (voteData.bill?.number && typeof voteData.bill.number === 'string') {
     const billRegex = /^(H\.R\.|S\.|H\.RES\.|S\.RES\.|H\.CON\.RES\.|S\.CON\.RES\.)\s*\d+$/i;
-    if (!billRegex.test(data.bill.number)) {
-      result.addWarning(`Unusual bill number format: ${data.bill.number}`);
+    if (!billRegex.test(voteData.bill.number)) {
+      result.addWarning(`Unusual bill number format: ${voteData.bill.number}`);
     }
   }
 
@@ -250,9 +411,9 @@ export function validateVoteData(data: unknown): ValidationResult {
 }
 
 // String sanitization
-export function sanitizeString(str: string): string {
-  if (typeof str !== 'string') return '';
-  
+export function sanitizeString(str: string | undefined): string {
+  if (!str || typeof str !== 'string') return '';
+
   return str
     .trim()
     .replace(/\s+/g, ' ') // Replace multiple spaces with single space
@@ -262,27 +423,31 @@ export function sanitizeString(str: string): string {
 
 // Number sanitization
 export function sanitizeNumber(value: unknown, min?: number, max?: number): number | null {
-  const num = parseFloat(value);
-  
+  const num = parseFloat(String(value));
+
   if (isNaN(num)) return null;
-  
+
   if (min !== undefined && num < min) return min;
   if (max !== undefined && num > max) return max;
-  
+
   return num;
 }
 
 // URL validation and sanitization
-export function validateAndSanitizeUrl(url: string): string | null {
+export function validateAndSanitizeUrl(url: string | undefined): string | null {
+  if (!url || typeof url !== 'string') {
+    return null;
+  }
+
   try {
     const sanitized = url.trim();
     const urlObj = new URL(sanitized);
-    
+
     // Only allow HTTP and HTTPS
     if (!['http:', 'https:'].includes(urlObj.protocol)) {
       return null;
     }
-    
+
     return urlObj.toString();
   } catch {
     return null;
@@ -292,27 +457,27 @@ export function validateAndSanitizeUrl(url: string): string | null {
 // Rate limiting helper
 export function createRateLimitValidator(maxRequests: number, windowMs: number) {
   const requests = new Map<string, number[]>();
-  
+
   return function validateRateLimit(identifier: string): boolean {
     const now = Date.now();
     const windowStart = now - windowMs;
-    
+
     if (!requests.has(identifier)) {
       requests.set(identifier, []);
     }
-    
+
     const userRequests = requests.get(identifier)!;
-    
+
     // Remove old requests
     const validRequests = userRequests.filter(time => time > windowStart);
-    
+
     if (validRequests.length >= maxRequests) {
       return false; // Rate limited
     }
-    
+
     validRequests.push(now);
     requests.set(identifier, validRequests);
-    
+
     return true; // Allow request
   };
 }
