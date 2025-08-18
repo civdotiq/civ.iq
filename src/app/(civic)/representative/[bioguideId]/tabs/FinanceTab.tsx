@@ -118,7 +118,10 @@ export function FinanceTab({ financeData }: FinanceTabProps) {
           <h3 className="font-medium mb-3">Top Contributors</h3>
           <div className="space-y-2">
             {safeFinanceData.topContributors.slice(0, 5).map((contributor, index) => (
-              <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+              <div
+                key={`contributor-${contributor.name}-${index}`}
+                className="flex justify-between items-center p-3 bg-gray-50 rounded"
+              >
                 <div>
                   <div className="font-medium">{contributor.name}</div>
                   <div className="text-sm text-gray-500">{contributor.type}</div>
@@ -138,7 +141,10 @@ export function FinanceTab({ financeData }: FinanceTabProps) {
           <h3 className="font-medium mb-3">Industry Breakdown</h3>
           <div className="space-y-2">
             {safeFinanceData.industryBreakdown.slice(0, 5).map((industry, index) => (
-              <div key={index} className="flex items-center gap-3">
+              <div
+                key={`industry-${industry.industry}-${index}`}
+                className="flex items-center gap-3"
+              >
                 <span className="w-32 text-sm">{industry.industry}</span>
                 <div className="flex-1 bg-gray-200 rounded h-6">
                   <div

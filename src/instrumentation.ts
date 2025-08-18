@@ -5,6 +5,12 @@
 
 /* eslint-disable no-console */
 
+// Polyfill 'self' for SSR compatibility (must be before any imports)
+if (typeof global !== 'undefined' && typeof global.self === 'undefined') {
+  // @ts-expect-error - Polyfilling self for SSR compatibility
+  global.self = global;
+}
+
 export async function register() {
   const timestamp = new Date().toISOString();
 

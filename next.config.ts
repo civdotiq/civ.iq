@@ -34,8 +34,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Simplified webpack configuration for better development experience
+  // Enhanced webpack configuration for better chunk loading and SSR compatibility
   webpack: (config, { isServer, dev }) => {
+    // Add self polyfill for server-side rendering
+    if (isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        // Self polyfill for SSR
+        'self-polyfill': require.resolve('./scripts/polyfill-self.js'),
+      };
+    }
     // Handle server-only dependencies on client side
     if (!isServer) {
       config.resolve.fallback = {
@@ -43,6 +51,11 @@ const nextConfig: NextConfig = {
         fs: false,
         net: false,
         tls: false,
+        crypto: false,
+        stream: false,
+        util: false,
+        url: false,
+        querystring: false,
       };
 
       // Exclude server-only dependencies from client bundle
@@ -52,21 +65,46 @@ const nextConfig: NextConfig = {
         ioredis: false,
         redis: false,
         winston: false,
+        // Prevent server-only imports from being bundled on client
+        '@/lib/logging/logger-server': false,
+        '@/lib/cache/redis-client': false,
       };
     }
 
-    // Only apply complex splitting in production
+    // Improve chunk loading reliability
     if (!dev) {
-      // Let Next.js handle default optimization for production
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          maxInitialRequests: 25,
+          maxAsyncRequests: 25,
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+              priority: 10,
+            },
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              priority: 5,
+              reuseExistingChunk: true,
+            },
           },
         },
+        // Improve module resolution reliability
+        moduleIds: 'deterministic',
+        chunkIds: 'deterministic',
+      };
+    }
+
+    // Prevent circular dependency warnings in development
+    if (dev) {
+      config.infrastructureLogging = {
+        level: 'error',
       };
     }
 

@@ -6,7 +6,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import dynamic from 'next/dynamic';
 import { DataTransparencyPanel } from '@/components/ui/DataTransparency';
 import { EnhancedRepresentative } from '@/types/representative';
 import { EnhancedHeader } from './EnhancedHeader';
@@ -15,31 +14,7 @@ import { TabNavigation, profileTabs } from './TabNavigation';
 import { ProfileOverview } from './ProfileOverview';
 import { DistrictSidebar } from './DistrictSidebar';
 import { ContactInfoTab } from './ContactInfoTab';
-
-// Dynamic imports with proper error boundaries for tab components
-const VotingTab = dynamic(
-  () => import('../tabs/VotingTab').then(mod => ({ default: mod.VotingTab })),
-  {
-    loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded"></div>,
-    ssr: false,
-  }
-);
-
-const BillsTab = dynamic(
-  () => import('../tabs/BillsTab').then(mod => ({ default: mod.BillsTab })),
-  {
-    loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded"></div>,
-    ssr: false,
-  }
-);
-
-const FinanceTab = dynamic(
-  () => import('../tabs/FinanceTab').then(mod => ({ default: mod.FinanceTab })),
-  {
-    loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded"></div>,
-    ssr: false,
-  }
-);
+import { TabLoader } from './TabLoader';
 
 interface RepresentativeClientProps {
   representative: EnhancedRepresentative;
@@ -96,50 +71,55 @@ export function RepresentativeClient({
 
       case 'voting':
         return (
-          <VotingTab
-            votes={
-              (serverData?.votes as Array<{
-                id: string;
-                date: string;
-                bill?: { number: string; title: string; url?: string };
-                question?: string;
-                description: string;
-                position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
-                result: 'Passed' | 'Failed' | 'Agreed to' | 'Disagreed to';
-                chamber: 'House' | 'Senate';
-                category?: string;
-              }>) || []
-            }
+          <TabLoader
+            tabName="voting"
+            props={{
+              votes:
+                (serverData?.votes as Array<{
+                  id: string;
+                  date: string;
+                  bill?: { number: string; title: string; url?: string };
+                  question?: string;
+                  description: string;
+                  position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
+                  result: 'Passed' | 'Failed' | 'Agreed to' | 'Disagreed to';
+                  chamber: 'House' | 'Senate';
+                  category?: string;
+                }>) || [],
+            }}
           />
         );
 
       case 'legislation':
         return (
-          <BillsTab
-            bills={
-              (serverData?.bills as Array<{
-                id: string;
-                number: string;
-                title: string;
-                introducedDate: string;
-                status: string;
-                lastAction: string;
-                congress: number;
-                type: string;
-                policyArea: string;
-                url?: string;
-                committee?: string;
-                progress?: number;
-              }>) || []
-            }
+          <TabLoader
+            tabName="bills"
+            props={{
+              bills:
+                (serverData?.bills as Array<{
+                  id: string;
+                  number: string;
+                  title: string;
+                  introducedDate: string;
+                  status: string;
+                  lastAction: string;
+                  congress: number;
+                  type: string;
+                  policyArea: string;
+                  url?: string;
+                  committee?: string;
+                  progress?: number;
+                }>) || [],
+            }}
           />
         );
 
       case 'finance':
         return (
-          <FinanceTab
-            financeData={
-              (serverData?.finance as {
+          <TabLoader
+            tabName="finance"
+            props={{
+              financeData: (serverData?.finance as {
                 totalRaised: number;
                 totalSpent: number;
                 cashOnHand: number;
@@ -172,8 +152,8 @@ export function RepresentativeClient({
                 topContributors: [],
                 industryBreakdown: [],
                 spendingCategories: [],
-              }
-            }
+              },
+            }}
           />
         );
 

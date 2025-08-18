@@ -669,10 +669,25 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
     // Filter for current 119th Congress members only
     const currentLegislators = filterCurrent119thCongress(legislators);
 
+    // Debug chamber breakdown
+    const chamberBreakdown = currentLegislators.reduce(
+      (acc, leg) => {
+        const currentTerm = leg.terms[leg.terms.length - 1];
+        if (currentTerm) {
+          if (currentTerm.type === 'sen') acc.senators++;
+          else if (currentTerm.type === 'rep') acc.representatives++;
+          else acc.other++;
+        }
+        return acc;
+      },
+      { senators: 0, representatives: 0, other: 0 }
+    );
+
     logger.debug('Filtered to current 119th Congress members', {
       originalCount: legislators.length,
       currentCount: currentLegislators.length,
       filteredOut: legislators.length - currentLegislators.length,
+      breakdown: chamberBreakdown,
     });
 
     const enhanced: EnhancedRepresentative[] = currentLegislators
