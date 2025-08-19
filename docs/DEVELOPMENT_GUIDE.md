@@ -85,9 +85,12 @@ npm run test:e2e:ui  # Playwright with UI mode
 npm run process-census           # Process Census data
 npm run process-zip-districts    # Process ZIP to district mappings
 npm run process-real-census-districts # Process Census TIGER boundaries
+npm run process-district-boundaries # Generate boundary metadata (2023 redistricting)
 npm run validate-mappings        # Validate all data mappings
 npm run test-phase3-integration  # Test ZIP integration
 npm run test-district-accuracy   # Validate district boundaries
+npm run diagnose:apis           # Test API connectivity and error handling
+npm run validate:data           # Comprehensive data integrity validation
 ```
 
 ### Migration & Updates
@@ -383,6 +386,43 @@ npm test -- RepresentativeCard.test.tsx
 
 # Update snapshots
 npm test -- -u
+```
+
+### District Boundary Issues
+
+```bash
+# Validate district mappings after redistricting updates
+npm run validate:data
+npm run test-district-accuracy
+
+# Check specific district (e.g., MI-12)
+curl http://localhost:3000/api/districts/MI-12 | jq '.geography'
+
+# Verify Congress data version
+npm run diagnose:apis
+```
+
+### Census API Errors
+
+```bash
+# Test Census API connectivity
+npm run diagnose:apis
+
+# Check API key validity
+curl "https://api.census.gov/data/2022/acs/acs5?get=NAME&for=congressional%20district:*&in=state:26&key=$CENSUS_API_KEY"
+```
+
+### Representative Assignment Issues
+
+```bash
+# Verify 119th Congress data is current
+npm run validate:data
+
+# Check specific representative assignment
+curl http://localhost:3000/api/representative/D000355 | jq '.district'
+
+# Validate term dates
+grep -r "119th Congress" src/lib/helpers/congress-validation.ts
 ```
 
 ### API Rate Limiting

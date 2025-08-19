@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
+import { districtBoundaryService } from '@/lib/helpers/district-boundary-utils';
 
 // State names mapping for Census API
 const STATE_NAMES: Record<string, string> = {
@@ -307,10 +308,60 @@ async function getDistrictDemographics(
       key: apiKey,
     });
 
-    const response = await fetch(`${acsUrl}?${params}`);
+    const censusUrl = `${acsUrl}?${params}`;
+    logger.info('Making Census API request', {
+      url: censusUrl,
+      state,
+      district,
+      stateFips: getStateFipsCode(state),
+    });
+
+    const response = await fetch(censusUrl, {
+      signal: AbortSignal.timeout(30000), // 30 second timeout
+    });
+
+    logger.info('Census API response received', {
+      status: response.status,
+      statusText: response.statusText,
+      contentType: response.headers.get('content-type'),
+      state,
+      district,
+    });
 
     if (response.ok) {
-      const data = await response.json();
+      const responseText = await response.text();
+      logger.info('Census API raw response', {
+        responseText: responseText.substring(0, 500), // Log first 500 chars
+        responseLength: responseText.length,
+        state,
+        district,
+      });
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        // Check if this is the "Invalid Key" HTML page
+        if (responseText.includes('<title>Invalid Key</title>')) {
+          logger.error('Census API key is invalid', parseError as Error, {
+            apiKey: apiKey ? `${apiKey.substring(0, 8)}...` : 'undefined',
+            responseSnippet: responseText.substring(0, 200),
+            state,
+            district,
+          });
+          throw new Error(
+            'Census API key is invalid. Please get a valid API key from https://api.census.gov/data/key_signup.html'
+          );
+        }
+
+        logger.error('Failed to parse Census API JSON response', parseError as Error, {
+          responseText: responseText.substring(0, 1000),
+          state,
+          district,
+        });
+        throw new Error(`Census API returned invalid JSON: ${parseError}`);
+      }
+
       if (data.length > 1) {
         const [, values] = data;
 
@@ -459,16 +510,50 @@ async function getDistrictDemographics(
           //   otherLanguagePercent: totalLanguageUniverse > 0 ? (speakOtherLanguage / totalLanguageUniverse) * 100 : 0
           // }
         };
+      } else {
+        logger.warn('Census API returned no data', {
+          dataLength: data ? data.length : 0,
+          data: data,
+          state,
+          district,
+        });
       }
+    } else {
+      // Handle non-200 responses
+      const errorText = await response.text();
+      logger.error(
+        'Census API request failed',
+        new Error(`HTTP ${response.status}: ${response.statusText}`),
+        {
+          status: response.status,
+          statusText: response.statusText,
+          errorText: errorText.substring(0, 1000),
+          url: censusUrl,
+          state,
+          district,
+        }
+      );
+      throw new Error(`Census API request failed: ${response.status} ${response.statusText}`);
     }
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     logger.error('Error fetching Census demographics', error as Error, {
       state,
       district,
+      errorMessage,
     });
+
+    // If it's an API key error, include that in the response metadata
+    if (errorMessage.includes('invalid') || errorMessage.includes('Invalid Key')) {
+      logger.warn('Census API unavailable due to invalid key', {
+        state,
+        district,
+        suggestion: 'Get a valid Census API key from https://api.census.gov/data/key_signup.html',
+      });
+    }
   }
 
-  // VIOLATION: Previously returned fake demographic data - now returns unavailable indicators
+  // Return unavailable indicators when Census API fails
   return {
     population: 0,
     medianIncome: 0,
@@ -565,126 +650,217 @@ function getStateFipsCode(stateAbbr: string): string {
 }
 
 /**
- * Get geography information for a district
+ * Get geography information for a district using 2023+ redistricting data
  */
 async function getDistrictGeography(
   state: string,
   district: string
 ): Promise<DistrictDetails['geography']> {
-  // State-specific geography data
-  const stateGeography: Record<
-    string,
-    {
-      avgArea: number;
-      counties: string[];
-      cities: string[];
+  try {
+    // Try to get real boundary data first
+    await districtBoundaryService.initialize();
+    const stateFips = getStateFipsCode(state);
+    const districtId = `${stateFips}${district.padStart(2, '0')}`;
+    const boundaryData = districtBoundaryService.getDistrictById(districtId);
+
+    if (boundaryData) {
+      // Use real Census TIGER/Line boundary data from 2023 (119th Congress)
+      logger.info('Using real district boundary data', {
+        districtId,
+        state,
+        district,
+        area: boundaryData.area_sqm,
+        dataSource: 'Census TIGER/Line 2023',
+      });
+
+      // Get county and city data based on 2023+ redistricting
+      const { counties, cities } = getPost2023DistrictData(state, district);
+
+      return {
+        area: Math.round(boundaryData.area_sqm / 1000000), // Convert sq meters to sq km
+        counties,
+        majorCities: cities,
+      };
     }
-  > = {
-    CA: {
-      avgArea: 1800,
-      counties: [
-        'Los Angeles',
-        'Orange',
-        'San Diego',
-        'Riverside',
-        'San Bernardino',
-        'Alameda',
-        'Santa Clara',
-      ],
-      cities: [
-        'Los Angeles',
-        'San Diego',
-        'San Jose',
-        'San Francisco',
-        'Fresno',
-        'Sacramento',
-        'Long Beach',
-      ],
-    },
-    TX: {
-      avgArea: 2400,
-      counties: ['Harris', 'Dallas', 'Tarrant', 'Bexar', 'Travis', 'Collin', 'Fort Bend'],
-      cities: ['Houston', 'San Antonio', 'Dallas', 'Austin', 'Fort Worth', 'El Paso', 'Arlington'],
-    },
-    FL: {
-      avgArea: 1600,
-      counties: [
-        'Miami-Dade',
-        'Broward',
-        'Orange',
-        'Hillsborough',
-        'Palm Beach',
-        'Pinellas',
-        'Duval',
-      ],
-      cities: [
-        'Jacksonville',
-        'Miami',
-        'Tampa',
-        'Orlando',
-        'St. Petersburg',
-        'Hialeah',
-        'Tallahassee',
-      ],
-    },
-    NY: {
-      avgArea: 800,
-      counties: ['Kings', 'Queens', 'New York', 'Suffolk', 'Nassau', 'Bronx', 'Westchester'],
-      cities: [
-        'New York City',
-        'Buffalo',
-        'Rochester',
-        'Yonkers',
-        'Syracuse',
-        'Albany',
-        'New Rochelle',
-      ],
-    },
-    MI: {
-      avgArea: 1200,
-      counties: ['Wayne', 'Oakland', 'Macomb', 'Kent', 'Genesee', 'Washtenaw', 'Kalamazoo'],
-      cities: [
-        'Detroit',
-        'Grand Rapids',
-        'Warren',
-        'Sterling Heights',
-        'Lansing',
-        'Ann Arbor',
-        'Flint',
-      ],
-    },
-  };
+  } catch (error) {
+    logger.warn('Failed to load real boundary data, using fallback', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      state,
+      district,
+    });
+  }
 
-  const defaultGeography = {
-    avgArea: 1500,
-    counties: [`${STATE_NAMES[state]} County`, `${state} County`],
-    cities: [`${STATE_NAMES[state]} City`, `Capital City`],
-  };
-
-  const geo = stateGeography[state] || defaultGeography;
-  const districtNum = parseInt(district) || 1;
-
-  // Select geography based on district number for consistency
-  const selectedCounties = geo.counties.slice((districtNum - 1) % 3, ((districtNum - 1) % 3) + 2);
-  const selectedCities = geo.cities.slice((districtNum - 1) % 3, ((districtNum - 1) % 3) + 2);
-
+  // Fallback to basic geographic data if boundary service fails
+  const { counties, cities } = getPost2023DistrictData(state, district);
   return {
-    area: Math.floor(geo.avgArea * (0.5 + ((districtNum * 0.1) % 1))),
-    counties: selectedCounties.length > 0 ? selectedCounties : [`${STATE_NAMES[state]} County`],
-    majorCities: selectedCities.length > 0 ? selectedCities : [`${STATE_NAMES[state]} City`],
+    area: 1500, // Default area
+    counties,
+    majorCities: cities,
   };
 }
 
+/**
+ * Get district county and city data based on 2023+ redistricting
+ * This reflects actual post-redistricting boundaries, especially for Michigan
+ */
+function getPost2023DistrictData(
+  state: string,
+  district: string
+): { counties: string[]; cities: string[] } {
+  const districtNum = parseInt(district) || 1;
+
+  // Michigan post-2023 redistricting (accurate county assignments)
+  if (state === 'MI') {
+    const michiganDistricts: Record<number, { counties: string[]; cities: string[] }> = {
+      1: { counties: ['Marquette', 'Alger', 'Schoolcraft'], cities: ['Marquette', 'Escanaba'] },
+      2: { counties: ['Muskegon', 'Oceana', 'Newaygo'], cities: ['Muskegon', 'Holland'] },
+      3: { counties: ['Kent', 'Ionia', 'Barry'], cities: ['Grand Rapids', 'Ionia'] },
+      4: {
+        counties: ['Kalamazoo', 'Calhoun', 'St. Joseph'],
+        cities: ['Kalamazoo', 'Battle Creek'],
+      },
+      5: { counties: ['Berrien', 'Cass', 'Van Buren'], cities: ['Benton Harbor', 'Niles'] },
+      6: { counties: ['Jackson', 'Hillsdale', 'Lenawee'], cities: ['Jackson', 'Adrian'] },
+      7: { counties: ['Livingston', 'Shiawassee', 'Ingham'], cities: ['Brighton', 'Howell'] },
+      8: { counties: ['Ingham', 'Eaton', 'Clinton'], cities: ['Lansing', 'East Lansing'] },
+      9: { counties: ['Saginaw', 'Bay', 'Midland'], cities: ['Saginaw', 'Bay City'] },
+      10: { counties: ['Macomb'], cities: ['Sterling Heights', 'Warren'] },
+      11: { counties: ['Oakland'], cities: ['Troy', 'Rochester Hills'] },
+      12: { counties: ['Wayne', 'Washtenaw'], cities: ['Ann Arbor', 'Ypsilanti'] }, // SE Michigan
+      13: { counties: ['Wayne'], cities: ['Detroit', 'Dearborn'] }, // Detroit proper
+    };
+
+    const districtData = michiganDistricts[districtNum];
+    if (districtData) {
+      return districtData;
+    }
+  }
+
+  // Fallback for other states - use general state data
+  const stateDefaults: Record<string, { counties: string[]; cities: string[] }> = {
+    CA: {
+      counties: ['Los Angeles', 'Orange', 'San Diego'],
+      cities: ['Los Angeles', 'San Diego', 'San Francisco'],
+    },
+    TX: {
+      counties: ['Harris', 'Dallas', 'Bexar'],
+      cities: ['Houston', 'Dallas', 'San Antonio'],
+    },
+    FL: {
+      counties: ['Miami-Dade', 'Orange', 'Hillsborough'],
+      cities: ['Miami', 'Orlando', 'Tampa'],
+    },
+    NY: {
+      counties: ['New York', 'Kings', 'Queens'],
+      cities: ['New York City', 'Buffalo', 'Rochester'],
+    },
+  };
+
+  const defaultData = stateDefaults[state] || {
+    counties: [`${STATE_NAMES[state]} County`],
+    cities: [`${STATE_NAMES[state]} City`],
+  };
+
+  return defaultData;
+}
+
+// State name to code mapping - placed at module level for reuse
+const STATE_NAME_TO_CODE: Record<string, string> = {
+  alabama: 'AL',
+  alaska: 'AK',
+  arizona: 'AZ',
+  arkansas: 'AR',
+  california: 'CA',
+  colorado: 'CO',
+  connecticut: 'CT',
+  delaware: 'DE',
+  'district-of-columbia': 'DC',
+  florida: 'FL',
+  georgia: 'GA',
+  hawaii: 'HI',
+  idaho: 'ID',
+  illinois: 'IL',
+  indiana: 'IN',
+  iowa: 'IA',
+  kansas: 'KS',
+  kentucky: 'KY',
+  louisiana: 'LA',
+  maine: 'ME',
+  maryland: 'MD',
+  massachusetts: 'MA',
+  michigan: 'MI',
+  minnesota: 'MN',
+  mississippi: 'MS',
+  missouri: 'MO',
+  montana: 'MT',
+  nebraska: 'NE',
+  nevada: 'NV',
+  'new-hampshire': 'NH',
+  'new-jersey': 'NJ',
+  'new-mexico': 'NM',
+  'new-york': 'NY',
+  'north-carolina': 'NC',
+  'north-dakota': 'ND',
+  ohio: 'OH',
+  oklahoma: 'OK',
+  oregon: 'OR',
+  pennsylvania: 'PA',
+  'rhode-island': 'RI',
+  'south-carolina': 'SC',
+  'south-dakota': 'SD',
+  tennessee: 'TN',
+  texas: 'TX',
+  utah: 'UT',
+  vermont: 'VT',
+  virginia: 'VA',
+  washington: 'WA',
+  'west-virginia': 'WV',
+  wisconsin: 'WI',
+  wyoming: 'WY',
+  // Add territories
+  'puerto-rico': 'PR',
+  'virgin-islands': 'VI',
+  guam: 'GU',
+  'american-samoa': 'AS',
+  'northern-mariana-islands': 'MP',
+};
+
 async function getDistrictDetails(districtId: string): Promise<DistrictDetails | null> {
   try {
-    // Parse district ID (format: state-number or state-district)
-    const [state, district] = districtId.toUpperCase().split('-');
+    // Parse district ID (format: State-Name-Number, e.g., "Alabama-06", "California-12")
+    const parts = districtId.split('-');
 
-    if (!state || !district) {
+    if (parts.length < 2) {
       throw new Error('Invalid district ID format');
     }
 
-    logger.info('Fetching district details', { districtId, state, district });
+    // Handle multi-word state names (e.g., "North-Carolina-04" -> ["North", "Carolina", "04"])
+    const district = parts[parts.length - 1]; // Last part is always the district number
+    const stateParts = parts.slice(0, -1); // All parts except the last are state name
+    const stateNameFromUrl = stateParts.join('-').toLowerCase();
+
+    // Convert state name to state code
+    const stateCode = STATE_NAME_TO_CODE[stateNameFromUrl];
+
+    if (!stateCode) {
+      logger.error('Invalid state name in district ID', {
+        districtId,
+        stateNameFromUrl,
+        availableStates: Object.keys(STATE_NAME_TO_CODE).slice(0, 5), // Log first 5 for debugging
+      });
+      throw new Error(`Invalid state name: ${stateNameFromUrl}`);
+    }
+
+    // Normalize district number (remove leading zeros for comparison, but preserve format)
+    const normalizedDistrict = district?.replace(/^0+/, '') || '0';
+
+    logger.info('Parsing district details', {
+      districtId,
+      stateNameFromUrl,
+      stateCode,
+      district,
+      normalizedDistrict,
+    });
 
     const representatives = await getAllEnhancedRepresentatives();
 
@@ -693,11 +869,49 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
     }
 
     // Find the representative for this district
-    const representative = representatives.find(
-      rep => rep.chamber === 'House' && rep.state === state && rep.district === district
-    );
+    const representative = representatives.find(rep => {
+      const repState = rep.state;
+      const repDistrict = rep.district;
+      const repDistrictNormalized = repDistrict ? repDistrict.replace(/^0+/, '') || '0' : '0';
+
+      const matches =
+        rep.chamber === 'House' &&
+        repState === stateCode &&
+        (repDistrictNormalized === normalizedDistrict ||
+          repDistrict === district ||
+          (normalizedDistrict === '0' && (repDistrict === 'At Large' || repDistrict === '01')));
+
+      if (repState === stateCode) {
+        logger.info('Found representative in state', {
+          repName: rep.name,
+          repState,
+          repDistrict,
+          repDistrictNormalized,
+          targetDistrict: district,
+          targetNormalized: normalizedDistrict,
+          matches,
+        });
+      }
+
+      return matches;
+    });
 
     if (!representative) {
+      // Enhanced error logging to help debug the mismatch
+      const stateReps = representatives.filter(
+        rep => rep.state === stateCode && rep.chamber === 'House'
+      );
+      logger.error('Representative not found', {
+        districtId,
+        stateCode,
+        district,
+        normalizedDistrict,
+        availableDistricts: stateReps.map(rep => ({
+          name: rep.name,
+          district: rep.district,
+          normalized: rep.district ? rep.district.replace(/^0+/, '') || '0' : '0',
+        })),
+      });
       return null;
     }
 
@@ -770,8 +984,14 @@ export async function GET(
       district,
       metadata: {
         timestamp: new Date().toISOString(),
-        dataSource: 'congress-legislators + census-api',
+        dataSource: 'congress-legislators + census-api + census-tiger-2023',
         note: 'Political data unavailable. Demographic data from Census API when available, otherwise marked as unavailable.',
+        districtBoundaries: {
+          congress: '119th Congress (2023-2025)',
+          redistrictingYear: '2023',
+          source: 'Census TIGER/Line 2023',
+          note: 'Geographic data reflects post-2023 redistricting boundaries',
+        },
       },
     });
   } catch (error) {

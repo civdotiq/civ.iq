@@ -405,11 +405,11 @@ Get detailed information about a congressional committee.
 
 #### GET /api/districts/[districtId]
 
-Get information about a congressional district.
+Get comprehensive information about a congressional district, including 2023+ redistricting data.
 
 **Parameters:**
 
-- `districtId`: District identifier (e.g., "CA-12")
+- `districtId`: District identifier (e.g., "CA-12", "MI-12")
 
 **Response:**
 
@@ -418,37 +418,108 @@ Get information about a congressional district.
   "districtId": "string",
   "state": "string",
   "number": "string",
-  "representative": {...},
-  "population": "number",
+  "representative": {
+    "bioguideId": "string",
+    "name": "string",
+    "party": "string",
+    "chamber": "house",
+    "imageUrl": "string"
+  },
   "demographics": {
+    "population": "number",
     "medianAge": "number",
     "medianIncome": "number",
-    "ethnicBreakdown": {...},
-    "educationLevels": {...},
-    "employmentRate": "number"
+    "raceEthnicity": {
+      "white": "number",
+      "black": "number",
+      "hispanic": "number",
+      "asian": "number",
+      "nativeAmerican": "number",
+      "pacificIslander": "number",
+      "other": "number",
+      "multiracial": "number"
+    },
+    "education": {
+      "lessThanHighSchool": "number",
+      "highSchool": "number",
+      "someCollege": "number",
+      "bachelors": "number",
+      "graduate": "number"
+    },
+    "employment": {
+      "employmentRate": "number",
+      "unemploymentRate": "number",
+      "laborForceParticipation": "number"
+    }
   },
   "geography": {
-    "area": "number",
     "counties": ["string"],
     "majorCities": ["string"],
-    "boundaries": "GeoJSON"
+    "area": "number",
+    "centroid": [lat, lng],
+    "bounds": [[minLat, minLng], [maxLat, maxLng]],
+    "dataVersion": "119th Congress (2023-2025)",
+    "source": "Census TIGER/Line 2023"
   },
-  "votingHistory": [
-    {
-      "election": "string",
-      "democraticVotes": "number",
-      "republicanVotes": "number",
-      "totalVotes": "number",
-      "turnout": "number"
+  "metadata": {
+    "lastUpdated": "string",
+    "dataSource": "Congress.gov + Census Bureau",
+    "boundaryVersion": "2023 Redistricting"
+  }
+}
+```
+
+**Notes:**
+
+- Geography data reflects 2023 congressional redistricting
+- Boundary data sourced from Census TIGER/Line 2023 files
+- Demographics include enhanced Census API integration with error handling
+- All coordinates in WGS84 (EPSG:4326) format
+
+#### GET /api/district-boundaries/metadata
+
+Get comprehensive metadata about all congressional district boundaries.
+
+**Response:**
+
+```json
+{
+  "districts": {
+    "AL-01": {
+      "id": "AL-01",
+      "state_fips": "01",
+      "state_name": "Alabama",
+      "state_abbr": "AL",
+      "district_num": "01",
+      "name": "AL-01",
+      "full_name": "Alabama 1st Congressional District",
+      "centroid": [lng, lat],
+      "bbox": [minLng, minLat, maxLng, maxLat],
+      "area_sqm": "number",
+      "geoid": "string"
     }
-  ],
-  "competitiveness": "safe|likely|lean|tossup"
+  },
+  "states": {
+    "01": {
+      "fips": "01",
+      "name": "Alabama",
+      "abbr": "AL",
+      "district_count": "number",
+      "districts": ["AL-01", "AL-02", ...]
+    }
+  },
+  "summary": {
+    "total_districts": "number",
+    "states_with_districts": "number",
+    "last_updated": "string",
+    "source": "Census TIGER/Line 2023"
+  }
 }
 ```
 
 #### GET /api/district-map
 
-Get interactive map data for districts.
+Get interactive map data for districts with PMTiles support.
 
 **Query Parameters:**
 
@@ -480,7 +551,8 @@ Get interactive map data for districts.
     "lat": "number",
     "lng": "number"
   },
-  "zoom": "number"
+  "zoom": "number",
+  "pmtilesUrl": "/maps/congressional_districts_119.pmtiles"
 }
 ```
 
@@ -656,12 +728,13 @@ Common error codes:
 
 All data comes from official government sources:
 
-- **Congress.gov** - Legislation, votes, members
+- **Congress.gov** - Legislation, votes, members (119th Congress)
 - **FEC.gov** - Campaign finance data
-- **Census.gov** - Demographics, district boundaries
+- **Census.gov** - Demographics, 2023+ district boundaries (TIGER/Line)
 - **Senate.gov** - Senate roll call votes
 - **GDELT** - News aggregation
 - **congress-legislators** - Enhanced member data
+- **Wikidata** - Biographical information via SPARQL
 
 ## Notes
 

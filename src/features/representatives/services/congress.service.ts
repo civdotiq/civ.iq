@@ -20,7 +20,7 @@ import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import yaml from 'js-yaml';
 import type { EnhancedRepresentative } from '@/types/representative';
-import { filterCurrent119thCongress } from '@/lib/helpers/congress-validation';
+import { filterCurrent119thCongress, is119thCongressTerm } from '@/lib/helpers/congress-validation';
 import { getFileCache } from '@/lib/cache/file-cache';
 
 // Base URLs for congress-legislators data
@@ -553,8 +553,10 @@ export async function getEnhancedRepresentative(
         })
         .filter(c => c.name) || [];
 
-    // Get current term (most recent)
-    const currentTerm = legislator.terms[legislator.terms.length - 1];
+    // Get current term for 119th Congress (post-2023 redistricting)
+    const currentTerm =
+      legislator.terms.find(term => is119thCongressTerm(term)) ||
+      legislator.terms[legislator.terms.length - 1];
 
     // Ensure we have a current term before proceeding
     if (!currentTerm) {
@@ -694,7 +696,9 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
       .map(legislator => {
         const bioguideId = legislator.id.bioguide;
         const social = socialMedia.find(s => s.bioguide === bioguideId);
-        const currentTerm = legislator.terms[legislator.terms.length - 1];
+        const currentTerm =
+          legislator.terms.find(term => is119thCongressTerm(term)) ||
+          legislator.terms[legislator.terms.length - 1];
 
         // Skip legislators without a current term
         if (!currentTerm) {
