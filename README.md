@@ -560,6 +560,9 @@ GET /api/committee/{committeeId}/timeline       # Unified activity timeline
 
 ### Live Data Sources & APIs
 
+- **ZIP to District Mapping**: Official 2023 post-redistricting data from OpenSourceActivismTech/us-zipcodes-congress
+  - 33,774 ZIP codes with 119th Congress boundaries (updated 2025-08-19)
+  - Handles 7,299 multi-district ZIPs with primary designation
 - **Congress-Legislators YAML**: Comprehensive legislator data with social media, IDs, and enhanced profiles
 - **Congress.gov API**: Real-time legislative data, member info, bills, votes
 - **FEC.gov API**: Live campaign finance data, contributions, expenditures

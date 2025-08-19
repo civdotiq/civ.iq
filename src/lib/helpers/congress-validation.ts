@@ -52,21 +52,16 @@ export function filterCurrent119thCongress<T extends CongressLegislator | Enhanc
 }
 
 /**
- * Check if a term is for the 119th Congress
+ * Check if a term is for the 119th Congress (2023-2025)
  */
 export function is119thCongressTerm(term: CongressLegislatorTerm): boolean {
   const termStart = new Date(term.start);
-  const termEnd = term.end ? new Date(term.end) : null;
   const congress119Start = new Date('2023-01-03');
   const congress119End = new Date('2025-01-03');
 
-  // Term is in 119th Congress if:
-  // 1. Started on or after Jan 3, 2023, OR
-  // 2. Started before but hasn't ended yet (or ends after Jan 3, 2023)
-  return (
-    (termStart >= congress119Start || !termEnd || termEnd >= congress119Start) &&
-    termStart < congress119End
-  );
+  // Term is in 119th Congress if it starts exactly on or after Jan 3, 2023
+  // and starts before Jan 3, 2025 (start of 120th Congress)
+  return termStart >= congress119Start && termStart < congress119End;
 }
 
 /**
