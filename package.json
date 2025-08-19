@@ -38,7 +38,12 @@
     "security:full": "npm run security:audit",
     "preinstall": "npx audit-ci --moderate",
     "security:emergency": "npm audit fix --force",
-    "prepare": "husky"
+    "prepare": "husky",
+    "flatten": "node flatten-codebase.js",
+    "flatten:src": "node flatten-codebase.js -i src -o .bmad-core/flattened-src.xml",
+    "debug:rep-api": "node debug-rep-api.js",
+    "verify:rendering": "node verify-rendering.js",
+    "emergency:diagnose": "node emergency-diagnose.js"
   },
   "dependencies": {
     "@redis/client": "^5.5.6",
@@ -63,7 +68,7 @@
     "leaflet": "^1.9.4",
     "limiter": "3.0.0",
     "lucide-react": "^0.525.0",
-    "next": "15.4.5",
+    "next": "14.2.32",
     "qrcode": "1.5.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
