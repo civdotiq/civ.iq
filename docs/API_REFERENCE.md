@@ -101,13 +101,17 @@ Get detailed information about a specific representative.
 
 #### GET /api/representative/[bioguideId]/votes
 
-Get voting records for a representative (House and Senate).
+Get voting records for a representative (House and Senate). **Updated 2025-08-25**: Enhanced Senate XML parsing with improved member matching.
 
 **Parameters:**
 
 - `bioguideId`: Congress bioguide identifier
-- `limit` (optional): Number of records to return (default: 50)
-- `offset` (optional): Pagination offset
+- `limit` (optional): Number of records to return (default: 20, max: 50)
+
+**Data Sources:**
+
+- **House**: Congress.gov API
+- **Senate**: Official Senate XML feeds (https://senate.gov/legislative/LIS/)
 
 **Response:**
 
@@ -116,32 +120,59 @@ Get voting records for a representative (House and Senate).
   "votes": [
     {
       "voteId": "string",
-      "chamber": "house|senate",
-      "date": "string",
-      "billNumber": "string",
-      "billTitle": "string",
+      "bill": {
+        "number": "string",
+        "title": "string",
+        "congress": "string",
+        "type": "string",
+        "url": "string"
+      },
       "question": "string",
+      "result": "string",
+      "date": "string",
       "position": "Yea|Nay|Present|Not Voting",
-      "result": "Passed|Failed",
-      "voteType": "string",
-      "requiredMajority": "string",
-      "democratsYea": "number",
-      "democratsNay": "number",
-      "republicansYea": "number",
-      "republicansNay": "number"
+      "chamber": "House|Senate",
+      "rollNumber": "number",
+      "description": "string",
+      "category": "Budget|Healthcare|Defense|Judiciary|Foreign Affairs|Other",
+      "isKeyVote": "boolean",
+      "metadata": {
+        "source": "house-congress-api|senate-xml-feed",
+        "confidence": "high|medium|low",
+        "processingDate": "string"
+      }
     }
   ],
-  "totalVotes": "number",
-  "votingSummary": {
-    "yea": "number",
-    "nay": "number",
-    "present": "number",
-    "notVoting": "number",
-    "partyLineVotes": "number",
-    "bipartisanVotes": "number"
+  "totalResults": "number",
+  "member": {
+    "bioguideId": "string",
+    "name": "string",
+    "chamber": "string"
+  },
+  "dataSource": "string",
+  "success": "boolean",
+  "metadata": {
+    "timestamp": "string",
+    "phase": "string",
+    "crashProof": "boolean"
   }
 }
 ```
+
+**Senate XML Parsing Features:**
+
+- Real-time parsing of official Senate roll call votes
+- Bioguide ID to LIS member ID mapping
+- Enhanced name matching (handles "Bernie" ↔ "Bernard" variations)
+- State-based validation for accuracy
+- Comprehensive logging for debugging
+- Supports all 100 current senators
+
+**Error Handling:**
+
+- Returns empty array with descriptive error message if member not found
+- Graceful degradation if XML feeds are unavailable
+- Detailed logging for troubleshooting parsing issues
 
 ### Bills & Legislation
 
