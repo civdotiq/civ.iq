@@ -75,11 +75,26 @@ interface VoteDetailPageProps {
   params: Promise<{ voteId: string }>;
 }
 
+// Extract numeric vote ID from various formats
+function extractNumericVoteId(voteId: string): string {
+  // If it's already numeric, return as-is
+  if (/^\d+$/.test(voteId)) {
+    return voteId;
+  }
+
+  // Extract from formats like "119-senate-00499" or "00499"
+  const match = voteId.match(/(\d+)$/);
+  return match?.[1] || voteId;
+}
+
 // Fetch vote details from our API
 async function fetchVoteDetails(voteId: string): Promise<VoteDetail | null> {
   try {
+    // Extract numeric vote ID for API call
+    const numericVoteId = extractNumericVoteId(voteId);
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/vote/${voteId}`,
+      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/vote/${numericVoteId}`,
       {
         cache: 'force-cache', // Cache the response since vote data doesn't change
       }
@@ -87,7 +102,8 @@ async function fetchVoteDetails(voteId: string): Promise<VoteDetail | null> {
 
     if (!response.ok) {
       logger.error('Failed to fetch vote details', new Error(`HTTP ${response.status}`), {
-        voteId,
+        voteId: numericVoteId,
+        originalVoteId: voteId,
       });
       return null;
     }
