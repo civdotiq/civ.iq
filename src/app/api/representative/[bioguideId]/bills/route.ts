@@ -23,8 +23,9 @@ export async function GET(
       return NextResponse.json({ error: 'Congress.gov API key required' }, { status: 500 });
     }
 
-    // SIMPLIFIED DATA FETCHING: Only fetch 119th Congress data (current congress)
-    const currentCongress = 119; // Only fetch current congress data
+    // ENHANCED DATA FETCHING: Fetch last 3 congresses for better data coverage
+    const currentCongress = 119;
+    const congressesToFetch = [119, 118, 117]; // Current + last 2 congresses
 
     // Check cache first
     const cacheKey = `bills:${bioguideId}:${currentCongress}`;
@@ -58,64 +59,71 @@ export async function GET(
     // eslint-disable-next-line no-console
     console.log('Congress to fetch:', currentCongress);
 
-    // SIMPLIFIED: Single API call instead of multiple congress loop
-    const url = `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?api_key=${process.env.CONGRESS_API_KEY}&limit=100&congress=${currentCongress}`;
-    // eslint-disable-next-line no-console
-    console.log('Congress API URL:', url.replace(/api_key=[^&]+/, 'api_key=***'));
+    // ENHANCED: Fetch multiple congresses for better data coverage
+    const allBills: unknown[] = [];
 
-    const response = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
-      },
-    });
+    for (const congress of congressesToFetch) {
+      let offset = 0;
+      const maxLimit = 250; // Congress.gov maximum
+      let hasMoreBills = true;
 
-    // Debug response details
-    // eslint-disable-next-line no-console
-    console.log('Response Status:', response.status, response.statusText);
-    // eslint-disable-next-line no-console
-    console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
+      // Paginate through ALL bills for this congress
+      while (hasMoreBills) {
+        const url = `https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation?api_key=${process.env.CONGRESS_API_KEY}&limit=${maxLimit}&offset=${offset}&congress=${congress}`;
+        // eslint-disable-next-line no-console
+        console.log(
+          `Congress ${congress} (offset ${offset}):`,
+          url.replace(/api_key=[^&]+/, 'api_key=***')
+        );
 
-    // Check if request failed
-    if (!response.ok) {
-      // eslint-disable-next-line no-console
-      console.log('Failed response details:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-      });
+        try {
+          const response = await fetch(url, {
+            headers: {
+              Accept: 'application/json',
+              'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
+            },
+          });
 
-      logger.error(
-        'Congress.gov sponsored legislation API failed',
-        new Error(`HTTP ${response.status}`),
-        {
-          bioguideId,
-          status: response.status,
-          congress: currentCongress,
+          // Debug response details
+          // eslint-disable-next-line no-console
+          console.log('Response Status:', response.status, response.statusText);
+
+          if (response.ok) {
+            const billsData = await response.json();
+            const congressBills = billsData.sponsoredLegislation || [];
+            allBills.push(...congressBills);
+
+            // eslint-disable-next-line no-console
+            console.log(`Congress ${congress} (offset ${offset}) bills:`, congressBills.length);
+
+            // Check if we've reached the end
+            if (congressBills.length < maxLimit) {
+              hasMoreBills = false;
+            } else {
+              offset += maxLimit;
+            }
+          } else {
+            // eslint-disable-next-line no-console
+            console.log(
+              `Failed to fetch Congress ${congress} (offset ${offset}):`,
+              response.status
+            );
+            hasMoreBills = false;
+          }
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.log(`Error fetching Congress ${congress} (offset ${offset}):`, error);
+          hasMoreBills = false;
         }
-      );
-      return NextResponse.json({ error: 'Failed to fetch from Congress.gov' }, { status: 500 });
+      }
     }
 
-    // Process single response
-    const billsData = await response.json();
-
-    // Debug raw response data
-    // eslint-disable-next-line no-console
-    console.log('Raw response data:', {
-      congress: currentCongress,
-      hasSponsored: !!billsData.sponsoredLegislation,
-      sponsoredCount: billsData.sponsoredLegislation?.length || 0,
-      dataKeys: Object.keys(billsData),
-      firstBill: billsData.sponsoredLegislation?.[0] || 'none',
-    });
-
-    const bills = billsData.sponsoredLegislation || [];
+    const bills = allBills;
 
     // eslint-disable-next-line no-console
     console.log('Final processing results:', {
-      congress: currentCongress,
-      billCount: bills.length,
+      totalBills: bills.length,
+      congressesFetched: congressesToFetch,
     });
 
     logger.info('Successfully fetched sponsored legislation from Congress.gov', {
@@ -124,11 +132,45 @@ export async function GET(
       billCount: bills.length,
     });
 
+    // DIAGNOSTIC: Check raw data quality before transformation
+    const rawDataDiagnostics = bills.slice(0, 3).map((bill: unknown) => {
+      const billData = bill as Record<string, unknown>;
+      return {
+        congress: billData.congress,
+        type: billData.type,
+        number: billData.number,
+        title: billData.title,
+        hasType: !!billData.type,
+        hasNumber: !!billData.number,
+        hasCongress: !!billData.congress,
+        rawKeys: Object.keys(billData),
+      };
+    });
+
+    logger.info('Raw Congress.gov bill data sample', {
+      bioguideId,
+      totalBills: bills.length,
+      sampleData: rawDataDiagnostics,
+    });
+
     // Transform bills to include required fields for frontend
     const transformedBills = bills.map((bill: unknown) => {
       const billData = bill as Record<string, unknown>;
       const latestAction = billData.latestAction as Record<string, unknown> | undefined;
       const policyArea = billData.policyArea as Record<string, unknown> | undefined;
+
+      // DIAGNOSTIC: Track incomplete data during transformation
+      const hasRequiredFields = !!(billData.type && billData.number && billData.congress);
+      if (!hasRequiredFields) {
+        logger.warn('Bill missing required fields during transformation', {
+          bioguideId,
+          billId: billData.id || 'unknown',
+          congress: billData.congress,
+          type: billData.type,
+          number: billData.number,
+          title: billData.title,
+        });
+      }
 
       return {
         id: `${billData.congress}-${billData.type}-${billData.number}`,
