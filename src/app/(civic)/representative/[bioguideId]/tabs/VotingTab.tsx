@@ -5,28 +5,13 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
-import { ChevronDown, Filter, ExternalLink } from 'lucide-react';
-import {
-  DataSourceBadge,
-  DataTransparencyPanel,
-  type DataMetadata,
-} from '@/components/ui/DataTransparency';
+import React from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Vote {
   id: string;
+  voteId?: string; // Senate vote ID for detailed page navigation
+  rollNumber?: number; // Alternative vote identifier
   date: string;
   bill?: {
     number: string;
@@ -43,318 +28,212 @@ interface Vote {
 
 interface VotingTabProps {
   votes: Vote[];
-  metadata?: DataMetadata;
+  metadata?: unknown;
   loading?: boolean;
 }
 
-const COLORS = {
-  Yea: '#22c55e', // Green
-  Nay: '#ef4444', // Red
-  Present: '#f59e0b', // Amber
-  'Not Voting': '#6b7280', // Gray
-};
+export function VotingTab({ votes = [] }: VotingTabProps) {
+  const router = useRouter();
 
-const _PARTY_COLORS = {
-  'With Party': '#3b82f6', // Blue
-  'Against Party': '#ef4444', // Red
-  Independent: '#6b7280', // Gray
-};
+  // Calculate voting statistics
+  const yesVotes = votes.filter(vote => vote.position === 'Yea').length;
+  const nayVotes = votes.filter(vote => vote.position === 'Nay').length;
+  const presentVotes = votes.filter(vote => vote.position === 'Present').length;
+  const notVotingVotes = votes.filter(vote => vote.position === 'Not Voting').length;
+  const totalVotes = votes.length;
+  const keyVotes = votes.filter(vote => vote.category === 'key').length;
 
-export function VotingTab({ votes, metadata, loading }: VotingTabProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [showAllVotes, setShowAllVotes] = useState(false);
-
-  // Process voting data for charts
-  const votingStats = useMemo(() => {
-    if (!votes?.length) return null;
-
-    const stats = votes.reduce(
-      (acc, vote) => {
-        acc[vote.position] = (acc[vote.position] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
-
-    return Object.entries(stats).map(([position, count]) => ({
-      name: position,
-      value: count,
-      percentage: Math.round((count / votes.length) * 100),
-    }));
-  }, [votes]);
-
-  // Mock party alignment data (would come from API in real implementation)
-  const partyAlignment = useMemo(() => {
-    if (!votes?.length) return null;
-
-    // This would typically be calculated based on party voting patterns
-    return [
-      { name: 'With Party', value: 85, count: Math.floor(votes.length * 0.85) },
-      { name: 'Against Party', value: 12, count: Math.floor(votes.length * 0.12) },
-      { name: 'Independent', value: 3, count: Math.floor(votes.length * 0.03) },
-    ];
-  }, [votes]);
-
-  // Filter votes by category
-  const filteredVotes = useMemo(() => {
-    if (!votes?.length) return [];
-    if (selectedCategory === 'all') return votes;
-    return votes.filter(vote => vote.category === selectedCategory);
-  }, [votes, selectedCategory]);
-
-  // Get unique categories
-  const categories = useMemo(() => {
-    if (!votes?.length) return [];
-    const cats = votes.map(vote => vote.category).filter(Boolean);
-    return ['all', ...Array.from(new Set(cats))];
-  }, [votes]);
-
-  // Display limited votes initially
-  const displayedVotes = showAllVotes ? filteredVotes : filteredVotes.slice(0, 10);
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+  // Extract vote ID from vote data for detailed page navigation
+  const extractVoteId = (vote: Vote): string | null => {
+    // For Senate votes, extract vote ID from the voteId field or from the id field
+    if (vote.chamber === 'Senate') {
+      if (vote.voteId) return vote.voteId;
+      if (vote.rollNumber) return vote.rollNumber.toString();
+      // Try to extract from vote.id format like "119-senate-00123"
+      const match = vote.id.match(/(\d+)$/);
+      return match?.[1] || null;
+    }
+    return null;
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="h-64 bg-gray-200 rounded"></div>
-            <div className="h-64 bg-gray-200 rounded"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!votes?.length) {
-    return (
-      <div className="space-y-6">
-        {/* Data Source Attribution */}
-        {metadata && (
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Voting Records</h3>
-            <DataTransparencyPanel metadata={metadata} layout="horizontal" showAll={false} />
-          </div>
-        )}
-
-        <div className="text-center py-12">
-          <div className="text-gray-500 mb-2">No voting data available</div>
-          <div className="text-sm text-gray-400">
-            Voting records will appear here when available from official sources
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Handle vote row click
+  const handleVoteClick = (vote: Vote) => {
+    const voteId = extractVoteId(vote);
+    if (voteId && vote.chamber === 'Senate') {
+      router.push(`/vote/${voteId}`);
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header with Data Source */}
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">Voting Records</h3>
-        {metadata && (
-          <DataTransparencyPanel metadata={metadata} layout="horizontal" showAll={false} />
+    <>
+      <h2 className="text-lg font-semibold mb-4">Interactive Voting Analysis</h2>
+
+      {/* Metrics */}
+      <div className="grid grid-cols-5 gap-4 mb-8">
+        <div className="text-center">
+          <div className="text-3xl font-bold">{totalVotes}</div>
+          <div className="text-sm text-gray-500">Total Votes</div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl font-bold text-green-600">{yesVotes}</div>
+          <div className="text-sm text-gray-500">Yes</div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl font-bold text-red-600">{nayVotes}</div>
+          <div className="text-sm text-gray-500">Nay</div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl font-bold">{presentVotes}</div>
+          <div className="text-sm text-gray-500">Present</div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl font-bold">{keyVotes}</div>
+          <div className="text-sm text-gray-500">Key Votes</div>
+        </div>
+      </div>
+
+      {/* Position Bars */}
+      <h3 className="font-medium mb-3">Position Distribution</h3>
+      <div className="space-y-2 mb-8">
+        <div className="flex items-center gap-3">
+          <span className="w-20 text-sm">Yes</span>
+          <div className="flex-1 bg-gray-200 rounded h-6">
+            <div
+              className="bg-green-500 h-6 rounded"
+              style={{
+                width: totalVotes > 0 ? `${(yesVotes / totalVotes) * 100}%` : '0%',
+              }}
+            ></div>
+          </div>
+          <span className="text-sm">
+            {totalVotes > 0 ? Math.round((yesVotes / totalVotes) * 100) : 0}%
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="w-20 text-sm">Nay</span>
+          <div className="flex-1 bg-gray-200 rounded h-6">
+            <div
+              className="bg-red-500 h-6 rounded"
+              style={{
+                width: totalVotes > 0 ? `${(nayVotes / totalVotes) * 100}%` : '0%',
+              }}
+            ></div>
+          </div>
+          <span className="text-sm">
+            {totalVotes > 0 ? Math.round((nayVotes / totalVotes) * 100) : 0}%
+          </span>
+        </div>
+        {presentVotes > 0 && (
+          <div className="flex items-center gap-3">
+            <span className="w-20 text-sm">Present</span>
+            <div className="flex-1 bg-gray-200 rounded h-6">
+              <div
+                className="bg-yellow-500 h-6 rounded"
+                style={{
+                  width: totalVotes > 0 ? `${(presentVotes / totalVotes) * 100}%` : '0%',
+                }}
+              ></div>
+            </div>
+            <span className="text-sm">
+              {totalVotes > 0 ? Math.round((presentVotes / totalVotes) * 100) : 0}%
+            </span>
+          </div>
+        )}
+        {notVotingVotes > 0 && (
+          <div className="flex items-center gap-3">
+            <span className="w-20 text-sm">Not Voting</span>
+            <div className="flex-1 bg-gray-200 rounded h-6">
+              <div
+                className="bg-gray-500 h-6 rounded"
+                style={{
+                  width: totalVotes > 0 ? `${(notVotingVotes / totalVotes) * 100}%` : '0%',
+                }}
+              ></div>
+            </div>
+            <span className="text-sm">
+              {totalVotes > 0 ? Math.round((notVotingVotes / totalVotes) * 100) : 0}%
+            </span>
+          </div>
         )}
       </div>
 
-      {/* Vote Distribution Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Donut Chart - Vote Distribution */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h4 className="text-md font-medium text-gray-900 mb-4">Vote Distribution</h4>
-          {votingStats && (
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={votingStats}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {votingStats.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[entry.name as keyof typeof COLORS]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value: number, name: string) => [
-                    `${value} votes (${votingStats.find(s => s.name === name)?.percentage}%)`,
-                    name,
-                  ]}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-
-          {/* Legend */}
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            {votingStats?.map(stat => (
-              <div key={stat.name} className="flex items-center gap-2">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: COLORS[stat.name as keyof typeof COLORS] }}
-                />
-                <span className="text-sm text-gray-600">
-                  {stat.name}: {stat.percentage}%
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Bar Chart - Party Alignment */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h4 className="text-md font-medium text-gray-900 mb-4">Party Alignment</h4>
-          {partyAlignment && (
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={partyAlignment}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip
-                  formatter={(value: number, _name: string) => [`${value}%`, 'Percentage']}
-                />
-                <Bar dataKey="value" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-gray-500" />
-          <label htmlFor="category-filter" className="text-sm font-medium text-gray-700">
-            Filter by category:
-          </label>
-        </div>
-        <div className="relative">
-          <select
-            id="category-filter"
-            value={selectedCategory}
-            onChange={e => setSelectedCategory(e.target.value)}
-            className="appearance-none bg-white border border-gray-300 rounded-md px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {categories.map(category => (
-              <option key={category} value={category}>
-                {category === 'all' ? 'All Categories' : category}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-2 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
-        </div>
-      </div>
-
-      {/* Recent Votes Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h4 className="text-md font-medium text-gray-900">Recent Votes</h4>
-        </div>
-
+      {/* Recent Votes */}
+      <h3 className="font-medium mb-3">Recent Voting Record</h3>
+      {votes.length === 0 ? (
+        <p className="text-gray-500 text-center py-8">No voting data available</p>
+      ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Bill
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Description
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vote
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Result
-                </th>
+          <table className="w-full">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-2">Bill</th>
+                <th className="text-left py-2">Description</th>
+                <th className="text-left py-2">Date</th>
+                <th className="text-right py-2">Position</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {displayedVotes.map(vote => (
-                <tr key={vote.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDate(vote.date)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {vote.bill ? (
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{vote.bill.number}</div>
-                        {vote.bill.url && (
+            <tbody>
+              {votes.slice(0, 10).map(vote => {
+                const voteId = extractVoteId(vote);
+                const isClickable = voteId && vote.chamber === 'Senate';
+
+                return (
+                  <tr
+                    key={vote.id}
+                    className={`border-b ${isClickable ? 'cursor-pointer hover:bg-gray-50 transition-colors' : ''}`}
+                    onClick={() => isClickable && handleVoteClick(vote)}
+                    title={isClickable ? 'Click to view detailed vote breakdown' : ''}
+                  >
+                    <td className="py-3">
+                      {vote.bill?.number ? (
+                        vote.bill.url ? (
                           <a
                             href={vote.bill.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                            className="text-blue-600 hover:underline"
+                            onClick={e => e.stopPropagation()} // Prevent row click when clicking external link
                           >
-                            View Bill <ExternalLink className="h-3 w-3" />
+                            {vote.bill.number}
                           </a>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-500">N/A</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    <div className="max-w-xs truncate" title={vote.description}>
-                      {vote.description}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        vote.position === 'Yea'
-                          ? 'bg-green-100 text-green-800'
-                          : vote.position === 'Nay'
-                            ? 'bg-red-100 text-red-800'
-                            : vote.position === 'Present'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {vote.position}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {vote.result}
-                  </td>
-                </tr>
-              ))}
+                        ) : (
+                          <span className={isClickable ? 'text-blue-600' : ''}>
+                            {vote.bill.number}
+                          </span>
+                        )
+                      ) : (
+                        <span className={isClickable ? 'text-blue-600' : ''}>Voice Vote</span>
+                      )}
+                      {isClickable && <span className="ml-1 text-xs text-gray-400">📊</span>}
+                    </td>
+                    <td className="py-3 text-sm text-gray-600">
+                      {vote.bill?.title || vote.question || vote.description}
+                    </td>
+                    <td className="py-3 text-sm text-gray-500">
+                      {new Date(vote.date).toLocaleDateString()}
+                    </td>
+                    <td className="text-right py-3">
+                      <span
+                        className={`px-2 py-1 rounded text-sm ${
+                          vote.position === 'Yea'
+                            ? 'bg-green-100 text-green-700'
+                            : vote.position === 'Nay'
+                              ? 'bg-red-100 text-red-700'
+                              : vote.position === 'Present'
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {vote.position}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-
-        {/* Show More Button */}
-        {filteredVotes.length > 10 && !showAllVotes && (
-          <div className="px-6 py-4 border-t border-gray-200 text-center">
-            <button
-              onClick={() => setShowAllVotes(true)}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-            >
-              Show all {filteredVotes.length} votes
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Data Source Attribution */}
-      <div className="text-center">
-        <div className="text-xs text-gray-500 mb-2">Official Government Data</div>
-        <DataSourceBadge source="congress.gov + house-senate-clerk-xml" size="sm" />
-      </div>
-    </div>
+      )}
+    </>
   );
 }

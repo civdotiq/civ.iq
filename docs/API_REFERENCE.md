@@ -678,6 +678,102 @@ Fetch multiple data types for a representative in one request.
 }
 ```
 
+### Vote Details
+
+#### GET /api/vote/[voteId]
+
+Get comprehensive details about a specific Senate roll call vote, including all senators' positions, vote counts, and related bill information. **New Feature 2025-08-25**: Direct Senate XML parsing for detailed vote analysis.
+
+**Parameters:**
+
+- `voteId`: Senate roll call vote number (numeric)
+
+**Data Source:**
+
+- **Senate XML Feeds**: Direct parsing from `https://senate.gov/legislative/LIS/roll_call_votes/` with real-time data
+
+**Response:**
+
+```json
+{
+  "vote": {
+    "voteId": "string",
+    "congress": "string",
+    "session": "string",
+    "rollNumber": "number",
+    "date": "string",
+    "time": "string",
+    "title": "string",
+    "question": "string",
+    "description": "string",
+    "result": "string",
+    "yeas": "number",
+    "nays": "number",
+    "present": "number",
+    "absent": "number",
+    "totalVotes": "number",
+    "requiredMajority": "string",
+    "members": [
+      {
+        "lisId": "string",
+        "bioguideId": "string",
+        "firstName": "string",
+        "lastName": "string",
+        "fullName": "string",
+        "state": "string",
+        "party": "D|R|I",
+        "position": "Yea|Nay|Present|Not Voting"
+      }
+    ],
+    "bill": {
+      "number": "string",
+      "title": "string",
+      "type": "string"
+    },
+    "amendment": {
+      "number": "string",
+      "purpose": "string"
+    },
+    "metadata": {
+      "source": "senate-xml-feed",
+      "confidence": "high",
+      "processingDate": "string",
+      "xmlUrl": "string"
+    }
+  },
+  "success": "boolean",
+  "metadata": {
+    "timestamp": "string",
+    "requestId": "string",
+    "responseTime": "number"
+  }
+}
+```
+
+**Features:**
+
+- **Complete Senator Information**: All 100 senators' voting positions with full names, states, and parties
+- **Comprehensive Vote Data**: Yea/Nay/Present/Absent counts with percentages
+- **Bill Integration**: Related bill information when available
+- **Amendment Details**: Amendment information for amendment votes
+- **High Performance**: Cached responses with 1-hour TTL
+- **Error Handling**: Graceful handling of missing votes or XML parsing failures
+
+**Error Response:**
+
+```json
+{
+  "vote": null,
+  "success": false,
+  "error": "Vote 123 not found or could not be parsed",
+  "metadata": {
+    "timestamp": "string",
+    "requestId": "string",
+    "responseTime": "number"
+  }
+}
+```
+
 ### Senate-Specific
 
 #### GET /api/senate-votes/[voteNumber]
