@@ -306,7 +306,7 @@ async function getSenateVotes(bioguideId: string, limit: number = 20): Promise<V
       ? voteSummary.votes.vote
       : [voteSummary.votes.vote];
 
-    const recentVotes = votes.slice(0, Math.min(limit, 10)); // Limit for Phase 2
+    const recentVotes = votes.slice(0, Math.min(limit, 50)); // Increased limit for better user experience
 
     // Step 3: For each vote, fetch individual XML and find member position
     const senateVotes: Vote[] = [];

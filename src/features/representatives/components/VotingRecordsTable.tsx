@@ -189,7 +189,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
 
-  const votesPerPage = 10;
+  const votesPerPage = 25;
 
   // SWR for voting records with caching
   const {
@@ -197,7 +197,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
     error,
     isLoading,
   } = useSWR(
-    `/api/representative/${bioguideId}/votes`,
+    `/api/representative/${bioguideId}/votes?limit=50`,
     async (url: string) => {
       try {
         logger.debug('VotingRecordsTable fetching votes', { bioguideId, url });

@@ -173,7 +173,7 @@ export function VotingTab({ votes = [] }: VotingTabProps) {
               </tr>
             </thead>
             <tbody>
-              {votes.slice(0, 10).map(vote => {
+              {votes.slice(0, 50).map(vote => {
                 const voteId = extractVoteId(vote);
                 const isClickable = voteId && vote.chamber === 'Senate';
 
@@ -185,25 +185,49 @@ export function VotingTab({ votes = [] }: VotingTabProps) {
                     title={isClickable ? 'Click to view detailed vote breakdown' : ''}
                   >
                     <td className="py-3">
-                      {vote.bill?.number ? (
-                        vote.bill.url ? (
-                          <a
-                            href={vote.bill.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                            onClick={e => e.stopPropagation()} // Prevent row click when clicking external link
-                          >
-                            {vote.bill.number}
-                          </a>
-                        ) : (
-                          <span className={isClickable ? 'text-blue-600' : ''}>
-                            {vote.bill.number}
-                          </span>
-                        )
-                      ) : (
-                        <span className={isClickable ? 'text-blue-600' : ''}>Voice Vote</span>
-                      )}
+                      {(() => {
+                        // Priority order for vote display text:
+                        // 1. vote.bill.title (if it's a bill vote)
+                        // 2. vote.question (the vote question)
+                        // 3. vote.description (additional context)
+                        // 4. "Vote" as fallback (not "Voice Vote")
+                        const displayText =
+                          vote.bill?.title || vote.question || vote.description || 'Vote';
+
+                        // Truncate long text for table display
+                        const truncatedText =
+                          displayText.length > 60
+                            ? `${displayText.substring(0, 57)}...`
+                            : displayText;
+
+                        return (
+                          <div className="flex flex-col">
+                            {vote.bill?.number && (
+                              <div className="text-xs text-gray-500 mb-1">
+                                {vote.bill.url ? (
+                                  <a
+                                    href={vote.bill.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:underline"
+                                    onClick={e => e.stopPropagation()}
+                                  >
+                                    {vote.bill.number}
+                                  </a>
+                                ) : (
+                                  <span>{vote.bill.number}</span>
+                                )}
+                              </div>
+                            )}
+                            <span
+                              className={`${isClickable ? 'text-blue-600' : ''} line-clamp-2`}
+                              title={displayText}
+                            >
+                              {truncatedText}
+                            </span>
+                          </div>
+                        );
+                      })()}
                       {isClickable && <span className="ml-1 text-xs text-gray-400">📊</span>}
                     </td>
                     <td className="py-3 text-sm text-gray-600">
