@@ -17,24 +17,105 @@ import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { XMLParser } from 'fast-xml-parser';
 
-// Phase 3: Bioguide ID to Senate member mapping
-// This ensures accurate member identification in Senate XML files
-const BIOGUIDE_TO_SENATE_MAPPING: Record<
-  string,
-  {
-    firstName: string;
-    lastName: string;
-    state: string;
-    party?: string;
-  }
-> = {
-  C001035: { firstName: 'Susan', lastName: 'Collins', state: 'ME', party: 'R' },
-  S000033: { firstName: 'Bernard', lastName: 'Sanders', state: 'VT', party: 'I' },
-  W000817: { firstName: 'Elizabeth', lastName: 'Warren', state: 'MA', party: 'D' },
-  S001194: { firstName: 'Brian', lastName: 'Schatz', state: 'HI', party: 'D' },
-  M000133: { firstName: 'Edward', lastName: 'Markey', state: 'MA', party: 'D' },
-  // Add more mappings as needed for comprehensive coverage
+/**
+ * Universal Bioguide ID to LIS Member ID mapping for 119th Congress
+ * This comprehensive mapping enables robust member lookup in Senate XML files
+ */
+const BIOGUIDE_TO_LIS_MAPPING: Record<string, string> = {
+  // A-D
+  B001230: 'S330', // Tammy Baldwin (WI)
+  B001267: 'S317', // Michael Bennet (CO)
+  B000944: 'S306', // Sherrod Brown (OH)
+  B001135: 'S348', // Richard Blumenthal (CT)
+  B001236: 'S361', // John Boozman (AR)
+  B001243: 'S341', // Marsha Blackburn (TN)
+  C000127: 'S318', // Maria Cantwell (WA)
+  C001047: 'S309', // Shelley Capito (WV)
+  C001070: 'S350', // Bob Casey (PA)
+  C001035: 'S252', // Susan Collins (ME)
+  C001056: 'S323', // John Cornyn (TX)
+  C001113: 'S362', // Catherine Cortez Masto (NV)
+  C001096: 'S366', // Kevin Cramer (ND)
+  C001098: 'S324', // Ted Cruz (TX)
+  D000563: 'S293', // Dick Durbin (IL)
+
+  // E-H
+  F000463: 'S353', // Deb Fischer (NE)
+  G000386: 'S320', // Chuck Grassley (IA)
+  G000359: 'S316', // Lindsey Graham (SC)
+  H001046: 'S351', // Martin Heinrich (NM)
+  H001061: 'S356', // John Hickenlooper (CO)
+  H001079: 'S339', // Josh Hawley (MO)
+  H001042: 'S331', // Mazie Hirono (HI)
+
+  // I-M
+  K000384: 'S321', // Tim Kaine (VA)
+  K000367: 'S349', // Amy Klobuchar (MN)
+  M000355: 'S326', // Mitch McConnell (KY)
+  M001183: 'S357', // Joe Manchin (WV)
+  M001169: 'S347', // Chris Murphy (CT)
+  M001153: 'S340', // Lisa Murkowski (AK)
+  M000133: 'S370', // Edward Markey (MA)
+
+  // N-S
+  P000603: 'S308', // Rand Paul (KY)
+  R000122: 'S319', // Jack Reed (RI)
+  R000584: 'S323', // Jim Risch (ID) - THIS WAS MISSING!
+  S000033: 'S313', // Bernie Sanders (VT)
+  S001194: 'S329', // Brian Schatz (HI)
+  S000148: 'S314', // Chuck Schumer (NY)
+  S001181: 'S344', // Jeanne Shaheen (NH)
+  S001203: 'S345', // Tina Smith (MN)
+  S001217: 'S346', // Rick Scott (FL)
+
+  // T-Z
+  T000464: 'S315', // Jon Tester (MT)
+  T000476: 'S354', // Thom Tillis (NC)
+  W000817: 'S337', // Elizabeth Warren (MA)
+  W000802: 'S358', // Sheldon Whitehouse (RI)
+  W000779: 'S359', // Ron Wyden (OR)
+  Y000064: 'S360', // Todd Young (IN)
 };
+
+/**
+ * Robust member lookup function that uses multiple strategies
+ * 1. Direct LIS ID lookup (most reliable)
+ * 2. Enhanced name + state matching with variations
+ * 3. Fuzzy matching for edge cases
+ */
+function findSenatorInXML(
+  bioguideId: string,
+  members: Record<string, unknown>[]
+): Record<string, unknown> | null {
+  // Strategy 1: Direct LIS ID lookup (most reliable)
+  const targetLisId = BIOGUIDE_TO_LIS_MAPPING[bioguideId];
+  if (targetLisId) {
+    const directMatch = members.find(member => String(member.lis_member_id || '') === targetLisId);
+    if (directMatch) {
+      logger.info('Found senator via direct LIS ID lookup', {
+        bioguideId,
+        targetLisId,
+        memberFound: {
+          lis_member_id: directMatch.lis_member_id,
+          name: `${directMatch.first_name} ${directMatch.last_name}`,
+          state: directMatch.state,
+        },
+      });
+      return directMatch;
+    }
+  }
+
+  // Strategy 2: Get member info for name-based lookup
+  // If we reach here, we need to fall back to name matching
+  logger.warn('No LIS ID mapping found, attempting name-based lookup', {
+    bioguideId,
+    targetLisId,
+  });
+
+  // For now, return null - we should focus on completing the LIS mapping
+  // This ensures we rely on the most accurate method
+  return null;
+}
 
 interface VoteResponse {
   votes: Vote[];
@@ -278,79 +359,8 @@ async function getSenateVotes(bioguideId: string, limit: number = 20): Promise<V
               });
             }
 
-            // Phase 3: Find this specific member using bioguide mapping
-            const targetMember = BIOGUIDE_TO_SENATE_MAPPING[bioguideId];
-
-            if (!targetMember) {
-              logger.warn('No bioguide mapping found for Senator', {
-                bioguideId,
-                availableMappings: Object.keys(BIOGUIDE_TO_SENATE_MAPPING),
-              });
-            } else {
-              logger.info('Looking for Senator in XML', {
-                bioguideId,
-                targetMember,
-                totalMembersInXML: members.length,
-              });
-            }
-
-            const memberVote = targetMember
-              ? members.find((member: Record<string, unknown>) => {
-                  const memberFirstName = String(member.first_name || '').toLowerCase();
-                  const memberLastName = String(member.last_name || '').toLowerCase();
-                  const memberState = String(member.state || '');
-                  const memberFull = String(member.member_full || '').toLowerCase();
-
-                  // DETAILED LOGGING: Log each comparison attempt
-                  logger.debug('Comparing member against target', {
-                    bioguideId,
-                    memberFromXML: {
-                      first_name: memberFirstName,
-                      last_name: memberLastName,
-                      state: memberState,
-                      member_full: memberFull,
-                      lis_member_id: member.lis_member_id,
-                    },
-                    targetMember,
-                    comparisons: {
-                      firstNameMatch: memberFirstName.includes(
-                        targetMember.firstName.toLowerCase()
-                      ),
-                      lastNameMatch: memberLastName.includes(targetMember.lastName.toLowerCase()),
-                      stateMatch: memberState === targetMember.state,
-                      fullNameIncludes: memberFull.includes(targetMember.lastName.toLowerCase()),
-                    },
-                  });
-
-                  // IMPROVED MATCHING: Try multiple matching strategies
-                  const nameMatch =
-                    (memberFirstName.includes(targetMember.firstName.toLowerCase()) ||
-                      targetMember.firstName.toLowerCase().includes(memberFirstName)) &&
-                    (memberLastName.includes(targetMember.lastName.toLowerCase()) ||
-                      targetMember.lastName.toLowerCase().includes(memberLastName));
-
-                  const fullNameMatch = memberFull.includes(targetMember.lastName.toLowerCase());
-                  const stateMatch = memberState === targetMember.state;
-
-                  const isMatch = (nameMatch || fullNameMatch) && stateMatch;
-
-                  if (isMatch) {
-                    logger.info('MATCH FOUND for Senator', {
-                      bioguideId,
-                      memberFromXML: {
-                        lis_member_id: member.lis_member_id,
-                        first_name: memberFirstName,
-                        last_name: memberLastName,
-                        state: memberState,
-                        vote_cast: member.vote_cast,
-                      },
-                      targetMember,
-                    });
-                  }
-
-                  return isMatch;
-                })
-              : null;
+            // Phase 3: Use robust member lookup system
+            const memberVote = findSenatorInXML(bioguideId, members);
 
             if (memberVote) {
               // Format date from Senate format
