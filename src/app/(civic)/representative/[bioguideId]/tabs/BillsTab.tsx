@@ -32,16 +32,35 @@ interface BillsTabProps {
 export function BillsTab({ bills = [] }: BillsTabProps) {
   // Helper function to generate correct bill ID for routing
   const getBillId = (bill: Bill): string => {
-    // Convert bill type to lowercase and remove periods (H.R. -> hr, S. -> s)
-    const cleanType = bill.type.toLowerCase().replace(/\./g, '');
-    // Extract just the numeric part from bill number (H.R. 1234 -> 1234)
-    const cleanNumber = bill.number.replace(/[^\d]/g, '');
-    return `${bill.congress}-${cleanType}-${cleanNumber}`;
+    // Handle missing bill.type - try to extract from bill.number
+    let cleanType = '';
+    if (bill.type) {
+      cleanType = bill.type.toLowerCase().replace(/\./g, '');
+    } else if (bill.number) {
+      // Try to extract type from number (e.g., "H.R. 1234" -> "hr")
+      const typeMatch = bill.number.match(/^([A-Z]+\.?[A-Z]*\.?)/);
+      if (typeMatch && typeMatch[1]) {
+        cleanType = typeMatch[1].toLowerCase().replace(/\./g, '');
+      }
+    }
+
+    // Extract numeric part from bill number
+    const cleanNumber = bill.number ? bill.number.replace(/[^\d]/g, '') : '';
+
+    // Use fallback if we couldn't determine type or number
+    if (!cleanType || !cleanNumber) {
+      // Use the full bill number as fallback ID
+      return `${bill.congress || '119'}-${bill.number || 'unknown'}`.replace(/\s+/g, '-');
+    }
+
+    return `${bill.congress || '119'}-${cleanType}-${cleanNumber}`;
   };
 
   // Calculate bill statistics
   const totalBills = bills.length;
-  const enactedBills = bills.filter(bill => bill.status.toLowerCase().includes('enacted')).length;
+  const enactedBills = bills.filter(
+    bill => bill.status && bill.status.toLowerCase().includes('enacted')
+  ).length;
   const avgCosponsors = 0; // This would come from actual data
   const totalSupport = 0; // This would come from actual data
 
@@ -93,14 +112,19 @@ export function BillsTab({ bills = [] }: BillsTabProps) {
                 )}
               </h3>
               <p className="text-sm text-gray-500 mt-1">
-                Introduced: {new Date(bill.introducedDate).toLocaleDateString()}
+                Introduced:{' '}
+                {bill.introducedDate
+                  ? new Date(bill.introducedDate).toLocaleDateString()
+                  : 'Date unknown'}
               </p>
               <p className="text-sm text-gray-600 mt-1">{bill.lastAction}</p>
               <div className="flex gap-2 mt-2">
                 <span className="text-xs bg-gray-100 px-2 py-1 rounded">
                   {bill.committee || 'Committee: Unknown'}
                 </span>
-                <span className="text-xs bg-blue-100 px-2 py-1 rounded">{bill.type}</span>
+                <span className="text-xs bg-blue-100 px-2 py-1 rounded">
+                  {bill.type || 'Type: Unknown'}
+                </span>
                 {bill.policyArea && (
                   <span className="text-xs bg-green-100 px-2 py-1 rounded">{bill.policyArea}</span>
                 )}
