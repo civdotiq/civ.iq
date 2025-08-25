@@ -371,7 +371,19 @@ export default async function VoteDetailPage({ params }: VoteDetailPageProps) {
                     >
                       <div>
                         <div className="font-medium text-gray-900">
-                          {senator.firstName} {senator.lastName}
+                          {senator.bioguideId ? (
+                            <Link
+                              href={`/representative/${senator.bioguideId}`}
+                              className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                              title={`View ${senator.firstName} ${senator.lastName}'s profile`}
+                            >
+                              {senator.firstName} {senator.lastName}
+                            </Link>
+                          ) : (
+                            <span>
+                              {senator.firstName} {senator.lastName}
+                            </span>
+                          )}
                         </div>
                         <div className="text-sm text-gray-500">{senator.state}</div>
                       </div>

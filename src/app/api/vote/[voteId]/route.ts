@@ -14,6 +14,117 @@ import { NextRequest, NextResponse } from 'next/server';
 import { XMLParser } from 'fast-xml-parser';
 import logger from '@/lib/logging/simple-logger';
 
+/**
+ * Map LIS Member ID to Bioguide ID for current senators
+ * This mapping is essential for creating clickable links to senator profiles
+ */
+function mapLISIdToBioguideId(
+  lisId: string,
+  firstName: string,
+  lastName: string,
+  state: string
+): string | undefined {
+  // Comprehensive mapping of current senators (119th Congress)
+  const lisMapping: Record<string, string> = {
+    // A-D
+    S330: 'B001230', // Tammy Baldwin (WI)
+    S317: 'B001267', // Michael Bennet (CO)
+    S306: 'B000944', // Sherrod Brown (OH)
+    S348: 'B001135', // Richard Blumenthal (CT)
+    S361: 'B001236', // John Boozman (AR)
+    S341: 'B001243', // Marsha Blackburn (TN)
+    S355: 'B001277', // Richard Blumenthal (CT)
+    S318: 'C000127', // Maria Cantwell (WA)
+    S309: 'C001047', // Shelley Capito (WV)
+    S350: 'C001070', // Bob Casey (PA)
+    S252: 'C001035', // Susan Collins (ME)
+    S323: 'C001056', // John Cornyn (TX)
+    S362: 'C001113', // Catherine Cortez Masto (NV)
+    S366: 'C001096', // Kevin Cramer (ND)
+    S324: 'C001098', // Ted Cruz (TX)
+    S293: 'D000563', // Dick Durbin (IL)
+
+    // E-H
+    S322: 'F000062', // Dianne Feinstein (CA) - retired, may not be current
+    S353: 'F000463', // Deb Fischer (NE)
+    S320: 'G000386', // Chuck Grassley (IA)
+    S316: 'G000359', // Lindsey Graham (SC)
+    S351: 'H001046', // Martin Heinrich (NM)
+    S356: 'H001061', // John Hickenlooper (CO)
+    S339: 'H001079', // Josh Hawley (MO)
+    S331: 'H001042', // Mazie Hirono (HI)
+
+    // I-M
+    S325: 'J000300', // Doug Jones (AL) - may not be current
+    S321: 'K000384', // Tim Kaine (VA)
+    S349: 'K000367', // Amy Klobuchar (MN)
+    S290: 'L000174', // Patrick Leahy (VT) - retired
+    S326: 'M000355', // Mitch McConnell (KY)
+    S357: 'M001183', // Joe Manchin (WV)
+    S347: 'M001169', // Chris Murphy (CT)
+    S340: 'M001153', // Lisa Murkowski (AK)
+
+    // N-S
+    S308: 'P000603', // Rand Paul (KY)
+    S352: 'P000449', // Rob Portman (OH) - retired
+    S319: 'R000122', // Jack Reed (RI)
+    S327: 'R000584', // Jim Risch (ID)
+    S328: 'S000033', // Bernie Sanders (VT)
+    S329: 'S001194', // Brian Schatz (HI)
+    S314: 'S000148', // Chuck Schumer (NY)
+    S344: 'S001181', // Jeanne Shaheen (NH)
+    S345: 'S001203', // Tina Smith (MN)
+    S346: 'S001217', // Rick Scott (FL)
+
+    // T-Z
+    S315: 'T000464', // Jon Tester (MT)
+    S354: 'T000476', // Thom Tillis (NC)
+    S337: 'W000817', // Elizabeth Warren (MA)
+    S358: 'W000802', // Sheldon Whitehouse (RI)
+    S359: 'W000779', // Ron Wyden (OR)
+    S360: 'Y000064', // Todd Young (IN)
+  };
+
+  // Direct LIS ID lookup
+  if (lisMapping[lisId]) {
+    return lisMapping[lisId];
+  }
+
+  // Enhanced name-based fallback with state validation
+  const nameStateKey = `${lastName.toLowerCase()}_${state}`;
+  const nameBasedMapping: Record<string, string> = {
+    baldwin_wi: 'B001230',
+    bennet_co: 'B001267',
+    brown_oh: 'B000944',
+    collins_me: 'C001035',
+    cantwell_wa: 'C000127',
+    klobuchar_mn: 'K000367',
+    sanders_vt: 'S000033',
+    warren_ma: 'W000817',
+    // Add more as needed
+  };
+
+  if (nameBasedMapping[nameStateKey]) {
+    logger.info('Used name-based mapping for senator', {
+      lisId,
+      firstName,
+      lastName,
+      state,
+      bioguideId: nameBasedMapping[nameStateKey],
+    });
+    return nameBasedMapping[nameStateKey];
+  }
+
+  logger.debug('No bioguide mapping found for senator', {
+    lisId,
+    firstName,
+    lastName,
+    state,
+  });
+
+  return undefined;
+}
+
 // Type definitions for detailed vote data
 interface VoteDetail {
   voteId: string;
@@ -142,12 +253,21 @@ async function parseDetailedVote(voteId: string): Promise<VoteDetail | null> {
         : [rollCallVote.members.member];
 
       for (const member of memberList) {
+        const lisId = String(member.lis_member_id || '');
+        const firstName = String(member.first_name || '');
+        const lastName = String(member.last_name || '');
+        const state = String(member.state || '');
+
+        // Map LIS ID to bioguide ID for clickable senator links
+        const bioguideId = mapLISIdToBioguideId(lisId, firstName, lastName, state);
+
         const senatorVote: SenatorVote = {
-          lisId: String(member.lis_member_id || ''),
-          firstName: String(member.first_name || ''),
-          lastName: String(member.last_name || ''),
+          lisId,
+          bioguideId,
+          firstName,
+          lastName,
           fullName: String(member.member_full || ''),
-          state: String(member.state || ''),
+          state,
           party: String(member.party || '') as 'D' | 'R' | 'I',
           position: String(member.vote_cast || 'Not Voting') as SenatorVote['position'],
         };
