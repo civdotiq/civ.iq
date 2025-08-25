@@ -5,8 +5,10 @@
 
 'use client';
 
-import React from 'react';
+import React, { useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import logger from '@/lib/logging/simple-logger';
 
 interface Bill {
   id: string;
@@ -30,31 +32,54 @@ interface BillsTabProps {
 }
 
 export function BillsTab({ bills = [] }: BillsTabProps) {
-  // Helper function to generate correct bill ID for routing
+  const params = useParams();
+  const bioguideId = params?.bioguideId as string;
+
+  // Only create links for bills with complete data
+  const canLinkToBill = useCallback((bill: Bill): boolean => {
+    return !!(bill.type && bill.number && bill.congress);
+  }, []);
+
+  // Helper function to generate correct bill ID for routing - ONLY for complete bills
   const getBillId = (bill: Bill): string => {
-    // Handle missing bill.type - try to extract from bill.number
-    let cleanType = '';
-    if (bill.type) {
-      cleanType = bill.type.toLowerCase().replace(/\./g, '');
-    } else if (bill.number) {
-      // Try to extract type from number (e.g., "H.R. 1234" -> "hr")
-      const typeMatch = bill.number.match(/^([A-Z]+\.?[A-Z]*\.?)/);
-      if (typeMatch && typeMatch[1]) {
-        cleanType = typeMatch[1].toLowerCase().replace(/\./g, '');
-      }
-    }
-
-    // Extract numeric part from bill number
-    const cleanNumber = bill.number ? bill.number.replace(/[^\d]/g, '') : '';
-
-    // Use fallback if we couldn't determine type or number
-    if (!cleanType || !cleanNumber) {
-      // Use the full bill number as fallback ID
-      return `${bill.congress || '119'}-${bill.number || 'unknown'}`.replace(/\s+/g, '-');
-    }
-
-    return `${bill.congress || '119'}-${cleanType}-${cleanNumber}`;
+    const cleanType = bill.type.toLowerCase().replace(/\./g, '');
+    const cleanNumber = bill.number.replace(/[^\d]/g, '');
+    return `${bill.congress}-${cleanType}-${cleanNumber}`;
   };
+
+  // DIAGNOSTIC LOGGING - Track data quality issues
+  useEffect(() => {
+    const incompleteBills = bills.filter(b => !b.type || !b.number || !b.congress);
+    if (incompleteBills.length > 0) {
+      logger.error(
+        `[DATA QUALITY] ${incompleteBills.length}/${bills.length} bills have missing data`,
+        new Error('Incomplete bill data'),
+        {
+          bioguideId,
+          samples: incompleteBills.slice(0, 3),
+          missingFields: incompleteBills.map(b => ({
+            id: b.id,
+            number: b.number,
+            hasType: !!b.type,
+            hasNumber: !!b.number,
+            hasCongress: !!b.congress,
+            rawType: b.type,
+            rawCongress: b.congress,
+          })),
+        }
+      );
+    }
+
+    const linkableBills = bills.filter(canLinkToBill);
+    logger.info(
+      `[BILLS TAB] ${linkableBills.length}/${bills.length} bills are clickable for ${bioguideId}`,
+      {
+        bioguideId,
+        totalBills: bills.length,
+        linkableBills: linkableBills.length,
+      }
+    );
+  }, [bills, bioguideId, canLinkToBill]);
 
   // Calculate bill statistics
   const totalBills = bills.length;
@@ -94,12 +119,21 @@ export function BillsTab({ bills = [] }: BillsTabProps) {
           {bills.slice(0, 10).map(bill => (
             <div key={bill.id} className="border rounded-lg p-4">
               <h3 className="font-medium">
-                <Link
-                  href={`/bill/${getBillId(bill)}`}
-                  className="text-blue-600 hover:text-blue-800 hover:underline"
-                >
-                  {bill.number}: {bill.title}
-                </Link>
+                {canLinkToBill(bill) ? (
+                  <Link
+                    href={`/bill/${getBillId(bill)}`}
+                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    {bill.number}: {bill.title}
+                  </Link>
+                ) : (
+                  <span
+                    className="text-gray-500"
+                    title="Bill details unavailable - incomplete data"
+                  >
+                    {bill.title || bill.number || 'Unknown Bill'}
+                  </span>
+                )}
                 {bill.url && (
                   <a
                     href={bill.url}
