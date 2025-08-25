@@ -47,38 +47,74 @@ export function BillsTab({ bills = [] }: BillsTabProps) {
     return `${bill.congress}-${cleanType}-${cleanNumber}`;
   };
 
-  // DIAGNOSTIC LOGGING - Track data quality issues
+  // COMPREHENSIVE DIAGNOSTIC - Inspect actual bill data structure
   useEffect(() => {
-    const incompleteBills = bills.filter(b => !b.type || !b.number || !b.congress);
-    if (incompleteBills.length > 0) {
-      logger.error(
-        `[DATA QUALITY] ${incompleteBills.length}/${bills.length} bills have missing data`,
-        new Error('Incomplete bill data'),
+    if (bills && bills.length > 0) {
+      // Detailed client-side diagnostic logging
+      // eslint-disable-next-line no-console
+      console.group(`📊 Bill Data Diagnostic for ${bioguideId}`);
+      // eslint-disable-next-line no-console
+      console.log('Total bills:', bills.length);
+      // eslint-disable-next-line no-console
+      console.log('First 3 bills raw structure:', bills.slice(0, 3));
+
+      // Analyze data completeness
+      const analysis = {
+        totalBills: bills.length,
+        withType: bills.filter(b => b.type).length,
+        withNumber: bills.filter(b => b.number).length,
+        withCongress: bills.filter(b => b.congress).length,
+        samples: bills.slice(0, 3).map(b => ({
+          number: b.number,
+          type: b.type,
+          congress: b.congress,
+          hasAllFields: !!(b.type && b.number && b.congress),
+          allKeys: Object.keys(b),
+        })),
+      };
+      // eslint-disable-next-line no-console
+      console.table(analysis.samples);
+      // eslint-disable-next-line no-console
+      console.log('Field completeness:', {
+        type: `${analysis.withType}/${analysis.totalBills}`,
+        number: `${analysis.withNumber}/${analysis.totalBills}`,
+        congress: `${analysis.withCongress}/${analysis.totalBills}`,
+      });
+      // eslint-disable-next-line no-console
+      console.groupEnd();
+
+      // Also send to logger for server-side tracking
+      const incompleteBills = bills.filter(b => !b.type || !b.number || !b.congress);
+      if (incompleteBills.length > 0) {
+        logger.error(
+          `[DATA QUALITY] ${incompleteBills.length}/${bills.length} bills have missing data`,
+          new Error('Incomplete bill data'),
+          {
+            bioguideId,
+            samples: incompleteBills.slice(0, 3),
+            missingFields: incompleteBills.map(b => ({
+              id: b.id,
+              number: b.number,
+              hasType: !!b.type,
+              hasNumber: !!b.number,
+              hasCongress: !!b.congress,
+              rawType: b.type,
+              rawCongress: b.congress,
+            })),
+          }
+        );
+      }
+
+      const linkableBills = bills.filter(canLinkToBill);
+      logger.info(
+        `[BILLS TAB] ${linkableBills.length}/${bills.length} bills are clickable for ${bioguideId}`,
         {
           bioguideId,
-          samples: incompleteBills.slice(0, 3),
-          missingFields: incompleteBills.map(b => ({
-            id: b.id,
-            number: b.number,
-            hasType: !!b.type,
-            hasNumber: !!b.number,
-            hasCongress: !!b.congress,
-            rawType: b.type,
-            rawCongress: b.congress,
-          })),
+          totalBills: bills.length,
+          linkableBills: linkableBills.length,
         }
       );
     }
-
-    const linkableBills = bills.filter(canLinkToBill);
-    logger.info(
-      `[BILLS TAB] ${linkableBills.length}/${bills.length} bills are clickable for ${bioguideId}`,
-      {
-        bioguideId,
-        totalBills: bills.length,
-        linkableBills: linkableBills.length,
-      }
-    );
   }, [bills, bioguideId, canLinkToBill]);
 
   // Calculate bill statistics

@@ -91,6 +91,29 @@ export async function GET(
           if (response.ok) {
             const billsData = await response.json();
             const congressBills = billsData.sponsoredLegislation || [];
+
+            // DIAGNOSTIC: Log raw Congress.gov response structure BEFORE any processing
+            if (congressBills.length > 0 && offset === 0) {
+              // eslint-disable-next-line no-console
+              console.log('🔍 RAW Congress.gov Response Sample for Congress', congress);
+              // eslint-disable-next-line no-console
+              console.log(
+                'First 3 raw bills:',
+                congressBills.slice(0, 3).map((bill: Record<string, unknown>) => ({
+                  number: bill.number,
+                  type: bill.type,
+                  billType: bill.billType, // Check if field name is different
+                  legislationType: bill.legislationType, // Another possible field name
+                  congress: bill.congress,
+                  title:
+                    typeof bill.title === 'string'
+                      ? bill.title.substring(0, 50) + '...'
+                      : bill.title,
+                  availableKeys: Object.keys(bill || {}),
+                }))
+              );
+            }
+
             allBills.push(...congressBills);
 
             // eslint-disable-next-line no-console
