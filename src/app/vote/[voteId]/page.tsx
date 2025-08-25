@@ -23,6 +23,7 @@ import {
   User,
 } from 'lucide-react';
 import logger from '@/lib/logging/simple-logger';
+import { findBioguideId } from '@/lib/data/senate-member-mappings';
 
 // Types for the vote detail data
 interface VoteDetail {
@@ -371,19 +372,41 @@ export default async function VoteDetailPage({ params }: VoteDetailPageProps) {
                     >
                       <div>
                         <div className="font-medium text-gray-900">
-                          {senator.bioguideId ? (
-                            <Link
-                              href={`/representative/${senator.bioguideId}`}
-                              className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                              title={`View ${senator.firstName} ${senator.lastName}'s profile`}
-                            >
-                              {senator.firstName} {senator.lastName}
-                            </Link>
-                          ) : (
-                            <span>
-                              {senator.firstName} {senator.lastName}
-                            </span>
-                          )}
+                          {(() => {
+                            // Enhanced bioguide ID lookup with mapping fallback
+                            const bioguideId = findBioguideId({
+                              firstName: senator.firstName,
+                              lastName: senator.lastName,
+                              fullName: senator.fullName,
+                              state: senator.state,
+                              bioguideId: senator.bioguideId,
+                            });
+
+                            // Debug logging for unmapped members
+                            if (!senator.bioguideId && !bioguideId) {
+                              logger.warn('No bioguide ID found for senator', {
+                                firstName: senator.firstName,
+                                lastName: senator.lastName,
+                                state: senator.state,
+                                fullName: senator.fullName,
+                                lisId: senator.lisId,
+                              });
+                            }
+
+                            return bioguideId ? (
+                              <Link
+                                href={`/representative/${bioguideId}`}
+                                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                title={`View ${senator.firstName} ${senator.lastName}'s profile`}
+                              >
+                                {senator.firstName} {senator.lastName}
+                              </Link>
+                            ) : (
+                              <span>
+                                {senator.firstName} {senator.lastName}
+                              </span>
+                            );
+                          })()}
                         </div>
                         <div className="text-sm text-gray-500">{senator.state}</div>
                       </div>
