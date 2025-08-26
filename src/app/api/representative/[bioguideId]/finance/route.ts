@@ -1247,6 +1247,40 @@ export async function GET(
               }
             : undefined;
 
+        // Calculate totals from contributions for fallback
+        const contributionsTotal = contributions.reduce(
+          (sum, contrib) => sum + contrib.contribution_receipt_amount,
+          0
+        );
+        const expendituresTotal = expenditures.reduce(
+          (sum, exp) => sum + exp.disbursement_amount,
+          0
+        );
+
+        // Get latest financial summary data or use calculated totals
+        const latestSummary = financialSummary[0];
+        const totalRaised = latestSummary?.total_receipts || contributionsTotal || 0;
+        const totalSpent = latestSummary?.total_disbursements || expendituresTotal || 0;
+        const cashOnHand =
+          latestSummary?.cash_on_hand_end_period || Math.max(0, totalRaised - totalSpent);
+
+        // Calculate donation breakdown from contributions if summary data is missing
+        const individualContributions =
+          latestSummary?.individual_contributions || contributionsTotal || 0;
+        const pacContributionsAmount = latestSummary?.pac_contributions || 0;
+        const partyContributionsAmount = latestSummary?.party_contributions || 0;
+        const candidateContributionsAmount = latestSummary?.candidate_contributions || 0;
+
+        logger.info('Finance data aggregated', {
+          bioguideId,
+          totalRaised,
+          totalSpent,
+          cashOnHand,
+          contributionsCount: contributions.length,
+          topContributorsCount: topContributors.length,
+          hasSummaryData: !!latestSummary,
+        });
+
         const financeData: CampaignFinanceData = {
           candidate_info: fecCandidate,
           financial_summary: financialSummary,
@@ -1269,8 +1303,42 @@ export async function GET(
           funding_diversity: fundingDiversity,
         };
 
+        // Get committee ID for the current cycle
+        const currentCycle =
+          new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
+        const committeeId = fecCandidate.candidate_id; // Use candidate ID as fallback for committee ID
+
+        // Build FEC source URLs for data verification
+        const fecUrls = {
+          candidateSummary: `https://www.fec.gov/data/candidate/${fecCandidate.candidate_id}/`,
+          contributions: `https://www.fec.gov/data/receipts/?candidate_id=${fecCandidate.candidate_id}&two_year_transaction_period=${currentCycle}`,
+          disbursements: `https://www.fec.gov/data/disbursements/?candidate_id=${fecCandidate.candidate_id}&two_year_transaction_period=${currentCycle}`,
+          filings: `https://www.fec.gov/data/filings/?candidate_id=${fecCandidate.candidate_id}`,
+          candidateProfile: `https://www.fec.gov/data/candidate/${fecCandidate.candidate_id}/?cycle=${currentCycle}&election_full=true`,
+        };
+
+        // Return response structure compatible with FinanceTab component
         return NextResponse.json({
           ...financeData,
+          // Add normalized fields for direct access
+          totalRaised,
+          totalSpent,
+          cashOnHand,
+          individualContributions,
+          pacContributions: pacContributionsAmount,
+          partyContributions: partyContributionsAmount,
+          candidateContributions: candidateContributionsAmount,
+          // Add FEC data sources for verification
+          dataSources: {
+            fec: {
+              candidateId: fecCandidate.candidate_id,
+              committeeId: committeeId,
+              cycle: currentCycle,
+              urls: fecUrls,
+              lastUpdated: new Date().toISOString(),
+              disclaimer: 'Data sourced from Federal Election Commission (FEC.gov)',
+            },
+          },
           metadata: {
             dataSource: 'fec.gov',
             retrievalMethod: dataSource,
