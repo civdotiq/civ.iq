@@ -40,11 +40,25 @@ export function BillsTab({ bills = [] }: BillsTabProps) {
     return !!(bill.type && bill.number && bill.congress);
   }, []);
 
-  // Helper function to generate correct bill ID for routing - ONLY for complete bills
+  // Helper function to generate correct bill ID for routing - Enhanced with fallbacks
   const getBillId = (bill: Bill): string => {
+    // Now we should always have a type from the API extraction
+    if (!bill.type || !bill.number) {
+      logger.error('Bill still missing required fields in getBillId', {
+        bioguideId,
+        bill: {
+          id: bill.id,
+          number: bill.number,
+          type: bill.type,
+          congress: bill.congress,
+        },
+      });
+      return `bill-${bill.number?.replace(/\W/g, '-') || 'unknown'}`;
+    }
+
     const cleanType = bill.type.toLowerCase().replace(/\./g, '');
-    const cleanNumber = bill.number.replace(/[^\d]/g, '');
-    return `${bill.congress}-${cleanType}-${cleanNumber}`;
+    const cleanNumber = bill.number.match(/\d+/)?.[0] || '';
+    return `${bill.congress || '119'}-${cleanType}-${cleanNumber}`;
   };
 
   // COMPREHENSIVE DIAGNOSTIC - Inspect actual bill data structure

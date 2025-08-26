@@ -176,11 +176,35 @@ export async function GET(
       sampleData: rawDataDiagnostics,
     });
 
-    // Helper function to extract bill type from Congress.gov URL
+    // Helper function to extract bill type from bill number (more reliable than URL parsing)
+    function extractBillType(billNumber: string): string {
+      if (!billNumber) return '';
+
+      // Match common bill patterns from Congress.gov
+      const patterns = [
+        /^(S)\.\s*\d+/i, // S. 123
+        /^(H\.?R)\.\s*\d+/i, // H.R. 123 or HR. 123
+        /^(H\.?J\.?RES)\.\s*\d+/i, // H.J.RES. 123
+        /^(S\.?J\.?RES)\.\s*\d+/i, // S.J.RES. 123
+        /^(H\.?RES)\.\s*\d+/i, // H.RES. 123
+        /^(S\.?RES)\.\s*\d+/i, // S.RES. 123
+        /^(H\.?CON\.?RES)\.\s*\d+/i, // H.CON.RES. 123
+        /^(S\.?CON\.?RES)\.\s*\d+/i, // S.CON.RES. 123
+      ];
+
+      for (const pattern of patterns) {
+        const match = billNumber.match(pattern);
+        if (match && match[1]) {
+          return match[1].toLowerCase().replace(/\./g, '');
+        }
+      }
+
+      return '';
+    }
+
+    // Helper function to extract bill type from Congress.gov URL (fallback)
     function extractTypeFromUrl(url: string): string | null {
       if (!url) return null;
-      // https://www.congress.gov/bill/119th-congress/senate-bill/123 -> "s"
-      // https://www.congress.gov/bill/119th-congress/house-bill/456 -> "hr"
       const match = url.match(/congress\.gov\/bill\/\d+th-congress\/([^\/]+)/);
       if (match && match[1]) {
         const urlType = match[1];
@@ -202,17 +226,20 @@ export async function GET(
       const latestAction = billData.latestAction as Record<string, unknown> | undefined;
       const policyArea = billData.policyArea as Record<string, unknown> | undefined;
 
-      // ROOT CAUSE FIX: Extract bill type from URL since Congress.gov doesn't provide 'type' field
-      const extractedType = extractTypeFromUrl(billData.url as string);
-      const billType = billData.type || extractedType;
+      // ROOT CAUSE FIX: Extract bill type from bill number (primary) or URL (fallback)
+      const extractedFromNumber = extractBillType(billData.number as string);
+      const extractedFromUrl = extractTypeFromUrl(billData.url as string);
+      const billType = billData.type || extractedFromNumber || extractedFromUrl;
 
       // DIAGNOSTIC: Track the fix in action
-      if (!billData.type && extractedType) {
-        logger.info('Extracted bill type from URL', {
+      if (!billData.type && (extractedFromNumber || extractedFromUrl)) {
+        logger.info('Extracted bill type', {
           bioguideId,
           billNumber: billData.number,
           url: billData.url,
-          extractedType,
+          extractedFromNumber,
+          extractedFromUrl,
+          finalType: billType,
         });
       }
 
@@ -224,7 +251,8 @@ export async function GET(
           billId: billData.id || 'unknown',
           congress: billData.congress,
           originalType: billData.type,
-          extractedType,
+          extractedFromNumber,
+          extractedFromUrl,
           finalType: billType,
           number: billData.number,
           url: billData.url,
@@ -244,6 +272,25 @@ export async function GET(
         url: billData.url as string,
       };
     });
+
+    // Log any bills that still don't have types after extraction
+    const missingTypes = transformedBills.filter(b => !b.type);
+    if (missingTypes.length > 0) {
+      logger.warn(`Bills still missing types after extraction`, {
+        bioguideId,
+        count: missingTypes.length,
+        samples: missingTypes.slice(0, 3).map(b => ({
+          number: b.number,
+          title: b.title,
+          url: b.url,
+        })),
+      });
+    } else {
+      logger.info(`All bills have types after extraction`, {
+        bioguideId,
+        totalBills: transformedBills.length,
+      });
+    }
 
     // NOTE: Congress.gov API doesn't currently distinguish between sponsored vs cosponsored
     // All bills returned from member/{bioguideId}/sponsored-legislation are sponsored bills
