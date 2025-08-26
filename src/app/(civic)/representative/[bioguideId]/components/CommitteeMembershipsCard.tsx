@@ -6,6 +6,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Users } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
 
@@ -38,8 +39,16 @@ export function CommitteeMembershipsCard({
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 text-sm leading-5">
-                      {committee.name}
+                    <h4 className="font-medium text-sm leading-5">
+                      <Link
+                        href={`/committee/${committee.name
+                          .replace(/\s+/g, '-')
+                          .toLowerCase()
+                          .replace(/[^a-z0-9-]/g, '')}`}
+                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {committee.name}
+                      </Link>
                     </h4>
                     {committee.role && (
                       <div className="mt-2">

@@ -178,6 +178,7 @@ export async function GET(
 
     // Helper function to extract bill type from bill number (more reliable than URL parsing)
     function extractBillType(billNumber: string): string {
+      logger.info('🔍 Running extractBillType', { billNumber });
       if (!billNumber) return '';
 
       // Match common bill patterns from Congress.gov

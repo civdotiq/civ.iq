@@ -297,11 +297,16 @@ export function EnhancedTabs({ bioguideId, representative, serverData }: Enhance
       // Extract specific data structures
       if (tabId === 'bills') {
         const billsObj = data as Record<string, unknown>;
-        processedData = Array.isArray(billsObj?.sponsoredLegislation)
-          ? billsObj.sponsoredLegislation
-          : Array.isArray(billsObj?.bills)
-            ? billsObj.bills
-            : [];
+        // Check for new enhanced structure first (sponsored.bills)
+        const sponsored = billsObj?.sponsored as Record<string, unknown> | undefined;
+        processedData =
+          sponsored?.bills && Array.isArray(sponsored.bills)
+            ? sponsored.bills
+            : Array.isArray(billsObj?.sponsoredLegislation)
+              ? billsObj.sponsoredLegislation
+              : Array.isArray(billsObj?.bills)
+                ? billsObj.bills
+                : [];
       } else if (tabId === 'votes') {
         const votesObj = data as Record<string, unknown>;
         processedData = Array.isArray(votesObj?.votes) ? votesObj.votes : [];
