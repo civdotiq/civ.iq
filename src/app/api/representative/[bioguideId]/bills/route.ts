@@ -176,34 +176,70 @@ export async function GET(
       sampleData: rawDataDiagnostics,
     });
 
+    // Helper function to extract bill type from Congress.gov URL
+    function extractTypeFromUrl(url: string): string | null {
+      if (!url) return null;
+      // https://www.congress.gov/bill/119th-congress/senate-bill/123 -> "s"
+      // https://www.congress.gov/bill/119th-congress/house-bill/456 -> "hr"
+      const match = url.match(/congress\.gov\/bill\/\d+th-congress\/([^\/]+)/);
+      if (match && match[1]) {
+        const urlType = match[1];
+        if (urlType.includes('senate-bill')) return 's';
+        if (urlType.includes('house-bill')) return 'hr';
+        if (urlType.includes('house-joint-resolution')) return 'hjres';
+        if (urlType.includes('senate-joint-resolution')) return 'sjres';
+        if (urlType.includes('house-concurrent-resolution')) return 'hconres';
+        if (urlType.includes('senate-concurrent-resolution')) return 'sconres';
+        if (urlType.includes('house-resolution')) return 'hres';
+        if (urlType.includes('senate-resolution')) return 'sres';
+      }
+      return null;
+    }
+
     // Transform bills to include required fields for frontend
     const transformedBills = bills.map((bill: unknown) => {
       const billData = bill as Record<string, unknown>;
       const latestAction = billData.latestAction as Record<string, unknown> | undefined;
       const policyArea = billData.policyArea as Record<string, unknown> | undefined;
 
-      // DIAGNOSTIC: Track incomplete data during transformation
-      const hasRequiredFields = !!(billData.type && billData.number && billData.congress);
+      // ROOT CAUSE FIX: Extract bill type from URL since Congress.gov doesn't provide 'type' field
+      const extractedType = extractTypeFromUrl(billData.url as string);
+      const billType = billData.type || extractedType;
+
+      // DIAGNOSTIC: Track the fix in action
+      if (!billData.type && extractedType) {
+        logger.info('Extracted bill type from URL', {
+          bioguideId,
+          billNumber: billData.number,
+          url: billData.url,
+          extractedType,
+        });
+      }
+
+      // Validate we have required fields after extraction
+      const hasRequiredFields = !!(billType && billData.number && billData.congress);
       if (!hasRequiredFields) {
-        logger.warn('Bill missing required fields during transformation', {
+        logger.warn('Bill still missing required fields after type extraction', {
           bioguideId,
           billId: billData.id || 'unknown',
           congress: billData.congress,
-          type: billData.type,
+          originalType: billData.type,
+          extractedType,
+          finalType: billType,
           number: billData.number,
-          title: billData.title,
+          url: billData.url,
         });
       }
 
       return {
-        id: `${billData.congress}-${billData.type}-${billData.number}`,
-        number: `${billData.type} ${billData.number}`,
+        id: `${billData.congress}-${billType}-${billData.number}`,
+        number: `${typeof billType === 'string' ? billType.toUpperCase() : billType} ${billData.number}`,
         title: billData.title as string,
         introducedDate: billData.introducedDate as string,
         status: (latestAction?.text as string) || 'Unknown',
         lastAction: (latestAction?.text as string) || 'No recent action',
         congress: billData.congress as number,
-        type: billData.type as string,
+        type: billType as string,
         policyArea: (policyArea?.name as string) || 'Unspecified',
         url: billData.url as string,
       };
