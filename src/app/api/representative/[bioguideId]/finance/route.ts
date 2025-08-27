@@ -3,860 +3,177 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+/**
+ * Campaign Finance API Route - FEC Data Only
+ *
+ * This route provides ONLY verified FEC data with full transparency
+ * about data completeness and quality. NO MOCK DATA, NO FALLBACKS.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
-import { cachedFetch } from '@/lib/cache';
 import { bioguideToFEC } from '@/lib/data/legislator-mappings';
-import logger from '@/lib/logging/simple-logger';
-import { monitorExternalApi } from '@/lib/monitoring/telemetry';
-import { FECUtils } from '@/lib/fec-api';
-import { industryCategorizer } from '@/lib/fec/industry-categorizer';
-import { bundledContributionsAnalyzer } from '@/lib/fec/bundled-contributions';
-import { independentExpendituresAnalyzer } from '@/lib/fec/independent-expenditures';
+import { fecApiService } from '@/lib/fec/fec-api-service';
+import { aggregateFinanceData } from '@/lib/fec/finance-aggregator';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import type { ContributionsBySector } from '@/lib/fec/industry-categorizer';
-import type { BundledContributor } from '@/lib/fec/bundled-contributions';
-import type { IndependentExpenditureAnalysis } from '@/lib/fec/independent-expenditures';
+import logger from '@/lib/logging/simple-logger';
 
-// State name to abbreviation mapping
-const STATE_ABBR: Record<string, string> = {
-  Alabama: 'AL',
-  Alaska: 'AK',
-  Arizona: 'AZ',
-  Arkansas: 'AR',
-  California: 'CA',
-  Colorado: 'CO',
-  Connecticut: 'CT',
-  Delaware: 'DE',
-  Florida: 'FL',
-  Georgia: 'GA',
-  Hawaii: 'HI',
-  Idaho: 'ID',
-  Illinois: 'IL',
-  Indiana: 'IN',
-  Iowa: 'IA',
-  Kansas: 'KS',
-  Kentucky: 'KY',
-  Louisiana: 'LA',
-  Maine: 'ME',
-  Maryland: 'MD',
-  Massachusetts: 'MA',
-  Michigan: 'MI',
-  Minnesota: 'MN',
-  Mississippi: 'MS',
-  Missouri: 'MO',
-  Montana: 'MT',
-  Nebraska: 'NE',
-  Nevada: 'NV',
-  'New Hampshire': 'NH',
-  'New Jersey': 'NJ',
-  'New Mexico': 'NM',
-  'New York': 'NY',
-  'North Carolina': 'NC',
-  'North Dakota': 'ND',
-  Ohio: 'OH',
-  Oklahoma: 'OK',
-  Oregon: 'OR',
-  Pennsylvania: 'PA',
-  'Rhode Island': 'RI',
-  'South Carolina': 'SC',
-  'South Dakota': 'SD',
-  Tennessee: 'TN',
-  Texas: 'TX',
-  Utah: 'UT',
-  Vermont: 'VT',
-  Virginia: 'VA',
-  Washington: 'WA',
-  'West Virginia': 'WV',
-  Wisconsin: 'WI',
-  Wyoming: 'WY',
-  'District of Columbia': 'DC',
-};
+interface CampaignFinanceResponse {
+  // Raw financial totals (directly from FEC)
+  totalRaised: number;
+  totalSpent: number;
+  cashOnHand: number;
+  individualContributions: number;
+  pacContributions: number;
+  partyContributions: number;
+  candidateContributions: number;
 
-function getStateAbbreviation(state: string): string {
-  // If it's already an abbreviation, return as is
-  if (state.length === 2) return state;
-  // Otherwise look up the abbreviation
-  return STATE_ABBR[state] || state;
-}
+  // Processed breakdowns (from individual contribution analysis)
+  industryBreakdown: Array<{
+    industry: string;
+    amount: number;
+    percentage: number;
+    count: number;
+    topEmployers: Array<{
+      name: string;
+      amount: number;
+      count: number;
+    }>;
+  }>;
 
-interface FECCandidate {
-  candidate_id: string;
-  name: string;
-  party: string;
-  office: string;
-  state: string;
-  district?: string;
-  election_years: number[];
-  cycles: number[];
-}
+  geographicBreakdown: Array<{
+    state: string;
+    stateName: string;
+    amount: number;
+    percentage: number;
+    count: number;
+    isHomeState: boolean;
+  }>;
 
-interface ContributionData {
-  contributor_name: string;
-  contributor_employer?: string;
-  contributor_occupation?: string;
-  contribution_receipt_amount: number;
-  contribution_receipt_date: string;
-  committee_name: string;
-}
+  // CRITICAL: Data quality transparency
+  dataQuality: {
+    industry: {
+      totalContributionsAnalyzed: number;
+      contributionsWithEmployer: number;
+      completenessPercentage: number;
+    };
+    geography: {
+      totalContributionsAnalyzed: number;
+      contributionsWithState: number;
+      completenessPercentage: number;
+    };
+    overallDataConfidence: 'high' | 'medium' | 'low';
+  };
 
-interface ExpenditureData {
-  committee_name: string;
-  disbursement_description: string;
-  disbursement_amount: number;
-  disbursement_date: string;
-  recipient_name: string;
-  category_code?: string;
-  category_code_full?: string;
-}
-
-interface FinancialSummary {
+  // Metadata and sources
+  candidateId: string;
   cycle: number;
-  total_receipts: number;
-  total_disbursements: number;
-  cash_on_hand_end_period: number;
-  individual_contributions: number;
-  pac_contributions: number;
-  party_contributions: number;
-  candidate_contributions: number;
-}
-
-interface CampaignFinanceData {
-  candidate_info: FECCandidate | null;
-  financial_summary: FinancialSummary[];
-  recent_contributions: ContributionData[];
-  recent_expenditures: ExpenditureData[];
-  top_contributors: Array<{
-    name: string;
-    total_amount: number;
-    count: number;
-  }>;
-  top_expenditure_categories: Array<{
-    category: string;
-    total_amount: number;
-    count: number;
-  }>;
-  // Enhanced features
-  industry_breakdown?: ContributionsBySector[];
-  bundled_contributions?: BundledContributor[];
-  independent_expenditures?: IndependentExpenditureAnalysis;
-  funding_diversity?: {
-    sector_count: number;
-    top_sector_percentage: number;
-    herfindahl_index: number;
+  lastUpdated: string;
+  fecDataSources: {
+    financialSummary: string;
+    contributions: string;
   };
 }
 
-// Enhanced helper function to find FEC candidate by name and state
-async function findFECCandidate(
-  representativeName: string,
-  state: string,
-  district?: string
-): Promise<FECCandidate | null> {
-  return cachedFetch(
-    `fec-candidate-${representativeName}-${state}-${district || 'senate'}`,
-    async () => {
-      try {
-        const currentCycle =
-          new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
-        const previousCycle = currentCycle - 2;
+/**
+ * Select the appropriate FEC ID based on the representative's current office
+ * Senate candidates have FEC IDs starting with 'S', House candidates start with 'H'
+ */
+function selectOfficeAwareFecId(
+  fecIds: string[],
+  chamber: 'House' | 'Senate' | null
+): string | null {
+  if (!fecIds.length) return null;
 
-        // Enhanced name cleaning for better FEC matching
-        const searchName = representativeName
-          .replace(/^(Rep\.|Representative|Senator|Sen\.)\s+/i, '')
-          .replace(/\s+(Jr\.|Sr\.|III|II|IV|Jr|Sr)\s*$/i, '') // Remove suffixes
-          .replace(/,\s*.*$/, '') // Remove everything after comma
-          .replace(/\s+/g, ' ') // Normalize whitespace
-          .trim();
-
-        // Generate comprehensive name variants for better matching
-        const nameVariants = new Set([searchName]);
-
-        // Handle "Last, First" format
-        if (representativeName.includes(',')) {
-          const parts = representativeName.split(',').map(p => p.trim());
-          if (parts.length >= 2) {
-            const lastName =
-              parts[0]?.replace(/^(Rep\.|Representative|Senator|Sen\.)\s+/i, '') || '';
-            const firstName = parts[1]?.split(' ')[0] || ''; // Get first name only
-            nameVariants.add(`${firstName} ${lastName}`);
-            nameVariants.add(lastName);
-            nameVariants.add(`${lastName}, ${firstName}`);
-            nameVariants.add(`${lastName?.toUpperCase() || ''}, ${firstName?.toUpperCase() || ''}`);
-          }
-        } else {
-          // Handle "First Last" format
-          const nameParts = searchName.split(' ');
-          if (nameParts.length >= 2) {
-            const firstName = nameParts[0] || '';
-            const lastName = nameParts[nameParts.length - 1] || '';
-            nameVariants.add(lastName); // Last name only
-            nameVariants.add(`${lastName}, ${firstName}`); // Formal format
-            nameVariants.add(`${lastName?.toUpperCase() || ''}, ${firstName?.toUpperCase() || ''}`); // Uppercase formal
-
-            // Add middle initials variants
-            if (nameParts.length > 2) {
-              const middleInitial = nameParts[1]?.charAt(0) || '';
-              nameVariants.add(`${firstName} ${middleInitial} ${lastName}`);
-              nameVariants.add(`${lastName}, ${firstName} ${middleInitial}`);
-              nameVariants.add(
-                `${lastName?.toUpperCase() || ''}, ${firstName?.toUpperCase() || ''} ${middleInitial?.toUpperCase() || ''}`
-              );
-            }
-          }
-        }
-
-        logger.info('Enhanced FEC candidate search', {
-          originalName: representativeName,
-          searchVariants: Array.from(nameVariants),
-          state,
-          district,
-          cycles: [currentCycle, previousCycle],
-        });
-
-        // Try each name variant with improved search parameters
-        for (const name of Array.from(nameVariants)) {
-          // Try current cycle first, then previous cycles (up to 3 cycles back)
-          for (const cycle of [currentCycle, previousCycle, currentCycle - 4]) {
-            const searchParams = new URLSearchParams({
-              api_key: process.env.FEC_API_KEY!,
-              name: name, // Use 'name' parameter for better matching
-              state: state,
-              cycle: cycle.toString(),
-              per_page: '50', // Increased to catch more potential matches
-            });
-
-            // Add office filter with better logic
-            if (district && district !== '00') {
-              searchParams.append('office', 'H');
-              searchParams.append('district', district.padStart(2, '0'));
-            } else {
-              searchParams.append('office', 'S');
-            }
-
-            // Add candidate status filter for active candidates
-            searchParams.append('candidate_status', 'C'); // Active candidates
-
-            const response = await fetch(
-              `https://api.open.fec.gov/v1/candidates/search/?${searchParams}`
-            );
-
-            const monitor = monitorExternalApi('fec', 'candidate-search', response.url);
-
-            if (!response.ok) {
-              monitor.end(false, response.status);
-              logger.warn('FEC search failed', {
-                name,
-                cycle,
-                status: response.status,
-              });
-              continue;
-            }
-
-            const data = await response.json();
-            monitor.end(true, 200);
-            logger.info('FEC candidate search results', {
-              name,
-              cycle,
-              resultsCount: data.results?.length || 0,
-            });
-
-            if (data.results && data.results.length > 0) {
-              // Enhanced candidate matching with multiple criteria
-              const candidates = data.results;
-
-              // Priority 1: Exact name, office, and district match
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              let candidate = candidates.find((c: any) => {
-                const nameMatch = isNameMatch(c.name, representativeName, name);
-                const officeMatch = district ? c.office === 'H' : c.office === 'S';
-                const locationMatch = district
-                  ? c.district?.padStart(2, '0') === district.padStart(2, '0') && c.state === state
-                  : c.state === state;
-
-                return nameMatch && officeMatch && locationMatch;
-              });
-
-              // Priority 2: Name and office match (relaxed district)
-              if (!candidate) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                candidate = candidates.find((c: any) => {
-                  const nameMatch = isNameMatch(c.name, representativeName, name);
-                  const officeMatch = district ? c.office === 'H' : c.office === 'S';
-                  const stateMatch = c.state === state;
-
-                  return nameMatch && officeMatch && stateMatch;
-                });
-              }
-
-              // Priority 3: Best name match with state
-              if (!candidate && candidates.length > 0) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                candidate = candidates
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  .filter((c: any) => c.state === state)
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  .sort((a: any, b: any) => {
-                    const aScore = getNameMatchScore(a.name, representativeName);
-                    const bScore = getNameMatchScore(b.name, representativeName);
-                    return bScore - aScore; // Higher score first
-                  })[0];
-              }
-
-              if (candidate) {
-                logger.info('Found matching FEC candidate', {
-                  candidateName: candidate.name,
-                  candidateId: candidate.candidate_id,
-                  searchName,
-                  cycle,
-                });
-                return {
-                  candidate_id: candidate.candidate_id,
-                  name: candidate.name,
-                  party: candidate.party,
-                  office: candidate.office,
-                  state: candidate.state,
-                  district: candidate.district,
-                  election_years: candidate.election_years || [],
-                  cycles: candidate.cycles || [],
-                };
-              }
-
-              // If no exact match but we have results for the right state and office type
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const fallbackCandidate = data.results.find((c: any) => {
-                return (
-                  c.state === state &&
-                  ((district && c.office === 'H') || (!district && c.office === 'S'))
-                );
-              });
-
-              if (fallbackCandidate) {
-                logger.info('Using fallback FEC candidate', {
-                  candidateName: fallbackCandidate.name,
-                  candidateId: fallbackCandidate.candidate_id,
-                  searchName,
-                });
-                return {
-                  candidate_id: fallbackCandidate.candidate_id,
-                  name: fallbackCandidate.name,
-                  party: fallbackCandidate.party,
-                  office: fallbackCandidate.office,
-                  state: fallbackCandidate.state,
-                  district: fallbackCandidate.district,
-                  election_years: fallbackCandidate.election_years || [],
-                  cycles: fallbackCandidate.cycles || [],
-                };
-              }
-            }
-          }
-        }
-
-        logger.warn('No FEC candidate found', { searchName, state });
-        return null;
-      } catch (error) {
-        logger.error('Error finding FEC candidate', error as Error, {
-          representativeName,
-          state,
-          district,
-        });
-        return null;
-      }
-    },
-    60 * 60 * 1000 // 1 hour cache
-  );
-}
-
-// Helper function to check if names match
-function isNameMatch(fecName: string, originalName: string, searchName: string): boolean {
-  const normalize = (name: string) =>
-    name
-      .toLowerCase()
-      .replace(/[.,\-]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-  const normalizedFec = normalize(fecName);
-  const normalizedOriginal = normalize(originalName);
-  const normalizedSearch = normalize(searchName);
-
-  // Exact match
-  if (normalizedFec === normalizedSearch || normalizedFec === normalizedOriginal) {
-    return true;
+  // If we don't know the chamber, return the first ID (fallback to original behavior)
+  if (!chamber) {
+    logger.warn('[Finance API] Chamber unknown, using first FEC ID as fallback');
+    return fecIds[0] || null;
   }
 
-  // Check last name matches
-  const fecLastName = normalizedFec.split(' ').pop() || '';
-  const originalLastName = normalizedOriginal.split(' ').pop() || '';
-  const searchLastName = normalizedSearch.split(' ').pop() || '';
+  // Look for office-specific FEC ID
+  const targetPrefix = chamber === 'Senate' ? 'S' : 'H';
+  const officeSpecificId = fecIds.find(id => id.startsWith(targetPrefix));
 
-  if (
-    fecLastName.length > 2 &&
-    (fecLastName === originalLastName || fecLastName === searchLastName)
-  ) {
-    // If last names match, check if first names or initials match
-    const fecFirstName = normalizedFec.split(' ')[0] || '';
-    const originalFirstName = normalizedOriginal.split(' ')[0] || '';
-    const searchFirstName = normalizedSearch.split(' ')[0] || '';
+  if (officeSpecificId) {
+    logger.info(`[Finance API] Selected ${chamber} FEC ID: ${officeSpecificId}`);
+    return officeSpecificId;
+  }
 
-    // First name match or initial match
-    if (
-      fecFirstName === originalFirstName ||
-      fecFirstName === searchFirstName ||
-      fecFirstName.charAt(0) === originalFirstName.charAt(0) ||
-      fecFirstName.charAt(0) === searchFirstName.charAt(0)
-    ) {
-      return true;
+  // If no office-specific ID found, log warning and use first ID as fallback
+  logger.warn(
+    `[Finance API] No ${chamber} FEC ID found in [${fecIds.join(', ')}], using first as fallback`
+  );
+  return fecIds[0] || null;
+}
+
+/**
+ * Get FEC candidate ID for a bioguide ID
+ */
+async function getFECCandidateId(bioguideId: string): Promise<string | null> {
+  try {
+    // Get representative info to determine current office (House vs Senate)
+    let currentChamber: 'House' | 'Senate' | null = null;
+    try {
+      const enhancedRep = await getEnhancedRepresentative(bioguideId);
+      currentChamber = enhancedRep?.chamber || null;
+    } catch (error) {
+      logger.warn(`[Finance API] Could not determine chamber for ${bioguideId}:`, error);
     }
-  }
 
-  // Check partial matches for longer names
-  return (
-    normalizedFec.includes(normalizedSearch) ||
-    normalizedSearch.includes(normalizedFec) ||
-    normalizedFec.includes(normalizedOriginal.split(' ').pop() || '') ||
-    normalizedOriginal.includes(normalizedFec.split(' ').pop() || '')
-  );
-}
+    // Strategy 1: Direct mapping from congress-legislators data (office-aware)
+    const fecIds = await bioguideToFEC(bioguideId);
+    if (fecIds.length > 0) {
+      // Select FEC ID based on current office
+      const officeAwareFecId = selectOfficeAwareFecId(fecIds, currentChamber);
+      logger.info(
+        `[Finance API] Found ${fecIds.length} FEC IDs for ${bioguideId}, selected office-aware ID: ${officeAwareFecId} (chamber: ${currentChamber})`
+      );
+      if (officeAwareFecId) return officeAwareFecId;
+    }
 
-// Helper function to score name matches
-function getNameMatchScore(fecName: string, originalName: string): number {
-  const normalize = (name: string) =>
-    name
-      .toLowerCase()
-      .replace(/[.,\-]/g, '')
-      .trim();
+    // Strategy 2: Enhanced representative lookup (office-aware)
+    try {
+      const enhancedRep = await getEnhancedRepresentative(bioguideId);
 
-  const fecNorm = normalize(fecName);
-  const origNorm = normalize(originalName);
-
-  let score = 0;
-
-  // Exact match gets highest score
-  if (fecNorm === origNorm) score += 100;
-
-  // Split names into parts
-  const fecParts = fecNorm.split(' ');
-  const origParts = origNorm.split(' ');
-
-  const fecFirst = fecParts[0] || '';
-  const fecLast = fecParts[fecParts.length - 1] || '';
-  const origFirst = origParts[0] || '';
-  const origLast = origParts[origParts.length - 1] || '';
-
-  // Last name exact match
-  if (fecLast === origLast && fecLast.length > 2) score += 50;
-
-  // First name exact match
-  if (fecFirst === origFirst && fecFirst.length > 1) score += 30;
-
-  // First name initial match
-  if (fecFirst.charAt(0) === origFirst.charAt(0) && fecFirst.charAt(0) !== '') score += 15;
-
-  // Partial last name matches
-  if (fecLast.includes(origLast) && origLast.length > 2) score += 20;
-  if (origLast.includes(fecLast) && fecLast.length > 2) score += 20;
-
-  // Middle name/initial matches
-  if (fecParts.length > 2 && origParts.length > 2) {
-    const fecMiddle = fecParts[1];
-    const origMiddle = origParts[1];
-    if (fecMiddle === origMiddle) score += 10;
-    if (fecMiddle?.charAt(0) === origMiddle?.charAt(0)) score += 5;
-  }
-
-  // Penalize length differences
-  const lengthDiff = Math.abs(fecNorm.length - origNorm.length);
-  if (lengthDiff > 10) score -= 10;
-
-  return Math.max(0, score);
-}
-
-async function getFinancialSummary(candidateId: string): Promise<FinancialSummary[]> {
-  const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
-  const cacheKey = `fec-summary-${candidateId}-${currentCycle}`;
-
-  // Validate candidate ID format
-  const normalizedId = FECUtils.normalizeCandidateId(candidateId);
-  const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
-
-  if (!validationInfo.isValid) {
-    logger.warn('Invalid FEC candidate ID format for financial summary', {
-      candidateId,
-      normalizedId,
-      errors: validationInfo.errors,
-    });
-    return [];
-  }
-
-  return cachedFetch(
-    cacheKey,
-    async () => {
-      try {
-        logger.info('Fetching financial summary from FEC', { candidateId, currentCycle });
-
-        const response = await fetch(
-          `https://api.open.fec.gov/v1/candidate/${normalizedId}/totals/?api_key=${process.env.FEC_API_KEY}&cycle=${currentCycle}&cycle=${currentCycle - 2}&sort=-cycle`,
-          {
-            headers: {
-              'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-              Accept: 'application/json',
-            },
-          }
+      if (enhancedRep?.ids?.fec && enhancedRep.ids.fec.length > 0) {
+        const officeAwareFecId = selectOfficeAwareFecId(enhancedRep.ids.fec, currentChamber);
+        logger.info(
+          `[Finance API] Found FEC ID via enhanced lookup: ${bioguideId} -> ${officeAwareFecId} (chamber: ${currentChamber})`
         );
-
-        const monitor = monitorExternalApi('fec', 'candidate-financials', response.url);
-
-        if (!response.ok) {
-          monitor.end(false, response.status);
-
-          // Log detailed error information for debugging
-          let errorDetails = '';
-          try {
-            const errorBody = await response.text();
-            errorDetails = errorBody.substring(0, 500); // Limit error message length
-          } catch {
-            errorDetails = 'Could not read error response body';
-          }
-
-          logger.error('FEC financial summary API error', new Error(`HTTP ${response.status}`), {
-            candidateId,
-            status: response.status,
-            statusText: response.statusText,
-            errorDetails,
-            url: response.url.replace(process.env.FEC_API_KEY!, '[REDACTED]'),
-          });
-
-          return [];
-        }
-
-        const data = await response.json();
-        monitor.end(true, 200);
-
-        logger.info('Successfully fetched financial summary', {
-          candidateId,
-          cycles: data.results?.length || 0,
-        });
-
-        return (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data.results?.map((total: any) => ({
-            cycle: total.cycle,
-            total_receipts: total.receipts || 0,
-            total_disbursements: total.disbursements || 0,
-            cash_on_hand_end_period: total.cash_on_hand_end_period || 0,
-            individual_contributions: total.individual_contributions || 0,
-            pac_contributions: total.other_political_committee_contributions || 0,
-            party_contributions: total.political_party_committee_contributions || 0,
-            candidate_contributions: total.candidate_contribution || 0,
-          })) || []
-        );
-      } catch (error) {
-        logger.error('Error fetching financial summary', error as Error, {
-          candidateId,
-          cacheKey,
-        });
-        return [];
+        if (officeAwareFecId) return officeAwareFecId;
       }
-    },
-    2 * 60 * 60 * 1000 // 2 hours cache for financial summaries (less frequent updates)
-  );
+    } catch (error) {
+      logger.warn(`[Finance API] Enhanced representative lookup failed for ${bioguideId}:`, error);
+    }
+
+    logger.warn(`[Finance API] No FEC mapping found for bioguide ${bioguideId}`);
+    return null;
+  } catch (error) {
+    logger.error(`[Finance API] Error getting FEC candidate ID for ${bioguideId}:`, error);
+    return null;
+  }
 }
 
-async function getContributions(candidateId: string, limit = 100): Promise<ContributionData[]> {
-  // FEC API has a maximum per_page of 100
-  const safeLimit = Math.min(limit, 100);
-  const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
-  const cacheKey = `fec-contributions-${candidateId}-${safeLimit}-${new Date().toISOString().split('T')[0]}`; // Daily cache
+/**
+ * Get representative's state for geographic analysis
+ */
+async function getRepresentativeState(bioguideId: string): Promise<string> {
+  try {
+    const enhancedRep = await getEnhancedRepresentative(bioguideId);
+    const state = enhancedRep?.state;
 
-  // Validate candidate ID format
-  const normalizedId = FECUtils.normalizeCandidateId(candidateId);
-  const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
+    if (state) {
+      return state;
+    }
 
-  if (!validationInfo.isValid) {
-    logger.warn('Invalid FEC candidate ID format for contributions', {
-      candidateId,
-      normalizedId,
-      errors: validationInfo.errors,
-    });
-    return [];
+    // Fallback: try to extract from other representative data
+    // This is a last resort and should rarely be needed
+    logger.warn(`[Finance API] Could not determine state for ${bioguideId}, using fallback`);
+    return 'Unknown';
+  } catch (error) {
+    logger.error(`[Finance API] Error getting representative state for ${bioguideId}:`, error);
+    return 'Unknown';
   }
-
-  return cachedFetch(
-    cacheKey,
-    async () => {
-      try {
-        logger.info('Fetching contributions from FEC', { candidateId, currentCycle });
-
-        const response = await fetch(
-          `https://api.open.fec.gov/v1/schedules/schedule_a/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&two_year_transaction_period=${currentCycle}&sort=-contribution_receipt_date&per_page=${safeLimit}`,
-          {
-            headers: {
-              'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-              Accept: 'application/json',
-            },
-          }
-        );
-
-        const monitor = monitorExternalApi('fec', 'contributions', response.url);
-
-        if (!response.ok) {
-          monitor.end(false, response.status);
-
-          // Log detailed error information for debugging
-          let errorDetails = '';
-          try {
-            const errorBody = await response.text();
-            errorDetails = errorBody.substring(0, 500); // Limit error message length
-          } catch {
-            errorDetails = 'Could not read error response body';
-          }
-
-          logger.error('FEC contributions API error', new Error(`HTTP ${response.status}`), {
-            candidateId,
-            status: response.status,
-            statusText: response.statusText,
-            errorDetails,
-            url: response.url.replace(process.env.FEC_API_KEY!, '[REDACTED]'),
-          });
-
-          return [];
-        }
-
-        const data = await response.json();
-        monitor.end(true, 200);
-
-        logger.info('Successfully fetched contributions', {
-          candidateId,
-          contributionsCount: data.results?.length || 0,
-        });
-
-        return (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data.results?.map((contrib: any) => ({
-            contributor_name: contrib.contributor_name || 'Unknown',
-            contributor_employer: contrib.contributor_employer,
-            contributor_occupation: contrib.contributor_occupation,
-            contribution_receipt_amount: contrib.contribution_receipt_amount || 0,
-            contribution_receipt_date: contrib.contribution_receipt_date,
-            committee_name: contrib.committee_name || 'Unknown',
-          })) || []
-        );
-      } catch (error) {
-        logger.error('Error fetching contributions', error as Error, {
-          candidateId,
-          cacheKey,
-        });
-        return [];
-      }
-    },
-    60 * 60 * 1000 // 1 hour cache for contributions (more frequent updates)
-  );
-}
-
-// New function to fetch PAC contributions for bundled analysis
-async function getPACContributions(candidateId: string): Promise<ContributionData[]> {
-  const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
-  const cacheKey = `fec-pac-contributions-${candidateId}-${new Date().toISOString().split('T')[0]}`;
-
-  const normalizedId = FECUtils.normalizeCandidateId(candidateId);
-  const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
-
-  if (!validationInfo.isValid) {
-    return [];
-  }
-
-  return cachedFetch(
-    cacheKey,
-    async () => {
-      try {
-        const response = await fetch(
-          `https://api.open.fec.gov/v1/schedules/schedule_a/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&contributor_type=committee&two_year_transaction_period=${currentCycle}&sort=-contribution_receipt_date&per_page=100`,
-          {
-            headers: {
-              'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-              Accept: 'application/json',
-            },
-          }
-        );
-
-        if (!response.ok) {
-          return [];
-        }
-
-        const data = await response.json();
-        return (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data.results?.map((contrib: any) => ({
-            contributor_name: contrib.contributor_name || contrib.committee_name || 'Unknown',
-            contributor_employer: contrib.committee_name,
-            contribution_receipt_amount: contrib.contribution_receipt_amount || 0,
-            contribution_receipt_date: contrib.contribution_receipt_date,
-            committee_name: contrib.committee_name || 'Unknown',
-          })) || []
-        );
-      } catch (error) {
-        logger.error('Error fetching PAC contributions', error as Error, {
-          candidateId,
-        });
-        return [];
-      }
-    },
-    60 * 60 * 1000
-  );
-}
-
-// New function to fetch independent expenditures
-async function getIndependentExpenditures(candidateId: string) {
-  const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
-  const cacheKey = `fec-independent-expenditures-${candidateId}-${new Date().toISOString().split('T')[0]}`;
-
-  const normalizedId = FECUtils.normalizeCandidateId(candidateId);
-  const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
-
-  if (!validationInfo.isValid) {
-    return [];
-  }
-
-  return cachedFetch(
-    cacheKey,
-    async () => {
-      try {
-        const response = await fetch(
-          `https://api.open.fec.gov/v1/schedules/schedule_e/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&two_year_transaction_period=${currentCycle}&sort=-expenditure_date&per_page=100`,
-          {
-            headers: {
-              'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-              Accept: 'application/json',
-            },
-          }
-        );
-
-        if (!response.ok) {
-          return [];
-        }
-
-        const data = await response.json();
-        return (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data.results?.map((exp: any) => ({
-            committee_id: exp.committee_id,
-            committee_name: exp.committee_name || 'Unknown',
-            candidate_id: exp.candidate_id,
-            candidate_name: exp.candidate_name,
-            expenditure_amount: exp.expenditure_amount || 0,
-            expenditure_date: exp.expenditure_date,
-            expenditure_description: exp.expenditure_description || 'Unknown',
-            support_oppose_indicator: exp.support_oppose_indicator,
-            election_type: exp.election_type,
-            expenditure_purpose: exp.expenditure_purpose_descrip || exp.expenditure_description,
-            payee_name: exp.payee_name || 'Unknown',
-            payee_city: exp.payee_city,
-            payee_state: exp.payee_state,
-            filing_form: exp.filing_form,
-            report_type: exp.report_type,
-            image_number: exp.image_number,
-            memo_text: exp.memo_text,
-          })) || []
-        );
-      } catch (error) {
-        logger.error('Error fetching independent expenditures', error as Error, {
-          candidateId,
-        });
-        return [];
-      }
-    },
-    2 * 60 * 60 * 1000 // 2 hours cache
-  );
-}
-
-async function getExpenditures(candidateId: string): Promise<ExpenditureData[]> {
-  const currentCycle = new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
-  const cacheKey = `fec-expenditures-${candidateId}-${new Date().toISOString().split('T')[0]}`; // Daily cache
-
-  // Validate candidate ID format
-  const normalizedId = FECUtils.normalizeCandidateId(candidateId);
-  const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedId);
-
-  if (!validationInfo.isValid) {
-    logger.warn('Invalid FEC candidate ID format for expenditures', {
-      candidateId,
-      normalizedId,
-      errors: validationInfo.errors,
-    });
-    return [];
-  }
-
-  return cachedFetch(
-    cacheKey,
-    async () => {
-      try {
-        logger.info('Fetching expenditures from FEC', { candidateId, currentCycle });
-
-        const response = await fetch(
-          `https://api.open.fec.gov/v1/schedules/schedule_b/?api_key=${process.env.FEC_API_KEY}&candidate_id=${normalizedId}&two_year_transaction_period=${currentCycle}&sort=-disbursement_date&per_page=20`,
-          {
-            headers: {
-              'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-              Accept: 'application/json',
-            },
-          }
-        );
-
-        const monitor = monitorExternalApi('fec', 'expenditures', response.url);
-
-        if (!response.ok) {
-          monitor.end(false, response.status);
-
-          // Log detailed error information for debugging
-          let errorDetails = '';
-          try {
-            const errorBody = await response.text();
-            errorDetails = errorBody.substring(0, 500); // Limit error message length
-          } catch {
-            errorDetails = 'Could not read error response body';
-          }
-
-          logger.error('FEC expenditures API error', new Error(`HTTP ${response.status}`), {
-            candidateId,
-            status: response.status,
-            statusText: response.statusText,
-            errorDetails,
-            url: response.url.replace(process.env.FEC_API_KEY!, '[REDACTED]'),
-          });
-
-          return [];
-        }
-
-        const data = await response.json();
-        monitor.end(true, 200);
-
-        logger.info('Successfully fetched expenditures', {
-          candidateId,
-          expendituresCount: data.results?.length || 0,
-        });
-
-        return (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data.results?.map((exp: any) => ({
-            committee_name: exp.committee_name || 'Unknown',
-            disbursement_description: exp.disbursement_description || 'Unknown',
-            disbursement_amount: exp.disbursement_amount || 0,
-            disbursement_date: exp.disbursement_date,
-            recipient_name: exp.recipient_name || 'Unknown',
-            category_code: exp.category_code,
-            category_code_full: exp.category_code_full,
-          })) || []
-        );
-      } catch (error) {
-        logger.error('Error fetching expenditures', error as Error, {
-          candidateId,
-          cacheKey,
-        });
-        return [];
-      }
-    },
-    60 * 60 * 1000 // 1 hour cache for expenditures (more frequent updates)
-  );
 }
 
 export async function GET(
@@ -864,545 +181,208 @@ export async function GET(
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const { bioguideId } = await params;
+  const { searchParams } = new URL(request.url);
+
+  const cycleParam = searchParams.get('cycle');
+  let requestedCycle: number;
+  let cachedFecCandidateId: string | null = null;
+
+  // If cycle is explicitly provided in query params, validate and use it
+  if (cycleParam) {
+    requestedCycle = parseInt(cycleParam, 10);
+  } else {
+    // Step 1: Get FEC candidate ID first to determine dynamic default cycle
+    cachedFecCandidateId = await getFECCandidateId(bioguideId);
+
+    if (cachedFecCandidateId) {
+      // Get candidate's election history to find their most recent active cycle
+      const electionCycles = await fecApiService.getCandidateElectionCycles(cachedFecCandidateId);
+
+      if (electionCycles.length > 0) {
+        // Use the most recent cycle from their actual election history
+        const mostRecentCycle = electionCycles[0]; // Already sorted in descending order
+        requestedCycle = mostRecentCycle!; // Non-null assertion since we checked length > 0
+        logger.info(
+          `[Finance API] Dynamic cycle detection: Using ${requestedCycle} for ${bioguideId} (FEC: ${cachedFecCandidateId})`
+        );
+      } else {
+        // Fallback to 2024 if no election history found
+        requestedCycle = 2024;
+        logger.warn(
+          `[Finance API] No election cycles found for ${bioguideId}, falling back to 2024`
+        );
+      }
+    } else {
+      // If no FEC ID found, use 2024 as fallback (will fail later anyway)
+      requestedCycle = 2024;
+    }
+  }
+
+  // Validate cycle parameter - only allow election years with actual data
+  if (
+    isNaN(requestedCycle) ||
+    requestedCycle < 2000 ||
+    requestedCycle > 2024 ||
+    requestedCycle % 2 !== 0
+  ) {
+    return NextResponse.json(
+      {
+        error: 'Invalid cycle parameter. Use even-numbered election years 2000-2024.',
+      },
+      { status: 400 }
+    );
+  }
+
+  const currentCycle = requestedCycle;
 
   if (!bioguideId) {
     return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
   }
 
+  // Check for API key
+  if (!process.env.FEC_API_KEY) {
+    logger.error('[Finance API] FEC_API_KEY environment variable is not set');
+    return NextResponse.json({ error: 'FEC API service unavailable' }, { status: 503 });
+  }
+
   try {
-    // First, try to get representative info to search FEC
-    let representative;
-    try {
-      const repResponse = await fetch(`${request.nextUrl.origin}/api/representative/${bioguideId}`);
+    // Get FEC candidate ID (reuse cached value if available from dynamic cycle detection)
+    const fecCandidateId = cachedFecCandidateId || (await getFECCandidateId(bioguideId));
 
-      if (repResponse.ok) {
-        representative = await repResponse.json();
-      } else {
-        // Fallback representative data
-        representative = {
-          name: `Representative ${bioguideId}`,
-          state: 'MI',
-          district: null,
+    if (!fecCandidateId) {
+      logger.info(
+        `[Finance API] No FEC data available for ${bioguideId} - returning empty response`
+      );
+      return NextResponse.json(
+        {
+          error: 'No campaign finance data available',
+          reason: 'Representative not found in FEC database',
+          dataAvailable: false,
           bioguideId,
-        };
-      }
-    } catch (error) {
-      logger.warn('Could not fetch representative info, using fallback', {
-        bioguideId,
-        error: (error as Error).message,
-      });
-      // Fallback representative data
-      representative = {
-        name: `Representative ${bioguideId}`,
-        state: 'MI',
-        district: null,
-        bioguideId,
-      };
+          lastUpdated: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
     }
 
-    // Enhanced FEC data retrieval with better error handling
-    let enhancedRep: unknown = null;
-    if (process.env.FEC_API_KEY) {
-      let fecCandidate: FECCandidate | null = null;
-      let dataSource = 'fallback';
+    // Step 2: Validate candidate has data
+    const candidateValidation = await fecApiService.validateCandidateData(
+      fecCandidateId,
+      currentCycle
+    );
 
-      // Get FEC IDs using the new legislator mapping service
-      const fecIds = await bioguideToFEC(bioguideId);
-
-      try {
-        // Strategy 1: Enhanced direct mapping using congress-legislators data
-        let mappedFECId = fecIds.length > 0 ? fecIds[0] : null;
-
-        // Try to get enhanced representative data for better FEC matching
-        try {
-          enhancedRep = await getEnhancedRepresentative(bioguideId);
-
-          // Use FEC IDs from congress-legislators if available
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const enhancedRepIds = (enhancedRep as Record<string, unknown>)?.ids as
-            | Record<string, string[]>
-            | undefined;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          if (enhancedRepIds?.fec && enhancedRepIds.fec.length > 0) {
-            mappedFECId = enhancedRepIds.fec[0] || null; // Use the first FEC ID
-            logger.info('Found enhanced FEC ID from congress-legislators', {
-              bioguideId,
-              fecId: mappedFECId,
-              totalFECIds: enhancedRepIds.fec.length,
-            });
-          }
-        } catch (enhancedError) {
-          logger.warn('Could not get enhanced representative data', {
-            bioguideId,
-            error: (enhancedError as Error).message,
-          });
-        }
-
-        if (mappedFECId) {
-          logger.info('Found direct FEC mapping', {
-            bioguideId,
-            fecId: mappedFECId,
-            source: enhancedRep ? 'congress-legislators' : 'bioguide-mapping',
-          });
-
-          try {
-            // Validate and normalize FEC candidate ID format
-            const normalizedFECId = FECUtils.normalizeCandidateId(mappedFECId);
-            const validationInfo = FECUtils.getCandidateIdValidationInfo(normalizedFECId);
-
-            if (!validationInfo.isValid) {
-              logger.warn('Invalid FEC candidate ID format', {
-                bioguideId,
-                fecId: mappedFECId,
-                normalizedId: normalizedFECId,
-                errors: validationInfo.errors,
-              });
-              // Don't throw, just skip to name-based search
-            } else {
-              const candidateResponse = await fetch(
-                `https://api.open.fec.gov/v1/candidate/${normalizedFECId}/?api_key=${process.env.FEC_API_KEY}`
-              );
-
-              if (candidateResponse.ok) {
-                const data = await candidateResponse.json();
-                if (data.results && data.results.length > 0) {
-                  const candidate = data.results[0];
-                  fecCandidate = {
-                    candidate_id: candidate.candidate_id,
-                    name: candidate.name,
-                    party: candidate.party,
-                    office: candidate.office,
-                    state: candidate.state,
-                    district: candidate.district,
-                    election_years: candidate.election_years || [],
-                    cycles: candidate.cycles || [],
-                  };
-                  dataSource = enhancedRep ? 'congress-legislators-mapping' : 'direct-mapping';
-                  logger.info('Successfully retrieved FEC data via direct mapping', {
-                    bioguideId,
-                    candidateId: fecCandidate.candidate_id,
-                    mappingSource: dataSource,
-                  });
-                }
-              } else {
-                logger.warn('FEC candidate lookup returned non-OK status', {
-                  bioguideId,
-                  fecId: mappedFECId,
-                  status: candidateResponse.status,
-                  statusText: candidateResponse.statusText,
-                });
-              }
-            }
-          } catch (mappingError) {
-            logger.warn('Direct FEC mapping failed, trying search', {
-              bioguideId,
-              fecId: mappedFECId,
-              error: (mappingError as Error).message,
-            });
-          }
-        }
-
-        // Strategy 2: Enhanced name-based search using congress-legislators data (fallback)
-        if (!fecCandidate) {
-          const stateAbbr = getStateAbbreviation(representative.state);
-
-          // Use enhanced name data if available
-          const enhancedRepData = enhancedRep as Record<string, unknown> | null;
-          const fullName = enhancedRepData?.fullName as Record<string, string> | undefined;
-          const searchName =
-            fullName?.official || (enhancedRepData?.name as string) || representative.name;
-
-          fecCandidate = await findFECCandidate(searchName, stateAbbr, representative.district);
-
-          if (fecCandidate) {
-            dataSource = 'enhanced-name-search';
-            logger.info('Found FEC candidate via enhanced name search', {
-              bioguideId,
-              candidateId: fecCandidate.candidate_id,
-              searchName,
-              originalName: representative.name,
-              usedEnhancedData: !!enhancedRep,
-            });
-          }
-        }
-      } catch (searchError) {
-        logger.error('FEC search failed', searchError as Error, {
+    if (!candidateValidation.exists) {
+      logger.info(
+        `[Finance API] FEC candidate ${fecCandidateId} has no data for cycle ${currentCycle}`
+      );
+      return NextResponse.json(
+        {
+          error: 'No campaign finance data available for current cycle',
+          reason: 'No financial data found in FEC database for current election cycle',
+          dataAvailable: false,
           bioguideId,
-          representativeName: representative.name,
-        });
-      }
-
-      if (fecCandidate) {
-        // Fetch comprehensive financial data including enhanced features
-        const [
-          financialSummary,
-          contributions,
-          expenditures,
-          pacContributions,
-          independentExpenditures,
-        ] = await Promise.all([
-          getFinancialSummary(fecCandidate.candidate_id),
-          getContributions(fecCandidate.candidate_id, 100), // FEC API max per_page is 100
-          getExpenditures(fecCandidate.candidate_id),
-          getPACContributions(fecCandidate.candidate_id),
-          getIndependentExpenditures(fecCandidate.candidate_id),
-        ]);
-
-        // Process top contributors with enhanced categorization
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const contributorTotals = contributions.reduce((acc: any, contrib) => {
-          const name = contrib.contributor_name;
-          if (!acc[name]) {
-            acc[name] = {
-              name,
-              total_amount: 0,
-              count: 0,
-              employer: contrib.contributor_employer,
-              occupation: contrib.contributor_occupation,
-            };
-          }
-          acc[name].total_amount += contrib.contribution_receipt_amount;
-          acc[name].count += 1;
-          return acc;
-        }, {});
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const topContributors = Object.values(contributorTotals)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .sort((a: any, b: any) => b.total_amount - a.total_amount)
-          .slice(0, 10);
-
-        // Helper function to categorize expenditures intelligently
-        function categorizeExpenditure(exp: ExpenditureData): string {
-          const desc = (exp.disbursement_description || '').toLowerCase();
-          const category = (exp.category_code_full || '').toLowerCase();
-
-          // Media and advertising
-          if (
-            desc.includes('media') ||
-            desc.includes('advertising') ||
-            desc.includes('ad') ||
-            desc.includes('television') ||
-            desc.includes('radio') ||
-            desc.includes('digital') ||
-            category.includes('media') ||
-            category.includes('advertising')
-          ) {
-            return 'Media and Advertising';
-          }
-
-          // Staff and payroll
-          if (
-            desc.includes('salary') ||
-            desc.includes('payroll') ||
-            desc.includes('staff') ||
-            desc.includes('consultant') ||
-            desc.includes('wage') ||
-            category.includes('salary') ||
-            category.includes('payroll')
-          ) {
-            return 'Staff and Payroll';
-          }
-
-          // Events and fundraising
-          if (
-            desc.includes('event') ||
-            desc.includes('fundrais') ||
-            desc.includes('venue') ||
-            desc.includes('catering') ||
-            desc.includes('reception') ||
-            category.includes('event') ||
-            category.includes('fundraising')
-          ) {
-            return 'Events and Fundraising';
-          }
-
-          // Travel and transportation
-          if (
-            desc.includes('travel') ||
-            desc.includes('hotel') ||
-            desc.includes('airline') ||
-            desc.includes('transportation') ||
-            desc.includes('mileage') ||
-            category.includes('travel')
-          ) {
-            return 'Travel and Transportation';
-          }
-
-          // Office operations
-          if (
-            desc.includes('office') ||
-            desc.includes('rent') ||
-            desc.includes('utilities') ||
-            desc.includes('phone') ||
-            desc.includes('equipment') ||
-            desc.includes('supplies') ||
-            category.includes('office') ||
-            category.includes('rent')
-          ) {
-            return 'Office Operations';
-          }
-
-          // Legal and compliance
-          if (
-            desc.includes('legal') ||
-            desc.includes('attorney') ||
-            desc.includes('compliance') ||
-            desc.includes('filing') ||
-            desc.includes('audit') ||
-            category.includes('legal') ||
-            category.includes('compliance')
-          ) {
-            return 'Legal and Compliance';
-          }
-
-          // Digital and technology
-          if (
-            desc.includes('website') ||
-            desc.includes('digital') ||
-            desc.includes('technology') ||
-            desc.includes('software') ||
-            desc.includes('online') ||
-            desc.includes('email') ||
-            category.includes('digital') ||
-            category.includes('technology')
-          ) {
-            return 'Digital and Technology';
-          }
-
-          // Use original category if available, otherwise use description or 'Other'
-          return (
-            exp.category_code_full ||
-            (exp.disbursement_description && exp.disbursement_description !== 'Unknown'
-              ? exp.disbursement_description
-              : 'Other')
-          );
-        }
-
-        // Process expenditure categories with intelligent categorization
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const categoryTotals = expenditures.reduce((acc: any, exp) => {
-          const category = categorizeExpenditure(exp);
-          if (!acc[category]) {
-            acc[category] = { category, total_amount: 0, count: 0 };
-          }
-          acc[category].total_amount += exp.disbursement_amount;
-          acc[category].count += 1;
-          return acc;
-        }, {});
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const topCategories = Object.values(categoryTotals)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .sort((a: any, b: any) => b.total_amount - a.total_amount)
-          .slice(0, 10);
-
-        // Enhanced Analysis Phase: Industry categorization, bundled contributions, and independent expenditures
-
-        // 1. Industry Categorization
-        const industryBreakdown = industryCategorizer.categorizeContributions(
-          contributions.map(contrib => ({
-            contributor_employer: contrib.contributor_employer,
-            contribution_receipt_amount: contrib.contribution_receipt_amount,
-            contributor_name: contrib.contributor_name,
-          }))
-        );
-
-        // 2. Bundled Contributions Analysis
-        const bundledContributions = bundledContributionsAnalyzer.analyzeBundledContributions(
-          contributions.map(contrib => ({
-            contributor_name: contrib.contributor_name,
-            contributor_employer: contrib.contributor_employer,
-            contribution_receipt_amount: contrib.contribution_receipt_amount,
-            contribution_receipt_date: contrib.contribution_receipt_date,
-            committee_name: contrib.committee_name,
-          })),
-          pacContributions.map(pac => ({
-            committee_name: pac.committee_name,
-            committee_id: pac.committee_name, // Use name as ID for basic analysis
-            contribution_receipt_amount: pac.contribution_receipt_amount,
-            contribution_receipt_date: pac.contribution_receipt_date,
-          }))
-        );
-
-        // 3. Independent Expenditures Analysis
-        const independentExpendituresAnalysis =
-          independentExpenditures.length > 0
-            ? independentExpendituresAnalyzer.analyzeIndependentExpenditures(
-                independentExpenditures,
-                fecCandidate.candidate_id
-              )
-            : undefined;
-
-        // 4. Funding Diversity Metrics
-        const fundingDiversity =
-          industryBreakdown.length > 0
-            ? {
-                sector_count: industryBreakdown.length,
-                top_sector_percentage: industryBreakdown[0]?.percentage || 0,
-                herfindahl_index: industryBreakdown.reduce(
-                  (sum, sector) => sum + Math.pow(sector.percentage / 100, 2),
-                  0
-                ),
-              }
-            : undefined;
-
-        // Calculate totals from contributions for fallback
-        const contributionsTotal = contributions.reduce(
-          (sum, contrib) => sum + contrib.contribution_receipt_amount,
-          0
-        );
-        const expendituresTotal = expenditures.reduce(
-          (sum, exp) => sum + exp.disbursement_amount,
-          0
-        );
-
-        // Get latest financial summary data or use calculated totals
-        const latestSummary = financialSummary[0];
-        const totalRaised = latestSummary?.total_receipts || contributionsTotal || 0;
-        const totalSpent = latestSummary?.total_disbursements || expendituresTotal || 0;
-        const cashOnHand =
-          latestSummary?.cash_on_hand_end_period || Math.max(0, totalRaised - totalSpent);
-
-        // Calculate donation breakdown from contributions if summary data is missing
-        const individualContributions =
-          latestSummary?.individual_contributions || contributionsTotal || 0;
-        const pacContributionsAmount = latestSummary?.pac_contributions || 0;
-        const partyContributionsAmount = latestSummary?.party_contributions || 0;
-        const candidateContributionsAmount = latestSummary?.candidate_contributions || 0;
-
-        logger.info('Finance data aggregated', {
-          bioguideId,
-          totalRaised,
-          totalSpent,
-          cashOnHand,
-          contributionsCount: contributions.length,
-          topContributorsCount: topContributors.length,
-          hasSummaryData: !!latestSummary,
-        });
-
-        const financeData: CampaignFinanceData = {
-          candidate_info: fecCandidate,
-          financial_summary: financialSummary,
-          recent_contributions: contributions.slice(0, 10),
-          recent_expenditures: expenditures.slice(0, 10),
-          top_contributors: topContributors as Array<{
-            name: string;
-            total_amount: number;
-            count: number;
-          }>,
-          top_expenditure_categories: topCategories as Array<{
-            category: string;
-            total_amount: number;
-            count: number;
-          }>,
-          // Enhanced features
-          industry_breakdown: industryBreakdown,
-          bundled_contributions: bundledContributions,
-          independent_expenditures: independentExpendituresAnalysis,
-          funding_diversity: fundingDiversity,
-        };
-
-        // Get committee ID for the current cycle
-        const currentCycle =
-          new Date().getFullYear() + (new Date().getFullYear() % 2 === 0 ? 0 : 1);
-        const committeeId = fecCandidate.candidate_id; // Use candidate ID as fallback for committee ID
-
-        // Build FEC source URLs for data verification
-        const fecUrls = {
-          candidateSummary: `https://www.fec.gov/data/candidate/${fecCandidate.candidate_id}/`,
-          contributions: `https://www.fec.gov/data/receipts/?candidate_id=${fecCandidate.candidate_id}&two_year_transaction_period=${currentCycle}`,
-          disbursements: `https://www.fec.gov/data/disbursements/?candidate_id=${fecCandidate.candidate_id}&two_year_transaction_period=${currentCycle}`,
-          filings: `https://www.fec.gov/data/filings/?candidate_id=${fecCandidate.candidate_id}`,
-          candidateProfile: `https://www.fec.gov/data/candidate/${fecCandidate.candidate_id}/?cycle=${currentCycle}&election_full=true`,
-        };
-
-        // Return response structure compatible with FinanceTab component
-        return NextResponse.json({
-          ...financeData,
-          // Add normalized fields for direct access
-          totalRaised,
-          totalSpent,
-          cashOnHand,
-          individualContributions,
-          pacContributions: pacContributionsAmount,
-          partyContributions: partyContributionsAmount,
-          candidateContributions: candidateContributionsAmount,
-          // Add FEC data sources for verification
-          dataSources: {
-            fec: {
-              candidateId: fecCandidate.candidate_id,
-              committeeId: committeeId,
-              cycle: currentCycle,
-              urls: fecUrls,
-              lastUpdated: new Date().toISOString(),
-              disclaimer: 'Data sourced from Federal Election Commission (FEC.gov)',
-            },
-          },
-          metadata: {
-            dataSource: 'fec.gov',
-            retrievalMethod: dataSource,
-            mappingUsed: fecIds.length > 0,
-            enhancedDataUsed: !!enhancedRep,
-            candidateInfo: {
-              fecId: fecCandidate.candidate_id,
-              name: fecCandidate.name,
-              office: fecCandidate.office,
-              state: fecCandidate.state,
-              district: fecCandidate.district,
-            },
-            dataQuality: {
-              financialSummary: financialSummary.length,
-              recentContributions: contributions.length,
-              recentExpenditures: expenditures.length,
-              topContributors: topContributors.length,
-              topCategories: topCategories.length,
-            },
-            lastUpdated: new Date().toISOString(),
-            cacheInfo: 'Real FEC data with enhanced congress-legislators matching',
-            dataSources: ['fec.gov', ...(enhancedRep ? ['congress-legislators'] : [])],
-          },
-        });
-      }
+          fecCandidateId,
+          cycle: currentCycle,
+          lastUpdated: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
     }
 
-    // EMERGENCY FIX: Never return fake financial data that could mislead citizens
-    // Previously returned $2.5M+ in fake receipts, fake contributors, and fabricated PAC donations
+    // Step 3: Get representative's state for geographic analysis
+    const representativeState = await getRepresentativeState(bioguideId);
 
-    logger.warn('FEC financial data unavailable - returning empty result', {
-      bioguideId,
-      reason: 'No FEC candidate mapping found and real financial data unavailable',
-    });
+    // Step 4: Check for sample vs full data request
+    const urlParams = new URL(request.url);
+    const useSampleData = urlParams.searchParams.get('sample') === 'true';
 
-    const emptyFinanceData: CampaignFinanceData = {
-      candidate_info: null,
-      financial_summary: [],
-      recent_contributions: [],
-      recent_expenditures: [],
-      top_contributors: [],
-      top_expenditure_categories: [],
+    if (useSampleData) {
+      logger.info(`[Finance API] Using sample data for ${fecCandidateId} (faster response)`);
+    } else {
+      logger.info(`[Finance API] Using full data for ${fecCandidateId} (may take longer)`);
+    }
+
+    // Step 5: Process complete finance data
+    const processedData = await aggregateFinanceData(
+      fecCandidateId,
+      currentCycle,
+      representativeState,
+      useSampleData
+    );
+
+    if (!processedData) {
+      logger.warn(`[Finance API] No financial data could be processed for ${fecCandidateId}`);
+      return NextResponse.json(
+        {
+          error: 'Unable to process campaign finance data',
+          reason: 'FEC data exists but could not be processed',
+          dataAvailable: false,
+          bioguideId,
+          fecCandidateId,
+          cycle: currentCycle,
+          lastUpdated: new Date().toISOString(),
+        },
+        { status: 500 }
+      );
+    }
+
+    // Step 6: Return processed data with full transparency
+    const response: CampaignFinanceResponse = {
+      // Financial totals
+      totalRaised: processedData.totalRaised,
+      totalSpent: processedData.totalSpent,
+      cashOnHand: processedData.cashOnHand,
+      individualContributions: processedData.individualContributions,
+      pacContributions: processedData.pacContributions,
+      partyContributions: processedData.partyContributions,
+      candidateContributions: processedData.candidateContributions,
+
+      // Breakdowns
+      industryBreakdown: processedData.industryBreakdown,
+      geographicBreakdown: processedData.geographicBreakdown,
+
+      // CRITICAL: Data quality transparency
+      dataQuality: processedData.dataQuality,
+
+      // Metadata
+      candidateId: processedData.candidateId,
+      cycle: processedData.cycle,
+      lastUpdated: processedData.lastUpdated,
+      fecDataSources: processedData.fecDataSources,
     };
 
-    return NextResponse.json({
-      ...emptyFinanceData,
-      metadata: {
-        dataSource: 'unavailable' as const,
-        retrievalMethod: 'none',
-        mappingUsed: false,
-        dataQuality: {
-          financialSummary: 0,
-          recentContributions: 0,
-          recentExpenditures: 0,
-          topContributors: 0,
-          topCategories: 0,
-        },
-        lastUpdated: new Date().toISOString(),
-        cacheInfo: 'Financial data unavailable - no FEC mapping found',
-        errorMessage: 'Campaign finance data unavailable from FEC.gov for this representative',
-      },
+    logger.info(`[Finance API] Successfully processed data for ${bioguideId}`, {
+      fecCandidateId,
+      totalRaised: response.totalRaised,
+      industryDataQuality: response.dataQuality.industry.completenessPercentage.toFixed(1) + '%',
+      geographyDataQuality: response.dataQuality.geography.completenessPercentage.toFixed(1) + '%',
+      overallConfidence: response.dataQuality.overallDataConfidence,
+      useSampleData,
+    });
+
+    // Add CORS headers for transparency tools
+    const headers = new Headers({
+      'Content-Type': 'application/json',
+      'X-Data-Source': 'fec.gov',
+      'X-Data-Quality': response.dataQuality.overallDataConfidence,
+      'X-Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+    });
+
+    return new NextResponse(JSON.stringify(response, null, 2), {
+      status: 200,
+      headers,
     });
   } catch (error) {
-    logger.error('Finance API error', error as Error, { bioguideId });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error(`[Finance API] Error processing request for ${bioguideId}:`, error);
+
+    // Don't expose internal error details to client
+    return NextResponse.json(
+      {
+        error: 'Internal server error while fetching campaign finance data',
+        bioguideId,
+        lastUpdated: new Date().toISOString(),
+      },
+      { status: 500 }
+    );
   }
 }

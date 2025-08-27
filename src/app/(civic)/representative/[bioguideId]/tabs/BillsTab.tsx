@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import logger from '@/lib/logging/simple-logger';
@@ -34,6 +34,40 @@ interface BillsTabProps {
 export function BillsTab({ bills = [] }: BillsTabProps) {
   const params = useParams();
   const bioguideId = params?.bioguideId as string;
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+
+  // Congress filter state - default to current congress to reduce overwhelming list
+  const [selectedCongress, setSelectedCongress] = useState(119);
+
+  // Apply congress filter
+  const filteredBills = React.useMemo(() => {
+    if (selectedCongress === 0) {
+      return bills; // Show all congresses
+    }
+    return bills.filter(bill => bill.congress === selectedCongress);
+  }, [bills, selectedCongress]);
+
+  // Get unique congress numbers for dropdown
+  const uniqueCongresses = React.useMemo(() => {
+    return [...new Set(bills.map(bill => bill.congress))]
+      .filter(c => typeof c === 'number' && c > 0)
+      .sort((a, b) => b - a); // Most recent first
+  }, [bills]);
+
+  const totalPages = Math.ceil(filteredBills.length / itemsPerPage);
+
+  // Calculate the bills to display on current page
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const displayedBills = filteredBills.slice(startIndex, endIndex);
+
+  // Reset to page 1 when congress filter changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCongress]);
 
   // Only create links for bills with complete data
   const canLinkToBill = useCallback((bill: Bill): boolean => {
@@ -131,9 +165,10 @@ export function BillsTab({ bills = [] }: BillsTabProps) {
     }
   }, [bills, bioguideId, canLinkToBill]);
 
-  // Calculate bill statistics
-  const totalBills = bills.length;
-  const enactedBills = bills.filter(
+  // Calculate bill statistics (based on filtered results)
+  const totalBills = filteredBills.length;
+  const allBills = bills.length;
+  const enactedBills = filteredBills.filter(
     bill => bill.status && bill.status.toLowerCase().includes('enacted')
   ).length;
   const avgCosponsors = 0; // This would come from actual data
@@ -143,10 +178,56 @@ export function BillsTab({ bills = [] }: BillsTabProps) {
     <>
       <h2 className="text-lg font-semibold mb-4">Legislative Tracker</h2>
 
+      {/* Congress Filter */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between">
+          <h3 className="font-medium text-gray-700">Filter by Congress</h3>
+          {selectedCongress !== 119 && (
+            <button
+              onClick={() => setSelectedCongress(119)}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              Reset to current Congress
+            </button>
+          )}
+        </div>
+        <div className="mt-3">
+          <select
+            value={selectedCongress}
+            onChange={e => setSelectedCongress(Number(e.target.value))}
+            className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value={119}>Current Congress (119th) - 2025-2027</option>
+            <option value={0}>All Congresses</option>
+            {uniqueCongresses.map(congress => (
+              <option key={congress} value={congress}>
+                {congress}th Congress {congress === 119 ? '(Current)' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+        {selectedCongress === 0 && (
+          <div className="mt-2 text-sm text-amber-600">
+            Showing all {allBills} bills across Bernie&apos;s entire career (this may take a moment
+            to load)
+          </div>
+        )}
+        {selectedCongress > 0 && selectedCongress !== 119 && (
+          <div className="mt-2 text-sm text-gray-600">
+            Showing {totalBills} bills from the {selectedCongress}th Congress
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-4 gap-4 mb-8">
         <div className="text-center">
           <div className="text-3xl font-bold text-blue-600">{totalBills}</div>
-          <div className="text-sm text-gray-500">Bills Sponsored</div>
+          <div className="text-sm text-gray-500">
+            Bills {selectedCongress === 0 ? 'Sponsored' : 'Shown'}
+          </div>
+          {selectedCongress !== 0 && totalBills !== allBills && (
+            <div className="text-xs text-gray-400">({allBills} total career)</div>
+          )}
         </div>
         <div className="text-center">
           <div className="text-3xl font-bold text-green-600">{enactedBills}</div>
@@ -162,11 +243,70 @@ export function BillsTab({ bills = [] }: BillsTabProps) {
         </div>
       </div>
 
-      {bills.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">No bills data available</p>
+      {/* Pagination Controls at Top */}
+      {filteredBills.length > itemsPerPage && (
+        <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-lg">
+          <div className="text-sm text-gray-600">
+            Showing {startIndex + 1}-{Math.min(endIndex, filteredBills.length)} of{' '}
+            {filteredBills.length} bills
+          </div>
+          <div className="flex items-center gap-4">
+            <select
+              value={itemsPerPage}
+              onChange={e => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="px-3 py-1 border rounded-md text-sm"
+            >
+              <option value={10}>10 per page</option>
+              <option value={25}>25 per page</option>
+              <option value={50}>50 per page</option>
+              <option value={100}>100 per page</option>
+              <option value={filteredBills.length}>Show all filtered results</option>
+            </select>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+              >
+                Previous
+              </button>
+              <span className="px-3 py-1 text-sm">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {filteredBills.length === 0 ? (
+        selectedCongress !== 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500 mb-2">
+              No bills found for the {selectedCongress}th Congress
+            </p>
+            <button
+              onClick={() => setSelectedCongress(0)}
+              className="text-blue-600 hover:text-blue-800 text-sm"
+            >
+              View all congresses
+            </button>
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center py-8">No bills data available</p>
+        )
       ) : (
         <div className="space-y-4">
-          {bills.slice(0, 10).map(bill => (
+          {displayedBills.map(bill => (
             <div key={bill.id} className="border rounded-lg p-4">
               <h3 className="font-medium">
                 {canLinkToBill(bill) ? (
@@ -218,6 +358,69 @@ export function BillsTab({ bills = [] }: BillsTabProps) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Pagination Controls at Bottom */}
+      {filteredBills.length > itemsPerPage && (
+        <div className="flex items-center justify-center mt-6 gap-2">
+          <button
+            onClick={() => setCurrentPage(1)}
+            disabled={currentPage === 1}
+            className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+          >
+            First
+          </button>
+          <button
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+          >
+            Previous
+          </button>
+
+          {/* Page numbers */}
+          <div className="flex gap-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`px-3 py-1 border rounded-md text-sm hover:bg-gray-100 ${
+                    currentPage === pageNum ? 'bg-blue-500 text-white hover:bg-blue-600' : ''
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+          >
+            Next
+          </button>
+          <button
+            onClick={() => setCurrentPage(totalPages)}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+          >
+            Last
+          </button>
         </div>
       )}
     </>
