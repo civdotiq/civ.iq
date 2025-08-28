@@ -108,8 +108,7 @@ async function fetchAllContributions(candidateId: string): Promise<ContributionD
             `&candidate_id=${candidateId}` +
             `&two_year_transaction_period=${currentCycle}` +
             `&per_page=${MAX_RECORDS_PER_REQUEST}` +
-            `&page=${page}` +
-            `&sort=-contribution_receipt_date`
+            `&page=${page}`
         );
 
         if (!response.ok) {

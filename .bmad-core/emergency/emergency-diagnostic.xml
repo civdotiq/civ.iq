@@ -1,0 +1,1288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<emergency-diagnostic>
+<!-- Generated: 2025-08-26T20:19:52.558Z -->
+<!-- Issue: No representatives loading, ZIP lookup failing -->
+<file path="src/app/api/representatives/route.ts" size="24729">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { getCongressionalDistrictFromZip } from '@/lib/census-api';
+import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
+import {
+  validateDistrictResponse,
+  validateRepresentativeResponse,
+  generateDataQualityReport,
+  validateApiResponse,
+} from '@/lib/validation/response-schemas';
+import logger from '@/lib/logging/simple-logger';
+import { govCache } from '@/services/cache/simple-government-cache';
+
+// At-large states for 119th Congress (states with only 1 House district)
+const AT_LARGE_STATES_119TH = ['AK', 'DE', 'ND', 'SD', 'VT', 'WY'];
+
+function isAtLargeState(state: string): boolean {
+  return AT_LARGE_STATES_119TH.includes(state.toUpperCase());
+}
+
+// Simplified response interfaces
+interface RepresentativeResponse {
+  bioguideId: string;
+  name: string;
+  party: string;
+  state: string;
+  district?: string;
+  chamber: string;
+  title: string;
+  phone?: string;
+  website?: string;
+  contactInfo: {
+    phone: string;
+    website: string;
+    office: string;
+  };
+}
+
+interface ApiResponse {
+  success: boolean;
+  representatives?: RepresentativeResponse[];
+  error?: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+  metadata: {
+    timestamp: string;
+    zipCode: string;
+    dataQuality: 'high' | 'medium' | 'low' | 'unavailable';
+    dataSource: string;
+    cacheable: boolean;
+    freshness?: string;
+    validationScore?: number;
+    validationStatus?: 'excellent' | 'good' | 'fair' | 'poor';
+  };
+}
+
+// Circuit breaker pattern
+class CircuitBreaker {
+  private failures = 0;
+  private lastFailureTime = 0;
+  private readonly threshold = 5;
+  private readonly timeout = 60000; // 1 minute
+
+  async execute&lt;T&gt;(fn: () =&gt; Promise&lt;T&gt;, serviceName: string): Promise&lt;T&gt; {
+    if (this.isOpen()) {
+      throw new Error(`Circuit breaker open for ${serviceName}. Too many recent failures.`);
+    }
+
+    try {
+      const result = await fn();
+      this.onSuccess();
+      return result;
+    } catch (error) {
+      this.onFailure();
+      throw error;
+    }
+  }
+
+  private isOpen(): boolean {
+    if (this.failures &gt;= this.threshold) {
+      return Date.now() - this.lastFailureTime &lt; this.timeout;
+    }
+    return false;
+  }
+
+  private onSuccess(): void {
+    this.failures = 0;
+  }
+
+  private onFailure(): void {
+    this.failures++;
+    this.lastFailureTime = Date.now();
+  }
+
+  getStatus() {
+    return {
+      failures: this.failures,
+      isOpen: this.isOpen(),
+      lastFailureTime: this.lastFailureTime,
+    };
+  }
+}
+
+// Create circuit breakers for external services
+const censusCircuitBreaker = new CircuitBreaker();
+const congressCircuitBreaker = new CircuitBreaker();
+
+// Retry with exponential backoff
+async function retryWithBackoff&lt;T&gt;(
+  fn: () =&gt; Promise&lt;T&gt;,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise&lt;T&gt; {
+  let lastError: Error;
+
+  for (let attempt = 0; attempt &lt;= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+
+      if (attempt === maxRetries) {
+        break;
+      }
+
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = baseDelay * Math.pow(2, attempt);
+      logger.warn(`Retry attempt ${attempt + 1}/${maxRetries + 1} after ${delay}ms delay`, {
+        attempt: attempt + 1,
+        maxRetries: maxRetries + 1,
+        delay,
+      });
+      await new Promise(resolve =&gt; setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError!;
+}
+
+// Get representatives by state and district directly
+async function getRepresentativesByStateDistrict(
+  state: string,
+  district: string
+): Promise&lt;ApiResponse&gt; {
+  const startTime = Date.now();
+  const metadata: ApiResponse['metadata'] = {
+    timestamp: new Date().toISOString(),
+    zipCode: `${state}-${district}`, // Use state-district as identifier
+    dataQuality: 'unavailable',
+    dataSource: 'none',
+    cacheable: false,
+  };
+
+  // Check cache first
+  const cacheKey = `representatives:${state}-${district}`;
+  const cached = govCache.get&lt;ApiResponse&gt;(cacheKey);
+  if (cached &amp;&amp; cached.success) {
+    logger.info(`Cache hit for state/district representatives lookup`, {
+      state,
+      district,
+      cacheKey,
+      representativeCount: cached.representatives?.length || 0,
+    });
+    return {
+      ...cached,
+      metadata: {
+        ...cached.metadata,
+        freshness: `Cached (retrieved in ${Date.now() - startTime}ms)`,
+        dataSource: `${cached.metadata.dataSource} (cached)`,
+      },
+    };
+  }
+
+  try {
+    // Get representatives with circuit breaker and retry
+    logger.info(`Fetching all representatives for ${state}-${district}`, {
+      state,
+      district,
+      operation: 'getAllRepresentatives',
+    });
+    const allRepresentatives = await congressCircuitBreaker.execute(
+      () =&gt; retryWithBackoff(() =&gt; getAllEnhancedRepresentatives()),
+      'Congress Legislators'
+    );
+
+    if (!allRepresentatives || allRepresentatives.length === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'REPRESENTATIVES_DATA_UNAVAILABLE',
+          message: 'Representative data is temporarily unavailable',
+          details: 'Congress legislators database could not be accessed',
+        },
+        metadata: {
+          ...metadata,
+          dataQuality: 'unavailable',
+          dataSource: 'congress-legislators-failed',
+          freshness: `Failed after ${Date.now() - startTime}ms`,
+        },
+      };
+    }
+
+    // Filter representatives for this state and district
+    const districtRepresentatives = allRepresentatives.filter(rep =&gt; {
+      if (rep.chamber === 'Senate' &amp;&amp; rep.state === state) {
+        return true;
+      }
+      if (rep.chamber === 'House' &amp;&amp; rep.state === state) {
+        if (isAtLargeState(state)) {
+          return true; // Always include for at-large states
+        }
+        const repDistrict = parseInt(rep.district || '0', 10);
+        const targetDistrict = parseInt(district || '0', 10);
+        return repDistrict === targetDistrict;
+      }
+      return false;
+    });
+
+    if (districtRepresentatives.length === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'NO_REPRESENTATIVES_FOUND',
+          message: `No representatives found for ${state}-${district}`,
+          details: {
+            district,
+            state,
+            totalRepsInDatabase: allRepresentatives.length,
+          },
+        },
+        metadata: {
+          ...metadata,
+          dataQuality: 'low',
+          dataSource: 'congress-legislators-partial',
+          freshness: `Data retrieved in ${Date.now() - startTime}ms`,
+        },
+      };
+    }
+
+    // Convert to response format
+    const representatives: RepresentativeResponse[] = districtRepresentatives.map(rep =&gt; ({
+      bioguideId: rep.bioguideId,
+      name: rep.name,
+      party: rep.party,
+      state: rep.state,
+      district: rep.district,
+      chamber: rep.chamber,
+      title: rep.title,
+      phone: rep.currentTerm?.phone || rep.phone,
+      website: rep.currentTerm?.website || rep.website,
+      contactInfo: {
+        phone: rep.currentTerm?.phone || rep.phone || '',
+        website: rep.currentTerm?.website || rep.website || '',
+        office: rep.currentTerm?.office || rep.currentTerm?.address || '',
+      },
+    }));
+
+    const result: ApiResponse = {
+      success: true,
+      representatives,
+      metadata: {
+        ...metadata,
+        dataQuality: 'high',
+        dataSource: 'congress-legislators',
+        cacheable: true,
+        freshness: `Retrieved in ${Date.now() - startTime}ms`,
+        validationScore: 95,
+        validationStatus: 'excellent',
+      },
+    };
+
+    // Cache the successful result
+    if (result.success &amp;&amp; representatives.length &gt; 0) {
+      govCache.set(cacheKey, result, {
+        ttl: 30 * 60 * 1000, // 30 minutes for representatives
+        source: 'congress-legislators',
+      });
+      logger.info(`Cached representatives for state/district`, {
+        state,
+        district,
+        cacheKey,
+        representativeCount: representatives.length,
+      });
+    }
+
+    return result;
+  } catch (error) {
+    logger.error('Error fetching representatives by state/district', error as Error, {
+      state,
+      district,
+      operation: 'getRepresentativesByStateDistrict',
+    });
+
+    return {
+      success: false,
+      error: {
+        code: 'UNKNOWN_ERROR',
+        message: 'An unexpected error occurred',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      metadata: {
+        ...metadata,
+        dataQuality: 'unavailable',
+        dataSource: 'error',
+        freshness: `Failed after ${Date.now() - startTime}ms`,
+      },
+    };
+  }
+}
+
+// Honest data fetching with transparency
+async function getRepresentativesByZip(zipCode: string): Promise&lt;ApiResponse&gt; {
+  const startTime = Date.now();
+  const metadata: ApiResponse['metadata'] = {
+    timestamp: new Date().toISOString(),
+    zipCode,
+    dataQuality: 'unavailable',
+    dataSource: 'none',
+    cacheable: false,
+  };
+
+  // Check cache first
+  const cacheKey = `representatives:${zipCode}`;
+  const cached = govCache.get&lt;ApiResponse&gt;(cacheKey);
+  if (cached &amp;&amp; cached.success) {
+    logger.info(`Cache hit for representatives lookup`, {
+      zipCode,
+      cacheKey,
+      representativeCount: cached.representatives?.length || 0,
+    });
+    return {
+      ...cached,
+      metadata: {
+        ...cached.metadata,
+        freshness: `Cached (retrieved in ${Date.now() - startTime}ms)`,
+        dataSource: `${cached.metadata.dataSource} (cached)`,
+      },
+    };
+  }
+
+  try {
+    // Step 1: Get district info with circuit breaker and retry
+    logger.info(`Fetching district info for ZIP ${zipCode}`, {
+      zipCode,
+      operation: 'getDistrict',
+    });
+
+    const districtInfo = await censusCircuitBreaker.execute(
+      () =&gt; retryWithBackoff(() =&gt; getCongressionalDistrictFromZip(zipCode)),
+      'Census API'
+    );
+
+    logger.info(`District info retrieved successfully`, {
+      zipCode,
+      state: districtInfo?.state,
+      district: districtInfo?.district,
+      operation: 'getDistrict',
+    });
+
+    if (!districtInfo) {
+      return {
+        success: false,
+        error: {
+          code: 'DISTRICT_NOT_FOUND',
+          message: `Could not determine congressional district for ZIP code ${zipCode}`,
+          details:
+            'This ZIP code may be invalid or not currently mapped to a congressional district',
+        },
+        metadata: {
+          ...metadata,
+          dataQuality: 'unavailable',
+          dataSource: 'census-failed',
+        },
+      };
+    }
+
+    // Validate district data
+    const districtValidation = validateDistrictResponse(districtInfo);
+    if (!districtValidation.isValid) {
+      logger.warn('District data validation failed', {
+        zipCode,
+        validationErrors: districtValidation.errors,
+        operation: 'validateDistrict',
+      });
+    }
+
+    logger.info(`District found: ${districtInfo.state}-${districtInfo.district}`, {
+      zipCode,
+      state: districtInfo.state,
+      district: districtInfo.district,
+    });
+
+    // Step 2: Get representatives with circuit breaker and retry
+    logger.info(`Fetching all representatives`, {
+      zipCode,
+      operation: 'getAllRepresentatives',
+    });
+    const allRepresentatives = await congressCircuitBreaker.execute(
+      () =&gt; retryWithBackoff(() =&gt; getAllEnhancedRepresentatives()),
+      'Congress Legislators'
+    );
+    logger.info(`Fetched representatives from congress-legislators`, {
+      zipCode,
+      representativeCount: allRepresentatives?.length || 0,
+      operation: 'getAllRepresentatives',
+    });
+
+    if (!allRepresentatives || allRepresentatives.length === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'REPRESENTATIVES_DATA_UNAVAILABLE',
+          message: 'Representative data is temporarily unavailable',
+          details: 'Congress legislators database could not be accessed',
+        },
+        metadata: {
+          ...metadata,
+          dataQuality: 'unavailable',
+          dataSource: 'congress-legislators-failed',
+          freshness: `District lookup successful (${Date.now() - startTime}ms)`,
+        },
+      };
+    }
+
+    // Step 3: Filter representatives for this district
+    logger.info(`Filtering representatives for district`, {
+      zipCode,
+      state: districtInfo.state,
+      district: districtInfo.district,
+      operation: 'filterRepresentatives',
+    });
+
+    // Debug: Log all representatives from the target state
+    const stateReps = allRepresentatives.filter(rep =&gt; rep.state === districtInfo.state);
+    logger.info(`Representatives from ${districtInfo.state}:`, {
+      total: stateReps.length,
+      houseMembers: stateReps.filter(r =&gt; r.chamber === 'House').length,
+      senators: stateReps.filter(r =&gt; r.chamber === 'Senate').length,
+      districts: stateReps.filter(r =&gt; r.chamber === 'House').map(r =&gt; r.district),
+    });
+
+    const districtRepresentatives = allRepresentatives.filter(rep =&gt; {
+      if (rep.chamber === 'Senate' &amp;&amp; rep.state === districtInfo.state) {
+        logger.debug(`Found Senate representative`, {
+          zipCode,
+          representativeName: rep.name,
+          state: rep.state,
+          chamber: rep.chamber,
+        });
+        return true;
+      }
+
+      if (rep.chamber === 'House' &amp;&amp; rep.state === districtInfo.state) {
+        if (isAtLargeState(districtInfo.state)) {
+          logger.info(`At-large state ${districtInfo.state}: including ${rep.name}`);
+          return true;
+        }
+
+        // Handle null/undefined/empty as "00" for both
+        const normalizeDistrict = (d: string | undefined) =&gt; {
+          if (!d || d === '' || d === '0' || d === '00') return '00';
+          return d.padStart(2, '0');
+        };
+
+        const repNorm = normalizeDistrict(rep.district);
+        const targetNorm = normalizeDistrict(districtInfo.district);
+        const matches = repNorm === targetNorm;
+
+        logger.debug(`House representative evaluation`, {
+          zipCode,
+          name: rep.name,
+          repDistrict: rep.district,
+          targetDistrict: districtInfo.district,
+          matches,
+        });
+
+        return matches;
+      }
+      return false;
+    });
+    logger.info(`Found representatives for district`, {
+      zipCode,
+      representativeCount: districtRepresentatives.length,
+      operation: 'filterRepresentatives',
+    });
+
+    if (isAtLargeState(districtInfo.state)) {
+      const houseCount = districtRepresentatives.filter(r =&gt; r.chamber === 'House').length;
+      if (houseCount === 0) {
+        logger.error(`No House rep found for at-large state ${districtInfo.state}`, { zipCode });
+      }
+    }
+
+    if (districtRepresentatives.length === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'NO_REPRESENTATIVES_FOUND',
+          message: `No representatives found for ${districtInfo.state}-${districtInfo.district}`,
+          details: {
+            district: districtInfo.district,
+            state: districtInfo.state,
+            totalRepsInDatabase: allRepresentatives.length,
+          },
+        },
+        metadata: {
+          ...metadata,
+          dataQuality: 'low',
+          dataSource: 'congress-legislators-partial',
+          freshness: `Data retrieved in ${Date.now() - startTime}ms`,
+        },
+      };
+    }
+
+    // Step 4: Convert to response format with validation
+    const representatives: RepresentativeResponse[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const validationResults: any[] = [];
+
+    for (const rep of districtRepresentatives) {
+      // Validate each representative's data
+      const repValidation = validateRepresentativeResponse(rep);
+      validationResults.push(
+        validateApiResponse(
+          rep,
+          validateRepresentativeResponse,
+          `congress-legislators-${rep.bioguideId}`
+        )
+      );
+
+      if (repValidation.warnings.length &gt; 0) {
+        logger.warn(`Data quality warnings for representative`, {
+          zipCode,
+          representativeName: rep.name,
+          bioguideId: rep.bioguideId,
+          validationWarnings: repValidation.warnings,
+        });
+      }
+
+      representatives.push({
+        bioguideId: rep.bioguideId,
+        name: rep.name,
+        party: rep.party,
+        state: rep.state,
+        district: rep.district,
+        chamber: rep.chamber,
+        title: rep.title,
+        phone: rep.currentTerm?.phone || rep.phone,
+        website: rep.currentTerm?.website || rep.website,
+        contactInfo: {
+          phone: rep.currentTerm?.phone || rep.phone || '',
+          website: rep.currentTerm?.website || rep.website || '',
+          office: rep.currentTerm?.office || rep.currentTerm?.address || '',
+        },
+      });
+    }
+
+    // Generate data quality report
+    const qualityReport = generateDataQualityReport([
+      validateApiResponse(districtInfo, validateDistrictResponse, 'census-api'),
+      ...validationResults,
+    ]);
+
+    // Determine data quality based on validation results
+    let dataQuality: 'high' | 'medium' | 'low' = 'high';
+    if (qualityReport.overall.score &gt;= 90) {
+      dataQuality = 'high';
+    } else if (qualityReport.overall.score &gt;= 70) {
+      dataQuality = 'medium';
+    } else {
+      dataQuality = 'low';
+    }
+
+    // Log quality issues for monitoring
+    if (qualityReport.overall.issues.length &gt; 0) {
+      logger.warn(`Data quality issues detected`, {
+        zipCode,
+        qualityScore: qualityReport.overall.score,
+        issues: qualityReport.overall.issues,
+        operation: 'dataQualityCheck',
+      });
+    }
+
+    const result: ApiResponse = {
+      success: true,
+      representatives,
+      metadata: {
+        ...metadata,
+        dataQuality,
+        dataSource: 'congress-legislators + census',
+        cacheable: true,
+        freshness: `Retrieved in ${Date.now() - startTime}ms`,
+        validationScore: qualityReport.overall.score,
+        validationStatus: qualityReport.overall.status,
+      },
+    };
+
+    // Cache the successful result
+    if (result.success &amp;&amp; representatives.length &gt; 0) {
+      govCache.set(cacheKey, result, {
+        ttl: 30 * 60 * 1000, // 30 minutes for representatives
+        source: 'congress-legislators + census',
+      });
+      logger.info(`Cached representatives for ZIP ${zipCode}`, {
+        zipCode,
+        cacheKey,
+        representativeCount: representatives.length,
+      });
+    }
+
+    return result;
+  } catch (error) {
+    logger.error('Error fetching representatives', error as Error, {
+      zipCode,
+      operation: 'getRepresentativesByZip',
+    });
+
+    // Determine error type and provide specific messaging
+    let errorCode = 'UNKNOWN_ERROR';
+    let errorMessage = 'An unexpected error occurred';
+    let errorDetails: unknown = undefined;
+
+    if (error instanceof Error) {
+      if (error.message.includes('Circuit breaker open')) {
+        errorCode = 'SERVICE_TEMPORARILY_UNAVAILABLE';
+        errorMessage =
+          'Government data services are temporarily unavailable due to multiple failures';
+        errorDetails = {
+          censusStatus: censusCircuitBreaker.getStatus(),
+          congressStatus: congressCircuitBreaker.getStatus(),
+        };
+      } else if (error.message.includes('timeout') || error.message.includes('ECONNRESET')) {
+        errorCode = 'SERVICE_TIMEOUT';
+        errorMessage = 'Government data services are responding slowly. Please try again.';
+      } else if (error.message.includes('API key')) {
+        errorCode = 'CONFIGURATION_ERROR';
+        errorMessage = 'Service configuration issue. Please contact support.';
+      } else {
+        errorMessage = error.message;
+      }
+    }
+
+    return {
+      success: false,
+      error: {
+        code: errorCode,
+        message: errorMessage,
+        details: errorDetails,
+      },
+      metadata: {
+        ...metadata,
+        dataQuality: 'unavailable',
+        dataSource: 'error',
+        freshness: `Failed after ${Date.now() - startTime}ms`,
+      },
+    };
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+  // Using simple logger
+
+  logger.info('Representatives API request started');
+
+  try {
+    const url = new URL(request.url);
+    const zipCode = url.searchParams.get('zip');
+    const state = url.searchParams.get('state');
+    const district = url.searchParams.get('district');
+
+    logger.info('Request parameters received', { zipCode, state, district });
+
+    // Input validation - either ZIP code OR state+district required
+    if (!zipCode &amp;&amp; (!state || !district)) {
+      logger.warn('Missing required parameters');
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'MISSING_PARAMETERS',
+            message: 'Either zip code or both state and district parameters are required',
+          },
+          metadata: {
+            timestamp: new Date().toISOString(),
+            zipCode: zipCode || '',
+            dataQuality: 'unavailable' as const,
+            dataSource: 'validation-error',
+            cacheable: false,
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate ZIP code if provided
+    if (zipCode &amp;&amp; !/^\d{5}(-\d{4})?$/.test(zipCode)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'INVALID_ZIP_CODE',
+            message: 'ZIP code must be 5 digits (e.g., 10001) or 9 digits (e.g., 10001-1234)',
+          },
+          metadata: {
+            timestamp: new Date().toISOString(),
+            zipCode,
+            dataQuality: 'unavailable' as const,
+            dataSource: 'validation-error',
+            cacheable: false,
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    // Get representatives with honest error handling
+    let result: ApiResponse;
+    if (zipCode) {
+      logger.info('Calling getRepresentativesByZip', { zipCode });
+      result = await getRepresentativesByZip(zipCode);
+    } else {
+      // state and district are guaranteed to be non-null by validation above
+      logger.info('Calling getRepresentativesByStateDistrict', { state, district });
+      result = await getRepresentativesByStateDistrict(state!, district!);
+    }
+    logger.info('getRepresentativesByZip completed', {
+      zipCode,
+      success: result.success,
+      representativeCount: result.success ? result.representatives?.length : 0,
+    });
+
+    if (!result.success) {
+      logger.warn('getRepresentativesByZip failed', {
+        zipCode,
+        errorCode: result.error?.code,
+        errorMessage: result.error?.message,
+      });
+    }
+
+    // Return appropriate HTTP status based on success
+    const httpStatus = result.success ? 200 : 503;
+    const processingTime = Date.now() - startTime;
+    logger.info('Representatives API request completed', {
+      zipCode,
+      processingTime,
+      httpStatus,
+      success: result.success,
+    });
+
+    return NextResponse.json(result, { status: httpStatus });
+  } catch (error) {
+    // Using simple logger
+    logger.error('Unexpected error in Representatives API', error as Error, {
+      hasStack: error instanceof Error &amp;&amp; !!error.stack,
+    });
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'An internal server error occurred',
+          details: error instanceof Error ? error.message : 'Unknown error',
+        },
+        metadata: {
+          timestamp: new Date().toISOString(),
+          zipCode: '',
+          dataQuality: 'unavailable' as const,
+          dataSource: 'internal-error',
+          cacheable: false,
+        },
+      },
+      { status: 500 }
+    );
+  }
+}
+
+</file>
+<file path="src/app/(civic)/representatives/page.tsx" size="6187">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+import { Suspense } from 'react';
+import Link from 'next/link';
+import { getRepresentativesByLocation } from '@/features/representatives/services/congress-api';
+import { CiviqLogo } from '@/shared/ui/CiviqLogo';
+import { RepresentativesClient } from './components/RepresentativesClient';
+import { LoadingState } from '@/components/ui/LoadingState';
+
+interface SearchParams {
+  searchParams: Promise&lt;{
+    zip?: string;
+    state?: string;
+    district?: string;
+    compare?: string;
+    chamber?: string;
+    party?: string;
+  }&gt;;
+}
+
+async function getInitialRepresentatives(zip?: string, state?: string, district?: string) {
+  // eslint-disable-next-line no-console
+  console.log('Fetching representatives...', { zip, state, district });
+
+  try {
+    // If we have state and district, get specific ones
+    if (state &amp;&amp; district) {
+      const representatives = await getRepresentativesByLocation(state, district);
+      // eslint-disable-next-line no-console
+      console.log('Fetched representatives by location:', representatives.length);
+      return representatives;
+    }
+
+    // If we have a ZIP, fetch from API
+    if (zip) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://civdotiq.org';
+      const response = await fetch(`${baseUrl}/api/representatives?zip=${zip}`);
+      const data = await response.json();
+      // eslint-disable-next-line no-console
+      console.log('API response for ZIP:', data);
+      return data.representatives || [];
+    }
+
+    // Otherwise fetch ALL representatives from the API
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://civdotiq.org';
+    // eslint-disable-next-line no-console
+    console.log('Fetching all representatives from:', `${baseUrl}/api/representatives/all`);
+
+    const response = await fetch(`${baseUrl}/api/representatives/all`, {
+      next: { revalidate: 300 }, // Cache for 5 minutes
+    } as RequestInit &amp; { next: { revalidate: number } });
+
+    if (!response.ok) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to fetch representatives:', response.status, response.statusText);
+      throw new Error(`Failed to fetch: ${response.status}`);
+    }
+
+    const data = await response.json();
+    // eslint-disable-next-line no-console
+    console.log('API response - all representatives:', data?.representatives?.length || 0);
+
+    return data.representatives || [];
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to fetch representatives:', error);
+    return [];
+  }
+}
+
+export default async function RepresentativesPage({ searchParams }: SearchParams) {
+  const { zip, state, district, compare, chamber, party } = await searchParams;
+  const compareIds = compare?.split(',').filter(Boolean) || [];
+
+  // Fetch initial data on the server if we have URL params
+  const initialRepresentatives = await getInitialRepresentatives(zip, state, district);
+
+  return (
+    &lt;div className="min-h-screen bg-gray-50"&gt;
+      {/* Header */}
+      &lt;header className="bg-white shadow-sm border-b sticky top-0 z-20"&gt;
+        &lt;div className="container mx-auto px-4 py-4"&gt;
+          &lt;div className="flex items-center justify-between"&gt;
+            &lt;Link href="/"&gt;
+              &lt;CiviqLogo /&gt;
+            &lt;/Link&gt;
+            &lt;nav className="flex items-center gap-6"&gt;
+              &lt;Link href="/representatives" className="text-blue-600 font-medium"&gt;
+                Representatives
+              &lt;/Link&gt;
+              &lt;Link
+                href="/districts"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              &gt;
+                Districts
+              &lt;/Link&gt;
+              &lt;Link
+                href="/analytics"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              &gt;
+                Analytics
+              &lt;/Link&gt;
+            &lt;/nav&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/header&gt;
+
+      &lt;main className="container mx-auto px-4 py-8"&gt;
+        {/* Page header */}
+        &lt;div className="mb-8"&gt;
+          &lt;h1 className="text-4xl font-bold text-gray-900 mb-3"&gt;Representatives&lt;/h1&gt;
+          &lt;p className="text-xl text-gray-600"&gt;
+            Browse and compare members of the U.S. House and Senate
+          &lt;/p&gt;
+        &lt;/div&gt;
+
+        {/* Compare bar */}
+        {compareIds.length &gt; 0 &amp;&amp; (
+          &lt;div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6"&gt;
+            &lt;div className="flex items-center justify-between"&gt;
+              &lt;div&gt;
+                &lt;p className="text-sm font-medium text-blue-900"&gt;
+                  Comparing {compareIds.length} representative{compareIds.length &gt; 1 ? 's' : ''}
+                &lt;/p&gt;
+                &lt;p className="text-xs text-blue-700 mt-1"&gt;
+                  {compareIds.length === 2
+                    ? 'Click "View Comparison" to see detailed analysis'
+                    : 'Select one more representative to compare'}
+                &lt;/p&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        )}
+
+        &lt;Suspense fallback={&lt;LoadingState message="Loading representatives..." /&gt;}&gt;
+          &lt;RepresentativesClient
+            initialRepresentatives={initialRepresentatives}
+            compareIds={compareIds}
+            initialFilters={{
+              chamber: chamber || 'all',
+              party: party || 'all',
+              state: state || 'all',
+            }}
+          /&gt;
+        &lt;/Suspense&gt;
+      &lt;/main&gt;
+
+      {/* Footer */}
+      &lt;footer className="bg-gray-900 text-white py-8 mt-16"&gt;
+        &lt;div className="container mx-auto px-4 text-center"&gt;
+          &lt;p className="text-gray-400"&gt;
+            Data sourced from Congress.gov and official government sources
+          &lt;/p&gt;
+          &lt;p className="text-gray-500 text-sm mt-2"&gt;
+            © 2019-2025 Mark Sandford. CIV.IQ™ - The Original Civic Information Platform
+          &lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/footer&gt;
+    &lt;/div&gt;
+  );
+}
+
+</file>
+<file path="src/lib/api/representatives.ts" size="10996">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+import { cache } from '@/lib/cache';
+import { RepresentativeProfile, BatchApiResponse } from '@/types/representative';
+
+// Base API configuration - FIXED to work with Next.js API routes
+const getApiBaseUrl = () =&gt; {
+  // For client-side requests
+  if (typeof window !== 'undefined') {
+    // Use relative URLs for same-origin requests (your API routes)
+    // This ensures requests go to /api/... on the same domain
+    return '';
+  }
+  // For server-side requests (if needed)
+  return process.env.NEXT_PUBLIC_API_URL || '';
+};
+
+const DEFAULT_TIMEOUT = 30000; // 30 seconds for batch requests
+
+// Error types for better error handling
+export class RepresentativeApiError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number,
+    public endpoint?: string,
+    public originalError?: Error
+  ) {
+    super(message);
+    this.name = 'RepresentativeApiError';
+  }
+}
+
+// Next.js 15 optimized fetch wrapper with built-in caching and deduplication
+async function apiRequest&lt;T&gt;(
+  endpoint: string,
+  options: RequestInit &amp; {
+    cacheTime?: number;
+    tags?: string[];
+    revalidate?: number | false;
+  } = {}
+): Promise&lt;T&gt; {
+  const { cacheTime = 300, tags = [], revalidate, ...fetchOptions } = options;
+
+  // FIXED: Ensure endpoint starts with / for relative URLs
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}${normalizedEndpoint}`;
+
+  console.log(`[CIV.IQ-DEBUG] API Request: ${fetchOptions.method || 'GET'} ${url}`);
+  console.log(`[CIV.IQ-DEBUG] Base URL: "${baseUrl}", Endpoint: "${normalizedEndpoint}"`);
+
+  try {
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() =&gt; controller.abort(), DEFAULT_TIMEOUT);
+
+    const response = await fetch(url, {
+      ...fetchOptions,
+      headers: {
+        'Content-Type': 'application/json',
+        ...fetchOptions.headers,
+      },
+      signal: controller.signal,
+      // Next.js 15 caching with automatic deduplication
+      ...(revalidate !== undefined
+        ? {
+            next: {
+              revalidate: revalidate !== false ? revalidate : cacheTime,
+              tags: [...tags, `api-${endpoint.split('/').join('-')}`],
+            },
+          }
+        : {}),
+    });
+
+    clearTimeout(timeoutId);
+
+    console.log(`[CIV.IQ-DEBUG] API Response: ${response.status} ${response.statusText}`);
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() =&gt; 'No error details');
+      console.error(`[CIV.IQ-DEBUG] API Error Response:`, errorText);
+
+      throw new RepresentativeApiError(
+        `API request failed: ${response.status} ${response.statusText}`,
+        response.status,
+        endpoint,
+        new Error(errorText)
+      );
+    }
+
+    const data = await response.json();
+    console.log(`[CIV.IQ-DEBUG] API Success Response:`, {
+      endpoint,
+      hasData: !!data,
+      dataKeys: data ? Object.keys(data).slice(0, 5) : [],
+    });
+
+    return data;
+  } catch (error) {
+    console.error(`[CIV.IQ-DEBUG] API Request Error:`, {
+      endpoint,
+      error: error instanceof Error ? error.message : String(error),
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
+    });
+
+    if (error instanceof RepresentativeApiError) {
+      throw error;
+    }
+
+    // Handle abort/timeout errors
+    if (error instanceof Error &amp;&amp; error.name === 'AbortError') {
+      throw new RepresentativeApiError('Request timeout - please try again', 408, endpoint, error);
+    }
+
+    throw new RepresentativeApiError(
+      `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      500,
+      endpoint,
+      error instanceof Error ? error : new Error(String(error))
+    );
+  }
+}
+
+// Representative API client
+export const representativeApi = {
+  /**
+   * Get representative profile using batch API for optimal performance
+   */
+  async getProfileBatch(
+    bioguideId: string,
+    options: {
+      includeVotes?: boolean;
+      includeBills?: boolean;
+      includeFinance?: boolean;
+      includeNews?: boolean;
+      includePartyAlignment?: boolean;
+      includeCommittees?: boolean;
+      includeLeadership?: boolean;
+      includeDistrict?: boolean;
+    } = {}
+  ): Promise&lt;BatchApiResponse&gt; {
+    // Build endpoint list based on options
+    const endpoints: string[] = ['profile']; // Always include basic profile
+
+    if (options.includeVotes) endpoints.push('votes');
+    if (options.includeBills) endpoints.push('bills');
+    if (options.includeFinance) endpoints.push('finance');
+    if (options.includeNews) endpoints.push('news');
+    if (options.includePartyAlignment) endpoints.push('party-alignment');
+    if (options.includeCommittees) endpoints.push('committees');
+    if (options.includeLeadership) endpoints.push('leadership');
+    if (options.includeDistrict) endpoints.push('district');
+
+    console.log(`[CIV.IQ-DEBUG] Batch request for ${bioguideId} with endpoints:`, endpoints);
+
+    try {
+      const response = await apiRequest&lt;BatchApiResponse&gt;(
+        `/api/representative/${bioguideId}/batch`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ endpoints }),
+        }
+      );
+
+      console.log(`[CIV.IQ-DEBUG] Batch response processed successfully:`, {
+        bioguideId,
+        endpointsRequested: endpoints.length,
+        successfulEndpoints: Object.keys(response.data || {}).length,
+        hasErrors: response.errors &amp;&amp; Object.keys(response.errors).length &gt; 0,
+        executionTime: response.executionTime,
+      });
+
+      return response;
+    } catch (error) {
+      console.error(`[CIV.IQ-DEBUG] Batch API failed, falling back to individual calls`, error);
+      // Return empty batch response on error
+      return {
+        success: false,
+        data: {},
+        errors: {
+          batch: error instanceof Error ? error.message : 'Batch API failed',
+        },
+        metadata: {
+          timestamp: new Date().toISOString(),
+          requestedEndpoints: endpoints,
+          successfulEndpoints: [],
+          failedEndpoints: endpoints,
+          totalTime: 0,
+        },
+        executionTime: 0,
+      };
+    }
+  },
+
+  /**
+   * Get individual representative profile (fallback method)
+   */
+  async getProfile(bioguideId: string): Promise&lt;RepresentativeProfile&gt; {
+    return apiRequest&lt;RepresentativeProfile&gt;(`/api/representative/${bioguideId}`, {
+      cacheTime: 600, // 10 minutes - profile data changes infrequently
+      tags: [`representative-${bioguideId}`, 'representative-profile'],
+    });
+  },
+
+  /**
+   * Get representative votes - client-side with shorter cache for real-time updates
+   */
+  async getVotes(bioguideId: string): Promise&lt;any&gt; {
+    return apiRequest(`/api/representative/${bioguideId}/votes`, {
+      cacheTime: 300, // 5 minutes - voting data updates frequently
+      tags: [`representative-${bioguideId}`, 'representative-votes'],
+    });
+  },
+
+  /**
+   * Get representative bills
+   */
+  async getBills(bioguideId: string): Promise&lt;any&gt; {
+    return apiRequest(`/api/representative/${bioguideId}/bills`, {
+      cacheTime: 600, // 10 minutes - bill data changes moderately
+      tags: [`representative-${bioguideId}`, 'representative-bills'],
+    });
+  },
+
+  /**
+   * Get representative finance data
+   */
+  async getFinance(bioguideId: string): Promise&lt;any&gt; {
+    return apiRequest(`/api/representative/${bioguideId}/finance`, {
+      cacheTime: 1800, // 30 minutes - finance data changes less frequently
+      tags: [`representative-${bioguideId}`, 'representative-finance'],
+    });
+  },
+
+  /**
+   * Get representative news - short cache for real-time updates
+   */
+  async getNews(bioguideId: string): Promise&lt;any&gt; {
+    return apiRequest(`/api/representative/${bioguideId}/news`, {
+      cacheTime: 180, // 3 minutes - news updates frequently
+      tags: [`representative-${bioguideId}`, 'representative-news'],
+    });
+  },
+
+  /**
+   * Get party alignment analysis
+   */
+  async getPartyAlignment(bioguideId: string): Promise&lt;any&gt; {
+    return apiRequest(`/api/representative/${bioguideId}/party-alignment`, {
+      cacheTime: 1800, // 30 minutes - alignment data changes slowly
+      tags: [`representative-${bioguideId}`, 'representative-party-alignment'],
+    });
+  },
+
+  /**
+   * Get committee assignments
+   */
+  async getCommittees(bioguideId: string): Promise&lt;any&gt; {
+    return apiRequest(`/api/representative/${bioguideId}/committees`, {
+      cacheTime: 3600, // 1 hour - committee assignments change infrequently
+      tags: [`representative-${bioguideId}`, 'representative-committees'],
+    });
+  },
+
+  /**
+   * Get leadership positions
+   */
+  async getLeadership(bioguideId: string): Promise&lt;any&gt; {
+    return apiRequest(`/api/representative/${bioguideId}/leadership`, {
+      cacheTime: 3600, // 1 hour - leadership positions change infrequently
+      tags: [`representative-${bioguideId}`, 'representative-leadership'],
+    });
+  },
+
+  /**
+   * Get district information
+   */
+  async getDistrict(bioguideId: string): Promise&lt;any&gt; {
+    return apiRequest(`/api/representative/${bioguideId}/district`, {
+      cacheTime: 3600, // 1 hour - district info changes rarely
+      tags: [`representative-${bioguideId}`, 'representative-district'],
+    });
+  },
+
+  /**
+   * Search representatives - with deduplication for common searches
+   */
+  async search(params: {
+    zip?: string;
+    state?: string;
+    district?: string;
+    party?: string;
+    chamber?: string;
+    query?: string;
+  }): Promise&lt;RepresentativeProfile[]&gt; {
+    const searchParams = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) =&gt; {
+      if (value) searchParams.append(key, value);
+    });
+
+    const queryString = searchParams.toString();
+    return apiRequest&lt;RepresentativeProfile[]&gt;(
+      `/api/representatives${queryString ? `?${queryString}` : ''}`,
+      {
+        cacheTime: 300, // 5 minutes for search results
+        tags: ['representatives-search', `search-${queryString}`],
+      }
+    );
+  },
+
+  /**
+   * Get representatives by ZIP code - highly cached due to frequent access
+   */
+  async getByZip(zipCode: string): Promise&lt;RepresentativeProfile[]&gt; {
+    return apiRequest&lt;RepresentativeProfile[]&gt;(`/api/representatives?zip=${zipCode}`, {
+      cacheTime: 600, // 10 minutes - ZIP lookups are expensive
+      tags: ['representatives-zip', `zip-${zipCode}`],
+    });
+  },
+};
+
+// RepresentativeApiError is already exported above with the class declaration
+export type { BatchApiResponse };
+
+</file>
+</emergency-diagnostic>

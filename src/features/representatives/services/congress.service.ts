@@ -564,6 +564,11 @@ export async function getEnhancedRepresentative(
       return null;
     }
 
+    // Build photo URL using existing representative-photo API
+    const buildPhotoUrl = (bioguideId: string): string | undefined => {
+      return `/api/representative-photo/${bioguideId}`;
+    };
+
     // Build enhanced representative object
     const enhanced: EnhancedRepresentative = {
       bioguideId: legislator.id.bioguide,
@@ -577,6 +582,7 @@ export async function getEnhancedRepresentative(
       title: currentTerm.type === 'sen' ? 'U.S. Senator' : 'U.S. Representative',
       phone: currentTerm.phone,
       website: currentTerm.url,
+      imageUrl: buildPhotoUrl(legislator.id.bioguide), // Add photo URL
       terms: [
         {
           congress: '119', // Current congress
@@ -716,6 +722,7 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
           district: currentTerm.district?.toString(),
           chamber: currentTerm.type === 'sen' ? 'Senate' : 'House',
           title: currentTerm.type === 'sen' ? 'U.S. Senator' : 'U.S. Representative',
+          imageUrl: `/api/representative-photo/${legislator.id.bioguide}`, // Add photo URL
           terms: [
             {
               congress: '119', // Current congress

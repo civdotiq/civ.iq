@@ -96,7 +96,20 @@
       "Bash(source:*)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npm run dev --port 3002)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx next dev --port 3002)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx next dev --port 3000)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx next dev --port 3000)",
+      "WebFetch(domain:www.huduser.gov)",
+      "WebFetch(domain:www.census.gov)",
+      "WebSearch",
+      "Read(//tmp/**)",
+      "Bash(BashOutput)",
+      "Bash([ -n \"$CONGRESS_API_KEY\" ])",
+      "Bash(NODE_ENV=development npx next dev --turbo)",
+      "Bash(export NODE_ENV=development)",
+      "Bash(DEBUG='*' npx next dev)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx next dev --port 3000 --hostname 0.0.0.0)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx next dev)",
+      "Bash(tail:*)",
+      "Bash(NODE_ENV=development NODE_OPTIONS=\"--max-old-space-size=8192\" npx next dev --port 3000 --turbo)"
     ],
     "deny": []
   },

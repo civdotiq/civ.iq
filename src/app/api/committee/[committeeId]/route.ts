@@ -237,14 +237,45 @@ function generateEmptyCommitteeData(committeeId: string): Committee {
   };
 }
 
+// Helper function to resolve committee ID from various formats
+function resolveCommitteeId(inputId: string): string {
+  // Try exact match first (thomas_id format like 'HSAG', 'SSJU')
+  const upperInputId = inputId.toUpperCase();
+  if (COMMITTEE_ID_MAP[upperInputId]) {
+    return upperInputId;
+  }
+
+  // Try base ID without numbers
+  const baseId = upperInputId.replace(/\d+$/, '');
+  if (COMMITTEE_ID_MAP[baseId]) {
+    return baseId;
+  }
+
+  // Try to find by name matching (for name-based slugs)
+  const matchingEntry = Object.entries(COMMITTEE_ID_MAP).find(([_, info]) => {
+    const slugifiedName = info.name
+      .replace(/\s+/g, '-')
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '');
+    return slugifiedName === inputId.toLowerCase();
+  });
+
+  if (matchingEntry) {
+    return matchingEntry[0];
+  }
+
+  // Return original if no match found
+  return inputId;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ committeeId: string }> }
 ): Promise<NextResponse<CommitteeAPIResponse>> {
   try {
-    const { committeeId } = await params;
+    const { committeeId: rawCommitteeId } = await params;
 
-    if (!committeeId) {
+    if (!rawCommitteeId) {
       return NextResponse.json(
         {
           committee: {} as Committee,
@@ -261,7 +292,14 @@ export async function GET(
       );
     }
 
-    logger.info('Committee API request', { committeeId });
+    // Resolve the committee ID to thomas_id format
+    const committeeId = resolveCommitteeId(rawCommitteeId);
+
+    logger.info('Committee API request', {
+      rawCommitteeId,
+      resolvedCommitteeId: committeeId,
+      wasResolved: rawCommitteeId !== committeeId,
+    });
 
     let committee: Committee | null = null;
 

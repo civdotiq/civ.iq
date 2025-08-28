@@ -6,34 +6,95 @@
 'use client';
 
 import React from 'react';
+import useSWR from 'swr';
 import { useRouter } from 'next/navigation';
+import { fetcher } from '@/lib/utils/fetcher';
 
 interface Vote {
-  id: string;
-  voteId?: string; // Senate vote ID for detailed page navigation
-  rollNumber?: number; // Alternative vote identifier
-  date: string;
-  bill?: {
+  voteId: string;
+  bill: {
     number: string;
     title: string;
+    congress: string;
+    type: string;
     url?: string;
   };
-  question?: string;
-  description: string;
+  question: string;
+  result: string;
+  date: string;
   position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
-  result: 'Passed' | 'Failed' | 'Agreed to' | 'Disagreed to';
   chamber: 'House' | 'Senate';
+  rollNumber: number;
+  description: string;
   category?: string;
+  isKeyVote?: boolean;
+}
+
+interface VoteResponse {
+  votes: Vote[];
+  totalResults: number;
+  member: {
+    bioguideId: string;
+    name: string;
+    chamber: string;
+  };
+  dataSource: string;
+  success: boolean;
+  error?: string;
 }
 
 interface VotingTabProps {
-  votes: Vote[];
-  metadata?: unknown;
-  loading?: boolean;
+  bioguideId: string;
 }
 
-export function VotingTab({ votes = [] }: VotingTabProps) {
+export function VotingTab({ bioguideId }: VotingTabProps) {
   const router = useRouter();
+  const { data, error, isLoading } = useSWR<VoteResponse>(
+    `/api/representative/${bioguideId}/votes`,
+    fetcher
+  );
+
+  if (isLoading) {
+    return (
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+        <div className="grid grid-cols-5 gap-4">
+          <div className="h-16 bg-gray-100 rounded"></div>
+          <div className="h-16 bg-gray-100 rounded"></div>
+          <div className="h-16 bg-gray-100 rounded"></div>
+          <div className="h-16 bg-gray-100 rounded"></div>
+          <div className="h-16 bg-gray-100 rounded"></div>
+        </div>
+        <div className="space-y-2">
+          <div className="h-6 bg-gray-100 rounded"></div>
+          <div className="h-6 bg-gray-100 rounded"></div>
+          <div className="h-6 bg-gray-100 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-600 mb-2">Failed to load voting records</div>
+        <div className="text-sm text-gray-500">Please try refreshing the page</div>
+      </div>
+    );
+  }
+
+  if (!data || !data.votes) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-gray-600 mb-2">No voting records available</div>
+        <div className="text-sm text-gray-400">
+          Voting data is sourced from Congress.gov and Senate XML feeds
+        </div>
+      </div>
+    );
+  }
+
+  const votes = data.votes;
 
   // Calculate voting statistics
   const yesVotes = votes.filter(vote => vote.position === 'Yea').length;
@@ -45,13 +106,14 @@ export function VotingTab({ votes = [] }: VotingTabProps) {
 
   // Extract vote ID from vote data for detailed page navigation
   const extractVoteId = (vote: Vote): string | null => {
-    // For Senate votes, extract vote ID from the voteId field or from the id field
+    // For Senate votes, extract vote ID from the voteId field
     if (vote.chamber === 'Senate') {
-      if (vote.voteId) return vote.voteId;
+      if (vote.voteId) {
+        // Extract from format like "119-senate-00123"
+        const match = vote.voteId.match(/(\d+)$/);
+        return match?.[1] || null;
+      }
       if (vote.rollNumber) return vote.rollNumber.toString();
-      // Try to extract from vote.id format like "119-senate-00123"
-      const match = vote.id.match(/(\d+)$/);
-      return match?.[1] || null;
     }
     return null;
   };
@@ -65,7 +127,7 @@ export function VotingTab({ votes = [] }: VotingTabProps) {
   };
 
   return (
-    <>
+    <div data-testid="voting-record">
       <h2 className="text-lg font-semibold mb-4">Interactive Voting Analysis</h2>
 
       {/* Metrics */}
@@ -179,7 +241,7 @@ export function VotingTab({ votes = [] }: VotingTabProps) {
 
                 return (
                   <tr
-                    key={vote.id}
+                    key={vote.voteId}
                     className={`border-b ${isClickable ? 'cursor-pointer hover:bg-gray-50 transition-colors' : ''}`}
                     onClick={() => isClickable && handleVoteClick(vote)}
                     title={isClickable ? 'Click to view detailed vote breakdown' : ''}
@@ -258,6 +320,6 @@ export function VotingTab({ votes = [] }: VotingTabProps) {
           </table>
         </div>
       )}
-    </>
+    </div>
   );
 }

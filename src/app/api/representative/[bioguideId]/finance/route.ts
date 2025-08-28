@@ -72,6 +72,31 @@ interface CampaignFinanceResponse {
     financialSummary: string;
     contributions: string;
   };
+
+  // DIAGNOSTIC: Debug information (only included when debug=true)
+  debug?: {
+    bioguideId: string;
+    fecIdResolution: {
+      strategy1Success: boolean;
+      strategy2Success: boolean;
+      selectedFecId: string | null;
+      allFecIds: string[];
+      chamberDetected: string | null;
+    };
+    cycleDetection: {
+      explicitCycleProvided: boolean;
+      dynamicCycleDetected: number | null;
+      availableElectionCycles: number[];
+      finalSelectedCycle: number;
+    };
+    apiCalls: {
+      financialSummarySuccess: boolean;
+      financialSummaryData: unknown;
+      committeeResolutionAttempts: number;
+      selectedCommitteeId: string | null;
+    };
+    processingErrors: string[];
+  };
 }
 
 /**
@@ -184,37 +209,96 @@ export async function GET(
   const { searchParams } = new URL(request.url);
 
   const cycleParam = searchParams.get('cycle');
+  const debugMode = searchParams.get('debug') === 'true';
   let requestedCycle: number;
   let cachedFecCandidateId: string | null = null;
+
+  // DIAGNOSTIC: Initialize debug tracking
+  const debugInfo = debugMode
+    ? {
+        bioguideId,
+        fecIdResolution: {
+          strategy1Success: false,
+          strategy2Success: false,
+          selectedFecId: null as string | null,
+          allFecIds: [] as string[],
+          chamberDetected: null as string | null,
+        },
+        cycleDetection: {
+          explicitCycleProvided: !!cycleParam,
+          dynamicCycleDetected: null as number | null,
+          availableElectionCycles: [] as number[],
+          finalSelectedCycle: 0,
+        },
+        apiCalls: {
+          financialSummarySuccess: false,
+          financialSummaryData: null as unknown,
+          committeeResolutionAttempts: 0,
+          selectedCommitteeId: null as string | null,
+        },
+        processingErrors: [] as string[],
+      }
+    : undefined;
+
+  if (debugMode) {
+    logger.info(`[Finance API DIAGNOSTIC] Debug mode enabled for ${bioguideId}`);
+  }
 
   // If cycle is explicitly provided in query params, validate and use it
   if (cycleParam) {
     requestedCycle = parseInt(cycleParam, 10);
+    logger.info(`[Finance API DIAGNOSTIC] Using explicit cycle parameter: ${requestedCycle}`);
   } else {
     // Step 1: Get FEC candidate ID first to determine dynamic default cycle
+    logger.info(`[Finance API DIAGNOSTIC] Starting dynamic cycle detection for ${bioguideId}`);
     cachedFecCandidateId = await getFECCandidateId(bioguideId);
+
+    logger.info(`[Finance API DIAGNOSTIC] Dynamic cycle detection - FEC ID result:`, {
+      bioguideId,
+      fecCandidateId: cachedFecCandidateId,
+      foundId: !!cachedFecCandidateId,
+    });
 
     if (cachedFecCandidateId) {
       // Get candidate's election history to find their most recent active cycle
+      logger.info(
+        `[Finance API DIAGNOSTIC] Fetching election cycles for FEC ID: ${cachedFecCandidateId}`
+      );
       const electionCycles = await fecApiService.getCandidateElectionCycles(cachedFecCandidateId);
+
+      logger.info(`[Finance API DIAGNOSTIC] Election cycles result:`, {
+        fecCandidateId: cachedFecCandidateId,
+        electionCycles,
+        cycleCount: electionCycles.length,
+      });
 
       if (electionCycles.length > 0) {
         // Use the most recent cycle from their actual election history
         const mostRecentCycle = electionCycles[0]; // Already sorted in descending order
         requestedCycle = mostRecentCycle!; // Non-null assertion since we checked length > 0
-        logger.info(
-          `[Finance API] Dynamic cycle detection: Using ${requestedCycle} for ${bioguideId} (FEC: ${cachedFecCandidateId})`
-        );
+        logger.info(`[Finance API DIAGNOSTIC] Dynamic cycle detection SUCCESS:`, {
+          bioguideId,
+          fecCandidateId: cachedFecCandidateId,
+          selectedCycle: requestedCycle,
+          availableCycles: electionCycles,
+        });
       } else {
         // Fallback to 2024 if no election history found
         requestedCycle = 2024;
         logger.warn(
-          `[Finance API] No election cycles found for ${bioguideId}, falling back to 2024`
+          `[Finance API DIAGNOSTIC] Dynamic cycle detection FAILED - no election cycles, using 2024 fallback`,
+          {
+            bioguideId,
+            fecCandidateId: cachedFecCandidateId,
+          }
         );
       }
     } else {
       // If no FEC ID found, use 2024 as fallback (will fail later anyway)
       requestedCycle = 2024;
+      logger.warn(
+        `[Finance API DIAGNOSTIC] Dynamic cycle detection FAILED - no FEC ID, using 2024 fallback for ${bioguideId}`
+      );
     }
   }
 
@@ -249,84 +333,190 @@ export async function GET(
     // Get FEC candidate ID (reuse cached value if available from dynamic cycle detection)
     const fecCandidateId = cachedFecCandidateId || (await getFECCandidateId(bioguideId));
 
+    // DIAGNOSTIC: Track FEC ID resolution for debug
+    if (debugInfo) {
+      debugInfo.fecIdResolution.selectedFecId = fecCandidateId;
+    }
+
     if (!fecCandidateId) {
-      logger.info(
-        `[Finance API] No FEC data available for ${bioguideId} - returning empty response`
-      );
-      return NextResponse.json(
-        {
-          error: 'No campaign finance data available',
-          reason: 'Representative not found in FEC database',
-          dataAvailable: false,
-          bioguideId,
-          lastUpdated: new Date().toISOString(),
+      const errorMsg = `No FEC data available for ${bioguideId} - returning zero response`;
+      logger.info(`[Finance API] ${errorMsg}`);
+
+      if (debugInfo) {
+        debugInfo.processingErrors.push('No FEC candidate ID found');
+      }
+
+      // CRITICAL FIX: Return expected data structure with zeros, not error object
+      const zeroResponse = {
+        totalRaised: 0,
+        totalSpent: 0,
+        cashOnHand: 0,
+        individualContributions: 0,
+        pacContributions: 0,
+        partyContributions: 0,
+        candidateContributions: 0,
+        industryBreakdown: [],
+        geographicBreakdown: [],
+        dataQuality: {
+          industry: {
+            totalContributionsAnalyzed: 0,
+            contributionsWithEmployer: 0,
+            completenessPercentage: 0,
+          },
+          geography: {
+            totalContributionsAnalyzed: 0,
+            contributionsWithState: 0,
+            completenessPercentage: 0,
+          },
+          overallDataConfidence: 'low' as const,
         },
-        { status: 404 }
-      );
+        candidateId: '',
+        cycle: currentCycle,
+        lastUpdated: new Date().toISOString(),
+        fecDataSources: {
+          financialSummary: 'No FEC candidate ID found',
+          contributions: 'No FEC candidate ID found',
+        },
+        errorOccurred: true,
+        errorMessage: 'No FEC candidate ID found for this representative',
+        ...(debugInfo && { debug: debugInfo }),
+      };
+
+      return NextResponse.json(zeroResponse, { status: 200 }); // Return 200 with zeros, not 404
     }
 
     // Step 2: Fetch summary totals FIRST - most reliable source
-    logger.info(
-      `[Finance API] Fetching financial summary for ${fecCandidateId}, cycle ${currentCycle}`
-    );
+    logger.info(`[Finance API DIAGNOSTIC] Starting financial summary fetch:`, {
+      bioguideId,
+      fecCandidateId,
+      cycle: currentCycle,
+      timestamp: new Date().toISOString(),
+    });
+
+    // eslint-disable-next-line no-console
+    console.log('🔍 FEC Candidate ID:', fecCandidateId);
 
     let financialSummary: Awaited<ReturnType<typeof fecApiService.getFinancialSummary>> = null;
     try {
       financialSummary = await fecApiService.getFinancialSummary(fecCandidateId, currentCycle);
+
+      // eslint-disable-next-line no-console
+      console.log('📊 Financial Summary:', financialSummary);
+
+      // eslint-disable-next-line no-console
+      console.log('💰 Raw totals:', {
+        receipts: financialSummary?.total_receipts,
+        disbursements: financialSummary?.total_disbursements,
+        cash: financialSummary?.cash_on_hand_end_period,
+      });
+
+      // DIAGNOSTIC: Track API success and data for debug
+      if (debugInfo) {
+        debugInfo.apiCalls.financialSummarySuccess = !!financialSummary;
+        debugInfo.apiCalls.financialSummaryData = financialSummary;
+      }
+
+      // DIAGNOSTIC: Log the actual FEC API response structure and values
+      logger.info(`[Finance API DIAGNOSTIC] Financial summary API response:`, {
+        fecCandidateId,
+        cycle: currentCycle,
+        responseReceived: !!financialSummary,
+        responseData: financialSummary
+          ? {
+              totalReceipts: financialSummary.total_receipts,
+              totalDisbursements: financialSummary.total_disbursements,
+              cashOnHand: financialSummary.cash_on_hand_end_period,
+              individualContributions: financialSummary.individual_contributions,
+              pacContributions: financialSummary.other_political_committee_contributions,
+              partyContributions: financialSummary.political_party_committee_contributions,
+              candidateContributions: financialSummary.candidate_contribution ?? 0,
+            }
+          : null,
+      });
     } catch (error) {
-      logger.error(`[Finance API] Failed to fetch financial summary for ${fecCandidateId}:`, error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (debugInfo) {
+        debugInfo.processingErrors.push(`Financial summary API error: ${errorMsg}`);
+      }
+
+      logger.error(`[Finance API DIAGNOSTIC] Financial summary fetch FAILED:`, {
+        fecCandidateId,
+        cycle: currentCycle,
+        error: errorMsg,
+        errorStack: error instanceof Error ? error.stack : undefined,
+      });
     }
 
-    // CRITICAL CHANGE: Always return data if we have ANY financial summary
-    // Even if all values are 0, we should return the data structure
-    // This prevents the "$0" bug by ensuring the UI always has data to display
+    // CRITICAL CHANGE: Only return empty if we have NO financial summary
+    // Don't reject data just because amounts are zero - zero is valid FEC data
     if (!financialSummary) {
-      logger.info(
-        `[Finance API] No financial summary data for ${fecCandidateId} cycle ${currentCycle}`
+      logger.warn(
+        `[Finance API DIAGNOSTIC] No financial summary data - this may be the root cause of $0 display:`,
+        {
+          bioguideId,
+          fecCandidateId,
+          cycle: currentCycle,
+          reason: 'financialSummary is null/undefined',
+          willReturnZeros: true,
+        }
       );
+
       // Return a successful response with zero values instead of 404
       // This is the key fix for the "$0" bug
-      return NextResponse.json(
-        {
-          // Financial totals - all zeros when no data exists
-          totalRaised: 0,
-          totalSpent: 0,
-          cashOnHand: 0,
-          individualContributions: 0,
-          pacContributions: 0,
-          partyContributions: 0,
-          candidateContributions: 0,
+      if (debugInfo) {
+        debugInfo.processingErrors.push('No financial summary data returned from FEC API');
+        debugInfo.cycleDetection.finalSelectedCycle = currentCycle;
+      }
 
-          // Empty breakdowns
-          industryBreakdown: [],
-          geographicBreakdown: [],
+      const emptyResponse = {
+        // Financial totals - all zeros when no data exists
+        totalRaised: 0,
+        totalSpent: 0,
+        cashOnHand: 0,
+        individualContributions: 0,
+        pacContributions: 0,
+        partyContributions: 0,
+        candidateContributions: 0,
 
-          // Data quality indicating no data
-          dataQuality: {
-            industry: {
-              totalContributionsAnalyzed: 0,
-              contributionsWithEmployer: 0,
-              completenessPercentage: 0,
-            },
-            geography: {
-              totalContributionsAnalyzed: 0,
-              contributionsWithState: 0,
-              completenessPercentage: 0,
-            },
-            overallDataConfidence: 'low' as const,
+        // Empty breakdowns
+        industryBreakdown: [],
+        geographicBreakdown: [],
+
+        // Data quality indicating no data
+        dataQuality: {
+          industry: {
+            totalContributionsAnalyzed: 0,
+            contributionsWithEmployer: 0,
+            completenessPercentage: 0,
           },
-
-          // Metadata
-          candidateId: fecCandidateId,
-          cycle: currentCycle,
-          lastUpdated: new Date().toISOString(),
-          fecDataSources: {
-            financialSummary: `FEC Candidate Totals API - No data for cycle ${currentCycle}`,
-            contributions: 'No contribution data available',
+          geography: {
+            totalContributionsAnalyzed: 0,
+            contributionsWithState: 0,
+            completenessPercentage: 0,
           },
+          overallDataConfidence: 'low' as const,
         },
-        { status: 200 } // Return 200 OK with empty data instead of 404
-      );
+
+        // Metadata
+        candidateId: fecCandidateId,
+        cycle: currentCycle,
+        lastUpdated: new Date().toISOString(),
+        fecDataSources: {
+          financialSummary: `FEC Candidate Totals API - No data for cycle ${currentCycle}`,
+          contributions: 'No contribution data available',
+        },
+
+        // Include debug information if requested
+        ...(debugInfo && { debug: debugInfo }),
+      };
+
+      logger.info(`[Finance API DIAGNOSTIC] Returning empty response structure:`, {
+        bioguideId,
+        fecCandidateId,
+        emptyResponse,
+      });
+
+      return NextResponse.json(emptyResponse, { status: 200 }); // Return 200 OK with empty data instead of 404
     }
 
     // Step 3: We have good summary data - now try to fetch detailed data
@@ -360,12 +550,29 @@ export async function GET(
       _detailedDataError = 'Detailed contributor breakdown is currently unavailable';
     }
 
+    // DIAGNOSTIC: Finalize debug info
+    if (debugInfo) {
+      debugInfo.cycleDetection.finalSelectedCycle = currentCycle;
+    }
+
     // Step 5: Create robust response that always includes summary data
     const response: CampaignFinanceResponse = {
       // Financial totals - use summary data if detailed processing failed
-      totalRaised: processedData?.totalRaised ?? financialSummary.total_receipts ?? 0,
-      totalSpent: processedData?.totalSpent ?? financialSummary.total_disbursements ?? 0,
-      cashOnHand: processedData?.cashOnHand ?? financialSummary.cash_on_hand_end_period ?? 0,
+      totalRaised:
+        processedData?.totalRaised ??
+        financialSummary.receipts ??
+        financialSummary.total_receipts ??
+        0,
+      totalSpent:
+        processedData?.totalSpent ??
+        financialSummary.disbursements ??
+        financialSummary.total_disbursements ??
+        0,
+      cashOnHand:
+        processedData?.cashOnHand ??
+        financialSummary.last_cash_on_hand_end_period ??
+        financialSummary.cash_on_hand_end_period ??
+        0,
       individualContributions:
         processedData?.individualContributions ?? financialSummary.individual_contributions ?? 0,
       pacContributions:
@@ -377,7 +584,7 @@ export async function GET(
         financialSummary.political_party_committee_contributions ??
         0,
       candidateContributions:
-        processedData?.candidateContributions ?? financialSummary.candidate_contributions ?? 0,
+        processedData?.candidateContributions ?? financialSummary.candidate_contribution ?? 0,
 
       // Detailed breakdowns - gracefully handle missing data
       industryBreakdown: processedData?.industryBreakdown ?? [],
@@ -406,15 +613,41 @@ export async function GET(
         financialSummary: `FEC Candidate Totals API (${currentCycle})`,
         contributions: 'Detailed data unavailable',
       },
+
+      // Include debug information if requested
+      ...(debugInfo && { debug: debugInfo }),
     };
 
-    logger.info(`[Finance API] Successfully processed data for ${bioguideId}`, {
+    logger.info(`[Finance API DIAGNOSTIC] Final response preparation:`, {
+      bioguideId,
       fecCandidateId,
-      totalRaised: response.totalRaised,
+      finalTotalRaised: response.totalRaised,
+      finalTotalSpent: response.totalSpent,
+      finalCashOnHand: response.cashOnHand,
+      financialSummaryUsed: !!financialSummary,
+      processedDataUsed: !!processedData,
       industryDataQuality: response.dataQuality.industry.completenessPercentage.toFixed(1) + '%',
       geographyDataQuality: response.dataQuality.geography.completenessPercentage.toFixed(1) + '%',
       overallConfidence: response.dataQuality.overallDataConfidence,
       useSampleData,
+      timestamp: new Date().toISOString(),
+    });
+
+    // DIAGNOSTIC: Log the exact values being sent to frontend
+    logger.info(`[Finance API DIAGNOSTIC] EXACT VALUES BEING SENT TO FRONTEND:`, {
+      bioguideId,
+      totalRaised: response.totalRaised,
+      totalSpent: response.totalSpent,
+      cashOnHand: response.cashOnHand,
+      allZeros:
+        response.totalRaised === 0 && response.totalSpent === 0 && response.cashOnHand === 0,
+    });
+
+    // eslint-disable-next-line no-console
+    console.log('✅ FINAL RESPONSE VALUES:', {
+      totalRaised: response.totalRaised,
+      rawFecReceipts: financialSummary?.total_receipts,
+      processedRaised: processedData?.totalRaised,
     });
 
     // Add CORS headers for transparency tools
@@ -433,13 +666,60 @@ export async function GET(
     logger.error(`[Finance API] Error processing request for ${bioguideId}:`, error);
 
     // Don't expose internal error details to client
-    return NextResponse.json(
-      {
-        error: 'Internal server error while fetching campaign finance data',
-        bioguideId,
-        lastUpdated: new Date().toISOString(),
+    if (debugInfo) {
+      debugInfo.processingErrors.push(
+        `Fatal error: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+
+    // CRITICAL FIX: Always return the expected data structure, even on error
+    // The frontend expects these fields, not an error object
+    const errorResponse = {
+      // Financial totals - all zeros on error
+      totalRaised: 0,
+      totalSpent: 0,
+      cashOnHand: 0,
+      individualContributions: 0,
+      pacContributions: 0,
+      partyContributions: 0,
+      candidateContributions: 0,
+
+      // Empty breakdowns
+      industryBreakdown: [],
+      geographicBreakdown: [],
+
+      // Data quality indicating error
+      dataQuality: {
+        industry: {
+          totalContributionsAnalyzed: 0,
+          contributionsWithEmployer: 0,
+          completenessPercentage: 0,
+        },
+        geography: {
+          totalContributionsAnalyzed: 0,
+          contributionsWithState: 0,
+          completenessPercentage: 0,
+        },
+        overallDataConfidence: 'low' as const,
       },
-      { status: 500 }
-    );
+
+      // Metadata
+      candidateId: '',
+      cycle: 2024,
+      lastUpdated: new Date().toISOString(),
+      fecDataSources: {
+        financialSummary: 'Error fetching data',
+        contributions: 'Error fetching data',
+      },
+
+      // Include error info for debugging
+      errorOccurred: true,
+      errorMessage: 'Internal server error while fetching campaign finance data',
+
+      // Include debug information if requested
+      ...(debugInfo && { debug: debugInfo }),
+    };
+
+    return NextResponse.json(errorResponse, { status: 200 }); // Return 200 with error flag instead of 500
   }
 }

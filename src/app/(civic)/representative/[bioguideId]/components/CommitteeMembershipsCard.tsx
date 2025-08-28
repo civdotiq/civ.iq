@@ -9,10 +9,24 @@ import React from 'react';
 import Link from 'next/link';
 import { Users } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
+import { COMMITTEE_ID_MAP } from '@/types/committee';
 
 interface CommitteeMembershipsCardProps {
   representative: EnhancedRepresentative;
   className?: string;
+}
+
+// Helper function to find thomas_id from committee name
+function findCommitteeId(committeeName: string): string | null {
+  // Try to find matching committee by name
+  const matchingEntry = Object.entries(COMMITTEE_ID_MAP).find(
+    ([_, info]) =>
+      info.name.toLowerCase() === committeeName.toLowerCase() ||
+      info.name.toLowerCase().includes(committeeName.toLowerCase()) ||
+      committeeName.toLowerCase().includes(info.name.toLowerCase())
+  );
+
+  return matchingEntry ? matchingEntry[0] : null;
 }
 
 export function CommitteeMembershipsCard({
@@ -40,15 +54,24 @@ export function CommitteeMembershipsCard({
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h4 className="font-medium text-sm leading-5">
-                      <Link
-                        href={`/committee/${committee.name
-                          .replace(/\s+/g, '-')
-                          .toLowerCase()
-                          .replace(/[^a-z0-9-]/g, '')}`}
-                        className="text-blue-600 hover:text-blue-800 hover:underline"
-                      >
-                        {committee.name}
-                      </Link>
+                      {(() => {
+                        const committeeId = findCommitteeId(committee.name);
+                        const href = committeeId
+                          ? `/committee/${committeeId.toLowerCase()}`
+                          : `/committee/${committee.name
+                              .replace(/\s+/g, '-')
+                              .toLowerCase()
+                              .replace(/[^a-z0-9-]/g, '')}`;
+
+                        return (
+                          <Link
+                            href={href}
+                            className="text-blue-600 hover:text-blue-800 hover:underline"
+                          >
+                            {committee.name}
+                          </Link>
+                        );
+                      })()}
                     </h4>
                     {committee.role && (
                       <div className="mt-2">

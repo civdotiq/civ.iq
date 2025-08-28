@@ -1,0 +1,1886 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rendering-verification>
+<!-- Frontend components that render API data -->
+<file path="src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+'use client';
+
+import React from 'react';
+
+interface Vote {
+  id: string;
+  date: string;
+  bill?: {
+    number: string;
+    title: string;
+    url?: string;
+  };
+  question?: string;
+  description: string;
+  position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
+  result: 'Passed' | 'Failed' | 'Agreed to' | 'Disagreed to';
+  chamber: 'House' | 'Senate';
+  category?: string;
+}
+
+interface VotingTabProps {
+  votes: Vote[];
+  metadata?: unknown;
+  loading?: boolean;
+}
+
+export function VotingTab({ votes = [] }: VotingTabProps) {
+  // Calculate voting statistics
+  const yesVotes = votes.filter(vote =&gt; vote.position === 'Yea').length;
+  const nayVotes = votes.filter(vote =&gt; vote.position === 'Nay').length;
+  const presentVotes = votes.filter(vote =&gt; vote.position === 'Present').length;
+  const notVotingVotes = votes.filter(vote =&gt; vote.position === 'Not Voting').length;
+  const totalVotes = votes.length;
+  const keyVotes = votes.filter(vote =&gt; vote.category === 'key').length;
+
+  return (
+    &lt;&gt;
+      &lt;h2 className="text-lg font-semibold mb-4"&gt;Interactive Voting Analysis&lt;/h2&gt;
+
+      {/* Metrics */}
+      &lt;div className="grid grid-cols-5 gap-4 mb-8"&gt;
+        &lt;div className="text-center"&gt;
+          &lt;div className="text-3xl font-bold"&gt;{totalVotes}&lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Total Votes&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div className="text-center"&gt;
+          &lt;div className="text-3xl font-bold text-green-600"&gt;{yesVotes}&lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Yes&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div className="text-center"&gt;
+          &lt;div className="text-3xl font-bold text-red-600"&gt;{nayVotes}&lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Nay&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div className="text-center"&gt;
+          &lt;div className="text-3xl font-bold"&gt;{presentVotes}&lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Present&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div className="text-center"&gt;
+          &lt;div className="text-3xl font-bold"&gt;{keyVotes}&lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Key Votes&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      {/* Position Bars */}
+      &lt;h3 className="font-medium mb-3"&gt;Position Distribution&lt;/h3&gt;
+      &lt;div className="space-y-2 mb-8"&gt;
+        &lt;div className="flex items-center gap-3"&gt;
+          &lt;span className="w-20 text-sm"&gt;Yes&lt;/span&gt;
+          &lt;div className="flex-1 bg-gray-200 rounded h-6"&gt;
+            &lt;div
+              className="bg-green-500 h-6 rounded"
+              style={{
+                width: totalVotes &gt; 0 ? `${(yesVotes / totalVotes) * 100}%` : '0%',
+              }}
+            &gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;span className="text-sm"&gt;
+            {totalVotes &gt; 0 ? Math.round((yesVotes / totalVotes) * 100) : 0}%
+          &lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div className="flex items-center gap-3"&gt;
+          &lt;span className="w-20 text-sm"&gt;Nay&lt;/span&gt;
+          &lt;div className="flex-1 bg-gray-200 rounded h-6"&gt;
+            &lt;div
+              className="bg-red-500 h-6 rounded"
+              style={{
+                width: totalVotes &gt; 0 ? `${(nayVotes / totalVotes) * 100}%` : '0%',
+              }}
+            &gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;span className="text-sm"&gt;
+            {totalVotes &gt; 0 ? Math.round((nayVotes / totalVotes) * 100) : 0}%
+          &lt;/span&gt;
+        &lt;/div&gt;
+        {presentVotes &gt; 0 &amp;&amp; (
+          &lt;div className="flex items-center gap-3"&gt;
+            &lt;span className="w-20 text-sm"&gt;Present&lt;/span&gt;
+            &lt;div className="flex-1 bg-gray-200 rounded h-6"&gt;
+              &lt;div
+                className="bg-yellow-500 h-6 rounded"
+                style={{
+                  width: totalVotes &gt; 0 ? `${(presentVotes / totalVotes) * 100}%` : '0%',
+                }}
+              &gt;&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;span className="text-sm"&gt;
+              {totalVotes &gt; 0 ? Math.round((presentVotes / totalVotes) * 100) : 0}%
+            &lt;/span&gt;
+          &lt;/div&gt;
+        )}
+        {notVotingVotes &gt; 0 &amp;&amp; (
+          &lt;div className="flex items-center gap-3"&gt;
+            &lt;span className="w-20 text-sm"&gt;Not Voting&lt;/span&gt;
+            &lt;div className="flex-1 bg-gray-200 rounded h-6"&gt;
+              &lt;div
+                className="bg-gray-500 h-6 rounded"
+                style={{
+                  width: totalVotes &gt; 0 ? `${(notVotingVotes / totalVotes) * 100}%` : '0%',
+                }}
+              &gt;&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;span className="text-sm"&gt;
+              {totalVotes &gt; 0 ? Math.round((notVotingVotes / totalVotes) * 100) : 0}%
+            &lt;/span&gt;
+          &lt;/div&gt;
+        )}
+      &lt;/div&gt;
+
+      {/* Recent Votes */}
+      &lt;h3 className="font-medium mb-3"&gt;Recent Voting Record&lt;/h3&gt;
+      {votes.length === 0 ? (
+        &lt;p className="text-gray-500 text-center py-8"&gt;No voting data available&lt;/p&gt;
+      ) : (
+        &lt;div className="overflow-x-auto"&gt;
+          &lt;table className="w-full"&gt;
+            &lt;thead&gt;
+              &lt;tr className="border-b"&gt;
+                &lt;th className="text-left py-2"&gt;Bill&lt;/th&gt;
+                &lt;th className="text-left py-2"&gt;Description&lt;/th&gt;
+                &lt;th className="text-left py-2"&gt;Date&lt;/th&gt;
+                &lt;th className="text-right py-2"&gt;Position&lt;/th&gt;
+              &lt;/tr&gt;
+            &lt;/thead&gt;
+            &lt;tbody&gt;
+              {votes.slice(0, 10).map(vote =&gt; (
+                &lt;tr key={vote.id} className="border-b"&gt;
+                  &lt;td className="py-3"&gt;
+                    {vote.bill?.number ? (
+                      vote.bill.url ? (
+                        &lt;a
+                          href={vote.bill.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        &gt;
+                          {vote.bill.number}
+                        &lt;/a&gt;
+                      ) : (
+                        vote.bill.number
+                      )
+                    ) : (
+                      'Voice Vote'
+                    )}
+                  &lt;/td&gt;
+                  &lt;td className="py-3 text-sm text-gray-600"&gt;
+                    {vote.bill?.title || vote.question || vote.description}
+                  &lt;/td&gt;
+                  &lt;td className="py-3 text-sm text-gray-500"&gt;
+                    {new Date(vote.date).toLocaleDateString()}
+                  &lt;/td&gt;
+                  &lt;td className="text-right py-3"&gt;
+                    &lt;span
+                      className={`px-2 py-1 rounded text-sm ${
+                        vote.position === 'Yea'
+                          ? 'bg-green-100 text-green-700'
+                          : vote.position === 'Nay'
+                            ? 'bg-red-100 text-red-700'
+                            : vote.position === 'Present'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-gray-100 text-gray-700'
+                      }`}
+                    &gt;
+                      {vote.position}
+                    &lt;/span&gt;
+                  &lt;/td&gt;
+                &lt;/tr&gt;
+              ))}
+            &lt;/tbody&gt;
+          &lt;/table&gt;
+        &lt;/div&gt;
+      )}
+    &lt;/&gt;
+  );
+}
+
+</file>
+<file path="src/app/(civic)/representative/[bioguideId]/tabs/BillsTab.tsx">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+'use client';
+
+import React from 'react';
+
+interface Bill {
+  id: string;
+  number: string;
+  title: string;
+  introducedDate: string;
+  status: string;
+  lastAction: string;
+  congress: number;
+  type: string;
+  policyArea: string;
+  url?: string;
+  committee?: string;
+  progress?: number;
+}
+
+interface BillsTabProps {
+  bills: Bill[];
+  metadata?: unknown;
+  loading?: boolean;
+}
+
+export function BillsTab({ bills = [] }: BillsTabProps) {
+  // Calculate bill statistics
+  const totalBills = bills.length;
+  const enactedBills = bills.filter(bill =&gt; bill.status.toLowerCase().includes('enacted')).length;
+  const avgCosponsors = 0; // This would come from actual data
+  const totalSupport = 0; // This would come from actual data
+
+  return (
+    &lt;&gt;
+      &lt;h2 className="text-lg font-semibold mb-4"&gt;Legislative Tracker&lt;/h2&gt;
+
+      &lt;div className="grid grid-cols-4 gap-4 mb-8"&gt;
+        &lt;div className="text-center"&gt;
+          &lt;div className="text-3xl font-bold text-blue-600"&gt;{totalBills}&lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Bills Sponsored&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div className="text-center"&gt;
+          &lt;div className="text-3xl font-bold text-green-600"&gt;{enactedBills}&lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Enacted&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div className="text-center"&gt;
+          &lt;div className="text-3xl font-bold text-yellow-600"&gt;{avgCosponsors}&lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Avg Cosponsors&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div className="text-center"&gt;
+          &lt;div className="text-3xl font-bold text-purple-600"&gt;{totalSupport}&lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Total Support&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      {bills.length === 0 ? (
+        &lt;p className="text-gray-500 text-center py-8"&gt;No bills data available&lt;/p&gt;
+      ) : (
+        &lt;div className="space-y-4"&gt;
+          {bills.slice(0, 10).map(bill =&gt; (
+            &lt;div key={bill.id} className="border rounded-lg p-4"&gt;
+              &lt;h3 className="font-medium"&gt;
+                {bill.url ? (
+                  &lt;a
+                    href={bill.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  &gt;
+                    {bill.number}: {bill.title}
+                  &lt;/a&gt;
+                ) : (
+                  `${bill.number}: ${bill.title}`
+                )}
+              &lt;/h3&gt;
+              &lt;p className="text-sm text-gray-500 mt-1"&gt;
+                Introduced: {new Date(bill.introducedDate).toLocaleDateString()}
+              &lt;/p&gt;
+              &lt;p className="text-sm text-gray-600 mt-1"&gt;{bill.lastAction}&lt;/p&gt;
+              &lt;div className="flex gap-2 mt-2"&gt;
+                &lt;span className="text-xs bg-gray-100 px-2 py-1 rounded"&gt;
+                  {bill.committee || 'Committee: Unknown'}
+                &lt;/span&gt;
+                &lt;span className="text-xs bg-blue-100 px-2 py-1 rounded"&gt;{bill.type}&lt;/span&gt;
+                {bill.policyArea &amp;&amp; (
+                  &lt;span className="text-xs bg-green-100 px-2 py-1 rounded"&gt;{bill.policyArea}&lt;/span&gt;
+                )}
+                &lt;span className="text-xs bg-yellow-100 px-2 py-1 rounded"&gt;
+                  {bill.status || 'Status: Unknown'}
+                &lt;/span&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          ))}
+        &lt;/div&gt;
+      )}
+    &lt;/&gt;
+  );
+}
+
+</file>
+<file path="src/app/(civic)/representative/[bioguideId]/tabs/FinanceTab.tsx">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+'use client';
+
+import React from 'react';
+
+interface FinanceData {
+  totalRaised: number;
+  totalSpent: number;
+  cashOnHand: number;
+  donations: {
+    individual: number;
+    pac: number;
+    party: number;
+    candidate: number;
+  };
+  topContributors: Array&lt;{
+    name: string;
+    amount: number;
+    type: 'Individual' | 'PAC' | 'Party Committee';
+  }&gt;;
+  industryBreakdown: Array&lt;{
+    industry: string;
+    amount: number;
+    percentage: number;
+  }&gt;;
+  spendingCategories: Array&lt;{
+    category: string;
+    amount: number;
+    percentage: number;
+  }&gt;;
+}
+
+interface FinanceTabProps {
+  financeData: FinanceData;
+  metadata?: unknown;
+  loading?: boolean;
+}
+
+export function FinanceTab({ financeData }: FinanceTabProps) {
+  // Provide default values if financeData is null/undefined
+  const safeFinanceData = financeData || {
+    totalRaised: 0,
+    totalSpent: 0,
+    cashOnHand: 0,
+    donations: { individual: 0, pac: 0, party: 0, candidate: 0 },
+    topContributors: [],
+    industryBreakdown: [],
+    spendingCategories: [],
+  };
+
+  const formatCurrency = (amount: number) =&gt; {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount || 0);
+  };
+
+  return (
+    &lt;&gt;
+      &lt;h2 className="text-lg font-semibold mb-4"&gt;Campaign Finance&lt;/h2&gt;
+
+      {/* Financial Overview */}
+      &lt;div className="grid grid-cols-3 gap-4 mb-8"&gt;
+        &lt;div className="text-center"&gt;
+          &lt;div className="text-3xl font-bold text-green-600"&gt;
+            {formatCurrency(safeFinanceData.totalRaised)}
+          &lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Total Raised&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div className="text-center"&gt;
+          &lt;div className="text-3xl font-bold text-red-600"&gt;
+            {formatCurrency(safeFinanceData.totalSpent)}
+          &lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Total Spent&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div className="text-center"&gt;
+          &lt;div className="text-3xl font-bold text-blue-600"&gt;
+            {formatCurrency(safeFinanceData.cashOnHand)}
+          &lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Cash on Hand&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      {/* Donation Sources */}
+      &lt;h3 className="font-medium mb-3"&gt;Donation Sources&lt;/h3&gt;
+      &lt;div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"&gt;
+        &lt;div className="text-center p-4 bg-gray-50 rounded"&gt;
+          &lt;div className="text-xl font-bold"&gt;
+            {formatCurrency(safeFinanceData.donations.individual)}
+          &lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Individual&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div className="text-center p-4 bg-gray-50 rounded"&gt;
+          &lt;div className="text-xl font-bold"&gt;{formatCurrency(safeFinanceData.donations.pac)}&lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;PAC&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div className="text-center p-4 bg-gray-50 rounded"&gt;
+          &lt;div className="text-xl font-bold"&gt;{formatCurrency(safeFinanceData.donations.party)}&lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Party&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div className="text-center p-4 bg-gray-50 rounded"&gt;
+          &lt;div className="text-xl font-bold"&gt;
+            {formatCurrency(safeFinanceData.donations.candidate)}
+          &lt;/div&gt;
+          &lt;div className="text-sm text-gray-500"&gt;Candidate&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      {/* Top Contributors */}
+      {safeFinanceData.topContributors.length &gt; 0 &amp;&amp; (
+        &lt;div className="mb-8"&gt;
+          &lt;h3 className="font-medium mb-3"&gt;Top Contributors&lt;/h3&gt;
+          &lt;div className="space-y-2"&gt;
+            {safeFinanceData.topContributors.slice(0, 5).map((contributor, index) =&gt; (
+              &lt;div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded"&gt;
+                &lt;div&gt;
+                  &lt;div className="font-medium"&gt;{contributor.name}&lt;/div&gt;
+                  &lt;div className="text-sm text-gray-500"&gt;{contributor.type}&lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div className="text-right"&gt;
+                  &lt;div className="font-medium"&gt;{formatCurrency(contributor.amount)}&lt;/div&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            ))}
+          &lt;/div&gt;
+        &lt;/div&gt;
+      )}
+
+      {/* Industry Breakdown */}
+      {safeFinanceData.industryBreakdown.length &gt; 0 &amp;&amp; (
+        &lt;div className="mb-8"&gt;
+          &lt;h3 className="font-medium mb-3"&gt;Industry Breakdown&lt;/h3&gt;
+          &lt;div className="space-y-2"&gt;
+            {safeFinanceData.industryBreakdown.slice(0, 5).map((industry, index) =&gt; (
+              &lt;div key={index} className="flex items-center gap-3"&gt;
+                &lt;span className="w-32 text-sm"&gt;{industry.industry}&lt;/span&gt;
+                &lt;div className="flex-1 bg-gray-200 rounded h-6"&gt;
+                  &lt;div
+                    className="bg-blue-500 h-6 rounded"
+                    style={{ width: `${industry.percentage}%` }}
+                  &gt;&lt;/div&gt;
+                &lt;/div&gt;
+                &lt;span className="text-sm w-16 text-right"&gt;{formatCurrency(industry.amount)}&lt;/span&gt;
+              &lt;/div&gt;
+            ))}
+          &lt;/div&gt;
+        &lt;/div&gt;
+      )}
+
+      {/* Data Notice */}
+      {safeFinanceData.totalRaised === 0 &amp;&amp; (
+        &lt;div className="text-center py-8"&gt;
+          &lt;p className="text-gray-500"&gt;No campaign finance data available&lt;/p&gt;
+          &lt;p className="text-sm text-gray-400 mt-2"&gt;
+            Financial data is sourced from FEC filings and may be delayed
+          &lt;/p&gt;
+        &lt;/div&gt;
+      )}
+    &lt;/&gt;
+  );
+}
+
+</file>
+<file path="src/app/(civic)/representative/[bioguideId]/components/DataFetchingWrapper.tsx">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { RepresentativeClient } from './RepresentativeClient';
+import { EnhancedRepresentative } from '@/types/representative';
+
+interface DataFetchingWrapperProps {
+  representative: EnhancedRepresentative;
+  initialServerData?: {
+    bills?: unknown[];
+    votes?: unknown[];
+    finance?: Record&lt;string, unknown&gt;;
+    news?: unknown[];
+  };
+  partialErrors?: Record&lt;string, string&gt;;
+}
+
+export function DataFetchingWrapper({
+  representative,
+  initialServerData,
+  partialErrors: initialPartialErrors,
+}: DataFetchingWrapperProps) {
+  const [serverData, setServerData] = useState(initialServerData);
+  const [partialErrors, setPartialErrors] = useState(initialPartialErrors || {});
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() =&gt; {
+    // Only fetch if we don't have initial data
+    if (!initialServerData?.bills?.length || !initialServerData?.votes?.length) {
+      fetchData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [representative.bioguideId, initialServerData]);
+
+  const fetchData = async () =&gt; {
+    setIsLoading(true);
+    const newServerData = {
+      bills: initialServerData?.bills || [],
+      votes: initialServerData?.votes || [],
+      finance: initialServerData?.finance || {},
+      news: initialServerData?.news || [],
+    };
+    const newPartialErrors: Record&lt;string, string&gt; = {};
+
+    // Fetch bills if not already available
+    if (!initialServerData?.bills?.length) {
+      try {
+        const billsResponse = await fetch(`/api/representative/${representative.bioguideId}/bills`);
+        if (billsResponse.ok) {
+          const billsData = await billsResponse.json();
+          // Extract the bills array from the response structure
+          newServerData.bills = Array.isArray(billsData?.sponsored?.bills)
+            ? billsData.sponsored.bills
+            : Array.isArray(billsData?.sponsoredLegislation)
+              ? billsData.sponsoredLegislation
+              : [];
+        } else {
+          newPartialErrors.bills = `HTTP ${billsResponse.status}`;
+        }
+      } catch (error) {
+        newPartialErrors.bills = error instanceof Error ? error.message : 'Failed to fetch';
+      }
+    }
+
+    // Fetch votes if not already available
+    if (!initialServerData?.votes?.length) {
+      try {
+        const votesResponse = await fetch(`/api/representative/${representative.bioguideId}/votes`);
+        if (votesResponse.ok) {
+          const votesData = await votesResponse.json();
+          // Extract the votes array from the response structure
+          newServerData.votes = Array.isArray(votesData?.votes) ? votesData.votes : [];
+        } else {
+          newPartialErrors.votes = `HTTP ${votesResponse.status}`;
+        }
+      } catch (error) {
+        newPartialErrors.votes = error instanceof Error ? error.message : 'Failed to fetch';
+      }
+    }
+
+    setServerData(newServerData);
+    setPartialErrors(newPartialErrors);
+    setIsLoading(false);
+  };
+
+  // Show loading state while fetching
+  if (isLoading &amp;&amp; (!initialServerData?.bills?.length || !initialServerData?.votes?.length)) {
+    return (
+      &lt;div className="min-h-screen bg-gray-50 flex items-center justify-center"&gt;
+        &lt;div className="text-center"&gt;
+          &lt;div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"&gt;&lt;/div&gt;
+          &lt;p className="text-gray-600"&gt;Loading representative data...&lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  return (
+    &lt;RepresentativeClient
+      representative={representative}
+      serverData={serverData}
+      partialErrors={partialErrors}
+    /&gt;
+  );
+}
+
+</file>
+<file path="src/app/(civic)/representative/[bioguideId]/components/RepresentativeClient.tsx">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+'use client';
+
+import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
+import { DataTransparencyPanel } from '@/components/ui/DataTransparency';
+import { EnhancedRepresentative } from '@/types/representative';
+import { EnhancedHeader } from './EnhancedHeader';
+import { KeyStatsBar } from './KeyStatsBar';
+import { TabNavigation, profileTabs } from './TabNavigation';
+import { ProfileOverview } from './ProfileOverview';
+import { DistrictSidebar } from './DistrictSidebar';
+import { ContactInfoTab } from './ContactInfoTab';
+
+// Dynamic imports with proper error boundaries for tab components
+const VotingTab = dynamic(
+  () =&gt; import('../tabs/VotingTab').then(mod =&gt; ({ default: mod.VotingTab })),
+  {
+    loading: () =&gt; &lt;div className="animate-pulse bg-gray-200 h-64 rounded"&gt;&lt;/div&gt;,
+    ssr: false,
+  }
+);
+
+const BillsTab = dynamic(
+  () =&gt; import('../tabs/BillsTab').then(mod =&gt; ({ default: mod.BillsTab })),
+  {
+    loading: () =&gt; &lt;div className="animate-pulse bg-gray-200 h-64 rounded"&gt;&lt;/div&gt;,
+    ssr: false,
+  }
+);
+
+const FinanceTab = dynamic(
+  () =&gt; import('../tabs/FinanceTab').then(mod =&gt; ({ default: mod.FinanceTab })),
+  {
+    loading: () =&gt; &lt;div className="animate-pulse bg-gray-200 h-64 rounded"&gt;&lt;/div&gt;,
+    ssr: false,
+  }
+);
+
+interface RepresentativeClientProps {
+  representative: EnhancedRepresentative;
+  serverData?: {
+    bills?: unknown[];
+    votes?: unknown[];
+    finance?: Record&lt;string, unknown&gt;;
+    news?: unknown[];
+  };
+  partialErrors?: Record&lt;string, string&gt;;
+}
+
+export function RepresentativeClient({
+  representative,
+  serverData,
+  partialErrors,
+}: RepresentativeClientProps) {
+  const [activeTab, setActiveTab] = useState('overview');
+
+  // Calculate stats for the KeyStatsBar
+  const calculateStats = () =&gt; {
+    const billsCount = Array.isArray(serverData?.bills) ? serverData.bills.length : 0;
+    const votesCount = Array.isArray(serverData?.votes) ? serverData.votes.length : 0;
+    const committeesCount = representative.committees?.length || 0;
+
+    // Calculate years in office
+    const yearsInOffice = representative.terms?.length
+      ? new Date().getFullYear() - parseInt(representative.terms[0]?.startYear || '0')
+      : 0;
+
+    // Get campaign finance total if available
+    const financeData = serverData?.finance as {
+      totalRaised?: number;
+      totalSpent?: number;
+      cashOnHand?: number;
+    };
+
+    return {
+      billsSponsored: billsCount,
+      votesParticipated: votesCount,
+      partyAlignment: 85, // Placeholder - would come from actual data
+      totalRaised: financeData?.totalRaised || 0,
+      yearsInOffice,
+      committees: committeesCount,
+    };
+  };
+
+  const stats = calculateStats();
+
+  const renderTabContent = () =&gt; {
+    switch (activeTab) {
+      case 'overview':
+        return &lt;ContactInfoTab representative={representative} /&gt;;
+
+      case 'voting':
+        return (
+          &lt;VotingTab
+            votes={
+              (serverData?.votes as Array&lt;{
+                id: string;
+                date: string;
+                bill?: { number: string; title: string; url?: string };
+                question?: string;
+                description: string;
+                position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
+                result: 'Passed' | 'Failed' | 'Agreed to' | 'Disagreed to';
+                chamber: 'House' | 'Senate';
+                category?: string;
+              }&gt;) || []
+            }
+          /&gt;
+        );
+
+      case 'legislation':
+        return (
+          &lt;BillsTab
+            bills={
+              (serverData?.bills as Array&lt;{
+                id: string;
+                number: string;
+                title: string;
+                introducedDate: string;
+                status: string;
+                lastAction: string;
+                congress: number;
+                type: string;
+                policyArea: string;
+                url?: string;
+                committee?: string;
+                progress?: number;
+              }&gt;) || []
+            }
+          /&gt;
+        );
+
+      case 'finance':
+        return (
+          &lt;FinanceTab
+            financeData={
+              (serverData?.finance as {
+                totalRaised: number;
+                totalSpent: number;
+                cashOnHand: number;
+                donations: {
+                  individual: number;
+                  pac: number;
+                  party: number;
+                  candidate: number;
+                };
+                topContributors: Array&lt;{
+                  name: string;
+                  amount: number;
+                  type: 'Individual' | 'PAC' | 'Party Committee';
+                }&gt;;
+                industryBreakdown: Array&lt;{
+                  industry: string;
+                  amount: number;
+                  percentage: number;
+                }&gt;;
+                spendingCategories: Array&lt;{
+                  category: string;
+                  amount: number;
+                  percentage: number;
+                }&gt;;
+              }) || {
+                totalRaised: 0,
+                totalSpent: 0,
+                cashOnHand: 0,
+                donations: { individual: 0, pac: 0, party: 0, candidate: 0 },
+                topContributors: [],
+                industryBreakdown: [],
+                spendingCategories: [],
+              }
+            }
+          /&gt;
+        );
+
+      case 'committees':
+        return (
+          &lt;div className="bg-white rounded-lg border border-gray-200 p-6"&gt;
+            &lt;h2 className="text-xl font-semibold mb-4"&gt;Committee Information&lt;/h2&gt;
+            {representative.committees &amp;&amp; representative.committees.length &gt; 0 ? (
+              &lt;div className="space-y-4"&gt;
+                {representative.committees.map((committee, index) =&gt; (
+                  &lt;div
+                    key={index}
+                    className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
+                  &gt;
+                    &lt;div className="flex justify-between items-start"&gt;
+                      &lt;div&gt;
+                        &lt;h3 className="font-semibold text-gray-900"&gt;{committee.name}&lt;/h3&gt;
+                        {committee.role &amp;&amp; (
+                          &lt;span className="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full"&gt;
+                            {committee.role}
+                          &lt;/span&gt;
+                        )}
+                      &lt;/div&gt;
+                    &lt;/div&gt;
+                  &lt;/div&gt;
+                ))}
+              &lt;/div&gt;
+            ) : (
+              &lt;p className="text-gray-500"&gt;No committee information available.&lt;/p&gt;
+            )}
+          &lt;/div&gt;
+        );
+
+      case 'news':
+        return (
+          &lt;div className="bg-white rounded-lg border border-gray-200 p-6"&gt;
+            &lt;h2 className="text-xl font-semibold mb-4"&gt;Recent News&lt;/h2&gt;
+            &lt;p className="text-gray-500"&gt;News integration coming soon...&lt;/p&gt;
+          &lt;/div&gt;
+        );
+
+      default:
+        return &lt;ProfileOverview representative={representative} /&gt;;
+    }
+  };
+
+  return (
+    &lt;div className="min-h-screen bg-gray-50"&gt;
+      {/* Enhanced Header */}
+      &lt;EnhancedHeader representative={representative} /&gt;
+
+      {/* Key Stats Bar */}
+      &lt;KeyStatsBar stats={stats} /&gt;
+
+      {/* Main Content Area */}
+      &lt;div className="container mx-auto px-4 py-6"&gt;
+        {/* Error Display for Partial Failures */}
+        {partialErrors &amp;&amp; Object.keys(partialErrors).length &gt; 0 &amp;&amp; (
+          &lt;div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6"&gt;
+            &lt;div className="flex"&gt;
+              &lt;div className="flex-shrink-0"&gt;
+                &lt;svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"&gt;
+                  &lt;path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  /&gt;
+                &lt;/svg&gt;
+              &lt;/div&gt;
+              &lt;div className="ml-3"&gt;
+                &lt;h3 className="text-sm font-medium text-yellow-800"&gt;
+                  Some data could not be loaded
+                &lt;/h3&gt;
+                &lt;div className="mt-2 text-sm text-yellow-700"&gt;
+                  &lt;p&gt;The following information may be incomplete:&lt;/p&gt;
+                  &lt;ul className="list-disc list-inside mt-1"&gt;
+                    {Object.entries(partialErrors).map(([key, error]) =&gt; (
+                      &lt;li key={key} className="capitalize"&gt;
+                        {key.replace('-', ' ')}:{' '}
+                        {typeof error === 'string' ? error : 'Failed to load'}
+                      &lt;/li&gt;
+                    ))}
+                  &lt;/ul&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        )}
+
+        {/* Main Layout Grid */}
+        &lt;div className="lg:grid lg:grid-cols-4 lg:gap-6"&gt;
+          {/* Main Content */}
+          &lt;div className="lg:col-span-3"&gt;
+            {/* Tab Navigation */}
+            &lt;div className="mb-6"&gt;
+              &lt;TabNavigation
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                tabs={profileTabs}
+                size="md"
+              /&gt;
+            &lt;/div&gt;
+
+            {/* Tab Content */}
+            &lt;div className="min-h-96"&gt;{renderTabContent()}&lt;/div&gt;
+          &lt;/div&gt;
+
+          {/* Sidebar */}
+          &lt;div className="lg:col-span-1 mt-6 lg:mt-0"&gt;
+            &lt;DistrictSidebar representative={representative} /&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+        {/* Data Transparency */}
+        &lt;div className="mt-8"&gt;
+          &lt;DataTransparencyPanel
+            metadata={{
+              source: 'congress-legislators + congress.gov',
+              cached: true,
+              fetchedAt: new Date().toISOString(),
+              dataQuality: 'high',
+              freshness: 'Current',
+            }}
+          /&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+
+</file>
+<file path="src/app/(civic)/representative/[bioguideId]/components/KeyStatsBar.tsx">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+'use client';
+
+import React from 'react';
+import { TrendingUp, Users, FileText, DollarSign, Calendar, Award } from 'lucide-react';
+
+interface KeyStatsBarProps {
+  stats: {
+    billsSponsored?: number;
+    votesParticipated?: number;
+    partyAlignment?: number;
+    totalRaised?: number;
+    yearsInOffice?: number;
+    committees?: number;
+  };
+  loading?: boolean;
+}
+
+interface StatCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  subtitle?: string;
+  color?: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'gray';
+  loading?: boolean;
+}
+
+function StatCard({
+  icon,
+  label,
+  value,
+  subtitle,
+  color = 'blue',
+  loading = false,
+}: StatCardProps) {
+  const colorClasses = {
+    blue: 'text-blue-600 bg-blue-50',
+    green: 'text-green-600 bg-green-50',
+    purple: 'text-purple-600 bg-purple-50',
+    orange: 'text-orange-600 bg-orange-50',
+    red: 'text-red-600 bg-red-50',
+    gray: 'text-gray-600 bg-gray-50',
+  };
+
+  if (loading) {
+    return (
+      &lt;div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100"&gt;
+        &lt;div className="flex items-center gap-3"&gt;
+          &lt;div className={`p-2 rounded-lg ${colorClasses[color]} animate-pulse`}&gt;{icon}&lt;/div&gt;
+          &lt;div className="flex-1"&gt;
+            &lt;div className="h-4 bg-gray-200 rounded animate-pulse mb-1"&gt;&lt;/div&gt;
+            &lt;div className="h-6 bg-gray-200 rounded animate-pulse w-16"&gt;&lt;/div&gt;
+            {subtitle &amp;&amp; &lt;div className="h-3 bg-gray-200 rounded animate-pulse w-12 mt-1"&gt;&lt;/div&gt;}
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  return (
+    &lt;div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"&gt;
+      &lt;div className="flex items-center gap-3"&gt;
+        &lt;div className={`p-2 rounded-lg ${colorClasses[color]}`}&gt;{icon}&lt;/div&gt;
+        &lt;div className="flex-1"&gt;
+          &lt;p className="text-sm font-medium text-gray-600 mb-1"&gt;{label}&lt;/p&gt;
+          &lt;p className="text-2xl font-bold text-gray-900"&gt;{value}&lt;/p&gt;
+          {subtitle &amp;&amp; &lt;p className="text-xs text-gray-500 mt-1"&gt;{subtitle}&lt;/p&gt;}
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+
+export function KeyStatsBar({ stats, loading = false }: KeyStatsBarProps) {
+  // Format currency values
+  const formatCurrency = (amount: number) =&gt; {
+    if (amount &gt;= 1000000) {
+      return `$${(amount / 1000000).toFixed(1)}M`;
+    }
+    if (amount &gt;= 1000) {
+      return `$${(amount / 1000).toFixed(0)}K`;
+    }
+    return `$${amount.toLocaleString()}`;
+  };
+
+  // Format percentage
+  const formatPercentage = (value: number) =&gt; {
+    return `${Math.round(value)}%`;
+  };
+
+  // Calculate years in office from terms or provide fallback
+  const yearsInOffice = stats.yearsInOffice || 0;
+
+  return (
+    &lt;div className="bg-gray-50 py-6"&gt;
+      &lt;div className="container mx-auto px-4"&gt;
+        &lt;div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"&gt;
+          &lt;StatCard
+            icon={&lt;FileText className="w-5 h-5" /&gt;}
+            label="Bills Sponsored"
+            value={stats.billsSponsored ?? '—'}
+            subtitle="Current Congress"
+            color="blue"
+            loading={loading}
+          /&gt;
+
+          &lt;StatCard
+            icon={&lt;Users className="w-5 h-5" /&gt;}
+            label="Votes Cast"
+            value={stats.votesParticipated ?? '—'}
+            subtitle="This term"
+            color="green"
+            loading={loading}
+          /&gt;
+
+          &lt;StatCard
+            icon={&lt;TrendingUp className="w-5 h-5" /&gt;}
+            label="Party Alignment"
+            value={stats.partyAlignment ? formatPercentage(stats.partyAlignment) : '—'}
+            subtitle="Voting record"
+            color="purple"
+            loading={loading}
+          /&gt;
+
+          &lt;StatCard
+            icon={&lt;DollarSign className="w-5 h-5" /&gt;}
+            label="Total Raised"
+            value={stats.totalRaised ? formatCurrency(stats.totalRaised) : '—'}
+            subtitle="Current cycle"
+            color="orange"
+            loading={loading}
+          /&gt;
+
+          &lt;StatCard
+            icon={&lt;Calendar className="w-5 h-5" /&gt;}
+            label="Years in Office"
+            value={yearsInOffice || '—'}
+            subtitle="Experience"
+            color="red"
+            loading={loading}
+          /&gt;
+
+          &lt;StatCard
+            icon={&lt;Award className="w-5 h-5" /&gt;}
+            label="Committees"
+            value={stats.committees ?? '—'}
+            subtitle="Current"
+            color="gray"
+            loading={loading}
+          /&gt;
+        &lt;/div&gt;
+
+        {/* Additional context for stats */}
+        &lt;div className="mt-4 text-center"&gt;
+          &lt;p className="text-xs text-gray-500"&gt;
+            Statistics updated from Congress.gov, FEC, and official records • Some data may be
+            incomplete
+          &lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+
+</file>
+<file path="src/app/(civic)/representative/[bioguideId]/components/ProfileOverview.tsx">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+'use client';
+
+import React from 'react';
+import {
+  Calendar,
+  MapPin,
+  Award,
+  Users,
+  Clock,
+  ExternalLink,
+  Briefcase,
+  Home,
+  Heart,
+} from 'lucide-react';
+import { EnhancedRepresentative } from '@/types/representative';
+
+interface ProfileOverviewProps {
+  representative: EnhancedRepresentative;
+  className?: string;
+}
+
+interface InfoCardProps {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}
+
+function InfoCard({ title, icon, children, className = '' }: InfoCardProps) {
+  return (
+    &lt;div className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className}`}&gt;
+      &lt;div className="p-4 border-b border-gray-100"&gt;
+        &lt;div className="flex items-center gap-2"&gt;
+          &lt;div className="text-gray-500"&gt;{icon}&lt;/div&gt;
+          &lt;h3 className="font-semibold text-gray-900"&gt;{title}&lt;/h3&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div className="p-4"&gt;{children}&lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+
+interface TimelineItemProps {
+  date: string;
+  title: string;
+  description?: string;
+  type?: 'term' | 'leadership' | 'committee' | 'other';
+}
+
+function TimelineItem({ date, title, description, type = 'other' }: TimelineItemProps) {
+  const typeColors = {
+    term: 'bg-blue-100 text-blue-800',
+    leadership: 'bg-purple-100 text-purple-800',
+    committee: 'bg-green-100 text-green-800',
+    other: 'bg-gray-100 text-gray-800',
+  };
+
+  return (
+    &lt;div className="flex gap-3 pb-4 last:pb-0"&gt;
+      &lt;div className="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full mt-2"&gt;&lt;/div&gt;
+      &lt;div className="flex-1"&gt;
+        &lt;div className="flex flex-wrap items-center gap-2 mb-1"&gt;
+          &lt;span className="text-sm font-medium text-gray-900"&gt;{title}&lt;/span&gt;
+          &lt;span className={`px-2 py-1 text-xs font-medium rounded ${typeColors[type]}`}&gt;
+            {type}
+          &lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div className="text-sm text-gray-600 mb-1"&gt;{date}&lt;/div&gt;
+        {description &amp;&amp; &lt;div className="text-sm text-gray-700"&gt;{description}&lt;/div&gt;}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+
+export function ProfileOverview({ representative, className = '' }: ProfileOverviewProps) {
+  // Get biographical information
+  const getBirthInfo = () =&gt; {
+    if (!representative.bio?.birthday) return null;
+    const birthDate = new Date(representative.bio.birthday);
+    const age = new Date().getFullYear() - birthDate.getFullYear();
+    return {
+      date: birthDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }),
+      age,
+    };
+  };
+
+  const birthInfo = getBirthInfo();
+
+  // Get years of service
+  const getYearsOfService = () =&gt; {
+    if (!representative.terms || representative.terms.length === 0) return 0;
+    const firstTerm = representative.terms[0];
+    if (!firstTerm || !firstTerm.startYear) return 0;
+    return new Date().getFullYear() - parseInt(firstTerm.startYear);
+  };
+
+  const yearsOfService = getYearsOfService();
+
+  // Create timeline from terms and leadership roles
+  const createTimeline = () =&gt; {
+    const timeline: TimelineItemProps[] = [];
+
+    // Add terms
+    if (representative.terms) {
+      representative.terms.forEach(term =&gt; {
+        timeline.push({
+          date: `${term.startYear} - ${term.endYear}`,
+          title: `${representative.chamber} Term`,
+          description: `Congress ${term.congress}`,
+          type: 'term',
+        });
+      });
+    }
+
+    // Add leadership roles
+    if (representative.leadershipRoles) {
+      representative.leadershipRoles.forEach(role =&gt; {
+        timeline.push({
+          date: `${role.start}${role.end ? ` - ${role.end}` : ' - Present'}`,
+          title: role.title,
+          type: 'leadership',
+        });
+      });
+    }
+
+    // Sort by start date (most recent first)
+    return timeline.sort((a, b) =&gt; {
+      const dateAStr = a.date.split(' - ')[0];
+      const dateBStr = b.date.split(' - ')[0];
+      if (!dateAStr || !dateBStr) return 0;
+      const dateA = new Date(dateAStr);
+      const dateB = new Date(dateBStr);
+      return dateB.getTime() - dateA.getTime();
+    });
+  };
+
+  const timeline = createTimeline();
+
+  return (
+    &lt;div className={`space-y-6 ${className}`}&gt;
+      {/* Quick Facts Grid */}
+      &lt;div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"&gt;
+        &lt;div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm"&gt;
+          &lt;div className="flex items-center gap-2 mb-2"&gt;
+            &lt;Clock className="w-4 h-4 text-gray-500" /&gt;
+            &lt;span className="text-sm font-medium text-gray-600"&gt;Years in Office&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div className="text-2xl font-bold text-gray-900"&gt;{yearsOfService}&lt;/div&gt;
+          &lt;div className="text-xs text-gray-500"&gt;
+            Since {representative.terms?.[0]?.startYear || 'N/A'}
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm"&gt;
+          &lt;div className="flex items-center gap-2 mb-2"&gt;
+            &lt;Users className="w-4 h-4 text-gray-500" /&gt;
+            &lt;span className="text-sm font-medium text-gray-600"&gt;Committees&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div className="text-2xl font-bold text-gray-900"&gt;
+            {representative.committees?.length || 0}
+          &lt;/div&gt;
+          &lt;div className="text-xs text-gray-500"&gt;Current assignments&lt;/div&gt;
+        &lt;/div&gt;
+
+        {birthInfo &amp;&amp; (
+          &lt;div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm"&gt;
+            &lt;div className="flex items-center gap-2 mb-2"&gt;
+              &lt;Calendar className="w-4 h-4 text-gray-500" /&gt;
+              &lt;span className="text-sm font-medium text-gray-600"&gt;Age&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;div className="text-2xl font-bold text-gray-900"&gt;{birthInfo.age}&lt;/div&gt;
+            &lt;div className="text-xs text-gray-500"&gt;Born {birthInfo.date}&lt;/div&gt;
+          &lt;/div&gt;
+        )}
+
+        &lt;div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm"&gt;
+          &lt;div className="flex items-center gap-2 mb-2"&gt;
+            &lt;MapPin className="w-4 h-4 text-gray-500" /&gt;
+            &lt;span className="text-sm font-medium text-gray-600"&gt;Represents&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div className="text-lg font-bold text-gray-900"&gt;
+            {representative.state}
+            {representative.district &amp;&amp; representative.district !== 'AL'
+              ? `-${representative.district}`
+              : ''}
+          &lt;/div&gt;
+          &lt;div className="text-xs text-gray-500"&gt;
+            {representative.chamber === 'House' ? 'House District' : 'U.S. Senate'}
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      {/* Main Content Grid */}
+      &lt;div className="grid grid-cols-1 lg:grid-cols-2 gap-6"&gt;
+        {/* Personal Information */}
+        &lt;InfoCard title="Personal Information" icon={&lt;Home className="w-5 h-5" /&gt;}&gt;
+          &lt;div className="space-y-3"&gt;
+            {representative.fullName &amp;&amp; (
+              &lt;div&gt;
+                &lt;label className="text-sm font-medium text-gray-600"&gt;Full Name&lt;/label&gt;
+                &lt;div className="text-gray-900"&gt;
+                  {representative.fullName.first}{' '}
+                  {representative.fullName.middle &amp;&amp; `${representative.fullName.middle} `}
+                  {representative.fullName.last}
+                  {representative.fullName.suffix &amp;&amp; `, ${representative.fullName.suffix}`}
+                &lt;/div&gt;
+                {representative.fullName.nickname &amp;&amp; (
+                  &lt;div className="text-sm text-gray-600"&gt;
+                    Known as: {representative.fullName.nickname}
+                  &lt;/div&gt;
+                )}
+              &lt;/div&gt;
+            )}
+
+            {representative.bio?.gender &amp;&amp; (
+              &lt;div&gt;
+                &lt;label className="text-sm font-medium text-gray-600"&gt;Gender&lt;/label&gt;
+                &lt;div className="text-gray-900"&gt;
+                  {representative.bio.gender === 'M' ? 'Male' : 'Female'}
+                &lt;/div&gt;
+              &lt;/div&gt;
+            )}
+
+            {representative.bio?.religion &amp;&amp; (
+              &lt;div&gt;
+                &lt;label className="text-sm font-medium text-gray-600"&gt;Religion&lt;/label&gt;
+                &lt;div className="text-gray-900"&gt;{representative.bio.religion}&lt;/div&gt;
+              &lt;/div&gt;
+            )}
+
+            {representative.currentTerm?.stateRank &amp;&amp; representative.chamber === 'Senate' &amp;&amp; (
+              &lt;div&gt;
+                &lt;label className="text-sm font-medium text-gray-600"&gt;Senate Rank&lt;/label&gt;
+                &lt;div className="text-gray-900 capitalize"&gt;
+                  {representative.currentTerm.stateRank} Senator
+                &lt;/div&gt;
+              &lt;/div&gt;
+            )}
+          &lt;/div&gt;
+        &lt;/InfoCard&gt;
+
+        {/* Current Term Information */}
+        &lt;InfoCard title="Current Term" icon={&lt;Briefcase className="w-5 h-5" /&gt;}&gt;
+          &lt;div className="space-y-3"&gt;
+            {representative.currentTerm?.start &amp;&amp; representative.currentTerm?.end &amp;&amp; (
+              &lt;div&gt;
+                &lt;label className="text-sm font-medium text-gray-600"&gt;Term&lt;/label&gt;
+                &lt;div className="text-gray-900"&gt;
+                  {new Date(representative.currentTerm.start).getFullYear()} -{' '}
+                  {new Date(representative.currentTerm.end).getFullYear()}
+                &lt;/div&gt;
+              &lt;/div&gt;
+            )}
+
+            {representative.currentTerm?.office &amp;&amp; (
+              &lt;div&gt;
+                &lt;label className="text-sm font-medium text-gray-600"&gt;Office&lt;/label&gt;
+                &lt;div className="text-gray-900"&gt;{representative.currentTerm.office}&lt;/div&gt;
+              &lt;/div&gt;
+            )}
+
+            {representative.chamber === 'Senate' &amp;&amp; representative.currentTerm?.class &amp;&amp; (
+              &lt;div&gt;
+                &lt;label className="text-sm font-medium text-gray-600"&gt;Senate Class&lt;/label&gt;
+                &lt;div className="text-gray-900"&gt;Class {representative.currentTerm.class}&lt;/div&gt;
+              &lt;/div&gt;
+            )}
+
+            {representative.currentTerm?.website &amp;&amp; (
+              &lt;div&gt;
+                &lt;label className="text-sm font-medium text-gray-600"&gt;Official Website&lt;/label&gt;
+                &lt;div&gt;
+                  &lt;a
+                    href={representative.currentTerm.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                  &gt;
+                    Visit Website
+                    &lt;ExternalLink className="w-3 h-3" /&gt;
+                  &lt;/a&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            )}
+          &lt;/div&gt;
+        &lt;/InfoCard&gt;
+
+        {/* Committee Memberships */}
+        {representative.committees &amp;&amp; representative.committees.length &gt; 0 &amp;&amp; (
+          &lt;InfoCard title="Committee Memberships" icon={&lt;Users className="w-5 h-5" /&gt;}&gt;
+            &lt;div className="space-y-3"&gt;
+              {representative.committees.map((committee, index) =&gt; (
+                &lt;div
+                  key={index}
+                  className="flex items-start justify-between p-3 bg-gray-50 rounded-lg"
+                &gt;
+                  &lt;div className="flex-1"&gt;
+                    &lt;div className="font-medium text-gray-900"&gt;{committee.name}&lt;/div&gt;
+                    {committee.role &amp;&amp; (
+                      &lt;div className="text-sm text-blue-600 font-medium"&gt;{committee.role}&lt;/div&gt;
+                    )}
+                  &lt;/div&gt;
+                &lt;/div&gt;
+              ))}
+            &lt;/div&gt;
+          &lt;/InfoCard&gt;
+        )}
+
+        {/* Service Timeline */}
+        {timeline.length &gt; 0 &amp;&amp; (
+          &lt;InfoCard title="Service Timeline" icon={&lt;Award className="w-5 h-5" /&gt;}&gt;
+            &lt;div className="space-y-3"&gt;
+              {timeline.slice(0, 6).map((item, index) =&gt; (
+                &lt;TimelineItem key={index} {...item} /&gt;
+              ))}
+              {timeline.length &gt; 6 &amp;&amp; (
+                &lt;div className="text-sm text-gray-500 text-center pt-2"&gt;
+                  And {timeline.length - 6} more entries...
+                &lt;/div&gt;
+              )}
+            &lt;/div&gt;
+          &lt;/InfoCard&gt;
+        )}
+      &lt;/div&gt;
+
+      {/* Social Media Links */}
+      {representative.socialMedia &amp;&amp; (
+        &lt;InfoCard title="Connect Online" icon={&lt;Heart className="w-5 h-5" /&gt;}&gt;
+          &lt;div className="flex flex-wrap gap-3"&gt;
+            {representative.socialMedia.twitter &amp;&amp; (
+              &lt;a
+                href={`https://twitter.com/${representative.socialMedia.twitter}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              &gt;
+                &lt;span&gt;Twitter&lt;/span&gt;
+                &lt;ExternalLink className="w-3 h-3" /&gt;
+              &lt;/a&gt;
+            )}
+
+            {representative.socialMedia.facebook &amp;&amp; (
+              &lt;a
+                href={`https://facebook.com/${representative.socialMedia.facebook}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              &gt;
+                &lt;span&gt;Facebook&lt;/span&gt;
+                &lt;ExternalLink className="w-3 h-3" /&gt;
+              &lt;/a&gt;
+            )}
+
+            {representative.socialMedia.youtube &amp;&amp; (
+              &lt;a
+                href={`https://youtube.com/${representative.socialMedia.youtube}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              &gt;
+                &lt;span&gt;YouTube&lt;/span&gt;
+                &lt;ExternalLink className="w-3 h-3" /&gt;
+              &lt;/a&gt;
+            )}
+
+            {representative.socialMedia.instagram &amp;&amp; (
+              &lt;a
+                href={`https://instagram.com/${representative.socialMedia.instagram}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+              &gt;
+                &lt;span&gt;Instagram&lt;/span&gt;
+                &lt;ExternalLink className="w-3 h-3" /&gt;
+              &lt;/a&gt;
+            )}
+          &lt;/div&gt;
+        &lt;/InfoCard&gt;
+      )}
+    &lt;/div&gt;
+  );
+}
+
+</file>
+<file path="src/types/representative.ts">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+/**
+ * Enhanced Representative Types
+ *
+ * This file defines comprehensive types for representative data,
+ * combining our existing structure with congress-legislators enhancements.
+ * Includes error handling and batch API response types.
+ */
+
+// Base representative interface (existing structure)
+export interface BaseRepresentative {
+  bioguideId: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  party: string;
+  state: string;
+  district?: string;
+  chamber: 'House' | 'Senate';
+  title: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  imageUrl?: string;
+  terms: Array&lt;{
+    congress: string;
+    startYear: string;
+    endYear: string;
+  }&gt;;
+  committees?: Array&lt;{
+    name: string;
+    role?: string;
+  }&gt;;
+}
+
+// Enhanced representative with congress-legislators data
+export interface EnhancedRepresentative extends BaseRepresentative {
+  // Enhanced name information
+  fullName?: {
+    first: string;
+    middle?: string;
+    last: string;
+    suffix?: string;
+    nickname?: string;
+    official?: string;
+  };
+
+  // Biographical information
+  bio?: {
+    birthday?: string;
+    gender?: 'M' | 'F';
+    religion?: string;
+  };
+
+  // Current term details
+  currentTerm?: {
+    start: string;
+    end: string;
+    office?: string;
+    phone?: string;
+    address?: string;
+    website?: string;
+    contactForm?: string;
+    rssUrl?: string;
+    stateRank?: 'junior' | 'senior';
+    class?: number; // Senate class
+  };
+
+  // Social media presence
+  socialMedia?: {
+    twitter?: string;
+    facebook?: string;
+    youtube?: string;
+    instagram?: string;
+    mastodon?: string;
+  };
+
+  // Cross-platform IDs
+  ids?: {
+    govtrack?: number;
+    opensecrets?: string;
+    votesmart?: number;
+    fec?: string[];
+    cspan?: number;
+    wikipedia?: string;
+    wikidata?: string;
+    ballotpedia?: string;
+  };
+
+  // Leadership roles
+  leadershipRoles?: Array&lt;{
+    title: string;
+    start: string;
+    end?: string;
+  }&gt;;
+
+  // Enhanced contact information
+  contact?: {
+    dcOffice?: {
+      address?: string;
+      phone?: string;
+      fax?: string;
+      hours?: string;
+    };
+    districtOffices?: Array&lt;{
+      address: string;
+      phone?: string;
+      fax?: string;
+      hours?: string;
+    }&gt;;
+    contactForm?: string;
+    schedulingUrl?: string;
+  };
+
+  // Data source metadata
+  metadata?: {
+    lastUpdated: string;
+    dataSources: Array&lt;'congress.gov' | 'congress-legislators' | 'fec' | 'openstates'&gt;;
+    completeness?: {
+      basicInfo: boolean;
+      socialMedia: boolean;
+      contact: boolean;
+      committees: boolean;
+      finance: boolean;
+    };
+  };
+}
+
+// Representative summary for list views
+export interface RepresentativeSummary {
+  bioguideId: string;
+  name: string;
+  party: string;
+  state: string;
+  district?: string;
+  chamber: 'House' | 'Senate';
+  title: string;
+  imageUrl?: string;
+  website?: string;
+  phone?: string;
+}
+
+// Representative search result
+export interface RepresentativeSearchResult extends RepresentativeSummary {
+  relevanceScore?: number;
+  matchedFields?: string[];
+}
+
+// Committee information
+export interface CommitteeMembership {
+  committeeId: string;
+  name: string;
+  fullName: string;
+  role: 'Chair' | 'Vice Chair' | 'Ranking Member' | 'Member';
+  subcommittees?: Array&lt;{
+    name: string;
+    role: string;
+  }&gt;;
+  startDate?: string;
+  endDate?: string;
+}
+
+// Enhanced committee data
+export interface EnhancedCommitteeInfo {
+  current: CommitteeMembership[];
+  historical: CommitteeMembership[];
+  leadership: Array&lt;{
+    committee: string;
+    role: string;
+    startDate: string;
+    endDate?: string;
+  }&gt;;
+}
+
+// Representative analytics data
+export interface RepresentativeAnalytics {
+  effectiveness?: {
+    billsSponsored: number;
+    billsPassed: number;
+    amendmentsOffered: number;
+    successRate: number;
+  };
+  engagement?: {
+    townHalls: number;
+    pressReleases: number;
+    socialMediaActivity: number;
+    lastUpdate: string;
+  };
+  voting?: {
+    totalVotes: number;
+    partyLineVotes: number;
+    bipartisanVotes: number;
+    absences: number;
+    votingScore: number;
+  };
+}
+
+// Contact attempt tracking
+export interface ContactAttempt {
+  id: string;
+  bioguideId: string;
+  userId?: string;
+  method: 'email' | 'phone' | 'contact_form' | 'office_visit';
+  timestamp: string;
+  subject?: string;
+  status: 'sent' | 'delivered' | 'responded' | 'failed';
+  response?: {
+    receivedAt: string;
+    type: 'automated' | 'personal';
+    content?: string;
+  };
+}
+
+// ZIP code to representative mapping
+export interface ZipCodeRepresentatives {
+  zipCode: string;
+  state: string;
+  representatives: {
+    house?: RepresentativeSummary;
+    senate: RepresentativeSummary[];
+  };
+  district?: string;
+  lastUpdated: string;
+}
+
+// Type guards
+export function isEnhancedRepresentative(rep: unknown): rep is EnhancedRepresentative {
+  return (
+    typeof rep === 'object' &amp;&amp;
+    rep !== null &amp;&amp;
+    'bioguideId' in rep &amp;&amp;
+    'name' in rep &amp;&amp;
+    typeof (rep as Record&lt;string, unknown&gt;).bioguideId === 'string' &amp;&amp;
+    typeof (rep as Record&lt;string, unknown&gt;).name === 'string'
+  );
+}
+
+export function isRepresentativeSummary(rep: unknown): rep is RepresentativeSummary {
+  return (
+    typeof rep === 'object' &amp;&amp;
+    rep !== null &amp;&amp;
+    'bioguideId' in rep &amp;&amp;
+    'name' in rep &amp;&amp;
+    'party' in rep &amp;&amp;
+    typeof (rep as Record&lt;string, unknown&gt;).bioguideId === 'string' &amp;&amp;
+    typeof (rep as Record&lt;string, unknown&gt;).name === 'string' &amp;&amp;
+    typeof (rep as Record&lt;string, unknown&gt;).party === 'string'
+  );
+}
+
+// Utility types
+export type RepresentativeField = keyof EnhancedRepresentative;
+export type SocialMediaPlatform = keyof NonNullable&lt;EnhancedRepresentative['socialMedia']&gt;;
+export type RepresentativeId = keyof NonNullable&lt;EnhancedRepresentative['ids']&gt;;
+
+// API response types
+export interface RepresentativeApiResponse {
+  representative: EnhancedRepresentative;
+  success: boolean;
+  error?: string;
+  metadata?: {
+    cacheHit?: boolean;
+    responseTime?: number;
+    dataSource?: string;
+  };
+}
+
+export interface RepresentativesListResponse {
+  representatives: RepresentativeSummary[];
+  total: number;
+  page?: number;
+  perPage?: number;
+  hasMore?: boolean;
+  success: boolean;
+  error?: string;
+}
+
+// Filter and search options
+export interface RepresentativeFilters {
+  state?: string;
+  party?: string;
+  chamber?: 'House' | 'Senate';
+  committee?: string;
+  leadership?: boolean;
+  hasTwitter?: boolean;
+  hasFacebook?: boolean;
+  hasWebsite?: boolean;
+}
+
+export interface RepresentativeSearchOptions {
+  query?: string;
+  filters?: RepresentativeFilters;
+  sortBy?: 'name' | 'state' | 'party' | 'seniority';
+  sortOrder?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+}
+
+// Enhanced error handling types
+export interface APIError {
+  message: string;
+  statusCode: number;
+  endpoint?: string;
+  timestamp: string;
+  requestId?: string;
+}
+
+// Specific data types for batch responses
+export interface VoteData {
+  vote_id: string;
+  position: string;
+  date: string;
+  bill: {
+    title: string;
+    number: string;
+  };
+}
+
+export interface BillData {
+  bill_id: string;
+  title: string;
+  number: string;
+  congress: number;
+  introduced_date: string;
+  status: string;
+}
+
+export interface FinanceData {
+  total_receipts?: number;
+  total_disbursements?: number;
+  cash_on_hand?: number;
+  cycle: string;
+}
+
+export interface NewsData {
+  title: string;
+  url: string;
+  published_date: string;
+  source: string;
+}
+
+// Batch API response types
+export interface BatchApiResponse {
+  success: boolean;
+  data: {
+    votes?: VoteData[];
+    bills?: BillData[];
+    finance?: FinanceData;
+    news?: NewsData[];
+    profile?: EnhancedRepresentative;
+    [key: string]: unknown;
+  };
+  errors: Record&lt;string, string&gt;;
+  metadata: {
+    timestamp: string;
+    requestedEndpoints: string[];
+    successfulEndpoints: string[];
+    failedEndpoints: string[];
+    totalTime: number;
+  };
+  executionTime: number;
+}
+
+// Enhanced type for batch API hook
+export interface BatchApiHookResult {
+  data: {
+    votes?: VoteData[];
+    bills?: BillData[];
+    finance?: FinanceData;
+    news?: NewsData[];
+    profile?: EnhancedRepresentative;
+    [key: string]: unknown;
+  };
+  loading: boolean;
+  error: string | null;
+  refetch: () =&gt; Promise&lt;void&gt;;
+  metadata?: BatchApiResponse['metadata'];
+  partialErrors?: Record&lt;string, string&gt;;
+}
+
+// Profile data structure for batch response
+export interface RepresentativeProfile {
+  profile: EnhancedRepresentative;
+  votes?: VoteData[];
+  bills?: BillData[];
+  finance?: FinanceData;
+  news?: NewsData[];
+  'party-alignment'?: {
+    score: number;
+    total_votes: number;
+    party_line_votes: number;
+  };
+  committees?: CommitteeMembership[];
+  leadership?: {
+    positions: string[];
+    current_role?: string;
+  };
+  district?: {
+    id: string;
+    state: string;
+    number: string;
+  };
+}
+
+// Individual endpoint response wrapper
+export interface EndpointResponse&lt;T = unknown&gt; {
+  success: boolean;
+  data?: T;
+  error?: string;
+  cached?: boolean;
+  executionTime?: number;
+}
+
+</file>
+</rendering-verification>

@@ -1,0 +1,3003 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<codebase>
+<!-- Generated on 2025-08-17T22:25:34.340Z -->
+<!-- Project: civic-intel-hub -->
+<file path="api/common.types.ts">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+/**
+ * Generic API response wrapper
+ */
+export interface ApiResponse&lt;T&gt; {
+  readonly success: boolean;
+  readonly data?: T;
+  readonly error?: ApiError;
+  readonly metadata: ResponseMetadata;
+}
+
+/**
+ * API error structure
+ */
+export interface ApiError {
+  readonly code: string;
+  readonly message: string;
+  readonly details?: unknown;
+  readonly field?: string;
+  readonly timestamp?: string;
+}
+
+/**
+ * Response metadata for all API calls
+ */
+export interface ResponseMetadata {
+  readonly timestamp: string;
+  readonly apiVersion: string;
+  readonly processingTime?: number;
+  readonly dataQuality?: &apos;high&apos; | &apos;medium&apos; | &apos;low&apos; | &apos;unavailable&apos;;
+  readonly dataSource?: string;
+  readonly cacheable?: boolean;
+  readonly freshness?: string;
+  readonly validationScore?: number;
+  readonly validationStatus?: &apos;excellent&apos; | &apos;good&apos; | &apos;fair&apos; | &apos;poor&apos;;
+}
+
+/**
+ * Pagination metadata
+ */
+export interface PaginationMetadata {
+  readonly page: number;
+  readonly limit: number;
+  readonly total: number;
+  readonly totalPages: number;
+  readonly hasNext: boolean;
+  readonly hasPrevious: boolean;
+}
+
+/**
+ * Paginated API response
+ */
+export interface PaginatedApiResponse&lt;T&gt; extends ApiResponse&lt;T&gt; {
+  readonly pagination: PaginationMetadata;
+}
+
+/**
+ * Request options for API calls
+ */
+export interface RequestOptions extends RequestInit {
+  readonly params?: Record&lt;string, string | number | boolean&gt;;
+  readonly timeout?: number;
+  readonly retries?: number;
+  readonly cacheKey?: string;
+  readonly cacheTtl?: number;
+}
+
+/**
+ * Base service configuration
+ */
+export interface ServiceConfig {
+  readonly baseURL: string;
+  readonly timeout: number;
+  readonly retries: number;
+  readonly headers: Record&lt;string, string&gt;;
+  readonly version: string;
+}
+
+/**
+ * Circuit breaker status
+ */
+export interface CircuitBreakerStatus {
+  readonly failures: number;
+  readonly isOpen: boolean;
+  readonly lastFailureTime: number;
+  readonly successCount?: number;
+  readonly totalRequests?: number;
+}
+
+/**
+ * Health check response
+ */
+export interface HealthCheckResponse {
+  readonly status: &apos;healthy&apos; | &apos;degraded&apos; | &apos;unhealthy&apos;;
+  readonly timestamp: string;
+  readonly services: Record&lt;string, ServiceHealthStatus&gt;;
+  readonly uptime?: number;
+  readonly version?: string;
+}
+
+/**
+ * Individual service health status
+ */
+export interface ServiceHealthStatus {
+  readonly status: &apos;up&apos; | &apos;down&apos; | &apos;degraded&apos;;
+  readonly responseTime?: number;
+  readonly lastChecked: string;
+  readonly error?: string;
+  readonly details?: Record&lt;string, unknown&gt;;
+}
+
+/**
+ * Cache configuration
+ */
+export interface CacheConfig {
+  readonly ttl: number;
+  readonly maxSize?: number;
+  readonly strategy: &apos;write-through&apos; | &apos;write-behind&apos; | &apos;cache-aside&apos;;
+  readonly compression?: boolean;
+}
+
+/**
+ * Rate limiting configuration
+ */
+export interface RateLimitConfig {
+  readonly requestsPerMinute: number;
+  readonly burstLimit: number;
+  readonly windowMs: number;
+  readonly skipSuccessfulRequests?: boolean;
+}
+
+/**
+ * Validation result
+ */
+export interface ValidationResult&lt;T = unknown&gt; {
+  readonly isValid: boolean;
+  readonly data?: T;
+  readonly errors: ReadonlyArray&lt;string&gt;;
+  readonly warnings: ReadonlyArray&lt;string&gt;;
+}
+
+/**
+ * Search parameters base interface
+ */
+export interface SearchParams {
+  readonly query?: string;
+  readonly limit?: number;
+  readonly offset?: number;
+  readonly sortBy?: string;
+  readonly sortOrder?: &apos;asc&apos; | &apos;desc&apos;;
+  readonly filters?: Record&lt;string, unknown&gt;;
+}
+
+/**
+ * Batch request base interface
+ */
+export interface BatchRequest&lt;T&gt; {
+  readonly items: ReadonlyArray&lt;T&gt;;
+  readonly options?: {
+    readonly continueOnError?: boolean;
+    readonly maxConcurrency?: number;
+    readonly timeout?: number;
+  };
+}
+
+/**
+ * Batch response base interface
+ */
+export interface BatchResponse&lt;T, E = ApiError&gt; {
+  readonly results: ReadonlyArray&lt;{
+    readonly success: boolean;
+    readonly data?: T;
+    readonly error?: E;
+    readonly index: number;
+  }&gt;;
+  readonly metadata: {
+    readonly totalRequested: number;
+    readonly successCount: number;
+    readonly errorCount: number;
+    readonly processingTime: number;
+    readonly timestamp: string;
+  };
+}
+
+/**
+ * External API configuration
+ */
+export interface ExternalApiConfig {
+  readonly baseURL: string;
+  readonly apiKey?: string;
+  readonly timeout: number;
+  readonly version?: string;
+  readonly rateLimit?: RateLimitConfig;
+  readonly circuitBreaker?: {
+    readonly threshold: number;
+    readonly timeout: number;
+    readonly resetTimeout: number;
+  };
+}
+
+/**
+ * Data quality metrics
+ */
+export interface DataQualityMetrics {
+  readonly completeness: number; // 0-100
+  readonly accuracy: number; // 0-100
+  readonly consistency: number; // 0-100
+  readonly timeliness: number; // 0-100
+  readonly overall: number; // 0-100
+  readonly issues: ReadonlyArray&lt;string&gt;;
+  readonly lastUpdated: string;
+}
+
+/**
+ * Performance metrics
+ */
+export interface PerformanceMetrics {
+  readonly responseTime: number;
+  readonly throughput: number;
+  readonly errorRate: number;
+  readonly availability: number;
+  readonly timestamp: string;
+  readonly period: string; // e.g., &apos;1h&apos;, &apos;24h&apos;, &apos;7d&apos;
+}
+
+</file>
+<file path="api/news.types.ts">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+import type { ApiResponse, PaginatedApiResponse } from &apos;./common.types&apos;;
+import type {
+  NewsArticle,
+  NewsTheme,
+  RepresentativeNews,
+  BatchNewsResponse,
+} from &apos;../models/NewsArticle&apos;;
+
+/**
+ * News articles list API response
+ */
+export interface NewsListResponse extends PaginatedApiResponse&lt;ReadonlyArray&lt;NewsArticle&gt;&gt; {
+  readonly metadata: PaginatedApiResponse&lt;ReadonlyArray&lt;NewsArticle&gt;&gt;[&apos;metadata&apos;] &amp; {
+    readonly query?: string;
+    readonly theme?: NewsTheme;
+    readonly totalArticles: number;
+    readonly duplicatesRemoved?: number;
+  };
+}
+
+/**
+ * Representative news API response
+ */
+export interface RepresentativeNewsResponse extends ApiResponse&lt;RepresentativeNews&gt; {
+  readonly metadata: ApiResponse&lt;RepresentativeNews&gt;[&apos;metadata&apos;] &amp; {
+    readonly bioguideId: string;
+    readonly searchTerms?: ReadonlyArray&lt;string&gt;;
+    readonly coverageAnalysis?: {
+      readonly sentiment: &apos;positive&apos; | &apos;negative&apos; | &apos;neutral&apos; | &apos;mixed&apos;;
+      readonly volume: &apos;high&apos; | &apos;medium&apos; | &apos;low&apos;;
+      readonly trending?: boolean;
+    };
+  };
+}
+
+/**
+ * News search parameters for API calls
+ */
+export interface NewsApiSearchParams {
+  readonly query: string;
+  readonly limit?: number;
+  readonly offset?: number;
+  readonly theme?: NewsTheme;
+  readonly startDate?: string;
+  readonly endDate?: string;
+  readonly sources?: ReadonlyArray&lt;string&gt;;
+  readonly language?: string;
+  readonly bioguideId?: string;
+  readonly representativeName?: string;
+  readonly state?: string;
+  readonly sortBy?: string;
+  readonly sortOrder?: &apos;asc&apos; | &apos;desc&apos;;
+}
+
+/**
+ * News themes aggregation response
+ */
+export interface NewsThemesResponse
+  extends ApiResponse&lt;
+    ReadonlyArray&lt;{
+      readonly theme: NewsTheme;
+      readonly count: number;
+      readonly percentage: number;
+      readonly trending?: boolean;
+      readonly sample_articles?: ReadonlyArray&lt;{
+        readonly title: string;
+        readonly url: string;
+        readonly source: string;
+        readonly publishedDate: string;
+      }&gt;;
+    }&gt;
+  &gt; {
+  readonly metadata: ApiResponse&lt;unknown&gt;[&apos;metadata&apos;] &amp; {
+    readonly period: string;
+    readonly totalArticles: number;
+  };
+}
+
+/**
+ * News trends analysis response
+ */
+export interface NewsTrendsResponse
+  extends ApiResponse&lt;{
+    readonly trends: ReadonlyArray&lt;{
+      readonly keyword: string;
+      readonly mentions: number;
+      readonly growth: number; // percentage change
+      readonly sentiment: &apos;positive&apos; | &apos;negative&apos; | &apos;neutral&apos;;
+      readonly related_representatives?: ReadonlyArray&lt;string&gt;;
+    }&gt;;
+    readonly timeframe: {
+      readonly start: string;
+      readonly end: string;
+      readonly period: &apos;hourly&apos; | &apos;daily&apos; | &apos;weekly&apos;;
+    };
+  }&gt; {
+  readonly metadata: ApiResponse&lt;unknown&gt;[&apos;metadata&apos;] &amp; {
+    readonly analysisType: &apos;keyword&apos; | &apos;sentiment&apos; | &apos;volume&apos;;
+    readonly sampleSize: number;
+  };
+}
+
+/**
+ * Batch news API response (extends base batch news response)
+ */
+export interface BatchNewsApiResponse extends ApiResponse&lt;BatchNewsResponse&gt; {
+  readonly metadata: ApiResponse&lt;BatchNewsResponse&gt;[&apos;metadata&apos;] &amp; {
+    readonly requestedBioguideIds: ReadonlyArray&lt;string&gt;;
+    readonly concurrencyLimit: number;
+  };
+}
+
+/**
+ * News source analysis response
+ */
+export interface NewsSourcesResponse
+  extends ApiResponse&lt;
+    ReadonlyArray&lt;{
+      readonly domain: string;
+      readonly name: string;
+      readonly articleCount: number;
+      readonly reliability?: &apos;high&apos; | &apos;medium&apos; | &apos;low&apos;;
+      readonly bias?: &apos;left&apos; | &apos;center&apos; | &apos;right&apos;;
+      readonly averageTone?: number;
+      readonly lastSeen: string;
+    }&gt;
+  &gt; {
+  readonly metadata: ApiResponse&lt;unknown&gt;[&apos;metadata&apos;] &amp; {
+    readonly period: string;
+    readonly totalSources: number;
+    readonly totalArticles: number;
+  };
+}
+
+/**
+ * News sentiment analysis response
+ */
+export interface NewsSentimentResponse
+  extends ApiResponse&lt;{
+    readonly bioguideId: string;
+    readonly overall: {
+      readonly positive: number;
+      readonly negative: number;
+      readonly neutral: number;
+      readonly compound: number; // -1 to 1
+    };
+    readonly timeline: ReadonlyArray&lt;{
+      readonly date: string;
+      readonly positive: number;
+      readonly negative: number;
+      readonly neutral: number;
+      readonly volume: number;
+    }&gt;;
+    readonly topics: ReadonlyArray&lt;{
+      readonly topic: string;
+      readonly sentiment: number;
+      readonly mentions: number;
+    }&gt;;
+  }&gt; {
+  readonly metadata: ApiResponse&lt;unknown&gt;[&apos;metadata&apos;] &amp; {
+    readonly bioguideId: string;
+    readonly analysisWindow: string;
+    readonly sampleSize: number;
+  };
+}
+
+/**
+ * News clustering response (for duplicate detection)
+ */
+export interface NewsClusteringResponse
+  extends ApiResponse&lt;{
+    readonly clusters: ReadonlyArray&lt;{
+      readonly id: string;
+      readonly representative_article: NewsArticle;
+      readonly similar_articles: ReadonlyArray&lt;NewsArticle&gt;;
+      readonly similarity_score: number;
+      readonly cluster_size: number;
+    }&gt;;
+    readonly total_articles: number;
+    readonly unique_stories: number;
+    readonly deduplication_ratio: number;
+  }&gt; {
+  readonly metadata: ApiResponse&lt;unknown&gt;[&apos;metadata&apos;] &amp; {
+    readonly algorithm: &apos;title_similarity&apos; | &apos;content_similarity&apos; | &apos;hybrid&apos;;
+    readonly threshold: number;
+  };
+}
+
+/**
+ * Real-time news alerts configuration
+ */
+export interface NewsAlertsConfig {
+  readonly bioguideId: string;
+  readonly keywords?: ReadonlyArray&lt;string&gt;;
+  readonly themes?: ReadonlyArray&lt;NewsTheme&gt;;
+  readonly sources?: ReadonlyArray&lt;string&gt;;
+  readonly sentiment_threshold?: number;
+  readonly frequency: &apos;immediate&apos; | &apos;hourly&apos; | &apos;daily&apos;;
+  readonly delivery_method: &apos;webhook&apos; | &apos;email&apos; | &apos;push&apos;;
+}
+
+/**
+ * News alerts response
+ */
+export interface NewsAlertsResponse
+  extends ApiResponse&lt;{
+    readonly alert_id: string;
+    readonly config: NewsAlertsConfig;
+    readonly status: &apos;active&apos; | &apos;paused&apos; | &apos;disabled&apos;;
+    readonly last_triggered?: string;
+    readonly trigger_count: number;
+  }&gt; {
+  readonly metadata: ApiResponse&lt;unknown&gt;[&apos;metadata&apos;] &amp; {
+    readonly bioguideId: string;
+  };
+}
+
+/**
+ * News export parameters
+ */
+export interface NewsExportParams {
+  readonly bioguideId?: string;
+  readonly startDate: string;
+  readonly endDate: string;
+  readonly format: &apos;json&apos; | &apos;csv&apos; | &apos;xlsx&apos;;
+  readonly themes?: ReadonlyArray&lt;NewsTheme&gt;;
+  readonly sources?: ReadonlyArray&lt;string&gt;;
+  readonly includeContent?: boolean;
+}
+
+/**
+ * News export response
+ */
+export interface NewsExportResponse
+  extends ApiResponse&lt;{
+    readonly export_id: string;
+    readonly download_url: string;
+    readonly expires_at: string;
+    readonly file_size: number;
+    readonly record_count: number;
+  }&gt; {
+  readonly metadata: ApiResponse&lt;unknown&gt;[&apos;metadata&apos;] &amp; {
+    readonly format: string;
+    readonly requested_params: NewsExportParams;
+  };
+}
+
+</file>
+<file path="api/representatives.types.ts">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+import type {
+  ApiResponse,
+  PaginatedApiResponse,
+  SearchParams,
+  BatchRequest,
+  BatchResponse,
+} from &apos;./common.types&apos;;
+import type {
+  Representative,
+  RepresentativeResponse,
+  VotingRecord,
+  CampaignFinance,
+  PartyAlignment,
+  RepresentativeBill,
+} from &apos;../models/Representative&apos;;
+
+/**
+ * Representatives list API response
+ */
+export interface RepresentativesListResponse
+  extends ApiResponse&lt;ReadonlyArray&lt;RepresentativeResponse&gt;&gt; {
+  readonly metadata: ApiResponse&lt;ReadonlyArray&lt;RepresentativeResponse&gt;&gt;[&apos;metadata&apos;] &amp; {
+    readonly zipCode?: string;
+    readonly state?: string;
+    readonly district?: string;
+    readonly totalRepresentatives: number;
+  };
+}
+
+/**
+ * Single representative API response
+ */
+export interface RepresentativeDetailResponse extends ApiResponse&lt;Representative&gt; {
+  readonly metadata: ApiResponse&lt;Representative&gt;[&apos;metadata&apos;] &amp; {
+    readonly bioguideId: string;
+    readonly lastUpdated?: string;
+  };
+}
+
+/**
+ * Representatives search parameters
+ */
+export interface RepresentativesSearchParams extends SearchParams {
+  readonly state?: string;
+  readonly party?: string;
+  readonly chamber?: &apos;house&apos; | &apos;senate&apos; | &apos;all&apos;;
+  readonly committee?: string;
+  readonly zipCode?: string;
+  readonly district?: string;
+}
+
+/**
+ * Representatives search response
+ */
+export interface RepresentativesSearchResponse
+  extends PaginatedApiResponse&lt;ReadonlyArray&lt;RepresentativeResponse&gt;&gt; {
+  readonly facets?: {
+    readonly states: ReadonlyArray&lt;{ readonly state: string; readonly count: number }&gt;;
+    readonly parties: ReadonlyArray&lt;{ readonly party: string; readonly count: number }&gt;;
+    readonly chambers: ReadonlyArray&lt;{ readonly chamber: string; readonly count: number }&gt;;
+  };
+}
+
+/**
+ * Representative voting records parameters
+ */
+export interface VotingRecordsParams {
+  readonly bioguideId: string;
+  readonly congress?: number;
+  readonly limit?: number;
+  readonly offset?: number;
+  readonly chamber?: &apos;house&apos; | &apos;senate&apos;;
+  readonly position?: &apos;Yea&apos; | &apos;Nay&apos; | &apos;Present&apos; | &apos;Not Voting&apos;;
+}
+
+/**
+ * Voting records API response
+ */
+export interface VotingRecordsResponse extends PaginatedApiResponse&lt;ReadonlyArray&lt;VotingRecord&gt;&gt; {
+  readonly metadata: PaginatedApiResponse&lt;ReadonlyArray&lt;VotingRecord&gt;&gt;[&apos;metadata&apos;] &amp; {
+    readonly bioguideId: string;
+    readonly congress?: number;
+    readonly summary?: {
+      readonly totalVotes: number;
+      readonly yeaVotes: number;
+      readonly nayVotes: number;
+      readonly presentVotes: number;
+      readonly missedVotes: number;
+    };
+  };
+}
+
+/**
+ * Campaign finance API response
+ */
+export interface CampaignFinanceResponse extends ApiResponse&lt;CampaignFinance&gt; {
+  readonly metadata: ApiResponse&lt;CampaignFinance&gt;[&apos;metadata&apos;] &amp; {
+    readonly bioguideId: string;
+    readonly cycle: string;
+    readonly lastReportDate?: string;
+  };
+}
+
+/**
+ * Party alignment API response
+ */
+export interface PartyAlignmentResponse extends ApiResponse&lt;PartyAlignment&gt; {
+  readonly metadata: ApiResponse&lt;PartyAlignment&gt;[&apos;metadata&apos;] &amp; {
+    readonly bioguideId: string;
+    readonly congress?: number;
+    readonly comparisonPeriod?: string;
+  };
+}
+
+/**
+ * Representative bills parameters
+ */
+export interface RepresentativeBillsParams {
+  readonly bioguideId: string;
+  readonly type?: &apos;sponsored&apos; | &apos;cosponsored&apos; | &apos;all&apos;;
+  readonly congress?: number;
+  readonly limit?: number;
+  readonly offset?: number;
+  readonly status?: string;
+}
+
+/**
+ * Representative bills API response
+ */
+export interface RepresentativeBillsResponse
+  extends PaginatedApiResponse&lt;ReadonlyArray&lt;RepresentativeBill&gt;&gt; {
+  readonly metadata: PaginatedApiResponse&lt;ReadonlyArray&lt;RepresentativeBill&gt;&gt;[&apos;metadata&apos;] &amp; {
+    readonly bioguideId: string;
+    readonly type?: &apos;sponsored&apos; | &apos;cosponsored&apos; | &apos;all&apos;;
+    readonly congress?: number;
+    readonly summary?: {
+      readonly totalBills: number;
+      readonly sponsored: number;
+      readonly cosponsored: number;
+      readonly enacted: number;
+    };
+  };
+}
+
+/**
+ * Batch representatives request
+ */
+export interface BatchRepresentativesRequest extends BatchRequest&lt;string&gt; {
+  readonly options?: BatchRequest&lt;string&gt;[&apos;options&apos;] &amp; {
+    readonly includeVotes?: boolean;
+    readonly includeFinance?: boolean;
+    readonly includeBills?: boolean;
+    readonly includeNews?: boolean;
+  };
+}
+
+/**
+ * Batch representatives response
+ */
+export interface BatchRepresentativesResponse extends BatchResponse&lt;Representative&gt; {
+  readonly aggregatedData?: {
+    readonly totalRepresentatives: number;
+    readonly partyBreakdown: Record&lt;string, number&gt;;
+    readonly stateBreakdown: Record&lt;string, number&gt;;
+    readonly chamberBreakdown: Record&lt;string, number&gt;;
+  };
+}
+
+/**
+ * Representatives comparison request
+ */
+export interface RepresentativesComparisonRequest {
+  readonly bioguideIds: ReadonlyArray&lt;string&gt;;
+  readonly metrics?: ReadonlyArray&lt;&apos;voting&apos; | &apos;bills&apos; | &apos;party_alignment&apos; | &apos;finance&apos;&gt;;
+  readonly congress?: number;
+}
+
+/**
+ * Representatives comparison response
+ */
+export interface RepresentativesComparisonResponse
+  extends ApiResponse&lt;{
+    readonly representatives: ReadonlyArray&lt;Representative&gt;;
+    readonly comparison: {
+      readonly votingSimilarity?: Record&lt;string, number&gt;;
+      readonly billCosponsorship?: Record&lt;string, number&gt;;
+      readonly partyAlignment?: Record&lt;string, number&gt;;
+      readonly ideologicalDistance?: Record&lt;string, number&gt;;
+    };
+  }&gt; {
+  readonly metadata: ApiResponse&lt;unknown&gt;[&apos;metadata&apos;] &amp; {
+    readonly comparisonMetrics: ReadonlyArray&lt;string&gt;;
+    readonly congress?: number;
+  };
+}
+
+/**
+ * District information parameters
+ */
+export interface DistrictParams {
+  readonly state: string;
+  readonly district: string;
+}
+
+/**
+ * District information response
+ */
+export interface DistrictResponse
+  extends ApiResponse&lt;{
+    readonly id: string;
+    readonly state: string;
+    readonly number: string;
+    readonly population: number;
+    readonly demographics: Record&lt;string, unknown&gt;;
+    readonly representatives?: ReadonlyArray&lt;RepresentativeResponse&gt;;
+  }&gt; {
+  readonly metadata: ApiResponse&lt;unknown&gt;[&apos;metadata&apos;] &amp; {
+    readonly state: string;
+    readonly district: string;
+    readonly lastCensus?: string;
+  };
+}
+
+/**
+ * State districts response
+ */
+export interface StateDistrictsResponse
+  extends ApiResponse&lt;
+    ReadonlyArray&lt;{
+      readonly id: string;
+      readonly number: string;
+      readonly representative?: RepresentativeResponse;
+    }&gt;
+  &gt; {
+  readonly metadata: ApiResponse&lt;unknown&gt;[&apos;metadata&apos;] &amp; {
+    readonly state: string;
+    readonly totalDistricts: number;
+  };
+}
+
+/**
+ * Representative photo response
+ */
+export interface RepresentativePhotoResponse
+  extends ApiResponse&lt;{
+    readonly url: string;
+    readonly source: string;
+    readonly lastUpdated?: string;
+  }&gt; {
+  readonly metadata: ApiResponse&lt;unknown&gt;[&apos;metadata&apos;] &amp; {
+    readonly bioguideId: string;
+  };
+}
+
+</file>
+<file path="api-responses.ts">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+// ==================== Congress.gov API Types ====================
+
+export interface CongressApiTerm {
+  chamber: string;
+  congress: number;
+  endYear?: number;
+  startYear: number;
+}
+
+export interface CongressApiDepiction {
+  attribution?: string;
+  imageUrl?: string;
+}
+
+export interface CongressApiMember {
+  bioguideId: string;
+  depiction?: CongressApiDepiction;
+  district?: string;
+  firstName: string;
+  lastName: string;
+  middleName?: string;
+  name: string;
+  party: string;
+  partyName: string;
+  state: string;
+  terms: {
+    item: CongressApiTerm[];
+  };
+  url?: string;
+  updateDate: string;
+}
+
+export interface CongressApiMembersResponse {
+  members: CongressApiMember[];
+  pagination?: {
+    count: number;
+    next?: string;
+    previous?: string;
+  };
+}
+
+export interface CongressApiBillSummary {
+  text: string;
+  versionCode: string;
+  actionDate: string;
+  updateDate: string;
+}
+
+export interface CongressApiBillAction {
+  actionCode?: string;
+  actionDate: string;
+  sourceSystem?: {
+    code: number;
+    name: string;
+  };
+  text: string;
+  type: string;
+}
+
+export interface CongressApiBill {
+  congress: number;
+  number: string;
+  originChamber: string;
+  title: string;
+  type: string;
+  url: string;
+  introducedDate: string;
+  updateDate: string;
+  latestAction?: {
+    actionDate: string;
+    text: string;
+  };
+  policyArea?: {
+    name: string;
+  };
+  sponsors?: Array&lt;{
+    bioguideId: string;
+    firstName: string;
+    lastName: string;
+    party: string;
+    state: string;
+    district?: string;
+  }&gt;;
+  summaries?: CongressApiBillSummary[];
+  actions?: CongressApiBillAction[];
+}
+
+export interface CongressApiBillsResponse {
+  bills: CongressApiBill[];
+  pagination?: {
+    count: number;
+    next?: string;
+    previous?: string;
+  };
+}
+
+export interface CongressApiVote {
+  chamber: string;
+  congress: number;
+  date: string;
+  number: number;
+  result: string;
+  sessionNumber: number;
+  type: string;
+  url: string;
+  question: string;
+  description?: string;
+  recordedVotes?: {
+    recordedVote: Array&lt;{
+      legislator: {
+        bioguideId: string;
+        firstName: string;
+        lastName: string;
+        party: string;
+        state: string;
+        district?: string;
+      };
+      vote: string;
+    }&gt;;
+  };
+}
+
+export interface CongressApiVotesResponse {
+  votes: CongressApiVote[];
+  pagination?: {
+    count: number;
+    next?: string;
+    previous?: string;
+  };
+}
+
+// ==================== FEC API Types ====================
+
+export interface FecApiCandidate {
+  candidate_id: string;
+  name: string;
+  party: string;
+  office: string;
+  office_full: string;
+  state: string;
+  district?: string;
+  cycles: number[];
+  election_years: number[];
+  candidate_status: string;
+  active_through: number;
+  incumbent_challenge: string;
+  incumbent_challenge_full: string;
+}
+
+export interface FecApiCandidatesResponse {
+  results: FecApiCandidate[];
+  pagination: {
+    count: number;
+    page: number;
+    pages: number;
+    per_page: number;
+  };
+}
+
+export interface FecApiCommittee {
+  committee_id: string;
+  name: string;
+  committee_type: string;
+  committee_type_full: string;
+  designation: string;
+  designation_full: string;
+  organization_type: string;
+  organization_type_full: string;
+  party: string;
+  party_full: string;
+  state: string;
+  cycles: number[];
+  first_file_date: string;
+  last_file_date?: string;
+}
+
+export interface FecApiFinancialSummary {
+  candidate_id: string;
+  cycle: number;
+  receipts: number;
+  disbursements: number;
+  cash_on_hand_end_period: number;
+  debts_owed_by_committee: number;
+  coverage_start_date: string;
+  coverage_end_date: string;
+}
+
+export interface FecApiContribution {
+  committee_id: string;
+  committee_name: string;
+  contributor_name: string;
+  contributor_employer?: string;
+  contributor_occupation?: string;
+  contributor_city?: string;
+  contributor_state?: string;
+  contribution_receipt_amount: number;
+  contribution_receipt_date: string;
+  receipt_type: string;
+  receipt_type_full: string;
+}
+
+export interface FecApiContributionsResponse {
+  results: FecApiContribution[];
+  pagination: {
+    count: number;
+    page: number;
+    pages: number;
+    per_page: number;
+  };
+}
+
+// ==================== GDELT API Types ====================
+
+export interface GdeltApiArticle {
+  url: string;
+  title: string;
+  summary?: string;
+  source: string;
+  author?: string;
+  published_date: string;
+  language: string;
+  theme?: string;
+  tone?: number;
+  location?: {
+    country: string;
+    state?: string;
+    city?: string;
+  };
+  mentions?: Array&lt;{
+    name: string;
+    type: string;
+    confidence: number;
+  }&gt;;
+}
+
+export interface GdeltApiResponse {
+  articles: GdeltApiArticle[];
+  query_info: {
+    query: string;
+    language: string;
+    startdatetime: string;
+    enddatetime: string;
+    total_articles: number;
+  };
+}
+
+export interface GdeltApiTimelineEntry {
+  date: string;
+  count: number;
+  articles: GdeltApiArticle[];
+}
+
+export interface GdeltApiTimelineResponse {
+  timeline: GdeltApiTimelineEntry[];
+  summary: {
+    total_articles: number;
+    date_range: {
+      start: string;
+      end: string;
+    };
+    top_sources: Array&lt;{
+      source: string;
+      count: number;
+    }&gt;;
+  };
+}
+
+// ==================== Census API Types ====================
+
+export interface CensusApiGeometry {
+  type: string;
+  coordinates: number[][][] | number[][][][];
+}
+
+export interface CensusApiFeature {
+  type: string;
+  properties: {
+    GEOID: string;
+    NAME: string;
+    STATE: string;
+    DISTRICT?: string;
+    [key: string]: string | number | undefined;
+  };
+  geometry: CensusApiGeometry;
+}
+
+export interface CensusApiResponse {
+  type: string;
+  features: CensusApiFeature[];
+}
+
+export interface CensusApiDemographics {
+  NAME: string;
+  B01003_001E?: number; // Total population
+  B19013_001E?: number; // Median household income
+  B25077_001E?: number; // Median home value
+  B08303_001E?: number; // Commute time
+  B15003_022E?: number; // Bachelor&apos;s degree
+  B15003_023E?: number; // Master&apos;s degree
+  B15003_024E?: number; // Professional degree
+  B15003_025E?: number; // Doctorate degree
+  [key: string]: string | number | undefined;
+}
+
+export interface CensusApiDemographicsResponse {
+  data: CensusApiDemographics[];
+}
+
+export interface CensusApiGeocodingMatch {
+  matchedAddress: string;
+  coordinates: {
+    x: number; // longitude
+    y: number; // latitude
+  };
+  addressComponents: {
+    zip: string;
+    city: string;
+    state: string;
+  };
+  tigerLine: {
+    side: string;
+    tigerLineId: string;
+  };
+}
+
+export interface CensusApiGeocodingResponse {
+  result: {
+    input: {
+      benchmark: string;
+      vintage: string;
+    };
+    addressMatches: CensusApiGeocodingMatch[];
+  };
+}
+
+// ==================== OpenStates API Types ====================
+
+export interface OpenStatesApiBill {
+  id: string;
+  identifier: string;
+  title: string;
+  classification: string[];
+  subject: string[];
+  session: string;
+  created_at: string;
+  updated_at: string;
+  first_action_date?: string;
+  latest_action_date?: string;
+  latest_action_description?: string;
+  latest_passage_date?: string;
+  abstracts: Array&lt;{
+    abstract: string;
+    note: string;
+    date: string;
+  }&gt;;
+  other_titles: Array&lt;{
+    title: string;
+    note: string;
+  }&gt;;
+  sponsors: Array&lt;{
+    name: string;
+    id: string;
+    primary: boolean;
+    classification: string;
+  }&gt;;
+  actions: Array&lt;{
+    description: string;
+    date: string;
+    classification: string[];
+    order: number;
+  }&gt;;
+}
+
+export interface OpenStatesApiBillsResponse {
+  results: OpenStatesApiBill[];
+  info: {
+    count: number;
+    total_count: number;
+    page: number;
+    max_page: number;
+  };
+}
+
+export interface OpenStatesApiLegislator {
+  id: string;
+  name: string;
+  party: string;
+  current_role?: {
+    title: string;
+    district: string;
+    start_date: string;
+    end_date?: string;
+    org_classification: string;
+  };
+  contact_details: Array&lt;{
+    type: string;
+    value: string;
+    note?: string;
+  }&gt;;
+  links: Array&lt;{
+    url: string;
+    note?: string;
+  }&gt;;
+  extras: {
+    [key: string]: string;
+  };
+}
+
+export interface OpenStatesApiLegislatorsResponse {
+  results: OpenStatesApiLegislator[];
+  info: {
+    count: number;
+    total_count: number;
+    page: number;
+    max_page: number;
+  };
+}
+
+</file>
+<file path="bill.ts">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+import type { EnhancedRepresentative } from &apos;./representative&apos;;
+
+export interface Bill {
+  id: string;
+  number: string; // &quot;H.R. 1234&quot;, &quot;S. 567&quot;
+  title: string;
+  shortTitle?: string;
+  congress: string; // &quot;119&quot;
+  session: string; // &quot;1&quot; or &quot;2&quot;
+  type: &apos;hr&apos; | &apos;s&apos; | &apos;hjres&apos; | &apos;sjres&apos; | &apos;hconres&apos; | &apos;sconres&apos; | &apos;hres&apos; | &apos;sres&apos;;
+  chamber: &apos;House&apos; | &apos;Senate&apos;;
+
+  // Bill status and timeline
+  status: {
+    current: BillStatus;
+    lastAction: {
+      date: string;
+      description: string;
+      chamber?: &apos;House&apos; | &apos;Senate&apos;;
+    };
+    timeline: BillAction[];
+  };
+
+  // Sponsorship
+  sponsor: {
+    representative: EnhancedRepresentative;
+    date: string;
+  };
+  cosponsors: Array&lt;{
+    representative: EnhancedRepresentative;
+    date: string;
+    withdrawn?: boolean;
+  }&gt;;
+
+  // Committee information
+  committees: Array&lt;{
+    committeeId: string;
+    name: string;
+    chamber: &apos;House&apos; | &apos;Senate&apos;;
+    activities: Array&lt;{
+      date: string;
+      activity: string;
+    }&gt;;
+  }&gt;;
+
+  // Content
+  summary?: {
+    text: string;
+    date: string;
+    version: string;
+  };
+  subjects: string[];
+
+  // Voting records
+  votes: BillVote[];
+
+  // Related bills
+  relatedBills: Array&lt;{
+    number: string;
+    title: string;
+    relationship: &apos;identical&apos; | &apos;related&apos; | &apos;supersedes&apos; | &apos;superseded&apos;;
+  }&gt;;
+
+  // Metadata
+  introducedDate: string;
+  url?: string;
+  textUrl?: string;
+  lastUpdated: string;
+}
+
+export type BillStatus =
+  | &apos;introduced&apos;
+  | &apos;referred&apos;
+  | &apos;reported&apos;
+  | &apos;passed_house&apos;
+  | &apos;passed_senate&apos;
+  | &apos;passed_both&apos;
+  | &apos;failed&apos;
+  | &apos;enacted&apos;
+  | &apos;vetoed&apos;
+  | &apos;pocket_vetoed&apos;;
+
+export interface BillAction {
+  date: string;
+  description: string;
+  chamber?: &apos;House&apos; | &apos;Senate&apos;;
+  actionCode?: string;
+  type: &apos;action&apos; | &apos;vote&apos; | &apos;committee&apos; | &apos;calendar&apos;;
+}
+
+export interface BillVote {
+  voteId: string;
+  chamber: &apos;House&apos; | &apos;Senate&apos;;
+  date: string;
+  question: string;
+  result: &apos;Passed&apos; | &apos;Failed&apos; | &apos;Agreed to&apos; | &apos;Disagreed to&apos;;
+  rollNumber?: number;
+  votes: {
+    yea: number;
+    nay: number;
+    present: number;
+    notVoting: number;
+  };
+  breakdown: {
+    democratic: { yea: number; nay: number; present: number; notVoting: number };
+    republican: { yea: number; nay: number; present: number; notVoting: number };
+    independent: { yea: number; nay: number; present: number; notVoting: number };
+  };
+  representativeVotes?: Array&lt;{
+    representative: EnhancedRepresentative;
+    position: &apos;Yea&apos; | &apos;Nay&apos; | &apos;Present&apos; | &apos;Not Voting&apos;;
+  }&gt;;
+}
+
+export interface BillAPIResponse {
+  bill: Bill;
+  metadata: {
+    dataSource: &apos;congress.gov&apos; | &apos;mock&apos;;
+    lastUpdated: string;
+    cacheHit?: boolean;
+    votesCount: number;
+    cosponsorsCount: number;
+    committeesCount: number;
+  };
+  errors?: Array&lt;{
+    code: string;
+    message: string;
+  }&gt;;
+}
+
+export interface BillSearchResult {
+  bills: Array&lt;{
+    number: string;
+    title: string;
+    status: BillStatus;
+    introducedDate: string;
+    chamber: &apos;House&apos; | &apos;Senate&apos;;
+    sponsor: string;
+  }&gt;;
+  total: number;
+  page: number;
+  perPage: number;
+}
+
+export interface BillListResponse {
+  bills: Bill[];
+  total: number;
+  page?: number;
+  perPage?: number;
+  hasMore?: boolean;
+  success: boolean;
+  error?: string;
+}
+
+// Utility functions
+export function getBillDisplayStatus(status: BillStatus): string {
+  const statusMap: Record&lt;BillStatus, string&gt; = {
+    introduced: &apos;Introduced&apos;,
+    referred: &apos;Referred to Committee&apos;,
+    reported: &apos;Reported by Committee&apos;,
+    passed_house: &apos;Passed House&apos;,
+    passed_senate: &apos;Passed Senate&apos;,
+    passed_both: &apos;Passed Both Chambers&apos;,
+    failed: &apos;Failed&apos;,
+    enacted: &apos;Enacted&apos;,
+    vetoed: &apos;Vetoed&apos;,
+    pocket_vetoed: &apos;Pocket Vetoed&apos;,
+  };
+  return statusMap[status] || status;
+}
+
+export function getBillStatusColor(status: BillStatus): string {
+  const colorMap: Record&lt;BillStatus, string&gt; = {
+    introduced: &apos;bg-blue-100 text-blue-800&apos;,
+    referred: &apos;bg-yellow-100 text-yellow-800&apos;,
+    reported: &apos;bg-purple-100 text-purple-800&apos;,
+    passed_house: &apos;bg-green-100 text-green-800&apos;,
+    passed_senate: &apos;bg-green-100 text-green-800&apos;,
+    passed_both: &apos;bg-green-100 text-green-800&apos;,
+    failed: &apos;bg-red-100 text-red-800&apos;,
+    enacted: &apos;bg-emerald-100 text-emerald-800&apos;,
+    vetoed: &apos;bg-red-100 text-red-800&apos;,
+    pocket_vetoed: &apos;bg-red-100 text-red-800&apos;,
+  };
+  return colorMap[status] || &apos;bg-gray-100 text-gray-800&apos;;
+}
+
+export function parseBillNumber(billNumber: string): {
+  type: string;
+  number: string;
+  congress: string;
+} {
+  // Handle suffixed formats like &quot;119-hr-1234-cosponsored&quot; by stripping suffixes
+  let cleanBillNumber = billNumber;
+  const suffixes = [&apos;-cosponsored&apos;, &apos;-sponsored&apos;, &apos;-introduced&apos;, &apos;-enacted&apos;];
+
+  for (const suffix of suffixes) {
+    if (cleanBillNumber.endsWith(suffix)) {
+      cleanBillNumber = cleanBillNumber.slice(0, -suffix.length);
+      break;
+    }
+  }
+
+  // Parse &quot;congress-type-number&quot; format (e.g., &quot;119-hr-1234&quot;)
+  const apiMatch = cleanBillNumber.match(/^(\d+)-([a-z]+)-(\d+)$/i);
+  if (apiMatch &amp;&amp; apiMatch[1] &amp;&amp; apiMatch[2] &amp;&amp; apiMatch[3]) {
+    return {
+      type: apiMatch[2].toLowerCase(),
+      number: apiMatch[3],
+      congress: apiMatch[1],
+    };
+  }
+
+  // Parse &quot;H.R. 1234&quot; or &quot;S. 567&quot; display format
+  const displayMatch = cleanBillNumber.match(/^([A-Z]+\.?[A-Z]*?)\.?\s+(\d+)$/i);
+  if (displayMatch &amp;&amp; displayMatch[1] &amp;&amp; displayMatch[2]) {
+    return {
+      type: displayMatch[1].toLowerCase().replace(/\./g, &apos;&apos;),
+      number: displayMatch[2],
+      congress: &apos;119&apos;, // Default to current congress
+    };
+  }
+
+  // Fallback for unrecognized formats
+  return {
+    type: &apos;unknown&apos;,
+    number: cleanBillNumber,
+    congress: &apos;119&apos;,
+  };
+}
+
+// Type guards
+export function isBill(obj: unknown): obj is Bill {
+  return (
+    typeof obj === &apos;object&apos; &amp;&amp;
+    obj !== null &amp;&amp;
+    typeof (obj as Bill).id === &apos;string&apos; &amp;&amp;
+    typeof (obj as Bill).number === &apos;string&apos; &amp;&amp;
+    typeof (obj as Bill).title === &apos;string&apos;
+  );
+}
+
+export function isBillVote(obj: unknown): obj is BillVote {
+  return (
+    typeof obj === &apos;object&apos; &amp;&amp;
+    obj !== null &amp;&amp;
+    typeof (obj as BillVote).voteId === &apos;string&apos; &amp;&amp;
+    typeof (obj as BillVote).chamber === &apos;string&apos;
+  );
+}
+
+</file>
+<file path="committee.ts">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+import type { EnhancedRepresentative } from &apos;./representative&apos;;
+
+export interface Committee {
+  id: string;
+  thomas_id?: string;
+  name: string;
+  chamber: &apos;House&apos; | &apos;Senate&apos; | &apos;Joint&apos;;
+  jurisdiction: string;
+  type: &apos;Standing&apos; | &apos;Select&apos; | &apos;Special&apos; | &apos;Joint&apos;;
+
+  leadership: {
+    chair?: CommitteeMember;
+    rankingMember?: CommitteeMember;
+    vice_chair?: CommitteeMember;
+  };
+
+  members: CommitteeMember[];
+  subcommittees: Subcommittee[];
+
+  // Metadata
+  url?: string;
+  phone?: string;
+  address?: string;
+  established?: string;
+  lastUpdated: string;
+}
+
+export interface CommitteeMember {
+  representative: EnhancedRepresentative;
+  role: &apos;Chair&apos; | &apos;Ranking Member&apos; | &apos;Vice Chair&apos; | &apos;Member&apos;;
+  joinedDate: string;
+  endDate?: string;
+  rank?: number;
+  subcommittees: string[];
+}
+
+export interface Subcommittee {
+  id: string;
+  name: string;
+  chair?: EnhancedRepresentative;
+  rankingMember?: EnhancedRepresentative;
+  focus: string;
+  members: Array&lt;{
+    representative: EnhancedRepresentative;
+    role: string;
+    joinedDate: string;
+  }&gt;;
+}
+
+export interface CommitteeAPIResponse {
+  committee: Committee;
+  metadata: {
+    dataSource: &apos;congress.gov&apos; | &apos;congress-legislators&apos; | &apos;mock&apos;;
+    lastUpdated: string;
+    memberCount: number;
+    subcommitteeCount: number;
+    cacheable: boolean;
+  };
+  errors?: Array&lt;{
+    code: string;
+    message: string;
+  }&gt;;
+}
+
+// Committee ID mapping for better URLs
+export const COMMITTEE_ID_MAP: Record&lt;string, { name: string; chamber: string }&gt; = {
+  // House committees - base IDs
+  HSAG: { name: &apos;House Committee on Agriculture&apos;, chamber: &apos;House&apos; },
+  HSAG22: { name: &apos;House Committee on Agriculture&apos;, chamber: &apos;House&apos; },
+  HSHL: { name: &apos;House Committee on Homeland Security&apos;, chamber: &apos;House&apos; },
+  HSHM: { name: &apos;House Committee on Homeland Security&apos;, chamber: &apos;House&apos; },
+  HSHM09: { name: &apos;House Committee on Homeland Security&apos;, chamber: &apos;House&apos; },
+  HSJU: { name: &apos;House Committee on the Judiciary&apos;, chamber: &apos;House&apos; },
+  HSED: { name: &apos;House Committee on Education and Labor&apos;, chamber: &apos;House&apos; },
+  HSWM: { name: &apos;House Committee on Ways and Means&apos;, chamber: &apos;House&apos; },
+  HSIF: { name: &apos;House Committee on Energy and Commerce&apos;, chamber: &apos;House&apos; },
+  HSAP: { name: &apos;House Committee on Appropriations&apos;, chamber: &apos;House&apos; },
+  HSBA: { name: &apos;House Committee on Financial Services&apos;, chamber: &apos;House&apos; },
+  HSPW: { name: &apos;House Committee on Transportation and Infrastructure&apos;, chamber: &apos;House&apos; },
+  HSGO: { name: &apos;House Committee on Oversight and Reform&apos;, chamber: &apos;House&apos; },
+  HSSM: { name: &apos;House Committee on Small Business&apos;, chamber: &apos;House&apos; },
+  HSSY: { name: &apos;House Committee on Science, Space, and Technology&apos;, chamber: &apos;House&apos; },
+  HSVR: { name: &quot;House Committee on Veterans&apos; Affairs&quot;, chamber: &apos;House&apos; },
+  HSAS: { name: &apos;House Committee on Armed Services&apos;, chamber: &apos;House&apos; },
+  HSRU: { name: &apos;House Committee on Rules&apos;, chamber: &apos;House&apos; },
+  HSHA: { name: &apos;House Committee on House Administration&apos;, chamber: &apos;House&apos; },
+  HSBU: { name: &apos;House Committee on the Budget&apos;, chamber: &apos;House&apos; },
+  HSII: { name: &apos;House Committee on Natural Resources&apos;, chamber: &apos;House&apos; },
+  HSFA: { name: &apos;House Committee on Foreign Affairs&apos;, chamber: &apos;House&apos; },
+  HLIG: { name: &apos;House Permanent Select Committee on Intelligence&apos;, chamber: &apos;House&apos; },
+  HSCX: { name: &apos;House Select Committee on Strategic Competition&apos;, chamber: &apos;House&apos; },
+
+  // Senate committees
+  SSAG: { name: &apos;Senate Committee on Agriculture, Nutrition, and Forestry&apos;, chamber: &apos;Senate&apos; },
+  SSAP: { name: &apos;Senate Committee on Appropriations&apos;, chamber: &apos;Senate&apos; },
+  SSAS: { name: &apos;Senate Committee on Armed Services&apos;, chamber: &apos;Senate&apos; },
+  SSBA: { name: &apos;Senate Committee on Banking, Housing, and Urban Affairs&apos;, chamber: &apos;Senate&apos; },
+  SSBU: { name: &apos;Senate Committee on the Budget&apos;, chamber: &apos;Senate&apos; },
+  SSCM: { name: &apos;Senate Committee on Commerce, Science, and Transportation&apos;, chamber: &apos;Senate&apos; },
+  SSEG: { name: &apos;Senate Committee on Energy and Natural Resources&apos;, chamber: &apos;Senate&apos; },
+  SSEV: { name: &apos;Senate Committee on Environment and Public Works&apos;, chamber: &apos;Senate&apos; },
+  SSFI: { name: &apos;Senate Committee on Finance&apos;, chamber: &apos;Senate&apos; },
+  SSGA: {
+    name: &apos;Senate Committee on Homeland Security and Governmental Affairs&apos;,
+    chamber: &apos;Senate&apos;,
+  },
+  SSHR: { name: &apos;Senate Committee on Health, Education, Labor and Pensions&apos;, chamber: &apos;Senate&apos; },
+  SSJU: { name: &apos;Senate Committee on the Judiciary&apos;, chamber: &apos;Senate&apos; },
+  SSRA: { name: &apos;Senate Committee on Rules and Administration&apos;, chamber: &apos;Senate&apos; },
+  SSSB: { name: &apos;Senate Committee on Small Business and Entrepreneurship&apos;, chamber: &apos;Senate&apos; },
+  SSVA: { name: &quot;Senate Committee on Veterans&apos; Affairs&quot;, chamber: &apos;Senate&apos; },
+  SSFR: { name: &apos;Senate Committee on Foreign Relations&apos;, chamber: &apos;Senate&apos; },
+  SLIN: { name: &apos;Senate Select Committee on Intelligence&apos;, chamber: &apos;Senate&apos; },
+};
+
+export function getCommitteeDisplayName(committeeId: string): string {
+  // Try exact match first
+  if (COMMITTEE_ID_MAP[committeeId]) {
+    return COMMITTEE_ID_MAP[committeeId].name;
+  }
+
+  // Extract base committee ID (e.g., &quot;HSIF&quot; from &quot;HSIF03&quot;)
+  const baseId = committeeId.replace(/\d+$/, &apos;&apos;);
+  if (baseId !== committeeId &amp;&amp; COMMITTEE_ID_MAP[baseId]) {
+    return COMMITTEE_ID_MAP[baseId].name;
+  }
+
+  return `Committee ${committeeId}`;
+}
+
+export function getCommitteeChamber(committeeId: string): string {
+  // Try exact match first
+  if (COMMITTEE_ID_MAP[committeeId]) {
+    return COMMITTEE_ID_MAP[committeeId].chamber;
+  }
+
+  // Extract base committee ID
+  const baseId = committeeId.replace(/\d+$/, &apos;&apos;);
+  if (baseId !== committeeId &amp;&amp; COMMITTEE_ID_MAP[baseId]) {
+    return COMMITTEE_ID_MAP[baseId].chamber;
+  }
+
+  return &apos;Unknown&apos;;
+}
+
+</file>
+<file path="fec.ts">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+// Enhanced FEC data types for comprehensive campaign finance analysis
+
+export interface EnhancedFECData {
+  summary: {
+    totalRaised: number;
+    totalSpent: number;
+    cashOnHand: number;
+    burnRate: number;
+    quarterlyAverage: number;
+    efficiency: number; // spending efficiency metric
+  };
+  
+  breakdown: {
+    individual: { amount: number; percent: number };
+    pac: { amount: number; percent: number };
+    party: { amount: number; percent: number };
+    candidate: { amount: number; percent: number };
+    smallDonors: { amount: number; percent: number; count: number };
+    largeDonors: { amount: number; percent: number; count: number };
+  };
+  
+  industries: Array&lt;{
+    name: string;
+    amount: number;
+    percentage: number;
+    contributorCount: number;
+    topEmployers: Array&lt;{
+      name: string;
+      amount: number;
+      count: number;
+    }&gt;;
+    trend: &apos;up&apos; | &apos;down&apos; | &apos;stable&apos;;
+  }&gt;;
+  
+  geography: {
+    inState: {
+      amount: number;
+      percent: number;
+      count: number;
+    };
+    outOfState: {
+      amount: number;
+      percent: number;
+      count: number;
+    };
+    topStates: Array&lt;{
+      state: string;
+      amount: number;
+      percent: number;
+      count: number;
+    }&gt;;
+    diversityScore: number; // 0-100, higher = more geographically diverse
+  };
+  
+  timeline: Array&lt;{
+    period: string;
+    quarter: string;
+    raised: number;
+    spent: number;
+    netChange: number;
+    cashOnHand: number;
+    burnRate: number;
+    contributorCount: number;
+  }&gt;;
+  
+  donors: {
+    smallDonorMetrics: {
+      averageAmount: number;
+      count: number;
+      percentage: number;
+      grassrootsScore: number; // 0-100, higher = more grassroots
+    };
+    largeDonorMetrics: {
+      averageAmount: number;
+      count: number;
+      percentage: number;
+      dependencyScore: number; // 0-100, higher = more dependent on large donors
+    };
+    repeatDonors: {
+      count: number;
+      percentage: number;
+      averageTotal: number;
+    };
+  };
+  
+  expenditures: {
+    categories: Array&lt;{
+      name: string;
+      amount: number;
+      percentage: number;
+      count: number;
+      trend: &apos;up&apos; | &apos;down&apos; | &apos;stable&apos;;
+    }&gt;;
+    efficiency: {
+      adminCosts: number;
+      fundraisingCosts: number;
+      programCosts: number;
+      efficiencyRatio: number;
+    };
+  };
+  
+  metadata: {
+    dataSource: string;
+    lastUpdated: string;
+    coverage: number; // percentage of data available
+    dataQuality: &apos;high&apos; | &apos;medium&apos; | &apos;low&apos;;
+    cyclesCovered: number[];
+  };
+}
+
+export interface ContributionDetail {
+  id: string;
+  contributorName: string;
+  employerName?: string;
+  occupation?: string;
+  amount: number;
+  date: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  industry?: string;
+  contributionType: &apos;individual&apos; | &apos;pac&apos; | &apos;party&apos; | &apos;candidate&apos;;
+  isSmallDonor: boolean;
+}
+
+export interface ExpenditureDetail {
+  id: string;
+  recipientName: string;
+  description: string;
+  amount: number;
+  date: string;
+  category: string;
+  subcategory?: string;
+  purpose?: string;
+  isMedia?: boolean;
+  isStaff?: boolean;
+  isAdmin?: boolean;
+}
+
+export interface IndustryCategory {
+  id: string;
+  name: string;
+  keywords: string[];
+  parentCategory?: string;
+  color?: string;
+  icon?: string;
+}
+
+export interface DonorAnalysisData {
+  totalDonors: number;
+  totalAmount: number;
+  
+  sizeAnalysis: {
+    small: { count: number; amount: number; threshold: number };
+    medium: { count: number; amount: number; range: [number, number] };
+    large: { count: number; amount: number; threshold: number };
+  };
+  
+  geographyAnalysis: {
+    inState: { count: number; amount: number; percent: number };
+    outOfState: { count: number; amount: number; percent: number };
+    topStates: Array&lt;{ state: string; count: number; amount: number; percent: number }&gt;;
+    diversityIndex: number;
+  };
+  
+  typeAnalysis: {
+    individuals: { count: number; amount: number; percent: number };
+    pacs: { count: number; amount: number; percent: number };
+    parties: { count: number; amount: number; percent: number };
+    candidates: { count: number; amount: number; percent: number };
+  };
+  
+  industryAnalysis: {
+    topIndustries: Array&lt;{
+      name: string;
+      count: number;
+      amount: number;
+      percent: number;
+      topEmployers: string[];
+    }&gt;;
+    diversityScore: number;
+    concentration: number; // how concentrated donations are in top industries
+  };
+  
+  temporalAnalysis: {
+    monthlyTrends: Array&lt;{
+      month: string;
+      count: number;
+      amount: number;
+      averageAmount: number;
+    }&gt;;
+    quarterlyTrends: Array&lt;{
+      quarter: string;
+      count: number;
+      amount: number;
+      growth: number;
+    }&gt;;
+  };
+}
+
+export interface FundraisingTrendsData {
+  overview: {
+    totalRaised: number;
+    totalSpent: number;
+    netPosition: number;
+    burnRate: number;
+    runwayMonths: number;
+  };
+  
+  quarterlyData: Array&lt;{
+    quarter: string;
+    year: number;
+    raised: number;
+    spent: number;
+    netChange: number;
+    cashOnHand: number;
+    donorCount: number;
+    avgDonation: number;
+    burnRate: number;
+    efficiency: number;
+  }&gt;;
+  
+  monthlyData: Array&lt;{
+    month: string;
+    year: number;
+    raised: number;
+    spent: number;
+    netChange: number;
+    events: string[]; // notable events that month
+  }&gt;;
+  
+  projections: {
+    nextQuarter: {
+      expectedRaised: number;
+      expectedSpent: number;
+      confidence: number;
+    };
+    electionCycle: {
+      totalNeeded: number;
+      currentPace: number;
+      onTrack: boolean;
+    };
+  };
+  
+  benchmarks: {
+    averageForOffice: number;
+    averageForState: number;
+    averageForParty: number;
+    competitiveRange: [number, number];
+  };
+}
+
+export interface CampaignFinanceFilter {
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  contributionSize: {
+    min: number;
+    max: number;
+  };
+  industries: string[];
+  states: string[];
+  contributionTypes: (&apos;individual&apos; | &apos;pac&apos; | &apos;party&apos; | &apos;candidate&apos;)[];
+  minAmount?: number;
+  maxAmount?: number;
+}
+
+export interface FECAPIResponse&lt;T&gt; {
+  success: boolean;
+  data: T;
+  metadata: {
+    totalRecords: number;
+    page: number;
+    perPage: number;
+    totalPages: number;
+    hasMore: boolean;
+    lastUpdated: string;
+    dataSource: string;
+  };
+  errors?: string[];
+}
+
+// Raw FEC API response types for schedules
+export interface FECScheduleAResponse {
+  results: Array&lt;{
+    sub_id: string;
+    contributor_name: string;
+    contributor_employer?: string;
+    contributor_occupation?: string;
+    contributor_city?: string;
+    contributor_state?: string;
+    contributor_zip?: string;
+    contribution_receipt_amount: number;
+    contribution_receipt_date: string;
+    two_year_transaction_period: number;
+    committee_name: string;
+    committee_id: string;
+    candidate_id: string;
+    entity_type: string;
+    is_individual: boolean;
+  }&gt;;
+  pagination: {
+    page: number;
+    per_page: number;
+    count: number;
+    pages: number;
+  };
+}
+
+export interface FECScheduleBResponse {
+  results: Array&lt;{
+    sub_id: string;
+    recipient_name: string;
+    disbursement_description: string;
+    disbursement_amount: number;
+    disbursement_date: string;
+    two_year_transaction_period: number;
+    committee_name: string;
+    committee_id: string;
+    candidate_id: string;
+    category_code?: string;
+    category_code_full?: string;
+    purpose_code?: string;
+    entity_type: string;
+  }&gt;;
+  pagination: {
+    page: number;
+    per_page: number;
+    count: number;
+    pages: number;
+  };
+}
+
+export interface FECCandidateTotalsResponse {
+  results: Array&lt;{
+    candidate_id: string;
+    cycle: number;
+    receipts: number;
+    disbursements: number;
+    cash_on_hand_end_period: number;
+    individual_contributions: number;
+    other_political_committee_contributions: number;
+    political_party_committee_contributions: number;
+    candidate_contribution: number;
+    total_contributions: number;
+    coverage_start_date: string;
+    coverage_end_date: string;
+    last_cash_on_hand_end_period: number;
+    last_debts_owed_by_committee: number;
+    last_report_type_full: string;
+    last_report_year: number;
+  }&gt;;
+}
+
+export type FECDataProcessingStatus = &apos;pending&apos; | &apos;processing&apos; | &apos;completed&apos; | &apos;error&apos;;
+
+export interface FECDataProcessingJob {
+  id: string;
+  candidateId: string;
+  bioguideId: string;
+  status: FECDataProcessingStatus;
+  progress: number;
+  startedAt: string;
+  completedAt?: string;
+  error?: string;
+  result?: EnhancedFECData;
+}
+</file>
+<file path="global.d.ts">
+declare module &apos;*.css&apos; {
+  const content: unknown;
+  export default content;
+}
+
+declare module &apos;leaflet/dist/leaflet.css&apos; {
+  const content: unknown;
+  export default content;
+}
+</file>
+<file path="index.ts">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+/**
+ * Central type definitions export
+ * This file re-exports all types for easy importing throughout the application
+ */
+
+// Model exports
+export type * from &apos;./models/Representative&apos;;
+export type * from &apos;./models/NewsArticle&apos;;
+export type * from &apos;./models/Legislation&apos;;
+
+// API type exports
+export type * from &apos;./api/common.types&apos;;
+export type * from &apos;./api/representatives.types&apos;;
+export type * from &apos;./api/news.types&apos;;
+
+// Re-export commonly used types with shorter names for convenience
+export type {
+  Representative,
+  RepresentativeResponse,
+  VotingRecord,
+  CampaignFinance,
+  PartyAlignment,
+} from &apos;./models/Representative&apos;;
+
+export type {
+  NewsArticle,
+  NewsTheme,
+  RepresentativeNews,
+  BatchNewsResponse,
+} from &apos;./models/NewsArticle&apos;;
+
+export type { Bill, BillType, BillStatus, Committee, RollCallVote } from &apos;./models/Legislation&apos;;
+
+export type {
+  ApiResponse,
+  ApiError,
+  ResponseMetadata,
+  PaginatedApiResponse,
+  ValidationResult,
+} from &apos;./api/common.types&apos;;
+
+export type {
+  RepresentativesListResponse,
+  RepresentativeDetailResponse,
+  VotingRecordsResponse,
+  CampaignFinanceResponse,
+} from &apos;./api/representatives.types&apos;;
+
+export type {
+  NewsListResponse,
+  RepresentativeNewsResponse,
+  NewsApiSearchParams,
+} from &apos;./api/news.types&apos;;
+
+</file>
+<file path="models/Legislation.ts">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+/**
+ * Bill/Legislation model with comprehensive type definitions
+ */
+export interface Bill {
+  readonly id: string;
+  readonly congress?: number;
+  readonly billType: BillType;
+  readonly number: string;
+  readonly title: string;
+  readonly shortTitle?: string;
+  readonly officialTitle?: string;
+  readonly summary?: string;
+  readonly introducedDate?: string;
+  readonly lastActionDate?: string;
+  readonly status: BillStatus;
+  readonly chamber: &apos;house&apos; | &apos;senate&apos; | &apos;joint&apos;;
+  readonly sponsor?: {
+    readonly bioguideId: string;
+    readonly name: string;
+    readonly state: string;
+    readonly party: string;
+  };
+  readonly cosponsors?: ReadonlyArray&lt;{
+    readonly bioguideId: string;
+    readonly name: string;
+    readonly state: string;
+    readonly party: string;
+    readonly dateAdded?: string;
+  }&gt;;
+  readonly committees?: ReadonlyArray&lt;{
+    readonly id: string;
+    readonly name: string;
+    readonly chamber: string;
+  }&gt;;
+  readonly subjects?: ReadonlyArray&lt;string&gt;;
+  readonly policyArea?: string;
+  readonly url?: string;
+  readonly textUrl?: string;
+  readonly voteResults?: ReadonlyArray&lt;VoteResult&gt;;
+}
+
+/**
+ * Bill types in Congress
+ */
+export type BillType =
+  | &apos;hr&apos; // House Bill
+  | &apos;s&apos; // Senate Bill
+  | &apos;hjres&apos; // House Joint Resolution
+  | &apos;sjres&apos; // Senate Joint Resolution
+  | &apos;hconres&apos; // House Concurrent Resolution
+  | &apos;sconres&apos; // Senate Concurrent Resolution
+  | &apos;hres&apos; // House Simple Resolution
+  | &apos;sres&apos;; // Senate Simple Resolution
+
+/**
+ * Bill status throughout the legislative process
+ */
+export type BillStatus =
+  | &apos;introduced&apos;
+  | &apos;referred&apos;
+  | &apos;reported&apos;
+  | &apos;passed_house&apos;
+  | &apos;passed_senate&apos;
+  | &apos;failed_house&apos;
+  | &apos;failed_senate&apos;
+  | &apos;enacted&apos;
+  | &apos;vetoed&apos;
+  | &apos;pocket_vetoed&apos;
+  | &apos;override_attempt_failed&apos;
+  | &apos;withdrawn&apos;;
+
+/**
+ * Vote result for a specific bill
+ */
+export interface VoteResult {
+  readonly voteId: string;
+  readonly chamber: &apos;house&apos; | &apos;senate&apos;;
+  readonly date: string;
+  readonly question: string;
+  readonly result: &apos;passed&apos; | &apos;failed&apos; | &apos;agreed_to&apos; | &apos;rejected&apos;;
+  readonly voteType: &apos;recorded_vote&apos; | &apos;voice_vote&apos; | &apos;unanimous_consent&apos;;
+  readonly totalVotes?: {
+    readonly yea: number;
+    readonly nay: number;
+    readonly present: number;
+    readonly notVoting: number;
+  };
+  readonly requiredMajority?: &apos;simple&apos; | &apos;two_thirds&apos; | &apos;three_fifths&apos;;
+}
+
+/**
+ * Legislative action taken on a bill
+ */
+export interface LegislativeAction {
+  readonly date: string;
+  readonly chamber?: &apos;house&apos; | &apos;senate&apos;;
+  readonly actionType: string;
+  readonly description: string;
+  readonly committee?: string;
+  readonly text?: string;
+}
+
+/**
+ * Bill search parameters
+ */
+export interface BillSearchParams {
+  readonly query?: string;
+  readonly congress?: number;
+  readonly billType?: BillType;
+  readonly status?: BillStatus;
+  readonly sponsor?: string;
+  readonly subject?: string;
+  readonly policyArea?: string;
+  readonly fromDate?: string;
+  readonly toDate?: string;
+  readonly limit?: number;
+  readonly offset?: number;
+}
+
+/**
+ * Bill summary with AI analysis
+ */
+export interface BillSummary {
+  readonly billId: string;
+  readonly title: string;
+  readonly shortSummary: string;
+  readonly detailedSummary?: string;
+  readonly keyProvisions?: ReadonlyArray&lt;string&gt;;
+  readonly impact?: {
+    readonly scope: &apos;national&apos; | &apos;state&apos; | &apos;local&apos;;
+    readonly sectors: ReadonlyArray&lt;string&gt;;
+    readonly estimatedCost?: string;
+  };
+  readonly timeline?: {
+    readonly introduced: string;
+    readonly lastAction: string;
+    readonly nextSteps?: ReadonlyArray&lt;string&gt;;
+  };
+  readonly analysisMetadata?: {
+    readonly generatedAt: string;
+    readonly source: &apos;ai&apos; | &apos;manual&apos; | &apos;congress&apos;;
+    readonly confidence?: number;
+  };
+}
+
+/**
+ * Committee information
+ */
+export interface Committee {
+  readonly id: string;
+  readonly name: string;
+  readonly fullName?: string;
+  readonly chamber: &apos;house&apos; | &apos;senate&apos; | &apos;joint&apos;;
+  readonly jurisdiction?: ReadonlyArray&lt;string&gt;;
+  readonly chair?: {
+    readonly bioguideId: string;
+    readonly name: string;
+    readonly party: string;
+    readonly state: string;
+  };
+  readonly rankingMember?: {
+    readonly bioguideId: string;
+    readonly name: string;
+    readonly party: string;
+    readonly state: string;
+  };
+  readonly members?: ReadonlyArray&lt;{
+    readonly bioguideId: string;
+    readonly name: string;
+    readonly party: string;
+    readonly state: string;
+    readonly rank?: number;
+    readonly title?: string;
+  }&gt;;
+  readonly subcommittees?: ReadonlyArray&lt;{
+    readonly id: string;
+    readonly name: string;
+    readonly chair?: string;
+  }&gt;;
+}
+
+/**
+ * Congressional session information
+ */
+export interface CongressionalSession {
+  readonly congress: number;
+  readonly session: number;
+  readonly startDate: string;
+  readonly endDate?: string;
+  readonly chamber: &apos;house&apos; | &apos;senate&apos; | &apos;joint&apos;;
+  readonly type: &apos;regular&apos; | &apos;special&apos; | &apos;lame_duck&apos;;
+}
+
+/**
+ * Roll call vote details
+ */
+export interface RollCallVote {
+  readonly voteId: string;
+  readonly congress: number;
+  readonly session: number;
+  readonly chamber: &apos;house&apos; | &apos;senate&apos;;
+  readonly rollNumber: number;
+  readonly date: string;
+  readonly question: string;
+  readonly description?: string;
+  readonly billId?: string;
+  readonly amendmentId?: string;
+  readonly result: string;
+  readonly totalVotes: {
+    readonly yea: number;
+    readonly nay: number;
+    readonly present: number;
+    readonly notVoting: number;
+  };
+  readonly votes?: ReadonlyArray&lt;{
+    readonly bioguideId: string;
+    readonly name: string;
+    readonly party: string;
+    readonly state: string;
+    readonly vote: &apos;Yea&apos; | &apos;Nay&apos; | &apos;Present&apos; | &apos;Not Voting&apos;;
+  }&gt;;
+}
+
+</file>
+<file path="models/NewsArticle.ts">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+/**
+ * News article model with comprehensive type definitions
+ */
+export interface NewsArticle {
+  readonly id: string;
+  readonly title: string;
+  readonly url: string;
+  readonly source: string;
+  readonly domain: string;
+  readonly publishedDate: string;
+  readonly seenDate?: string;
+  readonly language: string;
+  readonly summary?: string;
+  readonly content?: string;
+  readonly imageUrl?: string;
+  readonly socialImage?: string;
+  readonly author?: string;
+  readonly theme?: NewsTheme;
+  readonly tone?: &apos;positive&apos; | &apos;negative&apos; | &apos;neutral&apos;;
+  readonly relevanceScore?: number;
+  readonly metadata?: {
+    readonly wordCount?: number;
+    readonly readingTime?: number;
+    readonly extractedAt: string;
+  };
+}
+
+/**
+ * News themes for categorization
+ */
+export type NewsTheme =
+  | &apos;legislation&apos;
+  | &apos;voting&apos;
+  | &apos;committee&apos;
+  | &apos;campaign&apos;
+  | &apos;scandal&apos;
+  | &apos;policy&apos;
+  | &apos;endorsement&apos;
+  | &apos;healthcare&apos;
+  | &apos;economy&apos;
+  | &apos;environment&apos;;
+
+/**
+ * News search parameters
+ */
+export interface NewsSearchParams {
+  readonly query: string;
+  readonly limit?: number;
+  readonly offset?: number;
+  readonly theme?: NewsTheme;
+  readonly startDate?: string;
+  readonly endDate?: string;
+  readonly sources?: ReadonlyArray&lt;string&gt;;
+  readonly language?: string;
+}
+
+/**
+ * News aggregation result
+ */
+export interface NewsAggregation {
+  readonly articles: ReadonlyArray&lt;NewsArticle&gt;;
+  readonly totalResults: number;
+  readonly searchTerms: ReadonlyArray&lt;string&gt;;
+  readonly dataSource: &apos;gdelt&apos; | &apos;cached&apos; | &apos;fallback&apos;;
+  readonly duplicatesRemoved?: number;
+  readonly qualityFiltered?: number;
+  readonly themes?: ReadonlyArray&lt;{
+    readonly theme: NewsTheme;
+    readonly count: number;
+    readonly percentage: number;
+  }&gt;;
+}
+
+/**
+ * Representative-specific news result
+ */
+export interface RepresentativeNews {
+  readonly bioguideId: string;
+  readonly representativeName?: string;
+  readonly articles: ReadonlyArray&lt;NewsArticle&gt;;
+  readonly totalResults: number;
+  readonly searchTerms: ReadonlyArray&lt;string&gt;;
+  readonly dataSource: &apos;gdelt&apos; | &apos;cached&apos; | &apos;fallback&apos;;
+  readonly error?: string;
+  readonly lastUpdated?: string;
+  readonly coverage?: {
+    readonly positive: number;
+    readonly negative: number;
+    readonly neutral: number;
+  };
+}
+
+/**
+ * Batch news request for multiple representatives
+ */
+export interface BatchNewsRequest {
+  readonly bioguideIds: ReadonlyArray&lt;string&gt;;
+  readonly limit?: number;
+  readonly theme?: NewsTheme;
+  readonly daysBack?: number;
+}
+
+/**
+ * Batch news response
+ */
+export interface BatchNewsResponse {
+  readonly results: Record&lt;string, RepresentativeNews&gt;;
+  readonly metadata: {
+    readonly totalRequested: number;
+    readonly successCount: number;
+    readonly errorCount: number;
+    readonly totalArticles: number;
+    readonly timestamp: string;
+    readonly dataSource: string;
+    readonly processingTime?: number;
+  };
+}
+
+/**
+ * News deduplication options
+ */
+export interface NewsDeduplicationOptions {
+  readonly titleSimilarityThreshold?: number;
+  readonly maxArticlesPerDomain?: number;
+  readonly enableDomainClustering?: boolean;
+  readonly enableContentSimilarity?: boolean;
+}
+
+/**
+ * GDELT API specific types
+ */
+export interface GDELTArticle {
+  readonly url: string;
+  readonly urltone: string;
+  readonly domain: string;
+  readonly urlpubtimedate: string;
+  readonly urlpubdate: string;
+  readonly urltitle: string;
+  readonly seendate: string;
+  readonly socialimage?: string;
+  readonly language: string;
+  readonly sourcecountry: string;
+}
+
+/**
+ * GDELT search response
+ */
+export interface GDELTResponse {
+  readonly articles: ReadonlyArray&lt;GDELTArticle&gt;;
+  readonly totalResults?: number;
+  readonly next?: string;
+}
+
+</file>
+<file path="models/Representative.ts">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+/**
+ * Core Representative model with comprehensive type definitions
+ */
+export interface Representative {
+  readonly id: string;
+  readonly bioguideId: string;
+  readonly name: {
+    readonly first: string;
+    readonly last: string;
+    readonly official_full: string;
+    readonly nickname?: string;
+    readonly suffix?: string;
+  };
+  readonly state: string;
+  readonly district?: string;
+  readonly party: &apos;Democrat&apos; | &apos;Republican&apos; | &apos;Independent&apos; | &apos;Libertarian&apos; | &apos;Green&apos;;
+  readonly chamber: &apos;house&apos; | &apos;senate&apos; | &apos;House&apos; | &apos;Senate&apos;;
+  readonly title: string;
+  readonly photo_url?: string;
+  readonly contact: {
+    readonly phone?: string;
+    readonly website?: string;
+    readonly email?: string;
+    readonly office?: string;
+    readonly address?: string;
+  };
+  readonly terms?: ReadonlyArray&lt;RepresentativeTerm&gt;;
+  readonly currentTerm?: RepresentativeTerm;
+  readonly social?: {
+    readonly twitter?: string;
+    readonly facebook?: string;
+    readonly youtube?: string;
+    readonly instagram?: string;
+  };
+  readonly biographical?: {
+    readonly birthday?: string;
+    readonly gender?: &apos;M&apos; | &apos;F&apos;;
+    readonly religion?: string;
+    readonly occupation?: string;
+  };
+}
+
+/**
+ * Individual term of service for a representative
+ */
+export interface RepresentativeTerm {
+  readonly type: &apos;rep&apos; | &apos;sen&apos;;
+  readonly start: string;
+  readonly end: string;
+  readonly state: string;
+  readonly district?: string;
+  readonly party: string;
+  readonly phone?: string;
+  readonly website?: string;
+  readonly office?: string;
+  readonly address?: string;
+  readonly class?: number; // For senators
+}
+
+/**
+ * Simplified representative response for API endpoints
+ */
+export interface RepresentativeResponse {
+  readonly bioguideId: string;
+  readonly name: string;
+  readonly party: string;
+  readonly state: string;
+  readonly district?: string;
+  readonly chamber: string;
+  readonly title: string;
+  readonly phone?: string;
+  readonly website?: string;
+  readonly contactInfo: {
+    readonly phone: string;
+    readonly website: string;
+    readonly office: string;
+  };
+}
+
+/**
+ * Representative filters for search and filtering
+ */
+export interface RepresentativeFilters {
+  readonly state?: string;
+  readonly party?: string;
+  readonly chamber?: &apos;house&apos; | &apos;senate&apos; | &apos;all&apos;;
+  readonly committee?: string;
+  readonly searchQuery?: string;
+}
+
+/**
+ * Voting record for a representative
+ */
+export interface VotingRecord {
+  readonly voteId: string;
+  readonly billId?: string;
+  readonly date: string;
+  readonly question: string;
+  readonly position: &apos;Yea&apos; | &apos;Nay&apos; | &apos;Present&apos; | &apos;Not Voting&apos;;
+  readonly result: string;
+  readonly chamber: &apos;house&apos; | &apos;senate&apos;;
+  readonly congress?: number;
+  readonly session?: number;
+}
+
+/**
+ * Campaign finance data for a representative
+ */
+export interface CampaignFinance {
+  readonly totalRaised: number;
+  readonly totalSpent: number;
+  readonly cashOnHand: number;
+  readonly lastReportDate: string;
+  readonly cycle: string;
+  readonly topContributors: ReadonlyArray&lt;{
+    readonly name: string;
+    readonly amount: number;
+    readonly type: &apos;individual&apos; | &apos;pac&apos; | &apos;corporate&apos;;
+  }&gt;;
+  readonly contributionsByIndustry?: ReadonlyArray&lt;{
+    readonly industry: string;
+    readonly amount: number;
+    readonly percentage: number;
+  }&gt;;
+}
+
+/**
+ * Party alignment analysis for a representative
+ */
+export interface PartyAlignment {
+  readonly partyLineVoting: number;
+  readonly bipartisanBills: number;
+  readonly totalVotes: number;
+  readonly alignmentTrend: &apos;increasing&apos; | &apos;decreasing&apos; | &apos;stable&apos;;
+  readonly congress?: number;
+  readonly comparedToPeers?: {
+    readonly percentile: number;
+    readonly averageAlignment: number;
+  };
+}
+
+/**
+ * Bill information associated with a representative
+ */
+export interface RepresentativeBill {
+  readonly id: string;
+  readonly title: string;
+  readonly status: string;
+  readonly introducedDate?: string;
+  readonly type: &apos;sponsored&apos; | &apos;cosponsored&apos;;
+  readonly congress?: number;
+  readonly summary?: string;
+}
+
+</file>
+<file path="representative.ts">
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+/**
+ * Enhanced Representative Types
+ *
+ * This file defines comprehensive types for representative data,
+ * combining our existing structure with congress-legislators enhancements.
+ * Includes error handling and batch API response types.
+ */
+
+// Base representative interface (existing structure)
+export interface BaseRepresentative {
+  bioguideId: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  party: string;
+  state: string;
+  district?: string;
+  chamber: &apos;House&apos; | &apos;Senate&apos;;
+  title: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  imageUrl?: string;
+  terms: Array&lt;{
+    congress: string;
+    startYear: string;
+    endYear: string;
+  }&gt;;
+  committees?: Array&lt;{
+    name: string;
+    role?: string;
+  }&gt;;
+}
+
+// Enhanced representative with congress-legislators data
+export interface EnhancedRepresentative extends BaseRepresentative {
+  // Enhanced name information
+  fullName?: {
+    first: string;
+    middle?: string;
+    last: string;
+    suffix?: string;
+    nickname?: string;
+    official?: string;
+  };
+
+  // Biographical information
+  bio?: {
+    birthday?: string;
+    gender?: &apos;M&apos; | &apos;F&apos;;
+    religion?: string;
+  };
+
+  // Current term details
+  currentTerm?: {
+    start: string;
+    end: string;
+    office?: string;
+    phone?: string;
+    address?: string;
+    website?: string;
+    contactForm?: string;
+    rssUrl?: string;
+    stateRank?: &apos;junior&apos; | &apos;senior&apos;;
+    class?: number; // Senate class
+  };
+
+  // Social media presence
+  socialMedia?: {
+    twitter?: string;
+    facebook?: string;
+    youtube?: string;
+    instagram?: string;
+    mastodon?: string;
+  };
+
+  // Cross-platform IDs
+  ids?: {
+    govtrack?: number;
+    opensecrets?: string;
+    votesmart?: number;
+    fec?: string[];
+    cspan?: number;
+    wikipedia?: string;
+    wikidata?: string;
+    ballotpedia?: string;
+  };
+
+  // Leadership roles
+  leadershipRoles?: Array&lt;{
+    title: string;
+    start: string;
+    end?: string;
+  }&gt;;
+
+  // Enhanced contact information
+  contact?: {
+    dcOffice?: {
+      address?: string;
+      phone?: string;
+      fax?: string;
+      hours?: string;
+    };
+    districtOffices?: Array&lt;{
+      address: string;
+      phone?: string;
+      fax?: string;
+      hours?: string;
+    }&gt;;
+    contactForm?: string;
+    schedulingUrl?: string;
+  };
+
+  // Data source metadata
+  metadata?: {
+    lastUpdated: string;
+    dataSources: Array&lt;&apos;congress.gov&apos; | &apos;congress-legislators&apos; | &apos;fec&apos; | &apos;openstates&apos;&gt;;
+    completeness?: {
+      basicInfo: boolean;
+      socialMedia: boolean;
+      contact: boolean;
+      committees: boolean;
+      finance: boolean;
+    };
+  };
+}
+
+// Representative summary for list views
+export interface RepresentativeSummary {
+  bioguideId: string;
+  name: string;
+  party: string;
+  state: string;
+  district?: string;
+  chamber: &apos;House&apos; | &apos;Senate&apos;;
+  title: string;
+  imageUrl?: string;
+  website?: string;
+  phone?: string;
+}
+
+// Representative search result
+export interface RepresentativeSearchResult extends RepresentativeSummary {
+  relevanceScore?: number;
+  matchedFields?: string[];
+}
+
+// Committee information
+export interface CommitteeMembership {
+  committeeId: string;
+  name: string;
+  fullName: string;
+  role: &apos;Chair&apos; | &apos;Vice Chair&apos; | &apos;Ranking Member&apos; | &apos;Member&apos;;
+  subcommittees?: Array&lt;{
+    name: string;
+    role: string;
+  }&gt;;
+  startDate?: string;
+  endDate?: string;
+}
+
+// Enhanced committee data
+export interface EnhancedCommitteeInfo {
+  current: CommitteeMembership[];
+  historical: CommitteeMembership[];
+  leadership: Array&lt;{
+    committee: string;
+    role: string;
+    startDate: string;
+    endDate?: string;
+  }&gt;;
+}
+
+// Representative analytics data
+export interface RepresentativeAnalytics {
+  effectiveness?: {
+    billsSponsored: number;
+    billsPassed: number;
+    amendmentsOffered: number;
+    successRate: number;
+  };
+  engagement?: {
+    townHalls: number;
+    pressReleases: number;
+    socialMediaActivity: number;
+    lastUpdate: string;
+  };
+  voting?: {
+    totalVotes: number;
+    partyLineVotes: number;
+    bipartisanVotes: number;
+    absences: number;
+    votingScore: number;
+  };
+}
+
+// Contact attempt tracking
+export interface ContactAttempt {
+  id: string;
+  bioguideId: string;
+  userId?: string;
+  method: &apos;email&apos; | &apos;phone&apos; | &apos;contact_form&apos; | &apos;office_visit&apos;;
+  timestamp: string;
+  subject?: string;
+  status: &apos;sent&apos; | &apos;delivered&apos; | &apos;responded&apos; | &apos;failed&apos;;
+  response?: {
+    receivedAt: string;
+    type: &apos;automated&apos; | &apos;personal&apos;;
+    content?: string;
+  };
+}
+
+// ZIP code to representative mapping
+export interface ZipCodeRepresentatives {
+  zipCode: string;
+  state: string;
+  representatives: {
+    house?: RepresentativeSummary;
+    senate: RepresentativeSummary[];
+  };
+  district?: string;
+  lastUpdated: string;
+}
+
+// Type guards
+export function isEnhancedRepresentative(rep: unknown): rep is EnhancedRepresentative {
+  return (
+    typeof rep === &apos;object&apos; &amp;&amp;
+    rep !== null &amp;&amp;
+    &apos;bioguideId&apos; in rep &amp;&amp;
+    &apos;name&apos; in rep &amp;&amp;
+    typeof (rep as Record&lt;string, unknown&gt;).bioguideId === &apos;string&apos; &amp;&amp;
+    typeof (rep as Record&lt;string, unknown&gt;).name === &apos;string&apos;
+  );
+}
+
+export function isRepresentativeSummary(rep: unknown): rep is RepresentativeSummary {
+  return (
+    typeof rep === &apos;object&apos; &amp;&amp;
+    rep !== null &amp;&amp;
+    &apos;bioguideId&apos; in rep &amp;&amp;
+    &apos;name&apos; in rep &amp;&amp;
+    &apos;party&apos; in rep &amp;&amp;
+    typeof (rep as Record&lt;string, unknown&gt;).bioguideId === &apos;string&apos; &amp;&amp;
+    typeof (rep as Record&lt;string, unknown&gt;).name === &apos;string&apos; &amp;&amp;
+    typeof (rep as Record&lt;string, unknown&gt;).party === &apos;string&apos;
+  );
+}
+
+// Utility types
+export type RepresentativeField = keyof EnhancedRepresentative;
+export type SocialMediaPlatform = keyof NonNullable&lt;EnhancedRepresentative[&apos;socialMedia&apos;]&gt;;
+export type RepresentativeId = keyof NonNullable&lt;EnhancedRepresentative[&apos;ids&apos;]&gt;;
+
+// API response types
+export interface RepresentativeApiResponse {
+  representative: EnhancedRepresentative;
+  success: boolean;
+  error?: string;
+  metadata?: {
+    cacheHit?: boolean;
+    responseTime?: number;
+    dataSource?: string;
+  };
+}
+
+export interface RepresentativesListResponse {
+  representatives: RepresentativeSummary[];
+  total: number;
+  page?: number;
+  perPage?: number;
+  hasMore?: boolean;
+  success: boolean;
+  error?: string;
+}
+
+// Filter and search options
+export interface RepresentativeFilters {
+  state?: string;
+  party?: string;
+  chamber?: &apos;House&apos; | &apos;Senate&apos;;
+  committee?: string;
+  leadership?: boolean;
+  hasTwitter?: boolean;
+  hasFacebook?: boolean;
+  hasWebsite?: boolean;
+}
+
+export interface RepresentativeSearchOptions {
+  query?: string;
+  filters?: RepresentativeFilters;
+  sortBy?: &apos;name&apos; | &apos;state&apos; | &apos;party&apos; | &apos;seniority&apos;;
+  sortOrder?: &apos;asc&apos; | &apos;desc&apos;;
+  limit?: number;
+  offset?: number;
+}
+
+// Enhanced error handling types
+export interface APIError {
+  message: string;
+  statusCode: number;
+  endpoint?: string;
+  timestamp: string;
+  requestId?: string;
+}
+
+// Specific data types for batch responses
+export interface VoteData {
+  vote_id: string;
+  position: string;
+  date: string;
+  bill: {
+    title: string;
+    number: string;
+  };
+}
+
+export interface BillData {
+  bill_id: string;
+  title: string;
+  number: string;
+  congress: number;
+  introduced_date: string;
+  status: string;
+}
+
+export interface FinanceData {
+  total_receipts?: number;
+  total_disbursements?: number;
+  cash_on_hand?: number;
+  cycle: string;
+}
+
+export interface NewsData {
+  title: string;
+  url: string;
+  published_date: string;
+  source: string;
+}
+
+// Batch API response types
+export interface BatchApiResponse {
+  success: boolean;
+  data: {
+    votes?: VoteData[];
+    bills?: BillData[];
+    finance?: FinanceData;
+    news?: NewsData[];
+    profile?: EnhancedRepresentative;
+    [key: string]: unknown;
+  };
+  errors: Record&lt;string, string&gt;;
+  metadata: {
+    timestamp: string;
+    requestedEndpoints: string[];
+    successfulEndpoints: string[];
+    failedEndpoints: string[];
+    totalTime: number;
+  };
+  executionTime: number;
+}
+
+// Enhanced type for batch API hook
+export interface BatchApiHookResult {
+  data: {
+    votes?: VoteData[];
+    bills?: BillData[];
+    finance?: FinanceData;
+    news?: NewsData[];
+    profile?: EnhancedRepresentative;
+    [key: string]: unknown;
+  };
+  loading: boolean;
+  error: string | null;
+  refetch: () =&gt; Promise&lt;void&gt;;
+  metadata?: BatchApiResponse[&apos;metadata&apos;];
+  partialErrors?: Record&lt;string, string&gt;;
+}
+
+// Profile data structure for batch response
+export interface RepresentativeProfile {
+  profile: EnhancedRepresentative;
+  votes?: VoteData[];
+  bills?: BillData[];
+  finance?: FinanceData;
+  news?: NewsData[];
+  &apos;party-alignment&apos;?: {
+    score: number;
+    total_votes: number;
+    party_line_votes: number;
+  };
+  committees?: CommitteeMembership[];
+  leadership?: {
+    positions: string[];
+    current_role?: string;
+  };
+  district?: {
+    id: string;
+    state: string;
+    number: string;
+  };
+}
+
+// Individual endpoint response wrapper
+export interface EndpointResponse&lt;T = unknown&gt; {
+  success: boolean;
+  data?: T;
+  error?: string;
+  cached?: boolean;
+  executionTime?: number;
+}
+
+</file>
+</codebase>

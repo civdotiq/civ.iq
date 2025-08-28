@@ -23,15 +23,19 @@ if (!FEC_API_KEY) {
 export interface FECFinancialSummary {
   candidate_id: string;
   cycle: number;
-  total_receipts: number;
-  total_disbursements: number;
-  cash_on_hand_end_period: number;
+  receipts: number; // Changed from total_receipts
+  disbursements: number; // Changed from total_disbursements
+  last_cash_on_hand_end_period: number; // Changed from cash_on_hand_end_period
   individual_contributions: number;
   other_political_committee_contributions: number;
   political_party_committee_contributions: number;
-  candidate_contributions: number;
+  candidate_contribution: number; // Changed from candidate_contributions
   coverage_start_date: string;
   coverage_end_date: string;
+  // Legacy field mappings for backward compatibility
+  total_receipts?: number;
+  total_disbursements?: number;
+  cash_on_hand_end_period?: number;
 }
 
 export interface FECContribution {
@@ -147,9 +151,19 @@ export class FECApiService {
     cycle: number
   ): Promise<FECFinancialSummary | null> {
     try {
+      // eslint-disable-next-line no-console
+      console.log(`[FEC DEBUG] Getting financial summary for ${candidateId} cycle ${cycle}`);
+
       const response = await this.makeRequest<FECApiResponse<FECFinancialSummary>>(
         `/candidate/${candidateId}/totals/?cycle=${cycle}`
       );
+
+      // eslint-disable-next-line no-console
+      console.log(`[FEC DEBUG] Response received:`, {
+        hasResults: !!(response.results && response.results.length > 0),
+        resultsCount: response.results?.length || 0,
+        firstResult: response.results?.[0],
+      });
 
       // Return the most recent summary for the cycle
       if (response.results && response.results.length > 0) {
@@ -158,6 +172,8 @@ export class FECApiService {
 
       return null;
     } catch (error) {
+      // eslint-disable-next-line no-console
+      console.log(`[FEC DEBUG] Error getting financial summary:`, error);
       logger.error(`[FEC API] Failed to get financial summary for ${candidateId}:`, error);
       throw error;
     }
@@ -326,8 +342,17 @@ export class FECApiService {
    * Uses a resilient multi-step approach to find the best available committee ID
    */
   async getPrincipalCommitteeId(candidateId: string, cycle: number): Promise<string | null> {
+    logger.info(`[FEC API DIAGNOSTIC] Starting committee resolution:`, {
+      candidateId,
+      cycle,
+      timestamp: new Date().toISOString(),
+    });
+
     try {
       // Fetch candidate details WITHOUT specifying cycle to get ALL committees
+      logger.info(
+        `[FEC API DIAGNOSTIC] Fetching candidate details for committee lookup: ${candidateId}`
+      );
       const response = await this.makeRequest<
         FECApiResponse<{
           principal_committees: Array<{
@@ -339,31 +364,94 @@ export class FECApiService {
         }>
       >(`/candidate/${candidateId}/`);
 
+      logger.info(`[FEC API DIAGNOSTIC] Candidate details API response:`, {
+        candidateId,
+        responseReceived: !!response,
+        hasResults: !!response.results?.[0],
+        hasPrincipalCommittees: !!response.results?.[0]?.principal_committees,
+        committeesCount: response.results?.[0]?.principal_committees?.length || 0,
+      });
+
       if (!response.results?.[0]?.principal_committees) {
-        logger.warn(`[FEC API] No committees found for candidate ${candidateId}`);
+        logger.warn(
+          `[FEC API DIAGNOSTIC] Committee resolution FAILED - no committees structure found:`,
+          {
+            candidateId,
+            cycle,
+            response: response.results?.[0],
+          }
+        );
         return null;
       }
 
       const committees = response.results[0].principal_committees;
       if (committees.length === 0) {
-        logger.warn(`[FEC API] Empty committees array for candidate ${candidateId}`);
+        logger.warn(`[FEC API DIAGNOSTIC] Committee resolution FAILED - empty committees array:`, {
+          candidateId,
+          cycle,
+        });
         return null;
       }
 
+      // DIAGNOSTIC: Log all available committees
+      logger.info(`[FEC API DIAGNOSTIC] All available committees for ${candidateId}:`, {
+        candidateId,
+        cycle,
+        committeesCount: committees.length,
+        committees: committees.map(c => ({
+          committee_id: c.committee_id,
+          designation: c.designation,
+          name: c.name,
+          cycles: c.cycles,
+        })),
+      });
+
       // ATTEMPT 1 (Ideal): Find principal committee (designation = 'P') for exact cycle
+      logger.info(
+        `[FEC API DIAGNOSTIC] ATTEMPT 1 - Looking for principal committee with exact cycle ${cycle}`
+      );
       const principalExactCycle = committees.find(
         committee => committee.designation === 'P' && committee.cycles?.includes(cycle)
       );
 
+      logger.info(`[FEC API DIAGNOSTIC] ATTEMPT 1 result:`, {
+        candidateId,
+        cycle,
+        found: !!principalExactCycle,
+        committee: principalExactCycle
+          ? {
+              committee_id: principalExactCycle.committee_id,
+              designation: principalExactCycle.designation,
+              cycles: principalExactCycle.cycles,
+              name: principalExactCycle.name,
+            }
+          : null,
+      });
+
       if (principalExactCycle) {
         logger.info(
-          `[FEC API] ✓ Found principal committee ${principalExactCycle.committee_id} for exact cycle ${cycle}`
+          `[FEC API DIAGNOSTIC] ✓ ATTEMPT 1 SUCCESS - Found principal committee ${principalExactCycle.committee_id} for exact cycle ${cycle}`
         );
         return principalExactCycle.committee_id;
       }
 
       // ATTEMPT 2 (Fallback): Find most recent principal committee (any cycle)
+      logger.info(
+        `[FEC API DIAGNOSTIC] ATTEMPT 2 - Looking for any principal committee (designation = 'P')`
+      );
       const principalCommittees = committees.filter(c => c.designation === 'P');
+
+      logger.info(`[FEC API DIAGNOSTIC] ATTEMPT 2 result:`, {
+        candidateId,
+        cycle,
+        principalCommitteesFound: principalCommittees.length,
+        principalCommittees: principalCommittees.map(c => ({
+          committee_id: c.committee_id,
+          cycles: c.cycles,
+          name: c.name,
+        })),
+      });
+
       if (principalCommittees.length > 0) {
         // Sort by most recent cycle
         const sortedPrincipal = principalCommittees.sort((a, b) => {
@@ -371,37 +459,77 @@ export class FECApiService {
           const maxCycleB = Math.max(...(b.cycles || [0]));
           return maxCycleB - maxCycleA;
         });
-        
+
         const mostRecentPrincipal = sortedPrincipal[0];
         logger.warn(
-          `[FEC API] ⚠ Using most recent principal committee ${mostRecentPrincipal!.committee_id} ` +
-          `(from cycles: ${mostRecentPrincipal!.cycles?.join(', ')})`
+          `[FEC API DIAGNOSTIC] ⚠ ATTEMPT 2 SUCCESS - Using most recent principal committee:`,
+          {
+            candidateId,
+            cycle,
+            selectedCommittee: mostRecentPrincipal!.committee_id,
+            selectedCycles: mostRecentPrincipal!.cycles,
+            allPrincipalCommittees: sortedPrincipal.map(c => ({
+              committee_id: c.committee_id,
+              cycles: c.cycles,
+            })),
+          }
         );
         return mostRecentPrincipal!.committee_id;
       }
 
       // ATTEMPT 3 (Final Fallback): Find ANY committee for the target cycle
-      const anyCycleCommittee = committees.find(
-        committee => committee.cycles?.includes(cycle)
+      logger.info(
+        `[FEC API DIAGNOSTIC] ATTEMPT 3 - Looking for any committee with target cycle ${cycle}`
       );
+      const anyCycleCommittee = committees.find(committee => committee.cycles?.includes(cycle));
+
+      logger.info(`[FEC API DIAGNOSTIC] ATTEMPT 3 result:`, {
+        candidateId,
+        cycle,
+        found: !!anyCycleCommittee,
+        committee: anyCycleCommittee
+          ? {
+              committee_id: anyCycleCommittee.committee_id,
+              designation: anyCycleCommittee.designation,
+              cycles: anyCycleCommittee.cycles,
+              name: anyCycleCommittee.name,
+            }
+          : null,
+      });
 
       if (anyCycleCommittee) {
-        logger.warn(
-          `[FEC API] ⚠ Using non-principal committee ${anyCycleCommittee.committee_id} ` +
-          `(designation: ${anyCycleCommittee.designation}) for cycle ${cycle}`
-        );
+        logger.warn(`[FEC API DIAGNOSTIC] ⚠ ATTEMPT 3 SUCCESS - Using non-principal committee:`, {
+          candidateId,
+          cycle,
+          selectedCommittee: anyCycleCommittee.committee_id,
+          designation: anyCycleCommittee.designation,
+          cycles: anyCycleCommittee.cycles,
+        });
         return anyCycleCommittee.committee_id;
       }
 
       // FINAL RESORT: Use first available committee
+      logger.info(`[FEC API DIAGNOSTIC] FINAL RESORT - Using first available committee`);
       const firstCommittee = committees[0];
       logger.warn(
-        `[FEC API] ⚠ Using first available committee ${firstCommittee!.committee_id} as final fallback`
+        `[FEC API DIAGNOSTIC] ⚠ FINAL RESORT - Using first available committee as last fallback:`,
+        {
+          candidateId,
+          cycle,
+          selectedCommittee: firstCommittee!.committee_id,
+          designation: firstCommittee!.designation,
+          cycles: firstCommittee!.cycles,
+          allCommittees: committees.length,
+        }
       );
       return firstCommittee!.committee_id;
-
     } catch (error) {
-      logger.error(`[FEC API] Failed to get principal committee for ${candidateId}:`, error);
+      logger.error(`[FEC API DIAGNOSTIC] Committee resolution COMPLETELY FAILED:`, {
+        candidateId,
+        cycle,
+        error: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
+      });
       return null;
     }
   }

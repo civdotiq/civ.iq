@@ -5,7 +5,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Clock, Database, CheckCircle, AlertCircle, Info, ExternalLink } from 'lucide-react';
 
@@ -220,6 +220,25 @@ export function DataFreshnessIndicator({
   className = '',
   format = 'relative',
 }: DataFreshnessIndicatorProps) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Prevent hydration mismatch by only calculating time on client
+  if (!isClient) {
+    return (
+      <div
+        className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border text-gray-600 bg-gray-50 border-gray-200 ${className}`}
+        title="Loading freshness info..."
+      >
+        <Clock className="w-3 h-3" />
+        <span>Loading...</span>
+      </div>
+    );
+  }
+
   const fetchDate = new Date(fetchedAt);
   const now = new Date();
   const ageMs = now.getTime() - fetchDate.getTime();

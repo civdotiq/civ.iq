@@ -7,6 +7,14 @@
 **Methodology**: Claude Code best practices + OODA debugging framework  
 **Status**: ✅ **100% TypeScript Compliant** - ZERO compilation errors (December 17, 2025)
 
+# Guidance Principles
+
+1. **Stop overthinking** - Don't suggest overly complex solutions when simple ones work
+
+2. **Read carefully** - Read requests thoroughly before responding
+
+3. **Focus exactly** - Answer exactly what is asked, no assumptions or tangents
+
 ## ⚡ CRITICAL RULES (NEVER VIOLATE)
 
 1. **Quality Gates**: ALL code must pass `npm run lint && npm test` - NO exceptions

@@ -6,9 +6,34 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import {
+  PieChart,
+  Pie,
+  BarChart,
+  Bar,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+  XAxis,
+  YAxis,
+} from 'recharts';
+
+// Chart colors
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
 interface CampaignFinanceData {
-  financial_summary: Array<{
+  // New direct fields from our API fix
+  totalRaised?: number;
+  totalSpent?: number;
+  cashOnHand?: number;
+  individualContributions?: number;
+  pacContributions?: number;
+  partyContributions?: number;
+  candidateContributions?: number;
+
+  // Legacy financial_summary structure (fallback)
+  financial_summary?: Array<{
     cycle: number;
     total_receipts: number;
     total_disbursements: number;
@@ -18,13 +43,31 @@ interface CampaignFinanceData {
     party_contributions: number;
     candidate_contributions: number;
   }>;
-  recent_contributions: Array<{
+
+  // Top contributors with amounts
+  top_contributors?: Array<{
+    name: string;
+    total_amount: number;
+    count: number;
+    employer?: string;
+    occupation?: string;
+  }>;
+
+  // Industry breakdown
+  industry_breakdown?: Array<{
+    sector: string;
+    amount: number;
+    percentage: number;
+  }>;
+
+  // Recent data
+  recent_contributions?: Array<{
     contributor_name: string;
     contributor_employer?: string;
     contribution_receipt_amount: number;
     contribution_receipt_date: string;
   }>;
-  recent_expenditures: Array<{
+  recent_expenditures?: Array<{
     recipient_name: string;
     disbursement_description: string;
     disbursement_amount: number;
@@ -58,13 +101,53 @@ export function CampaignFinanceVisualizer({
   bioguideId: _bioguideId,
 }: CampaignFinanceVisualizerProps) {
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'lobbying' | 'expenditures' | 'contributions'
+    'overview' | 'charts' | 'lobbying' | 'expenditures' | 'contributions'
   >('overview');
   const [lobbyingData, setLobbyingData] = useState<LobbyingData | null>(null);
   const [isLoadingLobbying, setIsLoadingLobbying] = useState(false);
 
-  // Get current cycle data
+  // Get financial data - prefer direct fields, fallback to financial_summary
   const currentCycleData = financeData?.financial_summary?.[0];
+
+  // Use direct fields if available (from our API fix), otherwise fallback to legacy structure
+  const totalRaised = financeData?.totalRaised || currentCycleData?.total_receipts || 0;
+  const totalSpent = financeData?.totalSpent || currentCycleData?.total_disbursements || 0;
+  const cashOnHand = financeData?.cashOnHand || currentCycleData?.cash_on_hand_end_period || 0;
+  const individualContributions =
+    financeData?.individualContributions || currentCycleData?.individual_contributions || 0;
+  const pacContributions =
+    financeData?.pacContributions || currentCycleData?.pac_contributions || 0;
+  const partyContributions =
+    financeData?.partyContributions || currentCycleData?.party_contributions || 0;
+  const candidateContributions =
+    financeData?.candidateContributions || currentCycleData?.candidate_contributions || 0;
+
+  // Prepare chart data
+  const donationBreakdown = [
+    { name: 'Individual', value: individualContributions, color: COLORS[0] },
+    { name: 'PAC', value: pacContributions, color: COLORS[1] },
+    { name: 'Party', value: partyContributions, color: COLORS[2] },
+    { name: 'Self-Funded', value: candidateContributions, color: COLORS[3] },
+  ].filter(item => item.value > 0); // Only show non-zero categories
+
+  // Top contributors data for charts
+  const topContributorsData = (financeData?.top_contributors || [])
+    .slice(0, 10)
+    .map(contributor => ({
+      name:
+        contributor.name.length > 15 ? contributor.name.substring(0, 15) + '...' : contributor.name,
+      amount: contributor.total_amount,
+      fullName: contributor.name,
+    }));
+
+  // Industry breakdown data
+  const industryData = (financeData?.industry_breakdown || []).slice(0, 8).map(industry => ({
+    sector:
+      industry.sector.length > 15 ? industry.sector.substring(0, 15) + '...' : industry.sector,
+    amount: industry.amount,
+    percentage: industry.percentage,
+    fullSector: industry.sector,
+  }));
 
   // Fetch lobbying data when lobbying tab is active
   useEffect(() => {
@@ -98,7 +181,13 @@ export function CampaignFinanceVisualizer({
     return `${Math.round((numerator / denominator) * 100)}%`;
   };
 
-  if (!financeData || !currentCycleData) {
+  // Check if we have any meaningful financial data
+  const hasData =
+    totalRaised > 0 ||
+    individualContributions > 0 ||
+    (financeData?.top_contributors && financeData.top_contributors.length > 0);
+
+  if (!financeData || !hasData) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Campaign Finance</h3>
@@ -120,6 +209,7 @@ export function CampaignFinanceVisualizer({
           <nav className="flex" aria-label="Tabs">
             {[
               { id: 'overview', name: 'Basic Overview' },
+              { id: 'charts', name: 'Visual Charts' },
               { id: 'lobbying', name: 'Corporate Lobbying' },
               { id: 'expenditures', name: 'Expenditures' },
               { id: 'contributions', name: 'Contributions' },
@@ -127,7 +217,9 @@ export function CampaignFinanceVisualizer({
               <button
                 key={tab.id}
                 onClick={() =>
-                  setActiveTab(tab.id as 'overview' | 'lobbying' | 'expenditures' | 'contributions')
+                  setActiveTab(
+                    tab.id as 'overview' | 'charts' | 'lobbying' | 'expenditures' | 'contributions'
+                  )
                 }
                 className={`${
                   activeTab === tab.id
@@ -151,21 +243,15 @@ export function CampaignFinanceVisualizer({
               <div className="space-y-3 font-mono text-sm">
                 <div className="flex justify-between">
                   <span>Total Raised:</span>
-                  <span className="font-semibold">
-                    {formatCurrency(currentCycleData.total_receipts)}
-                  </span>
+                  <span className="font-semibold">{formatCurrency(totalRaised)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Total Spent:</span>
-                  <span className="font-semibold">
-                    {formatCurrency(currentCycleData.total_disbursements)}
-                  </span>
+                  <span className="font-semibold">{formatCurrency(totalSpent)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Cash on Hand:</span>
-                  <span className="font-semibold">
-                    {formatCurrency(currentCycleData.cash_on_hand_end_period)}
-                  </span>
+                  <span className="font-semibold">{formatCurrency(cashOnHand)}</span>
                 </div>
               </div>
 
@@ -177,53 +263,175 @@ export function CampaignFinanceVisualizer({
                   <div className="flex justify-between">
                     <span>Individual:</span>
                     <span>
-                      {formatCurrency(currentCycleData.individual_contributions)} (
-                      {formatPercent(
-                        currentCycleData.individual_contributions,
-                        currentCycleData.total_receipts
-                      )}
-                      )
+                      {formatCurrency(individualContributions)} (
+                      {formatPercent(individualContributions, totalRaised)})
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>PAC:</span>
                     <span>
-                      {formatCurrency(currentCycleData.pac_contributions)} (
-                      {formatPercent(
-                        currentCycleData.pac_contributions,
-                        currentCycleData.total_receipts
-                      )}
-                      )
+                      {formatCurrency(pacContributions)} (
+                      {formatPercent(pacContributions, totalRaised)})
                     </span>
                   </div>
-                  {currentCycleData.party_contributions > 0 && (
+                  {partyContributions > 0 && (
                     <div className="flex justify-between">
                       <span>Party:</span>
                       <span>
-                        {formatCurrency(currentCycleData.party_contributions)} (
-                        {formatPercent(
-                          currentCycleData.party_contributions,
-                          currentCycleData.total_receipts
-                        )}
-                        )
+                        {formatCurrency(partyContributions)} (
+                        {formatPercent(partyContributions, totalRaised)})
                       </span>
                     </div>
                   )}
-                  {currentCycleData.candidate_contributions > 0 && (
+                  {candidateContributions > 0 && (
                     <div className="flex justify-between">
                       <span>Self-Funded:</span>
                       <span>
-                        {formatCurrency(currentCycleData.candidate_contributions)} (
-                        {formatPercent(
-                          currentCycleData.candidate_contributions,
-                          currentCycleData.total_receipts
-                        )}
-                        )
+                        {formatCurrency(candidateContributions)} (
+                        {formatPercent(candidateContributions, totalRaised)})
                       </span>
                     </div>
                   )}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Visual Charts Tab */}
+          {activeTab === 'charts' && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Campaign Finance Visualizations
+              </h3>
+
+              {/* Donation Sources Pie Chart */}
+              {donationBreakdown.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h4 className="text-md font-semibold text-gray-900 mb-4">Contribution Sources</h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={donationBreakdown}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }) =>
+                              percent && percent > 0.05
+                                ? `${name} ${(percent * 100).toFixed(0)}%`
+                                : ''
+                            }
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {donationBreakdown.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            formatter={value => [`$${Number(value).toLocaleString()}`, 'Amount']}
+                          />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex flex-col justify-center">
+                      <div className="space-y-3">
+                        {donationBreakdown.map((item, index) => (
+                          <div key={item.name} className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div
+                                className="w-4 h-4 rounded mr-3"
+                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                              ></div>
+                              <span className="text-sm font-medium">{item.name}</span>
+                            </div>
+                            <span className="text-sm font-semibold">
+                              {formatCurrency(item.value)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Top Contributors Bar Chart */}
+              {topContributorsData.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h4 className="text-md font-semibold text-gray-900 mb-4">Top Contributors</h4>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart
+                      data={topContributorsData}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
+                    >
+                      <XAxis
+                        dataKey="name"
+                        angle={-45}
+                        textAnchor="end"
+                        height={100}
+                        fontSize={12}
+                      />
+                      <YAxis
+                        tickFormatter={value => `$${(Number(value) / 1000).toFixed(0)}K`}
+                        fontSize={12}
+                      />
+                      <Tooltip
+                        formatter={value => [`$${Number(value).toLocaleString()}`, 'Contributed']}
+                        labelFormatter={(label, payload) => {
+                          const entry = payload?.[0]?.payload;
+                          return entry?.fullName || label;
+                        }}
+                      />
+                      <Bar dataKey="amount" fill={COLORS[0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* Industry Breakdown Horizontal Bar Chart */}
+              {industryData.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h4 className="text-md font-semibold text-gray-900 mb-4">Industry Breakdown</h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart
+                      data={industryData}
+                      layout="horizontal"
+                      margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                    >
+                      <XAxis
+                        type="number"
+                        tickFormatter={value => `$${(Number(value) / 1000).toFixed(0)}K`}
+                        fontSize={12}
+                      />
+                      <YAxis type="category" dataKey="sector" width={100} fontSize={11} />
+                      <Tooltip
+                        formatter={value => [`$${Number(value).toLocaleString()}`, 'Amount']}
+                        labelFormatter={(label, payload) => {
+                          const entry = payload?.[0]?.payload;
+                          return entry?.fullSector || label;
+                        }}
+                      />
+                      <Bar dataKey="amount" fill={COLORS[1]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* No charts available message */}
+              {donationBreakdown.length === 0 &&
+                topContributorsData.length === 0 &&
+                industryData.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No data available for visualization</p>
+                    <p className="text-sm mt-2">
+                      Charts will appear when contribution data is available
+                    </p>
+                  </div>
+                )}
             </div>
           )}
 

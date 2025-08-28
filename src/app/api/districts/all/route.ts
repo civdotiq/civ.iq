@@ -168,6 +168,9 @@ export async function GET(request: Request) {
         continue;
       }
 
+      // Convert to string to ensure string methods work
+      districtNumber = String(districtNumber);
+
       // Normalize at-large districts to "01"
       if (
         districtNumber === 'At Large' ||
