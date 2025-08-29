@@ -18,63 +18,122 @@ import { getEnhancedRepresentative } from '@/features/representatives/services/c
 import { XMLParser } from 'fast-xml-parser';
 
 /**
- * Universal Bioguide ID to LIS Member ID mapping for 119th Congress
- * This comprehensive mapping enables robust member lookup in Senate XML files
+ * AUTHORITATIVE Bioguide ID to LIS Member ID mapping for 119th Congress
+ *
+ * ✅ DATA SOURCE: congress-legislators repository (unitedstates/congress-legislators)
+ * ✅ GENERATED: 2025-08-29 from legislators-current.yaml
+ * ✅ COVERAGE: All 100 current U.S. Senators with official LIS IDs
+ *
+ * This mapping uses the official, maintained congress-legislators dataset
+ * which is the authoritative source for Congressional member identifiers.
+ *
+ * Source: https://github.com/unitedstates/congress-legislators
+ * Last updated: 2025-08-29
+ *
+ * Testing: Chuck Schumer, Mitch McConnell, Bernie Sanders, Ted Cruz, Elizabeth Warren
  */
 const BIOGUIDE_TO_LIS_MAPPING: Record<string, string> = {
-  // A-D
-  B001230: 'S330', // Tammy Baldwin (WI)
-  B001267: 'S317', // Michael Bennet (CO)
-  B000944: 'S306', // Sherrod Brown (OH)
-  B001135: 'S348', // Richard Blumenthal (CT)
-  B001236: 'S361', // John Boozman (AR)
-  B001243: 'S341', // Marsha Blackburn (TN)
-  C000127: 'S318', // Maria Cantwell (WA)
-  C001047: 'S309', // Shelley Capito (WV)
-  C001070: 'S350', // Bob Casey (PA)
-  C001035: 'S252', // Susan Collins (ME)
-  C001056: 'S323', // John Cornyn (TX)
-  C001113: 'S362', // Catherine Cortez Masto (NV)
-  C001096: 'S366', // Kevin Cramer (ND)
-  C001098: 'S324', // Ted Cruz (TX)
-  D000563: 'S293', // Dick Durbin (IL)
-
-  // E-H
-  F000463: 'S353', // Deb Fischer (NE)
-  G000386: 'S320', // Chuck Grassley (IA)
-  G000359: 'S316', // Lindsey Graham (SC)
-  H001046: 'S351', // Martin Heinrich (NM)
-  H001061: 'S356', // John Hickenlooper (CO)
-  H001079: 'S339', // Josh Hawley (MO)
-  H001042: 'S331', // Mazie Hirono (HI)
-
-  // I-M
-  K000384: 'S321', // Tim Kaine (VA)
-  K000367: 'S349', // Amy Klobuchar (MN)
-  M000355: 'S326', // Mitch McConnell (KY)
-  M001183: 'S357', // Joe Manchin (WV)
-  M001169: 'S347', // Chris Murphy (CT)
-  M001153: 'S340', // Lisa Murkowski (AK)
-  M000133: 'S370', // Edward Markey (MA)
-
-  // N-S
-  P000603: 'S308', // Rand Paul (KY)
-  R000122: 'S319', // Jack Reed (RI)
-  R000584: 'S323', // Jim Risch (ID) - THIS WAS MISSING!
-  S000033: 'S313', // Bernie Sanders (VT)
-  S001194: 'S329', // Brian Schatz (HI)
-  S000148: 'S314', // Chuck Schumer (NY)
-  S001181: 'S344', // Jeanne Shaheen (NH)
-  S001203: 'S345', // Tina Smith (MN)
-  S001217: 'S346', // Rick Scott (FL)
-
-  // T-Z
-  T000464: 'S315', // Jon Tester (MT)
-  T000476: 'S354', // Thom Tillis (NC)
-  W000817: 'S337', // Elizabeth Warren (MA)
-  W000802: 'S358', // Sheldon Whitehouse (RI)
-  W000779: 'S359', // Ron Wyden (OR)
-  Y000064: 'S360', // Todd Young (IN)
+  // Generated from congress-legislators repository - 100 current senators
+  S001198: 'S383', // Dan Sullivan (Republican-AK)
+  M001153: 'S288', // Lisa Murkowski (Republican-AK)
+  B001319: 'S416', // Katie Britt (Republican-AL)
+  T000278: 'S412', // Tommy Tuberville (Republican-AL)
+  B001236: 'S343', // John Boozman (Republican-AR)
+  C001095: 'S374', // Tom Cotton (Republican-AR)
+  K000377: 'S406', // Mark Kelly (Democrat-AZ)
+  G000574: 'S432', // Ruben Gallego (Democrat-AZ)
+  S001150: 'S427', // Adam Schiff (Democrat-CA)
+  P000145: 'S413', // Alejandro Padilla (Democrat-CA)
+  H000273: 'S408', // John Hickenlooper (Democrat-CO)
+  B001267: 'S330', // Michael Bennet (Democrat-CO)
+  M001169: 'S364', // Christopher Murphy (Democrat-CT)
+  B001277: 'S341', // Richard Blumenthal (Democrat-CT)
+  C001088: 'S337', // Christopher Coons (Democrat-DE)
+  B001303: 'S430', // Lisa Blunt Rochester (Democrat-DE)
+  M001244: 'S439', // Ashley Moody (Republican-FL)
+  S001217: 'S404', // Rick Scott (Republican-FL)
+  O000174: 'S414', // Jon Ossoff (Democrat-GA)
+  W000790: 'S415', // Raphael Warnock (Democrat-GA)
+  S001194: 'S353', // Brian Schatz (Democrat-HI)
+  H001042: 'S361', // Mazie Hirono (Democrat-HI)
+  G000386: 'S153', // Charles Grassley (Republican-IA)
+  E000295: 'S376', // Joni Ernst (Republican-IA)
+  R000584: 'S323', // James Risch (Republican-ID)
+  C000880: 'S266', // Michael Crapo (Republican-ID)
+  D000563: 'S253', // Richard Durbin (Democrat-IL)
+  D000622: 'S386', // Tammy Duckworth (Democrat-IL)
+  B001299: 'S429', // Jim Banks (Republican-IN)
+  Y000064: 'S391', // Todd Young (Republican-IN)
+  M000934: 'S347', // Jerry Moran (Republican-KS)
+  M001198: 'S411', // Roger Marshall (Republican-KS)
+  M000355: 'S174', // Mitch McConnell (Republican-KY)
+  P000603: 'S348', // Rand Paul (Republican-KY)
+  C001075: 'S373', // Bill Cassidy (Republican-LA)
+  K000393: 'S389', // John Kennedy (Republican-LA)
+  M000133: 'S369', // Edward Markey (Democrat-MA)
+  W000817: 'S366', // Elizabeth Warren (Democrat-MA)
+  A000382: 'S428', // Angela Alsobrooks (Democrat-MD)
+  V000128: 'S390', // Chris Van Hollen (Democrat-MD)
+  K000383: 'S363', // Angus King (Independent-ME)
+  C001035: 'S252', // Susan Collins (Republican-ME)
+  S001208: 'S436', // Elissa Slotkin (Democrat-MI)
+  P000595: 'S380', // Gary Peters (Democrat-MI)
+  K000367: 'S311', // Amy Klobuchar (Democrat-MN)
+  S001203: 'S394', // Tina Smith (Democrat-MN)
+  S001227: 'S420', // Eric Schmitt (Republican-MO)
+  H001089: 'S399', // Joshua Hawley (Republican-MO)
+  H001079: 'S395', // Cindy Hyde-Smith (Republican-MS)
+  W000437: 'S318', // Roger Wicker (Republican-MS)
+  D000618: 'S375', // Steve Daines (Republican-MT)
+  S001232: 'S435', // Tim Sheehy (Republican-MT)
+  B001305: 'S417', // Ted Budd (Republican-NC)
+  T000476: 'S384', // Thom Tillis (Republican-NC)
+  H001061: 'S344', // John Hoeven (Republican-ND)
+  C001096: 'S398', // Kevin Cramer (Republican-ND)
+  F000463: 'S357', // Deb Fischer (Republican-NE)
+  R000618: 'S423', // Pete Ricketts (Republican-NE)
+  S001181: 'S324', // Jeanne Shaheen (Democrat-NH)
+  H001076: 'S388', // Margaret Hassan (Democrat-NH)
+  K000394: 'S426', // Andy Kim (Democrat-NJ)
+  B001288: 'S370', // Cory Booker (Democrat-NJ)
+  L000570: 'S409', // Ben Luján (Democrat-NM)
+  H001046: 'S359', // Martin Heinrich (Democrat-NM)
+  C001113: 'S385', // Catherine Cortez Masto (Democrat-NV)
+  R000608: 'S402', // Jacky Rosen (Democrat-NV)
+  S000148: 'S270', // Charles Schumer (Democrat-NY)
+  G000555: 'S331', // Kirsten Gillibrand (Democrat-NY)
+  M001242: 'S434', // Bernie Moreno (Republican-OH)
+  H001104: 'S438', // Jon Husted (Republican-OH)
+  L000575: 'S378', // James Lankford (Republican-OK)
+  M001190: 'S419', // Markwayne Mullin (Republican-OK)
+  M001176: 'S322', // Jeff Merkley (Democrat-OR)
+  W000779: 'S247', // Ron Wyden (Democrat-OR)
+  M001243: 'S433', // Dave McCormick (Republican-PA)
+  F000479: 'S418', // John Fetterman (Democrat-PA)
+  R000122: 'S259', // John Reed (Democrat-RI)
+  W000802: 'S316', // Sheldon Whitehouse (Democrat-RI)
+  G000359: 'S293', // Lindsey Graham (Republican-SC)
+  S001184: 'S365', // Tim Scott (Republican-SC)
+  T000250: 'S303', // John Thune (Republican-SD)
+  R000605: 'S381', // Mike Rounds (Republican-SD)
+  H000601: 'S407', // Bill Hagerty (Republican-TN)
+  B001243: 'S396', // Marsha Blackburn (Republican-TN)
+  C001056: 'S287', // John Cornyn (Republican-TX)
+  C001098: 'S355', // Ted Cruz (Republican-TX)
+  C001114: 'S431', // John Curtis (Republican-UT)
+  L000577: 'S346', // Mike Lee (Republican-UT)
+  W000805: 'S327', // Mark Warner (Democrat-VA)
+  K000384: 'S362', // Timothy Kaine (Democrat-VA)
+  S000033: 'S313', // Bernard Sanders (Independent-VT)
+  W000800: 'S422', // Peter Welch (Democrat-VT)
+  C000127: 'S275', // Maria Cantwell (Democrat-WA)
+  M001111: 'S229', // Patty Murray (Democrat-WA)
+  J000293: 'S345', // Ron Johnson (Republican-WI)
+  B001230: 'S354', // Tammy Baldwin (Democrat-WI)
+  J000312: 'S437', // Jim Justice (Republican-WV)
+  C001047: 'S372', // Shelley Capito (Republican-WV)
+  L000571: 'S410', // Cynthia Lummis (Republican-WY)
+  B001261: 'S317', // John Barrasso (Republican-WY)
 };
 
 /**
@@ -264,7 +323,7 @@ async function getMemberInfo(bioguideId: string): Promise<{
 /**
  * Safely fetch Senate votes from XML feed with member position lookup
  */
-async function getSenateVotes(bioguideId: string, limit: number = 20): Promise<Vote[]> {
+async function getSenateVotes(bioguideId: string, limit: number = 10): Promise<Vote[]> {
   try {
     logger.info('Fetching Senate votes from XML feed', { bioguideId, limit });
 
@@ -320,7 +379,7 @@ async function getSenateVotes(bioguideId: string, limit: number = 20): Promise<V
           headers: {
             'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
           },
-          signal: AbortSignal.timeout(8000),
+          signal: AbortSignal.timeout(3000), // Reduced timeout for faster failure
         });
 
         if (voteResponse.ok) {
@@ -592,7 +651,7 @@ export async function GET(
 
     const { chamber, name } = memberInfo;
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
 
     let votes: Vote[] = [];
     let dataSource = '';

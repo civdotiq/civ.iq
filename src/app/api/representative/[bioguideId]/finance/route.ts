@@ -527,9 +527,9 @@ export async function GET(
     // Get representative's state for geographic analysis
     const representativeState = await getRepresentativeState(bioguideId);
 
-    // Check for sample vs full data request
+    // Check for sample vs full data request - default to sample for faster initial loads
     const urlParams = new URL(request.url);
-    const useSampleData = urlParams.searchParams.get('sample') === 'true';
+    const useSampleData = urlParams.searchParams.get('full') !== 'true'; // Default to sample unless explicitly requesting full data
 
     // Step 4: Attempt to process detailed finance data (non-blocking)
     let processedData: Awaited<ReturnType<typeof aggregateFinanceData>> = null;
