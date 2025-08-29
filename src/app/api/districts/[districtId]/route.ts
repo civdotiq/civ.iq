@@ -827,28 +827,46 @@ const STATE_NAME_TO_CODE: Record<string, string> = {
 
 async function getDistrictDetails(districtId: string): Promise<DistrictDetails | null> {
   try {
-    // Parse district ID (format: State-Name-Number, e.g., "Alabama-06", "California-12")
+    // Parse district ID - support both formats:
+    // 1. State abbreviation: "MI-12", "CA-04"
+    // 2. Full state name: "Michigan-12", "North-Carolina-04"
     const parts = districtId.split('-');
 
     if (parts.length < 2) {
       throw new Error('Invalid district ID format');
     }
 
-    // Handle multi-word state names (e.g., "North-Carolina-04" -> ["North", "Carolina", "04"])
-    const district = parts[parts.length - 1]; // Last part is always the district number
-    const stateParts = parts.slice(0, -1); // All parts except the last are state name
-    const stateNameFromUrl = stateParts.join('-').toLowerCase();
+    let stateCode: string;
+    let district: string;
 
-    // Convert state name to state code
-    const stateCode = STATE_NAME_TO_CODE[stateNameFromUrl];
+    // Check if first part is a 2-letter state abbreviation
+    if (parts[0] && parts[0].length === 2 && parts[0] === parts[0].toUpperCase()) {
+      // Format: "MI-12" or "CA-04"
+      stateCode = parts[0];
+      district = parts[1] || '01';
 
-    if (!stateCode) {
-      logger.error('Invalid state name in district ID', {
-        districtId,
-        stateNameFromUrl,
-        availableStates: Object.keys(STATE_NAME_TO_CODE).slice(0, 5), // Log first 5 for debugging
-      });
-      throw new Error(`Invalid state name: ${stateNameFromUrl}`);
+      // Verify it's a valid state code
+      if (!STATE_NAMES[stateCode]) {
+        throw new Error(`Invalid state abbreviation: ${stateCode}`);
+      }
+    } else {
+      // Format: "Michigan-12" or "North-Carolina-04"
+      district = parts[parts.length - 1] || '01'; // Last part is always the district number
+      const stateParts = parts.slice(0, -1); // All parts except the last are state name
+      const stateNameFromUrl = stateParts.join('-').toLowerCase();
+
+      // Convert state name to state code
+      const resolvedStateCode = STATE_NAME_TO_CODE[stateNameFromUrl];
+
+      if (!resolvedStateCode) {
+        logger.error('Invalid state name in district ID', {
+          districtId,
+          stateNameFromUrl,
+          availableStates: Object.keys(STATE_NAME_TO_CODE).slice(0, 5), // Log first 5 for debugging
+        });
+        throw new Error(`Invalid state name: ${stateNameFromUrl}`);
+      }
+      stateCode = resolvedStateCode;
     }
 
     // Normalize district number (remove leading zeros for comparison, but preserve format)
@@ -856,7 +874,6 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
 
     logger.info('Parsing district details', {
       districtId,
-      stateNameFromUrl,
       stateCode,
       district,
       normalizedDistrict,

@@ -141,7 +141,10 @@ export async function GET(
       // Enhanced response structure with all required fields
       const enhancedResponse = {
         // Legacy format (keep for backward compatibility)
-        representative,
+        representative: {
+          ...representative,
+          isHistorical: representative.isHistorical || false,
+        },
         ...additionalData,
         success: true,
 
@@ -157,6 +160,7 @@ export async function GET(
             state: representative.state,
             district: representative.district,
             chamber: representative.chamber,
+            isHistorical: representative.isHistorical || false,
           },
           contact: {
             phone: representative.phone || null,

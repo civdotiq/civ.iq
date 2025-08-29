@@ -11,22 +11,20 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { DistrictCharts } from '@/features/districts/components/DistrictCharts';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
+import NeighboringDistricts from '@/components/districts/NeighboringDistricts';
 
 // Dynamic import of the map component to avoid SSR issues
-const DistrictBoundaryMap = dynamic(
-  () => import('@/features/districts/components/DistrictBoundaryMap'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
-          <p className="text-sm text-gray-600">Loading district map...</p>
-        </div>
+const DistrictMap = dynamic(() => import('@/components/districts/DistrictMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+        <p className="text-sm text-gray-600">Loading district map...</p>
       </div>
-    ),
-  }
-);
+    </div>
+  ),
+});
 
 function CiviqLogo() {
   return (
@@ -310,13 +308,7 @@ export default function DistrictDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Interactive Map */}
             <div className="lg:col-span-3">
-              <DistrictBoundaryMap
-                districtId={district.id}
-                state={district.state}
-                district={district.number}
-                width={900}
-                height={500}
-              />
+              <DistrictMap state={district.state} district={district.number} />
             </div>
 
             {/* District Quick Stats */}
@@ -2676,6 +2668,11 @@ export default function DistrictDetailPage() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Neighboring Districts - Wikipedia-style navigation */}
+        <div className="mt-8">
+          <NeighboringDistricts currentDistrict={district.id} />
         </div>
       </main>
 

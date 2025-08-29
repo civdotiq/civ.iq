@@ -220,8 +220,6 @@ export const getCurrentMembersByState = cache(
               Accept: 'application/json',
               'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
             },
-            // Next.js fetch extension with revalidate
-            next: { revalidate: 3600 }, // Cache for 1 hour
           });
 
           if (!response.ok) {
@@ -558,53 +556,7 @@ export async function getRepresentativesByLocation(
   return validatedRepresentatives;
 }
 
-/**
- * Get bills sponsored by a specific member
- */
-export async function getBillsByMember(bioguideId: string, apiKey?: string): Promise<unknown[]> {
-  try {
-    await congressRateLimiter.waitIfNeeded();
-
-    const congressApiKey = apiKey || process.env.CONGRESS_API_KEY;
-    const url = new URL(`${CONGRESS_API_BASE}/member/${bioguideId}/sponsored-legislation`);
-
-    url.searchParams.append('format', 'json');
-    url.searchParams.append('limit', '50');
-
-    if (congressApiKey) {
-      url.searchParams.append('api_key', congressApiKey);
-    }
-
-    const response = await fetch(url.toString(), {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-      },
-      // Next.js fetch extension with revalidate
-      next: { revalidate: 1800 }, // Cache for 30 minutes
-    });
-
-    if (!response.ok) {
-      logger.error('Congress bills API error', {
-        component: 'congressApi',
-        error: new Error(`${response.status} ${response.statusText}`),
-        metadata: { status: response.status, statusText: response.statusText },
-      });
-      return [];
-    }
-
-    const data = await response.json();
-    return data.sponsoredLegislation || [];
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching member bills:', error);
-    logger.error('Error fetching member bills', {
-      component: 'congressApi',
-      error: error as Error,
-    });
-    return [];
-  }
-}
+// getBillsByMember removed - use getOptimizedBillsByMember from @/services/congress/optimized-congress.service.ts
 
 /**
  * Get voting record for a specific member using the new House Roll Call Votes API (May 2025)
@@ -634,8 +586,6 @@ export async function getVotesByMember(bioguideId: string, apiKey?: string): Pro
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
       },
-      // Next.js fetch extension with revalidate
-      next: { revalidate: 1800 }, // Cache for 30 minutes
     });
 
     if (!response.ok) {
@@ -811,8 +761,6 @@ export async function getVoteDetails(
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
       },
-      // Next.js fetch extension with revalidate
-      next: { revalidate: 3600 }, // Cache for 1 hour since votes don't change
     });
 
     if (!response.ok) {
@@ -946,8 +894,6 @@ export async function getCommitteesByMember(
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
       },
-      // Next.js fetch extension with revalidate
-      next: { revalidate: 3600 }, // Cache for 1 hour
     });
 
     if (!response.ok) {
@@ -996,8 +942,6 @@ export async function getRecentBills(limit = 20, apiKey?: string): Promise<unkno
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
       },
-      // Next.js fetch extension with revalidate
-      next: { revalidate: 1800 }, // Cache for 30 minutes
     });
 
     if (!response.ok) {
@@ -1048,8 +992,6 @@ export async function searchBills(query: string, limit = 20, apiKey?: string): P
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
       },
-      // Next.js fetch extension with revalidate
-      next: { revalidate: 1800 }, // Cache for 30 minutes
     });
 
     if (!response.ok) {
@@ -1309,7 +1251,6 @@ export async function getSenateVoteDetails(
 export const congressApi = {
   getCurrentMembersByState,
   getRepresentativesByLocation,
-  getBillsByMember,
   getVotesByMember,
   getCommitteesByMember,
   getRecentBills,

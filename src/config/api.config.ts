@@ -22,7 +22,7 @@ export const apiConfig = {
     legislation: '/api/v1/legislation',
     bills: '/api/v1/bills',
     districts: '/api/v1/districts',
-    search: '/api/v1/search',
+    search: '/api/search',
     health: '/api/health', // Keep health at root level
   },
 

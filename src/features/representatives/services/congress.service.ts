@@ -286,6 +286,57 @@ async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
 }
 
 /**
+ * Fetch historical legislators data for former members
+ */
+async function fetchHistoricalLegislators(): Promise<CongressLegislator[]> {
+  return persistentCachedFetch(
+    'congress-legislators-historical',
+    async () => {
+      try {
+        logger.info('Fetching historical legislators from congress-legislators');
+
+        // Apply rate limiting
+        await githubRateLimiter.waitIfNeeded();
+
+        const response = await fetch(
+          `${CONGRESS_LEGISLATORS_BASE_URL}/legislators-historical.yaml`,
+          {
+            signal: AbortSignal.timeout(120000), // 2 minute timeout for large historical file
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch historical legislators: ${response.status} ${response.statusText}`
+          );
+        }
+
+        const yamlText = await response.text();
+
+        // Parse YAML using same parser
+        const legislators = parseCongressLegilatorsYAML(yamlText);
+
+        logger.info('Successfully fetched historical legislators', {
+          count: legislators.length,
+        });
+
+        return legislators;
+      } catch (error) {
+        logger.error('Error fetching historical legislators', error as Error, {
+          url: `${CONGRESS_LEGISLATORS_BASE_URL}/legislators-historical.yaml`,
+          timeout: '120s',
+          errorType: error instanceof Error ? error.name : 'Unknown',
+        });
+
+        // Return empty array if historical data fails - not critical
+        return [];
+      }
+    },
+    12 * 60 * 60 * 1000 // 12 hours cache - historical data changes infrequently
+  );
+}
+
+/**
  * Fetch social media data
  */
 async function fetchSocialMediaData(): Promise<CongressLegislatorSocialMedia[]> {
@@ -526,11 +577,41 @@ export async function getEnhancedRepresentative(
       fetchCommittees(),
     ]);
 
-    // Find the legislator by bioguide ID
-    const legislator = legislators.find(l => l.id.bioguide === bioguideId);
+    // Find the legislator by bioguide ID in current data
+    let legislator = legislators.find(l => l.id.bioguide === bioguideId);
+    let isHistorical = false;
+
+    logger.info('Looking for legislator in current data', {
+      bioguideId,
+      currentCount: legislators.length,
+      found: !!legislator,
+    });
+
+    // If not found in current legislators, try historical data
     if (!legislator) {
-      logger.warn('Legislator not found in congress-legislators data', { bioguideId });
-      return null;
+      logger.info('Legislator not found in current data, checking historical', { bioguideId });
+      try {
+        const historicalLegislators = await fetchHistoricalLegislators();
+        logger.info('Historical legislators loaded', {
+          bioguideId,
+          historicalCount: historicalLegislators.length,
+        });
+        legislator = historicalLegislators.find(l => l.id.bioguide === bioguideId);
+        isHistorical = true;
+
+        if (legislator) {
+          logger.info('Found legislator in historical data', {
+            bioguideId,
+            name: `${legislator.name.first} ${legislator.name.last}`,
+          });
+        } else {
+          logger.warn('Legislator not found in current or historical data', { bioguideId });
+          return null;
+        }
+      } catch (error) {
+        logger.error('Error fetching historical legislators', error as Error, { bioguideId });
+        return null;
+      }
     }
 
     // Find social media data
@@ -591,6 +672,9 @@ export async function getEnhancedRepresentative(
         },
       ],
       committees: representativeCommittees,
+
+      // Status information
+      isHistorical,
 
       fullName: {
         first: legislator.name.first,

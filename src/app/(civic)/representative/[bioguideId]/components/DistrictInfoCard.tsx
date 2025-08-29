@@ -6,7 +6,8 @@
 'use client';
 
 import React from 'react';
-import { MapPin, ExternalLink, Phone, Globe } from 'lucide-react';
+import Link from 'next/link';
+import { MapPin, ExternalLink, Phone, Globe, Map } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
 
 interface DistrictInfoCardProps {
@@ -39,7 +40,20 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
         <div className="p-4 space-y-3">
           <div>
             <label className="text-sm font-medium text-gray-600">District</label>
-            <div className="text-gray-900 font-semibold">{getDistrictDisplay()}</div>
+            <div className="flex items-center justify-between">
+              <div className="text-gray-900 font-semibold">{getDistrictDisplay()}</div>
+              {representative.chamber === 'House' &&
+                representative.state &&
+                representative.district && (
+                  <Link
+                    href={`/districts/${representative.state}-${representative.district}`}
+                    className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    <Map className="w-3 h-3" />
+                    View District
+                  </Link>
+                )}
+            </div>
           </div>
 
           <div>

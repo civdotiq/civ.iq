@@ -8,7 +8,6 @@
 import React, { useState, useCallback } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
-import { fetcher } from '@/lib/utils/fetcher';
 
 interface Bill {
   id: string;
@@ -37,15 +36,45 @@ interface BillsResponse {
   totalBills: number;
 }
 
-interface BillsTabProps {
-  bioguideId: string;
+interface BatchApiResponse {
+  success: boolean;
+  data: {
+    bills?: BillsResponse;
+  };
 }
 
-export function BillsTab({ bioguideId }: BillsTabProps) {
-  const { data, error, isLoading } = useSWR<BillsResponse>(
-    `/api/representative/${bioguideId}/bills`,
-    fetcher
+interface BillsTabProps {
+  bioguideId: string;
+  sharedData?: BillsResponse;
+  sharedLoading?: boolean;
+  sharedError?: Error | null;
+}
+
+export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }: BillsTabProps) {
+  // Use shared data if available, otherwise fetch individually
+  const {
+    data: batchData,
+    error: fetchError,
+    isLoading: fetchLoading,
+  } = useSWR<BatchApiResponse>(
+    sharedData ? null : `/api/representative/${bioguideId}/batch`,
+    sharedData
+      ? null
+      : () =>
+          fetch(`/api/representative/${bioguideId}/batch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoints: ['bills'] }),
+          }).then(res => res.json()),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000, // Cache for 1 minute
+    }
   );
+
+  const data: BillsResponse | undefined = sharedData || batchData?.data?.bills;
+  const error = sharedError || fetchError;
+  const isLoading = sharedLoading || fetchLoading;
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);

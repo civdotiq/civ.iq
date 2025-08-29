@@ -209,21 +209,69 @@ async function performSearch(filters: SearchFilters): Promise<{
 
     // Apply filters
     const filtered = representatives.filter(rep => {
-      // Text search across multiple fields
+      // Text search across multiple fields with enhanced name matching
       if (filters.query) {
         const searchTerm = filters.query.toLowerCase();
-        const searchableText = [
-          rep.name,
-          rep.state,
-          rep.party,
-          rep.district,
-          ...(rep.committees || []),
-        ]
+
+        // Common nickname mappings for flexible name matching
+        const nicknameMap: { [key: string]: string[] } = {
+          bernard: ['bernie'],
+          bernie: ['bernard'],
+          william: ['bill', 'billy'],
+          bill: ['william'],
+          robert: ['bob', 'bobby'],
+          bob: ['robert'],
+          richard: ['rick', 'dick'],
+          rick: ['richard'],
+          elizabeth: ['liz', 'beth'],
+          liz: ['elizabeth'],
+          charles: ['chuck', 'charlie'],
+          chuck: ['charles'],
+          thomas: ['tom', 'tommy'],
+          tom: ['thomas'],
+          michael: ['mike'],
+          mike: ['michael'],
+          joseph: ['joe'],
+          joe: ['joseph'],
+          alexandra: ['alex'],
+          alex: ['alexandra', 'alexander'],
+        };
+
+        // Function to check if a search word matches a name considering nicknames
+        const nameMatches = (searchWord: string, repName: string): boolean => {
+          const searchLower = searchWord.toLowerCase();
+          const nameLower = repName.toLowerCase();
+
+          // Direct match
+          if (nameLower.includes(searchLower)) return true;
+
+          // Check nickname equivalents
+          for (const [formal, nicknames] of Object.entries(nicknameMap)) {
+            if (searchLower === formal && nameLower.includes(formal)) return true;
+            if (nicknames.includes(searchLower) && nameLower.includes(formal)) return true;
+            if (searchLower === formal && nicknames.some(nick => nameLower.includes(nick)))
+              return true;
+          }
+
+          return false;
+        };
+
+        // Build searchable text for non-name fields
+        const searchableText = [rep.state, rep.party, rep.district, ...(rep.committees || [])]
           .filter(Boolean)
           .join(' ')
           .toLowerCase();
 
-        if (!searchableText.includes(searchTerm)) {
+        // Check if search term matches
+        const searchWords = searchTerm.split(' ').filter(word => word.length > 0);
+        const matchesAll = searchWords.every(word => {
+          // Check name with nickname support
+          if (rep.name && nameMatches(word, rep.name)) return true;
+          // Check other fields
+          return searchableText.includes(word.toLowerCase());
+        });
+
+        if (!matchesAll) {
           return false;
         }
       }

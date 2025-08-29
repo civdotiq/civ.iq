@@ -39,6 +39,9 @@ export interface BaseRepresentative {
 
 // Enhanced representative with congress-legislators data
 export interface EnhancedRepresentative extends BaseRepresentative {
+  // Status information
+  isHistorical?: boolean;
+
   // Enhanced name information
   fullName?: {
     first: string;

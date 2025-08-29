@@ -323,7 +323,7 @@ async function getMemberInfo(bioguideId: string): Promise<{
 /**
  * Safely fetch Senate votes from XML feed with member position lookup
  */
-async function getSenateVotes(bioguideId: string, limit: number = 10): Promise<Vote[]> {
+async function getSenateVotes(bioguideId: string, limit: number = 3): Promise<Vote[]> {
   try {
     logger.info('Fetching Senate votes from XML feed', { bioguideId, limit });
 

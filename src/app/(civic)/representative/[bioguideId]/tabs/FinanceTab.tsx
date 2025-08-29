@@ -7,7 +7,6 @@
 
 import React from 'react';
 import useSWR from 'swr';
-import { fetcher } from '@/lib/utils/fetcher';
 
 interface FinanceData {
   totalRaised: number;
@@ -19,15 +18,50 @@ interface FinanceData {
   candidateContributions: number;
 }
 
-interface FinanceTabProps {
-  bioguideId: string;
+interface BatchApiResponse {
+  success: boolean;
+  data: {
+    finance?: FinanceData;
+  };
 }
 
-export function FinanceTab({ bioguideId }: FinanceTabProps) {
-  const { data, error, isLoading } = useSWR<FinanceData>(
-    `/api/representative/${bioguideId}/finance`,
-    fetcher
+interface FinanceTabProps {
+  bioguideId: string;
+  sharedData?: FinanceData;
+  sharedLoading?: boolean;
+  sharedError?: Error | null;
+}
+
+export function FinanceTab({
+  bioguideId,
+  sharedData,
+  sharedLoading,
+  sharedError,
+}: FinanceTabProps) {
+  // Use shared data if available, otherwise fetch individually
+  const {
+    data: batchData,
+    error: fetchError,
+    isLoading: fetchLoading,
+  } = useSWR<BatchApiResponse>(
+    sharedData ? null : `/api/representative/${bioguideId}/batch`,
+    sharedData
+      ? null
+      : () =>
+          fetch(`/api/representative/${bioguideId}/batch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoints: ['finance'] }),
+          }).then(res => res.json()),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000, // Cache for 1 minute
+    }
   );
+
+  const data: FinanceData | undefined = sharedData || batchData?.data?.finance;
+  const error = sharedError || fetchError;
+  const isLoading = sharedLoading || fetchLoading;
 
   if (isLoading) {
     return (

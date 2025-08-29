@@ -8,7 +8,6 @@
 import React from 'react';
 import useSWR from 'swr';
 import { useRouter } from 'next/navigation';
-import { fetcher } from '@/lib/utils/fetcher';
 
 interface Vote {
   voteId: string;
@@ -43,16 +42,47 @@ interface VoteResponse {
   error?: string;
 }
 
-interface VotingTabProps {
-  bioguideId: string;
+interface BatchApiResponse {
+  success: boolean;
+  data: {
+    votes?: VoteResponse;
+  };
 }
 
-export function VotingTab({ bioguideId }: VotingTabProps) {
+interface VotingTabProps {
+  bioguideId: string;
+  sharedData?: VoteResponse;
+  sharedLoading?: boolean;
+  sharedError?: Error | null;
+}
+
+export function VotingTab({ bioguideId, sharedData, sharedLoading, sharedError }: VotingTabProps) {
   const router = useRouter();
-  const { data, error, isLoading } = useSWR<VoteResponse>(
-    `/api/representative/${bioguideId}/votes`,
-    fetcher
+
+  // Use shared data if available, otherwise fetch individually
+  const {
+    data: batchData,
+    error: fetchError,
+    isLoading: fetchLoading,
+  } = useSWR<BatchApiResponse>(
+    sharedData ? null : `/api/representative/${bioguideId}/batch`,
+    sharedData
+      ? null
+      : () =>
+          fetch(`/api/representative/${bioguideId}/batch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoints: ['votes'] }),
+          }).then(res => res.json()),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000, // Cache for 1 minute
+    }
   );
+
+  const data: VoteResponse | undefined = sharedData || batchData?.data?.votes;
+  const error = sharedError || fetchError;
+  const isLoading = sharedLoading || fetchLoading;
 
   if (isLoading) {
     return (

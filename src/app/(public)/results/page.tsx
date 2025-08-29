@@ -742,17 +742,23 @@ function ResultsContent() {
         }
 
         // Fallback to original search system for non-ZIP or failed cases
-        let response;
-        if (query) {
-          // New search system
-          response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
-        } else {
-          // Legacy ZIP/address endpoints
-          response = await fetch(
-            `/api/representatives-search?q=${encodeURIComponent(searchQuery)}`
-          );
-        }
-        const apiData: ApiResponse = await response.json();
+        // Use unified search endpoint for all search types
+        const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+        const searchData = await response.json();
+
+        // Convert unified search response to legacy format
+        const apiData: ApiResponse = {
+          success: response.ok && searchData.results && searchData.results.length > 0,
+          representatives: searchData.results || [],
+          error: !response.ok ? { code: 'SEARCH_ERROR', message: 'Search failed' } : undefined,
+          metadata: {
+            timestamp: new Date().toISOString(),
+            zipCode: searchQuery,
+            dataQuality: 'high',
+            dataSource: 'unified-search',
+            cacheable: true,
+          },
+        };
 
         setData(apiData);
 
