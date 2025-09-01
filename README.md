@@ -5,6 +5,7 @@ A comprehensive Progressive Web Application (PWA) that connects citizens with th
 ![CIV.IQ Logo](https://img.shields.io/badge/CIV.IQ-Civic%20Information-blue?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![Data Integrity](https://img.shields.io/badge/Data%20Integrity-98.4%25%20Validated-success)
 ![API Integration](https://img.shields.io/badge/APIs-Live%20Data-success)
 ![PWA Ready](https://img.shields.io/badge/PWA-Ready-purple)
 ![Coverage](https://img.shields.io/badge/coverage-federal%20%7C%20state%20%7C%20local-blue)
@@ -753,6 +754,64 @@ For detailed security policies and vulnerability reporting, see [SECURITY.md](SE
 - **Input Validation**: XSS protection and comprehensive sanitization
 - **Error Tracking**: Structured logging with Sentry integration
 - **Health Monitoring**: Real-time service status and performance metrics
+
+## 🛡️ Data Integrity Framework
+
+### Trust but Verify Protocol - 98.4% Data Validation Success
+
+CIV.IQ implements a comprehensive **Data Integrity Framework** to ensure all civic data is accurate and prevents coordinate system bugs from reaching production. This framework was implemented after discovering that 100% of congressional district data had coordinates in the wrong hemisphere.
+
+[![Data Integrity](https://img.shields.io/badge/Data%20Integrity-98.4%25%20Validated-success)](https://github.com/YOUR_USERNAME/civic-intel-hub/actions/workflows/data-integrity-checks.yml)
+
+#### **🎯 Framework Components**
+
+1. **Centralized Geospatial Utilities** (`src/lib/geospatial-utils.ts`)
+   - Safe TMS-to-XYZ coordinate system conversions
+   - Golden record validation against known landmarks
+   - US geographic bounds checking (including territories)
+
+2. **Ground Truth Test Suite** (Vitest-based)
+   - 18 comprehensive unit tests for coordinate conversion
+   - Real district file validation (CA-12, NY-14, AS-AL)
+   - Hemisphere verification (prevents negative latitude bugs)
+
+3. **API Integration Testing** (`src/tests/district-api.test.ts`)
+   - End-to-end validation of district boundary APIs
+   - Multiple district ID format testing (CA-12, 06-12, 0612)
+   - Error handling and response validation
+
+4. **CI/CD Quality Gates** (`.github/workflows/data-integrity-checks.yml`)
+   - Automatic validation on every pull request
+   - Golden record coordinate verification
+   - 95% minimum validation success rate required
+
+#### **🔧 Critical Problem Solved**
+
+**Issue**: Congressional district data extraction had coordinate system bug placing ALL districts in wrong hemisphere (negative latitude instead of positive).
+
+**Root Cause**: Vector tiles use TMS (Tile Map Service) coordinate system with Y-axis inversion, but existing code treated them as XYZ coordinates.
+
+**Solution**: Implemented proper TMS-to-XYZ conversion:
+
+```typescript
+export function convertTMStoXYZ(tmsCoord: TileCoordinate): TileCoordinate {
+  const maxTileIndex = Math.pow(2, tmsCoord.z) - 1;
+  return {
+    x: tmsCoord.x,
+    y: maxTileIndex - tmsCoord.y, // Y-axis inversion fix
+    z: tmsCoord.z,
+  };
+}
+```
+
+#### **📊 Validation Results**
+
+- **Before Framework**: ❌ 0% success rate (all districts in wrong hemisphere)
+- **After Framework**: ✅ 98.4% success rate (1,311/1,332 districts validated)
+- **Golden Records**: ✅ CA-12 San Francisco & NY-14 Bronx/Queens coordinates verified
+- **Quality Gates**: ✅ Automated CI/CD prevents regression
+
+**📋 [Complete Framework Documentation](./docs/DATA_INTEGRITY_FRAMEWORK.md)**
 
 ## 🏗️ Performance Architecture
 

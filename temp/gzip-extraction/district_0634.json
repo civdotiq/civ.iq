@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-118.1854248046875, -29.70236803854177],
+        [-118.125, -29.8501731256899],
+        [-118.2403564453125, -29.84064389983441],
+        [-118.3282470703125, -29.807284450222504],
+        [-118.1854248046875, -29.70236803854177]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "06",
+    "CD119FP": "34",
+    "GEOID": "0634",
+    "GEOIDFQ": "5001900US0634",
+    "NAMELSAD": "Congressional District 34",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 128664516,
+    "AWATER": 962989,
+    "INTPTLAT": "+34.0713045",
+    "INTPTLON": "-118.2166365",
+    "id": "06-34",
+    "state_fips": "06",
+    "state_name": "California",
+    "state_abbr": "CA",
+    "district_num": "34",
+    "name": "CA-34",
+    "full_name": "California Congressional District 34",
+    "geoid": "0634"
+  }
+}

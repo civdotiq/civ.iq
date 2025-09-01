@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-88.0609130859375, -54.06261195424756],
+        [-87.12158203125, -54.06583577161279],
+        [-87.099609375, -54.184941166684546],
+        [-87.879638671875, -54.184941166684546],
+        [-87.9290771484375, -54.28126193082709],
+        [-88.06640625, -54.1913695455611],
+        [-88.0609130859375, -54.06261195424756]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "55",
+    "CD119FP": "04",
+    "GEOID": "5504",
+    "GEOIDFQ": "5001900US5504",
+    "NAMELSAD": "Congressional District 4",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 362528483,
+    "AWATER": 1056839430,
+    "INTPTLAT": "+43.0725822",
+    "INTPTLON": "-087.8653685",
+    "id": "55-04",
+    "state_fips": "55",
+    "state_name": "Wisconsin",
+    "state_abbr": "WI",
+    "district_num": "04",
+    "name": "WI-04",
+    "full_name": "Wisconsin Congressional District 04",
+    "geoid": "5504"
+  }
+}

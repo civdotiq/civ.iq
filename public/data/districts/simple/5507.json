@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-92.7850341796875, 45.08346036174581],
+        [-92.7850341796875, 45.04223546457868],
+        [-92.79842376708984, 45.05218065994231],
+        [-92.80323028564453, 45.06260912911284],
+        [-92.7850341796875, 45.08346036174581]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "55",
+    "CD119FP": "07",
+    "GEOID": "5507",
+    "GEOIDFQ": "5001900US5507",
+    "NAMELSAD": "Congressional District 7",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 59856019689,
+    "AWATER": 7699965275,
+    "INTPTLAT": "+45.6989971",
+    "INTPTLON": "-090.6553345",
+    "id": "55-07",
+    "state_fips": "55",
+    "state_name": "Wisconsin",
+    "state_abbr": "WI",
+    "district_num": "07",
+    "name": "WI-07",
+    "full_name": "Wisconsin Congressional District 07",
+    "geoid": "5507"
+  }
+}

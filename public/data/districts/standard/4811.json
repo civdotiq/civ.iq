@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-102.6287841796875, 31.97546376218868],
+        [-102.6287841796875, 31.65133563062288],
+        [-102.65625, 31.65133563062288],
+        [-102.799072265625, 31.651627886099945],
+        [-102.79838562011719, 31.952162238024968],
+        [-102.79838562011719, 31.97546376218868],
+        [-102.6287841796875, 31.97546376218868]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "48",
+    "CD119FP": "11",
+    "GEOID": "4811",
+    "GEOIDFQ": "5001900US4811",
+    "NAMELSAD": "Congressional District 11",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 49742610173,
+    "AWATER": 359707433,
+    "INTPTLAT": "+31.3938385",
+    "INTPTLON": "-099.9805848",
+    "id": "48-11",
+    "state_fips": "48",
+    "state_name": "Texas",
+    "state_abbr": "TX",
+    "district_num": "11",
+    "name": "TX-11",
+    "full_name": "Texas Congressional District 11",
+    "geoid": "4811"
+  }
+}

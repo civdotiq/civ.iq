@@ -1,0 +1,39 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-93.22998046875, -52.45266189398768],
+        [-92.8125, -52.47274306920923],
+        [-92.7685546875, -52.67638208083924],
+        [-93.0926513671875, -52.62639458973132],
+        [-93.1805419921875, -52.656393941988014],
+        [-93.22998046875, -52.45266189398768]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "27",
+    "CD119FP": "04",
+    "GEOID": "2704",
+    "GEOIDFQ": "5001900US2704",
+    "NAMELSAD": "Congressional District 4",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 785260373,
+    "AWATER": 79782209,
+    "INTPTLAT": "+45.0016036",
+    "INTPTLON": "-092.9900225",
+    "id": "27-04",
+    "state_fips": "27",
+    "state_name": "Minnesota",
+    "state_abbr": "MN",
+    "district_num": "04",
+    "name": "MN-04",
+    "full_name": "Minnesota Congressional District 04",
+    "geoid": "2704"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-122.31697082519531, 47.80669847646382],
+        [-122.3162841796875, 47.77763635966164],
+        [-122.3272705078125, 47.77763635966164],
+        [-122.33345031738281, 47.78571080019046],
+        [-122.33001708984375, 47.802317134383514],
+        [-122.31697082519531, 47.80669847646382]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "53",
+    "CD119FP": "01",
+    "GEOID": "5301",
+    "GEOIDFQ": "5001900US5301",
+    "NAMELSAD": "Congressional District 1",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 860121484,
+    "AWATER": 44768979,
+    "INTPTLAT": "+47.8728586",
+    "INTPTLON": "-122.1268855",
+    "id": "53-01",
+    "state_fips": "53",
+    "state_name": "Washington",
+    "state_abbr": "WA",
+    "district_num": "01",
+    "name": "WA-01",
+    "full_name": "Washington Congressional District 01",
+    "geoid": "5301"
+  }
+}

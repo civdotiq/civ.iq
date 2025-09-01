@@ -1,0 +1,39 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-73.729248046875, -22.25859674097572],
+        [-73.7677001953125, -22.487181821139302],
+        [-74.0423583984375, -22.517631421923767],
+        [-73.85009765625, -22.421184710331858],
+        [-73.8555908203125, -22.278930598411876],
+        [-73.729248046875, -22.25859674097572]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "36",
+    "CD119FP": "05",
+    "GEOID": "3605",
+    "GEOIDFQ": "5001900US3605",
+    "NAMELSAD": "Congressional District 5",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 121993322,
+    "AWATER": 169482950,
+    "INTPTLAT": "+40.6697044",
+    "INTPTLON": "-073.8041084",
+    "id": "36-05",
+    "state_fips": "36",
+    "state_name": "New York",
+    "state_abbr": "NY",
+    "district_num": "05",
+    "name": "NY-05",
+    "full_name": "New York Congressional District 05",
+    "geoid": "3605"
+  }
+}

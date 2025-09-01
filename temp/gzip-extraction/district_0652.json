@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-117.0703125, -31.13760327002128],
+        [-116.8505859375, -31.344254455668057],
+        [-117.125244140625, -31.367708915120822],
+        [-117.1746826171875, -31.198706347135243],
+        [-117.0703125, -31.13760327002128]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "06",
+    "CD119FP": "52",
+    "GEOID": "0652",
+    "GEOIDFQ": "5001900US0652",
+    "NAMELSAD": "Congressional District 52",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 350386820,
+    "AWATER": 20741861,
+    "INTPTLAT": "+32.6286787",
+    "INTPTLON": "-117.0353225",
+    "id": "06-52",
+    "state_fips": "06",
+    "state_name": "California",
+    "state_abbr": "CA",
+    "district_num": "52",
+    "name": "CA-52",
+    "full_name": "California Congressional District 52",
+    "geoid": "0652"
+  }
+}

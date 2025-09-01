@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-122.3162841796875, 37.18685211021446],
+        [-122.3162841796875, 37.17727849703162],
+        [-122.31765747070312, 37.18685211021446],
+        [-122.3162841796875, 37.18685211021446]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "06",
+    "CD119FP": "19",
+    "GEOID": "0619",
+    "GEOIDFQ": "5001900US0619",
+    "NAMELSAD": "Congressional District 19",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 7294858202,
+    "AWATER": 1988282455,
+    "INTPTLAT": "+36.8677125",
+    "INTPTLON": "-121.7525021",
+    "id": "06-19",
+    "state_fips": "06",
+    "state_name": "California",
+    "state_abbr": "CA",
+    "district_num": "19",
+    "name": "CA-19",
+    "full_name": "California Congressional District 19",
+    "geoid": "0619"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-70.7354736328125, -54.21707306629117],
+        [-70.587158203125, -54.25559837127026],
+        [-70.8123779296875, -54.3197273165176],
+        [-70.7354736328125, -54.21707306629117]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "33",
+    "CD119FP": "ZZ",
+    "GEOID": "33ZZ",
+    "GEOIDFQ": "5001900US33ZZ",
+    "NAMELSAD": "Congressional Districts not defined",
+    "LSAD": "00",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "F",
+    "ALAND": 0,
+    "AWATER": 131522062,
+    "INTPTLAT": "+42.9043288",
+    "INTPTLON": "-070.7543495",
+    "id": "33-ZZ",
+    "state_fips": "33",
+    "state_name": "New Hampshire",
+    "state_abbr": "NH",
+    "district_num": "ZZ",
+    "name": "NH-ZZ",
+    "full_name": "New Hampshire Congressional District ZZ",
+    "geoid": "33ZZ"
+  }
+}

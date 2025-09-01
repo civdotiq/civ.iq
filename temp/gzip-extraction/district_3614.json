@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-73.8226318359375, -22.050004767036484],
+        [-73.7457275390625, -22.075459351546854],
+        [-73.85009765625, -22.223005383742787],
+        [-73.93798828125, -22.20774917841085],
+        [-73.8226318359375, -22.050004767036484]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "36",
+    "CD119FP": "14",
+    "GEOID": "3614",
+    "GEOIDFQ": "5001900US3614",
+    "NAMELSAD": "Congressional District 14",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 75966983,
+    "AWATER": 45061606,
+    "INTPTLAT": "+40.8187450",
+    "INTPTLON": "-073.8437344",
+    "id": "36-14",
+    "state_fips": "36",
+    "state_name": "New York",
+    "state_abbr": "NY",
+    "district_num": "14",
+    "name": "NY-14",
+    "full_name": "New York Congressional District 14",
+    "geoid": "3614"
+  }
+}

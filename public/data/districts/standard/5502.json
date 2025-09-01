@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-89.9725341796875, 43.0889491834659],
+        [-89.9725341796875, 42.50627456887963],
+        [-90, 42.50678076419689],
+        [-90.42640686035156, 42.50703386031847],
+        [-90.42915344238281, 43.06888777416961],
+        [-90.42949676513672, 43.0889491834659],
+        [-89.9725341796875, 43.0889491834659]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "55",
+    "CD119FP": "02",
+    "GEOID": "5502",
+    "GEOIDFQ": "5001900US5502",
+    "NAMELSAD": "Congressional District 2",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 11139291949,
+    "AWATER": 174477558,
+    "INTPTLAT": "+42.9614077",
+    "INTPTLON": "-089.7339555",
+    "id": "55-02",
+    "state_fips": "55",
+    "state_name": "Wisconsin",
+    "state_abbr": "WI",
+    "district_num": "02",
+    "name": "WI-02",
+    "full_name": "Wisconsin Congressional District 02",
+    "geoid": "5502"
+  }
+}

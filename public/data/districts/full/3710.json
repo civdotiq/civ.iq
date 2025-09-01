@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-81.5350341796875, 35.56881825654513],
+        [-81.5350341796875, 35.5635120512197],
+        [-81.53743743896484, 35.5643498964733],
+        [-81.5350341796875, 35.56881825654513]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "37",
+    "CD119FP": "10",
+    "GEOID": "3710",
+    "GEOIDFQ": "5001900US3710",
+    "NAMELSAD": "Congressional District 10",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 4848300510,
+    "AWATER": 134707784,
+    "INTPTLAT": "+35.8333254",
+    "INTPTLON": "-080.8825810",
+    "id": "37-10",
+    "state_fips": "37",
+    "state_name": "North Carolina",
+    "state_abbr": "NC",
+    "district_num": "10",
+    "name": "NC-10",
+    "full_name": "North Carolina Congressional District 10",
+    "geoid": "3710"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-123.7225341796875, 45.10842333769409],
+        [-123.7225341796875, 44.738929943073686],
+        [-123.72425079345703, 45.0766724235624],
+        [-123.78433227539062, 45.0766724235624],
+        [-123.78433227539062, 45.10842333769409],
+        [-123.7225341796875, 45.10842333769409]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "41",
+    "CD119FP": "06",
+    "GEOID": "4106",
+    "GEOIDFQ": "5001900US4106",
+    "NAMELSAD": "Congressional District 6",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 4908107109,
+    "AWATER": 30573990,
+    "INTPTLAT": "+45.0647035",
+    "INTPTLON": "-123.2628219",
+    "id": "41-06",
+    "state_fips": "41",
+    "state_name": "Oregon",
+    "state_abbr": "OR",
+    "district_num": "06",
+    "name": "OR-06",
+    "full_name": "Oregon Congressional District 06",
+    "geoid": "4106"
+  }
+}

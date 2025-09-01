@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-112.115478515625, -30.168875561169088],
+        [-112.060546875, -30.35865642078877],
+        [-112.0989990234375, -30.35865642078877],
+        [-112.115478515625, -30.168875561169088]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "04",
+    "CD119FP": "01",
+    "GEOID": "0401",
+    "GEOIDFQ": "5001900US0401",
+    "NAMELSAD": "Congressional District 1",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 4137523551,
+    "AWATER": 43192669,
+    "INTPTLAT": "+33.6988663",
+    "INTPTLON": "-111.6614783",
+    "id": "04-01",
+    "state_fips": "04",
+    "state_name": "Arizona",
+    "state_abbr": "AZ",
+    "district_num": "01",
+    "name": "AZ-01",
+    "full_name": "Arizona Congressional District 01",
+    "geoid": "0401"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-81.5350341796875, 25.824616618232156],
+        [-81.5350341796875, 25.803291235558405],
+        [-81.62498474121094, 25.80236395792228],
+        [-81.62464141845703, 25.824616618232156],
+        [-81.5350341796875, 25.824616618232156]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "12",
+    "CD119FP": "26",
+    "GEOID": "1226",
+    "GEOIDFQ": "5001900US1226",
+    "NAMELSAD": "Congressional District 26",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 5958663591,
+    "AWATER": 360952933,
+    "INTPTLAT": "+26.0228152",
+    "INTPTLON": "-081.0812485",
+    "id": "12-26",
+    "state_fips": "12",
+    "state_name": "Florida",
+    "state_abbr": "FL",
+    "district_num": "26",
+    "name": "FL-26",
+    "full_name": "Florida Congressional District 26",
+    "geoid": "1226"
+  }
+}

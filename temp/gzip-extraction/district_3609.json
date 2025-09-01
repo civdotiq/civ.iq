@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-73.927001953125, -22.31450773451182],
+        [-73.916015625, -22.370396344320042],
+        [-73.9764404296875, -22.41102852155869],
+        [-73.927001953125, -22.31450773451182]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "36",
+    "CD119FP": "09",
+    "GEOID": "3609",
+    "GEOIDFQ": "5001900US3609",
+    "NAMELSAD": "Congressional District 9",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 39383003,
+    "AWATER": 0,
+    "INTPTLAT": "+40.6389234",
+    "INTPTLON": "-073.9510159",
+    "id": "36-09",
+    "state_fips": "36",
+    "state_name": "New York",
+    "state_abbr": "NY",
+    "district_num": "09",
+    "name": "NY-09",
+    "full_name": "New York Congressional District 09",
+    "geoid": "3609"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-78.72459411621094, 38.232786699509944],
+        [-78.7225341796875, 38.22847167526396],
+        [-78.72631072998047, 38.230089839357106],
+        [-78.72459411621094, 38.232786699509944]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "51",
+    "CD119FP": "07",
+    "GEOID": "5107",
+    "GEOIDFQ": "5001900US5107",
+    "NAMELSAD": "Congressional District 7",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 7054540711,
+    "AWATER": 151180786,
+    "INTPTLAT": "+38.2880970",
+    "INTPTLON": "-077.7322133",
+    "id": "51-07",
+    "state_fips": "51",
+    "state_name": "Virginia",
+    "state_abbr": "VA",
+    "district_num": "07",
+    "name": "VA-07",
+    "full_name": "Virginia Congressional District 07",
+    "geoid": "5107"
+  }
+}

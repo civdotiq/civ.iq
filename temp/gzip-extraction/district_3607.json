@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-73.93798828125, -22.2026634080092],
+        [-73.8555908203125, -22.278930598411876],
+        [-73.85009765625, -22.319589442833916],
+        [-73.992919921875, -22.294179051660393],
+        [-73.93798828125, -22.2026634080092]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "36",
+    "CD119FP": "07",
+    "GEOID": "3607",
+    "GEOIDFQ": "5001900US3607",
+    "NAMELSAD": "Congressional District 7",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 56842677,
+    "AWATER": 1201683,
+    "INTPTLAT": "+40.7123918",
+    "INTPTLON": "-073.9199105",
+    "id": "36-07",
+    "state_fips": "36",
+    "state_name": "New York",
+    "state_abbr": "NY",
+    "district_num": "07",
+    "name": "NY-07",
+    "full_name": "New York Congressional District 07",
+    "geoid": "3607"
+  }
+}

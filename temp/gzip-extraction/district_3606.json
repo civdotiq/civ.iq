@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-73.828125, -22.18740499139878],
+        [-73.7347412109375, -22.233175265402792],
+        [-73.8116455078125, -22.278930598411876],
+        [-73.916015625, -22.25859674097572],
+        [-73.828125, -22.18740499139878]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "36",
+    "CD119FP": "06",
+    "GEOID": "3606",
+    "GEOIDFQ": "5001900US3606",
+    "NAMELSAD": "Congressional District 6",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 66826735,
+    "AWATER": 796953,
+    "INTPTLAT": "+40.7363880",
+    "INTPTLON": "-073.8314807",
+    "id": "36-06",
+    "state_fips": "36",
+    "state_name": "New York",
+    "state_abbr": "NY",
+    "district_num": "06",
+    "name": "NY-06",
+    "full_name": "New York Congressional District 06",
+    "geoid": "3606"
+  }
+}

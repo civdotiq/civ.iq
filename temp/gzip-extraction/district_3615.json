@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-73.916015625, -22.019453218696597],
+        [-73.85009765625, -22.02963780070074],
+        [-73.828125, -22.085639901650325],
+        [-73.9324951171875, -22.151795575397756],
+        [-73.916015625, -22.019453218696597]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "36",
+    "CD119FP": "15",
+    "GEOID": "3615",
+    "GEOIDFQ": "5001900US3615",
+    "NAMELSAD": "Congressional District 15",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 48167602,
+    "AWATER": 3175634,
+    "INTPTLAT": "+40.8627545",
+    "INTPTLON": "-073.8787941",
+    "id": "36-15",
+    "state_fips": "36",
+    "state_name": "New York",
+    "state_abbr": "NY",
+    "district_num": "15",
+    "name": "NY-15",
+    "full_name": "New York Congressional District 15",
+    "geoid": "3615"
+  }
+}

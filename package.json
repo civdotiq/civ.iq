@@ -12,8 +12,10 @@
     "lint:fix": "next lint --fix",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:unit": "jest",
+    "test:unit:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --watchAll=false",
     "test:e2e": "playwright test",
@@ -32,6 +34,7 @@
     "test-district-accuracy": "node scripts/test-district-accuracy.mjs",
     "migrate:119th": "npx tsx src/scripts/migrate-119th.ts",
     "validate:data": "npx tsx src/scripts/validate-data.ts",
+    "validate-districts": "npx tsx scripts/validate-data.ts",
     "validate:all": "node scripts/validation/validate-all.js",
     "diagnose:apis": "tsx scripts/diagnose-apis.ts",
     "security:audit": "npm audit --audit-level=moderate",
@@ -46,6 +49,8 @@
     "emergency:diagnose": "node emergency-diagnose.js"
   },
   "dependencies": {
+    "@mapbox/mbtiles": "0.12.1",
+    "@mapbox/vector-tile": "2.0.4",
     "@redis/client": "^5.5.6",
     "@sentry/nextjs": "^9.35.0",
     "@types/d3": "^7.4.3",
@@ -70,6 +75,8 @@
     "lucide-react": "^0.525.0",
     "maplibre-gl": "5.7.0",
     "next": "14.2.32",
+    "pbf": "4.0.1",
+    "pmtiles": "4.3.0",
     "qrcode": "1.5.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -79,6 +86,7 @@
     "react-window-infinite-loader": "1.0.10",
     "recharts": "^3.0.0",
     "redis": "^5.5.6",
+    "sqlite3": "5.1.7",
     "swr": "2.3.4",
     "tailwind-merge": "^3.3.1",
     "zustand": "5.0.6"
@@ -90,8 +98,10 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/bcryptjs": "^3.0.0",
     "@types/jest": "^30.0.0",
+    "@types/mapbox__vector-tile": "2.0.0",
     "@types/node": "^20",
     "@types/papaparse": "5.3.16",
+    "@types/pbf": "3.0.5",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/react-window": "1.8.8",
@@ -106,6 +116,7 @@
     "jest": "^30.0.4",
     "jest-environment-jsdom": "^30.0.4",
     "lint-staged": "15.5.2",
+    "mapshaper": "0.6.111",
     "msw": "^2.10.3",
     "npm-audit-resolver": "^3.0.0-RC.0",
     "papaparse": "5.5.3",
@@ -114,7 +125,8 @@
     "supertest": "^7.1.1",
     "tailwindcss": "^3.4.1",
     "terser-webpack-plugin": "5.3.14",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "vitest": "2.1.9"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

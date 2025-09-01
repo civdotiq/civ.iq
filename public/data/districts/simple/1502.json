@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-178.29540252685547, 28.3285599713617],
+        [-178.30123901367188, 28.328257764192713],
+        [-178.3029556274414, 28.3285599713617],
+        [-178.29540252685547, 28.3285599713617]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "15",
+    "CD119FP": "02",
+    "GEOID": "1502",
+    "GEOIDFQ": "5001900US1502",
+    "NAMELSAD": "Congressional District 2",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 16108396523,
+    "AWATER": 11401493885,
+    "INTPTLAT": "+19.8281671",
+    "INTPTLON": "-155.4950421",
+    "id": "15-02",
+    "state_fips": "15",
+    "state_name": "Hawaii",
+    "state_abbr": "HI",
+    "district_num": "02",
+    "name": "HI-02",
+    "full_name": "Hawaii Congressional District 02",
+    "geoid": "1502"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-80.35400390625, -37.7359692085905],
+        [-80.09033203125, -37.78808138412045],
+        [-80.1123046875, -37.94419750075404],
+        [-80.3594970703125, -37.9312004593337],
+        [-80.35400390625, -37.7359692085905]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "12",
+    "CD119FP": "27",
+    "GEOID": "1227",
+    "GEOIDFQ": "5001900US1227",
+    "NAMELSAD": "Congressional District 27",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 308813769,
+    "AWATER": 418178101,
+    "INTPTLAT": "+25.6912633",
+    "INTPTLON": "-080.2501523",
+    "id": "12-27",
+    "state_fips": "12",
+    "state_name": "Florida",
+    "state_abbr": "FL",
+    "district_num": "27",
+    "name": "FL-27",
+    "full_name": "Florida Congressional District 27",
+    "geoid": "1227"
+  }
+}

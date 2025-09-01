@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-97.0037841796875, 41.00062984868538],
+        [-97.0037841796875, 40.698079890025554],
+        [-97.03125, 40.698079890025554],
+        [-97.36839294433594, 40.69860047253292],
+        [-97.36804962158203, 40.979898069620134],
+        [-97.36804962158203, 41.00062984868538],
+        [-97.0037841796875, 41.00062984868538]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "31",
+    "CD119FP": "01",
+    "GEOID": "3101",
+    "GEOIDFQ": "5001900US3101",
+    "NAMELSAD": "Congressional District 1",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 15494091149,
+    "AWATER": 184039489,
+    "INTPTLAT": "+41.3776094",
+    "INTPTLON": "-096.9798487",
+    "id": "31-01",
+    "state_fips": "31",
+    "state_name": "Nebraska",
+    "state_abbr": "NE",
+    "district_num": "01",
+    "name": "NE-01",
+    "full_name": "Nebraska Congressional District 01",
+    "geoid": "3101"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-94.1912841796875, 36.61993662562922],
+        [-94.1912841796875, 36.49887343713958],
+        [-94.21875, 36.49887343713958],
+        [-94.61769104003906, 36.49942540790511],
+        [-94.61769104003906, 36.61993662562922],
+        [-94.1912841796875, 36.61993662562922]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "29",
+    "CD119FP": "07",
+    "GEOID": "2907",
+    "GEOIDFQ": "5001900US2907",
+    "NAMELSAD": "Congressional District 7",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 14958523496,
+    "AWATER": 231543808,
+    "INTPTLAT": "+36.9180924",
+    "INTPTLON": "-093.7105470",
+    "id": "29-07",
+    "state_fips": "29",
+    "state_name": "Missouri",
+    "state_abbr": "MO",
+    "district_num": "07",
+    "name": "MO-07",
+    "full_name": "Missouri Congressional District 07",
+    "geoid": "2907"
+  }
+}

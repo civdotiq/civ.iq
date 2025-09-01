@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-75.9100341796875, 40.9443797587997],
+        [-75.9100341796875, 40.837190668541126],
+        [-75.9375, 40.86134282702076],
+        [-75.9975814819336, 40.91325312694477],
+        [-75.9375, 40.93478394417514],
+        [-75.93509674072266, 40.93556203513171],
+        [-75.9100341796875, 40.9443797587997]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "42",
+    "CD119FP": "07",
+    "GEOID": "4207",
+    "GEOIDFQ": "5001900US4207",
+    "NAMELSAD": "Congressional District 7",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 3024400549,
+    "AWATER": 43530887,
+    "INTPTLAT": "+40.7727267",
+    "INTPTLON": "-075.5314367",
+    "id": "42-07",
+    "state_fips": "42",
+    "state_name": "Pennsylvania",
+    "state_abbr": "PA",
+    "district_num": "07",
+    "name": "PA-07",
+    "full_name": "Pennsylvania Congressional District 07",
+    "geoid": "4207"
+  }
+}

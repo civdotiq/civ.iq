@@ -1,0 +1,39 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-96.34391784667969, 28.3285599713617],
+        [-96.3607406616211, 28.304380682962787],
+        [-96.39507293701172, 28.279591208078358],
+        [-96.39129638671875, 28.304380682962787],
+        [-96.38786315917969, 28.3285599713617],
+        [-96.34391784667969, 28.3285599713617]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "48",
+    "CD119FP": "22",
+    "GEOID": "4822",
+    "GEOIDFQ": "5001900US4822",
+    "NAMELSAD": "Congressional District 22",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 8175305113,
+    "AWATER": 1424798112,
+    "INTPTLAT": "+29.1238360",
+    "INTPTLON": "-095.9876658",
+    "id": "48-22",
+    "state_fips": "48",
+    "state_name": "Texas",
+    "state_abbr": "TX",
+    "district_num": "22",
+    "name": "TX-22",
+    "full_name": "Texas Congressional District 22",
+    "geoid": "4822"
+  }
+}

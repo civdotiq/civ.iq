@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-85.38711547851562, 37.740313292102655],
+        [-85.39913177490234, 37.73081027834235],
+        [-85.41698455810547, 37.734611630216975],
+        [-85.43071746826172, 37.72673718477408],
+        [-85.4403305053711, 37.72863798965106],
+        [-85.43895721435547, 37.740313292102655],
+        [-85.38711547851562, 37.740313292102655]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "21",
+    "CD119FP": "04",
+    "GEOID": "2104",
+    "GEOIDFQ": "5001900US2104",
+    "NAMELSAD": "Congressional District 4",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 12547213878,
+    "AWATER": 319350254,
+    "INTPTLAT": "+38.5253193",
+    "INTPTLON": "-084.4541873",
+    "id": "21-04",
+    "state_fips": "21",
+    "state_name": "Kentucky",
+    "state_abbr": "KY",
+    "district_num": "04",
+    "name": "KY-04",
+    "full_name": "Kentucky Congressional District 04",
+    "geoid": "2104"
+  }
+}

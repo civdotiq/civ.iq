@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-118.421630859375, -29.792984135470505],
+        [-118.2623291015625, -29.807284450222504],
+        [-118.2568359375, -29.90732937685153],
+        [-118.3941650390625, -29.878755346037963],
+        [-118.421630859375, -29.792984135470505]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "06",
+    "CD119FP": "37",
+    "GEOID": "0637",
+    "GEOIDFQ": "5001900US0637",
+    "NAMELSAD": "Congressional District 37",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 136664154,
+    "AWATER": 173654,
+    "INTPTLAT": "+34.0096865",
+    "INTPTLON": "-118.3252030",
+    "id": "06-37",
+    "state_fips": "06",
+    "state_name": "California",
+    "state_abbr": "CA",
+    "district_num": "37",
+    "name": "CA-37",
+    "full_name": "California Congressional District 37",
+    "geoid": "0637"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-94.1912841796875, 45.10842333769409],
+        [-94.1912841796875, 44.9788852675924],
+        [-94.21875, 44.97912812237348],
+        [-94.25617218017578, 44.97937097612598],
+        [-94.25582885742188, 45.08903556483105],
+        [-94.25582885742188, 45.10842333769409],
+        [-94.1912841796875, 45.10842333769409]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "27",
+    "CD119FP": "06",
+    "GEOID": "2706",
+    "GEOIDFQ": "5001900US2706",
+    "NAMELSAD": "Congressional District 6",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 6434676045,
+    "AWATER": 338639027,
+    "INTPTLAT": "+45.2920692",
+    "INTPTLON": "-093.8388074",
+    "id": "27-06",
+    "state_fips": "27",
+    "state_name": "Minnesota",
+    "state_abbr": "MN",
+    "district_num": "06",
+    "name": "MN-06",
+    "full_name": "Minnesota Congressional District 06",
+    "geoid": "2706"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-95.5975341796875, 30.18074760506076],
+        [-95.5975341796875, 30.15225229720187],
+        [-95.60096740722656, 30.17570216117072],
+        [-95.5975341796875, 30.18074760506076]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "48",
+    "CD119FP": "02",
+    "GEOID": "4802",
+    "GEOIDFQ": "5001900US4802",
+    "NAMELSAD": "Congressional District 2",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 1627829605,
+    "AWATER": 80706923,
+    "INTPTLAT": "+30.0951301",
+    "INTPTLON": "-095.2555652",
+    "id": "48-02",
+    "state_fips": "48",
+    "state_name": "Texas",
+    "state_abbr": "TX",
+    "district_num": "02",
+    "name": "TX-02",
+    "full_name": "Texas Congressional District 02",
+    "geoid": "4802"
+  }
+}

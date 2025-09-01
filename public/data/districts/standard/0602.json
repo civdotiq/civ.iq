@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-123.7225341796875, 38.843986129756644],
+        [-123.7225341796875, 38.83810310364038],
+        [-123.72528076171875, 38.843986129756644],
+        [-123.7225341796875, 38.843986129756644]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "06",
+    "CD119FP": "02",
+    "GEOID": "0602",
+    "GEOIDFQ": "5001900US0602",
+    "NAMELSAD": "Congressional District 2",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 33769653017,
+    "AWATER": 4120898805,
+    "INTPTLAT": "+40.0715357",
+    "INTPTLON": "-123.4644363",
+    "id": "06-02",
+    "state_fips": "06",
+    "state_name": "California",
+    "state_abbr": "CA",
+    "district_num": "02",
+    "name": "CA-02",
+    "full_name": "California Congressional District 02",
+    "geoid": "0602"
+  }
+}

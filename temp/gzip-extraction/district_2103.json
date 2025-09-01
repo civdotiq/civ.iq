@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-85.638427734375, -25.040815498949115],
+        [-85.4736328125, -25.145284610685053],
+        [-85.5670166015625, -25.393660521998015],
+        [-85.946044921875, -25.4779923205748],
+        [-85.8251953125, -25.155229394940562],
+        [-85.682373046875, -25.140311914680737],
+        [-85.638427734375, -25.040815498949115]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "21",
+    "CD119FP": "03",
+    "GEOID": "2103",
+    "GEOIDFQ": "5001900US2103",
+    "NAMELSAD": "Congressional District 3",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 797065828,
+    "AWATER": 39732336,
+    "INTPTLAT": "+38.1903917",
+    "INTPTLON": "-085.7005810",
+    "id": "21-03",
+    "state_fips": "21",
+    "state_name": "Kentucky",
+    "state_abbr": "KY",
+    "district_num": "03",
+    "name": "KY-03",
+    "full_name": "Kentucky Congressional District 03",
+    "geoid": "2103"
+  }
+}

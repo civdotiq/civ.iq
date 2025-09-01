@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-73.0975341796875, 42.05337156043362],
+        [-73.0975341796875, 42.0411340094081],
+        [-73.49716186523438, 42.049547578969765],
+        [-73.4981918334961, 42.05337156043362],
+        [-73.0975341796875, 42.05337156043362]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "25",
+    "CD119FP": "01",
+    "GEOID": "2501",
+    "GEOIDFQ": "5001900US2501",
+    "NAMELSAD": "Congressional District 1",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 5784384135,
+    "AWATER": 154201475,
+    "INTPTLAT": "+42.1858704",
+    "INTPTLON": "-073.0732728",
+    "id": "25-01",
+    "state_fips": "25",
+    "state_name": "Massachusetts",
+    "state_abbr": "MA",
+    "district_num": "01",
+    "name": "MA-01",
+    "full_name": "Massachusetts Congressional District 01",
+    "geoid": "2501"
+  }
+}

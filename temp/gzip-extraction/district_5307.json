@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-122.2723388671875, -50.04302974380058],
+        [-122.2283935546875, -50.14522626967903],
+        [-122.332763671875, -50.208548992291014],
+        [-122.3272705078125, -50.391010070956696],
+        [-122.508544921875, -50.47498691278631],
+        [-122.4371337890625, -50.04302974380058],
+        [-122.2723388671875, -50.04302974380058]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "53",
+    "CD119FP": "07",
+    "GEOID": "5307",
+    "GEOIDFQ": "5001900US5307",
+    "NAMELSAD": "Congressional District 7",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 355882964,
+    "AWATER": 299455776,
+    "INTPTLAT": "+47.5530560",
+    "INTPTLON": "-122.3917291",
+    "id": "53-07",
+    "state_fips": "53",
+    "state_name": "Washington",
+    "state_abbr": "WA",
+    "district_num": "07",
+    "name": "WA-07",
+    "full_name": "Washington Congressional District 07",
+    "geoid": "5307"
+  }
+}

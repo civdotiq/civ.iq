@@ -1,0 +1,22 @@
+{
+  "extraction_timestamp": "2025-09-01T20:03:40.282Z",
+  "database_path": "/mnt/d/civic-intel-hub/public/maps/congressional_districts_119_real.pmtiles",
+  "statistics": {
+    "total_tiles_in_db": 292578,
+    "tiles_analyzed": 0,
+    "unique_layers_found": [],
+    "parsing_errors": 0,
+    "processing_time_ms": 14813
+  },
+  "findings": {
+    "database_accessible": true,
+    "vector_tile_format": true,
+    "geometry_parsing_issues": false,
+    "recommended_next_steps": [
+      "Examine saved .pbf files with external tools",
+      "Try alternative vector tile parsers",
+      "Consider geometry type 3 polygon parsing solutions",
+      "Investigate direct protobuf parsing without high-level libraries"
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-87.6434326171875, -55.06893234377867],
+        [-87.615966796875, -55.17259379606184],
+        [-87.7093505859375, -55.17886766328199],
+        [-87.6434326171875, -55.109800793143805],
+        [-87.9180908203125, -55.13178958302215],
+        [-87.9180908203125, -55.09408710192537],
+        [-87.6434326171875, -55.06893234377867]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "17",
+    "CD119FP": "07",
+    "GEOID": "1707",
+    "GEOIDFQ": "5001900US1707",
+    "NAMELSAD": "Congressional District 7",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 177223764,
+    "AWATER": 2189439,
+    "INTPTLAT": "+41.8784633",
+    "INTPTLON": "-087.8406513",
+    "id": "17-07",
+    "state_fips": "17",
+    "state_name": "Illinois",
+    "state_abbr": "IL",
+    "district_num": "07",
+    "name": "IL-07",
+    "full_name": "Illinois Congressional District 07",
+    "geoid": "1707"
+  }
+}

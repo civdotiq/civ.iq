@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-119.5037841796875, 38.843986129756644],
+        [-119.5037841796875, 38.65656057672703],
+        [-119.53125, 38.67586133295114],
+        [-119.74342346191406, 38.82259097617711],
+        [-119.74994659423828, 38.82713798441492],
+        [-119.77432250976562, 38.843986129756644],
+        [-119.5037841796875, 38.843986129756644]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "32",
+    "CD119FP": "02",
+    "GEOID": "3202",
+    "GEOIDFQ": "5001900US3202",
+    "NAMELSAD": "Congressional District 2",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 168518851390,
+    "AWATER": 1172616954,
+    "INTPTLAT": "+40.5281662",
+    "INTPTLON": "-116.9894216",
+    "id": "32-02",
+    "state_fips": "32",
+    "state_name": "Nevada",
+    "state_abbr": "NV",
+    "district_num": "02",
+    "name": "NV-02",
+    "full_name": "Nevada Congressional District 02",
+    "geoid": "3202"
+  }
+}

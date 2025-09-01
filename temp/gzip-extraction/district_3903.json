@@ -1,0 +1,39 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-83.0621337890625, -22.968509022673913],
+        [-82.760009765625, -22.98368116033086],
+        [-82.781982421875, -23.206009637648805],
+        [-82.9632568359375, -23.251440517055983],
+        [-83.089599609375, -23.115101554603044],
+        [-83.0621337890625, -22.968509022673913]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "39",
+    "CD119FP": "03",
+    "GEOID": "3903",
+    "GEOIDFQ": "5001900US3903",
+    "NAMELSAD": "Congressional District 3",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 564098329,
+    "AWATER": 8552766,
+    "INTPTLAT": "+40.0351897",
+    "INTPTLON": "-082.9224800",
+    "id": "39-03",
+    "state_fips": "39",
+    "state_name": "Ohio",
+    "state_abbr": "OH",
+    "district_num": "03",
+    "name": "OH-03",
+    "full_name": "Ohio Congressional District 03",
+    "geoid": "3903"
+  }
+}

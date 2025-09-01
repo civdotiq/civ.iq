@@ -1,0 +1,39 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-73.553466796875, -22.217920166311018],
+        [-73.4820556640625, -22.28401360096244],
+        [-73.487548828125, -22.502407459497732],
+        [-73.7677001953125, -22.487181821139302],
+        [-73.729248046875, -22.25859674097572],
+        [-73.553466796875, -22.217920166311018]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "36",
+    "CD119FP": "04",
+    "GEOID": "3604",
+    "GEOIDFQ": "5001900US3604",
+    "NAMELSAD": "Congressional District 4",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 295396939,
+    "AWATER": 194013684,
+    "INTPTLAT": "+40.6273483",
+    "INTPTLON": "-073.6078072",
+    "id": "36-04",
+    "state_fips": "36",
+    "state_name": "New York",
+    "state_abbr": "NY",
+    "district_num": "04",
+    "name": "NY-04",
+    "full_name": "New York Congressional District 04",
+    "geoid": "3604"
+  }
+}

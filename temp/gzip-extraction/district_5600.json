@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-104.051513671875, -21.534847002048792],
+        [-104.051513671875, -21.91756717219073],
+        [-111.0443115234375, -21.92266320932592],
+        [-111.0443115234375, -21.534847002048792],
+        [-104.051513671875, -21.534847002048792]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "56",
+    "CD119FP": "00",
+    "GEOID": "5600",
+    "GEOIDFQ": "5001900US5600",
+    "NAMELSAD": "Congressional District (at Large)",
+    "LSAD": "C1",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 251458190512,
+    "AWATER": 1868025485,
+    "INTPTLAT": "+42.9896591",
+    "INTPTLON": "-107.5443922",
+    "id": "56-00",
+    "state_fips": "56",
+    "state_name": "Wyoming",
+    "state_abbr": "WY",
+    "district_num": "00",
+    "name": "WY-00",
+    "full_name": "Wyoming Congressional District 00",
+    "geoid": "5600"
+  }
+}

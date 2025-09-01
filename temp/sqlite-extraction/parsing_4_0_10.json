@@ -1,0 +1,22 @@
+{
+  "tileId": "4_0_10",
+  "size": 1052,
+  "zoom": 4,
+  "x": 0,
+  "y": 10,
+  "parsing_attempts": [
+    {
+      "method": "@mapbox/vector-tile",
+      "success": false,
+      "error": "Unimplemented type: 3"
+    },
+    {
+      "method": "raw-pbf-inspection",
+      "success": true,
+      "raw_data_preview": [
+        31, 139, 8, 0, 0, 0, 0, 0, 0, 3, 117, 144, 107, 76, 91, 101
+      ],
+      "error": null
+    }
+  ]
+}

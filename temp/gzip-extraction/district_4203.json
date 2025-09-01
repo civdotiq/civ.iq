@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-75.223388671875, -23.019076187293038],
+        [-75.1409912109375, -23.059516273509303],
+        [-75.1300048828125, -23.236298608603292],
+        [-75.2783203125, -23.165613663312584],
+        [-75.223388671875, -23.019076187293038]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "42",
+    "CD119FP": "03",
+    "GEOID": "4203",
+    "GEOIDFQ": "5001900US4203",
+    "NAMELSAD": "Congressional District 3",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 137435143,
+    "AWATER": 4546735,
+    "INTPTLAT": "+40.0003322",
+    "INTPTLON": "-075.1970035",
+    "id": "42-03",
+    "state_fips": "42",
+    "state_name": "Pennsylvania",
+    "state_abbr": "PA",
+    "district_num": "03",
+    "name": "PA-03",
+    "full_name": "Pennsylvania Congressional District 03",
+    "geoid": "4203"
+  }
+}

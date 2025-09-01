@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-81.3153076171875, -33.48185394054359],
+        [-81.2054443359375, -34.016241889667015],
+        [-81.58447265625, -34.0116885991085],
+        [-81.6888427734375, -33.838482755995145],
+        [-81.683349609375, -33.591743271449836],
+        [-81.5570068359375, -33.49101671911273],
+        [-81.3153076171875, -33.48185394054359]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "12",
+    "CD119FP": "05",
+    "GEOID": "1205",
+    "GEOIDFQ": "5001900US1205",
+    "NAMELSAD": "Congressional District 5",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 1533326560,
+    "AWATER": 613844919,
+    "INTPTLAT": "+30.1016127",
+    "INTPTLON": "-081.4596712",
+    "id": "12-05",
+    "state_fips": "12",
+    "state_name": "Florida",
+    "state_abbr": "FL",
+    "district_num": "05",
+    "name": "FL-05",
+    "full_name": "Florida Congressional District 05",
+    "geoid": "1205"
+  }
+}

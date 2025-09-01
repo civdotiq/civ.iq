@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-89.560546875, -27.088473156555885],
+        [-89.560546875, -27.14225670479398],
+        [-89.571533203125, -27.1080338014631],
+        [-89.560546875, -27.088473156555885]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "21",
+    "CD119FP": "01",
+    "GEOID": "2101",
+    "GEOIDFQ": "5001900US2101",
+    "NAMELSAD": "Congressional District 1",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 29783310648,
+    "AWATER": 1185324165,
+    "INTPTLAT": "+36.9654032",
+    "INTPTLON": "-088.3425944",
+    "id": "21-01",
+    "state_fips": "21",
+    "state_name": "Kentucky",
+    "state_abbr": "KY",
+    "district_num": "01",
+    "name": "KY-01",
+    "full_name": "Kentucky Congressional District 01",
+    "geoid": "2101"
+  }
+}

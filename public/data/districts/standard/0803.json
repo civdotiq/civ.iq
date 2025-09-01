@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-108.2537841796875, 37.740313292102655],
+        [-108.2537841796875, 36.99981081734933],
+        [-108.28125, 36.99981081734933],
+        [-109.0451431274414, 36.99898824162521],
+        [-109.04205322265625, 37.71859032558815],
+        [-109.04205322265625, 37.740313292102655],
+        [-108.2537841796875, 37.740313292102655]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "08",
+    "CD119FP": "03",
+    "GEOID": "0803",
+    "GEOIDFQ": "5001900US0803",
+    "NAMELSAD": "Congressional District 3",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 129370970050,
+    "AWATER": 353187540,
+    "INTPTLAT": "+38.4582100",
+    "INTPTLON": "-106.8835657",
+    "id": "08-03",
+    "state_fips": "08",
+    "state_name": "Colorado",
+    "state_abbr": "CO",
+    "district_num": "03",
+    "name": "CO-03",
+    "full_name": "Colorado Congressional District 03",
+    "geoid": "0803"
+  }
+}

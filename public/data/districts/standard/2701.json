@@ -1,0 +1,41 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-96.45309448242188, 43.84938414031936],
+        [-95.625, 43.84789857101097],
+        [-95.5975341796875, 43.84789857101097],
+        [-95.5975341796875, 43.50000532779873],
+        [-95.625, 43.50000532779873],
+        [-96.35181427001953, 43.50025436478984],
+        [-96.45309448242188, 43.50050340075373],
+        [-96.45309448242188, 43.84938414031936]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "27",
+    "CD119FP": "01",
+    "GEOID": "2701",
+    "GEOIDFQ": "5001900US2701",
+    "NAMELSAD": "Congressional District 1",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 31696673134,
+    "AWATER": 560957069,
+    "INTPTLAT": "+43.9048576",
+    "INTPTLON": "-093.5311250",
+    "id": "27-01",
+    "state_fips": "27",
+    "state_name": "Minnesota",
+    "state_abbr": "MN",
+    "district_num": "01",
+    "name": "MN-01",
+    "full_name": "Minnesota Congressional District 01",
+    "geoid": "2701"
+  }
+}

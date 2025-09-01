@@ -52,7 +52,7 @@ class DistrictBoundaryService {
   private metadataUrl: string;
 
   constructor() {
-    this.pmtilesUrl = '/maps/congressional_districts_119.pmtiles';
+    this.pmtilesUrl = '/maps/congressional_districts_119_real.pmtiles';
     this.metadataUrl = '/api/district-boundaries/metadata';
   }
 
@@ -63,15 +63,24 @@ class DistrictBoundaryService {
     if (this.metadata) return;
 
     try {
-      const response = await fetch(this.metadataUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to load district metadata: ${response.status}`);
-      }
+      // Load metadata directly from file system instead of HTTP fetch
+      const { readFileSync } = await import('fs');
+      const { join } = await import('path');
 
-      this.metadata = await response.json();
+      const realDataPath = join(process.cwd(), 'data', 'districts', 'district_metadata_real.json');
+
+      try {
+        const fileContent = readFileSync(realDataPath, 'utf8');
+        this.metadata = JSON.parse(fileContent);
+      } catch (fileError) {
+        throw new Error(
+          `Failed to load district metadata from ${realDataPath}: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`
+        );
+      }
     } catch (error) {
-      // Failed to initialize district boundary service
-      throw error;
+      throw new Error(
+        `Failed to initialize district boundary service: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 

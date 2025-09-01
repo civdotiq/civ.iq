@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-71.6912841796875, 43.548050434476295],
+        [-71.6912841796875, 43.53062917044241],
+        [-71.70639038085938, 43.53759828009453],
+        [-71.6912841796875, 43.548050434476295]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "33",
+    "CD119FP": "01",
+    "GEOID": "3301",
+    "GEOIDFQ": "5001900US3301",
+    "NAMELSAD": "Congressional District 1",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 5551994812,
+    "AWATER": 477595286,
+    "INTPTLAT": "+43.4072139",
+    "INTPTLON": "-071.1869535",
+    "id": "33-01",
+    "state_fips": "33",
+    "state_name": "New Hampshire",
+    "state_abbr": "NH",
+    "district_num": "01",
+    "name": "NH-01",
+    "full_name": "New Hampshire Congressional District 01",
+    "geoid": "3301"
+  }
+}

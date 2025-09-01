@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-77.14599609375, -23.971195346707432],
+        [-76.9482421875, -24.25698131588247],
+        [-77.1185302734375, -24.39713301739104],
+        [-77.34375, -24.24696455430093],
+        [-77.3162841796875, -24.146753594703057],
+        [-77.1734619140625, -24.17181371625135],
+        [-77.14599609375, -23.971195346707432]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "24",
+    "CD119FP": "08",
+    "GEOID": "2408",
+    "GEOIDFQ": "5001900US2408",
+    "NAMELSAD": "Congressional District 8",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 708198478,
+    "AWATER": 17751413,
+    "INTPTLAT": "+39.0977390",
+    "INTPTLON": "-077.1240715",
+    "id": "24-08",
+    "state_fips": "24",
+    "state_name": "Maryland",
+    "state_abbr": "MD",
+    "district_num": "08",
+    "name": "MD-08",
+    "full_name": "Maryland Congressional District 08",
+    "geoid": "2408"
+  }
+}

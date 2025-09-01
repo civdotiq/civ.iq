@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-93.22998046875, -52.45266189398768],
+        [-93.1805419921875, -52.66305767075935],
+        [-93.31787109375, -52.67638208083924],
+        [-93.4002685546875, -52.50284765940396],
+        [-93.22998046875, -52.45266189398768]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "27",
+    "CD119FP": "05",
+    "GEOID": "2705",
+    "GEOIDFQ": "5001900US2705",
+    "NAMELSAD": "Congressional District 5",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 338806297,
+    "AWATER": 16518420,
+    "INTPTLAT": "+44.9836547",
+    "INTPTLON": "-093.2922722",
+    "id": "27-05",
+    "state_fips": "27",
+    "state_name": "Minnesota",
+    "state_abbr": "MN",
+    "district_num": "05",
+    "name": "MN-05",
+    "full_name": "Minnesota Congressional District 05",
+    "geoid": "2705"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-87.0172119140625, -54.61979771784952],
+        [-87.20947265625, -55.188276612554844],
+        [-87.550048828125, -55.188276612554844],
+        [-87.8302001953125, -54.7943516039205],
+        [-87.802734375, -54.61979771784952],
+        [-87.0172119140625, -54.61979771784952]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "17",
+    "CD119FP": "ZZ",
+    "GEOID": "17ZZ",
+    "GEOIDFQ": "5001900US17ZZ",
+    "NAMELSAD": "Congressional Districts not defined",
+    "LSAD": "00",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "F",
+    "ALAND": 0,
+    "AWATER": 4070576867,
+    "INTPTLAT": "+42.1753010",
+    "INTPTLON": "-087.4224236",
+    "id": "17-ZZ",
+    "state_fips": "17",
+    "state_name": "Illinois",
+    "state_abbr": "IL",
+    "district_num": "ZZ",
+    "name": "IL-ZZ",
+    "full_name": "Illinois Congressional District ZZ",
+    "geoid": "17ZZ"
+  }
+}

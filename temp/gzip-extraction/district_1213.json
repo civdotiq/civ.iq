@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-82.650146484375, -35.58138418324621],
+        [-82.672119140625, -36.06686213257887],
+        [-82.9248046875, -36.06686213257887],
+        [-83.0181884765625, -35.585851593232356],
+        [-82.650146484375, -35.58138418324621]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "12",
+    "CD119FP": "13",
+    "GEOID": "1213",
+    "GEOIDFQ": "5001900US1213",
+    "NAMELSAD": "Congressional District 13",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 589748441,
+    "AWATER": 1302486265,
+    "INTPTLAT": "+27.9312443",
+    "INTPTLON": "-082.8365752",
+    "id": "12-13",
+    "state_fips": "12",
+    "state_name": "Florida",
+    "state_abbr": "FL",
+    "district_num": "13",
+    "name": "FL-13",
+    "full_name": "Florida Congressional District 13",
+    "geoid": "1213"
+  }
+}

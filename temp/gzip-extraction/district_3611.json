@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-74.1851806640625, -22.35007580612485],
+        [-73.98193359375, -22.39071391683855],
+        [-74.0423583984375, -22.517631421923767],
+        [-74.2510986328125, -22.54300096592185],
+        [-74.1851806640625, -22.35007580612485]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "36",
+    "CD119FP": "11",
+    "GEOID": "3611",
+    "GEOIDFQ": "5001900US3611",
+    "NAMELSAD": "Congressional District 11",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 166353199,
+    "AWATER": 130066034,
+    "INTPTLAT": "+40.5669743",
+    "INTPTLON": "-074.1263136",
+    "id": "36-11",
+    "state_fips": "36",
+    "state_name": "New York",
+    "state_abbr": "NY",
+    "district_num": "11",
+    "name": "NY-11",
+    "full_name": "New York Congressional District 11",
+    "geoid": "3611"
+  }
+}

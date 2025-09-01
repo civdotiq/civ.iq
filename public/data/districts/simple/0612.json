@@ -1,0 +1,41 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-122.3162841796875, 37.896530447543],
+        [-122.3162841796875, 37.76284413400417],
+        [-122.3324203491211, 37.78211205989561],
+        [-122.34375, 37.80625771945958],
+        [-122.37361907958984, 37.883795951525],
+        [-122.34375, 37.890569893822146],
+        [-122.32933044433594, 37.893550231008845],
+        [-122.3162841796875, 37.896530447543]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "06",
+    "CD119FP": "12",
+    "GEOID": "0612",
+    "GEOIDFQ": "5001900US0612",
+    "NAMELSAD": "Congressional District 12",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 239977617,
+    "AWATER": 126063298,
+    "INTPTLAT": "+37.7801271",
+    "INTPTLON": "-122.2408008",
+    "id": "06-12",
+    "state_fips": "06",
+    "state_name": "California",
+    "state_abbr": "CA",
+    "district_num": "12",
+    "name": "CA-12",
+    "full_name": "California Congressional District 12",
+    "geoid": "0612"
+  }
+}

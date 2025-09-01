@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-77.1624755859375, -24.357105493969726],
+        [-77.0361328125, -24.47215043722686],
+        [-77.0416259765625, -24.64202435786399],
+        [-77.2283935546875, -24.781747337815773],
+        [-77.135009765625, -24.572104148016834],
+        [-77.2174072265625, -24.562112357996895],
+        [-77.1624755859375, -24.357105493969726]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "51",
+    "CD119FP": "08",
+    "GEOID": "5108",
+    "GEOIDFQ": "5001900US5108",
+    "NAMELSAD": "Congressional District 8",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 381276219,
+    "AWATER": 29253297,
+    "INTPTLAT": "+38.7982990",
+    "INTPTLON": "-077.1371960",
+    "id": "51-08",
+    "state_fips": "51",
+    "state_name": "Virginia",
+    "state_abbr": "VA",
+    "district_num": "08",
+    "name": "VA-08",
+    "full_name": "Virginia Congressional District 08",
+    "geoid": "5108"
+  }
+}

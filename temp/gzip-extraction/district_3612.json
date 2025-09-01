@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-73.970947265625, -22.141619800738766],
+        [-73.9599609375, -22.25859674097572],
+        [-74.014892578125, -22.233175265402792],
+        [-73.970947265625, -22.141619800738766]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "36",
+    "CD119FP": "12",
+    "GEOID": "3612",
+    "GEOIDFQ": "5001900US3612",
+    "NAMELSAD": "Congressional District 12",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 24784552,
+    "AWATER": 10382847,
+    "INTPTLAT": "+40.7648052",
+    "INTPTLON": "-073.9751822",
+    "id": "36-12",
+    "state_fips": "36",
+    "state_name": "New York",
+    "state_abbr": "NY",
+    "district_num": "12",
+    "name": "NY-12",
+    "full_name": "New York Congressional District 12",
+    "geoid": "3612"
+  }
+}

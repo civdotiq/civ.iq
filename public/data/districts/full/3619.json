@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-75.9100341796875, 42.05337156043362],
+        [-75.9100341796875, 41.998794306556505],
+        [-76.10572814941406, 41.998794306556505],
+        [-76.10504150390625, 42.0329743324414],
+        [-76.10675811767578, 42.05005745646616],
+        [-76.10710144042969, 42.05337156043362],
+        [-75.9100341796875, 42.05337156043362]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "36",
+    "CD119FP": "19",
+    "GEOID": "3619",
+    "GEOIDFQ": "5001900US3619",
+    "NAMELSAD": "Congressional District 19",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 21303642317,
+    "AWATER": 387688812,
+    "INTPTLAT": "+42.2553077",
+    "INTPTLON": "-074.9094493",
+    "id": "36-19",
+    "state_fips": "36",
+    "state_name": "New York",
+    "state_abbr": "NY",
+    "district_num": "19",
+    "name": "NY-19",
+    "full_name": "New York Congressional District 19",
+    "geoid": "3619"
+  }
+}

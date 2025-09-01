@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-82.9412841796875, 40.21453812929633],
+        [-82.9412841796875, 40.14581417372591],
+        [-82.9464340209961, 40.14581417372591],
+        [-82.9412841796875, 40.21453812929633]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "39",
+    "CD119FP": "12",
+    "GEOID": "3912",
+    "GEOIDFQ": "5001900US3912",
+    "NAMELSAD": "Congressional District 12",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 14454221106,
+    "AWATER": 135942308,
+    "INTPTLAT": "+40.0108957",
+    "INTPTLON": "-082.1028357",
+    "id": "39-12",
+    "state_fips": "39",
+    "state_name": "Ohio",
+    "state_abbr": "OH",
+    "district_num": "12",
+    "name": "OH-12",
+    "full_name": "Ohio Congressional District 12",
+    "geoid": "3912"
+  }
+}

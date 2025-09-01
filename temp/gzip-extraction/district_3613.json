@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-73.8885498046875, -22.060187150830146],
+        [-73.9324951171875, -22.192491314469763],
+        [-73.970947265625, -22.141619800738766],
+        [-73.8885498046875, -22.060187150830146]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "36",
+    "CD119FP": "13",
+    "GEOID": "3613",
+    "GEOIDFQ": "5001900US3613",
+    "NAMELSAD": "Congressional District 13",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 28514225,
+    "AWATER": 9212220,
+    "INTPTLAT": "+40.8030603",
+    "INTPTLON": "-073.9471189",
+    "id": "36-13",
+    "state_fips": "36",
+    "state_name": "New York",
+    "state_abbr": "NY",
+    "district_num": "13",
+    "name": "NY-13",
+    "full_name": "New York Congressional District 13",
+    "geoid": "3613"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-84.3475341796875, 33.9510496611821],
+        [-84.3475341796875, 33.881817226884806],
+        [-84.34822082519531, 33.88780249693977],
+        [-84.3475341796875, 33.9510496611821]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "13",
+    "CD119FP": "04",
+    "GEOID": "1304",
+    "GEOIDFQ": "5001900US1304",
+    "NAMELSAD": "Congressional District 4",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 697805283,
+    "AWATER": 10405445,
+    "INTPTLAT": "+33.8321207",
+    "INTPTLON": "-084.1944437",
+    "id": "13-04",
+    "state_fips": "13",
+    "state_name": "Georgia",
+    "state_abbr": "GA",
+    "district_num": "04",
+    "name": "GA-04",
+    "full_name": "Georgia Congressional District 04",
+    "geoid": "1304"
+  }
+}

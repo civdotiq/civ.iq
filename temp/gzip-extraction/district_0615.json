@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-122.2833251953125, -25.80978197584041],
+        [-122.080078125, -26.071586453170973],
+        [-122.2613525390625, -26.106120832355508],
+        [-122.574462890625, -25.814727063097394],
+        [-122.2833251953125, -25.80978197584041]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "06",
+    "CD119FP": "15",
+    "GEOID": "0615",
+    "GEOIDFQ": "5001900US0615",
+    "NAMELSAD": "Congressional District 15",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 301072298,
+    "AWATER": 290950223,
+    "INTPTLAT": "+37.5890673",
+    "INTPTLON": "-122.3166841",
+    "id": "06-15",
+    "state_fips": "06",
+    "state_name": "California",
+    "state_abbr": "CA",
+    "district_num": "15",
+    "name": "CA-15",
+    "full_name": "California Congressional District 15",
+    "geoid": "0615"
+  }
+}

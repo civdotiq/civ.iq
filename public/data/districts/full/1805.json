@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-85.86227416992188, 39.93080082075275],
+        [-85.93746185302734, 39.927114985940364],
+        [-86.24061584472656, 39.9260618538284],
+        [-86.24095916748047, 39.93080082075275],
+        [-85.86227416992188, 39.93080082075275]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "18",
+    "CD119FP": "05",
+    "GEOID": "1805",
+    "GEOIDFQ": "5001900US1805",
+    "NAMELSAD": "Congressional District 5",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 5684441719,
+    "AWATER": 37676700,
+    "INTPTLAT": "+40.2813992",
+    "INTPTLON": "-085.7926184",
+    "id": "18-05",
+    "state_fips": "18",
+    "state_name": "Indiana",
+    "state_abbr": "IN",
+    "district_num": "05",
+    "name": "IN-05",
+    "full_name": "Indiana Congressional District 05",
+    "geoid": "1805"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-74.5037841796875, 40.105911884642325],
+        [-74.5037841796875, 39.98632757879318],
+        [-74.53125, 40.04207208031741],
+        [-74.55322265625, 40.079122217500355],
+        [-74.53125, 40.08831593873089],
+        [-74.52747344970703, 40.090154533989846],
+        [-74.5037841796875, 40.105911884642325]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "34",
+    "CD119FP": "04",
+    "GEOID": "3404",
+    "GEOIDFQ": "5001900US3404",
+    "NAMELSAD": "Congressional District 4",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 1686732441,
+    "AWATER": 132574382,
+    "INTPTLAT": "+40.0687917",
+    "INTPTLON": "-074.2445565",
+    "id": "34-04",
+    "state_fips": "34",
+    "state_name": "New Jersey",
+    "state_abbr": "NJ",
+    "district_num": "04",
+    "name": "NJ-04",
+    "full_name": "New Jersey Congressional District 04",
+    "geoid": "3404"
+  }
+}

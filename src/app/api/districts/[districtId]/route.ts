@@ -103,6 +103,12 @@ interface DistrictDetails {
     counties: string[];
     majorCities: string[];
   };
+  wikidata?: {
+    established?: string;
+    area?: number;
+    previousRepresentatives?: string[];
+    wikipediaUrl?: string;
+  } | null;
 }
 
 /**
@@ -222,24 +228,8 @@ async function getDistrictDemographics(
   district: string
 ): Promise<DistrictDetails['demographics']> {
   try {
-    const apiKey = process.env.CENSUS_API_KEY;
-
-    if (!apiKey) {
-      // VIOLATION: Previously returned fake demographic data - now returns unavailable indicators
-      return {
-        population: 0,
-        medianIncome: 0,
-        medianAge: 0,
-        white_percent: 0,
-        black_percent: 0,
-        asian_percent: 0,
-        hispanic_percent: 0,
-        diversityIndex: 0,
-        urbanPercentage: 0,
-        poverty_rate: 0,
-        bachelor_degree_percent: 0,
-      };
-    }
+    // Census API works without a key for basic public data
+    const apiKey = process.env.CENSUS_API_KEY || '';
 
     // Get comprehensive data from Census American Community Survey 5-Year estimates
     const acsUrl = 'https://api.census.gov/data/2022/acs/acs5';
@@ -301,12 +291,17 @@ async function getDistrictDemographics(
       'B16001_003E', // Speak language other than English
     ].join(',');
 
+    // Build params without key if it's not provided or invalid
     const params = new URLSearchParams({
       get: variables,
       for: `congressional district:${district.padStart(2, '0')}`,
       in: `state:${getStateFipsCode(state)}`,
-      key: apiKey,
     });
+
+    // Only add key if it exists and is not the invalid one
+    if (apiKey && apiKey !== 'e7e0aed5d4a2bfd121a8f00dcc4cb7104df903e1') {
+      params.append('key', apiKey);
+    }
 
     const censusUrl = `${acsUrl}?${params}`;
     logger.info('Making Census API request', {
@@ -943,6 +938,12 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
     // Cook PVI data requires specialized political analysis
     const cookPVI = 'Data unavailable';
 
+    // Run geography and demographics calls in parallel
+    const [geography, demographics] = await Promise.all([
+      getDistrictGeography(representative.state, representative.district || '01'),
+      getDistrictDemographics(representative.state, representative.district || '01'),
+    ]);
+
     const districtDetails: DistrictDetails = {
       id: districtId.toLowerCase(),
       state: representative.state,
@@ -955,10 +956,7 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
         imageUrl: representative.imageUrl,
         yearsInOffice,
       },
-      demographics: await getDistrictDemographics(
-        representative.state,
-        representative.district || '01'
-      ),
+      demographics,
       political: {
         cookPVI,
         lastElection: {
@@ -968,7 +966,8 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
         },
         registeredVoters: 0,
       },
-      geography: await getDistrictGeography(representative.state, representative.district || '01'),
+      geography,
+      wikidata: null, // Wikidata integration is non-functional
     };
 
     return districtDetails;

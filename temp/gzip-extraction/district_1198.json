@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-77.0416259765625, -24.322071022275978],
+        [-76.9097900390625, -24.447149589730827],
+        [-77.0416259765625, -24.562112357996895],
+        [-77.1185302734375, -24.39713301739104],
+        [-77.0416259765625, -24.322071022275978]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "11",
+    "CD119FP": "98",
+    "GEOID": "1198",
+    "GEOIDFQ": "5001900US1198",
+    "NAMELSAD": "Delegate District (at Large)",
+    "LSAD": "C4",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 158316181,
+    "AWATER": 18709785,
+    "INTPTLAT": "+38.9042474",
+    "INTPTLON": "-077.0165167",
+    "id": "11-98",
+    "state_fips": "11",
+    "state_name": "District of Columbia",
+    "state_abbr": "DC",
+    "district_num": "98",
+    "name": "DC-98",
+    "full_name": "District of Columbia Congressional District 98",
+    "geoid": "1198"
+  }
+}

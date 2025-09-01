@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-84.320068359375, -29.983486718474694],
+        [-84.2431640625, -30.088107753367254],
+        [-84.39697265625, -30.391830328088133],
+        [-84.5068359375, -30.130875412002318],
+        [-84.320068359375, -29.983486718474694]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "13",
+    "CD119FP": "05",
+    "GEOID": "1305",
+    "GEOIDFQ": "5001900US1305",
+    "NAMELSAD": "Congressional District 5",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 583014612,
+    "AWATER": 2696160,
+    "INTPTLAT": "+33.6936140",
+    "INTPTLON": "-084.3817685",
+    "id": "13-05",
+    "state_fips": "13",
+    "state_name": "Georgia",
+    "state_abbr": "GA",
+    "district_num": "05",
+    "name": "GA-05",
+    "full_name": "Georgia Congressional District 05",
+    "geoid": "1305"
+  }
+}

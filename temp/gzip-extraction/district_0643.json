@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-118.333740234375, -29.878755346037963],
+        [-118.179931640625, -29.969211659636663],
+        [-118.3502197265625, -30.040566430584597],
+        [-118.4490966796875, -29.90732937685153],
+        [-118.333740234375, -29.878755346037963]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "06",
+    "CD119FP": "43",
+    "GEOID": "0643",
+    "GEOIDFQ": "5001900US0643",
+    "NAMELSAD": "Congressional District 43",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 186938591,
+    "AWATER": 617273,
+    "INTPTLAT": "+33.9106086",
+    "INTPTLON": "-118.3104728",
+    "id": "06-43",
+    "state_fips": "06",
+    "state_name": "California",
+    "state_abbr": "CA",
+    "district_num": "43",
+    "name": "CA-43",
+    "full_name": "California Congressional District 43",
+    "geoid": "0643"
+  }
+}

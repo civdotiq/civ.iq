@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-73.37631225585938, 41.00062984868538],
+        [-73.45630645751953, 40.983785774735225],
+        [-73.45630645751953, 41.00062984868538],
+        [-73.37631225585938, 41.00062984868538]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "09",
+    "CD119FP": "ZZ",
+    "GEOID": "09ZZ",
+    "GEOIDFQ": "5001900US09ZZ",
+    "NAMELSAD": "Congressional Districts not defined",
+    "LSAD": "00",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "F",
+    "ALAND": 0,
+    "AWATER": 1095660734,
+    "INTPTLAT": "+41.1666065",
+    "INTPTLON": "-072.8424645",
+    "id": "09-ZZ",
+    "state_fips": "09",
+    "state_name": "Connecticut",
+    "state_abbr": "CT",
+    "district_num": "ZZ",
+    "name": "CT-ZZ",
+    "full_name": "Connecticut Congressional District ZZ",
+    "geoid": "09ZZ"
+  }
+}

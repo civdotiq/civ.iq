@@ -1,0 +1,37 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-73.8936996459961, 41.00062984868538],
+        [-73.89404296875, 40.99726137817311],
+        [-73.9101791381836, 41.00062984868538],
+        [-73.8936996459961, 41.00062984868538]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "36",
+    "CD119FP": "17",
+    "GEOID": "3617",
+    "GEOIDFQ": "5001900US3617",
+    "NAMELSAD": "Congressional District 17",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 2135917500,
+    "AWATER": 206858784,
+    "INTPTLAT": "+41.3086976",
+    "INTPTLON": "-073.8034657",
+    "id": "36-17",
+    "state_fips": "36",
+    "state_name": "New York",
+    "state_abbr": "NY",
+    "district_num": "17",
+    "name": "NY-17",
+    "full_name": "New York Congressional District 17",
+    "geoid": "3617"
+  }
+}

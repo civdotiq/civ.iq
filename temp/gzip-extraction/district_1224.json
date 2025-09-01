@@ -1,0 +1,38 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-80.277099609375, -37.54893261064109],
+        [-80.0628662109375, -37.561996953143506],
+        [-80.09033203125, -37.78808138412045],
+        [-80.2496337890625, -37.70555348721582],
+        [-80.277099609375, -37.54893261064109]
+      ]
+    ]
+  },
+  "properties": {
+    "STATEFP": "12",
+    "CD119FP": "24",
+    "GEOID": "1224",
+    "GEOIDFQ": "5001900US1224",
+    "NAMELSAD": "Congressional District 24",
+    "LSAD": "C2",
+    "CDSESSN": "119",
+    "MTFCC": "G5200",
+    "FUNCSTAT": "N",
+    "ALAND": 257981757,
+    "AWATER": 215537480,
+    "INTPTLAT": "+25.8813712",
+    "INTPTLON": "-080.1610703",
+    "id": "12-24",
+    "state_fips": "12",
+    "state_name": "Florida",
+    "state_abbr": "FL",
+    "district_num": "24",
+    "name": "FL-24",
+    "full_name": "Florida Congressional District 24",
+    "geoid": "1224"
+  }
+}
