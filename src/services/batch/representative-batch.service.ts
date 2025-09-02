@@ -127,20 +127,43 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
         }
 
         case 'finance': {
-          const fullData = await fecAPI.getCandidateFinancials(bioguideId);
+          // SYSTEMS FIX: Proper bioguide->FEC ID mapping with error handling
+          logger.info(`Batch finance: Starting FEC lookup for ${bioguideId}`);
 
-          if (options.finance?.summaryOnly) {
-            // Get just basic financial summary from array response
-            const firstRecord = Array.isArray(fullData) && fullData.length > 0 ? fullData[0] : null;
-            result = {
-              totalRaised: firstRecord?.total_receipts || 0,
-              totalSpent: firstRecord?.total_disbursements || 0,
-              cashOnHand: firstRecord?.cash_on_hand || 0,
-              hasData: !!firstRecord,
-            };
-          } else {
-            result = fullData;
+          // Import the FEC mapping table
+          const { bioguideToFECMapping } = await import('@/lib/data/bioguide-fec-mapping');
+          const fecMapping = bioguideToFECMapping[bioguideId];
+
+          if (!fecMapping || !fecMapping.fecId) {
+            // Proper error handling - don't return empty array, throw error
+            const errorMsg = `FEC mapping not found for bioguideId ${bioguideId}`;
+            logger.warn(`Batch finance: ${errorMsg}`);
+            throw new Error(errorMsg);
           }
+
+          const fecId = fecMapping.fecId;
+          logger.info(`Batch finance: Found FEC ID ${fecId} for ${bioguideId}`);
+
+          // Call the working finance API internally to avoid duplication
+          const financeResponse = await fetch(
+            `http://localhost:${process.env.PORT || 3000}/api/representative/${bioguideId}/finance`
+          );
+
+          if (!financeResponse.ok) {
+            const errorMsg = `Finance API failed: ${financeResponse.status}`;
+            logger.error(`Batch finance: ${errorMsg}`);
+            throw new Error(errorMsg);
+          }
+
+          const financeData = await financeResponse.json();
+
+          // Return the structured finance data (not array)
+          result = financeData;
+          logger.info(`Batch finance: Successfully retrieved data for ${bioguideId}`, {
+            totalRaised: financeData.totalRaised,
+            totalSpent: financeData.totalSpent,
+          });
+
           break;
         }
 

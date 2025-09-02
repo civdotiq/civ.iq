@@ -38,7 +38,7 @@ export function FinanceTab({
   sharedLoading,
   sharedError,
 }: FinanceTabProps) {
-  // Use shared data if available, otherwise fetch individually
+  // SYSTEMS FIX: Use batch API consistently (no more dual paths)
   const {
     data: batchData,
     error: fetchError,

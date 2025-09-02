@@ -346,43 +346,17 @@ export async function GET(
         debugInfo.processingErrors.push('No FEC candidate ID found');
       }
 
-      // CRITICAL FIX: Return expected data structure with zeros, not error object
-      const zeroResponse = {
-        totalRaised: 0,
-        totalSpent: 0,
-        cashOnHand: 0,
-        individualContributions: 0,
-        pacContributions: 0,
-        partyContributions: 0,
-        candidateContributions: 0,
-        industryBreakdown: [],
-        geographicBreakdown: [],
-        dataQuality: {
-          industry: {
-            totalContributionsAnalyzed: 0,
-            contributionsWithEmployer: 0,
-            completenessPercentage: 0,
-          },
-          geography: {
-            totalContributionsAnalyzed: 0,
-            contributionsWithState: 0,
-            completenessPercentage: 0,
-          },
-          overallDataConfidence: 'low' as const,
-        },
-        candidateId: '',
+      // HONEST ERROR RESPONSE: No FEC data available
+      const errorResponse = {
+        error: 'Campaign finance data unavailable for this representative.',
+        reason:
+          'No corresponding FEC committee ID could be found or the data source is unreachable.',
+        bioguideId,
         cycle: currentCycle,
-        lastUpdated: new Date().toISOString(),
-        fecDataSources: {
-          financialSummary: 'No FEC candidate ID found',
-          contributions: 'No FEC candidate ID found',
-        },
-        errorOccurred: true,
-        errorMessage: 'No FEC candidate ID found for this representative',
         ...(debugInfo && { debug: debugInfo }),
       };
 
-      return NextResponse.json(zeroResponse, { status: 200 }); // Return 200 with zeros, not 404
+      return NextResponse.json(errorResponse, { status: 404 }); // Honest 404 - data not found
     }
 
     // Step 2: Fetch summary totals FIRST - most reliable source
@@ -468,55 +442,23 @@ export async function GET(
         debugInfo.cycleDetection.finalSelectedCycle = currentCycle;
       }
 
-      const emptyResponse = {
-        // Financial totals - all zeros when no data exists
-        totalRaised: 0,
-        totalSpent: 0,
-        cashOnHand: 0,
-        individualContributions: 0,
-        pacContributions: 0,
-        partyContributions: 0,
-        candidateContributions: 0,
-
-        // Empty breakdowns
-        industryBreakdown: [],
-        geographicBreakdown: [],
-
-        // Data quality indicating no data
-        dataQuality: {
-          industry: {
-            totalContributionsAnalyzed: 0,
-            contributionsWithEmployer: 0,
-            completenessPercentage: 0,
-          },
-          geography: {
-            totalContributionsAnalyzed: 0,
-            contributionsWithState: 0,
-            completenessPercentage: 0,
-          },
-          overallDataConfidence: 'low' as const,
-        },
-
-        // Metadata
-        candidateId: fecCandidateId,
+      // HONEST ERROR RESPONSE: FEC API returned no data
+      const errorResponse = {
+        error: 'Campaign finance data unavailable for this representative.',
+        reason: 'The FEC API returned no financial summary data for the requested cycle.',
+        bioguideId,
+        fecCandidateId,
         cycle: currentCycle,
-        lastUpdated: new Date().toISOString(),
-        fecDataSources: {
-          financialSummary: `FEC Candidate Totals API - No data for cycle ${currentCycle}`,
-          contributions: 'No contribution data available',
-        },
-
-        // Include debug information if requested
         ...(debugInfo && { debug: debugInfo }),
       };
 
-      logger.info(`[Finance API DIAGNOSTIC] Returning empty response structure:`, {
+      logger.info(`[Finance API] Returning honest error response - no FEC data:`, {
         bioguideId,
         fecCandidateId,
-        emptyResponse,
+        cycle: currentCycle,
       });
 
-      return NextResponse.json(emptyResponse, { status: 200 }); // Return 200 OK with empty data instead of 404
+      return NextResponse.json(errorResponse, { status: 404 }); // Honest 404 - no data available
     }
 
     // Step 3: We have good summary data - now try to fetch detailed data
@@ -672,54 +614,14 @@ export async function GET(
       );
     }
 
-    // CRITICAL FIX: Always return the expected data structure, even on error
-    // The frontend expects these fields, not an error object
+    // HONEST ERROR RESPONSE: Internal server error
     const errorResponse = {
-      // Financial totals - all zeros on error
-      totalRaised: 0,
-      totalSpent: 0,
-      cashOnHand: 0,
-      individualContributions: 0,
-      pacContributions: 0,
-      partyContributions: 0,
-      candidateContributions: 0,
-
-      // Empty breakdowns
-      industryBreakdown: [],
-      geographicBreakdown: [],
-
-      // Data quality indicating error
-      dataQuality: {
-        industry: {
-          totalContributionsAnalyzed: 0,
-          contributionsWithEmployer: 0,
-          completenessPercentage: 0,
-        },
-        geography: {
-          totalContributionsAnalyzed: 0,
-          contributionsWithState: 0,
-          completenessPercentage: 0,
-        },
-        overallDataConfidence: 'low' as const,
-      },
-
-      // Metadata
-      candidateId: '',
-      cycle: 2024,
-      lastUpdated: new Date().toISOString(),
-      fecDataSources: {
-        financialSummary: 'Error fetching data',
-        contributions: 'Error fetching data',
-      },
-
-      // Include error info for debugging
-      errorOccurred: true,
-      errorMessage: 'Internal server error while fetching campaign finance data',
-
-      // Include debug information if requested
+      error: 'Campaign finance data is temporarily unavailable.',
+      reason: 'The upstream data source (FEC API) could not be reached or returned an error.',
+      bioguideId,
       ...(debugInfo && { debug: debugInfo }),
     };
 
-    return NextResponse.json(errorResponse, { status: 200 }); // Return 200 with error flag instead of 500
+    return NextResponse.json(errorResponse, { status: 503 }); // Honest 503 - service unavailable
   }
 }

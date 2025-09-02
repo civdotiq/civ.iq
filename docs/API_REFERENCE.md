@@ -253,58 +253,89 @@ Get detailed information about a specific bill.
 
 #### GET /api/representative/[bioguideId]/finance
 
-Get FEC campaign finance data for a representative.
+Get FEC campaign finance data for a representative. **Updated 2025-09-02**: Enhanced with reliable bioguide→FEC ID mapping and honest error handling.
 
 **Parameters:**
 
 - `bioguideId`: Congress bioguide identifier
 - `cycle` (optional): Election cycle year (default: current cycle)
 
-**Response:**
+**Response (Success - 200):**
 
 ```json
 {
-  "summary": {
-    "totalRaised": "number",
-    "totalSpent": "number",
-    "cashOnHand": "number",
-    "debt": "number",
-    "lastReport": "string"
-  },
-  "contributions": {
-    "individual": "number",
-    "pac": "number",
-    "party": "number",
-    "candidate": "number",
-    "other": "number"
-  },
-  "topContributors": [
+  "totalRaised": "number",
+  "totalSpent": "number",
+  "cashOnHand": "number",
+  "individualContributions": "number",
+  "pacContributions": "number",
+  "partyContributions": "number",
+  "candidateContributions": "number",
+  "industryBreakdown": [
     {
-      "name": "string",
+      "industry": "string",
       "amount": "number",
-      "type": "individual|pac|organization"
+      "percentage": "number",
+      "topEmployers": ["string"]
     }
   ],
-  "industries": [
+  "geographicBreakdown": [
     {
-      "name": "string",
+      "state": "string",
       "amount": "number",
-      "individuals": "number",
-      "pacs": "number"
+      "percentage": "number"
     }
   ],
-  "expenditures": {
-    "operating": "number",
-    "fundraising": "number",
-    "advertising": "number",
-    "other": "number"
+  "dataQuality": {
+    "industry": {
+      "totalContributionsAnalyzed": "number",
+      "contributionsWithEmployer": "number",
+      "completenessPercentage": "number"
+    },
+    "geography": {
+      "totalContributionsAnalyzed": "number",
+      "contributionsWithState": "number",
+      "completenessPercentage": "number"
+    },
+    "overallDataConfidence": "high|medium|low"
   },
-  "independentExpenditures": {
-    "support": "number",
-    "oppose": "number"
+  "candidateId": "string",
+  "cycle": "number",
+  "lastUpdated": "string",
+  "fecDataSources": {
+    "financialSummary": "string",
+    "contributions": "string"
   }
 }
 ```
+
+**Response (No FEC Mapping - 404):**
+
+```json
+{
+  "error": "Campaign finance data unavailable for this representative.",
+  "reason": "No corresponding FEC committee ID could be found or the data source is unreachable.",
+  "bioguideId": "string",
+  "cycle": "number"
+}
+```
+
+**Response (Service Unavailable - 503):**
+
+```json
+{
+  "error": "Campaign finance data is temporarily unavailable.",
+  "reason": "The upstream data source (FEC API) could not be reached or returned an error.",
+  "bioguideId": "string"
+}
+```
+
+**Architecture Notes:**
+
+- **Systems Fix (2025-09-02)**: Fixed bioguide→FEC ID mapping in batch service with proper error handling
+- **Single Data Path**: Consistent flow through Frontend → Batch API → FEC Service (no more dual paths)
+- **Honest Error Handling**: Returns proper HTTP status codes instead of misleading zero-data responses
+- **Production Verified**: End-to-end tested with Nancy Pelosi (P000197) showing real FEC data
 
 ### News & Media
 
