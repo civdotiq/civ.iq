@@ -65,12 +65,50 @@ export function FinanceTab({
 
   if (isLoading) {
     return (
-      <div className="animate-pulse space-y-4">
+      <div className="animate-pulse space-y-6">
         <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+
+        {/* Enhanced loading skeleton for finance cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="h-32 bg-gray-100 rounded"></div>
-          <div className="h-32 bg-gray-100 rounded"></div>
-          <div className="h-32 bg-gray-100 rounded"></div>
+          <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border border-green-200">
+            <div className="h-6 bg-green-200 rounded w-2/3 mb-4"></div>
+            <div className="h-10 bg-green-300 rounded w-full mb-2"></div>
+            <div className="h-4 bg-green-200 rounded w-3/4 mb-3"></div>
+            <div className="h-6 bg-green-200 rounded-full w-20"></div>
+          </div>
+
+          <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-lg border border-red-200">
+            <div className="h-6 bg-red-200 rounded w-2/3 mb-4"></div>
+            <div className="h-10 bg-red-300 rounded w-full mb-2"></div>
+            <div className="h-4 bg-red-200 rounded w-3/4 mb-3"></div>
+            <div className="h-6 bg-red-200 rounded-full w-20"></div>
+          </div>
+
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
+            <div className="h-6 bg-blue-200 rounded w-2/3 mb-4"></div>
+            <div className="h-10 bg-blue-300 rounded w-full mb-2"></div>
+            <div className="h-4 bg-blue-200 rounded w-3/4 mb-3"></div>
+            <div className="h-6 bg-blue-200 rounded-full w-20"></div>
+          </div>
+        </div>
+
+        {/* Loading skeleton for contribution sources */}
+        <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            </div>
+            <div className="flex justify-between">
+              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            </div>
+            <div className="flex justify-between">
+              <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -109,23 +147,38 @@ export function FinanceTab({
 
       {/* Financial Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-green-600 mb-2">Total Raised</h3>
-          <div className="text-3xl font-bold text-gray-900">{formatCurrency(data.totalRaised)}</div>
-          <div className="text-sm text-gray-500 mt-1">Total receipts reported to FEC</div>
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border border-green-200 hover:shadow-lg transition-all duration-200">
+          <h3 className="text-lg font-semibold text-green-700 mb-2">Total Raised</h3>
+          <div className="text-3xl font-bold text-green-900 mb-2">
+            {formatCurrency(data.totalRaised)}
+          </div>
+          <div className="text-sm text-green-600 mb-2">Total receipts reported to FEC</div>
+          <div className="inline-flex items-center text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full">
+            Real FEC Data
+          </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-red-600 mb-2">Total Spent</h3>
-          <div className="text-3xl font-bold text-gray-900">{formatCurrency(data.totalSpent)}</div>
-          <div className="text-sm text-gray-500 mt-1">Total disbursements reported to FEC</div>
+        <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-lg border border-red-200 hover:shadow-lg transition-all duration-200">
+          <h3 className="text-lg font-semibold text-red-700 mb-2">Total Spent</h3>
+          <div className="text-3xl font-bold text-red-900 mb-2">
+            {formatCurrency(data.totalSpent)}
+          </div>
+          <div className="text-sm text-red-600 mb-2">Total disbursements reported to FEC</div>
+          <div className="inline-flex items-center text-xs bg-red-200 text-red-800 px-2 py-1 rounded-full">
+            Real FEC Data
+          </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-blue-600 mb-2">Cash on Hand</h3>
-          <div className="text-3xl font-bold text-gray-900">{formatCurrency(data.cashOnHand)}</div>
-          <div className="text-sm text-gray-500 mt-1">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200 hover:shadow-lg transition-all duration-200">
+          <h3 className="text-lg font-semibold text-blue-700 mb-2">Cash on Hand</h3>
+          <div className="text-3xl font-bold text-blue-900 mb-2">
+            {formatCurrency(data.cashOnHand)}
+          </div>
+          <div className="text-sm text-blue-600 mb-2">
             Available cash at end of reporting period
+          </div>
+          <div className="inline-flex items-center text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full">
+            Real FEC Data
           </div>
         </div>
       </div>

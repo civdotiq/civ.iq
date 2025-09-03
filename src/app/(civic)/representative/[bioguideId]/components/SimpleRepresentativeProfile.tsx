@@ -117,6 +117,38 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
             <DistrictSidebar representative={representative} />
           </div>
         </div>
+
+        {/* Data Sources Attribution */}
+        <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Data Sources</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <div>
+                <div className="font-medium text-sm text-gray-900">Congress.gov</div>
+                <div className="text-xs text-gray-500">Bills, votes, committees</div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <div>
+                <div className="font-medium text-sm text-gray-900">FEC.gov</div>
+                <div className="text-xs text-gray-500">Campaign finance data</div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+              <div>
+                <div className="font-medium text-sm text-gray-900">congress-legislators</div>
+                <div className="text-xs text-gray-500">Biographical information</div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 text-xs text-gray-400">
+            All data is sourced from official government APIs and repositories. Data is refreshed
+            automatically and reflects the most current available information.
+          </div>
+        </div>
       </div>
     </div>
   );

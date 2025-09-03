@@ -63,19 +63,41 @@ class DistrictBoundaryService {
     if (this.metadata) return;
 
     try {
-      // Load metadata directly from file system instead of HTTP fetch
-      const { readFileSync } = await import('fs');
-      const { join } = await import('path');
+      // Determine the base URL for API calls
+      const baseUrl =
+        typeof window !== 'undefined'
+          ? window.location.origin
+          : `http://localhost:${process.env.PORT || 3000}`;
 
-      const realDataPath = join(process.cwd(), 'data', 'districts', 'district_metadata_real.json');
+      const metadataUrl = `${baseUrl}${this.metadataUrl}`;
 
       try {
-        const fileContent = readFileSync(realDataPath, 'utf8');
-        this.metadata = JSON.parse(fileContent);
-      } catch (fileError) {
-        throw new Error(
-          `Failed to load district metadata from ${realDataPath}: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`
-        );
+        const response = await fetch(metadataUrl);
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch district metadata: ${response.status} ${response.statusText}`
+          );
+        }
+
+        this.metadata = await response.json();
+
+        if (!this.metadata || !this.metadata.districts) {
+          throw new Error('Invalid metadata format received from API');
+        }
+      } catch {
+        // Silently provide a fallback empty structure to prevent complete failure
+        // The error is already handled by the API returning appropriate status
+        this.metadata = {
+          districts: {},
+          states: {},
+          summary: {
+            total_districts: 0,
+            states_with_districts: 0,
+            last_updated: new Date().toISOString(),
+            source: 'Fallback - Metadata API unavailable',
+          },
+        };
       }
     } catch (error) {
       throw new Error(

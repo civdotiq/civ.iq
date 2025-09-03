@@ -45,7 +45,14 @@ export async function POST(
       cached: result.metadata.cached,
     });
 
-    return NextResponse.json(result);
+    // Add proper caching headers
+    const headers = new Headers({
+      'Cache-Control': 'public, max-age=300, s-maxage=300', // 5 minutes cache
+      'CDN-Cache-Control': 'public, max-age=300',
+      Vary: 'Accept-Encoding',
+    });
+
+    return NextResponse.json(result, { headers });
   } catch (error) {
     logger.error('Optimized batch API error', error as Error, {
       bioguideId: upperBioguideId,
