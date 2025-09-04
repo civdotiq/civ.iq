@@ -1,0 +1,41 @@
+--- a/src/services/batch/representative-batch.service.ts
++++ b/src/services/batch/representative-batch.service.ts
+@@ -141,34 +141,10 @@
+         }
+ 
+         case 'votes': {
+-          try {
+-            logger.info(`Batch votes: Starting for ${bioguideId}`);
+-
+-            // Use a shorter timeout for votes to prevent long waits
+-            const timeout = new Promise((_, reject) =>
+-              setTimeout(() => reject(new Error('Votes timeout')), 3000)
+-            );
+-
+-            // Import the optimized votes service when available
+-            // For now, use the existing service with timeout protection
+-            const votesPromise = getVotesByMember(bioguideId);
+-
+-            const votes = (await Promise.race([votesPromise, timeout])) as unknown[];
+-
+-            // Limit results if requested
+-            result =
+-              options.votes?.limit && Array.isArray(votes)
+-                ? votes.slice(0, options.votes.limit)
+-                : votes;
+-
+-            logger.info(`Votes retrieved for ${bioguideId}`, {
+-              count: Array.isArray(result) ? result.length : 0,
+-            });
+-          } catch (error) {
+-            if (error instanceof Error && error.message === 'Votes timeout') {
+-              logger.warn(`Votes timeout for ${bioguideId}`);
+-            } else {
+-              logger.error(`Votes error for ${bioguideId}:`, error);
+-            }
++          // DISABLED: Votes service is broken for senators (tries House API)
++          // This was causing 39-second response times
++          logger.warn(`Votes disabled for ${bioguideId} - service broken for senators`);
++          result = [];
+           break;
+         }

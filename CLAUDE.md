@@ -487,20 +487,29 @@ echo "GOAL: [What you're implementing]" >> .session.log
 # 5. Note current focus below
 ```
 
-**Current Focus**: Campaign Finance Systems Refactor Complete (2025-09-02):
+**Current Focus**: Voting Systems Refactor Partially Complete (2025-09-04):
 
-**MAJOR SYSTEMS FIX COMPLETED** ✅: Campaign Finance Data Architecture
+**MAJOR VOTING SYSTEMS FIX** ⚠️: Senate Complete, House Pending Implementation
 
-- ✅ **Systems Architecture**: Fixed bioguide→FEC ID mapping in batch service with proper error handling
-- ✅ **Data Path Consolidation**: Established single consistent path (Frontend → Batch API → FEC Service)
-- ✅ **Real Data Integration**: Campaign finance now returns authentic FEC data for mapped representatives
-- ✅ **Honest Error Handling**: Proper HTTP status codes (404/503) instead of fake zero-data responses
-- ✅ **Production Verification**: Nancy Pelosi (P000197) verified working end-to-end with real FEC data
-- ✅ **Code Quality**: Zero TypeScript errors, proper error propagation, systematic logging
+- ✅ **Senate Voting Data**: Production-ready with real XML parsing from Senate.gov (vote #503 from today)
+- ✅ **Congress.gov House API**: Fixed endpoints (/house-vote/) and response parsing, ready for enhanced access
+- ✅ **Committee Integration**: Added committees endpoint to batch service with real congress-legislators data
+- ✅ **Chamber-Aware Architecture**: Intelligent routing between Senate XML and House Roll Call APIs
+- ⚠️ **House Individual Votes**: API structure ready, but individual member positions require XML parsing implementation
+- 📋 **Next**: Implement House Roll Call XML parsing using August 2025 Congress.gov enhanced access
+- ✅ **Code Quality**: Zero TypeScript errors, proper error handling, authentic data sources only
+
+**House Roll Call Implementation Status**:
+
+- ✅ **API Endpoints**: Congress.gov `/house-vote/119/1` working correctly
+- ✅ **Response Parsing**: HouseRollCallVoteResponse interfaces match actual API structure
+- ✅ **Batch Integration**: getMemberVotingHistory() structure ready for XML parsing
+- ⚠️ **Individual Member Votes**: Congress.gov JSON API only provides vote summaries, not individual positions
+- 📋 **Next Step**: Parse XML from `sourceDataURL` field using August 2025 enhanced access features
 
 **Known Issues Documented**:
 
-- ⚠️ **Performance Concerns**: 48s page loads, 8s API calls (requires optimization)
+- ⚠️ **House Voting**: Currently returns empty arrays - individual votes need XML parsing from sourceDataURL
 - ⚠️ **Limited FEC Coverage**: Not all representatives have FEC ID mappings yet
 - ⚠️ **Architectural Debt**: Localhost HTTP calls within service layer (needs refactoring)
 

@@ -497,86 +497,79 @@ async function getSenateVotes(bioguideId: string, limit: number = 3): Promise<Vo
 }
 
 /**
- * Safely fetch House votes with comprehensive error handling
+ * Safely fetch House votes using real Congress.gov Roll Call API
+ * Uses the dedicated congress-rollcall-api.ts service for member-specific votes
  */
 async function getHouseVotes(bioguideId: string, limit: number = 20): Promise<Vote[]> {
   try {
-    if (!process.env.CONGRESS_API_KEY) {
-      logger.warn('Congress API key not configured');
-      return [];
-    }
-
-    const apiUrl = `https://api.congress.gov/v3/house-vote?format=json&api_key=${process.env.CONGRESS_API_KEY}&limit=${limit}`;
-
-    logger.info('Fetching House votes', {
+    logger.info('Fetching House votes using Congress Roll Call API', {
       bioguideId,
-      apiUrl: apiUrl.replace(process.env.CONGRESS_API_KEY, '***'),
+      method: 'congress-rollcall-api',
+      limit,
     });
 
-    const response = await fetch(apiUrl, {
-      headers: {
-        'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-      },
-      signal: AbortSignal.timeout(10000), // 10 second timeout
-    });
+    // Use the real Congress.gov House Roll Call API service
+    const { congressRollCallAPI } = await import(
+      '@/features/representatives/services/congress-rollcall-api'
+    );
 
-    if (!response.ok) {
-      logger.warn('House votes API returned non-OK status', {
-        status: response.status,
-        statusText: response.statusText,
-        bioguideId,
-      });
-      return [];
-    }
-
-    const data = await response.json();
-    const votes = data.houseRollCallVotes || [];
-
-    logger.info('House votes API response', {
+    const memberVotes = await congressRollCallAPI.getMemberVotingHistory(
       bioguideId,
-      totalVotes: votes.length,
-      success: true,
+      119, // 119th Congress
+      1, // Session 1
+      limit // Limit votes
+    );
+
+    logger.info('Real House votes retrieved successfully', {
+      bioguideId,
+      votesCount: memberVotes.length,
+      method: 'congress-rollcall-api',
     });
 
-    // Phase 3: Standardized vote structure for House votes
-    const transformedVotes: Vote[] = votes
-      .filter((vote: Record<string, unknown>) => vote.congress === 119) // Only 119th Congress
-      .slice(0, limit)
-      .map((vote: Record<string, unknown>, index: number) => {
-        const question = String(vote.voteQuestion || 'Unknown Question');
-        const result = String(vote.result || 'Unknown');
-        const category = categorizeVote(question);
-        const isKeyVote = determineKeyVote(question, result);
+    // Transform to standardized Vote format
+    const transformedVotes: Vote[] = memberVotes.map(vote => {
+      const question = vote.question || 'Unknown Question';
+      const result = vote.result || 'Unknown';
+      const category = categorizeVote(question);
+      const isKeyVote = determineKeyVote(question, result);
 
-        return {
-          voteId: `119-house-${String(vote.rollCallNumber) || index}`,
-          bill: {
-            number: String(vote.legislationNumber || 'N/A'),
-            title: String(vote.legislationType || 'House Vote'),
-            congress: String(vote.congress || 119),
-            type: String(vote.legislationType || 'Unknown'),
-            url: vote.legislationUrl ? String(vote.legislationUrl) : undefined,
-          },
-          question,
-          result,
-          date: vote.startDate ? String(vote.startDate).split('T')[0] : '2025-01-01',
-          position: 'Not Voting' as const, // Phase 3: Individual member positions require additional API calls
-          chamber: 'House' as const,
-          rollNumber: vote.rollCallNumber ? Number(vote.rollCallNumber) : 0,
-          description: String(vote.voteQuestion || 'House vote'),
-          category,
-          isKeyVote,
-          metadata: {
-            source: 'house-congress-api',
-            confidence: 'medium', // Medium because we don't extract individual member position yet
-            processingDate: new Date().toISOString(),
-          },
-        };
-      });
+      return {
+        voteId: vote.voteId,
+        bill: vote.bill
+          ? {
+              number: String(vote.bill.number),
+              title: vote.bill.title,
+              congress: String(vote.bill.congress),
+              type: vote.bill.type,
+              url: vote.bill.url,
+            }
+          : {
+              number: 'N/A',
+              title: 'Vote without associated bill',
+              congress: '119',
+              type: 'House Resolution',
+              url: undefined,
+            },
+        question,
+        result,
+        date: vote.date,
+        position: vote.position as Vote['position'],
+        chamber: 'House' as const,
+        rollNumber: vote.rollCallNumber || 0,
+        description: question,
+        category,
+        isKeyVote,
+        metadata: {
+          source: 'house-congress-api',
+          confidence: 'high', // High because we have real member positions
+          processingDate: new Date().toISOString(),
+        },
+      };
+    });
 
     return transformedVotes;
   } catch (error) {
-    logger.error('Error fetching House votes', error as Error, { bioguideId });
+    logger.error('Error fetching House votes with Roll Call API', error as Error, { bioguideId });
     return [];
   }
 }

@@ -12,46 +12,42 @@ import { logger } from '@/lib/logging/logger-edge';
 import { cachedFetch } from '@/lib/cache-edge';
 
 interface HouseRollCallVoteResponse {
-  rollCallVote: {
+  houseRollCallVote: {
     congress: number;
-    chamber: string;
-    session: number;
+    sessionNumber: number;
     rollCallNumber: number;
-    date: string;
-    question: string;
+    startDate: string;
+    voteQuestion: string;
     result: string;
-    bill?: {
-      congress: number;
-      type: string;
-      number: number;
-      title: string;
-      url: string;
-    };
-    members: Array<{
-      bioguideId: string;
-      name: string;
-      party: string;
-      state: string;
-      vote: 'Yea' | 'Nay' | 'Not Voting' | 'Present';
+    legislationType?: string;
+    legislationNumber?: string;
+    legislationUrl?: string;
+    votePartyTotal: Array<{
+      party: {
+        name: string;
+        type: string;
+      };
+      yeaTotal: number;
+      nayTotal: number;
+      presentTotal: number;
+      notVotingTotal: number;
     }>;
-    totals: {
-      yea: number;
-      nay: number;
-      present: number;
-      notVoting: number;
-    };
+    // Members data not included in basic response - would need separate endpoint
   };
 }
 
 interface HouseRollCallListResponse {
-  rollCallVotes: Array<{
+  houseRollCallVotes: Array<{
     congress: number;
-    session: number;
+    sessionNumber: number;
     rollCallNumber: number;
-    date: string;
-    question: string;
+    startDate: string;
+    voteQuestion?: string;
     result: string;
     url: string;
+    legislationType?: string;
+    legislationNumber?: string;
+    legislationUrl?: string;
   }>;
   pagination: {
     count: number;
@@ -78,12 +74,12 @@ export class CongressRollCallAPI {
     session: number = 1,
     limit: number = 20
   ): Promise<HouseRollCallListResponse> {
-    // Fixed URL format based on actual Congress.gov API structure
-    const url = `${this.baseUrl}/house/rollCall/${congress}/${session}`;
+    // CORRECTED: Using actual working Congress.gov API endpoint
+    const url = `${this.baseUrl}/house-vote/${congress}/${session}`;
     const params = new URLSearchParams({
       format: 'json',
       limit: limit.toString(),
-      sort: 'date:desc', // Get most recent first
+      // Note: sort parameter may not be supported, will test without it first
     });
 
     logger.info('Fetching recent House roll call votes', {
@@ -126,8 +122,8 @@ export class CongressRollCallAPI {
     session: number,
     rollCallNumber: number
   ): Promise<HouseRollCallVoteResponse> {
-    // Fixed URL format based on actual Congress.gov API structure
-    const url = `${this.baseUrl}/house/rollCall/${congress}/${session}/${rollCallNumber}`;
+    // CORRECTED: Using actual working Congress.gov API endpoint
+    const url = `${this.baseUrl}/house-vote/${congress}/${session}/${rollCallNumber}`;
     const params = new URLSearchParams({
       format: 'json',
     });
@@ -181,30 +177,20 @@ export class CongressRollCallAPI {
     };
   } | null> {
     try {
-      const rollCallData = await this.getHouseRollCallVote(congress, session, rollCallNumber);
+      // NOTE: Congress.gov House Roll Call API doesn't include individual member votes in JSON response
+      // Would need to parse XML from sourceDataURL for individual member positions
+      logger.warn('Individual member votes not available in Congress.gov JSON API', {
+        bioguideId,
+        congress,
+        session,
+        rollCallNumber,
+        note: 'Would need XML parsing from houseRollCallVote.sourceDataURL',
+      });
+      return null;
 
-      const memberVote = rollCallData.rollCallVote.members.find(
-        member => member.bioguideId === bioguideId
-      );
-
-      if (!memberVote) {
-        logger.warn('Member not found in roll call vote', {
-          bioguideId,
-          congress,
-          session,
-          rollCallNumber,
-        });
-        return null;
-      }
-
-      return {
-        position: memberVote.vote,
-        member: {
-          name: memberVote.name,
-          party: memberVote.party,
-          state: memberVote.state,
-        },
-      };
+      // NOTE: XML parsing from Congress.gov sourceDataURL would be needed
+      // const rollCallData = await this.getHouseRollCallVote(congress, session, rollCallNumber);
+      // Parse XML from rollCallData.houseRollCallVote.sourceDataURL
     } catch (error) {
       logger.error('Failed to get member vote position', error as Error, {
         bioguideId,
@@ -249,66 +235,20 @@ export class CongressRollCallAPI {
         limit,
       });
 
-      // NOTE: Congress.gov House Roll Call API is now available (May 2025)
-      // Processing all House members with real API data
+      // NOTE: Congress.gov House Roll Call API JSON response doesn't include individual member votes
+      // Individual votes would require XML parsing from sourceDataURL
 
-      // First, get the list of recent roll call votes
-      const rollCallList = await this.getRecentHouseRollCallVotes(congress, session, limit * 2); // Get more to account for member absences
-
-      const memberVotes = [];
-
-      // Process roll calls in parallel batches to avoid overwhelming the API
-      const batchSize = 5;
-      for (
-        let i = 0;
-        i < rollCallList.rollCallVotes.length && memberVotes.length < limit;
-        i += batchSize
-      ) {
-        const batch = rollCallList.rollCallVotes.slice(i, i + batchSize);
-
-        const batchPromises = batch.map(async rollCall => {
-          try {
-            const memberPosition = await this.getMemberVotePosition(
-              bioguideId,
-              congress,
-              session,
-              rollCall.rollCallNumber
-            );
-
-            if (memberPosition) {
-              return {
-                voteId: `congress-${congress}-${session}-${rollCall.rollCallNumber}`,
-                rollCallNumber: rollCall.rollCallNumber,
-                date: rollCall.date,
-                question: rollCall.question,
-                result: rollCall.result,
-                position: memberPosition.position,
-                // Get bill info from the full roll call data
-                bill: await this.getBillInfoForRollCall(congress, session, rollCall.rollCallNumber),
-              };
-            }
-            return null;
-          } catch (error) {
-            logger.debug('Failed to get member position for roll call', {
-              rollCallNumber: rollCall.rollCallNumber,
-              error: (error as Error).message,
-            });
-            return null;
-          }
-        });
-
-        const batchResults = await Promise.all(batchPromises);
-        const validVotes = batchResults.filter(vote => vote !== null);
-        memberVotes.push(...validVotes);
-      }
-
-      logger.info('Retrieved member voting history', {
+      logger.info('House Roll Call individual member votes require XML parsing implementation', {
         bioguideId,
-        votesFound: memberVotes.length,
-        totalRollCallsChecked: Math.min(rollCallList.rollCallVotes.length, limit * 2),
+        congress,
+        session,
+        limit,
+        note: 'JSON API only provides vote summaries, not individual member positions',
       });
 
-      return memberVotes.slice(0, limit);
+      // Return empty array for now - individual House member votes need XML parsing
+      // This maintains API compatibility while indicating the limitation
+      return [];
     } catch (error) {
       logger.error('Failed to get member voting history', error as Error, {
         bioguideId,
@@ -339,7 +279,22 @@ export class CongressRollCallAPI {
   > {
     try {
       const rollCallData = await this.getHouseRollCallVote(congress, session, rollCallNumber);
-      return rollCallData.rollCallVote.bill;
+
+      // Transform Congress.gov response to expected bill format
+      if (
+        rollCallData.houseRollCallVote.legislationType &&
+        rollCallData.houseRollCallVote.legislationNumber
+      ) {
+        return {
+          congress,
+          type: rollCallData.houseRollCallVote.legislationType,
+          number: parseInt(rollCallData.houseRollCallVote.legislationNumber),
+          title: `${rollCallData.houseRollCallVote.legislationType} ${rollCallData.houseRollCallVote.legislationNumber}`,
+          url: rollCallData.houseRollCallVote.legislationUrl || '',
+        };
+      }
+
+      return undefined;
     } catch (error) {
       logger.debug('Failed to get bill info for roll call', {
         congress,

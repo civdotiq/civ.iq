@@ -50,22 +50,79 @@ interface FECCommittee {
 }
 
 interface FECFinancialSummary {
+  // Core identifiers
   candidate_id: string;
   cycle: number;
+  candidate_election_year: number;
+
+  // Date fields
   coverage_start_date: string;
   coverage_end_date: string;
-  total_receipts: number;
-  total_disbursements: number;
-  cash_on_hand: number;
-  debts_owed: number;
+  transaction_coverage_date: string;
+
+  // Financial totals (actual field names from FEC API)
+  receipts: number;
+  disbursements: number;
+  last_cash_on_hand_end_period: number;
+
+  // Contributions breakdown
   individual_contributions: number;
-  pac_contributions: number;
-  party_contributions: number;
-  candidate_contributions: number;
-  transfer_from_other_committees: number;
-  transfer_to_other_committees: number;
-  refunds_to_individuals: number;
-  refunds_to_committees: number;
+  individual_itemized_contributions: number;
+  individual_unitemized_contributions: number;
+  other_political_committee_contributions: number;
+  political_party_committee_contributions: number;
+  candidate_contribution: number;
+
+  // Other financial details
+  contributions: number;
+  contribution_refunds: number;
+  net_contributions: number;
+  net_operating_expenditures: number;
+
+  // Loans
+  all_other_loans: number;
+  loans: number;
+  loans_made_by_candidate: number;
+  loan_repayments: number;
+  loan_repayments_candidate_loans: number;
+  loan_repayments_other_loans: number;
+
+  // Operating details
+  operating_expenditures: number;
+  other_disbursements: number;
+  fundraising_disbursements: number;
+  exempt_legal_accounting_disbursement: number;
+
+  // Transfers
+  transfers_from_other_authorized_committee: number;
+  transfers_to_other_authorized_committee: number;
+
+  // Refunds
+  refunded_individual_contributions: number;
+  refunded_other_political_committee_contributions: number;
+  refunded_political_party_committee_contributions: number;
+
+  // Offsets
+  offsets_to_fundraising_expenditures: number;
+  offsets_to_legal_accounting: number;
+  offsets_to_operating_expenditures: number;
+  total_offsets_to_operating_expenditures: number;
+
+  // Other fields
+  federal_funds: number;
+  other_receipts: number;
+
+  // Report metadata
+  last_beginning_image_number: string;
+  last_debts_owed_by_committee: number;
+  last_debts_owed_to_committee: number;
+  last_net_contributions: number;
+  last_net_operating_expenditures: number;
+  last_report_type_full: string;
+  last_report_year: number;
+
+  // Election metadata
+  election_full: string;
 }
 
 interface FECContribution {

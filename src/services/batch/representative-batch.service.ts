@@ -106,13 +106,13 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
               limit: options.bills?.limit || 25,
               page: options.bills?.page || 1,
             });
-            
+
             // Transform to legacy format for backward compatibility
             result = {
               // Legacy format expected by BillsTab
               sponsoredLegislation: billsResult.bills,
-              
-              // Enhanced format with counts and structure  
+
+              // Enhanced format with counts and structure
               sponsored: {
                 count: billsResult.bills.length,
                 bills: billsResult.bills,
@@ -121,15 +121,15 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
                 count: 0,
                 bills: [],
               },
-              
+
               // Summary
               totalSponsored: billsResult.bills.length,
               totalCosponsored: 0,
               totalBills: billsResult.bills.length,
-              
+
               // Include pagination info
               pagination: billsResult.pagination,
-              
+
               metadata: {
                 ...billsResult.metadata,
                 source: 'Congress.gov API (Optimized)',
@@ -143,33 +143,248 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
         }
 
         case 'votes': {
-          // For now, return empty votes array to avoid timeouts
-          // TODO: Implement optimized votes service that doesn't make multiple API calls
-          logger.info(`Batch votes: Returning empty array to avoid timeout for ${bioguideId}`);
-          result = [];
+          try {
+            logger.info(`Batch votes: Starting for ${bioguideId}`);
+
+            // Get representative chamber info for proper API routing
+            const { getEnhancedRepresentative } = await import(
+              '@/features/representatives/services/congress.service'
+            );
+            const representative = await getEnhancedRepresentative(bioguideId);
+            if (!representative) {
+              logger.error('Representative not found for votes', { bioguideId });
+              result = [];
+              break;
+            }
+            const chamber = representative.chamber;
+
+            logger.info(`Fetching ${chamber} votes for ${bioguideId}`, {
+              bioguideId,
+              chamber,
+            });
+
+            // Use chamber-aware votes function with timeout protection
+            const timeout = new Promise(
+              (_, reject) => setTimeout(() => reject(new Error('Votes timeout')), 5000) // 5 second timeout
+            );
+
+            const votesPromise = getVotesByMember(bioguideId, undefined, chamber);
+            const votes = (await Promise.race([votesPromise, timeout])) as unknown[];
+
+            // Limit results if requested
+            result =
+              options.votes?.limit && Array.isArray(votes)
+                ? votes.slice(0, options.votes.limit)
+                : votes;
+
+            logger.info(`Votes retrieved for ${bioguideId}`, {
+              count: Array.isArray(result) ? result.length : 0,
+              chamber,
+            });
+          } catch (error) {
+            if (error instanceof Error && error.message === 'Votes timeout') {
+              logger.warn(`Votes timeout for ${bioguideId} after 5 seconds`);
+            } else {
+              logger.error(`Votes error for ${bioguideId}:`, error);
+            }
+            // Return empty array on error/timeout
+            result = [];
+          }
+
           break;
         }
 
         case 'finance': {
-          // Direct service call - no HTTP requests for better performance
-          logger.info(`Batch finance: Starting for ${bioguideId}`);
-          
-          // For now, return empty finance data structure
-          // TODO: Implement direct FEC service calls after restoring full finance implementation
-          result = {
-            totalRaised: 0,
-            totalSpent: 0,
-            cashOnHand: 0,
-            individualContributions: 0,
-            pacContributions: 0,
-            partyContributions: 0,
-            candidateContributions: 0,
-            metadata: {
-              note: 'Finance data pending full implementation',
-              bioguideId,
-            },
-          };
-          
+          try {
+            logger.info(`Batch finance: Starting for ${bioguideId}`);
+
+            // Import FEC mapping
+            const { bioguideToFECMapping } = await import('@/lib/data/bioguide-fec-mapping');
+            const fecMapping = bioguideToFECMapping[bioguideId];
+
+            logger.info(`FEC mapping lookup for ${bioguideId}:`, {
+              hasFecMapping: !!fecMapping,
+              fecId: fecMapping?.fecId || 'none',
+              name: fecMapping?.name || 'unknown',
+            });
+
+            if (!fecMapping || !fecMapping.fecId) {
+              // Return empty structure for representatives without FEC data
+              logger.info(`No FEC mapping for ${bioguideId}`);
+              result = {
+                totalRaised: 0,
+                totalSpent: 0,
+                cashOnHand: 0,
+                individualContributions: 0,
+                pacContributions: 0,
+                partyContributions: 0,
+                candidateContributions: 0,
+                metadata: {
+                  note: 'No FEC data available for this representative',
+                  bioguideId,
+                },
+              };
+              break;
+            }
+
+            // Call FEC API with the mapped ID
+            const candidateId = fecMapping.fecId;
+            const cycle = 2024;
+
+            logger.info(`Calling FEC API:`, {
+              candidateId,
+              cycle,
+              method: 'getCandidateFinancials',
+            });
+
+            // Get financial summary (FIX: Correct method name)
+            const summaryDataArray = await fecAPI.getCandidateFinancials(candidateId, cycle);
+
+            logger.info(`FEC API response:`, {
+              candidateId,
+              responseType: Array.isArray(summaryDataArray) ? 'array' : typeof summaryDataArray,
+              length: Array.isArray(summaryDataArray) ? summaryDataArray.length : 'N/A',
+              firstItemKeys:
+                Array.isArray(summaryDataArray) && summaryDataArray[0]
+                  ? Object.keys(summaryDataArray[0])
+                  : 'none',
+            });
+
+            // Handle array response - take the most recent cycle's data
+            const summaryData =
+              Array.isArray(summaryDataArray) && summaryDataArray.length > 0
+                ? summaryDataArray[0]
+                : null;
+
+            if (!summaryData) {
+              logger.warn(`No financial data returned from FEC for ${candidateId} (${bioguideId})`);
+              result = {
+                totalRaised: 0,
+                totalSpent: 0,
+                cashOnHand: 0,
+                individualContributions: 0,
+                pacContributions: 0,
+                partyContributions: 0,
+                candidateContributions: 0,
+                metadata: {
+                  note: 'No financial data found in FEC records',
+                  candidateId,
+                  bioguideId,
+                },
+              };
+              break;
+            }
+
+            // Process financial data with proper types (interface now matches API response)
+            logger.info(`Processing financial data for ${bioguideId}:`, {
+              receipts: summaryData.receipts,
+              disbursements: summaryData.disbursements,
+              cashOnHand: summaryData.last_cash_on_hand_end_period,
+              individualContributions: summaryData.individual_contributions,
+            });
+
+            // Transform to expected format using proper field names
+            result = {
+              totalRaised: summaryData.receipts || 0,
+              totalSpent: summaryData.disbursements || 0,
+              cashOnHand: summaryData.last_cash_on_hand_end_period || 0,
+              individualContributions: summaryData.individual_contributions || 0,
+              pacContributions: summaryData.other_political_committee_contributions || 0,
+              partyContributions: summaryData.political_party_committee_contributions || 0,
+              candidateContributions: summaryData.candidate_contribution || 0,
+
+              metadata: {
+                candidateId,
+                cycle,
+                lastUpdated: new Date().toISOString(),
+                bioguideId,
+              },
+            };
+
+            logger.info(`Finance data retrieved for ${bioguideId}`, {
+              totalRaised: result.totalRaised,
+              hasFECMapping: true,
+            });
+          } catch (error) {
+            logger.error(`Finance error for ${bioguideId}:`, error);
+            // Return empty data on error
+            result = {
+              totalRaised: 0,
+              totalSpent: 0,
+              cashOnHand: 0,
+              individualContributions: 0,
+              pacContributions: 0,
+              partyContributions: 0,
+              candidateContributions: 0,
+              metadata: {
+                note: 'Finance data temporarily unavailable',
+                bioguideId,
+                error: error instanceof Error ? error.message : 'Unknown error',
+              },
+            };
+          }
+
+          break;
+        }
+
+        case 'committees': {
+          try {
+            logger.info(`Batch committees: Starting for ${bioguideId}`);
+
+            // Use the existing enhanced representative service which has real committee data
+            const { getEnhancedRepresentative } = await import(
+              '@/features/representatives/services/congress.service'
+            );
+
+            const representative = await getEnhancedRepresentative(bioguideId);
+
+            if (!representative) {
+              logger.warn(`Representative not found for committees: ${bioguideId}`);
+              result = {
+                committees: [],
+                count: 0,
+                metadata: {
+                  note: 'Representative not found',
+                  bioguideId,
+                  source: 'congress-legislators',
+                },
+              };
+              break;
+            }
+
+            const committees = representative.committees || [];
+
+            result = {
+              committees,
+              count: committees.length,
+              metadata: {
+                bioguideId,
+                source: 'congress-legislators YAML',
+                lastUpdated: new Date().toISOString(),
+                representativeName:
+                  representative.fullName?.first + ' ' + representative.fullName?.last,
+              },
+            };
+
+            logger.info(`Committees retrieved for ${bioguideId}`, {
+              count: committees.length,
+              representativeName:
+                representative.fullName?.first + ' ' + representative.fullName?.last,
+            });
+          } catch (error) {
+            logger.error(`Committees error for ${bioguideId}:`, error);
+            result = {
+              committees: [],
+              count: 0,
+              metadata: {
+                note: 'Committee data temporarily unavailable',
+                bioguideId,
+                source: 'congress-legislators',
+                error: error instanceof Error ? error.message : 'Unknown error',
+              },
+            };
+          }
+
           break;
         }
 
