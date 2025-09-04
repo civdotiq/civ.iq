@@ -15,7 +15,11 @@ function useBatchData(bioguideId: string | null, config?: SWRConfiguration) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ endpoints: ['bills', 'finance', 'committees', 'votes'] })
-      }).then(res => res.json()),
+      }).then(res => res.json()).then(data => {
+        // DEBUG: Log the actual response structure
+        console.log('[DEBUG] Batch API response:', data);
+        return data;
+      }),
     {
       revalidateOnFocus: false,
       dedupingInterval: 60000, // Share cache between all hooks
