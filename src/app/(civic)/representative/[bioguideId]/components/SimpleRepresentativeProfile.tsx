@@ -93,12 +93,12 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
             yearsInOffice: representative.terms?.length
               ? new Date().getFullYear() - parseInt(representative.terms[0]?.startYear || '0')
               : 0,
-            billsSponsored: batchData?.data?.bills?.totalSponsored || 0,
+            billsSponsored: batchData?.success ? (batchData.data?.bills?.totalSponsored || 0) : 0,
             committees: representative.committees?.length || 0,
-            totalRaised: batchData?.data?.finance?.totalRaised || 0,
-            votesParticipated: batchData?.data?.votes?.length || 0,
+            totalRaised: batchData?.success ? (batchData.data?.finance?.totalRaised || 0) : 0,
+            votesParticipated: batchData?.success ? (batchData.data?.votes?.length || 0) : 0,
           }}
-          loading={batchLoading}
+          loading={!batchData}
         />
 
         {/* Main Content Layout */}
