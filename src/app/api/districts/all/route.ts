@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCookPVI as getRealCookPVI } from '../cook-pvi-data';
+import { fetchAllDistrictDemographics } from '../census-helpers';
 import logger from '@/lib/logging/simple-logger';
 import type { CongressApiMember, CongressApiMembersResponse } from '@/types/api-responses';
 
@@ -140,20 +141,21 @@ export async function GET(request: Request) {
 
     // First, try to get comprehensive Census demographic data
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const censusDataMap = new Map<string, any>();
-    // Temporarily disable Census API to isolate the issue
-    /*
+    let censusDataMap = new Map<string, any>();
+
     try {
       logger.info('Fetching Census data for all districts');
       censusDataMap = await fetchAllDistrictDemographics(censusApiKey);
       logger.info('Fetched Census demographic data', {
-        districtCount: censusDataMap.size
+        districtCount: censusDataMap.size,
       });
     } catch (error) {
-      logger.error('Error fetching comprehensive Census data', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Error fetching comprehensive Census data',
+        error instanceof Error ? error : new Error(String(error))
+      );
       // Continue without Census data
     }
-    */
 
     // Process each member to extract district information
     let processedCount = 0;
@@ -183,7 +185,62 @@ export async function GET(request: Request) {
       // Ensure district number is padded
       districtNumber = districtNumber.padStart(2, '0');
 
-      const districtKey = `${member.state}-${districtNumber}`;
+      // Convert full state name to abbreviation - DIRECT MAPPING
+      const stateMapping: { [key: string]: string } = {
+        Alabama: 'AL',
+        Alaska: 'AK',
+        Arizona: 'AZ',
+        Arkansas: 'AR',
+        California: 'CA',
+        Colorado: 'CO',
+        Connecticut: 'CT',
+        Delaware: 'DE',
+        Florida: 'FL',
+        Georgia: 'GA',
+        Hawaii: 'HI',
+        Idaho: 'ID',
+        Illinois: 'IL',
+        Indiana: 'IN',
+        Iowa: 'IA',
+        Kansas: 'KS',
+        Kentucky: 'KY',
+        Louisiana: 'LA',
+        Maine: 'ME',
+        Maryland: 'MD',
+        Massachusetts: 'MA',
+        Michigan: 'MI',
+        Minnesota: 'MN',
+        Mississippi: 'MS',
+        Missouri: 'MO',
+        Montana: 'MT',
+        Nebraska: 'NE',
+        Nevada: 'NV',
+        'New Hampshire': 'NH',
+        'New Jersey': 'NJ',
+        'New Mexico': 'NM',
+        'New York': 'NY',
+        'North Carolina': 'NC',
+        'North Dakota': 'ND',
+        Ohio: 'OH',
+        Oklahoma: 'OK',
+        Oregon: 'OR',
+        Pennsylvania: 'PA',
+        'Rhode Island': 'RI',
+        'South Carolina': 'SC',
+        'South Dakota': 'SD',
+        Tennessee: 'TN',
+        Texas: 'TX',
+        Utah: 'UT',
+        Vermont: 'VT',
+        Virginia: 'VA',
+        Washington: 'WA',
+        'West Virginia': 'WV',
+        Wisconsin: 'WI',
+        Wyoming: 'WY',
+      };
+
+      const stateAbbr = stateMapping[member.state] || member.state;
+      const districtKey = `${stateAbbr}-${districtNumber}`;
 
       // Get census data for this district
       const censusData = censusDataMap.get(districtKey) || {};

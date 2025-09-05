@@ -219,9 +219,8 @@ export async function fetchAllDistrictDemographics(
       try {
         const stateDistricts = await fetchStateDistrictDemographics(state, censusApiKey);
         return { state, districts: stateDistricts };
-      } catch {
-        // Silently fail for individual states to avoid blocking the entire process
-        // Error will be logged by the calling code if needed
+      } catch (error) {
+        console.error(`Census API error for state ${state}:`, error);
         return { state, districts: new Map() };
       }
     });
