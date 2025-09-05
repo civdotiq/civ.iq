@@ -14,6 +14,7 @@ import dynamic from 'next/dynamic';
 import { Users, Building2, MapPin } from 'lucide-react';
 import NationalStatsCards from '@/shared/components/ui/NationalStatsCards';
 import StateInfoPanel from '@/shared/components/ui/StateInfoPanel';
+import CongressSessionInfo from '@/features/districts/components/CongressSessionInfo';
 
 // Dynamic import of the REAL district map component to avoid SSR issues
 const RealDistrictMapContainer = dynamic(
@@ -486,13 +487,20 @@ export default function DistrictsPage() {
   };
 
   const fetchDistricts = useCallback(async () => {
+    logger.info('[Districts] Starting fetch...', {
+      currentDistrictCount: districts.length,
+    });
     setLoading(true);
     try {
       // Fetch real district data from our representatives API
       // Bust cache on first load to get fresh data
       const url = districts.length === 0 ? '/api/districts/all?bust=true' : '/api/districts/all';
+      logger.info('[Districts] Fetching from URL', { url });
       const response = await fetch(url);
-      logger.info('Districts API response', { status: response.status });
+      logger.info('[Districts] API response received', {
+        status: response.status,
+        ok: response.ok,
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -624,6 +632,9 @@ export default function DistrictsPage() {
             Explore demographic, political, and geographic data for all U.S. congressional districts
           </p>
         </div>
+
+        {/* 119th Congress Session Information */}
+        <CongressSessionInfo />
 
         {loading ? (
           <div className="text-center py-12">
