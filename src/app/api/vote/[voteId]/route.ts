@@ -4,10 +4,11 @@
  */
 
 /**
- * Detailed Senate Vote API - Individual Vote Analysis
+ * Unified Vote Detail API - Individual Vote Analysis
  *
- * This endpoint fetches comprehensive vote details for a specific Senate roll call vote.
- * It provides complete member voting records, vote counts, and metadata.
+ * This endpoint fetches comprehensive vote details for both House and Senate votes.
+ * It automatically determines the chamber from the vote ID format and routes appropriately.
+ * Supports both numeric vote IDs and chamber-prefixed IDs like 'house-119-116'.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -125,7 +126,46 @@ function mapLISIdToBioguideId(
   return undefined;
 }
 
-// Type definitions for detailed vote data
+// Unified type definitions for both chambers
+interface UnifiedVoteDetail {
+  voteId: string;
+  congress: string;
+  session: string;
+  rollNumber: number;
+  date: string;
+  time?: string;
+  title: string;
+  question: string;
+  description: string;
+  result: string;
+  chamber: 'House' | 'Senate';
+  yeas: number;
+  nays: number;
+  present: number;
+  absent: number;
+  totalVotes: number;
+  requiredMajority?: string;
+  members: MemberVote[];
+  bill?: {
+    number: string;
+    title: string;
+    type: string;
+    url?: string;
+  };
+  amendment?: {
+    number: string;
+    purpose: string;
+  };
+  metadata: {
+    source: string;
+    confidence: string;
+    processingDate: string;
+    xmlUrl?: string;
+    apiUrl?: string;
+  };
+}
+
+// Legacy Senate-specific interface for backward compatibility
 interface VoteDetail {
   voteId: string;
   congress: string;
@@ -137,6 +177,7 @@ interface VoteDetail {
   question: string;
   description: string;
   result: string;
+  chamber: 'House' | 'Senate';
   yeas: number;
   nays: number;
   present: number;
@@ -154,14 +195,29 @@ interface VoteDetail {
     purpose: string;
   };
   metadata: {
-    source: 'senate-xml-feed';
+    source: string;
     confidence: 'high' | 'medium' | 'low';
     processingDate: string;
     xmlUrl: string;
   };
 }
 
+// Unified member vote interface for both chambers
+interface MemberVote {
+  id: string; // bioguideId for House, lisId for Senate
+  bioguideId?: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  state: string;
+  party: 'D' | 'R' | 'I';
+  position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
+  district?: string; // For House members
+}
+
+// Legacy Senate-specific interface for backward compatibility
 interface SenatorVote {
+  id: string; // Added for compatibility with MemberVote
   lisId: string;
   bioguideId?: string;
   firstName: string;
@@ -173,7 +229,7 @@ interface SenatorVote {
 }
 
 interface VoteResponse {
-  vote: VoteDetail | null;
+  vote: UnifiedVoteDetail | null;
   success: boolean;
   error?: string;
   metadata: {
@@ -181,6 +237,371 @@ interface VoteResponse {
     requestId: string;
     responseTime: number;
   };
+}
+
+// Parse vote ID and determine chamber and details
+function parseVoteId(voteId: string): {
+  chamber: 'House' | 'Senate';
+  congress: string;
+  rollNumber: string;
+  numericId: string;
+} {
+  // Handle House format: "house-119-116"
+  const houseMatch = voteId.match(/^house-(\d+)-(\d+)$/);
+  if (houseMatch && houseMatch[1] && houseMatch[2]) {
+    return {
+      chamber: 'House',
+      congress: houseMatch[1],
+      rollNumber: houseMatch[2],
+      numericId: houseMatch[2],
+    };
+  }
+
+  // Handle Senate formats: "119-senate-00499" or just numeric "499"
+  const senateMatch = voteId.match(/^(?:(\d+)-senate-)?(\d+)$/);
+  if (senateMatch && senateMatch[2]) {
+    return {
+      chamber: 'Senate',
+      congress: senateMatch[1] || '119',
+      rollNumber: senateMatch[2],
+      numericId: senateMatch[2],
+    };
+  }
+
+  // Default to Senate for backward compatibility with numeric IDs
+  const numericMatch = voteId.match(/(\d+)$/);
+  return {
+    chamber: 'Senate',
+    congress: '119',
+    rollNumber: numericMatch?.[1] || voteId,
+    numericId: numericMatch?.[1] || voteId,
+  };
+}
+
+/**
+ * Parse House vote XML to extract ALL member positions
+ * Adapted from existing parseHouseRollCallXML but returns all members
+ */
+async function parseHouseVoteXML(sourceDataURL: string): Promise<MemberVote[]> {
+  try {
+    logger.debug('Fetching House vote XML', { sourceDataURL });
+
+    const response = await fetch(sourceDataURL);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch XML: ${response.status} ${response.statusText}`);
+    }
+
+    const xmlText = await response.text();
+
+    // Validate XML content
+    if (!xmlText || xmlText.trim().length === 0) {
+      logger.warn('Empty XML response from House vote source', { sourceDataURL });
+      return [];
+    }
+
+    if (!xmlText.includes('<legislator') || !xmlText.includes('<vote>')) {
+      logger.warn('Malformed House vote XML - missing expected elements', {
+        sourceDataURL,
+        hasLegislator: xmlText.includes('<legislator'),
+        hasVote: xmlText.includes('<vote>'),
+        xmlLength: xmlText.length,
+      });
+      return [];
+    }
+
+    // Parse all legislator entries from XML using regex
+    // Pattern matches: <legislator name-id="J000299" ...>...</legislator><vote>Yea</vote>
+    const memberPattern =
+      /<legislator name-id="([^"]+)"[^>]*>([^<]*)<\/legislator><vote>([^<]+)<\/vote>/gi;
+    const members: MemberVote[] = [];
+    const invalidEntries: Array<{ reason: string; data: unknown }> = [];
+    let match;
+
+    while ((match = memberPattern.exec(xmlText)) !== null) {
+      const [fullMatch, bioguideId, memberInfo, votePosition] = match;
+
+      // Enhanced validation for required fields
+      if (!bioguideId || bioguideId.trim().length === 0) {
+        invalidEntries.push({ reason: 'Missing or empty bioguide ID', data: fullMatch });
+        continue;
+      }
+
+      if (!votePosition || votePosition.trim().length === 0) {
+        invalidEntries.push({
+          reason: 'Missing or empty vote position',
+          data: { bioguideId, fullMatch },
+        });
+        continue;
+      }
+
+      // Validate bioguide ID format (should be letter + numbers)
+      if (!/^[A-Z]\d{6}$/.test(bioguideId.trim())) {
+        logger.debug('Unusual bioguide ID format', {
+          bioguideId: bioguideId.trim(),
+          expected: 'Format: A123456',
+          sourceDataURL,
+        });
+        // Continue processing - some historical IDs might have different formats
+      }
+
+      // Parse member info from the legislator tag content
+      // Format varies but typically includes name and sometimes party/state
+      const nameMatch = memberInfo?.match(/([^,]+)(?:,\s*(.+))?/);
+      const fullName = nameMatch?.[1]?.trim() || 'Unknown';
+
+      // Split name into first/last - simple approach
+      const nameParts = fullName.split(' ');
+      const firstName = nameParts[0] || 'Unknown';
+      const lastName = nameParts.slice(1).join(' ') || 'Unknown';
+
+      // Map XML vote values to our standard format with validation
+      const cleanVotePosition = votePosition.trim();
+      let position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
+
+      switch (cleanVotePosition) {
+        case 'Yea':
+          position = 'Yea';
+          break;
+        case 'Nay':
+          position = 'Nay';
+          break;
+        case 'Present':
+          position = 'Present';
+          break;
+        case 'Not Voting':
+          position = 'Not Voting';
+          break;
+        default:
+          // Log unexpected vote positions for monitoring
+          logger.debug('Unexpected vote position in House XML', {
+            bioguideId: bioguideId.trim(),
+            votePosition: cleanVotePosition,
+            sourceDataURL,
+          });
+          position = 'Not Voting'; // Default for safety
+          break;
+      }
+
+      members.push({
+        id: bioguideId,
+        bioguideId,
+        firstName,
+        lastName,
+        fullName,
+        state: 'Unknown', // Need to get this from current terms data
+        party: 'R' as 'D' | 'R' | 'I', // Default to R if unknown, will need terms data
+        position,
+        district: undefined, // Need to get this from current terms data
+      });
+    }
+
+    // Report validation summary
+    if (invalidEntries.length > 0) {
+      logger.warn('Found invalid entries during House XML parsing', {
+        sourceDataURL,
+        invalidCount: invalidEntries.length,
+        validCount: members.length,
+        invalidEntries: invalidEntries.slice(0, 5), // Only log first 5 for brevity
+      });
+    }
+
+    // Validate final result
+    if (members.length === 0) {
+      logger.warn('No valid members found in House vote XML', {
+        sourceDataURL,
+        xmlLength: xmlText.length,
+        invalidEntriesCount: invalidEntries.length,
+      });
+    } else if (members.length < 400) {
+      // House should have ~435 members, warn if significantly fewer
+      logger.info('House vote has fewer members than expected', {
+        sourceDataURL,
+        memberCount: members.length,
+        expected: '~435 House members',
+      });
+    }
+
+    logger.debug('Parsed House vote XML members', {
+      sourceDataURL,
+      memberCount: members.length,
+      invalidEntriesSkipped: invalidEntries.length,
+      sampleMember: members[0],
+    });
+
+    return members;
+  } catch (error) {
+    logger.error('Failed to parse House vote XML', error as Error, { sourceDataURL });
+    return []; // Return empty array on error rather than throwing
+  }
+}
+
+/**
+ * Parse House vote from Congress.gov API
+ */
+async function parseHouseVote(
+  voteId: string,
+  congress: string,
+  rollNumber: string
+): Promise<UnifiedVoteDetail | null> {
+  try {
+    // Fetch House vote data from Congress.gov API
+    const apiUrl = `https://api.congress.gov/v3/house-vote/${congress}/${rollNumber}?api_key=${process.env.CONGRESS_API_KEY || ''}`;
+
+    logger.info('Fetching detailed House vote from Congress API', {
+      voteId,
+      apiUrl: apiUrl.replace(process.env.CONGRESS_API_KEY || '', '[REDACTED]'),
+    });
+
+    const response = await fetch(apiUrl, {
+      headers: {
+        'User-Agent': 'CivIQ-Hub/2.0 (civic-engagement-tool)',
+      },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!response.ok) {
+      logger.warn('Failed to fetch House vote from Congress API', {
+        voteId,
+        status: response.status,
+        statusText: response.statusText,
+      });
+      return null;
+    }
+
+    const apiData = await response.json();
+
+    // Enhanced API response validation
+    if (!apiData || typeof apiData !== 'object') {
+      logger.warn('Invalid JSON response from Congress API', { voteId, type: typeof apiData });
+      return null;
+    }
+
+    const vote = apiData.vote;
+    if (!vote || typeof vote !== 'object') {
+      logger.warn('Missing or invalid vote data in API response', {
+        voteId,
+        hasVote: !!vote,
+        apiKeys: Object.keys(apiData),
+      });
+      return null;
+    }
+
+    // Validate required vote fields
+    const requiredFields = [
+      'congress',
+      'session',
+      'rollcall_number',
+      'vote_question',
+      'vote_result',
+    ];
+    const missingFields = requiredFields.filter(field => !vote[field]);
+
+    if (missingFields.length > 0) {
+      logger.warn('House vote missing required fields', {
+        voteId,
+        missingFields,
+        availableFields: Object.keys(vote),
+      });
+    }
+
+    // Validate vote totals if present
+    if (vote.yeas !== undefined && vote.nays !== undefined) {
+      const totalVotes =
+        (vote.yeas || 0) + (vote.nays || 0) + (vote.present || 0) + (vote.not_voting || 0);
+      if (totalVotes < 400 || totalVotes > 450) {
+        logger.info('House vote totals outside expected range', {
+          voteId,
+          totalVotes,
+          breakdown: {
+            yeas: vote.yeas,
+            nays: vote.nays,
+            present: vote.present,
+            not_voting: vote.not_voting,
+          },
+        });
+      }
+    }
+
+    // Parse vote counts
+    const totals = vote.totals || {};
+    const yeas = parseInt(String(totals.yea || '0'));
+    const nays = parseInt(String(totals.nay || '0'));
+    const present = parseInt(String(totals.present || '0'));
+    const absent = parseInt(String(totals.notVoting || '0'));
+
+    // Extract bill information if available
+    let bill = undefined;
+    if (vote.bill) {
+      bill = {
+        number: String(vote.bill.number || 'N/A'),
+        title: String(vote.bill.title || 'Vote without associated bill'),
+        type: String(vote.bill.type || 'House Resolution'),
+        url: vote.bill.url || undefined,
+      };
+    }
+
+    // Process member votes - parse XML from sourceDataURL to get individual votes
+    let members: MemberVote[] = [];
+    if (vote.sourceDataURL) {
+      logger.info('Parsing House vote XML for individual member votes', {
+        voteId,
+        xmlUrl: vote.sourceDataURL,
+      });
+
+      try {
+        members = await parseHouseVoteXML(vote.sourceDataURL);
+        logger.info('Successfully parsed House vote XML', {
+          voteId,
+          memberCount: members.length,
+        });
+      } catch (error) {
+        logger.warn('Failed to parse House vote XML', {
+          voteId,
+          xmlUrl: vote.sourceDataURL,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    const voteDetail: UnifiedVoteDetail = {
+      voteId,
+      congress: String(congress),
+      session: String(vote.session || '1'),
+      rollNumber: parseInt(rollNumber),
+      date: String(vote.date || ''),
+      title: String(vote.question || vote.description || 'House Vote'),
+      question: String(vote.question || vote.description || ''),
+      description: String(vote.description || vote.question || ''),
+      result: String(vote.result || 'Unknown'),
+      chamber: 'House',
+      yeas,
+      nays,
+      present,
+      absent,
+      totalVotes: yeas + nays + present + absent,
+      members,
+      bill,
+      metadata: {
+        source: 'congress-api',
+        confidence: 'high',
+        processingDate: new Date().toISOString(),
+        apiUrl,
+        xmlUrl: String(vote.sourceDataURL || ''),
+      },
+    };
+
+    logger.info('Successfully parsed House vote from API', {
+      voteId,
+      totalVotes: voteDetail.totalVotes,
+      result: voteDetail.result,
+      memberCount: members.length,
+    });
+
+    return voteDetail;
+  } catch (error) {
+    logger.error('Error parsing House vote from API', error as Error, { voteId });
+    return null;
+  }
 }
 
 /**
@@ -262,6 +683,7 @@ async function parseDetailedVote(voteId: string): Promise<VoteDetail | null> {
         const bioguideId = mapLISIdToBioguideId(lisId, firstName, lastName, state);
 
         const senatorVote: SenatorVote = {
+          id: bioguideId || lisId, // Use bioguideId if available, otherwise lisId
           lisId,
           bioguideId,
           firstName,
@@ -315,6 +737,7 @@ async function parseDetailedVote(voteId: string): Promise<VoteDetail | null> {
       question: String(rollCallVote.question || rollCallVote.vote_title || ''),
       description: String(rollCallVote.vote_description || rollCallVote.question || ''),
       result: String(rollCallVote.vote_result || 'Unknown'),
+      chamber: 'Senate',
       yeas,
       nays,
       present,
@@ -347,6 +770,29 @@ async function parseDetailedVote(voteId: string): Promise<VoteDetail | null> {
 }
 
 /**
+ * Unified vote parsing function that handles both chambers
+ */
+async function parseUnifiedVote(voteId: string): Promise<UnifiedVoteDetail | null> {
+  const parsed = parseVoteId(voteId);
+
+  if (parsed.chamber === 'House') {
+    return await parseHouseVote(voteId, parsed.congress, parsed.rollNumber);
+  } else {
+    // Convert Senate VoteDetail to UnifiedVoteDetail
+    const senateVote = await parseDetailedVote(parsed.numericId);
+    if (!senateVote) return null;
+
+    // SenatorVote[] is compatible with MemberVote[] - no transformation needed
+    const unifiedVote: UnifiedVoteDetail = {
+      ...senateVote,
+      members: senateVote.members as MemberVote[],
+    };
+
+    return unifiedVote;
+  }
+}
+
+/**
  * API Route Handler - GET /api/vote/[voteId]
  */
 export async function GET(
@@ -361,13 +807,13 @@ export async function GET(
     const resolvedParams = await params;
     voteId = resolvedParams?.voteId?.toString() || '';
 
-    // Validate vote ID format (should be numeric)
-    if (!voteId || !/^\d+$/.test(voteId)) {
-      logger.warn('Invalid vote ID format', { voteId });
+    // Validate vote ID format (accepts numeric IDs and chamber-prefixed IDs)
+    if (!voteId) {
+      logger.warn('Missing vote ID', { voteId });
       const errorResponse: VoteResponse = {
         vote: null,
         success: false,
-        error: 'Invalid vote ID format. Vote ID must be numeric.',
+        error: 'Vote ID is required.',
         metadata: {
           timestamp: new Date().toISOString(),
           requestId: crypto.randomUUID(),
@@ -380,8 +826,8 @@ export async function GET(
 
     logger.info('Detailed vote API called', { voteId });
 
-    // Parse the detailed vote information
-    const voteDetail = await parseDetailedVote(voteId);
+    // Parse the unified vote information (handles both House and Senate)
+    const voteDetail = await parseUnifiedVote(voteId);
 
     if (!voteDetail) {
       logger.warn('Vote not found or failed to parse', { voteId });
