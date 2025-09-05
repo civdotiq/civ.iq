@@ -22,6 +22,7 @@ interface HouseRollCallVoteResponse {
     legislationType?: string;
     legislationNumber?: string;
     legislationUrl?: string;
+    sourceDataURL?: string; // XML URL for individual member votes
     votePartyTotal: Array<{
       party: {
         name: string;
@@ -32,7 +33,6 @@ interface HouseRollCallVoteResponse {
       presentTotal: number;
       notVotingTotal: number;
     }>;
-    // Members data not included in basic response - would need separate endpoint
   };
 }
 
@@ -235,20 +235,89 @@ export class CongressRollCallAPI {
         limit,
       });
 
-      // NOTE: Congress.gov House Roll Call API JSON response doesn't include individual member votes
-      // Individual votes would require XML parsing from sourceDataURL
+      // First, get the list of recent roll call votes to get sourceDataURLs
+      const rollCallList = await this.getRecentHouseRollCallVotes(congress, session, limit);
 
-      logger.info('House Roll Call individual member votes require XML parsing implementation', {
+      if (!rollCallList.houseRollCallVotes || rollCallList.houseRollCallVotes.length === 0) {
+        logger.warn('No House roll call votes found', { congress, session });
+        return [];
+      }
+
+      const memberVotes: Array<{
+        voteId: string;
+        rollCallNumber: number;
+        date: string;
+        question: string;
+        result: string;
+        position: 'Yea' | 'Nay' | 'Not Voting' | 'Present';
+        bill?: {
+          congress: number;
+          type: string;
+          number: number;
+          title: string;
+          url: string;
+        };
+      }> = [];
+
+      // Process votes in batches to avoid overwhelming the XML parsing
+      const maxVotes = Math.min(limit, rollCallList.houseRollCallVotes.length);
+
+      for (let i = 0; i < maxVotes; i++) {
+        const rollCallVote = rollCallList.houseRollCallVotes[i];
+        if (!rollCallVote) continue;
+
+        try {
+          // Get detailed vote info including sourceDataURL
+          const voteDetails = await this.getHouseRollCallVote(
+            congress,
+            session,
+            rollCallVote.rollCallNumber
+          );
+
+          // Parse XML from sourceDataURL to get individual member votes
+          if (voteDetails.houseRollCallVote.sourceDataURL) {
+            const memberVote = await this.parseHouseRollCallXML(
+              voteDetails.houseRollCallVote.sourceDataURL,
+              bioguideId
+            );
+
+            if (memberVote) {
+              memberVotes.push({
+                voteId: `congress-${congress}-${session}-${rollCallVote.rollCallNumber}`,
+                rollCallNumber: rollCallVote.rollCallNumber,
+                date: rollCallVote.startDate?.split('T')[0] || 'Unknown',
+                question: voteDetails.houseRollCallVote.voteQuestion || 'House Vote',
+                result: rollCallVote.result,
+                position: memberVote.position,
+                bill:
+                  voteDetails.houseRollCallVote.legislationType &&
+                  voteDetails.houseRollCallVote.legislationNumber
+                    ? {
+                        congress,
+                        type: voteDetails.houseRollCallVote.legislationType,
+                        number: parseInt(voteDetails.houseRollCallVote.legislationNumber),
+                        title: `${voteDetails.houseRollCallVote.legislationType} ${voteDetails.houseRollCallVote.legislationNumber}`,
+                        url: voteDetails.houseRollCallVote.legislationUrl || '',
+                      }
+                    : undefined,
+              });
+            }
+          }
+        } catch (error) {
+          logger.debug('Failed to process House roll call vote', {
+            rollCallNumber: rollCallVote.rollCallNumber,
+            error: (error as Error).message,
+          });
+        }
+      }
+
+      logger.info('House Roll Call votes processed', {
         bioguideId,
-        congress,
-        session,
-        limit,
-        note: 'JSON API only provides vote summaries, not individual member positions',
+        totalVotes: rollCallList.houseRollCallVotes.length,
+        memberVotesFound: memberVotes.length,
       });
 
-      // Return empty array for now - individual House member votes need XML parsing
-      // This maintains API compatibility while indicating the limitation
-      return [];
+      return memberVotes;
     } catch (error) {
       logger.error('Failed to get member voting history', error as Error, {
         bioguideId,
@@ -303,6 +372,68 @@ export class CongressRollCallAPI {
         error: (error as Error).message,
       });
       return undefined;
+    }
+  }
+
+  /**
+   * Parse House Roll Call XML to extract individual member vote
+   */
+  private async parseHouseRollCallXML(
+    sourceDataURL: string,
+    bioguideId: string
+  ): Promise<{ position: 'Yea' | 'Nay' | 'Not Voting' | 'Present' } | null> {
+    try {
+      logger.debug('Parsing House Roll Call XML', { sourceDataURL, bioguideId });
+
+      const response = await fetch(sourceDataURL);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch XML: ${response.status}`);
+      }
+
+      const xmlText = await response.text();
+
+      // Parse XML to find the specific member's vote
+      // Look for: <legislator name-id="J000299">...</legislator><vote>Yea</vote>
+      const memberPattern = new RegExp(
+        `<legislator name-id="${bioguideId}"[^>]*>.*?</legislator><vote>([^<]+)</vote>`,
+        'i'
+      );
+
+      const match = xmlText.match(memberPattern);
+
+      if (match && match[1]) {
+        const votePosition = match[1].trim();
+
+        // Map XML vote values to our standard format
+        let position: 'Yea' | 'Nay' | 'Not Voting' | 'Present';
+        switch (votePosition) {
+          case 'Yea':
+            position = 'Yea';
+            break;
+          case 'Nay':
+            position = 'Nay';
+            break;
+          case 'Present':
+            position = 'Present';
+            break;
+          case 'Not Voting':
+          default:
+            position = 'Not Voting';
+            break;
+        }
+
+        logger.debug('Found member vote in XML', { bioguideId, position });
+        return { position };
+      }
+
+      logger.debug('Member not found in XML', { bioguideId, sourceDataURL });
+      return null;
+    } catch (error) {
+      logger.error('Failed to parse House Roll Call XML', error as Error, {
+        sourceDataURL,
+        bioguideId,
+      });
+      return null;
     }
   }
 

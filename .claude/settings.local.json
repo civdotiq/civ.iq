@@ -32,7 +32,8 @@
       "Bash(find:*)",
       "Bash(grep:*)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:blogs.loc.gov)"
     ],
     "deny": [],
     "ask": []
