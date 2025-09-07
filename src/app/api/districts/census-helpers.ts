@@ -1,3 +1,6 @@
+import fs from 'fs/promises';
+import path from 'path';
+
 // District demographics interface for type safety
 export interface DistrictDemographics {
   population: number;
@@ -202,42 +205,234 @@ export async function fetchStateDistrictDemographics(
   return districtMap;
 }
 
-// Fetch all states' district demographics
+// Fetch all states' district demographics with file-based caching
 export async function fetchAllDistrictDemographics(
   censusApiKey: string
 ): Promise<Map<string, DistrictDemographics & { state: string }>> {
-  const allDistricts = new Map();
+  // Define cache file path
+  const cacheDir = path.join(process.cwd(), '.cache');
+  const cacheFile = path.join(cacheDir, 'census-cache.json');
+  const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-  // Process states in batches to avoid rate limiting
-  const states = Object.keys(STATE_FIPS);
-  const batchSize = 5;
+  try {
+    // Ensure cache directory exists
+    await fs.mkdir(cacheDir, { recursive: true });
 
-  for (let i = 0; i < states.length; i += batchSize) {
-    const batch = states.slice(i, i + batchSize);
+    // Check if cache file exists and is recent
+    try {
+      const stats = await fs.stat(cacheFile);
+      const cacheAge = Date.now() - stats.mtime.getTime();
 
-    const promises = batch.map(async state => {
-      try {
-        const stateDistricts = await fetchStateDistrictDemographics(state, censusApiKey);
-        return { state, districts: stateDistricts };
-      } catch (error) {
-        console.error(`Census API error for state ${state}:`, error);
-        return { state, districts: new Map() };
+      if (cacheAge < CACHE_DURATION_MS) {
+        console.log(
+          '📊 CENSUS DATA: FROM CACHE (age:',
+          Math.round(cacheAge / (60 * 60 * 1000)),
+          'hours)'
+        );
+
+        const cachedData = await fs.readFile(cacheFile, 'utf-8');
+        let parsed;
+        try {
+          parsed = JSON.parse(cachedData);
+        } catch (parseError) {
+          console.warn('⚠️ Cache file corrupted, fetching fresh data');
+          throw new Error('Cache corrupted');
+        }
+
+        // Convert back to Map from serialized array format
+        const allDistricts = new Map();
+        if (Array.isArray(parsed)) {
+          parsed.forEach(([key, value]: [string, any]) => {
+            allDistricts.set(key, value);
+          });
+        }
+
+        console.log(`✅ Loaded ${allDistricts.size} districts from cache`);
+        return allDistricts;
       }
+    } catch (error) {
+      // Cache file doesn't exist or can't be read, proceed with API fetch
+      console.log('📊 CENSUS DATA: Cache miss, fetching from API');
+    }
+
+    // Fetch from Census API
+    console.log('📊 CENSUS DATA: FROM CENSUS API (FETCHING NEW)');
+    console.time('Census API Single Call');
+
+    // Use improved API structure based on working individual district endpoint
+    const variables = [
+      'B01003_001E', // Total population
+      'B02001_002E', // White alone
+      'B02001_003E', // Black alone
+      'B02001_005E', // Asian alone
+      'B03003_003E', // Hispanic or Latino
+      'B01002_001E', // Median age
+      'B19013_001E', // Median household income
+      'B25001_001E', // Total housing units
+      'B15003_022E', // Bachelor's degree or higher
+      'B29001_001E', // Voting age population
+    ].join(',');
+
+    // Build API URL without key first (some endpoints work without it)
+    let url = `https://api.census.gov/data/2021/acs/acs5?get=${variables}&for=congressional%20district:*`;
+
+    // Only add key if it exists and is not the known invalid one
+    if (censusApiKey && censusApiKey !== 'e7e0aed5d4a2bfd121a8f00dcc4cb7104df903e1') {
+      url += `&key=${censusApiKey}`;
+    }
+
+    console.log('Making Census API request:', url.substring(0, 100) + '...');
+
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(45000), // 45 second timeout for bulk request
     });
 
-    const results = await Promise.all(promises);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Census API error ${response.status}:`, errorText.substring(0, 500));
 
-    for (const { state, districts } of results) {
-      districts.forEach((data, districtNum) => {
-        allDistricts.set(`${state}-${districtNum}`, { ...data, state });
-      });
+      // Check for specific errors
+      if (errorText.includes('Invalid Key') || errorText.includes('<title>Invalid Key</title>')) {
+        throw new Error(
+          'Census API key is invalid. Please get a valid API key from https://api.census.gov/data/key_signup.html'
+        );
+      }
+
+      throw new Error(`Census API error: ${response.status} ${response.statusText}`);
     }
 
-    // Small delay between batches to avoid rate limiting
-    if (i + batchSize < states.length) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+    const responseText = await response.text();
+    console.log('Raw response length:', responseText.length, 'chars');
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse Census API JSON:', responseText.substring(0, 1000));
+      throw new Error(`Census API returned invalid JSON: ${parseError}`);
     }
+
+    if (!Array.isArray(data) || data.length < 2) {
+      console.error('Unexpected Census API response structure:', data);
+      throw new Error('Census API returned unexpected data structure');
+    }
+
+    const headers = data[0];
+    const rows = data.slice(1);
+
+    console.timeEnd('Census API Single Call');
+    console.log(`📊 Processed ${rows.length} districts from Census API`);
+
+    const allDistricts = new Map();
+
+    // Create reverse mapping for FIPS codes to state abbreviations
+    const fipsToState: { [key: string]: string } = {};
+    Object.entries(STATE_FIPS).forEach(([abbr, fips]) => {
+      fipsToState[fips] = abbr;
+    });
+
+    // Get column indices
+    const indices = {
+      population: headers.indexOf('B01003_001E'),
+      white: headers.indexOf('B02001_002E'),
+      black: headers.indexOf('B02001_003E'),
+      asian: headers.indexOf('B02001_005E'),
+      hispanic: headers.indexOf('B03003_003E'),
+      medianAge: headers.indexOf('B01002_001E'),
+      medianIncome: headers.indexOf('B19013_001E'),
+      housingUnits: headers.indexOf('B25001_001E'),
+      education: headers.indexOf('B15003_022E'),
+      votingAge: headers.indexOf('B29001_001E'),
+      state: headers.indexOf('state'),
+      district: headers.indexOf('congressional district'),
+    };
+
+    for (const row of rows) {
+      const stateFips = row[indices.state];
+      const districtNum = row[indices.district];
+      const stateAbbr = fipsToState[stateFips];
+
+      if (!stateAbbr) {
+        console.warn(`Unknown state FIPS: ${stateFips}`);
+        continue;
+      }
+
+      // Skip at-large districts (00) - they should be normalized to 01
+      if (districtNum === '00') {
+        continue;
+      }
+
+      // Pad district number with leading zero if needed
+      const paddedDistrictNum = districtNum.padStart(2, '0');
+      const districtKey = `${stateAbbr}-${paddedDistrictNum}`;
+
+      const demographics: DistrictDemographics = {
+        population: parseInt(row[indices.population]) || 0,
+        white: parseInt(row[indices.white]) || 0,
+        black: parseInt(row[indices.black]) || 0,
+        asian: parseInt(row[indices.asian]) || 0,
+        hispanic: parseInt(row[indices.hispanic]) || 0,
+        medianAge: parseFloat(row[indices.medianAge]) || 0,
+        medianIncome: parseInt(row[indices.medianIncome]) || 0,
+        housingUnits: parseInt(row[indices.housingUnits]) || 0,
+        educationBachelors: parseInt(row[indices.education]) || 0,
+        votingAgePopulation: parseInt(row[indices.votingAge]) || 0,
+        diversityIndex: 0, // Will calculate below
+        urbanPercentage: 0, // Will calculate below
+      };
+
+      // Calculate diversity index
+      const totalPop = demographics.population;
+      if (totalPop > 0) {
+        const whitePercent = demographics.white / totalPop;
+        const blackPercent = demographics.black / totalPop;
+        const asianPercent = demographics.asian / totalPop;
+        const hispanicPercent = demographics.hispanic / totalPop;
+        const otherPercent = Math.max(
+          0,
+          1 - (whitePercent + blackPercent + asianPercent + hispanicPercent)
+        );
+
+        demographics.diversityIndex = Math.max(
+          0,
+          (1 -
+            (whitePercent ** 2 +
+              blackPercent ** 2 +
+              asianPercent ** 2 +
+              hispanicPercent ** 2 +
+              otherPercent ** 2)) *
+            100
+        );
+      }
+
+      // Calculate urban percentage (housing density as proxy)
+      if (demographics.housingUnits > 0 && totalPop > 0) {
+        const householdSize = totalPop / demographics.housingUnits;
+        demographics.urbanPercentage = Math.min(Math.max(householdSize * 25, 5), 95); // Bounded between 5-95%
+      }
+
+      allDistricts.set(districtKey, { ...demographics, state: stateAbbr });
+    }
+
+    console.log(`📊 Successfully processed ${allDistricts.size} districts`);
+
+    // Cache the results
+    try {
+      // Convert Map to array format for JSON serialization
+      const serializedData = Array.from(allDistricts.entries());
+      await fs.writeFile(cacheFile, JSON.stringify(serializedData, null, 2));
+      console.log('💾 Census data cached successfully');
+    } catch (cacheError) {
+      console.warn('⚠️ Failed to write cache file:', cacheError);
+      // Don't throw - return the data anyway
+    }
+
+    return allDistricts;
+  } catch (error) {
+    console.error('❌ Error in fetchAllDistrictDemographics:', error);
+
+    // Return empty Map instead of throwing to prevent cascade failures
+    console.warn('📊 Returning empty demographics due to API failure');
+    return new Map();
   }
-
-  return allDistricts;
 }

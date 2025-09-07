@@ -18,6 +18,13 @@ const nextConfig = {
         pathname: '/bioguide/photo/**',
       },
       {
+        // Congress.gov member images
+        protocol: 'https',
+        hostname: 'www.congress.gov',
+        port: '',
+        pathname: '/img/**',
+      },
+      {
         // Allow internal API photo proxy
         protocol: 'http',
         hostname: 'localhost',
@@ -30,6 +37,13 @@ const nextConfig = {
         hostname: 'civ.iq',
         port: '',
         pathname: '/api/photo/**',
+      },
+      {
+        // GitHub raw content for representative images
+        protocol: 'https',
+        hostname: 'raw.githubusercontent.com',
+        port: '',
+        pathname: '/unitedstates/images/**',
       },
     ],
   },
