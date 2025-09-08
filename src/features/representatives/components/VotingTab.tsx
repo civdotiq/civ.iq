@@ -102,11 +102,16 @@ const calculateVoteStats = (votes: Vote[]) => {
     presentVotes,
     notVotingVotes,
     keyVotes,
-    totalVotes: votes.length
+    totalVotes: votes.length,
   };
 };
 
-function VotingTabComponent({ bioguideId, sharedData, sharedLoading, sharedError }: VotingTabProps) {
+function VotingTabComponent({
+  bioguideId,
+  sharedData,
+  sharedLoading,
+  sharedError,
+}: VotingTabProps) {
   const router = useRouter();
 
   // Filter states
@@ -192,47 +197,7 @@ function VotingTabComponent({ bioguideId, sharedData, sharedLoading, sharedError
     setCurrentPage(1);
   }, [positionFilter, chamberFilter, categoryFilter, dateFilter]);
 
-  if (isLoading) {
-    return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-        <div className="grid grid-cols-5 gap-4">
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
-        </div>
-        <div className="space-y-2">
-          <div className="h-6 bg-gray-100 rounded"></div>
-          <div className="h-6 bg-gray-100 rounded"></div>
-          <div className="h-6 bg-gray-100 rounded"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <div className="text-red-600 mb-2">Failed to load voting records</div>
-        <div className="text-sm text-gray-500">Please try refreshing the page</div>
-      </div>
-    );
-  }
-
-  if (!data || !data.votes) {
-    return (
-      <div className="text-center py-8">
-        <div className="text-gray-600 mb-2">No voting records available</div>
-        <div className="text-sm text-gray-400">
-          Voting data is sourced from Congress.gov and Senate XML feeds
-        </div>
-      </div>
-    );
-  }
-
-  // Use filtered votes for calculations
+  // Use filtered votes for calculations - moved before early returns
   const votes = filteredVotes;
 
   // Memoized vote statistics calculations - only recalculate when votes change
@@ -253,17 +218,20 @@ function VotingTabComponent({ bioguideId, sharedData, sharedLoading, sharedError
       totalPages,
       startIndex,
       endIndex,
-      paginatedVotes
+      paginatedVotes,
     };
   }, [votes, totalVotes, votesPerPage, currentPage]);
 
   // Handle vote row click (unified for both chambers) - memoized to prevent recreating
-  const handleVoteClick = useCallback((vote: Vote) => {
-    const voteId = extractVoteId(vote);
-    if (voteId) {
-      router.push(`/vote/${voteId}`);
-    }
-  }, [router]);
+  const handleVoteClick = useCallback(
+    (vote: Vote) => {
+      const voteId = extractVoteId(vote);
+      if (voteId) {
+        router.push(`/vote/${voteId}`);
+      }
+    },
+    [router]
+  );
 
   // Memoized filter handlers to prevent unnecessary re-renders
   const handlePositionFilterChange = useCallback((value: string) => {
@@ -306,6 +274,46 @@ function VotingTabComponent({ bioguideId, sharedData, sharedLoading, sharedError
   const handleNextPage = useCallback(() => {
     setCurrentPage(prev => Math.min(prev + 1, paginationData.totalPages));
   }, [paginationData.totalPages]);
+
+  if (isLoading) {
+    return (
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+        <div className="grid grid-cols-5 gap-4">
+          <div className="h-16 bg-gray-100 rounded"></div>
+          <div className="h-16 bg-gray-100 rounded"></div>
+          <div className="h-16 bg-gray-100 rounded"></div>
+          <div className="h-16 bg-gray-100 rounded"></div>
+          <div className="h-16 bg-gray-100 rounded"></div>
+        </div>
+        <div className="space-y-2">
+          <div className="h-6 bg-gray-100 rounded"></div>
+          <div className="h-6 bg-gray-100 rounded"></div>
+          <div className="h-6 bg-gray-100 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-600 mb-2">Failed to load voting records</div>
+        <div className="text-sm text-gray-500">Please try refreshing the page</div>
+      </div>
+    );
+  }
+
+  if (!data || !data.votes) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-gray-600 mb-2">No voting records available</div>
+        <div className="text-sm text-gray-400">
+          Voting data is sourced from Congress.gov and Senate XML feeds
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div data-testid="voting-record">
@@ -550,7 +558,7 @@ function VotingTabComponent({ bioguideId, sharedData, sharedLoading, sharedError
               </tr>
             </thead>
             <tbody>
-              {paginatedVotes.map(vote => {
+              {paginationData.paginatedVotes.map((vote: Vote) => {
                 const voteId = extractVoteId(vote);
                 const isClickable = !!voteId; // Both chambers now supported
 
@@ -655,7 +663,8 @@ function VotingTabComponent({ bioguideId, sharedData, sharedLoading, sharedError
               <span>votes per page</span>
             </div>
             <div className="text-sm text-gray-600">
-              Showing {startIndex + 1}-{Math.min(endIndex, totalVotes)} of {totalVotes} votes
+              Showing {paginationData.startIndex + 1}-
+              {Math.min(paginationData.endIndex, totalVotes)} of {totalVotes} votes
             </div>
           </div>
 
@@ -670,9 +679,9 @@ function VotingTabComponent({ bioguideId, sharedData, sharedLoading, sharedError
             </button>
 
             <div className="flex items-center gap-1">
-              {totalPages <= 7 ? (
+              {paginationData.totalPages <= 7 ? (
                 // Show all pages if 7 or fewer
-                Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                Array.from({ length: paginationData.totalPages }, (_, i) => i + 1).map(page => (
                   <button
                     key={page}
                     onClick={() => handlePageClick(page)}
@@ -700,9 +709,9 @@ function VotingTabComponent({ bioguideId, sharedData, sharedLoading, sharedError
                     </>
                   )}
 
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  {Array.from({ length: Math.min(5, paginationData.totalPages) }, (_, i) => {
                     const page = Math.max(1, currentPage - 2) + i;
-                    if (page > totalPages) return null;
+                    if (page > paginationData.totalPages) return null;
                     return (
                       <button
                         key={page}
@@ -718,14 +727,14 @@ function VotingTabComponent({ bioguideId, sharedData, sharedLoading, sharedError
                     );
                   })}
 
-                  {currentPage < totalPages - 2 && (
+                  {currentPage < paginationData.totalPages - 2 && (
                     <>
                       <span className="px-2 text-gray-500">...</span>
                       <button
-                        onClick={() => handlePageClick(totalPages)}
+                        onClick={() => handlePageClick(paginationData.totalPages)}
                         className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                       >
-                        {totalPages}
+                        {paginationData.totalPages}
                       </button>
                     </>
                   )}
@@ -735,7 +744,7 @@ function VotingTabComponent({ bioguideId, sharedData, sharedLoading, sharedError
 
             <button
               onClick={handleNextPage}
-              disabled={currentPage === totalPages}
+              disabled={currentPage === paginationData.totalPages}
               className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next

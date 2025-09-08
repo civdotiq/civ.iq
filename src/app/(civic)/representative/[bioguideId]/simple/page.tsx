@@ -38,14 +38,14 @@ export default async function TestSimplePage({ params }: PageProps) {
       test: 'finance data available',
       financial_summary: [],
       recent_contributions: [],
-    } as unknown,
+    } as Record<string, unknown>,
     news: [] as unknown[],
   };
 
   return (
     <SimpleClientWrapper
       bioguideId={bioguideId}
-      initialData={initialData}
+      serverData={initialData}
       representative={representative}
     />
   );

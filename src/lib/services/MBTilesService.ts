@@ -65,40 +65,43 @@ export class MBTilesService {
     }
 
     try {
-      // @ts-expect-error - @mapbox/mbtiles doesn't have proper TypeScript declarations
-      const MBTiles = await import('@mapbox/mbtiles');
-      const MBTilesClass = MBTiles.default || MBTiles;
+      // @ts-expect-error - @mapbox/mbtiles doesn't have TypeScript declarations
+      const MBTiles = (await import('@mapbox/mbtiles')) as unknown;
+      const MBTilesClass = (MBTiles as { default?: unknown }).default || MBTiles;
 
       return new Promise(resolve => {
-        new MBTilesClass(this.mbtilesPath, (err: Error | null, mbtiles: unknown) => {
-          if (err) {
-            resolve({ connected: false, error: err.message });
-            return;
-          }
-
-          // @ts-expect-error - mbtiles object methods not properly typed
-          mbtiles.getInfo((infoErr: Error | null, info: Record<string, unknown>) => {
-            if (infoErr) {
-              resolve({ connected: false, error: infoErr.message });
+        new (MBTilesClass as new (...args: unknown[]) => unknown)(
+          this.mbtilesPath,
+          (err: Error | null, mbtiles: unknown) => {
+            if (err) {
+              resolve({ connected: false, error: err.message });
               return;
             }
 
-            const header = {
-              name: info.name as string,
-              description: info.description as string,
-              minzoom: info.minzoom as number,
-              maxzoom: info.maxzoom as number,
-              bounds: info.bounds as [number, number, number, number],
-              center: info.center as [number, number, number],
-            };
+            // @ts-expect-error - mbtiles object methods not properly typed
+            mbtiles.getInfo((infoErr: Error | null, info: Record<string, unknown>) => {
+              if (infoErr) {
+                resolve({ connected: false, error: infoErr.message });
+                return;
+              }
 
-            // Test getting a sample tile
-            this.testSampleTile(mbtiles, header, resolve);
+              const header = {
+                name: info.name as string,
+                description: info.description as string,
+                minzoom: info.minzoom as number,
+                maxzoom: info.maxzoom as number,
+                bounds: info.bounds as [number, number, number, number],
+                center: info.center as [number, number, number],
+              };
 
-            // @ts-expect-error - mbtiles.close method not properly typed
-            mbtiles.close();
-          });
-        });
+              // Test getting a sample tile
+              this.testSampleTile(mbtiles, header, resolve);
+
+              // @ts-expect-error - mbtiles.close method not properly typed
+              mbtiles.close();
+            });
+          }
+        );
       });
     } catch (error) {
       return {

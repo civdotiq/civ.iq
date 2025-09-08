@@ -15,7 +15,6 @@ import {
 } from '@/shared/components/ui/SkeletonComponents';
 import { LoadingStateWrapper, LoadingMessage, Spinner } from '@/shared/components/ui/LoadingStates';
 import { useMultiStageLoading } from '@/hooks/shared/useSmartLoading';
-import DistrictMap from '@/features/districts/components/DistrictMap';
 import { InteractiveDistrictMap } from '@/features/districts/components/InteractiveDistrictMap';
 import { DataQualityIndicator, DataSourceBadge } from '@/components/shared/ui/DataQualityIndicator';
 import {
@@ -1132,11 +1131,7 @@ function ResultsContent() {
                     </div>
                   </div>
 
-                  {useInteractiveMap ? (
-                    <InteractiveDistrictMap zipCode={zipCode || query || ''} />
-                  ) : (
-                    <DistrictMap zipCode={zipCode || query || ''} />
-                  )}
+                  <InteractiveDistrictMap zipCode={zipCode || query || ''} />
                 </div>
               )}
             </div>
