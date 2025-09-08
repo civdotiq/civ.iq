@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import { EnhancedRepresentative } from '@/types/representative';
 import { EnhancedHeader } from './EnhancedHeader';
@@ -13,9 +14,26 @@ import { KeyStatsBar } from './KeyStatsBar';
 import { TabNavigation, profileTabs } from './TabNavigation';
 import { DistrictSidebar } from './DistrictSidebar';
 import { ContactInfoTab } from './ContactInfoTab';
-import { FinanceTab } from './FinanceTab';
-import { VotingTab } from './VotingTab';
-import { BillsTab } from './BillsTab';
+import { TabLoadingSpinner } from '@/lib/utils/code-splitting';
+
+// Dynamically import heavy tabs to reduce initial bundle size
+const FinanceTab = dynamic(
+  () => import('./FinanceTab').then(mod => ({ default: mod.FinanceTab })),
+  {
+    loading: TabLoadingSpinner,
+    ssr: false,
+  }
+);
+
+const VotingTab = dynamic(() => import('./VotingTab').then(mod => ({ default: mod.VotingTab })), {
+  loading: TabLoadingSpinner,
+  ssr: false,
+});
+
+const BillsTab = dynamic(() => import('./BillsTab').then(mod => ({ default: mod.BillsTab })), {
+  loading: TabLoadingSpinner,
+  ssr: false,
+});
 
 interface SimpleRepresentativeProfileProps {
   representative: EnhancedRepresentative;

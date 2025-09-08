@@ -46,7 +46,11 @@
     "flatten:src": "node flatten-codebase.js -i src -o .bmad-core/flattened-src.xml",
     "debug:rep-api": "node debug-rep-api.js",
     "verify:rendering": "node verify-rendering.js",
-    "emergency:diagnose": "node emergency-diagnose.js"
+    "emergency:diagnose": "node emergency-diagnose.js",
+    "test:performance": "node scripts/performance-test.mjs",
+    "test:performance:quick": "node scripts/quick-performance-baseline.mjs",
+    "test:load": "node scripts/load-test.mjs",
+    "analyze": "npx @next/bundle-analyzer"
   },
   "dependencies": {
     "@mapbox/mbtiles": "0.12.1",

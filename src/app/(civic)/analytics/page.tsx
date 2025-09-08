@@ -6,15 +6,100 @@
  */
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import {
-  CivicEngagementDashboard,
-  LegislativeActivityMonitor,
-  CampaignFinanceOverview,
-  DistrictPerformanceDashboard,
-  NewsSentimentTracker,
-} from '@/shared/components/ui/AdvancedDashboard';
 import { CiviqLogo } from '@/shared/ui/CiviqLogo';
+
+// Dynamically import heavy dashboard components for better performance
+const CivicEngagementDashboard = dynamic(
+  () =>
+    import('@/shared/components/ui/AdvancedDashboard').then(mod => ({
+      default: mod.CivicEngagementDashboard,
+    })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p>Loading civic engagement dashboard...</p>
+        </div>
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
+const LegislativeActivityMonitor = dynamic(
+  () =>
+    import('@/shared/components/ui/AdvancedDashboard').then(mod => ({
+      default: mod.LegislativeActivityMonitor,
+    })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p>Loading legislative activity monitor...</p>
+        </div>
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
+const CampaignFinanceOverview = dynamic(
+  () =>
+    import('@/shared/components/ui/AdvancedDashboard').then(mod => ({
+      default: mod.CampaignFinanceOverview,
+    })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p>Loading campaign finance overview...</p>
+        </div>
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
+const DistrictPerformanceDashboard = dynamic(
+  () =>
+    import('@/shared/components/ui/AdvancedDashboard').then(mod => ({
+      default: mod.DistrictPerformanceDashboard,
+    })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p>Loading district performance dashboard...</p>
+        </div>
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
+const NewsSentimentTracker = dynamic(
+  () =>
+    import('@/shared/components/ui/AdvancedDashboard').then(mod => ({
+      default: mod.NewsSentimentTracker,
+    })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p>Loading news sentiment tracker...</p>
+        </div>
+      </div>
+    ),
+    ssr: false,
+  }
+);
 
 export default function AnalyticsPage() {
   const [activeView, setActiveView] = useState<

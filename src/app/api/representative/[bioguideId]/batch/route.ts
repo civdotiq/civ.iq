@@ -9,6 +9,7 @@ import {
   executeBatchRequest,
   getRepresentativeSummary,
 } from '@/services/batch/representative-batch.service';
+import { container, initializeServices } from '@/core/services/container';
 
 // POST handler for optimized batch requests
 export async function POST(
@@ -19,6 +20,11 @@ export async function POST(
   const upperBioguideId = bioguideId?.toUpperCase();
 
   try {
+    // Ensure services are initialized
+    if (!container.isRegistered('batchService')) {
+      initializeServices();
+    }
+
     const body = await request.json();
     const { endpoints, options } = body;
 
@@ -29,12 +35,49 @@ export async function POST(
       );
     }
 
-    // Use optimized batch service with direct service calls
-    const result = await executeBatchRequest({
-      bioguideId: upperBioguideId,
-      endpoints,
-      options,
-    });
+    // Try to use containerized batch service, fall back to direct service
+    let result;
+    try {
+      const batchService = await container.resolve<{
+        processBatch: (request: {
+          bioguideId: string;
+          endpoints: string[];
+          options?: unknown;
+        }) => Promise<Record<string, unknown>>;
+      }>('batchService');
+
+      const batchResult = await batchService.processBatch({
+        bioguideId: upperBioguideId,
+        endpoints,
+        options,
+      });
+
+      result = {
+        success: true,
+        data: batchResult,
+        metadata: {
+          bioguideId: upperBioguideId,
+          requestedEndpoints: endpoints,
+          successfulEndpoints: endpoints,
+          failedEndpoints: [],
+          executionTime: 0,
+          cached: false,
+          timestamp: new Date().toISOString(),
+        },
+      };
+    } catch (containerError) {
+      logger.warn('Container batch service not available, using legacy service', {
+        bioguideId: upperBioguideId,
+        error: containerError instanceof Error ? containerError.message : 'Unknown error',
+      });
+
+      // Fallback to existing batch service
+      result = await executeBatchRequest({
+        bioguideId: upperBioguideId,
+        endpoints,
+        options,
+      });
+    }
 
     logger.info('Optimized batch API success', {
       bioguideId: upperBioguideId,
