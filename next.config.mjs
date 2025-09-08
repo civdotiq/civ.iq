@@ -59,12 +59,12 @@ const nextConfig = {
 
     return config;
   },
-  // Experimental features for better WSL2 performance
-  experimental: {
-    // Reduce memory usage
-    workerThreads: false,
-    cpus: 2,
-  },
+  // Temporarily disable experimental features to fix build
+  // experimental: {
+  //   // Reduce memory usage
+  //   workerThreads: false,
+  //   cpus: 2,
+  // },
 };
 
 export default nextConfig;
