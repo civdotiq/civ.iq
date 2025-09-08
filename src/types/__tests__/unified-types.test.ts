@@ -35,14 +35,22 @@ import type {
   // UNIFIED CORE TYPES - consolidates 3 competing RepresentativeResponse types
   UnifiedRepresentativeResponse,
   UnifiedServiceResponse,
-  
+
   // SERVICE CONTRACTS - defines interfaces for 5 different service patterns
   IUnifiedRepresentativeService,
   IApiService,
   IServiceConfig,
 } from '../../services/interfaces/unified-service-interfaces';
 
-// NOTE: Migration helpers and adapters will be implemented later
+// Import the migration helpers and validators
+import {
+  TypeValidator,
+  RepresentativeMigrationHelper,
+  LegacyTypeAdapter,
+  ApiResponse,
+  ListApiResponse,
+  PaginatedApiResponse,
+} from '../core/unified-types';
 
 describe('Phase 1: Unified Type System Consolidation', () => {
   describe('1.1 Unified RepresentativeResponse (consolidating 3 competing versions)', () => {

@@ -6,7 +6,7 @@
  * These are end-to-end tests that prevent shipping APIs with bad data.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { validateDistrictData, GOLDEN_COORDINATES } from '../lib/geospatial-utils';
 
 // Test configuration

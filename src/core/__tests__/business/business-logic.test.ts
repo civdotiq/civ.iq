@@ -121,7 +121,9 @@ class RepresentativeBusinessLogic {
   static calculateVotingParticipation(votes: VotingRecord[]): number {
     if (!votes || votes.length === 0) return 0;
 
-    const participatedVotes = votes.filter(vote => vote.vote_cast !== 'Not Voting').length;
+    const participatedVotes = votes.filter(
+      vote => vote.vote_cast === 'Yea' || vote.vote_cast === 'Nay'
+    ).length;
 
     return Math.round((participatedVotes / votes.length) * 100 * 10) / 10;
   }

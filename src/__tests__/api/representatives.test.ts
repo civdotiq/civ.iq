@@ -22,16 +22,6 @@ jest.mock('@/lib/logging/logger-edge', () => ({
   })),
 }));
 
-jest.mock('@/lib/logging/universal-logger', () => ({
-  UniversalLogger: jest.fn().mockImplementation(() => ({
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    shouldLog: jest.fn(() => true),
-  })),
-}));
-
 // Mock census API to prevent actual API calls
 jest.mock('@/lib/census-api', () => ({
   getCongressionalDistrictFromZip: jest.fn(() =>

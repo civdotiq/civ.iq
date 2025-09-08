@@ -17,7 +17,7 @@
  * They define the unified service contracts we want to achieve.
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 
 // Import the unified service interfaces
 import type {
@@ -316,7 +316,7 @@ describe('Unified Service Interface Integration Tests', () => {
       expect(response.success).toBe(true);
       if (response.success && response.data) {
         expect(Array.isArray(response.data)).toBe(true);
-        response.data.forEach((vote: any) => {
+        response.data.forEach((vote: VotingRecord) => {
           expect(vote).toHaveProperty('voteId');
           expect(vote).toHaveProperty('date');
           expect(vote).toHaveProperty('position');
@@ -334,7 +334,7 @@ describe('Unified Service Interface Integration Tests', () => {
       expect(response.success).toBe(true);
       if (response.success && response.data) {
         expect(Array.isArray(response.data)).toBe(true);
-        response.data.forEach((bill: any) => {
+        response.data.forEach((bill: BillRecord) => {
           expect(bill).toHaveProperty('billId');
           expect(bill).toHaveProperty('title');
           expect(bill).toHaveProperty('introducedDate');
@@ -349,7 +349,7 @@ describe('Unified Service Interface Integration Tests', () => {
       expect(response.success).toBe(true);
       if (response.success && response.data) {
         expect(Array.isArray(response.data)).toBe(true);
-        response.data.forEach((committee: any) => {
+        response.data.forEach((committee: CommitteeRecord) => {
           expect(committee).toHaveProperty('committeeId');
           expect(committee).toHaveProperty('name');
           expect(committee).toHaveProperty('role');
@@ -493,7 +493,7 @@ describe('Unified Service Interface Integration Tests', () => {
       // Mock network failure
       const mockService = {
         ...service,
-        getRepresentative: vi.fn().mockRejectedValue(new Error('Network error')),
+        getRepresentative: jest.fn().mockRejectedValue(new Error('Network error') as never),
       } as unknown as IUnifiedRepresentativeService;
 
       const response = await mockService.getRepresentative('K000367');
@@ -508,7 +508,7 @@ describe('Unified Service Interface Integration Tests', () => {
       // Mock rate limit response
       const mockService = {
         ...service,
-        getRepresentative: vi.fn().mockResolvedValue({
+        getRepresentative: jest.fn().mockResolvedValue({
           success: false,
           data: null,
           error: {
@@ -523,7 +523,7 @@ describe('Unified Service Interface Integration Tests', () => {
             dataSource: 'congress.gov',
             serviceVersion: '2.0.0',
           },
-        }),
+        } as never),
       } as unknown as IUnifiedRepresentativeService;
 
       const response = await mockService.getRepresentative('K000367');
@@ -550,7 +550,7 @@ describe('Unified Service Interface Integration Tests', () => {
       let attemptCount = 0;
       const mockService = {
         ...service,
-        getRepresentative: vi.fn().mockImplementation(() => {
+        getRepresentative: jest.fn().mockImplementation(() => {
           attemptCount++;
           if (attemptCount < 3) {
             throw new Error('Temporary failure');

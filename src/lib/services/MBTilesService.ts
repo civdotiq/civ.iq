@@ -65,7 +65,6 @@ export class MBTilesService {
     }
 
     try {
-      // @ts-expect-error - @mapbox/mbtiles doesn't have TypeScript declarations
       const MBTiles = (await import('@mapbox/mbtiles')) as unknown;
       const MBTilesClass = (MBTiles as { default?: unknown }).default || MBTiles;
 

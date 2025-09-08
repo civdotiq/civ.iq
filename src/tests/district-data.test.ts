@@ -7,7 +7,7 @@
  * civic data to citizens.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@jest/globals';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
