@@ -65,7 +65,7 @@ export class MBTilesService {
     }
 
     try {
-      // @ts-expect-error - MBTiles library has no TypeScript declarations
+      // @ts-expect-error - @mapbox/mbtiles doesn't have proper TypeScript declarations
       const MBTiles = await import('@mapbox/mbtiles');
       const MBTilesClass = MBTiles.default || MBTiles;
 

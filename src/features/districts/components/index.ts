@@ -1,7 +1,7 @@
 // Districts components
 export { default as DistrictBoundaryMap } from './DistrictBoundaryMap';
 export { DistrictCharts } from './DistrictCharts';
-export { DistrictMap } from './DistrictMap';
+export { default as DistrictMap } from './DistrictMap';
 export { default as DistrictMapContainer } from './DistrictMapContainer';
 export { InteractiveDistrictMap } from './InteractiveDistrictMap';
 export { RealDistrictBoundaryMap } from './RealDistrictBoundaryMap';

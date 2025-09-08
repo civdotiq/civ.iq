@@ -1,0 +1,7760 @@
+[
+  [
+    "AL-01",
+    {
+      "population": 722794,
+      "white": 479183,
+      "black": 196018,
+      "asian": 10815,
+      "hispanic": 24198,
+      "medianAge": 40.3,
+      "medianIncome": 53606,
+      "housingUnits": 344531,
+      "educationBachelors": 81239,
+      "votingAgePopulation": 548787,
+      "diversityIndex": 48.52907236058984,
+      "urbanPercentage": 52.44767524547863,
+      "state": "AL"
+    }
+  ],
+  [
+    "AL-02",
+    {
+      "population": 689681,
+      "white": 431518,
+      "black": 216075,
+      "asian": 9027,
+      "hispanic": 28339,
+      "medianAge": 39,
+      "medianIncome": 52194,
+      "housingUnits": 317903,
+      "educationBachelors": 68071,
+      "votingAgePopulation": 524281,
+      "diversityIndex": 50.84658558602665,
+      "urbanPercentage": 54.236748316310326,
+      "state": "AL"
+    }
+  ],
+  [
+    "AL-03",
+    {
+      "population": 731482,
+      "white": 498000,
+      "black": 188393,
+      "asian": 14342,
+      "hispanic": 23623,
+      "medianAge": 38.8,
+      "medianIncome": 53090,
+      "housingUnits": 334483,
+      "educationBachelors": 68614,
+      "votingAgePopulation": 557904,
+      "diversityIndex": 46.86441347801329,
+      "urbanPercentage": 54.67258425689796,
+      "state": "AL"
+    }
+  ],
+  [
+    "AL-04",
+    {
+      "population": 702255,
+      "white": 599957,
+      "black": 48968,
+      "asian": 3591,
+      "hispanic": 47558,
+      "medianAge": 40.9,
+      "medianIncome": 50931,
+      "housingUnits": 317828,
+      "educationBachelors": 55879,
+      "votingAgePopulation": 524771,
+      "diversityIndex": 26.06372360103151,
+      "urbanPercentage": 55.23860389896422,
+      "state": "AL"
+    }
+  ],
+  [
+    "AL-05",
+    {
+      "population": 751690,
+      "white": 555035,
+      "black": 133256,
+      "asian": 12903,
+      "hispanic": 41024,
+      "medianAge": 39.8,
+      "medianIncome": 63180,
+      "housingUnits": 331853,
+      "educationBachelors": 111158,
+      "votingAgePopulation": 571205,
+      "diversityIndex": 41.99323390608482,
+      "urbanPercentage": 56.62823599605849,
+      "state": "AL"
+    }
+  ],
+  [
+    "AL-06",
+    {
+      "population": 731505,
+      "white": 556847,
+      "black": 122350,
+      "asian": 12584,
+      "hispanic": 36619,
+      "medianAge": 39.5,
+      "medianIncome": 73619,
+      "housingUnits": 307972,
+      "educationBachelors": 119253,
+      "votingAgePopulation": 545630,
+      "diversityIndex": 38.97265583915339,
+      "urbanPercentage": 59.38080409907395,
+      "state": "AL"
+    }
+  ],
+  [
+    "AL-07",
+    {
+      "population": 668268,
+      "white": 218050,
+      "black": 419173,
+      "asian": 6899,
+      "hispanic": 23298,
+      "medianAge": 36.5,
+      "medianIncome": 40677,
+      "housingUnits": 323956,
+      "educationBachelors": 59414,
+      "votingAgePopulation": 510402,
+      "diversityIndex": 49.87642617079755,
+      "urbanPercentage": 51.570892343404665,
+      "state": "AL"
+    }
+  ],
+  [
+    "AZ-01",
+    {
+      "population": 758861,
+      "white": 459591,
+      "black": 20648,
+      "asian": 11617,
+      "hispanic": 176955,
+      "medianAge": 38.3,
+      "medianIncome": 60420,
+      "housingUnits": 339847,
+      "educationBachelors": 80281,
+      "votingAgePopulation": 561265,
+      "diversityIndex": 56.377785117614025,
+      "urbanPercentage": 55.82372361680403,
+      "state": "AZ"
+    }
+  ],
+  [
+    "AZ-02",
+    {
+      "population": 729613,
+      "white": 546505,
+      "black": 28669,
+      "asian": 22458,
+      "hispanic": 217970,
+      "medianAge": 40.8,
+      "medianIncome": 59161,
+      "housingUnits": 350846,
+      "educationBachelors": 106174,
+      "votingAgePopulation": 552420,
+      "diversityIndex": 34.7206506170661,
+      "urbanPercentage": 51.98954812082795,
+      "state": "AZ"
+    }
+  ],
+  [
+    "AZ-03",
+    {
+      "population": 780580,
+      "white": 462894,
+      "black": 34732,
+      "asian": 13399,
+      "hispanic": 497233,
+      "medianAge": 32.6,
+      "medianIncome": 56106,
+      "housingUnits": 281702,
+      "educationBachelors": 55460,
+      "votingAgePopulation": 497597,
+      "diversityIndex": 24.028646913274244,
+      "urbanPercentage": 69.27355858318364,
+      "state": "AZ"
+    }
+  ],
+  [
+    "AZ-04",
+    {
+      "population": 796390,
+      "white": 660004,
+      "black": 13677,
+      "asian": 9608,
+      "hispanic": 166734,
+      "medianAge": 48.4,
+      "medianIncome": 57895,
+      "housingUnits": 407474,
+      "educationBachelors": 79882,
+      "votingAgePopulation": 617168,
+      "diversityIndex": 26.89091659789884,
+      "urbanPercentage": 48.86139974575065,
+      "state": "AZ"
+    }
+  ],
+  [
+    "AZ-05",
+    {
+      "population": 860467,
+      "white": 673758,
+      "black": 31764,
+      "asian": 44252,
+      "hispanic": 157787,
+      "medianAge": 39.1,
+      "medianIncome": 86858,
+      "housingUnits": 351413,
+      "educationBachelors": 146369,
+      "votingAgePopulation": 606046,
+      "diversityIndex": 34.925510426899756,
+      "urbanPercentage": 61.21479569623207,
+      "state": "AZ"
+    }
+  ],
+  [
+    "AZ-06",
+    {
+      "population": 769040,
+      "white": 601348,
+      "black": 25750,
+      "asian": 40442,
+      "hispanic": 140430,
+      "medianAge": 42.3,
+      "medianIncome": 81090,
+      "housingUnits": 365144,
+      "educationBachelors": 153904,
+      "votingAgePopulation": 568078,
+      "diversityIndex": 35.13290315185724,
+      "urbanPercentage": 52.65319983349035,
+      "state": "AZ"
+    }
+  ],
+  [
+    "AZ-07",
+    {
+      "population": 792891,
+      "white": 425670,
+      "black": 78675,
+      "asian": 19105,
+      "hispanic": 509225,
+      "medianAge": 30.3,
+      "medianIncome": 52167,
+      "housingUnits": 270546,
+      "educationBachelors": 51765,
+      "votingAgePopulation": 434531,
+      "diversityIndex": 28.888694951609175,
+      "urbanPercentage": 73.26766982324632,
+      "state": "AZ"
+    }
+  ],
+  [
+    "AZ-08",
+    {
+      "population": 821009,
+      "white": 629929,
+      "black": 35032,
+      "asian": 31805,
+      "hispanic": 180982,
+      "medianAge": 42.2,
+      "medianIncome": 77153,
+      "housingUnits": 339651,
+      "educationBachelors": 114180,
+      "votingAgePopulation": 608137,
+      "diversityIndex": 35.939451532731916,
+      "urbanPercentage": 60.43033878893335,
+      "state": "AZ"
+    }
+  ],
+  [
+    "AZ-09",
+    {
+      "population": 770352,
+      "white": 526030,
+      "black": 49880,
+      "asian": 41809,
+      "hispanic": 210113,
+      "medianAge": 33.8,
+      "medianIncome": 67359,
+      "housingUnits": 350267,
+      "educationBachelors": 135324,
+      "votingAgePopulation": 554860,
+      "diversityIndex": 45.21942686054912,
+      "urbanPercentage": 54.98319853140604,
+      "state": "AZ"
+    }
+  ],
+  [
+    "AR-01",
+    {
+      "population": 717868,
+      "white": 546821,
+      "black": 122520,
+      "asian": 3572,
+      "hispanic": 26782,
+      "medianAge": 39.6,
+      "medianIncome": 46235,
+      "housingUnits": 331639,
+      "educationBachelors": 56388,
+      "votingAgePopulation": 541941,
+      "diversityIndex": 38.8582231117108,
+      "urbanPercentage": 54.11516739587322,
+      "state": "AR"
+    }
+  ],
+  [
+    "AR-02",
+    {
+      "population": 767099,
+      "white": 529576,
+      "black": 178769,
+      "asian": 12655,
+      "hispanic": 41911,
+      "medianAge": 37.6,
+      "medianIncome": 55764,
+      "housingUnits": 349719,
+      "educationBachelors": 100427,
+      "votingAgePopulation": 570558,
+      "diversityIndex": 46.5803059654705,
+      "urbanPercentage": 54.83681184036327,
+      "state": "AR"
+    }
+  ],
+  [
+    "AR-03",
+    {
+      "population": 831156,
+      "white": 645773,
+      "black": 23623,
+      "asian": 25805,
+      "hispanic": 124022,
+      "medianAge": 35.9,
+      "medianIncome": 59029,
+      "housingUnits": 348560,
+      "educationBachelors": 101469,
+      "votingAgePopulation": 579165,
+      "diversityIndex": 37.209348515576416,
+      "urbanPercentage": 59.61355290337388,
+      "state": "AR"
+    }
+  ],
+  [
+    "AR-04",
+    {
+      "population": 690186,
+      "white": 504850,
+      "black": 133174,
+      "asian": 4356,
+      "hispanic": 43286,
+      "medianAge": 41,
+      "medianIncome": 46300,
+      "housingUnits": 331962,
+      "educationBachelors": 55243,
+      "votingAgePopulation": 519902,
+      "diversityIndex": 42.370515351962,
+      "urbanPercentage": 51.97778661413053,
+      "state": "AR"
+    }
+  ],
+  [
+    "CA-01",
+    {
+      "population": 708366,
+      "white": 583140,
+      "black": 11466,
+      "asian": 21398,
+      "hispanic": 105096,
+      "medianAge": 42,
+      "medianIncome": 61337,
+      "housingUnits": 320236,
+      "educationBachelors": 84987,
+      "votingAgePopulation": 544787,
+      "diversityIndex": 29.912492065168227,
+      "urbanPercentage": 55.30030977154349,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-02",
+    {
+      "population": 722327,
+      "white": 549670,
+      "black": 11014,
+      "asian": 28658,
+      "hispanic": 132147,
+      "medianAge": 44.5,
+      "medianIncome": 86108,
+      "housingUnits": 316859,
+      "educationBachelors": 132741,
+      "votingAgePopulation": 534265,
+      "diversityIndex": 38.564568740542136,
+      "urbanPercentage": 56.99120113362726,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-03",
+    {
+      "population": 757414,
+      "white": 462776,
+      "black": 47329,
+      "asian": 89668,
+      "hispanic": 231654,
+      "medianAge": 35.5,
+      "medianIncome": 77120,
+      "housingUnits": 274607,
+      "educationBachelors": 81089,
+      "votingAgePopulation": 519113,
+      "diversityIndex": 51.5221828762738,
+      "urbanPercentage": 68.95436023116672,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-04",
+    {
+      "population": 760658,
+      "white": 614096,
+      "black": 10727,
+      "asian": 45942,
+      "hispanic": 107414,
+      "medianAge": 44.2,
+      "medianIncome": 87963,
+      "housingUnits": 369892,
+      "educationBachelors": 132350,
+      "votingAgePopulation": 578304,
+      "diversityIndex": 32.44434844032038,
+      "urbanPercentage": 51.410817211510384,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-05",
+    {
+      "population": 728345,
+      "white": 423446,
+      "black": 43394,
+      "asian": 83076,
+      "hispanic": 214060,
+      "medianAge": 41.1,
+      "medianIncome": 89372,
+      "housingUnits": 289055,
+      "educationBachelors": 116285,
+      "votingAgePopulation": 517279,
+      "diversityIndex": 55.905968122782404,
+      "urbanPercentage": 62.99363442943384,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-06",
+    {
+      "population": 781387,
+      "white": 355848,
+      "black": 96857,
+      "asian": 130770,
+      "hispanic": 226431,
+      "medianAge": 34.6,
+      "medianIncome": 66518,
+      "housingUnits": 298534,
+      "educationBachelors": 102121,
+      "votingAgePopulation": 522007,
+      "diversityIndex": 66.5259795896205,
+      "urbanPercentage": 65.43534404791414,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-07",
+    {
+      "population": 778765,
+      "white": 449403,
+      "black": 55960,
+      "asian": 136034,
+      "hispanic": 144947,
+      "medianAge": 38.5,
+      "medianIncome": 87335,
+      "housingUnits": 283489,
+      "educationBachelors": 119472,
+      "votingAgePopulation": 546752,
+      "diversityIndex": 59.667011808732106,
+      "urbanPercentage": 68.67682696683116,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-08",
+    {
+      "population": 749184,
+      "white": 487990,
+      "black": 54660,
+      "asian": 26006,
+      "hispanic": 334357,
+      "medianAge": 34.2,
+      "medianIncome": 60500,
+      "housingUnits": 305123,
+      "educationBachelors": 51678,
+      "votingAgePopulation": 493678,
+      "diversityIndex": 37.0020361267402,
+      "urbanPercentage": 61.38376982397262,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-09",
+    {
+      "population": 796370,
+      "white": 368637,
+      "black": 72690,
+      "asian": 124031,
+      "hispanic": 314052,
+      "medianAge": 35.3,
+      "medianIncome": 78431,
+      "housingUnits": 258459,
+      "educationBachelors": 75214,
+      "votingAgePopulation": 506497,
+      "diversityIndex": 59.76232442923788,
+      "urbanPercentage": 77.0305928599894,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-10",
+    {
+      "population": 764549,
+      "white": 473451,
+      "black": 25644,
+      "asian": 61870,
+      "hispanic": 346700,
+      "medianAge": 34.8,
+      "medianIncome": 74420,
+      "housingUnits": 250677,
+      "educationBachelors": 63205,
+      "votingAgePopulation": 487459,
+      "diversityIndex": 40.32142685147042,
+      "urbanPercentage": 76.24841928058817,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-11",
+    {
+      "population": 767298,
+      "white": 394083,
+      "black": 59856,
+      "asian": 117383,
+      "hispanic": 216470,
+      "medianAge": 40,
+      "medianIncome": 106592,
+      "housingUnits": 285694,
+      "educationBachelors": 149506,
+      "votingAgePopulation": 514619,
+      "diversityIndex": 62.71361522894916,
+      "urbanPercentage": 67.14334217729458,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-12",
+    {
+      "population": 757251,
+      "white": 345230,
+      "black": 40138,
+      "asian": 246743,
+      "hispanic": 111713,
+      "medianAge": 38.3,
+      "medianIncome": 127278,
+      "housingUnits": 368132,
+      "educationBachelors": 219100,
+      "votingAgePopulation": 564997,
+      "diversityIndex": 66.10967136382916,
+      "urbanPercentage": 51.42523605663186,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-13",
+    {
+      "population": 772203,
+      "white": 303169,
+      "black": 123072,
+      "asian": 161499,
+      "hispanic": 172792,
+      "medianAge": 37.2,
+      "medianIncome": 92969,
+      "housingUnits": 314267,
+      "educationBachelors": 159146,
+      "votingAgePopulation": 537552,
+      "diversityIndex": 72.64228315892555,
+      "urbanPercentage": 61.42889644792485,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-14",
+    {
+      "population": 747495,
+      "white": 301467,
+      "black": 20936,
+      "asian": 263528,
+      "hispanic": 173974,
+      "medianAge": 40.2,
+      "medianIncome": 129943,
+      "housingUnits": 272958,
+      "educationBachelors": 162492,
+      "votingAgePopulation": 502365,
+      "diversityIndex": 65.81028251266368,
+      "urbanPercentage": 68.462455762425,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-15",
+    {
+      "population": 796865,
+      "white": 290595,
+      "black": 44625,
+      "asian": 298926,
+      "hispanic": 176418,
+      "medianAge": 39.1,
+      "medianIncome": 130999,
+      "housingUnits": 269735,
+      "educationBachelors": 161755,
+      "votingAgePopulation": 505466,
+      "diversityIndex": 67.41434331284835,
+      "urbanPercentage": 73.85628487218938,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-16",
+    {
+      "population": 747131,
+      "white": 346439,
+      "black": 37514,
+      "asian": 68113,
+      "hispanic": 466739,
+      "medianAge": 31,
+      "medianIncome": 52403,
+      "housingUnits": 230694,
+      "educationBachelors": 43105,
+      "votingAgePopulation": 429680,
+      "diversityIndex": 38.38963795743836,
+      "urbanPercentage": 80.96558644784866,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-17",
+    {
+      "population": 780242,
+      "white": 197720,
+      "black": 17941,
+      "asian": 442833,
+      "hispanic": 120057,
+      "medianAge": 36.3,
+      "medianIncome": 154511,
+      "housingUnits": 277276,
+      "educationBachelors": 166650,
+      "votingAgePopulation": 435978,
+      "diversityIndex": 58.94515578422788,
+      "urbanPercentage": 70.34885817741167,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-18",
+    {
+      "population": 744528,
+      "white": 424455,
+      "black": 16150,
+      "asian": 194076,
+      "hispanic": 122384,
+      "medianAge": 40.3,
+      "medianIncome": 157239,
+      "housingUnits": 292798,
+      "educationBachelors": 161799,
+      "votingAgePopulation": 485751,
+      "diversityIndex": 57.954721116313856,
+      "urbanPercentage": 63.57010635318547,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-19",
+    {
+      "population": 754007,
+      "white": 285000,
+      "black": 21054,
+      "asian": 225373,
+      "hispanic": 296185,
+      "medianAge": 37.4,
+      "medianIncome": 116609,
+      "housingUnits": 239975,
+      "educationBachelors": 121703,
+      "votingAgePopulation": 478269,
+      "diversityIndex": 61.27061930049533,
+      "urbanPercentage": 78.55057818522762,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-20",
+    {
+      "population": 744111,
+      "white": 384782,
+      "black": 14731,
+      "asian": 40511,
+      "hispanic": 403336,
+      "medianAge": 35.4,
+      "medianIncome": 85614,
+      "housingUnits": 253125,
+      "educationBachelors": 83772,
+      "votingAgePopulation": 443861,
+      "diversityIndex": 43.544411496327754,
+      "urbanPercentage": 73.49244444444444,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-21",
+    {
+      "population": 710344,
+      "white": 401340,
+      "black": 27937,
+      "asian": 24025,
+      "hispanic": 535143,
+      "medianAge": 30.3,
+      "medianIncome": 50309,
+      "housingUnits": 201092,
+      "educationBachelors": 28487,
+      "votingAgePopulation": 365055,
+      "diversityIndex": 11.054371001830955,
+      "urbanPercentage": 88.31082290692818,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-22",
+    {
+      "population": 786891,
+      "white": 465023,
+      "black": 25158,
+      "asian": 69167,
+      "hispanic": 391065,
+      "medianAge": 32.9,
+      "medianIncome": 70290,
+      "housingUnits": 263900,
+      "educationBachelors": 83807,
+      "votingAgePopulation": 492340,
+      "diversityIndex": 39.50310581885196,
+      "urbanPercentage": 74.54442970822282,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-23",
+    {
+      "population": 771198,
+      "white": 490983,
+      "black": 47541,
+      "asian": 40339,
+      "hispanic": 330190,
+      "medianAge": 34.3,
+      "medianIncome": 65784,
+      "housingUnits": 278444,
+      "educationBachelors": 69839,
+      "votingAgePopulation": 505830,
+      "diversityIndex": 40.48267452272412,
+      "urbanPercentage": 69.24175058539599,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-24",
+    {
+      "population": 739183,
+      "white": 527870,
+      "black": 12749,
+      "asian": 35113,
+      "hispanic": 274953,
+      "medianAge": 36.4,
+      "medianIncome": 83503,
+      "housingUnits": 286080,
+      "educationBachelors": 103794,
+      "votingAgePopulation": 514093,
+      "diversityIndex": 34.91089374478248,
+      "urbanPercentage": 64.5958298378076,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-25",
+    {
+      "population": 745689,
+      "white": 415293,
+      "black": 61287,
+      "asian": 62989,
+      "hispanic": 310965,
+      "medianAge": 36.4,
+      "medianIncome": 87671,
+      "housingUnits": 242565,
+      "educationBachelors": 93150,
+      "votingAgePopulation": 498987,
+      "diversityIndex": 50.204086060943254,
+      "urbanPercentage": 76.85455444932286,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-26",
+    {
+      "population": 722958,
+      "white": 506494,
+      "black": 14019,
+      "asian": 47437,
+      "hispanic": 334530,
+      "medianAge": 38.1,
+      "medianIncome": 93176,
+      "housingUnits": 247290,
+      "educationBachelors": 103868,
+      "votingAgePopulation": 481538,
+      "diversityIndex": 29.03849043037008,
+      "urbanPercentage": 73.088074730074,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-27",
+    {
+      "population": 708388,
+      "white": 243973,
+      "black": 30050,
+      "asian": 277041,
+      "hispanic": 200396,
+      "medianAge": 41.9,
+      "medianIncome": 89708,
+      "housingUnits": 263660,
+      "educationBachelors": 139678,
+      "votingAgePopulation": 482680,
+      "diversityIndex": 64.66095889466669,
+      "urbanPercentage": 67.16870211636198,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-28",
+    {
+      "population": 704354,
+      "white": 449015,
+      "black": 21420,
+      "asian": 92814,
+      "hispanic": 173165,
+      "medianAge": 40,
+      "medianIncome": 76855,
+      "housingUnits": 332356,
+      "educationBachelors": 173919,
+      "votingAgePopulation": 504440,
+      "diversityIndex": 51.48825228026863,
+      "urbanPercentage": 52.98189291001215,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-29",
+    {
+      "population": 703638,
+      "white": 312020,
+      "black": 26654,
+      "asian": 54357,
+      "hispanic": 476584,
+      "medianAge": 35.4,
+      "medianIncome": 64066,
+      "housingUnits": 222159,
+      "educationBachelors": 79167,
+      "votingAgePopulation": 409840,
+      "diversityIndex": 33.720532517046145,
+      "urbanPercentage": 79.18180222273237,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-30",
+    {
+      "population": 761222,
+      "white": 437647,
+      "black": 38762,
+      "asian": 98715,
+      "hispanic": 223227,
+      "medianAge": 39.7,
+      "medianIncome": 91231,
+      "housingUnits": 296569,
+      "educationBachelors": 162067,
+      "votingAgePopulation": 526185,
+      "diversityIndex": 56.405481131276034,
+      "urbanPercentage": 64.16904666367692,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-31",
+    {
+      "population": 754741,
+      "white": 365938,
+      "black": 77173,
+      "asian": 61141,
+      "hispanic": 413968,
+      "medianAge": 33.6,
+      "medianIncome": 73754,
+      "housingUnits": 241979,
+      "educationBachelors": 76244,
+      "votingAgePopulation": 486906,
+      "diversityIndex": 44.70589337173407,
+      "urbanPercentage": 77.9758780720641,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-32",
+    {
+      "population": 705766,
+      "white": 271263,
+      "black": 19410,
+      "asian": 138766,
+      "hispanic": 434179,
+      "medianAge": 37.8,
+      "medianIncome": 79816,
+      "housingUnits": 206342,
+      "educationBachelors": 79399,
+      "votingAgePopulation": 456890,
+      "diversityIndex": 43.440157343968835,
+      "urbanPercentage": 85.50925163078772,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-33",
+    {
+      "population": 709488,
+      "white": 481405,
+      "black": 24053,
+      "asian": 109313,
+      "hispanic": 98360,
+      "medianAge": 40.8,
+      "medianIncome": 122270,
+      "housingUnits": 331913,
+      "educationBachelors": 196389,
+      "votingAgePopulation": 521261,
+      "diversityIndex": 49.549691713566844,
+      "urbanPercentage": 53.43930487808552,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-34",
+    {
+      "population": 716495,
+      "white": 213211,
+      "black": 37185,
+      "asian": 139157,
+      "hispanic": 435139,
+      "medianAge": 35.4,
+      "medianIncome": 54103,
+      "housingUnits": 280506,
+      "educationBachelors": 107569,
+      "votingAgePopulation": 404834,
+      "diversityIndex": 50.220168419993925,
+      "urbanPercentage": 63.85736846983665,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-35",
+    {
+      "population": 739237,
+      "white": 270876,
+      "black": 46757,
+      "asian": 58717,
+      "hispanic": 521820,
+      "medianAge": 33.1,
+      "medianIncome": 73377,
+      "housingUnits": 209948,
+      "educationBachelors": 60709,
+      "votingAgePopulation": 444115,
+      "diversityIndex": 35.71413616684096,
+      "urbanPercentage": 88.02620172614171,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-36",
+    {
+      "population": 747370,
+      "white": 436793,
+      "black": 36672,
+      "asian": 26181,
+      "hispanic": 376810,
+      "medianAge": 42.1,
+      "medianIncome": 57732,
+      "housingUnits": 358917,
+      "educationBachelors": 72553,
+      "votingAgePopulation": 512607,
+      "diversityIndex": 40.05961180594767,
+      "urbanPercentage": 52.05730015574631,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-37",
+    {
+      "population": 712613,
+      "white": 280086,
+      "black": 153885,
+      "asian": 74644,
+      "hispanic": 279435,
+      "medianAge": 36,
+      "medianIncome": 70976,
+      "housingUnits": 300013,
+      "educationBachelors": 124391,
+      "votingAgePopulation": 464784,
+      "diversityIndex": 63.41510794202991,
+      "urbanPercentage": 59.38184345345036,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-38",
+    {
+      "population": 711540,
+      "white": 254823,
+      "black": 28281,
+      "asian": 112370,
+      "hispanic": 442478,
+      "medianAge": 37.5,
+      "medianIncome": 83143,
+      "housingUnits": 213349,
+      "educationBachelors": 85698,
+      "votingAgePopulation": 477861,
+      "diversityIndex": 45.85142462999499,
+      "urbanPercentage": 83.37747071699422,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-39",
+    {
+      "population": 733331,
+      "white": 322602,
+      "black": 17677,
+      "asian": 237986,
+      "hispanic": 250624,
+      "medianAge": 39.3,
+      "medianIncome": 100743,
+      "housingUnits": 242317,
+      "educationBachelors": 141849,
+      "votingAgePopulation": 496291,
+      "diversityIndex": 58.37766342139936,
+      "urbanPercentage": 75.65822868391405,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-40",
+    {
+      "population": 700867,
+      "white": 280159,
+      "black": 31945,
+      "asian": 16795,
+      "hispanic": 616741,
+      "medianAge": 32.2,
+      "medianIncome": 56942,
+      "housingUnits": 186991,
+      "educationBachelors": 36834,
+      "votingAgePopulation": 339811,
+      "diversityIndex": 6.321773280173648,
+      "urbanPercentage": 93.70330657625233,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-41",
+    {
+      "population": 752956,
+      "white": 292761,
+      "black": 68394,
+      "asian": 48717,
+      "hispanic": 469665,
+      "medianAge": 31.7,
+      "medianIncome": 75638,
+      "housingUnits": 206617,
+      "educationBachelors": 54393,
+      "votingAgePopulation": 464184,
+      "diversityIndex": 44.73069682279406,
+      "urbanPercentage": 91.10528175319553,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-42",
+    {
+      "population": 820055,
+      "white": 447425,
+      "black": 48054,
+      "asian": 79803,
+      "hispanic": 337094,
+      "medianAge": 35.6,
+      "medianIncome": 97618,
+      "housingUnits": 249612,
+      "educationBachelors": 97540,
+      "votingAgePopulation": 544258,
+      "diversityIndex": 52.04402982596149,
+      "urbanPercentage": 82.13297037001426,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-43",
+    {
+      "population": 733353,
+      "white": 233814,
+      "black": 151986,
+      "asian": 97626,
+      "hispanic": 358546,
+      "medianAge": 36,
+      "medianIncome": 70542,
+      "housingUnits": 255649,
+      "educationBachelors": 98169,
+      "votingAgePopulation": 443384,
+      "diversityIndex": 59.86386338330156,
+      "urbanPercentage": 71.71483166372644,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-44",
+    {
+      "population": 714444,
+      "white": 249805,
+      "black": 102974,
+      "asian": 44743,
+      "hispanic": 508246,
+      "medianAge": 33.7,
+      "medianIncome": 62974,
+      "housingUnits": 199478,
+      "educationBachelors": 50422,
+      "votingAgePopulation": 402270,
+      "diversityIndex": 34.697810544996344,
+      "urbanPercentage": 89.53919730496595,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-45",
+    {
+      "population": 806990,
+      "white": 451053,
+      "black": 14635,
+      "asian": 213898,
+      "hispanic": 158280,
+      "medianAge": 39.1,
+      "medianIncome": 116789,
+      "housingUnits": 303605,
+      "educationBachelors": 189194,
+      "votingAgePopulation": 545052,
+      "diversityIndex": 57.854106932525774,
+      "urbanPercentage": 66.4506513397342,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-46",
+    {
+      "population": 710498,
+      "white": 308553,
+      "black": 13770,
+      "asian": 98069,
+      "hispanic": 468649,
+      "medianAge": 33.6,
+      "medianIncome": 77248,
+      "housingUnits": 200447,
+      "educationBachelors": 71405,
+      "votingAgePopulation": 401333,
+      "diversityIndex": 35.689537133649274,
+      "urbanPercentage": 88.61419726910356,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-47",
+    {
+      "population": 714590,
+      "white": 342895,
+      "black": 47974,
+      "asian": 166369,
+      "hispanic": 257866,
+      "medianAge": 37.7,
+      "medianIncome": 78632,
+      "housingUnits": 262591,
+      "educationBachelors": 113532,
+      "votingAgePopulation": 483385,
+      "diversityIndex": 58.081529395823125,
+      "urbanPercentage": 68.03260583949945,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-48",
+    {
+      "population": 718069,
+      "white": 440391,
+      "black": 8938,
+      "asian": 137292,
+      "hispanic": 152048,
+      "medianAge": 42.7,
+      "medianIncome": 105309,
+      "housingUnits": 293547,
+      "educationBachelors": 156800,
+      "votingAgePopulation": 525220,
+      "diversityIndex": 54.23172207822016,
+      "urbanPercentage": 61.15451699387151,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-49",
+    {
+      "population": 735611,
+      "white": 517168,
+      "black": 19620,
+      "asian": 55604,
+      "hispanic": 202380,
+      "medianAge": 38.1,
+      "medianIncome": 104696,
+      "housingUnits": 278886,
+      "educationBachelors": 139386,
+      "votingAgePopulation": 517820,
+      "diversityIndex": 42.36119317119061,
+      "urbanPercentage": 65.94190816319212,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-50",
+    {
+      "population": 752367,
+      "white": 523216,
+      "black": 18489,
+      "asian": 42733,
+      "hispanic": 253023,
+      "medianAge": 37.7,
+      "medianIncome": 85615,
+      "housingUnits": 265327,
+      "educationBachelors": 103199,
+      "votingAgePopulation": 512564,
+      "diversityIndex": 39.94525065976185,
+      "urbanPercentage": 70.89054261345434,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-51",
+    {
+      "population": 724859,
+      "white": 371713,
+      "black": 48070,
+      "asian": 57122,
+      "hispanic": 510160,
+      "medianAge": 33.5,
+      "medianIncome": 56635,
+      "housingUnits": 225065,
+      "educationBachelors": 54411,
+      "votingAgePopulation": 435183,
+      "diversityIndex": 23.107801461883824,
+      "urbanPercentage": 80.51662852953592,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-52",
+    {
+      "population": 757448,
+      "white": 474740,
+      "black": 23711,
+      "asian": 154615,
+      "hispanic": 116836,
+      "medianAge": 37,
+      "medianIncome": 108946,
+      "housingUnits": 313698,
+      "educationBachelors": 180025,
+      "votingAgePopulation": 544711,
+      "diversityIndex": 54.07284106509147,
+      "urbanPercentage": 60.36442693291,
+      "state": "CA"
+    }
+  ],
+  [
+    "CA-53",
+    {
+      "population": 770304,
+      "white": 431987,
+      "black": 62270,
+      "asian": 107300,
+      "hispanic": 264296,
+      "medianAge": 35.9,
+      "medianIncome": 86816,
+      "housingUnits": 296042,
+      "educationBachelors": 139326,
+      "votingAgePopulation": 561824,
+      "diversityIndex": 54.18427164276282,
+      "urbanPercentage": 65.05022935934765,
+      "state": "CA"
+    }
+  ],
+  [
+    "CO-01",
+    {
+      "population": 831812,
+      "white": 592044,
+      "black": 66159,
+      "asian": 27650,
+      "hispanic": 226203,
+      "medianAge": 35.3,
+      "medianIncome": 80246,
+      "housingUnits": 388820,
+      "educationBachelors": 193236,
+      "votingAgePopulation": 615068,
+      "diversityIndex": 41.202653034115265,
+      "urbanPercentage": 53.48310272105344,
+      "state": "CO"
+    }
+  ],
+  [
+    "CO-02",
+    {
+      "population": 822288,
+      "white": 716310,
+      "black": 7653,
+      "asian": 26975,
+      "hispanic": 91031,
+      "medianAge": 38.2,
+      "medianIncome": 91259,
+      "housingUnits": 392616,
+      "educationBachelors": 186430,
+      "votingAgePopulation": 638260,
+      "diversityIndex": 22.77349054566923,
+      "urbanPercentage": 52.35955743016076,
+      "state": "CO"
+    }
+  ],
+  [
+    "CO-03",
+    {
+      "population": 755131,
+      "white": 636230,
+      "black": 6979,
+      "asian": 6701,
+      "hispanic": 190017,
+      "medianAge": 40.7,
+      "medianIncome": 62171,
+      "housingUnits": 369039,
+      "educationBachelors": 115189,
+      "votingAgePopulation": 570985,
+      "diversityIndex": 22.663797023599564,
+      "urbanPercentage": 51.155230206021585,
+      "state": "CO"
+    }
+  ],
+  [
+    "CO-04",
+    {
+      "population": 858938,
+      "white": 718008,
+      "black": 12894,
+      "asian": 21646,
+      "hispanic": 193620,
+      "medianAge": 37.5,
+      "medianIncome": 85817,
+      "housingUnits": 330379,
+      "educationBachelors": 140353,
+      "votingAgePopulation": 610758,
+      "diversityIndex": 24.955524196294864,
+      "urbanPercentage": 64.99641321028274,
+      "state": "CO"
+    }
+  ],
+  [
+    "CO-05",
+    {
+      "population": 824439,
+      "white": 642552,
+      "black": 47126,
+      "asian": 20260,
+      "hispanic": 140312,
+      "medianAge": 35.9,
+      "medianIncome": 73982,
+      "housingUnits": 337775,
+      "educationBachelors": 127053,
+      "votingAgePopulation": 614332,
+      "diversityIndex": 35.972918612129135,
+      "urbanPercentage": 61.01983568943824,
+      "state": "CO"
+    }
+  ],
+  [
+    "CO-06",
+    {
+      "population": 827989,
+      "white": 566886,
+      "black": 79262,
+      "asian": 53346,
+      "hispanic": 172811,
+      "medianAge": 37,
+      "medianIncome": 91753,
+      "housingUnits": 315002,
+      "educationBachelors": 155233,
+      "votingAgePopulation": 564338,
+      "diversityIndex": 47.43733607723352,
+      "urbanPercentage": 65.71299547304461,
+      "state": "CO"
+    }
+  ],
+  [
+    "CO-07",
+    {
+      "population": 802579,
+      "white": 635418,
+      "black": 13992,
+      "asian": 26813,
+      "hispanic": 240642,
+      "medianAge": 36.5,
+      "medianIncome": 80980,
+      "housingUnits": 321242,
+      "educationBachelors": 133529,
+      "votingAgePopulation": 580737,
+      "diversityIndex": 28.185749973583075,
+      "urbanPercentage": 62.45906512847013,
+      "state": "CO"
+    }
+  ],
+  [
+    "CT-01",
+    {
+      "population": 715324,
+      "white": 471211,
+      "black": 108845,
+      "asian": 39571,
+      "hispanic": 127231,
+      "medianAge": 40.6,
+      "medianIncome": 80168,
+      "housingUnits": 310621,
+      "educationBachelors": 108781,
+      "votingAgePopulation": 526004,
+      "diversityIndex": 50.82151175106162,
+      "urbanPercentage": 57.572089459502095,
+      "state": "CT"
+    }
+  ],
+  [
+    "CT-02",
+    {
+      "population": 702074,
+      "white": 586272,
+      "black": 28696,
+      "asian": 23923,
+      "hispanic": 65576,
+      "medianAge": 42,
+      "medianIncome": 84124,
+      "housingUnits": 306391,
+      "educationBachelors": 101205,
+      "votingAgePopulation": 550164,
+      "diversityIndex": 29.11234754835572,
+      "urbanPercentage": 57.28578842067815,
+      "state": "CT"
+    }
+  ],
+  [
+    "CT-03",
+    {
+      "population": 716576,
+      "white": 489815,
+      "black": 108617,
+      "asian": 31147,
+      "hispanic": 120056,
+      "medianAge": 39.9,
+      "medianIncome": 76949,
+      "housingUnits": 304308,
+      "educationBachelors": 100571,
+      "votingAgePopulation": 535867,
+      "diversityIndex": 47.98251922333042,
+      "urbanPercentage": 58.86930346885393,
+      "state": "CT"
+    }
+  ],
+  [
+    "CT-04",
+    {
+      "population": 745946,
+      "white": 505912,
+      "black": 88350,
+      "asian": 42996,
+      "hispanic": 155194,
+      "medianAge": 40.4,
+      "medianIncome": 104774,
+      "housingUnits": 293043,
+      "educationBachelors": 143264,
+      "votingAgePopulation": 498244,
+      "diversityIndex": 47.938882084364145,
+      "urbanPercentage": 63.63793026961913,
+      "state": "CT"
+    }
+  ],
+  [
+    "CT-05",
+    {
+      "population": 725410,
+      "white": 542674,
+      "black": 54782,
+      "asian": 29671,
+      "hispanic": 142008,
+      "medianAge": 42.1,
+      "medianIncome": 78198,
+      "housingUnits": 312676,
+      "educationBachelors": 107746,
+      "votingAgePopulation": 527745,
+      "diversityIndex": 39.46581676523999,
+      "urbanPercentage": 58.00013432434853,
+      "state": "CT"
+    }
+  ],
+  [
+    "CT-ZZ",
+    {
+      "population": 0,
+      "white": 0,
+      "black": 0,
+      "asian": 0,
+      "hispanic": 0,
+      "medianAge": -666666666,
+      "medianIncome": -666666666,
+      "housingUnits": 0,
+      "educationBachelors": 0,
+      "votingAgePopulation": 0,
+      "diversityIndex": 0,
+      "urbanPercentage": 0,
+      "state": "CT"
+    }
+  ],
+  [
+    "FL-01",
+    {
+      "population": 797259,
+      "white": 597145,
+      "black": 103774,
+      "asian": 21089,
+      "hispanic": 55633,
+      "medianAge": 38.8,
+      "medianIncome": 64607,
+      "housingUnits": 380518,
+      "educationBachelors": 103608,
+      "votingAgePopulation": 607007,
+      "diversityIndex": 41.58857191764458,
+      "urbanPercentage": 52.37984799667821,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-02",
+    {
+      "population": 729598,
+      "white": 577544,
+      "black": 90048,
+      "asian": 12527,
+      "hispanic": 50384,
+      "medianAge": 42.6,
+      "medianIncome": 55405,
+      "housingUnits": 353566,
+      "educationBachelors": 77688,
+      "votingAgePopulation": 568150,
+      "diversityIndex": 35.3085438214257,
+      "urbanPercentage": 51.58852944004797,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-03",
+    {
+      "population": 761626,
+      "white": 546212,
+      "black": 122575,
+      "asian": 26345,
+      "hispanic": 82244,
+      "medianAge": 37.7,
+      "medianIncome": 56028,
+      "housingUnits": 326754,
+      "educationBachelors": 89961,
+      "votingAgePopulation": 582006,
+      "diversityIndex": 44.691500827024846,
+      "urbanPercentage": 58.272125207342526,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-04",
+    {
+      "population": 851023,
+      "white": 651444,
+      "black": 82310,
+      "asian": 40599,
+      "hispanic": 79728,
+      "medianAge": 39.9,
+      "medianIncome": 79631,
+      "housingUnits": 369602,
+      "educationBachelors": 162935,
+      "votingAgePopulation": 635518,
+      "diversityIndex": 39.36278510301896,
+      "urbanPercentage": 57.56347368250172,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-05",
+    {
+      "population": 748057,
+      "white": 318314,
+      "black": 350547,
+      "asian": 19516,
+      "hispanic": 68209,
+      "medianAge": 34.6,
+      "medianIncome": 45619,
+      "housingUnits": 327873,
+      "educationBachelors": 71894,
+      "votingAgePopulation": 554687,
+      "diversityIndex": 59.034178480280005,
+      "urbanPercentage": 57.038624711397404,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-06",
+    {
+      "population": 789744,
+      "white": 619671,
+      "black": 80771,
+      "asian": 14179,
+      "hispanic": 108534,
+      "medianAge": 47.5,
+      "medianIncome": 58634,
+      "housingUnits": 387376,
+      "educationBachelors": 98665,
+      "votingAgePopulation": 627078,
+      "diversityIndex": 35.465828969577075,
+      "urbanPercentage": 50.96753541778531,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-07",
+    {
+      "population": 781734,
+      "white": 540925,
+      "black": 85571,
+      "asian": 37798,
+      "hispanic": 203897,
+      "medianAge": 37,
+      "medianIncome": 70822,
+      "housingUnits": 323494,
+      "educationBachelors": 146801,
+      "votingAgePopulation": 586865,
+      "diversityIndex": 43.88473054816093,
+      "urbanPercentage": 60.41333069546885,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-08",
+    {
+      "population": 775458,
+      "white": 615634,
+      "black": 72876,
+      "asian": 17436,
+      "hispanic": 89863,
+      "medianAge": 48.3,
+      "medianIncome": 63387,
+      "housingUnits": 374708,
+      "educationBachelors": 112889,
+      "votingAgePopulation": 613497,
+      "diversityIndex": 34.696062175528496,
+      "urbanPercentage": 51.73748625596465,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-09",
+    {
+      "population": 930697,
+      "white": 573659,
+      "black": 115589,
+      "asian": 27929,
+      "hispanic": 408430,
+      "medianAge": 38.1,
+      "medianIncome": 58995,
+      "housingUnits": 382427,
+      "educationBachelors": 109644,
+      "votingAgePopulation": 643132,
+      "diversityIndex": 41.117249932145796,
+      "urbanPercentage": 60.841480857784624,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-10",
+    {
+      "population": 867042,
+      "white": 420549,
+      "black": 242254,
+      "asian": 45443,
+      "hispanic": 257696,
+      "medianAge": 36.1,
+      "medianIncome": 63355,
+      "housingUnits": 338523,
+      "educationBachelors": 126309,
+      "votingAgePopulation": 563086,
+      "diversityIndex": 59.558899568305954,
+      "urbanPercentage": 64.03124750755488,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-11",
+    {
+      "population": 805200,
+      "white": 674855,
+      "black": 58885,
+      "asian": 10912,
+      "hispanic": 94051,
+      "medianAge": 55.1,
+      "medianIncome": 54163,
+      "housingUnits": 407488,
+      "educationBachelors": 89511,
+      "votingAgePopulation": 660178,
+      "diversityIndex": 27.837817136482947,
+      "urbanPercentage": 49.40022773676771,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-12",
+    {
+      "population": 798316,
+      "white": 661981,
+      "black": 41256,
+      "asian": 22478,
+      "hispanic": 114774,
+      "medianAge": 46.4,
+      "medianIncome": 60121,
+      "housingUnits": 376055,
+      "educationBachelors": 112905,
+      "votingAgePopulation": 614667,
+      "diversityIndex": 28.825791730224193,
+      "urbanPercentage": 53.0717581204877,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-13",
+    {
+      "population": 725783,
+      "white": 549099,
+      "black": 90109,
+      "asian": 27281,
+      "hispanic": 77226,
+      "medianAge": 47.3,
+      "medianIncome": 59761,
+      "housingUnits": 397464,
+      "educationBachelors": 120946,
+      "votingAgePopulation": 576636,
+      "diversityIndex": 39.94667906597466,
+      "urbanPercentage": 45.6508639776181,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-14",
+    {
+      "population": 788149,
+      "white": 487959,
+      "black": 133969,
+      "asian": 37886,
+      "hispanic": 254546,
+      "medianAge": 36.9,
+      "medianIncome": 61291,
+      "housingUnits": 337504,
+      "educationBachelors": 131987,
+      "votingAgePopulation": 550503,
+      "diversityIndex": 48.11788976314932,
+      "urbanPercentage": 58.38071548781644,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-15",
+    {
+      "population": 812631,
+      "white": 548355,
+      "black": 122424,
+      "asian": 24716,
+      "hispanic": 199382,
+      "medianAge": 39,
+      "medianIncome": 61727,
+      "housingUnits": 334732,
+      "educationBachelors": 102161,
+      "votingAgePopulation": 586122,
+      "diversityIndex": 46.08395794875055,
+      "urbanPercentage": 60.69265860449554,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-16",
+    {
+      "population": 861259,
+      "white": 672010,
+      "black": 82470,
+      "asian": 18515,
+      "hispanic": 154464,
+      "medianAge": 47.3,
+      "medianIncome": 69485,
+      "housingUnits": 431178,
+      "educationBachelors": 132842,
+      "votingAgePopulation": 645830,
+      "diversityIndex": 34.93905347923466,
+      "urbanPercentage": 49.936395177861584,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-17",
+    {
+      "population": 773890,
+      "white": 639491,
+      "black": 53486,
+      "asian": 11364,
+      "hispanic": 126744,
+      "medianAge": 52.3,
+      "medianIncome": 56938,
+      "housingUnits": 404309,
+      "educationBachelors": 88496,
+      "votingAgePopulation": 609570,
+      "diversityIndex": 28.53588630580417,
+      "urbanPercentage": 47.85263251621903,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-18",
+    {
+      "population": 783441,
+      "white": 582974,
+      "black": 103744,
+      "asian": 17340,
+      "hispanic": 134928,
+      "medianAge": 48,
+      "medianIncome": 69054,
+      "housingUnits": 377296,
+      "educationBachelors": 125646,
+      "votingAgePopulation": 596470,
+      "diversityIndex": 39.8599069720564,
+      "urbanPercentage": 51.91156280480047,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-19",
+    {
+      "population": 826628,
+      "white": 655516,
+      "black": 61141,
+      "asian": 15183,
+      "hispanic": 175038,
+      "medianAge": 51.6,
+      "medianIncome": 66647,
+      "housingUnits": 496890,
+      "educationBachelors": 130848,
+      "votingAgePopulation": 628001,
+      "diversityIndex": 32.050510492495654,
+      "urbanPercentage": 41.59009036205196,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-20",
+    {
+      "population": 787098,
+      "white": 247600,
+      "black": 418525,
+      "asian": 21994,
+      "hispanic": 200785,
+      "medianAge": 37.3,
+      "medianIncome": 52991,
+      "housingUnits": 302174,
+      "educationBachelors": 79248,
+      "votingAgePopulation": 502441,
+      "diversityIndex": 55.24505614718475,
+      "urbanPercentage": 65.11959996558274,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-21",
+    {
+      "population": 784165,
+      "white": 523095,
+      "black": 125857,
+      "asian": 22696,
+      "hispanic": 199017,
+      "medianAge": 46.2,
+      "medianIncome": 67178,
+      "housingUnits": 377753,
+      "educationBachelors": 128072,
+      "votingAgePopulation": 544767,
+      "diversityIndex": 46.40049865995471,
+      "urbanPercentage": 51.89667587021148,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-22",
+    {
+      "population": 767612,
+      "white": 522624,
+      "black": 117766,
+      "asian": 24102,
+      "hispanic": 176920,
+      "medianAge": 44.5,
+      "medianIncome": 71291,
+      "housingUnits": 396762,
+      "educationBachelors": 146013,
+      "votingAgePopulation": 541936,
+      "diversityIndex": 45.88068283509378,
+      "urbanPercentage": 48.36728315715719,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-23",
+    {
+      "population": 762612,
+      "white": 473699,
+      "black": 110354,
+      "asian": 34201,
+      "hispanic": 310440,
+      "medianAge": 41.9,
+      "medianIncome": 72175,
+      "housingUnits": 356810,
+      "educationBachelors": 135624,
+      "votingAgePopulation": 508541,
+      "diversityIndex": 42.55078622659361,
+      "urbanPercentage": 53.43263921975281,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-24",
+    {
+      "population": 748479,
+      "white": 258511,
+      "black": 341627,
+      "asian": 9246,
+      "hispanic": 317322,
+      "medianAge": 37.8,
+      "medianIncome": 47027,
+      "housingUnits": 288130,
+      "educationBachelors": 74803,
+      "votingAgePopulation": 455709,
+      "diversityIndex": 49.24935353549786,
+      "urbanPercentage": 64.94282094887724,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-25",
+    {
+      "population": 769234,
+      "white": 526936,
+      "black": 31710,
+      "asian": 8338,
+      "hispanic": 580753,
+      "medianAge": 42.5,
+      "medianIncome": 58973,
+      "housingUnits": 296058,
+      "educationBachelors": 96943,
+      "votingAgePopulation": 451112,
+      "diversityIndex": 0,
+      "urbanPercentage": 64.95635990245154,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-26",
+    {
+      "population": 785278,
+      "white": 485212,
+      "black": 85171,
+      "asian": 13461,
+      "hispanic": 551843,
+      "medianAge": 39.7,
+      "medianIncome": 65877,
+      "housingUnits": 276093,
+      "educationBachelors": 105807,
+      "votingAgePopulation": 493700,
+      "diversityIndex": 11.232232552409126,
+      "urbanPercentage": 71.10629389372421,
+      "state": "FL"
+    }
+  ],
+  [
+    "FL-27",
+    {
+      "population": 727749,
+      "white": 478003,
+      "black": 33660,
+      "asian": 14288,
+      "hispanic": 520239,
+      "medianAge": 41.9,
+      "medianIncome": 65458,
+      "housingUnits": 343360,
+      "educationBachelors": 136047,
+      "votingAgePopulation": 446952,
+      "diversityIndex": 5.503201538186331,
+      "urbanPercentage": 52.987316519105306,
+      "state": "FL"
+    }
+  ],
+  [
+    "GA-01",
+    {
+      "population": 752393,
+      "white": 458127,
+      "black": 222669,
+      "asian": 15042,
+      "hispanic": 54126,
+      "medianAge": 36.3,
+      "medianIncome": 57940,
+      "housingUnits": 328814,
+      "educationBachelors": 83481,
+      "votingAgePopulation": 557726,
+      "diversityIndex": 53.6078728276187,
+      "urbanPercentage": 57.20506122002105,
+      "state": "GA"
+    }
+  ],
+  [
+    "GA-02",
+    {
+      "population": 671948,
+      "white": 277720,
+      "black": 347757,
+      "asian": 8471,
+      "hispanic": 36717,
+      "medianAge": 36.7,
+      "medianIncome": 43151,
+      "housingUnits": 301697,
+      "educationBachelors": 49506,
+      "votingAgePopulation": 500716,
+      "diversityIndex": 55.81868540283028,
+      "urbanPercentage": 55.68069950977305,
+      "state": "GA"
+    }
+  ],
+  [
+    "GA-03",
+    {
+      "population": 756277,
+      "white": 498195,
+      "black": 194514,
+      "asian": 16007,
+      "hispanic": 46951,
+      "medianAge": 38.5,
+      "medianIncome": 68315,
+      "housingUnits": 299810,
+      "educationBachelors": 90575,
+      "votingAgePopulation": 557165,
+      "diversityIndex": 49.55984354652939,
+      "urbanPercentage": 63.06302324805711,
+      "state": "GA"
+    }
+  ],
+  [
+    "GA-04",
+    {
+      "population": 768431,
+      "white": 191225,
+      "black": 461015,
+      "asian": 42109,
+      "hispanic": 73065,
+      "medianAge": 36.8,
+      "medianIncome": 63415,
+      "housingUnits": 293186,
+      "educationBachelors": 101913,
+      "votingAgePopulation": 523430,
+      "diversityIndex": 56.60956573059719,
+      "urbanPercentage": 65.52418942241444,
+      "state": "GA"
+    }
+  ],
+  [
+    "GA-05",
+    {
+      "population": 778225,
+      "white": 252674,
+      "black": 432079,
+      "asian": 37547,
+      "hispanic": 56547,
+      "medianAge": 33.7,
+      "medianIncome": 61917,
+      "housingUnits": 375003,
+      "educationBachelors": 140103,
+      "votingAgePopulation": 580328,
+      "diversityIndex": 57.8716370812812,
+      "urbanPercentage": 51.881251616653735,
+      "state": "GA"
+    }
+  ],
+  [
+    "GA-06",
+    {
+      "population": 757644,
+      "white": 487183,
+      "black": 101227,
+      "asian": 91461,
+      "hispanic": 93628,
+      "medianAge": 38.8,
+      "medianIncome": 104703,
+      "housingUnits": 315862,
+      "educationBachelors": 197950,
+      "votingAgePopulation": 500501,
+      "diversityIndex": 53.882538138041355,
+      "urbanPercentage": 59.96637772191653,
+      "state": "GA"
+    }
+  ],
+  [
+    "GA-07",
+    {
+      "population": 854516,
+      "white": 412400,
+      "black": 181885,
+      "asian": 129982,
+      "hispanic": 172202,
+      "medianAge": 36.2,
+      "medianIncome": 83800,
+      "housingUnits": 295877,
+      "educationBachelors": 156990,
+      "votingAgePopulation": 518975,
+      "diversityIndex": 65.80312448065175,
+      "urbanPercentage": 72.20196230190248,
+      "state": "GA"
+    }
+  ],
+  [
+    "GA-08",
+    {
+      "population": 715067,
+      "white": 436043,
+      "black": 222658,
+      "asian": 11579,
+      "hispanic": 49195,
+      "medianAge": 37.4,
+      "medianIncome": 53827,
+      "housingUnits": 302761,
+      "educationBachelors": 63281,
+      "votingAgePopulation": 527778,
+      "diversityIndex": 52.619901788838334,
+      "urbanPercentage": 59.04550123694927,
+      "state": "GA"
+    }
+  ],
+  [
+    "GA-09",
+    {
+      "population": 770045,
+      "white": 641233,
+      "black": 50937,
+      "asian": 10604,
+      "hispanic": 102513,
+      "medianAge": 41.1,
+      "medianIncome": 64024,
+      "housingUnits": 336648,
+      "educationBachelors": 83534,
+      "votingAgePopulation": 562020,
+      "diversityIndex": 28.42872357916646,
+      "urbanPercentage": 57.184730044438105,
+      "state": "GA"
+    }
+  ],
+  [
+    "GA-10",
+    {
+      "population": 765152,
+      "white": 503663,
+      "black": 196660,
+      "asian": 17794,
+      "hispanic": 48008,
+      "medianAge": 37.4,
+      "medianIncome": 64359,
+      "housingUnits": 307038,
+      "educationBachelors": 83638,
+      "votingAgePopulation": 568448,
+      "diversityIndex": 49.61667998130596,
+      "urbanPercentage": 62.30108325353865,
+      "state": "GA"
+    }
+  ],
+  [
+    "GA-11",
+    {
+      "population": 788712,
+      "white": 550434,
+      "black": 132965,
+      "asian": 27556,
+      "hispanic": 90230,
+      "medianAge": 37.3,
+      "medianIncome": 84218,
+      "housingUnits": 318602,
+      "educationBachelors": 152075,
+      "votingAgePopulation": 561010,
+      "diversityIndex": 47.02206233530951,
+      "urbanPercentage": 61.88850038606161,
+      "state": "GA"
+    }
+  ],
+  [
+    "GA-12",
+    {
+      "population": 734110,
+      "white": 415600,
+      "black": 253640,
+      "asian": 12581,
+      "hispanic": 48039,
+      "medianAge": 35.9,
+      "medianIncome": 51850,
+      "housingUnits": 309468,
+      "educationBachelors": 65104,
+      "votingAgePopulation": 544049,
+      "diversityIndex": 55.551507847967294,
+      "urbanPercentage": 59.30419300218439,
+      "state": "GA"
+    }
+  ],
+  [
+    "GA-13",
+    {
+      "population": 788497,
+      "white": 213668,
+      "black": 486196,
+      "asian": 19680,
+      "hispanic": 88762,
+      "medianAge": 36.2,
+      "medianIncome": 65738,
+      "housingUnits": 304577,
+      "educationBachelors": 98508,
+      "votingAgePopulation": 547122,
+      "diversityIndex": 53.30646451893701,
+      "urbanPercentage": 64.72066177025843,
+      "state": "GA"
+    }
+  ],
+  [
+    "GA-14",
+    {
+      "population": 724598,
+      "white": 596766,
+      "black": 66701,
+      "asian": 7768,
+      "hispanic": 88491,
+      "medianAge": 38.3,
+      "medianIncome": 58070,
+      "housingUnits": 285696,
+      "educationBachelors": 59757,
+      "votingAgePopulation": 518856,
+      "diversityIndex": 29.82094813923587,
+      "urbanPercentage": 63.40638300851255,
+      "state": "GA"
+    }
+  ],
+  [
+    "HI-01",
+    {
+      "population": 729555,
+      "white": 123446,
+      "black": 15895,
+      "asian": 363512,
+      "hispanic": 65152,
+      "medianAge": 39.9,
+      "medianIncome": 91015,
+      "housingUnits": 276646,
+      "educationBachelors": 126558,
+      "votingAgePopulation": 526366,
+      "diversityIndex": 66.56166103189997,
+      "urbanPercentage": 65.92856936301266,
+      "state": "HI"
+    }
+  ],
+  [
+    "HI-02",
+    {
+      "population": 723943,
+      "white": 220849,
+      "black": 12247,
+      "asian": 181131,
+      "hispanic": 93589,
+      "medianAge": 39.3,
+      "medianIncome": 84198,
+      "housingUnits": 280291,
+      "educationBachelors": 99841,
+      "votingAgePopulation": 518866,
+      "diversityIndex": 73.8209883169915,
+      "urbanPercentage": 64.5706604921314,
+      "state": "HI"
+    }
+  ],
+  [
+    "ID-01",
+    {
+      "population": 941417,
+      "white": 815255,
+      "black": 6119,
+      "asian": 10735,
+      "hispanic": 108888,
+      "medianAge": 38.6,
+      "medianIncome": 65134,
+      "housingUnits": 388096,
+      "educationBachelors": 118896,
+      "votingAgePopulation": 687688,
+      "diversityIndex": 23.651567941087105,
+      "urbanPercentage": 60.64330732602242,
+      "state": "ID"
+    }
+  ],
+  [
+    "ID-02",
+    {
+      "population": 870200,
+      "white": 752544,
+      "black": 6123,
+      "asian": 13881,
+      "hispanic": 125673,
+      "medianAge": 34.9,
+      "medianIncome": 61601,
+      "housingUnits": 354049,
+      "educationBachelors": 112363,
+      "votingAgePopulation": 610734,
+      "diversityIndex": 23.09701479649917,
+      "urbanPercentage": 61.446296981491265,
+      "state": "ID"
+    }
+  ],
+  [
+    "IL-01",
+    {
+      "population": 715763,
+      "white": 281987,
+      "black": 357430,
+      "asian": 15478,
+      "hispanic": 82925,
+      "medianAge": 38.9,
+      "medianIncome": 60555,
+      "housingUnits": 311650,
+      "educationBachelors": 87215,
+      "votingAgePopulation": 526626,
+      "diversityIndex": 58.15303135259307,
+      "urbanPercentage": 57.41721482432216,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-02",
+    {
+      "population": 686546,
+      "white": 224812,
+      "black": 391658,
+      "asian": 5319,
+      "hispanic": 101713,
+      "medianAge": 38,
+      "medianIncome": 56038,
+      "housingUnits": 295463,
+      "educationBachelors": 66932,
+      "votingAgePopulation": 498229,
+      "diversityIndex": 54.532229265740085,
+      "urbanPercentage": 58.090691558672326,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-03",
+    {
+      "population": 724550,
+      "white": 508620,
+      "black": 34719,
+      "asian": 31808,
+      "hispanic": 246187,
+      "medianAge": 39.1,
+      "medianIncome": 77332,
+      "housingUnits": 269407,
+      "educationBachelors": 92829,
+      "votingAgePopulation": 488258,
+      "diversityIndex": 38.755005800706364,
+      "urbanPercentage": 67.23563233323559,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-04",
+    {
+      "population": 690373,
+      "white": 338164,
+      "black": 30286,
+      "asian": 26970,
+      "hispanic": 460502,
+      "medianAge": 34.2,
+      "medianIncome": 63991,
+      "housingUnits": 255927,
+      "educationBachelors": 83611,
+      "votingAgePopulation": 405257,
+      "diversityIndex": 31.16840871700792,
+      "urbanPercentage": 67.43846878211365,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-05",
+    {
+      "population": 752522,
+      "white": 561637,
+      "black": 23500,
+      "asian": 59629,
+      "hispanic": 154080,
+      "medianAge": 35.8,
+      "medianIncome": 94542,
+      "housingUnits": 339336,
+      "educationBachelors": 185416,
+      "votingAgePopulation": 547706,
+      "diversityIndex": 39.37999585289768,
+      "urbanPercentage": 55.440772567602615,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-06",
+    {
+      "population": 732738,
+      "white": 577655,
+      "black": 18975,
+      "asian": 73352,
+      "hispanic": 80933,
+      "medianAge": 41.2,
+      "medianIncome": 111571,
+      "housingUnits": 282973,
+      "educationBachelors": 164188,
+      "votingAgePopulation": 525104,
+      "diversityIndex": 35.56103387128729,
+      "urbanPercentage": 64.73568149611447,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-07",
+    {
+      "population": 738479,
+      "white": 261677,
+      "black": 325789,
+      "asian": 56243,
+      "hispanic": 124847,
+      "medianAge": 35,
+      "medianIncome": 67754,
+      "housingUnits": 365274,
+      "educationBachelors": 121536,
+      "votingAgePopulation": 540939,
+      "diversityIndex": 64.54333254406777,
+      "urbanPercentage": 50.54281169752022,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-08",
+    {
+      "population": 720276,
+      "white": 431796,
+      "black": 39478,
+      "asian": 97317,
+      "hispanic": 212016,
+      "medianAge": 37.5,
+      "medianIncome": 80043,
+      "housingUnits": 272845,
+      "educationBachelors": 112445,
+      "votingAgePopulation": 456210,
+      "diversityIndex": 53.271233325882505,
+      "urbanPercentage": 65.99681137642251,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-09",
+    {
+      "population": 745865,
+      "white": 506348,
+      "black": 66135,
+      "asian": 96907,
+      "hispanic": 91751,
+      "medianAge": 40.6,
+      "medianIncome": 83157,
+      "housingUnits": 326220,
+      "educationBachelors": 167683,
+      "votingAgePopulation": 520779,
+      "diversityIndex": 49.92557289206124,
+      "urbanPercentage": 57.15966219115934,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-10",
+    {
+      "population": 722961,
+      "white": 471943,
+      "black": 49221,
+      "asian": 83977,
+      "hispanic": 169403,
+      "medianAge": 39.1,
+      "medianIncome": 90082,
+      "housingUnits": 275438,
+      "educationBachelors": 127782,
+      "votingAgePopulation": 479265,
+      "diversityIndex": 50.08301348229401,
+      "urbanPercentage": 65.61921376135464,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-11",
+    {
+      "population": 706594,
+      "white": 437145,
+      "black": 80624,
+      "asian": 58779,
+      "hispanic": 196201,
+      "medianAge": 37,
+      "medianIncome": 85144,
+      "housingUnits": 262182,
+      "educationBachelors": 108392,
+      "votingAgePopulation": 465091,
+      "diversityIndex": 52.021281886951385,
+      "urbanPercentage": 67.37628822726198,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-12",
+    {
+      "population": 679543,
+      "white": 521754,
+      "black": 112499,
+      "asian": 8302,
+      "hispanic": 25589,
+      "medianAge": 39.9,
+      "medianIncome": 56256,
+      "housingUnits": 313687,
+      "educationBachelors": 70028,
+      "votingAgePopulation": 519683,
+      "diversityIndex": 38.12254100439119,
+      "urbanPercentage": 54.15772728866672,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-13",
+    {
+      "population": 697929,
+      "white": 556873,
+      "black": 79550,
+      "asian": 28384,
+      "hispanic": 26727,
+      "medianAge": 36.9,
+      "medianIncome": 56974,
+      "housingUnits": 321704,
+      "educationBachelors": 82009,
+      "votingAgePopulation": 537579,
+      "diversityIndex": 34.717013153971045,
+      "urbanPercentage": 54.23689167682093,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-14",
+    {
+      "population": 750475,
+      "white": 625522,
+      "black": 27188,
+      "asian": 38266,
+      "hispanic": 97757,
+      "medianAge": 39.5,
+      "medianIncome": 104214,
+      "housingUnits": 279452,
+      "educationBachelors": 137632,
+      "votingAgePopulation": 536337,
+      "diversityIndex": 28.439529276305507,
+      "urbanPercentage": 67.13809527217555,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-15",
+    {
+      "population": 683592,
+      "white": 626678,
+      "black": 28964,
+      "asian": 4663,
+      "hispanic": 19708,
+      "medianAge": 41.2,
+      "medianIncome": 59320,
+      "housingUnits": 308488,
+      "educationBachelors": 64811,
+      "votingAgePopulation": 524805,
+      "diversityIndex": 15.688240027946577,
+      "urbanPercentage": 55.398589248204146,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-16",
+    {
+      "population": 693820,
+      "white": 602794,
+      "black": 28131,
+      "asian": 11177,
+      "hispanic": 73901,
+      "medianAge": 40.6,
+      "medianIncome": 66115,
+      "housingUnits": 299052,
+      "educationBachelors": 71474,
+      "votingAgePopulation": 523252,
+      "diversityIndex": 23.193010401143354,
+      "urbanPercentage": 58.001618447627834,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-17",
+    {
+      "population": 677247,
+      "white": 536000,
+      "black": 81303,
+      "asian": 9160,
+      "hispanic": 64290,
+      "medianAge": 40.8,
+      "medianIncome": 52874,
+      "housingUnits": 319885,
+      "educationBachelors": 61954,
+      "votingAgePopulation": 507911,
+      "diversityIndex": 35.00174133037996,
+      "urbanPercentage": 52.928943213967514,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-18",
+    {
+      "population": 702540,
+      "white": 628008,
+      "black": 28563,
+      "asian": 19751,
+      "hispanic": 21546,
+      "medianAge": 40.5,
+      "medianIncome": 71011,
+      "housingUnits": 314012,
+      "educationBachelors": 104820,
+      "votingAgePopulation": 530865,
+      "diversityIndex": 19.74955723434939,
+      "urbanPercentage": 55.93257582512771,
+      "state": "IL"
+    }
+  ],
+  [
+    "IL-ZZ",
+    {
+      "population": 0,
+      "white": 0,
+      "black": 0,
+      "asian": 0,
+      "hispanic": 0,
+      "medianAge": -666666666,
+      "medianIncome": -666666666,
+      "housingUnits": 0,
+      "educationBachelors": 0,
+      "votingAgePopulation": 0,
+      "diversityIndex": 0,
+      "urbanPercentage": 0,
+      "state": "IL"
+    }
+  ],
+  [
+    "IN-01",
+    {
+      "population": 729457,
+      "white": 494841,
+      "black": 133087,
+      "asian": 10413,
+      "hispanic": 119593,
+      "medianAge": 39.4,
+      "medianIncome": 64466,
+      "housingUnits": 312043,
+      "educationBachelors": 79859,
+      "votingAgePopulation": 545598,
+      "diversityIndex": 47.94460267177326,
+      "urbanPercentage": 58.44202561826415,
+      "state": "IN"
+    }
+  ],
+  [
+    "IN-02",
+    {
+      "population": 729091,
+      "white": 607291,
+      "black": 49168,
+      "asian": 9906,
+      "hispanic": 75020,
+      "medianAge": 37.9,
+      "medianIncome": 59343,
+      "housingUnits": 309408,
+      "educationBachelors": 71458,
+      "votingAgePopulation": 527737,
+      "diversityIndex": 29.088668256287786,
+      "urbanPercentage": 58.910160693970425,
+      "state": "IN"
+    }
+  ],
+  [
+    "IN-03",
+    {
+      "population": 754959,
+      "white": 641603,
+      "black": 44994,
+      "asian": 19927,
+      "hispanic": 49059,
+      "medianAge": 37.1,
+      "medianIncome": 61830,
+      "housingUnits": 323288,
+      "educationBachelors": 81911,
+      "votingAgePopulation": 543725,
+      "diversityIndex": 26.92812104259913,
+      "urbanPercentage": 58.38130397664002,
+      "state": "IN"
+    }
+  ],
+  [
+    "IN-04",
+    {
+      "population": 761534,
+      "white": 657098,
+      "black": 33786,
+      "asian": 23350,
+      "hispanic": 49974,
+      "medianAge": 36.9,
+      "medianIncome": 64442,
+      "housingUnits": 320769,
+      "educationBachelors": 87183,
+      "votingAgePopulation": 561433,
+      "diversityIndex": 24.825605387651393,
+      "urbanPercentage": 59.35221296322275,
+      "state": "IN"
+    }
+  ],
+  [
+    "IN-05",
+    {
+      "population": 794485,
+      "white": 652449,
+      "black": 67942,
+      "asian": 30166,
+      "hispanic": 37902,
+      "medianAge": 38.4,
+      "medianIncome": 78391,
+      "housingUnits": 337906,
+      "educationBachelors": 159631,
+      "votingAgePopulation": 582683,
+      "diversityIndex": 31.45052642616699,
+      "urbanPercentage": 58.780030541038045,
+      "state": "IN"
+    }
+  ],
+  [
+    "IN-06",
+    {
+      "population": 721972,
+      "white": 662384,
+      "black": 17650,
+      "asian": 11727,
+      "hispanic": 22684,
+      "medianAge": 40,
+      "medianIncome": 60389,
+      "housingUnits": 315213,
+      "educationBachelors": 71456,
+      "votingAgePopulation": 549759,
+      "diversityIndex": 15.630071159258918,
+      "urbanPercentage": 57.26064597589566,
+      "state": "IN"
+    }
+  ],
+  [
+    "IN-07",
+    {
+      "population": 782178,
+      "white": 437642,
+      "black": 233713,
+      "asian": 31028,
+      "hispanic": 92298,
+      "medianAge": 33.7,
+      "medianIncome": 50976,
+      "housingUnits": 346779,
+      "educationBachelors": 88490,
+      "votingAgePopulation": 529402,
+      "diversityIndex": 58.21625834992823,
+      "urbanPercentage": 56.388795169257655,
+      "state": "IN"
+    }
+  ],
+  [
+    "IN-08",
+    {
+      "population": 715129,
+      "white": 645461,
+      "black": 31925,
+      "asian": 7459,
+      "hispanic": 19998,
+      "medianAge": 39.8,
+      "medianIncome": 56889,
+      "housingUnits": 318930,
+      "educationBachelors": 70819,
+      "votingAgePopulation": 544638,
+      "diversityIndex": 18.225907506371897,
+      "urbanPercentage": 56.05689336217979,
+      "state": "IN"
+    }
+  ],
+  [
+    "IN-09",
+    {
+      "population": 762535,
+      "white": 684527,
+      "black": 22811,
+      "asian": 19681,
+      "hispanic": 27880,
+      "medianAge": 38.3,
+      "medianIncome": 64034,
+      "housingUnits": 327226,
+      "educationBachelors": 87170,
+      "votingAgePopulation": 579996,
+      "diversityIndex": 19.113816524037365,
+      "urbanPercentage": 58.25751926802882,
+      "state": "IN"
+    }
+  ],
+  [
+    "IA-01",
+    {
+      "population": 778247,
+      "white": 692515,
+      "black": 32013,
+      "asian": 13399,
+      "hispanic": 34484,
+      "medianAge": 39,
+      "medianIncome": 65103,
+      "housingUnits": 345801,
+      "educationBachelors": 99384,
+      "votingAgePopulation": 583182,
+      "diversityIndex": 20.417739919963505,
+      "urbanPercentage": 56.26407962961356,
+      "state": "IA"
+    }
+  ],
+  [
+    "IA-02",
+    {
+      "population": 784135,
+      "white": 685064,
+      "black": 33721,
+      "asian": 19393,
+      "hispanic": 47796,
+      "medianAge": 38.2,
+      "medianIncome": 62134,
+      "housingUnits": 347794,
+      "educationBachelors": 98605,
+      "votingAgePopulation": 584216,
+      "diversityIndex": 23.054937286870835,
+      "urbanPercentage": 56.36490278728212,
+      "state": "IA"
+    }
+  ],
+  [
+    "IA-03",
+    {
+      "population": 852016,
+      "white": 731335,
+      "black": 39535,
+      "asian": 30153,
+      "hispanic": 62040,
+      "medianAge": 37.2,
+      "medianIncome": 72492,
+      "housingUnits": 365800,
+      "educationBachelors": 137162,
+      "votingAgePopulation": 612244,
+      "diversityIndex": 25.45133539417921,
+      "urbanPercentage": 58.22963367960634,
+      "state": "IA"
+    }
+  ],
+  [
+    "IA-04",
+    {
+      "population": 764692,
+      "white": 686405,
+      "black": 13767,
+      "asian": 16243,
+      "hispanic": 58728,
+      "medianAge": 38.9,
+      "medianIncome": 61829,
+      "housingUnits": 347705,
+      "educationBachelors": 88701,
+      "votingAgePopulation": 568549,
+      "diversityIndex": 18.759976801266852,
+      "urbanPercentage": 54.98137789217872,
+      "state": "IA"
+    }
+  ],
+  [
+    "KS-01",
+    {
+      "population": 702619,
+      "white": 597255,
+      "black": 21795,
+      "asian": 11308,
+      "hispanic": 116936,
+      "medianAge": 35.8,
+      "medianIncome": 55984,
+      "housingUnits": 315666,
+      "educationBachelors": 75731,
+      "votingAgePopulation": 503311,
+      "diversityIndex": 24.851042905871466,
+      "urbanPercentage": 55.645761659475525,
+      "state": "KS"
+    }
+  ],
+  [
+    "KS-02",
+    {
+      "population": 714255,
+      "white": 608952,
+      "black": 32349,
+      "asian": 11597,
+      "hispanic": 51424,
+      "medianAge": 38,
+      "medianIncome": 59626,
+      "housingUnits": 318008,
+      "educationBachelors": 90149,
+      "votingAgePopulation": 539688,
+      "diversityIndex": 26.543353423531755,
+      "urbanPercentage": 56.150710045030316,
+      "state": "KS"
+    }
+  ],
+  [
+    "KS-03",
+    {
+      "population": 785916,
+      "white": 605735,
+      "black": 64125,
+      "asian": 40819,
+      "hispanic": 98282,
+      "medianAge": 37.1,
+      "medianIncome": 85580,
+      "housingUnits": 321921,
+      "educationBachelors": 156057,
+      "votingAgePopulation": 547015,
+      "diversityIndex": 38.09701172796868,
+      "urbanPercentage": 61.03329698901283,
+      "state": "KS"
+    }
+  ],
+  [
+    "KS-04",
+    {
+      "population": 729309,
+      "white": 574824,
+      "black": 47022,
+      "asian": 24222,
+      "hispanic": 95411,
+      "medianAge": 36.8,
+      "medianIncome": 60304,
+      "housingUnits": 316695,
+      "educationBachelors": 93264,
+      "votingAgePopulation": 520039,
+      "diversityIndex": 35.64033490766032,
+      "urbanPercentage": 57.57187514801308,
+      "state": "KS"
+    }
+  ],
+  [
+    "KY-01",
+    {
+      "population": 719030,
+      "white": 635161,
+      "black": 47674,
+      "asian": 4673,
+      "hispanic": 24408,
+      "medianAge": 39.9,
+      "medianIncome": 49006,
+      "housingUnits": 330595,
+      "educationBachelors": 51794,
+      "votingAgePopulation": 548601,
+      "diversityIndex": 21.398984952307963,
+      "urbanPercentage": 54.37393185014897,
+      "state": "KY"
+    }
+  ],
+  [
+    "KY-02",
+    {
+      "population": 773346,
+      "white": 678796,
+      "black": 42826,
+      "asian": 12749,
+      "hispanic": 28491,
+      "medianAge": 38.6,
+      "medianIncome": 56942,
+      "housingUnits": 332020,
+      "educationBachelors": 66484,
+      "votingAgePopulation": 578633,
+      "diversityIndex": 22.46946204098673,
+      "urbanPercentage": 58.23037768809108,
+      "state": "KY"
+    }
+  ],
+  [
+    "KY-03",
+    {
+      "population": 754909,
+      "white": 516084,
+      "black": 170403,
+      "asian": 22171,
+      "hispanic": 46212,
+      "medianAge": 38.2,
+      "medianIncome": 60397,
+      "housingUnits": 343896,
+      "educationBachelors": 105197,
+      "votingAgePopulation": 556822,
+      "diversityIndex": 47.70776165863169,
+      "urbanPercentage": 54.87916404959638,
+      "state": "KY"
+    }
+  ],
+  [
+    "KY-04",
+    {
+      "population": 771347,
+      "white": 697420,
+      "black": 25571,
+      "asian": 9900,
+      "hispanic": 27402,
+      "medianAge": 39.3,
+      "medianIncome": 70298,
+      "housingUnits": 319464,
+      "educationBachelors": 101063,
+      "votingAgePopulation": 573976,
+      "diversityIndex": 17.976616955950952,
+      "urbanPercentage": 60.36259171612451,
+      "state": "KY"
+    }
+  ],
+  [
+    "KY-05",
+    {
+      "population": 694860,
+      "white": 664938,
+      "black": 9604,
+      "asian": 2743,
+      "hispanic": 9108,
+      "medianAge": 41,
+      "medianIncome": 38551,
+      "housingUnits": 318947,
+      "educationBachelors": 36384,
+      "votingAgePopulation": 536889,
+      "diversityIndex": 8.374258848789406,
+      "urbanPercentage": 54.46516192345436,
+      "state": "KY"
+    }
+  ],
+  [
+    "KY-06",
+    {
+      "population": 780649,
+      "white": 649984,
+      "black": 65625,
+      "asian": 16501,
+      "hispanic": 38738,
+      "medianAge": 37.1,
+      "medianIncome": 58606,
+      "housingUnits": 343498,
+      "educationBachelors": 100919,
+      "votingAgePopulation": 583454,
+      "diversityIndex": 29.66101580425645,
+      "urbanPercentage": 56.81612411134854,
+      "state": "KY"
+    }
+  ],
+  [
+    "LA-01",
+    {
+      "population": 805369,
+      "white": 608845,
+      "black": 112231,
+      "asian": 18026,
+      "hispanic": 70822,
+      "medianAge": 39.1,
+      "medianIncome": 64843,
+      "housingUnits": 349854,
+      "educationBachelors": 115301,
+      "votingAgePopulation": 592032,
+      "diversityIndex": 40.08368730507925,
+      "urbanPercentage": 57.550363866069844,
+      "state": "LA"
+    }
+  ],
+  [
+    "LA-02",
+    {
+      "population": 782637,
+      "white": 231350,
+      "black": 475529,
+      "asian": 19321,
+      "hispanic": 56609,
+      "medianAge": 37.4,
+      "medianIncome": 44412,
+      "housingUnits": 355049,
+      "educationBachelors": 83385,
+      "votingAgePopulation": 580731,
+      "diversityIndex": 53.760167714793894,
+      "urbanPercentage": 55.10767527862351,
+      "state": "LA"
+    }
+  ],
+  [
+    "LA-03",
+    {
+      "population": 784283,
+      "white": 538849,
+      "black": 191252,
+      "asian": 11824,
+      "hispanic": 32913,
+      "medianAge": 36.8,
+      "medianIncome": 55035,
+      "housingUnits": 345943,
+      "educationBachelors": 82303,
+      "votingAgePopulation": 575907,
+      "diversityIndex": 46.63502735329913,
+      "urbanPercentage": 56.67718381351842,
+      "state": "LA"
+    }
+  ],
+  [
+    "LA-04",
+    {
+      "population": 732845,
+      "white": 435064,
+      "black": 249705,
+      "asian": 7638,
+      "hispanic": 30999,
+      "medianAge": 37.4,
+      "medianIncome": 44353,
+      "housingUnits": 338502,
+      "educationBachelors": 62905,
+      "votingAgePopulation": 547462,
+      "diversityIndex": 52.93993248098467,
+      "urbanPercentage": 54.12412629762896,
+      "state": "LA"
+    }
+  ],
+  [
+    "LA-05",
+    {
+      "population": 741889,
+      "white": 446724,
+      "black": 260611,
+      "asian": 5580,
+      "hispanic": 18659,
+      "medianAge": 37.7,
+      "medianIncome": 43779,
+      "housingUnits": 327671,
+      "educationBachelors": 60519,
+      "votingAgePopulation": 560641,
+      "diversityIndex": 51.31423221486459,
+      "urbanPercentage": 56.603193447085644,
+      "state": "LA"
+    }
+  ],
+  [
+    "LA-06",
+    {
+      "population": 810282,
+      "white": 545043,
+      "black": 196674,
+      "asian": 18049,
+      "hispanic": 38780,
+      "medianAge": 36.2,
+      "medianIncome": 69156,
+      "housingUnits": 349304,
+      "educationBachelors": 107034,
+      "votingAgePopulation": 598888,
+      "diversityIndex": 48.561973443697006,
+      "urbanPercentage": 57.99260815793693,
+      "state": "LA"
+    }
+  ],
+  [
+    "ME-01",
+    {
+      "population": 699795,
+      "white": 645303,
+      "black": 12901,
+      "asian": 10506,
+      "hispanic": 14085,
+      "medianAge": 44.1,
+      "medianIncome": 73004,
+      "housingUnits": 363770,
+      "educationBachelors": 127746,
+      "votingAgePopulation": 557376,
+      "diversityIndex": 14.811302728240827,
+      "urbanPercentage": 48.09323198724469,
+      "state": "ME"
+    }
+  ],
+  [
+    "ME-02",
+    {
+      "population": 657251,
+      "white": 615794,
+      "black": 6624,
+      "asian": 4411,
+      "hispanic": 10441,
+      "medianAge": 45.3,
+      "medianIncome": 54363,
+      "housingUnits": 374012,
+      "educationBachelors": 81507,
+      "votingAgePopulation": 525468,
+      "diversityIndex": 12.08509031470053,
+      "urbanPercentage": 43.93248077601788,
+      "state": "ME"
+    }
+  ],
+  [
+    "MD-01",
+    {
+      "population": 741327,
+      "white": 594082,
+      "black": 87469,
+      "asian": 17374,
+      "hispanic": 33839,
+      "medianAge": 42.5,
+      "medianIncome": 83880,
+      "housingUnits": 344659,
+      "educationBachelors": 102109,
+      "votingAgePopulation": 566100,
+      "diversityIndex": 34.11079081881431,
+      "urbanPercentage": 53.772496873721565,
+      "state": "MD"
+    }
+  ],
+  [
+    "MD-02",
+    {
+      "population": 782892,
+      "white": 392223,
+      "black": 281775,
+      "asian": 42361,
+      "hispanic": 58198,
+      "medianAge": 36.9,
+      "medianIncome": 77448,
+      "housingUnits": 320296,
+      "educationBachelors": 104655,
+      "votingAgePopulation": 570365,
+      "diversityIndex": 61.09002620728528,
+      "urbanPercentage": 61.106913604915455,
+      "state": "MD"
+    }
+  ],
+  [
+    "MD-03",
+    {
+      "population": 762898,
+      "white": 452748,
+      "black": 176261,
+      "asian": 59983,
+      "hispanic": 69016,
+      "medianAge": 37.7,
+      "medianIncome": 97847,
+      "housingUnits": 316109,
+      "educationBachelors": 138219,
+      "votingAgePopulation": 553747,
+      "diversityIndex": 58.00203401855113,
+      "urbanPercentage": 60.335042659335855,
+      "state": "MD"
+    }
+  ],
+  [
+    "MD-04",
+    {
+      "population": 790373,
+      "white": 214504,
+      "black": 406704,
+      "asian": 25850,
+      "hispanic": 141269,
+      "medianAge": 38.3,
+      "medianIncome": 91696,
+      "housingUnits": 302952,
+      "educationBachelors": 111554,
+      "votingAgePopulation": 520654,
+      "diversityIndex": 62.85363266681794,
+      "urbanPercentage": 65.22262602656527,
+      "state": "MD"
+    }
+  ],
+  [
+    "MD-05",
+    {
+      "population": 786660,
+      "white": 355847,
+      "black": 307240,
+      "asian": 32640,
+      "hispanic": 80028,
+      "medianAge": 38.7,
+      "medianIncome": 109642,
+      "housingUnits": 291560,
+      "educationBachelors": 110351,
+      "votingAgePopulation": 570124,
+      "diversityIndex": 63.05757427348255,
+      "urbanPercentage": 67.45266840444506,
+      "state": "MD"
+    }
+  ],
+  [
+    "MD-06",
+    {
+      "population": 784464,
+      "white": 487307,
+      "black": 107829,
+      "asian": 91338,
+      "hispanic": 113847,
+      "medianAge": 39.4,
+      "medianIncome": 90692,
+      "housingUnits": 311336,
+      "educationBachelors": 121324,
+      "votingAgePopulation": 546162,
+      "diversityIndex": 56.06010598376121,
+      "urbanPercentage": 62.991751676645166,
+      "state": "MD"
+    }
+  ],
+  [
+    "MD-07",
+    {
+      "population": 718069,
+      "white": 249132,
+      "black": 366932,
+      "asian": 55732,
+      "hispanic": 33256,
+      "medianAge": 38.7,
+      "medianIncome": 68441,
+      "housingUnits": 322541,
+      "educationBachelors": 105683,
+      "votingAgePopulation": 530202,
+      "diversityIndex": 61.001105249146946,
+      "urbanPercentage": 55.65718776837674,
+      "state": "MD"
+    }
+  ],
+  [
+    "MD-08",
+    {
+      "population": 781862,
+      "white": 492828,
+      "black": 99777,
+      "asian": 71809,
+      "hispanic": 120904,
+      "medianAge": 40.2,
+      "medianIncome": 116245,
+      "housingUnits": 306888,
+      "educationBachelors": 140141,
+      "votingAgePopulation": 530827,
+      "diversityIndex": 55.40560346030856,
+      "urbanPercentage": 63.6927804280389,
+      "state": "MD"
+    }
+  ],
+  [
+    "MA-01",
+    {
+      "population": 730273,
+      "white": 582951,
+      "black": 47015,
+      "asian": 16889,
+      "hispanic": 140738,
+      "medianAge": 41.5,
+      "medianIncome": 64133,
+      "housingUnits": 325942,
+      "educationBachelors": 92968,
+      "votingAgePopulation": 564324,
+      "diversityIndex": 32.09532810263116,
+      "urbanPercentage": 56.0124960882611,
+      "state": "MA"
+    }
+  ],
+  [
+    "MA-02",
+    {
+      "population": 775094,
+      "white": 618117,
+      "black": 41054,
+      "asian": 45086,
+      "hispanic": 83299,
+      "medianAge": 39.3,
+      "medianIncome": 79154,
+      "housingUnits": 316714,
+      "educationBachelors": 121257,
+      "votingAgePopulation": 579536,
+      "diversityIndex": 34.62971452737599,
+      "urbanPercentage": 61.18248640729491,
+      "state": "MA"
+    }
+  ],
+  [
+    "MA-03",
+    {
+      "population": 791898,
+      "white": 566217,
+      "black": 33152,
+      "asian": 64273,
+      "hispanic": 164627,
+      "medianAge": 39.1,
+      "medianIncome": 86547,
+      "housingUnits": 308800,
+      "educationBachelors": 121749,
+      "votingAgePopulation": 555654,
+      "diversityIndex": 43.71991081743731,
+      "urbanPercentage": 64.11091321243522,
+      "state": "MA"
+    }
+  ],
+  [
+    "MA-04",
+    {
+      "population": 771803,
+      "white": 638403,
+      "black": 23381,
+      "asian": 52387,
+      "hispanic": 38822,
+      "medianAge": 41,
+      "medianIncome": 110624,
+      "housingUnits": 303127,
+      "educationBachelors": 140267,
+      "votingAgePopulation": 566217,
+      "diversityIndex": 30.716070267324458,
+      "urbanPercentage": 63.65343568867174,
+      "state": "MA"
+    }
+  ],
+  [
+    "MA-05",
+    {
+      "population": 791364,
+      "white": 563380,
+      "black": 41264,
+      "asian": 104511,
+      "hispanic": 79967,
+      "medianAge": 38.8,
+      "medianIncome": 110721,
+      "housingUnits": 325041,
+      "educationBachelors": 160778,
+      "votingAgePopulation": 541973,
+      "diversityIndex": 46.280512737191145,
+      "urbanPercentage": 60.86647530619215,
+      "state": "MA"
+    }
+  ],
+  [
+    "MA-06",
+    {
+      "population": 774573,
+      "white": 643991,
+      "black": 30589,
+      "asian": 33257,
+      "hispanic": 78863,
+      "medianAge": 42.8,
+      "medianIncome": 101111,
+      "housingUnits": 315483,
+      "educationBachelors": 153444,
+      "votingAgePopulation": 576824,
+      "diversityIndex": 29.498108796414122,
+      "urbanPercentage": 61.37993172373789,
+      "state": "MA"
+    }
+  ],
+  [
+    "MA-07",
+    {
+      "population": 799546,
+      "white": 371849,
+      "black": 190412,
+      "asian": 85005,
+      "hispanic": 180222,
+      "medianAge": 32.2,
+      "medianIncome": 77961,
+      "housingUnits": 333700,
+      "educationBachelors": 136456,
+      "votingAgePopulation": 543019,
+      "diversityIndex": 66.48787643034979,
+      "urbanPercentage": 59.90005993407252,
+      "state": "MA"
+    }
+  ],
+  [
+    "MA-08",
+    {
+      "population": 786564,
+      "white": 568290,
+      "black": 80875,
+      "asian": 67971,
+      "hispanic": 48270,
+      "medianAge": 39.4,
+      "medianIncome": 103338,
+      "housingUnits": 335589,
+      "educationBachelors": 162655,
+      "votingAgePopulation": 580544,
+      "diversityIndex": 45.5469051722748,
+      "urbanPercentage": 58.59578234089914,
+      "state": "MA"
+    }
+  ],
+  [
+    "MA-09",
+    {
+      "population": 770737,
+      "white": 658506,
+      "black": 23652,
+      "asian": 11565,
+      "hispanic": 49394,
+      "medianAge": 46.1,
+      "medianIncome": 80080,
+      "housingUnits": 415238,
+      "educationBachelors": 126365,
+      "votingAgePopulation": 596979,
+      "diversityIndex": 26.34683736303659,
+      "urbanPercentage": 46.40332773012104,
+      "state": "MA"
+    }
+  ],
+  [
+    "MI-01",
+    {
+      "population": 704864,
+      "white": 642502,
+      "black": 9577,
+      "asian": 4641,
+      "hispanic": 15304,
+      "medianAge": 46.7,
+      "medianIncome": 55820,
+      "housingUnits": 436162,
+      "educationBachelors": 88803,
+      "votingAgePopulation": 569573,
+      "diversityIndex": 16.624994654351433,
+      "urbanPercentage": 40.40150219413888,
+      "state": "MI"
+    }
+  ],
+  [
+    "MI-02",
+    {
+      "population": 753783,
+      "white": 620369,
+      "black": 48024,
+      "asian": 17510,
+      "hispanic": 74750,
+      "medianAge": 37.4,
+      "medianIncome": 65057,
+      "housingUnits": 324690,
+      "educationBachelors": 94331,
+      "votingAgePopulation": 557790,
+      "diversityIndex": 30.822614654509263,
+      "urbanPercentage": 58.03866765222212,
+      "state": "MI"
+    }
+  ],
+  [
+    "MI-03",
+    {
+      "population": 750350,
+      "white": 611144,
+      "black": 60644,
+      "asian": 16292,
+      "hispanic": 59340,
+      "medianAge": 37.2,
+      "medianIncome": 67902,
+      "housingUnits": 305768,
+      "educationBachelors": 109160,
+      "votingAgePopulation": 551730,
+      "diversityIndex": 32.33518043664206,
+      "urbanPercentage": 61.34961801104105,
+      "state": "MI"
+    }
+  ],
+  [
+    "MI-04",
+    {
+      "population": 697813,
+      "white": 644000,
+      "black": 13299,
+      "asian": 7070,
+      "hispanic": 24960,
+      "medianAge": 41.8,
+      "medianIncome": 56729,
+      "housingUnits": 343010,
+      "educationBachelors": 68848,
+      "votingAgePopulation": 549078,
+      "diversityIndex": 14.639322734944948,
+      "urbanPercentage": 50.859523045975344,
+      "state": "MI"
+    }
+  ],
+  [
+    "MI-05",
+    {
+      "population": 672455,
+      "white": 511779,
+      "black": 115412,
+      "asian": 5444,
+      "hispanic": 35282,
+      "medianAge": 41.4,
+      "medianIncome": 51356,
+      "housingUnits": 319858,
+      "educationBachelors": 63588,
+      "votingAgePopulation": 518808,
+      "diversityIndex": 38.8466745344297,
+      "urbanPercentage": 52.55886987350637,
+      "state": "MI"
+    }
+  ],
+  [
+    "MI-06",
+    {
+      "population": 720211,
+      "white": 596328,
+      "black": 58479,
+      "asian": 10857,
+      "hispanic": 47572,
+      "medianAge": 38.9,
+      "medianIncome": 61287,
+      "housingUnits": 330286,
+      "educationBachelors": 88706,
+      "votingAgePopulation": 540467,
+      "diversityIndex": 30.31544430850195,
+      "urbanPercentage": 54.51419375934796,
+      "state": "MI"
+    }
+  ],
+  [
+    "MI-07",
+    {
+      "population": 714616,
+      "white": 639138,
+      "black": 29519,
+      "asian": 7348,
+      "hispanic": 33811,
+      "medianAge": 42.1,
+      "medianIncome": 66229,
+      "housingUnits": 308026,
+      "educationBachelors": 82522,
+      "votingAgePopulation": 552054,
+      "diversityIndex": 19.59893373585536,
+      "urbanPercentage": 57.99964938024712,
+      "state": "MI"
+    }
+  ],
+  [
+    "MI-08",
+    {
+      "population": 739057,
+      "white": 617315,
+      "black": 42020,
+      "asian": 34520,
+      "hispanic": 40124,
+      "medianAge": 38.5,
+      "medianIncome": 79136,
+      "housingUnits": 306223,
+      "educationBachelors": 124864,
+      "votingAgePopulation": 554291,
+      "diversityIndex": 29.390857737952036,
+      "urbanPercentage": 60.336503136603056,
+      "state": "MI"
+    }
+  ],
+  [
+    "MI-09",
+    {
+      "population": 721023,
+      "white": 544654,
+      "black": 101700,
+      "asian": 36966,
+      "hispanic": 19961,
+      "medianAge": 40.2,
+      "medianIncome": 66720,
+      "housingUnits": 322287,
+      "educationBachelors": 104174,
+      "votingAgePopulation": 554688,
+      "diversityIndex": 40.54896456568608,
+      "urbanPercentage": 55.93019575719778,
+      "state": "MI"
+    }
+  ],
+  [
+    "MI-10",
+    {
+      "population": 723323,
+      "white": 655976,
+      "black": 23047,
+      "asian": 12376,
+      "hispanic": 25332,
+      "medianAge": 43.4,
+      "medianIncome": 71124,
+      "housingUnits": 313564,
+      "educationBachelors": 80658,
+      "votingAgePopulation": 553927,
+      "diversityIndex": 17.492895030535117,
+      "urbanPercentage": 57.66948693089768,
+      "state": "MI"
+    }
+  ],
+  [
+    "MI-11",
+    {
+      "population": 754129,
+      "white": 589947,
+      "black": 39402,
+      "asian": 83141,
+      "hispanic": 29235,
+      "medianAge": 42.2,
+      "medianIncome": 93529,
+      "housingUnits": 314768,
+      "educationBachelors": 153863,
+      "votingAgePopulation": 551119,
+      "diversityIndex": 37.13657121547788,
+      "urbanPercentage": 59.895621537132115,
+      "state": "MI"
+    }
+  ],
+  [
+    "MI-12",
+    {
+      "population": 742875,
+      "white": 563160,
+      "black": 83643,
+      "asian": 40990,
+      "hispanic": 47230,
+      "medianAge": 35.7,
+      "medianIncome": 65329,
+      "housingUnits": 307781,
+      "educationBachelors": 93479,
+      "votingAgePopulation": 550483,
+      "diversityIndex": 40.54363383266727,
+      "urbanPercentage": 60.341200398984995,
+      "state": "MI"
+    }
+  ],
+  [
+    "MI-13",
+    {
+      "population": 674752,
+      "white": 244474,
+      "black": 364559,
+      "asian": 8611,
+      "hispanic": 54522,
+      "medianAge": 35.9,
+      "medianIncome": 40378,
+      "housingUnits": 315591,
+      "educationBachelors": 49051,
+      "votingAgePopulation": 484177,
+      "diversityIndex": 57.01109755533824,
+      "urbanPercentage": 53.4514609098485,
+      "state": "MI"
+    }
+  ],
+  [
+    "MI-14",
+    {
+      "population": 693261,
+      "white": 234505,
+      "black": 378852,
+      "asian": 36452,
+      "hispanic": 32613,
+      "medianAge": 38,
+      "medianIncome": 53033,
+      "housingUnits": 318490,
+      "educationBachelors": 85809,
+      "votingAgePopulation": 504061,
+      "diversityIndex": 58.171712534044694,
+      "urbanPercentage": 54.41779961694245,
+      "state": "MI"
+    }
+  ],
+  [
+    "MI-ZZ",
+    {
+      "population": 0,
+      "white": 0,
+      "black": 0,
+      "asian": 0,
+      "hispanic": 0,
+      "medianAge": -666666666,
+      "medianIncome": -666666666,
+      "housingUnits": 0,
+      "educationBachelors": 0,
+      "votingAgePopulation": 0,
+      "diversityIndex": 0,
+      "urbanPercentage": 0,
+      "state": "MI"
+    }
+  ],
+  [
+    "MN-01",
+    {
+      "population": 687886,
+      "white": 601129,
+      "black": 24692,
+      "asian": 19405,
+      "hispanic": 47545,
+      "medianAge": 38.4,
+      "medianIncome": 69752,
+      "housingUnits": 294868,
+      "educationBachelors": 91087,
+      "votingAgePopulation": 505748,
+      "diversityIndex": 22.94743182932846,
+      "urbanPercentage": 58.32152013782438,
+      "state": "MN"
+    }
+  ],
+  [
+    "MN-02",
+    {
+      "population": 725672,
+      "white": 592692,
+      "black": 39975,
+      "asian": 35766,
+      "hispanic": 47945,
+      "medianAge": 37.9,
+      "medianIncome": 94315,
+      "housingUnits": 281160,
+      "educationBachelors": 136594,
+      "votingAgePopulation": 523078,
+      "diversityIndex": 32.2927808214306,
+      "urbanPercentage": 64.52482572200881,
+      "state": "MN"
+    }
+  ],
+  [
+    "MN-03",
+    {
+      "population": 732483,
+      "white": 559486,
+      "black": 62010,
+      "asian": 59352,
+      "hispanic": 32830,
+      "medianAge": 40.4,
+      "medianIncome": 101064,
+      "housingUnits": 298760,
+      "educationBachelors": 166409,
+      "votingAgePopulation": 524826,
+      "diversityIndex": 40.017685089460876,
+      "urbanPercentage": 61.29359686705047,
+      "state": "MN"
+    }
+  ],
+  [
+    "MN-04",
+    {
+      "population": 721898,
+      "white": 490347,
+      "black": 75898,
+      "asian": 95196,
+      "hispanic": 49773,
+      "medianAge": 36.4,
+      "medianIncome": 78396,
+      "housingUnits": 294529,
+      "educationBachelors": 135298,
+      "votingAgePopulation": 516493,
+      "diversityIndex": 50.52076479574896,
+      "urbanPercentage": 61.275629904016235,
+      "state": "MN"
+    }
+  ],
+  [
+    "MN-05",
+    {
+      "population": 728368,
+      "white": 474349,
+      "black": 124632,
+      "asian": 43015,
+      "hispanic": 69457,
+      "medianAge": 34.3,
+      "medianIncome": 72686,
+      "housingUnits": 326825,
+      "educationBachelors": 154508,
+      "votingAgePopulation": 533503,
+      "diversityIndex": 53.34750472779242,
+      "urbanPercentage": 55.7154440449782,
+      "state": "MN"
+    }
+  ],
+  [
+    "MN-06",
+    {
+      "population": 727471,
+      "white": 640544,
+      "black": 30626,
+      "asian": 18479,
+      "hispanic": 23551,
+      "medianAge": 37.3,
+      "medianIncome": 88506,
+      "housingUnits": 279292,
+      "educationBachelors": 105945,
+      "votingAgePopulation": 528715,
+      "diversityIndex": 22.085525177569355,
+      "urbanPercentage": 65.11742190968593,
+      "state": "MN"
+    }
+  ],
+  [
+    "MN-07",
+    {
+      "population": 672622,
+      "white": 600388,
+      "black": 11268,
+      "asian": 6872,
+      "hispanic": 35262,
+      "medianAge": 40.2,
+      "medianIncome": 63314,
+      "housingUnits": 328111,
+      "educationBachelors": 75675,
+      "votingAgePopulation": 501069,
+      "diversityIndex": 19.933311640481477,
+      "urbanPercentage": 51.24957712481447,
+      "state": "MN"
+    }
+  ],
+  [
+    "MN-08",
+    {
+      "population": 674072,
+      "white": 617823,
+      "black": 7305,
+      "asian": 5297,
+      "hispanic": 13465,
+      "medianAge": 43.1,
+      "medianIncome": 63595,
+      "housingUnits": 366938,
+      "educationBachelors": 79235,
+      "votingAgePopulation": 527854,
+      "diversityIndex": 15.734674297305718,
+      "urbanPercentage": 45.925469697878114,
+      "state": "MN"
+    }
+  ],
+  [
+    "MS-01",
+    {
+      "population": 757560,
+      "white": 502195,
+      "black": 213457,
+      "asian": 6348,
+      "hispanic": 26765,
+      "medianAge": 38.2,
+      "medianIncome": 53985,
+      "housingUnits": 336408,
+      "educationBachelors": 70092,
+      "votingAgePopulation": 566967,
+      "diversityIndex": 47.97016828626417,
+      "urbanPercentage": 56.297709923664115,
+      "state": "MS"
+    }
+  ],
+  [
+    "MS-02",
+    {
+      "population": 685584,
+      "white": 210793,
+      "black": 453101,
+      "asian": 3074,
+      "hispanic": 14047,
+      "medianAge": 37.2,
+      "medianIncome": 39575,
+      "housingUnits": 306098,
+      "educationBachelors": 55957,
+      "votingAgePopulation": 512555,
+      "diversityIndex": 46.81950437182441,
+      "urbanPercentage": 55.993832040718985,
+      "state": "MS"
+    }
+  ],
+  [
+    "MS-03",
+    {
+      "population": 748808,
+      "white": 445326,
+      "black": 266461,
+      "asian": 8475,
+      "hispanic": 19141,
+      "medianAge": 37.7,
+      "medianIncome": 51441,
+      "housingUnits": 335797,
+      "educationBachelors": 81301,
+      "votingAgePopulation": 564611,
+      "diversityIndex": 51.87499384048986,
+      "urbanPercentage": 55.748562375482805,
+      "state": "MS"
+    }
+  ],
+  [
+    "MS-04",
+    {
+      "population": 775071,
+      "white": 543675,
+      "black": 180395,
+      "asian": 11195,
+      "hispanic": 35690,
+      "medianAge": 38,
+      "medianIncome": 51235,
+      "housingUnits": 339072,
+      "educationBachelors": 73005,
+      "votingAgePopulation": 581420,
+      "diversityIndex": 45.14371943743003,
+      "urbanPercentage": 57.14649101075878,
+      "state": "MS"
+    }
+  ],
+  [
+    "MO-01",
+    {
+      "population": 720952,
+      "white": 298897,
+      "black": 354100,
+      "asian": 24110,
+      "hispanic": 26537,
+      "medianAge": 36.3,
+      "medianIncome": 51529,
+      "housingUnits": 367307,
+      "educationBachelors": 94235,
+      "votingAgePopulation": 542911,
+      "diversityIndex": 58.38340909572079,
+      "urbanPercentage": 49.070123901804216,
+      "state": "MO"
+    }
+  ],
+  [
+    "MO-02",
+    {
+      "population": 770323,
+      "white": 659788,
+      "black": 30433,
+      "asian": 36801,
+      "hispanic": 23294,
+      "medianAge": 42.4,
+      "medianIncome": 92112,
+      "housingUnits": 325582,
+      "educationBachelors": 164254,
+      "votingAgePopulation": 581725,
+      "diversityIndex": 26.096156701210592,
+      "urbanPercentage": 59.14969193628641,
+      "state": "MO"
+    }
+  ],
+  [
+    "MO-03",
+    {
+      "population": 800026,
+      "white": 724391,
+      "black": 28199,
+      "asian": 9492,
+      "hispanic": 21132,
+      "medianAge": 39.7,
+      "medianIncome": 73398,
+      "housingUnits": 349350,
+      "educationBachelors": 103430,
+      "votingAgePopulation": 607907,
+      "diversityIndex": 17.762094407914763,
+      "urbanPercentage": 57.2510376413339,
+      "state": "MO"
+    }
+  ],
+  [
+    "MO-04",
+    {
+      "population": 775737,
+      "white": 679146,
+      "black": 35851,
+      "asian": 12614,
+      "hispanic": 32585,
+      "medianAge": 37,
+      "medianIncome": 56694,
+      "housingUnits": 351380,
+      "educationBachelors": 82057,
+      "votingAgePopulation": 588773,
+      "diversityIndex": 22.896019098730115,
+      "urbanPercentage": 55.19217086914452,
+      "state": "MO"
+    }
+  ],
+  [
+    "MO-05",
+    {
+      "population": 784962,
+      "white": 523878,
+      "black": 167945,
+      "asian": 13472,
+      "hispanic": 73679,
+      "medianAge": 37.1,
+      "medianIncome": 57637,
+      "housingUnits": 366524,
+      "educationBachelors": 101143,
+      "votingAgePopulation": 581262,
+      "diversityIndex": 49.964789133466745,
+      "urbanPercentage": 53.54096866780893,
+      "state": "MO"
+    }
+  ],
+  [
+    "MO-06",
+    {
+      "population": 778899,
+      "white": 688057,
+      "black": 33166,
+      "asian": 11517,
+      "hispanic": 35372,
+      "medianAge": 38.7,
+      "medianIncome": 67221,
+      "housingUnits": 335957,
+      "educationBachelors": 99925,
+      "votingAgePopulation": 584185,
+      "diversityIndex": 21.536933438040084,
+      "urbanPercentage": 57.961212298002415,
+      "state": "MO"
+    }
+  ],
+  [
+    "MO-07",
+    {
+      "population": 788437,
+      "white": 703887,
+      "black": 14884,
+      "asian": 10103,
+      "hispanic": 42541,
+      "medianAge": 38.5,
+      "medianIncome": 52910,
+      "housingUnits": 357048,
+      "educationBachelors": 90024,
+      "votingAgePopulation": 595945,
+      "diversityIndex": 19.907714726640112,
+      "urbanPercentage": 55.205252515068004,
+      "state": "MO"
+    }
+  ],
+  [
+    "MO-08",
+    {
+      "population": 722198,
+      "white": 652422,
+      "black": 31100,
+      "asian": 5297,
+      "hispanic": 16426,
+      "medianAge": 40.7,
+      "medianIncome": 48309,
+      "housingUnits": 328933,
+      "educationBachelors": 54889,
+      "votingAgePopulation": 553225,
+      "diversityIndex": 18.09210806875875,
+      "urbanPercentage": 54.889445570982545,
+      "state": "MO"
+    }
+  ],
+  [
+    "NE-01",
+    {
+      "population": 657029,
+      "white": 560551,
+      "black": 18880,
+      "asian": 17473,
+      "hispanic": 65648,
+      "medianAge": 35.9,
+      "medianIncome": 66868,
+      "housingUnits": 275933,
+      "educationBachelors": 90715,
+      "votingAgePopulation": 474758,
+      "diversityIndex": 26.060139722550378,
+      "urbanPercentage": 59.527947001627204,
+      "state": "NE"
+    }
+  ],
+  [
+    "NE-02",
+    {
+      "population": 693079,
+      "white": 539083,
+      "black": 65173,
+      "asian": 26034,
+      "hispanic": 82528,
+      "medianAge": 35.3,
+      "medianIncome": 74752,
+      "housingUnits": 285600,
+      "educationBachelors": 120127,
+      "votingAgePopulation": 479434,
+      "diversityIndex": 37.05812625230739,
+      "urbanPercentage": 60.668679971988794,
+      "state": "NE"
+    }
+  ],
+  [
+    "NE-03",
+    {
+      "population": 601372,
+      "white": 530742,
+      "black": 9305,
+      "asian": 4872,
+      "hispanic": 76517,
+      "medianAge": 39.6,
+      "medianIncome": 58743,
+      "housingUnits": 279269,
+      "educationBachelors": 63822,
+      "votingAgePopulation": 437580,
+      "diversityIndex": 20.460774936967795,
+      "urbanPercentage": 53.83447500438645,
+      "state": "NE"
+    }
+  ],
+  [
+    "NV-01",
+    {
+      "population": 688773,
+      "white": 305149,
+      "black": 82611,
+      "asian": 59312,
+      "hispanic": 319025,
+      "medianAge": 36.8,
+      "medianIncome": 45483,
+      "housingUnits": 299548,
+      "educationBachelors": 54107,
+      "votingAgePopulation": 420148,
+      "diversityIndex": 56.73866223337929,
+      "urbanPercentage": 57.48435976871821,
+      "state": "NV"
+    }
+  ],
+  [
+    "NV-02",
+    {
+      "population": 748896,
+      "white": 553306,
+      "black": 15660,
+      "asian": 30873,
+      "hispanic": 176322,
+      "medianAge": 39.7,
+      "medianIncome": 72977,
+      "housingUnits": 320037,
+      "educationBachelors": 92504,
+      "votingAgePopulation": 543447,
+      "diversityIndex": 39.656193242857505,
+      "urbanPercentage": 58.500735852417066,
+      "state": "NV"
+    }
+  ],
+  [
+    "NV-03",
+    {
+      "population": 840860,
+      "white": 509675,
+      "black": 67946,
+      "asian": 121812,
+      "hispanic": 154916,
+      "medianAge": 39.6,
+      "medianIncome": 79844,
+      "housingUnits": 352302,
+      "educationBachelors": 136956,
+      "votingAgePopulation": 610091,
+      "diversityIndex": 57.1141633801207,
+      "urbanPercentage": 59.66897718434752,
+      "state": "NV"
+    }
+  ],
+  [
+    "NV-04",
+    {
+      "population": 780709,
+      "white": 431471,
+      "black": 118195,
+      "asian": 43097,
+      "hispanic": 247152,
+      "medianAge": 37,
+      "medianIncome": 65742,
+      "housingUnits": 297959,
+      "educationBachelors": 76136,
+      "votingAgePopulation": 525461,
+      "diversityIndex": 56.83742077290734,
+      "urbanPercentage": 65.50473387278115,
+      "state": "NV"
+    }
+  ],
+  [
+    "NH-01",
+    {
+      "population": 694723,
+      "white": 630893,
+      "black": 12195,
+      "asian": 18435,
+      "hispanic": 27893,
+      "medianAge": 42.3,
+      "medianIncome": 84502,
+      "housingUnits": 324172,
+      "educationBachelors": 122059,
+      "votingAgePopulation": 547275,
+      "diversityIndex": 17.26324180860678,
+      "urbanPercentage": 53.576727786483715,
+      "state": "NH"
+    }
+  ],
+  [
+    "NH-02",
+    {
+      "population": 677452,
+      "white": 618174,
+      "black": 9639,
+      "asian": 18190,
+      "hispanic": 28022,
+      "medianAge": 43.7,
+      "medianIncome": 82270,
+      "housingUnits": 312308,
+      "educationBachelors": 108255,
+      "votingAgePopulation": 532367,
+      "diversityIndex": 16.468635364987726,
+      "urbanPercentage": 54.22947859164671,
+      "state": "NH"
+    }
+  ],
+  [
+    "NJ-01",
+    {
+      "population": 748305,
+      "white": 488497,
+      "black": 125904,
+      "asian": 39483,
+      "hispanic": 109050,
+      "medianAge": 39.1,
+      "medianIncome": 77735,
+      "housingUnits": 304239,
+      "educationBachelors": 109863,
+      "votingAgePopulation": 554327,
+      "diversityIndex": 52.15162377177038,
+      "urbanPercentage": 61.489897744865054,
+      "state": "NJ"
+    }
+  ],
+  [
+    "NJ-02",
+    {
+      "population": 732891,
+      "white": 523378,
+      "black": 90301,
+      "asian": 27953,
+      "hispanic": 124953,
+      "medianAge": 42.4,
+      "medianIncome": 71713,
+      "housingUnits": 392426,
+      "educationBachelors": 95482,
+      "votingAgePopulation": 544324,
+      "diversityIndex": 44.43172816394318,
+      "urbanPercentage": 46.68975806903722,
+      "state": "NJ"
+    }
+  ],
+  [
+    "NJ-03",
+    {
+      "population": 753485,
+      "white": 581380,
+      "black": 84472,
+      "asian": 29195,
+      "hispanic": 67743,
+      "medianAge": 43.9,
+      "medianIncome": 90408,
+      "housingUnits": 326487,
+      "educationBachelors": 129170,
+      "votingAgePopulation": 582373,
+      "diversityIndex": 38.24991997536789,
+      "urbanPercentage": 57.696401388110395,
+      "state": "NJ"
+    }
+  ],
+  [
+    "NJ-04",
+    {
+      "population": 790796,
+      "white": 653785,
+      "black": 45813,
+      "asian": 34382,
+      "hispanic": 87500,
+      "medianAge": 40.3,
+      "medianIncome": 95243,
+      "housingUnits": 310980,
+      "educationBachelors": 144727,
+      "votingAgePopulation": 559640,
+      "diversityIndex": 29.900663415953012,
+      "urbanPercentage": 63.57289857868673,
+      "state": "NJ"
+    }
+  ],
+  [
+    "NJ-05",
+    {
+      "population": 747027,
+      "white": 557948,
+      "black": 38310,
+      "asian": 81885,
+      "hispanic": 111869,
+      "medianAge": 43.3,
+      "medianIncome": 115768,
+      "housingUnits": 285868,
+      "educationBachelors": 161447,
+      "votingAgePopulation": 541442,
+      "diversityIndex": 40.50822568016289,
+      "urbanPercentage": 65.32971511326906,
+      "state": "NJ"
+    }
+  ],
+  [
+    "NJ-06",
+    {
+      "population": 762161,
+      "white": 431562,
+      "black": 79624,
+      "asian": 145901,
+      "hispanic": 169100,
+      "medianAge": 38.4,
+      "medianIncome": 94689,
+      "housingUnits": 284669,
+      "educationBachelors": 130542,
+      "votingAgePopulation": 517200,
+      "diversityIndex": 58.25923881068387,
+      "urbanPercentage": 66.93396541246149,
+      "state": "NJ"
+    }
+  ],
+  [
+    "NJ-07",
+    {
+      "population": 757080,
+      "white": 561561,
+      "black": 37449,
+      "asian": 83893,
+      "hispanic": 100843,
+      "medianAge": 43.2,
+      "medianIncome": 125465,
+      "housingUnits": 289133,
+      "educationBachelors": 163302,
+      "votingAgePopulation": 539516,
+      "diversityIndex": 41.73448422415896,
+      "urbanPercentage": 65.46122372748874,
+      "state": "NJ"
+    }
+  ],
+  [
+    "NJ-08",
+    {
+      "population": 806843,
+      "white": 377960,
+      "black": 78679,
+      "asian": 77325,
+      "hispanic": 432988,
+      "medianAge": 35.6,
+      "medianIncome": 69812,
+      "housingUnits": 334767,
+      "educationBachelors": 124420,
+      "votingAgePopulation": 455802,
+      "diversityIndex": 47.38798597265106,
+      "urbanPercentage": 60.2540722353159,
+      "state": "NJ"
+    }
+  ],
+  [
+    "NJ-09",
+    {
+      "population": 785894,
+      "white": 414334,
+      "black": 74942,
+      "asian": 105255,
+      "hispanic": 309500,
+      "medianAge": 38.3,
+      "medianIncome": 79452,
+      "housingUnits": 295913,
+      "educationBachelors": 123725,
+      "votingAgePopulation": 488964,
+      "diversityIndex": 53.99217694331514,
+      "urbanPercentage": 66.39569738402842,
+      "state": "NJ"
+    }
+  ],
+  [
+    "NJ-10",
+    {
+      "population": 811105,
+      "white": 208220,
+      "black": 406625,
+      "asian": 57715,
+      "hispanic": 172821,
+      "medianAge": 36.2,
+      "medianIncome": 63053,
+      "housingUnits": 320763,
+      "educationBachelors": 111462,
+      "votingAgePopulation": 529759,
+      "diversityIndex": 63.23137719553411,
+      "urbanPercentage": 63.21684545910844,
+      "state": "NJ"
+    }
+  ],
+  [
+    "NJ-11",
+    {
+      "population": 757864,
+      "white": 586166,
+      "black": 29145,
+      "asian": 80656,
+      "hispanic": 89334,
+      "medianAge": 43.2,
+      "medianIncome": 126661,
+      "housingUnits": 293081,
+      "educationBachelors": 176097,
+      "votingAgePopulation": 555962,
+      "diversityIndex": 37.508302678830454,
+      "urbanPercentage": 64.64629232191783,
+      "state": "NJ"
+    }
+  ],
+  [
+    "NJ-12",
+    {
+      "population": 780573,
+      "white": 403082,
+      "black": 134057,
+      "asian": 136873,
+      "hispanic": 148802,
+      "medianAge": 39.9,
+      "medianIncome": 95129,
+      "housingUnits": 300016,
+      "educationBachelors": 141278,
+      "votingAgePopulation": 515358,
+      "diversityIndex": 63.67557277247371,
+      "urbanPercentage": 65.04428097168152,
+      "state": "NJ"
+    }
+  ],
+  [
+    "NM-01",
+    {
+      "population": 693653,
+      "white": 457172,
+      "black": 19366,
+      "asian": 17714,
+      "hispanic": 352400,
+      "medianAge": 38.9,
+      "medianIncome": 56174,
+      "housingUnits": 308663,
+      "educationBachelors": 92859,
+      "votingAgePopulation": 511640,
+      "diversityIndex": 30.608393737386784,
+      "urbanPercentage": 56.182065877672414,
+      "state": "NM"
+    }
+  ],
+  [
+    "NM-02",
+    {
+      "population": 711510,
+      "white": 496892,
+      "black": 14389,
+      "asian": 7189,
+      "hispanic": 400205,
+      "medianAge": 36.6,
+      "medianIncome": 49266,
+      "housingUnits": 314036,
+      "educationBachelors": 59100,
+      "votingAgePopulation": 493689,
+      "diversityIndex": 19.540294551669714,
+      "urbanPercentage": 56.64239131819282,
+      "state": "NM"
+    }
+  ],
+  [
+    "NM-03",
+    {
+      "population": 704203,
+      "white": 410574,
+      "black": 11037,
+      "asian": 9410,
+      "hispanic": 293806,
+      "medianAge": 39.6,
+      "medianIncome": 56086,
+      "housingUnits": 314698,
+      "educationBachelors": 73579,
+      "votingAgePopulation": 516780,
+      "diversityIndex": 48.557697302976344,
+      "urbanPercentage": 55.94276099625672,
+      "state": "NM"
+    }
+  ],
+  [
+    "NY-01",
+    {
+      "population": 738752,
+      "white": 603161,
+      "black": 38782,
+      "asian": 30816,
+      "hispanic": 114046,
+      "medianAge": 42.5,
+      "medianIncome": 106887,
+      "housingUnits": 313582,
+      "educationBachelors": 107711,
+      "votingAgePopulation": 547745,
+      "diversityIndex": 30.506603380663666,
+      "urbanPercentage": 58.89623766670281,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-02",
+    {
+      "population": 730154,
+      "white": 518336,
+      "black": 71477,
+      "asian": 27149,
+      "hispanic": 183176,
+      "medianAge": 40.5,
+      "medianIncome": 114856,
+      "housingUnits": 242286,
+      "educationBachelors": 96151,
+      "votingAgePopulation": 530229,
+      "diversityIndex": 42.21397151604014,
+      "urbanPercentage": 75.34009393856846,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-03",
+    {
+      "population": 742196,
+      "white": 521692,
+      "black": 22854,
+      "asian": 130868,
+      "hispanic": 82627,
+      "medianAge": 45.2,
+      "medianIncome": 129774,
+      "housingUnits": 270780,
+      "educationBachelors": 153260,
+      "votingAgePopulation": 537747,
+      "diversityIndex": 46.1494303795845,
+      "urbanPercentage": 68.52389393603664,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-04",
+    {
+      "population": 747392,
+      "white": 457263,
+      "black": 112425,
+      "asian": 56589,
+      "hispanic": 158713,
+      "medianAge": 40.6,
+      "medianIncome": 121558,
+      "housingUnits": 252804,
+      "educationBachelors": 128508,
+      "votingAgePopulation": 527296,
+      "diversityIndex": 55.22318461630616,
+      "urbanPercentage": 73.91022293951045,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-05",
+    {
+      "population": 813708,
+      "white": 130196,
+      "black": 378302,
+      "asian": 124912,
+      "hispanic": 156846,
+      "medianAge": 39.1,
+      "medianIncome": 80351,
+      "housingUnits": 253752,
+      "educationBachelors": 97186,
+      "votingAgePopulation": 535960,
+      "diversityIndex": 69.67062492166659,
+      "urbanPercentage": 80.16764399886503,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-06",
+    {
+      "population": 760652,
+      "white": 304712,
+      "black": 32750,
+      "asian": 301275,
+      "hispanic": 157358,
+      "medianAge": 41.9,
+      "medianIncome": 74575,
+      "housingUnits": 297376,
+      "educationBachelors": 132789,
+      "votingAgePopulation": 464224,
+      "diversityIndex": 63.79999639376774,
+      "urbanPercentage": 63.94698966964382,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-07",
+    {
+      "population": 752935,
+      "white": 339144,
+      "black": 76332,
+      "asian": 129482,
+      "hispanic": 294335,
+      "medianAge": 34.3,
+      "medianIncome": 68032,
+      "housingUnits": 283712,
+      "educationBachelors": 120555,
+      "votingAgePopulation": 463800,
+      "diversityIndex": 60.4446090608835,
+      "urbanPercentage": 66.34677066884727,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-08",
+    {
+      "population": 818072,
+      "white": 242545,
+      "black": 404711,
+      "asian": 49562,
+      "hispanic": 147933,
+      "medianAge": 36.7,
+      "medianIncome": 62483,
+      "housingUnits": 329797,
+      "educationBachelors": 124110,
+      "votingAgePopulation": 564469,
+      "diversityIndex": 63.098593674492,
+      "urbanPercentage": 62.0132990900463,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-09",
+    {
+      "population": 757933,
+      "white": 272483,
+      "black": 343589,
+      "asian": 57193,
+      "hispanic": 84232,
+      "medianAge": 37.6,
+      "medianIncome": 68747,
+      "housingUnits": 310499,
+      "educationBachelors": 126879,
+      "votingAgePopulation": 505238,
+      "diversityIndex": 64.72064422021528,
+      "urbanPercentage": 61.0253978273682,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-10",
+    {
+      "population": 763710,
+      "white": 503202,
+      "black": 29178,
+      "asian": 142987,
+      "hispanic": 99485,
+      "medianAge": 36.8,
+      "medianIncome": 103575,
+      "housingUnits": 376170,
+      "educationBachelors": 174258,
+      "votingAgePopulation": 510132,
+      "diversityIndex": 51.23794075854231,
+      "urbanPercentage": 50.755642395725346,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-11",
+    {
+      "population": 761248,
+      "white": 501907,
+      "black": 60347,
+      "asian": 113436,
+      "hispanic": 132158,
+      "medianAge": 40.3,
+      "medianIncome": 81867,
+      "housingUnits": 289104,
+      "educationBachelors": 119794,
+      "votingAgePopulation": 521248,
+      "diversityIndex": 50.666679640638314,
+      "urbanPercentage": 65.82821406829376,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-12",
+    {
+      "population": 741461,
+      "white": 516754,
+      "black": 37750,
+      "asian": 103674,
+      "hispanic": 102028,
+      "medianAge": 36.5,
+      "medianIncome": 120915,
+      "housingUnits": 458524,
+      "educationBachelors": 224039,
+      "votingAgePopulation": 558681,
+      "diversityIndex": 47.3196586708256,
+      "urbanPercentage": 40.42650984463191,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-13",
+    {
+      "population": 780893,
+      "white": 188022,
+      "black": 217386,
+      "asian": 38803,
+      "hispanic": 427692,
+      "medianAge": 36.2,
+      "medianIncome": 48638,
+      "housingUnits": 318911,
+      "educationBachelors": 107238,
+      "votingAgePopulation": 502586,
+      "diversityIndex": 56.20896256451289,
+      "urbanPercentage": 61.21558992947875,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-14",
+    {
+      "population": 717057,
+      "white": 267770,
+      "black": 75894,
+      "asian": 124292,
+      "hispanic": 354582,
+      "medianAge": 37.9,
+      "medianIncome": 66714,
+      "housingUnits": 271223,
+      "educationBachelors": 94047,
+      "votingAgePopulation": 409186,
+      "diversityIndex": 57.47763328716534,
+      "urbanPercentage": 66.09478178473066,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-15",
+    {
+      "population": 755887,
+      "white": 109073,
+      "black": 271885,
+      "asian": 14822,
+      "hispanic": 492474,
+      "medianAge": 32.5,
+      "medianIncome": 34252,
+      "housingUnits": 274351,
+      "educationBachelors": 49763,
+      "votingAgePopulation": 429953,
+      "diversityIndex": 42.49409488460658,
+      "urbanPercentage": 68.87955575157372,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-16",
+    {
+      "population": 774781,
+      "white": 322007,
+      "black": 247951,
+      "asian": 39942,
+      "hispanic": 211901,
+      "medianAge": 40.4,
+      "medianIncome": 79013,
+      "housingUnits": 300162,
+      "educationBachelors": 113758,
+      "votingAgePopulation": 523481,
+      "diversityIndex": 64.73918342636105,
+      "urbanPercentage": 64.53023700535044,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-17",
+    {
+      "population": 761994,
+      "white": 511606,
+      "black": 78601,
+      "asian": 45181,
+      "hispanic": 168406,
+      "medianAge": 38.9,
+      "medianIncome": 109618,
+      "housingUnits": 269932,
+      "educationBachelors": 125366,
+      "votingAgePopulation": 508488,
+      "diversityIndex": 48.62163080070003,
+      "urbanPercentage": 70.57277388379296,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-18",
+    {
+      "population": 743362,
+      "white": 545013,
+      "black": 73587,
+      "asian": 23304,
+      "hispanic": 135929,
+      "medianAge": 39.7,
+      "medianIncome": 94053,
+      "housingUnits": 283038,
+      "educationBachelors": 104326,
+      "votingAgePopulation": 538830,
+      "diversityIndex": 41.82383054280759,
+      "urbanPercentage": 65.65920477109081,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-19",
+    {
+      "population": 701650,
+      "white": 600887,
+      "black": 32428,
+      "asian": 11222,
+      "hispanic": 57125,
+      "medianAge": 45,
+      "medianIncome": 70565,
+      "housingUnits": 359654,
+      "educationBachelors": 87517,
+      "votingAgePopulation": 555113,
+      "diversityIndex": 25.757360279877783,
+      "urbanPercentage": 48.772570303680766,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-20",
+    {
+      "population": 743851,
+      "white": 574914,
+      "black": 68327,
+      "asian": 39954,
+      "hispanic": 50757,
+      "medianAge": 39.3,
+      "medianIncome": 75361,
+      "housingUnits": 343256,
+      "educationBachelors": 110826,
+      "votingAgePopulation": 571198,
+      "diversityIndex": 38.648745309391316,
+      "urbanPercentage": 54.1761105414035,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-21",
+    {
+      "population": 708621,
+      "white": 644021,
+      "black": 21615,
+      "asian": 6467,
+      "hispanic": 25662,
+      "medianAge": 41.2,
+      "medianIncome": 62887,
+      "housingUnits": 373850,
+      "educationBachelors": 70483,
+      "votingAgePopulation": 556105,
+      "diversityIndex": 17.14553985154723,
+      "urbanPercentage": 47.38671927243547,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-22",
+    {
+      "population": 697709,
+      "white": 613031,
+      "black": 27703,
+      "asian": 20571,
+      "hispanic": 29256,
+      "medianAge": 41,
+      "medianIncome": 59751,
+      "housingUnits": 321808,
+      "educationBachelors": 68145,
+      "votingAgePopulation": 540107,
+      "diversityIndex": 22.369287852247254,
+      "urbanPercentage": 54.20227278377169,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-23",
+    {
+      "population": 694520,
+      "white": 620944,
+      "black": 20242,
+      "asian": 15887,
+      "hispanic": 29019,
+      "medianAge": 40.8,
+      "medianIncome": 57407,
+      "housingUnits": 338876,
+      "educationBachelors": 67965,
+      "votingAgePopulation": 542045,
+      "diversityIndex": 19.738721942090432,
+      "urbanPercentage": 51.23703065428062,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-24",
+    {
+      "population": 716288,
+      "white": 590832,
+      "black": 58101,
+      "asian": 20468,
+      "hispanic": 33936,
+      "medianAge": 40.2,
+      "medianIncome": 64433,
+      "housingUnits": 321813,
+      "educationBachelors": 88578,
+      "votingAgePopulation": 549374,
+      "diversityIndex": 30.965066326424463,
+      "urbanPercentage": 55.64473778250102,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-25",
+    {
+      "population": 730626,
+      "white": 534141,
+      "black": 111794,
+      "asian": 28157,
+      "hispanic": 69310,
+      "medianAge": 39.1,
+      "medianIncome": 65722,
+      "housingUnits": 323788,
+      "educationBachelors": 110577,
+      "votingAgePopulation": 556674,
+      "diversityIndex": 43.16353653667273,
+      "urbanPercentage": 56.4123747637343,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-26",
+    {
+      "population": 738583,
+      "white": 515997,
+      "black": 127621,
+      "asian": 35159,
+      "hispanic": 52698,
+      "medianAge": 38.4,
+      "medianIncome": 55738,
+      "housingUnits": 351212,
+      "educationBachelors": 98443,
+      "votingAgePopulation": 564892,
+      "diversityIndex": 47.460818559522956,
+      "urbanPercentage": 52.57387276061183,
+      "state": "NY"
+    }
+  ],
+  [
+    "NY-27",
+    {
+      "population": 720710,
+      "white": 665465,
+      "black": 17214,
+      "asian": 7024,
+      "hispanic": 20069,
+      "medianAge": 44.4,
+      "medianIncome": 71541,
+      "housingUnits": 318918,
+      "educationBachelors": 94034,
+      "votingAgePopulation": 567246,
+      "diversityIndex": 14.576017788276808,
+      "urbanPercentage": 56.49649753228102,
+      "state": "NY"
+    }
+  ],
+  [
+    "NC-01",
+    {
+      "population": 741907,
+      "white": 339633,
+      "black": 317916,
+      "asian": 16187,
+      "hispanic": 69852,
+      "medianAge": 38.1,
+      "medianIncome": 50212,
+      "housingUnits": 342227,
+      "educationBachelors": 88084,
+      "votingAgePopulation": 551485,
+      "diversityIndex": 59.74709044142627,
+      "urbanPercentage": 54.19699497701818,
+      "state": "NC"
+    }
+  ],
+  [
+    "NC-02",
+    {
+      "population": 892874,
+      "white": 613501,
+      "black": 169919,
+      "asian": 20994,
+      "hispanic": 92048,
+      "medianAge": 39,
+      "medianIncome": 78555,
+      "housingUnits": 350796,
+      "educationBachelors": 149496,
+      "votingAgePopulation": 631553,
+      "diversityIndex": 48.04853637663786,
+      "urbanPercentage": 63.63199694409286,
+      "state": "NC"
+    }
+  ],
+  [
+    "NC-03",
+    {
+      "population": 752206,
+      "white": 530913,
+      "black": 150241,
+      "asian": 11244,
+      "hispanic": 63940,
+      "medianAge": 37.5,
+      "medianIncome": 56212,
+      "housingUnits": 383621,
+      "educationBachelors": 82836,
+      "votingAgePopulation": 574989,
+      "diversityIndex": 45.44924734167637,
+      "urbanPercentage": 49.02012663540317,
+      "state": "NC"
+    }
+  ],
+  [
+    "NC-04",
+    {
+      "population": 867309,
+      "white": 506336,
+      "black": 192439,
+      "asian": 81825,
+      "hispanic": 90188,
+      "medianAge": 35.2,
+      "medianIncome": 80354,
+      "housingUnits": 372271,
+      "educationBachelors": 185377,
+      "votingAgePopulation": 616371,
+      "diversityIndex": 59.023143347271166,
+      "urbanPercentage": 58.244464382130225,
+      "state": "NC"
+    }
+  ],
+  [
+    "NC-05",
+    {
+      "population": 756848,
+      "white": 577942,
+      "black": 111048,
+      "asian": 12337,
+      "hispanic": 77324,
+      "medianAge": 41,
+      "medianIncome": 52773,
+      "housingUnits": 364248,
+      "educationBachelors": 90669,
+      "votingAgePopulation": 570201,
+      "diversityIndex": 38.465749083049296,
+      "urbanPercentage": 51.94592695086864,
+      "state": "NC"
+    }
+  ],
+  [
+    "NC-06",
+    {
+      "population": 789755,
+      "white": 543410,
+      "black": 160972,
+      "asian": 15204,
+      "hispanic": 83848,
+      "medianAge": 41.1,
+      "medianIncome": 57137,
+      "housingUnits": 342609,
+      "educationBachelors": 92307,
+      "votingAgePopulation": 577355,
+      "diversityIndex": 47.33666243028939,
+      "urbanPercentage": 57.628010355828366,
+      "state": "NC"
+    }
+  ],
+  [
+    "NC-07",
+    {
+      "population": 772968,
+      "white": 560429,
+      "black": 137581,
+      "asian": 6805,
+      "hispanic": 77202,
+      "medianAge": 42.1,
+      "medianIncome": 56624,
+      "housingUnits": 387456,
+      "educationBachelors": 102383,
+      "votingAgePopulation": 584817,
+      "diversityIndex": 43.259034667716264,
+      "urbanPercentage": 49.8745664023786,
+      "state": "NC"
+    }
+  ],
+  [
+    "NC-08",
+    {
+      "population": 805788,
+      "white": 507096,
+      "black": 188005,
+      "asian": 22307,
+      "hispanic": 89167,
+      "medianAge": 36.1,
+      "medianIncome": 59198,
+      "housingUnits": 344340,
+      "educationBachelors": 98257,
+      "votingAgePopulation": 583544,
+      "diversityIndex": 53.651127240533825,
+      "urbanPercentage": 58.50235232618923,
+      "state": "NC"
+    }
+  ],
+  [
+    "NC-09",
+    {
+      "population": 764664,
+      "white": 481321,
+      "black": 142457,
+      "asian": 26179,
+      "hispanic": 63166,
+      "medianAge": 39.5,
+      "medianIncome": 69676,
+      "housingUnits": 307583,
+      "educationBachelors": 121100,
+      "votingAgePopulation": 546243,
+      "diversityIndex": 55.65405036334935,
+      "urbanPercentage": 62.15102915310664,
+      "state": "NC"
+    }
+  ],
+  [
+    "NC-10",
+    {
+      "population": 769560,
+      "white": 608801,
+      "black": 93230,
+      "asian": 14037,
+      "hispanic": 53873,
+      "medianAge": 42.1,
+      "medianIncome": 55461,
+      "housingUnits": 350520,
+      "educationBachelors": 95133,
+      "votingAgePopulation": 588174,
+      "diversityIndex": 35.42464739916671,
+      "urbanPercentage": 54.887024991441294,
+      "state": "NC"
+    }
+  ],
+  [
+    "NC-11",
+    {
+      "population": 766426,
+      "white": 676849,
+      "black": 23811,
+      "asian": 8959,
+      "hispanic": 51613,
+      "medianAge": 45.3,
+      "medianIncome": 52667,
+      "housingUnits": 398006,
+      "educationBachelors": 96671,
+      "votingAgePopulation": 602577,
+      "diversityIndex": 21.44096836455549,
+      "urbanPercentage": 48.14161093048849,
+      "state": "NC"
+    }
+  ],
+  [
+    "NC-12",
+    {
+      "population": 895417,
+      "white": 388560,
+      "black": 330248,
+      "asian": 50840,
+      "hispanic": 138466,
+      "medianAge": 34.2,
+      "medianIncome": 66749,
+      "housingUnits": 383412,
+      "educationBachelors": 168381,
+      "votingAgePopulation": 602266,
+      "diversityIndex": 64.85281438091273,
+      "urbanPercentage": 58.38477929746592,
+      "state": "NC"
+    }
+  ],
+  [
+    "NC-13",
+    {
+      "population": 791300,
+      "white": 530717,
+      "black": 175280,
+      "asian": 27772,
+      "hispanic": 66043,
+      "medianAge": 39.6,
+      "medianIncome": 57508,
+      "housingUnits": 346844,
+      "educationBachelors": 111154,
+      "votingAgePopulation": 586026,
+      "diversityIndex": 49.29111411221064,
+      "urbanPercentage": 57.03572787766258,
+      "state": "NC"
+    }
+  ],
+  [
+    "OH-01",
+    {
+      "population": 763591,
+      "white": 530759,
+      "black": 164313,
+      "asian": 28841,
+      "hispanic": 26920,
+      "medianAge": 37,
+      "medianIncome": 67294,
+      "housingUnits": 329953,
+      "educationBachelors": 115567,
+      "votingAgePopulation": 555614,
+      "diversityIndex": 46.76068271602166,
+      "urbanPercentage": 57.856043133415966,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-02",
+    {
+      "population": 732156,
+      "white": 627075,
+      "black": 61758,
+      "asian": 12377,
+      "hispanic": 17221,
+      "medianAge": 39.8,
+      "medianIncome": 65340,
+      "housingUnits": 327523,
+      "educationBachelors": 102939,
+      "votingAgePopulation": 557919,
+      "diversityIndex": 25.81411283675544,
+      "urbanPercentage": 55.885846184848084,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-03",
+    {
+      "population": 804631,
+      "white": 412599,
+      "black": 278067,
+      "asian": 36181,
+      "hispanic": 58212,
+      "medianAge": 32.7,
+      "medianIncome": 53818,
+      "housingUnits": 351568,
+      "educationBachelors": 103183,
+      "votingAgePopulation": 560240,
+      "diversityIndex": 60.978090612575485,
+      "urbanPercentage": 57.21730931142767,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-04",
+    {
+      "population": 715108,
+      "white": 635596,
+      "black": 34458,
+      "asian": 7540,
+      "hispanic": 30012,
+      "medianAge": 40.8,
+      "medianIncome": 60187,
+      "housingUnits": 311358,
+      "educationBachelors": 62827,
+      "votingAgePopulation": 549545,
+      "diversityIndex": 20.571020324281363,
+      "urbanPercentage": 57.41847005697621,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-05",
+    {
+      "population": 728981,
+      "white": 655472,
+      "black": 19725,
+      "asian": 9401,
+      "hispanic": 42762,
+      "medianAge": 39.7,
+      "medianIncome": 65721,
+      "housingUnits": 315758,
+      "educationBachelors": 85333,
+      "votingAgePopulation": 555102,
+      "diversityIndex": 18.71633344004765,
+      "urbanPercentage": 57.716748269244164,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-06",
+    {
+      "population": 689093,
+      "white": 649420,
+      "black": 14862,
+      "asian": 3524,
+      "hispanic": 8443,
+      "medianAge": 43.6,
+      "medianIncome": 53167,
+      "housingUnits": 316720,
+      "educationBachelors": 54132,
+      "votingAgePopulation": 541751,
+      "diversityIndex": 11.084209509895581,
+      "urbanPercentage": 54.39291803485729,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-07",
+    {
+      "population": 737294,
+      "white": 671663,
+      "black": 29630,
+      "asian": 5037,
+      "hispanic": 20480,
+      "medianAge": 40.8,
+      "medianIncome": 62453,
+      "housingUnits": 311708,
+      "educationBachelors": 71802,
+      "votingAgePopulation": 558876,
+      "diversityIndex": 16.747276471760564,
+      "urbanPercentage": 59.13338765767963,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-08",
+    {
+      "population": 742413,
+      "white": 640313,
+      "black": 44451,
+      "asian": 17441,
+      "hispanic": 28081,
+      "medianAge": 39,
+      "medianIncome": 65725,
+      "housingUnits": 307813,
+      "educationBachelors": 81923,
+      "votingAgePopulation": 552269,
+      "diversityIndex": 25.030184925507328,
+      "urbanPercentage": 60.29740459304838,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-09",
+    {
+      "population": 707993,
+      "white": 505001,
+      "black": 115490,
+      "asian": 12043,
+      "hispanic": 80693,
+      "medianAge": 38.6,
+      "medianIncome": 49073,
+      "housingUnits": 349447,
+      "educationBachelors": 77327,
+      "votingAgePopulation": 540026,
+      "diversityIndex": 45.13354588898327,
+      "urbanPercentage": 50.650957083620696,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-10",
+    {
+      "population": 727632,
+      "white": 544485,
+      "black": 121472,
+      "asian": 16787,
+      "hispanic": 23321,
+      "medianAge": 38.9,
+      "medianIncome": 60211,
+      "housingUnits": 333881,
+      "educationBachelors": 90044,
+      "votingAgePopulation": 552611,
+      "diversityIndex": 40.974377720957186,
+      "urbanPercentage": 54.482884620568406,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-11",
+    {
+      "population": 690420,
+      "white": 269563,
+      "black": 358251,
+      "asian": 16948,
+      "hispanic": 31814,
+      "medianAge": 38.6,
+      "medianIncome": 43082,
+      "housingUnits": 356964,
+      "educationBachelors": 76643,
+      "votingAgePopulation": 526050,
+      "diversityIndex": 57.518858229035615,
+      "urbanPercentage": 48.353615490637715,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-12",
+    {
+      "population": 801233,
+      "white": 681157,
+      "black": 39725,
+      "asian": 40132,
+      "hispanic": 20678,
+      "medianAge": 39.1,
+      "medianIncome": 82486,
+      "housingUnits": 333594,
+      "educationBachelors": 145174,
+      "votingAgePopulation": 594914,
+      "diversityIndex": 27.10410256716641,
+      "urbanPercentage": 60.045519403826205,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-13",
+    {
+      "population": 703031,
+      "white": 565641,
+      "black": 82561,
+      "asian": 14181,
+      "hispanic": 25998,
+      "medianAge": 40.8,
+      "medianIncome": 50500,
+      "housingUnits": 332359,
+      "educationBachelors": 75645,
+      "votingAgePopulation": 555522,
+      "diversityIndex": 33.6659660432146,
+      "urbanPercentage": 52.88189879016365,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-14",
+    {
+      "population": 726849,
+      "white": 641944,
+      "black": 35968,
+      "asian": 17497,
+      "hispanic": 23177,
+      "medianAge": 43.9,
+      "medianIncome": 75337,
+      "housingUnits": 316999,
+      "educationBachelors": 115740,
+      "votingAgePopulation": 559297,
+      "diversityIndex": 21.580547740844157,
+      "urbanPercentage": 57.322657169265526,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-15",
+    {
+      "population": 764503,
+      "white": 674512,
+      "black": 33887,
+      "asian": 20419,
+      "hispanic": 20608,
+      "medianAge": 38.3,
+      "medianIncome": 72124,
+      "housingUnits": 321462,
+      "educationBachelors": 108578,
+      "votingAgePopulation": 583131,
+      "diversityIndex": 21.777380071889606,
+      "urbanPercentage": 59.45516110768925,
+      "state": "OH"
+    }
+  ],
+  [
+    "OH-16",
+    {
+      "population": 734995,
+      "white": 669338,
+      "black": 17912,
+      "asian": 18479,
+      "hispanic": 21927,
+      "medianAge": 43.3,
+      "medianIncome": 75265,
+      "housingUnits": 315626,
+      "educationBachelors": 116164,
+      "votingAgePopulation": 566499,
+      "diversityIndex": 16.846418169008082,
+      "urbanPercentage": 58.217241291908785,
+      "state": "OH"
+    }
+  ],
+  [
+    "OK-01",
+    {
+      "population": 822185,
+      "white": 561718,
+      "black": 69996,
+      "asian": 26643,
+      "hispanic": 99452,
+      "medianAge": 36.6,
+      "medianIncome": 61601,
+      "housingUnits": 356888,
+      "educationBachelors": 113944,
+      "votingAgePopulation": 579247,
+      "diversityIndex": 50.417568908914156,
+      "urbanPercentage": 57.594049113447355,
+      "state": "OK"
+    }
+  ],
+  [
+    "OK-02",
+    {
+      "population": 726329,
+      "white": 467778,
+      "black": 22589,
+      "asian": 5520,
+      "hispanic": 41902,
+      "medianAge": 39.8,
+      "medianIncome": 47813,
+      "housingUnits": 338238,
+      "educationBachelors": 60335,
+      "votingAgePopulation": 545309,
+      "diversityIndex": 51.349020344921335,
+      "urbanPercentage": 53.68475747846191,
+      "state": "OK"
+    }
+  ],
+  [
+    "OK-03",
+    {
+      "population": 783317,
+      "white": 604565,
+      "black": 28496,
+      "asian": 11603,
+      "hispanic": 84062,
+      "medianAge": 36.9,
+      "medianIncome": 57700,
+      "housingUnits": 343386,
+      "educationBachelors": 84390,
+      "votingAgePopulation": 571607,
+      "diversityIndex": 38.64065005188425,
+      "urbanPercentage": 57.028897508925816,
+      "state": "OK"
+    }
+  ],
+  [
+    "OK-04",
+    {
+      "population": 797930,
+      "white": 581118,
+      "black": 54199,
+      "asian": 19661,
+      "hispanic": 75366,
+      "medianAge": 36.4,
+      "medianIncome": 61545,
+      "housingUnits": 341681,
+      "educationBachelors": 89722,
+      "votingAgePopulation": 594054,
+      "diversityIndex": 44.828903046442434,
+      "urbanPercentage": 58.38267272690024,
+      "state": "OK"
+    }
+  ],
+  [
+    "OK-05",
+    {
+      "population": 818375,
+      "white": 537374,
+      "black": 109256,
+      "asian": 25174,
+      "hispanic": 143132,
+      "medianAge": 35.3,
+      "medianIncome": 57157,
+      "housingUnits": 361528,
+      "educationBachelors": 108865,
+      "votingAgePopulation": 562061,
+      "diversityIndex": 51.945359449610976,
+      "urbanPercentage": 56.5913981766281,
+      "state": "OK"
+    }
+  ],
+  [
+    "OR-01",
+    {
+      "population": 856074,
+      "white": 645638,
+      "black": 16645,
+      "asian": 72009,
+      "hispanic": 129914,
+      "medianAge": 38.3,
+      "medianIncome": 86649,
+      "housingUnits": 352728,
+      "educationBachelors": 156738,
+      "votingAgePopulation": 611014,
+      "diversityIndex": 40.07220855206724,
+      "urbanPercentage": 60.67522283459209,
+      "state": "OR"
+    }
+  ],
+  [
+    "OR-02",
+    {
+      "population": 843033,
+      "white": 729209,
+      "black": 5264,
+      "asian": 8364,
+      "hispanic": 123018,
+      "medianAge": 41.7,
+      "medianIncome": 61570,
+      "housingUnits": 375756,
+      "educationBachelors": 102718,
+      "votingAgePopulation": 632212,
+      "diversityIndex": 23.037387106670725,
+      "urbanPercentage": 56.089124325360075,
+      "state": "OR"
+    }
+  ],
+  [
+    "OR-03",
+    {
+      "population": 844479,
+      "white": 634293,
+      "black": 41536,
+      "asian": 62704,
+      "hispanic": 100753,
+      "medianAge": 38.1,
+      "medianIncome": 76658,
+      "housingUnits": 362412,
+      "educationBachelors": 164518,
+      "votingAgePopulation": 637374,
+      "diversityIndex": 41.363551146788346,
+      "urbanPercentage": 58.254072712824076,
+      "state": "OR"
+    }
+  ],
+  [
+    "OR-04",
+    {
+      "population": 818485,
+      "white": 704733,
+      "black": 6465,
+      "asian": 19915,
+      "hispanic": 69269,
+      "medianAge": 41.4,
+      "medianIncome": 57728,
+      "housingUnits": 359847,
+      "educationBachelors": 97966,
+      "votingAgePopulation": 644049,
+      "diversityIndex": 25.033639014367925,
+      "urbanPercentage": 56.86340305741051,
+      "state": "OR"
+    }
+  ],
+  [
+    "OR-05",
+    {
+      "population": 845106,
+      "white": 680965,
+      "black": 8003,
+      "asian": 23732,
+      "hispanic": 147557,
+      "medianAge": 39.6,
+      "medianIncome": 72367,
+      "housingUnits": 348121,
+      "educationBachelors": 122873,
+      "votingAgePopulation": 610456,
+      "diversityIndex": 31.936316182742296,
+      "urbanPercentage": 60.6905357619908,
+      "state": "OR"
+    }
+  ],
+  [
+    "PA-01",
+    {
+      "population": 728310,
+      "white": 610284,
+      "black": 29811,
+      "asian": 44344,
+      "hispanic": 42206,
+      "medianAge": 43.7,
+      "medianIncome": 98257,
+      "housingUnits": 287623,
+      "educationBachelors": 134587,
+      "votingAgePopulation": 555916,
+      "diversityIndex": 28.910150888761454,
+      "urbanPercentage": 63.30422115060339,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-02",
+    {
+      "population": 741528,
+      "white": 328342,
+      "black": 193742,
+      "asian": 63402,
+      "hispanic": 198250,
+      "medianAge": 35.2,
+      "medianIncome": 50539,
+      "housingUnits": 297513,
+      "educationBachelors": 73478,
+      "votingAgePopulation": 502848,
+      "diversityIndex": 65.68835477366859,
+      "urbanPercentage": 62.310554496778295,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-03",
+    {
+      "population": 736685,
+      "white": 240475,
+      "black": 407136,
+      "asian": 41973,
+      "hispanic": 37208,
+      "medianAge": 34.2,
+      "medianIncome": 54143,
+      "housingUnits": 371040,
+      "educationBachelors": 114236,
+      "votingAgePopulation": 568200,
+      "diversityIndex": 58.20342991869973,
+      "urbanPercentage": 49.63649471755067,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-04",
+    {
+      "population": 750478,
+      "white": 585402,
+      "black": 71245,
+      "asian": 49027,
+      "hispanic": 40843,
+      "medianAge": 41.3,
+      "medianIncome": 97690,
+      "housingUnits": 306231,
+      "educationBachelors": 149676,
+      "votingAgePopulation": 560747,
+      "diversityIndex": 37.52697525338652,
+      "urbanPercentage": 61.267311278087455,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-05",
+    {
+      "population": 728014,
+      "white": 454689,
+      "black": 179085,
+      "asian": 50476,
+      "hispanic": 35971,
+      "medianAge": 38.5,
+      "medianIncome": 76124,
+      "housingUnits": 294957,
+      "educationBachelors": 111842,
+      "votingAgePopulation": 529126,
+      "diversityIndex": 54.204908214072134,
+      "urbanPercentage": 61.705095997043635,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-06",
+    {
+      "population": 748941,
+      "white": 578432,
+      "black": 46520,
+      "asian": 35854,
+      "hispanic": 119527,
+      "medianAge": 39.5,
+      "medianIncome": 92406,
+      "housingUnits": 293639,
+      "educationBachelors": 140325,
+      "votingAgePopulation": 538518,
+      "diversityIndex": 37.18809515486464,
+      "urbanPercentage": 63.76375413347682,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-07",
+    {
+      "population": 742270,
+      "white": 567913,
+      "black": 54305,
+      "asian": 23175,
+      "hispanic": 150701,
+      "medianAge": 40.4,
+      "medianIncome": 72587,
+      "housingUnits": 301336,
+      "educationBachelors": 100299,
+      "votingAgePopulation": 553502,
+      "diversityIndex": 36.70700733858141,
+      "urbanPercentage": 61.58158998592933,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-08",
+    {
+      "population": 711220,
+      "white": 590223,
+      "black": 42482,
+      "asian": 13342,
+      "hispanic": 92741,
+      "medianAge": 43,
+      "medianIncome": 59999,
+      "housingUnits": 352794,
+      "educationBachelors": 79366,
+      "votingAgePopulation": 546951,
+      "diversityIndex": 29.038599364431196,
+      "urbanPercentage": 50.39909975793238,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-09",
+    {
+      "population": 706475,
+      "white": 636236,
+      "black": 18460,
+      "asian": 7188,
+      "hispanic": 53746,
+      "medianAge": 43.3,
+      "medianIncome": 64948,
+      "housingUnits": 312802,
+      "educationBachelors": 72183,
+      "votingAgePopulation": 557186,
+      "diversityIndex": 18.23849796414053,
+      "urbanPercentage": 56.463433737635945,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-10",
+    {
+      "population": 754965,
+      "white": 581750,
+      "black": 86486,
+      "asian": 31008,
+      "hispanic": 67827,
+      "medianAge": 40,
+      "medianIncome": 70886,
+      "housingUnits": 321293,
+      "educationBachelors": 108947,
+      "votingAgePopulation": 567424,
+      "diversityIndex": 38.33472601536753,
+      "urbanPercentage": 58.74427703062314,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-11",
+    {
+      "population": 744465,
+      "white": 651395,
+      "black": 26827,
+      "asian": 14775,
+      "hispanic": 69611,
+      "medianAge": 39.7,
+      "medianIncome": 74768,
+      "housingUnits": 294923,
+      "educationBachelors": 93023,
+      "votingAgePopulation": 559053,
+      "diversityIndex": 22.396735606112816,
+      "urbanPercentage": 63.106726162422056,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-12",
+    {
+      "population": 688872,
+      "white": 639629,
+      "black": 14833,
+      "asian": 11604,
+      "hispanic": 17811,
+      "medianAge": 41.1,
+      "medianIncome": 58714,
+      "housingUnits": 320237,
+      "educationBachelors": 67197,
+      "votingAgePopulation": 541284,
+      "diversityIndex": 13.638869323386793,
+      "urbanPercentage": 53.778295449932386,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-13",
+    {
+      "population": 696156,
+      "white": 644704,
+      "black": 19706,
+      "asian": 4474,
+      "hispanic": 24543,
+      "medianAge": 44,
+      "medianIncome": 60107,
+      "housingUnits": 319314,
+      "educationBachelors": 67449,
+      "votingAgePopulation": 547116,
+      "diversityIndex": 14.02540780057423,
+      "urbanPercentage": 54.504030515417426,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-14",
+    {
+      "population": 690770,
+      "white": 639483,
+      "black": 21470,
+      "asian": 6327,
+      "hispanic": 10360,
+      "medianAge": 45.5,
+      "medianIncome": 63950,
+      "housingUnits": 322844,
+      "educationBachelors": 92389,
+      "votingAgePopulation": 554079,
+      "diversityIndex": 14.134360798473045,
+      "urbanPercentage": 53.49100494356407,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-15",
+    {
+      "population": 677635,
+      "white": 640826,
+      "black": 13477,
+      "asian": 5295,
+      "hispanic": 10722,
+      "medianAge": 44.6,
+      "medianIncome": 55835,
+      "housingUnits": 330295,
+      "educationBachelors": 67793,
+      "votingAgePopulation": 544296,
+      "diversityIndex": 10.486547722913253,
+      "urbanPercentage": 51.29013457666631,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-16",
+    {
+      "population": 688843,
+      "white": 617915,
+      "black": 31211,
+      "asian": 7869,
+      "hispanic": 18923,
+      "medianAge": 42.3,
+      "medianIncome": 58317,
+      "housingUnits": 312677,
+      "educationBachelors": 86969,
+      "votingAgePopulation": 540655,
+      "diversityIndex": 19.20414113670027,
+      "urbanPercentage": 55.076244814936814,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-17",
+    {
+      "population": 733477,
+      "white": 636026,
+      "black": 43216,
+      "asian": 21666,
+      "hispanic": 13974,
+      "medianAge": 43.1,
+      "medianIncome": 75169,
+      "housingUnits": 337387,
+      "educationBachelors": 139851,
+      "votingAgePopulation": 570481,
+      "diversityIndex": 24.272145153122647,
+      "urbanPercentage": 54.34982675681043,
+      "state": "PA"
+    }
+  ],
+  [
+    "PA-18",
+    {
+      "population": 701546,
+      "white": 510028,
+      "black": 125198,
+      "asian": 29133,
+      "hispanic": 18091,
+      "medianAge": 38.9,
+      "medianIncome": 58735,
+      "housingUnits": 351883,
+      "educationBachelors": 114037,
+      "votingAgePopulation": 555627,
+      "diversityIndex": 43.648417824243644,
+      "urbanPercentage": 49.84227712052017,
+      "state": "PA"
+    }
+  ],
+  [
+    "RI-01",
+    {
+      "population": 551867,
+      "white": 398777,
+      "black": 44557,
+      "asian": 19836,
+      "hispanic": 106381,
+      "medianAge": 38.9,
+      "medianIncome": 68969,
+      "housingUnits": 239942,
+      "educationBachelors": 80726,
+      "votingAgePopulation": 403805,
+      "diversityIndex": 43.288546732444324,
+      "urbanPercentage": 57.50004167673855,
+      "state": "RI"
+    }
+  ],
+  [
+    "RI-02",
+    {
+      "population": 540082,
+      "white": 442404,
+      "black": 24841,
+      "asian": 17865,
+      "hispanic": 72292,
+      "medianAge": 40.9,
+      "medianIncome": 79584,
+      "housingUnits": 241226,
+      "educationBachelors": 79797,
+      "votingAgePopulation": 415645,
+      "diversityIndex": 30.787939941086094,
+      "urbanPercentage": 55.97261489225871,
+      "state": "RI"
+    }
+  ],
+  [
+    "SC-01",
+    {
+      "population": 802857,
+      "white": 578086,
+      "black": 147595,
+      "asian": 15862,
+      "hispanic": 53851,
+      "medianAge": 40,
+      "medianIncome": 77020,
+      "housingUnits": 375045,
+      "educationBachelors": 147255,
+      "votingAgePopulation": 607168,
+      "diversityIndex": 44.27762383357125,
+      "urbanPercentage": 53.51737791465025,
+      "state": "SC"
+    }
+  ],
+  [
+    "SC-02",
+    {
+      "population": 717963,
+      "white": 480629,
+      "black": 175986,
+      "asian": 15611,
+      "hispanic": 44113,
+      "medianAge": 38.8,
+      "medianIncome": 64315,
+      "housingUnits": 312800,
+      "educationBachelors": 106799,
+      "votingAgePopulation": 536346,
+      "diversityIndex": 48.75217572888768,
+      "urbanPercentage": 57.38195332480819,
+      "state": "SC"
+    }
+  ],
+  [
+    "SC-03",
+    {
+      "population": 700576,
+      "white": 526482,
+      "black": 125880,
+      "asian": 6504,
+      "hispanic": 38824,
+      "medianAge": 40.6,
+      "medianIncome": 53484,
+      "housingUnits": 315291,
+      "educationBachelors": 71958,
+      "votingAgePopulation": 534469,
+      "diversityIndex": 39.97902114218618,
+      "urbanPercentage": 55.549952266319046,
+      "state": "SC"
+    }
+  ],
+  [
+    "SC-04",
+    {
+      "population": 752791,
+      "white": 533397,
+      "black": 136042,
+      "asian": 19367,
+      "hispanic": 65655,
+      "medianAge": 38.3,
+      "medianIncome": 62354,
+      "housingUnits": 322712,
+      "educationBachelors": 109326,
+      "votingAgePopulation": 548897,
+      "diversityIndex": 45.701685954836144,
+      "urbanPercentage": 58.3175555913632,
+      "state": "SC"
+    }
+  ],
+  [
+    "SC-05",
+    {
+      "population": 727226,
+      "white": 487196,
+      "black": 185619,
+      "asian": 11431,
+      "hispanic": 36730,
+      "medianAge": 40.1,
+      "medianIncome": 58828,
+      "housingUnits": 313416,
+      "educationBachelors": 85464,
+      "votingAgePopulation": 543642,
+      "diversityIndex": 48.31630475336121,
+      "urbanPercentage": 58.0080468131812,
+      "state": "SC"
+    }
+  ],
+  [
+    "SC-06",
+    {
+      "population": 653349,
+      "white": 247950,
+      "black": 359393,
+      "asian": 7416,
+      "hispanic": 33944,
+      "medianAge": 36.5,
+      "medianIncome": 42470,
+      "housingUnits": 304621,
+      "educationBachelors": 58763,
+      "votingAgePopulation": 503824,
+      "diversityIndex": 55.051047449763146,
+      "urbanPercentage": 53.61982594765299,
+      "state": "SC"
+    }
+  ],
+  [
+    "SC-07",
+    {
+      "population": 724141,
+      "white": 481221,
+      "black": 198176,
+      "asian": 7250,
+      "hispanic": 33113,
+      "medianAge": 44.4,
+      "medianIncome": 50463,
+      "housingUnits": 381363,
+      "educationBachelors": 74423,
+      "votingAgePopulation": 562258,
+      "diversityIndex": 48.126262102654096,
+      "urbanPercentage": 47.470585767366,
+      "state": "SC"
+    }
+  ],
+  [
+    "TN-01",
+    {
+      "population": 725183,
+      "white": 671190,
+      "black": 16807,
+      "asian": 6097,
+      "hispanic": 29871,
+      "medianAge": 44,
+      "medianIncome": 48817,
+      "housingUnits": 350330,
+      "educationBachelors": 71700,
+      "votingAgePopulation": 569438,
+      "diversityIndex": 14.105783428449337,
+      "urbanPercentage": 51.749992863871206,
+      "state": "TN"
+    }
+  ],
+  [
+    "TN-02",
+    {
+      "population": 767016,
+      "white": 670739,
+      "black": 45348,
+      "asian": 12872,
+      "hispanic": 34555,
+      "medianAge": 39.9,
+      "medianIncome": 60829,
+      "housingUnits": 341661,
+      "educationBachelors": 105455,
+      "votingAgePopulation": 590734,
+      "diversityIndex": 22.945978030935553,
+      "urbanPercentage": 56.12405278916821,
+      "state": "TN"
+    }
+  ],
+  [
+    "TN-03",
+    {
+      "population": 734250,
+      "white": 608764,
+      "black": 76196,
+      "asian": 9817,
+      "hispanic": 32526,
+      "medianAge": 41.6,
+      "medianIncome": 55944,
+      "housingUnits": 332596,
+      "educationBachelors": 83766,
+      "votingAgePopulation": 565972,
+      "diversityIndex": 29.959959172401383,
+      "urbanPercentage": 55.19083212065088,
+      "state": "TN"
+    }
+  ],
+  [
+    "TN-04",
+    {
+      "population": 821348,
+      "white": 671928,
+      "black": 77810,
+      "asian": 15705,
+      "hispanic": 59019,
+      "medianAge": 37.8,
+      "medianIncome": 61300,
+      "housingUnits": 337938,
+      "educationBachelors": 92415,
+      "votingAgePopulation": 605655,
+      "diversityIndex": 31.62422912414845,
+      "urbanPercentage": 60.76173736010747,
+      "state": "TN"
+    }
+  ],
+  [
+    "TN-05",
+    {
+      "population": 792617,
+      "white": 510180,
+      "black": 191270,
+      "asian": 25409,
+      "hispanic": 77299,
+      "medianAge": 35.1,
+      "medianIncome": 65700,
+      "housingUnits": 359294,
+      "educationBachelors": 144255,
+      "votingAgePopulation": 577318,
+      "diversityIndex": 51.692383077317025,
+      "urbanPercentage": 55.15100446987704,
+      "state": "TN"
+    }
+  ],
+  [
+    "TN-06",
+    {
+      "population": 800493,
+      "white": 709118,
+      "black": 38682,
+      "asian": 8392,
+      "hispanic": 38985,
+      "medianAge": 40.6,
+      "medianIncome": 61426,
+      "housingUnits": 340458,
+      "educationBachelors": 90096,
+      "votingAgePopulation": 605322,
+      "diversityIndex": 21.040605128713185,
+      "urbanPercentage": 58.780598487919214,
+      "state": "TN"
+    }
+  ],
+  [
+    "TN-07",
+    {
+      "population": 812291,
+      "white": 663428,
+      "black": 80555,
+      "asian": 18474,
+      "hispanic": 45151,
+      "medianAge": 37.7,
+      "medianIncome": 65409,
+      "housingUnits": 337701,
+      "educationBachelors": 109609,
+      "votingAgePopulation": 595463,
+      "diversityIndex": 31.946603884284364,
+      "urbanPercentage": 60.133890631061206,
+      "state": "TN"
+    }
+  ],
+  [
+    "TN-08",
+    {
+      "population": 712769,
+      "white": 523130,
+      "black": 139342,
+      "asian": 16554,
+      "hispanic": 25406,
+      "medianAge": 41,
+      "medianIncome": 64397,
+      "housingUnits": 299533,
+      "educationBachelors": 90274,
+      "votingAgePopulation": 535653,
+      "diversityIndex": 42.11668386265901,
+      "urbanPercentage": 59.49002280216204,
+      "state": "TN"
+    }
+  ],
+  [
+    "TN-09",
+    {
+      "population": 693530,
+      "white": 169729,
+      "black": 464598,
+      "asian": 12261,
+      "hispanic": 53155,
+      "medianAge": 33.8,
+      "medianIncome": 44723,
+      "housingUnits": 311613,
+      "educationBachelors": 71685,
+      "votingAgePopulation": 493363,
+      "diversityIndex": 48.51490012000941,
+      "urbanPercentage": 55.64032951128483,
+      "state": "TN"
+    }
+  ],
+  [
+    "TX-01",
+    {
+      "population": 720481,
+      "white": 523485,
+      "black": 122581,
+      "asian": 8017,
+      "hispanic": 131468,
+      "medianAge": 37.4,
+      "medianIncome": 56227,
+      "housingUnits": 313501,
+      "educationBachelors": 70211,
+      "votingAgePopulation": 510578,
+      "diversityIndex": 40.97188171826994,
+      "urbanPercentage": 57.454441931604684,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-02",
+    {
+      "population": 814155,
+      "white": 472341,
+      "black": 108108,
+      "asian": 65074,
+      "hispanic": 273275,
+      "medianAge": 35.2,
+      "medianIncome": 84530,
+      "housingUnits": 322435,
+      "educationBachelors": 145867,
+      "votingAgePopulation": 522795,
+      "diversityIndex": 52.6728542948975,
+      "urbanPercentage": 63.12551366942174,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-03",
+    {
+      "population": 910097,
+      "white": 561027,
+      "black": 92176,
+      "asian": 162045,
+      "hispanic": 138365,
+      "medianAge": 37.4,
+      "medianIncome": 104676,
+      "housingUnits": 348541,
+      "educationBachelors": 208144,
+      "votingAgePopulation": 580892,
+      "diversityIndex": 55.49177805190264,
+      "urbanPercentage": 65.27904894976487,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-04",
+    {
+      "population": 783941,
+      "white": 610458,
+      "black": 81211,
+      "asian": 11264,
+      "hispanic": 118811,
+      "medianAge": 38.9,
+      "medianIncome": 64245,
+      "housingUnits": 326041,
+      "educationBachelors": 87636,
+      "votingAgePopulation": 559917,
+      "diversityIndex": 35.97128154265482,
+      "urbanPercentage": 60.110614922663096,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-05",
+    {
+      "population": 773738,
+      "white": 520450,
+      "black": 118420,
+      "asian": 14794,
+      "hispanic": 235837,
+      "medianAge": 36.1,
+      "medianIncome": 59889,
+      "housingUnits": 304314,
+      "educationBachelors": 68936,
+      "votingAgePopulation": 499850,
+      "diversityIndex": 43.085644592205576,
+      "urbanPercentage": 63.56411469731922,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-06",
+    {
+      "population": 821592,
+      "white": 481994,
+      "black": 180244,
+      "asian": 40271,
+      "hispanic": 199373,
+      "medianAge": 35.4,
+      "medianIncome": 76960,
+      "housingUnits": 302208,
+      "educationBachelors": 108143,
+      "votingAgePopulation": 554497,
+      "diversityIndex": 54.64127740555753,
+      "urbanPercentage": 67.96577191867853,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-07",
+    {
+      "population": 791353,
+      "white": 434082,
+      "black": 120424,
+      "asian": 87750,
+      "hispanic": 251448,
+      "medianAge": 35.1,
+      "medianIncome": 77323,
+      "housingUnits": 341428,
+      "educationBachelors": 156017,
+      "votingAgePopulation": 466720,
+      "diversityIndex": 56.26988543095679,
+      "urbanPercentage": 57.94435430017456,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-08",
+    {
+      "population": 901501,
+      "white": 684225,
+      "black": 79132,
+      "asian": 27949,
+      "hispanic": 219385,
+      "medianAge": 37.3,
+      "medianIncome": 80724,
+      "housingUnits": 351710,
+      "educationBachelors": 130756,
+      "votingAgePopulation": 610195,
+      "diversityIndex": 35.60550769464956,
+      "urbanPercentage": 64.0798527195701,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-09",
+    {
+      "population": 765963,
+      "white": 224427,
+      "black": 284049,
+      "asian": 90400,
+      "hispanic": 304317,
+      "medianAge": 33.8,
+      "medianIncome": 52440,
+      "housingUnits": 296850,
+      "educationBachelors": 83949,
+      "votingAgePopulation": 428956,
+      "diversityIndex": 60.48532828389318,
+      "urbanPercentage": 64.50757958564932,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-10",
+    {
+      "population": 921341,
+      "white": 595127,
+      "black": 105423,
+      "asian": 59721,
+      "hispanic": 276976,
+      "medianAge": 35.7,
+      "medianIncome": 85693,
+      "housingUnits": 364776,
+      "educationBachelors": 164831,
+      "votingAgePopulation": 606456,
+      "diversityIndex": 47.509882867553884,
+      "urbanPercentage": 63.14429951531899,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-11",
+    {
+      "population": 771174,
+      "white": 595637,
+      "black": 30052,
+      "asian": 8634,
+      "hispanic": 308722,
+      "medianAge": 35.5,
+      "medianIncome": 65164,
+      "housingUnits": 347184,
+      "educationBachelors": 80116,
+      "votingAgePopulation": 530100,
+      "diversityIndex": 24.152800589846823,
+      "urbanPercentage": 55.53064081294069,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-12",
+    {
+      "population": 846301,
+      "white": 613363,
+      "black": 78355,
+      "asian": 31312,
+      "hispanic": 208812,
+      "medianAge": 35.7,
+      "medianIncome": 76977,
+      "housingUnits": 340438,
+      "educationBachelors": 123230,
+      "votingAgePopulation": 589443,
+      "diversityIndex": 40.39075145151049,
+      "urbanPercentage": 62.14795351870238,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-13",
+    {
+      "population": 709295,
+      "white": 566396,
+      "black": 39281,
+      "asian": 14749,
+      "hispanic": 201000,
+      "medianAge": 36.5,
+      "medianIncome": 57354,
+      "housingUnits": 308792,
+      "educationBachelors": 69199,
+      "votingAgePopulation": 492745,
+      "diversityIndex": 27.854026277045307,
+      "urbanPercentage": 57.42498186481515,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-14",
+    {
+      "population": 771651,
+      "white": 500887,
+      "black": 147310,
+      "asian": 24484,
+      "hispanic": 202888,
+      "medianAge": 37.3,
+      "medianIncome": 69431,
+      "housingUnits": 329582,
+      "educationBachelors": 89895,
+      "votingAgePopulation": 541290,
+      "diversityIndex": 47.207401297223974,
+      "urbanPercentage": 58.53255032131609,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-15",
+    {
+      "population": 803835,
+      "white": 528199,
+      "black": 15788,
+      "asian": 8984,
+      "hispanic": 658249,
+      "medianAge": 31.2,
+      "medianIncome": 50864,
+      "housingUnits": 277269,
+      "educationBachelors": 67882,
+      "votingAgePopulation": 444538,
+      "diversityIndex": 0,
+      "urbanPercentage": 72.4779005225972,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-16",
+    {
+      "population": 755415,
+      "white": 451876,
+      "black": 26852,
+      "asian": 9900,
+      "hispanic": 611723,
+      "medianAge": 32.6,
+      "medianIncome": 52510,
+      "housingUnits": 280142,
+      "educationBachelors": 82652,
+      "votingAgePopulation": 477440,
+      "diversityIndex": 0,
+      "urbanPercentage": 67.4135795418038,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-17",
+    {
+      "population": 802448,
+      "white": 558181,
+      "black": 105245,
+      "asian": 39602,
+      "hispanic": 217291,
+      "medianAge": 33.1,
+      "medianIncome": 60005,
+      "housingUnits": 339559,
+      "educationBachelors": 102794,
+      "votingAgePopulation": 561478,
+      "diversityIndex": 42.31820334992581,
+      "urbanPercentage": 59.08015985439938,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-18",
+    {
+      "population": 789886,
+      "white": 321692,
+      "black": 269107,
+      "asian": 31421,
+      "hispanic": 346928,
+      "medianAge": 33,
+      "medianIncome": 51725,
+      "housingUnits": 312649,
+      "educationBachelors": 78368,
+      "votingAgePopulation": 476883,
+      "diversityIndex": 52.35756383553783,
+      "urbanPercentage": 63.16076494727314,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-19",
+    {
+      "population": 728159,
+      "white": 552172,
+      "black": 44594,
+      "asian": 12013,
+      "hispanic": 276290,
+      "medianAge": 33.4,
+      "medianIncome": 55571,
+      "housingUnits": 309223,
+      "educationBachelors": 71952,
+      "votingAgePopulation": 510979,
+      "diversityIndex": 27.696757730038524,
+      "urbanPercentage": 58.870054944166505,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-20",
+    {
+      "population": 798649,
+      "white": 509212,
+      "black": 41630,
+      "asian": 26912,
+      "hispanic": 556165,
+      "medianAge": 32.7,
+      "medianIncome": 57043,
+      "housingUnits": 303165,
+      "educationBachelors": 84176,
+      "votingAgePopulation": 530704,
+      "diversityIndex": 10.46759701725618,
+      "urbanPercentage": 65.85926805534939,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-21",
+    {
+      "population": 826193,
+      "white": 641495,
+      "black": 31719,
+      "asian": 27954,
+      "hispanic": 256736,
+      "medianAge": 38.2,
+      "medianIncome": 78381,
+      "housingUnits": 386048,
+      "educationBachelors": 173760,
+      "votingAgePopulation": 620372,
+      "diversityIndex": 29.79485364180443,
+      "urbanPercentage": 53.503256071783824,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-22",
+    {
+      "population": 961113,
+      "white": 500573,
+      "black": 142135,
+      "asian": 183856,
+      "hispanic": 255927,
+      "medianAge": 36.4,
+      "medianIncome": 103893,
+      "housingUnits": 333821,
+      "educationBachelors": 174780,
+      "votingAgePopulation": 599579,
+      "diversityIndex": 59.93698808686534,
+      "urbanPercentage": 71.97817093592074,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-23",
+    {
+      "population": 806245,
+      "white": 551203,
+      "black": 30026,
+      "asian": 14752,
+      "hispanic": 558860,
+      "medianAge": 34.2,
+      "medianIncome": 63224,
+      "housingUnits": 297603,
+      "educationBachelors": 81458,
+      "votingAgePopulation": 515881,
+      "diversityIndex": 5.040155167175109,
+      "urbanPercentage": 67.7282319062644,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-24",
+    {
+      "population": 809110,
+      "white": 464189,
+      "black": 104693,
+      "asian": 128833,
+      "hispanic": 197839,
+      "medianAge": 36.1,
+      "medianIncome": 82358,
+      "housingUnits": 349853,
+      "educationBachelors": 173611,
+      "votingAgePopulation": 511113,
+      "diversityIndex": 56.89813060157308,
+      "urbanPercentage": 57.81785492764103,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-25",
+    {
+      "population": 832621,
+      "white": 643886,
+      "black": 61689,
+      "asian": 30291,
+      "hispanic": 166124,
+      "medianAge": 37.4,
+      "medianIncome": 81467,
+      "housingUnits": 336888,
+      "educationBachelors": 140202,
+      "votingAgePopulation": 601940,
+      "diversityIndex": 35.534877915399534,
+      "urbanPercentage": 61.78767127353898,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-26",
+    {
+      "population": 923492,
+      "white": 659306,
+      "black": 83387,
+      "asian": 72298,
+      "hispanic": 173687,
+      "medianAge": 36,
+      "medianIncome": 101044,
+      "housingUnits": 339277,
+      "educationBachelors": 188579,
+      "votingAgePopulation": 625990,
+      "diversityIndex": 44.065313417243004,
+      "urbanPercentage": 68.0485267200547,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-27",
+    {
+      "population": 739341,
+      "white": 534871,
+      "black": 36783,
+      "asian": 12203,
+      "hispanic": 401143,
+      "medianAge": 36.9,
+      "medianIncome": 59646,
+      "housingUnits": 322913,
+      "educationBachelors": 66849,
+      "votingAgePopulation": 515741,
+      "diversityIndex": 17.950239813269864,
+      "urbanPercentage": 57.23995317624252,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-28",
+    {
+      "population": 770051,
+      "white": 506934,
+      "black": 37829,
+      "asian": 8607,
+      "hispanic": 594497,
+      "medianAge": 32.2,
+      "medianIncome": 56194,
+      "housingUnits": 267343,
+      "educationBachelors": 65142,
+      "votingAgePopulation": 443329,
+      "diversityIndex": 0,
+      "urbanPercentage": 72.00964678334574,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-29",
+    {
+      "population": 734456,
+      "white": 403194,
+      "black": 76296,
+      "asian": 12786,
+      "hispanic": 579045,
+      "medianAge": 31,
+      "medianIncome": 49795,
+      "housingUnits": 249302,
+      "educationBachelors": 34829,
+      "votingAgePopulation": 363502,
+      "diversityIndex": 6.596375813791844,
+      "urbanPercentage": 73.65123424601488,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-30",
+    {
+      "population": 789297,
+      "white": 311615,
+      "black": 323419,
+      "asian": 16300,
+      "hispanic": 319847,
+      "medianAge": 32.8,
+      "medianIncome": 55861,
+      "housingUnits": 296784,
+      "educationBachelors": 74025,
+      "votingAgePopulation": 478312,
+      "diversityIndex": 51.159461429453415,
+      "urbanPercentage": 66.48749595665534,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-31",
+    {
+      "population": 914699,
+      "white": 621440,
+      "black": 106815,
+      "asian": 53674,
+      "hispanic": 232044,
+      "medianAge": 35.2,
+      "medianIncome": 80050,
+      "housingUnits": 358638,
+      "educationBachelors": 150004,
+      "votingAgePopulation": 627210,
+      "diversityIndex": 45.69900671849866,
+      "urbanPercentage": 63.761996776694055,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-32",
+    {
+      "population": 771112,
+      "white": 476083,
+      "black": 109854,
+      "asian": 66025,
+      "hispanic": 202811,
+      "medianAge": 35.7,
+      "medianIncome": 80661,
+      "housingUnits": 325156,
+      "educationBachelors": 148005,
+      "votingAgePopulation": 503984,
+      "diversityIndex": 52.201821343290725,
+      "urbanPercentage": 59.287849524535915,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-33",
+    {
+      "population": 727423,
+      "white": 354537,
+      "black": 116284,
+      "asian": 16442,
+      "hispanic": 490445,
+      "medianAge": 30.9,
+      "medianIncome": 48371,
+      "housingUnits": 248625,
+      "educationBachelors": 38241,
+      "votingAgePopulation": 348602,
+      "diversityIndex": 28.181188533666067,
+      "urbanPercentage": 73.14459527400705,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-34",
+    {
+      "population": 712253,
+      "white": 527771,
+      "black": 9191,
+      "asian": 3647,
+      "hispanic": 605650,
+      "medianAge": 32.7,
+      "medianIncome": 44413,
+      "housingUnits": 266920,
+      "educationBachelors": 51302,
+      "votingAgePopulation": 424278,
+      "diversityIndex": 0,
+      "urbanPercentage": 66.71034392327289,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-35",
+    {
+      "population": 805089,
+      "white": 495969,
+      "black": 71206,
+      "asian": 15872,
+      "hispanic": 491630,
+      "medianAge": 33,
+      "medianIncome": 56183,
+      "housingUnits": 324444,
+      "educationBachelors": 90466,
+      "votingAgePopulation": 534536,
+      "diversityIndex": 23.93834714497427,
+      "urbanPercentage": 62.03605244664718,
+      "state": "TX"
+    }
+  ],
+  [
+    "TX-36",
+    {
+      "population": 759111,
+      "white": 567730,
+      "black": 68554,
+      "asian": 13877,
+      "hispanic": 216324,
+      "medianAge": 36.9,
+      "medianIncome": 65901,
+      "housingUnits": 310458,
+      "educationBachelors": 65658,
+      "votingAgePopulation": 518988,
+      "diversityIndex": 35.09657861354884,
+      "urbanPercentage": 61.12831687378003,
+      "state": "TX"
+    }
+  ],
+  [
+    "UT-01",
+    {
+      "population": 792511,
+      "white": 694553,
+      "black": 8000,
+      "asian": 11502,
+      "hispanic": 103941,
+      "medianAge": 31.3,
+      "medianIncome": 78171,
+      "housingUnits": 285214,
+      "educationBachelors": 99542,
+      "votingAgePopulation": 531945,
+      "diversityIndex": 21.44171790942897,
+      "urbanPercentage": 69.46634807548017,
+      "state": "UT"
+    }
+  ],
+  [
+    "UT-02",
+    {
+      "population": 792727,
+      "white": 643420,
+      "black": 10636,
+      "asian": 20380,
+      "hispanic": 126498,
+      "medianAge": 33.4,
+      "medianIncome": 71984,
+      "housingUnits": 305653,
+      "educationBachelors": 106651,
+      "votingAgePopulation": 541055,
+      "diversityIndex": 31.49133007923637,
+      "urbanPercentage": 64.83880413409977,
+      "state": "UT"
+    }
+  ],
+  [
+    "UT-03",
+    {
+      "population": 778400,
+      "white": 682299,
+      "black": 6290,
+      "asian": 14878,
+      "hispanic": 84909,
+      "medianAge": 28.7,
+      "medianIncome": 82471,
+      "housingUnits": 257035,
+      "educationBachelors": 124091,
+      "votingAgePopulation": 522042,
+      "diversityIndex": 21.93476455082447,
+      "urbanPercentage": 75.70953372108856,
+      "state": "UT"
+    }
+  ],
+  [
+    "UT-04",
+    {
+      "population": 867732,
+      "white": 684289,
+      "black": 13619,
+      "asian": 28770,
+      "hispanic": 150484,
+      "medianAge": 31.3,
+      "medianIncome": 84261,
+      "housingUnits": 285656,
+      "educationBachelors": 120669,
+      "votingAgePopulation": 548375,
+      "diversityIndex": 34.66972638161402,
+      "urbanPercentage": 75.94204217660403,
+      "state": "UT"
+    }
+  ],
+  [
+    "VA-01",
+    {
+      "population": 816464,
+      "white": 574047,
+      "black": 129841,
+      "asian": 28505,
+      "hispanic": 91029,
+      "medianAge": 39.5,
+      "medianIncome": 96772,
+      "housingUnits": 322952,
+      "educationBachelors": 128886,
+      "votingAgePopulation": 593469,
+      "diversityIndex": 46.67262560249987,
+      "urbanPercentage": 63.203200475612476,
+      "state": "VA"
+    }
+  ],
+  [
+    "VA-02",
+    {
+      "population": 747365,
+      "white": 486259,
+      "black": 145685,
+      "asian": 43070,
+      "hispanic": 64405,
+      "medianAge": 36.6,
+      "medianIncome": 77519,
+      "housingUnits": 316632,
+      "educationBachelors": 115647,
+      "votingAgePopulation": 564110,
+      "diversityIndex": 52.78202414356956,
+      "urbanPercentage": 59.00895992824478,
+      "state": "VA"
+    }
+  ],
+  [
+    "VA-03",
+    {
+      "population": 752479,
+      "white": 318572,
+      "black": 346526,
+      "asian": 20193,
+      "hispanic": 52654,
+      "medianAge": 34.9,
+      "medianIncome": 60376,
+      "housingUnits": 327438,
+      "educationBachelors": 86911,
+      "votingAgePopulation": 564888,
+      "diversityIndex": 60.27021646050188,
+      "urbanPercentage": 57.45202145138927,
+      "state": "VA"
+    }
+  ],
+  [
+    "VA-04",
+    {
+      "population": 785406,
+      "white": 398101,
+      "black": 314179,
+      "asian": 15190,
+      "hispanic": 50875,
+      "medianAge": 37.9,
+      "medianIncome": 65153,
+      "housingUnits": 334423,
+      "educationBachelors": 107223,
+      "votingAgePopulation": 600850,
+      "diversityIndex": 57.84122492092134,
+      "urbanPercentage": 58.71351551777239,
+      "state": "VA"
+    }
+  ],
+  [
+    "VA-05",
+    {
+      "population": 741491,
+      "white": 549769,
+      "black": 140007,
+      "asian": 14132,
+      "hispanic": 30509,
+      "medianAge": 42.8,
+      "medianIncome": 61856,
+      "housingUnits": 349458,
+      "educationBachelors": 92305,
+      "votingAgePopulation": 577997,
+      "diversityIndex": 41.247137763534894,
+      "urbanPercentage": 53.04578804892147,
+      "state": "VA"
+    }
+  ],
+  [
+    "VA-06",
+    {
+      "population": 759456,
+      "white": 615596,
+      "black": 83208,
+      "asian": 14407,
+      "hispanic": 44907,
+      "medianAge": 39.7,
+      "medianIncome": 60467,
+      "housingUnits": 337255,
+      "educationBachelors": 91355,
+      "votingAgePopulation": 584554,
+      "diversityIndex": 32.71049145145321,
+      "urbanPercentage": 56.29686735556182,
+      "state": "VA"
+    }
+  ],
+  [
+    "VA-07",
+    {
+      "population": 811302,
+      "white": 549411,
+      "black": 146831,
+      "asian": 44229,
+      "hispanic": 62986,
+      "medianAge": 39.7,
+      "medianIncome": 87403,
+      "housingUnits": 322579,
+      "educationBachelors": 140441,
+      "votingAgePopulation": 586733,
+      "diversityIndex": 49.955742676637584,
+      "urbanPercentage": 62.876225668750905,
+      "state": "VA"
+    }
+  ],
+  [
+    "VA-08",
+    {
+      "population": 796645,
+      "white": 465969,
+      "black": 117323,
+      "asian": 94844,
+      "hispanic": 148685,
+      "medianAge": 36.7,
+      "medianIncome": 116876,
+      "housingUnits": 350852,
+      "educationBachelors": 174759,
+      "votingAgePopulation": 535416,
+      "diversityIndex": 58.71784559849173,
+      "urbanPercentage": 56.76503197929611,
+      "state": "VA"
+    }
+  ],
+  [
+    "VA-09",
+    {
+      "population": 698788,
+      "white": 627916,
+      "black": 38623,
+      "asian": 10123,
+      "hispanic": 18452,
+      "medianAge": 43.2,
+      "medianIncome": 48429,
+      "housingUnits": 339267,
+      "educationBachelors": 62801,
+      "votingAgePopulation": 561487,
+      "diversityIndex": 18.856665910880277,
+      "urbanPercentage": 51.49248232218282,
+      "state": "VA"
+    }
+  ],
+  [
+    "VA-10",
+    {
+      "population": 869926,
+      "white": 564567,
+      "black": 61726,
+      "asian": 141255,
+      "hispanic": 123938,
+      "medianAge": 38.6,
+      "medianIncome": 139983,
+      "housingUnits": 300872,
+      "educationBachelors": 175090,
+      "votingAgePopulation": 570168,
+      "diversityIndex": 52.71231543570202,
+      "urbanPercentage": 72.28372862878565,
+      "state": "VA"
+    }
+  ],
+  [
+    "VA-11",
+    {
+      "population": 803157,
+      "white": 424100,
+      "black": 107992,
+      "asian": 152262,
+      "hispanic": 151808,
+      "medianAge": 36.7,
+      "medianIncome": 122500,
+      "housingUnits": 294372,
+      "educationBachelors": 163413,
+      "votingAgePopulation": 516356,
+      "diversityIndex": 63.142647571378404,
+      "urbanPercentage": 68.20935754759284,
+      "state": "VA"
+    }
+  ],
+  [
+    "WA-01",
+    {
+      "population": 778963,
+      "white": 573470,
+      "black": 10702,
+      "asian": 102524,
+      "hispanic": 72249,
+      "medianAge": 38.4,
+      "medianIncome": 109851,
+      "housingUnits": 309325,
+      "educationBachelors": 152870,
+      "votingAgePopulation": 524672,
+      "diversityIndex": 43.12398658411987,
+      "urbanPercentage": 62.956679867453325,
+      "state": "WA"
+    }
+  ],
+  [
+    "WA-02",
+    {
+      "population": 758640,
+      "white": 553902,
+      "black": 26258,
+      "asian": 69104,
+      "hispanic": 89845,
+      "medianAge": 38.9,
+      "medianIncome": 79553,
+      "housingUnits": 325815,
+      "educationBachelors": 116863,
+      "votingAgePopulation": 559180,
+      "diversityIndex": 44.273406441661436,
+      "urbanPercentage": 58.2109479305741,
+      "state": "WA"
+    }
+  ],
+  [
+    "WA-03",
+    {
+      "population": 762407,
+      "white": 634571,
+      "black": 11183,
+      "asian": 26559,
+      "hispanic": 78594,
+      "medianAge": 40.1,
+      "medianIncome": 74610,
+      "housingUnits": 312373,
+      "educationBachelors": 93986,
+      "votingAgePopulation": 560785,
+      "diversityIndex": 29.495073649307034,
+      "urbanPercentage": 61.017357454069334,
+      "state": "WA"
+    }
+  ],
+  [
+    "WA-04",
+    {
+      "population": 744547,
+      "white": 507376,
+      "black": 9953,
+      "asian": 12109,
+      "hispanic": 300035,
+      "medianAge": 34.1,
+      "medianIncome": 64790,
+      "housingUnits": 276564,
+      "educationBachelors": 65806,
+      "votingAgePopulation": 453681,
+      "diversityIndex": 37.278443372552736,
+      "urbanPercentage": 67.30331858087098,
+      "state": "WA"
+    }
+  ],
+  [
+    "WA-05",
+    {
+      "population": 742007,
+      "white": 633487,
+      "black": 12121,
+      "asian": 17575,
+      "hispanic": 52504,
+      "medianAge": 38.1,
+      "medianIncome": 61935,
+      "housingUnits": 319101,
+      "educationBachelors": 96559,
+      "votingAgePopulation": 566484,
+      "diversityIndex": 26.40213572467577,
+      "urbanPercentage": 58.13261318516708,
+      "state": "WA"
+    }
+  ],
+  [
+    "WA-06",
+    {
+      "population": 729130,
+      "white": 574836,
+      "black": 25203,
+      "asian": 29294,
+      "hispanic": 60122,
+      "medianAge": 42.1,
+      "medianIncome": 73806,
+      "housingUnits": 330591,
+      "educationBachelors": 107263,
+      "votingAgePopulation": 570101,
+      "diversityIndex": 36.58782162263632,
+      "urbanPercentage": 55.138373397944896,
+      "state": "WA"
+    }
+  ],
+  [
+    "WA-07",
+    {
+      "population": 787902,
+      "white": 547466,
+      "black": 35725,
+      "asian": 108116,
+      "hispanic": 63897,
+      "medianAge": 36.4,
+      "medianIncome": 105480,
+      "housingUnits": 385153,
+      "educationBachelors": 214736,
+      "votingAgePopulation": 592069,
+      "diversityIndex": 48.8012731353323,
+      "urbanPercentage": 51.14214351179921,
+      "state": "WA"
+    }
+  ],
+  [
+    "WA-08",
+    {
+      "population": 772133,
+      "white": 549740,
+      "black": 23539,
+      "asian": 76406,
+      "hispanic": 94910,
+      "medianAge": 38.3,
+      "medianIncome": 100245,
+      "housingUnits": 299718,
+      "educationBachelors": 123816,
+      "votingAgePopulation": 527720,
+      "diversityIndex": 46.59879986335923,
+      "urbanPercentage": 64.40495732655363,
+      "state": "WA"
+    }
+  ],
+  [
+    "WA-09",
+    {
+      "population": 765280,
+      "white": 354787,
+      "black": 87841,
+      "asian": 187017,
+      "hispanic": 98118,
+      "medianAge": 36.9,
+      "medianIncome": 92847,
+      "housingUnits": 308200,
+      "educationBachelors": 146477,
+      "votingAgePopulation": 498010,
+      "diversityIndex": 69.33342176287158,
+      "urbanPercentage": 62.07657365347177,
+      "state": "WA"
+    }
+  ],
+  [
+    "WA-10",
+    {
+      "population": 776355,
+      "white": 535376,
+      "black": 50876,
+      "asian": 54007,
+      "hispanic": 97607,
+      "medianAge": 36.1,
+      "medianIncome": 78157,
+      "housingUnits": 303855,
+      "educationBachelors": 99199,
+      "votingAgePopulation": 560713,
+      "diversityIndex": 49.7050785671135,
+      "urbanPercentage": 63.87545046156884,
+      "state": "WA"
+    }
+  ],
+  [
+    "WV-01",
+    {
+      "population": 604226,
+      "white": 564073,
+      "black": 14004,
+      "asian": 5677,
+      "hispanic": 8693,
+      "medianAge": 41.7,
+      "medianIncome": 53134,
+      "housingUnits": 285832,
+      "educationBachelors": 59906,
+      "votingAgePopulation": 482227,
+      "diversityIndex": 12.727868764296979,
+      "urbanPercentage": 52.848001623331186,
+      "state": "WV"
+    }
+  ],
+  [
+    "WV-02",
+    {
+      "population": 621999,
+      "white": 559454,
+      "black": 26651,
+      "asian": 5286,
+      "hispanic": 14974,
+      "medianAge": 42.7,
+      "medianIncome": 56286,
+      "housingUnits": 292004,
+      "educationBachelors": 62509,
+      "votingAgePopulation": 485395,
+      "diversityIndex": 18.78789285088015,
+      "urbanPercentage": 53.252609553293794,
+      "state": "WV"
+    }
+  ],
+  [
+    "WV-03",
+    {
+      "population": 574824,
+      "white": 534878,
+      "black": 20488,
+      "asian": 2919,
+      "hispanic": 6529,
+      "medianAge": 43.6,
+      "medianIncome": 42763,
+      "housingUnits": 281601,
+      "educationBachelors": 43560,
+      "votingAgePopulation": 454521,
+      "diversityIndex": 13.2427519618589,
+      "urbanPercentage": 51.03177900646659,
+      "state": "WV"
+    }
+  ],
+  [
+    "WI-01",
+    {
+      "population": 725418,
+      "white": 609673,
+      "black": 40346,
+      "asian": 14115,
+      "hispanic": 77544,
+      "medianAge": 41.1,
+      "medianIncome": 74404,
+      "housingUnits": 314740,
+      "educationBachelors": 105585,
+      "votingAgePopulation": 543705,
+      "diversityIndex": 27.875576759465048,
+      "urbanPercentage": 57.62041685200483,
+      "state": "WI"
+    }
+  ],
+  [
+    "WI-02",
+    {
+      "population": 783230,
+      "white": 655691,
+      "black": 34982,
+      "asian": 34792,
+      "hispanic": 54011,
+      "medianAge": 36.8,
+      "medianIncome": 74891,
+      "housingUnits": 346793,
+      "educationBachelors": 141625,
+      "votingAgePopulation": 586704,
+      "diversityIndex": 29.041203679040407,
+      "urbanPercentage": 56.46235650661923,
+      "state": "WI"
+    }
+  ],
+  [
+    "WI-03",
+    {
+      "population": 731014,
+      "white": 672549,
+      "black": 9166,
+      "asian": 16493,
+      "hispanic": 22360,
+      "medianAge": 38.9,
+      "medianIncome": 62477,
+      "housingUnits": 328132,
+      "educationBachelors": 87116,
+      "votingAgePopulation": 569262,
+      "diversityIndex": 15.175336814684648,
+      "urbanPercentage": 55.695116599417304,
+      "state": "WI"
+    }
+  ],
+  [
+    "WI-04",
+    {
+      "population": 696075,
+      "white": 324996,
+      "black": 237088,
+      "asian": 30260,
+      "hispanic": 125228,
+      "medianAge": 33.2,
+      "medianIncome": 49504,
+      "housingUnits": 312332,
+      "educationBachelors": 81775,
+      "votingAgePopulation": 483051,
+      "diversityIndex": 63.17372038978715,
+      "urbanPercentage": 55.715952896277045,
+      "state": "WI"
+    }
+  ],
+  [
+    "WI-05",
+    {
+      "population": 732692,
+      "white": 644908,
+      "black": 19083,
+      "asian": 23118,
+      "hispanic": 47745,
+      "medianAge": 41.6,
+      "medianIncome": 79849,
+      "housingUnits": 320003,
+      "educationBachelors": 136419,
+      "votingAgePopulation": 562690,
+      "diversityIndex": 21.93457720365368,
+      "urbanPercentage": 57.24102586538251,
+      "state": "WI"
+    }
+  ],
+  [
+    "WI-06",
+    {
+      "population": 725311,
+      "white": 656532,
+      "black": 14535,
+      "asian": 18858,
+      "hispanic": 35967,
+      "medianAge": 41.8,
+      "medianIncome": 66072,
+      "housingUnits": 330925,
+      "educationBachelors": 93876,
+      "votingAgePopulation": 560393,
+      "diversityIndex": 17.712508448121365,
+      "urbanPercentage": 54.794213190299914,
+      "state": "WI"
+    }
+  ],
+  [
+    "WI-07",
+    {
+      "population": 729683,
+      "white": 672163,
+      "black": 5712,
+      "asian": 11366,
+      "hispanic": 18675,
+      "medianAge": 44.5,
+      "medianIncome": 63440,
+      "housingUnits": 413915,
+      "educationBachelors": 86270,
+      "votingAgePopulation": 565811,
+      "diversityIndex": 14.959472979211409,
+      "urbanPercentage": 44.07203169732916,
+      "state": "WI"
+    }
+  ],
+  [
+    "WI-08",
+    {
+      "population": 748238,
+      "white": 657507,
+      "black": 11527,
+      "asian": 17668,
+      "hispanic": 43068,
+      "medianAge": 40.5,
+      "medianIncome": 68745,
+      "housingUnits": 351529,
+      "educationBachelors": 101004,
+      "votingAgePopulation": 565596,
+      "diversityIndex": 22.30980542423592,
+      "urbanPercentage": 53.213106173317136,
+      "state": "WI"
+    }
+  ]
+]

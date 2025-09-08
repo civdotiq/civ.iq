@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { SimpleClientWrapper } from '@/components/client/SimpleClientWrapper';
+import { SimpleClientWrapper } from '../simple-client-wrapper';
 
 interface PageProps {
   params: Promise<{

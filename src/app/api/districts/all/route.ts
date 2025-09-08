@@ -63,6 +63,9 @@ export async function GET(request: Request) {
 
     logger.info('Cache miss for districts-all');
 
+    // Add timing for actual performance measurement
+    console.time('Total API Processing');
+
     const congressApiKey = process.env.CONGRESS_API_KEY;
     const censusApiKey = process.env.CENSUS_API_KEY;
 
@@ -72,6 +75,7 @@ export async function GET(request: Request) {
 
     // Get current Congress members from Congress.gov API
     // We need to handle pagination as the API limits results
+    console.time('Congress API Fetch');
     logger.info('Fetching House members from Congress.gov API');
     const allMembers: CongressApiMember[] = [];
     let offset = 0;
@@ -130,6 +134,7 @@ export async function GET(request: Request) {
       }
     }
 
+    console.timeEnd('Congress API Fetch');
     logger.info(`Fetched total House members from Congress API`, {
       totalMembers: allMembers.length,
       apiCalls: Math.ceil(allMembers.length / limit),
@@ -144,8 +149,10 @@ export async function GET(request: Request) {
     let censusDataMap = new Map<string, any>();
 
     try {
+      console.time('Census API Fetch');
       logger.info('Fetching Census data for all districts');
       censusDataMap = await fetchAllDistrictDemographics(censusApiKey);
+      console.timeEnd('Census API Fetch');
       logger.info('Fetched Census demographic data', {
         districtCount: censusDataMap.size,
       });
@@ -294,6 +301,7 @@ export async function GET(request: Request) {
     });
 
     const districtsArray = Array.from(districtsMap.values());
+    console.timeEnd('Total API Processing');
     logger.info('Districts response prepared', {
       districtCount: districtsArray.length,
       processingTime: Date.now() - startTime,

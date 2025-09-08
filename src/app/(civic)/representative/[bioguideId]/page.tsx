@@ -4,10 +4,10 @@
  */
 
 import { notFound } from 'next/navigation';
-import { SimpleRepresentativeProfile } from './components/SimpleRepresentativeProfile';
-import { ErrorBoundary } from '@/components/common/ErrorBoundary';
-import { ChunkLoadErrorBoundary } from '@/components/common/ChunkLoadErrorBoundary';
-import { SiteHeader } from '@/components/layout/SiteHeader';
+import { SimpleRepresentativeProfile } from '@/features/representatives/components/SimpleRepresentativeProfile';
+import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
+import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErrorBoundary';
+import { SiteHeader } from '@/components/shared/layout/SiteHeader';
 import Link from 'next/link';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 

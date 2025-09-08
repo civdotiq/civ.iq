@@ -553,13 +553,14 @@ export async function aggregateFinanceData(
     if (contributions.length === 0) {
       // Return basic financial data without breakdowns
       return {
-        totalRaised: financialSummary.total_receipts,
-        totalSpent: financialSummary.total_disbursements,
-        cashOnHand: financialSummary.cash_on_hand_end_period,
+        totalRaised: financialSummary.total_receipts ?? financialSummary.receipts,
+        totalSpent: financialSummary.total_disbursements ?? financialSummary.disbursements,
+        cashOnHand:
+          financialSummary.cash_on_hand_end_period ?? financialSummary.last_cash_on_hand_end_period,
         individualContributions: financialSummary.individual_contributions,
         pacContributions: financialSummary.other_political_committee_contributions,
         partyContributions: financialSummary.political_party_committee_contributions,
-        candidateContributions: financialSummary.candidate_contributions,
+        candidateContributions: financialSummary.candidate_contribution,
         industryBreakdown: [],
         geographicBreakdown: [],
         dataQuality: {
@@ -609,13 +610,14 @@ export async function aggregateFinanceData(
 
     // Step 5: Return complete processed data
     return {
-      totalRaised: financialSummary.total_receipts,
-      totalSpent: financialSummary.total_disbursements,
-      cashOnHand: financialSummary.cash_on_hand_end_period,
+      totalRaised: financialSummary.total_receipts ?? financialSummary.receipts,
+      totalSpent: financialSummary.total_disbursements ?? financialSummary.disbursements,
+      cashOnHand:
+        financialSummary.cash_on_hand_end_period ?? financialSummary.last_cash_on_hand_end_period,
       individualContributions: financialSummary.individual_contributions,
       pacContributions: financialSummary.other_political_committee_contributions,
       partyContributions: financialSummary.political_party_committee_contributions,
-      candidateContributions: financialSummary.candidate_contributions,
+      candidateContributions: financialSummary.candidate_contribution,
       industryBreakdown: industryResults.breakdown,
       geographicBreakdown: geographyResults.breakdown,
       dataQuality: {

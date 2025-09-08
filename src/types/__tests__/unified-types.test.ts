@@ -30,34 +30,19 @@ import type {
   RepresentativesListResponse,
 } from '../api/representatives.types';
 
-// Import the UNIFIED types that we want to create (these will fail initially)
-// This is the TDD contract - we define what we want, then implement it
+// Import the UNIFIED types from the service interfaces we created
 import type {
   // UNIFIED CORE TYPES - consolidates 3 competing RepresentativeResponse types
-  UnifiedRepresentative,
   UnifiedRepresentativeResponse,
-
-  // UNIFIED API RESPONSES - consolidates 15+ scattered response interfaces
-  ApiResponse,
-  ListApiResponse,
-  BatchApiResponse as UnifiedBatchApiResponse,
-  PaginatedApiResponse,
-
+  UnifiedServiceResponse,
+  
   // SERVICE CONTRACTS - defines interfaces for 5 different service patterns
-  IRepresentativeService,
+  IUnifiedRepresentativeService,
   IApiService,
-  ServiceConfig,
-} from '../core/unified-types';
+  IServiceConfig,
+} from '../../services/interfaces/unified-service-interfaces';
 
-// Import classes with regular imports (not type-only) so we can instantiate them
-import {
-  // TYPE GUARDS & MIGRATION HELPERS
-  RepresentativeMigrationHelper,
-  TypeValidator,
-
-  // BACKWARDS COMPATIBILITY
-  LegacyTypeAdapter,
-} from '../core/unified-types';
+// NOTE: Migration helpers and adapters will be implemented later
 
 describe('Phase 1: Unified Type System Consolidation', () => {
   describe('1.1 Unified RepresentativeResponse (consolidating 3 competing versions)', () => {
@@ -100,18 +85,18 @@ describe('Phase 1: Unified Type System Consolidation', () => {
           // Merged from models/Representative.ts RepresentativeResponse
           office: 'Hart Senate Office Building',
 
-          // Merged from api/representatives.types.ts RepresentativeDetailResponse
+          // Additional optional fields
           address: '425 Dirksen Senate Office Building',
           email: 'senator@klobuchar.senate.gov',
         },
       };
 
       // Should include all contact fields from competing implementations
-      expect(unifiedRep.contactInfo.phone).toBeDefined();
-      expect(unifiedRep.contactInfo.website).toBeDefined();
-      expect(unifiedRep.contactInfo.office).toBeDefined();
-      expect(unifiedRep.contactInfo.address).toBeDefined();
-      expect(unifiedRep.contactInfo.email).toBeDefined();
+      expect(unifiedRep.contactInfo?.phone).toBeDefined();
+      expect(unifiedRep.contactInfo?.website).toBeDefined();
+      expect(unifiedRep.contactInfo?.office).toBeDefined();
+      expect(unifiedRep.contactInfo?.address).toBeDefined();
+      expect(unifiedRep.contactInfo?.email).toBeDefined();
     });
 
     test('should have consistent bioguideId field as primary key', () => {

@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { ErrorBoundary as APIErrorBoundary } from '@/components/common/ErrorBoundary';
+import { ErrorBoundary as APIErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 import { logger } from '@/lib/logging/logger-client';
 
 interface PartyAlignment {

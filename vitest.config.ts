@@ -36,7 +36,7 @@ export default defineConfig({
     },
 
     // Reporter configuration
-    reporter: process.env.CI ? 'github-actions' : 'verbose',
+    reporters: process.env.CI ? 'github-actions' : 'verbose',
 
     // Environment variables for tests
     env: {

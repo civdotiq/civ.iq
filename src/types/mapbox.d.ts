@@ -26,25 +26,6 @@ declare module '@mapbox/mbtiles' {
   export = MBTiles;
 }
 
-declare module '@mapbox/vector-tile' {
-  interface VectorTileFeature {
-    properties: Record<string, unknown>;
-    toGeoJSON(x: number, y: number, z: number): GeoJSON.Feature;
-  }
-
-  interface VectorTileLayer {
-    length: number;
-    feature(index: number): VectorTileFeature;
-  }
-
-  class VectorTile {
-    layers: Record<string, VectorTileLayer>;
-    constructor(pbf: unknown);
-  }
-
-  export { VectorTile, VectorTileLayer, VectorTileFeature };
-}
-
 declare module 'pbf' {
   class Protobuf {
     constructor(buffer: Buffer | Uint8Array);

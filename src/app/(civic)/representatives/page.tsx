@@ -7,8 +7,8 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { getRepresentativesByLocation } from '@/features/representatives/services/congress-api';
 import { CiviqLogo } from '@/shared/ui/CiviqLogo';
-import { RepresentativesClient } from './components/RepresentativesClient';
-import { LoadingState } from '@/components/ui/LoadingState';
+import { RepresentativesClient } from '@/features/representatives/components/RepresentativesClient';
+import { LoadingState } from '@/components/shared/ui/LoadingState';
 
 interface SearchParams {
   searchParams: Promise<{

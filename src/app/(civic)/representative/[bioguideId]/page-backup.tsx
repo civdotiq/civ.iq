@@ -5,8 +5,8 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { RepresentativeProfileClient } from './client-wrapper';
-import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { SimpleClientWrapper as RepresentativeProfileClient } from './simple-client-wrapper';
+import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 import { RepresentativePageSidebar } from '@/features/representatives/components/RepresentativePageSidebar';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { logger } from '@/lib/logging/logger-client';

@@ -18,7 +18,7 @@ import {
   SearchResultsSkeleton,
   DistrictMapSkeleton,
 } from '@/shared/components/ui/SkeletonComponents';
-import { useSmartLoading, useMultiStageLoading } from '@/hooks/useSmartLoading';
+import { useSmartLoading, useMultiStageLoading } from '@/hooks/shared/useSmartLoading';
 
 export function LoadingDemo() {
   const [activeDemo, setActiveDemo] = useState<string>('spinners');
@@ -260,7 +260,7 @@ export function LoadingDemo() {
           <div>
             <h3 className="font-medium mb-2">Basic Usage</h3>
             <pre className="bg-gray-800 text-gray-100 p-3 rounded text-xs overflow-x-auto">
-              {`import { useSmartLoading } from '@/hooks/useSmartLoading';
+              {`import { useSmartLoading } from '@/hooks/shared/useSmartLoading';
 
 const loading = useSmartLoading(async () => {
   const data = await api.getData();

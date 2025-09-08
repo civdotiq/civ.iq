@@ -1,316 +1,195 @@
 'use client';
 
-/**
- * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
- */
+import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+import type { LatLngExpression } from 'leaflet';
+import type { GeoJSON } from 'geojson';
 
-import { useEffect, useState, useRef } from 'react';
-
-interface DistrictBoundary {
-  type: string;
-  coordinates: number[][][];
-  properties: {
-    district: string;
-    state: string;
-    name: string;
-    type: 'congressional' | 'state_senate' | 'state_house';
-  };
-}
-
-interface MapData {
-  zipCode: string;
-  state: string;
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
-  boundaries: {
-    congressional: DistrictBoundary | null;
-    state_senate: DistrictBoundary | null;
-    state_house: DistrictBoundary | null;
-  };
-  bbox: {
-    minLat: number;
-    maxLat: number;
-    minLng: number;
-    maxLng: number;
-  };
-}
+// Dynamic import to avoid SSR issues with Leaflet
+const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), {
+  ssr: false,
+});
+const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), {
+  ssr: false,
+});
+const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
 
 interface DistrictMapProps {
-  zipCode: string;
-  className?: string;
+  state: string;
+  district: string;
 }
 
-interface MapLayer {
-  id: string;
-  name: string;
-  color: string;
-  visible: boolean;
-}
+// State center coordinates for initial map view
+const STATE_CENTERS: Record<string, LatLngExpression> = {
+  MI: [44.3148, -85.6024],
+  CA: [36.7783, -119.4179],
+  TX: [31.9686, -99.9018],
+  FL: [27.6648, -81.5158],
+  NY: [43.0, -75.0],
+  PA: [41.2033, -77.1945],
+  IL: [40.6331, -89.3985],
+  OH: [40.4173, -82.9071],
+  GA: [32.1656, -82.9001],
+  NC: [35.7596, -79.0193],
+  MD: [39.0458, -76.6413],
+  DEFAULT: [39.8283, -98.5795], // Center of USA
+};
 
-export function DistrictMap({ zipCode, className = '' }: DistrictMapProps) {
-  const [mapData, setMapData] = useState<MapData | null>(null);
+export default function DistrictMap({ state, district }: DistrictMapProps) {
+  const [geoJsonData, setGeoJsonData] = useState<GeoJSON.Feature | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedLayer, setSelectedLayer] = useState<string>('congressional');
-  const svgRef = useRef<SVGSVGElement>(null);
-
-  const layers: MapLayer[] = [
-    { id: 'congressional', name: 'Congressional District', color: '#e11d07', visible: true },
-    { id: 'state_senate', name: 'State Senate District', color: '#0b983c', visible: false },
-    { id: 'state_house', name: 'State House District', color: '#3ea2d4', visible: false },
-  ];
+  const [coordinateCount, setCoordinateCount] = useState(0);
+  const [dataSource, setDataSource] = useState<string>('');
 
   useEffect(() => {
-    const fetchMapData = async () => {
+    async function fetchDistrictBoundary() {
       try {
         setLoading(true);
-        const response = await fetch(`/api/district-map?zip=${encodeURIComponent(zipCode)}`);
+        setError(null);
+
+        const districtId = `${state}-${district.padStart(2, '0')}`;
+        const response = await fetch(`/api/district-boundaries/${districtId}`);
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch map data');
+          if (response.status === 404) {
+            setError('District boundaries not available');
+            setGeoJsonData(null);
+          } else {
+            throw new Error(errorData.message || 'Failed to fetch district boundary');
+          }
+        } else {
+          const data = await response.json();
+          setGeoJsonData(data.boundary);
+          const coords = data.boundary?.geometry?.coordinates?.[0] || [];
+          setCoordinateCount(coords.length);
+          setDataSource(data.metadata?.method || 'unknown');
+          setError(null);
         }
-
-        const data: MapData = await response.json();
-        setMapData(data);
-        setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-        setMapData(null);
+        setError(err instanceof Error ? err.message : 'Failed to load district boundary');
+        setGeoJsonData(null);
       } finally {
         setLoading(false);
       }
-    };
-
-    if (zipCode) {
-      fetchMapData();
     }
-  }, [zipCode]);
 
-  // Convert lat/lng to SVG coordinates
-  const projectToSVG = (
-    lat: number,
-    lng: number,
-    bbox: MapData['bbox'],
-    width: number,
-    height: number
-  ) => {
-    const x = ((lng - bbox.minLng) / (bbox.maxLng - bbox.minLng)) * width;
-    const y = height - ((lat - bbox.minLat) / (bbox.maxLat - bbox.minLat)) * height;
-    return { x, y };
-  };
+    fetchDistrictBoundary();
+  }, [state, district]);
 
-  // Convert coordinates array to SVG path
-  const coordinatesToPath = (
-    coordinates: number[][][],
-    bbox: MapData['bbox'],
-    width: number,
-    height: number
-  ) => {
-    return coordinates
-      .map(ring => {
-        const pathData =
-          ring
-            .map((coord, index) => {
-              const [lng, lat] = coord;
-              if (typeof lat !== 'number' || typeof lng !== 'number') return '';
-              const { x, y } = projectToSVG(lat, lng, bbox, width, height);
-              return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-            })
-            .filter(path => path !== '')
-            .join(' ') + ' Z';
-        return pathData;
-      })
-      .join(' ');
-  };
+  // Calculate map center - use district bounds if available, otherwise state center
+  let mapCenter = STATE_CENTERS[state] || STATE_CENTERS.DEFAULT;
+  let mapZoom = 7;
 
-  const getCurrentBoundary = () => {
-    if (!mapData) return null;
-    return mapData.boundaries[selectedLayer as keyof typeof mapData.boundaries];
-  };
+  if (
+    geoJsonData &&
+    geoJsonData.geometry.type === 'Polygon' &&
+    geoJsonData.geometry.coordinates[0]
+  ) {
+    // Calculate center from bounding box of the district
+    const coords = geoJsonData.geometry.coordinates[0];
+    const lats = coords
+      .map(coord => coord[1])
+      .filter((lat): lat is number => typeof lat === 'number');
+    const lngs = coords
+      .map(coord => coord[0])
+      .filter((lng): lng is number => typeof lng === 'number');
 
-  const getCurrentLayerInfo = () => {
-    return layers.find(layer => layer.id === selectedLayer);
-  };
+    if (lats.length > 0 && lngs.length > 0) {
+      const minLat = Math.min(...lats);
+      const maxLat = Math.max(...lats);
+      const minLng = Math.min(...lngs);
+      const maxLng = Math.max(...lngs);
+
+      mapCenter = [(minLat + maxLat) / 2, (minLng + maxLng) / 2];
+
+      // Calculate zoom based on bounding box size
+      const latDiff = maxLat - minLat;
+      const lngDiff = maxLng - minLng;
+      const maxDiff = Math.max(latDiff, lngDiff);
+
+      if (maxDiff < 0.5) mapZoom = 10;
+      else if (maxDiff < 1) mapZoom = 9;
+      else if (maxDiff < 2) mapZoom = 8;
+      else mapZoom = 7;
+    }
+  }
 
   if (loading) {
     return (
-      <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
-        <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded mb-4 w-1/3"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
-        </div>
+      <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-gray-500">Loading district map...</div>
       </div>
     );
   }
 
-  if (error || !mapData) {
+  if (error && !geoJsonData) {
     return (
-      <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">District Map</h3>
-        <div className="text-center py-8">
-          <div className="text-gray-500 mb-2">{error || 'Unable to load district map'}</div>
+      <div className="w-full h-[400px] bg-gray-50 rounded-lg flex items-center justify-center">
+        <div className="text-gray-500 text-center">
+          <p className="mb-2">
+            {error === 'District boundaries not available'
+              ? `State Overview - District boundaries not available`
+              : 'District map unavailable'}
+          </p>
           <p className="text-sm text-gray-400">
-            Interactive district boundaries are not available for this location
+            {state}-{district.padStart(2, '0')}
           </p>
         </div>
       </div>
     );
   }
 
-  const boundary = getCurrentBoundary();
-  const layerInfo = getCurrentLayerInfo();
-  const svgWidth = 600;
-  const svgHeight = 400;
+  const isRealPolygon = dataSource === 'real_polygon_extraction';
+  const isFallback = dataSource === 'bounding_box_fallback';
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${className}`}>
-      <div className="p-6 pb-4 border-b border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">District Map</h3>
-
-        {/* Layer Controls */}
-        <div className="flex flex-wrap gap-2">
-          {layers.map(layer => (
-            <button
-              key={layer.id}
-              onClick={() => setSelectedLayer(layer.id)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                selectedLayer === layer.id
-                  ? 'text-white'
-                  : 'text-gray-600 bg-gray-100 hover:bg-gray-200'
-              }`}
+    <div className="w-full">
+      <div className="w-full h-[400px] rounded-lg overflow-hidden border border-gray-200">
+        <MapContainer
+          center={mapCenter}
+          zoom={mapZoom}
+          style={{ height: '100%', width: '100%' }}
+          scrollWheelZoom={false}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {geoJsonData && (
+            <GeoJSON
+              data={geoJsonData}
               style={{
-                backgroundColor: selectedLayer === layer.id ? layer.color : undefined,
+                fillColor: isRealPolygon ? '#22C55E' : '#3B82F6', // Green for real, blue for approximate
+                fillOpacity: 0.2,
+                color: isRealPolygon ? '#16A34A' : '#1E40AF',
+                weight: 3,
+                opacity: 0.8,
               }}
-            >
-              {layer.name}
-            </button>
-          ))}
-        </div>
+            />
+          )}
+        </MapContainer>
       </div>
-
-      <div className="p-6">
-        {/* Map Container */}
-        <div className="relative bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
-          <svg
-            ref={svgRef}
-            width={svgWidth}
-            height={svgHeight}
-            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-            className="w-full h-auto"
-          >
-            {/* Background */}
-            <rect width={svgWidth} height={svgHeight} fill="#f8fafc" />
-
-            {/* Grid lines */}
-            <defs>
-              <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-                <path
-                  d="M 50 0 L 0 0 0 50"
-                  fill="none"
-                  stroke="#e2e8f0"
-                  strokeWidth="1"
-                  opacity="0.3"
-                />
-              </pattern>
-            </defs>
-            <rect width={svgWidth} height={svgHeight} fill="url(#grid)" />
-
-            {/* District Boundary */}
-            {boundary && layerInfo && (
-              <g>
-                <path
-                  d={coordinatesToPath(boundary.coordinates, mapData.bbox, svgWidth, svgHeight)}
-                  fill={layerInfo.color}
-                  fillOpacity="0.3"
-                  stroke={layerInfo.color}
-                  strokeWidth="2"
-                  strokeOpacity="0.8"
-                />
-              </g>
-            )}
-
-            {/* ZIP Code Location Marker */}
-            {mapData.coordinates && (
-              <g>
-                {(() => {
-                  const { x, y } = projectToSVG(
-                    mapData.coordinates.lat,
-                    mapData.coordinates.lng,
-                    mapData.bbox,
-                    svgWidth,
-                    svgHeight
-                  );
-                  return (
-                    <>
-                      {/* Marker outer ring */}
-                      <circle cx={x} cy={y} r="12" fill="white" stroke="#1f2937" strokeWidth="2" />
-                      {/* Marker inner dot */}
-                      <circle cx={x} cy={y} r="6" fill="#1f2937" />
-                    </>
-                  );
-                })()}
-              </g>
-            )}
-          </svg>
-
-          {/* Map Legend */}
-          <div className="absolute top-4 right-4 bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-3 shadow-sm border border-gray-200">
-            <div className="text-xs font-medium text-gray-700 mb-2">Legend</div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-gray-900 rounded-full"></div>
-                <span className="text-xs text-gray-600">Your Location</span>
-              </div>
-              {layerInfo && (
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded"
-                    style={{ backgroundColor: layerInfo.color }}
-                  ></div>
-                  <span className="text-xs text-gray-600">{layerInfo.name}</span>
-                </div>
-              )}
-            </div>
-          </div>
+      {coordinateCount > 0 && (
+        <div className="mt-2 text-xs text-center">
+          {isRealPolygon ? (
+            <span className="text-green-600 font-medium">
+              ✅ Actual district boundaries ({coordinateCount.toLocaleString()} coordinate points)
+            </span>
+          ) : isFallback ? (
+            <span className="text-orange-600">
+              ⚠️ Approximate boundaries (bounding box) - PMTiles parsing in development
+            </span>
+          ) : (
+            <span className="text-gray-500">
+              {coordinateCount > 100
+                ? `District boundaries (${coordinateCount.toLocaleString()} coordinate points)`
+                : 'Approximate district boundaries'}
+            </span>
+          )}
         </div>
-
-        {/* District Information */}
-        {boundary && (
-          <div className="mt-4 bg-gray-50 rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-2">{boundary.properties.name}</h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">District:</span>
-                <span className="ml-2 font-medium">{boundary.properties.district}</span>
-              </div>
-              <div>
-                <span className="text-gray-600">State:</span>
-                <span className="ml-2 font-medium">{boundary.properties.state}</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Type:</span>
-                <span className="ml-2 font-medium capitalize">
-                  {boundary.properties.type.replace('_', ' ')}
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-600">ZIP Code:</span>
-                <span className="ml-2 font-medium">{mapData.zipCode}</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Map Controls */}
-        <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-          <div>Interactive map showing district boundaries for ZIP code {mapData.zipCode}</div>
-          <div className="text-xs">Data: U.S. Census Bureau TIGER/Line</div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

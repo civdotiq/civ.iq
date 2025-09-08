@@ -1,27 +1,62 @@
 {
   "hashes": {
-    "/mnt/d/civic-intel-hub/tsconfig.json": "cfc8eb2db5e0ebe8a3593ddababd831c8e574ac7c004bcbfdf90b7af2065d97f"
+    "/mnt/d/civic-intel-hub/tsconfig.json": "2c6788bc9176477a8ab696da98ee3f01d89f458a600f156862decf9d92c07edf"
   },
   "mappings": {
     "next-env.d.ts": {
       "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
-      "excludes": ["node_modules", "scripts", "archived-features"]
+      "excludes": [
+        "node_modules",
+        "scripts",
+        "archived-features",
+        "src/types/__tests__/unified-types.test.ts",
+        "src/app/(civic)/representative/[bioguideId]/page-backup.tsx",
+        "src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx"
+      ]
     },
     "**/*.ts": {
       "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
-      "excludes": ["node_modules", "scripts", "archived-features"]
+      "excludes": [
+        "node_modules",
+        "scripts",
+        "archived-features",
+        "src/types/__tests__/unified-types.test.ts",
+        "src/app/(civic)/representative/[bioguideId]/page-backup.tsx",
+        "src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx"
+      ]
     },
     "**/*.tsx": {
       "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
-      "excludes": ["node_modules", "scripts", "archived-features"]
+      "excludes": [
+        "node_modules",
+        "scripts",
+        "archived-features",
+        "src/types/__tests__/unified-types.test.ts",
+        "src/app/(civic)/representative/[bioguideId]/page-backup.tsx",
+        "src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx"
+      ]
     },
     ".next/types/**/*.ts": {
       "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
-      "excludes": ["node_modules", "scripts", "archived-features"]
+      "excludes": [
+        "node_modules",
+        "scripts",
+        "archived-features",
+        "src/types/__tests__/unified-types.test.ts",
+        "src/app/(civic)/representative/[bioguideId]/page-backup.tsx",
+        "src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx"
+      ]
     },
     "jest.setup.js": {
       "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
-      "excludes": ["node_modules", "scripts", "archived-features"]
+      "excludes": [
+        "node_modules",
+        "scripts",
+        "archived-features",
+        "src/types/__tests__/unified-types.test.ts",
+        "src/app/(civic)/representative/[bioguideId]/page-backup.tsx",
+        "src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx"
+      ]
     }
   }
 }

@@ -14,10 +14,10 @@ import {
   SearchResultsSkeleton,
 } from '@/shared/components/ui/SkeletonComponents';
 import { LoadingStateWrapper, LoadingMessage, Spinner } from '@/shared/components/ui/LoadingStates';
-import { useMultiStageLoading } from '@/hooks/useSmartLoading';
-import { DistrictMap } from '@/features/districts/components/DistrictMap';
+import { useMultiStageLoading } from '@/hooks/shared/useSmartLoading';
+import DistrictMap from '@/features/districts/components/DistrictMap';
 import { InteractiveDistrictMap } from '@/features/districts/components/InteractiveDistrictMap';
-import { DataQualityIndicator, DataSourceBadge } from '@/components/ui/DataQualityIndicator';
+import { DataQualityIndicator, DataSourceBadge } from '@/components/shared/ui/DataQualityIndicator';
 import {
   InlineQualityScore,
   DataTrustIndicator,

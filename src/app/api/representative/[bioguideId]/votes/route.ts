@@ -15,166 +15,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { XMLParser } from 'fast-xml-parser';
-
-/**
- * AUTHORITATIVE Bioguide ID to LIS Member ID mapping for 119th Congress
- *
- * ✅ DATA SOURCE: congress-legislators repository (unitedstates/congress-legislators)
- * ✅ GENERATED: 2025-08-29 from legislators-current.yaml
- * ✅ COVERAGE: All 100 current U.S. Senators with official LIS IDs
- *
- * This mapping uses the official, maintained congress-legislators dataset
- * which is the authoritative source for Congressional member identifiers.
- *
- * Source: https://github.com/unitedstates/congress-legislators
- * Last updated: 2025-08-29
- *
- * Testing: Chuck Schumer, Mitch McConnell, Bernie Sanders, Ted Cruz, Elizabeth Warren
- */
-const BIOGUIDE_TO_LIS_MAPPING: Record<string, string> = {
-  // Generated from congress-legislators repository - 100 current senators
-  S001198: 'S383', // Dan Sullivan (Republican-AK)
-  M001153: 'S288', // Lisa Murkowski (Republican-AK)
-  B001319: 'S416', // Katie Britt (Republican-AL)
-  T000278: 'S412', // Tommy Tuberville (Republican-AL)
-  B001236: 'S343', // John Boozman (Republican-AR)
-  C001095: 'S374', // Tom Cotton (Republican-AR)
-  K000377: 'S406', // Mark Kelly (Democrat-AZ)
-  G000574: 'S432', // Ruben Gallego (Democrat-AZ)
-  S001150: 'S427', // Adam Schiff (Democrat-CA)
-  P000145: 'S413', // Alejandro Padilla (Democrat-CA)
-  H000273: 'S408', // John Hickenlooper (Democrat-CO)
-  B001267: 'S330', // Michael Bennet (Democrat-CO)
-  M001169: 'S364', // Christopher Murphy (Democrat-CT)
-  B001277: 'S341', // Richard Blumenthal (Democrat-CT)
-  C001088: 'S337', // Christopher Coons (Democrat-DE)
-  B001303: 'S430', // Lisa Blunt Rochester (Democrat-DE)
-  M001244: 'S439', // Ashley Moody (Republican-FL)
-  S001217: 'S404', // Rick Scott (Republican-FL)
-  O000174: 'S414', // Jon Ossoff (Democrat-GA)
-  W000790: 'S415', // Raphael Warnock (Democrat-GA)
-  S001194: 'S353', // Brian Schatz (Democrat-HI)
-  H001042: 'S361', // Mazie Hirono (Democrat-HI)
-  G000386: 'S153', // Charles Grassley (Republican-IA)
-  E000295: 'S376', // Joni Ernst (Republican-IA)
-  R000584: 'S323', // James Risch (Republican-ID)
-  C000880: 'S266', // Michael Crapo (Republican-ID)
-  D000563: 'S253', // Richard Durbin (Democrat-IL)
-  D000622: 'S386', // Tammy Duckworth (Democrat-IL)
-  B001299: 'S429', // Jim Banks (Republican-IN)
-  Y000064: 'S391', // Todd Young (Republican-IN)
-  M000934: 'S347', // Jerry Moran (Republican-KS)
-  M001198: 'S411', // Roger Marshall (Republican-KS)
-  M000355: 'S174', // Mitch McConnell (Republican-KY)
-  P000603: 'S348', // Rand Paul (Republican-KY)
-  C001075: 'S373', // Bill Cassidy (Republican-LA)
-  K000393: 'S389', // John Kennedy (Republican-LA)
-  M000133: 'S369', // Edward Markey (Democrat-MA)
-  W000817: 'S366', // Elizabeth Warren (Democrat-MA)
-  A000382: 'S428', // Angela Alsobrooks (Democrat-MD)
-  V000128: 'S390', // Chris Van Hollen (Democrat-MD)
-  K000383: 'S363', // Angus King (Independent-ME)
-  C001035: 'S252', // Susan Collins (Republican-ME)
-  S001208: 'S436', // Elissa Slotkin (Democrat-MI)
-  P000595: 'S380', // Gary Peters (Democrat-MI)
-  K000367: 'S311', // Amy Klobuchar (Democrat-MN)
-  S001203: 'S394', // Tina Smith (Democrat-MN)
-  S001227: 'S420', // Eric Schmitt (Republican-MO)
-  H001089: 'S399', // Joshua Hawley (Republican-MO)
-  H001079: 'S395', // Cindy Hyde-Smith (Republican-MS)
-  W000437: 'S318', // Roger Wicker (Republican-MS)
-  D000618: 'S375', // Steve Daines (Republican-MT)
-  S001232: 'S435', // Tim Sheehy (Republican-MT)
-  B001305: 'S417', // Ted Budd (Republican-NC)
-  T000476: 'S384', // Thom Tillis (Republican-NC)
-  H001061: 'S344', // John Hoeven (Republican-ND)
-  C001096: 'S398', // Kevin Cramer (Republican-ND)
-  F000463: 'S357', // Deb Fischer (Republican-NE)
-  R000618: 'S423', // Pete Ricketts (Republican-NE)
-  S001181: 'S324', // Jeanne Shaheen (Democrat-NH)
-  H001076: 'S388', // Margaret Hassan (Democrat-NH)
-  K000394: 'S426', // Andy Kim (Democrat-NJ)
-  B001288: 'S370', // Cory Booker (Democrat-NJ)
-  L000570: 'S409', // Ben Luján (Democrat-NM)
-  H001046: 'S359', // Martin Heinrich (Democrat-NM)
-  C001113: 'S385', // Catherine Cortez Masto (Democrat-NV)
-  R000608: 'S402', // Jacky Rosen (Democrat-NV)
-  S000148: 'S270', // Charles Schumer (Democrat-NY)
-  G000555: 'S331', // Kirsten Gillibrand (Democrat-NY)
-  M001242: 'S434', // Bernie Moreno (Republican-OH)
-  H001104: 'S438', // Jon Husted (Republican-OH)
-  L000575: 'S378', // James Lankford (Republican-OK)
-  M001190: 'S419', // Markwayne Mullin (Republican-OK)
-  M001176: 'S322', // Jeff Merkley (Democrat-OR)
-  W000779: 'S247', // Ron Wyden (Democrat-OR)
-  M001243: 'S433', // Dave McCormick (Republican-PA)
-  F000479: 'S418', // John Fetterman (Democrat-PA)
-  R000122: 'S259', // John Reed (Democrat-RI)
-  W000802: 'S316', // Sheldon Whitehouse (Democrat-RI)
-  G000359: 'S293', // Lindsey Graham (Republican-SC)
-  S001184: 'S365', // Tim Scott (Republican-SC)
-  T000250: 'S303', // John Thune (Republican-SD)
-  R000605: 'S381', // Mike Rounds (Republican-SD)
-  H000601: 'S407', // Bill Hagerty (Republican-TN)
-  B001243: 'S396', // Marsha Blackburn (Republican-TN)
-  C001056: 'S287', // John Cornyn (Republican-TX)
-  C001098: 'S355', // Ted Cruz (Republican-TX)
-  C001114: 'S431', // John Curtis (Republican-UT)
-  L000577: 'S346', // Mike Lee (Republican-UT)
-  W000805: 'S327', // Mark Warner (Democrat-VA)
-  K000384: 'S362', // Timothy Kaine (Democrat-VA)
-  S000033: 'S313', // Bernard Sanders (Independent-VT)
-  W000800: 'S422', // Peter Welch (Democrat-VT)
-  C000127: 'S275', // Maria Cantwell (Democrat-WA)
-  M001111: 'S229', // Patty Murray (Democrat-WA)
-  J000293: 'S345', // Ron Johnson (Republican-WI)
-  B001230: 'S354', // Tammy Baldwin (Democrat-WI)
-  J000312: 'S437', // Jim Justice (Republican-WV)
-  C001047: 'S372', // Shelley Capito (Republican-WV)
-  L000571: 'S410', // Cynthia Lummis (Republican-WY)
-  B001261: 'S317', // John Barrasso (Republican-WY)
-};
-
-/**
- * Robust member lookup function that uses multiple strategies
- * 1. Direct LIS ID lookup (most reliable)
- * 2. Enhanced name + state matching with variations
- * 3. Fuzzy matching for edge cases
- */
-function findSenatorInXML(
-  bioguideId: string,
-  members: Record<string, unknown>[]
-): Record<string, unknown> | null {
-  // Strategy 1: Direct LIS ID lookup (most reliable)
-  const targetLisId = BIOGUIDE_TO_LIS_MAPPING[bioguideId];
-  if (targetLisId) {
-    const directMatch = members.find(member => String(member.lis_member_id || '') === targetLisId);
-    if (directMatch) {
-      logger.info('Found senator via direct LIS ID lookup', {
-        bioguideId,
-        targetLisId,
-        memberFound: {
-          lis_member_id: directMatch.lis_member_id,
-          name: `${directMatch.first_name} ${directMatch.last_name}`,
-          state: directMatch.state,
-        },
-      });
-      return directMatch;
-    }
-  }
-
-  // Strategy 2: Get member info for name-based lookup
-  // If we reach here, we need to fall back to name matching
-  logger.warn('No LIS ID mapping found, attempting name-based lookup', {
-    bioguideId,
-    targetLisId,
-  });
-
-  // For now, return null - we should focus on completing the LIS mapping
-  // This ensures we rely on the most accurate method
-  return null;
-}
 
 interface VoteResponse {
   votes: Vote[];
@@ -321,113 +161,84 @@ async function getMemberInfo(bioguideId: string): Promise<{
 }
 
 /**
- * Safely fetch Senate votes from XML feed with member position lookup
+ * Optimized Senate votes fetching using batch voting service
+ * Provides caching, parallel processing, and <2 second response times
  */
-async function getSenateVotes(bioguideId: string, limit: number = 3): Promise<Vote[]> {
+async function getSenateVotes(bioguideId: string, limit: number = 10): Promise<Vote[]> {
   try {
-    logger.info('Fetching Senate votes from XML feed', { bioguideId, limit });
-
-    // Step 1: Fetch the Senate vote menu XML
-    const menuUrl = 'https://www.senate.gov/legislative/LIS/roll_call_lists/vote_menu_119_1.xml';
-    const menuResponse = await fetch(menuUrl, {
-      headers: {
-        'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-      },
-      signal: AbortSignal.timeout(10000),
+    logger.info('Fetching Senate votes using optimized batch service', {
+      bioguideId,
+      limit,
+      method: 'batch-voting-service',
     });
 
-    if (!menuResponse.ok) {
-      logger.warn('Failed to fetch Senate vote menu', {
-        status: menuResponse.status,
-        statusText: menuResponse.statusText,
-      });
-      return [];
-    }
+    // Use the optimized batch voting service
+    const { batchVotingService } = await import(
+      '@/features/representatives/services/batch-voting-service'
+    );
 
-    const menuXml = await menuResponse.text();
-    const parser = new XMLParser({
-      ignoreAttributes: false,
-      attributeNamePrefix: '@_',
-      textNodeName: '#text',
-      parseAttributeValue: true,
+    const memberVotes = await batchVotingService.getSenateMemberVotes(
+      bioguideId,
+      119, // 119th Congress
+      1, // Session 1
+      limit // Limit votes
+    );
+
+    logger.info('Optimized Senate votes retrieved successfully', {
+      bioguideId,
+      votesCount: memberVotes.length,
+      method: 'batch-voting-service',
     });
 
-    const menuData = parser.parse(menuXml);
-    const voteSummary = menuData.vote_summary;
+    // Transform to standardized Vote format
+    const transformedVotes: Vote[] = memberVotes.map(vote => {
+      const question = vote.question || 'Unknown Question';
+      const result = vote.result || 'Unknown';
+      const category = categorizeVote(question);
+      const isKeyVote = determineKeyVote(question, result);
 
-    if (!voteSummary?.votes?.vote) {
-      logger.warn('No votes found in Senate XML menu');
-      return [];
-    }
-
-    // Step 2: Get recent votes (limited)
-    const votes = Array.isArray(voteSummary.votes.vote)
-      ? voteSummary.votes.vote
-      : [voteSummary.votes.vote];
-
-    const recentVotes = votes.slice(0, Math.min(limit, 50)); // Increased limit for better user experience
-
-    // Step 3: For each vote, fetch individual XML and find member position
-    const senateVotes: Vote[] = [];
-
-    for (const vote of recentVotes) {
-      try {
-        const voteNumber = String(vote.vote_number || '').padStart(5, '0');
-        const individualUrl = `https://www.senate.gov/legislative/LIS/roll_call_votes/vote1191/vote_119_1_${voteNumber}.xml`;
-
-        const voteResponse = await fetch(individualUrl, {
-          headers: {
-            'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-          },
-          signal: AbortSignal.timeout(3000), // Reduced timeout for faster failure
-        });
-
-        if (voteResponse.ok) {
-          const voteXml = await voteResponse.text();
-          const voteData = parser.parse(voteXml);
-          const rollCallVote = voteData.roll_call_vote;
-
-          if (rollCallVote?.members?.member) {
-            const members = Array.isArray(rollCallVote.members.member)
-              ? rollCallVote.members.member
-              : [rollCallVote.members.member];
-
-            // COMPREHENSIVE LOGGING: Log raw XML structure for debugging
-            logger.info('Senate XML vote structure analysis', {
-              bioguideId,
-              voteNumber: vote.vote_number,
-              totalMembers: members.length,
-              sampleMemberFields: members[0] ? Object.keys(members[0]) : [],
-              rollCallVoteKeys: rollCallVote ? Object.keys(rollCallVote) : [],
-            });
-
-            // Log first few members to understand structure
-            if (members.length > 0) {
-              logger.info('Sample Senate XML members', {
-                bioguideId,
-                first3Members: members.slice(0, 3).map((member: Record<string, unknown>) => ({
-                  lis_member_id: member.lis_member_id,
-                  first_name: member.first_name,
-                  last_name: member.last_name,
-                  member_full: member.member_full,
-                  state: member.state,
-                  party: member.party,
-                  vote_cast: member.vote_cast,
-                  allKeys: Object.keys(member),
-                })),
-              });
+      return {
+        voteId: vote.voteId,
+        bill: vote.bill
+          ? {
+              number: String(vote.bill.number),
+              title: vote.bill.title,
+              congress: String(vote.bill.congress),
+              type: vote.bill.type,
+              url: vote.bill.url,
             }
+          : {
+              number: 'N/A',
+              title: 'Vote without associated bill',
+              congress: '119',
+              type: 'Senate Resolution',
+              url: undefined,
+            },
+        question,
+        result,
+        date: vote.date,
+        position: vote.position as Vote['position'],
+        chamber: 'Senate' as const,
+        rollNumber: vote.rollCallNumber || 0,
+        description: question,
+        category,
+        isKeyVote,
+        metadata: {
+          source: 'senate-xml-feed',
+          confidence: 'high',
+          processingDate: new Date().toISOString(),
+        },
+      };
+    });
 
-            // Phase 3: Use robust member lookup system
-            const memberVote = findSenatorInXML(bioguideId, members);
+    return transformedVotes;
+  } catch (error) {
+    logger.error('Error fetching optimized Senate votes', error as Error, { bioguideId });
+    return [];
+  }
+}
 
-            if (memberVote) {
-              // Format date from Senate format
-              const year = voteSummary.congress_year || 2025;
-              const dateStr = String(vote.vote_date || '');
-              const [day, monthStr] = dateStr.split('-');
-              const monthMap: Record<string, string> = {
-                Jan: '01',
+/**
                 Feb: '02',
                 Mar: '03',
                 Apr: '04',
@@ -497,33 +308,38 @@ async function getSenateVotes(bioguideId: string, limit: number = 3): Promise<Vo
 }
 
 /**
- * Safely fetch House votes using real Congress.gov Roll Call API
- * Uses the dedicated congress-rollcall-api.ts service for member-specific votes
+ * Optimized House votes fetching using batch voting service
+ * Provides caching, parallel processing, and <2 second response times
  */
-async function getHouseVotes(bioguideId: string, limit: number = 20): Promise<Vote[]> {
+async function getHouseVotes(
+  bioguideId: string,
+  limit: number = 20,
+  bypassCache = false
+): Promise<Vote[]> {
   try {
-    logger.info('Fetching House votes using Congress Roll Call API', {
+    logger.info('Fetching House votes using optimized batch service', {
       bioguideId,
-      method: 'congress-rollcall-api',
+      method: 'batch-voting-service',
       limit,
     });
 
-    // Use the real Congress.gov House Roll Call API service
-    const { congressRollCallAPI } = await import(
-      '@/features/representatives/services/congress-rollcall-api'
+    // Use the optimized batch voting service
+    const { batchVotingService } = await import(
+      '@/features/representatives/services/batch-voting-service'
     );
 
-    const memberVotes = await congressRollCallAPI.getMemberVotingHistory(
+    const memberVotes = await batchVotingService.getHouseMemberVotes(
       bioguideId,
       119, // 119th Congress
       1, // Session 1
-      limit // Limit votes
+      limit, // Limit votes
+      bypassCache // Bypass cache for testing
     );
 
-    logger.info('Real House votes retrieved successfully', {
+    logger.info('Optimized House votes retrieved successfully', {
       bioguideId,
       votesCount: memberVotes.length,
-      method: 'congress-rollcall-api',
+      method: 'batch-voting-service',
     });
 
     // Transform to standardized Vote format
@@ -645,6 +461,7 @@ export async function GET(
     const { chamber, name } = memberInfo;
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
+    const bypassCache = searchParams.get('nocache') === 'true';
 
     let votes: Vote[] = [];
     let dataSource = '';
@@ -660,7 +477,7 @@ export async function GET(
     } else {
       // Phase 2: For House members, attempt to fetch with robust error handling
       logger.info('House member detected - attempting to fetch votes', { bioguideId, name });
-      votes = await getHouseVotes(bioguideId, limit);
+      votes = await getHouseVotes(bioguideId, limit, bypassCache);
       dataSource = 'house-congress-api';
     }
 

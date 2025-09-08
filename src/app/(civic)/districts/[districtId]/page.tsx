@@ -9,13 +9,13 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import DistrictRepresentative from '@/components/districts/DistrictRepresentative';
-import DistrictNavigation from '@/components/districts/DistrictNavigation';
-import DistrictDemographics from '@/components/districts/DistrictDemographics';
-import NeighboringDistricts from '@/components/districts/NeighboringDistricts';
+import DistrictRepresentative from '@/features/districts/components/DistrictRepresentative';
+import DistrictNavigation from '@/features/districts/components/DistrictNavigation';
+import DistrictDemographics from '@/features/districts/components/DistrictDemographics';
+import NeighboringDistricts from '@/features/districts/components/NeighboringDistricts';
 
 // Dynamic import of the map component to avoid SSR issues
-const DistrictMap = dynamic(() => import('@/components/districts/DistrictMap'), {
+const DistrictMap = dynamic(() => import('@/features/districts/components/DistrictMap'), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">

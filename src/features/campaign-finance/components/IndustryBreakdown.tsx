@@ -5,281 +5,404 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import { EnhancedFECData } from '@/types/fec';
-import logger from '@/lib/logging/simple-logger';
-import { getIndustryColor, getIndustryIcon } from '@/lib/fec/industryMapper';
+import React, { useState } from 'react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from 'recharts';
+import { DataQualityIndicator, type DataQualityMetric } from './DataQualityIndicator';
+
+interface IndustryData {
+  industry: string;
+  amount: number;
+  percentage: number;
+  count?: number;
+  description?: string;
+}
 
 interface IndustryBreakdownProps {
-  data: EnhancedFECData;
-  className?: string;
+  data: IndustryData[];
+  dataQuality: DataQualityMetric;
+  totalRaised: number;
+  loading?: boolean;
 }
 
-interface SortOption {
-  value: 'amount' | 'percentage' | 'count';
-  label: string;
-}
-
-const SORT_OPTIONS: SortOption[] = [
-  { value: 'amount', label: 'Amount' },
-  { value: 'percentage', label: 'Percentage' },
-  { value: 'count', label: 'Contributors' },
+// Industry sector colors for consistent theming
+const INDUSTRY_COLORS = [
+  '#3b82f6', // blue-500
+  '#10b981', // emerald-500
+  '#f59e0b', // amber-500
+  '#ef4444', // red-500
+  '#8b5cf6', // violet-500
+  '#06b6d4', // cyan-500
+  '#84cc16', // lime-500
+  '#f97316', // orange-500
+  '#ec4899', // pink-500
+  '#6b7280', // gray-500
 ];
 
-export function IndustryBreakdown({ data, className = '' }: IndustryBreakdownProps) {
-  const [sortBy, setSortBy] = useState<'amount' | 'percentage' | 'count'>('amount');
-  const [expandedIndustry, setExpandedIndustry] = useState<string | null>(null);
-  const [showAllIndustries, setShowAllIndustries] = useState(false);
+// Industry descriptions for better understanding
+const INDUSTRY_DESCRIPTIONS: Record<string, string> = {
+  'Finance/Insurance/Real Estate': 'Banking, insurance companies, real estate developers',
+  Health: 'Healthcare providers, pharmaceutical companies, medical device manufacturers',
+  'Communications/Electronics':
+    'Telecommunications, technology companies, electronics manufacturers',
+  'Energy/Natural Resources': 'Oil & gas, renewable energy, mining, utilities',
+  Transportation: 'Airlines, shipping, automotive, logistics companies',
+  Agribusiness: 'Agriculture, food processing, farming organizations',
+  Construction: 'Construction companies, building materials, infrastructure',
+  Defense: 'Defense contractors, aerospace, military suppliers',
+  Education: 'Educational institutions, training organizations',
+  Labor: 'Labor unions, worker organizations',
+  'Lawyers/Lobbyists': 'Law firms, lobbying organizations, legal services',
+  'Miscellaneous Business': 'Various business sectors not otherwise categorized',
+  'Ideology/Single Issue': 'Advocacy groups, political organizations, single-issue groups',
+};
 
-  // Debug logging to check data structure
-  if (process.env.NODE_ENV === 'development') {
-    logger.debug('IndustryBreakdown received data', {
-      component: 'IndustryBreakdown',
-      metadata: {
-        hasData: !!data,
-        hasIndustries: !!data?.industries,
-        industriesLength: data?.industries?.length || 0,
-      },
-    });
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    payload: IndustryData & { color?: string };
+  }>;
+  label?: string;
+}
+
+interface PieTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    payload: IndustryData & { color?: string };
+  }>;
+}
+
+const CustomTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
+  if (active && payload && payload.length && payload[0]) {
+    const data = payload[0].payload;
+    const description = INDUSTRY_DESCRIPTIONS[data.industry] || 'Industry sector';
+
+    return (
+      <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg max-w-xs">
+        <p className="font-semibold text-gray-900 mb-1">{data.industry}</p>
+        <p className="text-xs text-gray-600 mb-2">{description}</p>
+        <p className="text-lg font-bold text-blue-600">${data.amount.toLocaleString()}</p>
+        <p className="text-sm text-gray-500">{data.percentage.toFixed(1)}% of total</p>
+        {data.count && <p className="text-xs text-gray-400 mt-1">{data.count} contributions</p>}
+      </div>
+    );
+  }
+  return null;
+};
+
+const PieTooltip: React.FC<PieTooltipProps> = ({ active, payload }) => {
+  if (active && payload && payload.length && payload[0]) {
+    const data = payload[0].payload;
+    const description = INDUSTRY_DESCRIPTIONS[data.industry] || 'Industry sector';
+
+    return (
+      <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg max-w-xs">
+        <p className="font-semibold text-gray-900 mb-1">{data.industry}</p>
+        <p className="text-xs text-gray-600 mb-2">{description}</p>
+        <p className="text-lg font-bold" style={{ color: data.color }}>
+          ${data.amount.toLocaleString()}
+        </p>
+        <p className="text-sm text-gray-500">{data.percentage.toFixed(1)}% of total</p>
+      </div>
+    );
+  }
+  return null;
+};
+
+export const IndustryBreakdown: React.FC<IndustryBreakdownProps> = ({
+  data,
+  dataQuality,
+  loading = false,
+}) => {
+  const [viewMode, setViewMode] = useState<'chart' | 'pie'>('chart');
+
+  // Determine data quality level for adaptive rendering
+  const completenessPercentage = dataQuality.completenessPercentage;
+
+  // Filter and prepare data - show top 10 industries
+  const chartData = data
+    .filter(item => item.amount > 0)
+    .slice(0, 10)
+    .map((item, index) => ({
+      ...item,
+      color: INDUSTRY_COLORS[index % INDUSTRY_COLORS.length],
+      // Truncate long industry names for chart display
+      displayName:
+        item.industry.length > 25 ? `${item.industry.substring(0, 25)}...` : item.industry,
+    }));
+
+  // Calculate summary statistics
+  const topIndustry = chartData[0];
+  const industrialConcentration = chartData
+    .slice(0, 3)
+    .reduce((sum, item) => sum + item.percentage, 0);
+  const diversificationScore = chartData.length;
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-64 bg-gray-100 rounded"></div>
+        </div>
+      </div>
+    );
   }
 
-  const sortedIndustries = useMemo(() => {
-    // Safety check for data structure
-    if (!data || !data.industries || !Array.isArray(data.industries)) {
-      logger.warn('Invalid or missing industries data', {
-        component: 'IndustryBreakdown',
-        metadata: {
-          hasData: !!data,
-          hasIndustries: !!data?.industries,
-          isArray: Array.isArray(data?.industries),
-        },
-      });
-      return [];
-    }
-
-    const sorted = [...data.industries].sort((a, b) => {
-      switch (sortBy) {
-        case 'amount':
-          return (b.amount || 0) - (a.amount || 0);
-        case 'percentage':
-          return (b.percentage || 0) - (a.percentage || 0);
-        case 'count':
-          return (b.contributorCount || 0) - (a.contributorCount || 0);
-        default:
-          return (b.amount || 0) - (a.amount || 0);
-      }
-    });
-
-    return showAllIndustries ? sorted : sorted.slice(0, 10);
-  }, [data, sortBy, showAllIndustries]);
-
-  const maxAmount = useMemo(() => {
-    if (!data || !data.industries || data.industries.length === 0) {
-      return 0;
-    }
-    return Math.max(...data.industries.map(i => i.amount || 0));
-  }, [data]);
-
-  const formatCurrency = (amount: number): string => {
-    if (amount >= 1000000) {
-      return `$${(amount / 1000000).toFixed(1)}M`;
-    } else if (amount >= 1000) {
-      return `$${(amount / 1000).toFixed(0)}K`;
-    }
-    return `$${amount.toFixed(0)}`;
-  };
-
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'up':
-        return <span className="text-green-500">↗️</span>;
-      case 'down':
-        return <span className="text-red-500">↘️</span>;
-      default:
-        return <span className="text-gray-400">→</span>;
-    }
-  };
-
-  const handleIndustryClick = (industryName: string) => {
-    setExpandedIndustry(expandedIndustry === industryName ? null : industryName);
-  };
-
-  if (!data.industries || data.industries.length === 0) {
+  // Adaptive rendering based on data quality
+  if (completenessPercentage < 30) {
+    // Very low quality: Show only data quality indicator and message
     return (
-      <div className={`bg-white rounded-lg shadow-md border p-6 ${className}`}>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Industry Breakdown</h3>
-        <div className="text-center py-8 text-gray-500">
-          <p>No industry data available</p>
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Industry Funding Breakdown</h3>
+        <DataQualityIndicator metric={dataQuality} dataType="industry" className="mb-4" />
+        <div className="flex items-center justify-center h-32 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <div className="text-center">
+            <div className="text-gray-400 mb-2">
+              <svg
+                className="mx-auto h-8 w-8"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+            </div>
+            <h4 className="text-sm font-medium text-gray-900 mb-1">
+              Industry data is too incomplete to generate a meaningful analysis
+            </h4>
+            <p className="text-sm text-gray-500">
+              More detailed employer information needed for industry breakdown
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (chartData.length === 0) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Industry Funding Breakdown</h3>
+        <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <div className="text-center">
+            <div className="text-gray-400 mb-2">
+              <svg
+                className="mx-auto h-12 w-12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+            </div>
+            <h4 className="text-sm font-medium text-gray-900 mb-1">No industry data available</h4>
+            <p className="text-sm text-gray-500">
+              Industry breakdown will appear when data is available
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`bg-white rounded-lg shadow-md border p-6 ${className}`}>
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      {/* Data Quality Indicator */}
+      <DataQualityIndicator metric={dataQuality} dataType="industry" className="mb-6" />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">Industry Breakdown</h3>
-          <p className="text-sm text-gray-600">Top funding sources by industry sector</p>
-        </div>
-
-        {/* Sort Controls */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600">Sort by:</label>
-          <select
-            value={sortBy}
-            onChange={e => setSortBy(e.target.value as 'amount' | 'percentage' | 'count')}
-            className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {SORT_OPTIONS.map(option => (
-              <option key={`sort-${option.value}`} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Industry List */}
-      <div className="space-y-3">
-        {sortedIndustries.map((industry, index) => (
-          <div
-            key={`industry-${index}-${industry.name}`}
-            className="border border-gray-200 rounded-lg overflow-hidden"
-          >
-            {/* Main Industry Row */}
-            <div
-              className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-              onClick={() => handleIndustryClick(industry.name)}
+        <h3 className="text-lg font-semibold text-gray-900">Industry Funding Breakdown</h3>
+        {completenessPercentage > 70 ? (
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('chart')}
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                viewMode === 'chart'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 flex-1">
-                  {/* Rank & Icon */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-500 w-6">#{index + 1}</span>
-                    <span className="text-xl">
-                      {getIndustryIcon(industry.name.toLowerCase().replace(/\s+/g, '-'))}
-                    </span>
-                  </div>
-
-                  {/* Industry Name & Trend */}
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900">{industry.name}</span>
-                    {getTrendIcon(industry.trend)}
-                  </div>
-                </div>
-
-                {/* Metrics */}
-                <div className="flex items-center gap-6 text-sm">
-                  <div className="text-right">
-                    <div className="font-semibold text-gray-900">
-                      {formatCurrency(industry.amount)}
-                    </div>
-                    <div className="text-gray-500">{industry.percentage.toFixed(1)}%</div>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="font-semibold text-gray-900">{industry.contributorCount}</div>
-                    <div className="text-gray-500">contributors</div>
-                  </div>
-
-                  <div className="w-4 h-4 flex items-center justify-center">
-                    <span className="text-gray-400">
-                      {expandedIndustry === industry.name ? '▼' : '▶'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="mt-3">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="h-2 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${(industry.amount / maxAmount) * 100}%`,
-                      backgroundColor: getIndustryColor(
-                        industry.name.toLowerCase().replace(/\s+/g, '-')
-                      ),
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Expanded Details */}
-            {expandedIndustry === industry.name && (
-              <div className="px-4 pb-4 border-t bg-gray-50">
-                <div className="mt-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                    Top Employers in {industry.name}
-                  </h4>
-
-                  {industry.topEmployers && industry.topEmployers.length > 0 ? (
-                    <div className="space-y-2">
-                      {industry.topEmployers.map((employer, empIndex) => (
-                        <div
-                          key={`${industry.name}-employer-${empIndex}-${employer.name || empIndex}`}
-                          className="flex items-center justify-between"
-                        >
-                          <span className="text-sm text-gray-700">
-                            {employer.name || 'Unknown Employer'}
-                          </span>
-                          <div className="flex items-center gap-4 text-sm">
-                            <span className="font-medium text-gray-900">
-                              {formatCurrency(employer.amount || 0)}
-                            </span>
-                            <span className="text-gray-500">
-                              {employer.count || 0} contributions
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-500">No employer data available</p>
-                  )}
-                </div>
-              </div>
-            )}
+              Bar Chart
+            </button>
+            <button
+              onClick={() => setViewMode('pie')}
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                viewMode === 'pie'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Pie Chart
+            </button>
           </div>
-        ))}
+        ) : (
+          <div className="text-sm text-gray-500">Bar Chart Only (Limited Data Quality)</div>
+        )}
       </div>
 
-      {/* Show More/Less Toggle */}
-      {data.industries.length > 10 && (
-        <div className="mt-4 text-center">
-          <button
-            onClick={() => setShowAllIndustries(!showAllIndustries)}
-            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-          >
-            {showAllIndustries ? 'Show Less' : `Show All ${data.industries.length} Industries`}
-          </button>
-        </div>
-      )}
+      {/* Chart Display */}
+      <div className="mb-6">
+        {viewMode === 'chart' || completenessPercentage <= 70 ? (
+          <ResponsiveContainer width="100%" height={350}>
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="displayName"
+                angle={-45}
+                textAnchor="end"
+                height={120}
+                fontSize={11}
+                interval={0}
+              />
+              <YAxis tickFormatter={value => `$${(value / 1000).toFixed(0)}k`} fontSize={12} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="amount" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <ResponsiveContainer width="100%" height={350}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={140}
+                paddingAngle={2}
+                dataKey="amount"
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip content={<PieTooltip />} />
+              <Legend
+                wrapperStyle={{ fontSize: '12px' }}
+                formatter={(value: string) =>
+                  value.length > 20 ? `${value.substring(0, 20)}...` : value
+                }
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        )}
+      </div>
 
-      {/* Summary Stats */}
+      {/* Summary Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h4 className="font-medium text-blue-900 mb-1">Top Industry</h4>
+          <p className="text-sm text-blue-700 mb-2">{topIndustry ? topIndustry.industry : 'N/A'}</p>
+          <p className="text-lg font-bold text-blue-800">
+            {topIndustry ? `${topIndustry.percentage.toFixed(1)}%` : '0%'}
+          </p>
+        </div>
+
+        <div className="bg-green-50 p-4 rounded-lg">
+          <h4 className="font-medium text-green-900 mb-1">Top 3 Concentration</h4>
+          <p className="text-sm text-green-700 mb-2">Combined share of funding</p>
+          <p className="text-lg font-bold text-green-800">{industrialConcentration.toFixed(1)}%</p>
+        </div>
+
+        <div className="bg-purple-50 p-4 rounded-lg">
+          <h4 className="font-medium text-purple-900 mb-1">Diversification</h4>
+          <p className="text-sm text-purple-700 mb-2">Number of funding sectors</p>
+          <p className="text-lg font-bold text-purple-800">{diversificationScore} sectors</p>
+        </div>
+      </div>
+
+      {/* Detailed List */}
+      <div>
+        <h4 className="font-medium text-gray-800 mb-3">Detailed Breakdown</h4>
+        <div className="space-y-2 max-h-64 overflow-y-auto">
+          {chartData.map(industry => (
+            <div
+              key={industry.industry}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div
+                  className="w-4 h-4 rounded flex-shrink-0"
+                  style={{ backgroundColor: industry.color }}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-gray-900 truncate">{industry.industry}</p>
+                  <p className="text-xs text-gray-500">
+                    {INDUSTRY_DESCRIPTIONS[industry.industry] || 'Industry sector'}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right flex-shrink-0 ml-4">
+                <p className="font-medium text-gray-900">${industry.amount.toLocaleString()}</p>
+                <p className="text-sm text-gray-500">{industry.percentage.toFixed(1)}%</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Analysis Insights */}
       <div className="mt-6 pt-4 border-t border-gray-200">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-lg font-semibold text-gray-900">{data.industries.length}</div>
-            <div className="text-sm text-gray-500">Industries</div>
-          </div>
-          <div>
-            <div className="text-lg font-semibold text-gray-900">
-              {formatCurrency(data.industries.reduce((sum, i) => sum + i.amount, 0))}
+        <h4 className="font-medium text-gray-800 mb-3">Key Insights</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {industrialConcentration > 60 && (
+            <div className="flex items-start gap-2 p-2 bg-yellow-50 rounded">
+              <span className="text-yellow-500 text-xs mt-1">⚠️</span>
+              <span className="text-sm text-yellow-800">
+                High concentration: Top 3 industries provide {industrialConcentration.toFixed(0)}%
+                of funding
+              </span>
             </div>
-            <div className="text-sm text-gray-500">Total Amount</div>
-          </div>
-          <div>
-            <div className="text-lg font-semibold text-gray-900">
-              {data.industries.reduce((sum, i) => sum + i.contributorCount, 0)}
+          )}
+          {diversificationScore > 8 && (
+            <div className="flex items-start gap-2 p-2 bg-green-50 rounded">
+              <span className="text-green-500 text-xs mt-1">✅</span>
+              <span className="text-sm text-green-800">
+                Well-diversified funding across {diversificationScore} different sectors
+              </span>
             </div>
-            <div className="text-sm text-gray-500">Contributors</div>
-          </div>
+          )}
+          {topIndustry && topIndustry.percentage > 30 && (
+            <div className="flex items-start gap-2 p-2 bg-blue-50 rounded">
+              <span className="text-blue-500 text-xs mt-1">📊</span>
+              <span className="text-sm text-blue-800">
+                {topIndustry.industry} is the dominant funding source at{' '}
+                {topIndustry.percentage.toFixed(0)}%
+              </span>
+            </div>
+          )}
+          {industrialConcentration < 40 && diversificationScore > 6 && (
+            <div className="flex items-start gap-2 p-2 bg-purple-50 rounded">
+              <span className="text-purple-500 text-xs mt-1">🎯</span>
+              <span className="text-sm text-purple-800">
+                Balanced funding distribution across multiple industries
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
-}
+};

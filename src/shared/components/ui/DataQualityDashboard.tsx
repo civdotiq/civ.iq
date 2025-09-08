@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { DataSourceBadge } from '@/components/ui/DataQualityIndicator';
+import { DataSourceBadge } from '@/components/shared/ui/DataQualityIndicator';
 
 interface DataQualityMetrics {
   overall: {

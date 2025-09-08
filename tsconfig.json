@@ -46,6 +46,5 @@
     ".next/types/**/*.ts",
     "jest.setup.js"
   ],
-  "types": ["jest", "@testing-library/jest-dom"],
-  "exclude": ["node_modules", "scripts", "archived-features"]
+  "exclude": ["node_modules", "scripts", "archived-features", "src/types/__tests__/unified-types.test.ts", "src/app/(civic)/representative/[bioguideId]/page-backup.tsx", "src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx"]
 }

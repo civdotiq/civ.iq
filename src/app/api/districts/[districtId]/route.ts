@@ -984,6 +984,12 @@ export async function GET(
   try {
     const { districtId } = await params;
 
+    // Special case: redirect /api/districts/all to correct endpoint
+    if (districtId === 'all') {
+      logger.info('Redirecting districts/all request to correct endpoint');
+      return NextResponse.redirect(new URL('/api/districts/all', request.url));
+    }
+
     logger.info('District details API request', { districtId });
 
     const district = await cachedFetch(

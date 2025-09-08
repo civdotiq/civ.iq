@@ -9,7 +9,7 @@ import { useState, useMemo, useEffect, useCallback, memo } from 'react';
 import Image from 'next/image';
 import { representativeApi } from '@/lib/api/representatives';
 import logger from '@/lib/logging/simple-logger';
-import { GDELTAttribution } from '@/components/ui/DataSourceAttribution';
+import { GDELTAttribution } from '@/components/shared/ui/DataSourceAttribution';
 
 interface NewsArticle {
   title: string;

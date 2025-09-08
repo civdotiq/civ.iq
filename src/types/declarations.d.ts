@@ -35,30 +35,6 @@ declare module '@mapbox/mbtiles' {
   export = MBTiles;
 }
 
-declare module '@mapbox/vector-tile' {
-  interface VectorTileFeature {
-    properties: Record<string, string | number | boolean>;
-    type: 1 | 2 | 3; // Point, LineString, Polygon
-    coordinates: number[][];
-    toGeoJSON(x: number, y: number, z: number): GeoJSON.Feature<GeoJSON.Polygon>;
-  }
-
-  interface VectorTileLayer {
-    name: string;
-    version: number;
-    extent: number;
-    length: number;
-    feature(index: number): VectorTileFeature;
-  }
-
-  class VectorTile {
-    layers: Record<string, VectorTileLayer>;
-    constructor(pbf: Buffer);
-  }
-
-  export { VectorTile, VectorTileLayer, VectorTileFeature };
-}
-
 declare module 'pbf' {
   class Protobuf {
     constructor(buffer: Buffer);
