@@ -4,7 +4,6 @@
  */
 
 import useSWR, { SWRConfiguration } from 'swr';
-import logger from '@/lib/logging/simple-logger';
 
 // SINGLE batch data fetcher - all hooks share this data
 function useBatchData(bioguideId: string | null, config?: SWRConfiguration) {
@@ -14,16 +13,16 @@ function useBatchData(bioguideId: string | null, config?: SWRConfiguration) {
       fetch(`/api/representative/${bioguideId}/batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ endpoints: ['bills', 'finance', 'committees', 'votes'] })
-      }).then(res => res.json()).then(data => {
-        // DEBUG: Log the actual response structure
-        console.log('[DEBUG] Batch API response:', data);
-        return data;
-      }),
+        body: JSON.stringify({ endpoints: ['bills', 'finance', 'committees', 'votes'] }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          return data;
+        }),
     {
       revalidateOnFocus: false,
       dedupingInterval: 60000, // Share cache between all hooks
-      ...config
+      ...config,
     }
   );
 }

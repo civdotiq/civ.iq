@@ -36,7 +36,7 @@ export default function SubcommitteeCard({ subcommittee }: SubcommitteeCardProps
                   <Link
                     href={`/representative/${subcommittee.chair.bioguideId}`}
                     className="text-blue-600 hover:text-blue-800 inline-flex items-center"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={e => e.stopPropagation()}
                   >
                     <RepresentativePhoto
                       bioguideId={subcommittee.chair.bioguideId}
@@ -54,7 +54,7 @@ export default function SubcommitteeCard({ subcommittee }: SubcommitteeCardProps
                   <Link
                     href={`/representative/${subcommittee.rankingMember.bioguideId}`}
                     className="text-blue-600 hover:text-blue-800 inline-flex items-center"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={e => e.stopPropagation()}
                   >
                     <RepresentativePhoto
                       bioguideId={subcommittee.rankingMember.bioguideId}
@@ -99,7 +99,7 @@ export default function SubcommitteeCard({ subcommittee }: SubcommitteeCardProps
                   </tr>
                 </thead>
                 <tbody>
-                  {subcommittee.members.map((member, index) => (
+                  {subcommittee.members.map(member => (
                     <tr key={member.representative.bioguideId} className="border-t border-gray-200">
                       <td className="py-3 pr-4">
                         <Link
@@ -130,9 +130,7 @@ export default function SubcommitteeCard({ subcommittee }: SubcommitteeCardProps
                         {member.representative.state}
                         {member.representative.district && `-${member.representative.district}`}
                       </td>
-                      <td className="py-3 text-sm text-gray-900">
-                        {member.role}
-                      </td>
+                      <td className="py-3 text-sm text-gray-900">{member.role}</td>
                     </tr>
                   ))}
                 </tbody>

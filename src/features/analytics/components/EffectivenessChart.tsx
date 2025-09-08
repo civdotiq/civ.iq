@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -8,7 +7,6 @@
 
 import { useState, useEffect } from 'react';
 import {
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -16,7 +14,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  BarChart,
   Bar,
   Area,
   AreaChart,
@@ -25,7 +22,7 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  ComposedChart
+  ComposedChart,
 } from 'recharts';
 
 interface EffectivenessData {
@@ -86,7 +83,11 @@ interface EffectivenessChartProps {
   className?: string;
 }
 
-export function EffectivenessChart({ bioguideId, years = 8, className = '' }: EffectivenessChartProps) {
+export function EffectivenessChart({
+  bioguideId,
+  years = 8,
+  className = '',
+}: EffectivenessChartProps) {
   const [data, setData] = useState<EffectivenessResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -96,12 +97,14 @@ export function EffectivenessChart({ bioguideId, years = 8, className = '' }: Ef
     const fetchEffectiveness = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/analytics/effectiveness?bioguideId=${bioguideId}&years=${years}`);
-        
+        const response = await fetch(
+          `/api/analytics/effectiveness?bioguideId=${bioguideId}&years=${years}`
+        );
+
         if (!response.ok) {
           throw new Error('Failed to fetch effectiveness data');
         }
-        
+
         const effectivenessData = await response.json();
         setData(effectivenessData);
         setError(null);
@@ -124,42 +127,43 @@ export function EffectivenessChart({ bioguideId, years = 8, className = '' }: Ef
       score: item.overallScore,
       billsSponsored: item.billsSponsored,
       billsEnacted: item.billsEnacted,
-      successRate: item.billsSponsored > 0 ? Math.round((item.billsEnacted / item.billsSponsored) * 100) : 0,
-      bipartisanBills: item.bipartisanBills
+      successRate:
+        item.billsSponsored > 0 ? Math.round((item.billsEnacted / item.billsSponsored) * 100) : 0,
+      bipartisanBills: item.bipartisanBills,
     }));
 
     return (
       <ComposedChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
         <XAxis dataKey="year" stroke="#666" fontSize={12} />
-        <YAxis 
+        <YAxis
           yAxisId="left"
-          stroke="#666" 
+          stroke="#666"
           fontSize={12}
           label={{ value: 'Score', angle: -90, position: 'insideLeft' }}
         />
-        <YAxis 
+        <YAxis
           yAxisId="right"
           orientation="right"
-          stroke="#666" 
+          stroke="#666"
           fontSize={12}
           label={{ value: 'Bills', angle: 90, position: 'insideRight' }}
         />
-        <Tooltip 
+        <Tooltip
           contentStyle={{
             backgroundColor: 'white',
             border: '1px solid #ccc',
-            borderRadius: '4px'
+            borderRadius: '4px',
           }}
         />
         <Legend />
         <Bar yAxisId="right" dataKey="billsSponsored" fill="#3ea2d4" name="Bills Sponsored" />
         <Bar yAxisId="right" dataKey="billsEnacted" fill="#0b983c" name="Bills Enacted" />
-        <Line 
+        <Line
           yAxisId="left"
-          type="monotone" 
-          dataKey="score" 
-          stroke="#e11d07" 
+          type="monotone"
+          dataKey="score"
+          stroke="#e11d07"
           strokeWidth={3}
           dot={{ fill: '#e11d07', strokeWidth: 2, r: 4 }}
           name="Effectiveness Score"
@@ -178,24 +182,52 @@ export function EffectivenessChart({ bioguideId, years = 8, className = '' }: Ef
       inCommittee: item.billsInCommittee,
       passedHouse: item.billsPassedHouse,
       passedSenate: item.billsPassedSenate,
-      amendments: item.amendmentsAdopted
+      amendments: item.amendmentsAdopted,
     }));
 
     return (
       <AreaChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
         <XAxis dataKey="year" stroke="#666" fontSize={12} />
-        <YAxis 
-          stroke="#666" 
+        <YAxis
+          stroke="#666"
           fontSize={12}
           label={{ value: 'Count', angle: -90, position: 'insideLeft' }}
         />
         <Tooltip />
         <Legend />
-        <Area type="monotone" dataKey="enacted" stackId="1" stroke="#0b983c" fill="#0b983c" name="Enacted" />
-        <Area type="monotone" dataKey="passedSenate" stackId="1" stroke="#3ea2d4" fill="#3ea2d4" name="Passed Senate" />
-        <Area type="monotone" dataKey="passedHouse" stackId="1" stroke="#f59e0b" fill="#f59e0b" name="Passed House" />
-        <Area type="monotone" dataKey="inCommittee" stackId="1" stroke="#6b7280" fill="#6b7280" name="In Committee" />
+        <Area
+          type="monotone"
+          dataKey="enacted"
+          stackId="1"
+          stroke="#0b983c"
+          fill="#0b983c"
+          name="Enacted"
+        />
+        <Area
+          type="monotone"
+          dataKey="passedSenate"
+          stackId="1"
+          stroke="#3ea2d4"
+          fill="#3ea2d4"
+          name="Passed Senate"
+        />
+        <Area
+          type="monotone"
+          dataKey="passedHouse"
+          stackId="1"
+          stroke="#f59e0b"
+          fill="#f59e0b"
+          name="Passed House"
+        />
+        <Area
+          type="monotone"
+          dataKey="inCommittee"
+          stackId="1"
+          stroke="#6b7280"
+          fill="#6b7280"
+          name="In Committee"
+        />
       </AreaChart>
     );
   };
@@ -206,28 +238,25 @@ export function EffectivenessChart({ bioguideId, years = 8, className = '' }: Ef
     const radarData = data.summary.topSpecializations.map(spec => ({
       area: spec.area,
       score: spec.score,
-      bills: spec.billCount * 10 // Scale for better visualization
+      bills: spec.billCount * 10, // Scale for better visualization
     }));
 
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
-          <h4 className="text-sm font-medium text-gray-900 mb-4 text-center">Policy Area Expertise</h4>
+          <h4 className="text-sm font-medium text-gray-900 mb-4 text-center">
+            Policy Area Expertise
+          </h4>
           <ResponsiveContainer width="100%" height={300}>
             <RadarChart data={radarData}>
               <PolarGrid />
               <PolarAngleAxis dataKey="area" tick={{ fontSize: 12 }} />
-              <PolarRadiusAxis 
-                angle={90} 
-                domain={[0, 100]} 
-                tick={{ fontSize: 10 }} 
-                tickCount={6}
-              />
-              <Radar 
-                name="Expertise Score" 
-                dataKey="score" 
-                stroke="#0b983c" 
-                fill="#0b983c" 
+              <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 10 }} tickCount={6} />
+              <Radar
+                name="Expertise Score"
+                dataKey="score"
+                stroke="#0b983c"
+                fill="#0b983c"
                 fillOpacity={0.3}
                 strokeWidth={2}
               />
@@ -252,8 +281,8 @@ export function EffectivenessChart({ bioguideId, years = 8, className = '' }: Ef
                 </div>
                 <div className="flex items-center">
                   <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                    <div 
-                      className="bg-civiq-green h-2 rounded-full" 
+                    <div
+                      className="bg-civiq-green h-2 rounded-full"
                       style={{ width: `${spec.score}%` }}
                     ></div>
                   </div>
@@ -296,7 +325,7 @@ export function EffectivenessChart({ bioguideId, years = 8, className = '' }: Ef
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Legislative Effectiveness</h3>
           <div className="flex border border-gray-300 rounded overflow-hidden">
-            {(['trends', 'activity', 'specializations'] as const).map((viewType) => (
+            {(['trends', 'activity', 'specializations'] as const).map(viewType => (
               <button
                 key={viewType}
                 onClick={() => setView(viewType)}
@@ -321,15 +350,21 @@ export function EffectivenessChart({ bioguideId, years = 8, className = '' }: Ef
             <div className="text-sm text-gray-600">Avg Score</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-civiq-blue">{data.summary.totalBillsSponsored}</div>
+            <div className="text-2xl font-bold text-civiq-blue">
+              {data.summary.totalBillsSponsored}
+            </div>
             <div className="text-sm text-gray-600">Bills Sponsored</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-civiq-red">{data.summary.totalBillsEnacted}</div>
+            <div className="text-2xl font-bold text-civiq-red">
+              {data.summary.totalBillsEnacted}
+            </div>
             <div className="text-sm text-gray-600">Bills Enacted</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-700">{data.summary.overallSuccessRate}%</div>
+            <div className="text-2xl font-bold text-gray-700">
+              {data.summary.overallSuccessRate}%
+            </div>
             <div className="text-sm text-gray-600">Success Rate</div>
           </div>
         </div>
@@ -338,7 +373,9 @@ export function EffectivenessChart({ bioguideId, years = 8, className = '' }: Ef
         <div className="h-80 w-full">
           {view !== 'specializations' && (
             <ResponsiveContainer width="100%" height="100%">
-              {view === 'trends' ? (renderTrendsChart() || <div />) : (renderActivityChart() || <div />)}
+              {view === 'trends'
+                ? renderTrendsChart() || <div />
+                : renderActivityChart() || <div />}
             </ResponsiveContainer>
           )}
           {view === 'specializations' && renderSpecializationsChart()}
@@ -356,10 +393,15 @@ export function EffectivenessChart({ bioguideId, years = 8, className = '' }: Ef
             </div>
             <div>
               <span className="text-gray-600">Trend:</span>
-              <span className={`ml-2 font-medium ${
-                data.summary.scoresTrend === 'improving' ? 'text-civiq-green' : 
-                data.summary.scoresTrend === 'declining' ? 'text-civiq-red' : 'text-gray-600'
-              }`}>
+              <span
+                className={`ml-2 font-medium ${
+                  data.summary.scoresTrend === 'improving'
+                    ? 'text-civiq-green'
+                    : data.summary.scoresTrend === 'declining'
+                      ? 'text-civiq-red'
+                      : 'text-gray-600'
+                }`}
+              >
                 {data.summary.scoresTrend}
               </span>
             </div>

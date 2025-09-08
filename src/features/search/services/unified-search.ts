@@ -6,12 +6,7 @@
 import Fuse from 'fuse.js';
 import logger from '@/lib/logging/simple-logger';
 import { getCongressionalDistrictFromZip } from '@/lib/census-api';
-import {
-  geocodeAddress,
-  extractDistrictFromResult,
-  GeocodeResult,
-  GeocodeError,
-} from '@/lib/census-geocoder';
+import { geocodeAddress, extractDistrictFromResult, GeocodeError } from '@/lib/census-geocoder';
 import { classifyInput, InputType, ClassificationResult } from './input-classifier';
 import { ZIP_TO_DISTRICT_MAP } from '@/lib/data/zip-district-mapping-integrated';
 
