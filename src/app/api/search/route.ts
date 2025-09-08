@@ -7,6 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
+
+export const dynamic = 'force-dynamic';
 import {
   geocodeAddress,
   extractDistrictFromResult,
@@ -431,7 +433,7 @@ async function performSearch(filters: SearchFilters): Promise<{
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
 
     // Parse filters from query params
     const filters: SearchFilters = {

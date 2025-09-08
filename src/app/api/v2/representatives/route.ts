@@ -9,6 +9,8 @@ import { getCongressionalDistrictFromZip } from '@/lib/census-api';
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative, RepresentativeSummary } from '@/types/representative';
 
+export const dynamic = 'force-dynamic';
+
 // Response format types
 type ResponseFormat = 'simple' | 'detailed' | 'full';
 
@@ -162,7 +164,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Parse and validate query parameters
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const validation = validateAndParseQuery(searchParams);
 
     if (!validation.isValid) {

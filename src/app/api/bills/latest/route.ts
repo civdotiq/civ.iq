@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
     if (!process.env.CONGRESS_API_KEY) {
@@ -14,7 +16,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     // Use current Congress (119th - 2025-2027)
     const congress = process.env.CURRENT_CONGRESS || '119';
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = req.nextUrl;
     const limit = searchParams.get('limit') || '50';
     const sort = searchParams.get('sort') || 'updateDate+desc';
 

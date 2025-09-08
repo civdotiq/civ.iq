@@ -13,6 +13,8 @@ import {
   validateApiResponse,
 } from '@/lib/validation/response-schemas';
 import logger from '@/lib/logging/simple-logger';
+
+export const dynamic = 'force-dynamic';
 import { govCache } from '@/services/cache/simple-government-cache';
 
 // At-large states for 119th Congress (states with only 1 House district)
@@ -670,10 +672,10 @@ export async function GET(request: NextRequest) {
   logger.info('Representatives API request started');
 
   try {
-    const url = new URL(request.url);
-    const zipCode = url.searchParams.get('zip');
-    const state = url.searchParams.get('state');
-    const district = url.searchParams.get('district');
+    const { searchParams } = request.nextUrl;
+    const zipCode = searchParams.get('zip');
+    const state = searchParams.get('state');
+    const district = searchParams.get('district');
 
     logger.info('Request parameters received', { zipCode, state, district });
 

@@ -7,6 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 
+export const dynamic = 'force-dynamic';
+
 // Response interface for all representatives
 interface AllRepresentativesResponse {
   success: boolean;
@@ -48,10 +50,10 @@ export async function GET(request: NextRequest) {
 
   try {
     // Check for optional filters
-    const url = new URL(request.url);
-    const chamber = url.searchParams.get('chamber'); // 'house' or 'senate'
-    const state = url.searchParams.get('state'); // Two-letter state code
-    const party = url.searchParams.get('party'); // 'D', 'R', 'I'
+    const { searchParams } = request.nextUrl;
+    const chamber = searchParams.get('chamber'); // 'house' or 'senate'
+    const state = searchParams.get('state'); // Two-letter state code
+    const party = searchParams.get('party'); // 'D', 'R', 'I'
 
     logger.info('Request parameters', { chamber, state, party });
 
