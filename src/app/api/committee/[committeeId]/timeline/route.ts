@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
+export const dynamic = 'force-dynamic';
+
 interface TimelineItem {
   id: string;
   type: 'bill' | 'report' | 'hearing' | 'markup' | 'vote' | 'amendment';
@@ -232,7 +234,7 @@ export async function GET(
 ) {
   try {
     const { committeeId } = await params;
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
 
     const filter = searchParams.get('filter') || 'all'; // all, bills, reports
     const limit = parseInt(searchParams.get('limit') || '50');

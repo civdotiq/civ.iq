@@ -8,6 +8,8 @@ import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
+export const dynamic = 'force-dynamic';
+
 interface StateBill {
   id: string;
   billNumber: string;
@@ -380,7 +382,7 @@ export async function GET(
   { params }: { params: Promise<{ state: string }> }
 ) {
   const { state } = await params;
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
 
   const status = searchParams.get('status') || undefined;
   const chamber = searchParams.get('chamber') || undefined;

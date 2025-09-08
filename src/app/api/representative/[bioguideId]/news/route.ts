@@ -15,6 +15,7 @@ import { buildOptimizedGDELTQuery } from '@/features/news/services/gdelt-query-b
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
+export const dynamic = 'force-dynamic';
 interface NewsArticle {
   title: string;
   url: string;
@@ -39,7 +40,7 @@ export async function GET(
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const { bioguideId } = await params;
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const limit = parseInt(searchParams.get('limit') || '15');
 
   if (!bioguideId) {

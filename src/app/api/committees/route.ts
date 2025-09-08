@@ -124,7 +124,7 @@ function getCommitteeType(committeeName: string): Committee['type'] {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const chamber = searchParams.get('chamber') as 'house' | 'senate' | 'joint' | null;
   const includeSubcommittees = searchParams.get('includeSubcommittees') !== 'false';
   const includeMembers = searchParams.get('includeMembers') === 'true';

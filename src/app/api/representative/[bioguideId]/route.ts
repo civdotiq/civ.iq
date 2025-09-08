@@ -8,13 +8,15 @@ import { getEnhancedRepresentative } from '@/features/representatives/services/c
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const { bioguideId } = await params;
   const upperBioguideId = bioguideId?.toUpperCase(); // Ensure uppercase
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const includeCommittees = searchParams.get('includeCommittees') === 'true';
   const includeLeadership = searchParams.get('includeLeadership') === 'true';
   const includeAll = searchParams.get('includeAll') === 'true';
@@ -98,7 +100,7 @@ export async function GET(
       if (includeCommittees || includeAll) {
         try {
           const committeeResponse = await fetch(
-            `${request.url.split('/api/')[0]}/api/representative/${upperBioguideId}/committees`
+            `${request.nextUrl.origin}/api/representative/${upperBioguideId}/committees`
           );
           if (committeeResponse.ok) {
             additionalData.committees = await committeeResponse.json();
@@ -115,7 +117,7 @@ export async function GET(
       if (includeLeadership || includeAll) {
         try {
           const leadershipResponse = await fetch(
-            `${request.url.split('/api/')[0]}/api/representative/${upperBioguideId}/leadership`
+            `${request.nextUrl.origin}/api/representative/${upperBioguideId}/leadership`
           );
           if (leadershipResponse.ok) {
             additionalData.leadership = await leadershipResponse.json();

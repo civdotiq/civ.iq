@@ -14,6 +14,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -225,7 +227,7 @@ export async function GET(
 
   try {
     const { districtId } = params;
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const detail = searchParams.get('detail') || 'standard';
 
     // Validate detail level

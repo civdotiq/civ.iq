@@ -112,7 +112,7 @@ export async function GET(
 ) {
   const { bioguideId } = await params;
   const upperBioguideId = bioguideId?.toUpperCase();
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const summaryOnly = searchParams.get('summary') === 'true';
 
   logger.info('Batch API GET request', {

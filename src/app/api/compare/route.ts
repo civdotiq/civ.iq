@@ -8,6 +8,8 @@ import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { votingDataService } from '@/features/representatives/services/voting-data-service';
 
+export const dynamic = 'force-dynamic';
+
 interface ComparisonData {
   votingRecord: {
     totalVotes: number;
@@ -149,7 +151,7 @@ function getEmptyEffectiveness(): ComparisonData['effectiveness'] {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const bioguideId = searchParams.get('bioguideId');
 
   if (!bioguideId) {

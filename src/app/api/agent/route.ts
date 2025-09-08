@@ -7,6 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 
+export const dynamic = 'force-dynamic';
+
 interface DebugResults {
   apiCall?: {
     url?: string;
@@ -68,7 +70,7 @@ interface DebugInfo {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const bioguideId = searchParams.get('bioguideId') || 'P000595'; // Default to Gary Peters
   const test = searchParams.get('test') || 'all';
 

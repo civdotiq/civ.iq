@@ -459,7 +459,7 @@ export async function GET(
     }
 
     const { chamber, name } = memberInfo;
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
     const bypassCache = searchParams.get('nocache') === 'true';
 

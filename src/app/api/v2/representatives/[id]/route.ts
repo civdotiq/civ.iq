@@ -328,7 +328,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Parse and validate query parameters
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const validation = validateAndParseQuery(searchParams);
 
     if (!validation.isValid) {

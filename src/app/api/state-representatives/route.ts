@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
+export const dynamic = 'force-dynamic';
+
 interface StateLegislator {
   id: string;
   name: string;
@@ -304,7 +306,7 @@ function _generateEmptyLegislatorResponse(state: string, stateAbbrev: string): S
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const zipCode = searchParams.get('zip');
 
   if (!zipCode) {

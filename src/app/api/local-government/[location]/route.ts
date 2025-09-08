@@ -7,6 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 
+export const dynamic = 'force-dynamic';
+
 interface LocationInfo {
   city: string;
   state: string;
@@ -73,7 +75,7 @@ export async function GET(
   { params }: { params: Promise<{ location: string }> }
 ) {
   const { location } = await params;
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const jurisdiction = searchParams.get('jurisdiction'); // 'city', 'county', etc.
   const _zipCode = searchParams.get('zip');
 

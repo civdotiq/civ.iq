@@ -11,6 +11,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 import { BillSummarizer } from '@/features/legislation/services/ai/bill-summarizer';
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
 import { BillTextProcessor } from '@/features/legislation/services/ai/bill-text-processor';
@@ -33,7 +35,7 @@ export async function GET(
 
   try {
     const { billId } = await params;
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
 
     // Validate billId
     const billIdErrors = InputValidator.validateValue(billId, {
@@ -264,9 +266,12 @@ export async function POST(
 
     // Generate new summary with updated parameters
     const response = await GET(
-      new NextRequest(`${request.url}?forceRefresh=true&targetReadingLevel=${targetReadingLevel}`, {
-        method: 'GET',
-      }),
+      new NextRequest(
+        `${request.nextUrl.href}?forceRefresh=true&targetReadingLevel=${targetReadingLevel}`,
+        {
+          method: 'GET',
+        }
+      ),
       { params }
     );
 

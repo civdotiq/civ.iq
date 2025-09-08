@@ -8,6 +8,8 @@ import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
+export const dynamic = 'force-dynamic';
+
 interface StateLegislator {
   id: string;
   name: string;
@@ -295,7 +297,7 @@ export async function GET(
   { params }: { params: Promise<{ state: string }> }
 ) {
   const { state } = await params;
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const chamber = searchParams.get('chamber'); // 'upper', 'lower', or null for both
   const party = searchParams.get('party'); // 'D', 'R', 'I', or null for all
 

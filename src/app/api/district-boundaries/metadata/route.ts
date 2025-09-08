@@ -10,6 +10,8 @@ import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import type { DistrictBoundary, StateMetadata } from '@/lib/helpers/district-boundary-utils';
 
+export const dynamic = 'force-dynamic';
+
 interface DistrictMetadataResponse {
   districts: Record<string, DistrictBoundary>;
   states: Record<string, StateMetadata>;
