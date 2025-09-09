@@ -1,38 +1,9 @@
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  MagnifyingGlassIcon,
-  UserGroupIcon,
-  DocumentTextIcon,
-  ChartBarIcon,
-} from '@heroicons/react/24/outline';
+import { UserGroupIcon, DocumentTextIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import SearchForm from '@/components/SearchForm';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
 
 export default function HomePage() {
-  const [searchInput, setSearchInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchInput.trim() || isLoading) return;
-
-    setIsLoading(true);
-
-    const cleanInput = searchInput.trim();
-
-    if (/^\d{5}(-\d{4})?$/.test(cleanInput)) {
-      const zipCode = cleanInput.split('-')[0];
-      router.push(`/representatives?zip=${zipCode}`);
-    } else {
-      router.push(`/representatives?query=${encodeURIComponent(cleanInput)}`);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Hero Section */}
@@ -51,38 +22,7 @@ export default function HomePage() {
           </div>
 
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mb-12">
-            <form onSubmit={handleSearch} className="relative">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Enter your ZIP code or address..."
-                  value={searchInput}
-                  onChange={e => setSearchInput(e.target.value)}
-                  className="block w-full pl-10 pr-32 py-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
-                  disabled={isLoading}
-                />
-                <button
-                  type="submit"
-                  disabled={!searchInput.trim() || isLoading}
-                  className="absolute inset-y-0 right-0 flex items-center px-6 text-white bg-civiq-blue hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-r-lg transition-colors"
-                >
-                  {isLoading ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  ) : (
-                    'Search'
-                  )}
-                </button>
-              </div>
-            </form>
-            <p className="text-sm text-gray-500 mt-2">
-              Try: &ldquo;48221&rdquo;, &ldquo;1600 Pennsylvania Avenue&rdquo;, or &ldquo;Detroit,
-              MI&rdquo;
-            </p>
-          </div>
+          <SearchForm />
 
           {/* Feature Icons */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
