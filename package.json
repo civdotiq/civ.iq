@@ -53,6 +53,7 @@
     "analyze": "npx @next/bundle-analyzer"
   },
   "dependencies": {
+    "@heroicons/react": "2.2.0",
     "@mapbox/mbtiles": "0.12.1",
     "@mapbox/vector-tile": "2.0.4",
     "@redis/client": "^5.5.6",
