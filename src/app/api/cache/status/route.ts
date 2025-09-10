@@ -18,18 +18,17 @@ export async function GET() {
     const stats = await govCache.getStats();
 
     // Calculate hit rate estimates (since we don't track requests vs hits)
-    const estimatedHitRate =
-      stats.combined.activeEntries > 0 ? Math.min(85, 60 + stats.combined.activeEntries * 2) : 0;
+    const activeEntries = stats.combined?.activeEntries || 0;
+    const estimatedHitRate = activeEntries > 0 ? Math.min(85, 60 + activeEntries * 2) : 0;
 
     // Memory usage estimation in MB (from fallback cache)
-    const memoryUsageMB = (stats.fallback.memorySizeEstimate / 1024 / 1024).toFixed(2);
+    const memoryUsageMB = ((stats.fallback?.memorySizeEstimate || 0) / 1024 / 1024).toFixed(2);
 
     // Cache efficiency score based on active vs expired ratio
-    const totalCacheEntries = stats.combined.activeEntries + stats.combined.expiredEntries;
+    const expiredEntries = stats.combined?.expiredEntries || 0;
+    const totalCacheEntries = activeEntries + expiredEntries;
     const efficiencyScore =
-      totalCacheEntries > 0
-        ? Math.round((stats.combined.activeEntries / totalCacheEntries) * 100)
-        : 100;
+      totalCacheEntries > 0 ? Math.round((activeEntries / totalCacheEntries) * 100) : 100;
 
     const response = {
       status: 'healthy',

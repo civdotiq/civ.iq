@@ -20,71 +20,36 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
       <div className="p-6">
-        <h2 className="text-xl font-semibold mb-6">Contact Information</h2>
+        <h2 className="text-xl font-semibold mb-6">Detailed Information</h2>
 
-        {/* Three-column grid layout matching screenshot */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column */}
+        {/* Two-column grid layout - removed duplicated content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Personal & Committee Details */}
           <div className="space-y-6">
             <PersonalInfoCard representative={representative} />
             <CommitteeMembershipsCard representative={representative} />
           </div>
 
-          {/* Center Column */}
+          {/* Right Column - Service History */}
           <div className="space-y-6">
             <ServiceTermsCard representative={representative} />
 
-            {/* Office Contact (matching screenshot layout) */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-              <div className="p-4 border-b border-gray-100">
-                <h3 className="font-semibold text-gray-900">Office Contact</h3>
+            {/* Additional District Demographics (not shown in sidebar) */}
+            {representative.chamber === 'House' && (
+              <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+                <div className="p-4 border-b border-gray-100">
+                  <h3 className="font-semibold text-gray-900">District Demographics</h3>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="text-sm text-gray-600">
+                    <p>Additional district information and demographics will be displayed here.</p>
+                    <p className="mt-2">
+                      This section provides unique content not shown in the sidebar.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="p-4 space-y-3">
-                {representative.currentTerm?.office && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">
-                      Washington DC Address
-                    </label>
-                    <div className="text-gray-900 text-sm">{representative.currentTerm.office}</div>
-                  </div>
-                )}
-
-                {representative.currentTerm?.phone && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Phone Number</label>
-                    <div className="text-gray-900">
-                      <a
-                        href={`tel:${representative.currentTerm.phone}`}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        {representative.currentTerm.phone}
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                {representative.currentTerm?.website && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Website Link</label>
-                    <div>
-                      <a
-                        href={representative.currentTerm.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        Official Website
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div>
-            <DistrictInfoCard representative={representative} />
+            )}
           </div>
         </div>
       </div>

@@ -21,6 +21,7 @@
  */
 
 import { BaseUnifiedService } from '../base/unified-base.service';
+import { RepresentativesCoreService } from '../core/representatives-core.service';
 import type {
   IUnifiedRepresentativeService,
   UnifiedRepresentativeResponse,
@@ -32,7 +33,7 @@ import type {
 } from '../interfaces/unified-service-interfaces';
 
 import logger from '@/lib/logging/simple-logger';
-import { govCache } from '@/services/cache/simple-government-cache';
+import { govCache } from '@/services/cache';
 
 // Congress.gov API response types
 interface CongressBill {
@@ -163,35 +164,56 @@ export class UnifiedOptimizedCongressService
     };
   }
 
-  // Core unified interface implementations - Limited for Congress.gov focus
+  // Core unified interface implementations - Now using direct service calls
   async getRepresentative(
     bioguideId: string
   ): Promise<UnifiedServiceResponse<UnifiedRepresentativeResponse>> {
     const startTime = Date.now();
 
     try {
-      // This service focuses on bills/legislation data from Congress.gov
-      // For basic representative info, other services should be used
-      logger.info('Representative data not available in optimized Congress.gov service');
+      // DIRECT SERVICE CALL - No HTTP to localhost!
+      const representative = await RepresentativesCoreService.getRepresentativeById(bioguideId);
 
-      // Return minimal structure with bills data reference
+      if (!representative) {
+        logger.warn('Representative not found via core service', { bioguideId });
+        return this.formatErrorResponse(
+          new Error(`Representative ${bioguideId} not found`),
+          startTime
+        );
+      }
+
+      // Transform to unified response format
       const unifiedData: UnifiedRepresentativeResponse = {
-        bioguideId,
-        name: `Representative ${bioguideId}`,
-        firstName: '',
-        lastName: '',
-        party: 'Unknown' as 'Democratic' | 'Republican' | 'Independent',
-        state: '',
-        chamber: 'House' as 'House' | 'Senate',
-        district: null,
-        title: `Representative ${bioguideId}`,
-        contactInfo: {},
+        bioguideId: representative.bioguideId,
+        name: representative.name,
+        firstName: representative.firstName || '',
+        lastName: representative.lastName || '',
+        party: representative.party as 'Democratic' | 'Republican' | 'Independent',
+        state: representative.state,
+        chamber: representative.chamber as 'House' | 'Senate',
+        district: representative.district ? parseInt(representative.district, 10) : null,
+        title: representative.title,
+        contactInfo: {
+          phone: representative.currentTerm?.phone || representative.phone || '',
+          website: representative.currentTerm?.website || representative.website || '',
+          office: representative.currentTerm?.office || representative.currentTerm?.address || '',
+        },
         lastUpdated: new Date().toISOString(),
-        dataSource: 'optimized-congress.service',
+        dataSource: 'optimized-congress.service-direct',
       };
+
+      logger.info('Successfully retrieved representative via direct service', {
+        bioguideId,
+        name: representative.name,
+        responseTime: Date.now() - startTime,
+      });
 
       return this.formatResponse(unifiedData, startTime);
     } catch (error) {
+      logger.error('Failed to get representative via direct service', error as Error, {
+        bioguideId,
+        responseTime: Date.now() - startTime,
+      });
       return this.formatErrorResponse(error, startTime);
     }
   }
@@ -321,7 +343,7 @@ export class UnifiedOptimizedCongressService
 
     // Check cache first
     const cacheKey = `optimized-bills:${bioguideId}:${congress}:${limit}:${page}:${includeAmendments}`;
-    const cached = govCache.get<OptimizedBillsResponse>(cacheKey);
+    const cached = await govCache.get<OptimizedBillsResponse>(cacheKey);
 
     if (cached) {
       logger.info('Bills cache hit', { bioguideId, congress, cacheKey });
@@ -414,7 +436,7 @@ export class UnifiedOptimizedCongressService
       };
 
       // Cache for 30 minutes
-      govCache.set(cacheKey, result, { ttl: 1800 * 1000, source: 'congress.gov' });
+      await govCache.set(cacheKey, result, { ttl: 1800 * 1000, source: 'congress.gov' });
 
       logger.info('Optimized bills fetch complete', {
         bioguideId,
@@ -450,7 +472,7 @@ export class UnifiedOptimizedCongressService
   // Public utility method for bills summary
   public async getBillsSummary(bioguideId: string): Promise<BillsSummaryResult> {
     const cacheKey = `bills-summary:${bioguideId}`;
-    const cached = govCache.get<BillsSummaryResult>(cacheKey);
+    const cached = await govCache.get<BillsSummaryResult>(cacheKey);
 
     if (cached) {
       return cached;
@@ -482,7 +504,7 @@ export class UnifiedOptimizedCongressService
         })),
       };
 
-      govCache.set(cacheKey, result, { ttl: 3600 * 1000, source: 'congress.gov' }); // Cache for 1 hour
+      await govCache.set(cacheKey, result, { ttl: 3600 * 1000, source: 'congress.gov' }); // Cache for 1 hour
       return result;
     } catch (error) {
       logger.error('Bills summary fetch failed', error as Error, { bioguideId });

@@ -258,9 +258,9 @@ export function ExtendedTabNavigation({
 export const profileTabs: TabItem[] = [
   {
     id: 'overview',
-    label: 'Contact Information',
+    label: 'Overview',
     icon: <User className="w-4 h-4" />,
-    description: 'Contact details and personal information',
+    description: 'Personal details and committee memberships',
   },
   {
     id: 'voting',

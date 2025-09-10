@@ -12,7 +12,7 @@ export const apiConfig = {
   // Base API configuration
   baseURL: process.env.NEXT_PUBLIC_API_URL || '',
   version: 'v1',
-  timeout: 30000, // 30 seconds
+  timeout: 15000, // 15 seconds - reduced for faster failure detection
 
   // Internal API endpoints
   endpoints: {
@@ -42,7 +42,7 @@ export const apiConfig = {
     congress: {
       baseURL: 'https://api.congress.gov/v3',
       apiKey: process.env.CONGRESS_API_KEY,
-      timeout: 20000,
+      timeout: 10000, // 10 seconds - reduced from 20s for faster failure detection
       version: 'v3',
     },
 
@@ -50,7 +50,7 @@ export const apiConfig = {
     fec: {
       baseURL: 'https://api.open.fec.gov/v1',
       apiKey: process.env.FEC_API_KEY,
-      timeout: 25000,
+      timeout: 12000, // 12 seconds - reduced from 25s for faster failure detection
       version: 'v1',
     },
 

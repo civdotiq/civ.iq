@@ -36,24 +36,30 @@ export function CommitteeMembershipsCard({
   const committees = representative.committees || [];
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className}`}>
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <Users className="w-5 h-5 text-gray-500" />
-          <h3 className="font-semibold text-gray-900">Committee Memberships</h3>
+    <div
+      className={`bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-200 ${className}`}
+    >
+      <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 bg-blue-50 rounded-lg">
+            <Users className="w-5 h-5" style={{ color: '#3aa3d5' }} />
+          </div>
+          <h3 className="text-lg font-bold" style={{ color: '#3aa3d5' }}>
+            Committee Memberships
+          </h3>
         </div>
       </div>
-      <div className="p-4">
+      <div className="p-6">
         {committees.length > 0 ? (
           <div className="space-y-3">
             {committees.map((committee, index) => (
               <div
                 key={index}
-                className="border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-shadow"
+                className="group border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all duration-200 bg-gradient-to-r from-white to-gray-50 hover:from-blue-50 hover:to-white"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h4 className="font-medium text-sm leading-5">
+                    <h4 className="font-semibold text-base leading-5">
                       {(() => {
                         const committeeId = findCommitteeId(committee.name);
                         const href = committeeId
@@ -66,7 +72,7 @@ export function CommitteeMembershipsCard({
                         return (
                           <Link
                             href={href}
-                            className="text-blue-600 hover:text-blue-800 hover:underline"
+                            className="text-blue-600 hover:text-blue-800 hover:underline group-hover:text-blue-700 transition-colors"
                           >
                             {committee.name}
                           </Link>
@@ -76,13 +82,21 @@ export function CommitteeMembershipsCard({
                     {committee.role && (
                       <div className="mt-2">
                         <span
-                          className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                          className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full shadow-sm ${
                             committee.role === 'Chair'
-                              ? 'bg-blue-100 text-blue-800'
+                              ? 'bg-gradient-to-r text-white'
                               : committee.role === 'Ranking Member'
-                                ? 'bg-purple-100 text-purple-800'
-                                : 'bg-gray-100 text-gray-800'
+                                ? 'bg-gradient-to-r text-white'
+                                : 'bg-gray-100 text-gray-700 border border-gray-200'
                           }`}
+                          style={{
+                            background:
+                              committee.role === 'Chair'
+                                ? 'linear-gradient(to right, #3aa3d5, #1e40af)'
+                                : committee.role === 'Ranking Member'
+                                  ? 'linear-gradient(to right, #e21f0a, #dc2626)'
+                                  : undefined,
+                          }}
                         >
                           {committee.role}
                         </span>
@@ -94,9 +108,9 @@ export function CommitteeMembershipsCard({
             ))}
           </div>
         ) : (
-          <div className="text-center py-4">
-            <p className="text-gray-500">No committee memberships available</p>
-            <p className="text-sm text-gray-400 mt-1">Data sourced from Congress.gov</p>
+          <div className="text-center py-8">
+            <p className="text-gray-400 italic">No committee memberships available</p>
+            <p className="text-xs text-gray-300 mt-2">Data sourced from Congress.gov</p>
           </div>
         )}
       </div>

@@ -33,7 +33,7 @@ import type {
 } from '../interfaces/unified-service-interfaces';
 
 import logger from '@/lib/logging/simple-logger';
-import { govCache } from '@/services/cache/simple-government-cache';
+import { govCache } from '@/services/cache';
 import { getBillsSummary } from '@/services/congress/optimized-congress.service';
 import { fecAPI } from '@/lib/fec-api';
 import { getVotesByMember } from '@/features/representatives/services/congress-api';
@@ -338,7 +338,7 @@ export class UnifiedRepresentativeBatchService
 
     // Check if we have a cached batch response
     const cacheKey = `batch:${bioguideId}:${endpoints.sort().join(',')}:${JSON.stringify(options)}`;
-    const cached = govCache.get<BatchResponse>(cacheKey);
+    const cached = await govCache.get<BatchResponse>(cacheKey);
 
     if (cached) {
       logger.info('Batch cache hit', { bioguideId, endpoints, cacheKey });
@@ -669,7 +669,7 @@ export class UnifiedRepresentativeBatchService
 
     // Cache successful results for 5 minutes
     if (successfulEndpoints.length > 0) {
-      govCache.set(cacheKey, result, { ttl: 300 * 1000, source: 'unified-batch-service' });
+      await govCache.set(cacheKey, result, { ttl: 300 * 1000, source: 'unified-batch-service' });
     }
 
     logger.info('Batch request completed', {
@@ -686,7 +686,7 @@ export class UnifiedRepresentativeBatchService
   // Public utility method for summary data
   public async getRepresentativeSummary(bioguideId: string) {
     const cacheKey = `representative-summary:${bioguideId}`;
-    const cached = govCache.get<{
+    const cached = await govCache.get<{
       bills: unknown;
       finance: unknown;
       lastUpdated: string;
@@ -716,7 +716,7 @@ export class UnifiedRepresentativeBatchService
         lastUpdated: new Date().toISOString(),
       };
 
-      govCache.set(cacheKey, result, { ttl: 600 * 1000, source: 'unified-summary-service' });
+      await govCache.set(cacheKey, result, { ttl: 600 * 1000, source: 'unified-summary-service' });
       return result;
     } catch (error) {
       logger.error('Representative summary failed', error as Error, { bioguideId });

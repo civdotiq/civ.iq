@@ -25,10 +25,13 @@ const FinanceTab = dynamic(
   }
 );
 
-const VotingTab = dynamic(() => import('./VotingTab').then(mod => ({ default: mod.VotingTab })), {
-  loading: TabLoadingSpinner,
-  ssr: false,
-});
+const VotingTabComponent = dynamic(
+  () => import('./VotingTab').then(mod => ({ default: mod.VotingTab })),
+  {
+    loading: TabLoadingSpinner,
+    ssr: false,
+  }
+);
 
 const BillsTab = dynamic(() => import('./BillsTab').then(mod => ({ default: mod.BillsTab })), {
   loading: TabLoadingSpinner,
@@ -49,15 +52,37 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
     isLoading: batchLoading,
   } = useSWR(
     `/api/representative/${representative.bioguideId}/batch`,
-    () =>
-      fetch(`/api/representative/${representative.bioguideId}/batch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ endpoints: ['finance', 'bills', 'votes'] }),
-      }).then(res => res.json()),
+    async () => {
+      // Add timeout protection
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+      try {
+        // Use GET endpoint which works correctly (POST has JSON parsing issues)
+        const response = await fetch(`/api/representative/${representative.bioguideId}/batch`, {
+          method: 'GET',
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw new Error('Request timeout - data may be temporarily unavailable');
+        }
+        throw error;
+      }
+    },
     {
       revalidateOnFocus: false,
       dedupingInterval: 60000, // Cache for 1 minute
+      shouldRetryOnError: false, // Don't retry on timeout
+      errorRetryCount: 1, // Only retry once
     }
   );
 
@@ -67,7 +92,7 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
         return <ContactInfoTab representative={representative} />;
       case 'voting':
         return (
-          <VotingTab
+          <VotingTabComponent
             bioguideId={representative.bioguideId}
             sharedData={batchData?.data?.votes}
             sharedLoading={batchLoading}
@@ -116,7 +141,7 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
             totalRaised: batchData?.success ? batchData.data?.finance?.totalRaised || 0 : 0,
             votesParticipated: batchData?.success ? batchData.data?.votes?.length || 0 : 0,
           }}
-          loading={!batchData}
+          loading={batchLoading}
         />
 
         {/* Main Content Layout */}

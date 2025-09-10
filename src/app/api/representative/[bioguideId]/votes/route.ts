@@ -15,6 +15,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import { cachedHeavyEndpoint, govCache } from '@/services/cache';
 
 interface VoteResponse {
   votes: Vote[];
@@ -31,6 +32,9 @@ interface VoteResponse {
     timestamp: string;
     phase: string;
     crashProof: boolean;
+    cached?: boolean;
+    backgroundProcessing?: boolean;
+    cacheKey?: string;
   };
 }
 
@@ -465,20 +469,56 @@ export async function GET(
 
     let votes: Vote[] = [];
     let dataSource = '';
+    let cached = false;
 
-    if (chamber === 'Senate') {
-      // Phase 2: For Senators, fetch real votes from XML feed
-      logger.info('Senator detected - fetching real votes from XML feed (Phase 2)', {
-        bioguideId,
-        name,
-      });
-      votes = await getSenateVotes(bioguideId, limit);
-      dataSource = 'senate-xml-feed';
-    } else {
-      // Phase 2: For House members, attempt to fetch with robust error handling
-      logger.info('House member detected - attempting to fetch votes', { bioguideId, name });
-      votes = await getHouseVotes(bioguideId, limit, bypassCache);
-      dataSource = 'house-congress-api';
+    // Background processing with aggressive caching for heavy votes endpoint
+    const cacheKey = `votes:${bioguideId}:${chamber}:${limit}`;
+
+    try {
+      const votesResult = await cachedHeavyEndpoint(
+        cacheKey,
+        async () => {
+          if (chamber === 'Senate') {
+            // Phase 2: For Senators, fetch real votes from XML feed
+            logger.info('Senator detected - fetching real votes from XML feed (Background)', {
+              bioguideId,
+              name,
+            });
+            const senateVotes = await getSenateVotes(bioguideId, limit);
+            return { votes: senateVotes, source: 'senate-xml-feed' };
+          } else {
+            // Phase 2: For House members, attempt to fetch with robust error handling
+            logger.info('House member detected - fetching votes (Background)', {
+              bioguideId,
+              name,
+            });
+            const houseVotes = await getHouseVotes(bioguideId, limit, bypassCache);
+            return { votes: houseVotes, source: 'house-congress-api' };
+          }
+        },
+        {
+          source: 'votes-background-processing',
+          bypassCache,
+        }
+      );
+
+      votes = votesResult.votes;
+      dataSource = votesResult.source;
+      cached = !bypassCache;
+    } catch (error) {
+      logger.error(
+        'Background vote processing failed, falling back to empty response',
+        error as Error,
+        {
+          bioguideId,
+          chamber,
+        }
+      );
+
+      // Fallback to empty votes instead of crashing
+      votes = [];
+      dataSource = `${chamber.toLowerCase()}-fallback-error`;
+      cached = false;
     }
 
     const response: VoteResponse = {
@@ -493,8 +533,11 @@ export async function GET(
       success: true,
       metadata: {
         timestamp: new Date().toISOString(),
-        phase: 'Phase 2 - Senate XML Integrated',
+        phase: 'Phase 2 - Senate XML Integrated (Background Processed)',
         crashProof: true,
+        cached,
+        backgroundProcessing: true,
+        cacheKey,
       },
     };
 

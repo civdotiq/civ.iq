@@ -82,7 +82,10 @@
       "Bash(git checkout:*)",
       "Bash(NEXT_DEBUG=1 npx next build --no-lint)",
       "Bash(vercel:*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Read(//mnt/c/Users/Ron Ecstasy/Downloads/**)",
+      "Bash(redis-cli:*)",
+      "Bash(pgrep:*)"
     ],
     "deny": [],
     "ask": []

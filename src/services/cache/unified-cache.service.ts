@@ -7,7 +7,7 @@
 import { redisService } from './redis.service';
 import logger from '@/lib/logging/simple-logger';
 
-interface CacheEntry<T> {
+interface CacheEntry<T = unknown> {
   data: T;
   timestamp: number;
   source: string;
@@ -15,20 +15,34 @@ interface CacheEntry<T> {
 }
 
 export class UnifiedCacheService {
-  private fallbackCache = new Map<string, CacheEntry<any>>();
+  private fallbackCache = new Map<string, CacheEntry>();
   private readonly DEFAULT_TTL_SECONDS = 3600; // 1 hour
 
-  // TTL configuration in seconds for Redis, milliseconds for in-memory
+  // TTL configuration optimized for data volatility patterns
+  // Redis TTLs: seconds, Memory TTLs: milliseconds
   private readonly ttls = {
-    representatives: { redis: 86400, memory: 30 * 60 * 1000 }, // 24h / 30min
-    voting: { redis: 21600, memory: 15 * 60 * 1000 }, // 6h / 15min
-    finance: { redis: 86400, memory: 24 * 60 * 60 * 1000 }, // 24h / 24h
-    districts: { redis: 604800, memory: 7 * 24 * 60 * 60 * 1000 }, // 7d / 7d
-    committees: { redis: 86400, memory: 60 * 60 * 1000 }, // 24h / 1h
-    bills: { redis: 21600, memory: 5 * 60 * 1000 }, // 6h / 5min
-    votes: { redis: 21600, memory: 5 * 60 * 1000 }, // 6h / 5min
-    batch: { redis: 21600, memory: 5 * 60 * 1000 }, // 6h / 5min
-    heavyEndpoints: { redis: 21600, memory: 5 * 60 * 1000 }, // 6h / 5min
+    // Static/Semi-static data - long cache times
+    representatives: { redis: 86400, memory: 60 * 60 * 1000 }, // 24h / 1h (basic info rarely changes)
+    districts: { redis: 7 * 86400, memory: 24 * 60 * 60 * 1000 }, // 7d / 1d (boundaries static)
+    committees: { redis: 12 * 60 * 60, memory: 2 * 60 * 60 * 1000 }, // 12h / 2h (membership changes periodically)
+
+    // Dynamic financial data - moderate cache times
+    finance: { redis: 4 * 60 * 60, memory: 30 * 60 * 1000 }, // 4h / 30min (quarterly/annual filings)
+
+    // Legislative data - variable based on activity
+    bills: { redis: 2 * 60 * 60, memory: 10 * 60 * 1000 }, // 2h / 10min (active during sessions)
+    votes: { redis: 60 * 60, memory: 5 * 60 * 1000 }, // 1h / 5min (frequent during voting periods)
+    voting: { redis: 2 * 60 * 60, memory: 15 * 60 * 1000 }, // 2h / 15min (voting history accumulates)
+
+    // Heavy computation endpoints - balanced for performance vs freshness
+    batch: { redis: 30 * 60, memory: 5 * 60 * 1000 }, // 30min / 5min (multi-API aggregation)
+    heavyEndpoints: { redis: 45 * 60, memory: 10 * 60 * 1000 }, // 45min / 10min (complex queries)
+
+    // News and external data - shorter cache for freshness
+    news: { redis: 15 * 60, memory: 2 * 60 * 1000 }, // 15min / 2min (breaking news)
+
+    // Session-based data - very short cache
+    search: { redis: 5 * 60, memory: 30 * 1000 }, // 5min / 30sec (user search results)
   };
 
   constructor() {
@@ -70,7 +84,7 @@ export class UnifiedCacheService {
     if (fallbackEntry) {
       if (Date.now() <= fallbackEntry.expiresAt) {
         logger.debug(`[Unified Cache HIT-Fallback] ${key} (source: ${fallbackEntry.source})`);
-        return fallbackEntry.data;
+        return fallbackEntry.data as T;
       } else {
         logger.debug(`[Unified Cache EXPIRED-Fallback] ${key}`);
         this.fallbackCache.delete(key);
@@ -94,7 +108,7 @@ export class UnifiedCacheService {
     }
   ): Promise<void> {
     const dataType = options?.dataType || 'representatives';
-    const ttlConfig = (this.ttls as any)[dataType] || {
+    const ttlConfig = this.ttls[dataType as keyof typeof this.ttls] || {
       redis: this.DEFAULT_TTL_SECONDS,
       memory: 30 * 60 * 1000,
     };
@@ -387,7 +401,9 @@ export interface CacheOptions {
     | 'bills'
     | 'votes'
     | 'batch'
-    | 'heavyEndpoints';
+    | 'heavyEndpoints'
+    | 'news'
+    | 'search';
 }
 
 export interface CacheStats {

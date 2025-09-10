@@ -1,6 +1,6 @@
 {
   "hashes": {
-    "/mnt/d/civic-intel-hub/tsconfig.json": "c161103776ec4db43340a2b588bd90507453721f3c6b107c49f0541c3f0db3e9"
+    "/mnt/d/civic-intel-hub/tsconfig.json": "81674cdeeddbffcd05f8e1fdd0081d9c3d107ea31efa83ece9bcd054878e938c"
   },
   "mappings": {
     "next-env.d.ts": {
@@ -9,7 +9,10 @@
         "node_modules",
         "scripts",
         "archived-features",
-        "src/types/__tests__/unified-types.test.ts",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/__tests__/**",
+        "src/tests/**",
         "src/app/(civic)/representative/[bioguideId]/page-backup.tsx",
         "src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx"
       ]
@@ -20,7 +23,10 @@
         "node_modules",
         "scripts",
         "archived-features",
-        "src/types/__tests__/unified-types.test.ts",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/__tests__/**",
+        "src/tests/**",
         "src/app/(civic)/representative/[bioguideId]/page-backup.tsx",
         "src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx"
       ]
@@ -31,7 +37,10 @@
         "node_modules",
         "scripts",
         "archived-features",
-        "src/types/__tests__/unified-types.test.ts",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/__tests__/**",
+        "src/tests/**",
         "src/app/(civic)/representative/[bioguideId]/page-backup.tsx",
         "src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx"
       ]
@@ -42,7 +51,10 @@
         "node_modules",
         "scripts",
         "archived-features",
-        "src/types/__tests__/unified-types.test.ts",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/__tests__/**",
+        "src/tests/**",
         "src/app/(civic)/representative/[bioguideId]/page-backup.tsx",
         "src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx"
       ]
@@ -53,7 +65,10 @@
         "node_modules",
         "scripts",
         "archived-features",
-        "src/types/__tests__/unified-types.test.ts",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/__tests__/**",
+        "src/tests/**",
         "src/app/(civic)/representative/[bioguideId]/page-backup.tsx",
         "src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx"
       ]

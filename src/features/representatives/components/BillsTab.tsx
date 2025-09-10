@@ -36,13 +36,6 @@ interface BillsResponse {
   totalBills: number;
 }
 
-interface BatchApiResponse {
-  success: boolean;
-  data: {
-    bills?: BillsResponse;
-  };
-}
-
 interface BillsTabProps {
   bioguideId: string;
   sharedData?: BillsResponse;
@@ -51,28 +44,29 @@ interface BillsTabProps {
 }
 
 export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }: BillsTabProps) {
-  // Use shared data if available, otherwise fetch individually
+  // Use shared data if available, otherwise fetch individually using direct bills endpoint
   const {
-    data: batchData,
+    data: individualData,
     error: fetchError,
     isLoading: fetchLoading,
-  } = useSWR<BatchApiResponse>(
-    sharedData ? null : `/api/representative/${bioguideId}/batch`,
+  } = useSWR<BillsResponse>(
+    sharedData ? null : `/api/representative/${bioguideId}/bills`,
     sharedData
       ? null
-      : () =>
-          fetch(`/api/representative/${bioguideId}/batch`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ endpoints: ['bills'] }),
-          }).then(res => res.json()),
+      : async (url: string) => {
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          return await response.json();
+        },
     {
       revalidateOnFocus: false,
       dedupingInterval: 60000, // Cache for 1 minute
     }
   );
 
-  const data: BillsResponse | undefined = sharedData || batchData?.data?.bills;
+  const data: BillsResponse | undefined = sharedData || individualData;
   const error = sharedError || fetchError;
   const isLoading = sharedLoading || fetchLoading;
 

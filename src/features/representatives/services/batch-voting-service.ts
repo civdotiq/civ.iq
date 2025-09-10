@@ -10,6 +10,80 @@
 
 import { logger } from '@/lib/logging/logger-edge';
 import { getAllMappings } from '@/lib/data/legislator-mappings';
+import { circuitBreakers } from '@/lib/circuit-breaker';
+
+// Connection pooling with HTTP keep-alive for performance optimization
+class HttpClient {
+  private static instance: HttpClient;
+  private controller: AbortController;
+
+  private constructor() {
+    this.controller = new AbortController();
+  }
+
+  static getInstance(): HttpClient {
+    if (!HttpClient.instance) {
+      HttpClient.instance = new HttpClient();
+    }
+    return HttpClient.instance;
+  }
+
+  async fetch(url: string, options: RequestInit = {}): Promise<Response> {
+    const defaultOptions: RequestInit = {
+      headers: {
+        'User-Agent': 'CivicIntelHub/1.0 (Performance Optimized)',
+        Connection: 'keep-alive',
+        ...options.headers,
+      },
+      signal: options.signal || AbortSignal.timeout(10000), // 10s timeout
+    };
+
+    // Standard fetch options for all environments
+
+    const mergedOptions = { ...defaultOptions, ...options };
+
+    // Determine appropriate circuit breaker based on URL
+    let circuitBreaker;
+    if (url.includes('api.congress.gov')) {
+      circuitBreaker = circuitBreakers.congress;
+    } else if (url.includes('senate.gov')) {
+      circuitBreaker = circuitBreakers.senate;
+    } else if (url.includes('api.open.fec.gov')) {
+      circuitBreaker = circuitBreakers.fec;
+    } else if (url.includes('api.census.gov')) {
+      circuitBreaker = circuitBreakers.census;
+    } else if (url.includes('gdelt')) {
+      circuitBreaker = circuitBreakers.gdelt;
+    }
+
+    const fetchOperation = async (): Promise<Response> => {
+      try {
+        return await fetch(url, mergedOptions);
+      } catch (error) {
+        logger.warn('HTTP client fetch failed', {
+          url,
+          error: error instanceof Error ? error.message : 'Unknown',
+        });
+        throw error;
+      }
+    };
+
+    // Use circuit breaker if available, otherwise direct fetch
+    if (circuitBreaker) {
+      return await circuitBreaker.execute(fetchOperation);
+    } else {
+      return await fetchOperation();
+    }
+  }
+
+  // Cleanup method for connection management
+  destroy(): void {
+    this.controller.abort();
+  }
+}
+
+// Singleton HTTP client instance
+const httpClient = HttpClient.getInstance();
 
 // Simple concurrency limiter implementation
 class ConcurrencyLimiter {
@@ -364,8 +438,7 @@ export class BatchVotingService {
         params.append('api_key', this.apiKey);
       }
 
-      const response = await fetch(`${url}?${params}`, {
-        headers: { 'User-Agent': 'CivicIntelHub/1.0' },
+      const response = await httpClient.fetch(`${url}?${params}`, {
         signal: AbortSignal.timeout(5000),
       });
 
@@ -466,8 +539,7 @@ export class BatchVotingService {
 
     try {
       const response = await this.circuitBreaker.call(async () => {
-        const res = await fetch(vote.sourceDataURL, {
-          headers: { 'User-Agent': 'CivicIntelHub/1.0' },
+        const res = await httpClient.fetch(vote.sourceDataURL, {
           signal: AbortSignal.timeout(3000),
         });
 
@@ -489,7 +561,7 @@ export class BatchVotingService {
   }
 
   /**
-   * Parse House XML vote data using regex (Node.js compatible)
+   * Parse House XML vote data with fallback support for different XML schemas
    */
   private parseHouseXML(xmlText: string, voteInfo: VoteListItem): StandardizedVote | null {
     try {
@@ -500,51 +572,49 @@ export class BatchVotingService {
         xmlLength: xmlText.length,
       });
 
-      // Extract member votes using regex patterns
-      const memberVotes: StandardizedVote['memberVotes'] = [];
-      const memberMatches = xmlText.matchAll(/<recorded-vote>[\s\S]*?<\/recorded-vote>/g);
-      const memberMatchesArray = Array.from(memberMatches);
+      // Try primary parsing method first
+      let memberVotes = this.parseHouseXMLPrimary(xmlText);
 
-      logger.debug('House XML member matches found', {
+      // If primary parsing fails or returns no results, try fallback methods
+      if (memberVotes.length === 0) {
+        logger.debug('Primary parsing failed, trying fallback methods', {
+          rollCallNumber: voteInfo.rollCallNumber,
+        });
+
+        memberVotes =
+          this.parseHouseXMLLegacy(xmlText) || this.parseHouseXMLAlternative(xmlText) || [];
+      }
+
+      // Enhanced logging for debugging
+      const parsingResult = {
         rollCallNumber: voteInfo.rollCallNumber,
-        totalMatches: memberMatchesArray.length,
-        firstMatch: memberMatchesArray[0]?.[0]?.substring(0, 200),
-      });
+        memberVotesFound: memberVotes.length,
+        parsingMethod: memberVotes.length > 0 ? 'success' : 'failed',
+        xmlLength: xmlText.length,
+        containsRecordedVote: xmlText.includes('<recorded-vote>'),
+        containsMemberTag: xmlText.includes('<member>'),
+        containsLegislatorTag: xmlText.includes('<legislator'),
+        firstFewVoteIds: memberVotes.slice(0, 3).map(v => v.bioguideId),
+      };
 
-      for (const [memberXml] of memberMatchesArray) {
-        // Removed debugging limit - process all members
-        const getTag = (tag: string) =>
-          memberXml.match(new RegExp(`<${tag}[^>]*>([^<]*)</${tag}>`))?.[1]?.trim() || '';
-
-        const name = getTag('legislator');
-        const vote = getTag('vote');
-
-        // Extract attributes from legislator tag
-        const bioguideMatch = memberXml.match(/name-id="([^"]+)"/);
-        const partyMatch = memberXml.match(/party="([^"]+)"/);
-        const stateMatch = memberXml.match(/state="([^"]+)"/);
-
-        const bioguideId = bioguideMatch?.[1] || '';
-        const party = partyMatch?.[1] || 'Unknown';
-        const state = stateMatch?.[1] || 'Unknown';
-
-        if (bioguideId && name && vote) {
-          memberVotes.push({
-            bioguideId,
-            name,
-            party,
-            state,
-            position: this.normalizePosition(vote),
-          });
-        }
+      if (memberVotes.length === 0) {
+        logger.warn('House XML parsing returned no member votes', parsingResult);
+      } else {
+        logger.info('House XML parsing successful', parsingResult);
       }
 
       // Calculate totals
       const totals = {
-        yea: memberVotes.filter(v => v.position === 'Yea').length,
-        nay: memberVotes.filter(v => v.position === 'Nay').length,
-        present: memberVotes.filter(v => v.position === 'Present').length,
-        notVoting: memberVotes.filter(v => v.position === 'Not Voting').length,
+        yea: memberVotes.filter((v: StandardizedVote['memberVotes'][0]) => v.position === 'Yea')
+          .length,
+        nay: memberVotes.filter((v: StandardizedVote['memberVotes'][0]) => v.position === 'Nay')
+          .length,
+        present: memberVotes.filter(
+          (v: StandardizedVote['memberVotes'][0]) => v.position === 'Present'
+        ).length,
+        notVoting: memberVotes.filter(
+          (v: StandardizedVote['memberVotes'][0]) => v.position === 'Not Voting'
+        ).length,
       };
 
       return {
@@ -565,6 +635,141 @@ export class BatchVotingService {
       logger.error('Failed to parse House XML', error as Error);
       return null;
     }
+  }
+
+  /**
+   * Primary House XML parsing method for current format
+   */
+  private parseHouseXMLPrimary(xmlText: string): StandardizedVote['memberVotes'] {
+    const memberVotes: StandardizedVote['memberVotes'] = [];
+
+    try {
+      const memberMatches = xmlText.matchAll(/<recorded-vote>[\s\S]*?<\/recorded-vote>/g);
+      const memberMatchesArray = Array.from(memberMatches);
+
+      for (const [memberXml] of memberMatchesArray) {
+        // Extract vote from <vote> tag
+        const voteMatch = memberXml.match(/<vote>([^<]*)<\/vote>/);
+        const vote = voteMatch?.[1]?.trim() || '';
+
+        // Extract legislator name (text content between <legislator> tags)
+        const legislatorNameMatch = memberXml.match(/<legislator[^>]*>([^<]*)<\/legislator>/);
+        const name = legislatorNameMatch?.[1]?.trim() || '';
+
+        // Extract attributes from <legislator> tag
+        const bioguideMatch = memberXml.match(/name-id="([^"]+)"/);
+        const partyMatch = memberXml.match(/party="([^"]+)"/);
+        const stateMatch = memberXml.match(/state="([^"]+)"/);
+
+        const bioguideId = bioguideMatch?.[1] || '';
+        const party = partyMatch?.[1] || 'Unknown';
+        const state = stateMatch?.[1] || 'Unknown';
+
+        // Only add if we have essential data
+        if (bioguideId && vote) {
+          memberVotes.push({
+            bioguideId,
+            name: name || 'Unknown',
+            party,
+            state,
+            position: this.normalizePosition(vote),
+          });
+        }
+      }
+    } catch (error) {
+      logger.debug('Primary House XML parsing failed', {
+        error: error instanceof Error ? error.message : 'Unknown',
+      });
+    }
+
+    return memberVotes;
+  }
+
+  /**
+   * Legacy House XML parsing method for older formats
+   */
+  private parseHouseXMLLegacy(xmlText: string): StandardizedVote['memberVotes'] | null {
+    const memberVotes: StandardizedVote['memberVotes'] = [];
+
+    try {
+      // Try older format with different tag structure
+      const memberMatches = xmlText.matchAll(/<member>[\s\S]*?<\/member>/g);
+      const memberMatchesArray = Array.from(memberMatches);
+
+      for (const [memberXml] of memberMatchesArray) {
+        const getName = (tag: string) =>
+          memberXml.match(new RegExp(`<${tag}>([^<]*)</${tag}>`))?.[1]?.trim() || '';
+
+        const bioguideId = getName('bioguide_id') || getName('bioguide') || getName('id');
+        const name = getName('name') || getName('full_name') || getName('member_name');
+        const party = getName('party') || 'Unknown';
+        const state = getName('state') || 'Unknown';
+        const vote = getName('vote') || getName('position') || getName('vote_cast');
+
+        if (bioguideId && vote) {
+          memberVotes.push({
+            bioguideId,
+            name: name || 'Unknown',
+            party,
+            state,
+            position: this.normalizePosition(vote),
+          });
+        }
+      }
+    } catch (error) {
+      logger.debug('Legacy House XML parsing failed', {
+        error: error instanceof Error ? error.message : 'Unknown',
+      });
+      return null;
+    }
+
+    return memberVotes.length > 0 ? memberVotes : null;
+  }
+
+  /**
+   * Alternative House XML parsing method for different formats
+   */
+  private parseHouseXMLAlternative(xmlText: string): StandardizedVote['memberVotes'] | null {
+    const memberVotes: StandardizedVote['memberVotes'] = [];
+
+    try {
+      // Try alternative format with inline attributes
+      const memberMatches = xmlText.matchAll(/<vote[^>]*bioguide="([^"]+)"[^>]*>([^<]*)<\/vote>/g);
+
+      for (const match of memberMatches) {
+        const bioguideId = match[1];
+        const vote = match[2]?.trim();
+
+        if (bioguideId && vote) {
+          // Try to extract name and party from surrounding context
+          const contextStart = Math.max(0, xmlText.indexOf(match[0]) - 200);
+          const contextEnd = Math.min(
+            xmlText.length,
+            xmlText.indexOf(match[0]) + match[0].length + 200
+          );
+          const context = xmlText.substring(contextStart, contextEnd);
+
+          const nameMatch = context.match(/name="([^"]+)"/);
+          const partyMatch = context.match(/party="([^"]+)"/);
+          const stateMatch = context.match(/state="([^"]+)"/);
+
+          memberVotes.push({
+            bioguideId,
+            name: nameMatch?.[1] || 'Unknown',
+            party: partyMatch?.[1] || 'Unknown',
+            state: stateMatch?.[1] || 'Unknown',
+            position: this.normalizePosition(vote),
+          });
+        }
+      }
+    } catch (error) {
+      logger.debug('Alternative House XML parsing failed', {
+        error: error instanceof Error ? error.message : 'Unknown',
+      });
+      return null;
+    }
+
+    return memberVotes.length > 0 ? memberVotes : null;
   }
 
   /**
@@ -652,8 +857,7 @@ export class BatchVotingService {
       const url = `https://www.senate.gov/legislative/LIS/roll_call_votes/vote${congress}${session}/vote_${congress}_${session}_${paddedNum}.xml`;
 
       const xmlText = await this.circuitBreaker.call(async () => {
-        const response = await fetch(url, {
-          headers: { 'User-Agent': 'CivicIntelHub/1.0' },
+        const response = await httpClient.fetch(url, {
           signal: AbortSignal.timeout(3000),
         });
 

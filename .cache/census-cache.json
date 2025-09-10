@@ -1584,6 +1584,24 @@
     }
   ],
   [
+    "FL-06",
+    {
+      "population": 789744,
+      "white": 619671,
+      "black": 80771,
+      "asian": 14179,
+      "hispanic": 108534,
+      "medianAge": 47.5,
+      "medianIncome": 58634,
+      "housingUnits": 387376,
+      "educationBachelors": 98665,
+      "votingAgePopulation": 627078,
+      "diversityIndex": 35.465828969577075,
+      "urbanPercentage": 50.96753541778531,
+      "state": "FL"
+    }
+  ],
+  [
     "FL-03",
     {
       "population": 761626,
@@ -1634,24 +1652,6 @@
       "votingAgePopulation": 554687,
       "diversityIndex": 59.034178480280005,
       "urbanPercentage": 57.038624711397404,
-      "state": "FL"
-    }
-  ],
-  [
-    "FL-06",
-    {
-      "population": 789744,
-      "white": 619671,
-      "black": 80771,
-      "asian": 14179,
-      "hispanic": 108534,
-      "medianAge": 47.5,
-      "medianIncome": 58634,
-      "housingUnits": 387376,
-      "educationBachelors": 98665,
-      "votingAgePopulation": 627078,
-      "diversityIndex": 35.465828969577075,
-      "urbanPercentage": 50.96753541778531,
       "state": "FL"
     }
   ],
@@ -2466,6 +2466,24 @@
     }
   ],
   [
+    "IL-10",
+    {
+      "population": 722961,
+      "white": 471943,
+      "black": 49221,
+      "asian": 83977,
+      "hispanic": 169403,
+      "medianAge": 39.1,
+      "medianIncome": 90082,
+      "housingUnits": 275438,
+      "educationBachelors": 127782,
+      "votingAgePopulation": 479265,
+      "diversityIndex": 50.08301348229401,
+      "urbanPercentage": 65.61921376135464,
+      "state": "IL"
+    }
+  ],
+  [
     "IL-07",
     {
       "population": 738479,
@@ -2516,24 +2534,6 @@
       "votingAgePopulation": 520779,
       "diversityIndex": 49.92557289206124,
       "urbanPercentage": 57.15966219115934,
-      "state": "IL"
-    }
-  ],
-  [
-    "IL-10",
-    {
-      "population": 722961,
-      "white": 471943,
-      "black": 49221,
-      "asian": 83977,
-      "hispanic": 169403,
-      "medianAge": 39.1,
-      "medianIncome": 90082,
-      "housingUnits": 275438,
-      "educationBachelors": 127782,
-      "votingAgePopulation": 479265,
-      "diversityIndex": 50.08301348229401,
-      "urbanPercentage": 65.61921376135464,
       "state": "IL"
     }
   ],
@@ -3348,6 +3348,24 @@
     }
   ],
   [
+    "MA-01",
+    {
+      "population": 730273,
+      "white": 582951,
+      "black": 47015,
+      "asian": 16889,
+      "hispanic": 140738,
+      "medianAge": 41.5,
+      "medianIncome": 64133,
+      "housingUnits": 325942,
+      "educationBachelors": 92968,
+      "votingAgePopulation": 564324,
+      "diversityIndex": 32.09532810263116,
+      "urbanPercentage": 56.0124960882611,
+      "state": "MA"
+    }
+  ],
+  [
     "MD-06",
     {
       "population": 784464,
@@ -3399,24 +3417,6 @@
       "diversityIndex": 55.40560346030856,
       "urbanPercentage": 63.6927804280389,
       "state": "MD"
-    }
-  ],
-  [
-    "MA-01",
-    {
-      "population": 730273,
-      "white": 582951,
-      "black": 47015,
-      "asian": 16889,
-      "hispanic": 140738,
-      "medianAge": 41.5,
-      "medianIncome": 64133,
-      "housingUnits": 325942,
-      "educationBachelors": 92968,
-      "votingAgePopulation": 564324,
-      "diversityIndex": 32.09532810263116,
-      "urbanPercentage": 56.0124960882611,
-      "state": "MA"
     }
   ],
   [
@@ -4194,6 +4194,24 @@
     }
   ],
   [
+    "NV-01",
+    {
+      "population": 688773,
+      "white": 305149,
+      "black": 82611,
+      "asian": 59312,
+      "hispanic": 319025,
+      "medianAge": 36.8,
+      "medianIncome": 45483,
+      "housingUnits": 299548,
+      "educationBachelors": 54107,
+      "votingAgePopulation": 420148,
+      "diversityIndex": 56.73866223337929,
+      "urbanPercentage": 57.48435976871821,
+      "state": "NV"
+    }
+  ],
+  [
     "NE-01",
     {
       "population": 657029,
@@ -4245,24 +4263,6 @@
       "diversityIndex": 20.460774936967795,
       "urbanPercentage": 53.83447500438645,
       "state": "NE"
-    }
-  ],
-  [
-    "NV-01",
-    {
-      "population": 688773,
-      "white": 305149,
-      "black": 82611,
-      "asian": 59312,
-      "hispanic": 319025,
-      "medianAge": 36.8,
-      "medianIncome": 45483,
-      "housingUnits": 299548,
-      "educationBachelors": 54107,
-      "votingAgePopulation": 420148,
-      "diversityIndex": 56.73866223337929,
-      "urbanPercentage": 57.48435976871821,
-      "state": "NV"
     }
   ],
   [
@@ -5076,6 +5076,24 @@
     }
   ],
   [
+    "NC-02",
+    {
+      "population": 892874,
+      "white": 613501,
+      "black": 169919,
+      "asian": 20994,
+      "hispanic": 92048,
+      "medianAge": 39,
+      "medianIncome": 78555,
+      "housingUnits": 350796,
+      "educationBachelors": 149496,
+      "votingAgePopulation": 631553,
+      "diversityIndex": 48.04853637663786,
+      "urbanPercentage": 63.63199694409286,
+      "state": "NC"
+    }
+  ],
+  [
     "NY-26",
     {
       "population": 738583,
@@ -5126,24 +5144,6 @@
       "votingAgePopulation": 551485,
       "diversityIndex": 59.74709044142627,
       "urbanPercentage": 54.19699497701818,
-      "state": "NC"
-    }
-  ],
-  [
-    "NC-02",
-    {
-      "population": 892874,
-      "white": 613501,
-      "black": 169919,
-      "asian": 20994,
-      "hispanic": 92048,
-      "medianAge": 39,
-      "medianIncome": 78555,
-      "housingUnits": 350796,
-      "educationBachelors": 149496,
-      "votingAgePopulation": 631553,
-      "diversityIndex": 48.04853637663786,
-      "urbanPercentage": 63.63199694409286,
       "state": "NC"
     }
   ],
@@ -7668,6 +7668,24 @@
     }
   ],
   [
+    "WI-07",
+    {
+      "population": 729683,
+      "white": 672163,
+      "black": 5712,
+      "asian": 11366,
+      "hispanic": 18675,
+      "medianAge": 44.5,
+      "medianIncome": 63440,
+      "housingUnits": 413915,
+      "educationBachelors": 86270,
+      "votingAgePopulation": 565811,
+      "diversityIndex": 14.959472979211409,
+      "urbanPercentage": 44.07203169732916,
+      "state": "WI"
+    }
+  ],
+  [
     "WI-04",
     {
       "population": 696075,
@@ -7718,24 +7736,6 @@
       "votingAgePopulation": 560393,
       "diversityIndex": 17.712508448121365,
       "urbanPercentage": 54.794213190299914,
-      "state": "WI"
-    }
-  ],
-  [
-    "WI-07",
-    {
-      "population": 729683,
-      "white": 672163,
-      "black": 5712,
-      "asian": 11366,
-      "hispanic": 18675,
-      "medianAge": 44.5,
-      "medianIncome": 63440,
-      "housingUnits": 413915,
-      "educationBachelors": 86270,
-      "votingAgePopulation": 565811,
-      "diversityIndex": 14.959472979211409,
-      "urbanPercentage": 44.07203169732916,
       "state": "WI"
     }
   ],

@@ -54,6 +54,15 @@ class RedisService {
 
     const finalConfig = { ...defaultConfig, ...config };
 
+    // DEBUG: Log Redis configuration
+    logger.info('🔧 Redis Service Config:', {
+      host: finalConfig.host,
+      port: finalConfig.port,
+      db: finalConfig.db,
+      password: finalConfig.password ? '***' : 'none',
+      lazyConnect: finalConfig.lazyConnect,
+    });
+
     // Create Redis client
     this.client = new Redis({
       host: finalConfig.host,
@@ -80,6 +89,9 @@ class RedisService {
 
     this.setupEventHandlers();
     this.startCleanupTask();
+
+    // DEBUG: Force initial connection attempt
+    this.forceConnect();
   }
 
   public static getInstance(config?: Partial<CacheConfig>): RedisService {
@@ -145,6 +157,19 @@ class RedisService {
 
   private getFallbackKey(key: string): string {
     return `${this.keyPrefix}${key}`;
+  }
+
+  private async forceConnect(): Promise<void> {
+    try {
+      logger.info('🔌 Attempting Redis connection...');
+      await this.client.ping();
+      logger.info('✅ Redis connection successful');
+    } catch (error) {
+      logger.error('❌ Redis connection failed:', error as Error, {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: process.env.REDIS_PORT || '6379',
+      });
+    }
   }
 
   /**

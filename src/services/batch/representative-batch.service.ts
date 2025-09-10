@@ -4,7 +4,7 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
-import { govCache } from '@/services/cache/simple-government-cache';
+import { govCache } from '@/services/cache';
 import {
   getOptimizedBillsByMember,
   getBillsSummary,
@@ -55,7 +55,7 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
 
   // Check if we have a cached batch response
   const cacheKey = `batch:${bioguideId}:${endpoints.sort().join(',')}:${JSON.stringify(options)}`;
-  const cached = govCache.get<BatchResponse>(cacheKey);
+  const cached = await govCache.get<BatchResponse>(cacheKey);
 
   if (cached) {
     logger.info('Batch cache hit', { bioguideId, endpoints, cacheKey });
@@ -70,244 +70,205 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
   const successfulEndpoints: string[] = [];
   const failedEndpoints: string[] = [];
 
-  // Rate limiter for concurrent requests
-  const maxConcurrent = 3;
-  const semaphore = new Array(maxConcurrent).fill(null);
-  let semaphoreIndex = 0;
+  // Enhanced request queue with exponential backoff
+  const maxConcurrent = 8; // Increased from 3 to 8 for better throughput
+  const queue: Array<{ endpoint: string; resolve: () => void; retryCount: number }> = [];
+  let runningRequests = 0;
 
-  const executeEndpoint = async (endpoint: string): Promise<void> => {
-    // Wait for available slot
-    await new Promise<void>(resolve => {
-      const checkSlot = () => {
-        if (semaphore[semaphoreIndex] === null) {
-          semaphore[semaphoreIndex] = true;
-          resolve();
-        } else {
-          semaphoreIndex = (semaphoreIndex + 1) % maxConcurrent;
-          setTimeout(checkSlot, 10);
-        }
-      };
-      checkSlot();
-    });
-
-    const currentSlot = semaphoreIndex;
-    semaphoreIndex = (semaphoreIndex + 1) % maxConcurrent;
+  const executeWithBackoff = async (endpointName: string, retryCount = 0): Promise<void> => {
+    const maxRetries = 3;
+    const baseDelayMs = 1000; // 1 second base delay
 
     try {
-      let result;
-
-      switch (endpoint) {
-        case 'bills': {
-          if (options.bills?.summaryOnly) {
-            result = await getBillsSummary(bioguideId);
-          } else {
-            const billsResult = await getOptimizedBillsByMember({
-              bioguideId,
-              limit: options.bills?.limit || 25,
-              page: options.bills?.page || 1,
-            });
-
-            // Transform to legacy format for backward compatibility
-            result = {
-              // Legacy format expected by BillsTab
-              sponsoredLegislation: billsResult.bills,
-
-              // Enhanced format with counts and structure
-              sponsored: {
-                count: billsResult.bills.length,
-                bills: billsResult.bills,
-              },
-              cosponsored: {
-                count: 0,
-                bills: [],
-              },
-
-              // Summary
-              totalSponsored: billsResult.bills.length,
-              totalCosponsored: 0,
-              totalBills: billsResult.bills.length,
-
-              // Include pagination info
-              pagination: billsResult.pagination,
-
-              metadata: {
-                ...billsResult.metadata,
-                source: 'Congress.gov API (Optimized)',
-                congressLabel: `119th Congress`,
-                dataStructure: 'enhanced',
-                note: 'Cosponsored bills require separate API implementation',
-              },
-            };
+      await processEndpoint(endpointName);
+    } catch (error) {
+      if (retryCount < maxRetries && shouldRetry(error)) {
+        const delayMs = baseDelayMs * Math.pow(2, retryCount); // Exponential backoff
+        logger.warn(
+          `Retrying ${endpointName} after ${delayMs}ms (attempt ${retryCount + 1}/${maxRetries + 1})`,
+          {
+            bioguideId,
+            error: error instanceof Error ? error.message : 'Unknown error',
           }
-          break;
+        );
+
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        return executeWithBackoff(endpointName, retryCount + 1);
+      }
+      throw error;
+    }
+  };
+
+  const shouldRetry = (error: unknown): boolean => {
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      return (
+        message.includes('timeout') ||
+        message.includes('network') ||
+        message.includes('econnreset') ||
+        message.includes('503') ||
+        message.includes('502')
+      );
+    }
+    return false;
+  };
+
+  const executeEndpoint = async (endpoint: string): Promise<void> => {
+    // Wait for available slot with queue management
+    if (runningRequests >= maxConcurrent) {
+      await new Promise<void>(resolve => {
+        queue.push({ endpoint, resolve, retryCount: 0 });
+      });
+    }
+
+    runningRequests++;
+
+    const processNext = () => {
+      runningRequests--;
+      if (queue.length > 0) {
+        const next = queue.shift();
+        if (next) {
+          setImmediate(() => {
+            runningRequests++;
+            next.resolve();
+          });
         }
+      }
+    };
 
-        case 'votes': {
-          try {
-            logger.info(`Batch votes: Starting for ${bioguideId}`);
+    try {
+      await executeWithBackoff(endpoint);
+      successfulEndpoints.push(endpoint);
+    } catch (error) {
+      logger.error(`Batch endpoint ${endpoint} failed`, error as Error, { bioguideId });
+      failedEndpoints.push(endpoint);
+      errors[endpoint] = {
+        code: 'EXECUTION_ERROR',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      };
+    } finally {
+      processNext();
+    }
+  };
 
-            // Get representative chamber info for proper API routing
-            const { getEnhancedRepresentative } = await import(
-              '@/features/representatives/services/congress.service'
-            );
-            const representative = await getEnhancedRepresentative(bioguideId);
-            if (!representative) {
-              logger.error('Representative not found for votes', { bioguideId });
-              result = [];
-              break;
-            }
-            const chamber = representative.chamber;
+  const processEndpoint = async (endpointName: string): Promise<void> => {
+    let result;
 
-            logger.info(`Fetching ${chamber} votes for ${bioguideId}`, {
-              bioguideId,
-              chamber,
-            });
+    switch (endpointName) {
+      case 'bills': {
+        if (options.bills?.summaryOnly) {
+          result = await getBillsSummary(bioguideId);
+        } else {
+          const billsResult = await getOptimizedBillsByMember({
+            bioguideId,
+            limit: options.bills?.limit || 25,
+            page: options.bills?.page || 1,
+          });
 
-            // Use chamber-aware votes function with timeout protection
-            const timeout = new Promise(
-              (_, reject) => setTimeout(() => reject(new Error('Votes timeout')), 5000) // 5 second timeout
-            );
+          // Transform to legacy format for backward compatibility
+          result = {
+            // Legacy format expected by BillsTab
+            sponsoredLegislation: billsResult.bills,
 
-            const votesPromise = getVotesByMember(bioguideId, undefined, chamber);
-            const votes = (await Promise.race([votesPromise, timeout])) as unknown[];
+            // Enhanced format with counts and structure
+            sponsored: {
+              count: billsResult.bills.length,
+              bills: billsResult.bills,
+            },
+            cosponsored: {
+              count: 0,
+              bills: [],
+            },
 
-            // Limit results if requested
-            result =
-              options.votes?.limit && Array.isArray(votes)
-                ? votes.slice(0, options.votes.limit)
-                : votes;
+            // Summary
+            totalSponsored: billsResult.bills.length,
+            totalCosponsored: 0,
+            totalBills: billsResult.bills.length,
 
-            logger.info(`Votes retrieved for ${bioguideId}`, {
-              count: Array.isArray(result) ? result.length : 0,
-              chamber,
-            });
-          } catch (error) {
-            if (error instanceof Error && error.message === 'Votes timeout') {
-              logger.warn(`Votes timeout for ${bioguideId} after 5 seconds`);
-            } else {
-              logger.error(`Votes error for ${bioguideId}:`, error);
-            }
-            // Return empty array on error/timeout
+            // Include pagination info
+            pagination: billsResult.pagination,
+
+            metadata: {
+              ...billsResult.metadata,
+              source: 'Congress.gov API (Optimized)',
+              congressLabel: `119th Congress`,
+              dataStructure: 'enhanced',
+              note: 'Cosponsored bills require separate API implementation',
+            },
+          };
+        }
+        break;
+      }
+
+      case 'votes': {
+        try {
+          logger.info(`Batch votes: Starting for ${bioguideId}`);
+
+          // Get representative chamber info for proper API routing
+          const { getEnhancedRepresentative } = await import(
+            '@/features/representatives/services/congress.service'
+          );
+          const representative = await getEnhancedRepresentative(bioguideId);
+          if (!representative) {
+            logger.error('Representative not found for votes', { bioguideId });
             result = [];
+            break;
           }
+          const chamber = representative.chamber;
 
-          break;
+          logger.info(`Fetching ${chamber} votes for ${bioguideId}`, {
+            bioguideId,
+            chamber,
+          });
+
+          // Use chamber-aware votes function with timeout protection
+          const timeout = new Promise(
+            (_, reject) => setTimeout(() => reject(new Error('Votes timeout')), 5000) // 5 second timeout
+          );
+
+          const votesPromise = getVotesByMember(bioguideId, undefined, chamber);
+          const votes = (await Promise.race([votesPromise, timeout])) as unknown[];
+
+          // Limit results if requested
+          result =
+            options.votes?.limit && Array.isArray(votes)
+              ? votes.slice(0, options.votes.limit)
+              : votes;
+
+          logger.info(`Votes retrieved for ${bioguideId}`, {
+            count: Array.isArray(result) ? result.length : 0,
+            chamber,
+          });
+        } catch (error) {
+          if (error instanceof Error && error.message === 'Votes timeout') {
+            logger.warn(`Votes timeout for ${bioguideId} after 5 seconds`);
+          } else {
+            logger.error(`Votes error for ${bioguideId}:`, error);
+          }
+          // Return empty array on error/timeout
+          result = [];
         }
 
-        case 'finance': {
-          try {
-            logger.info(`Batch finance: Starting for ${bioguideId}`);
+        break;
+      }
 
-            // Import FEC mapping
-            const { bioguideToFECMapping } = await import('@/lib/data/bioguide-fec-mapping');
-            const fecMapping = bioguideToFECMapping[bioguideId];
+      case 'finance': {
+        try {
+          logger.info(`Batch finance: Starting for ${bioguideId}`);
 
-            logger.info(`FEC mapping lookup for ${bioguideId}:`, {
-              hasFecMapping: !!fecMapping,
-              fecId: fecMapping?.fecId || 'none',
-              name: fecMapping?.name || 'unknown',
-            });
+          // Import FEC mapping
+          const { bioguideToFECMapping } = await import('@/lib/data/bioguide-fec-mapping');
+          const fecMapping = bioguideToFECMapping[bioguideId];
 
-            if (!fecMapping || !fecMapping.fecId) {
-              // Return empty structure for representatives without FEC data
-              logger.info(`No FEC mapping for ${bioguideId}`);
-              result = {
-                totalRaised: 0,
-                totalSpent: 0,
-                cashOnHand: 0,
-                individualContributions: 0,
-                pacContributions: 0,
-                partyContributions: 0,
-                candidateContributions: 0,
-                metadata: {
-                  note: 'No FEC data available for this representative',
-                  bioguideId,
-                },
-              };
-              break;
-            }
+          logger.info(`FEC mapping lookup for ${bioguideId}:`, {
+            hasFecMapping: !!fecMapping,
+            fecId: fecMapping?.fecId || 'none',
+            name: fecMapping?.name || 'unknown',
+          });
 
-            // Call FEC API with the mapped ID
-            const candidateId = fecMapping.fecId;
-            const cycle = 2024;
-
-            logger.info(`Calling FEC API:`, {
-              candidateId,
-              cycle,
-              method: 'getCandidateFinancials',
-            });
-
-            // Get financial summary (FIX: Correct method name)
-            const summaryDataArray = await fecAPI.getCandidateFinancials(candidateId, cycle);
-
-            logger.info(`FEC API response:`, {
-              candidateId,
-              responseType: Array.isArray(summaryDataArray) ? 'array' : typeof summaryDataArray,
-              length: Array.isArray(summaryDataArray) ? summaryDataArray.length : 'N/A',
-              firstItemKeys:
-                Array.isArray(summaryDataArray) && summaryDataArray[0]
-                  ? Object.keys(summaryDataArray[0])
-                  : 'none',
-            });
-
-            // Handle array response - take the most recent cycle's data
-            const summaryData =
-              Array.isArray(summaryDataArray) && summaryDataArray.length > 0
-                ? summaryDataArray[0]
-                : null;
-
-            if (!summaryData) {
-              logger.warn(`No financial data returned from FEC for ${candidateId} (${bioguideId})`);
-              result = {
-                totalRaised: 0,
-                totalSpent: 0,
-                cashOnHand: 0,
-                individualContributions: 0,
-                pacContributions: 0,
-                partyContributions: 0,
-                candidateContributions: 0,
-                metadata: {
-                  note: 'No financial data found in FEC records',
-                  candidateId,
-                  bioguideId,
-                },
-              };
-              break;
-            }
-
-            // Process financial data with proper types (interface now matches API response)
-            logger.info(`Processing financial data for ${bioguideId}:`, {
-              receipts: summaryData.receipts,
-              disbursements: summaryData.disbursements,
-              cashOnHand: summaryData.last_cash_on_hand_end_period,
-              individualContributions: summaryData.individual_contributions,
-            });
-
-            // Transform to expected format using proper field names
-            result = {
-              totalRaised: summaryData.receipts || 0,
-              totalSpent: summaryData.disbursements || 0,
-              cashOnHand: summaryData.last_cash_on_hand_end_period || 0,
-              individualContributions: summaryData.individual_contributions || 0,
-              pacContributions: summaryData.other_political_committee_contributions || 0,
-              partyContributions: summaryData.political_party_committee_contributions || 0,
-              candidateContributions: summaryData.candidate_contribution || 0,
-
-              metadata: {
-                candidateId,
-                cycle,
-                lastUpdated: new Date().toISOString(),
-                bioguideId,
-              },
-            };
-
-            logger.info(`Finance data retrieved for ${bioguideId}`, {
-              totalRaised: result.totalRaised,
-              hasFECMapping: true,
-            });
-          } catch (error) {
-            logger.error(`Finance error for ${bioguideId}:`, error);
-            // Return empty data on error
+          if (!fecMapping || !fecMapping.fecId) {
+            // Return empty structure for representatives without FEC data
+            logger.info(`No FEC mapping for ${bioguideId}`);
             result = {
               totalRaised: 0,
               totalSpent: 0,
@@ -317,110 +278,194 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
               partyContributions: 0,
               candidateContributions: 0,
               metadata: {
-                note: 'Finance data temporarily unavailable',
+                note: 'No FEC data available for this representative',
                 bioguideId,
-                error: error instanceof Error ? error.message : 'Unknown error',
               },
             };
+            break;
           }
 
-          break;
-        }
+          // Call FEC API with the mapped ID
+          const candidateId = fecMapping.fecId;
+          const cycle = 2024;
 
-        case 'committees': {
-          try {
-            logger.info(`Batch committees: Starting for ${bioguideId}`);
+          logger.info(`Calling FEC API:`, {
+            candidateId,
+            cycle,
+            method: 'getCandidateFinancials',
+          });
 
-            // Use the existing enhanced representative service which has real committee data
-            const { getEnhancedRepresentative } = await import(
-              '@/features/representatives/services/congress.service'
-            );
+          // Get financial summary (FIX: Correct method name)
+          const summaryDataArray = await fecAPI.getCandidateFinancials(candidateId, cycle);
 
-            const representative = await getEnhancedRepresentative(bioguideId);
+          logger.info(`FEC API response:`, {
+            candidateId,
+            responseType: Array.isArray(summaryDataArray) ? 'array' : typeof summaryDataArray,
+            length: Array.isArray(summaryDataArray) ? summaryDataArray.length : 'N/A',
+            firstItemKeys:
+              Array.isArray(summaryDataArray) && summaryDataArray[0]
+                ? Object.keys(summaryDataArray[0])
+                : 'none',
+          });
 
-            if (!representative) {
-              logger.warn(`Representative not found for committees: ${bioguideId}`);
-              result = {
-                committees: [],
-                count: 0,
-                metadata: {
-                  note: 'Representative not found',
-                  bioguideId,
-                  source: 'congress-legislators',
-                },
-              };
-              break;
-            }
+          // Handle array response - take the most recent cycle's data
+          const summaryData =
+            Array.isArray(summaryDataArray) && summaryDataArray.length > 0
+              ? summaryDataArray[0]
+              : null;
 
-            const committees = representative.committees || [];
-
+          if (!summaryData) {
+            logger.warn(`No financial data returned from FEC for ${candidateId} (${bioguideId})`);
             result = {
-              committees,
-              count: committees.length,
+              totalRaised: 0,
+              totalSpent: 0,
+              cashOnHand: 0,
+              individualContributions: 0,
+              pacContributions: 0,
+              partyContributions: 0,
+              candidateContributions: 0,
               metadata: {
+                note: 'No financial data found in FEC records',
+                candidateId,
                 bioguideId,
-                source: 'congress-legislators YAML',
-                lastUpdated: new Date().toISOString(),
-                representativeName:
-                  representative.fullName?.first + ' ' + representative.fullName?.last,
               },
             };
+            break;
+          }
 
-            logger.info(`Committees retrieved for ${bioguideId}`, {
-              count: committees.length,
-              representativeName:
-                representative.fullName?.first + ' ' + representative.fullName?.last,
-            });
-          } catch (error) {
-            logger.error(`Committees error for ${bioguideId}:`, error);
+          // Process financial data with proper types (interface now matches API response)
+          logger.info(`Processing financial data for ${bioguideId}:`, {
+            receipts: summaryData.receipts,
+            disbursements: summaryData.disbursements,
+            cashOnHand: summaryData.last_cash_on_hand_end_period,
+            individualContributions: summaryData.individual_contributions,
+          });
+
+          // Transform to expected format using proper field names
+          result = {
+            totalRaised: summaryData.receipts || 0,
+            totalSpent: summaryData.disbursements || 0,
+            cashOnHand: summaryData.last_cash_on_hand_end_period || 0,
+            individualContributions: summaryData.individual_contributions || 0,
+            pacContributions: summaryData.other_political_committee_contributions || 0,
+            partyContributions: summaryData.political_party_committee_contributions || 0,
+            candidateContributions: summaryData.candidate_contribution || 0,
+
+            metadata: {
+              candidateId,
+              cycle,
+              lastUpdated: new Date().toISOString(),
+              bioguideId,
+            },
+          };
+
+          logger.info(`Finance data retrieved for ${bioguideId}`, {
+            totalRaised: result.totalRaised,
+            hasFECMapping: true,
+          });
+        } catch (error) {
+          logger.error(`Finance error for ${bioguideId}:`, error);
+          // Return empty data on error
+          result = {
+            totalRaised: 0,
+            totalSpent: 0,
+            cashOnHand: 0,
+            individualContributions: 0,
+            pacContributions: 0,
+            partyContributions: 0,
+            candidateContributions: 0,
+            metadata: {
+              note: 'Finance data temporarily unavailable',
+              bioguideId,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            },
+          };
+        }
+
+        break;
+      }
+
+      case 'committees': {
+        try {
+          logger.info(`Batch committees: Starting for ${bioguideId}`);
+
+          // Use the existing enhanced representative service which has real committee data
+          const { getEnhancedRepresentative } = await import(
+            '@/features/representatives/services/congress.service'
+          );
+
+          const representative = await getEnhancedRepresentative(bioguideId);
+
+          if (!representative) {
+            logger.warn(`Representative not found for committees: ${bioguideId}`);
             result = {
               committees: [],
               count: 0,
               metadata: {
-                note: 'Committee data temporarily unavailable',
+                note: 'Representative not found',
                 bioguideId,
                 source: 'congress-legislators',
-                error: error instanceof Error ? error.message : 'Unknown error',
               },
             };
+            break;
           }
 
-          break;
+          const committees = representative.committees || [];
+
+          result = {
+            committees,
+            count: committees.length,
+            metadata: {
+              bioguideId,
+              source: 'congress-legislators YAML',
+              lastUpdated: new Date().toISOString(),
+              representativeName:
+                representative.fullName?.first + ' ' + representative.fullName?.last,
+            },
+          };
+
+          logger.info(`Committees retrieved for ${bioguideId}`, {
+            count: committees.length,
+            representativeName:
+              representative.fullName?.first + ' ' + representative.fullName?.last,
+          });
+        } catch (error) {
+          logger.error(`Committees error for ${bioguideId}:`, error);
+          result = {
+            committees: [],
+            count: 0,
+            metadata: {
+              note: 'Committee data temporarily unavailable',
+              bioguideId,
+              source: 'congress-legislators',
+              error: error instanceof Error ? error.message : 'Unknown error',
+            },
+          };
         }
 
-        default:
-          throw new Error(`Unknown endpoint: ${endpoint}`);
+        break;
       }
 
-      data[endpoint] = result;
-      successfulEndpoints.push(endpoint);
-
-      logger.info(`Batch endpoint ${endpoint} completed`, {
-        bioguideId,
-        endpoint,
-        hasData: !!result,
-        dataSize: Array.isArray(result)
-          ? result.length
-          : typeof result === 'object' && result !== null
-            ? Object.keys(result).length
-            : 1,
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      errors[endpoint] = {
-        code: 'SERVICE_ERROR',
-        message: `${endpoint} service failed: ${errorMessage}`,
-      };
-      failedEndpoints.push(endpoint);
-
-      logger.error(`Batch endpoint ${endpoint} failed`, error as Error, {
-        bioguideId,
-        endpoint,
-      });
-    } finally {
-      // Release semaphore slot
-      semaphore[currentSlot] = null;
+      default:
+        throw new Error(`Unknown endpoint: ${endpointName}`);
     }
+
+    data[endpointName] = result;
+
+    logger.info(`Batch endpoint ${endpointName} completed`, {
+      bioguideId,
+      endpoint: endpointName,
+      hasData: !!result,
+      resultType: typeof result,
+      isNull: result === null,
+      isUndefined: result === undefined,
+      dataSize: Array.isArray(result)
+        ? result.length
+        : typeof result === 'object' && result !== null
+          ? Object.keys(result).length
+          : 1,
+      actualResult: result === null ? 'NULL' : result === undefined ? 'UNDEFINED' : 'HAS_DATA',
+    });
   };
 
   // Execute all endpoints with concurrency control
@@ -441,9 +486,9 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
     errors: Object.keys(errors).length > 0 ? errors : undefined,
   };
 
-  // Cache successful results for 5 minutes
+  // Cache successful results for 5 minutes using heavy endpoint TTL
   if (successfulEndpoints.length > 0) {
-    govCache.set(cacheKey, result, { ttl: 300 * 1000, source: 'batch-service' });
+    govCache.set(cacheKey, result, { dataType: 'batch', source: 'batch-service' });
   }
 
   logger.info('Batch request completed', {

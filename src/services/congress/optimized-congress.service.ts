@@ -4,7 +4,7 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
-import { govCache } from '@/services/cache/simple-government-cache';
+import { govCache } from '@/services/cache';
 
 // Congress.gov API response types
 interface CongressBill {
@@ -103,7 +103,7 @@ export async function getOptimizedBillsByMember(
 
   // Check cache first
   const cacheKey = `optimized-bills:${bioguideId}:${congress}:${limit}:${page}:${includeAmendments}`;
-  const cached = govCache.get<OptimizedBillsResponse>(cacheKey);
+  const cached = await govCache.get<OptimizedBillsResponse>(cacheKey);
 
   if (cached) {
     logger.info('Bills cache hit', { bioguideId, congress, cacheKey });
@@ -196,7 +196,7 @@ export async function getOptimizedBillsByMember(
     };
 
     // Cache for 30 minutes
-    govCache.set(cacheKey, result, { ttl: 1800 * 1000, source: 'congress.gov' });
+    await govCache.set(cacheKey, result, { ttl: 1800 * 1000, source: 'congress.gov' });
 
     logger.info('Optimized bills fetch complete', {
       bioguideId,
@@ -241,7 +241,7 @@ type BillsSummaryResult = {
 
 export async function getBillsSummary(bioguideId: string): Promise<BillsSummaryResult> {
   const cacheKey = `bills-summary:${bioguideId}`;
-  const cached = govCache.get<BillsSummaryResult>(cacheKey);
+  const cached = await govCache.get<BillsSummaryResult>(cacheKey);
 
   if (cached) {
     return cached;
@@ -273,7 +273,7 @@ export async function getBillsSummary(bioguideId: string): Promise<BillsSummaryR
       })),
     };
 
-    govCache.set(cacheKey, result, { ttl: 3600 * 1000, source: 'congress.gov' }); // Cache for 1 hour
+    await govCache.set(cacheKey, result, { ttl: 3600 * 1000, source: 'congress.gov' }); // Cache for 1 hour
     return result;
   } catch (error) {
     logger.error('Bills summary fetch failed', error as Error, { bioguideId });

@@ -46,6 +46,15 @@ export class RedisCache {
 
     const finalConfig = { ...defaultConfig, ...config };
 
+    // DEBUG: Log connection config
+    logger.info('🔧 Redis Config:', {
+      host: finalConfig.host,
+      port: finalConfig.port,
+      db: finalConfig.db,
+      password: finalConfig.password ? '***' : 'none',
+      lazyConnect: finalConfig.lazyConnect,
+    });
+
     // Create Redis client
     this.client = new Redis({
       host: finalConfig.host,
@@ -72,6 +81,9 @@ export class RedisCache {
 
     this.setupEventHandlers();
     this.startCleanupTask();
+
+    // DEBUG: Force initial connection for debugging
+    this.forceConnect();
   }
 
   private setupEventHandlers(): void {
@@ -130,6 +142,19 @@ export class RedisCache {
 
   private getFallbackKey(key: string): string {
     return `${this.keyPrefix}${key}`;
+  }
+
+  private async forceConnect(): Promise<void> {
+    try {
+      logger.info('🔌 Attempting Redis connection...');
+      await this.client.ping();
+      logger.info('✅ Redis connection successful');
+    } catch (error) {
+      logger.error('❌ Redis connection failed:', error as Error, {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: process.env.REDIS_PORT || '6379',
+      });
+    }
   }
 
   async get<T = any>(key: string): Promise<T | null> {
@@ -221,7 +246,7 @@ export class RedisCache {
           ttl: ttlSeconds * 1000,
         });
         return true;
-      } catch (fallbackError) {
+      } catch {
         return false;
       }
     }

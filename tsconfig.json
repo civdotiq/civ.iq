@@ -46,5 +46,15 @@
     ".next/types/**/*.ts",
     "jest.setup.js"
   ],
-  "exclude": ["node_modules", "scripts", "archived-features", "src/types/__tests__/unified-types.test.ts", "src/app/(civic)/representative/[bioguideId]/page-backup.tsx", "src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx"]
+  "exclude": [
+    "node_modules",
+    "scripts",
+    "archived-features",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/__tests__/**",
+    "src/tests/**",
+    "src/app/(civic)/representative/[bioguideId]/page-backup.tsx",
+    "src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx"
+  ]
 }

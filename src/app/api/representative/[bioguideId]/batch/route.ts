@@ -115,7 +115,7 @@ export async function GET(
   const { searchParams } = request.nextUrl;
   const summaryOnly = searchParams.get('summary') === 'true';
 
-  logger.info('Batch API GET request', {
+  logger.info('Batch API GET request - WITH VOTES', {
     bioguideId: upperBioguideId,
     summaryOnly,
   });
@@ -137,12 +137,13 @@ export async function GET(
       });
     }
 
-    // Default batch request with core endpoints
+    // Default batch request with core endpoints including votes
     const result = await executeBatchRequest({
       bioguideId: upperBioguideId,
-      endpoints: ['bills', 'finance'],
+      endpoints: ['bills', 'votes', 'finance'],
       options: {
         bills: { summaryOnly: true },
+        votes: { limit: 5 },
         finance: { summaryOnly: true },
       },
     });

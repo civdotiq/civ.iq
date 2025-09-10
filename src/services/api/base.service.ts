@@ -5,6 +5,7 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { apiConfig } from '@/config';
+import { circuitBreakers } from '@/lib/circuit-breaker';
 
 export interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean>;
@@ -67,11 +68,32 @@ export abstract class BaseService {
         headers: this.sanitizeHeaders(headers),
       });
 
-      const response = await fetch(url, {
-        ...fetchOptions,
-        headers,
-        signal: abortController.signal,
-      });
+      // Determine appropriate circuit breaker based on URL
+      let circuitBreaker;
+      if (url.includes('api.congress.gov')) {
+        circuitBreaker = circuitBreakers.congress;
+      } else if (url.includes('senate.gov')) {
+        circuitBreaker = circuitBreakers.senate;
+      } else if (url.includes('api.open.fec.gov')) {
+        circuitBreaker = circuitBreakers.fec;
+      } else if (url.includes('api.census.gov')) {
+        circuitBreaker = circuitBreakers.census;
+      } else if (url.includes('gdelt')) {
+        circuitBreaker = circuitBreakers.gdelt;
+      }
+
+      const fetchOperation = async (): Promise<Response> => {
+        return await fetch(url, {
+          ...fetchOptions,
+          headers,
+          signal: abortController.signal,
+        });
+      };
+
+      // Use circuit breaker if available, otherwise direct fetch
+      const response = circuitBreaker
+        ? await circuitBreaker.execute(fetchOperation)
+        : await fetchOperation();
 
       clearTimeout(timeoutId);
 

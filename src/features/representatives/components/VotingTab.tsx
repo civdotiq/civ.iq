@@ -296,10 +296,45 @@ function VotingTabComponent({
   }
 
   if (error) {
+    // Enhanced error handling for Phase 3: Differentiate API vs parsing failures
+    const isApiError = error.message?.includes('API') || error.message?.includes('fetch');
+    const isParsingError = error.message?.includes('parsing') || error.message?.includes('XML');
+
     return (
       <div className="text-center py-8">
-        <div className="text-red-600 mb-2">Failed to load voting records</div>
-        <div className="text-sm text-gray-500">Please try refreshing the page</div>
+        <div className="text-red-600 mb-2">
+          {isParsingError
+            ? 'Voting data processing issue'
+            : isApiError
+              ? 'Failed to load voting records'
+              : 'Voting records temporarily unavailable'}
+        </div>
+        <div className="text-sm text-gray-500 mb-4">
+          {isParsingError
+            ? 'XML parsing improvements were recently deployed. Some older votes may be temporarily affected.'
+            : isApiError
+              ? 'Please check your connection and try refreshing the page'
+              : 'Please try refreshing the page'}
+        </div>
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Retry Loading
+          </button>
+          <button
+            onClick={() => {
+              // Force cache bypass by adding timestamp
+              const url = new URL(window.location.href);
+              url.searchParams.set('refresh', Date.now().toString());
+              window.location.href = url.toString();
+            }}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Force Refresh
+          </button>
+        </div>
       </div>
     );
   }
@@ -308,8 +343,15 @@ function VotingTabComponent({
     return (
       <div className="text-center py-8">
         <div className="text-gray-600 mb-2">No voting records available</div>
-        <div className="text-sm text-gray-400">
+        <div className="text-sm text-gray-400 mb-4">
           Voting data is sourced from Congress.gov and Senate XML feeds
+        </div>
+        <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3 max-w-md mx-auto">
+          <div className="font-medium mb-1">Phase 3 Update:</div>
+          <div>
+            House voting XML parsing was recently improved. If you expect to see voting data, please
+            try refreshing the page.
+          </div>
         </div>
       </div>
     );
@@ -445,6 +487,22 @@ function VotingTabComponent({
         </div>
       )}
 
+      {/* Phase 4 Defensive UI: Data Quality Indicator */}
+      {data?.success === false || data?.error ? (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center gap-2 text-sm text-yellow-800">
+            <span className="text-lg">⚠️</span>
+            <div>
+              <div className="font-medium">Partial data available</div>
+              <div className="text-xs text-yellow-700 mt-1">
+                Some voting records may not display due to recent XML parsing improvements.
+                {data?.error && ` Error: ${data.error}`}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {/* Metrics */}
       <div className="grid grid-cols-5 gap-4 mb-8">
         <div className="text-center">
@@ -533,6 +591,16 @@ function VotingTabComponent({
           </div>
         )}
       </div>
+
+      {/* Phase 4 Debug: Cache Status Indicator (dev only) */}
+      {process.env.NODE_ENV === 'development' && data && (
+        <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+          <div className="font-mono">
+            Cache: {data.dataSource || 'unknown'} | Success: {data.success ? '✓' : '✗'} | Votes:{' '}
+            {data.votes?.length || 0} | Total: {data.totalResults || 'unknown'}
+          </div>
+        </div>
+      )}
 
       {/* Recent Votes */}
       <h3 className="font-medium mb-3">Recent Voting Record</h3>

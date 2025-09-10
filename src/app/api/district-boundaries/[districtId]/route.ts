@@ -221,12 +221,12 @@ async function getFileSize(filePath: string): Promise<number> {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { districtId: string } }
+  { params }: { params: Promise<{ districtId: string }> }
 ): Promise<NextResponse> {
   const startTime = Date.now();
 
   try {
-    const { districtId } = params;
+    const { districtId } = await params;
     const { searchParams } = request.nextUrl;
     const detail = searchParams.get('detail') || 'standard';
 
