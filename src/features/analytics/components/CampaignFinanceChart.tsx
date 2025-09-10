@@ -204,7 +204,10 @@ export function CampaignFinanceChart({
                 cy="50%"
                 outerRadius={80}
                 dataKey="value"
-                label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                label={props => {
+                  const { name, percent } = props as { name?: string; percent?: number };
+                  return `${name || ''}: ${((percent || 0) * 100).toFixed(0)}%`;
+                }}
               >
                 {sourceData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
@@ -227,7 +230,10 @@ export function CampaignFinanceChart({
                 cy="50%"
                 outerRadius={80}
                 dataKey="value"
-                label={({ name: _name, percent }) => `${((percent || 0) * 100).toFixed(0)}%`}
+                label={props => {
+                  const { percent } = props as { percent?: number };
+                  return `${((percent || 0) * 100).toFixed(0)}%`;
+                }}
               >
                 {smallVsLargeData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
