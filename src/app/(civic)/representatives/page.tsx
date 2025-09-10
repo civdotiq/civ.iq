@@ -8,7 +8,8 @@ import Link from 'next/link';
 import { getRepresentativesByLocation } from '@/features/representatives/services/congress-api';
 import { CiviqLogo } from '@/shared/ui/CiviqLogo';
 import { RepresentativesClient } from '@/features/representatives/components/RepresentativesClient';
-import { LoadingState } from '@/components/shared/ui/LoadingState';
+import { SmartLoadingState } from '@/shared/components/ui';
+import { PerformanceDashboard } from '@/components/performance/PerformanceDashboard';
 
 interface SearchParams {
   searchParams: Promise<{
@@ -135,7 +136,7 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
           </div>
         )}
 
-        <Suspense fallback={<LoadingState message="Loading representatives..." />}>
+        <Suspense fallback={<SmartLoadingState type="representatives" />}>
           <RepresentativesClient
             initialRepresentatives={initialRepresentatives}
             compareIds={compareIds}
@@ -159,6 +160,9 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
           </p>
         </div>
       </footer>
+
+      {/* Performance Dashboard - Development only */}
+      <PerformanceDashboard />
     </div>
   );
 }

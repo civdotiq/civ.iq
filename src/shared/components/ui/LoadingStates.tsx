@@ -424,3 +424,218 @@ export function ProgressiveLoading({ stages, className = '' }: ProgressiveLoadin
     </div>
   );
 }
+
+// Enhanced loading state with context-aware messaging
+interface SmartLoadingStateProps {
+  type?: 'representatives' | 'bills' | 'votes' | 'finance' | 'news' | 'generic';
+  count?: number;
+  location?: string;
+  className?: string;
+}
+
+export function SmartLoadingState({
+  type = 'generic',
+  count,
+  location,
+  className = '',
+}: SmartLoadingStateProps) {
+  const getLoadingConfig = () => {
+    switch (type) {
+      case 'representatives':
+        return {
+          message: location
+            ? `Finding representatives for ${location}...`
+            : 'Loading congressional representatives...',
+          submessage: count
+            ? `Loading ${count} representatives`
+            : 'Gathering the latest data from Congress.gov',
+          icon: (
+            <svg className="w-8 h-8 text-civiq-blue" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                clipRule="evenodd"
+              />
+            </svg>
+          ),
+        };
+      case 'bills':
+        return {
+          message: 'Loading legislative data...',
+          submessage: 'Fetching bill information from Congress.gov',
+          icon: (
+            <svg className="w-8 h-8 text-civiq-blue" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+                clipRule="evenodd"
+              />
+            </svg>
+          ),
+        };
+      case 'votes':
+        return {
+          message: 'Loading voting records...',
+          submessage: 'Analyzing legislative voting patterns',
+          icon: (
+            <svg className="w-8 h-8 text-civiq-blue" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M10 2L3 7v11c0 5.55 3.84 7.74 9 9 5.16-1.26 9-3.45 9-9V7l-7-5z"
+                clipRule="evenodd"
+              />
+            </svg>
+          ),
+        };
+      case 'finance':
+        return {
+          message: 'Loading campaign finance data...',
+          submessage: 'Retrieving FEC contribution records',
+          icon: (
+            <svg className="w-8 h-8 text-civiq-blue" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"
+                clipRule="evenodd"
+              />
+            </svg>
+          ),
+        };
+      case 'news':
+        return {
+          message: 'Loading latest news...',
+          submessage: 'Gathering media coverage from trusted sources',
+          icon: (
+            <svg className="w-8 h-8 text-civiq-blue" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z"
+                clipRule="evenodd"
+              />
+            </svg>
+          ),
+        };
+      default:
+        return {
+          message: 'Loading...',
+          submessage: 'Please wait while we fetch the latest data',
+          icon: <Spinner size="lg" />,
+        };
+    }
+  };
+
+  const config = getLoadingConfig();
+
+  return (
+    <div className={`flex flex-col items-center justify-center p-8 ${className}`}>
+      <div className="mb-4">{config.icon}</div>
+      <h3 className="text-lg font-medium text-gray-900 mb-2">{config.message}</h3>
+      <p className="text-sm text-gray-600 text-center max-w-md">{config.submessage}</p>
+    </div>
+  );
+}
+
+// Smart grid skeleton that adapts to screen size
+interface AdaptiveGridSkeletonProps {
+  type: 'representatives' | 'districts' | 'bills';
+  count?: number;
+  className?: string;
+}
+
+export function AdaptiveGridSkeleton({
+  type,
+  count = 9,
+  className = '',
+}: AdaptiveGridSkeletonProps) {
+  const getSkeletonComponent = () => {
+    switch (type) {
+      case 'representatives': {
+        const RepresentativeSkeleton = () => (
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-20 h-20 bg-gray-200 rounded-full animate-pulse flex-shrink-0" />
+              <div className="flex-1 space-y-3">
+                <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse" />
+                <div className="flex items-center gap-3">
+                  <div className="h-6 bg-gray-200 rounded-full w-20 animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-32 animate-pulse" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <div className="h-8 bg-gray-200 rounded w-24 animate-pulse" />
+                  <div className="h-8 bg-gray-200 rounded w-20 animate-pulse" />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+        RepresentativeSkeleton.displayName = 'RepresentativeSkeleton';
+        return RepresentativeSkeleton;
+      }
+      case 'districts': {
+        const DistrictSkeleton = () => (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="space-y-4">
+              <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse" />
+              <div className="h-48 bg-gray-100 rounded-lg animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
+                <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
+              </div>
+            </div>
+          </div>
+        );
+        DistrictSkeleton.displayName = 'DistrictSkeleton';
+        return DistrictSkeleton;
+      }
+      case 'bills': {
+        const BillSkeleton = () => (
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="space-y-4">
+              <div className="flex justify-between items-start">
+                <div className="h-6 bg-gray-200 rounded w-24 animate-pulse" />
+                <div className="h-6 bg-gray-200 rounded-full w-16 animate-pulse" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-6 bg-gray-200 rounded w-full animate-pulse" />
+                <div className="h-6 bg-gray-200 rounded w-3/4 animate-pulse" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
+                <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
+                <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
+              </div>
+              <div className="flex gap-4 pt-2">
+                <div className="h-4 bg-gray-200 rounded w-20 animate-pulse" />
+                <div className="h-4 bg-gray-200 rounded w-24 animate-pulse" />
+              </div>
+            </div>
+          </div>
+        );
+        BillSkeleton.displayName = 'BillSkeleton';
+        return BillSkeleton;
+      }
+      default: {
+        const DefaultSkeleton = () => <SkeletonCard />;
+        DefaultSkeleton.displayName = 'DefaultSkeleton';
+        return DefaultSkeleton;
+      }
+    }
+  };
+
+  const SkeletonComponent = getSkeletonComponent();
+
+  return (
+    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${className}`}>
+      {Array.from({ length: count }).map((_, index) => (
+        <div key={index} style={{ animationDelay: `${index * 100}ms` }}>
+          <SkeletonComponent />
+        </div>
+      ))}
+    </div>
+  );
+}
