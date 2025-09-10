@@ -4,7 +4,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { govCache } from '@/services/cache/simple-government-cache';
+import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
 
 /**
@@ -15,19 +15,21 @@ import logger from '@/lib/logging/simple-logger';
  */
 export async function GET() {
   try {
-    const stats = govCache.getStats();
+    const stats = await govCache.getStats();
 
     // Calculate hit rate estimates (since we don't track requests vs hits)
     const estimatedHitRate =
-      stats.activeEntries > 0 ? Math.min(85, 60 + stats.activeEntries * 2) : 0;
+      stats.combined.activeEntries > 0 ? Math.min(85, 60 + stats.combined.activeEntries * 2) : 0;
 
-    // Memory usage estimation in MB
-    const memoryUsageMB = (stats.memorySizeEstimate / 1024 / 1024).toFixed(2);
+    // Memory usage estimation in MB (from fallback cache)
+    const memoryUsageMB = (stats.fallback.memorySizeEstimate / 1024 / 1024).toFixed(2);
 
     // Cache efficiency score based on active vs expired ratio
-    const totalCacheEntries = stats.activeEntries + stats.expiredEntries;
+    const totalCacheEntries = stats.combined.activeEntries + stats.combined.expiredEntries;
     const efficiencyScore =
-      totalCacheEntries > 0 ? Math.round((stats.activeEntries / totalCacheEntries) * 100) : 100;
+      totalCacheEntries > 0
+        ? Math.round((stats.combined.activeEntries / totalCacheEntries) * 100)
+        : 100;
 
     const response = {
       status: 'healthy',
@@ -35,12 +37,13 @@ export async function GET() {
 
       // Core cache statistics
       cache: {
-        totalEntries: stats.totalEntries,
-        activeEntries: stats.activeEntries,
-        expiredEntries: stats.expiredEntries,
+        totalEntries: stats.combined.totalEntries,
+        activeEntries: stats.combined.activeEntries,
+        expiredEntries: stats.combined.expiredEntries,
         memoryUsageMB: parseFloat(memoryUsageMB),
-        oldestEntry: stats.oldestEntry,
-        newestEntry: stats.newestEntry,
+        isConnected: stats.redis.isConnected,
+        redisStatus: stats.redis.status,
+        redundancy: stats.combined.redundancy,
       },
 
       // Performance metrics
@@ -83,7 +86,7 @@ export async function GET() {
               : 'low',
         expirationRate:
           totalCacheEntries > 0
-            ? `${Math.round((stats.expiredEntries / totalCacheEntries) * 100)}%`
+            ? `${Math.round((stats.combined.expiredEntries / totalCacheEntries) * 100)}%`
             : '0%',
         overallHealth:
           parseFloat(memoryUsageMB) < 50 && efficiencyScore >= 60
@@ -94,18 +97,19 @@ export async function GET() {
       // Metadata
       metadata: {
         endpoint: '/api/cache/status',
-        dataSource: 'simple-government-cache',
+        dataSource: 'unified-cache-service',
         generatedAt: new Date().toISOString(),
-        version: '1.0.0',
+        version: '2.0.0',
       },
     };
 
     // Log cache status for monitoring
     logger.info('Cache status requested', {
-      activeEntries: stats.activeEntries,
+      activeEntries: stats.combined.activeEntries,
       memoryUsageMB: parseFloat(memoryUsageMB),
       efficiencyScore,
       healthStatus: response.health.overallHealth,
+      redundancy: stats.combined.redundancy,
     });
 
     return NextResponse.json(response);
@@ -125,7 +129,7 @@ export async function GET() {
         timestamp: new Date().toISOString(),
         metadata: {
           endpoint: '/api/cache/status',
-          dataSource: 'simple-government-cache',
+          dataSource: 'unified-cache-service',
           generatedAt: new Date().toISOString(),
         },
       },

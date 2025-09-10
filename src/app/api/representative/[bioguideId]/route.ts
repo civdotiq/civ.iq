@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
@@ -44,17 +45,33 @@ export async function GET(
   try {
     logger.info('Fetching representative data', { bioguideId: upperBioguideId });
 
-    // First, try to get enhanced data from congress-legislators
+    // First, try to get enhanced data from congress-legislators with caching
     let enhancedData: EnhancedRepresentative | null = null;
     try {
-      enhancedData = await getEnhancedRepresentative(upperBioguideId);
+      const cacheKey = `representative:${upperBioguideId}`;
+
+      // Try cache first
+      enhancedData = await govCache.get<EnhancedRepresentative>(cacheKey);
+
       if (enhancedData) {
-        logger.info('Successfully retrieved enhanced representative data', {
-          bioguideId,
-          hasIds: !!enhancedData.ids,
-          hasSocialMedia: !!enhancedData.socialMedia,
-          hasCurrentTerm: !!enhancedData.currentTerm,
-        });
+        logger.info('Cache hit for representative data', { bioguideId: upperBioguideId });
+      } else {
+        logger.info('Cache miss, fetching representative data', { bioguideId: upperBioguideId });
+        enhancedData = await getEnhancedRepresentative(upperBioguideId);
+
+        if (enhancedData) {
+          // Cache the result for 6 hours
+          await govCache.set(cacheKey, enhancedData, {
+            dataType: 'representatives',
+            source: 'congress-legislators',
+          });
+          logger.info('Successfully retrieved and cached enhanced representative data', {
+            bioguideId,
+            hasIds: !!enhancedData.ids,
+            hasSocialMedia: !!enhancedData.socialMedia,
+            hasCurrentTerm: !!enhancedData.currentTerm,
+          });
+        }
       }
     } catch (error) {
       logger.warn('Failed to get enhanced representative data', {
