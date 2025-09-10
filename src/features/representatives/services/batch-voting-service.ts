@@ -773,16 +773,34 @@ export class BatchVotingService {
   }
 
   /**
-   * Generate recent Senate vote numbers (working backwards from current)
+   * Generate recent Senate vote numbers with dynamic detection (optimized)
    */
   private generateRecentSenateVoteNumbers(count: number): number[] {
-    // Senate typically has 220+ votes by September in active session
-    const currentEstimate = 230;
+    // Dynamic estimation based on date and session progress
+    const currentDate = new Date();
+    const sessionStart = new Date(currentDate.getFullYear(), 0, 3); // January 3rd session start
+    const daysSinceSessionStart = Math.floor(
+      (currentDate.getTime() - sessionStart.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    // Senate averages ~1.5 votes per session day (more realistic than fixed 230)
+    const dynamicEstimate = Math.max(1, Math.floor(daysSinceSessionStart * 1.5));
+    const safeEstimate = Math.min(dynamicEstimate, 350); // Cap at reasonable max
+
     const numbers: number[] = [];
 
-    for (let i = currentEstimate; i > currentEstimate - count && i > 0; i--) {
+    // Start from estimated current and work backwards
+    for (let i = safeEstimate; i > safeEstimate - count && i > 0; i--) {
       numbers.push(i);
     }
+
+    logger.debug('Dynamic Senate vote number generation', {
+      daysSinceSessionStart,
+      dynamicEstimate,
+      safeEstimate,
+      numbersGenerated: numbers.length,
+      startingFrom: safeEstimate,
+    });
 
     return numbers;
   }
@@ -806,20 +824,29 @@ export class BatchVotingService {
       rollCallNumber?: number;
     }>
   > {
-    // Check cache first
+    // Enhanced caching strategy for Senate votes
     const cachedVotes: StandardizedVote[] = [];
     const uncachedNumbers: number[] = [];
+    let cacheHitCount = 0;
 
     for (const voteNumber of voteNumbers) {
-      const cacheKey = `senate-vote-${congress}-${voteNumber}`;
+      const cacheKey = `senate-vote-${congress}-${session}-${voteNumber}`;
       const cached = this.cache.get<StandardizedVote>(cacheKey);
 
       if (cached) {
         cachedVotes.push(cached);
+        cacheHitCount++;
       } else {
         uncachedNumbers.push(voteNumber);
       }
     }
+
+    logger.debug('Senate vote cache analysis', {
+      totalRequested: voteNumbers.length,
+      cacheHits: cacheHitCount,
+      needsFetch: uncachedNumbers.length,
+      hitRate: `${((cacheHitCount / voteNumbers.length) * 100).toFixed(1)}%`,
+    });
 
     // Fetch uncached votes in parallel
     const fetchTasks = uncachedNumbers.map(voteNumber =>
@@ -829,13 +856,28 @@ export class BatchVotingService {
     const newVotes = await Promise.allSettled(fetchTasks);
     const successfulVotes: StandardizedVote[] = [];
 
-    newVotes.forEach((result, _index) => {
+    newVotes.forEach((result, index) => {
       if (result.status === 'fulfilled' && result.value) {
         successfulVotes.push(result.value);
 
-        // Cache the parsed vote
-        const cacheKey = `senate-vote-${congress}-${result.value.rollCallNumber}`;
-        this.cache.set(cacheKey, result.value);
+        // Enhanced caching with appropriate TTL
+        const cacheKey = `senate-vote-${congress}-${session}-${result.value.rollCallNumber}`;
+        const ttlHours = this.getSenateVoteCacheTTL(result.value.rollCallNumber);
+
+        this.cache.set(cacheKey, result.value, ttlHours * 3600); // Convert hours to seconds
+
+        logger.debug('Cached Senate vote', {
+          rollCallNumber: result.value.rollCallNumber,
+          cacheKey,
+          ttlHours,
+          memberVotesCount: result.value.memberVotes.length,
+        });
+      } else if (result.status === 'rejected') {
+        const voteNumber = uncachedNumbers[index];
+        logger.debug('Senate vote fetch failed', {
+          voteNumber,
+          error: result.reason?.message || 'Unknown error',
+        });
       }
     });
 
@@ -1071,6 +1113,28 @@ export class BatchVotingService {
     }
 
     return memberVotes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
+
+  /**
+   * Determine appropriate cache TTL for Senate votes based on recency
+   */
+  private getSenateVoteCacheTTL(rollCallNumber: number): number {
+    // Recent votes (last 50) cache for shorter periods as they may be corrected
+    const currentEstimate = Math.max(
+      1,
+      Math.floor(
+        ((new Date().getTime() - new Date(new Date().getFullYear(), 0, 3).getTime()) /
+          (1000 * 60 * 60 * 24)) *
+          1.5
+      )
+    );
+    const isRecentVote = rollCallNumber > currentEstimate - 50;
+
+    if (isRecentVote) {
+      return 6; // 6 hours for recent votes
+    } else {
+      return 72; // 3 days for older votes (more stable)
+    }
   }
 
   /**
