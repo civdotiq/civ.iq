@@ -172,14 +172,15 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
               description: bill.latestAction?.text || 'Introduced',
               chamber: bill.latestAction?.actionCode?.startsWith('H') ? 'House' : 'Senate',
             },
-            timeline:
-              bill.actions?.map((action: CongressAction) => ({
-                date: action.actionDate,
-                description: action.text,
-                chamber: action.actionCode?.startsWith('H') ? 'House' : 'Senate',
-                actionCode: action.actionCode,
-                type: 'action' as const,
-              })) || [],
+            timeline: Array.isArray(bill.actions)
+              ? bill.actions.map((action: CongressAction) => ({
+                  date: action.actionDate,
+                  description: action.text,
+                  chamber: action.actionCode?.startsWith('H') ? 'House' : 'Senate',
+                  actionCode: action.actionCode,
+                  type: 'action' as const,
+                }))
+              : [],
           },
 
           sponsor: {
@@ -197,34 +198,37 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
             date: bill.introducedDate,
           },
 
-          cosponsors:
-            bill.cosponsors?.map((cosponsor: CongressCosponsor) => ({
-              representative: {
-                bioguideId: cosponsor.bioguideId,
-                name: cosponsor.fullName,
-                firstName: cosponsor.firstName,
-                lastName: cosponsor.lastName,
-                party: cosponsor.party,
-                state: cosponsor.state,
-                district: cosponsor.district,
-                chamber: bill.originChamber === 'House' ? 'House' : 'Senate',
-                title: `${bill.originChamber === 'House' ? 'Rep.' : 'Sen.'} ${cosponsor.fullName}`,
-              } as EnhancedRepresentative,
-              date: cosponsor.sponsorshipDate,
-              withdrawn: cosponsor.sponsorshipWithdrawnDate ? true : false,
-            })) || [],
+          cosponsors: Array.isArray(bill.cosponsors)
+            ? bill.cosponsors.map((cosponsor: CongressCosponsor) => ({
+                representative: {
+                  bioguideId: cosponsor.bioguideId,
+                  name: cosponsor.fullName,
+                  firstName: cosponsor.firstName,
+                  lastName: cosponsor.lastName,
+                  party: cosponsor.party,
+                  state: cosponsor.state,
+                  district: cosponsor.district,
+                  chamber: bill.originChamber === 'House' ? 'House' : 'Senate',
+                  title: `${bill.originChamber === 'House' ? 'Rep.' : 'Sen.'} ${cosponsor.fullName}`,
+                } as EnhancedRepresentative,
+                date: cosponsor.sponsorshipDate,
+                withdrawn: cosponsor.sponsorshipWithdrawnDate ? true : false,
+              }))
+            : [],
 
-          committees:
-            bill.committees?.map((committee: CongressCommittee) => ({
-              committeeId: committee.systemCode,
-              name: committee.name,
-              chamber: committee.chamber === 'House' ? 'House' : 'Senate',
-              activities:
-                committee.activities?.map(activity => ({
-                  date: activity.date,
-                  activity: activity.name,
-                })) || [],
-            })) || [],
+          committees: Array.isArray(bill.committees)
+            ? bill.committees.map((committee: CongressCommittee) => ({
+                committeeId: committee.systemCode,
+                name: committee.name,
+                chamber: committee.chamber === 'House' ? 'House' : 'Senate',
+                activities: Array.isArray(committee.activities)
+                  ? committee.activities.map(activity => ({
+                      date: activity.date,
+                      activity: activity.name,
+                    }))
+                  : [],
+              }))
+            : [],
 
           summary: bill.summaries?.[0]
             ? {
@@ -234,23 +238,24 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
               }
             : undefined,
 
-          subjects:
-            bill.subjects?.legislativeSubjects?.map((subject: CongressSubject) => subject.name) ||
-            [],
+          subjects: Array.isArray(bill.subjects?.legislativeSubjects)
+            ? bill.subjects.legislativeSubjects.map((subject: CongressSubject) => subject.name)
+            : [],
 
           votes: [], // Will be populated below
 
-          relatedBills:
-            bill.relatedBills?.map((related: CongressRelatedBill) => ({
-              number: `${related.type.toUpperCase()}. ${related.number}`,
-              title: related.title,
-              relationship:
-                (related.relationshipDetails?.identifiedBy as
-                  | 'identical'
-                  | 'related'
-                  | 'supersedes'
-                  | 'superseded') || 'related',
-            })) || [],
+          relatedBills: Array.isArray(bill.relatedBills)
+            ? bill.relatedBills.map((related: CongressRelatedBill) => ({
+                number: `${related.type.toUpperCase()}. ${related.number}`,
+                title: related.title,
+                relationship:
+                  (related.relationshipDetails?.identifiedBy as
+                    | 'identical'
+                    | 'related'
+                    | 'supersedes'
+                    | 'superseded') || 'related',
+              }))
+            : [],
 
           introducedDate: bill.introducedDate,
           url: `https://www.congress.gov/bill/${bill.congress}th-congress/${bill.originChamber.toLowerCase()}-bill/${bill.number}`,
@@ -295,7 +300,7 @@ async function fetchBillVotes(
 
   try {
     // Look for recorded votes in bill actions
-    if (billData.actions && billData.actions.length > 0) {
+    if (Array.isArray(billData.actions) && billData.actions.length > 0) {
       for (const action of billData.actions) {
         if (action.recordedVotes && action.recordedVotes.length > 0) {
           for (const recordedVote of action.recordedVotes) {
