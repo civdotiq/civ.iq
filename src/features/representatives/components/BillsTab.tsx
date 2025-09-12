@@ -20,6 +20,7 @@ interface Bill {
   type: string;
   policyArea: string;
   url?: string;
+  relationship?: 'sponsored' | 'cosponsored';
 }
 
 interface BillsResponse {
@@ -73,6 +74,10 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [selectedCongress, setSelectedCongress] = useState(119);
+  const [selectedType, setSelectedType] = useState<'all' | 'sponsored' | 'cosponsored'>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedPolicyArea, setSelectedPolicyArea] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const canLinkToBill = useCallback((bill: Bill): boolean => {
     return !!(bill.type && bill.number && bill.congress);
@@ -125,20 +130,69 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
     );
   }
 
-  const bills = data.sponsored.bills;
-  const filteredBills =
-    selectedCongress === 0 ? bills : bills.filter(bill => bill.congress === selectedCongress);
+  // Combine both sponsored and cosponsored bills
+  const sponsoredBills = data.sponsored?.bills || [];
+  const cosponsoredBills = data.cosponsored?.bills || [];
+
+  // Add relationship field to distinguish them
+  const allBillsWithRelationship = [
+    ...sponsoredBills.map(bill => ({ ...bill, relationship: 'sponsored' as const })),
+    ...cosponsoredBills.map(bill => ({ ...bill, relationship: 'cosponsored' as const })),
+  ];
+
+  // Sort by introduced date (most recent first)
+  const bills = allBillsWithRelationship.sort(
+    (a, b) => new Date(b.introducedDate).getTime() - new Date(a.introducedDate).getTime()
+  );
+
+  // Apply all filters
+  const filteredBills = bills.filter(bill => {
+    // Congress filter
+    if (selectedCongress !== 0 && bill.congress !== selectedCongress) {
+      return false;
+    }
+
+    // Type filter (sponsored/cosponsored)
+    if (selectedType !== 'all' && bill.relationship !== selectedType) {
+      return false;
+    }
+
+    // Status filter
+    if (selectedStatus !== 'all' && bill.status !== selectedStatus) {
+      return false;
+    }
+
+    // Policy area filter
+    if (selectedPolicyArea !== 'all' && bill.policyArea !== selectedPolicyArea) {
+      return false;
+    }
+
+    // Search filter
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      return (
+        bill.title?.toLowerCase().includes(search) ||
+        bill.number?.toLowerCase().includes(search) ||
+        bill.policyArea?.toLowerCase().includes(search)
+      );
+    }
+
+    return true;
+  });
 
   const uniqueCongresses = [...new Set(bills.map(bill => bill.congress))]
     .filter(c => typeof c === 'number' && c > 0)
     .sort((a, b) => b - a);
+
+  // Extract unique statuses and policy areas for filters
+  const uniqueStatuses = [...new Set(bills.map(bill => bill.status).filter(Boolean))].sort();
+  const uniquePolicyAreas = [...new Set(bills.map(bill => bill.policyArea).filter(Boolean))].sort();
 
   const totalPages = Math.ceil(filteredBills.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const displayedBills = filteredBills.slice(startIndex, endIndex);
 
-  const totalBills = filteredBills.length;
   const allBills = bills.length;
   const enactedBills = filteredBills.filter(
     bill => bill.status && bill.status.toLowerCase().includes('enacted')
@@ -146,64 +200,162 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-6">Sponsored Bills</h2>
+      <h2 className="text-xl font-bold mb-6">Legislative Activity</h2>
 
-      {/* Congress Filter */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <div className="flex items-center justify-between">
-          <h3 className="font-medium text-gray-700">Filter by Congress</h3>
-          {selectedCongress !== 119 && (
+      {/* Enhanced Filters Section */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-medium text-gray-700">Filter Bills</h3>
+          {(selectedCongress !== 119 ||
+            selectedType !== 'all' ||
+            selectedStatus !== 'all' ||
+            selectedPolicyArea !== 'all' ||
+            searchTerm) && (
             <button
               onClick={() => {
                 setSelectedCongress(119);
+                setSelectedType('all');
+                setSelectedStatus('all');
+                setSelectedPolicyArea('all');
+                setSearchTerm('');
                 setCurrentPage(1);
               }}
               className="text-sm text-blue-600 hover:text-blue-800"
             >
-              Reset to current Congress
+              Clear all filters
             </button>
           )}
         </div>
-        <div className="mt-3">
-          <select
-            value={selectedCongress}
+
+        {/* Search Bar */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Search Bills</label>
+          <input
+            type="text"
+            value={searchTerm}
             onChange={e => {
-              setSelectedCongress(Number(e.target.value));
+              setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value={119}>Current Congress (119th) - 2025-2027</option>
-            <option value={0}>All Congresses</option>
-            {uniqueCongresses.map(congress => (
-              <option key={congress} value={congress}>
-                {congress}th Congress {congress === 119 ? '(Current)' : ''}
-              </option>
-            ))}
-          </select>
+            placeholder="Search by title, bill number, or policy area..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
         </div>
-        {selectedCongress === 0 && (
-          <div className="mt-2 text-sm text-amber-600">
-            Showing all {allBills} bills across entire career
+
+        {/* Filter Controls Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Congress Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Congress</label>
+            <select
+              value={selectedCongress}
+              onChange={e => {
+                setSelectedCongress(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value={119}>Current (119th)</option>
+              <option value={0}>All Congresses</option>
+              {uniqueCongresses.map(congress => (
+                <option key={congress} value={congress}>
+                  {congress}th Congress
+                </option>
+              ))}
+            </select>
           </div>
-        )}
-        {selectedCongress > 0 && selectedCongress !== 119 && (
-          <div className="mt-2 text-sm text-gray-600">
-            Showing {totalBills} bills from the {selectedCongress}th Congress
+
+          {/* Type Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Bill Type</label>
+            <select
+              value={selectedType}
+              onChange={e => {
+                setSelectedType(e.target.value as 'all' | 'sponsored' | 'cosponsored');
+                setCurrentPage(1);
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Bills</option>
+              <option value="sponsored">Sponsored Only</option>
+              <option value="cosponsored">Cosponsored Only</option>
+            </select>
           </div>
-        )}
+
+          {/* Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select
+              value={selectedStatus}
+              onChange={e => {
+                setSelectedStatus(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Statuses</option>
+              {uniqueStatuses.map(status => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Policy Area Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Policy Area</label>
+            <select
+              value={selectedPolicyArea}
+              onChange={e => {
+                setSelectedPolicyArea(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Policy Areas</option>
+              {uniquePolicyAreas.map(area => (
+                <option key={area} value={area}>
+                  {area}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Items per page selector */}
+        <div className="flex items-center justify-between pt-2 border-t">
+          <div className="text-sm text-gray-600">
+            Showing {filteredBills.length} of {allBills} total bills
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-700">Items per page:</label>
+            <select
+              value={itemsPerPage}
+              onChange={e => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={250}>250</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Statistics */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         <div className="text-center">
-          <div className="text-3xl font-bold text-blue-600">{totalBills}</div>
-          <div className="text-sm text-gray-500">
-            Bills {selectedCongress === 0 ? 'Sponsored' : 'Shown'}
+          <div className="text-3xl font-bold text-blue-600">{data.totalSponsored}</div>
+          <div className="text-sm text-gray-500">Sponsored</div>
+          <div className="text-xs text-gray-400">
+            {filteredBills.filter(b => b.relationship === 'sponsored').length} shown
           </div>
-          {selectedCongress !== 0 && totalBills !== allBills && (
-            <div className="text-xs text-gray-400">({allBills} total career)</div>
-          )}
         </div>
         <div className="text-center">
           <div className="text-3xl font-bold text-green-600">{enactedBills}</div>
@@ -212,6 +364,9 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
         <div className="text-center">
           <div className="text-3xl font-bold text-yellow-600">{data.totalCosponsored}</div>
           <div className="text-sm text-gray-500">Cosponsored</div>
+          <div className="text-xs text-gray-400">
+            {filteredBills.filter(b => b.relationship === 'cosponsored').length} shown
+          </div>
         </div>
         <div className="text-center">
           <div className="text-3xl font-bold text-purple-600">{data.totalBills}</div>
@@ -282,9 +437,22 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
         )
       ) : (
         <div className="space-y-4">
-          {displayedBills.map(bill => (
-            <div key={bill.id} className="border rounded-lg p-4">
+          {displayedBills.map((bill, index) => (
+            <div
+              key={`${bill.id || 'bill'}-${index}-${bill.number || index}`}
+              className="border rounded-lg p-4"
+            >
               <h3 className="font-medium">
+                {bill.relationship === 'cosponsored' && (
+                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded mr-2">
+                    Cosponsored
+                  </span>
+                )}
+                {bill.relationship === 'sponsored' && (
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded mr-2">
+                    Sponsored
+                  </span>
+                )}
                 {canLinkToBill(bill) ? (
                   <Link
                     href={`/bill/${getBillId(bill)}`}

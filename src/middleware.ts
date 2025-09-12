@@ -5,7 +5,17 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { logger } from '@/lib/logging/logger-edge';
+
+// Simple logging for edge runtime (console is allowed in edge runtime)
+const logger = {
+  // eslint-disable-next-line no-console, @typescript-eslint/no-explicit-any
+  http: (message: string, data?: any) => console.log(`[HTTP] ${message}`, data),
+  // eslint-disable-next-line no-console, @typescript-eslint/no-explicit-any
+  warn: (message: string, data?: any) => console.warn(`[WARN] ${message}`, data),
+  // eslint-disable-next-line no-console, @typescript-eslint/no-explicit-any
+  error: (message: string, error?: Error, data?: any) =>
+    console.error(`[ERROR] ${message}`, error, data),
+};
 
 // Rate limiting store (in-memory for Edge Runtime)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
