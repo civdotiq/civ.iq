@@ -76,35 +76,51 @@ interface RepresentativeDetails {
 async function getRepresentativeData(bioguideId: string): Promise<RepresentativeDetails> {
   try {
     if (!bioguideId || typeof bioguideId !== 'string') {
-      const _error = 'Invalid bioguideId provided';
       if (process.env.NODE_ENV === 'development') {
-        // Server component error handling - no console.error
+        // eslint-disable-next-line no-console
+        console.log('DEBUG: Invalid bioguideId:', bioguideId);
       }
       notFound();
     }
 
     if (process.env.NODE_ENV === 'development') {
-      // Server component - fetching representative data
+      // eslint-disable-next-line no-console
+      console.log('DEBUG: Calling getEnhancedRepresentative with:', bioguideId.toUpperCase());
     }
 
     // Direct service call - no HTTP networking during SSR
     const enhancedData = await getEnhancedRepresentative(bioguideId.toUpperCase());
 
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('DEBUG: getEnhancedRepresentative returned:', {
+        isNull: enhancedData === null,
+        isUndefined: enhancedData === undefined,
+        type: typeof enhancedData,
+        hasName: enhancedData?.name,
+        hasFirstName: enhancedData?.firstName,
+        hasLastName: enhancedData?.lastName,
+        keys: enhancedData ? Object.keys(enhancedData).slice(0, 10) : [],
+      });
+    }
+
     if (!enhancedData) {
       if (process.env.NODE_ENV === 'development') {
-        // Representative not found in congress-legislators data
+        // eslint-disable-next-line no-console
+        console.log('DEBUG: enhancedData is null/undefined - calling notFound()');
       }
       notFound();
     }
 
     if (process.env.NODE_ENV === 'development') {
-      // Representative data fetched successfully
+      // eslint-disable-next-line no-console
+      console.log('DEBUG: Returning enhanced data successfully');
     }
-
     return enhancedData;
-  } catch {
+  } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      // Representative data fetch failed - return not found
+      // eslint-disable-next-line no-console
+      console.log('DEBUG: Exception in getRepresentativeData:', error);
     }
     notFound();
   }
@@ -138,10 +154,24 @@ export default async function RepresentativeProfilePage({
   }
 
   // Validate essential representative data - be more lenient
-  if (
-    !representative ||
-    (!representative.name && !representative.firstName && !representative.lastName)
-  ) {
+  if (!representative) {
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('DEBUG: representative is null/undefined');
+    }
+    notFound();
+  }
+
+  if (!representative.name && !representative.firstName && !representative.lastName) {
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('DEBUG: missing name fields:', {
+        name: representative.name,
+        firstName: representative.firstName,
+        lastName: representative.lastName,
+        keys: Object.keys(representative).slice(0, 10),
+      });
+    }
     notFound();
   }
 
@@ -158,12 +188,15 @@ export default async function RepresentativeProfilePage({
 
       <main id="main-content">
         <div className="container mx-auto px-4 py-6">
-          <Link
-            href="/"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
-          >
-            ← Back to Search
-          </Link>
+          <div className="flex justify-between items-center mb-6">
+            <div></div>
+            <Link
+              href="/"
+              className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm"
+            >
+              ← Back to Search
+            </Link>
+          </div>
         </div>
 
         <ChunkLoadErrorBoundary>
