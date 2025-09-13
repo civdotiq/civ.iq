@@ -38,6 +38,11 @@ export async function POST(
     // Try to use containerized batch service, fall back to direct service
     let result;
     try {
+      // Force use of legacy service for votes and bills endpoints - legacy service has optimized implementation
+      if (endpoints.includes('votes') || endpoints.includes('bills')) {
+        throw new Error('Using legacy service for votes/bills - has optimized service integration');
+      }
+
       const batchService = await container.resolve<{
         processBatch: (request: {
           bioguideId: string;

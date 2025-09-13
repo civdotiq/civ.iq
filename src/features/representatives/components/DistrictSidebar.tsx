@@ -6,6 +6,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import {
   MapPin,
   Users,
@@ -165,10 +166,25 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
       <SidebarCard title="District" icon={<MapPin className="w-4 h-4" />} variant="highlight">
         <div className="space-y-3">
           <div>
-            <div className="text-lg font-bold text-gray-900">{getDistrictDisplay()}</div>
-            <div className="text-sm text-gray-600">
-              {representative.chamber === 'House' ? 'Congressional District' : 'U.S. Senate'}
-            </div>
+            {representative.chamber === 'Senate' ? (
+              <Link
+                href={`/districts/${representative.state}-STATE`}
+                className="block hover:bg-blue-50 -m-3 p-3 rounded-lg transition-colors group"
+              >
+                <div className="text-lg font-bold text-gray-900 group-hover:text-blue-600">
+                  {getDistrictDisplay()}
+                </div>
+                <div className="text-sm text-gray-600">U.S. Senate</div>
+                <div className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                  View state overview →
+                </div>
+              </Link>
+            ) : (
+              <div>
+                <div className="text-lg font-bold text-gray-900">{getDistrictDisplay()}</div>
+                <div className="text-sm text-gray-600">Congressional District</div>
+              </div>
+            )}
           </div>
 
           {representative.chamber === 'House' && (

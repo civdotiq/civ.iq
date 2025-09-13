@@ -6,9 +6,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { User } from 'lucide-react';
+import { User, MapPin } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
-import { getAgeFromWikidata } from '@/lib/api/wikidata';
+import { getAgeFromWikidata, getBiographyFromWikidata } from '@/lib/api/wikidata';
 
 interface PersonalInfoCardProps {
   representative: EnhancedRepresentative;
@@ -17,21 +17,27 @@ interface PersonalInfoCardProps {
 
 export function PersonalInfoCard({ representative, className = '' }: PersonalInfoCardProps) {
   const [age, setAge] = useState<number | null>(null);
-  const [isLoadingAge, setIsLoadingAge] = useState(true);
+  const [birthPlace, setBirthPlace] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAge = async () => {
+    const fetchBiographicalData = async () => {
       try {
-        const ageFromWikidata = await getAgeFromWikidata(representative.bioguideId);
+        const [ageFromWikidata, biographyData] = await Promise.all([
+          getAgeFromWikidata(representative.bioguideId),
+          getBiographyFromWikidata(representative.bioguideId),
+        ]);
         setAge(ageFromWikidata);
+        setBirthPlace(biographyData?.birthPlace || null);
       } catch {
         setAge(null);
+        setBirthPlace(null);
       } finally {
-        setIsLoadingAge(false);
+        setIsLoading(false);
       }
     };
 
-    fetchAge();
+    fetchBiographicalData();
   }, [representative.bioguideId]);
 
   const partyColor =
@@ -81,7 +87,7 @@ export function PersonalInfoCard({ representative, className = '' }: PersonalInf
             Age
           </label>
           <div className="mt-1 text-base text-gray-900">
-            {isLoadingAge ? (
+            {isLoading ? (
               <span className="inline-flex items-center gap-2">
                 <span className="animate-pulse h-4 w-16 bg-gray-200 rounded"></span>
               </span>
@@ -92,6 +98,16 @@ export function PersonalInfoCard({ representative, className = '' }: PersonalInf
             )}
           </div>
         </div>
+
+        {birthPlace && (
+          <div className="group">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <MapPin className="w-3 h-3 inline mr-1" />
+              Birthplace
+            </label>
+            <div className="mt-1 text-base text-gray-900">{birthPlace}</div>
+          </div>
+        )}
 
         <div className="group">
           <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">

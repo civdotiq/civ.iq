@@ -10,7 +10,6 @@ import {
   getBillsSummary,
 } from '@/services/congress/optimized-congress.service';
 import { fecAPI } from '@/lib/fec-api';
-import { getVotesByMember } from '@/features/representatives/services/congress-api';
 
 export interface BatchRequest {
   bioguideId: string;
@@ -211,42 +210,135 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
           const representative = await getEnhancedRepresentative(bioguideId);
           if (!representative) {
             logger.error('Representative not found for votes', { bioguideId });
-            result = [];
+            result = {
+              votes: [],
+              totalResults: 0,
+              member: {
+                bioguideId,
+                name: 'Unknown',
+                chamber: 'Unknown',
+              },
+              dataSource: 'member-not-found',
+              success: false,
+            };
             break;
           }
-          const chamber = representative.chamber;
+          const { chamber, name } = representative;
 
           logger.info(`Fetching ${chamber} votes for ${bioguideId}`, {
             bioguideId,
             chamber,
           });
 
-          // Use chamber-aware votes function with timeout protection
-          const timeout = new Promise(
-            (_, reject) => setTimeout(() => reject(new Error('Votes timeout')), 5000) // 5 second timeout
+          // Use the same optimized batch voting service as the direct votes endpoint
+          const limit = options.votes?.limit || 10;
+          let votes = [];
+          let dataSource = '';
+
+          const { batchVotingService } = await import(
+            '@/features/representatives/services/batch-voting-service'
           );
 
-          const votesPromise = getVotesByMember(bioguideId, undefined, chamber);
-          const votes = (await Promise.race([votesPromise, timeout])) as unknown[];
+          if (chamber === 'Senate') {
+            const memberVotes = await batchVotingService.getSenateMemberVotes(
+              bioguideId,
+              119, // 119th Congress
+              1, // Session 1
+              limit
+            );
 
-          // Limit results if requested
-          result =
-            options.votes?.limit && Array.isArray(votes)
-              ? votes.slice(0, options.votes.limit)
-              : votes;
+            // Transform to the same Vote format as the direct endpoint
+            votes = memberVotes.map(vote => ({
+              voteId: vote.voteId,
+              bill: vote.bill || {
+                number: 'N/A',
+                title: 'Vote without associated bill',
+                congress: '119',
+                type: 'Senate Resolution',
+              },
+              question: vote.question || 'Unknown Question',
+              result: vote.result || 'Unknown',
+              date: vote.date,
+              position: vote.position,
+              chamber: 'Senate' as const,
+              rollNumber: vote.rollCallNumber || 0,
+              description: vote.question || 'Unknown Question',
+              category: 'Other',
+              isKeyVote: false,
+              metadata: {
+                source: 'senate-xml-feed',
+                confidence: 'high',
+                processingDate: new Date().toISOString(),
+              },
+            }));
+            dataSource = 'senate-xml-feed';
+          } else {
+            const memberVotes = await batchVotingService.getHouseMemberVotes(
+              bioguideId,
+              119, // 119th Congress
+              1, // Session 1
+              limit
+            );
 
-          logger.info(`Votes retrieved for ${bioguideId}`, {
-            count: Array.isArray(result) ? result.length : 0,
+            // Transform to the same Vote format as the direct endpoint
+            votes = memberVotes.map(vote => ({
+              voteId: vote.voteId,
+              bill: vote.bill || {
+                number: 'N/A',
+                title: 'Vote without associated bill',
+                congress: '119',
+                type: 'House Resolution',
+              },
+              question: vote.question || 'Unknown Question',
+              result: vote.result || 'Unknown',
+              date: vote.date,
+              position: vote.position,
+              chamber: 'House' as const,
+              rollNumber: vote.rollCallNumber || 0,
+              description: vote.question || 'Unknown Question',
+              category: 'Other',
+              isKeyVote: false,
+              metadata: {
+                source: 'house-congress-api',
+                confidence: 'high',
+                processingDate: new Date().toISOString(),
+              },
+            }));
+            dataSource = 'house-congress-api';
+          }
+
+          // Return in the same format as the direct votes endpoint
+          result = {
+            votes,
+            totalResults: votes.length,
+            member: {
+              bioguideId,
+              name,
+              chamber,
+            },
+            dataSource,
+            success: true,
+          };
+
+          logger.info(`Batch votes completed for ${bioguideId}`, {
+            count: votes.length,
             chamber,
           });
         } catch (error) {
-          if (error instanceof Error && error.message === 'Votes timeout') {
-            logger.warn(`Votes timeout for ${bioguideId} after 5 seconds`);
-          } else {
-            logger.error(`Votes error for ${bioguideId}:`, error);
-          }
-          // Return empty array on error/timeout
-          result = [];
+          logger.error(`Batch votes error for ${bioguideId}:`, error);
+          // Return proper error format matching the direct endpoint
+          result = {
+            votes: [],
+            totalResults: 0,
+            member: {
+              bioguideId,
+              name: 'Unknown',
+              chamber: 'Unknown',
+            },
+            dataSource: 'batch-error',
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          };
         }
 
         break;

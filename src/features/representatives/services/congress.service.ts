@@ -664,13 +664,37 @@ export async function getEnhancedRepresentative(
       phone: currentTerm.phone,
       website: currentTerm.url,
       imageUrl: buildPhotoUrl(legislator.id.bioguide), // Add photo URL
-      terms: [
-        {
-          congress: '119', // Current congress
-          startYear: currentTerm.start.split('-')[0] || 'Unknown',
-          endYear: currentTerm.end.split('-')[0] || 'Unknown',
-        },
-      ],
+      terms: (() => {
+        logger.debug(`Processing terms for ${bioguideId}`, {
+          totalTerms: legislator.terms.length,
+          firstTerm: legislator.terms[0],
+          lastTerm: legislator.terms[legislator.terms.length - 1],
+        });
+
+        const processedTerms = legislator.terms
+          .map(term => {
+            // Extract congress number from years (approximate)
+            const startYear = parseInt(term.start?.split('-')[0] || '0');
+            const congress = Math.floor((startYear - 1789) / 2) + 1;
+
+            return {
+              congress: congress.toString(),
+              startYear: term.start?.split('-')[0] || 'Unknown',
+              endYear: term.end?.split('-')[0] || 'Unknown',
+              chamber: term.type === 'sen' ? 'Senate' : 'House',
+              party: term.party,
+              state: term.state,
+              district: term.district?.toString(),
+              office: term.office,
+              stateRank: term.state_rank,
+              class: term.class,
+            };
+          })
+          .sort((a, b) => parseInt(b.congress) - parseInt(a.congress));
+
+        logger.debug(`Processed ${processedTerms.length} terms for ${bioguideId}`);
+        return processedTerms;
+      })(), // Most recent first
       committees: representativeCommittees,
 
       // Status information
@@ -807,13 +831,26 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
           chamber: currentTerm.type === 'sen' ? 'Senate' : 'House',
           title: currentTerm.type === 'sen' ? 'U.S. Senator' : 'U.S. Representative',
           imageUrl: `/api/representative-photo/${legislator.id.bioguide}`, // Add photo URL
-          terms: [
-            {
-              congress: '119', // Current congress
-              startYear: currentTerm.start.split('-')[0],
-              endYear: currentTerm.end.split('-')[0],
-            },
-          ],
+          terms: legislator.terms
+            .map(term => {
+              // Extract congress number from years (approximate)
+              const startYear = parseInt(term.start?.split('-')[0] || '0');
+              const congress = Math.floor((startYear - 1789) / 2) + 1;
+
+              return {
+                congress: congress.toString(),
+                startYear: term.start?.split('-')[0] || 'Unknown',
+                endYear: term.end?.split('-')[0] || 'Unknown',
+                chamber: term.type === 'sen' ? 'Senate' : 'House',
+                party: term.party,
+                state: term.state,
+                district: term.district?.toString(),
+                office: term.office,
+                stateRank: term.state_rank,
+                class: term.class,
+              };
+            })
+            .sort((a, b) => parseInt(b.congress) - parseInt(a.congress)),
           committees: [],
 
           fullName: {

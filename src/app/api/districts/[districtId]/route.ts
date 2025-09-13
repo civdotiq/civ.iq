@@ -8,6 +8,7 @@ import { getAllEnhancedRepresentatives } from '@/features/representatives/servic
 import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
 import { districtBoundaryService } from '@/lib/helpers/district-boundary-utils';
+import { getStateFromWikidata } from '@/lib/api/wikidata';
 
 // State names mapping for Census API
 const STATE_NAMES: Record<string, string> = {
@@ -108,6 +109,10 @@ interface DistrictDetails {
     area?: number;
     previousRepresentatives?: string[];
     wikipediaUrl?: string;
+    capital?: string;
+    governor?: string;
+    motto?: string;
+    nickname?: string;
   } | null;
 }
 
@@ -822,9 +827,10 @@ const STATE_NAME_TO_CODE: Record<string, string> = {
 
 async function getDistrictDetails(districtId: string): Promise<DistrictDetails | null> {
   try {
-    // Parse district ID - support both formats:
+    // Parse district ID - support multiple formats:
     // 1. State abbreviation: "MI-12", "CA-04"
     // 2. Full state name: "Michigan-12", "North-Carolina-04"
+    // 3. State-level for senators: "VT-STATE", "CA-STATE"
     const parts = districtId.split('-');
 
     if (parts.length < 2) {
@@ -833,12 +839,19 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
 
     let stateCode: string;
     let district: string;
+    let isStateLevelDistrict = false;
 
     // Check if first part is a 2-letter state abbreviation
     if (parts[0] && parts[0].length === 2 && parts[0] === parts[0].toUpperCase()) {
-      // Format: "MI-12" or "CA-04"
+      // Format: "MI-12", "CA-04", or "VT-STATE"
       stateCode = parts[0];
       district = parts[1] || '01';
+
+      // Check if this is a state-level district for senators
+      if (parts[1] === 'STATE') {
+        isStateLevelDistrict = true;
+        district = 'STATE';
+      }
 
       // Verify it's a valid state code
       if (!STATE_NAMES[stateCode]) {
@@ -880,33 +893,53 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
       throw new Error('No representatives data available');
     }
 
-    // Find the representative for this district
-    const representative = representatives.find(rep => {
-      const repState = rep.state;
-      const repDistrict = rep.district;
-      const repDistrictNormalized = repDistrict ? repDistrict.replace(/^0+/, '') || '0' : '0';
+    let representative;
 
-      const matches =
-        rep.chamber === 'House' &&
-        repState === stateCode &&
-        (repDistrictNormalized === normalizedDistrict ||
-          repDistrict === district ||
-          (normalizedDistrict === '0' && (repDistrict === 'At Large' || repDistrict === '01')));
+    if (isStateLevelDistrict) {
+      // For state-level districts, find a senator from that state
+      representative = representatives.find(rep => {
+        const matches = rep.chamber === 'Senate' && rep.state === stateCode;
 
-      if (repState === stateCode) {
-        logger.info('Found representative in state', {
-          repName: rep.name,
-          repState,
-          repDistrict,
-          repDistrictNormalized,
-          targetDistrict: district,
-          targetNormalized: normalizedDistrict,
-          matches,
-        });
-      }
+        if (rep.state === stateCode && rep.chamber === 'Senate') {
+          logger.info('Found senator for state district', {
+            repName: rep.name,
+            repState: rep.state,
+            repChamber: rep.chamber,
+            matches,
+          });
+        }
 
-      return matches;
-    });
+        return matches;
+      });
+    } else {
+      // Find the representative for this House district
+      representative = representatives.find(rep => {
+        const repState = rep.state;
+        const repDistrict = rep.district;
+        const repDistrictNormalized = repDistrict ? repDistrict.replace(/^0+/, '') || '0' : '0';
+
+        const matches =
+          rep.chamber === 'House' &&
+          repState === stateCode &&
+          (repDistrictNormalized === normalizedDistrict ||
+            repDistrict === district ||
+            (normalizedDistrict === '0' && (repDistrict === 'At Large' || repDistrict === '01')));
+
+        if (repState === stateCode) {
+          logger.info('Found representative in state', {
+            repName: rep.name,
+            repState,
+            repDistrict,
+            repDistrictNormalized,
+            targetDistrict: district,
+            targetNormalized: normalizedDistrict,
+            matches,
+          });
+        }
+
+        return matches;
+      });
+    }
 
     if (!representative) {
       // Enhanced error logging to help debug the mismatch
@@ -938,17 +971,47 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
     // Cook PVI data requires specialized political analysis
     const cookPVI = 'Data unavailable';
 
-    // Run geography and demographics calls in parallel
-    const [geography, demographics] = await Promise.all([
-      getDistrictGeography(representative.state, representative.district || '01'),
-      getDistrictDemographics(representative.state, representative.district || '01'),
-    ]);
+    let geography, demographics, wikidata;
+
+    if (isStateLevelDistrict) {
+      // For state-level districts, get state-wide information
+      const [stateGeography, stateDemographics, stateWikidata] = await Promise.all([
+        getDistrictGeography(representative.state, '00'), // Use '00' for statewide
+        getDistrictDemographics(representative.state, '00'),
+        getStateFromWikidata(representative.state),
+      ]);
+
+      geography = stateGeography;
+      demographics = stateDemographics;
+      wikidata = stateWikidata
+        ? {
+            established: stateWikidata.statehood,
+            area: stateWikidata.area,
+            wikipediaUrl: stateWikidata.wikipediaUrl,
+            capital: stateWikidata.capital,
+            governor: stateWikidata.governor,
+            motto: stateWikidata.motto,
+            nickname: stateWikidata.nickname,
+          }
+        : null;
+    } else {
+      // Run geography and demographics calls in parallel for House districts
+      const [houseGeography, houseDemographics] = await Promise.all([
+        getDistrictGeography(representative.state, representative.district || '01'),
+        getDistrictDemographics(representative.state, representative.district || '01'),
+      ]);
+      geography = houseGeography;
+      demographics = houseDemographics;
+      wikidata = null; // House district wikidata integration not implemented
+    }
 
     const districtDetails: DistrictDetails = {
       id: districtId.toLowerCase(),
       state: representative.state,
-      number: representative.district || '1',
-      name: `${representative.state} District ${representative.district}`,
+      number: isStateLevelDistrict ? 'STATE' : representative.district || '1',
+      name: isStateLevelDistrict
+        ? `${STATE_NAMES[representative.state]} (Statewide)`
+        : `${representative.state} District ${representative.district}`,
       representative: {
         name: representative.name,
         party: representative.party || 'Unknown',
@@ -967,7 +1030,7 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
         registeredVoters: 0,
       },
       geography,
-      wikidata: null, // Wikidata integration is non-functional
+      wikidata,
     };
 
     return districtDetails;

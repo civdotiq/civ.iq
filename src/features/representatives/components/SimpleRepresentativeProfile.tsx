@@ -103,9 +103,9 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
         return (
           <BillsTab
             bioguideId={representative.bioguideId}
-            sharedData={batchData?.data?.bills}
-            sharedLoading={batchLoading}
-            sharedError={batchError}
+            sharedData={undefined}
+            sharedLoading={false}
+            sharedError={null}
           />
         );
       case 'finance':
@@ -136,7 +136,11 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
             yearsInOffice: representative.terms?.length
               ? new Date().getFullYear() - parseInt(representative.terms[0]?.startYear || '0')
               : 0,
-            billsSponsored: batchData?.success ? batchData.data?.bills?.totalSponsored || 0 : 0,
+            billsSponsored: batchData?.success
+              ? batchData.data?.bills?.totalSponsored ||
+                batchData.data?.bills?.currentCongress?.count ||
+                0
+              : 0,
             committees: representative.committees?.length || 0,
             totalRaised: batchData?.success ? batchData.data?.finance?.totalRaised || 0 : 0,
             votesParticipated: batchData?.success ? batchData.data?.votes?.length || 0 : 0,

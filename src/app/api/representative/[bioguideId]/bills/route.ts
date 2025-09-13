@@ -6,30 +6,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import {
-  getOptimizedBillsByMember,
+  getComprehensiveBillsByMember,
   getBillsSummary,
+  type OptimizedBillsResponse,
 } from '@/services/congress/optimized-congress.service';
 import { cachedHeavyEndpoint } from '@/services/cache';
 
 // Helper function to create legacy response format
-function createLegacyResponse(result: any, congress: number) {
+function createLegacyResponse(result: OptimizedBillsResponse, congress: number) {
+  const sponsoredCount = result.metadata?.sponsoredCount || 0;
+  const cosponsoredCount = result.metadata?.cosponsoredCount || 0;
+
+  // Separate bills by relationship type
+  const sponsoredBills = result.bills.filter(bill => bill.relationship === 'sponsored');
+  const cosponsoredBills = result.bills.filter(bill => bill.relationship === 'cosponsored');
+
+  // Remove relationship field from final output for backward compatibility
+  const cleanBills = result.bills.map(({ relationship: _relationship, ...bill }) => bill);
+
   return {
     // Legacy format (keep for backward compatibility)
-    sponsoredLegislation: result.bills,
+    sponsoredLegislation: cleanBills,
 
     // Enhanced format with counts and structure
     sponsored: {
-      count: result.bills.length,
-      bills: result.bills,
+      count: sponsoredCount,
+      bills: sponsoredBills.map(({ relationship: _relationship, ...bill }) => bill),
     },
     cosponsored: {
-      count: 0,
-      bills: [],
+      count: cosponsoredCount,
+      bills: cosponsoredBills.map(({ relationship: _relationship, ...bill }) => bill),
     },
 
     // Summary
-    totalSponsored: result.bills.length,
-    totalCosponsored: 0,
+    totalSponsored: sponsoredCount,
+    totalCosponsored: cosponsoredCount,
     totalBills: result.bills.length,
 
     // Include pagination info
@@ -37,11 +48,16 @@ function createLegacyResponse(result: any, congress: number) {
 
     metadata: {
       ...result.metadata,
-      source: 'Congress.gov API (Optimized & Cached)',
+      source: 'Congress.gov API (Comprehensive & Cached)',
       congressLabel: `${congress}th Congress`,
       dataStructure: 'enhanced',
-      note: 'Cosponsored bills require separate API implementation',
+      note: 'Now includes both sponsored AND cosponsored legislation',
     },
+
+    // Progressive loading properties
+    progressive: false,
+    cached: false,
+    loadingComplete: false,
   };
 }
 
@@ -82,7 +98,8 @@ export async function GET(
         // First, try to return cached data immediately
         const cachedResult = await cachedHeavyEndpoint(
           cacheKey,
-          () => getOptimizedBillsByMember({ bioguideId, limit, page, congress, includeAmendments }),
+          () =>
+            getComprehensiveBillsByMember({ bioguideId, limit, page, congress, includeAmendments }),
           { source: 'bills-progressive-cached' }
         );
 
@@ -105,7 +122,7 @@ export async function GET(
         });
 
         // Cache miss, fetch fresh data
-        const result = await getOptimizedBillsByMember({
+        const result = await getComprehensiveBillsByMember({
           bioguideId,
           limit,
           page,
@@ -114,9 +131,9 @@ export async function GET(
         });
 
         const response = createLegacyResponse(result, congress);
-        response.metadata.progressive = true;
-        response.metadata.cached = false;
-        response.metadata.loadingComplete = true;
+        response.progressive = true;
+        response.cached = false;
+        response.loadingComplete = true;
 
         return NextResponse.json(response);
       }
@@ -126,7 +143,7 @@ export async function GET(
     const cacheKey = `bills:${bioguideId}:${congress}:${limit}:${page}:${includeAmendments}`;
     const result = await cachedHeavyEndpoint(
       cacheKey,
-      () => getOptimizedBillsByMember({ bioguideId, limit, page, congress, includeAmendments }),
+      () => getComprehensiveBillsByMember({ bioguideId, limit, page, congress, includeAmendments }),
       { source: 'bills-standard-cached' }
     );
 

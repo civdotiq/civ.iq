@@ -30,6 +30,13 @@ export interface BaseRepresentative {
     congress: string;
     startYear: string;
     endYear: string;
+    chamber?: string;
+    party?: string;
+    state?: string;
+    district?: string;
+    office?: string;
+    stateRank?: string;
+    class?: number;
   }>;
   committees?: Array<{
     name: string;
@@ -57,6 +64,25 @@ export interface EnhancedRepresentative extends BaseRepresentative {
     birthday?: string;
     gender?: 'M' | 'F';
     religion?: string;
+  };
+
+  // Enhanced biographical data from Wikidata/Wikipedia
+  biography?: {
+    // Wikidata fields
+    birthPlace?: string;
+    education?: string[];
+    occupations?: string[];
+    spouse?: string;
+    children?: number;
+    awards?: string[];
+    wikidataDescription?: string;
+    // Wikipedia fields
+    wikipediaSummary?: string;
+    wikipediaHtmlSummary?: string;
+    wikipediaImageUrl?: string;
+    wikipediaPageUrl?: string;
+    // Combined fields
+    lastUpdated?: string;
   };
 
   // Current term details

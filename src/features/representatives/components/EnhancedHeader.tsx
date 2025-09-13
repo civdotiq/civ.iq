@@ -53,6 +53,26 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
     return null;
   };
 
+  // Calculate age from birthday
+  const getAge = () => {
+    if (!representative.bio?.birthday) return null;
+
+    try {
+      const birthDate = new Date(representative.bio.birthday);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+
+      return age;
+    } catch {
+      return null;
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
       {/* Simple horizontal header layout like June 2025 */}
@@ -86,9 +106,14 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
 
           {/* Name and Title - cleaner layout */}
           <div className="flex-1">
-            <h1 data-testid="representative-name" className="text-3xl font-bold text-gray-900 mb-1">
-              {getDisplayName()}
-            </h1>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 data-testid="representative-name" className="text-3xl font-bold text-gray-900">
+                {getDisplayName()}
+              </h1>
+              {getAge() && (
+                <span className="text-lg text-gray-500 font-medium">{getAge()} years old</span>
+              )}
+            </div>
             <p data-testid="representative-state" className="text-lg text-gray-600 mb-2">
               {getTitle()}
             </p>

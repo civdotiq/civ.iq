@@ -11,6 +11,7 @@ import { PersonalInfoCard } from './PersonalInfoCard';
 import { ServiceTermsCard } from './ServiceTermsCard';
 import { CommitteeMembershipsCard } from './CommitteeMembershipsCard';
 import { DistrictInfoCard } from './DistrictInfoCard';
+import { BiographyCard } from './BiographyCard';
 
 interface ContactInfoTabProps {
   representative: EnhancedRepresentative;
@@ -21,6 +22,9 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
       <div className="p-6">
         <h2 className="text-xl font-semibold mb-6">Detailed Information</h2>
+
+        {/* Biography Section - Full Width */}
+        <BiographyCard representative={representative} className="mb-6" />
 
         {/* Two-column grid layout - removed duplicated content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -36,19 +40,7 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
 
             {/* Additional District Demographics (not shown in sidebar) */}
             {representative.chamber === 'House' && (
-              <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-                <div className="p-4 border-b border-gray-100">
-                  <h3 className="font-semibold text-gray-900">District Demographics</h3>
-                </div>
-                <div className="p-4 space-y-3">
-                  <div className="text-sm text-gray-600">
-                    <p>Additional district information and demographics will be displayed here.</p>
-                    <p className="mt-2">
-                      This section provides unique content not shown in the sidebar.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <DistrictInfoCard representative={representative} />
             )}
           </div>
         </div>

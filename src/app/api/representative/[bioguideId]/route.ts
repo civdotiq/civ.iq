@@ -90,13 +90,7 @@ export async function GET(
         title: enhancedData.chamber === 'Senate' ? 'U.S. Senator' : 'U.S. Representative',
         phone: enhancedData.currentTerm?.phone || enhancedData.phone,
         website: enhancedData.currentTerm?.website || enhancedData.website,
-        terms: [
-          {
-            congress: '119', // Current congress
-            startYear: enhancedData.currentTerm?.start.split('-')[0] || '2023',
-            endYear: enhancedData.currentTerm?.end.split('-')[0] || '2025',
-          },
-        ],
+        terms: enhancedData.terms || [],
         committees: enhancedData.committees || [],
         metadata: {
           lastUpdated: new Date().toISOString(),
@@ -187,7 +181,7 @@ export async function GET(
             website: representative.website || null,
             officeAddress: representative.currentTerm?.address || null,
           },
-          terms: representative.terms || [],
+          terms: enhancedData.terms || [],
           imageUrl: representative.imageUrl || null,
         },
         committees: {
