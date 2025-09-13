@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { Users } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
 import { COMMITTEE_ID_MAP } from '@/types/committee';
+import { getCommitteeName } from '@/lib/data/committee-names';
 
 interface CommitteeMembershipsCardProps {
   representative: EnhancedRepresentative;
@@ -74,7 +75,7 @@ export function CommitteeMembershipsCard({
                             href={href}
                             className="text-blue-600 hover:text-blue-800 hover:underline group-hover:text-blue-700 transition-colors"
                           >
-                            {committee.name}
+                            {getCommitteeName(committee.name)}
                           </Link>
                         );
                       })()}
