@@ -118,12 +118,15 @@ export default function SubcommitteeCard({ subcommittee }: SubcommitteeCardProps
                       <td className="py-3 pr-4">
                         <span
                           className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            member.representative.party === 'Democrat' ||
                             member.representative.party === 'D'
                               ? 'bg-blue-100 text-blue-800'
-                              : 'bg-red-100 text-red-800'
+                              : member.representative.party === 'Independent'
+                                ? 'bg-purple-100 text-purple-800'
+                                : 'bg-red-100 text-red-800'
                           }`}
                         >
-                          {member.representative.party === 'D' ? 'Democrat' : 'Republican'}
+                          {member.representative.party}
                         </span>
                       </td>
                       <td className="py-3 pr-4 text-sm text-gray-900">

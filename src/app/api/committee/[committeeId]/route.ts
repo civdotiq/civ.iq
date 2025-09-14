@@ -68,6 +68,12 @@ async function fetchCommitteeFromCongressLegislators(
           getAllEnhancedRepresentatives(),
         ]);
 
+        logger.info('Fetched data counts', {
+          committeesCount: committees.length,
+          membershipsCount: memberships.length,
+          representativesCount: allRepresentatives.length,
+        });
+
         // Find the committee by ID (try both exact match and variations)
         const committee = committees.find(
           c =>
@@ -86,10 +92,28 @@ async function fetchCommitteeFromCongressLegislators(
 
         // Find committee memberships for this committee
         const committeeMembers: CommitteeMember[] = [];
+        const subcommitteeMembersMap = new Map<string, CommitteeMember[]>();
         const leadership = {
           chair: undefined as CommitteeMember | undefined,
           rankingMember: undefined as CommitteeMember | undefined,
         };
+
+        // Log a sample to understand the data structure
+        if (memberships.length > 0) {
+          const sampleMember = memberships[0];
+          const ssevMember = memberships.find(m =>
+            m.committees.some(c => c.thomas_id.startsWith('SSEV'))
+          );
+          logger.info('Membership data analysis', {
+            sampleBioguide: sampleMember?.bioguide,
+            sampleCommitteeIds: sampleMember?.committees.map(c => c.thomas_id),
+            ssevMemberBioguide: ssevMember?.bioguide,
+            ssevCommitteeIds: ssevMember?.committees
+              .filter(c => c.thomas_id.startsWith('SSEV'))
+              .map(c => c.thomas_id),
+            totalMemberships: memberships.length,
+          });
+        }
 
         for (const membership of memberships) {
           // Find committee membership for this specific committee
@@ -114,8 +138,26 @@ async function fetchCommitteeFromCongressLegislators(
                       ? ('Vice Chair' as const)
                       : ('Member' as const);
 
+              // Use committee-specific party designation (majority/minority)
+              // For current Senate (2025): majority = Republican, minority = preserve original (Democrat/Independent)
+              const committeeParty = memberCommittee.party;
+              const actualParty =
+                committee.type === 'senate'
+                  ? committeeParty === 'majority'
+                    ? 'Republican'
+                    : representative.party // Preserve original party for minority (Democrat/Independent)
+                  : committeeParty === 'majority'
+                    ? 'Republican'
+                    : representative.party; // House logic same for now
+
+              // Create representative with corrected party
+              const correctedRepresentative = {
+                ...representative,
+                party: actualParty,
+              };
+
               const member: CommitteeMember = {
-                representative,
+                representative: correctedRepresentative,
                 role: normalizedRole,
                 joinedDate: '2023-01-03', // Default date for 119th Congress
                 rank: memberCommittee.rank || committeeMembers.length + 1,
@@ -130,6 +172,73 @@ async function fetchCommitteeFromCongressLegislators(
                 leadership.chair = { ...member, role: 'Chair' };
               } else if (title.includes('ranking')) {
                 leadership.rankingMember = { ...member, role: 'Ranking Member' };
+              }
+            }
+          }
+
+          // Also check for subcommittee memberships
+          if (committee.subcommittees) {
+            for (const subcommittee of committee.subcommittees) {
+              // Subcommittee IDs in membership data are prefixed with parent committee ID
+              const subcommitteeFullId = `${committee.thomas_id}${subcommittee.thomas_id}`;
+              const memberSubcommittee = membership.committees.find(c => {
+                // Subcommittee thomas_ids in committees data are just the numeric part (e.g., "10")
+                // but in membership data they're prefixed (e.g., "SSEV10")
+                const isMatch = c.thomas_id === subcommitteeFullId;
+                if (isMatch) {
+                  logger.info('Found subcommittee membership match', {
+                    memberBioguide: membership.bioguide,
+                    subcommitteeId: subcommittee.thomas_id,
+                    subcommitteeFullId,
+                    matchedId: c.thomas_id,
+                  });
+                }
+                return isMatch;
+              });
+
+              if (memberSubcommittee) {
+                const representative = allRepresentatives.find(
+                  rep => rep.bioguideId === membership.bioguide
+                );
+
+                if (representative) {
+                  const role = memberSubcommittee.title || 'Member';
+                  const normalizedRole =
+                    role.includes('Chair') && !role.includes('Ranking')
+                      ? ('Chair' as const)
+                      : role.includes('Ranking')
+                        ? ('Ranking Member' as const)
+                        : ('Member' as const);
+
+                  // Use committee-specific party designation for subcommittees too
+                  const subCommitteeParty = memberSubcommittee.party;
+                  const subActualParty =
+                    committee.type === 'senate'
+                      ? subCommitteeParty === 'majority'
+                        ? 'Republican'
+                        : representative.party // Preserve original party for minority
+                      : subCommitteeParty === 'majority'
+                        ? 'Republican'
+                        : representative.party;
+
+                  const correctedSubRepresentative = {
+                    ...representative,
+                    party: subActualParty,
+                  };
+
+                  const subMember: CommitteeMember = {
+                    representative: correctedSubRepresentative,
+                    role: normalizedRole,
+                    joinedDate: '2023-01-03',
+                    rank: memberSubcommittee.rank || 999,
+                    subcommittees: [],
+                  };
+
+                  if (!subcommitteeMembersMap.has(subcommitteeFullId)) {
+                    subcommitteeMembersMap.set(subcommitteeFullId, []);
+                  }
+                  subcommitteeMembersMap.get(subcommitteeFullId)!.push(subMember);
+                }
               }
             }
           }
@@ -162,21 +271,25 @@ async function fetchCommitteeFromCongressLegislators(
           },
           members: committeeMembers,
           subcommittees:
-            committee.subcommittees?.map(sub => ({
-              id: sub.thomas_id,
-              name: sub.name,
-              chair: committeeMembers[0]?.representative, // Simplified
-              focus: `${sub.name} subcommittee`,
-              members: committeeMembers[0]
-                ? [
-                    {
-                      representative: committeeMembers[0].representative,
-                      role: 'Chair',
-                      joinedDate: '2023-01-03',
-                    },
-                  ]
-                : [],
-            })) || [],
+            committee.subcommittees?.map(sub => {
+              const subcommitteeFullId = `${committee.thomas_id}${sub.thomas_id}`;
+              const subMembers = subcommitteeMembersMap.get(subcommitteeFullId) || [];
+
+              // Find the chair of the subcommittee
+              const subChair = subMembers.find(m => m.role === 'Chair');
+
+              // Only show subcommittee members if we found specific ones
+              // Don't fallback to all committee members - show empty if no specific data
+              const finalMembers = subMembers.length > 0 ? subMembers : [];
+
+              return {
+                id: sub.thomas_id,
+                name: sub.name,
+                chair: subChair?.representative || leadership.chair?.representative,
+                focus: `${sub.name} subcommittee`,
+                members: finalMembers,
+              };
+            }) || [],
           url: `https://www.congress.gov/committee/${committee.thomas_id.toLowerCase()}`,
           lastUpdated: new Date().toISOString(),
         };

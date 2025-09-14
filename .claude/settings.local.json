@@ -93,7 +93,8 @@
       "Bash(set +a)",
       "Bash(rm:*)",
       "WebFetch(domain:query.wikidata.org)",
-      "WebFetch(domain:en.wikipedia.org)"
+      "WebFetch(domain:en.wikipedia.org)",
+      "Bash(/dev/null)"
     ],
     "deny": [],
     "ask": []

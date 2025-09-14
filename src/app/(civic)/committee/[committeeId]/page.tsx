@@ -245,10 +245,8 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
                     {committee.leadership.chair.representative.name}
                   </Link>
                   <p className="text-gray-600">
-                    {committee.leadership.chair.representative.party === 'D'
-                      ? 'Democrat'
-                      : 'Republican'}{' '}
-                    • {committee.leadership.chair.representative.state}
+                    {committee.leadership.chair.representative.party} •{' '}
+                    {committee.leadership.chair.representative.state}
                     {committee.leadership.chair.representative.district &&
                       `-${committee.leadership.chair.representative.district}`}
                   </p>
@@ -281,10 +279,8 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
                     {committee.leadership.rankingMember.representative.name}
                   </Link>
                   <p className="text-gray-600">
-                    {committee.leadership.rankingMember.representative.party === 'D'
-                      ? 'Democrat'
-                      : 'Republican'}{' '}
-                    • {committee.leadership.rankingMember.representative.state}
+                    {committee.leadership.rankingMember.representative.party} •{' '}
+                    {committee.leadership.rankingMember.representative.state}
                     {committee.leadership.rankingMember.representative.district &&
                       `-${committee.leadership.rankingMember.representative.district}`}
                   </p>
@@ -349,12 +345,15 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          member.representative.party === 'Democrat' ||
                           member.representative.party === 'D'
                             ? 'bg-blue-100 text-blue-800'
-                            : 'bg-red-100 text-red-800'
+                            : member.representative.party === 'Independent'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-red-100 text-red-800'
                         }`}
                       >
-                        {member.representative.party === 'D' ? 'Democrat' : 'Republican'}
+                        {member.representative.party}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
