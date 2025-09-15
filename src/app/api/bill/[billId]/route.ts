@@ -105,6 +105,64 @@ interface CongressBillData {
   textVersions?: CongressTextVersion[];
 }
 
+// Helper function to fetch bill cosponsors from Congress.gov
+async function fetchBillCosponsors(
+  congress: string,
+  type: string,
+  number: string
+): Promise<CongressCosponsor[]> {
+  try {
+    logger.info('Fetching bill cosponsors from Congress.gov', {
+      congress,
+      type,
+      number,
+    });
+
+    const cosponsorsResponse = await fetch(
+      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/cosponsors?api_key=${process.env.CONGRESS_API_KEY}&format=json&limit=250`,
+      {
+        headers: {
+          'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+          Accept: 'application/json',
+        },
+      }
+    );
+
+    const monitor = monitorExternalApi('congress', 'bill-cosponsors', cosponsorsResponse.url);
+
+    if (!cosponsorsResponse.ok) {
+      monitor.end(false, cosponsorsResponse.status);
+      logger.warn('Failed to fetch cosponsors', {
+        status: cosponsorsResponse.status,
+        congress,
+        type,
+        number,
+      });
+      return [];
+    }
+
+    const cosponsorsData: { cosponsors: CongressCosponsor[] } = await cosponsorsResponse.json();
+    monitor.end(true, 200);
+
+    const cosponsors = cosponsorsData.cosponsors || [];
+    logger.info('Successfully fetched cosponsors', {
+      congress,
+      type,
+      number,
+      count: cosponsors.length,
+    });
+
+    return cosponsors;
+  } catch (error) {
+    logger.error('Error fetching bill cosponsors', error as Error, {
+      congress,
+      type,
+      number,
+    });
+    return [];
+  }
+}
+
 // Helper function to fetch bill data from Congress.gov
 async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
   const { type, number, congress } = parseBillNumber(billId);
@@ -154,6 +212,13 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
 
         const bill = billData.bill;
 
+        // Fetch detailed cosponsors data
+        const detailedCosponsors = await fetchBillCosponsors(
+          congress.toString(),
+          type,
+          number.toString()
+        );
+
         // Transform Congress.gov data to our Bill interface
         const result: Bill = {
           id: `${bill.congress}-${bill.type}-${bill.number}`,
@@ -198,23 +263,21 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
             date: bill.introducedDate,
           },
 
-          cosponsors: Array.isArray(bill.cosponsors)
-            ? bill.cosponsors.map((cosponsor: CongressCosponsor) => ({
-                representative: {
-                  bioguideId: cosponsor.bioguideId,
-                  name: cosponsor.fullName,
-                  firstName: cosponsor.firstName,
-                  lastName: cosponsor.lastName,
-                  party: cosponsor.party,
-                  state: cosponsor.state,
-                  district: cosponsor.district,
-                  chamber: bill.originChamber === 'House' ? 'House' : 'Senate',
-                  title: `${bill.originChamber === 'House' ? 'Rep.' : 'Sen.'} ${cosponsor.fullName}`,
-                } as EnhancedRepresentative,
-                date: cosponsor.sponsorshipDate,
-                withdrawn: cosponsor.sponsorshipWithdrawnDate ? true : false,
-              }))
-            : [],
+          cosponsors: detailedCosponsors.map((cosponsor: CongressCosponsor) => ({
+            representative: {
+              bioguideId: cosponsor.bioguideId,
+              name: cosponsor.fullName,
+              firstName: cosponsor.firstName,
+              lastName: cosponsor.lastName,
+              party: cosponsor.party,
+              state: cosponsor.state,
+              district: cosponsor.district,
+              chamber: bill.originChamber === 'House' ? 'House' : 'Senate',
+              title: `${bill.originChamber === 'House' ? 'Rep.' : 'Sen.'} ${cosponsor.fullName}`,
+            } as EnhancedRepresentative,
+            date: cosponsor.sponsorshipDate,
+            withdrawn: cosponsor.sponsorshipWithdrawnDate ? true : false,
+          })),
 
           committees: Array.isArray(bill.committees)
             ? bill.committees.map((committee: CongressCommittee) => ({

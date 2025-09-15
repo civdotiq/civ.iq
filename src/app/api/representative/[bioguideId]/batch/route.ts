@@ -148,7 +148,7 @@ export async function GET(
       endpoints: ['bills', 'votes', 'finance'],
       options: {
         bills: { summaryOnly: true },
-        votes: { limit: 5 },
+        votes: { limit: 50 },
         finance: { summaryOnly: true },
       },
     });

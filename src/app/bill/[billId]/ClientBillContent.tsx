@@ -194,6 +194,48 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
               Sponsor & Cosponsors ({bill.cosponsors.length + 1})
             </h3>
 
+            {/* Party Breakdown */}
+            {bill.cosponsors.length > 0 && (
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Party Breakdown</h4>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="bg-blue-100 p-3 rounded-lg">
+                    <div className="text-lg font-bold text-blue-800">
+                      {
+                        [
+                          bill.sponsor.representative,
+                          ...bill.cosponsors.map(c => c.representative),
+                        ].filter(rep => rep.party === 'D').length
+                      }
+                    </div>
+                    <div className="text-xs text-blue-600">Democrats</div>
+                  </div>
+                  <div className="bg-red-100 p-3 rounded-lg">
+                    <div className="text-lg font-bold text-red-800">
+                      {
+                        [
+                          bill.sponsor.representative,
+                          ...bill.cosponsors.map(c => c.representative),
+                        ].filter(rep => rep.party === 'R').length
+                      }
+                    </div>
+                    <div className="text-xs text-red-600">Republicans</div>
+                  </div>
+                  <div className="bg-purple-100 p-3 rounded-lg">
+                    <div className="text-lg font-bold text-purple-800">
+                      {
+                        [
+                          bill.sponsor.representative,
+                          ...bill.cosponsors.map(c => c.representative),
+                        ].filter(rep => rep.party === 'I').length
+                      }
+                    </div>
+                    <div className="text-xs text-purple-600">Independents</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Sponsor */}
             <div className="mb-6">
               <h4 className="text-sm font-medium text-gray-700 mb-3">Sponsor</h4>
@@ -211,8 +253,12 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                     {bill.sponsor.representative.name}
                   </Link>
                   <p className="text-gray-600">
-                    {bill.sponsor.representative.party === 'D' ? 'Democrat' : 'Republican'} •{' '}
-                    {bill.sponsor.representative.state}
+                    {bill.sponsor.representative.party === 'D'
+                      ? 'Democrat'
+                      : bill.sponsor.representative.party === 'R'
+                        ? 'Republican'
+                        : 'Independent'}{' '}
+                    • {bill.sponsor.representative.state}
                     {bill.sponsor.representative.district &&
                       `-${bill.sponsor.representative.district}`}
                   </p>
@@ -224,7 +270,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
             </div>
 
             {/* Cosponsors */}
-            {bill.cosponsors.length > 0 && (
+            {bill.cosponsors.length > 0 ? (
               <div>
                 <h4 className="text-sm font-medium text-gray-700 mb-3">
                   Cosponsors ({bill.cosponsors.length})
@@ -233,7 +279,11 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                   {bill.cosponsors.slice(0, 6).map(cosponsor => (
                     <div
                       key={cosponsor.representative.bioguideId}
-                      className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
+                      className={`flex items-center space-x-3 p-3 border-2 rounded-lg hover:bg-gray-50 ${
+                        cosponsor.withdrawn
+                          ? 'border-gray-300 bg-gray-100 opacity-60'
+                          : 'border-gray-200'
+                      }`}
                     >
                       <RepresentativePhoto
                         bioguideId={cosponsor.representative.bioguideId}
@@ -248,10 +298,19 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                           {cosponsor.representative.name}
                         </Link>
                         <p className="text-xs text-gray-500 truncate">
-                          {cosponsor.representative.party === 'D' ? 'D' : 'R'}-
-                          {cosponsor.representative.state}
+                          {cosponsor.representative.party === 'D'
+                            ? 'D'
+                            : cosponsor.representative.party === 'R'
+                              ? 'R'
+                              : 'I'}
+                          -{cosponsor.representative.state}
                           {cosponsor.representative.district &&
                             `-${cosponsor.representative.district}`}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {cosponsor.withdrawn
+                            ? 'Withdrawn'
+                            : `Joined ${new Date(cosponsor.date).toLocaleDateString()}`}
                         </p>
                       </div>
                     </div>
@@ -263,6 +322,13 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                   </p>
                 )}
               </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-sm">No cosponsors yet</p>
+                <p className="text-xs mt-1">
+                  Cosponsors may be added as the bill moves through Congress
+                </p>
+              </div>
             )}
           </div>
         </div>
@@ -271,56 +337,134 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
         <div className="space-y-6">
           {/* Timeline */}
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Timeline</h3>
-            <div className="space-y-3">
-              {/* Always show introduction */}
-              <div className="flex">
-                <div className="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full mt-2 mr-3"></div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">Introduced</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(bill.introducedDate).toLocaleDateString()} • {bill.chamber}
-                  </p>
-                </div>
-              </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Legislative Timeline</h3>
+            <div className="relative">
+              {/* Timeline line */}
+              <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-gray-200"></div>
 
-              {/* Show latest action */}
-              {bill.status.lastAction && (
-                <div className="flex">
-                  <div className="flex-shrink-0 w-2 h-2 bg-green-600 rounded-full mt-2 mr-3"></div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">{bill.status.lastAction.description}</p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(bill.status.lastAction.date).toLocaleDateString()}
-                      {bill.status.lastAction.chamber && ` • ${bill.status.lastAction.chamber}`}
+              <div className="space-y-4">
+                {/* Always show introduction */}
+                <div className="flex relative">
+                  <div className="flex-shrink-0 w-4 h-4 bg-blue-600 rounded-full border-2 border-white shadow-md mr-4 relative z-10"></div>
+                  <div className="flex-1 bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500">
+                    <p className="text-sm font-medium text-gray-900">Bill Introduced</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      {new Date(bill.introducedDate).toLocaleDateString()} • {bill.chamber}
                     </p>
                   </div>
                 </div>
-              )}
 
-              {/* Show additional timeline if available */}
-              {bill.status.timeline &&
-                bill.status.timeline.length > 0 &&
-                bill.status.timeline.slice(0, 3).map((action, index) => (
-                  <div key={index} className="flex">
-                    <div className="flex-shrink-0 w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3"></div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-900">{action.description}</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(action.date).toLocaleDateString()}
-                        {action.chamber && ` • ${action.chamber}`}
+                {/* Show latest action */}
+                {bill.status.lastAction && bill.status.lastAction.description !== 'Introduced' && (
+                  <div className="flex relative">
+                    <div
+                      className={`flex-shrink-0 w-4 h-4 rounded-full border-2 border-white shadow-md mr-4 relative z-10 ${
+                        bill.status.current === 'enacted'
+                          ? 'bg-green-600'
+                          : bill.status.current === 'failed'
+                            ? 'bg-red-600'
+                            : bill.status.current === 'passed_house' ||
+                                bill.status.current === 'passed_senate'
+                              ? 'bg-orange-600'
+                              : 'bg-yellow-600'
+                      }`}
+                    ></div>
+                    <div
+                      className={`flex-1 p-3 rounded-lg border-l-4 ${
+                        bill.status.current === 'enacted'
+                          ? 'bg-green-50 border-green-500'
+                          : bill.status.current === 'failed'
+                            ? 'bg-red-50 border-red-500'
+                            : bill.status.current === 'passed_house' ||
+                                bill.status.current === 'passed_senate'
+                              ? 'bg-orange-50 border-orange-500'
+                              : 'bg-yellow-50 border-yellow-500'
+                      }`}
+                    >
+                      <p className="text-sm font-medium text-gray-900">
+                        {bill.status.lastAction.description}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {new Date(bill.status.lastAction.date).toLocaleDateString()}
+                        {bill.status.lastAction.chamber && ` • ${bill.status.lastAction.chamber}`}
                       </p>
                     </div>
                   </div>
-                ))}
+                )}
 
-              {bill.status.timeline && bill.status.timeline.length > 3 && (
-                <p className="text-xs text-gray-500 text-center">
-                  And {bill.status.timeline.length - 3} more actions
-                </p>
-              )}
+                {/* Show additional timeline if available */}
+                {bill.status.timeline &&
+                  bill.status.timeline.length > 0 &&
+                  bill.status.timeline.slice(0, 2).map((action, index) => (
+                    <div key={index} className="flex relative">
+                      <div className="flex-shrink-0 w-4 h-4 bg-gray-400 rounded-full border-2 border-white shadow-md mr-4 relative z-10"></div>
+                      <div className="flex-1 bg-gray-50 p-3 rounded-lg border-l-4 border-gray-400">
+                        <p className="text-sm font-medium text-gray-900">{action.description}</p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {new Date(action.date).toLocaleDateString()}
+                          {action.chamber && ` • ${action.chamber}`}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+
+                {bill.status.timeline && bill.status.timeline.length > 2 && (
+                  <div className="text-center">
+                    <p className="text-xs text-gray-500 bg-gray-100 py-2 px-3 rounded-full inline-block">
+                      + {bill.status.timeline.length - 2} more legislative actions
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* Related Bills */}
+          {bill.relatedBills && bill.relatedBills.length > 0 && (
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Related Bills ({bill.relatedBills.length})
+              </h3>
+              <div className="space-y-3">
+                {bill.relatedBills.map((relatedBill, index) => (
+                  <div
+                    key={index}
+                    className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-blue-600">{relatedBill.number}</p>
+                        <p className="text-xs text-gray-700 mt-1 line-clamp-2">
+                          {relatedBill.title}
+                        </p>
+                        <div className="mt-2">
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              relatedBill.relationship === 'identical'
+                                ? 'bg-green-100 text-green-800'
+                                : relatedBill.relationship === 'supersedes'
+                                  ? 'bg-orange-100 text-orange-800'
+                                  : relatedBill.relationship === 'superseded'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-blue-100 text-blue-800'
+                            }`}
+                          >
+                            {relatedBill.relationship === 'identical'
+                              ? 'Identical'
+                              : relatedBill.relationship === 'supersedes'
+                                ? 'Supersedes'
+                                : relatedBill.relationship === 'superseded'
+                                  ? 'Superseded by'
+                                  : 'Related'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Committee Information */}
           {bill.committees && bill.committees.length > 0 && (

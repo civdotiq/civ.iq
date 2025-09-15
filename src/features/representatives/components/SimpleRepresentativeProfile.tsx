@@ -143,7 +143,9 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
               : 0,
             committees: representative.committees?.length || 0,
             totalRaised: batchData?.success ? batchData.data?.finance?.totalRaised || 0 : 0,
-            votesParticipated: batchData?.success ? batchData.data?.votes?.length || 0 : 0,
+            votesParticipated: batchData?.success
+              ? batchData.data?.votes?.totalResults || batchData.data?.votes?.votes?.length || 0
+              : 0,
           }}
           loading={batchLoading}
         />

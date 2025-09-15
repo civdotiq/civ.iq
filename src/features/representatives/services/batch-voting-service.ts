@@ -227,6 +227,9 @@ interface VoteListItem {
   date: string;
   question: string;
   result: string;
+  legislationNumber?: string;
+  legislationType?: string;
+  legislationUrl?: string;
 }
 
 // Circuit breaker for handling API failures
@@ -411,7 +414,7 @@ export class BatchVotingService {
   }
 
   /**
-   * Get House vote list (single API call)
+   * Get House vote list with pagination support to fetch ALL votes
    */
   private async getHouseVoteList(
     congress: number,
@@ -427,42 +430,104 @@ export class BatchVotingService {
     }
 
     try {
-      const url = `https://api.congress.gov/v3/house-vote/${congress}`;
-      const params = new URLSearchParams({
-        format: 'json',
-        limit: (limit * 2).toString(), // Get more to account for filtering
-        sort: 'date:desc',
+      const baseUrl = `https://api.congress.gov/v3/house-vote/${congress}`;
+      const pageLimit = 250; // Maximum allowed by Congress.gov API
+      let offset = 0;
+      let hasMore = true;
+      const allVotes: VoteListItem[] = [];
+
+      logger.info('Fetching House votes with pagination', {
+        congress,
+        session,
+        requestedLimit: limit,
+        pageSize: pageLimit,
       });
 
-      if (this.apiKey) {
-        params.append('api_key', this.apiKey);
+      while (hasMore) {
+        const params = new URLSearchParams({
+          format: 'json',
+          limit: pageLimit.toString(),
+          offset: offset.toString(),
+          sort: 'date:desc',
+        });
+
+        if (this.apiKey) {
+          params.append('api_key', this.apiKey);
+        }
+
+        const response = await httpClient.fetch(`${baseUrl}?${params}`, {
+          signal: AbortSignal.timeout(10000), // Increased timeout for larger requests
+        });
+
+        if (!response.ok) {
+          throw new Error(`House vote list API failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const votes = data.rollCallVotes || data.houseRollCallVotes || data.votes || [];
+
+        // Parse and add votes from this page
+        const pageVotes: VoteListItem[] = votes.map((vote: Record<string, unknown>) => ({
+          rollCallNumber: Number(vote.rollCallNumber || vote.number) || 0,
+          sourceDataURL: String(vote.sourceDataURL || ''),
+          date: String(vote.date || vote.voteDate || vote.startDate || ''),
+          question: String(vote.question || vote.voteQuestion || ''),
+          result: String(vote.result || vote.voteResult || ''),
+          legislationNumber: vote.legislationNumber ? String(vote.legislationNumber) : undefined,
+          legislationType: vote.legislationType ? String(vote.legislationType) : undefined,
+          legislationUrl: vote.legislationUrl ? String(vote.legislationUrl) : undefined,
+        }));
+
+        allVotes.push(...pageVotes);
+
+        // Check pagination info to determine if there are more pages
+        const pagination = data.pagination;
+        if (pagination) {
+          const totalCount = pagination.count || 0;
+          const currentPageSize = votes.length;
+
+          // Continue if there's a next URL or if we haven't fetched all items yet
+          hasMore = !!pagination.next || offset + currentPageSize < totalCount;
+
+          // If we've already fetched enough votes for the requested limit, we can stop early
+          if (allVotes.length >= limit * 2) {
+            logger.info('Reached sufficient votes for requested limit', {
+              fetched: allVotes.length,
+              requested: limit,
+            });
+            hasMore = false;
+          }
+        } else {
+          // No pagination info means this is likely the last/only page
+          hasMore = false;
+        }
+
+        if (hasMore) {
+          offset += pageLimit;
+          logger.debug('Fetching next page of House votes', {
+            offset,
+            votesFetchedSoFar: allVotes.length,
+          });
+        }
       }
 
-      const response = await httpClient.fetch(`${url}?${params}`, {
-        signal: AbortSignal.timeout(5000),
+      logger.info('Completed fetching House votes', {
+        congress,
+        totalVotesFetched: allVotes.length,
+        pagesRetrieved: Math.ceil(offset / pageLimit) + 1,
       });
 
-      if (!response.ok) {
-        throw new Error(`House vote list API failed: ${response.status}`);
+      // Cache the complete list for 1 hour
+      if (allVotes.length > 0) {
+        this.cache.set(cacheKey, allVotes, 60 * 60 * 1000);
       }
 
-      const data = await response.json();
-      const votes = data.rollCallVotes || data.houseRollCallVotes || data.votes || [];
-
-      const voteList: VoteListItem[] = votes.map((vote: Record<string, unknown>) => ({
-        rollCallNumber: Number(vote.rollCallNumber || vote.number) || 0,
-        sourceDataURL: String(vote.sourceDataURL || ''),
-        date: String(vote.date || vote.voteDate || ''),
-        question: String(vote.question || vote.voteQuestion || ''),
-        result: String(vote.result || vote.voteResult || ''),
-      }));
-
-      // Cache for 1 hour (vote lists change frequently)
-      this.cache.set(cacheKey, voteList, 60 * 60 * 1000);
-
-      return voteList.slice(0, limit);
+      return allVotes.slice(0, limit);
     } catch (error) {
-      logger.error('Failed to fetch House vote list', error as Error);
+      logger.error('Failed to fetch House vote list', error as Error, {
+        congress,
+        session,
+      });
       return [];
     }
   }
@@ -530,7 +595,7 @@ export class BatchVotingService {
   }
 
   /**
-   * Fetch and parse House XML vote data
+   * Fetch and parse House XML vote data, with bill information enrichment
    */
   private async fetchAndParseHouseXML(vote: VoteListItem): Promise<StandardizedVote | null> {
     if (!vote.sourceDataURL) {
@@ -550,7 +615,18 @@ export class BatchVotingService {
         return res.text();
       });
 
-      return this.parseHouseXML(response, vote);
+      const parsedVote = this.parseHouseXML(response, vote);
+
+      // Enrich with bill information if available
+      if (parsedVote && vote.legislationNumber && vote.legislationType) {
+        parsedVote.bill = await this.fetchBillDetails(
+          vote.legislationNumber,
+          vote.legislationType,
+          vote.legislationUrl
+        );
+      }
+
+      return parsedVote;
     } catch (error) {
       logger.debug('Failed to fetch House XML', {
         rollCallNumber: vote.rollCallNumber,
@@ -565,11 +641,28 @@ export class BatchVotingService {
    */
   private parseHouseXML(xmlText: string, voteInfo: VoteListItem): StandardizedVote | null {
     try {
-      // Debug: Log the first 500 characters to see what we're getting
+      // Extract question and description from XML
+      const getXmlTag = (tag: string) =>
+        xmlText.match(new RegExp(`<${tag}>([^<]*)</${tag}>`))?.[1]?.trim() || '';
+
+      const voteQuestion = getXmlTag('vote-question') || getXmlTag('question') || voteInfo.question;
+      const voteDesc = getXmlTag('vote-desc') || getXmlTag('description') || '';
+      const legislativeNumber = getXmlTag('legis-num') || '';
+
+      // Combine question and description for a more descriptive question
+      let enhancedQuestion = voteQuestion || 'Unknown Question';
+      if (voteDesc && voteDesc !== voteQuestion) {
+        enhancedQuestion = voteDesc ? `${voteQuestion}: ${voteDesc}` : voteQuestion;
+      }
+
+      // Debug: Log the parsing process
       logger.debug('Parsing House XML', {
         rollCallNumber: voteInfo.rollCallNumber,
-        xmlPreview: xmlText.substring(0, 500),
         xmlLength: xmlText.length,
+        extractedQuestion: voteQuestion,
+        extractedDesc: voteDesc,
+        extractedLegisNum: legislativeNumber,
+        enhancedQuestion,
       });
 
       // Try primary parsing method first
@@ -624,12 +717,14 @@ export class BatchVotingService {
         chamber: 'House',
         rollCallNumber: voteInfo.rollCallNumber,
         date: voteInfo.date,
-        question: voteInfo.question,
+        question: enhancedQuestion,
         result: voteInfo.result,
         totals,
         memberVotes,
         sourceUrl: voteInfo.sourceDataURL,
         processedAt: new Date().toISOString(),
+        // Bill will be populated later in fetchAndParseHouseXML
+        bill: undefined,
       };
     } catch (error) {
       logger.error('Failed to parse House XML', error as Error);
@@ -1032,6 +1127,123 @@ export class BatchVotingService {
     } catch (error) {
       logger.error('Error converting LIS to bioguide', error as Error, { lisId });
       return lisId;
+    }
+  }
+
+  /**
+   * Fetch bill details from Congress.gov API
+   */
+  private async fetchBillDetails(
+    billNumber: string,
+    billType: string,
+    billUrl?: string
+  ): Promise<StandardizedVote['bill'] | undefined> {
+    try {
+      // Try to get from cache first
+      const cacheKey = `bill-${billType.toLowerCase()}-${billNumber}`;
+      const cached = this.cache.get<StandardizedVote['bill']>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
+      // If we don't have an API key, return basic info
+      if (!this.apiKey) {
+        return {
+          congress: 119,
+          type: billType,
+          number: billNumber,
+          title: `${billType} ${billNumber}`,
+          url: billUrl,
+        };
+      }
+
+      // Construct API URL for bill details
+      const billTypeMap: Record<string, string> = {
+        HR: 'hr',
+        'H.R.': 'hr',
+        S: 's',
+        'S.': 's',
+        HRES: 'hres',
+        'H.RES.': 'hres',
+        SRES: 'sres',
+        'S.RES.': 'sres',
+        HJRES: 'hjres',
+        'H.J.RES.': 'hjres',
+        SJRES: 'sjres',
+        'S.J.RES.': 'sjres',
+        HCONRES: 'hconres',
+        'H.CON.RES.': 'hconres',
+        SCONRES: 'sconres',
+        'S.CON.RES.': 'sconres',
+      };
+
+      const normalizedType = billTypeMap[billType.toUpperCase()] || billType.toLowerCase();
+      const apiUrl = `https://api.congress.gov/v3/bill/119/${normalizedType}/${billNumber}?format=json&api_key=${this.apiKey}`;
+
+      const response = await httpClient.fetch(apiUrl, {
+        signal: AbortSignal.timeout(2000), // Quick timeout for bill details
+      });
+
+      if (!response.ok) {
+        logger.debug('Failed to fetch bill details', {
+          billNumber,
+          billType,
+          status: response.status,
+        });
+        // Return basic info on failure
+        return {
+          congress: 119,
+          type: billType,
+          number: billNumber,
+          title: `${billType} ${billNumber}`,
+          url: billUrl,
+        };
+      }
+
+      const data = await response.json();
+      const billData = data.bill;
+
+      if (!billData) {
+        return {
+          congress: 119,
+          type: billType,
+          number: billNumber,
+          title: `${billType} ${billNumber}`,
+          url: billUrl,
+        };
+      }
+
+      // Extract the title - Congress.gov provides it directly
+      const title = billData.title || billData.shortTitle || `${billType} ${billNumber}`;
+
+      const bill: StandardizedVote['bill'] = {
+        congress: 119,
+        type: billType,
+        number: billNumber,
+        title,
+        url:
+          billUrl ||
+          `https://www.congress.gov/bill/119th-congress/${normalizedType}-bill/${billNumber}`,
+      };
+
+      // Cache the bill details for 24 hours
+      this.cache.set(cacheKey, bill, 24 * 60 * 60 * 1000);
+
+      return bill;
+    } catch (error) {
+      logger.debug('Error fetching bill details', {
+        billNumber,
+        billType,
+        error: (error as Error).message,
+      });
+      // Return basic info on error
+      return {
+        congress: 119,
+        type: billType,
+        number: billNumber,
+        title: `${billType} ${billNumber}`,
+        url: billUrl,
+      };
     }
   }
 
