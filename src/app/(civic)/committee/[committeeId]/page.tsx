@@ -12,7 +12,7 @@ import { getCommitteeDisplayName } from '@/types/committee';
 import type { Committee, CommitteeAPIResponse } from '@/types/committee';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 
-// Dynamically import the SubcommitteeCard component (client component)
+// Dynamically import client components
 const SubcommitteeCard = dynamic(
   () => import('@/features/legislation/components/SubcommitteeCard'),
   {
@@ -21,6 +21,30 @@ const SubcommitteeCard = dynamic(
       <div className="border border-gray-200 rounded-lg p-4 animate-pulse">
         <div className="h-6 w-1/2 bg-gray-200 rounded mb-2"></div>
         <div className="h-4 w-full bg-gray-200 rounded"></div>
+      </div>
+    ),
+  }
+);
+
+const CommitteeMembers = dynamic(
+  () => import('@/features/legislation/components/CommitteeMembers'),
+  {
+    ssr: true,
+    loading: () => (
+      <div className="bg-white rounded-lg shadow-lg p-6 animate-pulse">
+        <div className="h-6 w-48 bg-gray-200 rounded mb-6"></div>
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center space-x-4 p-4 border rounded">
+              <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+              <div className="flex-1">
+                <div className="h-4 w-1/3 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 w-1/4 bg-gray-200 rounded"></div>
+              </div>
+              <div className="h-4 w-20 bg-gray-200 rounded"></div>
+            </div>
+          ))}
+        </div>
       </div>
     ),
   }
@@ -294,84 +318,8 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
           )}
         </div>
 
-        {/* Committee Members */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            Committee Members ({committee.members.length})
-          </h2>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Representative
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Party
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    State/District
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Role
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Joined
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {committee.members.map(member => (
-                  <tr key={member.representative.bioguideId} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <RepresentativePhoto
-                          bioguideId={member.representative.bioguideId}
-                          name={member.representative.name}
-                          size="sm"
-                          className="mr-3"
-                        />
-                        <div>
-                          <Link
-                            href={`/representative/${member.representative.bioguideId}`}
-                            className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                          >
-                            {member.representative.name}
-                          </Link>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          member.representative.party === 'Democrat' ||
-                          member.representative.party === 'D'
-                            ? 'bg-blue-100 text-blue-800'
-                            : member.representative.party === 'Independent'
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {member.representative.party}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {member.representative.state}
-                      {member.representative.district && `-${member.representative.district}`}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {member.role}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(member.joinedDate).getFullYear()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        {/* Committee Members with Enhanced Features */}
+        <CommitteeMembers committee={committee} />
 
         {/* Subcommittees */}
         {committee.subcommittees.length > 0 && (

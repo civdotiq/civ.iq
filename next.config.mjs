@@ -47,7 +47,7 @@ const nextConfig = {
       },
     ],
   },
-  // WSL2 optimizations + bundle optimization
+  // Simplified webpack config for WSL2
   webpack: (config, { isServer }) => {
     // Disable file system polling in WSL2
     if (!isServer) {
@@ -56,56 +56,6 @@ const nextConfig = {
         aggregateTimeout: 300,
       };
     }
-
-    // Bundle optimization
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          default: false,
-          vendors: false,
-          // Vendor chunk for react ecosystem
-          react: {
-            name: 'react',
-            chunks: 'all',
-            test: /[\\/]node_modules[\\/](react|react-dom|react-router)[\\/]/,
-            priority: 20,
-          },
-          // UI library chunk
-          ui: {
-            name: 'ui',
-            chunks: 'all',
-            test: /[\\/]node_modules[\\/](@radix-ui|@headlessui|framer-motion)[\\/]/,
-            priority: 15,
-          },
-          // Charts and visualization
-          charts: {
-            name: 'charts',
-            chunks: 'all',
-            test: /[\\/]node_modules[\\/](recharts|d3|chart\.js)[\\/]/,
-            priority: 15,
-          },
-          // Common vendor libraries
-          vendor: {
-            name: 'vendor',
-            chunks: 'all',
-            test: /[\\/]node_modules[\\/]/,
-            priority: 10,
-            minChunks: 1,
-            maxSize: 200000,
-          },
-          // Common app code
-          common: {
-            name: 'common',
-            chunks: 'all',
-            minChunks: 2,
-            priority: 5,
-            reuseExistingChunk: true,
-          },
-        },
-      },
-    };
 
     return config;
   },

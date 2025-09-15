@@ -257,13 +257,25 @@ async function fetchCommitteeFromCongressLegislators(
           }
         }
 
+        // Clean up verbose jurisdiction text for better UI display
+        let cleanJurisdiction = committee.jurisdiction || `${committee.name} jurisdiction`;
+
+        // Special case: Senate Appropriations has very verbose description - make it concise
+        if (
+          committee.thomas_id === 'SSAP' &&
+          cleanJurisdiction.includes('responsible for legislation allocating federal funds')
+        ) {
+          cleanJurisdiction =
+            'Responsible for federal spending bills and discretionary budget allocations.';
+        }
+
         const result: Committee = {
           id: committee.thomas_id,
           thomas_id: committee.thomas_id,
           name: committee.name,
           chamber:
             committee.type === 'house' ? 'House' : committee.type === 'senate' ? 'Senate' : 'Joint',
-          jurisdiction: committee.jurisdiction || `${committee.name} jurisdiction`,
+          jurisdiction: cleanJurisdiction,
           type: 'Standing',
           leadership: {
             chair: leadership.chair,
@@ -416,12 +428,22 @@ export async function GET(
 
     let committee: Committee | null = null;
 
-    // First try to get hardcoded committee data
-    committee = await getCommitteeData(committeeId);
+    // First try to get hardcoded committee data (for clean jurisdiction text)
+    const hardcodedCommittee = await getCommitteeData(committeeId);
 
-    // If not found, try to get real data from congress-legislators
-    if (!committee) {
-      committee = await fetchCommitteeFromCongressLegislators(committeeId);
+    // Always try to get real member data from congress-legislators
+    const realCommittee = await fetchCommitteeFromCongressLegislators(committeeId);
+
+    // Merge hardcoded data (jurisdiction) with real data (members, leadership)
+    if (hardcodedCommittee && realCommittee) {
+      committee = {
+        ...realCommittee,
+        jurisdiction: hardcodedCommittee.jurisdiction, // Use clean jurisdiction from hardcoded data
+      };
+    } else if (realCommittee) {
+      committee = realCommittee;
+    } else if (hardcodedCommittee) {
+      committee = hardcodedCommittee;
     }
 
     // EMERGENCY FIX: Return empty data instead of fake members

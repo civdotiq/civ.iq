@@ -125,6 +125,10 @@ export const committeeRegistry: CommitteeRegistry = {
       const { senateAgricultureCommittee } = await import('./senate/agriculture');
       return senateAgricultureCommittee;
     },
+    SSAP: async () => {
+      const { senateAppropriationsCommittee } = await import('./senate/appropriations');
+      return senateAppropriationsCommittee;
+    },
   },
   joint: {
     // Joint committee implementations pending
