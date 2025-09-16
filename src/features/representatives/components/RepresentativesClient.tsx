@@ -5,7 +5,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useState, useCallback, useMemo, useEffect, lazy } from 'react';
+import { useState, useCallback, useEffect, lazy } from 'react';
 import { useRouter } from 'next/navigation';
 import { Representative } from '@/features/representatives/services/congress-api';
 import { useRepresentativesByZip } from '@/features/representatives/hooks/useRepresentatives';
@@ -13,6 +13,7 @@ import { SearchForm } from './SearchForm';
 import { RepresentativeGrid } from './RepresentativeGrid';
 import { FilterSidebar } from './FilterSidebar';
 import { ErrorState } from '@/components/shared/ui/DataQualityIndicator';
+import CongressHeader from './CongressHeader';
 
 // Lazy load visualization components with dynamic imports for better code splitting
 const VotingPatternHeatmap = lazy(() =>
@@ -84,7 +85,13 @@ export function RepresentativesClient({
       let filtered = [...representatives];
 
       if (filters.chamber !== 'all') {
-        filtered = filtered.filter(r => r.chamber === filters.chamber);
+        // Map filter values to actual data values
+        const chamberMapping: Record<string, string> = {
+          house: 'House',
+          senate: 'Senate',
+        };
+        const actualChamber = chamberMapping[filters.chamber] || filters.chamber;
+        filtered = filtered.filter(r => r.chamber === actualChamber);
       }
       if (filters.party !== 'all') {
         filtered = filtered.filter(r => r.party === filters.party);
@@ -110,30 +117,10 @@ export function RepresentativesClient({
     [representatives, searchTerm]
   );
 
-  // Update filtered reps when representatives change
+  // Update filtered reps when representatives or filters change
   useEffect(() => {
-    if (initialFilters) {
-      handleFilterChange(filters);
-    } else {
-      setFilteredReps(representatives);
-    }
-  }, [representatives, filters, initialFilters, handleFilterChange]);
-
-  const searchFilteredReps = useMemo(() => {
-    if (!searchTerm) return representatives;
-
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    return representatives.filter(
-      rep =>
-        rep.name.toLowerCase().includes(lowerSearchTerm) ||
-        rep.state.toLowerCase().includes(lowerSearchTerm) ||
-        (rep.district && rep.district.includes(searchTerm))
-    );
-  }, [representatives, searchTerm]);
-
-  useEffect(() => {
-    setFilteredReps(searchFilteredReps);
-  }, [searchFilteredReps]);
+    handleFilterChange(filters);
+  }, [representatives, filters, handleFilterChange]);
 
   const generateNetworkData = () => {
     const nodes = filteredReps.slice(0, 30).map(rep => ({
@@ -193,6 +180,26 @@ export function RepresentativesClient({
   return (
     <>
       <SearchForm onSearch={handleZipSearch} apiMetadata={metadata || undefined} />
+
+      {/* Congress Statistics Header */}
+      <CongressHeader
+        chamber={filters.chamber as 'all' | 'house' | 'senate'}
+        onChamberChange={chamber => {
+          const newFilters = { ...filters, chamber };
+          setFilters(newFilters);
+          handleFilterChange(newFilters);
+
+          // Update URL to reflect the chamber filter
+          const params = new URLSearchParams(window.location.search);
+          if (chamber === 'all') {
+            params.delete('chamber');
+          } else {
+            params.set('chamber', chamber);
+          }
+          const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+          router.push(newUrl);
+        }}
+      />
 
       {/* Search and view controls */}
       <div className="bg-white rounded-lg shadow-md p-4 mb-6">

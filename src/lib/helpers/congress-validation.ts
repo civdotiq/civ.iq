@@ -10,8 +10,8 @@ import type {
 import type { EnhancedRepresentative } from '@/types/representative';
 
 /**
- * Check if a representative is a current member of the 118th Congress
- * 118th Congress: January 3, 2023 - January 3, 2025
+ * Check if a representative is a current member of the 119th Congress
+ * 119th Congress: January 3, 2025 - January 3, 2027
  */
 export function isCurrentMember(
   representative: CongressLegislator | EnhancedRepresentative
@@ -21,7 +21,7 @@ export function isCurrentMember(
     const termEnd = representative.currentTerm.end
       ? new Date(representative.currentTerm.end)
       : null;
-    const congressStart = new Date('2023-01-03');
+    const congressStart = new Date('2025-01-03');
 
     // Current if no end date or end date is in the future
     return !termEnd || termEnd >= congressStart;
@@ -32,7 +32,7 @@ export function isCurrentMember(
     const latestTerm = representative.terms[representative.terms.length - 1];
     if (latestTerm && 'end' in latestTerm) {
       const termEnd = latestTerm.end ? new Date(latestTerm.end) : null;
-      const congressStart = new Date('2023-01-03');
+      const congressStart = new Date('2025-01-03');
 
       // Current if no end date or end date is in the future
       return !termEnd || termEnd >= congressStart;
@@ -52,15 +52,15 @@ export function filterCurrent119thCongress<T extends CongressLegislator | Enhanc
 }
 
 /**
- * Check if a term is for the 119th Congress (2023-2025)
+ * Check if a term is for the 119th Congress (2025-2027)
  */
 export function is119thCongressTerm(term: CongressLegislatorTerm): boolean {
   const termStart = new Date(term.start);
-  const congress119Start = new Date('2023-01-03');
-  const congress119End = new Date('2025-01-03');
+  const congress119Start = new Date('2025-01-03');
+  const congress119End = new Date('2027-01-03');
 
-  // Term is in 119th Congress if it starts exactly on or after Jan 3, 2023
-  // and starts before Jan 3, 2025 (start of 120th Congress)
+  // Term is in 119th Congress if it starts exactly on or after Jan 3, 2025
+  // and starts before Jan 3, 2027 (start of 120th Congress)
   return termStart >= congress119Start && termStart < congress119End;
 }
 
@@ -98,7 +98,7 @@ export function getMemberFilterDebugInfo(
       reason = 'Current member (no end date)';
     } else {
       const endDate = new Date(latestTermEnd);
-      const congressStart = new Date('2023-01-03');
+      const congressStart = new Date('2025-01-03');
       reason = endDate >= congressStart ? 'Current member' : `Term ended ${latestTermEnd}`;
     }
   } else if ('terms' in representative && representative.terms && representative.terms.length > 0) {
@@ -109,7 +109,7 @@ export function getMemberFilterDebugInfo(
         reason = 'Current member (no end date)';
       } else {
         const endDate = new Date(latestTermEnd);
-        const congressStart = new Date('2023-01-03');
+        const congressStart = new Date('2025-01-03');
         reason = endDate >= congressStart ? 'Current member' : `Term ended ${latestTermEnd}`;
       }
     }

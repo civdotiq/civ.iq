@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run seed-data && next build",
+    "seed-data": "tsx scripts/seed-congress-data.ts",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",

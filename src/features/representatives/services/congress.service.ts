@@ -785,8 +785,26 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
     // Filter for current 119th Congress members only
     const currentLegislators = filterCurrent119thCongress(legislators);
 
-    // Debug chamber breakdown
-    const chamberBreakdown = currentLegislators.reduce(
+    // Filter out non-voting delegates from territories
+    // These are representatives from DC, PR, VI, GU, AS, MP who are not part of the 435 voting House members
+    const votingLegislators = currentLegislators.filter(legislator => {
+      const currentTerm = legislator.terms[legislator.terms.length - 1];
+      if (!currentTerm) return false;
+
+      // Include all senators
+      if (currentTerm.type === 'sen') return true;
+
+      // For House representatives, exclude non-voting delegates from territories
+      if (currentTerm.type === 'rep') {
+        const nonVotingTerritories = ['DC', 'PR', 'VI', 'GU', 'AS', 'MP'];
+        return !nonVotingTerritories.includes(currentTerm.state);
+      }
+
+      return false;
+    });
+
+    // Debug chamber breakdown for voting members only
+    const chamberBreakdown = votingLegislators.reduce(
       (acc, leg) => {
         const currentTerm = leg.terms[leg.terms.length - 1];
         if (currentTerm) {
@@ -799,14 +817,15 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
       { senators: 0, representatives: 0, other: 0 }
     );
 
-    logger.debug('Filtered to current 119th Congress members', {
+    logger.debug('Filtered to voting members of 119th Congress', {
       originalCount: legislators.length,
-      currentCount: currentLegislators.length,
-      filteredOut: legislators.length - currentLegislators.length,
+      current119thCount: currentLegislators.length,
+      votingMembersCount: votingLegislators.length,
+      nonVotingDelegatesExcluded: currentLegislators.length - votingLegislators.length,
       breakdown: chamberBreakdown,
     });
 
-    const enhanced: EnhancedRepresentative[] = currentLegislators
+    const enhanced: EnhancedRepresentative[] = votingLegislators
       .map(legislator => {
         const bioguideId = legislator.id.bioguide;
         const social = socialMedia.find(s => s.bioguide === bioguideId);
