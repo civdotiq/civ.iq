@@ -179,38 +179,14 @@ async function fetchFCCBroadbandData(
   }
 }
 
-function generateInfrastructureEstimates(stateCode: string): EconomicProfile['infrastructure'] {
-  // Infrastructure estimates based on state characteristics
-  const infrastructureProfiles: Record<string, Partial<EconomicProfile['infrastructure']>> = {
-    // High infrastructure investment states
-    CA: { bridgeConditionRating: 75, highwayFunding: 5000000, publicTransitAccessibility: 80 },
-    NY: { bridgeConditionRating: 70, highwayFunding: 4500000, publicTransitAccessibility: 85 },
-    TX: { bridgeConditionRating: 72, highwayFunding: 4000000, publicTransitAccessibility: 60 },
-    FL: { bridgeConditionRating: 78, highwayFunding: 3500000, publicTransitAccessibility: 65 },
-
-    // Medium infrastructure states
-    PA: { bridgeConditionRating: 65, highwayFunding: 2500000, publicTransitAccessibility: 70 },
-    IL: { bridgeConditionRating: 68, highwayFunding: 2800000, publicTransitAccessibility: 75 },
-    OH: { bridgeConditionRating: 70, highwayFunding: 2200000, publicTransitAccessibility: 60 },
-    MI: { bridgeConditionRating: 66, highwayFunding: 2000000, publicTransitAccessibility: 55 },
-
-    // Lower infrastructure investment states
-    WV: { bridgeConditionRating: 55, highwayFunding: 800000, publicTransitAccessibility: 30 },
-    MS: { bridgeConditionRating: 58, highwayFunding: 900000, publicTransitAccessibility: 35 },
-    AR: { bridgeConditionRating: 60, highwayFunding: 1000000, publicTransitAccessibility: 40 },
-  };
-
-  const profile = infrastructureProfiles[stateCode] || {
-    bridgeConditionRating: 65,
-    highwayFunding: 1500000,
-    publicTransitAccessibility: 50,
-  };
-
+function getInfrastructureData(): EconomicProfile['infrastructure'] {
+  // Return zeros for all infrastructure metrics as no real API is available
+  // Following CLAUDE.md rule: "NO mock data ever" - show "Data unavailable" instead
   return {
-    bridgeConditionRating: profile.bridgeConditionRating || 65,
-    highwayFunding: profile.highwayFunding || 1500000,
-    broadbandAvailability: 75, // Will be overridden by FCC data if available
-    publicTransitAccessibility: profile.publicTransitAccessibility || 50,
+    bridgeConditionRating: 0,
+    highwayFunding: 0,
+    broadbandAvailability: 0, // Will be overridden by FCC data if available
+    publicTransitAccessibility: 0,
   };
 }
 
@@ -238,8 +214,8 @@ async function getEconomicProfile(districtId: string): Promise<EconomicProfile> 
       fetchFCCBroadbandData(stateCode),
     ]);
 
-    // Generate infrastructure estimates
-    const infrastructureData = generateInfrastructureEstimates(stateCode);
+    // Get infrastructure data (returns zeros as no real API available)
+    const infrastructureData = getInfrastructureData();
 
     // Combine all data sources
     const economicProfile: EconomicProfile = {
@@ -324,12 +300,12 @@ export async function GET(
         dataSources: {
           bls: 'Bureau of Labor Statistics - https://api.bls.gov/',
           fcc: 'Federal Communications Commission - https://opendata.fcc.gov/',
-          dot: 'Estimates based on DOT infrastructure profiles',
+          infrastructure: 'Data unavailable - no real API source',
         },
         notes: [
           'Employment data from BLS public API',
           'Broadband data from FCC Fixed Broadband Deployment',
-          'Infrastructure estimates based on state profiles',
+          'Infrastructure data unavailable - real government APIs needed',
           'Data cached for 30 minutes for performance',
         ],
       },

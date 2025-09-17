@@ -13,6 +13,7 @@ import DistrictRepresentative from '@/features/districts/components/DistrictRepr
 import DistrictNavigation from '@/features/districts/components/DistrictNavigation';
 import DistrictDemographics from '@/features/districts/components/DistrictDemographics';
 import NeighboringDistricts from '@/features/districts/components/NeighboringDistricts';
+import logger from '@/lib/logging/simple-logger';
 
 // Dynamic import of the map component to avoid SSR issues
 const DistrictMap = dynamic(() => import('@/features/districts/components/DistrictMap'), {
@@ -117,17 +118,23 @@ export default function DistrictPage() {
     async function fetchDistrict() {
       try {
         setLoading(true);
+        logger.info('🔄 Starting fetch for district:', districtId);
+
         const response = await fetch(`/api/districts/${districtId}`);
+        logger.info('📡 Fetch response:', response.status, response.statusText);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch district: ${response.status}`);
         }
 
         const data: APIResponse = await response.json();
+        logger.info('✅ District data loaded:', data.district.name);
         setDistrict(data.district);
       } catch (err) {
+        logger.error('❌ District fetch error:', err);
         setError(err instanceof Error ? err.message : 'Failed to load district');
       } finally {
+        logger.info('🏁 District loading complete');
         setLoading(false);
       }
     }

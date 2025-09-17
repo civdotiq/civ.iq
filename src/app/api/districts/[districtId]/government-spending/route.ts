@@ -197,161 +197,21 @@ async function fetchCongressionalBillsData(
   }
 }
 
-function generateSocialServicesEstimates(
-  stateCode: string
-): GovernmentServicesProfile['socialServices'] {
-  // Social services estimates based on state demographics
-  const socialServiceProfiles: Record<
-    string,
-    Partial<GovernmentServicesProfile['socialServices']>
-  > = {
-    // High population states
-    CA: {
-      snapBeneficiaries: 450000,
-      medicaidEnrollment: 1200000,
-      housingAssistanceUnits: 85000,
-      veteransServices: 75000,
-    },
-    TX: {
-      snapBeneficiaries: 380000,
-      medicaidEnrollment: 980000,
-      housingAssistanceUnits: 65000,
-      veteransServices: 68000,
-    },
-    FL: {
-      snapBeneficiaries: 320000,
-      medicaidEnrollment: 850000,
-      housingAssistanceUnits: 55000,
-      veteransServices: 62000,
-    },
-    NY: {
-      snapBeneficiaries: 350000,
-      medicaidEnrollment: 920000,
-      housingAssistanceUnits: 70000,
-      veteransServices: 58000,
-    },
-
-    // Medium population states
-    PA: {
-      snapBeneficiaries: 180000,
-      medicaidEnrollment: 420000,
-      housingAssistanceUnits: 32000,
-      veteransServices: 45000,
-    },
-    IL: {
-      snapBeneficiaries: 165000,
-      medicaidEnrollment: 380000,
-      housingAssistanceUnits: 28000,
-      veteransServices: 42000,
-    },
-    OH: {
-      snapBeneficiaries: 155000,
-      medicaidEnrollment: 350000,
-      housingAssistanceUnits: 25000,
-      veteransServices: 38000,
-    },
-    MI: {
-      snapBeneficiaries: 142000,
-      medicaidEnrollment: 320000,
-      housingAssistanceUnits: 22000,
-      veteransServices: 35000,
-    },
-
-    // Lower population states
-    WV: {
-      snapBeneficiaries: 42000,
-      medicaidEnrollment: 85000,
-      housingAssistanceUnits: 8500,
-      veteransServices: 12000,
-    },
-    VT: {
-      snapBeneficiaries: 18000,
-      medicaidEnrollment: 35000,
-      housingAssistanceUnits: 3200,
-      veteransServices: 5500,
-    },
-    WY: {
-      snapBeneficiaries: 15000,
-      medicaidEnrollment: 28000,
-      housingAssistanceUnits: 2800,
-      veteransServices: 4200,
-    },
-  };
-
-  const profile = socialServiceProfiles[stateCode] || {
-    snapBeneficiaries: 85000,
-    medicaidEnrollment: 200000,
-    housingAssistanceUnits: 15000,
-    veteransServices: 25000,
-  };
-
+function getSocialServicesData(): GovernmentServicesProfile['socialServices'] {
+  // Return zeros for all social services as no real API is available
+  // Following CLAUDE.md rule: "NO mock data ever" - show "Data unavailable" instead
   return {
-    snapBeneficiaries: profile.snapBeneficiaries || 85000,
-    medicaidEnrollment: profile.medicaidEnrollment || 200000,
-    housingAssistanceUnits: profile.housingAssistanceUnits || 15000,
-    veteransServices: profile.veteransServices || 25000,
+    snapBeneficiaries: 0,
+    medicaidEnrollment: 0,
+    housingAssistanceUnits: 0,
+    veteransServices: 0,
   };
 }
 
-function generateFederalFacilitiesEstimates(
-  stateCode: string
-): GovernmentServicesProfile['representation']['federalFacilities'] {
-  // Federal facilities estimates based on state characteristics
-  const facilityProfiles: Record<
-    string,
-    Array<{ name: string; type: string; employees: number; economicImpact: number }>
-  > = {
-    VA: [
-      { name: 'Pentagon', type: 'Defense', employees: 25000, economicImpact: 5000000000 },
-      {
-        name: 'CIA Headquarters',
-        type: 'Intelligence',
-        employees: 15000,
-        economicImpact: 2500000000,
-      },
-      { name: 'FBI Academy', type: 'Law Enforcement', employees: 3500, economicImpact: 450000000 },
-    ],
-    MD: [
-      { name: 'NASA Goddard', type: 'Space', employees: 8500, economicImpact: 1200000000 },
-      { name: 'NIH Campus', type: 'Health Research', employees: 12000, economicImpact: 1800000000 },
-      {
-        name: 'Fort Meade NSA',
-        type: 'Intelligence',
-        employees: 18000,
-        economicImpact: 2200000000,
-      },
-    ],
-    CA: [
-      { name: 'Vandenberg AFB', type: 'Military', employees: 5500, economicImpact: 850000000 },
-      {
-        name: 'Naval Base San Diego',
-        type: 'Military',
-        employees: 12000,
-        economicImpact: 1500000000,
-      },
-    ],
-    TX: [
-      { name: 'Johnson Space Center', type: 'Space', employees: 6500, economicImpact: 1100000000 },
-      { name: 'Fort Hood', type: 'Military', employees: 45000, economicImpact: 3200000000 },
-    ],
-  };
-
-  return (
-    facilityProfiles[stateCode] || [
-      {
-        name: 'Federal Building',
-        type: 'Administrative',
-        employees: 850,
-        economicImpact: 120000000,
-      },
-      {
-        name: 'VA Medical Center',
-        type: 'Veterans Affairs',
-        employees: 1200,
-        economicImpact: 180000000,
-      },
-    ]
-  );
+function getFederalFacilitiesData(): GovernmentServicesProfile['representation']['federalFacilities'] {
+  // Return empty array for federal facilities as no real API is available
+  // Following CLAUDE.md rule: "NO mock data ever" - show "Data unavailable" instead
+  return [];
 }
 
 async function getGovernmentServicesProfile(
@@ -381,8 +241,8 @@ async function getGovernmentServicesProfile(
     ]);
 
     // Generate estimates for missing data
-    const socialServicesData = generateSocialServicesEstimates(stateCode);
-    const federalFacilitiesData = generateFederalFacilitiesEstimates(stateCode);
+    const socialServicesData = getSocialServicesData();
+    const federalFacilitiesData = getFederalFacilitiesData();
 
     // Combine all data sources
     const servicesProfile: GovernmentServicesProfile = {
@@ -485,13 +345,14 @@ export async function GET(
         dataSources: {
           usaspending: 'USASpending.gov - https://api.usaspending.gov/',
           congress: 'Congress.gov enhanced API access',
-          census: 'Estimates based on Census demographic data',
+          socialServices: 'Data unavailable - no real API source',
+          federalFacilities: 'Data unavailable - no real API source',
         },
         notes: [
           'Federal spending data from USASpending.gov API',
           'Congressional bills from enhanced Congress.gov access',
-          'Social services estimates based on state demographics',
-          'Federal facilities data from government directories',
+          'Social services data unavailable - real government APIs needed',
+          'Federal facilities data unavailable - real government APIs needed',
           'Data cached for 30 minutes for performance',
         ],
       },

@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import logger from '@/lib/logging/simple-logger';
 
 // GeoJSON types for district boundaries
 interface DistrictProperties {
@@ -13,34 +14,18 @@ interface DistrictProperties {
   NAME: string;
   STATEFP: string;
   CD118FP: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface DistrictFeature {
   type: 'Feature';
   properties: DistrictProperties;
-  geometry: any;
+  geometry: unknown;
 }
 
 interface BoundaryData {
   type: 'FeatureCollection';
   features: DistrictFeature[];
-}
-
-// Leaflet type interfaces
-interface LeafletMap {
-  remove(): void;
-  fitBounds(bounds: any, options?: any): void;
-  invalidateSize(): void;
-  [key: string]: any;
-}
-
-interface LeafletLayer {
-  bindPopup(content: string): void;
-  on(event: string, handler: (...args: unknown[]) => void): void;
-  setStyle(style: any): void;
-  getBounds(): any;
-  [key: string]: any;
 }
 
 interface MapComponentProps {
@@ -58,7 +43,7 @@ export default function MapComponent({
   width,
   height,
 }: MapComponentProps) {
-  const mapRef = useRef<LeafletMap | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -69,21 +54,19 @@ export default function MapComponent({
   useEffect(() => {
     if (!isClient || !containerRef.current) return;
 
-    let map: LeafletMap | null = null;
-    let geoJsonLayer: LeafletLayer | null = null;
+    // Guard clause: prevent re-initialization if map already exists
+    if (mapRef.current) return;
 
     const initializeMap = async () => {
       try {
-        // Dynamic import of Leaflet to avoid SSR issues
+        // Dynamic import of Leaflet
         const L = await import('leaflet');
-
-        // Import Leaflet CSS - dynamic import for SSR compatibility
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         await import('leaflet/dist/leaflet.css');
 
         // Fix for default markers
-        delete (L as any).Icon.Default.prototype._getIconUrl;
+        delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
         L.Icon.Default.mergeOptions({
           iconRetinaUrl:
             'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -92,28 +75,16 @@ export default function MapComponent({
             'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
         });
 
-        // Ensure container exists and has dimensions
         if (!containerRef.current) return;
 
-        const container = containerRef.current;
-
-        // Clear any existing map
-        if (mapRef.current) {
-          mapRef.current.remove();
-          mapRef.current = null;
-        }
-
-        // Clear container
-        container.innerHTML = '';
-
-        // Create map with proper container check
-        map = L.map(container, {
+        // Create map instance
+        const map = L.map(containerRef.current, {
           center: center,
           zoom: zoom,
           scrollWheelZoom: true,
           zoomControl: true,
           attributionControl: true,
-          preferCanvas: true, // Better performance for large datasets
+          preferCanvas: true,
         });
 
         // Add tile layer
@@ -121,17 +92,18 @@ export default function MapComponent({
           attribution:
             '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
           maxZoom: 18,
-        }).addTo(map as any);
+        }).addTo(map);
 
-        // Add GeoJSON layer with enhanced interactivity
+        // Add GeoJSON layer if available
         if (boundaryData) {
-          geoJsonLayer = L.geoJSON(boundaryData as any, {
+          const geoJsonLayer = L.geoJSON(boundaryData as GeoJSON.FeatureCollection, {
             style: feature => {
-              // Dynamic styling based on district properties
-              const typedBoundaryData = boundaryData as any;
+              const firstFeature = boundaryData.features[0];
               const isMainDistrict =
                 feature?.properties?.GEOID ===
-                `${typedBoundaryData.features?.[0]?.properties?.STATEFP}${typedBoundaryData.features?.[0]?.properties?.CD118FP}`;
+                `${firstFeature?.properties?.STATEFP || ''}${
+                  firstFeature?.properties?.CD118FP || ''
+                }`;
               return {
                 fillColor: isMainDistrict ? '#3b82f6' : '#6b7280',
                 weight: isMainDistrict ? 4 : 2,
@@ -141,23 +113,34 @@ export default function MapComponent({
                 fillOpacity: isMainDistrict ? 0.3 : 0.1,
               };
             },
-            onEachFeature: (feature: any, layer: any) => {
+            onEachFeature: (feature, layer) => {
               const firstFeature = boundaryData.features[0];
               const isMainDistrict =
                 feature?.properties?.GEOID ===
-                `${firstFeature?.properties?.STATEFP || ''}${firstFeature?.properties?.CD118FP || ''}`;
+                `${firstFeature?.properties?.STATEFP || ''}${
+                  firstFeature?.properties?.CD118FP || ''
+                }`;
 
-              // Enhanced popup with more district information
               layer.bindPopup(`
                 <div style="min-width: 200px;">
                   <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                    <h3 style="font-weight: 600; margin: 0; color: #1f2937;">${feature.properties.NAME}</h3>
-                    ${isMainDistrict ? '<span style="margin-left: 8px; padding: 2px 6px; background: #3b82f6; color: white; border-radius: 4px; font-size: 12px;">Current</span>' : ''}
+                    <h3 style="font-weight: 600; margin: 0; color: #1f2937;">${
+                      feature.properties?.NAME || ''
+                    }</h3>
+                    ${
+                      isMainDistrict
+                        ? '<span style="margin-left: 8px; padding: 2px 6px; background: #3b82f6; color: white; border-radius: 4px; font-size: 12px;">Current</span>'
+                        : ''
+                    }
                   </div>
                   <p style="margin: 0 0 4px 0; color: #6b7280; font-size: 14px;">Congressional District</p>
-                  <p style="margin: 0 0 8px 0; font-size: 14px; color: #4b5563;">GEOID: ${feature.properties.GEOID}</p>
+                  <p style="margin: 0 0 8px 0; font-size: 14px; color: #4b5563;">GEOID: ${
+                    feature.properties?.GEOID || ''
+                  }</p>
                   <div style="border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 8px;">
-                    <a href="/districts/${feature.properties.STATEFP}-${feature.properties.CD118FP}" 
+                    <a href="/districts/${feature.properties?.STATEFP || ''}-${
+                      feature.properties?.CD118FP || ''
+                    }"
                        style="color: #3b82f6; text-decoration: none; font-size: 14px; font-weight: 500;">
                       View District Details →
                     </a>
@@ -166,29 +149,30 @@ export default function MapComponent({
               `);
 
               // Add hover effects
-              layer.on('mouseover', function (this: any) {
+              layer.on('mouseover', function (this: L.Path) {
                 this.setStyle({
                   weight: isMainDistrict ? 6 : 4,
                   fillOpacity: isMainDistrict ? 0.5 : 0.3,
                 });
               });
 
-              layer.on('mouseout', function (this: any) {
+              layer.on('mouseout', function (this: L.Path) {
                 this.setStyle({
                   weight: isMainDistrict ? 4 : 2,
                   fillOpacity: isMainDistrict ? 0.3 : 0.1,
                 });
               });
 
-              // Add click handler for navigation
               layer.on('click', function () {
-                const districtId = `${feature.properties.STATEFP}-${feature.properties.CD118FP}`;
+                const districtId = `${feature.properties?.STATEFP || ''}-${
+                  feature.properties?.CD118FP || ''
+                }`;
                 if (typeof window !== 'undefined') {
                   window.location.href = `/districts/${districtId}`;
                 }
               });
             },
-          }).addTo(map as any) as LeafletLayer;
+          }).addTo(map);
 
           // Fit map to bounds
           try {
@@ -197,26 +181,25 @@ export default function MapComponent({
               map.fitBounds(bounds, { padding: [20, 20] });
             }
           } catch (error) {
-            console.warn('Could not fit bounds:', error);
+            logger.warn('Could not fit bounds:', error as Error);
           }
         }
 
+        // Store map instance in ref
         mapRef.current = map;
 
         // Force resize after initialization
         setTimeout(() => {
-          if (map) {
-            map.invalidateSize();
-          }
+          map.invalidateSize();
         }, 100);
       } catch (error) {
-        console.error('Error initializing map:', error);
+        logger.error('Error initializing map:', error as Error);
       }
     };
 
     initializeMap();
 
-    // Cleanup function
+    // CRITICAL: Cleanup function using Leaflet's official cleanup method
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();

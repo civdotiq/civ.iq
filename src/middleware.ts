@@ -14,6 +14,7 @@ const logger = {
   warn: (message: string, data?: any) => console.warn(`[WARN] ${message}`, data),
   // eslint-disable-next-line no-console, @typescript-eslint/no-explicit-any
   error: (message: string, error?: Error, data?: any) =>
+    // eslint-disable-next-line no-console
     console.error(`[ERROR] ${message}`, error, data),
 };
 
@@ -29,7 +30,7 @@ const SECURITY_HEADERS = {
   'Permissions-Policy': 'geolocation=(), microphone=(), camera=(), payment=()',
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
   'Content-Security-Policy':
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; frame-ancestors 'none';",
 } as const;
 
 // Rate limiting configuration

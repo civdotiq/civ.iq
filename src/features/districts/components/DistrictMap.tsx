@@ -1,46 +1,315 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
-import type { LatLngExpression } from 'leaflet';
+import { useEffect, useState, useRef } from 'react';
+import type { Map } from 'maplibre-gl';
 import type { GeoJSON } from 'geojson';
-
-// Dynamic import to avoid SSR issues with Leaflet
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), {
-  ssr: false,
-});
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), {
-  ssr: false,
-});
-const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
+import logger from '@/lib/logging/simple-logger';
 
 interface DistrictMapProps {
   state: string;
   district: string;
 }
 
-// State center coordinates for initial map view
-const STATE_CENTERS: Record<string, LatLngExpression> = {
-  MI: [44.3148, -85.6024],
-  CA: [36.7783, -119.4179],
-  TX: [31.9686, -99.9018],
-  FL: [27.6648, -81.5158],
-  NY: [43.0, -75.0],
-  PA: [41.2033, -77.1945],
-  IL: [40.6331, -89.3985],
-  OH: [40.4173, -82.9071],
-  GA: [32.1656, -82.9001],
-  NC: [35.7596, -79.0193],
-  MD: [39.0458, -76.6413],
-  DEFAULT: [39.8283, -98.5795], // Center of USA
+// State center coordinates for initial map view (lng, lat format for MapLibre)
+const STATE_CENTERS: Record<string, [number, number]> = {
+  MI: [-85.6024, 44.3148],
+  CA: [-119.4179, 36.7783],
+  TX: [-99.9018, 31.9686],
+  FL: [-81.5158, 27.6648],
+  NY: [-75.0, 43.0],
+  PA: [-77.1945, 41.2033],
+  IL: [-89.3985, 40.6331],
+  OH: [-82.9071, 40.4173],
+  GA: [-82.9001, 32.1656],
+  NC: [-79.0193, 35.7596],
+  MD: [-76.6413, 39.0458],
+  VA: [-78.6569, 37.4316], // Add Virginia center
+  DEFAULT: [-98.5795, 39.8283], // Center of USA
 };
 
 export default function DistrictMap({ state, district }: DistrictMapProps) {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<Map | null>(null);
   const [geoJsonData, setGeoJsonData] = useState<GeoJSON.Feature | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [coordinateCount, setCoordinateCount] = useState(0);
   const [dataSource, setDataSource] = useState<string>('');
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure we're on the client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Initialize MapLibre map
+  useEffect(() => {
+    if (!isClient) return; // Exit early if not client-side
+
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      logger.info('🔍 Map useEffect triggered - checking conditions:', {
+        hasContainer: !!mapContainer.current,
+        hasExistingMap: !!mapRef.current,
+        isClient: isClient,
+        state: state,
+        district: district,
+      });
+
+      if (!mapContainer.current || mapRef.current) {
+        logger.warn('⚠️ Map initialization skipped - conditions not met:', {
+          noContainer: !mapContainer.current,
+          mapExists: !!mapRef.current,
+          notClient: !isClient,
+        });
+        return;
+      }
+
+      const initializeMap = async () => {
+        try {
+          // Step 2: Add diagnostic logging
+          logger.info('🗺️ Map container element:', mapContainer.current);
+          logger.info('⏳ Attempting to initialize MapLibre map...');
+
+          // Dynamic import MapLibre GL
+          const maplibregl = (await import('maplibre-gl')).default;
+
+          const mapCenter = STATE_CENTERS[state] || STATE_CENTERS.DEFAULT;
+
+          // Create map instance with comprehensive base map configuration
+          const map = new maplibregl.Map({
+            container: mapContainer.current!,
+            style: {
+              version: 8,
+              glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+              sources: {
+                'base-tiles': {
+                  type: 'raster',
+                  tiles: [
+                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  ],
+                  tileSize: 256,
+                  attribution: '© OpenStreetMap contributors',
+                  maxzoom: 19,
+                },
+                'fallback-background': {
+                  type: 'geojson',
+                  data: {
+                    type: 'FeatureCollection',
+                    features: [],
+                  },
+                },
+              },
+              layers: [
+                {
+                  id: 'background',
+                  type: 'background',
+                  paint: {
+                    'background-color': '#e3f2fd',
+                  },
+                },
+                {
+                  id: 'base-map',
+                  type: 'raster',
+                  source: 'base-tiles',
+                  paint: {
+                    'raster-opacity': 1,
+                  },
+                },
+              ],
+            },
+            center: mapCenter,
+            zoom: 7,
+            interactive: true,
+            attributionControl: false,
+          });
+
+          mapRef.current = map;
+          logger.info('✅ MapLibre map successfully initialized:', map);
+
+          // Add navigation controls
+          map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+          // Set a flag to indicate map is ready for district data
+          map.on('load', () => {
+            // Map is now ready for layers
+            logger.info('MapLibre map loaded and ready for district data');
+            logger.info('Map center:', map.getCenter());
+            logger.info('Map zoom:', map.getZoom());
+
+            // Force a resize to ensure proper rendering
+            setTimeout(() => {
+              map.resize();
+              logger.info('Map resized');
+            }, 100);
+          });
+
+          // Add source data event for debugging
+          map.on('sourcedata', e => {
+            if (e.sourceId === 'base-tiles') {
+              logger.info('Base tiles source data loaded:', e.isSourceLoaded);
+            }
+          });
+
+          // Add error event handling
+          map.on('error', e => {
+            logger.error('MapLibre map error:', e.error);
+          });
+
+          // Add style data event for debugging
+          map.on('styledata', () => {
+            logger.info('MapLibre style loaded');
+          });
+        } catch (error) {
+          logger.error('Failed to initialize MapLibre GL:', error as Error);
+          setError('Failed to initialize map');
+        }
+      };
+
+      initializeMap();
+    }, 100); // 100ms delay to ensure DOM is ready
+
+    // Cleanup
+    return () => {
+      clearTimeout(timer);
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [isClient, state, district]);
+
+  // Update map with district data
+  useEffect(() => {
+    if (!mapRef.current || !geoJsonData || !isClient) return;
+
+    const map = mapRef.current;
+
+    logger.info('Updating map with district data:', {
+      hasMap: !!mapRef.current,
+      hasGeoJson: !!geoJsonData,
+      geoJsonType: geoJsonData?.type,
+      geometryType: geoJsonData?.geometry?.type,
+      mapLoaded: map.loaded(),
+    });
+
+    const addDistrictLayers = () => {
+      try {
+        console.log('▶️ Attempting to load district boundaries...');
+
+        // Remove existing district layer if present
+        if (map.getSource('district-boundary')) {
+          if (map.getLayer('district-fill')) {
+            map.removeLayer('district-fill');
+          }
+          if (map.getLayer('district-stroke')) {
+            map.removeLayer('district-stroke');
+          }
+          map.removeSource('district-boundary');
+        }
+
+        // Add new district boundary
+        const sourceConfig = {
+          type: 'geojson' as const,
+          data: geoJsonData,
+        };
+        console.log('  Adding source with config:', sourceConfig);
+
+        map.addSource('district-boundary', sourceConfig);
+        console.log('  ✅ Source added successfully.');
+
+        const isRealPolygon = dataSource === 'real_polygon_extraction';
+        const fillColor = isRealPolygon ? '#22C55E' : '#3B82F6';
+        const strokeColor = isRealPolygon ? '#16A34A' : '#1E40AF';
+
+        // Add fill layer
+        const fillLayerConfig = {
+          id: 'district-fill',
+          type: 'fill' as const,
+          source: 'district-boundary',
+          paint: {
+            'fill-color': fillColor,
+            'fill-opacity': 0.3,
+          },
+        };
+        console.log('  Adding fill layer with config:', fillLayerConfig);
+
+        map.addLayer(fillLayerConfig);
+        console.log('  ✅ Fill layer added successfully.');
+
+        // Add stroke layer
+        const strokeLayerConfig = {
+          id: 'district-stroke',
+          type: 'line' as const,
+          source: 'district-boundary',
+          paint: {
+            'line-color': strokeColor,
+            'line-width': 3,
+            'line-opacity': 0.9,
+          },
+        };
+        console.log('  Adding stroke layer with config:', strokeLayerConfig);
+
+        map.addLayer(strokeLayerConfig);
+        console.log('  ✅ Stroke layer added successfully.');
+
+        logger.info('✅ District layers added successfully');
+
+        // Fit map to district bounds - handle both Polygon and MultiPolygon
+        const geometry = geoJsonData.geometry;
+        let allCoords: number[][] = [];
+
+        if (geometry.type === 'Polygon' && geometry.coordinates[0]) {
+          allCoords = geometry.coordinates[0] as number[][];
+        } else if (geometry.type === 'MultiPolygon' && geometry.coordinates.length > 0) {
+          // For MultiPolygon, collect coordinates from all polygons
+          for (const polygon of geometry.coordinates) {
+            if (polygon[0]) {
+              allCoords = allCoords.concat(polygon[0] as number[][]);
+            }
+          }
+        }
+
+        if (allCoords.length > 0) {
+          const lngs = allCoords
+            .map(coord => coord[0])
+            .filter((lng): lng is number => typeof lng === 'number');
+          const lats = allCoords
+            .map(coord => coord[1])
+            .filter((lat): lat is number => typeof lat === 'number');
+
+          if (lngs.length > 0 && lats.length > 0) {
+            const minLng = Math.min(...lngs);
+            const maxLng = Math.max(...lngs);
+            const minLat = Math.min(...lats);
+            const maxLat = Math.max(...lats);
+
+            map.fitBounds(
+              [
+                [minLng, minLat],
+                [maxLng, maxLat],
+              ],
+              { padding: 50 }
+            );
+            logger.info('✅ Map fitted to district bounds');
+          }
+        }
+      } catch (error) {
+        logger.error('❌ Error updating map with district data:', error as Error);
+      }
+    };
+
+    // Check if map is already loaded, if not wait for load event
+    if (map.loaded()) {
+      addDistrictLayers();
+    } else {
+      logger.info('⏳ Map not yet loaded, waiting for load event...');
+      map.once('load', addDistrictLayers);
+    }
+  }, [geoJsonData, dataSource, isClient]);
 
   useEffect(() => {
     async function fetchDistrictBoundary() {
@@ -61,10 +330,29 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           }
         } else {
           const data = await response.json();
-          setGeoJsonData(data.boundary);
-          const coords = data.boundary?.geometry?.coordinates?.[0] || [];
-          setCoordinateCount(coords.length);
-          setDataSource(data.metadata?.method || 'unknown');
+
+          // The API returns the GeoJSON directly, not wrapped in a boundary property
+          const boundary = data.boundary || data; // Support both formats
+          setGeoJsonData(boundary);
+
+          // Count coordinates properly for both Polygon and MultiPolygon
+          let totalCoords = 0;
+          const geometry = boundary?.geometry;
+          if (geometry?.type === 'Polygon' && geometry.coordinates[0]) {
+            totalCoords = geometry.coordinates[0].length;
+          } else if (geometry?.type === 'MultiPolygon' && geometry.coordinates) {
+            for (const polygon of geometry.coordinates) {
+              if (polygon[0]) {
+                totalCoords += polygon[0].length;
+              }
+            }
+          }
+
+          setCoordinateCount(totalCoords);
+          // Check for metadata in different locations
+          setDataSource(
+            data.metadata?.method || data.properties?.api_metadata?.detail_level || 'standard'
+          );
           setError(null);
         }
       } catch (err) {
@@ -76,45 +364,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
     }
 
     fetchDistrictBoundary();
-  }, [state, district]);
-
-  // Calculate map center - use district bounds if available, otherwise state center
-  let mapCenter = STATE_CENTERS[state] || STATE_CENTERS.DEFAULT;
-  let mapZoom = 7;
-
-  if (
-    geoJsonData &&
-    geoJsonData.geometry.type === 'Polygon' &&
-    geoJsonData.geometry.coordinates[0]
-  ) {
-    // Calculate center from bounding box of the district
-    const coords = geoJsonData.geometry.coordinates[0];
-    const lats = coords
-      .map(coord => coord[1])
-      .filter((lat): lat is number => typeof lat === 'number');
-    const lngs = coords
-      .map(coord => coord[0])
-      .filter((lng): lng is number => typeof lng === 'number');
-
-    if (lats.length > 0 && lngs.length > 0) {
-      const minLat = Math.min(...lats);
-      const maxLat = Math.max(...lats);
-      const minLng = Math.min(...lngs);
-      const maxLng = Math.max(...lngs);
-
-      mapCenter = [(minLat + maxLat) / 2, (minLng + maxLng) / 2];
-
-      // Calculate zoom based on bounding box size
-      const latDiff = maxLat - minLat;
-      const lngDiff = maxLng - minLng;
-      const maxDiff = Math.max(latDiff, lngDiff);
-
-      if (maxDiff < 0.5) mapZoom = 10;
-      else if (maxDiff < 1) mapZoom = 9;
-      else if (maxDiff < 2) mapZoom = 8;
-      else mapZoom = 7;
-    }
-  }
+  }, [state, district, isClient]);
 
   if (loading) {
     return (
@@ -141,35 +391,30 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
     );
   }
 
+  if (!isClient) {
+    return (
+      <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-gray-500">Loading interactive map...</div>
+      </div>
+    );
+  }
+
   const isRealPolygon = dataSource === 'real_polygon_extraction';
   const isFallback = dataSource === 'bounding_box_fallback';
 
   return (
     <div className="w-full">
       <div className="w-full h-[400px] rounded-lg overflow-hidden border border-gray-200">
-        <MapContainer
-          center={mapCenter}
-          zoom={mapZoom}
-          style={{ height: '100%', width: '100%' }}
-          scrollWheelZoom={false}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          {geoJsonData && (
-            <GeoJSON
-              data={geoJsonData}
-              style={{
-                fillColor: isRealPolygon ? '#22C55E' : '#3B82F6', // Green for real, blue for approximate
-                fillOpacity: 0.2,
-                color: isRealPolygon ? '#16A34A' : '#1E40AF',
-                weight: 3,
-                opacity: 0.8,
-              }}
-            />
-          )}
-        </MapContainer>
+        <div
+          ref={mapContainer}
+          className="h-full w-full district-map-container"
+          style={{
+            height: '400px',
+            width: '100%',
+            minHeight: '400px',
+            position: 'relative',
+          }}
+        />
       </div>
       {coordinateCount > 0 && (
         <div className="mt-2 text-xs text-center">

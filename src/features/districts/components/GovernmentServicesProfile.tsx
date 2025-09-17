@@ -19,7 +19,8 @@ interface GovernmentData {
     dataSources: {
       usaspending: string;
       congress: string;
-      census: string;
+      socialServices: string;
+      federalFacilities: string;
     };
     notes: string[];
   };
@@ -34,6 +35,9 @@ function formatCurrency(amount: number): string {
 }
 
 function formatLargeNumber(num: number): string {
+  if (num === 0) {
+    return 'N/A';
+  }
   if (num >= 1000000000) {
     return `$${(num / 1000000000).toFixed(1)}B`;
   }
@@ -47,6 +51,9 @@ function formatLargeNumber(num: number): string {
 }
 
 function formatNumber(num: number): string {
+  if (num === 0) {
+    return 'Data unavailable';
+  }
   return new Intl.NumberFormat('en-US').format(num);
 }
 
@@ -174,46 +181,67 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
         )}
       </div>
 
-      {/* Social Services */}
-      <div className="mb-8">
-        <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-          <Users className="w-5 h-5 mr-2 text-blue-600" />
-          Social Services
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-6">
-            <div className="text-2xl font-bold text-orange-900">
-              {formatNumber(government.socialServices.snapBeneficiaries)}
-            </div>
-            <p className="text-sm text-orange-700 mt-1">SNAP Beneficiaries</p>
-            <p className="text-xs text-orange-600 mt-1">Households receiving aid</p>
-          </div>
+      {/* Social Services - Only show if any social services data exists */}
+      {(government.socialServices.snapBeneficiaries > 0 ||
+        government.socialServices.medicaidEnrollment > 0 ||
+        government.socialServices.housingAssistanceUnits > 0 ||
+        government.socialServices.veteransServices > 0) && (
+        <div className="mb-8">
+          <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
+            <Users className="w-5 h-5 mr-2 text-blue-600" />
+            Social Services
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {government.socialServices.snapBeneficiaries > 0 && (
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-6">
+                <div className="text-2xl font-bold text-orange-900">
+                  {new Intl.NumberFormat('en-US').format(
+                    government.socialServices.snapBeneficiaries
+                  )}
+                </div>
+                <p className="text-sm text-orange-700 mt-1">SNAP Beneficiaries</p>
+                <p className="text-xs text-orange-600 mt-1">Households receiving aid</p>
+              </div>
+            )}
 
-          <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-6">
-            <div className="text-2xl font-bold text-red-900">
-              {formatNumber(government.socialServices.medicaidEnrollment)}
-            </div>
-            <p className="text-sm text-red-700 mt-1">Medicaid Enrollment</p>
-            <p className="text-xs text-red-600 mt-1">Healthcare coverage</p>
-          </div>
+            {government.socialServices.medicaidEnrollment > 0 && (
+              <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-6">
+                <div className="text-2xl font-bold text-red-900">
+                  {new Intl.NumberFormat('en-US').format(
+                    government.socialServices.medicaidEnrollment
+                  )}
+                </div>
+                <p className="text-sm text-red-700 mt-1">Medicaid Enrollment</p>
+                <p className="text-xs text-red-600 mt-1">Healthcare coverage</p>
+              </div>
+            )}
 
-          <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg p-6">
-            <div className="text-2xl font-bold text-teal-900">
-              {formatNumber(government.socialServices.housingAssistanceUnits)}
-            </div>
-            <p className="text-sm text-teal-700 mt-1">Housing Assistance</p>
-            <p className="text-xs text-teal-600 mt-1">Subsidized units</p>
-          </div>
+            {government.socialServices.housingAssistanceUnits > 0 && (
+              <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg p-6">
+                <div className="text-2xl font-bold text-teal-900">
+                  {new Intl.NumberFormat('en-US').format(
+                    government.socialServices.housingAssistanceUnits
+                  )}
+                </div>
+                <p className="text-sm text-teal-700 mt-1">Housing Assistance</p>
+                <p className="text-xs text-teal-600 mt-1">Subsidized units</p>
+              </div>
+            )}
 
-          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-6">
-            <div className="text-2xl font-bold text-indigo-900">
-              {formatNumber(government.socialServices.veteransServices)}
-            </div>
-            <p className="text-sm text-indigo-700 mt-1">Veterans Served</p>
-            <p className="text-xs text-indigo-600 mt-1">VA benefits & services</p>
+            {government.socialServices.veteransServices > 0 && (
+              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-6">
+                <div className="text-2xl font-bold text-indigo-900">
+                  {new Intl.NumberFormat('en-US').format(
+                    government.socialServices.veteransServices
+                  )}
+                </div>
+                <p className="text-sm text-indigo-700 mt-1">Veterans Served</p>
+                <p className="text-xs text-indigo-600 mt-1">VA benefits & services</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Congressional Representation */}
       <div className="mb-8">
@@ -273,34 +301,44 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
         )}
       </div>
 
-      {/* Federal Facilities */}
-      {government.representation.federalFacilities.length > 0 && (
-        <div className="mb-6">
-          <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-            <Building2 className="w-5 h-5 mr-2 text-gray-600" />
-            Federal Facilities
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {government.representation.federalFacilities.slice(0, 4).map((facility, index) => (
-              <div
-                key={index}
-                className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4"
-              >
-                <h6 className="font-medium text-gray-900">{facility.name}</h6>
-                <p className="text-sm text-gray-600 mt-1">{facility.type}</p>
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-sm text-gray-500">
-                    {formatNumber(facility.employees)} employees
-                  </span>
-                  <span className="text-sm font-medium text-gray-700">
-                    {formatLargeNumber(facility.economicImpact)} impact
-                  </span>
-                </div>
-              </div>
-            ))}
+      {/* Federal Facilities - Only show if facilities with real data exist */}
+      {government.representation.federalFacilities.length > 0 &&
+        government.representation.federalFacilities.some(
+          facility => facility.employees > 0 || facility.economicImpact > 0
+        ) && (
+          <div className="mb-6">
+            <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
+              <Building2 className="w-5 h-5 mr-2 text-gray-600" />
+              Federal Facilities
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {government.representation.federalFacilities
+                .filter(facility => facility.employees > 0 || facility.economicImpact > 0)
+                .slice(0, 4)
+                .map((facility, index) => (
+                  <div
+                    key={index}
+                    className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4"
+                  >
+                    <h6 className="font-medium text-gray-900">{facility.name}</h6>
+                    <p className="text-sm text-gray-600 mt-1">{facility.type}</p>
+                    <div className="flex justify-between items-center mt-2">
+                      {facility.employees > 0 && (
+                        <span className="text-sm text-gray-500">
+                          {new Intl.NumberFormat('en-US').format(facility.employees)} employees
+                        </span>
+                      )}
+                      {facility.economicImpact > 0 && (
+                        <span className="text-sm font-medium text-gray-700">
+                          {formatLargeNumber(facility.economicImpact)} impact
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Data Sources */}
       <div className="border-t pt-4">
@@ -326,7 +364,11 @@ export default function GovernmentServicesProfile({ districtId }: GovernmentServ
           </div>
           <div>
             <strong>Social Services:</strong>{' '}
-            <span className="text-gray-500">Census demographic estimates</span>
+            <span className="text-red-600">{data.metadata.dataSources.socialServices}</span>
+          </div>
+          <div>
+            <strong>Federal Facilities:</strong>{' '}
+            <span className="text-red-600">{data.metadata.dataSources.federalFacilities}</span>
           </div>
         </div>
 

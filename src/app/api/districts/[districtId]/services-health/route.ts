@@ -202,82 +202,27 @@ async function fetchCDCHealthData(
   }
 }
 
-function generateHealthcareEstimates(stateCode: string): ServicesHealthProfile['healthcare'] {
-  // Healthcare estimates based on state characteristics
-  const healthcareProfiles: Record<string, Partial<ServicesHealthProfile['healthcare']>> = {
-    // High healthcare access states
-    MA: { hospitalQualityRating: 4.2, primaryCarePhysiciansPerCapita: 85, healthOutcomeIndex: 82 },
-    CT: { hospitalQualityRating: 4.1, primaryCarePhysiciansPerCapita: 82, healthOutcomeIndex: 80 },
-    VT: { hospitalQualityRating: 4.0, primaryCarePhysiciansPerCapita: 78, healthOutcomeIndex: 79 },
-    NH: { hospitalQualityRating: 3.9, primaryCarePhysiciansPerCapita: 75, healthOutcomeIndex: 77 },
-
-    // Major metropolitan states
-    CA: { hospitalQualityRating: 3.8, primaryCarePhysiciansPerCapita: 70, healthOutcomeIndex: 75 },
-    NY: { hospitalQualityRating: 3.9, primaryCarePhysiciansPerCapita: 72, healthOutcomeIndex: 76 },
-    FL: { hospitalQualityRating: 3.6, primaryCarePhysiciansPerCapita: 65, healthOutcomeIndex: 72 },
-    TX: { hospitalQualityRating: 3.5, primaryCarePhysiciansPerCapita: 62, healthOutcomeIndex: 70 },
-
-    // Rural/underserved states
-    WV: { hospitalQualityRating: 3.2, primaryCarePhysiciansPerCapita: 45, healthOutcomeIndex: 60 },
-    MS: { hospitalQualityRating: 3.1, primaryCarePhysiciansPerCapita: 42, healthOutcomeIndex: 58 },
-    AL: { hospitalQualityRating: 3.3, primaryCarePhysiciansPerCapita: 48, healthOutcomeIndex: 62 },
-    AR: { hospitalQualityRating: 3.2, primaryCarePhysiciansPerCapita: 46, healthOutcomeIndex: 61 },
-  };
-
-  const profile = healthcareProfiles[stateCode] || {
-    hospitalQualityRating: 3.5,
-    primaryCarePhysiciansPerCapita: 60,
-    healthOutcomeIndex: 70,
-  };
-
+function getHealthcareData(): ServicesHealthProfile['healthcare'] {
+  // Return zeros for all healthcare metrics as no real API is available
+  // Following CLAUDE.md rule: "NO mock data ever" - show "Data unavailable" instead
   return {
-    hospitalQualityRating: profile.hospitalQualityRating || 3.5,
-    primaryCarePhysiciansPerCapita: profile.primaryCarePhysiciansPerCapita || 60,
-    healthOutcomeIndex: profile.healthOutcomeIndex || 70,
-    medicareProviderCount: Math.floor((profile.primaryCarePhysiciansPerCapita || 60) * 2.5),
-    healthcareCostIndex: Math.max(
-      0.8,
-      Math.min(1.5, 1.0 + (80 - (profile.healthOutcomeIndex || 70)) / 100)
-    ),
+    hospitalQualityRating: 0,
+    primaryCarePhysiciansPerCapita: 0,
+    healthOutcomeIndex: 0,
+    medicareProviderCount: 0,
+    healthcareCostIndex: 0,
   };
 }
 
-function generateEducationEstimates(
-  stateCode: string
-): Partial<ServicesHealthProfile['education']> {
-  // Education performance estimates based on state characteristics
-  const educationProfiles: Record<string, Partial<ServicesHealthProfile['education']>> = {
-    // High-performing education states
-    MA: { schoolDistrictPerformance: 92, graduationRate: 89, collegeEnrollmentRate: 78 },
-    CT: { schoolDistrictPerformance: 90, graduationRate: 87, collegeEnrollmentRate: 76 },
-    NJ: { schoolDistrictPerformance: 89, graduationRate: 86, collegeEnrollmentRate: 75 },
-    VT: { schoolDistrictPerformance: 88, graduationRate: 85, collegeEnrollmentRate: 72 },
-
-    // Large diverse states
-    CA: { schoolDistrictPerformance: 75, graduationRate: 81, collegeEnrollmentRate: 65 },
-    NY: { schoolDistrictPerformance: 78, graduationRate: 83, collegeEnrollmentRate: 68 },
-    TX: { schoolDistrictPerformance: 72, graduationRate: 79, collegeEnrollmentRate: 62 },
-    FL: { schoolDistrictPerformance: 74, graduationRate: 80, collegeEnrollmentRate: 63 },
-
-    // States with challenges
-    WV: { schoolDistrictPerformance: 65, graduationRate: 75, collegeEnrollmentRate: 55 },
-    MS: { schoolDistrictPerformance: 63, graduationRate: 73, collegeEnrollmentRate: 52 },
-    AL: { schoolDistrictPerformance: 66, graduationRate: 76, collegeEnrollmentRate: 56 },
-    NV: { schoolDistrictPerformance: 67, graduationRate: 77, collegeEnrollmentRate: 58 },
-  };
-
-  const profile = educationProfiles[stateCode] || {
-    schoolDistrictPerformance: 75,
-    graduationRate: 80,
-    collegeEnrollmentRate: 65,
-  };
-
+function getEducationEstimatesData(): Partial<ServicesHealthProfile['education']> {
+  // Return zeros for education estimates as no reliable fallback API is available
+  // Following CLAUDE.md rule: "NO mock data ever" - show "Data unavailable" instead
   return {
-    schoolDistrictPerformance: profile.schoolDistrictPerformance || 75,
-    graduationRate: profile.graduationRate || 80,
-    collegeEnrollmentRate: profile.collegeEnrollmentRate || 65,
-    federalEducationFunding: (profile.graduationRate || 80) * 50000, // Rough correlation
-    teacherToStudentRatio: 16, // National average
+    schoolDistrictPerformance: 0,
+    graduationRate: 0,
+    collegeEnrollmentRate: 0,
+    federalEducationFunding: 0,
+    teacherToStudentRatio: 0,
   };
 }
 
@@ -305,9 +250,9 @@ async function getServicesHealthProfile(districtId: string): Promise<ServicesHea
       fetchCDCHealthData(stateCode),
     ]);
 
-    // Generate estimates for missing data
-    const educationEstimates = generateEducationEstimates(stateCode);
-    const healthcareEstimates = generateHealthcareEstimates(stateCode);
+    // Get fallback data (returns zeros as no real APIs available)
+    const educationEstimates = getEducationEstimatesData();
+    const healthcareEstimates = getHealthcareData();
 
     // Combine all data sources
     const servicesProfile: ServicesHealthProfile = {
@@ -397,12 +342,12 @@ export async function GET(
         dataSources: {
           education: 'Department of Education - https://api.ed.gov/',
           cdc: 'Centers for Disease Control - https://data.cdc.gov/',
-          cms: 'Estimates based on CMS provider data',
+          healthcare: 'Data unavailable - no real API source',
         },
         notes: [
           'Education data from Department of Education API when available',
           'Health outcomes from CDC PLACES dataset',
-          'Healthcare access estimates based on state profiles',
+          'Healthcare data unavailable - real government APIs needed',
           'Data cached for 30 minutes for performance',
         ],
       },

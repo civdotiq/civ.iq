@@ -709,6 +709,8 @@ function getPost2023DistrictData(
 ): { counties: string[]; cities: string[] } {
   const districtNum = parseInt(district) || 1;
 
+  logger.info('getPost2023DistrictData called', { state, district, districtNum });
+
   // Michigan post-2023 redistricting (accurate county assignments)
   if (state === 'MI') {
     const michiganDistricts: Record<number, { counties: string[]; cities: string[] }> = {
@@ -736,6 +738,27 @@ function getPost2023DistrictData(
     }
   }
 
+  // Washington state congressional districts
+  if (state === 'WA') {
+    const washingtonDistricts: Record<number, { counties: string[]; cities: string[] }> = {
+      1: { counties: ['Whatcom', 'Skagit', 'San Juan'], cities: ['Bellingham', 'Mount Vernon'] },
+      2: { counties: ['Snohomish', 'Skagit', 'Whatcom'], cities: ['Everett', 'Bellingham'] },
+      3: { counties: ['Clark', 'Skamania', 'Klickitat'], cities: ['Vancouver', 'Longview'] },
+      4: { counties: ['Yakima', 'Benton', 'Franklin'], cities: ['Yakima', 'Richland'] },
+      5: { counties: ['Spokane', 'Stevens', 'Pend Oreille'], cities: ['Spokane', 'Colville'] },
+      6: { counties: ['Mason', 'Kitsap', 'Jefferson'], cities: ['Bremerton', 'Port Townsend'] },
+      7: { counties: ['King'], cities: ['Seattle', 'Burien'] },
+      8: { counties: ['King', 'Pierce'], cities: ['Bellevue', 'Issaquah'] },
+      9: { counties: ['King', 'Pierce'], cities: ['Tacoma', 'Federal Way'] },
+      10: { counties: ['Thurston', 'Mason', 'Pierce'], cities: ['Olympia', 'Lacey'] },
+    };
+
+    const districtData = washingtonDistricts[districtNum];
+    if (districtData) {
+      return districtData;
+    }
+  }
+
   // Fallback for other states - use general state data
   const stateDefaults: Record<string, { counties: string[]; cities: string[] }> = {
     CA: {
@@ -753,6 +776,10 @@ function getPost2023DistrictData(
     NY: {
       counties: ['New York', 'Kings', 'Queens'],
       cities: ['New York City', 'Buffalo', 'Rochester'],
+    },
+    WA: {
+      counties: ['King', 'Pierce', 'Snohomish'],
+      cities: ['Seattle', 'Spokane', 'Tacoma'],
     },
   };
 

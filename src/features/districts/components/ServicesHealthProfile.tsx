@@ -19,7 +19,7 @@ interface ServicesData {
     dataSources: {
       education: string;
       cdc: string;
-      cms: string;
+      healthcare: string;
     };
     notes: string[];
   };
@@ -189,70 +189,89 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
         </div>
       </div>
 
-      {/* Healthcare Access */}
-      <div className="mb-8">
-        <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-          <Heart className="w-5 h-5 mr-2 text-red-600" />
-          Healthcare Access
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-6">
-            <div className="text-2xl font-bold text-red-900">
-              {getStarRating(services.healthcare.hospitalQualityRating)}
-            </div>
-            <p className="text-sm text-red-700 mt-1">Hospital Quality Rating</p>
-            <p className="text-xs text-red-600 mt-1">
-              {services.healthcare.hospitalQualityRating.toFixed(1)} out of 5 stars
-            </p>
+      {/* Healthcare Access - Only show if any healthcare data exists */}
+      {(services.healthcare.hospitalQualityRating > 0 ||
+        services.healthcare.primaryCarePhysiciansPerCapita > 0 ||
+        services.healthcare.healthOutcomeIndex > 0 ||
+        services.healthcare.medicareProviderCount > 0 ||
+        services.healthcare.healthcareCostIndex > 0) && (
+        <div className="mb-8">
+          <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
+            <Heart className="w-5 h-5 mr-2 text-red-600" />
+            Healthcare Access
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {services.healthcare.hospitalQualityRating > 0 && (
+              <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-6">
+                <div className="text-2xl font-bold text-red-900">
+                  {getStarRating(services.healthcare.hospitalQualityRating)}
+                </div>
+                <p className="text-sm text-red-700 mt-1">Hospital Quality Rating</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {services.healthcare.hospitalQualityRating.toFixed(1)} out of 5 stars
+                </p>
+              </div>
+            )}
+
+            {services.healthcare.primaryCarePhysiciansPerCapita > 0 && (
+              <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-6">
+                <div className="text-2xl font-bold text-pink-900">
+                  {services.healthcare.primaryCarePhysiciansPerCapita}
+                </div>
+                <p className="text-sm text-pink-700 mt-1">Primary Care Physicians</p>
+                <p className="text-xs text-pink-600 mt-1">Per 100,000 residents</p>
+              </div>
+            )}
+
+            {services.healthcare.healthOutcomeIndex > 0 && (
+              <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-lg p-6">
+                <div className="text-2xl font-bold text-rose-900">
+                  {services.healthcare.healthOutcomeIndex}/100
+                </div>
+                <p className="text-sm text-rose-700 mt-1">Health Outcome Index</p>
+                <p className="text-xs text-rose-600 mt-1">
+                  {services.healthcare.healthOutcomeIndex >= 80
+                    ? '🟢 Excellent'
+                    : services.healthcare.healthOutcomeIndex >= 65
+                      ? '🟡 Good'
+                      : '🔴 Needs Improvement'}
+                </p>
+              </div>
+            )}
           </div>
 
-          <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-6">
-            <div className="text-2xl font-bold text-pink-900">
-              {services.healthcare.primaryCarePhysiciansPerCapita}
-            </div>
-            <p className="text-sm text-pink-700 mt-1">Primary Care Physicians</p>
-            <p className="text-xs text-pink-600 mt-1">Per 100,000 residents</p>
-          </div>
+          {(services.healthcare.medicareProviderCount > 0 ||
+            services.healthcare.healthcareCostIndex > 0) && (
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {services.healthcare.medicareProviderCount > 0 && (
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-6">
+                  <div className="text-2xl font-bold text-orange-900">
+                    {services.healthcare.medicareProviderCount}
+                  </div>
+                  <p className="text-sm text-orange-700 mt-1">Medicare Providers</p>
+                  <p className="text-xs text-orange-600 mt-1">Active provider count</p>
+                </div>
+              )}
 
-          <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-lg p-6">
-            <div className="text-2xl font-bold text-rose-900">
-              {services.healthcare.healthOutcomeIndex}/100
+              {services.healthcare.healthcareCostIndex > 0 && (
+                <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-6">
+                  <div className="text-2xl font-bold text-amber-900">
+                    {(services.healthcare.healthcareCostIndex * 100).toFixed(0)}%
+                  </div>
+                  <p className="text-sm text-amber-700 mt-1">Healthcare Cost Index</p>
+                  <p className="text-xs text-amber-600 mt-1">
+                    {services.healthcare.healthcareCostIndex <= 1.0
+                      ? '🟢 Below Average'
+                      : services.healthcare.healthcareCostIndex <= 1.2
+                        ? '🟡 Average'
+                        : '🔴 Above Average'}
+                  </p>
+                </div>
+              )}
             </div>
-            <p className="text-sm text-rose-700 mt-1">Health Outcome Index</p>
-            <p className="text-xs text-rose-600 mt-1">
-              {services.healthcare.healthOutcomeIndex >= 80
-                ? '🟢 Excellent'
-                : services.healthcare.healthOutcomeIndex >= 65
-                  ? '🟡 Good'
-                  : '🔴 Needs Improvement'}
-            </p>
-          </div>
+          )}
         </div>
-
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-6">
-            <div className="text-2xl font-bold text-orange-900">
-              {services.healthcare.medicareProviderCount}
-            </div>
-            <p className="text-sm text-orange-700 mt-1">Medicare Providers</p>
-            <p className="text-xs text-orange-600 mt-1">Active provider count</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-6">
-            <div className="text-2xl font-bold text-amber-900">
-              {(services.healthcare.healthcareCostIndex * 100).toFixed(0)}%
-            </div>
-            <p className="text-sm text-amber-700 mt-1">Healthcare Cost Index</p>
-            <p className="text-xs text-amber-600 mt-1">
-              {services.healthcare.healthcareCostIndex <= 1.0
-                ? '🟢 Below Average'
-                : services.healthcare.healthcareCostIndex <= 1.2
-                  ? '🟡 Average'
-                  : '🔴 Above Average'}
-            </p>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Public Health */}
       <div className="mb-6">
@@ -326,7 +345,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
           </div>
           <div>
             <strong>Healthcare:</strong>{' '}
-            <span className="text-gray-500">CMS provider data estimates</span>
+            <span className="text-red-600">{data.metadata.dataSources.healthcare}</span>
           </div>
         </div>
 

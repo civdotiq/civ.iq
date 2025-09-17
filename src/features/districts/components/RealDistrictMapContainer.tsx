@@ -120,6 +120,7 @@ export function RealDistrictMapContainer({
 
         // Wait for map to load
         map.on('load', () => {
+          console.log('🗺️ Map load event fired - ready for district data');
           setMapState(prev => ({ ...prev, mapLoaded: true }));
           loadDistrictBoundaries();
         });
@@ -163,6 +164,7 @@ export function RealDistrictMapContainer({
     if (!mapRef.current || !mapState.mapLoaded) return;
 
     try {
+      console.log('▶️ Attempting to load district boundaries...');
       setMapState(prev => ({ ...prev, loading: true }));
 
       const map = mapRef.current;
@@ -177,15 +179,19 @@ export function RealDistrictMapContainer({
       });
 
       // Add district boundaries source using REAL PMTiles
-      map.addSource('district-boundaries', {
-        type: 'vector',
+      const sourceConfig = {
+        type: 'vector' as const,
         url: `pmtiles://${pmtilesUrl}`,
-      });
+      };
+      console.log('  Adding source with config:', sourceConfig);
+
+      map.addSource('district-boundaries', sourceConfig);
+      console.log('  ✅ Source added successfully.');
 
       // Add district boundary layers using REAL Census data
-      map.addLayer({
+      const fillLayerConfig = {
         id: 'district-fill',
-        type: 'fill',
+        type: 'fill' as const,
         source: 'district-boundaries',
         'source-layer': 'districts', // PMTiles layer name from Tippecanoe
         paint: {
@@ -197,11 +203,15 @@ export function RealDistrictMapContainer({
           ],
           'fill-opacity': 0.6,
         },
-      });
+      };
+      console.log('  Adding fill layer with config:', fillLayerConfig);
 
-      map.addLayer({
+      map.addLayer(fillLayerConfig);
+      console.log('  ✅ Fill layer added successfully.');
+
+      const strokeLayerConfig = {
         id: 'district-stroke',
-        type: 'line',
+        type: 'line' as const,
         source: 'district-boundaries',
         'source-layer': 'districts', // PMTiles layer name from Tippecanoe
         paint: {
@@ -213,12 +223,16 @@ export function RealDistrictMapContainer({
             1, // Default
           ],
         },
-      });
+      };
+      console.log('  Adding stroke layer with config:', strokeLayerConfig);
+
+      map.addLayer(strokeLayerConfig);
+      console.log('  ✅ Stroke layer added successfully.');
 
       // Add district labels showing real district names
-      map.addLayer({
+      const labelsLayerConfig = {
         id: 'district-labels',
-        type: 'symbol',
+        type: 'symbol' as const,
         source: 'district-boundaries',
         'source-layer': 'districts', // PMTiles layer name from Tippecanoe
         layout: {
@@ -231,7 +245,11 @@ export function RealDistrictMapContainer({
           'text-halo-color': '#ffffff',
           'text-halo-width': 1,
         },
-      });
+      };
+      console.log('  Adding labels layer with config:', labelsLayerConfig);
+
+      map.addLayer(labelsLayerConfig);
+      console.log('  ✅ Labels layer added successfully.');
 
       // Add click handlers
       if (enableInteraction) {

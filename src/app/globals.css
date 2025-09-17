@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import Leaflet CSS for maps */
-@import '../styles/leaflet.css';
+/* Import MapLibre GL CSS for maps */
+@import 'maplibre-gl/dist/maplibre-gl.css';
 
 /* Base layer customizations */
 @layer base {
@@ -81,6 +81,13 @@
   /* Loading skeleton */
   .skeleton {
     @apply animate-pulse bg-gray-200 rounded;
+  }
+
+  /* Map container with explicit dimensions */
+  .district-map-container {
+    height: 400px;
+    width: 100%;
+    border-radius: 8px;
   }
 }
 

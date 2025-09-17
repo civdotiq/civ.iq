@@ -19,7 +19,7 @@ interface EconomicData {
     dataSources: {
       bls: string;
       fcc: string;
-      dot: string;
+      infrastructure: string;
     };
     notes: string[];
   };
@@ -38,6 +38,9 @@ function formatPercentage(value: number): string {
 }
 
 function formatLargeNumber(num: number): string {
+  if (num === 0) {
+    return 'N/A';
+  }
   if (num >= 1000000) {
     return `$${(num / 1000000).toFixed(1)}M`;
   }
@@ -169,44 +172,54 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
         )}
       </div>
 
-      {/* Infrastructure Metrics */}
-      <div className="mb-8">
-        <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-          <Building className="w-5 h-5 mr-2 text-orange-600" />
-          Infrastructure
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-6">
-            <div className="text-2xl font-bold text-orange-900">
-              {economic.infrastructure.bridgeConditionRating}/100
-            </div>
-            <p className="text-sm text-orange-700 mt-1">Bridge Condition Rating</p>
-            <p className="text-xs text-orange-600 mt-1">
-              {economic.infrastructure.bridgeConditionRating >= 80
-                ? '🟢 Excellent'
-                : economic.infrastructure.bridgeConditionRating >= 60
-                  ? '🟡 Good'
-                  : '🔴 Needs Work'}
-            </p>
-          </div>
+      {/* Infrastructure Metrics - Only show if any infrastructure data exists */}
+      {(economic.infrastructure.bridgeConditionRating > 0 ||
+        economic.infrastructure.highwayFunding > 0 ||
+        economic.infrastructure.publicTransitAccessibility > 0) && (
+        <div className="mb-8">
+          <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
+            <Building className="w-5 h-5 mr-2 text-orange-600" />
+            Infrastructure
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {economic.infrastructure.bridgeConditionRating > 0 && (
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-6">
+                <div className="text-2xl font-bold text-orange-900">
+                  {economic.infrastructure.bridgeConditionRating}/100
+                </div>
+                <p className="text-sm text-orange-700 mt-1">Bridge Condition Rating</p>
+                <p className="text-xs text-orange-600 mt-1">
+                  {economic.infrastructure.bridgeConditionRating >= 80
+                    ? '🟢 Excellent'
+                    : economic.infrastructure.bridgeConditionRating >= 60
+                      ? '🟡 Good'
+                      : '🔴 Needs Work'}
+                </p>
+              </div>
+            )}
 
-          <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg p-6">
-            <div className="text-2xl font-bold text-teal-900">
-              {formatLargeNumber(economic.infrastructure.highwayFunding)}
-            </div>
-            <p className="text-sm text-teal-700 mt-1">Annual Highway Funding</p>
-            <p className="text-xs text-teal-600 mt-1">Federal investment</p>
-          </div>
+            {economic.infrastructure.highwayFunding > 0 && (
+              <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg p-6">
+                <div className="text-2xl font-bold text-teal-900">
+                  {formatLargeNumber(economic.infrastructure.highwayFunding)}
+                </div>
+                <p className="text-sm text-teal-700 mt-1">Annual Highway Funding</p>
+                <p className="text-xs text-teal-600 mt-1">Federal investment</p>
+              </div>
+            )}
 
-          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-6">
-            <div className="text-2xl font-bold text-indigo-900">
-              {economic.infrastructure.publicTransitAccessibility}/100
-            </div>
-            <p className="text-sm text-indigo-700 mt-1">Transit Accessibility</p>
-            <p className="text-xs text-indigo-600 mt-1">Public transportation access</p>
+            {economic.infrastructure.publicTransitAccessibility > 0 && (
+              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-6">
+                <div className="text-2xl font-bold text-indigo-900">
+                  {economic.infrastructure.publicTransitAccessibility}/100
+                </div>
+                <p className="text-sm text-indigo-700 mt-1">Transit Accessibility</p>
+                <p className="text-xs text-indigo-600 mt-1">Public transportation access</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Connectivity Metrics */}
       <div className="mb-6">
@@ -276,7 +289,7 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
           </div>
           <div>
             <strong>Infrastructure:</strong>{' '}
-            <span className="text-gray-500">Department of Transportation estimates</span>
+            <span className="text-red-600">{data.metadata.dataSources.infrastructure}</span>
           </div>
         </div>
 

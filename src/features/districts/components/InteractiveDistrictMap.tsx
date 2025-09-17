@@ -5,18 +5,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useEffect, useState, useMemo } from 'react';
-import dynamic from 'next/dynamic';
-import { useTileProvider } from '@/lib/map-tiles';
-
-// Dynamic imports for leaflet components (SSR compatibility)
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), {
-  ssr: false,
-});
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
-const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
-const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
+import { useEffect, useState, useMemo, useRef } from 'react';
+import type { Map } from 'maplibre-gl';
 
 interface DistrictBoundary {
   type: string;
@@ -62,14 +52,13 @@ interface MapLayer {
 }
 
 export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveDistrictMapProps) {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<Map | null>(null);
   const [mapData, setMapData] = useState<MapData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedLayer, setSelectedLayer] = useState<string>('congressional');
   const [isClient, setIsClient] = useState(false);
-
-  // Use tile provider with fallback support
-  const { currentProvider, handleTileError } = useTileProvider();
 
   const layers: MapLayer[] = [
     { id: 'congressional', name: 'Congressional District', color: '#e11d07', visible: true },
@@ -77,11 +66,81 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
     { id: 'state_house', name: 'State House District', color: '#3ea2d4', visible: false },
   ];
 
-  // Ensure we're on the client side for leaflet
+  // Ensure we're on the client side
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  // Initialize MapLibre map
+  useEffect(() => {
+    if (!mapContainer.current || mapRef.current || !isClient) {
+      return;
+    }
+
+    const initializeMap = async () => {
+      try {
+        // Dynamic import MapLibre GL
+        const maplibregl = (await import('maplibre-gl')).default;
+
+        // Create map instance
+        const map = new maplibregl.Map({
+          container: mapContainer.current!,
+          style: {
+            version: 8,
+            sources: {
+              'base-tiles': {
+                type: 'raster',
+                tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                tileSize: 256,
+                attribution: '© OpenStreetMap contributors',
+              },
+            },
+            layers: [
+              {
+                id: 'base-map',
+                type: 'raster',
+                source: 'base-tiles',
+              },
+            ],
+          },
+          center: [-95.7129, 37.0902], // Center of US
+          zoom: 4,
+          interactive: true,
+        });
+
+        mapRef.current = map;
+
+        // Add navigation controls
+        map.addControl(new maplibregl.NavigationControl(), 'top-right');
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to initialize MapLibre GL:', error);
+        setError('Failed to initialize map');
+      }
+    };
+
+    initializeMap();
+
+    // Cleanup
+    const containerElement = mapContainer.current;
+    return () => {
+      if (mapRef.current) {
+        try {
+          mapRef.current.remove();
+          mapRef.current = null;
+          if (containerElement) {
+            containerElement.innerHTML = '';
+          }
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.warn('Map cleanup error (non-critical):', error);
+          mapRef.current = null;
+        }
+      }
+    };
+  }, [isClient]);
+
+  // Fetch map data
   useEffect(() => {
     const fetchMapData = async () => {
       try {
@@ -96,6 +155,11 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
         const data: MapData = await response.json();
         setMapData(data);
         setError(null);
+
+        // Update map with new data
+        if (mapRef.current && data) {
+          updateMapWithData(data);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
         setMapData(null);
@@ -104,13 +168,127 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
       }
     };
 
-    if (zipCode) {
+    if (zipCode && isClient) {
       fetchMapData();
     }
-  }, [zipCode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zipCode, isClient]);
 
-  // Convert boundary data to GeoJSON format
-  const getCurrentGeoJSON = useMemo(() => {
+  // Update map with boundary data
+  const updateMapWithData = async (data: MapData) => {
+    if (!mapRef.current) return;
+
+    const map = mapRef.current;
+
+    try {
+      // Remove existing sources and layers
+      ['district-boundaries', 'zip-marker'].forEach(sourceId => {
+        if (map.getSource(sourceId)) {
+          ['district-fill', 'district-stroke', 'zip-marker'].forEach(layerId => {
+            if (map.getLayer(layerId)) {
+              map.removeLayer(layerId);
+            }
+          });
+          map.removeSource(sourceId);
+        }
+      });
+
+      // Add ZIP code marker
+      map.addSource('zip-marker', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [data.coordinates.lng, data.coordinates.lat],
+          },
+          properties: {
+            zipCode: data.zipCode,
+          },
+        },
+      });
+
+      map.addLayer({
+        id: 'zip-marker',
+        type: 'circle',
+        source: 'zip-marker',
+        paint: {
+          'circle-color': '#000000',
+          'circle-radius': 8,
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 2,
+        },
+      });
+
+      // Add district boundary if available
+      const boundary = data.boundaries[selectedLayer as keyof typeof data.boundaries];
+      if (boundary) {
+        const geoJsonData = {
+          type: 'Feature' as const,
+          geometry: {
+            type: boundary.type as 'Polygon',
+            coordinates: boundary.coordinates,
+          },
+          properties: boundary.properties,
+        };
+
+        map.addSource('district-boundaries', {
+          type: 'geojson',
+          data: geoJsonData,
+        });
+
+        const layerInfo = getCurrentLayerInfo();
+
+        // Add fill layer
+        map.addLayer({
+          id: 'district-fill',
+          type: 'fill',
+          source: 'district-boundaries',
+          paint: {
+            'fill-color': layerInfo?.color || '#e11d07',
+            'fill-opacity': 0.3,
+          },
+        });
+
+        // Add stroke layer
+        map.addLayer({
+          id: 'district-stroke',
+          type: 'line',
+          source: 'district-boundaries',
+          paint: {
+            'line-color': layerInfo?.color || '#e11d07',
+            'line-width': 2,
+            'line-opacity': 0.8,
+          },
+        });
+
+        // Fit map to bounds
+        if (data.bbox) {
+          map.fitBounds(
+            [
+              [data.bbox.minLng, data.bbox.minLat],
+              [data.bbox.maxLng, data.bbox.maxLat],
+            ],
+            { padding: 50 }
+          );
+        }
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error updating map with data:', error);
+    }
+  };
+
+  // Update map when selected layer changes
+  useEffect(() => {
+    if (mapData && mapRef.current) {
+      updateMapWithData(mapData);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLayer, mapData]);
+
+  // Convert boundary data to GeoJSON format (kept for potential future use)
+  const _getCurrentGeoJSON = useMemo(() => {
     if (!mapData) return null;
     const boundary = mapData.boundaries[selectedLayer as keyof typeof mapData.boundaries];
     if (!boundary) return null;
@@ -127,49 +305,6 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
 
   const getCurrentLayerInfo = () => {
     return layers.find(layer => layer.id === selectedLayer);
-  };
-
-  // Calculate map bounds from boundary data
-  const mapBounds = useMemo(() => {
-    if (!mapData || !isClient) return null;
-
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const L = require('leaflet');
-    return new L.LatLngBounds(
-      [mapData.bbox.minLat, mapData.bbox.minLng],
-      [mapData.bbox.maxLat, mapData.bbox.maxLng]
-    );
-  }, [mapData, isClient]);
-
-  // Create custom marker icon
-  const createCustomIcon = () => {
-    if (!isClient) return null;
-
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const L = require('leaflet');
-    return L.divIcon({
-      className: 'custom-marker',
-      html: `
-        <div style="
-          width: 24px;
-          height: 24px;
-          background: white;
-          border: 3px solid #1f2937;
-          border-radius: 50%;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        ">
-          <div style="
-            width: 10px;
-            height: 10px;
-            background: #1f2937;
-            border-radius: 50%;
-            margin: 4px auto;
-          "></div>
-        </div>
-      `,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
-    });
   };
 
   if (loading) {
@@ -197,7 +332,7 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
     );
   }
 
-  if (!isClient || !mapBounds) {
+  if (!isClient) {
     return (
       <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
         <div className="h-96 bg-gray-100 rounded flex items-center justify-center">
@@ -237,56 +372,13 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
       </div>
 
       <div className="p-0 relative">
-        {/* Interactive Leaflet Map */}
+        {/* Interactive MapLibre Map */}
         <div className="h-96 w-full">
-          <MapContainer
-            bounds={mapBounds}
+          <div
+            ref={mapContainer}
             className="h-full w-full rounded-b-lg"
-            boundsOptions={{ padding: [20, 20] }}
-          >
-            <TileLayer
-              attribution={currentProvider.attribution}
-              url={currentProvider.url}
-              maxZoom={currentProvider.maxZoom}
-              subdomains={currentProvider.subdomains}
-              errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-              eventHandlers={{
-                tileerror: handleTileError,
-              }}
-            />
-
-            {/* District Boundary */}
-            {getCurrentGeoJSON && layerInfo && (
-              <GeoJSON
-                data={getCurrentGeoJSON}
-                style={{
-                  color: layerInfo.color,
-                  weight: 2,
-                  opacity: 0.8,
-                  fillColor: layerInfo.color,
-                  fillOpacity: 0.3,
-                }}
-              />
-            )}
-
-            {/* ZIP Code Location Marker */}
-            <Marker
-              position={[mapData.coordinates.lat, mapData.coordinates.lng]}
-              icon={createCustomIcon()}
-            >
-              <Popup>
-                <div className="text-sm">
-                  <strong>Your Location</strong>
-                  <br />
-                  ZIP Code: {mapData.zipCode}
-                  <br />
-                  Lat: {mapData.coordinates.lat.toFixed(4)}
-                  <br />
-                  Lng: {mapData.coordinates.lng.toFixed(4)}
-                </div>
-              </Popup>
-            </Marker>
-          </MapContainer>
+            style={{ height: '384px' }}
+          />
         </div>
 
         {/* Map Legend - Overlay */}
