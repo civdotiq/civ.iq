@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
     });
 
     const committeeData = await cachedFetch(
-      `committees-directory-${chamber || 'all'}-${includeSubcommittees}-${includeMembers}`,
+      `committees-directory-v2-${chamber || 'all'}-${includeSubcommittees}-${includeMembers}`,
       async () => {
         if (!process.env.CONGRESS_API_KEY) {
           throw new Error('Congress API key not configured');
@@ -146,43 +146,93 @@ export async function GET(request: NextRequest) {
         const committees: Committee[] = [];
         const chambersToFetch = chamber ? [chamber] : ['house', 'senate'];
 
-        // Fetch committees for each chamber
+        // Fetch committees for each chamber with pagination
         for (const chamberName of chambersToFetch) {
           try {
-            const response = await fetch(
-              `https://api.congress.gov/v3/committee/${chamberName}?api_key=${process.env.CONGRESS_API_KEY}&limit=100&format=json`,
-              {
-                headers: {
-                  'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
-                },
+            let allCommittees: Array<{
+              systemCode?: string;
+              code?: string;
+              name: string;
+              establishedDate?: string;
+              url?: string;
+            }> = [];
+            let offset = 0;
+            const limit = 200; // Use larger batch size for efficiency
+            let hasMore = true;
+
+            // Fetch all committees with pagination
+            while (hasMore) {
+              const response = await fetch(
+                `https://api.congress.gov/v3/committee/${chamberName}?api_key=${process.env.CONGRESS_API_KEY}&limit=${limit}&offset=${offset}&format=json`,
+                {
+                  headers: {
+                    'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+                  },
+                }
+              );
+
+              const monitor = monitorExternalApi(
+                'congress',
+                `${chamberName}-committees-batch-${offset}`,
+                response.url
+              );
+
+              if (!response.ok) {
+                monitor.end(false, response.status);
+                logger.warn(`Failed to fetch ${chamberName} committees batch ${offset}`, {
+                  status: response.status,
+                  statusText: response.statusText,
+                });
+                break; // Exit pagination loop on error
               }
-            );
 
-            const monitor = monitorExternalApi(
-              'congress',
-              `${chamberName}-committees`,
-              response.url
-            );
+              const data = await response.json();
+              monitor.end(true, 200);
 
-            if (!response.ok) {
-              monitor.end(false, response.status);
-              logger.warn(`Failed to fetch ${chamberName} committees`, {
-                status: response.status,
-                statusText: response.statusText,
-              });
-              continue;
+              if (data.committees && data.committees.length > 0) {
+                allCommittees = allCommittees.concat(data.committees);
+
+                // Check if there are more results
+                const totalCount = data.pagination?.count || 0;
+                offset += limit;
+                hasMore = offset < totalCount;
+
+                logger.info(`Retrieved ${chamberName} committees batch`, {
+                  batchSize: data.committees.length,
+                  totalSoFar: allCommittees.length,
+                  totalExpected: totalCount,
+                  hasMore,
+                  offset,
+                  limit,
+                  calculatedHasMore: offset < totalCount,
+                });
+
+                // Additional debug info for first batch
+                if (offset === limit) {
+                  logger.info(`DEBUG: First batch for ${chamberName}`, {
+                    totalExpected: totalCount,
+                    batchSize: data.committees.length,
+                    hasMoreCalculation: `${offset} < ${totalCount} = ${offset < totalCount}`,
+                    paginationInfo: data.pagination,
+                  });
+                }
+              } else {
+                hasMore = false;
+              }
+
+              // Add small delay between requests to be respectful
+              if (hasMore) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+              }
             }
 
-            const data = await response.json();
-            monitor.end(true, 200);
-
-            logger.info(`Retrieved ${chamberName} committees`, {
-              count: data.committees?.length || 0,
+            logger.info(`Retrieved ALL ${chamberName} committees`, {
+              totalCount: allCommittees.length,
             });
 
             // Process each committee
-            if (data.committees) {
-              for (const committee of data.committees) {
+            if (allCommittees.length > 0) {
+              for (const committee of allCommittees) {
                 const committeeInfo: Committee = {
                   code: committee.systemCode || committee.code || '',
                   name: committee.name,
@@ -432,7 +482,7 @@ export async function GET(request: NextRequest) {
           },
         };
       },
-      2 * 60 * 60 * 1000 // 2 hour cache
+      10 * 1000 // 10 second cache for testing
     );
 
     logger.info('Successfully processed committee directory', {

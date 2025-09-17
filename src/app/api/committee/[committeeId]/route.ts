@@ -364,8 +364,18 @@ function generateEmptyCommitteeData(committeeId: string): Committee {
 
 // Helper function to resolve committee ID from various formats
 function resolveCommitteeId(inputId: string): string {
-  // Try exact match first (thomas_id format like 'HSAG', 'SSJU')
   const upperInputId = inputId.toUpperCase();
+
+  // Special case mappings where the URL ID differs from the actual thomas_id
+  const redirectMappings: Record<string, string> = {
+    HSHL: 'HSHM', // House Homeland Security: HSHL (legacy URL) -> HSHM (actual committee ID)
+  };
+
+  if (redirectMappings[upperInputId]) {
+    return redirectMappings[upperInputId];
+  }
+
+  // Try exact match first (thomas_id format like 'HSAG', 'SSJU')
   if (COMMITTEE_ID_MAP[upperInputId]) {
     return upperInputId;
   }
