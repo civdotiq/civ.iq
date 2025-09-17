@@ -113,6 +113,19 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
               {getAge() && (
                 <span className="text-lg text-gray-500 font-medium">{getAge()} years old</span>
               )}
+              {representative.party && (
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                    representative.party === 'Republican'
+                      ? 'bg-red-100 text-red-800 border border-red-200'
+                      : representative.party === 'Democrat'
+                        ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                        : 'bg-gray-100 text-gray-800 border border-gray-200'
+                  }`}
+                >
+                  {representative.party}
+                </span>
+              )}
             </div>
             <p data-testid="representative-state" className="text-lg text-gray-600 mb-2">
               {getTitle()}

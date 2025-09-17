@@ -7,10 +7,8 @@
 
 import React from 'react';
 import { EnhancedRepresentative } from '@/types/representative';
-import { PersonalInfoCard } from './PersonalInfoCard';
 import { ServiceTermsCard } from './ServiceTermsCard';
 import { CommitteeMembershipsCard } from './CommitteeMembershipsCard';
-import { DistrictInfoCard } from './DistrictInfoCard';
 import { BiographyCard } from './BiographyCard';
 
 interface ContactInfoTabProps {
@@ -28,20 +26,14 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
 
         {/* Two-column grid layout - removed duplicated content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Personal & Committee Details */}
+          {/* Left Column - Committee Details */}
           <div className="space-y-6">
-            <PersonalInfoCard representative={representative} />
             <CommitteeMembershipsCard representative={representative} />
           </div>
 
           {/* Right Column - Service History */}
           <div className="space-y-6">
             <ServiceTermsCard representative={representative} />
-
-            {/* Additional District Demographics (not shown in sidebar) */}
-            {representative.chamber === 'House' && (
-              <DistrictInfoCard representative={representative} />
-            )}
           </div>
         </div>
       </div>

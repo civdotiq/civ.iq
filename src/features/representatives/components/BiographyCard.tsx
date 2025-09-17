@@ -161,6 +161,20 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
   }
 
   // Generate a meaningful bio summary
+  // Simple HTML sanitization for Wikipedia content
+  const sanitizeHtml = (html: string): string => {
+    // Allow only basic formatting tags that are safe
+    const allowedTags = ['b', 'strong', 'i', 'em', 'p', 'br'];
+    const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g;
+
+    return html.replace(tagRegex, (match, tagName) => {
+      if (allowedTags.includes(tagName.toLowerCase())) {
+        return match;
+      }
+      return '';
+    });
+  };
+
   const generateBioSummary = () => {
     const parts = [];
 
@@ -216,8 +230,9 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
   };
 
   const bioSummary = generateBioSummary();
-  const hasBiographicalData =
-    biographyData?.wikipediaSummary || bioSummary || biographyData?.education?.length;
+  const hasWikipediaContent =
+    biographyData?.wikipediaHtmlSummary || biographyData?.wikipediaSummary;
+  const hasBiographicalData = hasWikipediaContent || bioSummary || biographyData?.education?.length;
 
   if (!hasBiographicalData && !batchData) {
     return null;
@@ -239,62 +254,73 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
       </div>
 
       <div className="p-6 space-y-5">
-        {/* Concise Bio Summary */}
-        {bioSummary && (
-          <div className="text-lg text-gray-800 font-medium leading-relaxed">
-            {representative.name} is a {bioSummary}.
-          </div>
-        )}
-
-        {/* Key Legislative Priorities */}
-        {batchData?.bills?.recentBills && batchData.bills.recentBills.length > 0 && (
-          <div>
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-              Current Legislative Priorities
-            </h4>
-            <div className="space-y-2">
-              {batchData.bills.recentBills.slice(0, 3).map((bill, idx) => {
-                // Extract key theme from bill title
-                const title = bill.title;
-                let summary = title;
-
-                // Simplify common legislative language
-                summary = summary.replace(/A bill to amend/gi, 'Amending');
-                summary = summary.replace(/A bill to/gi, '');
-                summary = summary.replace(/A joint resolution/gi, 'Resolution:');
-                summary = summary.replace(/and for other purposes/gi, '');
-                summary = summary.replace(/Act of \d{4}/gi, 'Act');
-
-                return (
-                  <div key={idx} className="flex items-start gap-2">
-                    <span className="text-blue-600 font-bold text-sm mt-0.5">•</span>
-                    <span className="text-sm text-gray-700 leading-snug">{summary.trim()}</span>
-                  </div>
-                );
-              })}
+        {/* Wikipedia HTML Summary - Primary content when available */}
+        {biographyData?.wikipediaHtmlSummary && (
+          <div className="group">
+            <div
+              className="text-gray-700 leading-relaxed text-lg"
+              style={{
+                fontFamily: 'inherit',
+              }}
+              dangerouslySetInnerHTML={{
+                __html: sanitizeHtml(biographyData.wikipediaHtmlSummary),
+              }}
+            />
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-400 font-medium">Source: Wikipedia</span>
+                {biographyData.wikipediaPageUrl && (
+                  <a
+                    href={biographyData.wikipediaPageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors hover:underline"
+                  >
+                    Read full biography
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         )}
 
-        {/* Wikipedia Summary - if available but shortened */}
-        {biographyData?.wikipediaSummary && !bioSummary && (
+        {/* Wikipedia Plain Summary - Fallback when HTML not available */}
+        {biographyData?.wikipediaSummary && !biographyData.wikipediaHtmlSummary && (
           <div className="group">
-            <div className="text-gray-700 leading-relaxed">
+            <div className="text-gray-700 leading-relaxed text-lg">
               {biographyData.wikipediaSummary.split('.').slice(0, 2).join('.').trim()}.
             </div>
-            {biographyData.wikipediaPageUrl && (
-              <div className="mt-3">
-                <a
-                  href={biographyData.wikipediaPageUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
-                >
-                  Full biography on Wikipedia
-                  <ExternalLink className="w-3 h-3" />
-                </a>
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-400 font-medium">Source: Wikipedia</span>
+                {biographyData.wikipediaPageUrl && (
+                  <a
+                    href={biographyData.wikipediaPageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors hover:underline"
+                  >
+                    Read full biography
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
               </div>
-            )}
+            </div>
+          </div>
+        )}
+
+        {/* Generated Bio Summary - Fallback when no Wikipedia content */}
+        {bioSummary && !hasWikipediaContent && (
+          <div>
+            <div className="text-lg text-gray-800 font-medium leading-relaxed">
+              {representative.name} is a {bioSummary}.
+            </div>
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <span className="text-xs text-gray-400 font-medium">
+                Source: Congressional and Legislative Records
+              </span>
+            </div>
           </div>
         )}
 

@@ -629,6 +629,7 @@ export const COMMITTEE_NAMES: Record<string, string> = {
   HSVY: "House Committee on Veterans' Affairs",
   HSFS: 'House Committee on Financial Services',
   HSHL: 'House Committee on Homeland Security',
+  HSHM: 'House Committee on Homeland Security',
 
   // Senate Committees
   SSAG: 'Senate Committee on Agriculture, Nutrition, and Forestry',
@@ -764,7 +765,21 @@ export const COMMITTEE_NAMES: Record<string, string> = {
  * Get the full committee name from the Thomas ID
  */
 export function getCommitteeName(thomasId: string): string {
-  return COMMITTEE_NAMES[thomasId] || thomasId;
+  // First try direct lookup
+  if (COMMITTEE_NAMES[thomasId]) {
+    return COMMITTEE_NAMES[thomasId];
+  }
+
+  // If it's a subcommittee (has numbers), try the parent committee
+  if (thomasId.match(/^[A-Z]{4,}\d+$/)) {
+    const parentId = thomasId.replace(/\d+$/, '');
+    if (COMMITTEE_NAMES[parentId]) {
+      return COMMITTEE_NAMES[parentId];
+    }
+  }
+
+  // If no mapping found, return the original ID
+  return thomasId;
 }
 
 /**
