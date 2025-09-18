@@ -602,8 +602,9 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
 export async function getRepresentativeSummary(bioguideId: string) {
   const cacheKey = `representative-summary:${bioguideId}`;
   const cached = govCache.get<{
-    bills: unknown;
-    finance: unknown;
+    billsSponsored?: number;
+    totalRaised?: number;
+    votesParticipated?: number;
     lastUpdated: string;
   }>(cacheKey);
 
@@ -622,12 +623,20 @@ export async function getRepresentativeSummary(bioguideId: string) {
       }),
     ]);
 
+    // Extract the data KeyStatsBar needs
+    const billsData = billsSummary.status === 'fulfilled' ? billsSummary.value : null;
+    const financeData =
+      financeSummary.status === 'fulfilled' && financeSummary.value.success
+        ? financeSummary.value.data.finance
+        : null;
+
     const result = {
-      bills: billsSummary.status === 'fulfilled' ? billsSummary.value : null,
-      finance:
-        financeSummary.status === 'fulfilled' && financeSummary.value.success
-          ? financeSummary.value.data.finance
-          : null,
+      billsSponsored:
+        (billsData as any)?.totalSponsored ?? (billsData as any)?.currentCongress?.count ?? 0,
+      totalRaised: (financeData as any)?.totalRaised ?? 0,
+      // For votes, we'll use a placeholder since fetching real voting data is expensive
+      // The UI will show a dash (—) when this is undefined
+      votesParticipated: undefined, // Avoid expensive vote counting
       lastUpdated: new Date().toISOString(),
     };
 
@@ -636,8 +645,9 @@ export async function getRepresentativeSummary(bioguideId: string) {
   } catch (error) {
     logger.error('Representative summary failed', error as Error, { bioguideId });
     return {
-      bills: null,
-      finance: null,
+      billsSponsored: 0,
+      totalRaised: 0,
+      votesParticipated: undefined,
       lastUpdated: new Date().toISOString(),
     };
   }

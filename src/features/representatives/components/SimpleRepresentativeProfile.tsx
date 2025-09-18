@@ -15,6 +15,7 @@ import { TabNavigation, profileTabs } from './TabNavigation';
 import { DistrictSidebar } from './DistrictSidebar';
 import { ContactInfoTab } from './ContactInfoTab';
 import { TabLoadingSpinner } from '@/lib/utils/code-splitting';
+import { EnhancedNewsFeedWithSuspense } from '@/shared/components/ui/LazyComponents';
 
 // Dynamically import heavy tabs to reduce initial bundle size
 const FinanceTab = dynamic(
@@ -45,44 +46,59 @@ interface SimpleRepresentativeProfileProps {
 export function SimpleRepresentativeProfile({ representative }: SimpleRepresentativeProfileProps) {
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Fetch batch data for all tabs to share between them
+  // Fetch lightweight summary data for Key Stats
+  const {
+    data: summaryData,
+    error: summaryError,
+    isLoading: summaryLoading,
+  } = useSWR(
+    `/api/representative/${representative.bioguideId}/batch?summary=true`,
+    async () => {
+      const response = await fetch(
+        `/api/representative/${representative.bioguideId}/batch?summary=true`
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 300000, // Cache for 5 minutes
+    }
+  );
+
+  // Fetch full batch data for tabs (excluding votes for now to improve performance)
   const {
     data: batchData,
     error: batchError,
     isLoading: batchLoading,
   } = useSWR(
-    `/api/representative/${representative.bioguideId}/batch`,
+    `batch-no-votes-${representative.bioguideId}`,
     async () => {
-      // Add timeout protection
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      const response = await fetch(`/api/representative/${representative.bioguideId}/batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          endpoints: ['bills', 'finance'], // Exclude votes for better performance
+          options: {
+            bills: { summaryOnly: true },
+            finance: { summaryOnly: true },
+          },
+        }),
+      });
 
-      try {
-        // Use GET endpoint which works correctly (POST has JSON parsing issues)
-        const response = await fetch(`/api/representative/${representative.bioguideId}/batch`, {
-          method: 'GET',
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        return await response.json();
-      } catch (error) {
-        clearTimeout(timeoutId);
-        if (error instanceof Error && error.name === 'AbortError') {
-          throw new Error('Request timeout - data may be temporarily unavailable');
-        }
-        throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+
+      return response.json();
     },
     {
       revalidateOnFocus: false,
       dedupingInterval: 60000, // Cache for 1 minute
-      shouldRetryOnError: false, // Don't retry on timeout
-      errorRetryCount: 1, // Only retry once
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
     }
   );
 
@@ -118,7 +134,16 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
           />
         );
       case 'news':
-        return <div className="text-center py-8 text-gray-500">News feature coming soon</div>;
+        return (
+          <EnhancedNewsFeedWithSuspense
+            bioguideId={representative.bioguideId}
+            representative={{
+              name: `${representative.firstName} ${representative.lastName}`,
+              party: representative.party,
+              state: representative.state,
+            }}
+          />
+        );
       default:
         return <ContactInfoTab representative={representative} />;
     }
@@ -133,21 +158,22 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
         {/* Key Stats Bar */}
         <KeyStatsBar
           stats={{
-            yearsInOffice: representative.terms?.length
-              ? new Date().getFullYear() - parseInt(representative.terms[0]?.startYear || '0')
-              : 0,
-            billsSponsored: batchData?.success
-              ? batchData.data?.bills?.totalSponsored ||
-                batchData.data?.bills?.currentCongress?.count ||
-                0
-              : 0,
-            committees: representative.committees?.length || 0,
-            totalRaised: batchData?.success ? batchData.data?.finance?.totalRaised || 0 : 0,
-            votesParticipated: batchData?.success
-              ? batchData.data?.votes?.totalResults || batchData.data?.votes?.votes?.length || 0
-              : 0,
+            billsSponsored: summaryData?.success
+              ? (summaryData.data?.billsSponsored ??
+                batchData?.data?.bills?.totalSponsored ??
+                batchData?.data?.bills?.currentCongress?.count)
+              : undefined,
+            committees: representative.committees?.length ?? 0,
+            totalRaised: summaryData?.success
+              ? summaryData.data?.totalRaised
+              : batchData?.success
+                ? batchData.data?.finance?.totalRaised
+                : undefined,
+            votesParticipated: summaryData?.success
+              ? summaryData.data?.votesParticipated
+              : undefined,
           }}
-          loading={batchLoading}
+          loading={summaryLoading}
         />
 
         {/* Main Content Layout */}

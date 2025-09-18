@@ -195,12 +195,7 @@ export function RealDistrictMapContainer({
         source: 'district-boundaries',
         'source-layer': 'districts', // PMTiles layer name from Tippecanoe
         paint: {
-          'fill-color': [
-            'case',
-            ['==', ['get', 'selected'], true],
-            '#3b82f6', // Selected district (blue)
-            '#e5e7eb', // Default (light gray)
-          ],
+          'fill-color': '#e5e7eb', // Light gray default
           'fill-opacity': 0.6,
         },
       };
@@ -216,12 +211,7 @@ export function RealDistrictMapContainer({
         'source-layer': 'districts', // PMTiles layer name from Tippecanoe
         paint: {
           'line-color': '#374151',
-          'line-width': [
-            'case',
-            ['==', ['get', 'selected'], true],
-            3, // Selected district
-            1, // Default
-          ],
+          'line-width': 1,
         },
       };
       console.log('  Adding stroke layer with config:', strokeLayerConfig);
@@ -236,7 +226,7 @@ export function RealDistrictMapContainer({
         source: 'district-boundaries',
         'source-layer': 'districts', // PMTiles layer name from Tippecanoe
         layout: {
-          'text-field': ['get', 'name'], // Real district name from Census data
+          'text-field': '{name}', // Real district name from Census data
           'text-font': ['Open Sans Regular'],
           'text-size': 12,
         },

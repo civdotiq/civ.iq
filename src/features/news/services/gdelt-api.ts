@@ -12,7 +12,7 @@ import {
   type DeduplicationOptions,
 } from '@/features/news/utils/news-deduplication';
 
-interface GDELTArticle {
+export interface GDELTArticle {
   url: string;
   urlmobile?: string;
   title: string;
@@ -23,8 +23,10 @@ interface GDELTArticle {
   sourcecountry: string;
 }
 
-interface GDELTResponse {
+export interface GDELTResponse {
   articles?: GDELTArticle[];
+  totalResults?: number;
+  searchTerms?: string[];
 }
 
 interface RetryOptions {

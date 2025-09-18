@@ -618,6 +618,183 @@ Get interactive map data for districts with PMTiles support.
 }
 ```
 
+### District Enhancement APIs
+
+#### GET /api/districts/[districtId]/economic-profile
+
+Get comprehensive economic and infrastructure data for a congressional district.
+
+**Parameters:**
+
+- `districtId`: District identifier (e.g., "CA-12", "MI-12")
+
+**Response:**
+
+```json
+{
+  "districtId": "string",
+  "economic": {
+    "employment": {
+      "unemploymentRate": "number",
+      "laborForceParticipation": "number",
+      "jobGrowthRate": "number",
+      "majorIndustries": ["string"],
+      "averageWage": "number"
+    },
+    "infrastructure": {
+      "bridgeConditionRating": "number",
+      "highwayFunding": "number",
+      "broadbandAvailability": "number",
+      "publicTransitAccessibility": "number"
+    },
+    "connectivity": {
+      "fiberAvailability": "number",
+      "averageDownloadSpeed": "number",
+      "averageUploadSpeed": "number",
+      "digitalDivideIndex": "number"
+    }
+  },
+  "metadata": {
+    "timestamp": "string",
+    "dataSources": {
+      "bls": "Bureau of Labor Statistics - https://api.bls.gov/",
+      "fcc": "Federal Communications Commission - https://opendata.fcc.gov/",
+      "infrastructure": "Data unavailable - no real API source"
+    },
+    "notes": ["string"]
+  }
+}
+```
+
+**Data Sources:**
+
+- **BLS (Bureau of Labor Statistics)**: Real unemployment rates, labor force participation
+- **FCC (Federal Communications Commission)**: Broadband availability, fiber access, internet speeds
+- **Infrastructure**: Currently shows zero values - awaiting real government APIs
+
+#### GET /api/districts/[districtId]/services-health
+
+Get education, healthcare, and public health data for a congressional district.
+
+**Parameters:**
+
+- `districtId`: District identifier (e.g., "CA-12", "MI-12")
+
+**Response:**
+
+```json
+{
+  "districtId": "string",
+  "services": {
+    "education": {
+      "schoolDistrictPerformance": "number",
+      "graduationRate": "number",
+      "collegeEnrollmentRate": "number",
+      "federalEducationFunding": "number",
+      "teacherToStudentRatio": "number"
+    },
+    "healthcare": {
+      "hospitalQualityRating": "number",
+      "primaryCarePhysiciansPerCapita": "number",
+      "healthOutcomeIndex": "number",
+      "medicareProviderCount": "number",
+      "healthcareCostIndex": "number"
+    },
+    "publicHealth": {
+      "preventableDiseaseRate": "number",
+      "mentalHealthProviderRatio": "number",
+      "substanceAbusePrograms": "number",
+      "preventiveCareCoverage": "number"
+    }
+  },
+  "metadata": {
+    "timestamp": "string",
+    "dataSources": {
+      "education": "Department of Education - https://data.ed.gov/",
+      "healthcare": "CDC PLACES - https://www.cdc.gov/places/",
+      "cms": "Centers for Medicare & Medicaid Services"
+    },
+    "notes": ["string"]
+  }
+}
+```
+
+**Data Sources:**
+
+- **Department of Education**: School performance, graduation rates, federal funding
+- **CDC PLACES**: Health outcomes, preventable disease rates
+- **CMS**: Medicare provider counts, healthcare quality ratings
+
+#### GET /api/districts/[districtId]/government-spending
+
+Get federal investment and social services data for a congressional district.
+
+**Parameters:**
+
+- `districtId`: District identifier (e.g., "CA-12", "MI-12")
+
+**Response:**
+
+```json
+{
+  "districtId": "string",
+  "government": {
+    "federalInvestment": {
+      "totalAnnualSpending": "number",
+      "contractsAndGrants": "number",
+      "majorProjects": [
+        {
+          "title": "string",
+          "amount": "number",
+          "agency": "string",
+          "description": "string"
+        }
+      ],
+      "infrastructureInvestment": "number"
+    },
+    "socialServices": {
+      "snapBeneficiaries": "number",
+      "medicaidEnrollment": "number",
+      "housingAssistanceUnits": "number",
+      "veteransServices": "number"
+    },
+    "representation": {
+      "billsAffectingDistrict": [
+        {
+          "billNumber": "string",
+          "title": "string",
+          "status": "string",
+          "impactLevel": "High|Medium|Low"
+        }
+      ],
+      "federalFacilities": [
+        {
+          "name": "string",
+          "type": "string",
+          "employees": "number",
+          "economicImpact": "number"
+        }
+      ],
+      "appropriationsSecured": "number"
+    }
+  },
+  "metadata": {
+    "timestamp": "string",
+    "dataSources": {
+      "usaspending": "USASpending.gov - https://api.usaspending.gov/",
+      "congress": "Congress.gov - enhanced legislative tracking"
+    },
+    "notes": ["string"]
+  }
+}
+```
+
+**Data Sources:**
+
+- **USASpending.gov**: Federal contracts, grants, spending by district
+- **Congress.gov**: Bills affecting district, legislative impact tracking
+- **Federal Facilities**: Government installations and their economic impact
+
 ### Search
 
 #### GET /api/search

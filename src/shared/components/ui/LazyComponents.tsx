@@ -117,14 +117,13 @@ export const LazyDonutChart = lazy(() =>
 );
 
 // Heavy visualization components
-// TODO: Create EnhancedNewsFeed component
-// export const LazyEnhancedNewsFeed = lazy(() =>
-//   import(/* webpackChunkName: "news-feed" */ '../features/news/components/EnhancedNewsFeed').then(
-//     module => ({
-//       default: module.EnhancedNewsFeed,
-//     })
-//   )
-// );
+export const LazyEnhancedNewsFeed = lazy(() =>
+  import(/* webpackChunkName: "news-feed" */ '@/features/news/components/EnhancedNewsFeed').then(
+    module => ({
+      default: module.EnhancedNewsFeed,
+    })
+  )
+);
 
 export const LazyBillsTracker = lazy(() =>
   import(
@@ -313,13 +312,12 @@ export const ChartsWithSuspense = (props: any) => (
   </Suspense>
 );
 
-// TODO: Re-enable when component is created
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-// export const EnhancedNewsFeedWithSuspense = (props: any) => (
-//   <Suspense fallback={<NewsFeedSkeleton />}>
-//     <LazyEnhancedNewsFeed {...props} />
-//   </Suspense>
-// );
+export const EnhancedNewsFeedWithSuspense = (props: any) => (
+  <Suspense fallback={<_NewsFeedSkeleton />}>
+    <LazyEnhancedNewsFeed {...props} />
+  </Suspense>
+);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const BillsTrackerWithSuspense = (props: any) => (

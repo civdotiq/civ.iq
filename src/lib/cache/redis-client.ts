@@ -39,7 +39,7 @@ export class RedisCache {
       port: parseInt(process.env.REDIS_PORT || '6379'),
       password: process.env.REDIS_PASSWORD,
       db: parseInt(process.env.REDIS_DB || '0'),
-      maxRetriesPerRequest: 3,
+      maxRetriesPerRequest: process.env.NODE_ENV === 'development' ? 1 : 3,
       lazyConnect: true,
       keyPrefix: this.keyPrefix,
     };
@@ -67,6 +67,11 @@ export class RedisCache {
 
       // Connection retry strategy
       retryStrategy: times => {
+        // In development, fail fast after a few attempts
+        if (process.env.NODE_ENV === 'development' && times > 3) {
+          logger.warn('Redis connection failed in development, using fallback cache');
+          return null; // Stop retrying
+        }
         const delay = Math.min(times * 50, 2000);
         logger.warn('Redis connection retry', { attempt: times, delay });
         return delay;

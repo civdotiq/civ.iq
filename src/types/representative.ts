@@ -41,6 +41,7 @@ export interface BaseRepresentative {
   committees?: Array<{
     name: string;
     role?: string;
+    title?: string; // Alias for role for news services compatibility
   }>;
 }
 
@@ -157,6 +158,11 @@ export interface EnhancedRepresentative extends BaseRepresentative {
       finance: boolean;
     };
   };
+
+  // Convenience getters for news services compatibility
+  readonly gender?: string; // Maps to bio?.gender
+  readonly nickname?: string; // Maps to fullName?.nickname
+  readonly leadershipRole?: string; // Maps to first leadershipRoles item
 }
 
 // Representative summary for list views

@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { fecApiService } from '@/lib/fec/fec-api-service';
+import { fecApiService, FECContribution } from '@/lib/fec/fec-api-service';
 import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { govCache } from '@/services/cache';
 
@@ -22,8 +22,48 @@ interface FinanceResponse {
   pacContributions: number;
   partyContributions: number;
   candidateContributions: number;
-  industryBreakdown: unknown[];
-  geographicBreakdown: unknown[];
+  industryBreakdown: Array<{
+    sector: string;
+    amount: number;
+    percentage: number;
+  }>;
+  geographicBreakdown: Array<{
+    state: string;
+    amount: number;
+    percentage: number;
+  }>;
+  topContributors: Array<{
+    name: string;
+    total_amount: number;
+    count: number;
+    employer?: string;
+    occupation?: string;
+  }>;
+  recentContributions: Array<{
+    contributor_name: string;
+    contributor_employer?: string;
+    contribution_receipt_amount: number;
+    contribution_receipt_date: string;
+  }>;
+  // Legacy field names for compatibility with existing component
+  industry_breakdown?: Array<{
+    sector: string;
+    amount: number;
+    percentage: number;
+  }>;
+  top_contributors?: Array<{
+    name: string;
+    total_amount: number;
+    count: number;
+    employer?: string;
+    occupation?: string;
+  }>;
+  recent_contributions?: Array<{
+    contributor_name: string;
+    contributor_employer?: string;
+    contribution_receipt_amount: number;
+    contribution_receipt_date: string;
+  }>;
   dataQuality: {
     industry: {
       totalContributionsAnalyzed: number;
@@ -44,12 +84,128 @@ interface FinanceResponse {
     financialSummary: string;
     contributions: string;
   };
+  fecTransparencyLinks: {
+    candidatePage: string;
+    contributions: string;
+    disbursements: string;
+    financialSummary: string;
+  };
   metadata: {
     note?: string;
     bioguideId: string;
     hasFecMapping: boolean;
     cacheHit: boolean;
   };
+}
+
+/**
+ * Analyze industry breakdown from contribution employer data
+ */
+function analyzeIndustryBreakdown(contributions: FECContribution[]): Array<{
+  sector: string;
+  amount: number;
+  percentage: number;
+}> {
+  if (!contributions.length) return [];
+
+  const industryMap = new Map<string, number>();
+  let totalAnalyzed = 0;
+
+  contributions.forEach(contrib => {
+    if (contrib.contributor_employer && contrib.contributor_employer.trim()) {
+      const employer = contrib.contributor_employer.trim().toUpperCase();
+      const amount = contrib.contribution_receipt_amount || 0;
+      industryMap.set(employer, (industryMap.get(employer) || 0) + amount);
+      totalAnalyzed += amount;
+    }
+  });
+
+  return Array.from(industryMap.entries())
+    .map(([sector, amount]) => ({
+      sector,
+      amount,
+      percentage: totalAnalyzed > 0 ? (amount / totalAnalyzed) * 100 : 0,
+    }))
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 10);
+}
+
+/**
+ * Analyze geographic distribution from contributor state data
+ */
+function analyzeGeographicBreakdown(contributions: FECContribution[]): Array<{
+  state: string;
+  amount: number;
+  percentage: number;
+}> {
+  if (!contributions.length) return [];
+
+  const stateMap = new Map<string, number>();
+  let totalAnalyzed = 0;
+
+  contributions.forEach(contrib => {
+    if (contrib.contributor_state && contrib.contributor_state.trim()) {
+      const state = contrib.contributor_state.trim().toUpperCase();
+      const amount = contrib.contribution_receipt_amount || 0;
+      stateMap.set(state, (stateMap.get(state) || 0) + amount);
+      totalAnalyzed += amount;
+    }
+  });
+
+  return Array.from(stateMap.entries())
+    .map(([state, amount]) => ({
+      state,
+      amount,
+      percentage: totalAnalyzed > 0 ? (amount / totalAnalyzed) * 100 : 0,
+    }))
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 10);
+}
+
+/**
+ * Analyze top contributors from contribution data
+ */
+function analyzeTopContributors(contributions: FECContribution[]): Array<{
+  name: string;
+  total_amount: number;
+  count: number;
+  employer?: string;
+  occupation?: string;
+}> {
+  if (!contributions.length) return [];
+
+  const contributorMap = new Map<
+    string,
+    {
+      total_amount: number;
+      count: number;
+      employer?: string;
+      occupation?: string;
+    }
+  >();
+
+  contributions.forEach(contrib => {
+    if (contrib.contributor_name && contrib.contributor_name.trim()) {
+      const name = contrib.contributor_name.trim();
+      const amount = contrib.contribution_receipt_amount || 0;
+      const existing = contributorMap.get(name) || { total_amount: 0, count: 0 };
+
+      contributorMap.set(name, {
+        total_amount: existing.total_amount + amount,
+        count: existing.count + 1,
+        employer: contrib.contributor_employer || existing.employer,
+        occupation: contrib.contributor_occupation || existing.occupation,
+      });
+    }
+  });
+
+  return Array.from(contributorMap.entries())
+    .map(([name, data]) => ({
+      name,
+      ...data,
+    }))
+    .sort((a, b) => b.total_amount - a.total_amount)
+    .slice(0, 20);
 }
 
 export async function GET(
@@ -84,6 +240,13 @@ export async function GET(
     // Check if we have FEC mapping for this bioguide ID
     const fecMapping = bioguideToFECMapping[bioguideId];
 
+    // Debug: Log mapping check
+    logger.info('[Finance API DEBUG] Mapping check', {
+      bioguideId,
+      hasFecMapping: !!fecMapping,
+      fecId: fecMapping?.fecId || 'none',
+    });
+
     if (!fecMapping) {
       logger.warn('[Finance API] No FEC mapping found', { bioguideId });
 
@@ -97,6 +260,12 @@ export async function GET(
         candidateContributions: 0,
         industryBreakdown: [],
         geographicBreakdown: [],
+        topContributors: [],
+        recentContributions: [],
+        // Legacy compatibility
+        industry_breakdown: [],
+        top_contributors: [],
+        recent_contributions: [],
         dataQuality: {
           industry: {
             totalContributionsAnalyzed: 0,
@@ -116,6 +285,12 @@ export async function GET(
         fecDataSources: {
           financialSummary: 'No FEC mapping available',
           contributions: 'No FEC mapping available',
+        },
+        fecTransparencyLinks: {
+          candidatePage: '',
+          contributions: '',
+          disbursements: '',
+          financialSummary: '',
         },
         metadata: {
           note: `No FEC candidate ID mapping found for bioguide ${bioguideId}`,
@@ -160,6 +335,12 @@ export async function GET(
         candidateContributions: 0,
         industryBreakdown: [],
         geographicBreakdown: [],
+        topContributors: [],
+        recentContributions: [],
+        // Legacy compatibility
+        industry_breakdown: [],
+        top_contributors: [],
+        recent_contributions: [],
         dataQuality: {
           industry: {
             totalContributionsAnalyzed: 0,
@@ -180,6 +361,12 @@ export async function GET(
           financialSummary: 'No 2024 financial data available',
           contributions: 'No 2024 contribution data available',
         },
+        fecTransparencyLinks: {
+          candidatePage: `https://www.fec.gov/data/candidate/${fecMapping.fecId}`,
+          contributions: `https://www.fec.gov/data/receipts/individual-contributions/?candidate_id=${fecMapping.fecId}`,
+          disbursements: `https://www.fec.gov/data/disbursements/?candidate_id=${fecMapping.fecId}`,
+          financialSummary: `https://www.fec.gov/data/candidate/${fecMapping.fecId}/totals`,
+        },
         metadata: {
           note: `No FEC financial data available for candidate ${fecMapping.fecId} in 2024 cycle`,
           bioguideId,
@@ -198,6 +385,42 @@ export async function GET(
       return NextResponse.json(noDataResponse);
     }
 
+    // Fetch sample contributions for detailed analysis
+    logger.info('[Finance API] Fetching sample contributions for detailed analysis', {
+      bioguideId,
+      fecId: fecMapping.fecId,
+    });
+
+    const sampleContributions = await fecApiService.getSampleContributions(
+      fecMapping.fecId,
+      2024,
+      200
+    );
+
+    // Analyze industry breakdown from employer data
+    const industryBreakdown = analyzeIndustryBreakdown(sampleContributions);
+
+    // Analyze geographic distribution
+    const geographicBreakdown = analyzeGeographicBreakdown(sampleContributions);
+
+    // Get top contributors
+    const topContributors = analyzeTopContributors(sampleContributions);
+
+    // Get recent contributions (last 20)
+    const recentContributions = sampleContributions
+      .sort(
+        (a, b) =>
+          new Date(b.contribution_receipt_date).getTime() -
+          new Date(a.contribution_receipt_date).getTime()
+      )
+      .slice(0, 20)
+      .map(contrib => ({
+        contributor_name: contrib.contributor_name,
+        contributor_employer: contrib.contributor_employer || undefined,
+        contribution_receipt_amount: contrib.contribution_receipt_amount,
+        contribution_receipt_date: contrib.contribution_receipt_date,
+      }));
+
     // Process FEC financial summary into our response format
     const response: FinanceResponse = {
       totalRaised: financialSummary.receipts || financialSummary.total_receipts || 0,
@@ -211,20 +434,42 @@ export async function GET(
       partyContributions: financialSummary.political_party_committee_contributions || 0,
       candidateContributions: financialSummary.candidate_contribution || 0,
 
-      // For now, return empty arrays - detailed breakdown would require contribution analysis
-      industryBreakdown: [],
-      geographicBreakdown: [],
+      // Real analyzed data from FEC contributions
+      industryBreakdown,
+      geographicBreakdown,
+      topContributors,
+      recentContributions,
+      // Legacy compatibility for existing component
+      industry_breakdown: industryBreakdown,
+      top_contributors: topContributors,
+      recent_contributions: recentContributions,
 
       dataQuality: {
         industry: {
-          totalContributionsAnalyzed: 0,
-          contributionsWithEmployer: 0,
-          completenessPercentage: 0,
+          totalContributionsAnalyzed: sampleContributions.length,
+          contributionsWithEmployer: sampleContributions.filter(c => c.contributor_employer?.trim())
+            .length,
+          completenessPercentage:
+            sampleContributions.length > 0
+              ? Math.round(
+                  (sampleContributions.filter(c => c.contributor_employer?.trim()).length /
+                    sampleContributions.length) *
+                    100
+                )
+              : 0,
         },
         geography: {
-          totalContributionsAnalyzed: 0,
-          contributionsWithState: 0,
-          completenessPercentage: 0,
+          totalContributionsAnalyzed: sampleContributions.length,
+          contributionsWithState: sampleContributions.filter(c => c.contributor_state?.trim())
+            .length,
+          completenessPercentage:
+            sampleContributions.length > 0
+              ? Math.round(
+                  (sampleContributions.filter(c => c.contributor_state?.trim()).length /
+                    sampleContributions.length) *
+                    100
+                )
+              : 0,
         },
         overallDataConfidence: 'high', // FEC official data
       },
@@ -235,6 +480,12 @@ export async function GET(
       fecDataSources: {
         financialSummary: `FEC.gov candidate/${fecMapping.fecId}/totals`,
         contributions: 'Summary data only - detailed contributions not analyzed',
+      },
+      fecTransparencyLinks: {
+        candidatePage: `https://www.fec.gov/data/candidate/${fecMapping.fecId}`,
+        contributions: `https://www.fec.gov/data/receipts/individual-contributions/?candidate_id=${fecMapping.fecId}`,
+        disbursements: `https://www.fec.gov/data/disbursements/?candidate_id=${fecMapping.fecId}`,
+        financialSummary: `https://www.fec.gov/data/candidate/${fecMapping.fecId}/totals`,
       },
 
       metadata: {

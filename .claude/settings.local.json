@@ -96,7 +96,11 @@
       "WebFetch(domain:en.wikipedia.org)",
       "Bash(/dev/null)",
       "Bash(jobs:*)",
-      "Bash(redis-server:*)"
+      "Bash(redis-server:*)",
+      "Read(//mnt/d/Downloads/Vivaldi Captures (feb_3_2022)/**)",
+      "WebFetch(domain:www.congress.gov)",
+      "Read(//mnt/d/Downloads/Downloads/**)",
+      "WebFetch(domain:www.opensecrets.org)"
     ],
     "deny": [],
     "ask": []

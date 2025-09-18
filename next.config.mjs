@@ -47,24 +47,33 @@ const nextConfig = {
       },
     ],
   },
-  // Simplified webpack config for WSL2
-  webpack: (config, { isServer }) => {
-    // Disable file system polling in WSL2
-    if (!isServer) {
+  // Optimized webpack config for WSL2 performance
+  webpack: (config, { isServer, dev }) => {
+    // Optimize for WSL2 in development
+    if (dev && !isServer) {
       config.watchOptions = {
-        poll: 1000,
+        poll: false, // Disable polling, use native file watching
+        ignored: ['**/node_modules/**', '**/.git/**', '**/.next/**'],
         aggregateTimeout: 300,
+      };
+
+      // Reduce memory usage in development
+      config.optimization = {
+        ...config.optimization,
+        removeAvailableModules: false,
+        removeEmptyChunks: false,
+        splitChunks: false,
       };
     }
 
     return config;
   },
-  // Temporarily disable experimental features to fix build
-  // experimental: {
-  //   // Reduce memory usage
-  //   workerThreads: false,
-  //   cpus: 2,
-  // },
+  // Enable experimental features for better performance
+  experimental: {
+    // Optimize for development
+    optimizeCss: false,
+    scrollRestoration: true,
+  },
 };
 
 export default nextConfig;

@@ -53,8 +53,9 @@ export function middleware(request: NextRequest) {
     // Extract client information
     const clientInfo = extractClientInfo(request);
 
-    // Log request start (only for API routes to avoid spam)
-    if (request.nextUrl.pathname.startsWith('/api/')) {
+    // Log request start (only for API routes in production to avoid spam)
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    if (!isDevelopment && request.nextUrl.pathname.startsWith('/api/')) {
       logger.http('Request started', {
         method: request.method,
         url: request.url,
@@ -121,8 +122,8 @@ export function middleware(request: NextRequest) {
     response.headers.set('X-Response-Time', `${duration}ms`);
     response.headers.set('X-Request-ID', generateRequestId());
 
-    // Log successful request (only for API routes)
-    if (request.nextUrl.pathname.startsWith('/api/')) {
+    // Log successful request (only for API routes in production)
+    if (!isDevelopment && request.nextUrl.pathname.startsWith('/api/')) {
       logger.http('Request completed', {
         method: request.method,
         url: request.url,

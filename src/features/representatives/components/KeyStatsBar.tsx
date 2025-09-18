@@ -6,15 +6,13 @@
 'use client';
 
 import React from 'react';
-import { TrendingUp, Users, FileText, DollarSign, Calendar, Award } from 'lucide-react';
+import { Users, FileText, DollarSign, Award } from 'lucide-react';
 
 interface KeyStatsBarProps {
   stats: {
     billsSponsored?: number;
     votesParticipated?: number;
-    partyAlignment?: number;
     totalRaised?: number;
-    yearsInOffice?: number;
     committees?: number;
   };
   loading?: boolean;
@@ -87,22 +85,14 @@ export function KeyStatsBar({ stats, loading = false }: KeyStatsBarProps) {
     return `$${amount.toLocaleString()}`;
   };
 
-  // Format percentage
-  const formatPercentage = (value: number) => {
-    return `${Math.round(value)}%`;
-  };
-
-  // Calculate years in office from terms or provide fallback
-  const yearsInOffice = stats.yearsInOffice || 0;
-
   return (
     <div className="bg-gray-50 py-6">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
             icon={<FileText className="w-5 h-5" />}
             label="Bills Sponsored"
-            value={stats.billsSponsored ?? '—'}
+            value={stats.billsSponsored !== undefined ? stats.billsSponsored : '—'}
             subtitle="Current Congress"
             color="blue"
             loading={loading}
@@ -111,43 +101,25 @@ export function KeyStatsBar({ stats, loading = false }: KeyStatsBarProps) {
           <StatCard
             icon={<Users className="w-5 h-5" />}
             label="Votes Cast"
-            value={stats.votesParticipated ?? '—'}
+            value={stats.votesParticipated !== undefined ? stats.votesParticipated : '—'}
             subtitle="This term"
             color="green"
             loading={loading}
           />
 
           <StatCard
-            icon={<TrendingUp className="w-5 h-5" />}
-            label="Party Alignment"
-            value={stats.partyAlignment ? formatPercentage(stats.partyAlignment) : '—'}
-            subtitle="Voting record"
-            color="purple"
-            loading={loading}
-          />
-
-          <StatCard
             icon={<DollarSign className="w-5 h-5" />}
             label="Total Raised"
-            value={stats.totalRaised ? formatCurrency(stats.totalRaised) : '—'}
+            value={stats.totalRaised !== undefined ? formatCurrency(stats.totalRaised) : '—'}
             subtitle="Current cycle"
             color="orange"
             loading={loading}
           />
 
           <StatCard
-            icon={<Calendar className="w-5 h-5" />}
-            label="Years in Office"
-            value={yearsInOffice || '—'}
-            subtitle="Experience"
-            color="red"
-            loading={loading}
-          />
-
-          <StatCard
             icon={<Award className="w-5 h-5" />}
             label="Committees"
-            value={stats.committees ?? '—'}
+            value={stats.committees !== undefined ? stats.committees : '—'}
             subtitle="Current"
             color="gray"
             loading={loading}

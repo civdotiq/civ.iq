@@ -5,7 +5,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   MapPin,
@@ -109,6 +109,14 @@ function ContactMethod({ icon, label, value, href, copyable = false }: ContactMe
 }
 
 export function DistrictSidebar({ representative, className = '' }: DistrictSidebarProps) {
+  // Use state for client-side date calculations to avoid hydration mismatches
+  const [termProgress, setTermProgress] = useState<{
+    progress: number;
+    daysRemaining: number;
+  } | null>(null);
+
+  const [nextElection, setNextElection] = useState<number | null>(null);
+
   // Format district display
   const getDistrictDisplay = () => {
     if (representative.chamber === 'Senate') {
@@ -120,45 +128,47 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
     return `${representative.state} (At-Large)`;
   };
 
-  // Get next election year
-  const getNextElectionYear = () => {
-    const currentYear = new Date().getFullYear();
-    if (representative.chamber === 'House') {
-      // House members elected every 2 years
-      return currentYear % 2 === 0 ? currentYear : currentYear + 1;
-    } else {
-      // Senate members elected every 6 years
-      if (representative.currentTerm?.end) {
-        return new Date(representative.currentTerm.end).getFullYear();
+  // Calculate date-dependent values only on the client side
+  useEffect(() => {
+    // Get next election year
+    const getNextElectionYear = () => {
+      const currentYear = new Date().getFullYear();
+      if (representative.chamber === 'House') {
+        // House members elected every 2 years
+        return currentYear % 2 === 0 ? currentYear : currentYear + 1;
+      } else {
+        // Senate members elected every 6 years
+        if (representative.currentTerm?.end) {
+          return new Date(representative.currentTerm.end).getFullYear();
+        }
       }
-    }
-    return null;
-  };
-
-  const nextElection = getNextElectionYear();
-
-  // Calculate term progress
-  const getTermProgress = () => {
-    if (!representative.currentTerm?.start || !representative.currentTerm?.end) return null;
-
-    const start = new Date(representative.currentTerm.start);
-    const end = new Date(representative.currentTerm.end);
-    const now = new Date();
-
-    const total = end.getTime() - start.getTime();
-    const elapsed = now.getTime() - start.getTime();
-    const progress = Math.min(Math.max((elapsed / total) * 100, 0), 100);
-
-    return {
-      progress: Math.round(progress),
-      daysRemaining: Math.max(
-        0,
-        Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-      ),
+      return null;
     };
-  };
 
-  const termProgress = getTermProgress();
+    // Calculate term progress
+    const getTermProgress = () => {
+      if (!representative.currentTerm?.start || !representative.currentTerm?.end) return null;
+
+      const start = new Date(representative.currentTerm.start);
+      const end = new Date(representative.currentTerm.end);
+      const now = new Date();
+
+      const total = end.getTime() - start.getTime();
+      const elapsed = now.getTime() - start.getTime();
+      const progress = Math.min(Math.max((elapsed / total) * 100, 0), 100);
+
+      return {
+        progress: Math.round(progress),
+        daysRemaining: Math.max(
+          0,
+          Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+        ),
+      };
+    };
+
+    setNextElection(getNextElectionYear());
+    setTermProgress(getTermProgress());
+  }, [representative.chamber, representative.currentTerm]);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -180,10 +190,18 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
                 </div>
               </Link>
             ) : (
-              <div>
-                <div className="text-lg font-bold text-gray-900">{getDistrictDisplay()}</div>
+              <Link
+                href={`/districts/${representative.state}-${representative.district || 'AL'}`}
+                className="block hover:bg-blue-50 -m-3 p-3 rounded-lg transition-colors group"
+              >
+                <div className="text-lg font-bold text-gray-900 group-hover:text-blue-600">
+                  {getDistrictDisplay()}
+                </div>
                 <div className="text-sm text-gray-600">Congressional District</div>
-              </div>
+                <div className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                  View district profile →
+                </div>
+              </Link>
             )}
           </div>
 
@@ -278,7 +296,7 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
                     ></div>
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
-                    {termProgress.daysRemaining} days remaining
+                    {termProgress.daysRemaining.toLocaleString()} days remaining
                   </div>
                 </div>
               )}

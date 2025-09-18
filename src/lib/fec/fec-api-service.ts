@@ -74,6 +74,29 @@ export interface FECApiResponse<T> {
   results: T[];
 }
 
+// New interfaces for committee endpoint responses
+export interface FECCommitteeResponse {
+  committee_id: string;
+  name: string;
+  designation: string;
+  cycles: number[];
+  candidate_ids: string[];
+  party: string;
+  committee_type: string;
+  committee_type_full: string;
+  sponsor_candidate_ids?: string[];
+}
+
+export interface FECCandidateCommitteesResponse {
+  candidate_id: string;
+  committees: Array<{
+    committee_id: string;
+    designation: string;
+    cycles: number[];
+    name: string;
+  }>;
+}
+
 class FECApiError extends Error {
   constructor(
     message: string,
@@ -189,49 +212,65 @@ export class FECApiService {
     cycle: number,
     progressCallback?: (current: number, total: number) => void
   ): Promise<FECContribution[]> {
-    // First get the principal committee ID
-    const committeeId = await this.getPrincipalCommitteeId(candidateId, cycle);
-    if (!committeeId) {
-      logger.warn(
-        `[FEC API] No principal committee found for ${candidateId}, cannot fetch contributions`
-      );
+    // Get all available committee IDs using robust method
+    const committeeIds = await this.findCandidateCommitteeIds(candidateId, cycle);
+    if (committeeIds.length === 0) {
+      logger.warn(`[FEC API] No committees found for ${candidateId}, cannot fetch contributions`);
       return [];
     }
 
     const allContributions: FECContribution[] = [];
-    let page = 1;
-    let totalPages = 1;
+    let totalPages = 0;
+    let currentPage = 0;
     const perPage = 100; // FEC API max per page
 
     logger.info(
-      `[FEC API] Starting to fetch all contributions for ${candidateId} (committee: ${committeeId}) in cycle ${cycle}`
+      `[FEC API] Starting to fetch all contributions for ${candidateId} from ${committeeIds.length} committees in cycle ${cycle}`
     );
 
     try {
-      do {
-        const response = await this.makeRequest<FECApiResponse<FECContribution>>(
-          `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&cycle=${cycle}&per_page=${perPage}&page=${page}`
-        );
+      // Fetch contributions from all committees
+      for (const committeeId of committeeIds) {
+        logger.info(`[FEC API] Fetching contributions from committee ${committeeId}`);
 
-        if (response.results) {
-          allContributions.push(...response.results);
-        }
+        let page = 1;
+        let committeeTotalPages = 1;
 
-        totalPages = response.pagination.pages;
+        do {
+          try {
+            const response = await this.makeRequest<FECApiResponse<FECContribution>>(
+              `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&cycle=${cycle}&per_page=${perPage}&page=${page}`
+            );
 
-        if (progressCallback) {
-          progressCallback(page, totalPages);
-        }
+            if (response.results) {
+              allContributions.push(...response.results);
+            }
 
-        logger.info(
-          `[FEC API] Fetched page ${page}/${totalPages}, total contributions so far: ${allContributions.length}`
-        );
+            committeeTotalPages = response.pagination.pages;
+            totalPages += committeeTotalPages;
+            currentPage++;
 
-        page++;
-      } while (page <= totalPages);
+            if (progressCallback) {
+              progressCallback(currentPage, totalPages);
+            }
+
+            logger.info(
+              `[FEC API] Committee ${committeeId}: Fetched page ${page}/${committeeTotalPages}, total contributions so far: ${allContributions.length}`
+            );
+
+            page++;
+          } catch (committeeError) {
+            logger.warn(
+              `[FEC API] Error fetching from committee ${committeeId} page ${page}:`,
+              committeeError instanceof Error ? committeeError.message : String(committeeError)
+            );
+            break; // Move to next committee
+          }
+        } while (page <= committeeTotalPages);
+      }
 
       logger.info(
-        `[FEC API] Completed fetching all contributions: ${allContributions.length} records`
+        `[FEC API] Completed fetching all contributions from ${committeeIds.length} committees: ${allContributions.length} records`
       );
       return allContributions;
     } catch (error) {
@@ -243,27 +282,69 @@ export class FECApiService {
   /**
    * Get a sample of individual contributions (first page only)
    * Useful for quick analysis without fetching thousands of records
+   * Automatically tries multiple cycles to find contribution data
    */
   async getSampleContributions(
     candidateId: string,
     cycle: number,
     count: number = 100
   ): Promise<FECContribution[]> {
-    // First get the principal committee ID
-    const committeeId = await this.getPrincipalCommitteeId(candidateId, cycle);
-    if (!committeeId) {
+    // Get all available committee IDs using robust method
+    const committeeIds = await this.findCandidateCommitteeIds(candidateId, cycle);
+    if (committeeIds.length === 0) {
       logger.warn(
-        `[FEC API] No principal committee found for ${candidateId}, cannot fetch sample contributions`
+        `[FEC API] No committees found for ${candidateId}, cannot fetch sample contributions`
       );
       return [];
     }
 
-    try {
-      const response = await this.makeRequest<FECApiResponse<FECContribution>>(
-        `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&cycle=${cycle}&per_page=${count}&page=1`
-      );
+    logger.info(`[FEC API] Fetching sample contributions using committee IDs:`, committeeIds);
 
-      return response.results || [];
+    // Define cycles to try - current cycle and next election cycle
+    const cyclesToTry = [cycle, cycle + 2, cycle - 2].filter(c => c >= 2020 && c <= 2030);
+    logger.info(`[FEC API] Will try cycles: ${cyclesToTry.join(', ')} for contributions`);
+
+    try {
+      // Try each cycle with each committee until we find data
+      for (const testCycle of cyclesToTry) {
+        logger.info(`[FEC API] Trying cycle ${testCycle} for contributions`);
+
+        for (let i = 0; i < committeeIds.length; i++) {
+          const committeeId = committeeIds[i];
+          try {
+            const response = await this.makeRequest<FECApiResponse<FECContribution>>(
+              `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&cycle=${testCycle}&per_page=${Math.min(count, 100)}&page=1`
+            );
+
+            if (response.results && response.results.length > 0) {
+              logger.info(
+                `[FEC API] ✅ SUCCESS: Found ${response.results.length} contributions from committee ${committeeId} in cycle ${testCycle}`
+              );
+              return response.results;
+            } else {
+              logger.info(
+                `[FEC API] No contributions found for committee ${committeeId} in cycle ${testCycle}`
+              );
+            }
+          } catch (cycleError) {
+            if (cycleError instanceof FECApiError && cycleError.status === 422) {
+              logger.info(
+                `[FEC API] No data available for committee ${committeeId} in cycle ${testCycle} (422 error)`
+              );
+            } else {
+              logger.warn(
+                `[FEC API] Error fetching from committee ${committeeId} cycle ${testCycle}:`,
+                cycleError instanceof Error ? cycleError.message : String(cycleError)
+              );
+            }
+          }
+        }
+      }
+
+      logger.warn(
+        `[FEC API] No contributions found across ${committeeIds.length} committees and ${cyclesToTry.length} cycles`
+      );
+      return [];
     } catch (error) {
       logger.error(`[FEC API] Failed to get sample contributions for ${candidateId}:`, error);
       throw error;
@@ -338,10 +419,201 @@ export class FECApiService {
   }
 
   /**
+   * Find candidate committee IDs using robust multi-endpoint fallback strategy
+   * Returns array of committee IDs prioritized by relevance to the candidate and cycle
+   */
+  async findCandidateCommitteeIds(candidateId: string, cycle: number): Promise<string[]> {
+    logger.info(`[FEC API] Starting robust committee finding for ${candidateId} cycle ${cycle}`);
+
+    const foundCommittees: string[] = [];
+
+    // STEP 1: /committees/?candidate_id={id}&cycle={cycle} (Primary - most reliable)
+    try {
+      logger.info(`[FEC API] STEP 1 - Trying committees endpoint with candidate_id and cycle`);
+      const response = await this.makeRequest<FECApiResponse<FECCommitteeResponse>>(
+        `/committees/?candidate_id=${candidateId}&cycle=${cycle}&per_page=100`
+      );
+
+      if (response.results && response.results.length > 0) {
+        const committeeIds = response.results
+          .filter(
+            committee =>
+              committee.candidate_ids?.includes(candidateId) && committee.cycles?.includes(cycle)
+          )
+          .sort((a, b) => {
+            // Prioritize principal committees (designation = 'P')
+            if (a.designation === 'P' && b.designation !== 'P') return -1;
+            if (a.designation !== 'P' && b.designation === 'P') return 1;
+            return 0;
+          })
+          .map(committee => committee.committee_id);
+
+        foundCommittees.push(...committeeIds);
+        logger.info(
+          `[FEC API] STEP 1 SUCCESS - Found ${committeeIds.length} committees:`,
+          committeeIds
+        );
+      } else {
+        logger.info(`[FEC API] STEP 1 - No committees found via committees endpoint`);
+      }
+    } catch (error) {
+      logger.warn(
+        `[FEC API] STEP 1 FAILED - committees endpoint error:`,
+        error instanceof Error ? error.message : String(error)
+      );
+    }
+
+    // STEP 2: /candidate/{id}/committees/?cycle={cycle} (Secondary alternative)
+    try {
+      logger.info(`[FEC API] STEP 2 - Trying candidate committees endpoint`);
+      const response = await this.makeRequest<FECApiResponse<FECCommitteeResponse>>(
+        `/candidate/${candidateId}/committees/?cycle=${cycle}&per_page=100`
+      );
+
+      if (response.results && response.results.length > 0) {
+        // Step 2 returns committee objects directly, not nested in committees property
+        const allCommittees = response.results
+          .filter(committee => committee.cycles?.includes(cycle))
+          .map(committee => committee.committee_id);
+
+        // Add new committees not already found
+        const newCommittees = allCommittees.filter(id => !foundCommittees.includes(id));
+        foundCommittees.push(...newCommittees);
+
+        logger.info(
+          `[FEC API] STEP 2 SUCCESS - Found ${newCommittees.length} additional committees:`,
+          newCommittees
+        );
+      } else {
+        logger.info(`[FEC API] STEP 2 - No committees found via candidate committees endpoint`);
+      }
+    } catch (error) {
+      logger.warn(
+        `[FEC API] STEP 2 FAILED - candidate committees endpoint error:`,
+        error instanceof Error ? error.message : String(error)
+      );
+    }
+
+    // STEP 3: /candidate/{id}/ (Legacy fallback - current approach)
+    if (foundCommittees.length === 0) {
+      try {
+        logger.info(`[FEC API] STEP 3 - Trying legacy candidate endpoint`);
+        const legacyCommitteeId = await this.getPrincipalCommitteeIdLegacy(candidateId, cycle);
+        if (legacyCommitteeId) {
+          foundCommittees.push(legacyCommitteeId);
+          logger.info(`[FEC API] STEP 3 SUCCESS - Found legacy committee:`, legacyCommitteeId);
+        } else {
+          logger.info(`[FEC API] STEP 3 - No committee found via legacy endpoint`);
+        }
+      } catch (error) {
+        logger.warn(
+          `[FEC API] STEP 3 FAILED - legacy endpoint error:`,
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    }
+
+    // STEP 4: Direct contribution lookup with proper API parameters (Ultimate fallback)
+    if (foundCommittees.length === 0) {
+      try {
+        logger.info(
+          `[FEC API] STEP 4 - Trying direct contribution lookup with two_year_transaction_period`
+        );
+        // Use two_year_transaction_period instead of cycle to avoid API requirements
+        const response = await this.makeRequest<
+          FECApiResponse<{ committee_id: string; candidate_id?: string }>
+        >(`/schedules/schedule_a/?two_year_transaction_period=${cycle}&per_page=10`);
+
+        if (response.results && response.results.length > 0) {
+          // Filter for contributions to this specific candidate
+          const candidateContributions = response.results.filter(
+            r => r.candidate_id === candidateId
+          );
+
+          if (candidateContributions.length > 0) {
+            const contributionCommittees = [
+              ...new Set(candidateContributions.map(r => r.committee_id)),
+            ].filter(id => id && !foundCommittees.includes(id));
+            foundCommittees.push(...contributionCommittees);
+            logger.info(
+              `[FEC API] STEP 4 SUCCESS - Found ${contributionCommittees.length} committees via contributions:`,
+              contributionCommittees
+            );
+          } else {
+            logger.info(`[FEC API] STEP 4 - No contributions found for candidate ${candidateId}`);
+          }
+        } else {
+          logger.info(`[FEC API] STEP 4 - No contribution data found`);
+        }
+      } catch (error) {
+        // Try alternative Step 4 with contributor name filter as final resort
+        logger.warn(
+          `[FEC API] STEP 4 FAILED - trying alternative with contributor filter:`,
+          error instanceof Error ? error.message : String(error)
+        );
+
+        try {
+          // Alternative: Search with candidate's last name as contributor filter
+          const candidateInfo = await this.getCandidateInfo(candidateId);
+          const candidateName = ((candidateInfo as Record<string, unknown>)?.name as string) || '';
+          const lastName = candidateName.split(',')[0]?.trim() || '';
+
+          if (lastName) {
+            logger.info(`[FEC API] STEP 4 ALT - Trying with contributor name filter: ${lastName}`);
+            const altResponse = await this.makeRequest<
+              FECApiResponse<{ committee_id: string; candidate_id?: string }>
+            >(
+              `/schedules/schedule_a/?contributor_name=${encodeURIComponent(lastName)}&two_year_transaction_period=${cycle}&per_page=50`
+            );
+
+            if (altResponse.results && altResponse.results.length > 0) {
+              const candidateContributions = altResponse.results.filter(
+                r => r.candidate_id === candidateId
+              );
+
+              if (candidateContributions.length > 0) {
+                const contributionCommittees = [
+                  ...new Set(candidateContributions.map(r => r.committee_id)),
+                ].filter(id => id && !foundCommittees.includes(id));
+                foundCommittees.push(...contributionCommittees);
+                logger.info(
+                  `[FEC API] STEP 4 ALT SUCCESS - Found ${contributionCommittees.length} committees:`,
+                  contributionCommittees
+                );
+              }
+            }
+          }
+        } catch (altError) {
+          logger.warn(
+            `[FEC API] STEP 4 ALT FAILED - all fallback attempts exhausted:`,
+            altError instanceof Error ? altError.message : String(altError)
+          );
+        }
+      }
+    }
+
+    logger.info(
+      `[FEC API] Committee finding complete for ${candidateId}: found ${foundCommittees.length} committees:`,
+      foundCommittees
+    );
+    return foundCommittees;
+  }
+
+  /**
    * Get principal campaign committee ID for a candidate in a specific cycle
-   * Uses a resilient multi-step approach to find the best available committee ID
+   * NEW ROBUST METHOD - Uses multi-endpoint fallback strategy
    */
   async getPrincipalCommitteeId(candidateId: string, cycle: number): Promise<string | null> {
+    // Use the new robust method and return the first (most relevant) committee
+    const committees = await this.findCandidateCommitteeIds(candidateId, cycle);
+    return committees.length > 0 ? committees[0]! : null;
+  }
+
+  /**
+   * Get principal campaign committee ID for a candidate in a specific cycle
+   * LEGACY METHOD - Uses original single-endpoint approach for backward compatibility
+   */
+  async getPrincipalCommitteeIdLegacy(candidateId: string, cycle: number): Promise<string | null> {
     logger.info(`[FEC API DIAGNOSTIC] Starting committee resolution:`, {
       candidateId,
       cycle,

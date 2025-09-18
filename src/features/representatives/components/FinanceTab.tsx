@@ -16,6 +16,12 @@ interface FinanceData {
   pacContributions: number;
   partyContributions: number;
   candidateContributions: number;
+  fecTransparencyLinks?: {
+    candidatePage: string;
+    contributions: string;
+    disbursements: string;
+    financialSummary: string;
+  };
 }
 
 interface BatchApiResponse {
@@ -30,6 +36,79 @@ interface FinanceTabProps {
   sharedData?: FinanceData;
   sharedLoading?: boolean;
   sharedError?: Error | null;
+}
+
+interface IndustryData {
+  topIndustries?: Array<{
+    industry: string;
+    amount: number;
+    percentage: number;
+    contributionCount: number;
+  }>;
+}
+
+interface GeographyData {
+  inStateTotal?: number;
+  outOfStateTotal?: number;
+  inStatePercentage?: number;
+  outOfStatePercentage?: number;
+  topStates?: Array<{
+    state: string;
+    stateName: string;
+    amount: number;
+    percentage: number;
+    contributionCount: number;
+    isHomeState: boolean;
+  }>;
+}
+
+interface ContributorData {
+  topContributors?: Array<{
+    name: string;
+    totalAmount: number;
+    contributionCount: number;
+    city: string;
+    state: string;
+    employer: string;
+    occupation: string;
+  }>;
+}
+
+interface FinanceDetailCardProps {
+  title: string;
+  description: string;
+  endpoint: string;
+  renderContent: (data: unknown) => React.ReactNode;
+}
+
+function FinanceDetailCard({
+  title,
+  description,
+  endpoint,
+  renderContent,
+}: FinanceDetailCardProps) {
+  const { data, error, isLoading } = useSWR(endpoint, (url: string) =>
+    fetch(url).then(res => res.json())
+  );
+
+  return (
+    <div className="bg-white p-6 rounded-lg border border-gray-200">
+      <h3 className="text-lg font-semibold mb-2">{title}</h3>
+      <p className="text-sm text-gray-600 mb-4">{description}</p>
+
+      {isLoading && (
+        <div className="animate-pulse space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+      )}
+
+      {error && <div className="text-red-600 text-sm">Failed to load data</div>}
+
+      {data && !isLoading && !error && renderContent(data)}
+    </div>
+  );
 }
 
 export function FinanceTab({
@@ -184,7 +263,7 @@ export function FinanceTab({
       </div>
 
       {/* Contribution Sources */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200">
+      <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
         <h3 className="text-lg font-semibold mb-4">Contribution Sources</h3>
         <div className="space-y-3">
           <div className="flex justify-between items-center">
@@ -205,6 +284,130 @@ export function FinanceTab({
           </div>
         </div>
       </div>
+
+      {/* Enhanced Finance Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <FinanceDetailCard
+          title="Top Industries"
+          description="Campaign contributions by industry"
+          endpoint={`/api/representative/${bioguideId}/finance/industries`}
+          renderContent={(data: unknown) => {
+            const industryData = data as IndustryData;
+            return (
+              <div className="space-y-3">
+                {industryData?.topIndustries?.slice(0, 5).map((industry, index: number) => (
+                  <div key={index} className="flex justify-between items-center">
+                    <span className="text-sm text-gray-700">{industry.industry}</span>
+                    <span className="text-sm font-medium">{formatCurrency(industry.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          }}
+        />
+
+        <FinanceDetailCard
+          title="Geographic Distribution"
+          description="In-state vs out-of-state contributions"
+          endpoint={`/api/representative/${bioguideId}/finance/geography`}
+          renderContent={(data: unknown) => {
+            const geographyData = data as GeographyData;
+            return (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-700">In-State</span>
+                  <span className="text-sm font-medium">
+                    {formatCurrency(geographyData?.inStateTotal || 0)} (
+                    {(geographyData?.inStatePercentage || 0).toFixed(1)}%)
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-700">Out-of-State</span>
+                  <span className="text-sm font-medium">
+                    {formatCurrency(geographyData?.outOfStateTotal || 0)} (
+                    {(geographyData?.outOfStatePercentage || 0).toFixed(1)}%)
+                  </span>
+                </div>
+                {geographyData?.topStates?.slice(0, 3).map((state, index: number) => (
+                  <div key={index} className="flex justify-between items-center text-xs">
+                    <span className="text-gray-600">{state.stateName}</span>
+                    <span className="text-gray-600">{formatCurrency(state.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          }}
+        />
+      </div>
+
+      {/* Top Contributors */}
+      <FinanceDetailCard
+        title="Top Individual Contributors"
+        description="Largest individual contributors to campaign"
+        endpoint={`/api/representative/${bioguideId}/finance/contributors`}
+        renderContent={(data: unknown) => {
+          const contributorData = data as ContributorData;
+          return (
+            <div className="space-y-3">
+              {contributorData?.topContributors?.slice(0, 10).map((contributor, index: number) => (
+                <div key={index} className="flex justify-between items-center">
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">{contributor.name}</div>
+                    <div className="text-xs text-gray-500">
+                      {contributor.city}, {contributor.state} • {contributor.contributionCount}{' '}
+                      contributions
+                    </div>
+                  </div>
+                  <span className="text-sm font-medium">
+                    {formatCurrency(contributor.totalAmount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          );
+        }}
+      />
+
+      {/* FEC Transparency Links */}
+      {data.fecTransparencyLinks && (
+        <div className="bg-blue-50 p-6 rounded-lg border border-blue-200 mt-8">
+          <h3 className="text-lg font-semibold text-blue-900 mb-4">FEC Transparency Links</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a
+              href={data.fecTransparencyLinks.candidatePage}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 underline text-sm"
+            >
+              View Full FEC Candidate Profile →
+            </a>
+            <a
+              href={data.fecTransparencyLinks.contributions}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 underline text-sm"
+            >
+              Browse All Individual Contributions →
+            </a>
+            <a
+              href={data.fecTransparencyLinks.disbursements}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 underline text-sm"
+            >
+              View Campaign Expenditures →
+            </a>
+            <a
+              href={data.fecTransparencyLinks.financialSummary}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 underline text-sm"
+            >
+              See Financial Summary →
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
