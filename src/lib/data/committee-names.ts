@@ -754,6 +754,15 @@ export const COMMITTEE_NAMES: Record<string, string> = {
   SSCM38: 'Subcommittee on Surface Transportation, Maritime, Freight, and Ports',
   SSCM39: 'Subcommittee on Tourism, Trade, and Export Promotion',
 
+  // Senate Armed Services Subcommittees (119th Congress)
+  SSAS14: 'Subcommittee on Cybersecurity',
+  SSAS20: 'Subcommittee on Seapower',
+  SSAS21: 'Subcommittee on Strategic Forces',
+
+  // Senate Homeland Security and Governmental Affairs Subcommittees
+  SSGA20: 'Subcommittee on Investigations',
+  SSGA22: 'Subcommittee on Governmental Operations and Border Management',
+
   // Senate Judiciary Subcommittees (additional)
   SSJU01: 'Subcommittee on the Constitution',
   SSJU04: 'Subcommittee on Competition Policy, Antitrust, and Consumer Rights',
