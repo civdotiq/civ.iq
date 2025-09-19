@@ -651,12 +651,20 @@ export const COMMITTEE_NAMES: Record<string, string> = {
   SSVA: "Senate Committee on Veterans' Affairs",
   SSIN: 'Senate Committee on Indian Affairs',
   SSAF: 'Senate Committee on Agriculture, Nutrition, and Forestry',
+  SLET: 'Senate Select Committee on Ethics',
+  SLIA: 'Senate Committee on Indian Affairs',
+  SLIN: 'Senate Select Committee on Intelligence',
+  SSFR: 'Senate Committee on Foreign Relations',
+  SSRA: 'Senate Committee on Rules and Administration',
 
   // Joint Committees
   JCEC: 'Joint Economic Committee',
   JCLC: 'Joint Committee on the Library',
   JCPR: 'Joint Committee on Printing',
   JCTX: 'Joint Committee on Taxation',
+  JSEC: 'Joint Economic Committee',
+  JSLC: 'Joint Committee on the Library',
+  JSTX: 'Joint Committee on Taxation',
   JCSE: 'Joint Committee on Security and Cooperation in Europe',
 
   // Select Committees
@@ -762,6 +770,12 @@ export const COMMITTEE_NAMES: Record<string, string> = {
   // Senate Homeland Security and Governmental Affairs Subcommittees
   SSGA20: 'Subcommittee on Investigations',
   SSGA22: 'Subcommittee on Governmental Operations and Border Management',
+
+  // Senate Foreign Relations Subcommittees (119th Congress)
+  SSFR01: 'Subcommittee on Europe and Regional Security Cooperation',
+  SSFR02: 'Subcommittee on East Asia, the Pacific, and International Cybersecurity Policy',
+  SSFR15:
+    "Subcommittee on Western Hemisphere, Transnational Crime, Civilian Security, Democracy, Human Rights, and Global Women's Issues",
 
   // Senate Judiciary Subcommittees (additional)
   SSJU01: 'Subcommittee on the Constitution',
