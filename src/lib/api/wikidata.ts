@@ -10,7 +10,12 @@
  * Follows CLAUDE.MD rules for real data only
  */
 
-// Map bioguide IDs to Wikidata IDs (official government data cross-reference)
+import {
+  hasEnhancedWikidataMapping,
+  getEnhancedWikidataId,
+} from '../data/enhanced-wikidata-mappings';
+
+// Legacy mappings (now supplemented by enhanced mappings)
 const BIOGUIDE_TO_WIKIDATA: Record<string, string> = {
   T000488: 'Q115604581', // Shri Thanedar
   P000197: 'Q170581', // Nancy Pelosi
@@ -28,7 +33,12 @@ const BIOGUIDE_TO_WIKIDATA: Record<string, string> = {
  */
 export async function findWikidataId(bioguideId: string): Promise<string | null> {
   try {
-    // Check static mapping first
+    // Check enhanced mappings first
+    if (hasEnhancedWikidataMapping(bioguideId)) {
+      return getEnhancedWikidataId(bioguideId);
+    }
+
+    // Check legacy mapping as fallback
     if (BIOGUIDE_TO_WIKIDATA[bioguideId]) {
       return BIOGUIDE_TO_WIKIDATA[bioguideId];
     }
@@ -59,13 +69,18 @@ export async function findWikidataId(bioguideId: string): Promise<string | null>
       return null;
     }
 
-    const wikidataUri = data.results.bindings[0].person.value;
+    const binding = data.results.bindings[0];
+    if (!binding?.person?.value) return null;
+
+    const wikidataUri = binding.person.value;
     const wikidataId = wikidataUri.split('/').pop();
 
-    // Cache the mapping
-    BIOGUIDE_TO_WIKIDATA[bioguideId] = wikidataId;
+    if (wikidataId) {
+      // Cache the mapping for future use
+      BIOGUIDE_TO_WIKIDATA[bioguideId] = wikidataId;
+    }
 
-    return wikidataId;
+    return wikidataId ?? null;
   } catch {
     return null;
   }
@@ -107,7 +122,7 @@ interface WikidataBiography {
  */
 export async function getAgeFromWikidata(bioguideId: string): Promise<number | null> {
   try {
-    const wikidataId = BIOGUIDE_TO_WIKIDATA[bioguideId];
+    const wikidataId = await findWikidataId(bioguideId);
     if (!wikidataId) {
       return null;
     }
@@ -259,7 +274,7 @@ export async function getBiographyFromWikidata(
  * @returns boolean indicating if mapping exists
  */
 export function hasWikidataMapping(bioguideId: string): boolean {
-  return bioguideId in BIOGUIDE_TO_WIKIDATA;
+  return hasEnhancedWikidataMapping(bioguideId) || bioguideId in BIOGUIDE_TO_WIKIDATA;
 }
 
 interface DistrictWikidataInfo {

@@ -9,6 +9,14 @@
  * Follows CLAUDE.MD rules for real data only
  */
 
+interface WikipediaSearchPage {
+  key: string;
+  title: string;
+  excerpt?: string;
+  description?: string;
+  matched_title?: string;
+}
+
 interface WikipediaSummary {
   title: string;
   description: string;
@@ -50,13 +58,86 @@ interface WikipediaBiographyData {
   lastModified?: string;
 }
 
-// Map bioguide IDs to Wikipedia page names
+import {
+  hasEnhancedWikipediaMapping,
+  getEnhancedWikipediaPageName,
+} from '../data/enhanced-wikipedia-mappings';
+
+// Legacy mappings (now supplemented by enhanced mappings)
 const BIOGUIDE_TO_WIKIPEDIA: Record<string, string> = {
   S000033: 'Bernie_Sanders',
   P000197: 'Nancy_Pelosi',
   T000488: 'Shri_Thanedar',
   // Add more mappings as needed
 };
+
+/**
+ * Normalize name for better Wikipedia matching
+ */
+function normalizeNameForSearch(name: string): string[] {
+  const normalized = name
+    .replace(/[""'']/g, '') // Remove quotes
+    .replace(/\s+/g, ' ') // Normalize spaces
+    .trim();
+
+  const variants = [normalized];
+
+  // Handle common name transformations
+  if (normalized.includes(' ')) {
+    const parts = normalized.split(' ');
+
+    // Try "First Last" format
+    if (parts.length >= 2) {
+      variants.push(`${parts[0]} ${parts[parts.length - 1]}`);
+    }
+
+    // Try with middle names/initials removed
+    if (parts.length > 2) {
+      variants.push(`${parts[0]} ${parts[parts.length - 1]}`);
+    }
+
+    // Try nickname variations
+    const commonNicknames: Record<string, string[]> = {
+      Alexander: ['Alex'],
+      Andrew: ['Andy'],
+      Anthony: ['Tony'],
+      Bernard: ['Bernie'],
+      Charles: ['Chuck', 'Charlie'],
+      Christopher: ['Chris'],
+      Daniel: ['Dan', 'Danny'],
+      David: ['Dave'],
+      Donald: ['Don'],
+      Edward: ['Ed', 'Eddie'],
+      Elizabeth: ['Liz', 'Beth'],
+      Gregory: ['Greg'],
+      James: ['Jim', 'Jimmy'],
+      Jeffrey: ['Jeff'],
+      John: ['Johnny'],
+      Joseph: ['Joe'],
+      Katherine: ['Kate', 'Katie'],
+      Kenneth: ['Ken'],
+      Margaret: ['Maggie', 'Meg'],
+      Michael: ['Mike'],
+      Nicholas: ['Nick'],
+      Patricia: ['Pat', 'Patty'],
+      Richard: ['Rick', 'Dick'],
+      Robert: ['Bob', 'Bobby'],
+      Steven: ['Steve'],
+      Theodore: ['Ted'],
+      Thomas: ['Tom', 'Tommy'],
+      William: ['Bill', 'Billy'],
+    };
+
+    const firstName = parts[0];
+    if (firstName && commonNicknames[firstName]) {
+      commonNicknames[firstName].forEach((nickname: string) => {
+        variants.push(`${nickname} ${parts[parts.length - 1]}`);
+      });
+    }
+  }
+
+  return [...new Set(variants)]; // Remove duplicates
+}
 
 /**
  * Find Wikipedia page name by searching for representative
@@ -69,37 +150,139 @@ async function findWikipediaPageName(
   representativeName: string
 ): Promise<string | null> {
   try {
-    // Check static mapping first
+    // Check enhanced mappings first
+    if (hasEnhancedWikipediaMapping(bioguideId)) {
+      return getEnhancedWikipediaPageName(bioguideId);
+    }
+
+    // Check legacy mapping as fallback
     if (BIOGUIDE_TO_WIKIPEDIA[bioguideId]) {
       return BIOGUIDE_TO_WIKIPEDIA[bioguideId];
     }
 
-    // Search Wikipedia for the representative
-    const searchQuery = encodeURIComponent(`${representativeName} United States Congress`);
-    const searchUrl = `https://en.wikipedia.org/api/rest_v1/page/search/${searchQuery}`;
+    const nameVariants = normalizeNameForSearch(representativeName);
 
-    const response = await fetch(searchUrl, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Government Data Portal',
-      },
-    });
+    // Try different search strategies for each name variant
+    for (const nameVariant of nameVariants) {
+      const searchStrategies = [
+        // Direct Wikipedia page format
+        nameVariant.replace(/\s+/g, '_'),
 
-    if (!response.ok) {
-      return null;
-    }
+        // Quoted searches with context
+        `"${nameVariant}"`,
+        `"${nameVariant}" United States`,
+        `"${nameVariant}" Congress`,
+        `"${nameVariant}" Senator`,
+        `"${nameVariant}" Representative`,
+        `"${nameVariant}" politician`,
 
-    const searchResults = await response.json();
-    if (!searchResults.pages?.length) {
-      return null;
-    }
+        // Unquoted searches
+        `${nameVariant} United States Congress`,
+        `${nameVariant} US Senator`,
+        `${nameVariant} US Representative`,
+        `${nameVariant} politician American`,
+      ];
 
-    // Find the most relevant result (usually the first one)
-    const topResult = searchResults.pages[0];
-    if (topResult?.key) {
-      // Cache the mapping
-      BIOGUIDE_TO_WIKIPEDIA[bioguideId] = topResult.key;
-      return topResult.key;
+      for (const searchQuery of searchStrategies) {
+        try {
+          // First try direct page access
+          if (searchQuery.includes('_') && !searchQuery.includes('"')) {
+            const directUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(searchQuery)}`;
+            const directResponse = await fetch(directUrl, {
+              headers: {
+                Accept: 'application/json',
+                'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Government Data Portal',
+              },
+            });
+
+            if (directResponse.ok) {
+              const directResult = await directResponse.json();
+              if (directResult.title && !directResult.title.includes('may refer to')) {
+                // Cache the mapping
+                BIOGUIDE_TO_WIKIPEDIA[bioguideId] = searchQuery;
+                return searchQuery;
+              }
+            }
+          }
+
+          // Try search API
+          const searchUrl = `https://en.wikipedia.org/api/rest_v1/page/search/${encodeURIComponent(searchQuery)}`;
+          const response = await fetch(searchUrl, {
+            headers: {
+              Accept: 'application/json',
+              'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Government Data Portal',
+            },
+          });
+
+          if (!response.ok) continue;
+
+          const searchResults = await response.json();
+          if (!searchResults.pages?.length) continue;
+
+          // Score and rank results
+          const scoredResults = searchResults.pages.map((page: WikipediaSearchPage) => {
+            const title = page.title?.toLowerCase() || '';
+            const excerpt = page.excerpt?.toLowerCase() || '';
+            const description = page.description?.toLowerCase() || '';
+            const nameL = nameVariant.toLowerCase();
+
+            let score = 0;
+
+            // Exact title match gets highest score
+            if (title === nameL) score += 100;
+
+            // Name components in title
+            const nameWords = nameL.split(' ');
+            const titleWords = title.split(' ');
+            const matchingWords = nameWords.filter(word => titleWords.includes(word));
+            score += (matchingWords.length / nameWords.length) * 50;
+
+            // Political keywords boost score
+            const politicalKeywords = [
+              'senator',
+              'representative',
+              'congress',
+              'politician',
+              'house',
+              'senate',
+            ];
+            politicalKeywords.forEach(keyword => {
+              if (
+                title.includes(keyword) ||
+                excerpt.includes(keyword) ||
+                description.includes(keyword)
+              ) {
+                score += 20;
+              }
+            });
+
+            // Exact name in excerpt or description
+            if (excerpt.includes(nameL) || description.includes(nameL)) {
+              score += 15;
+            }
+
+            // Avoid disambiguation pages
+            if (title.includes('disambiguation') || title.includes('may refer to')) {
+              score -= 30;
+            }
+
+            return { page, score };
+          });
+
+          // Sort by score and get best match
+          scoredResults.sort((a: { score: number }, b: { score: number }) => b.score - a.score);
+          const bestMatch = scoredResults[0];
+
+          if (bestMatch && bestMatch.score > 30) {
+            // Cache the mapping
+            BIOGUIDE_TO_WIKIPEDIA[bioguideId] = bestMatch.page.key;
+            return bestMatch.page.key;
+          }
+        } catch {
+          // Continue to next search strategy
+          continue;
+        }
+      }
     }
 
     return null;
