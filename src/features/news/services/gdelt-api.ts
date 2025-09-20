@@ -121,15 +121,21 @@ const REPRESENTATIVE_NICKNAMES: Record<string, string[]> = {
 
   // Senators
   'Bernie Sanders': ['Bernie'],
+  'Bernard Sanders': ['Bernie Sanders', 'Bernie'], // Map formal to common
   'Elizabeth Warren': ['Sen. Warren'],
   'Ted Cruz': ['Sen. Cruz'],
+  'Rafael Cruz': ['Ted Cruz', 'Sen. Cruz'], // Map formal to common
   'Josh Hawley': ['Sen. Hawley'],
   'Marco Rubio': ['Sen. Rubio'],
   'Mitt Romney': ['Sen. Romney'],
+  'Willard Romney': ['Mitt Romney', 'Sen. Romney'], // Map formal to common
   'John Cornyn': ['Sen. Cornyn'],
   'Chuck Schumer': ['Leader Schumer', 'Majority Leader Schumer'],
+  'Charles Schumer': ['Chuck Schumer', 'Leader Schumer', 'Majority Leader Schumer'], // Map formal name to common name
   'Mitch McConnell': ['Leader McConnell', 'Minority Leader McConnell'],
+  'Addison McConnell': ['Mitch McConnell', 'Leader McConnell'], // Map formal to common
   'Joe Manchin': ['Sen. Manchin'],
+  'Joseph Manchin': ['Joe Manchin', 'Sen. Manchin'], // Map formal to common
   'Kyrsten Sinema': ['Sen. Sinema'],
   'Susan Collins': ['Sen. Collins'],
   'Lisa Murkowski': ['Sen. Murkowski'],
