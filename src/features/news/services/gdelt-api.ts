@@ -11,23 +11,7 @@ import {
   type DuplicationStats,
   type DeduplicationOptions,
 } from '@/features/news/utils/news-deduplication';
-
-export interface GDELTArticle {
-  url: string;
-  urlmobile?: string;
-  title: string;
-  seendate: string;
-  socialimage?: string;
-  domain: string;
-  language: string;
-  sourcecountry: string;
-}
-
-export interface GDELTResponse {
-  articles?: GDELTArticle[];
-  totalResults?: number;
-  searchTerms?: string[];
-}
+import { GDELTArticle, GDELTResponse } from '@/types/gdelt';
 
 interface RetryOptions {
   maxRetries: number;
@@ -119,7 +103,41 @@ async function retryWithBackoff<T>(
   throw lastError!;
 }
 
-// Enhanced search term generation with better civic/political focus
+// High-profile member nickname mapping for better GDELT coverage
+const REPRESENTATIVE_NICKNAMES: Record<string, string[]> = {
+  // House Representatives
+  'Alexandria Ocasio-Cortez': ['AOC'],
+  'Ilhan Omar': ['Rep. Omar'],
+  'Rashida Tlaib': ['Rep. Tlaib'],
+  'Ayanna Pressley': ['Rep. Pressley'],
+  'Matt Gaetz': ['Rep. Gaetz'],
+  'Marjorie Taylor Greene': ['MTG', 'Rep. Greene'],
+  'Lauren Boebert': ['Rep. Boebert'],
+  'Nancy Pelosi': ['Speaker Pelosi'],
+  'Kevin McCarthy': ['Leader McCarthy'],
+  'Hakeem Jeffries': ['Leader Jeffries'],
+  'Jim Jordan': ['Rep. Jordan'],
+  'Adam Schiff': ['Rep. Schiff'],
+
+  // Senators
+  'Bernie Sanders': ['Bernie'],
+  'Elizabeth Warren': ['Sen. Warren'],
+  'Ted Cruz': ['Sen. Cruz'],
+  'Josh Hawley': ['Sen. Hawley'],
+  'Marco Rubio': ['Sen. Rubio'],
+  'Mitt Romney': ['Sen. Romney'],
+  'John Cornyn': ['Sen. Cornyn'],
+  'Chuck Schumer': ['Leader Schumer', 'Majority Leader Schumer'],
+  'Mitch McConnell': ['Leader McConnell', 'Minority Leader McConnell'],
+  'Joe Manchin': ['Sen. Manchin'],
+  'Kyrsten Sinema': ['Sen. Sinema'],
+  'Susan Collins': ['Sen. Collins'],
+  'Lisa Murkowski': ['Sen. Murkowski'],
+  'Amy Klobuchar': ['Sen. Klobuchar'],
+  'Kamala Harris': ['VP Harris', 'Vice President Harris'],
+};
+
+// Enhanced search term generation with better civic/political focus and nickname support
 export function generateOptimizedSearchTerms(
   representativeName: string,
   state: string,
@@ -192,6 +210,12 @@ export function generateOptimizedSearchTerms(
     searchTerms.push(`"${cleanName}" Senate`);
   }
 
+  // Add nickname variants for high-profile members
+  const nicknames = REPRESENTATIVE_NICKNAMES[cleanName] || [];
+  nicknames.forEach(nickname => {
+    searchTerms.push(`"${nickname}"`);
+  });
+
   // Add fallback with just last name if we have a multi-word name
   if (lastName && lastName !== cleanName && lastName.length > 3) {
     searchTerms.push(`"${lastName}"`);
@@ -199,11 +223,12 @@ export function generateOptimizedSearchTerms(
 
   logger.debug(`Generated search terms for ${fullName}`, {
     searchTerms,
+    nicknamesFound: nicknames.length,
     operation: 'gdelt_search_terms',
   });
 
-  // Return top 4 most relevant search terms, starting with broadest
-  return searchTerms.slice(0, 4);
+  // Return top 6 most relevant search terms (increased to accommodate nicknames)
+  return searchTerms.slice(0, 6);
 }
 
 // Main GDELT API fetch function with comprehensive error handling and deduplication
@@ -217,22 +242,25 @@ export async function fetchGDELTNewsWithDeduplication(
   // Convert GDELT articles to NewsArticle format for deduplication
   const newsArticles: NewsArticle[] = rawArticles.map(article => ({
     url: article.url,
-    title: article.title,
+    title: article.title || 'Untitled',
     seendate: article.seendate,
-    domain: article.domain,
-    socialimage: article.socialimage,
-    urlmobile: article.urlmobile,
-    language: article.language,
-    sourcecountry: article.sourcecountry,
+    domain: article.domain || 'unknown',
+    socialimage: article.socialimage || undefined,
+    urlmobile: article.urlmobile || undefined,
+    language: article.language || 'English',
+    sourcecountry: article.sourcecountry || 'US',
   }));
 
-  // Apply deduplication
+  // Apply enhanced deduplication with improved settings for exact duplicates
   const { articles: deduplicatedArticles, stats } = deduplicateNews(newsArticles, {
     enableUrlDeduplication: true,
     enableTitleSimilarity: true,
     enableDomainClustering: true,
-    maxArticlesPerDomain: 2,
-    titleSimilarityThreshold: 0.85,
+    enableMinHashDeduplication: true, // Use our new MinHash system
+    maxArticlesPerDomain: 1, // Stricter limit for duplicate reduction
+    titleSimilarityThreshold: 0.9, // Higher threshold for exact duplicates
+    minHashSimilarityThreshold: 0.85, // Catch near-duplicates with MinHash
+    preserveNewestArticles: true, // Keep most recent versions
     logDuplicates: true,
     ...deduplicationOptions,
   });
@@ -490,9 +518,9 @@ async function fetchGDELTNewsWithTimespan(
 // Clean and normalize article data
 export function normalizeGDELTArticle(article: GDELTArticle): unknown {
   return {
-    title: cleanTitle(article.title),
+    title: cleanTitle(article.title || 'Untitled'),
     url: article.url,
-    source: extractSourceName(article.domain),
+    source: extractSourceName(article.domain || 'unknown'),
     publishedDate: normalizeDate(article.seendate),
     language: article.language,
     imageUrl: article.socialimage || undefined,
@@ -831,13 +859,13 @@ export async function getGDELTRealTimeStream(
           const { articles: finalArticles } = deduplicateNews(
             allArticles.map(article => ({
               url: article.url,
-              title: article.title,
+              title: article.title || 'Untitled',
               seendate: article.seendate,
-              domain: article.domain,
-              socialimage: article.socialimage,
-              urlmobile: article.urlmobile,
-              language: article.language,
-              sourcecountry: article.sourcecountry,
+              domain: article.domain || 'unknown',
+              socialimage: article.socialimage || undefined,
+              urlmobile: article.urlmobile || undefined,
+              language: article.language || 'English',
+              sourcecountry: article.sourcecountry || 'US',
             })),
             { maxArticlesPerDomain: 1, titleSimilarityThreshold: 0.9 }
           );
@@ -930,13 +958,13 @@ export async function monitorBreakingNews(
     const { articles: deduplicatedArticles } = deduplicateNews(
       allArticles.map(article => ({
         url: article.url,
-        title: article.title,
+        title: article.title || 'Untitled',
         seendate: article.seendate,
-        domain: article.domain,
-        socialimage: article.socialimage,
-        urlmobile: article.urlmobile,
-        language: article.language,
-        sourcecountry: article.sourcecountry,
+        domain: article.domain || 'unknown',
+        socialimage: article.socialimage || undefined,
+        urlmobile: article.urlmobile || undefined,
+        language: article.language || 'English',
+        sourcecountry: article.sourcecountry || 'US',
       })),
       { titleSimilarityThreshold: 0.9, maxArticlesPerDomain: 2 }
     );

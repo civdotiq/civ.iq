@@ -627,7 +627,9 @@ npm run validate:all
 
 - `docs/PHASE_TRACKER.md` - Feature completion tracking
 - `docs/ZIP_CODE_MAPPING_SYSTEM.md` - ZIP to district mapping
-- `docs/development/GDELT_NEWS_INTEGRATION.md` - News API setup
+- `docs/development/GDELT_NEWS_INTEGRATION.md` - News API setup (current basic)
+- `docs/development/GDELT_IMPLEMENTATION_GUIDE.md` - **GDELT API patterns and optimization (NEW)**
+- `docs/development/GDELT_UPGRADE_TRACKER.md` - **GDELT upgrade progress tracking (NEW)**
 - `docs/development/CAMPAIGN_FINANCE_FIX.md` - FEC integration
 
 ### Security & Deployment:

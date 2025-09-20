@@ -34,7 +34,46 @@ export function CommitteeMembershipsCard({
   representative,
   className = '',
 }: CommitteeMembershipsCardProps) {
-  const committees = representative.committees || [];
+  // Memoize committees to prevent unnecessary re-renders
+  const committees = React.useMemo(
+    () => representative.committees || [],
+    [representative.committees]
+  );
+
+  // Deduplicate committees by name and consolidate roles
+  const deduplicatedCommittees = React.useMemo(() => {
+    const committeeMap = new Map<
+      string,
+      {
+        name: string;
+        thomas_id: string;
+        roles: string[];
+        originalCommittee: (typeof committees)[0];
+      }
+    >();
+
+    committees.forEach(committee => {
+      const displayName = getCommitteeName(committee.name);
+
+      if (committeeMap.has(displayName)) {
+        // Add role to existing committee entry
+        const existing = committeeMap.get(displayName)!;
+        if (committee.role && !existing.roles.includes(committee.role)) {
+          existing.roles.push(committee.role);
+        }
+      } else {
+        // Create new committee entry
+        committeeMap.set(displayName, {
+          name: displayName,
+          thomas_id: (committee as { thomas_id?: string }).thomas_id || committee.name,
+          roles: committee.role ? [committee.role] : [],
+          originalCommittee: committee,
+        });
+      }
+    });
+
+    return Array.from(committeeMap.values());
+  }, [committees]);
 
   return (
     <div
@@ -51,11 +90,11 @@ export function CommitteeMembershipsCard({
         </div>
       </div>
       <div className="p-6">
-        {committees.length > 0 ? (
+        {deduplicatedCommittees.length > 0 ? (
           <div className="space-y-3">
-            {committees.map((committee, index) => (
+            {deduplicatedCommittees.map((committee, index) => (
               <div
-                key={index}
+                key={`${committee.name}-${index}`}
                 className="group border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all duration-200 bg-gradient-to-r from-white to-gray-50 hover:from-blue-50 hover:to-white"
               >
                 <div className="flex justify-between items-start">
@@ -75,32 +114,35 @@ export function CommitteeMembershipsCard({
                             href={href}
                             className="text-blue-600 hover:text-blue-800 hover:underline group-hover:text-blue-700 transition-colors"
                           >
-                            {getCommitteeName(committee.name)}
+                            {committee.name}
                           </Link>
                         );
                       })()}
                     </h4>
-                    {committee.role && (
-                      <div className="mt-2">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full shadow-sm ${
-                            committee.role === 'Chair'
-                              ? 'bg-gradient-to-r text-white'
-                              : committee.role === 'Ranking Member'
+                    {committee.roles.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {committee.roles.map((role, roleIndex) => (
+                          <span
+                            key={roleIndex}
+                            className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full shadow-sm ${
+                              role === 'Chair'
                                 ? 'bg-gradient-to-r text-white'
-                                : 'bg-gray-100 text-gray-700 border border-gray-200'
-                          }`}
-                          style={{
-                            background:
-                              committee.role === 'Chair'
-                                ? 'linear-gradient(to right, #3aa3d5, #1e40af)'
-                                : committee.role === 'Ranking Member'
-                                  ? 'linear-gradient(to right, #e21f0a, #dc2626)'
-                                  : undefined,
-                          }}
-                        >
-                          {committee.role}
-                        </span>
+                                : role === 'Ranking Member'
+                                  ? 'bg-gradient-to-r text-white'
+                                  : 'bg-gray-100 text-gray-700 border border-gray-200'
+                            }`}
+                            style={{
+                              background:
+                                role === 'Chair'
+                                  ? 'linear-gradient(to right, #3aa3d5, #1e40af)'
+                                  : role === 'Ranking Member'
+                                    ? 'linear-gradient(to right, #e21f0a, #dc2626)'
+                                    : undefined,
+                            }}
+                          >
+                            {role}
+                          </span>
+                        ))}
                       </div>
                     )}
                   </div>

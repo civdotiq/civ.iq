@@ -6,9 +6,11 @@
 /**
  * Intelligent news deduplication system for GDELT and other news sources
  * Uses multiple algorithms to detect and remove duplicate articles
+ * Enhanced with MinHash for improved similarity detection
  */
 
 import logger from '@/lib/logging/simple-logger';
+import { deduplicateNews as minHashDeduplicate, URLNormalizer } from '@/lib/gdelt/deduplication';
 
 export interface NewsArticle {
   url: string;
@@ -40,8 +42,10 @@ export interface DeduplicationOptions {
   enableTitleSimilarity: boolean;
   enableContentSimilarity: boolean;
   enableDomainClustering: boolean;
+  enableMinHashDeduplication: boolean;
   titleSimilarityThreshold: number;
   contentSimilarityThreshold: number;
+  minHashSimilarityThreshold: number;
   maxArticlesPerDomain: number;
   preserveNewestArticles: boolean;
   logDuplicates: boolean;
@@ -52,8 +56,10 @@ const DEFAULT_OPTIONS: DeduplicationOptions = {
   enableTitleSimilarity: true,
   enableContentSimilarity: false, // Disabled by default as content might not be available
   enableDomainClustering: true,
+  enableMinHashDeduplication: true, // Enable new MinHash deduplication
   titleSimilarityThreshold: 0.75,
   contentSimilarityThreshold: 0.85,
+  minHashSimilarityThreshold: 0.8, // 80% similarity threshold for MinHash
   maxArticlesPerDomain: 3,
   preserveNewestArticles: true,
   logDuplicates: true,
@@ -105,7 +111,12 @@ export class NewsDeduplicator {
       deduplicatedArticles = this.removeContentSimilarDuplicates(deduplicatedArticles);
     }
 
-    // Step 4: Limit articles per domain
+    // Step 4: MinHash deduplication for enhanced similarity detection
+    if (this.options.enableMinHashDeduplication) {
+      deduplicatedArticles = this.applyMinHashDeduplication(deduplicatedArticles);
+    }
+
+    // Step 5: Limit articles per domain
     if (this.options.enableDomainClustering) {
       deduplicatedArticles = this.limitArticlesPerDomain(deduplicatedArticles);
     }
@@ -297,6 +308,62 @@ export class NewsDeduplicator {
     }
 
     return result;
+  }
+
+  /**
+   * Apply MinHash deduplication for enhanced similarity detection
+   */
+  private applyMinHashDeduplication(articles: NewsArticle[]): NewsArticle[] {
+    if (articles.length === 0) return articles;
+
+    // Convert to GDELT format for MinHash deduplication
+    const gdeltArticles = articles.map(article => ({
+      url: article.url,
+      title: article.title || '',
+      urltone: null,
+      domain: article.domain,
+      urlpubtimedate: null,
+      urlpubtime: null,
+      socialimage: article.socialimage || null,
+      seendate: article.seendate,
+      tone: null,
+      country: article.sourcecountry || null,
+      lang: article.language || null,
+    }));
+
+    // Apply MinHash deduplication
+    const result = minHashDeduplicate(gdeltArticles, {
+      similarityThreshold: this.options.minHashSimilarityThreshold,
+      enableUrlNormalization: this.options.enableUrlDeduplication,
+      enableTitleSimilarity: this.options.enableTitleSimilarity,
+    });
+
+    // Track duplicates found by MinHash
+    const duplicatesFound = result.duplicateCount;
+    for (let i = 0; i < duplicatesFound; i++) {
+      this.stats.duplicatesDetected.push({
+        method: 'minhash',
+        originalIndex: -1, // MinHash doesn't provide specific indices
+        duplicateIndex: -1,
+        similarity: this.options.minHashSimilarityThreshold,
+      });
+    }
+
+    // Convert back to NewsArticle format
+    return result.unique.map(gdeltArticle => {
+      const originalArticle = articles.find(a => a.url === gdeltArticle.url);
+      return (
+        originalArticle || {
+          url: gdeltArticle.url,
+          title: gdeltArticle.title || '',
+          seendate: gdeltArticle.seendate,
+          domain: gdeltArticle.domain || URLNormalizer.getDomain(gdeltArticle.url),
+          socialimage: gdeltArticle.socialimage || undefined,
+          language: gdeltArticle.lang || undefined,
+          sourcecountry: gdeltArticle.country || undefined,
+        }
+      );
+    });
   }
 
   /**

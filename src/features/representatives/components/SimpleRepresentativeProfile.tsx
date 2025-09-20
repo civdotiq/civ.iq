@@ -19,7 +19,7 @@ import { EnhancedNewsFeedWithSuspense } from '@/shared/components/ui/LazyCompone
 
 // Dynamically import heavy tabs to reduce initial bundle size
 const FinanceTab = dynamic(
-  () => import('./FinanceTab').then(mod => ({ default: mod.FinanceTab })),
+  () => import('./FinanceTabEnhanced').then(mod => ({ default: mod.FinanceTabEnhanced })),
   {
     loading: TabLoadingSpinner,
     ssr: false,
@@ -49,7 +49,7 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
   // Fetch lightweight summary data for Key Stats
   const {
     data: summaryData,
-    error: summaryError,
+    error: _summaryError,
     isLoading: summaryLoading,
   } = useSWR(
     `/api/representative/${representative.bioguideId}/batch?summary=true`,

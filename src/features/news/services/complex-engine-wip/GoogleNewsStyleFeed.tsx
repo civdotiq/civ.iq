@@ -8,14 +8,11 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { EnhancedRepresentative } from '@/types/representative';
-import {
-  ParallelSearchOrchestrator,
-  MergedSearchResults,
-} from '../services/parallel-search-orchestrator';
-import { ArticleClusteringEngine, NewsCluster } from '../services/article-clustering-engine';
-import { SearchDimension } from '../services/gdelt-query-builder-v2';
+import { ParallelSearchOrchestrator, MergedSearchResults } from './parallel-search-orchestrator';
+import { ArticleClusteringEngine, NewsCluster } from './article-clustering-engine';
+import { SearchDimension } from './gdelt-query-builder-v2';
 import { NewsClusterCard } from './NewsClusterCard';
 import { TopicNavigation } from './TopicNavigation';
 import { NewsFilters } from './NewsFilters';
@@ -102,7 +99,7 @@ export function GoogleNewsStyleFeed({
   );
 
   // Fetch and cluster news
-  const fetchNews = async () => {
+  const fetchNews = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -169,7 +166,7 @@ export function GoogleNewsStyleFeed({
     } finally {
       setLoading(false);
     }
-  };
+  }, [representative, filters, maxClusters, orchestrator, clusteringEngine, activeViewMode]);
 
   // Apply filters to clusters
   const applyFilters = (clusters: NewsCluster[], filters: NewsFilters): NewsCluster[] => {
@@ -300,12 +297,12 @@ export function GoogleNewsStyleFeed({
       return () => clearInterval(interval);
     }
     return undefined; // Explicit return for when autoRefresh is false
-  }, [representative.bioguideId, filters, autoRefresh, refreshInterval]);
+  }, [representative.bioguideId, filters, autoRefresh, refreshInterval, fetchNews]);
 
   // Render clusters based on view mode
   const renderClusters = () => {
     if (loading) {
-      return <LoadingSkeleton count={5} />;
+      return <LoadingSkeleton />;
     }
 
     if (error) {
@@ -384,9 +381,8 @@ export function GoogleNewsStyleFeed({
 
         {/* Topic Navigation */}
         <TopicNavigation
-          tabs={getTopicTabs()}
-          activeTab={filters.dimension === 'all' ? 'all' : filters.dimension}
-          onTabChange={tabId => {
+          topics={getTopicTabs()}
+          onTopicSelect={(tabId: string) => {
             setFilters(prev => ({
               ...prev,
               dimension: tabId === 'all' ? 'all' : (tabId as SearchDimension),

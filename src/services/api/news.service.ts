@@ -120,9 +120,9 @@ class NewsService extends BaseService {
           title: (normalized as { title: string }).title,
           source: (normalized as { source: string }).source,
           publishedDate: (normalized as { publishedDate: string }).publishedDate,
-          language: article.language,
+          language: article.language || undefined,
           imageUrl: (normalized as { imageUrl?: string }).imageUrl,
-          domain: article.domain,
+          domain: article.domain || 'unknown',
         };
       });
 
@@ -215,9 +215,9 @@ class NewsService extends BaseService {
           title: (normalized as { title: string }).title,
           source: (normalized as { source: string }).source,
           publishedDate: (normalized as { publishedDate: string }).publishedDate,
-          language: article.language,
+          language: article.language || undefined,
           imageUrl: (normalized as { imageUrl?: string }).imageUrl,
-          domain: article.domain,
+          domain: article.domain || 'unknown',
         };
       });
 

@@ -445,6 +445,8 @@ async function parseHouseVote(
 ): Promise<UnifiedVoteDetail | null> {
   try {
     // Fetch House vote data from Congress.gov API
+    // Try the new House roll call votes endpoint structure (available from May 2025)
+    // Format: /v3/house-vote/{congress}/{rollNumber}
     const apiUrl = `https://api.congress.gov/v3/house-vote/${congress}/${rollNumber}?api_key=${process.env.CONGRESS_API_KEY || ''}`;
 
     logger.info('Fetching detailed House vote from Congress API', {

@@ -16,6 +16,7 @@ interface FinanceData {
   pacContributions: number;
   partyContributions: number;
   candidateContributions: number;
+  candidateId?: string;
   fecTransparencyLinks?: {
     candidatePage: string;
     contributions: string;
@@ -71,7 +72,11 @@ interface ContributorData {
     state: string;
     employer: string;
     occupation: string;
+    fecTransparencyLink?: string;
   }>;
+  metadata?: {
+    fecCandidateLink?: string;
+  };
 }
 
 interface FinanceDetailCardProps {
@@ -232,9 +237,19 @@ export function FinanceTab({
             {formatCurrency(data.totalRaised)}
           </div>
           <div className="text-sm text-green-600 mb-2">Total receipts reported to FEC</div>
-          <div className="inline-flex items-center text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full">
-            Real FEC Data
-          </div>
+          <a
+            href={
+              data.fecTransparencyLinks?.contributions ||
+              (data.candidateId
+                ? `https://www.fec.gov/data/receipts/?committee_id=${data.candidateId}`
+                : 'https://www.fec.gov/data/receipts/')
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full hover:bg-green-300 transition-colors"
+          >
+            View on FEC.gov →
+          </a>
         </div>
 
         <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-lg border border-red-200 hover:shadow-lg transition-all duration-200">
@@ -243,9 +258,19 @@ export function FinanceTab({
             {formatCurrency(data.totalSpent)}
           </div>
           <div className="text-sm text-red-600 mb-2">Total disbursements reported to FEC</div>
-          <div className="inline-flex items-center text-xs bg-red-200 text-red-800 px-2 py-1 rounded-full">
-            Real FEC Data
-          </div>
+          <a
+            href={
+              data.fecTransparencyLinks?.disbursements ||
+              (data.candidateId
+                ? `https://www.fec.gov/data/disbursements/?committee_id=${data.candidateId}`
+                : 'https://www.fec.gov/data/disbursements/')
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-xs bg-red-200 text-red-800 px-2 py-1 rounded-full hover:bg-red-300 transition-colors"
+          >
+            View on FEC.gov →
+          </a>
         </div>
 
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200 hover:shadow-lg transition-all duration-200">
@@ -256,15 +281,38 @@ export function FinanceTab({
           <div className="text-sm text-blue-600 mb-2">
             Available cash at end of reporting period
           </div>
-          <div className="inline-flex items-center text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full">
-            Real FEC Data
-          </div>
+          <a
+            href={
+              data.fecTransparencyLinks?.financialSummary ||
+              (data.candidateId
+                ? `https://www.fec.gov/data/candidate/${data.candidateId}`
+                : 'https://www.fec.gov/data/candidate/')
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full hover:bg-blue-300 transition-colors"
+          >
+            View on FEC.gov →
+          </a>
         </div>
       </div>
 
       {/* Contribution Sources */}
       <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
-        <h3 className="text-lg font-semibold mb-4">Contribution Sources</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Contribution Sources</h3>
+          <a
+            href={
+              data.fecTransparencyLinks?.contributions ||
+              'https://www.fec.gov/data/receipts/individual-contributions/'
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-600 hover:text-blue-800 underline"
+          >
+            View on FEC.gov →
+          </a>
+        </div>
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-gray-700">Individual Contributions</span>
@@ -289,7 +337,7 @@ export function FinanceTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <FinanceDetailCard
           title="Top Industries"
-          description="Campaign contributions by industry"
+          description="Campaign contributions by industry (Source: FEC)"
           endpoint={`/api/representative/${bioguideId}/finance/industries`}
           renderContent={(data: unknown) => {
             const industryData = data as IndustryData;
@@ -308,7 +356,7 @@ export function FinanceTab({
 
         <FinanceDetailCard
           title="Geographic Distribution"
-          description="In-state vs out-of-state contributions"
+          description="In-state vs out-of-state contributions (Source: FEC)"
           endpoint={`/api/representative/${bioguideId}/finance/geography`}
           renderContent={(data: unknown) => {
             const geographyData = data as GeographyData;
@@ -342,27 +390,61 @@ export function FinanceTab({
 
       {/* Top Contributors */}
       <FinanceDetailCard
-        title="Top Individual Contributors"
-        description="Largest individual contributors to campaign"
+        title="Top Individual Contributors (20+)"
+        description="Largest individual contributors to campaign with direct FEC.gov links"
         endpoint={`/api/representative/${bioguideId}/finance/contributors`}
         renderContent={(data: unknown) => {
           const contributorData = data as ContributorData;
           return (
             <div className="space-y-3">
-              {contributorData?.topContributors?.slice(0, 10).map((contributor, index: number) => (
-                <div key={index} className="flex justify-between items-center">
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{contributor.name}</div>
+              {contributorData?.topContributors?.slice(0, 20).map((contributor, index: number) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-2 hover:bg-gray-50 rounded"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-900">{contributor.name}</span>
+                      {contributor.fecTransparencyLink && (
+                        <a
+                          href={contributor.fecTransparencyLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:text-blue-800"
+                          title="View on FEC.gov"
+                        >
+                          FEC↗
+                        </a>
+                      )}
+                    </div>
                     <div className="text-xs text-gray-500">
                       {contributor.city}, {contributor.state} • {contributor.contributionCount}{' '}
                       contributions
                     </div>
+                    {contributor.employer && (
+                      <div className="text-xs text-gray-400">
+                        {contributor.employer}
+                        {contributor.occupation && ` • ${contributor.occupation}`}
+                      </div>
+                    )}
                   </div>
-                  <span className="text-sm font-medium">
+                  <span className="text-sm font-medium ml-2">
                     {formatCurrency(contributor.totalAmount)}
                   </span>
                 </div>
               ))}
+              {contributorData?.topContributors && contributorData.topContributors.length > 20 && (
+                <div className="pt-2 border-t">
+                  <a
+                    href={contributorData?.metadata?.fecCandidateLink || 'https://www.fec.gov'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                  >
+                    View all {contributorData.topContributors.length} contributors on FEC.gov →
+                  </a>
+                </div>
+              )}
             </div>
           );
         }}

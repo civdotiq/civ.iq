@@ -100,7 +100,11 @@
       "Read(//mnt/d/Downloads/Vivaldi Captures (feb_3_2022)/**)",
       "WebFetch(domain:www.congress.gov)",
       "Read(//mnt/d/Downloads/Downloads/**)",
-      "WebFetch(domain:www.opensecrets.org)"
+      "WebFetch(domain:www.opensecrets.org)",
+      "Read(//mnt/d/Downloads/**)",
+      "Bash(xargs kill:*)",
+      "WebFetch(domain:news.google.com)",
+      "Bash(ss:*)"
     ],
     "deny": [],
     "ask": []

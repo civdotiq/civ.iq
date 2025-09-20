@@ -170,13 +170,13 @@ async function fetchNewsForRepresentative(
             );
 
             return articles.map(article => ({
-              title: article.title,
+              title: article.title || 'Untitled',
               url: article.url,
-              source: article.domain,
+              source: article.domain || 'unknown',
               publishedDate: article.seendate,
-              language: article.language,
-              imageUrl: article.socialimage,
-              domain: article.domain,
+              language: article.language || 'English',
+              imageUrl: article.socialimage || undefined,
+              domain: article.domain || 'unknown',
             }));
           } catch (error) {
             logger.error(`Error fetching news for term: ${searchTerm}`, error as Error, {
@@ -199,11 +199,13 @@ async function fetchNewsForRepresentative(
 
           return (
             article.language === 'English' &&
+            article.title &&
             article.title.length > 15 &&
             article.title.length < 300 &&
             articleDate >= thirtyDaysAgo &&
             !article.title.toLowerCase().includes('404') &&
             !article.title.toLowerCase().includes('error') &&
+            article.domain &&
             !article.domain.includes('facebook.com') &&
             !article.domain.includes('twitter.com')
           );

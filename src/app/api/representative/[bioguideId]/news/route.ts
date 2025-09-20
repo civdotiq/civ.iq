@@ -16,6 +16,7 @@ import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
 export const dynamic = 'force-dynamic';
+
 interface NewsArticle {
   title: string;
   url: string;
