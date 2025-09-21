@@ -95,6 +95,10 @@ interface FinanceResponse {
     bioguideId: string;
     hasFecMapping: boolean;
     cacheHit: boolean;
+    mappingLastUpdated?: string;
+    suggestedAction?: string;
+    fecCandidateId?: string;
+    suggestedCycles?: number[];
   };
 }
 
@@ -293,10 +297,12 @@ export async function GET(
           financialSummary: '',
         },
         metadata: {
-          note: `No FEC candidate ID mapping found for bioguide ${bioguideId}`,
+          note: `No FEC candidate ID mapping found for bioguide ${bioguideId}. This representative may be newly elected or serving in a non-federal office.`,
           bioguideId,
           hasFecMapping: false,
           cacheHit: false,
+          mappingLastUpdated: '2025-09-18',
+          suggestedAction: 'Check congress-legislators repository for recent updates',
         },
       };
 
@@ -368,10 +374,12 @@ export async function GET(
           financialSummary: `https://www.fec.gov/data/candidate/${fecMapping.fecId}/totals`,
         },
         metadata: {
-          note: `No FEC financial data available for candidate ${fecMapping.fecId} in 2024 cycle`,
+          note: `No FEC financial data available for candidate ${fecMapping.fecId} in 2024 cycle. This may occur for senators not up for re-election or newly elected representatives.`,
           bioguideId,
           hasFecMapping: true,
           cacheHit: false,
+          fecCandidateId: fecMapping.fecId,
+          suggestedCycles: [2022, 2020, 2018],
         },
       };
 

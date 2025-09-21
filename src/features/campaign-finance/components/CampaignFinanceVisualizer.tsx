@@ -133,7 +133,7 @@ export function CampaignFinanceVisualizer({
   // Top contributors data for charts
   const topContributorsData = (financeData?.top_contributors || [])
     .slice(0, 10)
-    .map(contributor => ({
+    .map((contributor: { name: string; total_amount: number }) => ({
       name:
         contributor.name.length > 15 ? contributor.name.substring(0, 15) + '...' : contributor.name,
       amount: contributor.total_amount,
