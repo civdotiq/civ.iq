@@ -5,13 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import {
-  generateOptimizedSearchTerms,
-  fetchGDELTNewsWithDeduplication,
-  normalizeGDELTArticle,
-  fetchGDELTNews,
-} from '@/features/news/services/gdelt-api';
-import { buildOptimizedGDELTQuery } from '@/features/news/services/gdelt-query-builder';
+import { normalizeGDELTArticle, fetchGDELTNews } from '@/features/news/services/gdelt-api';
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
@@ -123,31 +117,91 @@ export async function GET(
           request
         );
 
-        // Try enhanced query builder if we have full representative data
-        let searchTerms: string[];
-        const useEnhancedQueries = searchParams.get('enhanced') !== 'false';
+        // Use simpler, more effective queries that actually return results
+        // Build simple but effective search terms
+        const simpleName =
+          representative.name || `${representative.firstName} ${representative.lastName}`;
+        const lastName = representative.lastName || representative.name?.split(' ').pop() || '';
+        const state = representative.state || '';
 
-        if (useEnhancedQueries && representative.committees) {
-          // Use advanced query builder with full metadata
-          searchTerms = buildOptimizedGDELTQuery(representative as EnhancedRepresentative, {
-            focusLocal: true,
-            timespan: '24h',
-          });
-        } else {
-          // Fallback to basic search terms
-          searchTerms = generateOptimizedSearchTerms(
-            representative.name,
-            representative.state,
-            representative.district
-          );
-        }
+        // Create multiple simple queries that are more likely to return results
+        // GDELT requires keywords to be at least 3 characters, so we need to use full state names
+        const stateNameMap: Record<string, string> = {
+          AL: 'Alabama',
+          AK: 'Alaska',
+          AZ: 'Arizona',
+          AR: 'Arkansas',
+          CA: 'California',
+          CO: 'Colorado',
+          CT: 'Connecticut',
+          DE: 'Delaware',
+          FL: 'Florida',
+          GA: 'Georgia',
+          HI: 'Hawaii',
+          ID: 'Idaho',
+          IL: 'Illinois',
+          IN: 'Indiana',
+          IA: 'Iowa',
+          KS: 'Kansas',
+          KY: 'Kentucky',
+          LA: 'Louisiana',
+          ME: 'Maine',
+          MD: 'Maryland',
+          MA: 'Massachusetts',
+          MI: 'Michigan',
+          MN: 'Minnesota',
+          MS: 'Mississippi',
+          MO: 'Missouri',
+          MT: 'Montana',
+          NE: 'Nebraska',
+          NV: 'Nevada',
+          NH: 'New Hampshire',
+          NJ: 'New Jersey',
+          NM: 'New Mexico',
+          NY: 'New York',
+          NC: 'North Carolina',
+          ND: 'North Dakota',
+          OH: 'Ohio',
+          OK: 'Oklahoma',
+          OR: 'Oregon',
+          PA: 'Pennsylvania',
+          RI: 'Rhode Island',
+          SC: 'South Carolina',
+          SD: 'South Dakota',
+          TN: 'Tennessee',
+          TX: 'Texas',
+          UT: 'Utah',
+          VT: 'Vermont',
+          VA: 'Virginia',
+          WA: 'Washington',
+          WV: 'West Virginia',
+          WI: 'Wisconsin',
+          WY: 'Wyoming',
+        };
 
-        logger.debug(
+        const fullStateName = stateNameMap[state] || state;
+
+        const searchTerms = [
+          // Simple full name search
+          simpleName,
+          // Last name with full state name (not abbreviation)
+          fullStateName && fullStateName.length >= 3 ? `${lastName} ${fullStateName}` : lastName,
+          // Name with title
+          representative.chamber === 'Senate'
+            ? `Senator ${lastName}`
+            : `Representative ${lastName}`,
+        ].filter(term => term && term.trim().length > 0);
+
+        logger.info(
           'Generated optimized search terms',
           {
             bioguideId,
             searchTerms,
             searchTermsCount: searchTerms.length,
+            state,
+            fullStateName,
+            lastName,
+            simpleName,
             operation: 'news_search_terms_generation',
           },
           request
@@ -159,27 +213,9 @@ export async function GET(
 
         const fetchPromises = searchTerms.map(async (searchTerm, _index) => {
           try {
-            // Use raw fetchGDELTNews for enhanced queries (already include themes)
-            // Use deduplication wrapper for basic queries
-            if (useEnhancedQueries && representative.committees) {
-              const gdeltArticles = await fetchGDELTNews(searchTerm, articlesPerTerm);
-              return gdeltArticles.map(article => normalizeGDELTArticle(article));
-            } else {
-              const { articles: gdeltArticles, stats } = await fetchGDELTNewsWithDeduplication(
-                searchTerm,
-                articlesPerTerm,
-                {
-                  titleSimilarityThreshold: 0.85,
-                  maxArticlesPerDomain: 2,
-                  enableDomainClustering: true,
-                }
-              );
-
-              totalDuplicatesRemoved += stats.duplicatesRemoved;
-
-              // Normalize articles
-              return gdeltArticles.map(article => normalizeGDELTArticle(article));
-            }
+            // Use simple fetchGDELTNews for better results
+            const gdeltArticles = await fetchGDELTNews(searchTerm, articlesPerTerm);
+            return gdeltArticles.map(article => normalizeGDELTArticle(article));
           } catch (error) {
             logger.error(
               `Error fetching GDELT news for term: ${searchTerm}`,
@@ -268,9 +304,11 @@ export async function GET(
           );
         });
 
-        // Final cross-term deduplication
-        const { deduplicateNews } = await import('@/features/news/utils/news-deduplication');
-        const { articles: finalDeduplicatedArticles, stats: finalStats } = deduplicateNews(
+        // Final cross-term deduplication using enhanced system
+        const { deduplicateEnhancedNews } = await import(
+          '@/features/news/services/enhanced-deduplication'
+        );
+        const { articles: finalDeduplicatedArticles, stats: finalStats } = deduplicateEnhancedNews(
           qualityFilteredArticles.map((article: unknown) => {
             const articleData = article as {
               url: string;

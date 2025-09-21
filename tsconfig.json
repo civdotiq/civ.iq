@@ -44,7 +44,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "jest.setup.js"
+    "jest.setup.js",
+    "src/types/css-modules.d.ts"
   ],
   "exclude": [
     "node_modules",

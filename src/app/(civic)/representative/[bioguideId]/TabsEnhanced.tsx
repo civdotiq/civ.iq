@@ -14,16 +14,12 @@ import {
   Globe,
   Clock,
 } from 'lucide-react';
+import { ClusteredNewsFeed } from '@/features/news/components/ClusteredNewsFeed';
+import { EnhancedRepresentative } from '@/types/representative';
 
 interface TabsEnhancedProps {
   bioguideId: string;
-  representative: {
-    name: string;
-    chamber: string;
-    party: string;
-    state: string;
-    district?: string;
-  };
+  representative: EnhancedRepresentative;
   serverData?: {
     bills?: unknown[];
     votes?: unknown[];
@@ -374,8 +370,14 @@ function FinanceContent({ data }: { data: Record<string, any> }) {
   );
 }
 
-// Enhanced component for News tab
-function NewsContent({ data }: { data: Record<string, any> }) {
+// Enhanced component for News tab using ClusteredNewsFeed
+function NewsContent({
+  representative,
+  data,
+}: {
+  representative: EnhancedRepresentative;
+  data: Record<string, any>;
+}) {
   if (process.env.NODE_ENV === 'development') {
     // eslint-disable-next-line no-console
     console.log('🔍 NewsContent received data:', data);
@@ -388,6 +390,7 @@ function NewsContent({ data }: { data: Record<string, any> }) {
     console.log('🔍 NewsContent articles:', articles);
   }
 
+  // If no data available, show loading state or empty message
   if (!articles || articles.length === 0) {
     return (
       <div className="text-center py-8">
@@ -400,50 +403,17 @@ function NewsContent({ data }: { data: Record<string, any> }) {
     );
   }
 
+  // Use ClusteredNewsFeed for advanced news display
   return (
-    <div className="space-y-4">
-      <h4 className="font-semibold text-gray-900 flex items-center gap-2 mb-4">
-        <Newspaper className="h-5 w-5 text-blue-500" />
-        Recent News ({articles.length})
-      </h4>
-
-      <div className="space-y-3">
-        {articles.slice(0, 10).map((article: any, index: number) => (
-          <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h5 className="font-medium text-gray-900 mb-2 line-clamp-2">{article.title}</h5>
-                {article.description && (
-                  <p className="text-sm text-gray-600 mb-2 line-clamp-2">{article.description}</p>
-                )}
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <span>{article.source?.name || 'Unknown Source'}</span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    {new Date(article.publishedAt || article.date).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-              {article.url && (
-                <a
-                  href={article.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-4 text-blue-600 hover:text-blue-800"
-                >
-                  <Globe className="h-5 w-5" />
-                </a>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {articles.length > 10 && (
-        <div className="text-center text-sm text-gray-500 pt-4">
-          Showing 10 of {articles.length} articles
-        </div>
-      )}
+    <div className="-mx-6 -my-6">
+      <ClusteredNewsFeed
+        representative={representative}
+        viewMode="headlines"
+        maxClusters={8}
+        autoRefresh={true}
+        refreshInterval={300000} // 5 minutes
+        className="p-6"
+      />
     </div>
   );
 }
@@ -482,7 +452,7 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
               // eslint-disable-next-line no-console
               console.log('🔍 Profile data:', representative);
             }
-            setData(representative);
+            setData(representative as unknown as Record<string, unknown>);
             setLoading(false);
             return;
 
@@ -655,7 +625,9 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
             {activeTab === 'bills' && <BillsContent data={data as Record<string, any>} />}
             {activeTab === 'votes' && <VotesContent data={data as Record<string, any>} />}
             {activeTab === 'finance' && <FinanceContent data={data as Record<string, any>} />}
-            {activeTab === 'news' && <NewsContent data={data as Record<string, any>} />}
+            {activeTab === 'news' && (
+              <NewsContent representative={representative} data={data as Record<string, any>} />
+            )}
           </div>
         )}
       </div>

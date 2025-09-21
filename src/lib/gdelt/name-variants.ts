@@ -102,6 +102,63 @@ const LEADERSHIP_TITLES: Record<string, string[]> = {
 };
 
 /**
+ * State abbreviation to full name mapping for GDELT search optimization
+ * GDELT requires minimum 3-character search terms, so we use full state names
+ */
+const STATE_NAME_MAP: Record<string, string> = {
+  AL: 'Alabama',
+  AK: 'Alaska',
+  AZ: 'Arizona',
+  AR: 'Arkansas',
+  CA: 'California',
+  CO: 'Colorado',
+  CT: 'Connecticut',
+  DE: 'Delaware',
+  FL: 'Florida',
+  GA: 'Georgia',
+  HI: 'Hawaii',
+  ID: 'Idaho',
+  IL: 'Illinois',
+  IN: 'Indiana',
+  IA: 'Iowa',
+  KS: 'Kansas',
+  KY: 'Kentucky',
+  LA: 'Louisiana',
+  ME: 'Maine',
+  MD: 'Maryland',
+  MA: 'Massachusetts',
+  MI: 'Michigan',
+  MN: 'Minnesota',
+  MS: 'Mississippi',
+  MO: 'Missouri',
+  MT: 'Montana',
+  NE: 'Nebraska',
+  NV: 'Nevada',
+  NH: 'New Hampshire',
+  NJ: 'New Jersey',
+  NM: 'New Mexico',
+  NY: 'New York',
+  NC: 'North Carolina',
+  ND: 'North Dakota',
+  OH: 'Ohio',
+  OK: 'Oklahoma',
+  OR: 'Oregon',
+  PA: 'Pennsylvania',
+  RI: 'Rhode Island',
+  SC: 'South Carolina',
+  SD: 'South Dakota',
+  TN: 'Tennessee',
+  TX: 'Texas',
+  UT: 'Utah',
+  VT: 'Vermont',
+  VA: 'Virginia',
+  WA: 'Washington',
+  WV: 'West Virginia',
+  WI: 'Wisconsin',
+  WY: 'Wyoming',
+};
+
+/**
  * State-specific name variations and regional titles
  */
 const STATE_VARIATIONS: Record<string, (member: BaseRepresentative) => string[]> = {
@@ -186,10 +243,13 @@ export class NameVariantsGenerator {
     const nicknames = CONGRESS_NICKNAMES[member.bioguideId] || [];
     const variants: string[] = [];
 
+    // Get full state name for GDELT compatibility (minimum 3 characters)
+    const fullStateName = STATE_NAME_MAP[member.state] || member.state;
+
     nicknames.forEach(nickname => {
       variants.push(`"${nickname}"`);
       variants.push(`"${nickname} ${member.lastName}"`);
-      variants.push(`"${nickname} ${member.state}"`);
+      variants.push(`"${nickname} ${fullStateName}"`);
     });
 
     // Add common shortened versions of first names
@@ -247,22 +307,26 @@ export class NameVariantsGenerator {
 
   /**
    * Generate state-specific variations
+   * Uses full state names instead of abbreviations to meet GDELT's 3-character minimum requirement
    */
   private generateStateVariations(member: BaseRepresentative): string[] {
+    // Get full state name for GDELT compatibility (minimum 3 characters)
+    const fullStateName = STATE_NAME_MAP[member.state] || member.state;
+
     const variants = [
-      `"${member.lastName} ${member.state}"`,
-      `"${member.firstName} ${member.lastName} ${member.state}"`,
+      `"${member.lastName} ${fullStateName}"`,
+      `"${member.firstName} ${member.lastName} ${fullStateName}"`,
     ];
 
-    // Add district for House members
+    // Add district for House members (use full state name)
     if (member.chamber === 'House' && member.district) {
       variants.push(
-        `"${member.lastName} ${member.state}-${member.district}"`,
-        `"${member.lastName} ${member.state} ${member.district}"`
+        `"${member.lastName} ${fullStateName} ${member.district}"`,
+        `"${member.lastName} ${fullStateName}-${member.district}"`
       );
     }
 
-    // Add state-specific generators
+    // Add state-specific generators (these already use full state names)
     const stateGenerator = STATE_VARIATIONS[member.state];
     if (stateGenerator) {
       variants.push(...stateGenerator(member));

@@ -12,6 +12,7 @@ import {
   type DeduplicationOptions,
 } from '@/features/news/utils/news-deduplication';
 import { GDELTArticle, GDELTResponse } from '@/types/gdelt';
+import { validateGDELTResponse } from '@/lib/validation/gdelt-schemas';
 
 interface RetryOptions {
   maxRetries: number;
@@ -141,6 +142,7 @@ const REPRESENTATIVE_NICKNAMES: Record<string, string[]> = {
   'Lisa Murkowski': ['Sen. Murkowski'],
   'Amy Klobuchar': ['Sen. Klobuchar'],
   'Kamala Harris': ['VP Harris', 'Vice President Harris'],
+  'Elissa Slotkin': ['Rep. Slotkin', 'Senator Slotkin'], // Now Senator from Michigan
 };
 
 // Enhanced search term generation with better civic/political focus and nickname support
@@ -168,6 +170,64 @@ export function generateOptimizedSearchTerms(
     state = ''; // Will still search but without state context
   }
 
+  // Map state abbreviations to full names (GDELT requires minimum 3-character search terms)
+  const stateNameMap: Record<string, string> = {
+    AL: 'Alabama',
+    AK: 'Alaska',
+    AZ: 'Arizona',
+    AR: 'Arkansas',
+    CA: 'California',
+    CO: 'Colorado',
+    CT: 'Connecticut',
+    DE: 'Delaware',
+    FL: 'Florida',
+    GA: 'Georgia',
+    HI: 'Hawaii',
+    ID: 'Idaho',
+    IL: 'Illinois',
+    IN: 'Indiana',
+    IA: 'Iowa',
+    KS: 'Kansas',
+    KY: 'Kentucky',
+    LA: 'Louisiana',
+    ME: 'Maine',
+    MD: 'Maryland',
+    MA: 'Massachusetts',
+    MI: 'Michigan',
+    MN: 'Minnesota',
+    MS: 'Mississippi',
+    MO: 'Missouri',
+    MT: 'Montana',
+    NE: 'Nebraska',
+    NV: 'Nevada',
+    NH: 'New Hampshire',
+    NJ: 'New Jersey',
+    NM: 'New Mexico',
+    NY: 'New York',
+    NC: 'North Carolina',
+    ND: 'North Dakota',
+    OH: 'Ohio',
+    OK: 'Oklahoma',
+    OR: 'Oregon',
+    PA: 'Pennsylvania',
+    RI: 'Rhode Island',
+    SC: 'South Carolina',
+    SD: 'South Dakota',
+    TN: 'Tennessee',
+    TX: 'Texas',
+    UT: 'Utah',
+    VT: 'Vermont',
+    VA: 'Virginia',
+    WA: 'Washington',
+    WV: 'West Virginia',
+    WI: 'Wisconsin',
+    WY: 'Wyoming',
+    DC: 'District of Columbia',
+  };
+
+  // Get full state name if we have a 2-character abbreviation
+  const fullStateName = state.length === 2 ? stateNameMap[state] || state : state;
+
   // Clean the representative name - extract just the name part
   const fullName = representativeName.trim();
   const cleanName = fullName
@@ -190,9 +250,9 @@ export function generateOptimizedSearchTerms(
 
   if (district) {
     // House Representative specific searches
-    // 2. Name with state for Representatives
-    if (state) {
-      searchTerms.push(`"${cleanName}" "${state}"`);
+    // 2. Name with full state name for Representatives
+    if (fullStateName) {
+      searchTerms.push(`"${cleanName}" "${fullStateName}"`);
     }
 
     // 3. Representative title with name (simplified - no OR statements)
@@ -207,9 +267,9 @@ export function generateOptimizedSearchTerms(
     searchTerms.push(`"Senator ${cleanName}"`);
     searchTerms.push(`"Sen. ${cleanName}"`);
 
-    // 3. Name with state for Senators
-    if (state) {
-      searchTerms.push(`"${cleanName}" "${state}"`);
+    // 3. Name with full state name for Senators
+    if (fullStateName) {
+      searchTerms.push(`"${cleanName}" "${fullStateName}"`);
     }
 
     // 4. Name with Senate context
@@ -464,7 +524,22 @@ async function fetchGDELTNewsWithTimespan(
 
       let data: GDELTResponse;
       try {
-        data = JSON.parse(text);
+        const parsedData = JSON.parse(text);
+
+        // Validate the response with Zod
+        const validationResult = validateGDELTResponse(parsedData);
+        if (!validationResult.success) {
+          logger.warn('GDELT response validation failed', {
+            errors: validationResult.error.issues,
+            searchTerm: searchTerm.slice(0, 50),
+            operation: 'gdelt_validation_warning',
+          });
+          // Use the data anyway but log the validation issues
+          data = parsedData as GDELTResponse;
+        } else {
+          // Cast to GDELTResponse type since Zod validation passed
+          data = validationResult.data as GDELTResponse;
+        }
       } catch (parseError) {
         logger.error('Failed to parse GDELT JSON response', parseError as Error, {
           searchTerm: searchTerm.slice(0, 50),

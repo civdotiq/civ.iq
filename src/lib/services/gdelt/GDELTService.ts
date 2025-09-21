@@ -172,9 +172,13 @@ export class GDELTService {
 
   /**
    * Build GDELT query from name variants
+   * Fixed: Use simple queries instead of complex OR statements that GDELT rejects
    */
   private buildQueryFromVariants(variants: string[]): string {
-    return `(${variants.join(' OR ')}) theme:GENERAL_GOVERNMENT`;
+    // Use the first (most specific) variant instead of complex OR logic
+    // GDELT API doesn't support complex nested parentheses
+    const primaryVariant = variants[0] || '';
+    return `${primaryVariant} theme:GENERAL_GOVERNMENT`;
   }
 
   /**

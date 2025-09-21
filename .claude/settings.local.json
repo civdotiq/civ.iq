@@ -104,7 +104,9 @@
       "Read(//mnt/d/Downloads/**)",
       "Bash(xargs kill:*)",
       "WebFetch(domain:news.google.com)",
-      "Bash(ss:*)"
+      "Bash(ss:*)",
+      "Bash(awk:*)",
+      "WebFetch(domain:blog.gdeltproject.org)"
     ],
     "deny": [],
     "ask": []

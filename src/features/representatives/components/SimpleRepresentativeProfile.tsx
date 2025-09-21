@@ -15,7 +15,7 @@ import { TabNavigation, profileTabs } from './TabNavigation';
 import { DistrictSidebar } from './DistrictSidebar';
 import { ContactInfoTab } from './ContactInfoTab';
 import { TabLoadingSpinner } from '@/lib/utils/code-splitting';
-import { EnhancedNewsFeedWithSuspense } from '@/shared/components/ui/LazyComponents';
+import { ClusteredNewsFeed } from '@/features/news/components/ClusteredNewsFeed';
 
 // Dynamically import heavy tabs to reduce initial bundle size
 const FinanceTab = dynamic(
@@ -135,13 +135,13 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
         );
       case 'news':
         return (
-          <EnhancedNewsFeedWithSuspense
-            bioguideId={representative.bioguideId}
-            representative={{
-              name: `${representative.firstName} ${representative.lastName}`,
-              party: representative.party,
-              state: representative.state,
-            }}
+          <ClusteredNewsFeed
+            representative={representative}
+            viewMode="headlines"
+            maxClusters={8}
+            autoRefresh={true}
+            refreshInterval={300000}
+            className="-mx-6 -my-6 p-6"
           />
         );
       default:
