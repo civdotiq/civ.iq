@@ -172,6 +172,28 @@ export function ArticleCard({
               </>
             )}
 
+            {/* Local impact indicator */}
+            {article.localImpact && (
+              <>
+                <span className="mx-2">•</span>
+                <span
+                  className={`font-medium ${
+                    article.localImpact.localRelevance === 'high'
+                      ? 'text-green-600'
+                      : article.localImpact.localRelevance === 'medium'
+                        ? 'text-yellow-600'
+                        : 'text-gray-500'
+                  }`}
+                >
+                  {article.localImpact.localRelevance === 'high'
+                    ? '📍 Local'
+                    : article.localImpact.localRelevance === 'medium'
+                      ? '🏛️ Regional'
+                      : '🌐 National'}
+                </span>
+              </>
+            )}
+
             {/* Verified badge */}
             <span className="mx-2">•</span>
             <span className="text-green-600 font-medium">✓ Verified</span>

@@ -5,7 +5,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { normalizeGDELTArticle, fetchGDELTNews } from '@/features/news/services/gdelt-api';
+import {
+  normalizeGDELTArticle,
+  fetchGDELTNews,
+  calculateLocalImpactScore,
+} from '@/features/news/services/gdelt-api';
+import { getAdvancedRepresentativeNews } from '@/lib/services/news';
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
@@ -20,6 +25,11 @@ interface NewsArticle {
   summary?: string;
   imageUrl?: string;
   domain: string;
+  localImpact?: {
+    score: number;
+    localRelevance: 'high' | 'medium' | 'low';
+    factors: string[];
+  };
 }
 
 interface NewsResponse {
@@ -37,15 +47,64 @@ export async function GET(
   const { bioguideId } = await params;
   const { searchParams } = request.nextUrl;
   const limit = parseInt(searchParams.get('limit') || '15');
+  const enableAdvanced = searchParams.get('advanced') === 'true';
+  const includeTelevision = searchParams.get('tv') === 'true';
+  const includeTrending = searchParams.get('trending') === 'true';
 
   if (!bioguideId) {
     return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
   }
 
+  // Use advanced GDELT service if requested
+  if (enableAdvanced) {
+    try {
+      // Get representative info for advanced news
+      const repResponse = await fetch(`${request.nextUrl.origin}/api/representative/${bioguideId}`);
+
+      if (!repResponse.ok) {
+        throw new Error('Representative not found');
+      }
+
+      const repData = await repResponse.json();
+      const representative = repData.representative as EnhancedRepresentative;
+
+      // Extract committees from representative data
+      const committees =
+        representative.committees?.map(committee => ({
+          name: committee.name,
+          type: 'committee' as const,
+        })) || [];
+
+      const advancedNews = await getAdvancedRepresentativeNews(representative, committees, {
+        includeTelevision,
+        includeTrending,
+        includeDistrict: true,
+        limit,
+      });
+
+      return NextResponse.json({
+        ...advancedNews,
+        cacheStatus: 'Advanced GDELT integration with GEO, TV, and trending analysis',
+      });
+    } catch (error) {
+      logger.error(
+        'Advanced news API error',
+        error as Error,
+        {
+          bioguideId,
+          operation: 'advanced_news_api_error',
+        },
+        request
+      );
+
+      // Fall back to standard news if advanced fails
+    }
+  }
+
   try {
     // Use cached fetch with 30-minute TTL as specified in project docs
-    const cacheKey = `news-${bioguideId}-${limit}`;
-    const TTL_30_MINUTES = 30 * 60 * 1000;
+    const cacheKey = `news-${bioguideId}-${limit}-v4`; // v4 to include expanded district mappings
+    const TTL_30_MINUTES = 30 * 60; // 30 minutes in seconds
 
     const newsData = await cachedFetch(
       cacheKey,
@@ -337,20 +396,48 @@ export async function GET(
         totalDuplicatesRemoved += finalStats.duplicatesRemoved;
 
         // Convert back and sort by date (most recent first)
-        const uniqueArticles = finalDeduplicatedArticles.map(article => ({
-          title: article.title,
-          url: article.url,
-          publishedDate: article.seendate,
-          domain: article.domain,
-          imageUrl: article.socialimage,
-          language: article.language || 'English',
-          source:
-            (
-              qualityFilteredArticles.find(
-                (orig: unknown) => (orig as { url: string }).url === article.url
-              ) as { source?: string }
-            )?.source || article.domain,
-        }));
+        const uniqueArticles = finalDeduplicatedArticles.map(article => {
+          // Calculate local impact score for geographic relevance
+          const localImpact = calculateLocalImpactScore(
+            {
+              title: article.title,
+              url: article.url,
+              domain: article.domain,
+              seendate: article.seendate,
+              socialimage: article.socialimage,
+              language: article.language || 'English',
+              sourcecountry: 'US',
+            },
+            representative.name,
+            representative.state,
+            representative.district
+          );
+
+          logger.info('✅ Calculated local impact score', {
+            articleTitle: article.title.slice(0, 50),
+            representativeName: representative.name,
+            state: representative.state,
+            district: representative.district,
+            localImpact,
+            operation: 'local_impact_calculation',
+          });
+
+          return {
+            title: article.title,
+            url: article.url,
+            publishedDate: article.seendate,
+            domain: article.domain,
+            imageUrl: article.socialimage,
+            language: article.language || 'English',
+            source:
+              (
+                qualityFilteredArticles.find(
+                  (orig: unknown) => (orig as { url: string }).url === article.url
+                ) as { source?: string }
+              )?.source || article.domain,
+            localImpact,
+          };
+        });
 
         const sortedArticles = uniqueArticles
           .sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime())

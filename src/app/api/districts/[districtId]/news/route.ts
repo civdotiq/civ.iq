@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDistrictNews } from '@/lib/services/news';
 
-export async function GET(request: NextRequest, { params }: { params: { districtId: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ districtId: string }> }
+) {
   try {
-    const { districtId } = params;
+    const { districtId } = await params;
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get('limit') || '20');
 
     // Parse district ID (format: "TX-02" or "TX-2")
     const [state, districtStr] = districtId.split('-');
-    const districtNumber = parseInt(districtStr);
+    const districtNumber = parseInt(districtStr || '0');
 
     if (!state || isNaN(districtNumber)) {
       return NextResponse.json(
@@ -26,7 +29,11 @@ export async function GET(request: NextRequest, { params }: { params: { district
       },
     });
   } catch (error) {
-    console.error('District news API error:', error);
+    // Log error for debugging in development
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.error('District news API error:', error);
+    }
     return NextResponse.json({ error: 'Failed to fetch district news' }, { status: 500 });
   }
 }

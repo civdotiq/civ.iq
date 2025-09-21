@@ -145,7 +145,250 @@ const REPRESENTATIVE_NICKNAMES: Record<string, string[]> = {
   'Elissa Slotkin': ['Rep. Slotkin', 'Senator Slotkin'], // Now Senator from Michigan
 };
 
-// Enhanced search term generation with better civic/political focus and nickname support
+// Get major cities for a congressional district to enhance geographic relevance
+function getDistrictCities(state: string, districtNumber: number): string[] {
+  const districtCityMap: Record<string, Record<number, string[]>> = {
+    // Top 20 most populous districts and major metropolitan areas
+    TX: {
+      1: ['Marshall', 'Longview', 'Tyler'],
+      2: ['Huntsville', 'Conroe', 'Spring'],
+      3: ['Plano', 'McKinney', 'Allen'],
+      7: ['Houston', 'Katy', 'Cypress'],
+      9: ['Houston', 'Missouri City', 'Sugar Land'],
+      18: ['Houston', 'Heights', 'Downtown Houston'],
+      20: ['San Antonio', 'Leon Valley'],
+      21: ['San Antonio', 'New Braunfels'],
+      22: ['Houston', 'Pearland', 'Friendswood'],
+      24: ['Dallas', 'Carrollton', 'Farmers Branch'],
+      32: ['Dallas', 'Grand Prairie', 'Irving'],
+      35: ['Austin', 'Cedar Park', 'Round Rock'],
+    },
+    CA: {
+      1: ['Eureka', 'Redding', 'Chico'],
+      6: ['Sacramento', 'Elk Grove', 'Folsom'],
+      7: ['Davis', 'Woodland', 'West Sacramento'],
+      11: ['Modesto', 'Tracy', 'Manteca'],
+      12: ['San Francisco', 'Daly City'],
+      13: ['Oakland', 'San Leandro', 'Alameda'],
+      14: ['San Mateo', 'Redwood City', 'Foster City'],
+      15: ['San Jose', 'Campbell', 'Los Gatos'],
+      16: ['Fresno', 'Clovis', 'Madera'],
+      17: ['Santa Cruz', 'Watsonville', 'Capitola'],
+      18: ['Modesto', 'Turlock', 'Riverbank'],
+      27: ['Los Angeles', 'Alhambra', 'San Gabriel'],
+      28: ['Los Angeles', 'Hollywood', 'West Hollywood'],
+      30: ['Los Angeles', 'Glendale', 'Burbank'],
+      33: ['Los Angeles', 'Beverly Hills', 'West LA'],
+      34: ['Los Angeles', 'Hollywood'],
+      37: ['Los Angeles', 'Gardena', 'Carson'],
+      39: ['Fullerton', 'Buena Park', 'La Habra'],
+      40: ['Riverside', 'Moreno Valley', 'Perris'],
+      45: ['Irvine', 'Tustin', 'Lake Forest'],
+      47: ['Long Beach', 'Signal Hill'],
+      48: ['Huntington Beach', 'Costa Mesa', 'Newport Beach'],
+      49: ['San Diego', 'Encinitas', 'Carlsbad'],
+      50: ['San Diego', 'Chula Vista', 'National City'],
+      52: ['San Diego', 'Poway', 'Del Mar'],
+      53: ['San Diego', 'El Cajon', 'La Mesa'],
+    },
+    FL: {
+      1: ['Pensacola', 'Gulf Breeze', 'Milton'],
+      7: ['St. Petersburg', 'Clearwater', 'Largo'],
+      9: ['Orlando', 'Winter Park', 'Altamonte Springs'],
+      10: ['Tampa', 'Temple Terrace', 'Plant City'],
+      11: ['Tampa', 'Carrollwood', 'Town N Country'],
+      13: ['Tampa', 'Hillsborough', 'Brandon'],
+      14: ['Tampa', 'Hyde Park', 'Westchase'],
+      20: ['Fort Lauderdale', 'Sunrise', 'Plantation'],
+      21: ['Miami', 'Miami Beach', 'Coral Gables'],
+      23: ['Miami', 'Homestead', 'Florida City'],
+      24: ['Miami', 'Kendall', 'Pinecrest'],
+      25: ['Miami', 'Doral', 'Aventura'],
+      26: ['Miami', 'Key Biscayne', 'Palmetto Bay'],
+      27: ['Miami', 'Hialeah', 'Miami Lakes'],
+    },
+    NY: {
+      1: ['Brookhaven', 'Islip', 'Babylon'],
+      3: ['Hempstead', 'Garden City', 'Uniondale'],
+      4: ['Hempstead', 'Levittown', 'East Meadow'],
+      5: ['Staten Island', 'New York'],
+      6: ['Queens', 'Astoria', 'Long Island City'],
+      7: ['Queens', 'Elmhurst', 'Corona'],
+      8: ['Brooklyn', 'Coney Island', 'Brighton Beach'],
+      9: ['Brooklyn', 'Park Slope', 'Prospect Heights'],
+      10: ['Manhattan', 'Lower East Side', 'Chinatown'],
+      11: ['Brooklyn', 'Red Hook', 'Carroll Gardens'],
+      12: ['Manhattan', 'Upper West Side', 'Harlem'],
+      13: ['Manhattan', 'Upper East Side', 'Midtown'],
+      14: ['Bronx', 'Mount Vernon'],
+      15: ['Bronx', 'South Bronx', 'Mott Haven'],
+      16: ['Bronx', 'Riverdale', 'Kingsbridge'],
+    },
+    IL: {
+      1: ['Chicago', 'Evanston', 'Wilmette'],
+      2: ['Chicago', 'South Side', 'Hyde Park'],
+      3: ['Chicago', 'Southwest Side', 'Midway'],
+      4: ['Chicago', 'North Side', 'Uptown'],
+      5: ['Chicago', 'Northwest Side', 'Jefferson Park'],
+      6: ['Wheaton', 'Glen Ellyn', 'Carol Stream'],
+      7: ['Chicago', 'West Side', 'Oak Park'],
+      8: ['Schaumburg', 'Elgin', 'Hoffman Estates'],
+      9: ['Evanston', 'Skokie', 'Morton Grove'],
+      10: ['Highland Park', 'Deerfield', 'Northbrook'],
+      11: ['Naperville', 'Lisle', 'Warrenville'],
+    },
+    PA: {
+      1: ['Philadelphia', 'South Philadelphia'],
+      2: ['Philadelphia', 'West Philadelphia'],
+      3: ['Philadelphia', 'North Philadelphia'],
+      5: ['Delaware County', 'Chester', 'Yeadon'],
+      7: ['Lehigh Valley', 'Allentown', 'Bethlehem'],
+      8: ['Bucks County', 'Levittown', 'Bristol'],
+      12: ['Pittsburgh', 'Squirrel Hill', 'Shadyside'],
+      17: ['Harrisburg', 'Camp Hill', 'Mechanicsburg'],
+      18: ['Pittsburgh', 'Mt. Lebanon', 'Bethel Park'],
+    },
+    OH: {
+      1: ['Cincinnati', 'Hamilton', 'Springdale'],
+      3: ['Columbus', 'Westerville', 'Gahanna'],
+      11: ['Cleveland', 'Lakewood', 'Rocky River'],
+      13: ['Akron', 'Barberton', 'Norton'],
+      15: ['Columbus', 'Upper Arlington', 'Grandview Heights'],
+    },
+    MI: {
+      7: ['Lansing', 'East Lansing', 'Battle Creek'],
+      8: ['Flint', 'Bay City', 'Midland'],
+      11: ['Detroit', 'Hamtramck', 'Highland Park'],
+      12: ['Detroit', 'Dearborn', 'Dearborn Heights'],
+      13: ['Detroit', 'Southwest Detroit'],
+      14: ['Detroit', 'Grosse Pointe', 'Harper Woods'],
+    },
+    MN: {
+      3: ['Minneapolis', 'Bloomington', 'Plymouth'],
+      4: ['St. Paul', 'Falcon Heights', 'Lauderdale'],
+      5: ['Minneapolis', 'St. Paul'],
+    },
+    WA: {
+      1: ['Seattle', 'Bellevue', 'Redmond'],
+      7: ['Seattle', 'Ballard', 'Fremont'],
+      9: ['Seattle', 'Federal Way', 'Tukwila'],
+      10: ['Tacoma', 'Lakewood', 'Steilacoom'],
+    },
+    GA: {
+      4: ['Atlanta', 'Decatur', 'Stone Mountain'],
+      5: ['Atlanta', 'East Point', 'College Park'],
+      6: ['Atlanta', 'Sandy Springs', 'Dunwoody'],
+      7: ['Atlanta', 'Marietta', 'Smyrna'],
+      13: ['Atlanta', 'Buckhead', 'Brookhaven'],
+    },
+    NC: {
+      4: ['Raleigh', 'Cary', 'Apex'],
+      9: ['Charlotte', 'Matthews', 'Mint Hill'],
+      12: ['Charlotte', 'Gastonia', 'Belmont'],
+    },
+    NJ: {
+      6: ['Trenton', 'Princeton', 'Lawrenceville'],
+      8: ['Newark', 'Jersey City', 'Hoboken'],
+      10: ['Paterson', 'Clifton', 'Passaic'],
+      11: ['Morris County', 'Morristown', 'Madison'],
+    },
+    VA: {
+      8: ['Arlington', 'Alexandria', 'Falls Church'],
+      10: ['Fairfax', 'Vienna', 'Oakton'],
+      11: ['Fairfax', 'Reston', 'Herndon'],
+    },
+    AZ: {
+      1: ['Phoenix', 'Scottsdale', 'Tempe'],
+      3: ['Phoenix', 'Glendale', 'Peoria'],
+      4: ['Phoenix', 'Mesa', 'Chandler'],
+      9: ['Phoenix', 'South Phoenix', 'Ahwatukee'],
+    },
+    CO: {
+      1: ['Denver', 'Capitol Hill', 'Five Points'],
+      2: ['Boulder', 'Longmont', 'Lafayette'],
+      6: ['Aurora', 'Centennial', 'Littleton'],
+      7: ['Denver', 'Lakewood', 'Wheat Ridge'],
+    },
+    OR: {
+      1: ['Portland', 'Beaverton', 'Tigard'],
+      3: ['Portland', 'Lake Oswego', 'Milwaukie'],
+      5: ['Salem', 'Keizer', 'Silverton'],
+    },
+    WI: {
+      2: ['Madison', 'Middleton', 'Fitchburg'],
+      4: ['Milwaukee', 'West Allis', 'Greenfield'],
+      5: ['Milwaukee', 'Wauwatosa', 'Brookfield'],
+    },
+    NV: {
+      1: ['Las Vegas', 'Henderson', 'Paradise'],
+      3: ['Las Vegas', 'North Las Vegas', 'Summerlin'],
+      4: ['Reno', 'Sparks', 'Carson City'],
+    },
+    TN: {
+      5: ['Nashville', 'Franklin', 'Brentwood'],
+      7: ['Memphis', 'Germantown', 'Collierville'],
+      9: ['Memphis', 'Bartlett', 'Millington'],
+    },
+    IN: {
+      7: ['Indianapolis', 'Carmel', 'Fishers'],
+      9: ['Indianapolis', 'Speedway', 'Beech Grove'],
+    },
+    MD: {
+      4: ['Baltimore', 'Towson', 'Dundalk'],
+      7: ['Baltimore', 'Columbia', 'Ellicott City'],
+      8: ['Rockville', 'Bethesda', 'Silver Spring'],
+    },
+    MO: {
+      1: ['St. Louis', 'Clayton', 'University City'],
+      5: ['Kansas City', 'Independence', 'Blue Springs'],
+    },
+    AL: {
+      6: ['Birmingham', 'Vestavia Hills', 'Hoover'],
+      7: ['Birmingham', 'Mountain Brook', 'Homewood'],
+    },
+    LA: {
+      1: ['New Orleans', 'Metairie', 'Kenner'],
+      2: ['New Orleans', 'Algiers', 'Marrero'],
+    },
+    KY: {
+      3: ['Louisville', 'Jeffersontown', 'St. Matthews'],
+    },
+    SC: {
+      1: ['Charleston', 'Mount Pleasant', 'North Charleston'],
+      6: ['Columbia', 'Forest Acres', 'Cayce'],
+    },
+    OK: {
+      5: ['Oklahoma City', 'Norman', 'Moore'],
+    },
+    CT: {
+      1: ['Hartford', 'West Hartford', 'East Hartford'],
+      3: ['New Haven', 'Hamden', 'East Haven'],
+    },
+    UT: {
+      2: ['Salt Lake City', 'West Valley City', 'South Salt Lake'],
+      4: ['Provo', 'Orem', 'American Fork'],
+    },
+    IA: {
+      3: ['Des Moines', 'West Des Moines', 'Urbandale'],
+    },
+    AR: {
+      2: ['Little Rock', 'North Little Rock', 'Conway'],
+    },
+    KS: {
+      3: ['Kansas City', 'Overland Park', 'Olathe'],
+    },
+    NM: {
+      1: ['Albuquerque', 'Rio Rancho', 'Corrales'],
+    },
+    NE: {
+      2: ['Omaha', 'Bellevue', 'Papillion'],
+    },
+  };
+
+  return districtCityMap[state]?.[districtNumber] || [];
+}
+
+// Enhanced search term generation with geographic context and civic/political focus
 export function generateOptimizedSearchTerms(
   representativeName: string,
   state: string,
@@ -282,6 +525,18 @@ export function generateOptimizedSearchTerms(
     searchTerms.push(`"${nickname}"`);
   });
 
+  // Add geographic context with district cities for House representatives
+  if (district && fullStateName) {
+    const districtNumber = parseInt(district);
+    const cities = getDistrictCities(state, districtNumber);
+
+    // Add major city context for local relevance
+    if (cities.length > 0) {
+      const majorCity = cities[0]; // Use the first/largest city
+      searchTerms.push(`"${cleanName}" "${majorCity}"`);
+    }
+  }
+
   // Add fallback with just last name if we have a multi-word name
   if (lastName && lastName !== cleanName && lastName.length > 3) {
     searchTerms.push(`"${lastName}"`);
@@ -290,11 +545,12 @@ export function generateOptimizedSearchTerms(
   logger.debug(`Generated search terms for ${fullName}`, {
     searchTerms,
     nicknamesFound: nicknames.length,
+    citiesFound: district ? getDistrictCities(state, parseInt(district)).length : 0,
     operation: 'gdelt_search_terms',
   });
 
-  // Return top 6 most relevant search terms (increased to accommodate nicknames)
-  return searchTerms.slice(0, 6);
+  // Return top 7 most relevant search terms (increased for geographic context)
+  return searchTerms.slice(0, 7);
 }
 
 // Main GDELT API fetch function with comprehensive error handling and deduplication
@@ -596,7 +852,62 @@ async function fetchGDELTNewsWithTimespan(
   });
 }
 
-// Clean and normalize article data
+// Calculate local impact score for geographic relevance
+export function calculateLocalImpactScore(
+  article: GDELTArticle,
+  _representativeName: string,
+  state: string,
+  district?: string
+): { score: number; localRelevance: 'high' | 'medium' | 'low'; factors: string[] } {
+  const title = (article.title || '').toLowerCase();
+  const domain = article.domain || '';
+
+  let score = 0;
+  const factors: string[] = [];
+
+  // State-specific indicators (20 points)
+  const stateNames = { [state]: true, [getStateFullName(state)?.toLowerCase() || '']: true };
+  if (Object.keys(stateNames).some(name => name && title.includes(name))) {
+    score += 20;
+    factors.push('State mentioned');
+  }
+
+  // District cities (15 points)
+  if (district) {
+    const cities = getDistrictCities(state, parseInt(district));
+    if (cities.some(city => title.includes(city.toLowerCase()))) {
+      score += 15;
+      factors.push('District city mentioned');
+    }
+  }
+
+  // Local domain indicators (10 points)
+  const localDomainKeywords = [state.toLowerCase(), 'local', 'metro', 'news', 'tribune'];
+  if (localDomainKeywords.some(keyword => domain.includes(keyword))) {
+    score += 10;
+    factors.push('Local news source');
+  }
+
+  return {
+    score,
+    localRelevance: score >= 30 ? 'high' : score >= 15 ? 'medium' : 'low',
+    factors,
+  };
+}
+
+// Helper to get full state name
+function getStateFullName(abbreviation: string): string | null {
+  const stateMap: Record<string, string> = {
+    MI: 'Michigan',
+    TX: 'Texas',
+    CA: 'California',
+    NY: 'New York',
+    MN: 'Minnesota',
+  };
+  return stateMap[abbreviation] || null;
+}
+
+// Clean and normalize article data with local impact scoring
 export function normalizeGDELTArticle(article: GDELTArticle): unknown {
   return {
     title: cleanTitle(article.title || 'Untitled'),

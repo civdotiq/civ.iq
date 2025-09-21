@@ -44,10 +44,32 @@ export interface GDELTMetadata {
   readonly country?: string;
 }
 
-// GDELT API Response structure
+// GDELT Television Coverage interface
+export interface GDELTTelevisionMention {
+  readonly station: string;
+  readonly datetime: string;
+  readonly duration?: number; // In seconds
+  readonly snippet?: string;
+  readonly tone?: number;
+  readonly mentionContext?: string;
+}
+
+// GDELT Trending Topic interface
+export interface GDELTTrendingTopic {
+  readonly topic: string;
+  readonly mentionCount: number;
+  readonly trendScore: number; // Normalized trending score
+  readonly timeframe: string;
+  readonly peakDate?: string;
+  readonly associatedEvents?: readonly string[];
+}
+
+// Enhanced GDELT API Response structure
 export interface GDELTResponse {
   readonly articles?: ReadonlyArray<GDELTArticle>;
   readonly timeline?: ReadonlyArray<GDELTTimelineEntry>;
+  readonly television?: ReadonlyArray<GDELTTelevisionMention>;
+  readonly trending?: ReadonlyArray<GDELTTrendingTopic>;
   readonly metadata?: GDELTMetadata;
 }
 
@@ -62,6 +84,29 @@ export interface GDELTQueryParams {
   readonly domain?: string;
   readonly country?: string;
   readonly sourcelang?: string;
+  // GEO API parameters
+  readonly geo?: string;
+  readonly geores?: string;
+  readonly near?: string;
+  readonly withinradius?: string;
+}
+
+// GDELT GEO API parameters for location-based searches
+export interface GDELTGeoParams {
+  readonly location: string; // City, state, or coordinates
+  readonly radius?: number; // Radius in kilometers
+  readonly geores?: 'country' | 'state' | 'city';
+}
+
+// Enhanced GDELT query options for advanced features
+export interface GDELTAdvancedOptions {
+  readonly includeTelevision?: boolean;
+  readonly trendingThreshold?: number;
+  readonly sources?: readonly string[]; // Specific source domains
+  readonly excludeSources?: readonly string[]; // Sources to exclude
+  readonly includeImages?: boolean;
+  readonly minTone?: number; // Minimum tone threshold
+  readonly maxTone?: number; // Maximum tone threshold
 }
 
 // Error handling types following Result/Either pattern

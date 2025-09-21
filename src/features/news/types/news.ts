@@ -6,6 +6,7 @@
  */
 
 import { NewsArticle } from '../utils/news-deduplication';
+import { GDELTArticle } from '@/types/gdelt';
 // import { SearchDimension } from '../services/gdelt-query-builder-v2'; // Temporarily disabled
 
 /**
@@ -25,7 +26,7 @@ export interface EnhancedArticle extends NewsArticle {
 
   // Enhanced properties for clustering and search
   relevanceScore: number;
-  dimensions: any[]; // SearchDimension[] - temporarily any
+  dimensions: unknown[]; // SearchDimension[] - temporarily unknown for type safety
   matchedQueries: string[];
   isDuplicate: boolean;
   clusterGroup?: string;
@@ -37,6 +38,11 @@ export interface EnhancedArticle extends NewsArticle {
   categories?: string[];
   representativeRelevance?: number;
   clusterAssignment?: string;
+  localImpact?: {
+    score: number;
+    localRelevance: 'high' | 'medium' | 'low';
+    factors: string[];
+  };
 }
 
 /**
@@ -67,27 +73,27 @@ export function enhanceArticle(article: NewsArticle): EnhancedArticle {
  * Convert GDELTArticle to EnhancedArticle
  */
 export function enhanceGdeltArticle(
-  article: any,
+  article: GDELTArticle,
   relevanceScore: number = 0.5,
-  dimensions: any[] = [],
+  dimensions: unknown[] = [],
   matchedQueries: string[] = []
 ): EnhancedArticle {
-  const source = extractSourceFromDomain(article.domain);
+  const source = extractSourceFromDomain(article.domain || '');
   return {
     // Map GDELTArticle fields to NewsArticle fields
     url: article.url,
-    title: article.title,
-    seendate: article.seendate,
-    domain: article.domain,
-    language: article.language,
-    sourcecountry: article.sourcecountry,
-    socialimage: article.socialimage,
-    urlmobile: article.urlmobile,
+    title: article.title || 'Untitled',
+    seendate: article.seendate || new Date().toISOString(),
+    domain: article.domain || 'unknown',
+    language: article.language || undefined,
+    sourcecountry: article.sourcecountry || undefined,
+    socialimage: article.socialimage || undefined,
+    urlmobile: article.urlmobile || undefined,
 
     // EnhancedArticle specific fields
-    publishedDate: article.seendate,
+    publishedDate: article.seendate || new Date().toISOString(),
     source,
-    imageUrl: article.socialimage,
+    imageUrl: article.socialimage || undefined,
 
     // Required fields for enhanced article
     relevanceScore,
