@@ -21,7 +21,7 @@ export default function DistrictNavigation({
   majorCities,
 }: DistrictNavigationProps) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+    <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Facts</h3>
 
       <div className="space-y-4">

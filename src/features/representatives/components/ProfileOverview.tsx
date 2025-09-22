@@ -33,7 +33,7 @@ interface InfoCardProps {
 
 function InfoCard({ title, icon, children, className = '' }: InfoCardProps) {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className}`}>
+    <div className={`bg-white border border-gray-200 border-2 border-black ${className}`}>
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <div className="text-gray-500">{icon}</div>
@@ -57,7 +57,7 @@ function TimelineItem({ date, title, description, type = 'other' }: TimelineItem
     term: 'bg-blue-100 text-blue-800',
     leadership: 'bg-purple-100 text-purple-800',
     committee: 'bg-green-100 text-green-800',
-    other: 'bg-gray-100 text-gray-800',
+    other: 'bg-white border-2 border-gray-300 text-gray-800',
   };
 
   return (
@@ -149,7 +149,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
     <div className={`space-y-6 ${className}`}>
       {/* Quick Facts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 border border-gray-200 border-2 border-black">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-4 h-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-600">Years in Office</span>
@@ -160,7 +160,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 border border-gray-200 border-2 border-black">
           <div className="flex items-center gap-2 mb-2">
             <Users className="w-4 h-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-600">Committees</span>
@@ -172,7 +172,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
         </div>
 
         {birthInfo && (
-          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <div className="bg-white p-4 border border-gray-200 border-2 border-black">
             <div className="flex items-center gap-2 mb-2">
               <Calendar className="w-4 h-4 text-gray-500" />
               <span className="text-sm font-medium text-gray-600">Age</span>
@@ -182,7 +182,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
           </div>
         )}
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 border border-gray-200 border-2 border-black">
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="w-4 h-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-600">Represents</span>
@@ -299,10 +299,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
           <InfoCard title="Committee Memberships" icon={<Users className="w-5 h-5" />}>
             <div className="space-y-3">
               {representative.committees.map((committee, index) => (
-                <div
-                  key={index}
-                  className="flex items-start justify-between p-3 bg-gray-50 rounded-lg"
-                >
+                <div key={index} className="flex items-start justify-between p-3 bg-white">
                   <div className="flex-1">
                     <div className="font-medium text-gray-900">{committee.name}</div>
                     {committee.role && (
@@ -341,7 +338,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
                 href={`https://twitter.com/${representative.socialMedia.twitter}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-blue-500 text-white hover:bg-blue-600 transition-colors"
               >
                 <span>Twitter</span>
                 <ExternalLink className="w-3 h-3" />
@@ -353,7 +350,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
                 href={`https://facebook.com/${representative.socialMedia.facebook}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
               >
                 <span>Facebook</span>
                 <ExternalLink className="w-3 h-3" />
@@ -365,7 +362,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
                 href={`https://youtube.com/${representative.socialMedia.youtube}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors"
               >
                 <span>YouTube</span>
                 <ExternalLink className="w-3 h-3" />
@@ -377,7 +374,7 @@ export function ProfileOverview({ representative, className = '' }: ProfileOverv
                 href={`https://instagram.com/${representative.socialMedia.instagram}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-pink-600 text-white hover:bg-pink-700 transition-colors"
               >
                 <span>Instagram</span>
                 <ExternalLink className="w-3 h-3" />

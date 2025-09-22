@@ -88,9 +88,9 @@ export default function CommitteeActivityTimeline({
       case 'medium':
         return 'border-yellow-500 bg-yellow-50';
       case 'low':
-        return 'border-gray-400 bg-gray-50';
+        return 'border-gray-400 bg-white';
       default:
-        return 'border-gray-400 bg-gray-50';
+        return 'border-gray-400 bg-white';
     }
   };
 
@@ -127,7 +127,7 @@ export default function CommitteeActivityTimeline({
   const displayedItems = expanded ? timeline : timeline.slice(0, 10);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+    <div className="bg-white border-2 border-black p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold text-gray-900">Activity Timeline</h2>
         <div className="flex items-center space-x-4">
@@ -138,7 +138,7 @@ export default function CommitteeActivityTimeline({
               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                 filter === 'all'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
               }`}
             >
               All ({stats.totalItems})
@@ -148,7 +148,7 @@ export default function CommitteeActivityTimeline({
               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                 filter === 'bills'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
               }`}
             >
               Bills ({stats.billsCount})
@@ -158,7 +158,7 @@ export default function CommitteeActivityTimeline({
               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                 filter === 'reports'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
               }`}
             >
               Reports ({stats.reportsCount})
@@ -168,7 +168,7 @@ export default function CommitteeActivityTimeline({
       </div>
 
       {/* Activity Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 p-4 bg-white">
         <div className="text-center">
           <div className="text-2xl font-bold text-blue-600">{stats.billsCount}</div>
           <div className="text-xs text-gray-600">Bills</div>

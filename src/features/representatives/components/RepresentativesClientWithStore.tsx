@@ -191,13 +191,13 @@ export function RepresentativesClientWithStore({
                   key={mode}
                   onClick={() => handleViewModeChange(mode)}
                   className={`
-                    py-2 px-1 border-b-2 font-medium text-sm capitalize
-                    ${
-                      viewMode === mode
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }
-                  `}
+          py-2 px-1 border-b-2 font-medium text-sm capitalize
+          ${
+            viewMode === mode
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }
+         `}
                 >
                   {mode} View
                 </button>
@@ -207,19 +207,19 @@ export function RepresentativesClientWithStore({
 
           {/* Stats Summary */}
           <div className="mb-6 grid grid-cols-4 gap-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="bg-blue-50 p-4">
               <p className="text-sm text-gray-600">Democrats</p>
               <p className="text-2xl font-bold text-blue-600">{stats.dems}</p>
             </div>
-            <div className="bg-red-50 p-4 rounded-lg">
+            <div className="bg-red-50 p-4">
               <p className="text-sm text-gray-600">Republicans</p>
               <p className="text-2xl font-bold text-red-600">{stats.reps}</p>
             </div>
-            <div className="bg-purple-50 p-4 rounded-lg">
+            <div className="bg-purple-50 p-4">
               <p className="text-sm text-gray-600">Senate</p>
               <p className="text-2xl font-bold text-purple-600">{stats.senate}</p>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg">
+            <div className="bg-green-50 p-4">
               <p className="text-sm text-gray-600">House</p>
               <p className="text-2xl font-bold text-green-600">{stats.house}</p>
             </div>

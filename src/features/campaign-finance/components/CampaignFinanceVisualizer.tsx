@@ -189,7 +189,7 @@ export function CampaignFinanceVisualizer({
 
   if (!financeData || !hasData) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="aicher-card p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Campaign Finance</h3>
         <div className="text-center py-8 text-gray-500">
           <p>Campaign finance data not available</p>
@@ -204,7 +204,7 @@ export function CampaignFinanceVisualizer({
   return (
     <div className="space-y-6">
       {/* Tab Navigation - Only 4 Tabs */}
-      <div className="bg-white rounded-lg shadow-md">
+      <div className="aicher-card aicher-no-radius">
         <div className="border-b border-gray-200">
           <nav className="flex" aria-label="Tabs">
             {[
@@ -306,9 +306,9 @@ export function CampaignFinanceVisualizer({
 
               {/* Donation Sources Pie Chart */}
               {donationBreakdown.length > 0 && (
-                <div className="bg-gray-50 rounded-lg p-6">
+                <div className="bg-white p-6">
                   <h4 className="text-md font-semibold text-gray-900 mb-4">Contribution Sources</h4>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="aicher-grid aicher-grid-2 gap-6">
                     <div>
                       <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
@@ -365,7 +365,7 @@ export function CampaignFinanceVisualizer({
 
               {/* Top Contributors Bar Chart */}
               {topContributorsData.length > 0 && (
-                <div className="bg-gray-50 rounded-lg p-6">
+                <div className="bg-white p-6">
                   <h4 className="text-md font-semibold text-gray-900 mb-4">Top Contributors</h4>
                   <ResponsiveContainer width="100%" height={400}>
                     <BarChart
@@ -398,7 +398,7 @@ export function CampaignFinanceVisualizer({
 
               {/* Industry Breakdown Horizontal Bar Chart */}
               {industryData.length > 0 && (
-                <div className="bg-gray-50 rounded-lg p-6">
+                <div className="bg-white p-6">
                   <h4 className="text-md font-semibold text-gray-900 mb-4">Industry Breakdown</h4>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart
@@ -451,7 +451,7 @@ export function CampaignFinanceVisualizer({
               ) : lobbyingData && lobbyingData.lobbyingData.totalRelevantSpending > 0 ? (
                 <div className="space-y-6">
                   {/* Simple Lobbying Summary */}
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-white p-4">
                     <h4 className="text-md font-semibold text-gray-900 mb-3">Lobbying Summary</h4>
                     <hr className="border-gray-300 mb-4" />
 
@@ -485,7 +485,7 @@ export function CampaignFinanceVisualizer({
                       </h4>
                       <div className="overflow-x-auto">
                         <table className="min-w-full bg-white">
-                          <thead className="bg-gray-50">
+                          <thead className="bg-white">
                             <tr>
                               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                                 Company
@@ -499,7 +499,7 @@ export function CampaignFinanceVisualizer({
                             {lobbyingData.lobbyingData.topCompanies.slice(0, 10).map(company => (
                               <tr
                                 key={`company-${company.name}-${company.totalSpending}`}
-                                className="hover:bg-gray-50"
+                                className="hover:bg-white"
                               >
                                 <td className="px-4 py-2 text-sm text-gray-900">{company.name}</td>
                                 <td className="px-4 py-2 text-sm text-gray-900">
@@ -532,7 +532,7 @@ export function CampaignFinanceVisualizer({
               {financeData.recent_expenditures && financeData.recent_expenditures.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="min-w-full bg-white">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-white">
                       <tr>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                           Date
@@ -552,7 +552,7 @@ export function CampaignFinanceVisualizer({
                       {financeData.recent_expenditures.slice(0, 10).map(expenditure => (
                         <tr
                           key={`exp-${expenditure.disbursement_date}-${expenditure.recipient_name}-${expenditure.disbursement_amount}`}
-                          className="hover:bg-gray-50"
+                          className="hover:bg-white"
                         >
                           <td className="px-4 py-2 text-sm text-gray-900">
                             {new Date(expenditure.disbursement_date).toLocaleDateString()}
@@ -587,7 +587,7 @@ export function CampaignFinanceVisualizer({
               {financeData.recent_contributions && financeData.recent_contributions.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="min-w-full bg-white">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-white">
                       <tr>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                           Date
@@ -607,7 +607,7 @@ export function CampaignFinanceVisualizer({
                       {financeData.recent_contributions.slice(0, 10).map(contribution => (
                         <tr
                           key={`cont-${contribution.contributor_name}-${contribution.contribution_receipt_amount}`}
-                          className="hover:bg-gray-50"
+                          className="hover:bg-white"
                         >
                           <td className="px-4 py-2 text-sm text-gray-900">
                             {new Date(contribution.contribution_receipt_date).toLocaleDateString()}

@@ -96,7 +96,10 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
           <div className="h-6 bg-gray-200 w-48 mb-4 border border-gray-300"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-gray-100 border border-gray-300 p-grid-3 h-24"></div>
+              <div
+                key={i}
+                className="bg-white border-2 border-gray-300 border border-gray-300 p-grid-3 h-24"
+              ></div>
             ))}
           </div>
         </div>
@@ -108,7 +111,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
     return (
       <div className="bg-white border-aicher border-black p-grid-4">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Education & Healthcare</h3>
-        <div className="bg-gray-50 border border-gray-300 p-grid-3 text-center">
+        <div className="bg-white border border-gray-300 p-grid-3 text-center">
           <p className="text-gray-600">
             Education & healthcare data not available for this district
           </p>

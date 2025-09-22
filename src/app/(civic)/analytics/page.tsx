@@ -18,7 +18,7 @@ const CivicEngagementDashboard = dynamic(
     })),
   {
     loading: () => (
-      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow">
+      <div className="flex items-center justify-center h-96 bg-white border-2 border-black">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
           <p>Loading civic engagement dashboard...</p>
@@ -36,7 +36,7 @@ const LegislativeActivityMonitor = dynamic(
     })),
   {
     loading: () => (
-      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow">
+      <div className="flex items-center justify-center h-96 bg-white border-2 border-black">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
           <p>Loading legislative activity monitor...</p>
@@ -54,7 +54,7 @@ const CampaignFinanceOverview = dynamic(
     })),
   {
     loading: () => (
-      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow">
+      <div className="flex items-center justify-center h-96 bg-white border-2 border-black">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
           <p>Loading campaign finance overview...</p>
@@ -72,7 +72,7 @@ const DistrictPerformanceDashboard = dynamic(
     })),
   {
     loading: () => (
-      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow">
+      <div className="flex items-center justify-center h-96 bg-white border-2 border-black">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
           <p>Loading district performance dashboard...</p>
@@ -90,7 +90,7 @@ const NewsSentimentTracker = dynamic(
     })),
   {
     loading: () => (
-      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow">
+      <div className="flex items-center justify-center h-96 bg-white border-2 border-black">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
           <p>Loading news sentiment tracker...</p>
@@ -107,9 +107,9 @@ export default function AnalyticsPage() {
   >('engagement');
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-20">
+      <header className="bg-white border-2 border-black border-b sticky top-0 z-20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/">
@@ -146,7 +146,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Navigation tabs */}
-        <div className="bg-white rounded-lg shadow-md p-1 mb-8">
+        <div className="bg-white border-2 border-black p-1 mb-8">
           <nav className="flex flex-wrap">
             {[
               { id: 'engagement', label: 'Civic Engagement' },
@@ -162,10 +162,10 @@ export default function AnalyticsPage() {
                     view.id as 'engagement' | 'legislative' | 'finance' | 'districts' | 'sentiment'
                   )
                 }
-                className={`flex-1 px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                   activeView === view.id
                     ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    : 'text-gray-700 hover:bg-white border-2 border-gray-300'
                 }`}
               >
                 {view.label}
@@ -185,7 +185,7 @@ export default function AnalyticsPage() {
 
         {/* Quick insights section */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white border-2 border-black p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Insights</h3>
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
@@ -207,7 +207,7 @@ export default function AnalyticsPage() {
             </ul>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white border-2 border-black p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Trending Topics</h3>
             <div className="space-y-2">
               {['Healthcare Reform', 'Infrastructure', 'Climate Policy', 'Economic Recovery'].map(
@@ -229,22 +229,22 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white border-2 border-black p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="space-y-3">
               <Link
                 href="/compare"
-                className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 transition-colors"
+                className="block w-full px-4 py-2 bg-blue-600 text-white text-center hover:bg-blue-700 transition-colors"
               >
                 Compare Representatives
               </Link>
               <Link
                 href="/districts"
-                className="block w-full px-4 py-2 border border-gray-300 text-gray-700 text-center rounded-lg hover:bg-gray-50 transition-colors"
+                className="block w-full px-4 py-2 border border-gray-300 text-gray-700 text-center hover:bg-white transition-colors"
               >
                 Explore Districts
               </Link>
-              <button className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+              <button className="w-full px-4 py-2 border border-gray-300 text-gray-700 hover:bg-white transition-colors">
                 Export Report
               </button>
             </div>

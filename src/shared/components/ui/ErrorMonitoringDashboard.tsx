@@ -133,7 +133,7 @@ export function ErrorMonitoringDashboard() {
       case 'critical':
         return 'text-red-800 bg-red-200';
       default:
-        return 'text-gray-600 bg-gray-100';
+        return 'text-gray-600 bg-white border-2 border-gray-300';
     }
   };
 
@@ -181,7 +181,7 @@ export function ErrorMonitoringDashboard() {
           <select
             value={selectedTimeframe}
             onChange={e => setSelectedTimeframe(e.target.value as '1h' | '24h' | '7d' | 'all')}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-civiq-blue"
+            className="px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue"
           >
             <option value="1h">Last Hour</option>
             <option value="24h">Last 24 Hours</option>
@@ -190,13 +190,13 @@ export function ErrorMonitoringDashboard() {
           </select>
           <button
             onClick={exportErrorData}
-            className="px-4 py-2 bg-civiq-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-civiq-blue text-white hover:bg-blue-700 transition-colors"
           >
             Export Data
           </button>
           <button
             onClick={clearErrorData}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors"
           >
             Clear Data
           </button>
@@ -205,7 +205,7 @@ export function ErrorMonitoringDashboard() {
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white border border-gray-200 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Total Errors</h3>
           <p className="text-3xl font-bold text-gray-900">{errorReports.length}</p>
           <p className="text-sm text-gray-600 mt-1">
@@ -213,19 +213,19 @@ export function ErrorMonitoringDashboard() {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white border border-gray-200 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Unique Error Types</h3>
           <p className="text-3xl font-bold text-gray-900">{errorStats.length}</p>
           <p className="text-sm text-gray-600 mt-1">Different error codes</p>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white border border-gray-200 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">User Feedback</h3>
           <p className="text-3xl font-bold text-gray-900">{errorFeedback.length}</p>
           <p className="text-sm text-gray-600 mt-1">{getErrorResolutionRate()}% found helpful</p>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white border border-gray-200 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Top Issue</h3>
           <p className="text-xl font-bold text-gray-900">{errorStats[0]?.errorCode || 'None'}</p>
           <p className="text-sm text-gray-600 mt-1">{errorStats[0]?.count || 0} occurrences</p>
@@ -233,11 +233,11 @@ export function ErrorMonitoringDashboard() {
       </div>
 
       {/* Most Problematic Errors */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white border border-gray-200 p-6">
         <h2 className="text-xl font-semibold mb-4">Most Problematic Errors</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-white">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Error Code
@@ -258,9 +258,11 @@ export function ErrorMonitoringDashboard() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {getMostProblematicErrors().map((error, _index) => (
-                <tr key={error.errorCode} className="hover:bg-gray-50">
+                <tr key={error.errorCode} className="hover:bg-white">
                   <td className="px-4 py-4">
-                    <code className="text-sm bg-gray-100 px-2 py-1 rounded">{error.errorCode}</code>
+                    <code className="text-sm bg-white border-2 border-gray-300 px-2 py-1 rounded">
+                      {error.errorCode}
+                    </code>
                   </td>
                   <td className="px-4 py-4 text-sm text-gray-900">{error.count}</td>
                   <td className="px-4 py-4 text-sm">{getTrendIcon(error.count)}</td>
@@ -297,14 +299,14 @@ export function ErrorMonitoringDashboard() {
       </div>
 
       {/* Recent Error Reports */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white border border-gray-200 p-6">
         <h2 className="text-xl font-semibold mb-4">Recent Error Reports</h2>
         <div className="space-y-4 max-h-96 overflow-y-auto">
           {errorReports.slice(0, 10).map((report, index) => (
-            <div key={index} className="border border-gray-100 rounded-lg p-4">
+            <div key={index} className="border border-gray-100 p-4">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                  <code className="text-sm bg-white border-2 border-gray-300 px-2 py-1 rounded">
                     {report.error?.code || 'UNKNOWN'}
                   </code>
                   <span
@@ -328,7 +330,7 @@ export function ErrorMonitoringDashboard() {
               {report.error?.context !== undefined && (
                 <details className="mt-2">
                   <summary className="text-xs text-gray-600 cursor-pointer">Show details</summary>
-                  <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-auto">
+                  <pre className="text-xs bg-white p-2 rounded mt-1 overflow-auto">
                     {String(JSON.stringify(report.error.context, null, 2))}
                   </pre>
                 </details>
@@ -339,14 +341,14 @@ export function ErrorMonitoringDashboard() {
       </div>
 
       {/* User Feedback */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white border border-gray-200 p-6">
         <h2 className="text-xl font-semibold mb-4">User Feedback on Error Messages</h2>
         <div className="space-y-3">
           {errorFeedback.slice(0, 10).map((feedback, index) => (
             <div key={index} className="border-l-4 border-gray-200 pl-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                  <code className="text-sm bg-white border-2 border-gray-300 px-2 py-1 rounded">
                     {feedback.errorCode}
                   </code>
                   <span

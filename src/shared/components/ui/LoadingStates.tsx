@@ -162,7 +162,7 @@ export function SkeletonImage({
 }) {
   return (
     <div
-      className={`${width} ${height} bg-gray-200 rounded-lg ${animate ? 'animate-pulse' : ''} ${className} flex items-center justify-center`}
+      className={`${width} ${height} bg-gray-200 ${animate ? 'animate-pulse' : ''} ${className} flex items-center justify-center`}
     >
       <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
         <path
@@ -187,7 +187,7 @@ export function SkeletonCard({
   animate?: boolean;
 }) {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
+    <div className={`bg-white border border-gray-200 p-6 ${className}`}>
       <div className="flex items-start gap-4">
         {showImage && (
           <SkeletonImage
@@ -222,9 +222,9 @@ export function SkeletonTable({
   animate?: boolean;
 }) {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${className}`}>
+    <div className={`bg-white border border-gray-200 overflow-hidden ${className}`}>
       {/* Header */}
-      <div className="bg-gray-50 border-b border-gray-200 p-4">
+      <div className="bg-white border-b border-gray-200 p-4">
         <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
           {Array.from({ length: columns }, (_, i) => (
             <div key={i} className={`h-4 bg-gray-200 rounded ${animate ? 'animate-pulse' : ''}`} />
@@ -328,7 +328,7 @@ export function LoadingStateWrapper({
           {retry && (
             <button
               onClick={retry}
-              className="px-4 py-2 bg-civiq-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-civiq-blue text-white hover:bg-blue-700 transition-colors"
             >
               Try Again
             </button>
@@ -354,7 +354,7 @@ export function LoadingStateWrapper({
             {retry && (
               <button
                 onClick={retry}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 bg-gray-600 text-white hover:bg-gray-700 transition-colors"
               >
                 Try Again
               </button>
@@ -552,7 +552,7 @@ export function AdaptiveGridSkeleton({
     switch (type) {
       case 'representatives': {
         const RepresentativeSkeleton = () => (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white border border-gray-200 p-6">
             <div className="flex items-start gap-4">
               <div className="w-20 h-20 bg-gray-200 rounded-full animate-pulse flex-shrink-0" />
               <div className="flex-1 space-y-3">
@@ -578,10 +578,10 @@ export function AdaptiveGridSkeleton({
       }
       case 'districts': {
         const DistrictSkeleton = () => (
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white border border-gray-200 p-4">
             <div className="space-y-4">
               <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse" />
-              <div className="h-48 bg-gray-100 rounded-lg animate-pulse" />
+              <div className="h-48 bg-white border-2 border-gray-300 animate-pulse" />
               <div className="space-y-2">
                 <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
                 <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
@@ -594,7 +594,7 @@ export function AdaptiveGridSkeleton({
       }
       case 'bills': {
         const BillSkeleton = () => (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white border border-gray-200 p-6">
             <div className="space-y-4">
               <div className="flex justify-between items-start">
                 <div className="h-6 bg-gray-200 rounded w-24 animate-pulse" />

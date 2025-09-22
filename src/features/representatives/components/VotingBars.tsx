@@ -30,7 +30,7 @@ export function VotingBars({ dist }: VotingBarsProps) {
         {bars.map(b => (
           <div key={b.label} className="flex items-center gap-4">
             <span className="text-sm w-16 text-gray-700">{b.label}</span>
-            <div className="flex-1 h-1 bg-gray-100 rounded-full">
+            <div className="flex-1 h-1 bg-white border-2 border-gray-300 rounded-full">
               <div
                 className={`h-1 ${b.bg} rounded-full transition-all duration-300`}
                 style={{ width: `${b.pct}%` }}

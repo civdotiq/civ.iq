@@ -22,8 +22,8 @@ export function AnimatedFooter({ children, delay = '0ms', className = '' }: Anim
   }, []);
 
   return (
-    <div 
-      className={`${isHydrated ? 'animate-fade-in-up' : ''} ${className}`} 
+    <div
+      className={`${isHydrated ? 'animate-fade-in-up' : ''} ${className}`}
       style={isHydrated ? { animationDelay: delay } : undefined}
     >
       {children}

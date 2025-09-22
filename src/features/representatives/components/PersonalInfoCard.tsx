@@ -45,13 +45,11 @@ export function PersonalInfoCard({ representative, className = '' }: PersonalInf
       ? 'border-red-300 bg-red-100 text-red-800'
       : representative.party === 'Democrat'
         ? 'border-blue-300 bg-blue-100 text-blue-800'
-        : 'border-gray-200 bg-gray-50 text-gray-700';
+        : 'border-gray-200 bg-white text-gray-700';
 
   return (
-    <div
-      className={`bg-white border-aicher border-black hover:border-civiq-blue transition-colors duration-200 ${className}`}
-    >
-      <div className="p-grid-3 border-b-aicher border-black bg-white">
+    <div className={`aicher-card aicher-hover transition-colors duration-200 ${className}`}>
+      <div className="p-grid-3 border-b-aicher border-black aicher-background">
         <div className="flex items-center gap-2.5">
           <div className="p-grid-1 bg-civiq-red border border-black">
             <RepresentativesIcon className="w-5 h-5 text-white" />

@@ -140,7 +140,7 @@ class ChunkLoadErrorBoundaryClass extends React.Component<
       // Show chunk-specific error UI for chunk load errors
       if (isChunkLoadError) {
         return (
-          <div className="min-h-96 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
+          <div className="min-h-96 flex items-center justify-center bg-white border border-gray-200">
             <div className="text-center p-8 max-w-md">
               <div className="mb-4">
                 <svg
@@ -169,7 +169,7 @@ class ChunkLoadErrorBoundaryClass extends React.Component<
                   </div>
                   <button
                     onClick={this.retry}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                    className="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors"
                   >
                     Retry Loading
                   </button>
@@ -181,7 +181,7 @@ class ChunkLoadErrorBoundaryClass extends React.Component<
                   </p>
                   <button
                     onClick={() => window.location.reload()}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                    className="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors"
                   >
                     Refresh Page
                   </button>
@@ -194,7 +194,7 @@ class ChunkLoadErrorBoundaryClass extends React.Component<
 
       // Default error UI for non-chunk errors
       return (
-        <div className="min-h-96 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
+        <div className="min-h-96 flex items-center justify-center bg-white border border-gray-200">
           <div className="text-center p-8">
             <div className="mb-4">
               <svg
@@ -217,7 +217,7 @@ class ChunkLoadErrorBoundaryClass extends React.Component<
             </p>
             <button
               onClick={this.retry}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+              className="bg-red-600 text-white px-4 py-2 hover:bg-red-700 transition-colors"
             >
               Try Again
             </button>

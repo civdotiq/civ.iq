@@ -25,7 +25,7 @@ const RealDistrictMapContainer = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+      <div className="flex items-center justify-center h-96 bg-white border-2 border-gray-300">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
           <p className="text-sm text-gray-600">Loading real district boundaries...</p>
@@ -128,11 +128,11 @@ function DistrictCard({ district }: { district: District }) {
   const getPVIBackground = (pvi: string) => {
     if (pvi.startsWith('D+')) return 'bg-blue-100';
     if (pvi.startsWith('R+')) return 'bg-red-100';
-    return 'bg-gray-100';
+    return 'bg-white border-2 border-gray-300';
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6">
+    <div className="bg-white border-2 border-black hover:border-2 border-black transition-border-2 border-black p-6">
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-xl font-bold text-gray-900">
@@ -192,7 +192,7 @@ function DistrictCard({ district }: { district: District }) {
 
       <Link
         href={`/districts/${district.state}-${district.number}`}
-        className="block w-full text-center py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        className="block w-full text-center py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
       >
         View Details
       </Link>
@@ -211,7 +211,7 @@ function DemographicsDashboard({
   // Handle empty districts array
   if (!districts || districts.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-8">
+      <div className="bg-white border-2 border-black p-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">
           {selectedState ? `${selectedState} Demographics` : 'National Demographics Overview'}
         </h2>
@@ -286,7 +286,7 @@ function DemographicsDashboard({
     .slice(0, 5);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8">
+    <div className="bg-white border-2 border-black p-8">
       {/* Header */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -302,7 +302,7 @@ function DemographicsDashboard({
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-        <div className="text-center p-4 bg-gray-50 rounded-lg">
+        <div className="text-center p-4 bg-white">
           <div className="text-3xl font-bold text-blue-600">{stats.totalDistricts}</div>
           <p className="text-sm text-gray-600 mt-1">Total Districts</p>
           <p className="text-xs text-gray-500 mt-1">
@@ -310,7 +310,7 @@ function DemographicsDashboard({
           </p>
         </div>
 
-        <div className="text-center p-4 bg-gray-50 rounded-lg">
+        <div className="text-center p-4 bg-white">
           <div className="text-3xl font-bold text-green-600">
             {(stats.totalPopulation / 1000000).toFixed(1)}M
           </div>
@@ -320,7 +320,7 @@ function DemographicsDashboard({
           </p>
         </div>
 
-        <div className="text-center p-4 bg-gray-50 rounded-lg">
+        <div className="text-center p-4 bg-white">
           <div className="text-3xl font-bold text-purple-600">
             ${Math.round(stats.avgMedianIncome / 1000)}k
           </div>
@@ -331,7 +331,7 @@ function DemographicsDashboard({
           </p>
         </div>
 
-        <div className="text-center p-4 bg-gray-50 rounded-lg">
+        <div className="text-center p-4 bg-white">
           <div className="text-3xl font-bold text-orange-600">
             {stats.avgUrbanPercentage.toFixed(0)}%
           </div>
@@ -343,7 +343,7 @@ function DemographicsDashboard({
       </div>
 
       {/* Secondary Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 p-4 bg-blue-50 rounded-lg">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 p-4 bg-blue-50">
         <div className="text-center">
           <div className="text-xl font-semibold text-blue-900">{stats.avgMedianAge.toFixed(1)}</div>
           <p className="text-xs text-blue-700">Median Age</p>
@@ -376,7 +376,7 @@ function DemographicsDashboard({
       {/* Rankings Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Most Populous Districts */}
-        <div className="bg-gray-50 rounded-lg p-4">
+        <div className="bg-white p-4">
           <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
             <Users className="w-4 h-4 mr-2 text-blue-600" />
             Most Populous Districts
@@ -396,7 +396,7 @@ function DemographicsDashboard({
         </div>
 
         {/* Highest Income Districts */}
-        <div className="bg-gray-50 rounded-lg p-4">
+        <div className="bg-white p-4">
           <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
             <Building2 className="w-4 h-4 mr-2 text-green-600" />
             Highest Income Districts
@@ -416,7 +416,7 @@ function DemographicsDashboard({
         </div>
 
         {/* Most Urban Districts */}
-        <div className="bg-gray-50 rounded-lg p-4">
+        <div className="bg-white p-4">
           <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
             <MapPin className="w-4 h-4 mr-2 text-purple-600" />
             Most Urban Districts
@@ -437,7 +437,7 @@ function DemographicsDashboard({
       </div>
 
       {/* Political Balance Visualization */}
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+      <div className="mt-6 p-4 bg-white">
         <h3 className="font-semibold text-gray-800 mb-3">Political Balance</h3>
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-gray-600">Party Control</span>
@@ -595,9 +595,9 @@ export default function DistrictsPage() {
       : [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-20">
+      <header className="bg-white border-2 border-black border-b sticky top-0 z-20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/">
@@ -647,7 +647,7 @@ export default function DistrictsPage() {
             <NationalStatsCards districts={districts} />
 
             {/* Filters */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div className="bg-white border-2 border-black p-6 mb-8">
               <div className="flex flex-wrap gap-4">
                 <div className="flex-1 min-w-64">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
@@ -656,7 +656,7 @@ export default function DistrictsPage() {
                     placeholder="Search by district, representative name, state, or city..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
@@ -664,7 +664,7 @@ export default function DistrictsPage() {
                   <select
                     value={stateFilter}
                     onChange={e => setStateFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
                   >
                     <option value="all">All States</option>
                     {states.map(state => (
@@ -683,7 +683,7 @@ export default function DistrictsPage() {
                     onChange={e =>
                       setFilter(e.target.value as 'all' | 'competitive' | 'safe-d' | 'safe-r')
                     }
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
                   >
                     <option value="all">All Districts</option>
                     <option value="competitive">Competitive (±5)</option>
@@ -695,7 +695,7 @@ export default function DistrictsPage() {
             </div>
 
             {/* Interactive map */}
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-8 relative">
+            <div className="bg-white border-2 border-black p-6 mb-8 relative">
               <h2 className="text-xl font-bold text-gray-900 mb-4">
                 National Congressional Overview
               </h2>

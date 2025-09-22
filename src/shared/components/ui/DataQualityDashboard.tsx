@@ -62,7 +62,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
       case 'failed':
         return 'bg-red-100 text-red-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-white border-2 border-gray-300 text-gray-800';
     }
   };
 
@@ -82,7 +82,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
   const trendInfo = getTrendIcon(metrics.overall.trend);
 
   return (
-    <div className={`bg-white rounded-lg shadow-md border p-6 ${className}`}>
+    <div className={`bg-white border-2 border-black border p-6 ${className}`}>
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900">Data Quality Dashboard</h3>
         <span className="text-sm text-gray-500">
@@ -134,9 +134,9 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
         <h4 className="text-md font-semibold text-gray-900 mb-3">Data Sources</h4>
         <div className="space-y-3">
           {Object.entries(metrics.sources).map(([key, source]) => (
-            <div key={key} className="border rounded-lg">
+            <div key={key} className="border">
               <div
-                className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                className="p-4 cursor-pointer hover:bg-white transition-colors"
                 onClick={() => setExpandedSource(expandedSource === key ? null : key)}
               >
                 <div className="flex items-center justify-between">
@@ -163,7 +163,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
               </div>
 
               {expandedSource === key && (
-                <div className="px-4 pb-4 border-t bg-gray-50">
+                <div className="px-4 pb-4 border-t bg-white">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 mb-4">
                     <div className="text-center">
                       <div
@@ -221,7 +221,7 @@ export function DataQualityDashboard({ metrics, className = '' }: DataQualityDas
           <h4 className="text-md font-semibold text-gray-900 mb-3">Recommendations</h4>
           <div className="space-y-2">
             {metrics.recommendations.map((recommendation, index) => (
-              <div key={index} className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
+              <div key={index} className="flex items-start gap-2 p-3 bg-blue-50">
                 <span className="text-blue-500 mt-0.5">💡</span>
                 <span className="text-sm text-blue-800">{recommendation}</span>
               </div>
@@ -322,7 +322,7 @@ export function DataTrustIndicator({ sources, className = '' }: DataTrustIndicat
 
   return (
     <div
-      className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border text-sm ${getColor(trustScore)} ${className}`}
+      className={`inline-flex items-center gap-2 px-3 py-1 border text-sm ${getColor(trustScore)} ${className}`}
     >
       <span className="font-medium">🛡️ Trust Score: {trustScore}%</span>
       <div className="flex gap-1">

@@ -190,7 +190,7 @@ function StateMap({ stateAbbr }: { stateAbbr: string }) {
   }, [stateAbbr]);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Congressional Districts Map</h3>
       <div id="state-map"></div>
     </div>
@@ -215,7 +215,7 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
   const lowerControl = calculateControl(lowerHouse.democratSeats, lowerHouse.republicanSeats);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">State Legislature Control</h3>
 
       <div className="space-y-6">
@@ -268,7 +268,7 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
         </div>
 
         {/* Trifecta Status */}
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+        <div className="mt-4 p-4 bg-white">
           <p className="text-sm text-gray-600">
             <span className="font-medium">Trifecta Status:</span>{' '}
             {upperControl.control === lowerControl.control ? (
@@ -377,7 +377,7 @@ function PresidentialHistory({ history }: { history: StateData['presidentialHist
   }, [history]);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Presidential Election History</h3>
       <div id="presidential-chart"></div>
     </div>
@@ -489,7 +489,7 @@ function KeyIssuesRadar({ issues }: { issues: StateData['keyIssues'] }) {
   }, [issues]);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Policy Issues</h3>
       <div id="issues-radar"></div>
     </div>
@@ -511,7 +511,7 @@ function DistrictCompetitiveness({ districts }: { districts: StateData['district
   );
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">District Competitiveness</h3>
       <div className="space-y-2">
         {sortedDistricts.map(district => {
@@ -581,7 +581,7 @@ function StatCard({
   trend?: { value: number; positive: boolean };
 }) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-sm font-medium text-gray-600">{title}</h3>
       <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
       {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
@@ -636,7 +636,7 @@ export default function StateOverviewPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">Loading state data...</p>
@@ -647,7 +647,7 @@ export default function StateOverviewPage() {
 
   if (!stateData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-xl text-gray-600">State not found</p>
         </div>
@@ -656,9 +656,9 @@ export default function StateOverviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-20">
+      <header className="bg-white border-2 border-black border-b sticky top-0 z-20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/">
@@ -687,9 +687,9 @@ export default function StateOverviewPage() {
 
       <main className="container mx-auto px-4 py-8">
         {/* State header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg p-8 mb-8">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 mb-8">
           <div className="flex items-center gap-6">
-            <div className="w-24 h-24 bg-white/20 rounded-lg flex items-center justify-center">
+            <div className="w-24 h-24 bg-white/20 flex items-center justify-center">
               <span className="text-4xl font-bold">{stateData.abbreviation}</span>
             </div>
             <div>
@@ -728,14 +728,16 @@ export default function StateOverviewPage() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-md p-1 mb-8">
+        <div className="bg-white border-2 border-black p-1 mb-8">
           <nav className="flex">
             {(['overview', 'legislature', 'elections', 'districts'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 px-4 py-3 text-sm font-medium rounded-md transition-colors ${
-                  activeTab === tab ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  activeTab === tab
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:bg-white border-2 border-gray-300'
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -754,7 +756,7 @@ export default function StateOverviewPage() {
               </div>
 
               {/* State leadership */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="bg-white border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Leadership</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
@@ -791,7 +793,7 @@ export default function StateOverviewPage() {
               <PartyControl legislature={stateData.legislature} />
 
               {/* Additional legislature info */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="bg-white border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Legislative Statistics</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -832,7 +834,7 @@ export default function StateOverviewPage() {
               <PresidentialHistory history={stateData.presidentialHistory} />
 
               {/* Electoral trends */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="bg-white border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Electoral Trends</h3>
                 <div className="prose max-w-none">
                   <p className="text-gray-600">
@@ -856,7 +858,7 @@ export default function StateOverviewPage() {
               <DistrictCompetitiveness districts={stateData.districts} />
 
               {/* District delegation breakdown */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="bg-white border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   House Delegation Breakdown
                 </h3>

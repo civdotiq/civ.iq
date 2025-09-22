@@ -84,7 +84,7 @@ export default function CommitteeBiographicalInfo({
 
   if (error) {
     return (
-      <div className={`bg-yellow-50 border border-yellow-200 rounded-lg p-4 ${className}`}>
+      <div className={`bg-yellow-50 border border-yellow-200 p-4 ${className}`}>
         <div className="flex items-center">
           <AlertCircle className="w-4 h-4 text-yellow-600 mr-2" />
           <p className="text-sm text-yellow-700">
@@ -105,7 +105,7 @@ export default function CommitteeBiographicalInfo({
   }
 
   return (
-    <div className={`bg-blue-50 border border-blue-200 rounded-lg overflow-hidden ${className}`}>
+    <div className={`bg-blue-50 border border-blue-200 overflow-hidden ${className}`}>
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full p-4 text-left hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
@@ -210,7 +210,7 @@ export default function CommitteeBiographicalInfo({
                         {data.history.previousNames.map((name, index) => (
                           <span
                             key={index}
-                            className="px-2 py-1 bg-gray-100 text-xs text-gray-700 rounded"
+                            className="px-2 py-1 bg-white border-2 border-gray-300 text-xs text-gray-700 rounded"
                           >
                             {name.name}
                           </span>
@@ -231,7 +231,7 @@ export default function CommitteeBiographicalInfo({
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {data.oversight.map((agency, index) => (
-                    <div key={index} className="bg-gray-50 rounded-lg p-3">
+                    <div key={index} className="bg-white p-3">
                       <div className="flex items-center justify-between">
                         <div>
                           <h5 className="font-medium text-sm text-gray-900">
@@ -281,7 +281,7 @@ export default function CommitteeBiographicalInfo({
                           <ExternalLink className="w-3 h-3 ml-1" />
                         </a>
                       ) : (
-                        <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                        <span className="px-3 py-1 bg-white border-2 border-gray-300 text-gray-700 text-xs rounded-full">
                           {entity.name}
                         </span>
                       )}

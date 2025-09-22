@@ -86,20 +86,16 @@ export function TabNavigation({
 
   if (variant === 'pills') {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-2 ${className}`}>
+      <div className={`aicher-card aicher-no-radius ${className}`}>
         <nav className="flex flex-wrap gap-1">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={`
-                inline-flex items-center gap-2 ${sizeClasses[size]} rounded-lg font-medium transition-all duration-200
-                ${
-                  activeTab === tab.id
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }
-              `}
+        aicher-button inline-flex items-center gap-2 ${sizeClasses[size]} aicher-heading-wide transition-all duration-200 aicher-focus
+        ${activeTab === tab.id ? 'aicher-button-primary' : 'aicher-button aicher-hover'}
+       `}
               title={tab.description}
             >
               <span className={iconSizes[size]}>{tab.icon}</span>
@@ -107,9 +103,9 @@ export function TabNavigation({
               {tab.badge && (
                 <span
                   className={`
-                    inline-flex items-center justify-center min-w-5 h-5 text-xs font-medium rounded-full
-                    ${activeTab === tab.id ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}
-                  `}
+          inline-flex items-center justify-center min-w-5 h-5 aicher-heading text-xs aicher-no-radius
+          ${activeTab === tab.id ? 'aicher-status-info' : 'aicher-border bg-gray-100 text-gray-700'}
+         `}
                 >
                   {tab.badge}
                 </span>
@@ -123,20 +119,20 @@ export function TabNavigation({
 
   // Underline variant (default)
   return (
-    <div className={`bg-white border-b border-gray-200 ${className}`}>
+    <div className={`aicher-card aicher-no-radius aicher-border-b ${className}`}>
       <nav className="flex overflow-x-auto">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
             className={`
-              inline-flex items-center gap-2 ${sizeClasses[size]} font-medium border-b-2 transition-all duration-200 whitespace-nowrap
-              ${
-                activeTab === tab.id
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }
-            `}
+       aicher-button inline-flex items-center gap-2 ${sizeClasses[size]} aicher-heading-wide aicher-border-b transition-all duration-200 whitespace-nowrap aicher-focus
+       ${
+         activeTab === tab.id
+           ? 'aicher-border-blue text-blue-600'
+           : 'border-transparent text-gray-500 aicher-hover'
+       }
+      `}
             title={tab.description}
           >
             <span className={iconSizes[size]}>{tab.icon}</span>
@@ -144,11 +140,9 @@ export function TabNavigation({
             {tab.badge && (
               <span
                 className={`
-                  inline-flex items-center justify-center min-w-5 h-5 text-xs font-medium rounded-full
-                  ${
-                    activeTab === tab.id ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
-                  }
-                `}
+         inline-flex items-center justify-center min-w-5 h-5 aicher-heading text-xs aicher-no-radius
+         ${activeTab === tab.id ? 'aicher-status-info' : 'aicher-border bg-white text-gray-600'}
+        `}
               >
                 {tab.badge}
               </span>
@@ -194,20 +188,20 @@ export function ExtendedTabNavigation({
   };
 
   return (
-    <div className={`bg-white border-b border-gray-200 ${className}`}>
+    <div className={`aicher-card aicher-no-radius aicher-border-b ${className}`}>
       <nav className="flex overflow-x-auto">
         {tabs.map(tab => (
           <div key={tab.id} className="relative">
             <button
               onClick={() => onTabChange(tab.id)}
               className={`
-                inline-flex items-center gap-2 ${sizeClasses[size]} font-medium border-b-2 transition-all duration-200 whitespace-nowrap relative
-                ${
-                  activeTab === tab.id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }
-              `}
+        aicher-button inline-flex items-center gap-2 ${sizeClasses[size]} aicher-heading-wide aicher-border-b transition-all duration-200 whitespace-nowrap relative aicher-focus
+        ${
+          activeTab === tab.id
+            ? 'aicher-border-blue text-blue-600'
+            : 'border-transparent text-gray-500 aicher-hover'
+        }
+       `}
               title={tab.description}
             >
               <span className={iconSizes[size]}>{tab.icon}</span>
@@ -217,24 +211,20 @@ export function ExtendedTabNavigation({
                   {tab.badge && (
                     <span
                       className={`
-                        inline-flex items-center justify-center min-w-5 h-5 text-xs font-medium rounded-full
-                        ${
-                          activeTab === tab.id
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-600'
-                        }
-                      `}
+            inline-flex items-center justify-center min-w-5 h-5 aicher-heading text-xs aicher-no-radius
+            ${activeTab === tab.id ? 'aicher-status-info' : 'aicher-border bg-white text-gray-600'}
+           `}
                     >
                       {tab.badge}
                     </span>
                   )}
                   {tab.isNew && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded">
+                    <span className="aicher-status-success px-1.5 py-0.5 aicher-heading text-xs aicher-no-radius">
                       New
                     </span>
                   )}
                   {tab.isUpdated && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-orange-100 text-orange-800 rounded">
+                    <span className="aicher-status-error px-1.5 py-0.5 aicher-heading text-xs aicher-no-radius">
                       Updated
                     </span>
                   )}

@@ -73,7 +73,7 @@ export function ErrorDisplay({
       case 'critical':
         return 'bg-red-100 border-red-300 text-red-900';
       default:
-        return 'bg-gray-50 border-gray-200 text-gray-800';
+        return 'bg-white border-gray-200 text-gray-800';
     }
   };
 
@@ -166,7 +166,7 @@ export function ErrorDisplay({
     return (
       <ComponentErrorBoundary componentName="CompactErrorDisplay">
         <div
-          className={`flex items-center gap-3 p-3 ${getSeverityStyles(severity)} rounded-lg border ${className}`}
+          className={`flex items-center gap-3 p-3 ${getSeverityStyles(severity)} border ${className}`}
         >
           {getSeverityIcon(severity)}
           <div className="flex-1 min-w-0">
@@ -177,7 +177,7 @@ export function ErrorDisplay({
             {retryable && countdown === 0 && (
               <button
                 onClick={handleRetry}
-                className="px-3 py-1 text-xs font-medium bg-white rounded border hover:bg-gray-50 transition-colors"
+                className="px-3 py-1 text-xs font-medium bg-white rounded border hover:bg-white transition-colors"
               >
                 Retry
               </button>
@@ -210,7 +210,7 @@ export function ErrorDisplay({
 
   return (
     <ComponentErrorBoundary componentName="ErrorDisplay">
-      <div className={`${getSeverityStyles(severity)} rounded-lg border p-6 ${className}`}>
+      <div className={`${getSeverityStyles(severity)} border p-6 ${className}`}>
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0">{getSeverityIcon(severity)}</div>
 
@@ -251,7 +251,7 @@ export function ErrorDisplay({
                       key={index}
                       onClick={handleRetry}
                       disabled={countdown > 0}
-                      className="px-4 py-2 bg-white text-gray-900 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-4 py-2 bg-white text-gray-900 border border-gray-300 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {countdown > 0 ? `Retry in ${countdown}s` : 'Try Again'}
                     </button>
@@ -263,7 +263,7 @@ export function ErrorDisplay({
                     <button
                       key={index}
                       onClick={() => window.history.back()}
-                      className="px-4 py-2 bg-white text-gray-900 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 bg-white text-gray-900 border border-gray-300 hover:bg-white transition-colors"
                     >
                       Go Back
                     </button>
@@ -275,7 +275,7 @@ export function ErrorDisplay({
                     <button
                       key={index}
                       onClick={() => (window.location.href = '/')}
-                      className="px-4 py-2 bg-civiq-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="px-4 py-2 bg-civiq-blue text-white hover:bg-blue-700 transition-colors"
                     >
                       Search Different ZIP
                     </button>
@@ -287,7 +287,7 @@ export function ErrorDisplay({
                     <button
                       key={index}
                       onClick={() => setShowFeedback(true)}
-                      className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                      className="px-4 py-2 bg-gray-600 text-white hover:bg-gray-700 transition-colors"
                     >
                       Report Problem
                     </button>
@@ -297,7 +297,7 @@ export function ErrorDisplay({
                 return (
                   <button
                     key={index}
-                    className="px-4 py-2 bg-white text-gray-900 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2 bg-white text-gray-900 border border-gray-300 hover:bg-white transition-colors"
                   >
                     {action}
                   </button>
@@ -395,7 +395,7 @@ export function ErrorToast({ error, onDismiss, duration = 5000 }: ErrorToastProp
   }, [onDismiss, duration]);
 
   return (
-    <div className="fixed bottom-4 right-4 max-w-sm bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50">
+    <div className="fixed bottom-4 right-4 max-w-sm bg-white border border-gray-200 border-2 border-black p-4 z-50">
       <ErrorDisplay error={error} onDismiss={onDismiss} compact={true} />
     </div>
   );

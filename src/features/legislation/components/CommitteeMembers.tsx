@@ -239,7 +239,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-white border-2 border-black p-6">
       {/* Header with filters */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-gray-900">
@@ -249,11 +249,11 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium ${
+            className={`inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium ${
               hasActiveFilters
                 ? 'bg-blue-50 text-blue-700 border-blue-300'
                 : 'text-gray-700 bg-white'
-            } hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            } hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
           >
             <FunnelIcon className="w-4 h-4 mr-2" />
             Filters
@@ -277,7 +277,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
 
       {/* Filter Panel */}
       {showFilters && (
-        <div className="bg-gray-50 rounded-lg p-4 mb-6">
+        <div className="bg-white p-4 mb-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {/* Party Filter */}
             <div>
@@ -357,7 +357,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
       {/* Members Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-white">
             <tr>
               {/* Representative Column */}
               <th className="px-6 py-3 text-left">
@@ -424,7 +424,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredAndSortedMembers.map(member => (
               <React.Fragment key={member.representative.bioguideId}>
-                <tr className="hover:bg-gray-50">
+                <tr className="hover:bg-white">
                   {/* Representative */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -484,7 +484,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                           ? 'bg-green-100 text-green-800'
                           : member.role === 'Ranking Member'
                             ? 'bg-orange-100 text-orange-800'
-                            : 'bg-gray-100 text-gray-800'
+                            : 'bg-white border-2 border-gray-300 text-gray-800'
                       }`}
                     >
                       {member.role}
@@ -522,7 +522,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                 {/* Expanded Row for Bills */}
                 {expandedMembers.has(member.representative.bioguideId) && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 bg-gray-50">
+                    <td colSpan={6} className="px-6 py-4 bg-white">
                       <div className="space-y-3">
                         {memberBills[member.representative.bioguideId]?.loading && (
                           <div className="flex items-center justify-center py-4">
@@ -573,7 +573,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
                                   .map(bill => (
                                     <div
                                       key={bill.billId}
-                                      className="border border-gray-200 rounded-lg p-3 bg-white"
+                                      className="border border-gray-200 p-3 bg-white"
                                     >
                                       <div className="flex items-start justify-between">
                                         <div className="flex-1">

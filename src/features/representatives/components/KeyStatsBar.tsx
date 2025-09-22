@@ -41,14 +41,14 @@ function StatCard({
     purple: 'text-purple-600 bg-purple-50',
     orange: 'text-orange-600 bg-orange-50',
     red: 'text-red-600 bg-red-50',
-    gray: 'text-gray-600 bg-gray-50',
+    gray: 'text-gray-600 bg-white',
   };
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+      <div className="bg-white p-4 border-2 border-black border border-gray-100">
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${colorClasses[color]} animate-pulse`}>{icon}</div>
+          <div className={`p-2 ${colorClasses[color]} animate-pulse`}>{icon}</div>
           <div className="flex-1">
             <div className="h-4 bg-gray-200 rounded animate-pulse mb-1"></div>
             <div className="h-6 bg-gray-200 rounded animate-pulse w-16"></div>
@@ -60,9 +60,9 @@ function StatCard({
   }
 
   return (
-    <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+    <div className="bg-white p-4 border-2 border-black border border-gray-100 hover:border-2 border-black transition-border-2 border-black">
       <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>{icon}</div>
+        <div className={`p-2 ${colorClasses[color]}`}>{icon}</div>
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-600 mb-1">{label}</p>
           <p className="text-2xl font-bold text-gray-900">{value}</p>
@@ -86,7 +86,7 @@ export function KeyStatsBar({ stats, loading = false }: KeyStatsBarProps) {
   };
 
   return (
-    <div className="bg-gray-50 py-6">
+    <div className="bg-white py-6">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard

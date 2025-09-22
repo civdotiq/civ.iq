@@ -42,19 +42,16 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   };
 
   return (
-    <div
-      className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-6"
-      data-testid={dataTestId}
-    >
+    <div className="aicher-card aicher-hover p-6" data-testid={dataTestId}>
       {/* Header */}
       <div className="mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-medium text-gray-700">{title}</h3>
+            <h3 className="aicher-heading-wide text-sm text-gray-700">{title}</h3>
             {description && (
               <button
                 title={description}
-                className="text-gray-400 hover:text-gray-600 cursor-help text-xs"
+                className="aicher-button text-gray-400 aicher-hover cursor-help text-xs"
               >
                 ℹ️
               </button>
@@ -67,7 +64,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       </div>
 
       {/* Main Metric */}
-      <div className={`text-3xl font-bold ${colorClasses[mainColor]} mb-4`}>{mainValue}</div>
+      <div className={`aicher-heading text-3xl ${colorClasses[mainColor]} mb-4`}>{mainValue}</div>
 
       {/* Sub-metrics */}
       {subMetrics.length > 0 && (
@@ -75,17 +72,17 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           {subMetrics.map((metric, index) => (
             <div key={index} className="flex justify-between items-center">
               <div className="flex items-center gap-1">
-                <span className="text-sm text-gray-600">{metric.label}</span>
+                <span className="aicher-heading-wide text-sm text-gray-600">{metric.label}</span>
                 {metric.description && (
                   <button
                     title={metric.description}
-                    className="text-gray-400 hover:text-gray-600 cursor-help text-xs"
+                    className="aicher-button text-gray-400 aicher-hover cursor-help text-xs"
                   >
                     ℹ️
                   </button>
                 )}
               </div>
-              <span className="text-sm font-medium text-gray-900">{metric.value}</span>
+              <span className="aicher-heading text-sm text-gray-900">{metric.value}</span>
             </div>
           ))}
         </div>

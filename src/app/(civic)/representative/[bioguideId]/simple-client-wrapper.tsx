@@ -52,7 +52,7 @@ export function SimpleClientWrapper({
   }
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white border-2 border-black p-6">
         <h2 className="text-2xl font-bold mb-4">Representative Data</h2>
         <p className="text-gray-600 mb-4">
           View comprehensive information about this representative including their profile,

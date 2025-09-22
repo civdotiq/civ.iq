@@ -19,10 +19,10 @@ export default function SubcommitteeCard({ subcommittee }: SubcommitteeCardProps
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <div className="border border-gray-200 overflow-hidden">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full p-4 text-left hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+        className="w-full p-4 text-left hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
       >
         <div className="flex items-center justify-between">
           <div className="flex-1">
@@ -85,7 +85,7 @@ export default function SubcommitteeCard({ subcommittee }: SubcommitteeCardProps
       </button>
 
       {isExpanded && subcommittee.members.length > 0 && (
-        <div className="border-t border-gray-200 bg-gray-50">
+        <div className="border-t border-gray-200 bg-white">
           <div className="p-4">
             <h4 className="text-sm font-medium text-gray-900 mb-3">Subcommittee Members</h4>
             <div className="overflow-x-auto">

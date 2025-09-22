@@ -72,7 +72,7 @@ const CustomTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
     const data = payload[0].payload;
 
     return (
-      <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg max-w-xs">
+      <div className="bg-white p-4 border border-gray-200 border-2 border-black max-w-xs">
         <p className="font-semibold text-gray-900 mb-1">{data.stateName}</p>
         {data.isHomeState && (
           <p className="text-xs text-blue-600 font-medium mb-2">🏠 Home State</p>
@@ -91,7 +91,7 @@ const PieTooltip: React.FC<PieTooltipProps> = ({ active, payload }) => {
     const data = payload[0].payload;
 
     return (
-      <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg max-w-xs">
+      <div className="bg-white p-4 border border-gray-200 border-2 border-black max-w-xs">
         <p className="font-semibold text-gray-900 mb-1">{data.stateName}</p>
         {data.isHomeState && (
           <p className="text-xs text-blue-600 font-medium mb-2">🏠 Home State</p>
@@ -138,10 +138,10 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white border border-gray-200 p-6">
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="h-64 bg-gray-100 rounded"></div>
+          <div className="h-64 bg-white border-2 border-gray-300 rounded"></div>
         </div>
       </div>
     );
@@ -151,10 +151,10 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
   if (completenessPercentage < 30) {
     // Very low quality: Show only data quality indicator and message
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Geographic Funding Sources</h3>
         <DataQualityIndicator metric={dataQuality} dataType="geography" className="mb-4" />
-        <div className="flex items-center justify-center h-32 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+        <div className="flex items-center justify-center h-32 bg-white border-2 border-dashed border-gray-300">
           <div className="text-center">
             <div className="text-gray-400 mb-2">
               <svg
@@ -185,10 +185,10 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
 
   if (chartData.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Geographic Funding Sources</h3>
         <DataQualityIndicator metric={dataQuality} dataType="geography" className="mb-4" />
-        <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+        <div className="flex items-center justify-center h-64 bg-white border-2 border-dashed border-gray-300">
           <div className="text-center">
             <div className="text-gray-400 mb-2">
               <svg
@@ -216,7 +216,7 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       {/* Data Quality Indicator */}
       <DataQualityIndicator metric={dataQuality} dataType="geography" className="mb-6" />
 
@@ -224,12 +224,12 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900">Geographic Funding Sources</h3>
         {completenessPercentage > 70 ? (
-          <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className="flex bg-white border-2 border-gray-300 p-1">
             <button
               onClick={() => setViewMode('chart')}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+              className={`px-3 py-1 text-sm font-medium transition-colors ${
                 viewMode === 'chart'
-                  ? 'bg-white text-gray-900 shadow-sm'
+                  ? 'bg-white text-gray-900 border-2 border-black'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -237,9 +237,9 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
             </button>
             <button
               onClick={() => setViewMode('pie')}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+              className={`px-3 py-1 text-sm font-medium transition-colors ${
                 viewMode === 'pie'
-                  ? 'bg-white text-gray-900 shadow-sm'
+                  ? 'bg-white text-gray-900 border-2 border-black'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -300,7 +300,7 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
 
       {/* Summary Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 p-4 rounded-lg">
+        <div className="bg-blue-50 p-4">
           <h4 className="font-medium text-blue-900 mb-1">Home State</h4>
           <p className="text-sm text-blue-700 mb-2">{representativeState || 'N/A'}</p>
           <p className="text-lg font-bold text-blue-800">
@@ -308,13 +308,13 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
           </p>
         </div>
 
-        <div className="bg-green-50 p-4 rounded-lg">
+        <div className="bg-green-50 p-4">
           <h4 className="font-medium text-green-900 mb-1">Out-of-State</h4>
           <p className="text-sm text-green-700 mb-2">Non-home state funding</p>
           <p className="text-lg font-bold text-green-800">{outOfStatePercentage.toFixed(1)}%</p>
         </div>
 
-        <div className="bg-purple-50 p-4 rounded-lg">
+        <div className="bg-purple-50 p-4">
           <h4 className="font-medium text-purple-900 mb-1">Geographic Reach</h4>
           <p className="text-sm text-purple-700 mb-2">States contributing</p>
           <p className="text-lg font-bold text-purple-800">{stateCount} states</p>
@@ -328,7 +328,7 @@ export const GeographicBreakdown: React.FC<GeographicBreakdownProps> = ({
           {chartData.map(state => (
             <div
               key={state.state}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center justify-between p-3 bg-white hover:bg-white border-2 border-gray-300 transition-colors"
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div

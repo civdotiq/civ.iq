@@ -26,9 +26,9 @@ export const Card: FC<CardProps> = memo(
     return (
       <div
         className={cn(
-          'bg-white rounded-lg border border-gray-100 shadow-sm',
+          'bg-white border border-gray-100 border-2 border-black',
           (interactive || onClick) &&
-            'cursor-pointer hover:shadow-md hover:border-gray-200 hover:-translate-y-0.5 transform transition-all duration-200',
+            'cursor-pointer hover:border-2 border-black hover:border-gray-200 hover:-translate-y-0.5 transform transition-all duration-200',
           paddingClasses[padding],
           className
         )}

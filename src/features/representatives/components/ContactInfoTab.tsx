@@ -17,7 +17,7 @@ interface ContactInfoTabProps {
 
 export function ContactInfoTab({ representative }: ContactInfoTabProps) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+    <div className="bg-white border border-gray-200 border-2 border-black">
       <div className="p-6">
         <h2 className="text-xl font-semibold mb-6">Detailed Information</h2>
 

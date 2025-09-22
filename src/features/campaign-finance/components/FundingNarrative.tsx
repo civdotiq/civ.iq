@@ -25,7 +25,7 @@ const profileColors = {
   grassroots: 'bg-green-50 border-green-200 text-green-800',
   traditional: 'bg-blue-50 border-blue-200 text-blue-800',
   'self-funded': 'bg-purple-50 border-purple-200 text-purple-800',
-  mixed: 'bg-gray-50 border-gray-200 text-gray-800',
+  mixed: 'bg-white border-gray-200 text-gray-800',
   'pac-heavy': 'bg-orange-50 border-orange-200 text-orange-800',
 };
 
@@ -44,7 +44,7 @@ export const FundingNarrative: React.FC<FundingNarrativeProps> = ({
   const trustColor = trustLevelColors[narrative.trustLevel];
 
   return (
-    <div className={`rounded-lg border-2 p-6 ${profileColor}`}>
+    <div className={` border-2 p-6 ${profileColor}`}>
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">

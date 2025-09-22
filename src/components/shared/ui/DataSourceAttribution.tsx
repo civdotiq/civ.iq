@@ -17,11 +17,11 @@
 // Using inline SVG icon instead of external dependency
 
 interface DataSourceAttributionProps {
-  /** Name of the data source (e.g., "Federal Election Commission") */
+  /** Name of the data source (e.g.,"Federal Election Commission") */
   sourceName: string;
   /** Optional URL to the data source */
   sourceUrl?: string;
-  /** Additional context about the data (e.g., "via GDELT Project") */
+  /** Additional context about the data (e.g.,"via GDELT Project") */
   sourceContext?: string;
   /** Data freshness indicator */
   lastUpdated?: string;
@@ -84,9 +84,9 @@ export function DataSourceAttribution({
   const baseClasses = 'text-sm text-gray-600 border-l-2 pl-3';
 
   const variantClasses = {
-    default: 'border-gray-300 bg-gray-50 p-3 rounded-r',
+    default: 'border-gray-300 bg-white p-3 rounded-r',
     compact: 'border-gray-200 py-1',
-    prominent: 'border-civiq-blue bg-blue-50 p-4 rounded-r shadow-sm',
+    prominent: 'border-civiq-blue bg-blue-50 p-4 rounded-r border-2 border-black',
   };
 
   const reliabilityColors = {

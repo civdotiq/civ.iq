@@ -78,7 +78,7 @@ const VirtualizedGrid = memo(function VirtualizedGrid({
       <div style={{ height: totalRows * itemHeight, position: 'relative' }}>
         {/* Visible items */}
         <div
-          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 absolute w-full"
+          className="aicher-grid aicher-grid-3 absolute w-full"
           style={{
             top: startRow * itemHeight,
             transform: 'translateY(0px)',
@@ -112,7 +112,7 @@ const RepresentativeCard = memo(function RepresentativeCard({
   const router = useRouter();
 
   const getPartyBgColor = (party?: string) => {
-    if (!party) return 'bg-gray-100 text-gray-700';
+    if (!party) return 'bg-white border-2 border-gray-300 text-gray-700';
 
     switch (party) {
       case 'D':
@@ -123,26 +123,26 @@ const RepresentativeCard = memo(function RepresentativeCard({
       case 'Republican':
         return 'bg-red-100 text-red-700';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-white border-2 border-gray-300 text-gray-700';
     }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1">
+    <div className="aicher-card aicher-hover">
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-4">
             <RepresentativePhoto bioguideId={rep.bioguideId} name={rep.name} size="md" />
             <div>
-              <h3 className="text-lg font-bold text-gray-900">{rep.name}</h3>
-              <p className="text-sm text-gray-600">{rep.chamber}</p>
+              <h3 className="aicher-heading text-lg text-gray-900">{rep.name}</h3>
+              <p className="aicher-heading-wide text-sm text-gray-600">{rep.chamber}</p>
               <div className="flex items-center gap-2 mt-1">
                 <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${getPartyBgColor(rep.party)}`}
+                  className={`aicher-button px-2 py-1 text-xs aicher-no-radius ${getPartyBgColor(rep.party)}`}
                 >
                   {rep.party || 'Unknown'}
                 </span>
-                <span className="text-xs text-gray-500">
+                <span className="aicher-heading-wide text-xs text-gray-500">
                   {rep.state}
                   {rep.district && `-${rep.district}`}
                 </span>
@@ -153,7 +153,7 @@ const RepresentativeCard = memo(function RepresentativeCard({
 
         {/* Data Transparency Section */}
         {metadata && (
-          <div className="flex flex-wrap items-center gap-2 mb-3 pb-3 border-b border-gray-100">
+          <div className="flex flex-wrap items-center gap-2 mb-3 pb-3 aicher-border-b border-gray-100">
             {metadata.source && <DataSourceBadge source={metadata.source} size="sm" />}
             {typeof metadata.cached === 'boolean' && (
               <CacheStatusIndicator cached={metadata.cached} showLabel={false} />
@@ -177,7 +177,7 @@ const RepresentativeCard = memo(function RepresentativeCard({
                   d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                 />
               </svg>
-              <a href={`tel:${rep.phone}`} className="text-blue-600 hover:underline">
+              <a href={`tel:${rep.phone}`} className="aicher-button-primary text-sm aicher-focus">
                 {rep.phone}
               </a>
             </div>
@@ -221,7 +221,7 @@ const RepresentativeCard = memo(function RepresentativeCard({
         <div className="flex gap-2">
           <button
             onClick={() => router.push(`/representative/${rep.bioguideId}`)}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            className="flex-1 aicher-button-primary aicher-focus"
           >
             View Profile
           </button>
@@ -239,7 +239,7 @@ const RepresentativeCard = memo(function RepresentativeCard({
                 alert('You can only compare 2 representatives at a time');
               }
             }}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+            className="aicher-button aicher-focus"
           >
             Compare
           </button>

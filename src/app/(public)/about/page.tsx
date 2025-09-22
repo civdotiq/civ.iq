@@ -82,7 +82,7 @@ export default function AboutPage() {
             <section className="mb-12">
               <h2 className="text-2xl font-semibold mb-4">What We Do</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div className="bg-gray-50 rounded-lg p-6">
+                <div className="bg-white p-6">
                   <h3 className="text-xl font-semibold mb-3 text-civiq-red">
                     Aggregate Official Data
                   </h3>
@@ -92,7 +92,7 @@ export default function AboutPage() {
                     information.
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-6">
+                <div className="bg-white p-6">
                   <h3 className="text-xl font-semibold mb-3 text-civiq-green">
                     Simplify Complexity
                   </h3>
@@ -101,14 +101,14 @@ export default function AboutPage() {
                     formats that make civic engagement accessible to everyone.
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-6">
+                <div className="bg-white p-6">
                   <h3 className="text-xl font-semibold mb-3 text-civiq-blue">Enable Engagement</h3>
                   <p className="text-gray-600">
                     From finding your representatives to tracking legislation, we provide tools that
                     help you participate actively in democracy.
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-6">
+                <div className="bg-white p-6">
                   <h3 className="text-xl font-semibold mb-3 text-gray-700">Maintain Neutrality</h3>
                   <p className="text-gray-600">
                     We present information without partisan bias, allowing citizens to form their
@@ -157,7 +157,7 @@ export default function AboutPage() {
               <p className="text-gray-700 mb-4">
                 CIV.IQ aggregates data from trusted government sources:
               </p>
-              <div className="bg-gray-50 rounded-lg p-6">
+              <div className="bg-white p-6">
                 <ul className="space-y-3">
                   <li>
                     <strong>Congress.gov:</strong> Federal legislative data, member information,

@@ -12,11 +12,13 @@ export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerPr
   const sizeClasses = {
     sm: 'h-4 w-4',
     md: 'h-8 w-8',
-    lg: 'h-12 w-12'
+    lg: 'h-12 w-12',
   };
 
   return (
-    <div className={`inline-block animate-spin rounded-full border-b-2 border-civiq-blue ${sizeClasses[size]} ${className}`} />
+    <div
+      className={`inline-block animate-spin rounded-full border-b-2 border-civiq-blue ${sizeClasses[size]} ${className}`}
+    />
   );
 }
 
@@ -26,7 +28,11 @@ interface LoadingStateProps {
   className?: string;
 }
 
-export function LoadingState({ message = 'Loading...', size = 'md', className = '' }: LoadingStateProps) {
+export function LoadingState({
+  message = 'Loading...',
+  size = 'md',
+  className = '',
+}: LoadingStateProps) {
   return (
     <div className={`text-center py-8 ${className}`}>
       <LoadingSpinner size={size} />

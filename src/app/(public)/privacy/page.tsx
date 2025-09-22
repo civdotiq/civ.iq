@@ -19,7 +19,7 @@ export default function PrivacyPage() {
           <p className="text-xl text-gray-600">Last updated: July 2025</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 space-y-8">
+        <div className="bg-white rounded-2xl border-2 border-black p-8 md:p-12 space-y-8">
           <section>
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
               <Eye className="w-6 h-6 text-blue-600" />
@@ -40,7 +40,7 @@ export default function PrivacyPage() {
             </h2>
 
             <div className="space-y-6">
-              <div className="bg-gray-50 rounded-xl p-6">
+              <div className="bg-white rounded-xl p-6">
                 <h3 className="font-semibold text-gray-900 mb-3">Search Queries</h3>
                 <p className="text-gray-700 mb-2">
                   When you search for representatives by ZIP code or name, we:
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
                 </ul>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-6">
+              <div className="bg-white rounded-xl p-6">
                 <h3 className="font-semibold text-gray-900 mb-3">Analytics Data</h3>
                 <p className="text-gray-700 mb-2">
                   We collect anonymous usage statistics to improve our service:
@@ -65,7 +65,7 @@ export default function PrivacyPage() {
                 </ul>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-6">
+              <div className="bg-white rounded-xl p-6">
                 <h3 className="font-semibold text-gray-900 mb-3">Technical Information</h3>
                 <p className="text-gray-700 mb-2">For security and performance, we may collect:</p>
                 <ul className="list-disc list-inside text-gray-600 space-y-1 ml-4">

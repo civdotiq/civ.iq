@@ -97,7 +97,7 @@ function FinanceDetailCard({
   );
 
   return (
-    <div className="bg-white p-6 rounded-lg border border-gray-200">
+    <div className="bg-white p-6 border border-gray-200">
       <h3 className="text-lg font-semibold mb-2">{title}</h3>
       <p className="text-sm text-gray-600 mb-4">{description}</p>
 
@@ -154,21 +154,21 @@ export function FinanceTab({
 
         {/* Enhanced loading skeleton for finance cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border border-green-200">
+          <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 border border-green-200">
             <div className="h-6 bg-green-200 rounded w-2/3 mb-4"></div>
             <div className="h-10 bg-green-300 rounded w-full mb-2"></div>
             <div className="h-4 bg-green-200 rounded w-3/4 mb-3"></div>
             <div className="h-6 bg-green-200 rounded-full w-20"></div>
           </div>
 
-          <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-lg border border-red-200">
+          <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 border border-red-200">
             <div className="h-6 bg-red-200 rounded w-2/3 mb-4"></div>
             <div className="h-10 bg-red-300 rounded w-full mb-2"></div>
             <div className="h-4 bg-red-200 rounded w-3/4 mb-3"></div>
             <div className="h-6 bg-red-200 rounded-full w-20"></div>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 border border-blue-200">
             <div className="h-6 bg-blue-200 rounded w-2/3 mb-4"></div>
             <div className="h-10 bg-blue-300 rounded w-full mb-2"></div>
             <div className="h-4 bg-blue-200 rounded w-3/4 mb-3"></div>
@@ -177,7 +177,7 @@ export function FinanceTab({
         </div>
 
         {/* Loading skeleton for contribution sources */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="bg-white p-6 border border-gray-200">
           <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="space-y-3">
             <div className="flex justify-between">
@@ -231,7 +231,7 @@ export function FinanceTab({
 
       {/* Financial Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border border-green-200 hover:shadow-lg transition-all duration-200">
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 border border-green-200 hover:border-2 border-black transition-all duration-200">
           <h3 className="text-lg font-semibold text-green-700 mb-2">Total Raised</h3>
           <div className="text-3xl font-bold text-green-900 mb-2">
             {formatCurrency(data.totalRaised)}
@@ -252,7 +252,7 @@ export function FinanceTab({
           </a>
         </div>
 
-        <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-lg border border-red-200 hover:shadow-lg transition-all duration-200">
+        <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 border border-red-200 hover:border-2 border-black transition-all duration-200">
           <h3 className="text-lg font-semibold text-red-700 mb-2">Total Spent</h3>
           <div className="text-3xl font-bold text-red-900 mb-2">
             {formatCurrency(data.totalSpent)}
@@ -273,7 +273,7 @@ export function FinanceTab({
           </a>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200 hover:shadow-lg transition-all duration-200">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 border border-blue-200 hover:border-2 border-black transition-all duration-200">
           <h3 className="text-lg font-semibold text-blue-700 mb-2">Cash on Hand</h3>
           <div className="text-3xl font-bold text-blue-900 mb-2">
             {formatCurrency(data.cashOnHand)}
@@ -298,7 +298,7 @@ export function FinanceTab({
       </div>
 
       {/* Contribution Sources */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
+      <div className="bg-white p-6 border border-gray-200 mb-8">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">Contribution Sources</h3>
           <a
@@ -400,7 +400,7 @@ export function FinanceTab({
               {contributorData?.topContributors?.slice(0, 20).map((contributor, index: number) => (
                 <div
                   key={index}
-                  className="flex justify-between items-center p-2 hover:bg-gray-50 rounded"
+                  className="flex justify-between items-center p-2 hover:bg-white rounded"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -452,7 +452,7 @@ export function FinanceTab({
 
       {/* FEC Transparency Links */}
       {data.fecTransparencyLinks && (
-        <div className="bg-blue-50 p-6 rounded-lg border border-blue-200 mt-8">
+        <div className="bg-blue-50 p-6 border border-blue-200 mt-8">
           <h3 className="text-lg font-semibold text-blue-900 mb-4">FEC Transparency Links</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <a

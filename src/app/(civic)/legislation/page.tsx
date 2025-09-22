@@ -56,9 +56,9 @@ export default function LegislationPage() {
       case 'In Committee':
         return 'bg-yellow-100 text-yellow-800';
       case 'Introduced':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-white border-2 border-gray-300 text-gray-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-white border-2 border-gray-300 text-gray-800';
     }
   };
 
@@ -75,7 +75,7 @@ export default function LegislationPage() {
       case 'Education':
         return 'bg-purple-100 text-purple-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-white border-2 border-gray-300 text-gray-800';
     }
   };
 
@@ -115,7 +115,7 @@ export default function LegislationPage() {
       </header>
 
       {/* Main Content */}
-      <main className="min-h-screen pt-24 px-4 pb-16 bg-gray-50">
+      <main className="min-h-screen pt-24 px-4 pb-16 bg-white">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl font-bold text-center mb-8">Track Legislation</h1>
 
@@ -125,7 +125,7 @@ export default function LegislationPage() {
           </p>
 
           {/* Tabs */}
-          <div className="bg-white rounded-lg shadow-sm mb-8">
+          <div className="bg-white border-2 border-black mb-8">
             <div className="border-b border-gray-200">
               <nav className="flex">
                 <button
@@ -169,7 +169,7 @@ export default function LegislationPage() {
                 recentBills.map(bill => (
                   <div
                     key={bill.id}
-                    className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+                    className="bg-white border-2 border-black p-6 hover:border-2 border-black transition-border-2 border-black"
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
@@ -201,7 +201,7 @@ export default function LegislationPage() {
                   </div>
                 ))
               ) : (
-                <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                <div className="bg-white border-2 border-black p-12 text-center">
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     Loading from Congress.gov...
                   </h3>
@@ -212,7 +212,7 @@ export default function LegislationPage() {
           )}
 
           {activeTab === 'tracked' && (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <div className="bg-white border-2 border-black p-8 text-center">
               <h3 className="text-2xl font-semibold mb-4">Track Bills That Matter to You</h3>
               <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
                 Start tracking bills to receive updates on their progress, committee actions, and
@@ -228,17 +228,17 @@ export default function LegislationPage() {
           )}
 
           {activeTab === 'search' && (
-            <div className="bg-white rounded-lg shadow-md p-8">
+            <div className="bg-white border-2 border-black p-8">
               <div className="max-w-2xl mx-auto">
                 <h3 className="text-2xl font-semibold mb-6 text-center">Search Legislation</h3>
                 <div className="space-y-4">
                   <input
                     type="text"
                     placeholder="Search by bill number, title, or keyword..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-civiq-blue focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 focus:ring-2 focus:ring-civiq-blue focus:border-transparent"
                   />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <select className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-civiq-blue focus:border-transparent">
+                    <select className="px-4 py-3 border border-gray-300 focus:ring-2 focus:ring-civiq-blue focus:border-transparent">
                       <option value="">All Categories</option>
                       <option value="infrastructure">Infrastructure</option>
                       <option value="environment">Environment</option>
@@ -246,7 +246,7 @@ export default function LegislationPage() {
                       <option value="healthcare">Healthcare</option>
                       <option value="education">Education</option>
                     </select>
-                    <select className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-civiq-blue focus:border-transparent">
+                    <select className="px-4 py-3 border border-gray-300 focus:ring-2 focus:ring-civiq-blue focus:border-transparent">
                       <option value="">All Statuses</option>
                       <option value="introduced">Introduced</option>
                       <option value="committee">In Committee</option>
@@ -255,7 +255,7 @@ export default function LegislationPage() {
                       <option value="enacted">Enacted</option>
                     </select>
                   </div>
-                  <button className="w-full bg-civiq-blue text-white py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                  <button className="w-full bg-civiq-blue text-white py-3 hover:bg-blue-700 transition-colors">
                     Search Bills
                   </button>
                 </div>
@@ -264,7 +264,7 @@ export default function LegislationPage() {
           )}
 
           {/* How Bills Become Laws */}
-          <div className="mt-16 bg-white rounded-lg shadow-lg p-8">
+          <div className="mt-16 bg-white border-2 border-black p-8">
             <h2 className="text-2xl font-semibold mb-6 text-center">How a Bill Becomes a Law</h2>
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 max-w-5xl mx-auto">
               <div className="text-center">

@@ -77,8 +77,10 @@ const BillsList = ({
       return (
         <div style={style} className="px-1 py-2">
           <div
-            className={`bg-white rounded-lg border transition-all duration-200 cursor-pointer ${
-              isSelected ? 'border-civiq-blue shadow-md' : 'border-gray-200 hover:border-gray-300'
+            className={`aicher-card aicher-hover transition-all duration-200 cursor-pointer ${
+              isSelected
+                ? 'border-civiq-blue border-2 border-black'
+                : 'border-gray-200 hover:border-gray-300'
             }`}
             onClick={() => setSelectedBill(isSelected ? null : bill.billId)}
           >
@@ -122,7 +124,7 @@ const BillsList = ({
                       bill.subjects.slice(0, 3).map((subject, idx) => (
                         <span
                           key={`${bill.billId}-subject-${subject}-${idx}`}
-                          className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                          className="px-3 py-1 bg-white border-2 border-gray-300 text-gray-700 text-xs rounded-full"
                         >
                           {subject}
                         </span>
@@ -254,7 +256,7 @@ const BillsList = ({
   };
 
   return (
-    <div className="bg-gray-50 rounded-lg p-2">
+    <div className="aicher-card aicher-no-radius p-2">
       <List
         height={600} // Max height of the list container
         itemCount={bills.length}
@@ -498,7 +500,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
   return (
     <div className="space-y-6">
       {/* Header and Controls */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="aicher-card p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Legislative Tracker</h3>
           <button
@@ -510,7 +512,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
         </div>
 
         {/* Enhanced Filter Controls */}
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+        <div className="aicher-card p-4 mb-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
@@ -641,7 +643,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
 
       {/* Timeline View */}
       {showTimelineView && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="aicher-card p-6">
           <h4 className="text-lg font-semibold text-gray-900 mb-6">Legislative Timeline</h4>
           <div className="relative">
             {/* Timeline line */}
@@ -660,7 +662,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
 
                     {/* Content */}
                     <div className="ml-16 flex-1">
-                      <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="aicher-card p-4">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
@@ -748,9 +750,9 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
             return (
               <div
                 key={bill.billId}
-                className={`bg-white rounded-lg border transition-all duration-200 cursor-pointer ${
+                className={`aicher-card aicher-hover transition-all duration-200 cursor-pointer ${
                   isSelected
-                    ? 'border-civiq-blue shadow-md'
+                    ? 'border-civiq-blue border-2 border-black'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
                 onClick={() => setSelectedBill(isSelected ? null : bill.billId)}
@@ -795,7 +797,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
                           bill.subjects.slice(0, 3).map((subject, idx) => (
                             <span
                               key={`${bill.billId}-subject-${subject}-${idx}`}
-                              className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                              className="px-3 py-1 bg-white border-2 border-gray-300 text-gray-700 text-xs rounded-full"
                             >
                               {subject}
                             </span>

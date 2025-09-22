@@ -115,9 +115,9 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
 
       // In production, send to monitoring service
       // await fetch('/api/errors', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(errorReport)
+      //  method: 'POST',
+      //  headers: { 'Content-Type': 'application/json' },
+      //  body: JSON.stringify(errorReport)
       // });
     } catch (reportError) {
       logger.error('Failed to report error', {
@@ -186,7 +186,7 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
 
             {/* Development info */}
             {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
-              <details className="mt-6 p-4 bg-gray-100 rounded-lg text-sm">
+              <details className="mt-6 p-4 bg-white border-2 border-gray-300 text-sm">
                 <summary className="cursor-pointer font-medium text-gray-700 mb-2">
                   Debug Information
                 </summary>

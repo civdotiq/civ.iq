@@ -100,12 +100,12 @@ export function ServiceTermsCard({ representative, className = '' }: ServiceTerm
 
   return (
     <div
-      className={`bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-200 ${className}`}
+      className={`bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200 ${className}`}
     >
       <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-green-50 rounded-lg">
+            <div className="p-2 bg-green-50">
               <Calendar className="w-5 h-5" style={{ color: '#0e8d37' }} />
             </div>
             <h3 className="text-lg font-bold" style={{ color: '#0e8d37' }}>
@@ -144,10 +144,10 @@ export function ServiceTermsCard({ representative, className = '' }: ServiceTerm
                       </div>
                     )}
                     <div
-                      className={`flex items-start gap-3 p-3 rounded-lg transition-all cursor-pointer border-2 ${
+                      className={`flex items-start gap-3 p-3 transition-all cursor-pointer border-2 ${
                         selectedChamber === (group.chamber === 'Senate' ? 'Senate' : 'House')
-                          ? 'bg-green-50 border-green-300 shadow-sm'
-                          : 'bg-gray-50 border-transparent hover:bg-gray-100'
+                          ? 'bg-green-50 border-green-300 border-2 border-black'
+                          : 'bg-white border-transparent hover:bg-white border-2 border-gray-300'
                       }`}
                       onClick={() =>
                         setSelectedChamber(group.chamber === 'Senate' ? 'Senate' : 'House')
@@ -213,7 +213,7 @@ export function ServiceTermsCard({ representative, className = '' }: ServiceTerm
                 {displayTerms.map((term, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors group"
+                    className="flex items-center justify-between py-2 px-3 hover:bg-white transition-colors group"
                   >
                     <div className="flex items-center gap-3">
                       <a
@@ -254,7 +254,7 @@ export function ServiceTermsCard({ representative, className = '' }: ServiceTerm
               {filteredTerms.length > 5 && (
                 <button
                   onClick={() => setShowAllTerms(!showAllTerms)}
-                  className="mt-3 w-full py-2 text-sm text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors flex items-center justify-center gap-1"
+                  className="mt-3 w-full py-2 text-sm text-green-600 hover:text-green-700 hover:bg-green-50 transition-colors flex items-center justify-center gap-1"
                 >
                   {showAllTerms ? (
                     <>

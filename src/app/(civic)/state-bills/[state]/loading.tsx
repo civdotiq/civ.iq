@@ -16,7 +16,10 @@ export default function Loading() {
 
         <div className="space-y-4">
           {Array.from({ length: 8 }).map((_, index) => (
-            <div key={index} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div
+              key={index}
+              className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-6"
+            >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <Skeleton className="h-6 w-3/4 mb-2" />

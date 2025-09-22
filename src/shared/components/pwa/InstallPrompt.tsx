@@ -129,62 +129,62 @@ export function InstallPrompt() {
   const showIOSInstallInstructions = () => {
     const modal = document.createElement('div');
     modal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-      padding: 20px;
-    `;
+   position: fixed;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   background: rgba(0,0,0,0.8);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   z-index: 10000;
+   padding: 20px;
+  `;
 
     const content = document.createElement('div');
     content.style.cssText = `
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      max-width: 400px;
-      text-align: center;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    `;
+   background: white;
+   border-radius: 12px;
+   padding: 24px;
+   max-width: 400px;
+   text-align: center;
+   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  `;
 
     content.innerHTML = `
-      <h3 style="margin: 0 0 16px 0; color: #333;">Install CivicHub</h3>
-      <p style="margin: 0 0 20px 0; color: #666; line-height: 1.5;">
-        To install this app on your iPhone/iPad:
-      </p>
-      <div style="text-align: left; margin: 0 0 20px 0;">
-        <p style="margin: 8px 0; display: flex; align-items: center;">
-          <span style="margin-right: 8px;">1.</span>
-          <span>Tap the Share button</span>
-          <span style="margin-left: 8px; font-size: 18px;">⎆</span>
-        </p>
-        <p style="margin: 8px 0; display: flex; align-items: center;">
-          <span style="margin-right: 8px;">2.</span>
-          <span>Tap "Add to Home Screen"</span>
-          <span style="margin-left: 8px; font-size: 18px;">📱</span>
-        </p>
-        <p style="margin: 8px 0; display: flex; align-items: center;">
-          <span style="margin-right: 8px;">3.</span>
-          <span>Tap "Add"</span>
-          <span style="margin-left: 8px; font-size: 18px;">✅</span>
-        </p>
-      </div>
-      <button id="ios-install-close" style="
-        background: #e11d07;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 6px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-      ">Got it!</button>
-    `;
+   <h3 style="margin: 0 0 16px 0; color: #333;">Install CivicHub</h3>
+   <p style="margin: 0 0 20px 0; color: #666; line-height: 1.5;">
+    To install this app on your iPhone/iPad:
+   </p>
+   <div style="text-align: left; margin: 0 0 20px 0;">
+    <p style="margin: 8px 0; display: flex; align-items: center;">
+     <span style="margin-right: 8px;">1.</span>
+     <span>Tap the Share button</span>
+     <span style="margin-left: 8px; font-size: 18px;">⎆</span>
+    </p>
+    <p style="margin: 8px 0; display: flex; align-items: center;">
+     <span style="margin-right: 8px;">2.</span>
+     <span>Tap"Add to Home Screen"</span>
+     <span style="margin-left: 8px; font-size: 18px;">📱</span>
+    </p>
+    <p style="margin: 8px 0; display: flex; align-items: center;">
+     <span style="margin-right: 8px;">3.</span>
+     <span>Tap"Add"</span>
+     <span style="margin-left: 8px; font-size: 18px;">✅</span>
+    </p>
+   </div>
+   <button id="ios-install-close" style="
+    background: #e11d07;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  ">Got it!</button>
+  `;
 
     modal.appendChild(content);
     document.body.appendChild(modal);
@@ -236,17 +236,17 @@ export function InstallPrompt() {
       }}
     >
       <style>{`
-        @keyframes slideUp {
-          from {
-            transform: translateY(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-      `}</style>
+    @keyframes slideUp {
+     from {
+      transform: translateY(100%);
+      opacity: 0;
+     }
+     to {
+      transform: translateY(0);
+      opacity: 1;
+     }
+    }
+   `}</style>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <span style={{ fontSize: '20px' }}>📱</span>

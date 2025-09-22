@@ -309,7 +309,7 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
 
   if (loading) {
     return (
-      <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
+      <div className={`bg-white border border-gray-200 p-6 ${className}`}>
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded mb-4 w-1/3"></div>
           <div className="h-96 bg-gray-200 rounded"></div>
@@ -320,7 +320,7 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
 
   if (error || !mapData) {
     return (
-      <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
+      <div className={`bg-white border border-gray-200 p-6 ${className}`}>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Interactive District Map</h3>
         <div className="text-center py-8">
           <div className="text-gray-500 mb-2">{error || 'Unable to load district map'}</div>
@@ -334,8 +334,8 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
 
   if (!isClient) {
     return (
-      <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
-        <div className="h-96 bg-gray-100 rounded flex items-center justify-center">
+      <div className={`bg-white border border-gray-200 p-6 ${className}`}>
+        <div className="h-96 bg-white border-2 border-gray-300 rounded flex items-center justify-center">
           <p className="text-gray-500">Loading interactive map...</p>
         </div>
       </div>
@@ -346,7 +346,7 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
   const layerInfo = getCurrentLayerInfo();
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${className}`}>
+    <div className={`bg-white border border-gray-200 overflow-hidden ${className}`}>
       <div className="p-6 pb-4 border-b border-gray-100">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Interactive District Map</h3>
 
@@ -356,10 +356,10 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
             <button
               key={layer.id}
               onClick={() => setSelectedLayer(layer.id)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-2 text-sm font-medium transition-colors ${
                 selectedLayer === layer.id
                   ? 'text-white'
-                  : 'text-gray-600 bg-gray-100 hover:bg-gray-200'
+                  : 'text-gray-600 bg-white border-2 border-gray-300 hover:bg-gray-200'
               }`}
               style={{
                 backgroundColor: selectedLayer === layer.id ? layer.color : undefined,
@@ -382,7 +382,7 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
         </div>
 
         {/* Map Legend - Overlay */}
-        <div className="absolute top-4 right-4 bg-white bg-opacity-95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-gray-200 z-[1000]">
+        <div className="absolute top-4 right-4 bg-white bg-opacity-95 backdrop-blur-sm p-3 border-2 border-black border border-gray-200 z-[1000]">
           <div className="text-xs font-medium text-gray-700 mb-2">Legend</div>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -401,7 +401,7 @@ export function InteractiveDistrictMap({ zipCode, className = '' }: InteractiveD
 
       {/* District Information */}
       {boundary && (
-        <div className="p-6 pt-4 bg-gray-50 border-t border-gray-100">
+        <div className="p-6 pt-4 bg-white border-t border-gray-100">
           <h4 className="font-medium text-gray-900 mb-3">{boundary.properties.name}</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>

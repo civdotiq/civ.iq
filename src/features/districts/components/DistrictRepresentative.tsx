@@ -24,7 +24,7 @@ export default function DistrictRepresentative({
   districtName,
 }: DistrictRepresentativeProps) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+    <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8">
       <div className="flex items-center space-x-6">
         <div className="flex-shrink-0">
           <RepresentativePhoto
@@ -43,7 +43,7 @@ export default function DistrictRepresentative({
                   ? 'bg-blue-100 text-blue-800'
                   : representative.party === 'Republican'
                     ? 'bg-red-100 text-red-800'
-                    : 'bg-gray-100 text-gray-800'
+                    : 'bg-white border-2 border-gray-300 text-gray-800'
               }`}
             >
               {representative.party}
@@ -57,7 +57,7 @@ export default function DistrictRepresentative({
           <div className="mt-4">
             <Link
               href={`/representative/${representative.bioguideId}`}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
             >
               View Full Profile
             </Link>

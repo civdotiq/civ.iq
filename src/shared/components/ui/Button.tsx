@@ -23,16 +23,16 @@ export const Button: FC<ButtonProps> = memo(
     ...props
   }) => {
     const baseStyles =
-      'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 transform active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2';
+      'inline-flex items-center justify-center font-medium transition-all duration-200 transform active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2';
 
     const variants = {
       primary:
-        'bg-civiq-green text-white hover:bg-green-700 hover:shadow-lg focus-visible:ring-civiq-green',
+        'bg-civiq-green text-white hover:bg-green-700 hover:border-2 border-black focus-visible:ring-civiq-green',
       secondary:
-        'border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50 focus-visible:ring-gray-400',
-      ghost: 'text-gray-700 hover:bg-gray-100 focus-visible:ring-gray-400',
+        'border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-white focus-visible:ring-gray-400',
+      ghost: 'text-gray-700 hover:bg-white border-2 border-gray-300 focus-visible:ring-gray-400',
       danger:
-        'bg-civiq-red text-white hover:bg-red-700 hover:shadow-lg focus-visible:ring-civiq-red',
+        'bg-civiq-red text-white hover:bg-red-700 hover:border-2 border-black focus-visible:ring-civiq-red',
     };
 
     const sizes = {

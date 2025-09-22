@@ -50,9 +50,9 @@ function CiviqLogo() {
 
 export default function SearchPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen aicher-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-20">
+      <header className="aicher-card aicher-no-radius sticky top-0 z-20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/">
@@ -91,7 +91,9 @@ export default function SearchPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Page header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">Advanced Representative Search</h1>
+          <h1 className="aicher-heading text-4xl text-gray-900 mb-3">
+            Advanced Representative Search
+          </h1>
           <p className="text-xl text-gray-600">
             Find representatives using multiple criteria including voting patterns, committee
             membership, campaign finance, and more
@@ -102,8 +104,8 @@ export default function SearchPage() {
         <AdvancedSearch />
 
         {/* Search Tips */}
-        <div className="mt-12 bg-blue-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-4">Search Tips</h3>
+        <div className="aicher-card aicher-status-info mt-12 p-6">
+          <h3 className="aicher-heading text-lg text-blue-900 mb-4">Search Tips</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
             <div>
               <h4 className="font-medium mb-2">Quick Searches:</h4>
@@ -141,8 +143,8 @@ export default function SearchPage() {
         </div>
 
         {/* Recent Searches */}
-        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Popular Searches</h3>
+        <div className="aicher-card mt-8 p-6">
+          <h3 className="aicher-heading text-lg text-gray-900 mb-4">Popular Searches</h3>
           <div className="flex flex-wrap gap-2">
             {[
               'Progressive Democrats',
@@ -154,10 +156,7 @@ export default function SearchPage() {
               'New Representatives 2024',
               'High Fundraisers',
             ].map((search, index) => (
-              <button
-                key={index}
-                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-colors text-sm"
-              >
+              <button key={index} className="aicher-button aicher-hover px-3 py-2 text-sm">
                 {search}
               </button>
             ))}

@@ -75,7 +75,7 @@ interface LoadingCardProps {
 }
 
 export const LoadingCard: FC<LoadingCardProps> = ({ lines = 3 }) => (
-  <div className="bg-white rounded-lg border border-gray-100 p-6">
+  <div className="bg-white border border-gray-100 p-6">
     <div className="flex items-center gap-4 mb-4">
       <Skeleton variant="circular" className="w-12 h-12" />
       <div className="flex-1">

@@ -62,7 +62,7 @@ export function MobileNav({ isOpen, onClose, navigation, currentPath }: MobileNa
       />
 
       {/* Mobile Menu */}
-      <div className="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 shadow-lg z-50 animate-slide-down">
+      <div className="md:hidden absolute top-full left-0 w-full aicher-card aicher-no-radius z-50 animate-slide-down">
         <nav className="container mx-auto px-4 py-4">
           <div className="space-y-1">
             {navigation.map(item => {
@@ -71,10 +71,10 @@ export function MobileNav({ isOpen, onClose, navigation, currentPath }: MobileNa
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`block py-3 px-4 rounded-lg transition-all duration-200 font-medium ${
+                  className={`aicher-heading-wide block py-3 px-4 transition-all duration-200 ${
                     isActive
                       ? 'bg-[#3ea2d4]/10 text-[#3ea2d4] border-l-4 border-[#3ea2d4]'
-                      : 'text-gray-700 hover:text-[#3ea2d4] hover:bg-gray-50'
+                      : 'text-gray-700 hover:text-[#3ea2d4] aicher-hover'
                   }`}
                   onClick={onClose}
                 >
@@ -89,14 +89,14 @@ export function MobileNav({ isOpen, onClose, navigation, currentPath }: MobileNa
             <div className="space-y-1">
               <Link
                 href="/search"
-                className="block py-3 px-4 text-gray-700 hover:text-[#3ea2d4] hover:bg-gray-50 rounded-lg transition-all duration-200 font-medium"
+                className="aicher-heading-wide block py-3 px-4 text-gray-700 hover:text-[#3ea2d4] aicher-hover transition-all duration-200"
                 onClick={onClose}
               >
                 Search
               </Link>
               <Link
                 href="/analytics"
-                className="block py-3 px-4 text-gray-700 hover:text-[#3ea2d4] hover:bg-gray-50 rounded-lg transition-all duration-200 font-medium"
+                className="aicher-heading-wide block py-3 px-4 text-gray-700 hover:text-[#3ea2d4] aicher-hover transition-all duration-200"
                 onClick={onClose}
               >
                 Analytics

@@ -1,8 +1,8 @@
 /*
  * CIV.IQ - Civic Information Hub
  * Phase 4: Edge Case Tooltip Component
- * 
- * Provides informative tooltips for edge cases like territories, DC, 
+ *
+ * Provides informative tooltips for edge cases like territories, DC,
  * and other special ZIP code situations.
  */
 
@@ -26,7 +26,7 @@ export default function EdgeCaseTooltip({
   state,
   district,
   additionalInfo,
-  className = ''
+  className = '',
 }: EdgeCaseTooltipProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -38,13 +38,14 @@ export default function EdgeCaseTooltip({
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
-      description: 'This ZIP code is located in a U.S. territory with non-voting representation in Congress.',
+      description:
+        'This ZIP code is located in a U.S. territory with non-voting representation in Congress.',
       details: [
         'Representatives from territories cannot vote on final legislation',
         'They can participate in committee work and debates',
-        'Territories have unique political status within the U.S. system'
+        'Territories have unique political status within the U.S. system',
       ],
-      learnMoreUrl: 'https://www.house.gov/representatives/find-your-representative'
+      learnMoreUrl: 'https://www.house.gov/representatives/find-your-representative',
     },
     dc: {
       icon: MapPin,
@@ -56,9 +57,9 @@ export default function EdgeCaseTooltip({
       details: [
         'D.C. has one non-voting delegate in the House',
         'No representation in the U.S. Senate',
-        'Residents pay federal taxes but have limited representation'
+        'Residents pay federal taxes but have limited representation',
       ],
-      learnMoreUrl: 'https://www.house.gov/representatives/find-your-representative'
+      learnMoreUrl: 'https://www.house.gov/representatives/find-your-representative',
     },
     'at-large': {
       icon: Info,
@@ -70,9 +71,9 @@ export default function EdgeCaseTooltip({
       details: [
         'States with populations too small for multiple districts',
         'Representative serves all residents of the state',
-        'Common in less populated states like Wyoming, Vermont, and Delaware'
+        'Common in less populated states like Wyoming, Vermont, and Delaware',
       ],
-      learnMoreUrl: 'https://www.census.gov/topics/public-sector/congressional-apportionment.html'
+      learnMoreUrl: 'https://www.census.gov/topics/public-sector/congressional-apportionment.html',
     },
     'multi-district': {
       icon: AlertTriangle,
@@ -84,9 +85,10 @@ export default function EdgeCaseTooltip({
       details: [
         'ZIP codes are designed for mail delivery, not political boundaries',
         'About 15% of ZIP codes cross district boundaries',
-        'We show the primary district based on population distribution'
+        'We show the primary district based on population distribution',
       ],
-      learnMoreUrl: 'https://www.census.gov/programs-surveys/geography/guidance/geo-areas/zctas.html'
+      learnMoreUrl:
+        'https://www.census.gov/programs-surveys/geography/guidance/geo-areas/zctas.html',
     },
     'low-confidence': {
       icon: AlertTriangle,
@@ -98,9 +100,10 @@ export default function EdgeCaseTooltip({
       details: [
         'Data source may be incomplete or outdated',
         'ZIP code may be newly created or modified',
-        'Consider verifying with official sources'
+        'Consider verifying with official sources',
       ],
-      learnMoreUrl: 'https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html'
+      learnMoreUrl:
+        'https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html',
     },
     unmapped: {
       icon: AlertTriangle,
@@ -112,10 +115,10 @@ export default function EdgeCaseTooltip({
       details: [
         'ZIP code may be invalid or no longer in use',
         'Could be a PO Box or business-specific ZIP code',
-        'May be located in a territory not represented in Congress'
+        'May be located in a territory not represented in Congress',
       ],
-      learnMoreUrl: 'https://tools.usps.com/zip-code-lookup.htm'
-    }
+      learnMoreUrl: 'https://tools.usps.com/zip-code-lookup.htm',
+    },
   };
 
   const config = edgeCaseConfig[type];
@@ -123,12 +126,12 @@ export default function EdgeCaseTooltip({
 
   const getTerritoryName = (state: string): string => {
     const territories: Record<string, string> = {
-      'DC': 'District of Columbia',
-      'GU': 'Guam',
-      'PR': 'Puerto Rico',
-      'VI': 'U.S. Virgin Islands',
-      'AS': 'American Samoa',
-      'MP': 'Northern Mariana Islands'
+      DC: 'District of Columbia',
+      GU: 'Guam',
+      PR: 'Puerto Rico',
+      VI: 'U.S. Virgin Islands',
+      AS: 'American Samoa',
+      MP: 'Northern Mariana Islands',
     };
     return territories[state] || state;
   };
@@ -155,9 +158,13 @@ export default function EdgeCaseTooltip({
       {/* Tooltip */}
       {showTooltip && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 sm:absolute sm:inset-auto sm:bg-transparent sm:p-0">
-          <div className={`relative w-full max-w-md bg-white rounded-lg shadow-xl border-2 ${config.borderColor} sm:absolute sm:top-full sm:left-0 sm:mt-2 sm:w-80`}>
+          <div
+            className={`relative w-full max-w-md bg-white border-2 border-black-xl border-2 ${config.borderColor} sm:absolute sm:top-full sm:left-0 sm:mt-2 sm:w-80`}
+          >
             {/* Header */}
-            <div className={`px-4 py-3 rounded-t-lg ${config.bgColor} border-b ${config.borderColor}`}>
+            <div
+              className={`px-4 py-3 rounded-t-lg ${config.bgColor} border-b ${config.borderColor}`}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <IconComponent className={`w-5 h-5 ${config.color}`} />
@@ -176,7 +183,7 @@ export default function EdgeCaseTooltip({
             <div className="p-4">
               {/* Context Information */}
               {zipCode && (
-                <div className="mb-3 p-2 bg-gray-50 rounded-lg">
+                <div className="mb-3 p-2 bg-white">
                   <div className="text-sm text-gray-600">
                     <strong>ZIP Code:</strong> {zipCode}
                     {state && district && (
@@ -200,7 +207,7 @@ export default function EdgeCaseTooltip({
 
               {/* Additional Info */}
               {additionalInfo && (
-                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <div className="mb-4 p-3 bg-white">
                   <p className="text-sm text-gray-600">{additionalInfo}</p>
                 </div>
               )}

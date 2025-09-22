@@ -19,7 +19,7 @@ export const Skeleton = memo(function Skeleton({ className = '' }: SkeletonProps
 
 export const RepresentativeCardSkeleton = memo(function RepresentativeCardSkeleton() {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in-up">
+    <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 overflow-hidden animate-fade-in-up">
       {/* Header Section */}
       <div className="p-6 pb-4">
         <div className="flex items-start gap-4">
@@ -59,7 +59,7 @@ export const RepresentativeCardSkeleton = memo(function RepresentativeCardSkelet
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+      <div className="px-6 py-4 bg-white border-t border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1">
             <Skeleton className="flex-1 h-2 rounded-full" />
@@ -74,7 +74,7 @@ export const RepresentativeCardSkeleton = memo(function RepresentativeCardSkelet
 
 export const ProfileHeaderSkeleton = memo(function ProfileHeaderSkeleton() {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8 animate-fade-in-up">
+    <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8 mb-8 animate-fade-in-up">
       <div className="flex items-start gap-6">
         <Skeleton className="w-24 h-24 rounded-full" />
         <div className="flex-1">
@@ -93,7 +93,7 @@ export const TabContentSkeleton = memo(function TabContentSkeleton() {
       {[1, 2, 3].map(item => (
         <div
           key={item}
-          className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm animate-fade-in-up"
+          className="bg-white rounded-2xl border border-gray-100 p-6 border-2 border-black animate-fade-in-up"
           style={{ animationDelay: `${item * 100}ms` }}
         >
           <div className="flex items-start justify-between mb-3">
@@ -116,7 +116,7 @@ export const TabContentSkeleton = memo(function TabContentSkeleton() {
 export const ContactTabSkeleton = memo(function ContactTabSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm animate-fade-in-up">
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 border-2 border-black animate-fade-in-up">
         <Skeleton className="h-5 w-32 mb-4" />
         <div className="space-y-4">
           <div className="flex items-center gap-3">
@@ -135,7 +135,7 @@ export const ContactTabSkeleton = memo(function ContactTabSkeleton() {
       </div>
 
       <div
-        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm animate-fade-in-up"
+        className="bg-white rounded-2xl border border-gray-100 p-6 border-2 border-black animate-fade-in-up"
         style={{ animationDelay: '200ms' }}
       >
         <Skeleton className="h-5 w-24 mb-4" />
@@ -152,7 +152,7 @@ export const ContactTabSkeleton = memo(function ContactTabSkeleton() {
       </div>
 
       <div
-        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm animate-fade-in-up"
+        className="bg-white rounded-2xl border border-gray-100 p-6 border-2 border-black animate-fade-in-up"
         style={{ animationDelay: '400ms' }}
       >
         <Skeleton className="h-5 w-32 mb-4" />

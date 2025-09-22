@@ -40,7 +40,7 @@ export function SearchForm({ onSearch, apiMetadata }: SearchFormProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+    <div className="bg-white border-2 border-black p-4 mb-6">
       <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-4 mb-4">
         <div className="flex-1 min-w-[300px]">
           <div className="relative">
@@ -50,7 +50,7 @@ export function SearchForm({ onSearch, apiMetadata }: SearchFormProps) {
               onChange={e => setZipCode(e.target.value)}
               placeholder="Enter ZIP code to find your representatives..."
               pattern="\d{5}(-\d{4})?"
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
             />
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
@@ -76,7 +76,7 @@ export function SearchForm({ onSearch, apiMetadata }: SearchFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Searching...' : 'Search'}
         </button>

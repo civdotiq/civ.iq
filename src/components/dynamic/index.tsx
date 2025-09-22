@@ -81,7 +81,7 @@ export const DynamicDistrictMap = dynamic(
   () => import('@/features/districts/components/DistrictMap'),
   {
     loading: () => (
-      <div className="h-64 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+      <div className="h-64 bg-white border-2 border-gray-300 animate-pulse flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
           <p className="text-gray-600">Loading district map...</p>
@@ -99,7 +99,7 @@ export const DynamicInteractiveDistrictMap = dynamic(
     })),
   {
     loading: () => (
-      <div className="h-96 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+      <div className="h-96 bg-white border-2 border-gray-300 animate-pulse flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
           <p className="text-gray-600">Loading interactive map...</p>
@@ -114,7 +114,7 @@ export const DynamicDistrictBoundaryMap = dynamic(
   () => import('@/features/districts/components/DistrictBoundaryMap'),
   {
     loading: () => (
-      <div className="h-64 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+      <div className="h-64 bg-white border-2 border-gray-300 animate-pulse flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
           <p className="text-gray-600">Loading boundary map...</p>
@@ -129,7 +129,7 @@ export const DynamicLeafletDistrictMap = dynamic(
   () => import('@/features/districts/components/LeafletDistrictMap'),
   {
     loading: () => (
-      <div className="h-64 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+      <div className="h-64 bg-white border-2 border-gray-300 animate-pulse flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-civiq-blue mx-auto mb-2"></div>
           <p className="text-gray-600">Loading map...</p>

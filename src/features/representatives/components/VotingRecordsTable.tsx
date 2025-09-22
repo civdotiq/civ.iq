@@ -67,8 +67,10 @@ const VotesList = memo(
         return (
           <div style={style} className="px-1 py-1">
             <div
-              className={`bg-white rounded-lg border transition-all duration-200 cursor-pointer ${
-                isExpanded ? 'border-civiq-blue shadow-md' : 'border-gray-200 hover:border-gray-300'
+              className={`aicher-card aicher-hover transition-all duration-200 cursor-pointer ${
+                isExpanded
+                  ? 'border-civiq-blue border-2 border-black'
+                  : 'border-gray-200 hover:border-gray-300'
               }`}
               onClick={() => toggleRowExpansion(vote.voteId)}
             >
@@ -106,11 +108,11 @@ const VotesList = memo(
                   </div>
                   <div className="flex flex-col items-end gap-2 ml-4">
                     <span
-                      className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full border ${getPositionColor(vote.position)}`}
+                      className={`aicher-button px-2.5 py-1 aicher-heading text-xs aicher-no-radius ${getPositionColor(vote.position)}`}
                     >
                       {vote.position}
                     </span>
-                    <span className={`text-sm font-medium ${getResultColor(vote.result)}`}>
+                    <span className={`aicher-heading text-sm ${getResultColor(vote.result)}`}>
                       {vote.result}
                     </span>
                   </div>
@@ -118,7 +120,7 @@ const VotesList = memo(
 
                 {/* Expanded Details */}
                 {isExpanded && (
-                  <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="mt-3 pt-3 aicher-border-t border-gray-100">
                     <div className="space-y-2 text-sm text-gray-600">
                       <p>
                         <span className="font-medium">Question:</span> {vote.question}
@@ -162,7 +164,7 @@ const VotesList = memo(
     };
 
     return (
-      <div className="bg-gray-50 rounded-lg p-2">
+      <div className="bg-white p-2">
         <List
           height={600} // Max height of the list container
           itemCount={votes.length}
@@ -335,11 +337,11 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
       case 'Nay':
         return 'text-red-700 bg-red-100 border-red-300';
       case 'Not Voting':
-        return 'text-gray-700 bg-gray-100 border-gray-300';
+        return 'text-gray-700 bg-white border-2 border-gray-300 border-gray-300';
       case 'Present':
         return 'text-blue-700 bg-blue-100 border-blue-300';
       default:
-        return 'text-gray-700 bg-gray-100 border-gray-300';
+        return 'text-gray-700 bg-white border-2 border-gray-300 border-gray-300';
     }
   }, []);
 
@@ -356,7 +358,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
   // Early return if no bioguideId - after hooks to follow rules of hooks
   if (!bioguideId) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+      <div className="aicher-card text-center p-8">
         <p className="text-gray-600">Invalid representative ID</p>
       </div>
     );
@@ -390,13 +392,13 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
         });
 
         return votes.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+          <div className="aicher-card text-center p-8">
             <p className="text-gray-600">No voting records available at this time.</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="aicher-card aicher-no-radius overflow-hidden">
             {/* Header with filters */}
-            <div className="p-4 border-b border-gray-200 bg-gray-50">
+            <div className="p-4 border-b border-gray-200 bg-white">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h3 className="text-lg font-semibold text-gray-900">Recent Votes</h3>
                 <div className="flex flex-wrap gap-2">

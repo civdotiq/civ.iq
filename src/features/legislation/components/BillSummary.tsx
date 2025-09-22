@@ -62,7 +62,7 @@ export function BillSummary({
   };
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className}`}>
+    <div className={`bg-white border border-gray-200 border-2 border-black ${className}`}>
       {/* Header */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-start justify-between">
@@ -96,7 +96,7 @@ export function BillSummary({
 
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-white border-2 border-gray-300 transition-colors"
             aria-label={isExpanded ? 'Collapse summary' : 'Expand summary'}
           >
             {isExpanded ? (
@@ -110,13 +110,13 @@ export function BillSummary({
 
       {/* Quick Summary - Always Visible */}
       <div className="p-4">
-        <div className="bg-blue-50 rounded-lg p-4 mb-4">
+        <div className="bg-blue-50 p-4 mb-4">
           <h4 className="text-sm font-medium text-blue-900 mb-2">What This Bill Does</h4>
           <p className="text-blue-800 leading-relaxed">{summary.whatItDoes || summary.summary}</p>
         </div>
 
         {summary.whyItMatters && (
-          <div className="bg-green-50 rounded-lg p-4">
+          <div className="bg-green-50 p-4">
             <h4 className="text-sm font-medium text-green-900 mb-2">Why It Matters</h4>
             <p className="text-green-800 leading-relaxed">{summary.whyItMatters}</p>
           </div>
@@ -139,7 +139,7 @@ export function BillSummary({
                 className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
                   activeTab === tab.id
                     ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white'
                 }`}
               >
                 <tab.icon className="h-4 w-4" />
@@ -187,10 +187,7 @@ export function BillSummary({
                 {summary.whoItAffects && summary.whoItAffects.length > 0 ? (
                   <div className="grid gap-2">
                     {summary.whoItAffects.map((group, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
-                      >
+                      <div key={index} className="flex items-center gap-2 p-3 bg-white">
                         <Users className="h-4 w-4 text-gray-600 flex-shrink-0" />
                         <span className="text-gray-700">{group}</span>
                       </div>
@@ -206,7 +203,7 @@ export function BillSummary({
       )}
 
       {/* Footer with Source Info */}
-      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 rounded-b-lg">
+      <div className="px-4 py-3 bg-white border-t border-gray-100 rounded-b-lg">
         <div className="flex items-center justify-between text-xs text-gray-500">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-3 w-3" />
@@ -228,7 +225,7 @@ interface BillSummarySkeletonProps {
 export function BillSummarySkeleton({ className = '' }: BillSummarySkeletonProps) {
   return (
     <div
-      className={`bg-white rounded-lg border border-gray-200 shadow-sm animate-pulse ${className}`}
+      className={`bg-white border border-gray-200 border-2 border-black animate-pulse ${className}`}
     >
       {/* Header */}
       <div className="p-4 border-b border-gray-100">
@@ -245,20 +242,20 @@ export function BillSummarySkeleton({ className = '' }: BillSummarySkeletonProps
               <div className="h-4 w-24 bg-gray-300 rounded"></div>
             </div>
           </div>
-          <div className="h-8 w-8 bg-gray-300 rounded-lg"></div>
+          <div className="h-8 w-8 bg-gray-300"></div>
         </div>
       </div>
 
       {/* Content */}
       <div className="p-4">
-        <div className="bg-gray-100 rounded-lg p-4 mb-4">
+        <div className="bg-white border-2 border-gray-300 p-4 mb-4">
           <div className="h-4 w-24 bg-gray-300 rounded mb-2"></div>
           <div className="space-y-2">
             <div className="h-4 w-full bg-gray-300 rounded"></div>
             <div className="h-4 w-4/5 bg-gray-300 rounded"></div>
           </div>
         </div>
-        <div className="bg-gray-100 rounded-lg p-4">
+        <div className="bg-white border-2 border-gray-300 p-4">
           <div className="h-4 w-20 bg-gray-300 rounded mb-2"></div>
           <div className="space-y-2">
             <div className="h-4 w-full bg-gray-300 rounded"></div>
@@ -268,7 +265,7 @@ export function BillSummarySkeleton({ className = '' }: BillSummarySkeletonProps
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 rounded-b-lg">
+      <div className="px-4 py-3 bg-white border-t border-gray-100 rounded-b-lg">
         <div className="h-3 w-1/2 bg-gray-300 rounded"></div>
       </div>
     </div>
@@ -283,7 +280,7 @@ interface BillSummaryErrorProps {
 
 export function BillSummaryError({ error, onRetry, className = '' }: BillSummaryErrorProps) {
   return (
-    <div className={`bg-white rounded-lg border border-red-200 shadow-sm ${className}`}>
+    <div className={`bg-white border border-red-200 border-2 border-black ${className}`}>
       <div className="p-4">
         <div className="flex items-center gap-2 mb-2">
           <AlertCircle className="h-5 w-5 text-red-600" />
@@ -296,7 +293,7 @@ export function BillSummaryError({ error, onRetry, className = '' }: BillSummary
         {onRetry && (
           <button
             onClick={onRetry}
-            className="px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+            className="px-3 py-2 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
           >
             Try Again
           </button>

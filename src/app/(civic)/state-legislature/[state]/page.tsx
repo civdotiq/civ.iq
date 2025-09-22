@@ -158,7 +158,7 @@ function LegislatorCard({
       case 'Independent':
         return 'bg-purple-100 text-purple-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-white border-2 border-gray-300 text-gray-800';
     }
   };
 
@@ -170,7 +170,7 @@ function LegislatorCard({
       : 0;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+    <div className="bg-white border border-gray-200 p-6 hover:border-2 border-black transition-border-2 border-black">
       <div className="flex items-start gap-4">
         <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center relative overflow-hidden">
           {legislator.photoUrl ? (
@@ -232,7 +232,7 @@ function LegislatorCard({
                 {legislator.committees.slice(0, 3).map((committee, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center px-2 py-1 bg-gray-100 text-xs rounded"
+                    className="inline-flex items-center px-2 py-1 bg-white border-2 border-gray-300 text-xs rounded"
                   >
                     {committee.name}
                     {committee.role === 'chair' && <span className="ml-1 text-blue-600">•</span>}
@@ -292,7 +292,7 @@ function ChamberOverview({ chamber, data }: { chamber: 'upper' | 'lower'; data: 
   const minoritySeats = Math.min(chamberData.democraticSeats, chamberData.republicanSeats);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{chamberData.name}</h3>
 
       <div className="mb-4">
@@ -344,7 +344,7 @@ function RecentBills({ bills }: { bills: StateBill[] }) {
       case 'vetoed':
         return 'bg-red-100 text-red-800';
       case 'dead':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-white border-2 border-gray-300 text-gray-800';
       default:
         return 'bg-yellow-100 text-yellow-800';
     }
@@ -355,7 +355,7 @@ function RecentBills({ bills }: { bills: StateBill[] }) {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Recent Bills</h3>
         <Link href="#" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
@@ -442,7 +442,7 @@ export default function StateLegislaturePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">Loading state legislature data...</p>
@@ -453,7 +453,7 @@ export default function StateLegislaturePage() {
 
   if (!legislatureData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-xl text-gray-600">State legislature data not available</p>
           <Link href="/states" className="mt-4 text-blue-600 hover:text-blue-700">
@@ -481,9 +481,9 @@ export default function StateLegislaturePage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-20">
+      <header className="bg-white border-2 border-black border-b sticky top-0 z-20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/">
@@ -518,9 +518,9 @@ export default function StateLegislaturePage() {
 
       <main className="container mx-auto px-4 py-8">
         {/* Page header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg p-8 mb-8">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 mb-8">
           <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-white/20 rounded-lg flex items-center justify-center">
+            <div className="w-16 h-16 bg-white/20 flex items-center justify-center">
               <span className="text-2xl font-bold">{legislatureData.state}</span>
             </div>
             <div>
@@ -537,22 +537,22 @@ export default function StateLegislaturePage() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
+          <div className="bg-white border border-gray-200 p-6 text-center">
             <Users className="w-8 h-8 text-blue-600 mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">{legislatureData.totalCount}</p>
             <p className="text-sm text-gray-600">Total Legislators</p>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
+          <div className="bg-white border border-gray-200 p-6 text-center">
             <FileText className="w-8 h-8 text-green-600 mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">{recentBills.length}</p>
             <p className="text-sm text-gray-600">Active Bills</p>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
+          <div className="bg-white border border-gray-200 p-6 text-center">
             <Calendar className="w-8 h-8 text-purple-600 mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">2024</p>
             <p className="text-sm text-gray-600">Current Session</p>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
+          <div className="bg-white border border-gray-200 p-6 text-center">
             <ExternalLink className="w-8 h-8 text-orange-600 mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">
               {Math.round(
@@ -565,14 +565,16 @@ export default function StateLegislaturePage() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-md p-1 mb-8">
+        <div className="bg-white border-2 border-black p-1 mb-8">
           <nav className="flex">
             {(['overview', 'upper', 'lower', 'bills'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 px-4 py-3 text-sm font-medium rounded-md transition-colors ${
-                  activeTab === tab ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  activeTab === tab
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:bg-white border-2 border-gray-300'
                 }`}
               >
                 {tab === 'overview'
@@ -602,7 +604,7 @@ export default function StateLegislaturePage() {
           {(activeTab === 'upper' || activeTab === 'lower') && (
             <>
               {/* Filters */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="bg-white border border-gray-200 p-6">
                 <div className="flex flex-wrap gap-4">
                   <div className="flex-1 min-w-64">
                     <div className="relative">
@@ -612,14 +614,14 @@ export default function StateLegislaturePage() {
                         placeholder="Search legislators..."
                         value={filters.search}
                         onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
                   <select
                     value={filters.party}
                     onChange={e => setFilters(prev => ({ ...prev, party: e.target.value }))}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="all">All Parties</option>
                     <option value="d">Democrats</option>

@@ -28,11 +28,11 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
   const pathname = usePathname();
 
   const headerClasses = transparent
-    ? 'bg-white/95 backdrop-blur-md'
-    : 'bg-white border-b border-gray-100';
+    ? 'aicher-card/95 backdrop-blur-md'
+    : 'aicher-card aicher-no-radius';
 
   return (
-    <header className={`fixed top-0 w-full ${headerClasses} z-50 shadow-sm ${className}`}>
+    <header className={`fixed top-0 w-full ${headerClasses} z-50 ${className}`}>
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">
@@ -51,7 +51,7 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`relative font-medium transition-all duration-200 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] after:transition-all after:duration-200 hover:after:w-full ${
+                className={`aicher-heading-wide relative transition-all duration-200 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] after:transition-all after:duration-200 hover:after:w-full ${
                   isActive ? 'text-[#3ea2d4] after:w-full' : 'text-gray-700 hover:text-[#3ea2d4]'
                 }`}
               >
@@ -63,7 +63,7 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
 
         {/* Mobile Menu Button */}
         <button
-          className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+          className="aicher-button md:hidden flex items-center justify-center w-10 h-10 text-gray-700 transition-colors"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle mobile menu"
           aria-expanded={mobileMenuOpen}

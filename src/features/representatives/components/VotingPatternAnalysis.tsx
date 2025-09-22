@@ -111,10 +111,10 @@ export function VotingPatternAnalysis({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white border border-gray-200 p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-64 bg-gray-100 rounded"></div>
+          <div className="h-64 bg-white border-2 border-gray-300 rounded"></div>
         </div>
       </div>
     );
@@ -127,7 +127,7 @@ export function VotingPatternAnalysis({
   const attendance = ((stats.totalVotes - stats.notVotingCount) / stats.totalVotes) * 100;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Voting Pattern Analysis</h3>
         <p className="text-sm text-gray-600">Analysis based on {stats.totalVotes} recorded votes</p>
@@ -135,12 +135,12 @@ export function VotingPatternAnalysis({
 
       {/* Toggle between views */}
       <div className="mb-6">
-        <div className="bg-gray-100 p-1 rounded-lg inline-flex">
+        <div className="bg-white border-2 border-gray-300 p-1 inline-flex">
           <button
             onClick={() => setSelectedView('distribution')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
               selectedView === 'distribution'
-                ? 'bg-white text-gray-900 shadow-sm'
+                ? 'bg-white text-gray-900 border-2 border-black'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -148,9 +148,9 @@ export function VotingPatternAnalysis({
           </button>
           <button
             onClick={() => setSelectedView('alignment')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
               selectedView === 'alignment'
-                ? 'bg-white text-gray-900 shadow-sm'
+                ? 'bg-white text-gray-900 border-2 border-black'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -240,7 +240,7 @@ export function VotingPatternAnalysis({
 
           {/* Key Statistics */}
           <div className="space-y-4">
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-white p-4">
               <div className="text-sm text-gray-600 mb-1">Attendance Rate</div>
               <div className="text-2xl font-bold text-gray-900">{attendance.toFixed(1)}%</div>
               <div className="mt-2 bg-gray-200 rounded-full h-2 overflow-hidden">
@@ -251,7 +251,7 @@ export function VotingPatternAnalysis({
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-white p-4">
               <div className="text-sm text-gray-600 mb-1">Key Votes Participated</div>
               <div className="text-2xl font-bold text-gray-900">{stats.keyVotesCount}</div>
               <div className="text-xs text-gray-500 mt-1">
@@ -259,7 +259,7 @@ export function VotingPatternAnalysis({
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-white p-4">
               <div className="text-sm text-gray-600 mb-1">Voting Consistency</div>
               <div className="text-2xl font-bold text-gray-900">
                 {(((stats.yeaVotes + stats.nayVotes) / stats.totalVotes) * 100).toFixed(1)}%
@@ -319,7 +319,7 @@ export function VotingPatternAnalysis({
 
           {/* Bipartisan Statistics */}
           <div className="space-y-4">
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-white p-4">
               <div className="text-sm text-gray-600 mb-1">Bipartisan Votes</div>
               <div className="text-2xl font-bold text-gray-900">{stats.bipartisanVotes}</div>
               <div className="text-xs text-gray-500 mt-1">
@@ -327,7 +327,7 @@ export function VotingPatternAnalysis({
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-white p-4">
               <div className="text-sm text-gray-600 mb-1">Independence Score</div>
               <div className="text-2xl font-bold text-gray-900">
                 {(100 - stats.partyAlignment).toFixed(1)}%
@@ -335,7 +335,7 @@ export function VotingPatternAnalysis({
               <div className="text-xs text-gray-500 mt-1">Votes against party line</div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-white p-4">
               <div className="text-sm text-gray-600 mb-1">Leadership Support</div>
               <div className="text-2xl font-bold text-gray-900">Data unavailable</div>
               <div className="text-xs text-gray-500 mt-1">

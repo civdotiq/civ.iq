@@ -7,9 +7,9 @@ import { AdaptiveGridSkeleton } from '@/shared/components/ui';
 
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header skeleton */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-20">
+      <header className="bg-white border-2 border-black border-b sticky top-0 z-20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="h-8 bg-gray-200 rounded w-32 animate-pulse" />

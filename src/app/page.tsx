@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen aicher-background">
       {/* Hero Section */}
       <div className="flex flex-col justify-center items-center min-h-screen px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
@@ -43,7 +43,7 @@ export default function HomePage() {
 
           {/* Feature Icons */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto mt-16">
-            <div className="flex flex-col items-center p-6 bg-white aicher-border hover:border-civiq-blue transition-colors">
+            <div className="aicher-card aicher-hover flex flex-col items-center p-6">
               <div className="w-12 h-12 bg-civiq-blue flex items-center justify-center mb-4 aicher-border">
                 <RepresentativesIcon className="h-6 w-6 text-white" />
               </div>
@@ -56,7 +56,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="flex flex-col items-center p-grid-3 bg-white border-2 border-black hover:border-civiq-blue transition-colors">
+            <div className="aicher-card aicher-hover flex flex-col items-center p-grid-3">
               <div className="w-grid-6 h-grid-6 bg-civiq-green flex items-center justify-center mb-grid-2 border-2 border-black">
                 <LegislationIcon className="h-6 w-6 text-white" />
               </div>
@@ -68,7 +68,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="flex flex-col items-center p-grid-3 bg-white border-2 border-black hover:border-civiq-blue transition-colors">
+            <div className="aicher-card aicher-hover flex flex-col items-center p-grid-3">
               <div className="w-grid-6 h-grid-6 bg-civiq-red flex items-center justify-center mb-grid-2 border-2 border-black">
                 <StatisticsIcon className="h-6 w-6 text-white" />
               </div>

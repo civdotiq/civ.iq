@@ -586,7 +586,7 @@ export default function StateDataVisualizations({
   if (!data) {
     return (
       <div
-        className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}
+        className={`flex items-center justify-center bg-white border-2 border-gray-300 ${className}`}
         style={{ width, height }}
       >
         <p className="text-gray-500">No data available</p>
@@ -635,7 +635,7 @@ export default function StateDataVisualizations({
       default:
         return (
           <div
-            className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}
+            className={`flex items-center justify-center bg-white border-2 border-gray-300 ${className}`}
             style={{ width, height }}
           >
             <p className="text-gray-500">Visualization type not supported</p>
@@ -646,7 +646,7 @@ export default function StateDataVisualizations({
     setError(err instanceof Error ? err.message : 'Visualization error');
     return (
       <div
-        className={`flex items-center justify-center bg-red-100 rounded-lg ${className}`}
+        className={`flex items-center justify-center bg-red-100 ${className}`}
         style={{ width, height }}
       >
         <p className="text-red-600">Error: {error}</p>

@@ -16,7 +16,7 @@ const LeafletDistrictMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex items-center justify-center h-full bg-gray-100 rounded-lg">
+      <div className="flex items-center justify-center h-full bg-white border-2 border-gray-300">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
           <p className="text-sm text-gray-600">Loading Leaflet map...</p>
@@ -30,9 +30,9 @@ export default function LeafletDemoPage() {
   const [selectedState, setSelectedState] = useState<string>('all');
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white border-2 border-black border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -47,7 +47,7 @@ export default function LeafletDemoPage() {
 
       <main className="container mx-auto px-4 py-8">
         {/* Info Card */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="bg-blue-50 border border-blue-200 p-4 mb-6">
           <h2 className="text-lg font-semibold text-blue-900 mb-2">🍃 Free Leaflet Alternative</h2>
           <p className="text-blue-700 text-sm">
             This demonstrates a simple, lightweight Leaflet-based map using only free OpenStreetMap
@@ -56,12 +56,12 @@ export default function LeafletDemoPage() {
         </div>
 
         {/* Controls */}
-        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+        <div className="bg-white border-2 border-black p-4 mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">Filter by State</label>
           <select
             value={selectedState}
             onChange={e => setSelectedState(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+            className="px-3 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
           >
             <option value="all">All States</option>
             <option value="CA">California</option>
@@ -73,7 +73,7 @@ export default function LeafletDemoPage() {
         </div>
 
         {/* Map */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="bg-white border-2 border-black overflow-hidden">
           <div className="h-[600px]">
             <LeafletDistrictMap
               selectedState={selectedState}
@@ -89,7 +89,7 @@ export default function LeafletDemoPage() {
 
         {/* Features */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white border-2 border-black p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">✅ Advantages</h3>
             <ul className="text-sm text-gray-600 space-y-2">
               <li>• 100% free - no API keys required</li>
@@ -100,7 +100,7 @@ export default function LeafletDemoPage() {
             </ul>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white border-2 border-black p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">⚠️ Limitations</h3>
             <ul className="text-sm text-gray-600 space-y-2">
               <li>• No district boundary polygons</li>

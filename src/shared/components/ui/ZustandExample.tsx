@@ -152,7 +152,7 @@ export function ZustandExample() {
       <h1 className="text-2xl font-bold mb-6">Zustand State Management Example</h1>
 
       {/* Representatives Section */}
-      <section className="mb-8 p-4 border rounded-lg">
+      <section className="mb-8 p-4 border">
         <h2 className="text-xl font-semibold mb-4">Representatives Store</h2>
 
         <div className="space-y-4">
@@ -175,7 +175,7 @@ export function ZustandExample() {
 
           <div>
             <h3 className="font-medium mb-2">Current Filters:</h3>
-            <pre className="bg-gray-100 p-2 rounded text-sm">
+            <pre className="bg-white border-2 border-gray-300 p-2 rounded text-sm">
               {JSON.stringify(filters, null, 2)}
             </pre>
           </div>
@@ -200,7 +200,7 @@ export function ZustandExample() {
       </section>
 
       {/* UI Store Section */}
-      <section className="mb-8 p-4 border rounded-lg">
+      <section className="mb-8 p-4 border">
         <h2 className="text-xl font-semibold mb-4">UI Store</h2>
 
         <div className="space-y-4">
@@ -237,13 +237,11 @@ export function ZustandExample() {
 
           <div>
             <h3 className="font-medium mb-2">Modal State:</h3>
-            <p className="text-sm">
-              {modalOpen ? `Modal "${modalOpen}" is open` : 'No modal open'}
-            </p>
+            <p className="text-sm">{modalOpen ? `Modal"${modalOpen}" is open` : 'No modal open'}</p>
             {modalOpen && (
               <button
                 onClick={closeModal}
-                className="mt-2 px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+                className="mt-2 px-3 py-1 bg-white0 text-white rounded text-sm hover:bg-gray-600"
               >
                 Close Modal
               </button>
@@ -253,7 +251,7 @@ export function ZustandExample() {
       </section>
 
       {/* Legislation Store Section */}
-      <section className="mb-8 p-4 border rounded-lg">
+      <section className="mb-8 p-4 border">
         <h2 className="text-xl font-semibold mb-4">Legislation Store</h2>
 
         <div className="space-y-4">
@@ -281,7 +279,7 @@ export function ZustandExample() {
 
           <div>
             <h3 className="font-medium mb-2">Legislation Filters:</h3>
-            <pre className="bg-gray-100 p-2 rounded text-sm">
+            <pre className="bg-white border-2 border-gray-300 p-2 rounded text-sm">
               {JSON.stringify(legislationFilters, null, 2)}
             </pre>
           </div>
@@ -289,13 +287,13 @@ export function ZustandExample() {
       </section>
 
       {/* Instructions */}
-      <section className="p-4 bg-blue-50 rounded-lg">
+      <section className="p-4 bg-blue-50">
         <h2 className="text-lg font-semibold mb-2">How to Use Zustand in Your Components</h2>
         <ol className="list-decimal list-inside space-y-2 text-sm">
           <li>
             Import the store hooks:{' '}
             <code className="bg-white px-1 py-0.5 rounded">
-              {'import { useRepresentativesStore } from "@/store"'}
+              {'import { useRepresentativesStore } from"@/store"'}
             </code>
           </li>
           <li>Destructure the state and actions you need from the hook</li>

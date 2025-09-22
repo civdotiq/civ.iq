@@ -252,10 +252,12 @@ export function AdvancedSearch() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="aicher-card p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Advanced Representative Search</h2>
-        <p className="text-gray-600">
+        <h2 className="aicher-heading text-2xl text-gray-900 mb-2">
+          Advanced Representative Search
+        </h2>
+        <p className="aicher-heading-wide text-gray-600">
           Find representatives by multiple criteria including voting patterns, committee membership,
           and more
         </p>
@@ -271,7 +273,7 @@ export function AdvancedSearch() {
           placeholder="Search by name, state, or keyword..."
           value={filters.query}
           onChange={e => updateFilter('query', e.target.value)}
-          className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+          className="aicher-button block w-full pl-10 pr-3 py-3 focus:outline-none focus:aicher-focus text-lg"
         />
       </div>
 
@@ -282,17 +284,17 @@ export function AdvancedSearch() {
           className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-colors min-h-[44px] ${
             showFilters
               ? 'bg-blue-600 text-white border-blue-600'
-              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              : 'aicher-button text-gray-700 aicher-hover'
           }`}
         >
           <Filter className="w-4 h-4" />
-          <span className="font-medium">Advanced Filters</span>
+          <span className="aicher-heading-wide">Advanced Filters</span>
         </button>
 
         <select
           value={filters.party}
           onChange={e => updateFilter('party', e.target.value)}
-          className="min-h-[44px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 font-medium"
+          className="aicher-button min-h-[44px] px-4 py-3 focus:outline-none focus:aicher-focus aicher-heading-wide text-gray-700"
         >
           <option value="all">All Parties</option>
           <option value="D">Democrat</option>
@@ -303,7 +305,7 @@ export function AdvancedSearch() {
         <select
           value={filters.chamber}
           onChange={e => updateFilter('chamber', e.target.value)}
-          className="min-h-[44px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 font-medium"
+          className="aicher-button min-h-[44px] px-4 py-3 focus:outline-none focus:aicher-focus aicher-heading-wide text-gray-700"
         >
           <option value="all">Both Chambers</option>
           <option value="House">House</option>
@@ -313,7 +315,7 @@ export function AdvancedSearch() {
         <select
           value={filters.state}
           onChange={e => updateFilter('state', e.target.value)}
-          className="min-h-[44px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 font-medium"
+          className="aicher-button min-h-[44px] px-4 py-3 focus:outline-none focus:aicher-focus aicher-heading-wide text-gray-700"
         >
           <option value="">All States</option>
           {states.map(state => (
@@ -329,25 +331,27 @@ export function AdvancedSearch() {
         <div className="mb-6">
           <button
             onClick={clearFilters}
-            className="flex items-center justify-center gap-2 px-4 py-3 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 min-h-[44px] w-full sm:w-auto"
+            className="aicher-button flex items-center justify-center gap-2 px-4 py-3 text-sm text-gray-600 aicher-hover min-h-[44px] w-full sm:w-auto"
           >
             <X className="w-4 h-4" />
-            <span className="font-medium">Clear All Filters</span>
+            <span className="aicher-heading-wide">Clear All Filters</span>
           </button>
         </div>
       )}
 
       {/* Advanced Filters Panel */}
       {showFilters && (
-        <div className="bg-gray-50 rounded-lg p-6 mb-6 space-y-6">
+        <div className="aicher-card aicher-status-info p-6 mb-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Committee Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Committee</label>
+              <label className="aicher-heading-wide block text-sm text-gray-700 mb-2">
+                Committee
+              </label>
               <select
                 value={filters.committee}
                 onChange={e => updateFilter('committee', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="aicher-button w-full px-3 py-2 focus:outline-none focus:aicher-focus"
               >
                 <option value="">Any Committee</option>
                 {committees.map(committee => (
@@ -360,11 +364,13 @@ export function AdvancedSearch() {
 
             {/* Voting Pattern */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Voting Pattern</label>
+              <label className="aicher-heading-wide block text-sm text-gray-700 mb-2">
+                Voting Pattern
+              </label>
               <select
                 value={filters.votingPattern}
                 onChange={e => updateFilter('votingPattern', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="aicher-button w-full px-3 py-2 focus:outline-none focus:aicher-focus"
               >
                 <option value="all">All Patterns</option>
                 <option value="progressive">Progressive (80%+ liberal votes)</option>
@@ -375,7 +381,7 @@ export function AdvancedSearch() {
 
             {/* Years in Office Range */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="aicher-heading-wide block text-sm text-gray-700 mb-2">
                 Years in Office: {filters.experienceYears[0]} - {filters.experienceYears[1]}
               </label>
               <div className="flex items-center gap-3">
@@ -410,7 +416,7 @@ export function AdvancedSearch() {
 
             {/* Campaign Finance Range */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="aicher-heading-wide block text-sm text-gray-700 mb-2">
                 Campaign Fundraising: {formatCurrency(filters.campaignFinance[0])} -{' '}
                 {formatCurrency(filters.campaignFinance[1])}
               </label>
@@ -448,7 +454,7 @@ export function AdvancedSearch() {
 
             {/* Bills Sponsored Range */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="aicher-heading-wide block text-sm text-gray-700 mb-2">
                 Bills Sponsored: {filters.billsSponsoredRange[0]} - {filters.billsSponsoredRange[1]}
               </label>
               <div className="flex items-center gap-3">
@@ -523,7 +529,9 @@ export function AdvancedSearch() {
           <div className="text-center py-12">
             <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No representatives found</h3>
-            <p className="text-gray-600">Try adjusting your search criteria or filters</p>
+            <p className="aicher-heading-wide text-gray-600">
+              Try adjusting your search criteria or filters
+            </p>
           </div>
         ) : (
           results.map((rep, index) => (

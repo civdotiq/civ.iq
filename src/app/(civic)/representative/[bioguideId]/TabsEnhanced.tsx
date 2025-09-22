@@ -140,7 +140,7 @@ function BillsContent({ data }: { data: Record<string, any> }) {
 
       <div className="space-y-3">
         {bills.slice(0, 10).map((bill: any, index: number) => (
-          <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+          <div key={index} className="border p-4 hover:bg-white transition-colors">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
@@ -148,7 +148,7 @@ function BillsContent({ data }: { data: Record<string, any> }) {
                     {bill.type}
                     {bill.number || ` ${bill.congress}-${index + 1}`}
                   </span>
-                  <span className="text-xs px-2 py-1 bg-gray-100 rounded">
+                  <span className="text-xs px-2 py-1 bg-white border-2 border-gray-300 rounded">
                     {bill.congress}th Congress
                   </span>
                 </div>
@@ -213,23 +213,23 @@ function VotesContent({ data }: { data: Record<string, any> }) {
       {/* Voting Summary */}
       {votingPattern && (
         <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-green-50 rounded-lg p-3 text-center">
+          <div className="bg-green-50 p-3 text-center">
             <div className="text-2xl font-bold text-green-600">
               {Number(votingPattern.yes || 0)}
             </div>
             <div className="text-sm text-gray-600">Yes Votes</div>
           </div>
-          <div className="bg-red-50 rounded-lg p-3 text-center">
+          <div className="bg-red-50 p-3 text-center">
             <div className="text-2xl font-bold text-red-600">{Number(votingPattern.no || 0)}</div>
             <div className="text-sm text-gray-600">No Votes</div>
           </div>
-          <div className="bg-yellow-50 rounded-lg p-3 text-center">
+          <div className="bg-yellow-50 p-3 text-center">
             <div className="text-2xl font-bold text-yellow-600">
               {Number(votingPattern.present || 0)}
             </div>
             <div className="text-sm text-gray-600">Present</div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-3 text-center">
+          <div className="bg-white p-3 text-center">
             <div className="text-2xl font-bold text-gray-600">
               {Number(votingPattern.notVoting || 0)}
             </div>
@@ -247,7 +247,7 @@ function VotesContent({ data }: { data: Record<string, any> }) {
 
         <div className="space-y-3">
           {votes.slice(0, 10).map((vote: any, index: number) => (
-            <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+            <div key={index} className="border p-4 hover:bg-white transition-colors">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
@@ -259,7 +259,7 @@ function VotesContent({ data }: { data: Record<string, any> }) {
                             ? 'bg-red-100 text-red-700'
                             : vote.position === 'Present'
                               ? 'bg-yellow-100 text-yellow-700'
-                              : 'bg-gray-100 text-gray-700'
+                              : 'bg-white border-2 border-gray-300 text-gray-700'
                       }`}
                     >
                       {vote.position}
@@ -318,7 +318,7 @@ function FinanceContent({ data }: { data: Record<string, any> }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {summary?.total_receipts !== undefined && summary?.total_receipts !== null && (
-          <div className="bg-blue-50 rounded-lg p-4">
+          <div className="bg-blue-50 p-4">
             <div className="text-sm text-gray-600 mb-1">Total Receipts</div>
             <div className="text-2xl font-bold text-blue-600">
               ${Number(summary.total_receipts || 0).toLocaleString()}
@@ -327,7 +327,7 @@ function FinanceContent({ data }: { data: Record<string, any> }) {
         )}
 
         {summary?.total_disbursements !== undefined && summary?.total_disbursements !== null && (
-          <div className="bg-orange-50 rounded-lg p-4">
+          <div className="bg-orange-50 p-4">
             <div className="text-sm text-gray-600 mb-1">Total Disbursements</div>
             <div className="text-2xl font-bold text-orange-600">
               ${Number(summary.total_disbursements || 0).toLocaleString()}
@@ -337,7 +337,7 @@ function FinanceContent({ data }: { data: Record<string, any> }) {
 
         {summary?.cash_on_hand_end_period !== undefined &&
           summary?.cash_on_hand_end_period !== null && (
-            <div className="bg-green-50 rounded-lg p-4">
+            <div className="bg-green-50 p-4">
               <div className="text-sm text-gray-600 mb-1">Cash on Hand</div>
               <div className="text-2xl font-bold text-green-600">
                 ${Number(summary.cash_on_hand_end_period || 0).toLocaleString()}
@@ -351,7 +351,7 @@ function FinanceContent({ data }: { data: Record<string, any> }) {
           <h5 className="font-medium text-gray-900 mb-3">Top Contributors</h5>
           <div className="space-y-2">
             {topContributors.slice(0, 5).map((contributor: any, index: number) => (
-              <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+              <div key={index} className="flex justify-between items-center p-3 bg-white rounded">
                 <div>
                   <div className="text-gray-700 font-medium">{contributor.name}</div>
                   {contributor.employer && (
@@ -592,7 +592,7 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
       </div>
 
       {/* Enhanced Content Area */}
-      <div className="bg-white rounded-lg shadow-sm border p-6 min-h-[400px]">
+      <div className="bg-white border-2 border-black border p-6 min-h-[400px]">
         {loading && (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">

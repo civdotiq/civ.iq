@@ -150,7 +150,7 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-6">
         {/* Header Section */}
         <EnhancedHeader representative={representative} />
@@ -180,7 +180,7 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
           {/* Main Content Area */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-lg shadow-sm">
+            <div className="bg-white border-2 border-black">
               {/* Tab Navigation */}
               <TabNavigation tabs={profileTabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -196,7 +196,7 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
         </div>
 
         {/* Data Sources Attribution */}
-        <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="mt-8 bg-white border-2 border-black border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Data Sources</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-center space-x-3">

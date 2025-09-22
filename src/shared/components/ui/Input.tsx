@@ -21,7 +21,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           className={cn(
-            'w-full px-4 py-3 border rounded-lg transition-all duration-200',
+            'w-full px-4 py-3 border transition-all duration-200',
             'focus:outline-none focus:ring-2 focus:ring-offset-0',
             error
               ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
@@ -53,7 +53,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           type="search"
           value={value}
           className={cn(
-            'w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg',
+            'w-full pl-12 pr-12 py-3 border border-gray-300 ',
             'focus:outline-none focus:ring-2 focus:ring-civiq-blue/20 focus:border-civiq-blue',
             'transition-all duration-200',
             className

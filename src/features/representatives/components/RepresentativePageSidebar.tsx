@@ -33,9 +33,9 @@ interface RepresentativePageSidebarProps {
 
 export function RepresentativePageSidebar({ representative }: RepresentativePageSidebarProps) {
   /* ARCHIVED: Trading Card Features - Remove comments to restore
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [generatedStats, setGeneratedStats] = useState<any[]>([]);
-  */
+ const [isModalOpen, setIsModalOpen] = useState(false);
+ const [generatedStats, setGeneratedStats] = useState<any[]>([]);
+ */
 
   const getDistrictDisplay = () => {
     if (representative.chamber === 'Senate') {
@@ -56,7 +56,7 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
   return (
     <div className="space-y-6 lg:sticky lg:top-6">
       {/* Federal Level Card */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white border-2 border-black border border-gray-200 p-6">
         <div className="flex items-center mb-3">
           <div className="flex-shrink-0">
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -80,7 +80,7 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
 
         <p className="text-sm text-gray-600 mb-4">{getFederalLevelDescription()}</p>
 
-        <div className="bg-gray-50 rounded-md p-3">
+        <div className="bg-white p-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">
               {representative.chamber === 'Senate' ? 'State' : 'District'}:
@@ -91,7 +91,7 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
       </div>
 
       {/* District Information Card */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white border-2 border-black border border-gray-200 p-6">
         <div className="flex items-center mb-3">
           <div className="flex-shrink-0">
             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -153,7 +153,7 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
       </div>
 
       {/* Compare Representatives Card */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white border-2 border-black border border-gray-200 p-6">
         <div className="flex items-center mb-3">
           <div className="flex-shrink-0">
             <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
@@ -183,14 +183,14 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
         <div className="space-y-3">
           <Link
             href={`/compare?base=${representative.bioguideId}`}
-            className="block w-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 px-4 py-2 rounded-md text-sm font-medium text-center transition-colors duration-200"
+            className="block w-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 px-4 py-2 text-sm font-medium text-center transition-colors duration-200"
           >
             Compare representatives
           </Link>
 
           <Link
             href={`/representatives?state=${representative.state}`}
-            className="block w-full bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-800 px-4 py-2 rounded-md text-sm font-medium text-center transition-colors duration-200"
+            className="block w-full bg-white hover:bg-white border-2 border-gray-300 text-gray-700 hover:text-gray-800 px-4 py-2 text-sm font-medium text-center transition-colors duration-200"
           >
             View all from {representative.state}
           </Link>
@@ -198,71 +198,71 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
       </div>
 
       {/* ARCHIVED: Trading Card Feature - Remove comments to restore
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center mb-3">
-          <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m0 0V1a1 1 0 011-1h2a1 1 0 011 1v18a1 1 0 01-1 1h-2a1 1 0 01-1-1V4M7 4H5a1 1 0 00-1 1v16a1 1 0 001 1h2a1 1 0 001-1V5a1 1 0 00-1-1z" />
-              </svg>
-            </div>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 ml-3">Trading Card</h3>
-        </div>
-        
-        <p className="text-sm text-gray-600 mb-4">
-          Create a shareable trading card with key stats about {representative.name}. Perfect for social media!
-        </p>
-        
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="block w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-800 px-4 py-2 rounded-md text-sm font-medium text-center transition-colors duration-200"
-        >
-          🎴 Create Trading Card
-        </button>
-        
-        <TradingCardPreview 
-          representative={{
-            bioguideId: representative.bioguideId,
-            name: representative.name,
-            firstName: representative.name.split(' ')[0],
-            lastName: representative.name.split(' ').slice(1).join(' '),
-            party: representative.party || 'Unknown',
-            state: representative.state,
-            district: representative.district,
-            chamber: representative.chamber,
-            title: representative.chamber === 'Senate' ? 'U.S. Senator' : 'U.S. Representative',
-            terms: []
-          }}
-          visible={false}
-        />
+   <div className="bg-white border-2 border-black border border-gray-200 p-6">
+    <div className="flex items-center mb-3">
+     <div className="flex-shrink-0">
+      <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+       <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m0 0V1a1 1 0 011-1h2a1 1 0 011 1v18a1 1 0 01-1 1h-2a1 1 0 01-1-1V4M7 4H5a1 1 0 00-1 1v16a1 1 0 001 1h2a1 1 0 001-1V5a1 1 0 00-1-1z" />
+       </svg>
       </div>
+     </div>
+     <h3 className="text-lg font-semibold text-gray-900 ml-3">Trading Card</h3>
+    </div>
+    
+    <p className="text-sm text-gray-600 mb-4">
+     Create a shareable trading card with key stats about {representative.name}. Perfect for social media!
+    </p>
+    
+    <button 
+     onClick={() => setIsModalOpen(true)}
+     className="block w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-800 px-4 py-2 text-sm font-medium text-center transition-colors duration-200"
+    >
+     🎴 Create Trading Card
+    </button>
+    
+    <TradingCardPreview 
+     representative={{
+      bioguideId: representative.bioguideId,
+      name: representative.name,
+      firstName: representative.name.split(' ')[0],
+      lastName: representative.name.split(' ').slice(1).join(' '),
+      party: representative.party || 'Unknown',
+      state: representative.state,
+      district: representative.district,
+      chamber: representative.chamber,
+      title: representative.chamber === 'Senate' ? 'U.S. Senator' : 'U.S. Representative',
+      terms: []
+     }}
+     visible={false}
+    />
+   </div>
 
-      <TradingCardModal
-        representative={{
-          bioguideId: representative.bioguideId,
-          name: representative.name,
-          firstName: representative.name.split(' ')[0],
-          lastName: representative.name.split(' ').slice(1).join(' '),
-          party: representative.party || 'Unknown',
-          state: representative.state,
-          district: representative.district,
-          chamber: representative.chamber,
-          title: representative.chamber === 'Senate' ? 'U.S. Senator' : 'U.S. Representative',
-          terms: []
-        }}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onGenerate={(stats) => {
-          setGeneratedStats(stats);
-          // Trading card stats generated
-        }}
-        additionalData={additionalData}
-      />
-      */}
+   <TradingCardModal
+    representative={{
+     bioguideId: representative.bioguideId,
+     name: representative.name,
+     firstName: representative.name.split(' ')[0],
+     lastName: representative.name.split(' ').slice(1).join(' '),
+     party: representative.party || 'Unknown',
+     state: representative.state,
+     district: representative.district,
+     chamber: representative.chamber,
+     title: representative.chamber === 'Senate' ? 'U.S. Senator' : 'U.S. Representative',
+     terms: []
+    }}
+    isOpen={isModalOpen}
+    onClose={() => setIsModalOpen(false)}
+    onGenerate={(stats) => {
+     setGeneratedStats(stats);
+     // Trading card stats generated
+    }}
+    additionalData={additionalData}
+   />
+   */}
 
       {/* Additional Resources Card */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white border-2 border-black border border-gray-200 p-6">
         <div className="flex items-center mb-3">
           <div className="flex-shrink-0">
             <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">

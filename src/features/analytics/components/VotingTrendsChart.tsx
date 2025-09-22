@@ -226,7 +226,7 @@ export function VotingTrendsChart({
 
   if (loading) {
     return (
-      <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
+      <div className={`aicher-card p-6 ${className}`}>
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded mb-4 w-1/3"></div>
           <div className="h-64 bg-gray-200 rounded"></div>
@@ -237,7 +237,7 @@ export function VotingTrendsChart({
 
   if (error || !data) {
     return (
-      <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
+      <div className={`aicher-card p-6 ${className}`}>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Voting Trends</h3>
         <div className="text-center py-8">
           <div className="text-gray-500 mb-2">{error || 'Unable to load voting trends'}</div>
@@ -248,7 +248,7 @@ export function VotingTrendsChart({
   }
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${className}`}>
+    <div className={`aicher-card aicher-no-radius overflow-hidden ${className}`}>
       <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Voting Trends</h3>

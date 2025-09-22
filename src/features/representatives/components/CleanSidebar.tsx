@@ -80,7 +80,7 @@ export function CleanSidebar({ representative }: CleanSidebarProps) {
   return (
     <div className="space-y-4">
       {/* Federal Level Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      <div className="bg-white border border-gray-200 p-6 border-2 border-black">
         <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
           <Building className="h-5 w-5 text-blue-500" />
           Federal Level
@@ -96,7 +96,7 @@ export function CleanSidebar({ representative }: CleanSidebarProps) {
       </div>
 
       {/* District Information Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      <div className="bg-white border border-gray-200 p-6 border-2 border-black">
         <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
           <MapPin className="h-5 w-5 text-green-500" />
           District Information
@@ -130,7 +130,7 @@ export function CleanSidebar({ representative }: CleanSidebarProps) {
       </div>
 
       {/* Compare Representatives Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      <div className="bg-white border border-gray-200 p-6 border-2 border-black">
         <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-purple-500" />
           Compare Representatives
@@ -156,7 +156,7 @@ export function CleanSidebar({ representative }: CleanSidebarProps) {
       </div>
 
       {/* Additional Resources Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      <div className="bg-white border border-gray-200 p-6 border-2 border-black">
         <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
           <Info className="h-5 w-5 text-orange-500" />
           Additional Resources

@@ -48,7 +48,7 @@ function SidebarCard({
   };
 
   return (
-    <div className={`rounded-lg border shadow-sm ${variants[variant]} ${className}`}>
+    <div className={` border border-2 border-black ${variants[variant]} ${className}`}>
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <div className="text-gray-500">{icon}</div>
@@ -76,7 +76,7 @@ function ContactMethod({ icon, label, value, href, copyable = false }: ContactMe
   };
 
   const content = (
-    <div className="flex items-start gap-2 p-2 rounded hover:bg-gray-50 transition-colors">
+    <div className="flex items-start gap-2 p-2 rounded hover:bg-white transition-colors">
       <div className="text-gray-400 mt-0.5">{icon}</div>
       <div className="flex-1 min-w-0">
         <div className="text-xs font-medium text-gray-600 mb-0.5">{label}</div>
@@ -179,7 +179,7 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
             {representative.chamber === 'Senate' ? (
               <Link
                 href={`/districts/${representative.state}-STATE`}
-                className="block hover:bg-blue-50 -m-3 p-3 rounded-lg transition-colors group"
+                className="block hover:bg-blue-50 -m-3 p-3 transition-colors group"
               >
                 <div className="text-lg font-bold text-gray-900 group-hover:text-blue-600">
                   {getDistrictDisplay()}
@@ -192,7 +192,7 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
             ) : (
               <Link
                 href={`/districts/${representative.state}-${representative.district || 'AL'}`}
-                className="block hover:bg-blue-50 -m-3 p-3 rounded-lg transition-colors group"
+                className="block hover:bg-blue-50 -m-3 p-3 transition-colors group"
               >
                 <div className="text-lg font-bold text-gray-900 group-hover:text-blue-600">
                   {getDistrictDisplay()}
@@ -327,7 +327,7 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
               href={representative.currentTerm.contactForm}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full bg-blue-600 text-white text-center py-2 px-3 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="block w-full bg-blue-600 text-white text-center py-2 px-3 text-sm font-medium hover:bg-blue-700 transition-colors"
             >
               Send Message
             </a>
@@ -338,13 +338,13 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
               href={representative.currentTerm.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full bg-white border border-gray-300 text-gray-700 text-center py-2 px-3 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+              className="block w-full bg-white border border-gray-300 text-gray-700 text-center py-2 px-3 text-sm font-medium hover:bg-white transition-colors"
             >
               Visit Website
             </a>
           )}
 
-          <button className="block w-full bg-white border border-gray-300 text-gray-700 text-center py-2 px-3 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
+          <button className="block w-full bg-white border border-gray-300 text-gray-700 text-center py-2 px-3 text-sm font-medium hover:bg-white transition-colors">
             Find Local Offices
           </button>
         </div>

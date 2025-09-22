@@ -26,10 +26,10 @@ export function CongressBadge({
   className = '',
   variant = 'default',
 }: CongressBadgeProps) {
-  const baseClasses = 'inline-flex items-center px-2 py-1 text-xs font-medium rounded-md';
+  const baseClasses = 'inline-flex items-center px-2 py-1 text-xs font-medium ';
   const variantClasses = {
     default: 'bg-blue-100 text-blue-800 border border-blue-200',
-    compact: 'bg-gray-100 text-gray-700 border border-gray-200',
+    compact: 'bg-white border-2 border-gray-300 text-gray-700 border border-gray-200',
     full: 'bg-indigo-100 text-indigo-800 border border-indigo-200',
   };
 

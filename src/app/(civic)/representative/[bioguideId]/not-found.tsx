@@ -24,9 +24,9 @@ function CiviqLogo() {
 
 export default function RepresentativeNotFound() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="bg-white shadow-sm">
+      <div className="bg-white border-2 border-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             <Link href="/" className="flex items-center">
@@ -69,7 +69,7 @@ export default function RepresentativeNotFound() {
           </p>
 
           {/* Reasons List */}
-          <div className="bg-white rounded-lg p-6 mb-8 text-left max-w-2xl mx-auto shadow-sm">
+          <div className="bg-white p-6 mb-8 text-left max-w-2xl mx-auto border-2 border-black">
             <ul className="space-y-3 text-gray-700">
               <li className="flex items-start">
                 <span className="text-civiq-red mr-2">•</span>
@@ -94,7 +94,7 @@ export default function RepresentativeNotFound() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
               href="/representatives"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-civiq-blue hover:bg-civiq-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-civiq-blue transition-colors"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium text-white bg-civiq-blue hover:bg-civiq-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-civiq-blue transition-colors"
             >
               <svg
                 className="w-5 h-5 mr-2"
@@ -115,7 +115,7 @@ export default function RepresentativeNotFound() {
 
             <Link
               href="/"
-              className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-civiq-blue transition-colors"
+              className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium text-gray-700 bg-white hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-civiq-blue transition-colors"
             >
               <svg
                 className="w-5 h-5 mr-2"

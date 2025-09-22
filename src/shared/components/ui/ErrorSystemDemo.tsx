@@ -124,7 +124,7 @@ export function ErrorSystemDemo() {
           <select
             value={selectedError}
             onChange={e => setSelectedError(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg"
+            className="px-3 py-2 border border-gray-300"
           >
             <option value="">Select an error type</option>
             <option value="invalidZip">Invalid ZIP Code</option>
@@ -144,7 +144,7 @@ export function ErrorSystemDemo() {
               onFeedback={(helpful, comment) => {
                 console.log('Feedback:', { helpful, comment });
                 alert(
-                  `Feedback recorded: ${helpful ? 'Helpful' : 'Not helpful'}${comment ? ` - "${comment}"` : ''}`
+                  `Feedback recorded: ${helpful ? 'Helpful' : 'Not helpful'}${comment ? ` -"${comment}"` : ''}`
                 );
               }}
             />
@@ -181,7 +181,7 @@ export function ErrorSystemDemo() {
         <select
           value={selectedError}
           onChange={e => setSelectedError(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg"
+          className="px-3 py-2 border border-gray-300"
         >
           <option value="">No error (component works)</option>
           <option value="invalidZip">Invalid ZIP Code Error</option>
@@ -190,7 +190,7 @@ export function ErrorSystemDemo() {
           <option value="server">Server Error</option>
         </select>
 
-        <div className="border border-gray-300 rounded-lg p-4">
+        <div className="border border-gray-300 p-4">
           <EnhancedErrorBoundary
             onError={(error, errorInfo) => {
               console.log('Error boundary caught:', error.toJSON());
@@ -214,7 +214,7 @@ export function ErrorSystemDemo() {
                 setShowToast(false);
                 setTimeout(() => setShowToast(true), 100);
               }}
-              className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded border text-left"
+              className="px-3 py-2 text-sm bg-white border-2 border-gray-300 hover:bg-gray-200 rounded border text-left"
             >
               {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
             </button>
@@ -259,18 +259,18 @@ export function ErrorSystemDemo() {
       </div>
 
       {/* Demo Content */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+      <div className="bg-white border border-gray-200 p-6 mb-8">
         {demos[activeDemo as keyof typeof demos]}
       </div>
 
       {/* Feature Summary */}
-      <div className="bg-gray-50 rounded-lg p-6">
+      <div className="bg-white p-6">
         <h2 className="text-xl font-semibold mb-4">Error System Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div>
             <h3 className="font-medium mb-2 text-green-700">✅ Specific Messages</h3>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>• No more "Something went wrong"</li>
+              <li>• No more"Something went wrong"</li>
               <li>• Context-aware error descriptions</li>
               <li>• User-friendly language</li>
               <li>• Clear problem identification</li>
@@ -290,7 +290,7 @@ export function ErrorSystemDemo() {
           <div>
             <h3 className="font-medium mb-2 text-purple-700">📊 User Feedback</h3>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>• "Was this helpful?" collection</li>
+              <li>•"Was this helpful?" collection</li>
               <li>• Optional improvement comments</li>
               <li>• Error message effectiveness tracking</li>
               <li>• Continuous improvement data</li>

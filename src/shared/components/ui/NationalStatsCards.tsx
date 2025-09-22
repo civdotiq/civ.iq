@@ -35,37 +35,37 @@ export default function NationalStatsCards({ districts = [] }: NationalStatsCard
       value: '435 Seats',
       subtitle: `R: ${republicanSeats} | D: ${democraticSeats}`,
       icon: Building2,
-      color: 'blue'
+      color: 'blue',
     },
     {
       title: 'US Senate',
-      value: '100 Seats', 
+      value: '100 Seats',
       subtitle: `R: ${senateRepublican} | D: ${senateDemocratic} | I: ${senateIndependent}`,
       icon: Vote,
-      color: 'green'
+      color: 'green',
     },
     {
       title: 'Total Population',
       value: totalPopulation > 0 ? `${(totalPopulation / 1000000).toFixed(1)}M` : '331.9M',
       subtitle: '2020 Census',
       icon: Users,
-      color: 'purple'
+      color: 'purple',
     },
     {
       title: 'Congressional Districts',
       value: '435 Districts',
       subtitle: 'Across 50 States',
       icon: MapPin,
-      color: 'orange'
-    }
+      color: 'orange',
+    },
   ];
 
   const getColorClasses = (color: string) => {
     const colors = {
       blue: 'bg-blue-50 text-blue-600 border-blue-200',
-      green: 'bg-green-50 text-green-600 border-green-200', 
+      green: 'bg-green-50 text-green-600 border-green-200',
       purple: 'bg-purple-50 text-purple-600 border-purple-200',
-      orange: 'bg-orange-50 text-orange-600 border-orange-200'
+      orange: 'bg-orange-50 text-orange-600 border-orange-200',
     };
     return colors[color as keyof typeof colors] || colors.blue;
   };
@@ -75,16 +75,19 @@ export default function NationalStatsCards({ districts = [] }: NationalStatsCard
       {stats.map((stat, index) => {
         const Icon = stat.icon;
         const colorClasses = getColorClasses(stat.color);
-        
+
         return (
-          <div key={index} className="bg-white rounded-lg shadow-md border hover:shadow-lg transition-shadow">
+          <div
+            key={index}
+            className="bg-white border-2 border-black border hover:border-2 border-black transition-border-2 border-black"
+          >
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-lg border ${colorClasses}`}>
+                <div className={`p-3 border ${colorClasses}`}>
                   <Icon className="h-6 w-6" />
                 </div>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-600 mb-1">{stat.title}</h3>
                 <p className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</p>

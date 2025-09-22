@@ -155,7 +155,7 @@ export function AgeDistributionChart({ medianAge }: { medianAge: number }) {
   const data = useMemo(() => generateAgeDistribution(medianAge), [medianAge]);
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white border-2 border-black p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Age Distribution</h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data}>
@@ -177,7 +177,7 @@ export function IncomeDistributionChart({ medianIncome }: { medianIncome: number
   const data = useMemo(() => generateIncomeDistribution(medianIncome), [medianIncome]);
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white border-2 border-black p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Household Income Distribution</h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data}>
@@ -236,7 +236,7 @@ export function RacialCompositionChart({ demographics }: { demographics: Demogra
   );
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white border-2 border-black p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Racial & Ethnic Composition</h3>
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
@@ -274,7 +274,7 @@ export function ElectionHistoryChart({
   );
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white border-2 border-black p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Election Results History</h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>
@@ -328,7 +328,7 @@ export function EmploymentByIndustryChart() {
   const data = useMemo(() => generateEmploymentData(), []);
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white border-2 border-black p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Employment by Industry</h3>
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
@@ -364,7 +364,7 @@ export function EmploymentByIndustryChart() {
 export function DistrictCharts({ districtData }: DistrictChartsProps) {
   if (!districtData.demographics) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white border-2 border-black p-6">
         <p className="text-gray-600">Demographic data not available for enhanced visualizations.</p>
       </div>
     );

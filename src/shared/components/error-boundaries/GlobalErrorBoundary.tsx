@@ -82,7 +82,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
       // Default error UI
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-white px-4">
           <Card className="max-w-md w-full p-6 text-center">
             <div className="text-red-500 mb-4">
               <svg

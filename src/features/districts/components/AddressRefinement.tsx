@@ -110,7 +110,7 @@ export function AddressRefinement({
 
             {/* Error Display */}
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="p-3 bg-red-50 border border-red-200">
                 <div className="flex items-start">
                   <div className="text-red-600 mr-2">⚠️</div>
                   <div>
@@ -148,7 +148,7 @@ export function AddressRefinement({
           </div>
 
           {/* Help Section */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200">
             <h4 className="text-sm font-semibold text-blue-900 mb-2">💡 Tips for Better Results</h4>
             <ul className="text-xs text-blue-800 space-y-1">
               <li>• Include your full street address (number, street name, type)</li>

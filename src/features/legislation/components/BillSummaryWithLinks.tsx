@@ -49,7 +49,7 @@ export function BillSummaryWithLinks({
   };
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className}`}>
+    <div className={`bg-white border border-gray-200 border-2 border-black ${className}`}>
       {/* Header */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-start justify-between">
@@ -86,7 +86,7 @@ export function BillSummaryWithLinks({
 
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-white border-2 border-gray-300 transition-colors"
             aria-label={isExpanded ? 'Collapse summary' : 'Expand summary'}
           >
             {isExpanded ? (
@@ -207,5 +207,5 @@ export function BillSummaryWithLinks({
 // After: <BillSummaryWithLinks summary={billSummary} />
 //
 // This automatically converts text like:
-// "Rep. John Smith (R-TX) sponsored H.R. 1234 in the House Ways and Means Committee"
+//"Rep. John Smith (R-TX) sponsored H.R. 1234 in the House Ways and Means Committee"
 // Into clickable links for each entity.

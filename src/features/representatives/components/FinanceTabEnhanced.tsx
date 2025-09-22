@@ -91,7 +91,7 @@ function InfoTooltip({ text }: { text: string }) {
         </svg>
       </button>
       {show && (
-        <div className="absolute z-10 w-64 p-2 text-xs text-white bg-gray-800 rounded-lg shadow-lg -top-2 left-6">
+        <div className="absolute z-10 w-64 p-2 text-xs text-white bg-gray-800 border-2 border-black -top-2 left-6">
           {text}
           <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 -left-1 top-3"></div>
         </div>
@@ -125,7 +125,7 @@ function ContributorsModal({
 
   return (
     <div className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] flex flex-col">
+      <div className="bg-white max-w-4xl w-full max-h-[80vh] flex flex-col">
         <div className="p-6 border-b flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold">All Individual Contributors</h2>
@@ -153,7 +153,7 @@ function ContributorsModal({
         <div className="flex-1 overflow-auto p-6">
           <div className="space-y-3">
             {contributors?.map((contributor, index) => (
-              <div key={index} className="border rounded-lg p-4 hover:bg-gray-50">
+              <div key={index} className="border p-4 hover:bg-white">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -190,7 +190,7 @@ function ContributorsModal({
           </div>
         </div>
 
-        <div className="p-4 border-t bg-gray-50">
+        <div className="p-4 border-t bg-white">
           {metadata?.fecReceiptsLink && (
             <a
               href={metadata.fecReceiptsLink}
@@ -228,7 +228,7 @@ function ContributionTrendsChart({
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg border border-gray-200">
+    <div className="bg-white p-6 border border-gray-200">
       <div className="flex items-center mb-4">
         <h3 className="text-lg font-semibold">Contribution Trends</h3>
         <InfoTooltip text="Monthly contribution totals over the past 12 months from FEC filings" />
@@ -301,7 +301,7 @@ export function FinanceTabEnhanced({
 
       {/* Financial Overview with Enhanced FEC Links */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border border-green-200">
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 border border-green-200">
           <div className="flex items-center">
             <h3 className="text-lg font-semibold text-green-700">Total Raised</h3>
             <InfoTooltip text="Total contributions received during the current election cycle as reported to the FEC" />
@@ -323,7 +323,7 @@ export function FinanceTabEnhanced({
           </a>
         </div>
 
-        <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-lg border border-red-200">
+        <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 border border-red-200">
           <div className="flex items-center">
             <h3 className="text-lg font-semibold text-red-700">Total Spent</h3>
             <InfoTooltip text="Total disbursements made by the campaign as reported to the FEC" />
@@ -346,7 +346,7 @@ export function FinanceTabEnhanced({
           </a>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 border border-blue-200">
           <div className="flex items-center">
             <h3 className="text-lg font-semibold text-blue-700">Cash on Hand</h3>
             <InfoTooltip text="Available campaign funds at the end of the last reporting period" />
@@ -372,7 +372,7 @@ export function FinanceTabEnhanced({
 
       {/* Conduit Aggregates (ActBlue/WinRed) */}
       {contributorData?.conduitAggregates && (
-        <div className="bg-yellow-50 p-6 rounded-lg border border-yellow-200 mb-8">
+        <div className="bg-yellow-50 p-6 border border-yellow-200 mb-8">
           <div className="flex items-center mb-4">
             <h3 className="text-lg font-semibold">Online Fundraising Platforms</h3>
             <InfoTooltip text="ActBlue (Democrats) and WinRed (Republicans) are conduit organizations that process small-dollar online donations" />
@@ -440,7 +440,7 @@ export function FinanceTabEnhanced({
       )}
 
       {/* Top Individual Contributors */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200">
+      <div className="bg-white p-6 border border-gray-200">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center">
             <h3 className="text-lg font-semibold">Top Individual Contributors</h3>
@@ -461,7 +461,7 @@ export function FinanceTabEnhanced({
           {contributorData?.topContributors?.slice(0, 10).map((contributor, index) => (
             <div
               key={index}
-              className="flex justify-between items-center p-2 hover:bg-gray-50 rounded"
+              className="flex justify-between items-center p-2 hover:bg-white rounded"
             >
               <div className="flex-1">
                 <div className="flex items-center gap-2">

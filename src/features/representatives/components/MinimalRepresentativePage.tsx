@@ -123,27 +123,27 @@ export function MinimalRepresentativePage({
                     Voting Analysis
                   </h2>
                   <div className="grid grid-cols-4 gap-6">
-                    <div className="text-center p-6 bg-gray-50 rounded-lg">
+                    <div className="text-center p-6 bg-white">
                       <div className="text-2xl font-light text-gray-900">{votingData.total}</div>
                       <div className="text-xs uppercase tracking-wide text-gray-500 mt-1">
                         Total Votes
                       </div>
                     </div>
-                    <div className="text-center p-6 bg-green-50 rounded-lg">
+                    <div className="text-center p-6 bg-green-50">
                       <div className="text-2xl font-light text-[#0a9338]">{votingData.yes}</div>
                       <div className="text-xs uppercase tracking-wide text-gray-500 mt-1">
                         Yes Votes
                       </div>
                       <div className="text-xs text-gray-400 mt-1">{votingDistribution.yes}%</div>
                     </div>
-                    <div className="text-center p-6 bg-red-50 rounded-lg">
+                    <div className="text-center p-6 bg-red-50">
                       <div className="text-2xl font-light text-[#e11d07]">{votingData.no}</div>
                       <div className="text-xs uppercase tracking-wide text-gray-500 mt-1">
                         No Votes
                       </div>
                       <div className="text-xs text-gray-400 mt-1">{votingDistribution.no}%</div>
                     </div>
-                    <div className="text-center p-6 bg-gray-50 rounded-lg">
+                    <div className="text-center p-6 bg-white">
                       <div className="text-2xl font-light text-gray-600">
                         {votingData.absent + votingData.present}
                       </div>
@@ -178,7 +178,7 @@ export function MinimalRepresentativePage({
                                 ? 'bg-green-50 text-[#0a9338]'
                                 : v.vote === 'No'
                                   ? 'bg-red-50 text-[#e11d07]'
-                                  : 'bg-gray-50 text-gray-600'
+                                  : 'bg-white text-gray-600'
                             }`}
                           >
                             {v.vote}
@@ -216,7 +216,7 @@ export function MinimalRepresentativePage({
                                 ? 'bg-green-50 text-[#0a9338]'
                                 : v.vote === 'No'
                                   ? 'bg-red-50 text-[#e11d07]'
-                                  : 'bg-gray-50 text-gray-600'
+                                  : 'bg-white text-gray-600'
                             }`}
                           >
                             {v.vote}
@@ -236,7 +236,7 @@ export function MinimalRepresentativePage({
                     Legislative Summary
                   </h2>
                   <div className="grid grid-cols-3 gap-6">
-                    <div className="text-center p-6 bg-blue-50 rounded-lg">
+                    <div className="text-center p-6 bg-blue-50">
                       <div className="text-2xl font-light text-[#3ea2d4]">
                         {quickStats.billsSponsored}
                       </div>
@@ -244,13 +244,13 @@ export function MinimalRepresentativePage({
                         Bills Sponsored
                       </div>
                     </div>
-                    <div className="text-center p-6 bg-gray-50 rounded-lg">
+                    <div className="text-center p-6 bg-white">
                       <div className="text-2xl font-light text-gray-900">8</div>
                       <div className="text-xs uppercase tracking-wide text-gray-500 mt-1">
                         Bills Enacted
                       </div>
                     </div>
-                    <div className="text-center p-6 bg-green-50 rounded-lg">
+                    <div className="text-center p-6 bg-green-50">
                       <div className="text-2xl font-light text-[#0a9338]">15</div>
                       <div className="text-xs uppercase tracking-wide text-gray-500 mt-1">
                         Co-Sponsored
@@ -293,7 +293,7 @@ export function MinimalRepresentativePage({
                           'Creates tax incentives and grants for small businesses investing in research and development.',
                       },
                     ].map(bill => (
-                      <div key={bill.id} className="border border-gray-100 rounded-lg p-6">
+                      <div key={bill.id} className="border border-gray-100 p-6">
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex-1">
                             <h3 className="font-medium text-gray-900">
@@ -309,7 +309,7 @@ export function MinimalRepresentativePage({
                                 ? 'bg-green-50 text-[#0a9338]'
                                 : bill.status === 'Passed House'
                                   ? 'bg-blue-50 text-[#3ea2d4]'
-                                  : 'bg-gray-50 text-gray-600'
+                                  : 'bg-white text-gray-600'
                             }`}
                           >
                             {bill.status}
@@ -334,7 +334,7 @@ export function MinimalRepresentativePage({
                     ].map(focus => (
                       <div
                         key={focus.area}
-                        className="flex justify-between items-center p-4 bg-gray-50 rounded-lg"
+                        className="flex justify-between items-center p-4 bg-white"
                       >
                         <span className="text-sm text-gray-700">{focus.area}</span>
                         <span className="text-sm font-medium text-gray-900">
@@ -354,28 +354,28 @@ export function MinimalRepresentativePage({
                     Campaign Finance Overview
                   </h2>
                   <div className="grid grid-cols-4 gap-6">
-                    <div className="text-center p-6 bg-green-50 rounded-lg">
+                    <div className="text-center p-6 bg-green-50">
                       <div className="text-2xl font-light text-[#0a9338]">$2.4M</div>
                       <div className="text-xs uppercase tracking-wide text-gray-500 mt-1">
                         Total Raised
                       </div>
                       <div className="text-xs text-gray-400 mt-1">2023-2024 Cycle</div>
                     </div>
-                    <div className="text-center p-6 bg-blue-50 rounded-lg">
+                    <div className="text-center p-6 bg-blue-50">
                       <div className="text-2xl font-light text-[#3ea2d4]">$1.8M</div>
                       <div className="text-xs uppercase tracking-wide text-gray-500 mt-1">
                         Total Spent
                       </div>
                       <div className="text-xs text-gray-400 mt-1">75% of funds</div>
                     </div>
-                    <div className="text-center p-6 bg-gray-50 rounded-lg">
+                    <div className="text-center p-6 bg-white">
                       <div className="text-2xl font-light text-gray-900">$600K</div>
                       <div className="text-xs uppercase tracking-wide text-gray-500 mt-1">
                         Cash on Hand
                       </div>
                       <div className="text-xs text-gray-400 mt-1">As of Q4 2024</div>
                     </div>
-                    <div className="text-center p-6 bg-gray-50 rounded-lg">
+                    <div className="text-center p-6 bg-white">
                       <div className="text-2xl font-light text-gray-900">3,847</div>
                       <div className="text-xs uppercase tracking-wide text-gray-500 mt-1">
                         Contributors
@@ -413,7 +413,7 @@ export function MinimalRepresentativePage({
                     ].map(item => (
                       <div key={item.source} className="flex items-center gap-4">
                         <span className="text-sm w-32 text-gray-700">{item.source}</span>
-                        <div className="flex-1 h-2 bg-gray-100 rounded-full">
+                        <div className="flex-1 h-2 bg-white border-2 border-gray-300 rounded-full">
                           <div
                             className={`h-2 ${item.color} rounded-full transition-all duration-300`}
                             style={{ width: `${item.percentage}%` }}
@@ -470,7 +470,7 @@ export function MinimalRepresentativePage({
                       { category: 'Travel & Events', amount: '$180K', percentage: 10 },
                       { category: 'Administrative', amount: '$90K', percentage: 5 },
                     ].map(expense => (
-                      <div key={expense.category} className="p-4 bg-gray-50 rounded-lg">
+                      <div key={expense.category} className="p-4 bg-white">
                         <div className="flex justify-between items-start mb-2">
                           <span className="text-sm text-gray-700">{expense.category}</span>
                           <span className="text-sm font-medium text-gray-900">
@@ -540,7 +540,7 @@ export function MinimalRepresentativePage({
                     ].map(article => (
                       <article
                         key={article.id}
-                        className="border border-gray-100 rounded-lg p-6 hover:border-gray-200 transition-colors"
+                        className="border border-gray-100 p-6 hover:border-gray-200 transition-colors"
                       >
                         <div className="flex justify-between items-start mb-3">
                           <h3 className="font-medium text-gray-900 leading-relaxed">
@@ -620,7 +620,7 @@ export function MinimalRepresentativePage({
                       { outlet: 'Fox News Sunday', topic: 'Education Funding', date: '2024-08-06' },
                       { outlet: 'Meet the Press', topic: 'Climate Action', date: '2024-08-04' },
                     ].map((appearance, index) => (
-                      <div key={index} className="p-4 bg-gray-50 rounded-lg">
+                      <div key={index} className="p-4 bg-white">
                         <h3 className="font-medium text-gray-900 text-sm">{appearance.outlet}</h3>
                         <p className="text-sm text-gray-600 mt-1">{appearance.topic}</p>
                         <time className="text-xs text-gray-400 mt-2 block">{appearance.date}</time>

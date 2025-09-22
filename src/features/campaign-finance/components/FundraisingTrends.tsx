@@ -103,7 +103,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
       <div className="space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-4 gap-4">
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <div className="bg-blue-50 p-4 border border-blue-200">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-blue-600 text-lg">💰</span>
               <h4 className="font-semibold text-gray-900">Total Raised</h4>
@@ -113,7 +113,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
             </div>
           </div>
 
-          <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+          <div className="bg-red-50 p-4 border border-red-200">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-red-600 text-lg">💸</span>
               <h4 className="font-semibold text-gray-900">Total Spent</h4>
@@ -123,7 +123,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
             </div>
           </div>
 
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+          <div className="bg-green-50 p-4 border border-green-200">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-green-600 text-lg">🏦</span>
               <h4 className="font-semibold text-gray-900">Cash on Hand</h4>
@@ -133,9 +133,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
             </div>
           </div>
 
-          <div
-            className={`p-4 rounded-lg border ${getEfficiencyBackground(data.summary.efficiency)}`}
-          >
+          <div className={`p-4 border ${getEfficiencyBackground(data.summary.efficiency)}`}>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-lg">⚡</span>
               <h4 className="font-semibold text-gray-900">Efficiency</h4>
@@ -147,7 +145,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
         </div>
 
         {/* Timeline Chart */}
-        <div className="bg-gray-50 p-6 rounded-lg">
+        <div className="bg-white p-6">
           <h4 className="font-semibold text-gray-900 mb-4">Fundraising Timeline</h4>
           <div className="space-y-4">
             {sortedTimeline.map((period, index) => {
@@ -160,7 +158,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
               return (
                 <div
                   key={`${period.period}-${period.quarter}`}
-                  className="border border-gray-200 rounded-lg p-4 bg-white"
+                  className="border border-gray-200 p-4 bg-white"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -265,7 +263,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
     return (
       <div className="space-y-6">
         {/* Quarterly Performance Summary */}
-        <div className="bg-gray-50 p-6 rounded-lg">
+        <div className="bg-white p-6">
           <h4 className="font-semibold text-gray-900 mb-4">Quarterly Performance Summary</h4>
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
@@ -290,13 +288,13 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
         </div>
 
         {/* Quarterly Comparison Table */}
-        <div className="bg-white border rounded-lg overflow-hidden">
-          <div className="px-6 py-4 border-b bg-gray-50">
+        <div className="bg-white border overflow-hidden">
+          <div className="px-6 py-4 border-b bg-white">
             <h4 className="font-semibold text-gray-900">Quarterly Comparison</h4>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-white">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Period
@@ -323,7 +321,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {quarterlyData.map((quarter, index) => (
-                  <tr key={`${quarter.period}-${quarter.quarter}`} className="hover:bg-gray-50">
+                  <tr key={`${quarter.period}-${quarter.quarter}`} className="hover:bg-white">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {quarter.period} {quarter.quarter}
                     </td>
@@ -399,11 +397,11 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
     return (
       <div className="space-y-6">
         {/* Cash Flow Projections */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 border">
           <h4 className="font-semibold text-gray-900 mb-4">Cash Flow Projections</h4>
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div className="bg-white p-4 rounded-lg shadow-sm">
+              <div className="bg-white p-4 border-2 border-black">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-green-600 text-lg">📈</span>
                   <h5 className="font-medium text-gray-900">Next Quarter Projection</h5>
@@ -437,7 +435,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                 </div>
               </div>
 
-              <div className="bg-white p-4 rounded-lg shadow-sm">
+              <div className="bg-white p-4 border-2 border-black">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-orange-600 text-lg">⏰</span>
                   <h5 className="font-medium text-gray-900">Runway Analysis</h5>
@@ -471,7 +469,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-lg shadow-sm">
+            <div className="bg-white p-4 border-2 border-black">
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-purple-600 text-lg">🎯</span>
                 <h5 className="font-medium text-gray-900">Performance Targets</h5>
@@ -518,10 +516,10 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
         </div>
 
         {/* Scenario Analysis */}
-        <div className="bg-gray-50 p-6 rounded-lg">
+        <div className="bg-white p-6">
           <h4 className="font-semibold text-gray-900 mb-4">Scenario Analysis</h4>
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+            <div className="bg-green-50 p-4 border border-green-200">
               <h5 className="font-medium text-green-900 mb-2">Best Case</h5>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -535,7 +533,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
               </div>
             </div>
 
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+            <div className="bg-yellow-50 p-4 border border-yellow-200">
               <h5 className="font-medium text-yellow-900 mb-2">Likely Case</h5>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -549,7 +547,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
               </div>
             </div>
 
-            <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+            <div className="bg-red-50 p-4 border border-red-200">
               <h5 className="font-medium text-red-900 mb-2">Worst Case</h5>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -570,7 +568,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
 
   if (!data.timeline || data.timeline.length === 0) {
     return (
-      <div className={`bg-white rounded-lg shadow-md border p-6 ${className}`}>
+      <div className={`bg-white border-2 border-black border p-6 ${className}`}>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Fundraising Trends</h3>
         <div className="text-center py-8 text-gray-500">
           <p>No fundraising data available</p>
@@ -580,7 +578,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
   }
 
   return (
-    <div className={`bg-white rounded-lg shadow-md border p-6 ${className}`}>
+    <div className={`bg-white border-2 border-black border p-6 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -590,14 +588,14 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
       </div>
 
       {/* View Toggle */}
-      <div className="flex space-x-1 mb-6 bg-gray-100 rounded-lg p-1">
+      <div className="flex space-x-1 mb-6 bg-white border-2 border-gray-300 p-1">
         {VIEW_MODES.map(mode => (
           <button
             key={mode.value}
             onClick={() => setActiveView(mode.value)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
               activeView === mode.value
-                ? 'bg-white text-gray-900 shadow-sm'
+                ? 'bg-white text-gray-900 border-2 border-black'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >

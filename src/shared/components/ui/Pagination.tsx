@@ -83,13 +83,13 @@ export function Pagination({
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1 || loading}
           className={`
-            px-3 py-2 text-sm font-medium rounded-md transition-colors
-            ${
-              currentPage <= 1 || loading
-                ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-            }
-          `}
+      px-3 py-2 text-sm font-medium transition-colors
+      ${
+        currentPage <= 1 || loading
+          ? 'text-gray-400 cursor-not-allowed bg-white border-2 border-gray-300'
+          : 'text-gray-700 bg-white border border-gray-300 hover:bg-white'
+      }
+     `}
         >
           Previous
         </button>
@@ -101,14 +101,14 @@ export function Pagination({
               onClick={() => onPageChange(1)}
               disabled={loading}
               className={`
-                px-3 py-2 text-sm font-medium rounded-md transition-colors
-                ${
-                  currentPage === 1
-                    ? 'bg-civiq-red text-white'
-                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                }
-                ${loading ? 'opacity-50 cursor-not-allowed' : ''}
-              `}
+        px-3 py-2 text-sm font-medium transition-colors
+        ${
+          currentPage === 1
+            ? 'bg-civiq-red text-white'
+            : 'text-gray-700 bg-white border border-gray-300 hover:bg-white'
+        }
+        ${loading ? 'opacity-50 cursor-not-allowed' : ''}
+       `}
             >
               1
             </button>
@@ -125,14 +125,14 @@ export function Pagination({
             onClick={() => onPageChange(page)}
             disabled={loading}
             className={`
-              px-3 py-2 text-sm font-medium rounded-md transition-colors
-              ${
-                currentPage === page
-                  ? 'bg-civiq-red text-white'
-                  : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-              }
-              ${loading ? 'opacity-50 cursor-not-allowed' : ''}
-            `}
+       px-3 py-2 text-sm font-medium transition-colors
+       ${
+         currentPage === page
+           ? 'bg-civiq-red text-white'
+           : 'text-gray-700 bg-white border border-gray-300 hover:bg-white'
+       }
+       ${loading ? 'opacity-50 cursor-not-allowed' : ''}
+      `}
           >
             {page}
           </button>
@@ -148,14 +148,14 @@ export function Pagination({
               onClick={() => onPageChange(totalPages)}
               disabled={loading}
               className={`
-                px-3 py-2 text-sm font-medium rounded-md transition-colors
-                ${
-                  currentPage === totalPages
-                    ? 'bg-civiq-red text-white'
-                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                }
-                ${loading ? 'opacity-50 cursor-not-allowed' : ''}
-              `}
+        px-3 py-2 text-sm font-medium transition-colors
+        ${
+          currentPage === totalPages
+            ? 'bg-civiq-red text-white'
+            : 'text-gray-700 bg-white border border-gray-300 hover:bg-white'
+        }
+        ${loading ? 'opacity-50 cursor-not-allowed' : ''}
+       `}
             >
               {totalPages}
             </button>
@@ -167,13 +167,13 @@ export function Pagination({
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages || loading}
           className={`
-            px-3 py-2 text-sm font-medium rounded-md transition-colors
-            ${
-              currentPage >= totalPages || loading
-                ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-            }
-          `}
+      px-3 py-2 text-sm font-medium transition-colors
+      ${
+        currentPage >= totalPages || loading
+          ? 'text-gray-400 cursor-not-allowed bg-white border-2 border-gray-300'
+          : 'text-gray-700 bg-white border border-gray-300 hover:bg-white'
+      }
+     `}
         >
           Next
         </button>
@@ -191,9 +191,9 @@ export function Pagination({
             onChange={e => onItemsPerPageChange(Number(e.target.value))}
             disabled={loading}
             className={`
-              border border-gray-300 rounded-md px-3 py-1 text-sm
-              ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-            `}
+       border border-gray-300 px-3 py-1 text-sm
+       ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+      `}
           >
             {itemsPerPageOptions.map(option => (
               <option key={option} value={option}>
@@ -280,13 +280,13 @@ export function SimplePagination({
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
         disabled={currentPage <= 1 || loading}
         className={`
-          px-4 py-2 text-sm font-medium rounded-md transition-colors
-          ${
-            currentPage <= 1 || loading
-              ? 'text-gray-400 cursor-not-allowed'
-              : 'text-civiq-red hover:bg-civiq-red hover:text-white border border-civiq-red'
-          }
-        `}
+     px-4 py-2 text-sm font-medium transition-colors
+     ${
+       currentPage <= 1 || loading
+         ? 'text-gray-400 cursor-not-allowed'
+         : 'text-civiq-red hover:bg-civiq-red hover:text-white border border-civiq-red'
+     }
+    `}
       >
         ← Previous
       </button>
@@ -299,13 +299,13 @@ export function SimplePagination({
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
         disabled={currentPage >= totalPages || loading}
         className={`
-          px-4 py-2 text-sm font-medium rounded-md transition-colors
-          ${
-            currentPage >= totalPages || loading
-              ? 'text-gray-400 cursor-not-allowed'
-              : 'text-civiq-red hover:bg-civiq-red hover:text-white border border-civiq-red'
-          }
-        `}
+     px-4 py-2 text-sm font-medium transition-colors
+     ${
+       currentPage >= totalPages || loading
+         ? 'text-gray-400 cursor-not-allowed'
+         : 'text-civiq-red hover:bg-civiq-red hover:text-white border border-civiq-red'
+     }
+    `}
       >
         Next →
       </button>

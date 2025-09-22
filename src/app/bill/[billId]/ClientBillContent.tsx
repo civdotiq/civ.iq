@@ -53,17 +53,17 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
     return (
       <div className="animate-pulse space-y-4">
         <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-        <div className="h-6 bg-gray-100 rounded w-1/2"></div>
+        <div className="h-6 bg-white border-2 border-gray-300 rounded w-1/2"></div>
         <div className="grid grid-cols-4 gap-4">
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
         </div>
         <div className="space-y-4">
-          <div className="h-24 bg-gray-100 rounded"></div>
-          <div className="h-24 bg-gray-100 rounded"></div>
-          <div className="h-24 bg-gray-100 rounded"></div>
+          <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
         </div>
       </div>
     );
@@ -71,7 +71,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
 
   if (error || !bill) {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+      <div className="bg-white border-2 border-black p-8 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Bill Not Found</h1>
         <p className="text-gray-600 mb-6">
           Sorry, we couldn&apos;t find information for bill &quot;{billId}&quot;.
@@ -86,7 +86,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
   return (
     <div className="space-y-8">
       {/* Bill Header */}
-      <div className="bg-white rounded-lg shadow-lg p-8">
+      <div className="bg-white border-2 border-black p-8">
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">
@@ -114,7 +114,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                 href={bill.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Congress.gov
@@ -125,7 +125,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                 href={bill.textUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 hover:bg-white transition-colors"
               >
                 <FileText className="w-4 h-4 mr-2" />
                 Full Text
@@ -135,7 +135,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
         </div>
 
         {/* Last Action */}
-        <div className="bg-gray-50 rounded-lg p-4">
+        <div className="bg-white p-4">
           <h3 className="font-medium text-gray-900 mb-2">Latest Action</h3>
           <p className="text-gray-700 mb-1">{bill.status.lastAction.description}</p>
           <p className="text-sm text-gray-500">
@@ -149,7 +149,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Summary */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white border-2 border-black p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               {bill.summary ? 'Summary' : 'Bill Information'}
             </h3>
@@ -166,7 +166,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                   This is {bill.type.toUpperCase()}. {bill.number}, &ldquo;{bill.title}&rdquo;
                 </p>
                 <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="bg-white p-3">
                     <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                       Congress
                     </div>
@@ -174,7 +174,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                       {bill.congress}th Congress
                     </div>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="bg-white p-3">
                     <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                       Chamber
                     </div>
@@ -189,17 +189,17 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           </div>
 
           {/* Sponsor and Cosponsors */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white border-2 border-black p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Sponsor & Cosponsors ({bill.cosponsors.length + 1})
             </h3>
 
             {/* Party Breakdown */}
             {bill.cosponsors.length > 0 && (
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="mb-6 p-4 bg-white">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Party Breakdown</h4>
                 <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="bg-blue-100 p-3 rounded-lg">
+                  <div className="bg-blue-100 p-3">
                     <div className="text-lg font-bold text-blue-800">
                       {
                         [
@@ -210,7 +210,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                     </div>
                     <div className="text-xs text-blue-600">Democrats</div>
                   </div>
-                  <div className="bg-red-100 p-3 rounded-lg">
+                  <div className="bg-red-100 p-3">
                     <div className="text-lg font-bold text-red-800">
                       {
                         [
@@ -221,7 +221,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                     </div>
                     <div className="text-xs text-red-600">Republicans</div>
                   </div>
-                  <div className="bg-purple-100 p-3 rounded-lg">
+                  <div className="bg-purple-100 p-3">
                     <div className="text-lg font-bold text-purple-800">
                       {
                         [
@@ -239,7 +239,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
             {/* Sponsor */}
             <div className="mb-6">
               <h4 className="text-sm font-medium text-gray-700 mb-3">Sponsor</h4>
-              <div className="flex items-center space-x-4 p-4 bg-blue-50 rounded-lg">
+              <div className="flex items-center space-x-4 p-4 bg-blue-50">
                 <RepresentativePhoto
                   bioguideId={bill.sponsor.representative.bioguideId}
                   name={bill.sponsor.representative.name}
@@ -279,9 +279,9 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                   {bill.cosponsors.slice(0, 6).map(cosponsor => (
                     <div
                       key={cosponsor.representative.bioguideId}
-                      className={`flex items-center space-x-3 p-3 border-2 rounded-lg hover:bg-gray-50 ${
+                      className={`flex items-center space-x-3 p-3 border-2 hover:bg-white ${
                         cosponsor.withdrawn
-                          ? 'border-gray-300 bg-gray-100 opacity-60'
+                          ? 'border-gray-300 bg-white border-2 border-gray-300 opacity-60'
                           : 'border-gray-200'
                       }`}
                     >
@@ -336,7 +336,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Timeline */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white border-2 border-black p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Legislative Timeline</h3>
             <div className="relative">
               {/* Timeline line */}
@@ -345,8 +345,8 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
               <div className="space-y-4">
                 {/* Always show introduction */}
                 <div className="flex relative">
-                  <div className="flex-shrink-0 w-4 h-4 bg-blue-600 rounded-full border-2 border-white shadow-md mr-4 relative z-10"></div>
-                  <div className="flex-1 bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500">
+                  <div className="flex-shrink-0 w-4 h-4 bg-blue-600 rounded-full border-2 border-white border-2 border-black mr-4 relative z-10"></div>
+                  <div className="flex-1 bg-blue-50 p-3 border-l-4 border-blue-500">
                     <p className="text-sm font-medium text-gray-900">Bill Introduced</p>
                     <p className="text-xs text-gray-600 mt-1">
                       {new Date(bill.introducedDate).toLocaleDateString()} • {bill.chamber}
@@ -358,7 +358,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                 {bill.status.lastAction && bill.status.lastAction.description !== 'Introduced' && (
                   <div className="flex relative">
                     <div
-                      className={`flex-shrink-0 w-4 h-4 rounded-full border-2 border-white shadow-md mr-4 relative z-10 ${
+                      className={`flex-shrink-0 w-4 h-4 rounded-full border-2 border-white border-2 border-black mr-4 relative z-10 ${
                         bill.status.current === 'enacted'
                           ? 'bg-green-600'
                           : bill.status.current === 'failed'
@@ -370,7 +370,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                       }`}
                     ></div>
                     <div
-                      className={`flex-1 p-3 rounded-lg border-l-4 ${
+                      className={`flex-1 p-3 border-l-4 ${
                         bill.status.current === 'enacted'
                           ? 'bg-green-50 border-green-500'
                           : bill.status.current === 'failed'
@@ -397,8 +397,8 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                   bill.status.timeline.length > 0 &&
                   bill.status.timeline.slice(0, 2).map((action, index) => (
                     <div key={index} className="flex relative">
-                      <div className="flex-shrink-0 w-4 h-4 bg-gray-400 rounded-full border-2 border-white shadow-md mr-4 relative z-10"></div>
-                      <div className="flex-1 bg-gray-50 p-3 rounded-lg border-l-4 border-gray-400">
+                      <div className="flex-shrink-0 w-4 h-4 bg-gray-400 rounded-full border-2 border-white border-2 border-black mr-4 relative z-10"></div>
+                      <div className="flex-1 bg-white p-3 border-l-4 border-gray-400">
                         <p className="text-sm font-medium text-gray-900">{action.description}</p>
                         <p className="text-xs text-gray-600 mt-1">
                           {new Date(action.date).toLocaleDateString()}
@@ -410,7 +410,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
 
                 {bill.status.timeline && bill.status.timeline.length > 2 && (
                   <div className="text-center">
-                    <p className="text-xs text-gray-500 bg-gray-100 py-2 px-3 rounded-full inline-block">
+                    <p className="text-xs text-gray-500 bg-white border-2 border-gray-300 py-2 px-3 rounded-full inline-block">
                       + {bill.status.timeline.length - 2} more legislative actions
                     </p>
                   </div>
@@ -421,16 +421,13 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
 
           {/* Related Bills */}
           {bill.relatedBills && bill.relatedBills.length > 0 && (
-            <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="bg-white border-2 border-black p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Related Bills ({bill.relatedBills.length})
               </h3>
               <div className="space-y-3">
                 {bill.relatedBills.map((relatedBill, index) => (
-                  <div
-                    key={index}
-                    className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
-                  >
+                  <div key={index} className="p-3 border border-gray-200 hover:bg-white">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <p className="text-sm font-medium text-blue-600">{relatedBill.number}</p>
@@ -468,16 +465,13 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
 
           {/* Committee Information */}
           {bill.committees && bill.committees.length > 0 && (
-            <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="bg-white border-2 border-black p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Committee{bill.committees.length > 1 ? 's' : ''}
               </h3>
               <div className="space-y-2">
                 {bill.committees.map((committee, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
+                  <div key={index} className="flex items-center justify-between p-3 bg-white">
                     <div>
                       <p className="text-sm font-medium text-gray-900">{committee.name}</p>
                       {committee.chamber && (
@@ -491,7 +485,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           )}
 
           {/* Bill Details */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white border-2 border-black p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Details</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center py-2 border-b border-gray-100">

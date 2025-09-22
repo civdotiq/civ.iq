@@ -19,7 +19,7 @@ import logger from '@/lib/logging/simple-logger';
 const DistrictMap = dynamic(() => import('@/features/districts/components/DistrictMap'), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+    <div className="flex items-center justify-center h-96 bg-white border-2 border-gray-300">
       <div className="text-center">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
         <p className="text-sm text-gray-600">Loading district map...</p>
@@ -146,7 +146,7 @@ export default function DistrictPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">Loading district details...</p>
@@ -157,7 +157,7 @@ export default function DistrictPage() {
 
   if (error || !district) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">District Not Found</h1>
           <p className="text-gray-600 mb-4">
@@ -165,7 +165,7 @@ export default function DistrictPage() {
           </p>
           <Link
             href="/districts"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium hover:bg-blue-700"
           >
             Browse All Districts
           </Link>
@@ -175,9 +175,9 @@ export default function DistrictPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-100">
+      <header className="bg-white border-2 border-black border-b border-gray-100">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
@@ -217,7 +217,7 @@ export default function DistrictPage() {
             />
 
             {/* Interactive Map */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8">
               <h2 className="text-xl font-bold text-gray-900 mb-4">District Boundaries</h2>
               <DistrictMap state={district.state} district={district.number} />
             </div>
@@ -239,7 +239,7 @@ export default function DistrictPage() {
 
             {/* Wikidata Facts */}
             {district.wikidata && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+              <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Historical Facts</h3>
                 <div className="space-y-3">
                   {district.wikidata.established && (

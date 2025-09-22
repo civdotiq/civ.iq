@@ -67,7 +67,7 @@ export function DistrictSelector({
   const getPartyColor = (party: string) => {
     if (party.toLowerCase().includes('democrat')) return 'text-blue-600 bg-blue-50 border-blue-200';
     if (party.toLowerCase().includes('republican')) return 'text-red-600 bg-red-50 border-red-200';
-    return 'text-gray-600 bg-gray-50 border-gray-200';
+    return 'text-gray-600 bg-white border-gray-200';
   };
 
   return (
@@ -94,14 +94,14 @@ export function DistrictSelector({
               <Card
                 key={districtId}
                 className={`
-                  transition-all duration-200 hover:shadow-lg
-                  ${
-                    isSelected
-                      ? 'ring-2 ring-civiq-blue border-civiq-blue bg-civiq-blue/5'
-                      : 'border-gray-200 hover:border-civiq-blue/50'
-                  }
-                  ${district.primary ? 'border-civiq-green/50 bg-civiq-green/5' : ''}
-                `}
+         transition-all duration-200 hover:border-2 border-black
+         ${
+           isSelected
+             ? 'ring-2 ring-civiq-blue border-civiq-blue bg-civiq-blue/5'
+             : 'border-gray-200 hover:border-civiq-blue/50'
+         }
+         ${district.primary ? 'border-civiq-green/50 bg-civiq-green/5' : ''}
+        `}
                 padding="none"
                 onClick={() => handleDistrictSelect(district)}
               >
@@ -170,7 +170,7 @@ export function DistrictSelector({
         {/* Address Refinement Option */}
         {onRefineAddress && (
           <div className="text-center">
-            <div className="inline-flex flex-col items-center space-y-3 p-6 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="inline-flex flex-col items-center space-y-3 p-6 bg-white border border-gray-200">
               <div className="text-sm text-gray-600">Not sure which district you're in?</div>
               <Button
                 onClick={onRefineAddress}
@@ -235,14 +235,14 @@ export function CompactDistrictSelector({
                 key={districtId}
                 onClick={() => handleSelect(district)}
                 className={`
-                  px-3 py-2 rounded-lg text-sm font-medium transition-all
-                  ${
-                    isSelected
-                      ? 'bg-civiq-blue text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }
-                  ${district.primary ? 'ring-2 ring-civiq-green ring-opacity-50' : ''}
-                `}
+         px-3 py-2 text-sm font-medium transition-all
+         ${
+           isSelected
+             ? 'bg-civiq-blue text-white'
+             : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
+         }
+         ${district.primary ? 'ring-2 ring-civiq-green ring-opacity-50' : ''}
+        `}
               >
                 {formatDistrictName(district)}
                 {district.primary && <span className="ml-1">★</span>}

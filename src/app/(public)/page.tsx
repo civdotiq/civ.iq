@@ -73,7 +73,7 @@ export default function Home() {
 
   return (
     <>
-      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md z-50 border-b border-gray-100 shadow-sm">
+      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md z-50 border-b border-gray-100 border-2 border-black">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="transform transition-all duration-300 group-hover:scale-105">
@@ -106,7 +106,7 @@ export default function Home() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            className="md:hidden flex items-center justify-center w-10 h-10 text-gray-700 hover:bg-white border-2 border-gray-300 transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle mobile menu"
           >
@@ -132,26 +132,26 @@ export default function Home() {
 
         {/* Mobile Menu Dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 shadow-lg z-40">
+          <div className="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 border-2 border-black z-40">
             <nav className="container mx-auto px-4 py-4">
               <div className="space-y-4">
                 <Link
                   href="/representatives"
-                  className="block py-3 px-4 text-gray-700 hover:text-[#3ea2d4] hover:bg-gray-50 rounded-lg transition-all duration-200 font-medium"
+                  className="block py-3 px-4 text-gray-700 hover:text-[#3ea2d4] hover:bg-white transition-all duration-200 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Representatives
                 </Link>
                 <Link
                   href="/districts"
-                  className="block py-3 px-4 text-gray-700 hover:text-[#3ea2d4] hover:bg-gray-50 rounded-lg transition-all duration-200 font-medium"
+                  className="block py-3 px-4 text-gray-700 hover:text-[#3ea2d4] hover:bg-white transition-all duration-200 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Districts
                 </Link>
                 <Link
                   href="/about"
-                  className="block py-3 px-4 text-gray-700 hover:text-[#3ea2d4] hover:bg-gray-50 rounded-lg transition-all duration-200 font-medium"
+                  className="block py-3 px-4 text-gray-700 hover:text-[#3ea2d4] hover:bg-white transition-all duration-200 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   About
@@ -203,7 +203,7 @@ export default function Home() {
           >
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-[#3ea2d4]/20 to-[#0a9338]/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
-              <div className="relative shadow-2xl rounded-xl overflow-hidden border border-gray-200 bg-white">
+              <div className="relative border-2 border-black-2xl rounded-xl overflow-hidden border border-gray-200 bg-white">
                 <SmartSearchInput
                   placeholder="Enter ZIP code or address (e.g., 10001 or 123 Main St, City, State)"
                   className="w-full"
@@ -240,7 +240,7 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            <div className="group relative bg-white rounded-2xl p-8 text-center shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 hover:border-blue-200 animate-fade-in-up">
+            <div className="group relative bg-white rounded-2xl p-8 text-center border-2 border-black hover:border-2 border-black-xl transition-all duration-500 border border-gray-100 hover:border-blue-200 animate-fade-in-up">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-green-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative">
                 <div className="w-20 h-20 mx-auto mb-6 p-4 bg-gradient-to-br from-[#e11d07]/10 to-[#0a9338]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
@@ -282,7 +282,7 @@ export default function Home() {
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-8 text-center shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 hover:border-green-200 animate-fade-in-up"
+              className="group relative bg-white rounded-2xl p-8 text-center border-2 border-black hover:border-2 border-black-xl transition-all duration-500 border border-gray-100 hover:border-green-200 animate-fade-in-up"
               style={{ animationDelay: '200ms' }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-blue-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -318,7 +318,7 @@ export default function Home() {
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-8 text-center shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 hover:border-red-200 animate-fade-in-up"
+              className="group relative bg-white rounded-2xl p-8 text-center border-2 border-black hover:border-2 border-black-xl transition-all duration-500 border border-gray-100 hover:border-red-200 animate-fade-in-up"
               style={{ animationDelay: '400ms' }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-red-50/50 to-blue-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -367,7 +367,7 @@ export default function Home() {
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-8 text-center shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 hover:border-blue-200 animate-fade-in-up"
+              className="group relative bg-white rounded-2xl p-8 text-center border-2 border-black hover:border-2 border-black-xl transition-all duration-500 border border-gray-100 hover:border-blue-200 animate-fade-in-up"
               style={{ animationDelay: '600ms' }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-red-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -400,7 +400,7 @@ export default function Home() {
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-8 text-center shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 hover:border-green-200 animate-fade-in-up"
+              className="group relative bg-white rounded-2xl p-8 text-center border-2 border-black hover:border-2 border-black-xl transition-all duration-500 border border-gray-100 hover:border-green-200 animate-fade-in-up"
               style={{ animationDelay: '800ms' }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-blue-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -457,7 +457,7 @@ export default function Home() {
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-8 text-center shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 hover:border-purple-200 animate-fade-in-up"
+              className="group relative bg-white rounded-2xl p-8 text-center border-2 border-black hover:border-2 border-black-xl transition-all duration-500 border border-gray-100 hover:border-purple-200 animate-fade-in-up"
               style={{ animationDelay: '1000ms' }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 to-pink-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>

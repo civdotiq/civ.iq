@@ -47,7 +47,7 @@ export function DataQualityIndicator({
   if (!quality || !source) {
     return (
       <div
-        className={`inline-flex items-center gap-2 px-3 py-1 rounded-md border text-xs font-medium bg-gray-100 text-gray-800 border-gray-200 ${className}`}
+        className={`inline-flex items-center gap-2 px-3 py-1 border text-xs font-medium bg-white border-2 border-gray-300 text-gray-800 border-gray-200 ${className}`}
       >
         <span className="text-xs">?</span>
         <span>Unknown Quality</span>
@@ -87,7 +87,7 @@ export function DataQualityIndicator({
         };
       default:
         return {
-          color: 'bg-gray-100 text-gray-800 border-gray-200',
+          color: 'bg-white border-2 border-gray-300 text-gray-800 border-gray-200',
           icon: '?',
           label: 'Unknown Quality',
           description: 'Quality status unknown',
@@ -100,7 +100,7 @@ export function DataQualityIndicator({
 
   return (
     <div
-      className={`inline-flex items-center gap-2 px-3 py-1 rounded-md border text-xs font-medium ${config.color} ${className}`}
+      className={`inline-flex items-center gap-2 px-3 py-1 border text-xs font-medium ${config.color} ${className}`}
     >
       <span className="text-xs">{config.icon}</span>
       <span>{config.label}</span>
@@ -145,7 +145,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
   // Defensive programming: handle missing props gracefully
   if (!error && !metadata) {
     return (
-      <div className="p-6 rounded-lg border bg-red-50 border-red-200 text-red-800">
+      <div className="p-6 border bg-red-50 border-red-200 text-red-800">
         <div className="flex items-start gap-4">
           <span className="text-2xl">❌</span>
           <div className="flex-1">
@@ -156,7 +156,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
             {onRetry && (
               <button
                 onClick={onRetry}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
               >
                 Try Again
               </button>
@@ -223,7 +223,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
   };
 
   return (
-    <div className={`p-6 rounded-lg border ${severityStyles[severity]}`}>
+    <div className={`p-6 border ${severityStyles[severity]}`}>
       <div className="flex items-start gap-4">
         <span className="text-2xl">{getErrorIcon()}</span>
         <div className="flex-1">
@@ -261,7 +261,7 @@ export function ErrorState({ error, metadata, onRetry }: ErrorStateProps) {
             {onRetry && (
               <button
                 onClick={onRetry}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
               >
                 Try Again
               </button>
@@ -293,7 +293,7 @@ export function DataSourceBadge({
   if (!source) {
     return (
       <span
-        className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800 ${className}`}
+        className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-white border-2 border-gray-300 text-gray-800 ${className}`}
       >
         <span className="text-xs">?</span>
         Unknown Source
@@ -337,7 +337,7 @@ export function DataSourceBadge({
       };
     } else if (source.includes('mock') || source.includes('fallback')) {
       return {
-        color: 'bg-gray-100 text-gray-800',
+        color: 'bg-white border-2 border-gray-300 text-gray-800',
         icon: '🔧',
         label: 'Test Data',
         trustLevel: 'synthetic',
@@ -353,7 +353,7 @@ export function DataSourceBadge({
       };
     } else {
       return {
-        color: 'bg-gray-100 text-gray-800',
+        color: 'bg-white border-2 border-gray-300 text-gray-800',
         icon: '📊',
         label: 'Data',
         trustLevel: 'unknown',

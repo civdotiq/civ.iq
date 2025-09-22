@@ -96,17 +96,17 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
     return (
       <div className="animate-pulse space-y-4">
         <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-        <div className="h-6 bg-gray-100 rounded w-1/2"></div>
+        <div className="h-6 bg-white border-2 border-gray-300 rounded w-1/2"></div>
         <div className="grid grid-cols-4 gap-4">
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
         </div>
         <div className="space-y-4">
-          <div className="h-24 bg-gray-100 rounded"></div>
-          <div className="h-24 bg-gray-100 rounded"></div>
-          <div className="h-24 bg-gray-100 rounded"></div>
+          <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-24 bg-white border-2 border-gray-300 rounded"></div>
         </div>
       </div>
     );
@@ -203,7 +203,7 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
       <h2 className="text-xl font-bold mb-6">Legislative Activity</h2>
 
       {/* Enhanced Filters Section */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg space-y-4">
+      <div className="mb-6 p-4 bg-white space-y-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-medium text-gray-700">Filter Bills</h3>
           {(selectedCongress !== 119 ||
@@ -238,7 +238,7 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
               setCurrentPage(1);
             }}
             placeholder="Search by title, bill number, or policy area..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
 
@@ -253,7 +253,7 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
                 setSelectedCongress(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value={119}>Current (119th)</option>
               <option value={0}>All Congresses</option>
@@ -274,7 +274,7 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
                 setSelectedType(e.target.value as 'all' | 'sponsored' | 'cosponsored');
                 setCurrentPage(1);
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Bills</option>
               <option value="sponsored">Sponsored Only</option>
@@ -291,7 +291,7 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
                 setSelectedStatus(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Statuses</option>
               {uniqueStatuses.map(status => (
@@ -311,7 +311,7 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
                 setSelectedPolicyArea(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Policy Areas</option>
               {uniquePolicyAreas.map(area => (
@@ -376,7 +376,7 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
 
       {/* Pagination Controls */}
       {filteredBills.length > itemsPerPage && (
-        <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between mb-6 p-4 bg-white">
           <div className="text-sm text-gray-600">
             Showing {startIndex + 1}-{Math.min(endIndex, filteredBills.length)} of{' '}
             {filteredBills.length} bills
@@ -388,7 +388,7 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
                 setItemsPerPage(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="px-3 py-1 border rounded-md text-sm"
+              className="px-3 py-1 border text-sm"
             >
               <option value={10}>10 per page</option>
               <option value={25}>25 per page</option>
@@ -399,7 +399,7 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                className="px-3 py-1 border text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white border-2 border-gray-300"
               >
                 Previous
               </button>
@@ -409,7 +409,7 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
               <button
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                className="px-3 py-1 border text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white border-2 border-gray-300"
               >
                 Next
               </button>
@@ -440,7 +440,7 @@ export function BillsTab({ bioguideId, sharedData, sharedLoading, sharedError }:
           {displayedBills.map((bill, index) => (
             <div
               key={`${bill.id || 'bill'}-${index}-${bill.number || index}`}
-              className="border rounded-lg p-4"
+              className="border p-4"
             >
               <h3 className="font-medium">
                 {bill.relationship === 'cosponsored' && (

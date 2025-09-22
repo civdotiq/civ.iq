@@ -153,11 +153,11 @@ const RepresentativeCard = memo(function RepresentativeCard({
   const getPartyColor = (party: string) => {
     if (party.toLowerCase().includes('democrat')) return 'text-blue-600 bg-blue-50';
     if (party.toLowerCase().includes('republican')) return 'text-red-600 bg-red-50';
-    return 'text-gray-600 bg-gray-50';
+    return 'text-gray-600 bg-white';
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+    <div className="bg-white border-2 border-black border border-gray-200 overflow-hidden">
       {/* Header Section */}
       <div className="p-6 pb-4">
         <div className="flex items-start gap-4">
@@ -177,7 +177,7 @@ const RepresentativeCard = memo(function RepresentativeCard({
                 {representative.party}
               </span>
               {representative.chamber === 'House' && representative.district && (
-                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                <span className="px-2 py-1 bg-white border-2 border-gray-300 text-gray-700 rounded-full text-xs font-medium">
                   District {representative.district}
                 </span>
               )}
@@ -255,7 +255,7 @@ const RepresentativeCard = memo(function RepresentativeCard({
       </div>
 
       {/* Data Completeness & Action */}
-      <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+      <div className="px-6 py-4 bg-white border-t border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1">
             <div className="flex-1 bg-gray-200 rounded-full h-2">
@@ -286,20 +286,20 @@ const StateLegislatorCard = memo(function StateLegislatorCard({
   const getPartyColor = (party: string) => {
     if (party.toLowerCase().includes('democrat')) return 'text-blue-600 bg-blue-50';
     if (party.toLowerCase().includes('republican')) return 'text-red-600 bg-red-50';
-    return 'text-gray-600 bg-gray-50';
+    return 'text-gray-600 bg-white';
   };
 
   const getChamberInfo = (chamber: string) => {
     if (chamber === 'upper')
       return { name: 'State Senate', color: 'bg-purple-100 text-purple-800' };
     if (chamber === 'lower') return { name: 'State House', color: 'bg-green-100 text-green-800' };
-    return { name: 'Legislature', color: 'bg-gray-100 text-gray-800' };
+    return { name: 'Legislature', color: 'bg-white border-2 border-gray-300 text-gray-800' };
   };
 
   const chamberInfo = getChamberInfo(legislator.chamber);
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+    <div className="bg-white border-2 border-black border border-gray-200 overflow-hidden">
       {/* Header Section */}
       <div className="p-6 pb-4">
         <div className="flex items-start gap-4">
@@ -319,7 +319,7 @@ const StateLegislatorCard = memo(function StateLegislatorCard({
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${chamberInfo.color}`}>
                 {chamberInfo.name}
               </span>
-              <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+              <span className="px-2 py-1 bg-white border-2 border-gray-300 text-gray-700 rounded-full text-xs font-medium">
                 District {legislator.district}
               </span>
             </div>
@@ -382,7 +382,7 @@ const StateLegislatorCard = memo(function StateLegislatorCard({
       )}
 
       {/* Footer */}
-      <div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
+      <div className="px-6 py-3 bg-white border-t border-gray-100">
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">{legislator.state} State Legislature</span>
           {legislator.currentRole?.start_date && (
@@ -453,7 +453,7 @@ const StateRepresentativesTab = memo(function StateRepresentativesTab({
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+      <div className="bg-red-50 border border-red-200 p-6 text-center">
         <p className="text-red-800 font-medium">Error</p>
         <p className="text-red-600 mt-1">{error}</p>
       </div>
@@ -474,7 +474,7 @@ const StateRepresentativesTab = memo(function StateRepresentativesTab({
   return (
     <div className="space-y-8">
       {/* State Info */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white border border-gray-200 p-6">
         <h3 className="text-xl font-semibold text-gray-900 mb-2">
           {stateData.stateName} State Legislature
         </h3>
@@ -486,7 +486,7 @@ const StateRepresentativesTab = memo(function StateRepresentativesTab({
             {stateData.jurisdiction.chambers.map((chamber, index) => (
               <span
                 key={index}
-                className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                className="px-3 py-1 bg-white border-2 border-gray-300 text-gray-700 rounded-full text-sm"
               >
                 {chamber.name}
               </span>
@@ -591,7 +591,7 @@ function ResultsContent() {
 
         // For ZIP codes, check if multi-district first
         if (isZipCode && !selectedDistrictOverride) {
-          nextStage(); // "Checking district boundaries..."
+          nextStage(); //"Checking district boundaries..."
           const multiDistrictCheck = await checkMultiDistrict(searchQuery);
 
           if (multiDistrictCheck.success && multiDistrictCheck.isMultiDistrict) {
@@ -602,7 +602,7 @@ function ResultsContent() {
             return;
           } else if (multiDistrictCheck.success && !multiDistrictCheck.isMultiDistrict) {
             // Single district - continue with normal flow using multi-district API for consistency
-            nextStage(); // "Looking up representatives..."
+            nextStage(); //"Looking up representatives..."
             const response = await fetch(
               `/api/representatives-multi-district?zip=${encodeURIComponent(searchQuery)}`
             );
@@ -646,7 +646,7 @@ function ResultsContent() {
                 },
               };
 
-              nextStage(); // "Loading additional data..."
+              nextStage(); //"Loading additional data..."
               setData(legacyData);
 
               // Set district info
@@ -853,8 +853,8 @@ function ResultsContent() {
   }, [zipCode, address, query]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
+    <div className="min-h-screen bg-white">
+      <header className="bg-white border-2 border-black border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/">
@@ -870,7 +870,7 @@ function ResultsContent() {
                       <Link
                         key={`header-${item.zipCode}-${index}`}
                         href={`/results?zip=${encodeURIComponent(item.zipCode)}`}
-                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                        className="px-2 py-1 text-xs bg-white border-2 border-gray-300 hover:bg-gray-200 rounded text-gray-700 transition-colors"
                       >
                         {item.zipCode}
                       </Link>
@@ -954,7 +954,7 @@ function ResultsContent() {
 
         {/* Tab Navigation */}
         {(zipCode || query) && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-8">
+          <div className="bg-white border border-gray-200 overflow-hidden mb-8">
             <div className="border-b border-gray-200">
               <nav className="flex">
                 <button
@@ -1039,7 +1039,7 @@ function ResultsContent() {
                   )}
 
                   {loading.error && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                    <div className="bg-red-50 border border-red-200 p-6 text-center">
                       <div className="text-red-500 mb-4">
                         <svg
                           className="w-12 h-12 mx-auto"
@@ -1060,7 +1060,7 @@ function ResultsContent() {
                       <div className="flex gap-4 justify-center mt-4">
                         <button
                           onClick={() => loading.retry()}
-                          className="px-4 py-2 bg-civiq-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          className="px-4 py-2 bg-civiq-blue text-white hover:bg-blue-700 transition-colors"
                         >
                           Try Again
                         </button>
@@ -1123,7 +1123,7 @@ function ResultsContent() {
                         className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                           useInteractiveMap
                             ? 'bg-civiq-blue text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
                         {useInteractiveMap ? 'Interactive' : 'Static'}
@@ -1140,7 +1140,7 @@ function ResultsContent() {
 
         {/* Show error state if no search query */}
         {!zipCode && !address && !query && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <div className="bg-red-50 border border-red-200 p-6 text-center">
             <p className="text-red-800 font-medium">Error</p>
             <p className="text-red-600 mt-1">No search query provided</p>
             <Link href="/" className="inline-block mt-4 text-civiq-blue hover:underline">
@@ -1157,7 +1157,7 @@ export default function Results() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-white flex items-center justify-center">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-civiq-blue"></div>
             <p className="mt-4 text-gray-600">Loading results...</p>

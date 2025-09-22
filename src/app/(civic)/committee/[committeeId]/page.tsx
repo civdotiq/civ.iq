@@ -18,7 +18,7 @@ const SubcommitteeCard = dynamic(
   {
     ssr: true,
     loading: () => (
-      <div className="border border-gray-200 rounded-lg p-4 animate-pulse">
+      <div className="border border-gray-200 p-4 animate-pulse">
         <div className="h-6 w-1/2 bg-gray-200 rounded mb-2"></div>
         <div className="h-4 w-full bg-gray-200 rounded"></div>
       </div>
@@ -31,7 +31,7 @@ const CommitteeMembers = dynamic(
   {
     ssr: true,
     loading: () => (
-      <div className="bg-white rounded-lg shadow-lg p-6 animate-pulse">
+      <div className="bg-white border-2 border-black p-6 animate-pulse">
         <div className="h-6 w-48 bg-gray-200 rounded mb-6"></div>
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
@@ -97,7 +97,7 @@ export async function generateMetadata({ params }: CommitteePageProps): Promise<
 // Loading component for committee data
 function CommitteeLoading() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back button skeleton */}
         <div className="mb-6">
@@ -105,7 +105,7 @@ function CommitteeLoading() {
         </div>
 
         {/* Header skeleton */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
+        <div className="bg-white border-2 border-black p-8 mb-8">
           <div className="h-8 w-2/3 bg-gray-200 rounded animate-pulse mb-4"></div>
           <div className="h-6 w-1/3 bg-gray-200 rounded animate-pulse mb-2"></div>
           <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
@@ -113,7 +113,7 @@ function CommitteeLoading() {
 
         {/* Leadership skeleton */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white border-2 border-black p-6">
             <div className="h-6 w-24 bg-gray-200 rounded animate-pulse mb-4"></div>
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse"></div>
@@ -123,7 +123,7 @@ function CommitteeLoading() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white border-2 border-black p-6">
             <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-4"></div>
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse"></div>
@@ -136,7 +136,7 @@ function CommitteeLoading() {
         </div>
 
         {/* Members table skeleton */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-white border-2 border-black p-6">
           <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-4"></div>
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
@@ -162,7 +162,7 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
 
   if (!committee) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Link
             href="/representatives"
@@ -172,7 +172,7 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
             Back to Representatives
           </Link>
 
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="bg-white border-2 border-black p-8 text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Committee Not Found</h1>
             <p className="text-gray-600 mb-6">
               Sorry, we couldn&apos;t find information for committee &quot;{committeeId}&quot;.
@@ -187,7 +187,7 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back button */}
         <Link
@@ -199,7 +199,7 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
         </Link>
 
         {/* Committee Header */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
+        <div className="bg-white border-2 border-black p-8 mb-8">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{committee.name}</h1>
@@ -217,7 +217,7 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
                 href={committee.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Congress.gov
@@ -250,7 +250,7 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
         {/* Leadership Cards */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {committee.leadership.chair && (
-            <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="bg-white border-2 border-black p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Users className="w-5 h-5 mr-2" />
                 Chairperson
@@ -284,7 +284,7 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
           )}
 
           {committee.leadership.rankingMember && (
-            <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="bg-white border-2 border-black p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Users className="w-5 h-5 mr-2" />
                 Ranking Member
@@ -323,7 +323,7 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
 
         {/* Subcommittees */}
         {committee.subcommittees.length > 0 && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white border-2 border-black p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
               Subcommittees ({committee.subcommittees.length})
             </h2>

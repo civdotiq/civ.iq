@@ -13,7 +13,7 @@ import { Loader2, Maximize2 } from 'lucide-react';
 const MapComponent = dynamic(() => import('@/shared/components/ui/MapComponent'), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-full bg-gray-100">
+    <div className="flex items-center justify-center h-full bg-white border-2 border-gray-300">
       <div className="text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
         <p className="text-sm text-gray-600">Loading map...</p>
@@ -230,7 +230,7 @@ export default function DistrictBoundaryMap({
   if (loading) {
     return (
       <div
-        className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}
+        className={`flex items-center justify-center bg-white border-2 border-gray-300 ${className}`}
         style={{ width, height }}
       >
         <div className="text-center">
@@ -244,7 +244,7 @@ export default function DistrictBoundaryMap({
   if (error) {
     return (
       <div
-        className={`flex items-center justify-center bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 ${className}`}
+        className={`flex items-center justify-center bg-white border-2 border-gray-300 border-2 border-dashed border-gray-300 ${className}`}
         style={{ width, height }}
       >
         <div className="text-center">
@@ -261,12 +261,12 @@ export default function DistrictBoundaryMap({
   }
 
   const mapComponent = (
-    <div className={`relative rounded-lg overflow-hidden border shadow-sm ${className}`}>
+    <div className={`relative overflow-hidden border border-2 border-black ${className}`}>
       {/* Map Controls */}
       <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-2">
         <button
           onClick={toggleFullscreen}
-          className="bg-white hover:bg-gray-50 border border-gray-300 rounded p-2 shadow-sm transition-colors"
+          className="bg-white hover:bg-white border border-gray-300 rounded p-2 border-2 border-black transition-colors"
           title="Toggle fullscreen"
         >
           <Maximize2 className="h-4 w-4 text-gray-600" />
@@ -293,7 +293,7 @@ export default function DistrictBoundaryMap({
       </div>
 
       {/* Enhanced Map Info Footer */}
-      <div className="p-3 bg-gray-50 border-t text-xs text-gray-600">
+      <div className="p-3 bg-white border-t text-xs text-gray-600">
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center space-x-4">
             <div>
@@ -359,7 +359,7 @@ export default function DistrictBoundaryMap({
         {mapComponent}
         <button
           onClick={toggleFullscreen}
-          className="absolute top-4 left-4 z-[1001] bg-white hover:bg-gray-50 border border-gray-300 rounded px-3 py-2 shadow-sm transition-colors"
+          className="absolute top-4 left-4 z-[1001] bg-white hover:bg-white border border-gray-300 rounded px-3 py-2 border-2 border-black transition-colors"
         >
           Exit Fullscreen
         </button>

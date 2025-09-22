@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: BillPageProps): Promise<Metad
 // Loading component for bill data
 function BillLoading() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen aicher-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back button skeleton */}
         <div className="mb-6">
@@ -54,7 +54,7 @@ function BillLoading() {
         </div>
 
         {/* Header skeleton */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
+        <div className="aicher-card p-8 mb-8">
           <div className="h-8 w-2/3 bg-gray-200 rounded animate-pulse mb-4"></div>
           <div className="h-6 w-1/3 bg-gray-200 rounded animate-pulse mb-2"></div>
           <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
@@ -63,7 +63,7 @@ function BillLoading() {
         {/* Content skeleton */}
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="aicher-card p-6">
               <div className="h-6 w-24 bg-gray-200 rounded animate-pulse mb-4"></div>
               <div className="space-y-2">
                 <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
@@ -72,7 +72,7 @@ function BillLoading() {
             </div>
           </div>
           <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="aicher-card p-6">
               <div className="h-6 w-20 bg-gray-200 rounded animate-pulse mb-4"></div>
               <div className="space-y-3">
                 <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
@@ -89,7 +89,7 @@ function BillLoading() {
 // Bill content component
 function BillContent({ billId }: { billId: string }) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen aicher-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back button */}
         <Link

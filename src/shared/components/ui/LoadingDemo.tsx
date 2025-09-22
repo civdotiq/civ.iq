@@ -136,20 +136,20 @@ export function LoadingDemo() {
         <div className="flex gap-4 mb-4">
           <button
             onClick={() => smartLoading.start()}
-            className="px-4 py-2 bg-civiq-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-civiq-blue text-white hover:bg-blue-700 transition-colors"
             disabled={smartLoading.loading}
           >
             Start Loading
           </button>
           <button
             onClick={() => smartLoading.setError(new Error('Simulated error for demo'))}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors"
           >
             Simulate Error
           </button>
           <button
             onClick={() => smartLoading.reset()}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            className="px-4 py-2 bg-gray-600 text-white hover:bg-gray-700 transition-colors"
           >
             Reset
           </button>
@@ -162,14 +162,14 @@ export function LoadingDemo() {
           loadingMessage="Simulating API call..."
           timeoutMessage="This is taking longer than expected"
         >
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+          <div className="bg-green-50 border border-green-200 p-6 text-center">
             <p className="text-green-800 font-medium">✓ Loading Complete!</p>
             <p className="text-green-600 mt-1">Data loaded successfully.</p>
           </div>
         </LoadingStateWrapper>
 
         {smartLoading.showTimeout && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="bg-yellow-50 border border-yellow-200 p-4">
             <p className="text-yellow-800 text-sm">
               ⏱️ Timeout detected after {Math.round(smartLoading.timeElapsed / 1000)}s
             </p>
@@ -184,14 +184,14 @@ export function LoadingDemo() {
         <div className="flex gap-4 mb-4">
           <button
             onClick={startMultiStageDemo}
-            className="px-4 py-2 bg-civiq-green text-white rounded-lg hover:bg-green-700 transition-colors"
+            className="px-4 py-2 bg-civiq-green text-white hover:bg-green-700 transition-colors"
             disabled={multiStageLoading.loading}
           >
             Start Multi-Stage Demo
           </button>
           <button
             onClick={() => multiStageLoading.reset()}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            className="px-4 py-2 bg-gray-600 text-white hover:bg-gray-700 transition-colors"
           >
             Reset
           </button>
@@ -212,7 +212,7 @@ export function LoadingDemo() {
           )}
 
           {!multiStageLoading.loading && multiStageLoading.progress === 100 && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+            <div className="bg-green-50 border border-green-200 p-6 text-center">
               <p className="text-green-800 font-medium">✓ All Stages Complete!</p>
             </div>
           )}
@@ -249,12 +249,12 @@ export function LoadingDemo() {
       </div>
 
       {/* Demo Content */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white border border-gray-200 p-6">
         {demos[activeDemo as keyof typeof demos]}
       </div>
 
       {/* Implementation Guide */}
-      <div className="mt-8 bg-gray-50 rounded-lg p-6">
+      <div className="mt-8 bg-white p-6">
         <h2 className="text-xl font-semibold mb-4">Implementation Guide</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
           <div>
@@ -263,17 +263,17 @@ export function LoadingDemo() {
               {`import { useSmartLoading } from '@/hooks/shared/useSmartLoading';
 
 const loading = useSmartLoading(async () => {
-  const data = await api.getData();
-  setData(data);
+ const data = await api.getData();
+ setData(data);
 });
 
 // In component
 <LoadingStateWrapper
-  loading={loading.loading}
-  error={loading.error}
-  retry={loading.retry}
+ loading={loading.loading}
+ error={loading.error}
+ retry={loading.retry}
 >
-  <DataComponent />
+ <DataComponent />
 </LoadingStateWrapper>`}
             </pre>
           </div>

@@ -216,10 +216,10 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           type: 'geojson' as const,
           data: geoJsonData,
         };
-        console.log('  Adding source with config:', sourceConfig);
+        console.log(' Adding source with config:', sourceConfig);
 
         map.addSource('district-boundary', sourceConfig);
-        console.log('  ✅ Source added successfully.');
+        console.log(' ✅ Source added successfully.');
 
         const isRealPolygon = dataSource === 'real_polygon_extraction';
         const fillColor = isRealPolygon ? '#22C55E' : '#3B82F6';
@@ -235,10 +235,10 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
             'fill-opacity': 0.3,
           },
         };
-        console.log('  Adding fill layer with config:', fillLayerConfig);
+        console.log(' Adding fill layer with config:', fillLayerConfig);
 
         map.addLayer(fillLayerConfig);
-        console.log('  ✅ Fill layer added successfully.');
+        console.log(' ✅ Fill layer added successfully.');
 
         // Add stroke layer
         const strokeLayerConfig = {
@@ -251,10 +251,10 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
             'line-opacity': 0.9,
           },
         };
-        console.log('  Adding stroke layer with config:', strokeLayerConfig);
+        console.log(' Adding stroke layer with config:', strokeLayerConfig);
 
         map.addLayer(strokeLayerConfig);
-        console.log('  ✅ Stroke layer added successfully.');
+        console.log(' ✅ Stroke layer added successfully.');
 
         logger.info('✅ District layers added successfully');
 
@@ -368,7 +368,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
 
   if (loading) {
     return (
-      <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
+      <div className="w-full h-[400px] bg-white border-2 border-gray-300 flex items-center justify-center">
         <div className="text-gray-500">Loading district map...</div>
       </div>
     );
@@ -376,7 +376,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
 
   if (error && !geoJsonData) {
     return (
-      <div className="w-full h-[400px] bg-gray-50 rounded-lg flex items-center justify-center">
+      <div className="w-full h-[400px] bg-white flex items-center justify-center">
         <div className="text-gray-500 text-center">
           <p className="mb-2">
             {error === 'District boundaries not available'
@@ -393,7 +393,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
 
   if (!isClient) {
     return (
-      <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
+      <div className="w-full h-[400px] bg-white border-2 border-gray-300 flex items-center justify-center">
         <div className="text-gray-500">Loading interactive map...</div>
       </div>
     );
@@ -404,7 +404,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
 
   return (
     <div className="w-full">
-      <div className="w-full h-[400px] rounded-lg overflow-hidden border border-gray-200">
+      <div className="w-full h-[400px] overflow-hidden border border-gray-200">
         <div
           ref={mapContainer}
           className="h-full w-full district-map-container"

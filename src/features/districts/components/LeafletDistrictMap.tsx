@@ -322,7 +322,7 @@ export default function LeafletDistrictMap({
   if (mapState.error) {
     return (
       <div
-        className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}
+        className={`flex items-center justify-center bg-white border-2 border-gray-300 ${className}`}
         style={{ height }}
       >
         <div className="text-center p-6">
@@ -344,14 +344,10 @@ export default function LeafletDistrictMap({
         </div>
       )}
 
-      <div
-        ref={mapContainer}
-        className="h-full w-full rounded-lg overflow-hidden"
-        style={{ height }}
-      />
+      <div ref={mapContainer} className="h-full w-full overflow-hidden" style={{ height }} />
 
       {showControls && (
-        <div className="absolute bottom-4 right-4 bg-white bg-opacity-90 rounded p-2 shadow-md z-10">
+        <div className="absolute bottom-4 right-4 bg-white bg-opacity-90 rounded p-2 border-2 border-black z-10">
           <div className="text-xs text-gray-600">
             {districts.length} districts • MapLibre + OpenStreetMap
           </div>

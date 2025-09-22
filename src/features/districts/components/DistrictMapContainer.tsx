@@ -346,7 +346,7 @@ export function DistrictMapContainer({
   if (mapState.error) {
     return (
       <div
-        className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}
+        className={`flex items-center justify-center bg-white border-2 border-gray-300 ${className}`}
         style={{ width, height }}
       >
         <div className="text-center p-6">
@@ -367,7 +367,7 @@ export function DistrictMapContainer({
     <div className={`relative ${className}`} style={{ width, height }}>
       {/* Loading overlay */}
       {mapState.loading && (
-        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
           <div className="text-center">
             <Loader2 className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-2" />
             <div className="text-sm text-gray-600">Loading district map...</div>
@@ -381,14 +381,10 @@ export function DistrictMapContainer({
       )}
 
       {/* Map container */}
-      <div
-        ref={mapContainer}
-        className="w-full h-full rounded-lg overflow-hidden"
-        style={{ width, height }}
-      />
+      <div ref={mapContainer} className="w-full h-full overflow-hidden" style={{ width, height }} />
 
       {/* Map legend */}
-      <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-10">
+      <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 backdrop-blur-sm p-3 border-2 border-black z-10">
         <div className="text-xs font-medium text-gray-700 mb-2">Congressional Districts</div>
         <div className="space-y-1 text-xs">
           <div className="flex items-center gap-2">
@@ -400,7 +396,7 @@ export function DistrictMapContainer({
             <span>Democratic</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-white0 rounded-full"></div>
             <span>Independent/Other</span>
           </div>
         </div>

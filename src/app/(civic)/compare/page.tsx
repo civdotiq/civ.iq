@@ -151,7 +151,7 @@ function RepresentativeSelector({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full bg-white border-2 border-gray-300 rounded-lg p-4 text-left hover:border-blue-500 transition-colors"
+        className="w-full bg-white border-2 border-gray-300 p-4 text-left hover:border-blue-500 transition-colors"
       >
         {selectedRep ? (
           <div className="flex items-center gap-3">
@@ -182,14 +182,14 @@ function RepresentativeSelector({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-10 max-h-96 overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 border-2 border-black-xl z-10 max-h-96 overflow-hidden">
           <div className="p-3 border-b border-gray-200">
             <input
               type="text"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Search by name or state..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
               onClick={e => e.stopPropagation()}
             />
           </div>
@@ -202,7 +202,7 @@ function RepresentativeSelector({
                   setIsOpen(false);
                   setSearchTerm('');
                 }}
-                className="w-full p-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
+                className="w-full p-3 text-left hover:bg-white transition-colors flex items-center gap-3"
               >
                 <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                   {rep.imageUrl ? (
@@ -325,7 +325,7 @@ function TimelineComparison({ rep1, rep2 }: { rep1: Representative; rep2: Repres
   }, [rep1, rep2]);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Years in Office Timeline</h3>
       <div id="timeline-chart"></div>
     </div>
@@ -374,7 +374,7 @@ function DistrictDemographicsComparison({
   ];
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">District Demographics</h3>
       <div className="space-y-4">
         {demographics.map((demo, index) => (
@@ -522,7 +522,7 @@ function NewsSentimentComparison({ rep1, rep2 }: { rep1: Representative; rep2: R
   }, [rep1, rep2]);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">News Sentiment Analysis</h3>
       <div className="flex justify-between mb-4">
         <div className="text-sm">
@@ -552,7 +552,7 @@ function CommitteeEffectiveness({ rep1, rep2 }: { rep1: Representative; rep2: Re
   const score2 = calculateEffectiveness(rep2);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Committee Effectiveness Score</h3>
       <div className="space-y-6">
         <div>
@@ -649,7 +649,7 @@ function EnhancedKeyVotes({ rep1, rep2 }: { rep1: Representative; rep2: Represen
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-lg font-semibold text-gray-900">Key Policy Votes</h3>
         <div className="text-right">
@@ -878,7 +878,7 @@ function LegislativeEffectivenessChart({
   }, [rep1, rep2]);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Legislative Success Funnel</h3>
       <div id="legislative-chart"></div>
     </div>
@@ -1019,9 +1019,9 @@ function ComparePageContent() {
   const rep2 = representatives.find(r => r.bioguideId === selectedRep2);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-20">
+      <header className="bg-white border-2 border-black border-b sticky top-0 z-20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/">
@@ -1084,17 +1084,17 @@ function ComparePageContent() {
             {rep1 && rep2 && (
               <>
                 {/* View selector tabs */}
-                <div className="bg-white rounded-lg shadow-md p-1 mb-8">
+                <div className="bg-white border-2 border-black p-1 mb-8">
                   <nav className="flex flex-wrap">
                     {(['overview', 'voting', 'legislation', 'finance', 'district'] as const).map(
                       view => (
                         <button
                           key={view}
                           onClick={() => setCompareView(view)}
-                          className={`flex-1 px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+                          className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                             compareView === view
                               ? 'bg-blue-600 text-white'
-                              : 'text-gray-700 hover:bg-gray-100'
+                              : 'text-gray-700 hover:bg-white border-2 border-gray-300'
                           }`}
                         >
                           {view.charAt(0).toUpperCase() + view.slice(1)}
@@ -1142,7 +1142,7 @@ function ComparePageContent() {
                   )}
 
                   {compareView === 'finance' && (
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <div className="bg-white border border-gray-200 p-6">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">
                         Campaign Finance Comparison
                       </h3>
@@ -1154,7 +1154,7 @@ function ComparePageContent() {
                 </div>
 
                 {/* Enhanced share functionality */}
-                <div className="mt-12 bg-gradient-to-r from-blue-50 to-red-50 rounded-lg p-8 text-center">
+                <div className="mt-12 bg-gradient-to-r from-blue-50 to-red-50 p-8 text-center">
                   <h3 className="text-xl font-semibold text-gray-900 mb-4">
                     Share This Comparison
                   </h3>
@@ -1165,7 +1165,7 @@ function ComparePageContent() {
                         navigator.clipboard.writeText(url);
                         alert('Comparison link copied to clipboard!');
                       }}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
                     >
                       <svg
                         className="w-5 h-5"
@@ -1191,7 +1191,7 @@ function ComparePageContent() {
                           '_blank'
                         );
                       }}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 text-white hover:bg-gray-900 transition-colors"
                     >
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
@@ -1205,7 +1205,7 @@ function ComparePageContent() {
 
             {/* Empty state */}
             {(!rep1 || !rep2) && !loading && (
-              <div className="text-center py-16 bg-white rounded-lg shadow-md">
+              <div className="text-center py-16 bg-white border-2 border-black">
                 <svg
                   className="w-24 h-24 mx-auto text-gray-400 mb-4"
                   fill="none"

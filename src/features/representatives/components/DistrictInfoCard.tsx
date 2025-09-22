@@ -39,10 +39,10 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
   return (
     <div className={`space-y-4 ${className}`}>
       {/* District Information */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-200">
+      <div className="bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-red-50 rounded-lg">
+            <div className="p-2 bg-red-50">
               <MapPin className="w-5 h-5" style={{ color: '#e21f0a' }} />
             </div>
             <h3 className="text-lg font-bold" style={{ color: '#e21f0a' }}>
@@ -86,10 +86,10 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
       </div>
 
       {/* Office Contact */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-200">
+      <div className="bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-blue-50 rounded-lg">
+            <div className="p-2 bg-blue-50">
               <Phone className="w-5 h-5" style={{ color: '#3aa3d5' }} />
             </div>
             <h3 className="text-lg font-bold" style={{ color: '#3aa3d5' }}>
@@ -136,7 +136,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
                   href={representative.currentTerm.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
                 >
                   <Globe className="w-4 h-4" />
                   Official Website
@@ -149,7 +149,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-200">
+      <div className="bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <h3 className="text-lg font-bold" style={{ color: '#0e8d37' }}>
             Quick Actions
@@ -161,19 +161,19 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
               href={representative.currentTerm.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center py-3 px-4 rounded-lg text-sm font-bold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center py-3 px-4 text-sm font-bold hover:from-blue-700 hover:to-blue-800 transition-all border-2 border-black hover:border-2 border-black transform hover:-translate-y-0.5"
             >
               Visit Website
             </a>
           )}
-          <button className="block w-full bg-white border-2 border-gray-200 text-gray-700 text-center py-3 px-4 rounded-lg text-sm font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all">
+          <button className="block w-full bg-white border-2 border-gray-200 text-gray-700 text-center py-3 px-4 text-sm font-semibold hover:border-gray-300 hover:bg-white transition-all">
             Find Local Offices
           </button>
         </div>
       </div>
 
       {/* Data Sources */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-200">
+      <div className="bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200">
         <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <h3 className="text-lg font-bold" style={{ color: '#e21f0a' }}>
             Data Sources

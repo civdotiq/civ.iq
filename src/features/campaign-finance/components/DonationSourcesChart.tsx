@@ -59,7 +59,7 @@ const CustomTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
     const percentage = ((data.value / data.total) * 100).toFixed(1);
 
     return (
-      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+      <div className="bg-white p-3 border border-gray-200 border-2 border-black">
         <p className="font-semibold text-gray-900">{data.name}</p>
         <p className="text-sm text-gray-600 mb-1">{data.description}</p>
         <p className="text-lg font-bold" style={{ color: data.color }}>
@@ -122,7 +122,7 @@ export const DonationSourcesChart: React.FC<DonationSourcesChartProps> = ({
   // Handle case where there's no data
   if (chartData.length === 0 || totalRaised === 0) {
     return (
-      <div className="flex items-center justify-center h-80 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+      <div className="flex items-center justify-center h-80 bg-white border-2 border-dashed border-gray-300">
         <div className="text-center">
           <div className="text-gray-400 mb-2">
             <svg
@@ -153,7 +153,7 @@ export const DonationSourcesChart: React.FC<DonationSourcesChartProps> = ({
   const outerRadius = 120;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Donation Sources</h3>
 
       <ResponsiveContainer width="100%" height={300}>

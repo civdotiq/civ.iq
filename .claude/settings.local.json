@@ -106,7 +106,11 @@
       "WebFetch(domain:news.google.com)",
       "Bash(ss:*)",
       "Bash(awk:*)",
-      "WebFetch(domain:blog.gdeltproject.org)"
+      "WebFetch(domain:blog.gdeltproject.org)",
+      "Bash(for:*)",
+      "Bash(do:*)",
+      "Bash(done)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

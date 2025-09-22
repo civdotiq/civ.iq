@@ -16,7 +16,7 @@ import {
 // Representative card skeleton
 export function RepresentativeSkeleton({ className = '' }: { className?: string }) {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
+    <div className={`bg-white border border-gray-200 p-6 ${className}`}>
       <div className="flex items-start gap-4">
         {/* Avatar skeleton */}
         <div className="w-20 h-20 bg-gray-200 rounded-full animate-pulse flex-shrink-0" />
@@ -51,15 +51,15 @@ export function RepresentativeSkeleton({ className = '' }: { className?: string 
 // District map skeleton
 export function DistrictMapSkeleton({ className = '' }: { className?: string }) {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-4 ${className}`}>
+    <div className={`bg-white border border-gray-200 p-4 ${className}`}>
       <div className="space-y-4">
         {/* Map title skeleton */}
         <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse" />
 
         {/* Map container skeleton */}
-        <div className="relative h-64 bg-gray-100 rounded-lg animate-pulse overflow-hidden">
+        <div className="relative h-64 bg-white border-2 border-gray-300 animate-pulse overflow-hidden">
           {/* Map outline simulation */}
-          <div className="absolute inset-4 border-2 border-gray-300 rounded-lg" />
+          <div className="absolute inset-4 border-2 border-gray-300" />
           <div className="absolute top-8 left-8 w-16 h-12 bg-gray-300 rounded" />
           <div className="absolute bottom-8 right-8 w-20 h-16 bg-gray-300 rounded" />
 
@@ -99,9 +99,9 @@ export function VotingRecordsSkeleton({
   className?: string;
 }) {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${className}`}>
+    <div className={`bg-white border border-gray-200 overflow-hidden ${className}`}>
       {/* Header skeleton */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
+      <div className="p-4 border-b border-gray-200 bg-white">
         <div className="flex justify-between items-center mb-4">
           <div className="h-6 bg-gray-200 rounded w-32 animate-pulse" />
           <div className="flex gap-2">
@@ -120,7 +120,7 @@ export function VotingRecordsSkeleton({
       {/* Mobile cards skeleton */}
       <div className="md:hidden space-y-4 p-4">
         {Array.from({ length: rows }, (_, i) => (
-          <div key={i} className="bg-white rounded-lg border border-gray-200 p-4">
+          <div key={i} className="bg-white border border-gray-200 p-4">
             <div className="flex justify-between items-start mb-3">
               <div className="space-y-2 flex-1">
                 <div className="h-4 bg-gray-200 rounded w-20 animate-pulse" />
@@ -160,7 +160,7 @@ export function SearchResultsSkeleton({
 // Bill summary skeleton
 export function BillSummarySkeleton({ className = '' }: { className?: string }) {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
+    <div className={`bg-white border border-gray-200 p-6 ${className}`}>
       <div className="space-y-4">
         {/* Bill number and status */}
         <div className="flex justify-between items-start">
@@ -195,7 +195,7 @@ export function BillSummarySkeleton({ className = '' }: { className?: string }) 
 // Campaign finance skeleton
 export function CampaignFinanceSkeleton({ className = '' }: { className?: string }) {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
+    <div className={`bg-white border border-gray-200 p-6 ${className}`}>
       <div className="space-y-6">
         {/* Header */}
         <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse" />
@@ -203,7 +203,7 @@ export function CampaignFinanceSkeleton({ className = '' }: { className?: string
         {/* Stats grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {Array.from({ length: 3 }, (_, i) => (
-            <div key={i} className="text-center p-4 bg-gray-50 rounded-lg">
+            <div key={i} className="text-center p-4 bg-white">
               <div className="h-8 bg-gray-200 rounded w-20 mx-auto mb-2 animate-pulse" />
               <div className="h-4 bg-gray-200 rounded w-16 mx-auto animate-pulse" />
             </div>
@@ -211,7 +211,7 @@ export function CampaignFinanceSkeleton({ className = '' }: { className?: string
         </div>
 
         {/* Chart placeholder */}
-        <div className="h-64 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
+        <div className="h-64 bg-white border-2 border-gray-300 animate-pulse flex items-center justify-center">
           <div className="text-gray-400">
             <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
               <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
@@ -226,7 +226,7 @@ export function CampaignFinanceSkeleton({ className = '' }: { className?: string
 // News article skeleton
 export function NewsArticleSkeleton({ className = '' }: { className?: string }) {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-4 ${className}`}>
+    <div className={`bg-white border border-gray-200 p-4 ${className}`}>
       <div className="flex gap-4">
         {/* Article image */}
         <SkeletonImage width="w-24" height="h-18" className="flex-shrink-0" />
@@ -287,10 +287,10 @@ export function PageSkeleton({ className = '' }: { className?: string }) {
 // Profile header skeleton for representative pages
 export function ProfileSkeleton({ className = '' }: { className?: string }) {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
+    <div className={`bg-white border border-gray-200 p-6 ${className}`}>
       <div className="flex items-start gap-6">
         {/* Large avatar skeleton */}
-        <div className="w-32 h-32 bg-gray-200 rounded-lg animate-pulse flex-shrink-0" />
+        <div className="w-32 h-32 bg-gray-200 animate-pulse flex-shrink-0" />
 
         <div className="flex-1 space-y-4">
           {/* Name and title */}

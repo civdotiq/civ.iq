@@ -60,7 +60,7 @@ export function DebugPanel() {
       <div className="fixed bottom-4 right-4 z-50">
         <button
           onClick={() => setIsVisible(true)}
-          className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 shadow-lg"
+          className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 border-2 border-black"
           title="Show Debug Panel (Ctrl+Shift+D)"
         >
           🐛 Debug
@@ -70,7 +70,7 @@ export function DebugPanel() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-black text-green-400 p-4 rounded-lg shadow-xl max-w-md max-h-96 overflow-y-auto font-mono text-xs">
+    <div className="fixed bottom-4 right-4 z-50 bg-black text-green-400 p-4 border-2 border-black-xl max-w-md max-h-96 overflow-y-auto font-mono text-xs">
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-white font-bold">🔍 Phase 2 Debug Panel</h3>
         <button

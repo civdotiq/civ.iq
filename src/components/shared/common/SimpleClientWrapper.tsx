@@ -49,7 +49,7 @@ export function SimpleClientWrapper({
       </div>
 
       {/* Basic representative info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <div className="bg-blue-50 border border-blue-200 p-4 mb-6">
         <h1 className="text-2xl font-bold">{representative?.name || 'Unknown'}</h1>
         <p className="text-gray-600">
           {representative?.party} • {representative?.state} • {representative?.chamber}
@@ -58,7 +58,7 @@ export function SimpleClientWrapper({
       </div>
 
       {/* Simple tab navigation - no complex imports */}
-      <div className="bg-white rounded-lg shadow-sm mb-6">
+      <div className="bg-white border-2 border-black mb-6">
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8 px-6">
             {[
@@ -84,7 +84,7 @@ export function SimpleClientWrapper({
       </div>
 
       {/* Simple tab content with minimal imports */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white border-2 border-black p-6">
         {activeTab === 'profile' && (
           <div>
             <h2 className="text-lg font-semibold mb-4">Profile</h2>
@@ -114,7 +114,7 @@ export function SimpleClientWrapper({
         {activeTab === 'voting' && (
           <div>
             <h2 className="text-lg font-semibold mb-4">Voting Records</h2>
-            <div className="bg-gray-50 border rounded p-4">
+            <div className="bg-white border rounded p-4">
               <p>
                 <strong>BioGuide ID:</strong> {bioguideId}
               </p>
@@ -128,7 +128,7 @@ export function SimpleClientWrapper({
               {Array.isArray(initialData?.votes) && initialData.votes.length > 0 ? (
                 <div className="mt-4">
                   <p className="font-semibold">Sample Vote:</p>
-                  <pre className="text-xs bg-gray-100 p-2 rounded mt-2">
+                  <pre className="text-xs bg-white border-2 border-gray-300 p-2 rounded mt-2">
                     {JSON.stringify(initialData.votes[0], null, 2)}
                   </pre>
                 </div>
@@ -142,7 +142,7 @@ export function SimpleClientWrapper({
         {activeTab === 'bills' && (
           <div>
             <h2 className="text-lg font-semibold mb-4">Sponsored Legislation</h2>
-            <div className="bg-gray-50 border rounded p-4">
+            <div className="bg-white border rounded p-4">
               <p>
                 <strong>Bills Count:</strong>{' '}
                 {Array.isArray(initialData?.bills) ? initialData.bills.length : 0}
@@ -171,7 +171,7 @@ export function SimpleClientWrapper({
                     <summary className="cursor-pointer text-sm text-gray-600">
                       View Raw Data
                     </summary>
-                    <pre className="text-xs bg-gray-100 p-2 rounded mt-2">
+                    <pre className="text-xs bg-white border-2 border-gray-300 p-2 rounded mt-2">
                       {JSON.stringify(initialData.bills[0], null, 2)}
                     </pre>
                   </details>
@@ -186,7 +186,7 @@ export function SimpleClientWrapper({
         {activeTab === 'finance' && (
           <div>
             <h2 className="text-lg font-semibold mb-4">Campaign Finance</h2>
-            <div className="bg-gray-50 border rounded p-4">
+            <div className="bg-white border rounded p-4">
               <p>
                 <strong>Finance Data Available:</strong> {initialData?.finance ? 'Yes' : 'No'}
               </p>
@@ -210,7 +210,7 @@ export function SimpleClientWrapper({
                     <summary className="cursor-pointer text-sm text-gray-600">
                       View Raw Data
                     </summary>
-                    <pre className="text-xs bg-gray-100 p-2 rounded mt-2 max-h-40 overflow-auto">
+                    <pre className="text-xs bg-white border-2 border-gray-300 p-2 rounded mt-2 max-h-40 overflow-auto">
                       {JSON.stringify(initialData.finance, null, 2)}
                     </pre>
                   </details>
@@ -224,7 +224,7 @@ export function SimpleClientWrapper({
       </div>
 
       {/* Debug info */}
-      <div className="mt-8 bg-gray-50 border rounded p-4">
+      <div className="mt-8 bg-white border rounded p-4">
         <h3 className="font-semibold mb-2">Debug Information</h3>
         <div className="text-sm space-y-1">
           <p>

@@ -59,7 +59,7 @@ export function CivicEngagementDashboard() {
   const metrics = engagementMetrics[timeRange];
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-white border-2 border-black p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Civic Engagement Dashboard</h2>
         <div className="flex gap-2">
@@ -67,10 +67,10 @@ export function CivicEngagementDashboard() {
             <button
               key={range}
               onClick={() => setTimeRange(range)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
                 timeRange === range
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {range.charAt(0).toUpperCase() + range.slice(1)}
@@ -140,9 +140,9 @@ function MetricCard({
   };
 
   return (
-    <div className="bg-gray-50 rounded-lg p-6">
+    <div className="bg-white p-6">
       <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>{icon}</div>
+        <div className={`p-3 ${colorClasses[color]}`}>{icon}</div>
         {trend !== 0 && (
           <div
             className={`flex items-center gap-1 text-sm ${
@@ -279,7 +279,7 @@ function EngagementChart({ timeRange }: { timeRange: 'week' | 'month' | 'year' }
   }, [timeRange]);
 
   return (
-    <div className="bg-gray-50 rounded-lg p-6">
+    <div className="bg-white p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Engagement Over Time</h3>
       <div id="engagement-chart"></div>
     </div>
@@ -310,12 +310,12 @@ function TopSearchedRepresentatives() {
   }> = []; // Empty - search analytics loading from real data...
 
   return (
-    <div className="bg-gray-50 rounded-lg p-6">
+    <div className="bg-white p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Searched Representatives</h3>
       <div className="space-y-3">
         {representatives.length > 0 ? (
           representatives.map((rep, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg">
+            <div key={index} className="flex items-center justify-between p-3 bg-white">
               <div className="flex items-center gap-3">
                 <div className="text-lg font-bold text-gray-400 w-6">#{index + 1}</div>
                 <div>
@@ -330,7 +330,7 @@ function TopSearchedRepresentatives() {
                       ? 'bg-blue-100 text-blue-700'
                       : rep.party === 'R'
                         ? 'bg-red-100 text-red-700'
-                        : 'bg-gray-100 text-gray-700'
+                        : 'bg-white border-2 border-gray-300 text-gray-700'
                   }`}
                 >
                   {rep.party}
@@ -382,7 +382,7 @@ export function LegislativeActivityMonitor() {
   });
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-white border-2 border-black p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Legislative Activity Monitor</h2>
         <div className="flex gap-2">
@@ -390,10 +390,10 @@ export function LegislativeActivityMonitor() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
                 filter === f
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {f === 'all' ? 'All Activity' : f === 'tracked' ? 'Tracked Bills' : 'Upcoming Votes'}
@@ -407,7 +407,7 @@ export function LegislativeActivityMonitor() {
           filteredActivities.map(activity => (
             <div
               key={activity.id}
-              className={`border rounded-lg p-4 ${
+              className={`border p-4 ${
                 activity.urgent ? 'border-red-300 bg-red-50' : 'border-gray-200'
               }`}
             >
@@ -467,7 +467,7 @@ export function LegislativeActivityMonitor() {
         )}
       </div>
 
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+      <div className="mt-6 p-4 bg-blue-50">
         <div className="flex items-center gap-2">
           <AlertCircle className="w-5 h-5 text-blue-600" />
           <p className="text-sm text-blue-900">
@@ -511,13 +511,13 @@ export function CampaignFinanceOverview() {
   }, [selectedCycle]);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-white border-2 border-black p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Campaign Finance Overview</h2>
         <select
           value={selectedCycle}
           onChange={e => setSelectedCycle(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+          className="px-4 py-2 border border-gray-300 text-sm focus:outline-none focus:border-blue-500"
         >
           <option value="2024">2024 Cycle</option>
           <option value="2022">2022 Cycle</option>
@@ -536,24 +536,24 @@ export function CampaignFinanceOverview() {
             <p className="text-sm text-gray-500 mt-2">Campaign finance data unavailable</p>
           </div>
           {/* REMOVED: Fake PAC contributors including:
-              - Americans for Progress PAC ($5M)
-              - Healthcare Workers United ($3.5M)
-              - Tech Innovation Fund ($2.8M)
-              - Environmental Action Committee ($2.2M)
-              - Small Business Alliance ($1.8M) */}
+       - Americans for Progress PAC ($5M)
+       - Healthcare Workers United ($3.5M)
+       - Tech Innovation Fund ($2.8M)
+       - Environmental Action Committee ($2.2M)
+       - Small Business Alliance ($1.8M) */}
         </div>
       </div>
 
       <div className="mt-6 grid grid-cols-3 gap-4">
-        <div className="text-center p-4 bg-gray-50 rounded-lg">
+        <div className="text-center p-4 bg-white">
           <p className="text-2xl font-bold text-gray-900">78%</p>
           <p className="text-sm text-gray-600">Small Donors</p>
         </div>
-        <div className="text-center p-4 bg-gray-50 rounded-lg">
+        <div className="text-center p-4 bg-white">
           <p className="text-2xl font-bold text-gray-900">$285</p>
           <p className="text-sm text-gray-600">Avg. Contribution</p>
         </div>
-        <div className="text-center p-4 bg-gray-50 rounded-lg">
+        <div className="text-center p-4 bg-white">
           <p className="text-2xl font-bold text-gray-900">342K</p>
           <p className="text-sm text-gray-600">Total Donors</p>
         </div>
@@ -576,7 +576,7 @@ export function DistrictPerformanceDashboard() {
   }> = []; // Empty - district performance loading from Census API...
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-white border-2 border-black p-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">District Performance Analysis</h2>
 
       <div className="overflow-x-auto">
@@ -594,7 +594,7 @@ export function DistrictPerformanceDashboard() {
           <tbody>
             {districts.length > 0 ? (
               districts.map(district => (
-                <tr key={district.id} className="border-b border-gray-100 hover:bg-gray-50">
+                <tr key={district.id} className="border-b border-gray-100 hover:bg-white">
                   <td className="py-3 px-4">
                     <div>
                       <p className="font-medium text-gray-900">{district.id}</p>
@@ -646,7 +646,7 @@ export function DistrictPerformanceDashboard() {
                               ? 'bg-yellow-100 text-yellow-700'
                               : district.competitiveness === 'Competitive'
                                 ? 'bg-purple-100 text-purple-700'
-                                : 'bg-gray-100 text-gray-700'
+                                : 'bg-white border-2 border-gray-300 text-gray-700'
                       }`}
                     >
                       {district.competitiveness}
@@ -670,17 +670,17 @@ export function DistrictPerformanceDashboard() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-50 rounded-lg p-4">
+        <div className="bg-blue-50 p-4">
           <h3 className="font-semibold text-blue-900 mb-2">Democratic Performance</h3>
           <p className="text-2xl font-bold text-blue-900">52.3%</p>
           <p className="text-sm text-blue-700">Average vote share</p>
         </div>
-        <div className="bg-red-50 rounded-lg p-4">
+        <div className="bg-red-50 p-4">
           <h3 className="font-semibold text-red-900 mb-2">Republican Performance</h3>
           <p className="text-2xl font-bold text-red-900">47.7%</p>
           <p className="text-sm text-red-700">Average vote share</p>
         </div>
-        <div className="bg-purple-50 rounded-lg p-4">
+        <div className="bg-purple-50 p-4">
           <h3 className="font-semibold text-purple-900 mb-2">Competitive Districts</h3>
           <p className="text-2xl font-bold text-purple-900">23</p>
           <p className="text-sm text-purple-700">Within 5% margin</p>
@@ -705,13 +705,13 @@ export function NewsSentimentTracker() {
   const selectedData = topics.find(t => t.id === selectedTopic) ?? topics[0]!;
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-white border-2 border-black p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">News Sentiment Analysis</h2>
         <select
           value={selectedTopic}
           onChange={e => setSelectedTopic(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+          className="px-4 py-2 border border-gray-300 text-sm focus:outline-none focus:border-blue-500"
         >
           {topics.map(topic => (
             <option key={topic.id} value={topic.id}>
@@ -775,7 +775,10 @@ export function NewsSentimentTracker() {
             time: '8 hours ago',
           },
         ].map((article, index) => (
-          <div key={index} className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+          <div
+            key={index}
+            className="p-3 bg-white hover:bg-white border-2 border-gray-300 cursor-pointer"
+          >
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h4 className="font-medium text-gray-900">{article.title}</h4>

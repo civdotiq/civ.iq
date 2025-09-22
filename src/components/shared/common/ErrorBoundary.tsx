@@ -73,7 +73,7 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
 
       // Default error UI
       return (
-        <div className="min-h-96 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
+        <div className="aicher-card min-h-96 flex items-center justify-center">
           <div className="text-center p-8">
             <div className="mb-4">
               <svg
@@ -90,13 +90,13 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Something went wrong</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className="aicher-heading text-lg text-gray-900 mb-2">Something went wrong</h3>
+            <p className="aicher-heading-wide text-gray-600 mb-4">
               We encountered an error while loading this content. This might be a temporary issue.
             </p>
             <button
               onClick={this.retry}
-              className="bg-civiq-blue text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+              className="aicher-button-primary px-4 py-2 transition-colors"
             >
               Try Again
             </button>
@@ -105,7 +105,7 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
                 <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
                   Error Details (Development Only)
                 </summary>
-                <pre className="mt-2 p-4 bg-gray-100 rounded text-xs text-red-600 overflow-auto">
+                <pre className="aicher-card mt-2 p-4 text-xs text-red-600 overflow-auto">
                   {this.state.error.toString()}
                   {this.state.errorInfo?.componentStack}
                 </pre>
@@ -130,7 +130,7 @@ export function APIErrorBoundary({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary
       fallback={({ error: _error, retry }) => (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="aicher-card aicher-status-error p-4">
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg
@@ -148,15 +148,15 @@ export function APIErrorBoundary({ children }: { children: React.ReactNode }) {
               </svg>
             </div>
             <div className="ml-3 flex-1">
-              <h3 className="text-sm font-medium text-red-800">Unable to load data</h3>
-              <p className="text-sm text-red-700 mt-1">
+              <h3 className="aicher-heading text-sm text-red-800">Unable to load data</h3>
+              <p className="aicher-heading-wide text-sm text-red-700 mt-1">
                 There was a problem connecting to our data sources. This could be due to high
                 traffic or a temporary server issue.
               </p>
               <div className="mt-3">
                 <button
                   onClick={retry}
-                  className="text-sm bg-red-100 text-red-800 px-3 py-1 rounded-md hover:bg-red-200 transition-colors"
+                  className="aicher-button text-sm text-red-800 px-3 py-1 transition-colors"
                 >
                   Retry
                 </button>
@@ -197,7 +197,7 @@ export function LoadingErrorBoundary({ children }: { children: React.ReactNode }
                 />
               </svg>
             </div>
-            <p className="text-gray-600 mb-3">Loading failed</p>
+            <p className="aicher-heading-wide text-gray-600 mb-3">Loading failed</p>
             <button
               onClick={retry}
               className="text-sm text-civiq-blue hover:text-blue-600 underline"

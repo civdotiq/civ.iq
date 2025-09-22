@@ -100,7 +100,7 @@ export function TabsSimple({ bioguideId, representative }: TabsSimpleProps) {
       </div>
 
       {/* Content Area */}
-      <div className="bg-white rounded-lg border p-4">
+      <div className="bg-white border p-4">
         <h3 className="text-lg font-semibold mb-4">
           Tab: {activeTab} | BioguideId: {bioguideId}
         </h3>
@@ -116,7 +116,7 @@ export function TabsSimple({ bioguideId, representative }: TabsSimpleProps) {
         {data !== null && !loading && !error && (
           <div>
             <p className="text-sm text-gray-600 mb-2">Raw data from API:</p>
-            <pre className="bg-gray-100 p-4 rounded overflow-auto max-h-96 text-xs">
+            <pre className="bg-white border-2 border-gray-300 p-4 rounded overflow-auto max-h-96 text-xs">
               {JSON.stringify(data, null, 2)}
             </pre>
           </div>

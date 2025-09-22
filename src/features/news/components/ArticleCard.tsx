@@ -92,12 +92,12 @@ export function ArticleCard({
   const getTitleClasses = (): string => {
     if (isPrimary) {
       return compact
-        ? 'text-base font-semibold text-gray-900 line-clamp-2'
-        : 'text-lg font-semibold text-gray-900 line-clamp-3';
+        ? 'aicher-heading text-base text-gray-900 line-clamp-2'
+        : 'aicher-heading text-lg text-gray-900 line-clamp-3';
     }
     return compact
-      ? 'text-sm font-medium text-gray-900 line-clamp-2'
-      : 'text-base font-medium text-gray-900 line-clamp-2';
+      ? 'aicher-heading-wide text-sm text-gray-900 line-clamp-2'
+      : 'aicher-heading-wide text-base text-gray-900 line-clamp-2';
   };
 
   /**
@@ -105,7 +105,7 @@ export function ArticleCard({
    */
   const getSummaryClasses = (): string => {
     if (compact) {
-      return 'text-xs text-gray-600 line-clamp-2 mt-1';
+      return 'aicher-heading-wide text-xs text-gray-600 line-clamp-2 mt-1';
     }
     return isPrimary
       ? 'text-sm text-gray-600 line-clamp-3 mt-2'
@@ -117,7 +117,7 @@ export function ArticleCard({
       href={article.url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`block hover:bg-blue-50 hover:shadow-sm -m-3 p-3 rounded-lg transition-all duration-200 group ${className}`}
+      className={`aicher-card aicher-hover block -m-3 p-3 transition-all duration-200 group ${className}`}
     >
       <div className={getLayoutClasses()}>
         {/* Image (if shown) */}

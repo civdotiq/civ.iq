@@ -74,7 +74,7 @@ export function DataSourceBadge({
   showDescription = false,
   size = 'md',
 }: DataSourceBadgeProps) {
-  // Extract primary source from compound sources like "congress-legislators + census"
+  // Extract primary source from compound sources like"congress-legislators + census"
   const firstPart = source.split(' + ')[0] || '';
   const primarySource = (firstPart.split(' (')[0] || '').toLowerCase().trim();
   const sourceConfig = DATA_SOURCES[primarySource as keyof typeof DATA_SOURCES];
@@ -82,7 +82,7 @@ export function DataSourceBadge({
   if (!sourceConfig) {
     return (
       <span
-        className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-gray-500 text-white ${className}`}
+        className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-white0 text-white ${className}`}
       >
         <Database className="w-3 h-3" />
         {source}
@@ -108,7 +108,7 @@ export function DataSourceBadge({
         href={sourceConfig?.url || '#'}
         target="_blank"
         rel="noopener noreferrer"
-        className={`inline-flex items-center gap-1 ${sizeClasses[size]} rounded-full text-white hover:opacity-90 transition-opacity ${sourceConfig?.color || 'bg-gray-500'}`}
+        className={`inline-flex items-center gap-1 ${sizeClasses[size]} rounded-full text-white hover:opacity-90 transition-opacity ${sourceConfig?.color || 'bg-white0'}`}
         title={`Data from ${sourceConfig?.displayName || source}`}
       >
         <Database className={iconSizes[size]} />
@@ -230,7 +230,7 @@ export function DataFreshnessIndicator({
   if (!isClient) {
     return (
       <div
-        className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border text-gray-600 bg-gray-50 border-gray-200 ${className}`}
+        className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border text-gray-600 bg-white border-gray-200 ${className}`}
         title="Loading freshness info..."
       >
         <Clock className="w-3 h-3" />
@@ -252,7 +252,7 @@ export function DataFreshnessIndicator({
   const freshnessColors = {
     fresh: 'text-green-600 bg-green-50 border-green-200',
     recent: 'text-blue-600 bg-blue-50 border-blue-200',
-    older: 'text-gray-600 bg-gray-50 border-gray-200',
+    older: 'text-gray-600 bg-white border-gray-200',
   };
 
   // Format relative time

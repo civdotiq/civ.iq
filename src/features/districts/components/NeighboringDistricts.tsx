@@ -23,7 +23,7 @@ export default function NeighboringDistricts({ currentDistrict }: NeighboringDis
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white border-2 border-black p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Neighboring Districts</h2>
         <div className="animate-pulse">
           <div className="space-y-2">
@@ -38,7 +38,7 @@ export default function NeighboringDistricts({ currentDistrict }: NeighboringDis
 
   if (error || !data?.neighbors?.length) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white border-2 border-black p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Neighboring Districts</h2>
         <p className="text-gray-500">No neighboring districts data available.</p>
       </div>
@@ -46,14 +46,14 @@ export default function NeighboringDistricts({ currentDistrict }: NeighboringDis
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white border-2 border-black p-6">
       <h2 className="text-xl font-bold text-gray-900 mb-4">Neighboring Districts</h2>
       <div className="space-y-3">
         {data.neighbors.map((neighbor: { id: string; name: string }) => (
           <Link
             key={neighbor.id}
             href={`/districts/${neighbor.id}`}
-            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
+            className="flex items-center justify-between p-3 bg-white hover:bg-white border-2 border-gray-300 transition-colors group"
           >
             <div>
               <div className="font-semibold text-gray-900">{neighbor.id}</div>

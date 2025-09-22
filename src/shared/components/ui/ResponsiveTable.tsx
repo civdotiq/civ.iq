@@ -62,7 +62,7 @@ export function ResponsiveTableHead({
   children: ReactNode;
   className?: string;
 }) {
-  return <thead className={`bg-gray-50 border-b border-gray-200 ${className}`}>{children}</thead>;
+  return <thead className={`bg-white border-b border-gray-200 ${className}`}>{children}</thead>;
 }
 
 /**
@@ -103,8 +103,8 @@ export function ResponsiveTableRow({
   mobileCard,
 }: ResponsiveTableRowProps) {
   const baseClasses = 'transition-colors';
-  const desktopClasses = `hidden md:table-row hover:bg-gray-50 ${onClick ? 'cursor-pointer' : ''}`;
-  const mobileClasses = 'block md:hidden bg-white rounded-lg border border-gray-200 shadow-sm';
+  const desktopClasses = `hidden md:table-row hover:bg-white ${onClick ? 'cursor-pointer' : ''}`;
+  const mobileClasses = 'block md:hidden bg-white border border-gray-200 border-2 border-black';
 
   return (
     <>
@@ -115,7 +115,7 @@ export function ResponsiveTableRow({
 
       {/* Mobile card */}
       <div
-        className={`${baseClasses} ${mobileClasses} ${onClick ? 'cursor-pointer hover:shadow-md' : ''} p-4`}
+        className={`${baseClasses} ${mobileClasses} ${onClick ? 'cursor-pointer hover:border-2 border-black' : ''} p-4`}
         onClick={onClick}
       >
         {mobileCard || (
@@ -210,7 +210,7 @@ export function VoteCard({
 }) {
   return (
     <div
-      className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+      className="bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-all duration-200 cursor-pointer"
       onClick={() => onToggleExpansion(vote.voteId)}
     >
       <div className="p-4">
@@ -324,14 +324,13 @@ export function TouchPagination({
   totalItems: number;
   className?: string;
 }) {
-  const buttonClasses =
-    'min-h-[44px] min-w-[44px] px-3 py-2 text-sm font-medium rounded-lg transition-colors';
+  const buttonClasses = 'min-h-[44px] min-w-[44px] px-3 py-2 text-sm font-medium transition-colors';
   const activeClasses = 'bg-civiq-blue text-white';
-  const inactiveClasses = 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50';
-  const disabledClasses = 'bg-gray-100 text-gray-400 cursor-not-allowed';
+  const inactiveClasses = 'bg-white text-gray-700 border border-gray-300 hover:bg-white';
+  const disabledClasses = 'bg-white border-2 border-gray-300 text-gray-400 cursor-not-allowed';
 
   return (
-    <div className={`px-4 py-3 border-t border-gray-200 bg-gray-50 ${className}`}>
+    <div className={`px-4 py-3 border-t border-gray-200 bg-white ${className}`}>
       <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
         <div className="text-sm text-gray-700 text-center md:text-left">{itemsShown}</div>
         <div className="flex items-center justify-center gap-2">

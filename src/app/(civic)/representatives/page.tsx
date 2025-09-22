@@ -80,9 +80,9 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
   const initialRepresentatives = await getInitialRepresentatives(zip, state, district);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-20">
+      <header className="bg-white border-2 border-black border-b sticky top-0 z-20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/">
@@ -120,7 +120,7 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
 
         {/* Compare bar */}
         {compareIds.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="bg-blue-50 border border-blue-200 p-4 mb-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-blue-900">
@@ -128,7 +128,7 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
                 </p>
                 <p className="text-xs text-blue-700 mt-1">
                   {compareIds.length === 2
-                    ? 'Click "View Comparison" to see detailed analysis'
+                    ? 'Click"View Comparison" to see detailed analysis'
                     : 'Select one more representative to compare'}
                 </p>
               </div>

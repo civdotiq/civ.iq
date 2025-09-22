@@ -46,7 +46,7 @@ export function PerformanceDashboard({ showDevOnly = true }: PerformanceDashboar
       {!isExpanded && (
         <button
           onClick={() => setIsExpanded(true)}
-          className={`px-3 py-2 rounded-lg shadow-lg text-sm font-medium transition-colors ${
+          className={`px-3 py-2 border-2 border-black text-sm font-medium transition-colors ${
             gradeColors[summary.performanceGrade]
           }`}
           title="Click to expand performance metrics"
@@ -57,7 +57,7 @@ export function PerformanceDashboard({ showDevOnly = true }: PerformanceDashboar
 
       {/* Expanded view */}
       {isExpanded && (
-        <div className="bg-white rounded-lg shadow-lg border p-4 max-w-sm max-h-96 overflow-y-auto">
+        <div className="bg-white border-2 border-black border p-4 max-w-sm max-h-96 overflow-y-auto">
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-semibold text-gray-900">Performance Metrics</h3>
             <button

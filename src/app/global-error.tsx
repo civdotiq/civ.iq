@@ -28,8 +28,8 @@ export default function GlobalError({
   return (
     <html>
       <body>
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
+        <div className="min-h-screen flex items-center justify-center bg-white">
+          <div className="text-center p-8 bg-white border-2 border-black max-w-md">
             <h2 className="text-2xl font-bold text-red-600 mb-4">Application Error</h2>
             <p className="text-gray-600 mb-4">
               Something went wrong with the application. Please try refreshing the page.
@@ -37,7 +37,7 @@ export default function GlobalError({
             {process.env?.NODE_ENV === 'development' && (
               <details className="text-left mb-4">
                 <summary className="cursor-pointer text-sm text-gray-500">Error details</summary>
-                <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
+                <pre className="mt-2 text-xs bg-white border-2 border-gray-300 p-2 rounded overflow-auto">
                   {error.message}
                   {error.stack}
                 </pre>

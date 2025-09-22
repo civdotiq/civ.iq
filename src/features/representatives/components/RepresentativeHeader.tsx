@@ -64,7 +64,7 @@ export function RepresentativeHeader({ representative, metrics }: Representative
       case 'd':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-white border-2 border-gray-300 text-gray-800 border-gray-200';
     }
   };
 
@@ -88,7 +88,7 @@ export function RepresentativeHeader({ representative, metrics }: Representative
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+    <div className="aicher-card aicher-no-radius overflow-hidden">
       {/* Party Color Stripe */}
       <div className={`h-2 ${getPartyColor(representative.party)}`} />
 
@@ -102,22 +102,24 @@ export function RepresentativeHeader({ representative, metrics }: Representative
                 bioguideId={representative.bioguideId}
                 name={representative.name}
                 size="xl"
-                className="rounded-lg"
+                className=""
               />
             </div>
 
             {/* Name and Basic Info */}
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{representative.name}</h1>
+              <h1 className="aicher-heading text-3xl text-gray-900 mb-2">{representative.name}</h1>
 
               <div className="flex flex-wrap items-center gap-3 mb-4">
                 <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium border ${getPartyBadgeColor(representative.party)}`}
+                  className={`aicher-button px-3 py-1 text-sm ${getPartyBadgeColor(representative.party)} aicher-no-radius`}
                 >
                   {representative.party}
                 </span>
-                <span className="text-gray-600">{representative.title}</span>
-                <span className="text-gray-600">
+                <span className="aicher-heading-wide text-gray-600 text-sm">
+                  {representative.title}
+                </span>
+                <span className="aicher-heading-wide text-gray-600 text-sm">
                   {representative.state}
                   {representative.district ? `-${representative.district}` : ''}
                 </span>
@@ -130,7 +132,7 @@ export function RepresentativeHeader({ representative, metrics }: Representative
                     href={representative.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    className="aicher-button-primary text-sm aicher-focus"
                   >
                     Official Website
                   </a>
@@ -140,7 +142,7 @@ export function RepresentativeHeader({ representative, metrics }: Representative
                     href={representative.currentTerm.contactForm}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    className="aicher-button text-sm aicher-focus"
                   >
                     Contact Form
                   </a>
@@ -167,49 +169,53 @@ export function RepresentativeHeader({ representative, metrics }: Representative
         </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
+        <div className="aicher-grid aicher-grid-4 mb-6">
+          <div className="aicher-card text-center">
+            <div className="aicher-heading text-2xl text-gray-900">
               {representative.committees?.length || 0}
             </div>
-            <div className="text-sm text-gray-600">Committees</div>
+            <div className="aicher-heading-wide text-sm text-gray-600">Committees</div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">{metrics?.billsSponsored || 0}</div>
-            <div className="text-sm text-gray-600">Bills Sponsored</div>
+          <div className="aicher-card text-center">
+            <div className="aicher-heading text-2xl text-gray-900">
+              {metrics?.billsSponsored || 0}
+            </div>
+            <div className="aicher-heading-wide text-sm text-gray-600">Bills Sponsored</div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
+          <div className="aicher-card text-center">
+            <div className="aicher-heading text-2xl text-gray-900">
               {metrics?.partyVotingPercentage || 0}%
             </div>
-            <div className="text-sm text-gray-600">Party Voting</div>
+            <div className="aicher-heading-wide text-sm text-gray-600">Party Voting</div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
+          <div className="aicher-card text-center">
+            <div className="aicher-heading text-2xl text-gray-900">
               {metrics?.attendancePercentage || 0}%
             </div>
-            <div className="text-sm text-gray-600">Attendance</div>
+            <div className="aicher-heading-wide text-sm text-gray-600">Attendance</div>
           </div>
         </div>
 
         {/* Profile Completeness */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">Profile Completeness</span>
-            <span className="text-sm text-gray-600">{metrics?.profileCompleteness || 85}%</span>
+            <span className="aicher-heading-wide text-sm text-gray-700">Profile Completeness</span>
+            <span className="aicher-heading text-sm text-gray-600">
+              {metrics?.profileCompleteness || 85}%
+            </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full aicher-border h-2 bg-gray-100">
             <div
-              className="bg-green-600 h-2 rounded-full transition-all duration-300"
+              className="aicher-status-success h-2 transition-all duration-300"
               style={{ width: `${metrics?.profileCompleteness || 85}%` }}
             />
           </div>
         </div>
 
         {/* Data Source Attribution */}
-        <div className="pt-4 border-t border-gray-100">
+        <div className="pt-4 aicher-border-t border-gray-100">
           <div className="flex items-center justify-between">
-            <div className="text-xs text-gray-500">Data Sources</div>
+            <div className="aicher-heading-wide text-xs text-gray-500">Data Sources</div>
             <div className="flex gap-2">
               <DataSourceBadge source="congress-legislators" size="sm" />
             </div>

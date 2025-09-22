@@ -74,7 +74,7 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
+    <div className="bg-white border-2 border-black border border-gray-200 overflow-hidden mb-6">
       {/* Simple horizontal header layout like June 2025 */}
       <div className="p-6">
         <div className="flex items-center gap-6">
@@ -120,7 +120,7 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
                       ? 'bg-red-100 text-red-800 border border-red-200'
                       : representative.party === 'Democrat'
                         ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                        : 'bg-gray-100 text-gray-800 border border-gray-200'
+                        : 'bg-white border-2 border-gray-300 text-gray-800 border border-gray-200'
                   }`}
                 >
                   {representative.party}

@@ -106,7 +106,7 @@ export function RepresentativeSidebar({
   return (
     <div className="space-y-6">
       {/* Federal Level Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <CheckCircle className="h-5 w-5 text-blue-500" />
           Federal Level
@@ -129,7 +129,7 @@ export function RepresentativeSidebar({
       </div>
 
       {/* District Information */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <MapPin className="h-5 w-5 text-green-500" />
           District Information
@@ -159,7 +159,7 @@ export function RepresentativeSidebar({
       </div>
 
       {/* Data Completeness */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Data Completeness</h3>
 
         <div className="space-y-3">
@@ -190,7 +190,7 @@ export function RepresentativeSidebar({
       </div>
 
       {/* Compare Representatives */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <Users className="h-5 w-5 text-purple-500" />
           Compare Representatives
@@ -199,7 +199,7 @@ export function RepresentativeSidebar({
         <div className="space-y-3">
           <Link
             href={`/compare?reps=${representative.bioguideId}`}
-            className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700 transition-colors"
+            className="block w-full px-4 py-2 bg-blue-600 text-white text-center hover:bg-blue-700 transition-colors"
           >
             Start Comparison
           </Link>
@@ -212,7 +212,7 @@ export function RepresentativeSidebar({
 
       {/* Recent News */}
       {newsArticles.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Newspaper className="h-5 w-5 text-orange-500" />
             Recent News
@@ -225,7 +225,7 @@ export function RepresentativeSidebar({
                   href={article.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block hover:bg-gray-50 -mx-2 px-2 py-2 rounded"
+                  className="block hover:bg-white -mx-2 px-2 py-2 rounded"
                 >
                   <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
                     {article.title}
@@ -253,31 +253,31 @@ export function RepresentativeSidebar({
       )}
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
 
         <div className="space-y-2">
           <Link
             href={`/representative/${representative.bioguideId}/contact`}
-            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded"
+            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-white rounded"
           >
             Contact Information
           </Link>
           <Link
             href={`/representative/${representative.bioguideId}/committees`}
-            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded"
+            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-white rounded"
           >
             Committee Assignments
           </Link>
           <Link
             href={`/representative/${representative.bioguideId}/votes`}
-            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded"
+            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-white rounded"
           >
             Full Voting Record
           </Link>
           <Link
             href={`/representative/${representative.bioguideId}/bills`}
-            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded"
+            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-white rounded"
           >
             All Sponsored Bills
           </Link>

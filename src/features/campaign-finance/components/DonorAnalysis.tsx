@@ -58,7 +58,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
     return (
       <div className="space-y-6">
         {/* Grassroots Score */}
-        <div className={`p-4 rounded-lg border ${getScoreBackground(grassrootsScore)}`}>
+        <div className={`p-4 border ${getScoreBackground(grassrootsScore)}`}>
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-semibold text-gray-900">Grassroots Score</h4>
             <span className={`text-2xl font-bold ${getScoreColor(grassrootsScore)}`}>
@@ -72,7 +72,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
 
         {/* Small vs Large Donors */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+          <div className="bg-green-50 p-4 border border-green-200">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-green-600 text-lg">👤</span>
               <h4 className="font-semibold text-gray-900">Small Donors</h4>
@@ -105,7 +105,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             </div>
           </div>
 
-          <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+          <div className="bg-red-50 p-4 border border-red-200">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-red-600 text-lg">🏢</span>
               <h4 className="font-semibold text-gray-900">Large Donors</h4>
@@ -140,7 +140,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
         </div>
 
         {/* Dependency Score */}
-        <div className={`p-4 rounded-lg border ${getScoreBackground(100 - dependencyScore)}`}>
+        <div className={`p-4 border ${getScoreBackground(100 - dependencyScore)}`}>
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-semibold text-gray-900">Independence Score</h4>
             <span className={`text-2xl font-bold ${getScoreColor(100 - dependencyScore)}`}>
@@ -153,7 +153,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
         </div>
 
         {/* Donor Size Distribution */}
-        <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="bg-white p-4">
           <h4 className="font-semibold text-gray-900 mb-3">Donor Size Distribution</h4>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -196,7 +196,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
     return (
       <div className="space-y-6">
         {/* Geographic Diversity Score */}
-        <div className={`p-4 rounded-lg border ${getScoreBackground(diversityScore)}`}>
+        <div className={`p-4 border ${getScoreBackground(diversityScore)}`}>
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-semibold text-gray-900">Geographic Diversity Score</h4>
             <span className={`text-2xl font-bold ${getScoreColor(diversityScore)}`}>
@@ -210,7 +210,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
 
         {/* In-State vs Out-of-State */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <div className="bg-blue-50 p-4 border border-blue-200">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-blue-600 text-lg">🏠</span>
               <h4 className="font-semibold text-gray-900">In-State</h4>
@@ -231,7 +231,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             </div>
           </div>
 
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+          <div className="bg-purple-50 p-4 border border-purple-200">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-purple-600 text-lg">🌍</span>
               <h4 className="font-semibold text-gray-900">Out-of-State</h4>
@@ -254,7 +254,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
         </div>
 
         {/* Top States */}
-        <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="bg-white p-4">
           <h4 className="font-semibold text-gray-900 mb-3">Top Contributing States</h4>
           <div className="space-y-2">
             {topStates.slice(0, 10).map((state, index) => (
@@ -292,7 +292,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
       <div className="space-y-6">
         {/* Contribution Type Breakdown */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+          <div className="bg-green-50 p-4 border border-green-200">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-green-600 text-lg">👤</span>
               <h4 className="font-semibold text-gray-900">Individual</h4>
@@ -309,7 +309,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             </div>
           </div>
 
-          <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+          <div className="bg-orange-50 p-4 border border-orange-200">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-orange-600 text-lg">🏢</span>
               <h4 className="font-semibold text-gray-900">PACs</h4>
@@ -326,7 +326,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             </div>
           </div>
 
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <div className="bg-blue-50 p-4 border border-blue-200">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-blue-600 text-lg">🎭</span>
               <h4 className="font-semibold text-gray-900">Party</h4>
@@ -343,7 +343,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
             </div>
           </div>
 
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+          <div className="bg-purple-50 p-4 border border-purple-200">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-purple-600 text-lg">💼</span>
               <h4 className="font-semibold text-gray-900">Self-Funded</h4>
@@ -362,7 +362,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
         </div>
 
         {/* Contribution Type Distribution Chart */}
-        <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="bg-white p-4">
           <h4 className="font-semibold text-gray-900 mb-3">Contribution Type Distribution</h4>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -428,7 +428,7 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-md border p-6 ${className}`}>
+    <div className={`bg-white border-2 border-black border p-6 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -438,14 +438,14 @@ export function DonorAnalysis({ data, className = '' }: DonorAnalysisProps) {
       </div>
 
       {/* View Toggle */}
-      <div className="flex space-x-1 mb-6 bg-gray-100 rounded-lg p-1">
+      <div className="flex space-x-1 mb-6 bg-white border-2 border-gray-300 p-1">
         {VIEW_MODES.map(mode => (
           <button
             key={mode.value}
             onClick={() => setActiveView(mode.value)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
               activeView === mode.value
-                ? 'bg-white text-gray-900 shadow-sm'
+                ? 'bg-white text-gray-900 border-2 border-black'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >

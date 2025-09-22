@@ -84,12 +84,12 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+      <div className="aicher-card p-8">
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-100 rounded-lg p-6 h-24"></div>
+              <div key={i} className="aicher-card p-6 h-24"></div>
             ))}
           </div>
         </div>
@@ -99,9 +99,9 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
 
   if (error || !data) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+      <div className="aicher-card p-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Economic & Infrastructure</h3>
-        <div className="bg-gray-50 rounded-lg p-6 text-center">
+        <div className="bg-white p-6 text-center">
           <p className="text-gray-600">Economic data not available for this district</p>
           <p className="text-sm text-gray-500 mt-2">
             {error || 'Unable to load data from government APIs'}
@@ -114,17 +114,19 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
   const { economic } = data;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-      <h3 className="text-lg font-semibold text-gray-900 mb-6">Economic & Infrastructure Health</h3>
+    <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8">
+      <h3 className="aicher-heading text-lg text-gray-900 mb-6">
+        Economic & Infrastructure Health
+      </h3>
 
       {/* Employment Metrics */}
       <div className="mb-8">
-        <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
+        <h4 className="aicher-heading text-md text-gray-800 mb-4 flex items-center">
           <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
           Employment & Economy
         </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-6">
+        <div className="aicher-grid aicher-grid-3 gap-6">
+          <div className="aicher-card aicher-status-success p-6">
             <div className="text-2xl font-bold text-green-900">
               {formatPercentage(economic.employment.unemploymentRate)}
             </div>
@@ -138,7 +140,7 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
+          <div className="aicher-card aicher-status-info p-6">
             <div className="text-2xl font-bold text-blue-900">
               {formatPercentage(economic.employment.laborForceParticipation)}
             </div>
@@ -146,7 +148,7 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
             <p className="text-xs text-blue-600 mt-1">Working age population</p>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6">
+          <div className="aicher-card aicher-border bg-purple-100 p-6">
             <div className="text-2xl font-bold text-purple-900">
               {formatCurrency(economic.employment.averageWage)}
             </div>
@@ -156,7 +158,7 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
         </div>
 
         {economic.employment.majorIndustries.length > 0 && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+          <div className="mt-4 p-4 bg-white">
             <p className="text-sm font-medium text-gray-700 mb-2">Major Industries:</p>
             <div className="flex flex-wrap gap-2">
               {economic.employment.majorIndustries.map((industry, index) => (
@@ -177,13 +179,13 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
         economic.infrastructure.highwayFunding > 0 ||
         economic.infrastructure.publicTransitAccessibility > 0) && (
         <div className="mb-8">
-          <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
+          <h4 className="aicher-heading text-md text-gray-800 mb-4 flex items-center">
             <Building className="w-5 h-5 mr-2 text-orange-600" />
             Infrastructure
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="aicher-grid aicher-grid-3 gap-6">
             {economic.infrastructure.bridgeConditionRating > 0 && (
-              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-6">
+              <div className="aicher-card aicher-status-error p-6">
                 <div className="text-2xl font-bold text-orange-900">
                   {economic.infrastructure.bridgeConditionRating}/100
                 </div>
@@ -199,7 +201,7 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
             )}
 
             {economic.infrastructure.highwayFunding > 0 && (
-              <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg p-6">
+              <div className="aicher-card aicher-border bg-teal-100 p-6">
                 <div className="text-2xl font-bold text-teal-900">
                   {formatLargeNumber(economic.infrastructure.highwayFunding)}
                 </div>
@@ -209,7 +211,7 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
             )}
 
             {economic.infrastructure.publicTransitAccessibility > 0 && (
-              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-6">
+              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6">
                 <div className="text-2xl font-bold text-indigo-900">
                   {economic.infrastructure.publicTransitAccessibility}/100
                 </div>
@@ -223,33 +225,33 @@ export default function EconomicProfile({ districtId }: EconomicProfileProps) {
 
       {/* Connectivity Metrics */}
       <div className="mb-6">
-        <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
+        <h4 className="aicher-heading text-md text-gray-800 mb-4 flex items-center">
           <Wifi className="w-5 h-5 mr-2 text-blue-600" />
           Digital Connectivity
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg p-6">
+          <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 p-6">
             <div className="text-2xl font-bold text-cyan-900">
               {formatPercentage(economic.connectivity.fiberAvailability)}
             </div>
             <p className="text-sm text-cyan-700 mt-1">Fiber Availability</p>
           </div>
 
-          <div className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-lg p-6">
+          <div className="bg-gradient-to-br from-sky-50 to-sky-100 p-6">
             <div className="text-2xl font-bold text-sky-900">
               {economic.connectivity.averageDownloadSpeed} Mbps
             </div>
             <p className="text-sm text-sky-700 mt-1">Avg Download Speed</p>
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-6">
+          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-6">
             <div className="text-2xl font-bold text-emerald-900">
               {economic.connectivity.averageUploadSpeed} Mbps
             </div>
             <p className="text-sm text-emerald-700 mt-1">Avg Upload Speed</p>
           </div>
 
-          <div className="bg-gradient-to-br from-violet-50 to-violet-100 rounded-lg p-6">
+          <div className="bg-gradient-to-br from-violet-50 to-violet-100 p-6">
             <div className="text-2xl font-bold text-violet-900">
               {economic.connectivity.digitalDivideIndex}/100
             </div>

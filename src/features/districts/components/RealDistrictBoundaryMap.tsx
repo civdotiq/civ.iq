@@ -257,17 +257,17 @@ export function RealDistrictBoundaryMap({
         .setLngLat(district.centroid)
         .setPopup(
           new (await import('maplibre-gl')).default.Popup().setHTML(`
-            <div class="p-2">
-              <h3 class="font-semibold text-sm">${district.full_name}</h3>
-              <p class="text-xs text-gray-600 mt-1">
-                ${district.state_name} Congressional District ${parseInt(district.district_num)}
-              </p>
-              <div class="text-xs text-gray-500 mt-2">
-                <div>Area: ${(district.area_sqm / 1000000).toFixed(2)} km²</div>
-                <div>GEOID: ${district.geoid}</div>
-              </div>
-            </div>
-          `)
+      <div class="p-2">
+       <h3 class="font-semibold text-sm">${district.full_name}</h3>
+       <p class="text-xs text-gray-600 mt-1">
+        ${district.state_name} Congressional District ${parseInt(district.district_num)}
+       </p>
+       <div class="text-xs text-gray-500 mt-2">
+        <div>Area: ${(district.area_sqm / 1000000).toFixed(2)} km²</div>
+        <div>GEOID: ${district.geoid}</div>
+       </div>
+      </div>
+     `)
         )
         .addTo(map);
 
@@ -304,7 +304,7 @@ export function RealDistrictBoundaryMap({
   if (mapState.error) {
     return (
       <div
-        className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}
+        className={`flex items-center justify-center bg-white border-2 border-gray-300 ${className}`}
         style={{ height }}
       >
         <div className="text-center p-6">
@@ -320,7 +320,7 @@ export function RealDistrictBoundaryMap({
     <div className={`relative ${className}`}>
       {/* Loading overlay */}
       {mapState.loading && (
-        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
             <div className="text-sm text-gray-600">Loading district boundary...</div>
@@ -332,11 +332,11 @@ export function RealDistrictBoundaryMap({
       )}
 
       {/* Map container */}
-      <div ref={mapContainer} className="w-full rounded-lg overflow-hidden" style={{ height }} />
+      <div ref={mapContainer} className="w-full overflow-hidden" style={{ height }} />
 
       {/* District info overlay */}
       {mapState.district && showControls && (
-        <div className="absolute top-4 left-4 bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-10 max-w-xs">
+        <div className="absolute top-4 left-4 bg-white bg-opacity-90 backdrop-blur-sm p-3 border-2 border-black z-10 max-w-xs">
           <div className="text-sm font-semibold text-gray-800 mb-1">{mapState.district.name}</div>
           <div className="text-xs text-gray-600 mb-2">{mapState.district.full_name}</div>
           <div className="space-y-1 text-xs text-gray-500">
@@ -364,7 +364,7 @@ export function RealDistrictBoundaryMap({
 
       {/* Map legend */}
       {showControls && (
-        <div className="absolute bottom-4 right-4 bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-10">
+        <div className="absolute bottom-4 right-4 bg-white bg-opacity-90 backdrop-blur-sm p-3 border-2 border-black z-10">
           <div className="text-xs font-medium text-gray-700 mb-2">Legend</div>
           <div className="space-y-1 text-xs">
             <div className="flex items-center gap-2">

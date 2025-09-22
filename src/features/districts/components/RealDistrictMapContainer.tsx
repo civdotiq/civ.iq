@@ -183,10 +183,10 @@ export function RealDistrictMapContainer({
         type: 'vector' as const,
         url: `pmtiles://${pmtilesUrl}`,
       };
-      console.log('  Adding source with config:', sourceConfig);
+      console.log(' Adding source with config:', sourceConfig);
 
       map.addSource('district-boundaries', sourceConfig);
-      console.log('  ✅ Source added successfully.');
+      console.log(' ✅ Source added successfully.');
 
       // Add district boundary layers using REAL Census data
       const fillLayerConfig = {
@@ -199,10 +199,10 @@ export function RealDistrictMapContainer({
           'fill-opacity': 0.6,
         },
       };
-      console.log('  Adding fill layer with config:', fillLayerConfig);
+      console.log(' Adding fill layer with config:', fillLayerConfig);
 
       map.addLayer(fillLayerConfig);
-      console.log('  ✅ Fill layer added successfully.');
+      console.log(' ✅ Fill layer added successfully.');
 
       const strokeLayerConfig = {
         id: 'district-stroke',
@@ -214,10 +214,10 @@ export function RealDistrictMapContainer({
           'line-width': 1,
         },
       };
-      console.log('  Adding stroke layer with config:', strokeLayerConfig);
+      console.log(' Adding stroke layer with config:', strokeLayerConfig);
 
       map.addLayer(strokeLayerConfig);
-      console.log('  ✅ Stroke layer added successfully.');
+      console.log(' ✅ Stroke layer added successfully.');
 
       // Add district labels showing real district names
       const labelsLayerConfig = {
@@ -236,10 +236,10 @@ export function RealDistrictMapContainer({
           'text-halo-width': 1,
         },
       };
-      console.log('  Adding labels layer with config:', labelsLayerConfig);
+      console.log(' Adding labels layer with config:', labelsLayerConfig);
 
       map.addLayer(labelsLayerConfig);
-      console.log('  ✅ Labels layer added successfully.');
+      console.log(' ✅ Labels layer added successfully.');
 
       // Add click handlers
       if (enableInteraction) {
@@ -451,7 +451,7 @@ export function RealDistrictMapContainer({
   if (mapState.error) {
     return (
       <div
-        className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}
+        className={`flex items-center justify-center bg-white border-2 border-gray-300 ${className}`}
         style={{ height }}
       >
         <div className="text-center p-6">
@@ -472,7 +472,7 @@ export function RealDistrictMapContainer({
     <div className={`relative ${className}`}>
       {/* Loading overlay */}
       {mapState.loading && (
-        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
             <div className="text-sm text-gray-600">Loading district boundaries...</div>
@@ -486,11 +486,11 @@ export function RealDistrictMapContainer({
       )}
 
       {/* Map container */}
-      <div ref={mapContainer} className="w-full rounded-lg overflow-hidden" style={{ height }} />
+      <div ref={mapContainer} className="w-full overflow-hidden" style={{ height }} />
 
       {/* Map legend */}
       {showControls && (
-        <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-10">
+        <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 backdrop-blur-sm p-3 border-2 border-black z-10">
           <div className="text-xs font-medium text-gray-700 mb-2">Congressional Districts</div>
           <div className="space-y-1 text-xs">
             <div className="flex items-center gap-2">

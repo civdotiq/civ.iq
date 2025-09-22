@@ -77,11 +77,11 @@ export function CommitteeMembershipsCard({
 
   return (
     <div
-      className={`bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-200 ${className}`}
+      className={`bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200 ${className}`}
     >
       <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-blue-50 rounded-lg">
+          <div className="p-2 bg-blue-50">
             <Users className="w-5 h-5" style={{ color: '#3aa3d5' }} />
           </div>
           <h3 className="text-lg font-bold" style={{ color: '#3aa3d5' }}>
@@ -95,7 +95,7 @@ export function CommitteeMembershipsCard({
             {deduplicatedCommittees.map((committee, index) => (
               <div
                 key={`${committee.name}-${index}`}
-                className="group border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all duration-200 bg-gradient-to-r from-white to-gray-50 hover:from-blue-50 hover:to-white"
+                className="group border border-gray-200 p-4 hover:border-blue-300 hover:border-2 border-black transition-all duration-200 bg-gradient-to-r from-white to-gray-50 hover:from-blue-50 hover:to-white"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
@@ -124,12 +124,12 @@ export function CommitteeMembershipsCard({
                         {committee.roles.map((role, roleIndex) => (
                           <span
                             key={roleIndex}
-                            className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full shadow-sm ${
+                            className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full border-2 border-black ${
                               role === 'Chair'
                                 ? 'bg-gradient-to-r text-white'
                                 : role === 'Ranking Member'
                                   ? 'bg-gradient-to-r text-white'
-                                  : 'bg-gray-100 text-gray-700 border border-gray-200'
+                                  : 'bg-white border-2 border-gray-300 text-gray-700 border border-gray-200'
                             }`}
                             style={{
                               background:

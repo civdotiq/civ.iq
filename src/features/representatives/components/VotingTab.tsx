@@ -70,7 +70,7 @@ interface VotingTabProps {
 const extractVoteId = (vote: Vote): string | null => {
   if (!vote.voteId) return null;
 
-  // House votes: use the full voteId (e.g., "house-119-116")
+  // House votes: use the full voteId (e.g.,"house-119-116")
   if (vote.chamber === 'House') {
     return vote.voteId;
   }
@@ -78,7 +78,7 @@ const extractVoteId = (vote: Vote): string | null => {
   // Senate votes: extract numeric part from voteId or use rollNumber
   if (vote.chamber === 'Senate') {
     if (vote.voteId) {
-      // Extract from format like "119-senate-00123" or use as-is if numeric
+      // Extract from format like"119-senate-00123" or use as-is if numeric
       const match = vote.voteId.match(/(\d+)$/);
       return match?.[1] || null;
     }
@@ -280,16 +280,16 @@ function VotingTabComponent({
       <div className="animate-pulse space-y-4">
         <div className="h-8 bg-gray-200 rounded w-1/3"></div>
         <div className="grid grid-cols-5 gap-4">
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
         </div>
         <div className="space-y-2">
-          <div className="h-6 bg-gray-100 rounded"></div>
-          <div className="h-6 bg-gray-100 rounded"></div>
-          <div className="h-6 bg-gray-100 rounded"></div>
+          <div className="h-6 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-6 bg-white border-2 border-gray-300 rounded"></div>
+          <div className="h-6 bg-white border-2 border-gray-300 rounded"></div>
         </div>
       </div>
     );
@@ -319,7 +319,7 @@ function VotingTabComponent({
         <div className="flex gap-3 justify-center">
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Retry Loading
           </button>
@@ -330,7 +330,7 @@ function VotingTabComponent({
               url.searchParams.set('refresh', Date.now().toString());
               window.location.href = url.toString();
             }}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Force Refresh
           </button>
@@ -346,7 +346,7 @@ function VotingTabComponent({
         <div className="text-sm text-gray-400 mb-4">
           Voting data is sourced from Congress.gov and Senate XML feeds
         </div>
-        <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3 max-w-md mx-auto">
+        <div className="text-xs text-gray-500 bg-white p-3 max-w-md mx-auto">
           <div className="font-medium mb-1">Phase 3 Update:</div>
           <div>
             House voting XML parsing was recently improved. If you expect to see voting data, please
@@ -363,7 +363,7 @@ function VotingTabComponent({
         <h2 className="text-lg font-semibold">Interactive Voting Analysis</h2>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           <Filter className="h-4 w-4" />
           Filters
@@ -388,7 +388,7 @@ function VotingTabComponent({
 
       {/* Filter Panel */}
       {showFilters && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+        <div className="mb-6 p-4 bg-white border">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Position Filter */}
             <div>
@@ -399,7 +399,7 @@ function VotingTabComponent({
               <select
                 value={positionFilter}
                 onChange={e => handlePositionFilterChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All Positions</option>
                 <option value="Yea">Yea</option>
@@ -418,7 +418,7 @@ function VotingTabComponent({
               <select
                 value={chamberFilter}
                 onChange={e => handleChamberFilterChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All Chambers</option>
                 <option value="House">House</option>
@@ -435,7 +435,7 @@ function VotingTabComponent({
               <select
                 value={categoryFilter}
                 onChange={e => handleCategoryFilterChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All Categories</option>
                 <option value="key">Key Votes</option>
@@ -454,14 +454,14 @@ function VotingTabComponent({
                   type="date"
                   value={dateFilter.start}
                   onChange={e => handleDateFilterChange('start', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   placeholder="Start date"
                 />
                 <input
                   type="date"
                   value={dateFilter.end}
                   onChange={e => handleDateFilterChange('end', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   placeholder="End date"
                 />
               </div>
@@ -477,7 +477,7 @@ function VotingTabComponent({
             <div className="mt-4 pt-4 border-t border-gray-200">
               <button
                 onClick={handleClearFilters}
-                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 <X className="h-4 w-4" />
                 Clear All Filters
@@ -489,7 +489,7 @@ function VotingTabComponent({
 
       {/* Phase 4 Defensive UI: Data Quality Indicator */}
       {data?.success === false || data?.error ? (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200">
           <div className="flex items-center gap-2 text-sm text-yellow-800">
             <span className="text-lg">⚠️</span>
             <div>
@@ -579,7 +579,7 @@ function VotingTabComponent({
             <span className="w-20 text-sm">Not Voting</span>
             <div className="flex-1 bg-gray-200 rounded h-6">
               <div
-                className="bg-gray-500 h-6 rounded"
+                className="bg-white0 h-6 rounded"
                 style={{
                   width: totalVotes > 0 ? `${(notVotingVotes / totalVotes) * 100}%` : '0%',
                 }}
@@ -609,17 +609,17 @@ function VotingTabComponent({
       ) : (
         <div className="relative">
           {filteredVotes.length !== (data?.votes?.length || 0) && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200">
               <p className="text-sm text-blue-800">
                 Showing {filteredVotes.length} of {data?.votes?.length || 0} votes
                 {filteredVotes.length === 0 && ' (try adjusting filters)'}
               </p>
             </div>
           )}
-          <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+          <div className="overflow-x-auto border border-gray-200 border-2 border-black">
             <table className="w-full border-collapse bg-white" style={{ minWidth: '900px' }}>
               <thead>
-                <tr className="bg-gray-50 border-b-2 border-gray-200">
+                <tr className="bg-white border-b-2 border-gray-200">
                   <th
                     className="text-left py-3 px-3 font-semibold text-gray-700 text-xs uppercase tracking-wider whitespace-nowrap"
                     style={{ width: '80px', minWidth: '80px' }}
@@ -671,7 +671,7 @@ function VotingTabComponent({
                       } ${vote.isKeyVote ? 'bg-yellow-50' : ''} ${
                         paginationData.paginatedVotes.indexOf(vote) % 2 === 0
                           ? 'bg-white'
-                          : 'bg-gray-50/50'
+                          : 'bg-white/50'
                       }`}
                       onClick={() => isClickable && handleVoteClick(vote)}
                       title={isClickable ? 'Click to view detailed vote breakdown' : ''}
@@ -797,7 +797,7 @@ function VotingTabComponent({
                                 ? 'bg-red-100 text-red-800 border border-red-200'
                                 : vote.position === 'Present'
                                   ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
-                                  : 'bg-gray-100 text-gray-700 border border-gray-200'
+                                  : 'bg-white border-2 border-gray-300 text-gray-700 border border-gray-200'
                           }`}
                         >
                           {vote.position}
@@ -840,7 +840,7 @@ function VotingTabComponent({
             <button
               onClick={handlePreviousPage}
               disabled={currentPage === 1}
-              className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="h-4 w-4" />
               Previous
@@ -853,10 +853,10 @@ function VotingTabComponent({
                   <button
                     key={page}
                     onClick={() => handlePageClick(page)}
-                    className={`px-3 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    className={`px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                       page === currentPage
                         ? 'bg-blue-600 text-white'
-                        : 'text-gray-600 bg-white border border-gray-300 hover:bg-gray-50'
+                        : 'text-gray-600 bg-white border border-gray-300 hover:bg-white'
                     }`}
                   >
                     {page}
@@ -869,7 +869,7 @@ function VotingTabComponent({
                     <>
                       <button
                         onClick={() => handlePageClick(1)}
-                        className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                       >
                         1
                       </button>
@@ -884,10 +884,10 @@ function VotingTabComponent({
                       <button
                         key={page}
                         onClick={() => handlePageClick(page)}
-                        className={`px-3 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        className={`px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                           page === currentPage
                             ? 'bg-blue-600 text-white'
-                            : 'text-gray-600 bg-white border border-gray-300 hover:bg-gray-50'
+                            : 'text-gray-600 bg-white border border-gray-300 hover:bg-white'
                         }`}
                       >
                         {page}
@@ -900,7 +900,7 @@ function VotingTabComponent({
                       <span className="px-2 text-gray-500">...</span>
                       <button
                         onClick={() => handlePageClick(paginationData.totalPages)}
-                        className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                       >
                         {paginationData.totalPages}
                       </button>
@@ -913,7 +913,7 @@ function VotingTabComponent({
             <button
               onClick={handleNextPage}
               disabled={currentPage === paginationData.totalPages}
-              className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
               <ChevronRight className="h-4 w-4" />

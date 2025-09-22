@@ -88,7 +88,7 @@ export const DataQualityIndicator: React.FC<DataQualityIndicatorProps> = ({
   };
 
   return (
-    <div className={`p-4 rounded-lg border ${style.bgColor} ${style.borderColor} ${className}`}>
+    <div className={`p-4 border ${style.bgColor} ${style.borderColor} ${className}`}>
       <div className="flex items-start gap-3">
         <span className="text-lg flex-shrink-0" role="img" aria-label="Quality indicator">
           {style.icon}

@@ -14,8 +14,8 @@ export function LoadingState({ message = 'Loading data...', fullPage = false }: 
         <div className="absolute top-0 left-0 w-full h-full border-4 border-gray-200 rounded-full"></div>
         <div className="absolute top-0 left-0 w-full h-full border-4 border-civiq-blue border-t-transparent rounded-full animate-spin"></div>
       </div>
-      <p className="text-gray-600 dark:text-gray-400 text-center">{message}</p>
-      <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+      <p className="aicher-heading-wide text-gray-600 dark:text-gray-400 text-center">{message}</p>
+      <p className="aicher-heading-wide text-sm text-gray-500 dark:text-gray-500 mt-2">
         Initial load may take a moment while we fetch the latest data
       </p>
     </div>
@@ -23,7 +23,7 @@ export function LoadingState({ message = 'Loading data...', fullPage = false }: 
 
   if (fullPage) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center aicher-background dark:bg-gray-900">
         {content}
       </div>
     );

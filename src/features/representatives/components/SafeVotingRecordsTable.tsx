@@ -17,7 +17,7 @@ export function SafeVotingRecordsTable(props: SafeVotingRecordsTableProps) {
   return (
     <ErrorBoundary
       fallback={({ retry }) => (
-        <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+        <div className="bg-white border border-gray-200 p-8 text-center">
           <p className="text-gray-600 mb-4">Unable to load voting records at this time.</p>
           <button
             onClick={retry}

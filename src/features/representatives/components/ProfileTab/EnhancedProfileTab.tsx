@@ -241,7 +241,7 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
         <h3 className="text-lg font-medium text-gray-900 mb-4">Contact Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Washington DC Office */}
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="bg-white p-4">
             <h4 className="text-sm font-medium text-gray-900 mb-3">Washington, DC Office</h4>
             <dl className="space-y-2">
               {representative.currentTerm?.office && (
@@ -277,7 +277,7 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
           </div>
 
           {/* Online Presence */}
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="bg-white p-4">
             <h4 className="text-sm font-medium text-gray-900 mb-3">Online Presence</h4>
             <div className="space-y-2">
               {representative.currentTerm?.website && (
@@ -373,7 +373,7 @@ export function EnhancedProfileTab({ representative, committees }: ProfileTabPro
               return (
                 <div
                   key={`committee-${committee.name}-${committee.id || idx}`}
-                  className="bg-gray-50 p-4 rounded-lg"
+                  className="bg-white p-4"
                 >
                   <div className="flex items-center justify-between">
                     <Link

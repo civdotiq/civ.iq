@@ -132,7 +132,7 @@ function BillCard({ bill }: { bill: StateBill }) {
       case 'vetoed':
         return 'bg-red-100 text-red-800 border-red-200';
       case 'dead':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-white border-2 border-gray-300 text-gray-800 border-gray-200';
       case 'floor':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'committee':
@@ -175,7 +175,7 @@ function BillCard({ bill }: { bill: StateBill }) {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+    <div className="bg-white border border-gray-200 p-6 hover:border-2 border-black transition-border-2 border-black">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
@@ -222,7 +222,10 @@ function BillCard({ bill }: { bill: StateBill }) {
         {bill.subjects.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {bill.subjects.slice(0, 4).map((subject, index) => (
-              <span key={index} className="inline-flex px-2 py-1 bg-gray-100 text-xs rounded-full">
+              <span
+                key={index}
+                className="inline-flex px-2 py-1 bg-white border-2 border-gray-300 text-xs rounded-full"
+              >
                 {subject}
               </span>
             ))}
@@ -311,7 +314,7 @@ function StatusSummary({ summary }: { summary: StateBillsData['summary'] }) {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Bill Status Summary</h3>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -389,7 +392,7 @@ export default function StateBillsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">Loading state bills...</p>
@@ -400,7 +403,7 @@ export default function StateBillsPage() {
 
   if (!billsData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-xl text-gray-600">State bills data not available</p>
@@ -415,9 +418,9 @@ export default function StateBillsPage() {
   const availableSubjects = [...new Set(billsData.bills.flatMap(bill => bill.subjects))].sort();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-20">
+      <header className="bg-white border-2 border-black border-b sticky top-0 z-20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/">
@@ -452,9 +455,9 @@ export default function StateBillsPage() {
 
       <main className="container mx-auto px-4 py-8">
         {/* Page header */}
-        <div className="bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg p-8 mb-8">
+        <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-8 mb-8">
           <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-white/20 rounded-lg flex items-center justify-center">
+            <div className="w-16 h-16 bg-white/20 flex items-center justify-center">
               <FileText className="w-8 h-8" />
             </div>
             <div>
@@ -472,7 +475,7 @@ export default function StateBillsPage() {
             <StatusSummary summary={billsData.summary} />
 
             {/* Filters */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 mt-6">
+            <div className="bg-white border border-gray-200 p-6 mt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Filter className="w-5 h-5" />
                 Filters
@@ -484,7 +487,7 @@ export default function StateBillsPage() {
                   <select
                     value={filters.status}
                     onChange={e => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="all">All Statuses</option>
                     <option value="introduced">Introduced</option>
@@ -502,7 +505,7 @@ export default function StateBillsPage() {
                   <select
                     value={filters.chamber}
                     onChange={e => setFilters(prev => ({ ...prev, chamber: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="all">Both Chambers</option>
                     <option value="upper">Senate</option>
@@ -515,7 +518,7 @@ export default function StateBillsPage() {
                   <select
                     value={filters.subject}
                     onChange={e => setFilters(prev => ({ ...prev, subject: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="all">All Subjects</option>
                     {availableSubjects.map(subject => (
@@ -532,7 +535,7 @@ export default function StateBillsPage() {
           {/* Main content */}
           <div className="lg:col-span-3">
             {/* Search */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+            <div className="bg-white border border-gray-200 p-4 mb-6">
               <div className="relative">
                 <Search className="w-5 h-5 absolute left-3 top-3 text-gray-400" />
                 <input
@@ -540,7 +543,7 @@ export default function StateBillsPage() {
                   placeholder="Search bills by title, sponsor, or bill number..."
                   value={filters.search}
                   onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>

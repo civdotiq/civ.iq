@@ -47,7 +47,7 @@ export const FilterSidebar = memo(function FilterSidebar({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white border-2 border-black p-6">
       <h2 className="text-lg font-bold text-gray-900 mb-4">Filters</h2>
 
       <div className="space-y-4">
@@ -56,7 +56,7 @@ export const FilterSidebar = memo(function FilterSidebar({
           <select
             value={filters.chamber}
             onChange={e => updateFilter('chamber', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
           >
             <option value="all">All Chambers</option>
             <option value="Senate">Senate</option>
@@ -69,7 +69,7 @@ export const FilterSidebar = memo(function FilterSidebar({
           <select
             value={filters.party}
             onChange={e => updateFilter('party', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
           >
             <option value="all">All Parties</option>
             <option value="D">Democratic</option>
@@ -83,7 +83,7 @@ export const FilterSidebar = memo(function FilterSidebar({
           <select
             value={filters.state}
             onChange={e => updateFilter('state', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
           >
             <option value="all">All States</option>
             {states.map(state => (
@@ -99,7 +99,7 @@ export const FilterSidebar = memo(function FilterSidebar({
           <select
             value={filters.committee}
             onChange={e => updateFilter('committee', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
           >
             <option value="all">All Committees</option>
             {committees.map(committee => (
@@ -122,7 +122,7 @@ export const FilterSidebar = memo(function FilterSidebar({
           setFilters(resetFilters);
           onFilterChange(resetFilters);
         }}
-        className="w-full mt-4 px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        className="w-full mt-4 px-4 py-2 text-sm text-gray-700 border border-gray-300 hover:bg-white transition-colors"
       >
         Reset Filters
       </button>

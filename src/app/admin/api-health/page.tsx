@@ -82,7 +82,7 @@ export default function APIHealthPage() {
       case 'error':
         return 'text-red-600 bg-red-50';
       default:
-        return 'text-gray-600 bg-gray-50';
+        return 'text-gray-600 bg-white';
     }
   };
 
@@ -100,7 +100,7 @@ export default function APIHealthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <Link href="/" className="text-civiq-blue hover:underline mb-4 inline-block">
@@ -112,14 +112,14 @@ export default function APIHealthPage() {
         </div>
 
         {loading && !health && (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
+          <div className="bg-white border-2 border-black p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-civiq-blue mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading health status...</p>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <div className="bg-red-50 border border-red-200 p-4 mb-4">
             <p className="text-red-800">Error: {error}</p>
             <button
               onClick={fetchHealth}
@@ -133,7 +133,7 @@ export default function APIHealthPage() {
         {health && (
           <>
             {/* Overall Status */}
-            <div className={`rounded-lg p-6 mb-6 ${getStatusColor(health.overall)}`}>
+            <div className={` p-6 mb-6 ${getStatusColor(health.overall)}`}>
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-semibold flex items-center gap-2">
@@ -148,7 +148,7 @@ export default function APIHealthPage() {
                 <button
                   onClick={fetchHealth}
                   disabled={loading}
-                  className="px-4 py-2 bg-white rounded-md shadow hover:shadow-md transition-shadow disabled:opacity-50"
+                  className="px-4 py-2 bg-white border-2 border-black hover:border-2 border-black transition-border-2 border-black disabled:opacity-50"
                 >
                   {loading ? 'Refreshing...' : 'Refresh'}
                 </button>
@@ -156,7 +156,7 @@ export default function APIHealthPage() {
             </div>
 
             {/* API Keys Configuration */}
-            <div className="bg-white rounded-lg shadow mb-6 p-6">
+            <div className="bg-white border-2 border-black mb-6 p-6">
               <h3 className="text-lg font-semibold mb-4">API Key Configuration</h3>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {Object.entries(health.environment.apiKeysConfigured).map(([key, configured]) => (
@@ -171,7 +171,7 @@ export default function APIHealthPage() {
             </div>
 
             {/* Individual API Status */}
-            <div className="bg-white rounded-lg shadow">
+            <div className="bg-white border-2 border-black">
               <div className="px-6 py-4 border-b">
                 <h3 className="text-lg font-semibold">API Status Details</h3>
               </div>
@@ -217,19 +217,19 @@ export default function APIHealthPage() {
 
             {/* Summary Stats */}
             <div className="mt-6 grid grid-cols-3 gap-4">
-              <div className="bg-green-50 rounded-lg p-4 text-center">
+              <div className="bg-green-50 p-4 text-center">
                 <p className="text-3xl font-bold text-green-600">
                   {health.apis.filter(a => a.status === 'operational').length}
                 </p>
                 <p className="text-sm text-green-800">Operational</p>
               </div>
-              <div className="bg-yellow-50 rounded-lg p-4 text-center">
+              <div className="bg-yellow-50 p-4 text-center">
                 <p className="text-3xl font-bold text-yellow-600">
                   {health.apis.filter(a => a.status === 'degraded').length}
                 </p>
                 <p className="text-sm text-yellow-800">Degraded</p>
               </div>
-              <div className="bg-red-50 rounded-lg p-4 text-center">
+              <div className="bg-red-50 p-4 text-center">
                 <p className="text-3xl font-bold text-red-600">
                   {health.apis.filter(a => a.status === 'error').length}
                 </p>

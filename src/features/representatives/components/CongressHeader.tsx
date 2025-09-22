@@ -146,7 +146,7 @@ export default function CongressHeader({
   if (isLoading) {
     return (
       <div
-        className={`bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-6 ${className}`}
+        className={`bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-6 mb-6 ${className}`}
       >
         <div className="animate-pulse">
           <div className="flex items-center gap-2 mb-3">
@@ -166,7 +166,7 @@ export default function CongressHeader({
 
   if (error) {
     return (
-      <div className={`bg-red-50 border border-red-200 rounded-lg p-6 mb-6 ${className}`}>
+      <div className={`bg-red-50 border border-red-200 p-6 mb-6 ${className}`}>
         <div className="flex items-center gap-2 mb-2">
           <Users className="w-5 h-5 text-red-600" />
           <h3 className="text-lg font-semibold text-red-900">Unable to load Congress statistics</h3>
@@ -181,7 +181,7 @@ export default function CongressHeader({
 
   return (
     <div
-      className={`bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-6 ${className}`}
+      className={`bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-6 mb-6 ${className}`}
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
@@ -199,7 +199,7 @@ export default function CongressHeader({
             <div className="flex gap-2 mb-4">
               <button
                 onClick={() => onChamberChange('all')}
-                className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                className={`px-4 py-2 transition-colors text-sm font-medium ${
                   chamber === 'all'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-blue-600 border border-blue-300 hover:bg-blue-50'
@@ -209,7 +209,7 @@ export default function CongressHeader({
               </button>
               <button
                 onClick={() => onChamberChange('house')}
-                className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                className={`px-4 py-2 transition-colors text-sm font-medium ${
                   chamber === 'house'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-blue-600 border border-blue-300 hover:bg-blue-50'
@@ -219,7 +219,7 @@ export default function CongressHeader({
               </button>
               <button
                 onClick={() => onChamberChange('senate')}
-                className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                className={`px-4 py-2 transition-colors text-sm font-medium ${
                   chamber === 'senate'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-blue-600 border border-blue-300 hover:bg-blue-50'
@@ -233,7 +233,7 @@ export default function CongressHeader({
           {/* Statistics Grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Total Members */}
-            <div className="bg-white rounded-lg p-4 border border-blue-100">
+            <div className="bg-white p-4 border border-blue-100">
               <div className="flex items-center gap-2 mb-2">
                 <Building className="w-4 h-4 text-blue-600" />
                 <span className="text-sm font-medium text-blue-900">Total Members</span>
@@ -242,7 +242,7 @@ export default function CongressHeader({
             </div>
 
             {/* Democrats */}
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+            <div className="bg-blue-50 p-4 border border-blue-200">
               <div className="flex items-center gap-2 mb-2">
                 <BarChart3 className="w-4 h-4 text-blue-600" />
                 <span className="text-sm font-medium text-blue-900">Democrats</span>
@@ -256,7 +256,7 @@ export default function CongressHeader({
             </div>
 
             {/* Republicans */}
-            <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+            <div className="bg-red-50 p-4 border border-red-200">
               <div className="flex items-center gap-2 mb-2">
                 <BarChart3 className="w-4 h-4 text-red-600" />
                 <span className="text-sm font-medium text-red-900">Republicans</span>
@@ -270,7 +270,7 @@ export default function CongressHeader({
             </div>
 
             {/* Session Info */}
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div className="bg-white p-4 border border-gray-200">
               <div className="flex items-center gap-2 mb-2">
                 <Calendar className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-900">Session</span>

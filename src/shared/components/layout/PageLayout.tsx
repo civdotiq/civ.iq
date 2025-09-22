@@ -18,7 +18,7 @@ export function PageLayout({
   transparentHeader = false,
 }: PageLayoutProps) {
   return (
-    <div className={`min-h-screen bg-gray-50 ${className}`}>
+    <div className={`min-h-screen bg-white ${className}`}>
       <Header transparent={transparentHeader} />
       <main className="pt-16">{children}</main>
     </div>

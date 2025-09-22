@@ -70,7 +70,7 @@ export class ComponentErrorBoundary extends Component<Props, State> {
 
       // Component-level error UI
       return (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="p-4 bg-red-50 border border-red-200">
           <div className="flex items-center space-x-2 text-red-700">
             <svg
               className="w-5 h-5"

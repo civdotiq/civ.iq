@@ -88,7 +88,7 @@ export function ElectionResultsChart({ data, className = '' }: ElectionResultsCh
   const majorityStatus = getMajorityStatus();
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
+    <div className={`bg-white border border-gray-200 p-6 ${className}`}>
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Chart */}
         <div className="flex-1">
@@ -140,7 +140,7 @@ export function ElectionResultsChart({ data, className = '' }: ElectionResultsCh
         <div className="lg:w-80">
           <div className="space-y-4">
             {/* Majority Status */}
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-white p-4">
               <h4 className="text-sm font-semibold text-gray-700 mb-2">Control</h4>
               <div className="flex items-center gap-2">
                 <div
@@ -176,7 +176,7 @@ export function ElectionResultsChart({ data, className = '' }: ElectionResultsCh
             </div>
 
             {/* Key Numbers */}
-            <div className="bg-blue-50 rounded-lg p-4">
+            <div className="bg-blue-50 p-4">
               <h4 className="text-sm font-semibold text-blue-900 mb-2">Key Numbers</h4>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
