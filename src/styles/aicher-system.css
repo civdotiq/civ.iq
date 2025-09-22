@@ -14,7 +14,11 @@
 .aicher-heading {
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-weight: 700;
+  font-weight: 900;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
 .aicher-heading-wide {
