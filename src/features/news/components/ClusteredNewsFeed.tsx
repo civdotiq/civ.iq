@@ -161,7 +161,19 @@ export function ClusteredNewsFeed({
           sourcecountry?: string;
           socialimage?: string;
           urlmobile?: string;
-        }) => enhanceGdeltArticle(article, 0.5, [], [])
+        }) =>
+          enhanceGdeltArticle(
+            {
+              ...article,
+              language: article.language || null,
+              sourcecountry: article.sourcecountry || null,
+              socialimage: article.socialimage || null,
+              urlmobile: article.urlmobile || null,
+            },
+            0.5,
+            [],
+            []
+          )
       );
 
       // Cluster articles using the enhanced engine

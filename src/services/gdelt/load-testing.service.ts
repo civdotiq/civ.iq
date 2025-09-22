@@ -12,7 +12,7 @@
 
 import { GDELTBatchQueueService, JobPriority } from './batch-queue.service';
 import { GDELTService } from '@/lib/services/gdelt/GDELTService';
-import { gdeltAnalyticsService } from './analytics.service';
+// import { gdeltAnalyticsService } from './analytics.service'; // Service not implemented yet
 import { BaseRepresentative } from '@/types/representative';
 import logger from '@/lib/logging/simple-logger';
 
@@ -401,7 +401,8 @@ export class GDELTLoadTestingService {
     const duration = endTime.getTime() - startTime.getTime();
 
     // Get analytics data for the test period
-    const analyticsReport = gdeltAnalyticsService.generateReport(startTime, endTime);
+    // const analyticsReport = gdeltAnalyticsService.generateReport(startTime, endTime); // Service not implemented yet
+    const analyticsReport = { summary: 'Analytics service not available' };
 
     // Calculate response time percentiles (simplified)
     // In a real implementation, you'd collect all response times

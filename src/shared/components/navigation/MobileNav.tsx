@@ -94,13 +94,6 @@ export function MobileNav({ isOpen, onClose, navigation, currentPath }: MobileNa
               >
                 Search
               </Link>
-              <Link
-                href="/analytics"
-                className="aicher-heading-wide block py-3 px-4 text-gray-700 hover:text-[#3ea2d4] aicher-hover transition-all duration-200"
-                onClick={onClose}
-              >
-                Analytics
-              </Link>
             </div>
           </div>
         </nav>

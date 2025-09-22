@@ -8,39 +8,8 @@
 import dynamic from 'next/dynamic';
 import { SmartLoadingState } from '@/shared/components/ui';
 
-// Heavy chart components - split for better performance
-export const DynamicCampaignFinanceChart = dynamic(
-  () =>
-    import('@/features/analytics/components/CampaignFinanceChart').then(mod => ({
-      default: mod.CampaignFinanceChart,
-    })),
-  {
-    loading: () => <SmartLoadingState type="finance" />,
-    ssr: false,
-  }
-);
-
-export const DynamicVotingTrendsChart = dynamic(
-  () =>
-    import('@/features/analytics/components/VotingTrendsChart').then(mod => ({
-      default: mod.VotingTrendsChart,
-    })),
-  {
-    loading: () => <SmartLoadingState type="votes" />,
-    ssr: false,
-  }
-);
-
-export const DynamicEffectivenessChart = dynamic(
-  () =>
-    import('@/features/analytics/components/EffectivenessChart').then(mod => ({
-      default: mod.EffectivenessChart,
-    })),
-  {
-    loading: () => <SmartLoadingState type="generic" />,
-    ssr: false,
-  }
-);
+// Note: Analytics chart components (CampaignFinanceChart, VotingTrendsChart, EffectivenessChart)
+// are not currently implemented - using existing campaign finance components instead
 
 // Campaign finance visualization components
 export const DynamicCampaignFinanceVisualizer = dynamic(

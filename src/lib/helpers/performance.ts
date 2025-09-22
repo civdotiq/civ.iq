@@ -331,7 +331,7 @@ export function loadChunk(chunkName: string): Promise<unknown> {
     case 'district-map':
       return import('@/features/districts/components/DistrictMap');
     case 'analytics':
-      return import('@/features/analytics/components/VotingTrendsChart');
+      return import('@/shared/components/ui/Charts'); // Using Charts instead of non-existent VotingTrendsChart
     case 'news-feed':
       return import('@/features/news/components/EnhancedNewsFeed');
     case 'advanced-search':

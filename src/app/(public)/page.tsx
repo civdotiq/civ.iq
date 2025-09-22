@@ -168,19 +168,19 @@ export default function Home() {
             <CiviqLogo className="w-24 h-36 mx-auto mb-8" />
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-8">
             <h1
-              className="text-5xl md:text-7xl font-black tracking-tight animate-fade-in-up"
+              className="text-5xl md:text-7xl font-bold tracking-tight animate-fade-in-up leading-tight"
               style={{ animationDelay: '200ms' }}
             >
               Know Your{' '}
-              <span className="bg-gradient-to-r from-[#e11d07] via-[#0a9338] to-[#3ea2d4] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#e11d07] via-[#0a9338] to-[#3ea2d4] bg-clip-text text-transparent font-bold">
                 Representatives
               </span>
             </h1>
 
             <p
-              className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto animate-fade-in-up leading-relaxed"
+              className="text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto animate-fade-in-up leading-relaxed font-medium"
               style={{ animationDelay: '400ms' }}
             >
               Transparent access to government data. Find who represents you at every level.
@@ -230,20 +230,20 @@ export default function Home() {
 
       <section className="py-24 bg-gradient-to-b from-white to-gray-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16 animate-fade-in-up">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+          <div className="text-center mb-20 animate-fade-in-up">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 leading-tight tracking-tight">
               Comprehensive Government Data
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-700 max-w-3xl mx-auto font-medium leading-relaxed">
               All information sourced directly from official government APIs for complete
               transparency and accuracy.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            <div className="group relative bg-white rounded-2xl p-8 text-center border-2 border-black hover:border-2 border-black-xl transition-all duration-500 border border-gray-100 hover:border-blue-200 animate-fade-in-up">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-7xl mx-auto">
+            <div className="group relative bg-white rounded-2xl p-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-green-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative">
-                <div className="w-20 h-20 mx-auto mb-6 p-4 bg-gradient-to-br from-[#e11d07]/10 to-[#0a9338]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#e11d07]/10 to-[#0a9338]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
                   <svg
                     viewBox="0 0 100 100"
                     fill="none"
@@ -271,10 +271,10 @@ export default function Home() {
                     <line x1="62" y1="46" x2="78" y2="46" stroke="#0a9338" strokeWidth="3" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-gray-900 group-hover:text-[#e11d07] transition-colors">
+                <h3 className="text-2xl font-bold mb-6 text-gray-900 group-hover:text-[#e11d07] transition-colors tracking-tight">
                   Complete Profiles
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed font-medium">
                   Voting records, committee assignments, sponsored bills, and contact information
                   for every representative.
                 </p>
@@ -282,12 +282,12 @@ export default function Home() {
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-8 text-center border-2 border-black hover:border-2 border-black-xl transition-all duration-500 border border-gray-100 hover:border-green-200 animate-fade-in-up"
+              className="group relative bg-white rounded-2xl p-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
               style={{ animationDelay: '200ms' }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-blue-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative">
-                <div className="w-20 h-20 mx-auto mb-6 p-4 bg-gradient-to-br from-[#0a9338]/10 to-[#3ea2d4]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
+                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#0a9338]/10 to-[#3ea2d4]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
                   <svg
                     viewBox="0 0 100 100"
                     fill="none"
@@ -307,10 +307,10 @@ export default function Home() {
                     <path d="M63 68 L57 65 L63 62" fill="#3ea2d4" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-gray-900 group-hover:text-[#0a9338] transition-colors">
+                <h3 className="text-2xl font-bold mb-6 text-gray-900 group-hover:text-[#0a9338] transition-colors tracking-tight">
                   Campaign Finance
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed font-medium">
                   Track contributions, expenditures, and funding sources with data directly from the
                   FEC.
                 </p>
@@ -318,12 +318,12 @@ export default function Home() {
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-8 text-center border-2 border-black hover:border-2 border-black-xl transition-all duration-500 border border-gray-100 hover:border-red-200 animate-fade-in-up"
+              className="group relative bg-white rounded-2xl p-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
               style={{ animationDelay: '400ms' }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-red-50/50 to-blue-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative">
-                <div className="w-20 h-20 mx-auto mb-6 p-4 bg-gradient-to-br from-[#e11d07]/10 to-[#3ea2d4]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#e11d07]/10 to-[#3ea2d4]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
                   <svg
                     viewBox="0 0 100 100"
                     fill="none"
@@ -356,10 +356,10 @@ export default function Home() {
                     <line x1="60" y1="64" x2="70" y2="64" stroke="#3ea2d4" strokeWidth="2" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-gray-900 group-hover:text-[#e11d07] transition-colors">
+                <h3 className="text-2xl font-bold mb-6 text-gray-900 group-hover:text-[#e11d07] transition-colors tracking-tight">
                   Legislative Activity
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed font-medium">
                   Monitor bills, votes, and policy positions with comprehensive tracking and
                   analysis.
                 </p>
@@ -367,12 +367,12 @@ export default function Home() {
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-8 text-center border-2 border-black hover:border-2 border-black-xl transition-all duration-500 border border-gray-100 hover:border-blue-200 animate-fade-in-up"
+              className="group relative bg-white rounded-2xl p-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
               style={{ animationDelay: '600ms' }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-red-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative">
-                <div className="w-20 h-20 mx-auto mb-6 p-4 bg-gradient-to-br from-[#3ea2d4]/10 to-[#e11d07]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
+                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#3ea2d4]/10 to-[#e11d07]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
                   <svg
                     viewBox="0 0 100 100"
                     fill="none"
@@ -389,10 +389,10 @@ export default function Home() {
                     <path d="M50 48 L50 60" stroke="#e11d07" strokeWidth="3" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-gray-900 group-hover:text-[#3ea2d4] transition-colors">
+                <h3 className="text-2xl font-bold mb-6 text-gray-900 group-hover:text-[#3ea2d4] transition-colors tracking-tight">
                   District Information
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed font-medium">
                   Demographics, boundaries, and electoral history for congressional and legislative
                   districts.
                 </p>
@@ -400,12 +400,12 @@ export default function Home() {
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-8 text-center border-2 border-black hover:border-2 border-black-xl transition-all duration-500 border border-gray-100 hover:border-green-200 animate-fade-in-up"
+              className="group relative bg-white rounded-2xl p-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
               style={{ animationDelay: '800ms' }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-blue-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative">
-                <div className="w-20 h-20 mx-auto mb-6 p-4 bg-gradient-to-br from-[#0a9338]/10 to-[#3ea2d4]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#0a9338]/10 to-[#3ea2d4]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
                   <svg
                     viewBox="0 0 100 100"
                     fill="none"
@@ -447,22 +447,22 @@ export default function Home() {
                     <path d="M28 63 L22 60 L28 57" fill="#3ea2d4" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-gray-900 group-hover:text-[#0a9338] transition-colors">
+                <h3 className="text-2xl font-bold mb-6 text-gray-900 group-hover:text-[#0a9338] transition-colors tracking-tight">
                   Real-Time Updates
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed font-medium">
                   Fresh data from official government sources, updated daily to keep you informed.
                 </p>
               </div>
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-8 text-center border-2 border-black hover:border-2 border-black-xl transition-all duration-500 border border-gray-100 hover:border-purple-200 animate-fade-in-up"
+              className="group relative bg-white rounded-2xl p-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
               style={{ animationDelay: '1000ms' }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 to-pink-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative">
-                <div className="w-20 h-20 mx-auto mb-6 p-4 bg-gradient-to-br from-purple-100/50 to-pink-100/50 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
+                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-purple-100/50 to-pink-100/50 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
                   <svg
                     viewBox="0 0 100 100"
                     fill="none"
@@ -493,10 +493,10 @@ export default function Home() {
                     <line x1="15" y1="75" x2="55" y2="75" stroke="#666" strokeWidth="3" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-gray-900 group-hover:text-purple-600 transition-colors">
+                <h3 className="text-2xl font-bold mb-6 text-gray-900 group-hover:text-purple-600 transition-colors tracking-tight">
                   Comparison Tools
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed font-medium">
                   Side-by-side analysis of representatives&apos; voting patterns, funding, and
                   legislative effectiveness.
                 </p>

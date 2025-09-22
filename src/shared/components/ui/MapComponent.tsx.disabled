@@ -43,7 +43,7 @@ export default function MapComponent({
   width,
   height,
 }: MapComponentProps) {
-  const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef<any | null>(null); // Using any since L types are not available
   const containerRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -60,7 +60,7 @@ export default function MapComponent({
     const initializeMap = async () => {
       try {
         // Dynamic import of Leaflet
-        const L = await import('leaflet');
+        const L = await import('leaflet') as any;
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         await import('leaflet/dist/leaflet.css');

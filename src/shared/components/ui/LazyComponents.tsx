@@ -143,22 +143,8 @@ export const LazyBillsTracker = lazy(() =>
 //  }))
 // );
 
-// Analytics components
-export const LazyVotingTrendsChart = lazy(() =>
-  import(
-    /* webpackChunkName:"voting-trends" */ '@/features/analytics/components/VotingTrendsChart'
-  ).then(module => ({
-    default: module.VotingTrendsChart,
-  }))
-);
-
-export const LazyCampaignFinanceChart = lazy(() =>
-  import(
-    /* webpackChunkName:"campaign-finance-chart" */ '@/features/analytics/components/CampaignFinanceChart'
-  ).then(module => ({
-    default: module.CampaignFinanceChart,
-  }))
-);
+// Analytics components - Note: VotingTrendsChart and CampaignFinanceChart
+// are not implemented yet, using campaign finance components instead
 
 // TODO: Create EffectivenessChart component
 // export const LazyEffectivenessChart = lazy(() =>
@@ -279,10 +265,10 @@ export const LazyStateDataVisualizations = lazy(
 //   )
 // );
 
-// Third-party heavy components
-export const LazyLeafletMap = lazy(
-  () => import(/* webpackChunkName:"leaflet-components" */ './MapComponent')
-);
+// Third-party heavy components - MapComponent temporarily disabled due to Leaflet type issues
+// export const LazyLeafletMap = lazy(
+//   () => import(/* webpackChunkName:"leaflet-components" */ './MapComponent')
+// );
 
 // TODO: Create DistrictBoundaryMap component
 // export const LazyDistrictBoundaryMap = lazy(
@@ -337,19 +323,21 @@ export const BillsTrackerWithSuspense = (props: any) => (
 //  </Suspense>
 // );
 
+// TODO: Re-enable when VotingTrendsChart component is created
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const VotingTrendsChartWithSuspense = (props: any) => (
-  <Suspense fallback={<ChartSkeleton />}>
-    <LazyVotingTrendsChart {...props} />
-  </Suspense>
-);
+// export const VotingTrendsChartWithSuspense = (props: any) => (
+//   <Suspense fallback={<ChartSkeleton />}>
+//     <LazyVotingTrendsChart {...props} />
+//   </Suspense>
+// );
 
+// TODO: Re-enable when CampaignFinanceChart component is created
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const CampaignFinanceChartWithSuspense = (props: any) => (
-  <Suspense fallback={<ChartSkeleton />}>
-    <LazyCampaignFinanceChart {...props} />
-  </Suspense>
-);
+// export const CampaignFinanceChartWithSuspense = (props: any) => (
+//   <Suspense fallback={<ChartSkeleton />}>
+//     <LazyCampaignFinanceChart {...props} />
+//   </Suspense>
+// );
 
 // TODO: Re-enable when component is created
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

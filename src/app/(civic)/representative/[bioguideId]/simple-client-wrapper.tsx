@@ -63,10 +63,16 @@ export function SimpleClientWrapper({
       <TabsEnhanced
         bioguideId={bioguideId}
         representative={{
+          bioguideId: representative.bioguideId,
           name: representative.name,
-          chamber: representative.chamber,
+          firstName: representative.name.split(' ')[0] || '',
+          lastName: representative.name.split(' ').slice(-1)[0] || '',
+          chamber: representative.chamber as 'House' | 'Senate',
           party: representative.party,
           state: representative.state,
+          district: representative.district,
+          title: representative.chamber === 'House' ? 'Representative' : 'Senator',
+          terms: [],
         }}
         serverData={serverData}
       />
