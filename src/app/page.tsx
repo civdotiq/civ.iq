@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import SearchForm from '@/components/SearchForm';
 import {
   RepresentativesIcon,
@@ -14,8 +15,20 @@ export default function HomePage() {
       <div className="flex flex-col justify-center items-center min-h-screen px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           {/* Logo */}
-          <div className="mb-8">
-            <div className="text-4xl font-bold text-civiq-red mb-4">CIV.IQ</div>
+          <div className="mb-grid-4">
+            <div className="flex flex-col items-center mb-grid-3">
+              <div className="mb-grid-2">
+                <Image
+                  src="/images/civiq-logo.png"
+                  alt="CIV.IQ Logo"
+                  width={120}
+                  height={120}
+                  className="border-aicher border-black"
+                  priority
+                />
+              </div>
+              <div className="text-4xl font-bold text-civiq-red aicher-heading">CIV.IQ</div>
+            </div>
             <h1 className="text-5xl font-bold text-black sm:text-6xl mb-grid-6 aicher-heading">
               Know Your Representatives
             </h1>
