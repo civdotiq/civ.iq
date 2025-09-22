@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { StatisticsIcon, CheckIcon } from '@/components/icons/AicherIcons';
+import { GraduationCap, Heart, Shield, Activity } from 'lucide-react';
 import type { ServicesHealthProfile } from '@/types/district-enhancements';
 
 interface ServicesHealthProps {
@@ -91,12 +91,12 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
 
   if (loading) {
     return (
-      <div className="bg-white border-aicher border-black p-grid-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 w-48 mb-4 border border-gray-300"></div>
+          <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-gray-100 border border-gray-300 p-grid-3 h-24"></div>
+              <div key={i} className="bg-gray-100 rounded-lg p-6 h-24"></div>
             ))}
           </div>
         </div>
@@ -106,9 +106,9 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
 
   if (error || !data) {
     return (
-      <div className="bg-white border-aicher border-black p-grid-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Education & Healthcare</h3>
-        <div className="bg-gray-50 border border-gray-300 p-grid-3 text-center">
+        <div className="bg-gray-50 rounded-lg p-6 text-center">
           <p className="text-gray-600">
             Education & healthcare data not available for this district
           </p>
@@ -123,17 +123,17 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
   const { services } = data;
 
   return (
-    <div className="bg-white border-aicher border-black p-grid-4">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
       <h3 className="text-lg font-semibold text-gray-900 mb-6">Education & Healthcare Access</h3>
 
       {/* Education Metrics */}
       <div className="mb-8">
         <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-          <StatisticsIcon className="w-5 h-5 mr-2 text-blue-600" />
+          <GraduationCap className="w-5 h-5 mr-2 text-blue-600" />
           Education Performance
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-blue-50 border-aicher border-blue-600 p-grid-3">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
             <div className="text-2xl font-bold text-blue-900">
               {formatPercentage(services.education.graduationRate)}
             </div>
@@ -147,7 +147,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             </p>
           </div>
 
-          <div className="bg-purple-50 border-aicher border-purple-600 p-grid-3">
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6">
             <div className="text-2xl font-bold text-purple-900">
               {services.education.schoolDistrictPerformance}/100
             </div>
@@ -155,7 +155,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             <p className="text-xs text-purple-600 mt-1">Overall school quality</p>
           </div>
 
-          <div className="bg-indigo-50 border-aicher border-indigo-600 p-grid-3">
+          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-6">
             <div className="text-2xl font-bold text-indigo-900">
               {formatPercentage(services.education.collegeEnrollmentRate)}
             </div>
@@ -165,7 +165,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
         </div>
 
         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-emerald-50 border-aicher border-emerald-600 p-grid-3">
+          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-6">
             <div className="text-2xl font-bold text-emerald-900">
               {formatLargeNumber(services.education.federalEducationFunding)}
             </div>
@@ -173,7 +173,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             <p className="text-xs text-emerald-600 mt-1">Annual investment</p>
           </div>
 
-          <div className="bg-cyan-50 border-aicher border-cyan-600 p-grid-3">
+          <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg p-6">
             <div className="text-2xl font-bold text-cyan-900">
               {services.education.teacherToStudentRatio.toFixed(1)}:1
             </div>
@@ -197,12 +197,12 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
         services.healthcare.healthcareCostIndex > 0) && (
         <div className="mb-8">
           <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-            <CheckIcon className="w-5 h-5 mr-2 text-red-600" />
+            <Heart className="w-5 h-5 mr-2 text-red-600" />
             Healthcare Access
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.healthcare.hospitalQualityRating > 0 && (
-              <div className="bg-red-50 border-aicher border-red-600 p-grid-3">
+              <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-6">
                 <div className="text-2xl font-bold text-red-900">
                   {getStarRating(services.healthcare.hospitalQualityRating)}
                 </div>
@@ -214,7 +214,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             )}
 
             {services.healthcare.primaryCarePhysiciansPerCapita > 0 && (
-              <div className="bg-pink-50 border-aicher border-pink-600 p-grid-3">
+              <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-6">
                 <div className="text-2xl font-bold text-pink-900">
                   {services.healthcare.primaryCarePhysiciansPerCapita}
                 </div>
@@ -224,7 +224,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             )}
 
             {services.healthcare.healthOutcomeIndex > 0 && (
-              <div className="bg-rose-50 border-aicher border-rose-600 p-grid-3">
+              <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-lg p-6">
                 <div className="text-2xl font-bold text-rose-900">
                   {services.healthcare.healthOutcomeIndex}/100
                 </div>
@@ -244,7 +244,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             services.healthcare.healthcareCostIndex > 0) && (
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
               {services.healthcare.medicareProviderCount > 0 && (
-                <div className="bg-orange-50 border-aicher border-orange-600 p-grid-3">
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-6">
                   <div className="text-2xl font-bold text-orange-900">
                     {services.healthcare.medicareProviderCount}
                   </div>
@@ -254,7 +254,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
               )}
 
               {services.healthcare.healthcareCostIndex > 0 && (
-                <div className="bg-amber-50 border-aicher border-amber-600 p-grid-3">
+                <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-6">
                   <div className="text-2xl font-bold text-amber-900">
                     {(services.healthcare.healthcareCostIndex * 100).toFixed(0)}%
                   </div>
@@ -276,11 +276,11 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
       {/* Public Health */}
       <div className="mb-6">
         <h4 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-          <CheckIcon className="w-5 h-5 mr-2 text-green-600" />
+          <Shield className="w-5 h-5 mr-2 text-green-600" />
           Public Health & Prevention
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-green-50 border-aicher border-green-600 p-grid-3">
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-6">
             <div className="text-2xl font-bold text-green-900">
               {services.publicHealth.preventableDiseaseRate.toFixed(0)}
             </div>
@@ -288,7 +288,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             <p className="text-xs text-green-600 mt-1">Per 100,000 population</p>
           </div>
 
-          <div className="bg-teal-50 border-aicher border-teal-600 p-grid-3">
+          <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg p-6">
             <div className="text-2xl font-bold text-teal-900">
               {services.publicHealth.mentalHealthProviderRatio.toFixed(1)}
             </div>
@@ -296,7 +296,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             <p className="text-xs text-teal-600 mt-1">Per 1,000 residents</p>
           </div>
 
-          <div className="bg-lime-50 border-aicher border-lime-600 p-grid-3">
+          <div className="bg-gradient-to-br from-lime-50 to-lime-100 rounded-lg p-6">
             <div className="text-2xl font-bold text-lime-900">
               {services.publicHealth.substanceAbusePrograms}
             </div>
@@ -304,7 +304,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
             <p className="text-xs text-lime-600 mt-1">Available programs</p>
           </div>
 
-          <div className="bg-emerald-50 border-aicher border-emerald-600 p-grid-3">
+          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-6">
             <div className="text-2xl font-bold text-emerald-900">
               {formatPercentage(services.publicHealth.preventiveCareCoverage)}
             </div>
@@ -317,7 +317,7 @@ export default function ServicesHealthProfile({ districtId }: ServicesHealthProp
       {/* Data Sources */}
       <div className="border-t pt-4">
         <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-          <StatisticsIcon className="w-4 h-4 mr-2" />
+          <Activity className="w-4 h-4 mr-2" />
           Data Sources
         </h5>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-gray-600">
