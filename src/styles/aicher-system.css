@@ -1,0 +1,181 @@
+/* Otl Aicher Design System - Based on 1972 Munich Olympics */
+:root {
+  --grid-unit: 8px;
+  --border-width: 2px;
+  --border-color: #000000;
+
+  /* Exact logo colors */
+  --aicher-red: #e11d09;
+  --aicher-green: #0a9338;
+  --aicher-blue: #3ea0d2;
+}
+
+/* Typography */
+.aicher-heading {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.aicher-heading-wide {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+
+/* Borders replace shadows */
+.aicher-border {
+  border: 2px solid #000000;
+}
+
+.aicher-border-red {
+  border: 2px solid #e11d09;
+}
+
+.aicher-border-green {
+  border: 2px solid #0a9338;
+}
+
+.aicher-border-blue {
+  border: 2px solid #3ea0d2;
+}
+
+/* Grid-aligned sections */
+.aicher-section {
+  padding: calc(var(--grid-unit) * 6) 0;
+}
+
+/* Geometric shapes */
+.aicher-square {
+  aspect-ratio: 1;
+}
+
+.aicher-circle {
+  border-radius: 50% !important;
+}
+
+/* No rounded corners by default */
+.aicher-no-radius * {
+  border-radius: 0 !important;
+}
+
+/* Hover states without shadows */
+.aicher-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--aicher-blue);
+}
+
+/* Focus states */
+.aicher-focus:focus {
+  outline: 2px solid var(--aicher-blue);
+  outline-offset: 2px;
+  border-radius: 0;
+}
+
+/* Button styles */
+.aicher-button {
+  padding: calc(var(--grid-unit) * 2) calc(var(--grid-unit) * 3);
+  border: 2px solid #000000;
+  background: white;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.aicher-button:hover {
+  background: #000000;
+  color: white;
+}
+
+.aicher-button-primary {
+  background: var(--aicher-blue);
+  color: white;
+  border-color: var(--aicher-blue);
+}
+
+.aicher-button-primary:hover {
+  background: white;
+  color: var(--aicher-blue);
+}
+
+/* Card styles */
+.aicher-card {
+  padding: calc(var(--grid-unit) * 3);
+  border: 2px solid #000000;
+  background: white;
+}
+
+.aicher-card:hover {
+  border-color: var(--aicher-blue);
+}
+
+/* Loading states */
+.aicher-loading {
+  border: 2px solid #e5e5e5;
+  border-top-color: var(--aicher-blue);
+  animation: aicher-spin 1s linear infinite;
+}
+
+@keyframes aicher-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Data visualization containers */
+.aicher-chart-container {
+  padding: calc(var(--grid-unit) * 2);
+  border: 2px solid #000000;
+  background: white;
+}
+
+/* Status indicators */
+.aicher-status-success {
+  background: var(--aicher-green);
+  color: white;
+}
+
+.aicher-status-error {
+  background: var(--aicher-red);
+  color: white;
+}
+
+.aicher-status-info {
+  background: var(--aicher-blue);
+  color: white;
+}
+
+/* Grid layout utilities */
+.aicher-grid {
+  display: grid;
+  gap: calc(var(--grid-unit) * 2);
+}
+
+.aicher-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.aicher-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.aicher-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Responsive grid */
+@media (max-width: 768px) {
+  .aicher-grid-2,
+  .aicher-grid-3,
+  .aicher-grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .aicher-grid-3,
+  .aicher-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

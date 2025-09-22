@@ -5,6 +5,9 @@
 /* Import MapLibre GL CSS for maps */
 @import 'maplibre-gl/dist/maplibre-gl.css';
 
+/* Import Otl Aicher Design System */
+@import '../styles/aicher-system.css';
+
 /* Base layer customizations */
 @layer base {
   /* Improved typography */
@@ -34,36 +37,36 @@
 
 /* Component layer for reusable styles */
 @layer components {
-  /* Enhanced button styles */
+  /* Aicher button styles */
   .btn {
-    @apply px-6 py-3 font-medium rounded-lg transition-all duration-200 transform active:scale-95;
+    @apply px-grid-3 py-grid-2 font-bold uppercase tracking-aicher border-aicher border-black transition-all duration-200;
   }
 
   .btn-primary {
-    @apply btn bg-civiq-green text-white hover:bg-green-700 hover:shadow-lg;
+    @apply btn bg-civiq-green text-white border-civiq-green hover:bg-white hover:text-civiq-green;
   }
 
   .btn-secondary {
-    @apply btn border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50;
+    @apply btn border-2 border-gray-300 text-gray-700 hover:border-black hover:bg-gray-50;
   }
 
-  /* Card styles with subtle depth */
+  /* Aicher card styles - geometric */
   .card {
-    @apply bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200;
+    @apply bg-white border-aicher border-gray-300 hover:border-civiq-blue transition-colors duration-200;
   }
 
   .card-interactive {
-    @apply card cursor-pointer hover:border-gray-200 hover:-translate-y-0.5 transform transition-all duration-200;
+    @apply card cursor-pointer hover:border-civiq-blue hover:-translate-y-1 transform transition-all duration-200;
   }
 
-  /* Input field enhancements */
+  /* Aicher input field styles */
   .input-field {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-civiq-blue focus:ring-2 focus:ring-civiq-blue/20 transition-all duration-200;
+    @apply w-full px-grid-2 py-grid-2 border-aicher border-gray-300 focus:border-civiq-blue focus:outline-none focus:outline-civiq-blue focus:outline-2 transition-all duration-200;
   }
 
-  /* Badge styles */
+  /* Aicher badge styles - rectangular */
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-grid-1 py-1 text-xs font-bold uppercase tracking-aicher;
   }
 
   .badge-red {
@@ -83,11 +86,11 @@
     @apply animate-pulse bg-gray-200 rounded;
   }
 
-  /* Map container with explicit dimensions */
+  /* Aicher map container - geometric */
   .district-map-container {
     height: 400px;
     width: 100%;
-    border-radius: 8px;
+    border: 2px solid #000000;
   }
 }
 
@@ -108,36 +111,36 @@
     -webkit-line-clamp: 3;
   }
 
-  /* Gradient text */
-  .text-gradient {
-    background: linear-gradient(135deg, #e11d07, #3ea2d4);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  /* Aicher text styles - no gradients */
+  .text-aicher-emphasis {
+    color: #e11d07;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
-  .text-gradient-subtle {
-    background: linear-gradient(135deg, #1a1a1a, #4a4a4a);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  .text-aicher-subtle {
+    color: #1a1a1a;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
-  /* Subtle shadows */
-  .shadow-soft {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  /* Aicher borders replace shadows */
+  .border-soft {
+    border: 1px solid #e5e5e5;
   }
 
-  .shadow-glow {
-    box-shadow: 0 0 20px rgba(62, 162, 212, 0.15);
+  .border-glow {
+    border: 2px solid #3ea2d4;
   }
 
-  .shadow-glow-green {
-    box-shadow: 0 0 20px rgba(10, 147, 56, 0.15);
+  .border-glow-green {
+    border: 2px solid #0a9338;
   }
 
-  .shadow-glow-red {
-    box-shadow: 0 0 20px rgba(225, 29, 7, 0.15);
+  .border-glow-red {
+    border: 2px solid #e11d09;
   }
 
   /* Hover lift effect */

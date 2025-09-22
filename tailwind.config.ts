@@ -3,26 +3,45 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss';
 
 export default {
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
       colors: {
         civiq: {
-          red: "#e11d09",
-          green: "#0a9338",
-          blue: "#3ea0d2",
+          red: '#e11d09',
+          green: '#0a9338',
+          blue: '#3ea0d2',
         },
         // Add the specific blue for consistency
         'civiq-red': '#e11d09',
         'civiq-green': '#0a9338',
         'civiq-blue': '#3ea0d2',
+      },
+      // Otl Aicher 8px grid system
+      spacing: {
+        'grid-1': '8px',
+        'grid-2': '16px',
+        'grid-3': '24px',
+        'grid-4': '32px',
+        'grid-5': '40px',
+        'grid-6': '48px',
+        'grid-8': '64px',
+        'grid-10': '80px',
+        'grid-12': '96px',
+      },
+      borderWidth: {
+        aicher: '2px',
+      },
+      letterSpacing: {
+        aicher: '0.05em',
+        'aicher-wide': '0.1em',
       },
       animation: {
         shimmer: 'shimmer 2s infinite',

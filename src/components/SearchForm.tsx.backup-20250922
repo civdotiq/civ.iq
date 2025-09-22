@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { SearchIcon } from '@/components/icons/AicherIcons';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 export default function SearchForm() {
   const [searchInput, setSearchInput] = useState('');
@@ -30,20 +30,20 @@ export default function SearchForm() {
       <form onSubmit={handleSearch} className="relative">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <SearchIcon className="h-5 w-5 text-gray-400" />
+            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
           </div>
           <input
             type="text"
             placeholder="Enter your ZIP code or address..."
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
-            className="block w-full pl-grid-5 pr-grid-12 py-grid-2 text-lg border-aicher border-gray-300 focus:outline-none focus:border-civiq-blue"
+            className="block w-full pl-10 pr-32 py-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={!searchInput.trim() || isLoading}
-            className="absolute inset-y-0 right-0 flex items-center px-grid-3 text-white bg-civiq-blue hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors aicher-heading"
+            className="absolute inset-y-0 right-0 flex items-center px-6 text-white bg-civiq-blue hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-r-lg transition-colors"
           >
             {isLoading ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
