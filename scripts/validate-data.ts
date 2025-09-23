@@ -69,6 +69,21 @@ class DistrictValidator {
     maxLon: -65.0, // Eastern Maine
   };
 
+  // US Territories with negative latitudes (Southern Hemisphere)
+  private readonly SOUTHERN_HEMISPHERE_TERRITORIES = [
+    '6098', // American Samoa At-Large
+    '6000', // American Samoa (alternative ID)
+    'AS00', // American Samoa (state format)
+  ];
+
+  // Extended US bounds for all territories
+  private readonly US_TERRITORIES_BOUNDS = {
+    minLat: -15.0, // American Samoa (southernmost US territory)
+    maxLat: 72.0, // Northern Alaska
+    minLon: -180.0, // Western Aleutians
+    maxLon: -64.0, // US Virgin Islands (easternmost US territory)
+  };
+
   async validateAllDistricts(): Promise<void> {
     console.log('🔍 Congressional District Data Validation Tool');
     console.log('============================================\n');
@@ -215,21 +230,34 @@ class DistrictValidator {
     result.metrics.firstPointLon = lon;
     result.metrics.firstPointLat = lat;
 
-    // Check hemisphere - CRITICAL CHECK
-    if (lat < 0) {
-      result.errors.push(`❌ CRITICAL: Negative latitude ${lat.toFixed(4)}° - Wrong hemisphere!`);
-    }
+    // Check hemisphere - CRITICAL CHECK (with territory exception)
+    const isSouthernHemisphereTerritory = this.SOUTHERN_HEMISPHERE_TERRITORIES.includes(
+      result.districtId
+    );
 
-    // Check US bounds
-    if (lat < this.US_BOUNDS.minLat || lat > this.US_BOUNDS.maxLat) {
+    if (lat < 0 && !isSouthernHemisphereTerritory) {
       result.errors.push(
-        `Latitude ${lat.toFixed(4)}° outside US bounds [${this.US_BOUNDS.minLat}, ${this.US_BOUNDS.maxLat}]`
+        `❌ CRITICAL: Negative latitude ${lat.toFixed(4)}° - Wrong hemisphere! (Not an expected US territory)`
+      );
+    } else if (lat < 0 && isSouthernHemisphereTerritory) {
+      // Expected for southern hemisphere territories like American Samoa
+      result.warnings.push(
+        `ℹ️ Expected negative latitude ${lat.toFixed(4)}° for southern hemisphere territory ${result.districtId}`
       );
     }
 
-    if (lon < this.US_BOUNDS.minLon || lon > this.US_BOUNDS.maxLon) {
+    // Check bounds (use extended bounds for all territories)
+    const bounds = this.US_TERRITORIES_BOUNDS;
+
+    if (lat < bounds.minLat || lat > bounds.maxLat) {
       result.errors.push(
-        `Longitude ${lon.toFixed(4)}° outside US bounds [${this.US_BOUNDS.minLon}, ${this.US_BOUNDS.maxLon}]`
+        `Latitude ${lat.toFixed(4)}° outside US territories bounds [${bounds.minLat}, ${bounds.maxLat}]`
+      );
+    }
+
+    if (lon < bounds.minLon || lon > bounds.maxLon) {
+      result.errors.push(
+        `Longitude ${lon.toFixed(4)}° outside US territories bounds [${bounds.minLon}, ${bounds.maxLon}]`
       );
     }
 
