@@ -14,6 +14,9 @@ import { RepresentativeGrid } from './RepresentativeGrid';
 import { FilterSidebar } from './FilterSidebar';
 import { ErrorState } from '@/components/shared/ui/DataQualityIndicator';
 import CongressHeader from './CongressHeader';
+import { AddressPrompt } from './AddressPrompt';
+import { checkMultiDistrict, DistrictInfo } from '@/lib/multi-district/detection';
+import logger from '@/lib/logging/simple-logger';
 
 // Lazy load visualization components with dynamic imports for better code splitting
 const VotingPatternHeatmap = lazy(() =>
@@ -62,6 +65,13 @@ export function RepresentativesClient({
     committee: 'all',
   });
 
+  // Multi-district detection state
+  const [showAddressPrompt, setShowAddressPrompt] = useState(false);
+  const [multiDistrictData, setMultiDistrictData] = useState<{
+    zipCode: string;
+    districts: DistrictInfo[];
+  } | null>(null);
+
   // Use SWR for automatic caching and data fetching
   const {
     representatives: swrRepresentatives,
@@ -76,8 +86,83 @@ export function RepresentativesClient({
     zipCode && swrRepresentatives.length > 0 ? swrRepresentatives : initialRepresentatives;
   const [filteredReps, setFilteredReps] = useState<Representative[]>(representatives);
 
-  const handleZipSearch = (zip: string) => {
+  const handleZipSearch = async (zip: string) => {
+    // First check if this ZIP spans multiple districts
+    try {
+      const multiDistrictResponse = await checkMultiDistrict(zip);
+
+      if (multiDistrictResponse.success && multiDistrictResponse.isMultiDistrict) {
+        // Show address prompt for multi-district ZIPs
+        setMultiDistrictData({
+          zipCode: zip,
+          districts: multiDistrictResponse.districts,
+        });
+        setShowAddressPrompt(true);
+        return; // Don't proceed with normal ZIP search
+      }
+    } catch (error) {
+      logger.warn('Multi-district check failed, proceeding with normal search', error as Error, {
+        zip,
+      });
+    }
+
+    // Single district or fallback - proceed with normal search
     setZipCode(zip);
+  };
+
+  const handleAddressSubmit = async (address: string) => {
+    if (!multiDistrictData) return;
+
+    // For now, we'll implement a simple fallback to district selection
+    // In a production system, this would integrate with a geocoding service
+    logger.info('Address submitted for geocoding', { address, zipCode: multiDistrictData.zipCode });
+
+    // For demo purposes, show district selection
+    // Note: Address geocoding integration planned for next version
+    alert(
+      'Address geocoding will be implemented in the next version. Please select your district manually below.'
+    );
+  };
+
+  const handleDistrictSelect = async (district: DistrictInfo) => {
+    if (!multiDistrictData) return;
+
+    try {
+      // Fetch representatives for the specific district
+      const response = await fetch(
+        `/api/representatives-multi-district?zip=${multiDistrictData.zipCode}&district=${district.state}-${district.district}`
+      );
+      const data = await response.json();
+
+      if (data.success && data.representatives) {
+        // Update representatives with the district-specific ones
+        // This will bypass the SWR cache and show the specific district's representatives
+        setZipCode(`${district.state}-${district.district}`);
+
+        // Close the prompt
+        setShowAddressPrompt(false);
+        setMultiDistrictData(null);
+      } else {
+        logger.error(
+          'Failed to fetch district representatives',
+          new Error(data.error?.message || 'Unknown error'),
+          {
+            zipCode: multiDistrictData.zipCode,
+            district: `${district.state}-${district.district}`,
+          }
+        );
+      }
+    } catch (error) {
+      logger.error('Error fetching district representatives', error as Error, {
+        zipCode: multiDistrictData.zipCode,
+        district: `${district.state}-${district.district}`,
+      });
+    }
+  };
+
+  const handleCloseAddressPrompt = () => {
+    setShowAddressPrompt(false);
+    setMultiDistrictData(null);
   };
 
   const handleFilterChange = useCallback(
@@ -180,6 +265,18 @@ export function RepresentativesClient({
   return (
     <>
       <SearchForm onSearch={handleZipSearch} apiMetadata={metadata || undefined} />
+
+      {/* Multi-district Address Prompt */}
+      {multiDistrictData && (
+        <AddressPrompt
+          isOpen={showAddressPrompt}
+          onClose={handleCloseAddressPrompt}
+          zipCode={multiDistrictData.zipCode}
+          districts={multiDistrictData.districts}
+          onAddressSubmit={handleAddressSubmit}
+          onDistrictSelect={handleDistrictSelect}
+        />
+      )}
 
       {/* Congress Statistics Header */}
       <CongressHeader

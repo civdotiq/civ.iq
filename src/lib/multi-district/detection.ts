@@ -225,6 +225,9 @@ export function quickMultiDistrictCheck(zipCode: string): boolean {
     '480',
     '481',
     '482', // Phoenix
+    '481',
+    '482',
+    '483', // Detroit area
     '191',
     '190', // Philadelphia
     '021',

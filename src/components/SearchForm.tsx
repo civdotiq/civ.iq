@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SearchIcon } from '@/components/icons/AicherIcons';
+import { quickMultiDistrictCheck } from '@/lib/multi-district/detection';
 
 export default function SearchForm() {
   const [searchInput, setSearchInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [multiDistrictWarning, setMultiDistrictWarning] = useState(false);
   const router = useRouter();
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -14,11 +16,21 @@ export default function SearchForm() {
     if (!searchInput.trim() || isLoading) return;
 
     setIsLoading(true);
+    setMultiDistrictWarning(false);
 
     const cleanInput = searchInput.trim();
 
     if (/^\d{5}(-\d{4})?$/.test(cleanInput)) {
       const zipCode = cleanInput.split('-')[0];
+
+      // Quick pre-check for known multi-district ZIPs
+      if (zipCode) {
+        const isLikelyMultiDistrict = quickMultiDistrictCheck(zipCode);
+        if (isLikelyMultiDistrict) {
+          setMultiDistrictWarning(true);
+        }
+      }
+
       router.push(`/representatives?zip=${zipCode}`);
     } else {
       router.push(`/representatives?query=${encodeURIComponent(cleanInput)}`);
@@ -53,6 +65,32 @@ export default function SearchForm() {
           </button>
         </div>
       </form>
+      {multiDistrictWarning && (
+        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 text-sm text-blue-800">
+          <div className="flex items-start">
+            <svg
+              className="w-4 h-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div>
+              <p className="font-medium">Multi-District ZIP Code Detected</p>
+              <p className="mt-1">
+                This ZIP code may span multiple congressional districts. You&apos;ll be prompted to
+                provide your street address for precise representative identification.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <p className="text-sm text-gray-500 mt-2">
         Try: &ldquo;48221&rdquo;, &ldquo;1600 Pennsylvania Avenue&rdquo;, or &ldquo;Detroit,
         MI&rdquo;
