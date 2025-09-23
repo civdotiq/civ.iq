@@ -193,8 +193,33 @@ export async function GET(request: NextRequest) {
     const warnings = [];
     if (isMultiDistrict && !selectedDistrict) {
       warnings.push(
-        'This ZIP code spans multiple congressional districts. Please provide your street address for precise representative identification.'
+        `This ZIP code spans ${districts.length} congressional districts. Please provide your street address or select a district for accurate representation.`
       );
+
+      // When multi-district with no selection, include all possible representatives
+      const allStates = [...new Set(districts.map(d => d.state))];
+      try {
+        const allReps = await RepresentativesCoreService.getAllRepresentatives();
+        representatives = allReps.filter(rep => {
+          // Include all senators from states in the multi-district ZIP
+          if (rep.chamber === 'Senate' && allStates.includes(rep.state)) {
+            return true;
+          }
+          // Include all house representatives from the districts
+          if (rep.chamber === 'House') {
+            return districts.some(district => {
+              if (rep.state !== district.state) return false;
+              const repDistrict = rep.district?.padStart(2, '0') || '00';
+              const targetDistrictNorm = district.district.padStart(2, '0');
+              return repDistrict === targetDistrictNorm;
+            });
+          }
+          return false;
+        });
+        representativesFound = representatives.length > 0;
+      } catch (error) {
+        logger.error('Error fetching multi-district representatives', error as Error, { zipCode });
+      }
     }
 
     const response: MultiDistrictResponse = {

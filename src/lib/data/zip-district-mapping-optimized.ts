@@ -269,20 +269,10 @@ class OptimizedZipLookupService {
    * Check if ZIP code spans multiple districts
    */
   isZipMultiDistrict(zipCode: string): boolean {
-    // Check hot cache first
-    if (this.hotCache.has(zipCode)) {
-      return false; // Hot cache only stores single districts
-    }
-
-    // Check runtime cache
-    const cached = this.cache.get(zipCode);
-    if (cached) {
-      return Array.isArray(cached);
-    }
-
-    // Direct check
-    const mapping = ZIP_TO_DISTRICT_MAP_119TH[zipCode];
-    return mapping ? Array.isArray(mapping) : false;
+    // Get all districts for this ZIP
+    const allDistricts = this.getAllDistrictsForZip(zipCode);
+    // Return true if more than one district found
+    return allDistricts.length > 1;
   }
 
   /**

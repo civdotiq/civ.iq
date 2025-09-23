@@ -113,15 +113,49 @@ export function RepresentativesClient({
   const handleAddressSubmit = async (address: string) => {
     if (!multiDistrictData) return;
 
-    // For now, we'll implement a simple fallback to district selection
-    // In a production system, this would integrate with a geocoding service
-    logger.info('Address submitted for geocoding', { address, zipCode: multiDistrictData.zipCode });
+    try {
+      // Call geocode API with address
+      const response = await fetch('/api/geocode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'address',
+          address,
+          zipCode: multiDistrictData.zipCode,
+        }),
+      });
 
-    // For demo purposes, show district selection
-    // Note: Address geocoding integration planned for next version
-    alert(
-      'Address geocoding will be implemented in the next version. Please select your district manually below.'
-    );
+      const data = await response.json();
+
+      if (data.success && data.district) {
+        // Found the district - fetch representatives for it
+        const districtResponse = await fetch(
+          `/api/representatives-multi-district?zip=${multiDistrictData.zipCode}&district=${data.district.state}-${data.district.district}`
+        );
+        const districtData = await districtResponse.json();
+
+        if (districtData.success && districtData.representatives) {
+          // Update with the specific district's representatives
+          setZipCode(`${data.district.state}-${data.district.district}`);
+          setShowAddressPrompt(false);
+          setMultiDistrictData(null);
+          logger.info('Address geocoded successfully', {
+            address,
+            district: `${data.district.state}-${data.district.district}`,
+          });
+        } else {
+          alert('Could not fetch representatives for the identified district. Please try again.');
+        }
+      } else {
+        alert(
+          data.error?.message ||
+            'Could not determine your district from this address. Please try selecting your district manually.'
+        );
+      }
+    } catch (error) {
+      logger.error('Address geocoding failed', error as Error, { address });
+      alert('Failed to geocode address. Please try again or select your district manually.');
+    }
   };
 
   const handleDistrictSelect = async (district: DistrictInfo) => {
