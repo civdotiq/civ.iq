@@ -30,6 +30,8 @@ interface RepresentativeResponse {
   title: string;
   phone?: string;
   website?: string;
+  yearsInOffice?: number;
+  nextElection?: string;
   contactInfo: {
     phone: string;
     website: string;
@@ -375,6 +377,8 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
       title: rep.title,
       phone: rep.currentTerm?.phone || rep.phone,
       website: rep.currentTerm?.website || rep.website,
+      yearsInOffice: rep.yearsInOffice,
+      nextElection: rep.nextElection,
       contactInfo: {
         phone: rep.currentTerm?.phone || rep.phone || '',
         website: rep.currentTerm?.website || rep.website || '',
@@ -549,6 +553,8 @@ export async function GET(request: NextRequest) {
           title: rep.title,
           phone: rep.currentTerm?.phone || rep.phone,
           website: rep.currentTerm?.website || rep.website,
+          yearsInOffice: rep.yearsInOffice,
+          nextElection: rep.nextElection,
           contactInfo: {
             phone: rep.currentTerm?.phone || rep.phone || '',
             website: rep.currentTerm?.website || rep.website || '',

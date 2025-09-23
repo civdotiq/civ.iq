@@ -837,6 +837,51 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
           return null;
         }
 
+        // Calculate years in current office (current consecutive tenure in specific chamber)
+        const calculateYearsInOffice = () => {
+          const currentChamber = currentTerm.type === 'sen' ? 'sen' : 'rep';
+
+          // Find the first term in the current chamber to get when they first entered this office
+          const chamberTerms = legislator.terms
+            .filter(term => term.type === currentChamber && term.start)
+            .sort((a, b) => new Date(a.start!).getTime() - new Date(b.start!).getTime());
+
+          // Use the first term in this chamber, not the current term
+          const firstChamberTerm = chamberTerms[0];
+          const startOfCurrentService = firstChamberTerm
+            ? new Date(firstChamberTerm.start || '')
+            : new Date(currentTerm.start || '');
+
+          const daysSinceStart =
+            (new Date().getTime() - startOfCurrentService.getTime()) / (1000 * 60 * 60 * 24);
+
+          return Math.round(daysSinceStart / 365.25); // Convert to years, accounting for leap years
+        };
+
+        // Calculate next election based on chamber and current term
+        const calculateNextElection = () => {
+          if (currentTerm.type === 'sen') {
+            // Senators serve 6-year terms
+            // Classes rotate: Class I (2030), Class II (2026), Class III (2028)
+            if (currentTerm.class === 1) return '2030';
+            if (currentTerm.class === 2) return '2026';
+            if (currentTerm.class === 3) return '2028';
+            // Fallback: if no class, use term end year
+            const endYear = currentTerm.end?.split('-')[0];
+            return endYear || '2026';
+          } else {
+            // House members serve 2-year terms, all up for election in even years
+            const currentYear = new Date().getFullYear();
+            const nextEvenYear = currentYear % 2 === 0 ? currentYear : currentYear + 1;
+            // If we're past November in an election year, the next election is in 2 years
+            const currentMonth = new Date().getMonth();
+            if (currentYear % 2 === 0 && currentMonth >= 11) {
+              return (nextEvenYear + 2).toString();
+            }
+            return nextEvenYear.toString();
+          }
+        };
+
         return {
           bioguideId: legislator.id.bioguide,
           name: `${legislator.name.first} ${legislator.name.last}`,
@@ -848,6 +893,8 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
           chamber: currentTerm.type === 'sen' ? 'Senate' : 'House',
           title: currentTerm.type === 'sen' ? 'U.S. Senator' : 'U.S. Representative',
           imageUrl: `/api/representative-photo/${legislator.id.bioguide}`, // Add photo URL
+          yearsInOffice: calculateYearsInOffice(),
+          nextElection: calculateNextElection(),
           terms: legislator.terms
             .map(term => {
               // Extract congress number from years (approximate)

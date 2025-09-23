@@ -43,6 +43,8 @@ export interface BaseRepresentative {
     role?: string;
     title?: string; // Alias for role for news services compatibility
   }>;
+  yearsInOffice?: number;
+  nextElection?: string;
 }
 
 // Enhanced representative with congress-legislators data
