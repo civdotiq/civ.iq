@@ -71,20 +71,20 @@ async function persistentCachedFetch<T>(
   if (fileCached) {
     const duration = Date.now() - startTime;
     // eslint-disable-next-line no-console
-    console.log(`🎯 [CACHE HIT] File cache hit for ${key} (${duration}ms)`);
+    logger.debug('File cache hit', { key, duration });
     logger.info('File cache hit for congress data', { key, duration });
     return fileCached;
   }
 
   // eslint-disable-next-line no-console
-  console.log(`❌ [CACHE MISS] File cache miss for ${key}, checking memory cache...`);
+  logger.debug('File cache miss, checking memory cache', { key });
 
   // Fall back to regular cache and fetch
   return cachedFetch(
     key,
     async () => {
       // eslint-disable-next-line no-console
-      console.log(`📡 [FETCHING] Downloading ${key} from GitHub...`);
+      logger.info('Downloading from GitHub', { key });
       logger.info('Fetching congress data from remote source', { key });
 
       const fetchStartTime = Date.now();
@@ -92,7 +92,7 @@ async function persistentCachedFetch<T>(
       const fetchDuration = Date.now() - fetchStartTime;
 
       // eslint-disable-next-line no-console
-      console.log(`✅ [FETCH COMPLETE] Downloaded ${key} in ${fetchDuration}ms`);
+      logger.info('Download complete', { key, fetchDuration });
 
       // Save to file cache for persistence
       const cacheStartTime = Date.now();
@@ -100,7 +100,7 @@ async function persistentCachedFetch<T>(
       const cacheDuration = Date.now() - cacheStartTime;
 
       // eslint-disable-next-line no-console
-      console.log(`💾 [CACHE SAVE] Saved ${key} to file cache in ${cacheDuration}ms`);
+      logger.debug('Saved to file cache', { key, cacheDuration });
       logger.info('Congress data cached successfully', {
         key,
         fetchDuration,
@@ -266,18 +266,16 @@ async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
           'congress-legislators-current-fallback'
         );
         if (fallbackData && fallbackData.length > 0) {
-          // eslint-disable-next-line no-console
-          console.log(
-            `🔄 [FALLBACK] Using cached fallback data (${fallbackData.length} legislators)`
-          );
+          logger.warn('Using cached fallback data', {
+            fallbackCount: fallbackData.length,
+          });
           logger.warn('Using fallback data due to fetch error', {
             fallbackCount: fallbackData.length,
           });
           return fallbackData;
         }
 
-        // eslint-disable-next-line no-console
-        console.log('❌ [ERROR] No fallback data available, returning empty array');
+        logger.error('No fallback data available, returning empty array');
         return [];
       }
     },

@@ -22,23 +22,16 @@ export async function GET(
   const includeLeadership = searchParams.get('includeLeadership') === 'true';
   const includeAll = searchParams.get('includeAll') === 'true';
 
-  // Detailed logging for debugging
-  // eslint-disable-next-line no-console
-  console.log('[API] Representative route called');
-  // eslint-disable-next-line no-console
-  console.log('[API] Original bioguideId:', bioguideId);
-  // eslint-disable-next-line no-console
-  console.log('[API] Uppercase bioguideId:', upperBioguideId);
-  // eslint-disable-next-line no-console
-  console.log('[API] Environment:', process.env.NODE_ENV);
-  // eslint-disable-next-line no-console
-  console.log('[API] Has CONGRESS_API_KEY:', !!process.env.CONGRESS_API_KEY);
-  // eslint-disable-next-line no-console
-  console.log('[API] Query params:', { includeCommittees, includeLeadership, includeAll });
+  logger.debug('Representative route called', {
+    originalBioguideId: bioguideId,
+    upperBioguideId,
+    environment: process.env.NODE_ENV,
+    hasCongressApiKey: !!process.env.CONGRESS_API_KEY,
+    queryParams: { includeCommittees, includeLeadership, includeAll },
+  });
 
   if (!bioguideId) {
-    // eslint-disable-next-line no-console
-    console.error('[API] No bioguideId provided');
+    logger.error('No bioguideId provided');
     return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
   }
 

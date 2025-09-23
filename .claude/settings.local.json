@@ -110,7 +110,8 @@
       "Bash(for:*)",
       "Bash(do:*)",
       "Bash(done)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": []

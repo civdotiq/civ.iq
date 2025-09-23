@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import logger from '@/lib/logging/simple-logger';
 
 // District demographics interface for type safety
 export interface DistrictDemographics {
@@ -224,40 +225,38 @@ export async function fetchAllDistrictDemographics(
       const cacheAge = Date.now() - stats.mtime.getTime();
 
       if (cacheAge < CACHE_DURATION_MS) {
-        console.log(
-          '📊 CENSUS DATA: FROM CACHE (age:',
-          Math.round(cacheAge / (60 * 60 * 1000)),
-          'hours)'
-        );
+        logger.info('Census data: Loading from cache', {
+          ageHours: Math.round(cacheAge / (60 * 60 * 1000)),
+        });
 
         const cachedData = await fs.readFile(cacheFile, 'utf-8');
         let parsed;
         try {
           parsed = JSON.parse(cachedData);
-        } catch (parseError) {
-          console.warn('⚠️ Cache file corrupted, fetching fresh data');
+        } catch {
+          logger.warn('Cache file corrupted, fetching fresh data');
           throw new Error('Cache corrupted');
         }
 
         // Convert back to Map from serialized array format
         const allDistricts = new Map();
         if (Array.isArray(parsed)) {
-          parsed.forEach(([key, value]: [string, any]) => {
+          parsed.forEach(([key, value]: [string, DistrictDemographics]) => {
             allDistricts.set(key, value);
           });
         }
 
-        console.log(`✅ Loaded ${allDistricts.size} districts from cache`);
+        logger.info('Loaded districts from cache', { count: allDistricts.size });
         return allDistricts;
       }
-    } catch (error) {
+    } catch {
       // Cache file doesn't exist or can't be read, proceed with API fetch
-      console.log('📊 CENSUS DATA: Cache miss, fetching from API');
+      logger.info('Census data: Cache miss, fetching from API');
     }
 
     // Fetch from Census API
-    console.log('📊 CENSUS DATA: FROM CENSUS API (FETCHING NEW)');
-    console.time('Census API Single Call');
+    logger.info('Census data: Fetching new data from Census API');
+    const startTime = Date.now();
 
     // Use improved API structure based on working individual district endpoint
     const variables = [
@@ -281,7 +280,7 @@ export async function fetchAllDistrictDemographics(
       url += `&key=${censusApiKey}`;
     }
 
-    console.log('Making Census API request:', url.substring(0, 100) + '...');
+    logger.debug('Making Census API request', { urlPreview: url.substring(0, 100) + '...' });
 
     const response = await fetch(url, {
       signal: AbortSignal.timeout(45000), // 45 second timeout for bulk request
@@ -289,7 +288,10 @@ export async function fetchAllDistrictDemographics(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Census API error ${response.status}:`, errorText.substring(0, 500));
+      logger.error('Census API error', {
+        status: response.status,
+        error: errorText.substring(0, 500),
+      });
 
       // Check for specific errors
       if (errorText.includes('Invalid Key') || errorText.includes('<title>Invalid Key</title>')) {
@@ -302,26 +304,31 @@ export async function fetchAllDistrictDemographics(
     }
 
     const responseText = await response.text();
-    console.log('Raw response length:', responseText.length, 'chars');
+    logger.debug('Raw response received', { length: responseText.length });
 
     let data;
     try {
       data = JSON.parse(responseText);
     } catch (parseError) {
-      console.error('Failed to parse Census API JSON:', responseText.substring(0, 1000));
+      logger.error('Failed to parse Census API JSON', {
+        responsePreview: responseText.substring(0, 1000),
+      });
       throw new Error(`Census API returned invalid JSON: ${parseError}`);
     }
 
     if (!Array.isArray(data) || data.length < 2) {
-      console.error('Unexpected Census API response structure:', data);
+      logger.error('Unexpected Census API response structure', { data });
       throw new Error('Census API returned unexpected data structure');
     }
 
     const headers = data[0];
     const rows = data.slice(1);
 
-    console.timeEnd('Census API Single Call');
-    console.log(`📊 Processed ${rows.length} districts from Census API`);
+    const fetchTime = Date.now() - startTime;
+    logger.info('Processed districts from Census API', {
+      count: rows.length,
+      fetchTimeMs: fetchTime,
+    });
 
     const allDistricts = new Map();
 
@@ -353,7 +360,7 @@ export async function fetchAllDistrictDemographics(
       const stateAbbr = fipsToState[stateFips];
 
       if (!stateAbbr) {
-        console.warn(`Unknown state FIPS: ${stateFips}`);
+        logger.warn('Unknown state FIPS', { stateFips });
         continue;
       }
 
@@ -414,25 +421,25 @@ export async function fetchAllDistrictDemographics(
       allDistricts.set(districtKey, { ...demographics, state: stateAbbr });
     }
 
-    console.log(`📊 Successfully processed ${allDistricts.size} districts`);
+    logger.info('Successfully processed districts', { count: allDistricts.size });
 
     // Cache the results
     try {
       // Convert Map to array format for JSON serialization
       const serializedData = Array.from(allDistricts.entries());
       await fs.writeFile(cacheFile, JSON.stringify(serializedData, null, 2));
-      console.log('💾 Census data cached successfully');
+      logger.info('Census data cached successfully');
     } catch (cacheError) {
-      console.warn('⚠️ Failed to write cache file:', cacheError);
+      logger.warn('Failed to write cache file', cacheError as Error);
       // Don't throw - return the data anyway
     }
 
     return allDistricts;
   } catch (error) {
-    console.error('❌ Error in fetchAllDistrictDemographics:', error);
+    logger.error('Error in fetchAllDistrictDemographics', error as Error);
 
     // Return empty Map instead of throwing to prevent cascade failures
-    console.warn('📊 Returning empty demographics due to API failure');
+    logger.warn('Returning empty demographics due to API failure');
     return new Map();
   }
 }

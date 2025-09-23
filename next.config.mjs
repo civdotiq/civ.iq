@@ -1,10 +1,10 @@
 /**
- * Next.js configuration optimized for WSL2 environment
+ * Next.js configuration optimized for Vercel deployment
  */
 
 const nextConfig = {
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false, // Enable ESLint in production builds
   },
   typescript: {
     ignoreBuildErrors: false,
@@ -25,16 +25,16 @@ const nextConfig = {
         pathname: '/img/**',
       },
       {
-        // Allow internal API photo proxy
+        // Allow internal API photo proxy (development)
         protocol: 'http',
         hostname: 'localhost',
         port: '3000',
         pathname: '/api/photo/**',
       },
       {
-        // Allow production API photo proxy
+        // Production API photo proxy (update with your domain)
         protocol: 'https',
-        hostname: 'civ.iq',
+        hostname: process.env.NEXT_PUBLIC_APP_URL?.replace('https://', '') || 'your-app.vercel.app',
         port: '',
         pathname: '/api/photo/**',
       },
@@ -47,17 +47,16 @@ const nextConfig = {
       },
     ],
   },
-  // Optimized webpack config for WSL2 performance
+  // Production-optimized webpack config
   webpack: (config, { isServer, dev }) => {
-    // Optimize for WSL2 in development
+    // Development optimizations for WSL2
     if (dev && !isServer) {
       config.watchOptions = {
-        poll: false, // Disable polling, use native file watching
+        poll: false,
         ignored: ['**/node_modules/**', '**/.git/**', '**/.next/**'],
         aggregateTimeout: 300,
       };
 
-      // Reduce memory usage in development
       config.optimization = {
         ...config.optimization,
         removeAvailableModules: false,
@@ -66,13 +65,34 @@ const nextConfig = {
       };
     }
 
+    // Production optimizations
+    if (!dev) {
+      config.optimization = {
+        ...config.optimization,
+        usedExports: true,
+        sideEffects: false,
+      };
+    }
+
     return config;
   },
-  // Enable experimental features for better performance
+  // Production-ready features
   experimental: {
-    // Optimize for development
-    optimizeCss: false,
     scrollRestoration: true,
+  },
+  // Headers for security and performance
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 's-maxage=300, stale-while-revalidate=600',
+          },
+        ],
+      },
+    ];
   },
 };
 

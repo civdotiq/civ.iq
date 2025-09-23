@@ -17,6 +17,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { gdeltCache } from '@/lib/gdelt/cache';
+import logger from '@/lib/logging/simple-logger';
 
 export async function GET(_request: NextRequest) {
   try {
@@ -92,7 +93,7 @@ export async function GET(_request: NextRequest) {
     });
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error('Error getting cache status:', error);
+    logger.error('Error getting cache status', error as Error);
 
     return NextResponse.json(
       {
@@ -199,7 +200,7 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error('Error performing cache operation:', error);
+    logger.error('Error performing cache operation', error as Error);
 
     return NextResponse.json(
       {

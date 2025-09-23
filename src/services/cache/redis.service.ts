@@ -32,7 +32,7 @@ export interface CacheOperationResult<T = unknown> {
 
 class RedisService {
   private static instance: RedisService;
-  private client: Redis;
+  private client: Redis | null = null;
   private fallbackCache: Map<string, CacheEntry>;
   private isConnected: boolean = false;
   private readonly keyPrefix: string;
@@ -41,6 +41,22 @@ class RedisService {
     this.keyPrefix = config?.keyPrefix || 'civiq:';
     this.fallbackCache = new Map();
 
+    // Don't initialize Redis during build phase
+    const isBuildPhase =
+      process.env.NEXT_PHASE === 'phase-production-build' ||
+      (process.env.NODE_ENV === 'production' && !process.env.REDIS_URL);
+
+    if (isBuildPhase) {
+      logger.info('Build phase detected, Redis service using memory fallback only');
+      this.startCleanupTask();
+      return;
+    }
+
+    // Only initialize Redis at runtime
+    this.initializeRedis(config);
+  }
+
+  private async initializeRedis(config?: Partial<CacheConfig>): Promise<void> {
     // Default Redis configuration
     const defaultConfig: CacheConfig = {
       host: process.env.REDIS_HOST || 'localhost',
@@ -102,6 +118,8 @@ class RedisService {
   }
 
   private setupEventHandlers(): void {
+    if (!this.client) return;
+
     this.client.on('connect', () => {
       this.isConnected = true;
       logger.info('Redis connected successfully');
@@ -160,6 +178,8 @@ class RedisService {
   }
 
   private async forceConnect(): Promise<void> {
+    if (!this.client) return;
+
     try {
       logger.info('🔌 Attempting Redis connection...');
       await this.client.ping();
@@ -179,7 +199,7 @@ class RedisService {
     const monitor = monitorCache('get', key);
 
     try {
-      if (this.isConnected) {
+      if (this.isConnected && this.client) {
         const value = await this.client.get(key);
 
         if (value) {
@@ -261,7 +281,7 @@ class RedisService {
     try {
       const serializedValue = JSON.stringify(value);
 
-      if (this.isConnected) {
+      if (this.isConnected && this.client) {
         await this.client.setex(key, ttlSeconds, serializedValue);
         monitor.end();
         logger.debug('Cache set', { key, ttl: ttlSeconds });
@@ -319,7 +339,7 @@ class RedisService {
     const monitor = monitorCache('delete', key);
 
     try {
-      if (this.isConnected) {
+      if (this.isConnected && this.client) {
         const result = await this.client.del(key);
         monitor.end();
         logger.debug('Cache delete', { key, deleted: result > 0 });
@@ -365,7 +385,7 @@ class RedisService {
    */
   async flush(): Promise<CacheOperationResult> {
     try {
-      if (this.isConnected) {
+      if (this.isConnected && this.client) {
         await this.client.flushdb();
         logger.info('Redis cache flushed');
       }
@@ -394,7 +414,7 @@ class RedisService {
    */
   async exists(key: string): Promise<CacheOperationResult<boolean>> {
     try {
-      if (this.isConnected) {
+      if (this.isConnected && this.client) {
         const result = await this.client.exists(key);
         return {
           success: true,
@@ -434,7 +454,7 @@ class RedisService {
    */
   async keys(pattern: string): Promise<CacheOperationResult<string[]>> {
     try {
-      if (this.isConnected) {
+      if (this.isConnected && this.client) {
         const keys = await this.client.keys(pattern);
         return {
           success: true,
@@ -543,7 +563,7 @@ class RedisService {
     return {
       isConnected: this.isConnected,
       fallbackCacheSize: this.fallbackCache.size,
-      redisStatus: this.client.status,
+      redisStatus: this.client?.status || 'not-available',
       keyPrefix: this.keyPrefix,
     };
   }
@@ -553,7 +573,9 @@ class RedisService {
    */
   async disconnect(): Promise<void> {
     try {
-      await this.client.quit();
+      if (this.client) {
+        await this.client.quit();
+      }
       logger.info('Redis client disconnected');
     } catch (error) {
       logger.error('Error disconnecting Redis', error as Error);
@@ -563,7 +585,7 @@ class RedisService {
   /**
    * Get direct access to Redis client (for advanced operations)
    */
-  getClient(): Redis {
+  getClient(): Redis | null {
     return this.client;
   }
 
@@ -580,7 +602,7 @@ class RedisService {
   ): Promise<CacheOperationResult[]> {
     const results: CacheOperationResult[] = [];
 
-    if (this.isConnected) {
+    if (this.isConnected && this.client) {
       // Use Redis pipeline for batch operations
       const pipeline = this.client.pipeline();
 

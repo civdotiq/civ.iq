@@ -235,7 +235,7 @@ async function fetchCosponsoredLegislation(
     totalCount = data.pagination?.count || 0;
 
     // eslint-disable-next-line no-console
-    console.log('🔍 COSPONSORED API RAW RESPONSE:', JSON.stringify(data, null, 2));
+    logger.debug('Cosponsored API raw response', { data });
 
     // Debug logging for cosponsored legislation
     logger.info('Cosponsored legislation API page fetch', {

@@ -270,15 +270,7 @@ const BillsList = ({
 };
 
 export function BillsTracker({ bills, representative: _representative }: BillsTrackerProps) {
-  // VERIFICATION: Add console logs to trace data flow
-  // eslint-disable-next-line no-console
-  console.log('🔍 BILLS TO RENDER:', {
-    bills: bills?.slice(0, 2),
-    billsLength: bills?.length,
-    billsType: typeof bills,
-    isArray: Array.isArray(bills),
-    firstBill: bills?.[0],
-  });
+  // Process bills data - removed debug console logs
 
   const [selectedCategory, setSelectedCategory] = useState<'all' | string>('all');
   const [sortBy, setSortBy] = useState<SortByType>('date');
@@ -489,13 +481,7 @@ export function BillsTracker({ bills, representative: _representative }: BillsTr
     return { total, byStage, avgCosponsors, totalCosponsors };
   }, [filteredAndSortedBills]);
 
-  // VERIFICATION: Log before rendering
-  // eslint-disable-next-line no-console
-  console.log('🚀 RENDERING NOW with filteredAndSortedBills:', {
-    count: filteredAndSortedBills.length,
-    showTimelineView,
-    firstFilteredBill: filteredAndSortedBills[0],
-  });
+  // Render bills with current filter settings
 
   return (
     <div className="space-y-6">

@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { representativeApi, RepresentativeApiError } from '@/lib/api/representatives';
 
 interface BatchAPIResult {
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -34,33 +34,22 @@ export function useBatchAPI(
   } = {}
 ): BatchAPIResult {
   const { enabled = true, refetchOnMount = true } = options;
-  
-  const [data, setData] = useState<Record<string, any>>({});
+
+  const [data, setData] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<BatchAPIResult['metadata']>();
   const [partialErrors, setPartialErrors] = useState<Record<string, string>>({});
-  
+
   // Use ref to track mounted state to prevent memory leaks
   const mountedRef = useRef(true);
 
   const fetchBatchData = useCallback(async () => {
     if (!bioguideId || endpoints.length === 0 || !enabled) {
-      console.log('[CIV.IQ-DEBUG] useBatchAPI: Skipping fetch - invalid params', {
-        bioguideId: !!bioguideId,
-        endpointsLength: endpoints.length,
-        enabled
-      });
       return;
     }
 
     try {
-      console.log('[CIV.IQ-DEBUG] useBatchAPI: Starting batch fetch', {
-        bioguideId,
-        endpoints,
-        endpointCount: endpoints.length
-      });
-      
       setLoading(true);
       setError(null);
       setPartialErrors({});
@@ -79,29 +68,13 @@ export function useBatchAPI(
 
       // Only update state if component is still mounted
       if (!mountedRef.current) {
-        console.log('[CIV.IQ-DEBUG] useBatchAPI: Component unmounted, skipping state update');
         return;
       }
-
-      console.log('[CIV.IQ-DEBUG] useBatchAPI: Batch fetch completed', {
-        success: result.success,
-        dataEndpoints: Object.keys(result.data || {}),
-        errorEndpoints: Object.keys(result.errors || {}),
-        executionTime: result.executionTime
-      });
 
       setData(result.data || {});
       setMetadata(result.metadata);
       setPartialErrors(result.errors || {});
-      
-      // Log partial errors for debugging
-      if (result.errors && Object.keys(result.errors).length > 0) {
-        console.warn('[CIV.IQ-DEBUG] useBatchAPI: Some endpoints failed:', result.errors);
-      }
-      
     } catch (err) {
-      console.error('[CIV.IQ-DEBUG] useBatchAPI: Batch fetch error:', err);
-      
       // Only update state if component is still mounted
       if (!mountedRef.current) {
         return;
@@ -138,7 +111,7 @@ export function useBatchAPI(
     error,
     refetch: fetchBatchData,
     metadata,
-    partialErrors
+    partialErrors,
   };
 }
 
@@ -163,17 +136,17 @@ export function useRepresentativeProfile(
     includeFinance = true,
     includeNews = true,
     includePartyAlignment = true,
-    enabled = true
+    enabled = true,
   } = options;
 
   const endpoints = ['profile'];
-  
+
   if (includeVotes) endpoints.push('votes');
   if (includeBills) endpoints.push('bills');
   if (includeFinance) endpoints.push('finance');
   if (includeNews) endpoints.push('news');
   if (includePartyAlignment) endpoints.push('party-alignment');
-  
+
   return useBatchAPI(bioguideId, endpoints, { enabled });
 }
 
@@ -182,7 +155,15 @@ export function useRepresentativeProfile(
  */
 export function useRepresentativeData(
   bioguideId: string,
-  dataTypes: ('votes' | 'bills' | 'finance' | 'news' | 'committees' | 'party-alignment' | 'leadership')[],
+  dataTypes: (
+    | 'votes'
+    | 'bills'
+    | 'finance'
+    | 'news'
+    | 'committees'
+    | 'party-alignment'
+    | 'leadership'
+  )[],
   enabled: boolean = true
 ): BatchAPIResult {
   return useBatchAPI(bioguideId, ['profile', ...dataTypes], { enabled });

@@ -174,15 +174,13 @@ export class FECApiService {
     cycle: number
   ): Promise<FECFinancialSummary | null> {
     try {
-      // eslint-disable-next-line no-console
-      console.log(`[FEC DEBUG] Getting financial summary for ${candidateId} cycle ${cycle}`);
+      logger.debug('Getting FEC financial summary', { candidateId, cycle });
 
       const response = await this.makeRequest<FECApiResponse<FECFinancialSummary>>(
         `/candidate/${candidateId}/totals/?cycle=${cycle}`
       );
 
-      // eslint-disable-next-line no-console
-      console.log(`[FEC DEBUG] Response received:`, {
+      logger.debug('FEC response received', {
         hasResults: !!(response.results && response.results.length > 0),
         resultsCount: response.results?.length || 0,
         firstResult: response.results?.[0],
@@ -195,8 +193,7 @@ export class FECApiService {
 
       return null;
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.log(`[FEC DEBUG] Error getting financial summary:`, error);
+      logger.debug('Error getting FEC financial summary', error);
       logger.error(`[FEC API] Failed to get financial summary for ${candidateId}:`, error);
       throw error;
     }

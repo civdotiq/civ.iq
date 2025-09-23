@@ -3,12 +3,19 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { getRedisCache } from '@/lib/cache/redis-client';
+import { getRedisCache, RedisCache } from '@/lib/cache/redis-client';
 import logger from '@/lib/logging/simple-logger';
 import { monitorCache } from '@/lib/monitoring/telemetry';
 
-// Get the Redis cache instance
-const redisCache = getRedisCache();
+// Lazy-load the Redis cache instance
+let redisCache: RedisCache | null = null;
+
+const getCache = (): RedisCache => {
+  if (!redisCache) {
+    redisCache = getRedisCache();
+  }
+  return redisCache;
+};
 
 // Cache helper function with automatic key generation
 export async function cachedFetch<T>(
@@ -17,9 +24,10 @@ export async function cachedFetch<T>(
   ttlSeconds: number = 3600
 ): Promise<T> {
   const monitor = monitorCache('get', key);
+  const cache = getCache();
 
   try {
-    const cached = await redisCache.get<T>(key);
+    const cached = await cache.get<T>(key);
     if (cached) {
       monitor.end(true);
       logger.info('Cache hit', { key, ttl: ttlSeconds });
@@ -32,7 +40,7 @@ export async function cachedFetch<T>(
 
     // Set in cache with monitoring
     const setMonitor = monitorCache('set', key);
-    const setSuccess = await redisCache.set(key, data, ttlSeconds);
+    const setSuccess = await cache.set(key, data, ttlSeconds);
     setMonitor.end();
 
     if (setSuccess) {
@@ -55,7 +63,7 @@ export async function cachedFetch<T>(
 export const cache = {
   get: async <T>(key: string): Promise<T | null> => {
     try {
-      return await redisCache.get<T>(key);
+      return await getCache().get<T>(key);
     } catch (error) {
       logger.error('Cache get failed', error as Error, { key });
       return null;
@@ -64,7 +72,7 @@ export const cache = {
 
   set: async <T>(key: string, data: T, ttlSeconds: number = 3600): Promise<boolean> => {
     try {
-      return await redisCache.set(key, data, ttlSeconds);
+      return await getCache().set(key, data, ttlSeconds);
     } catch (error) {
       logger.error('Cache set failed', error as Error, { key });
       return false;
@@ -73,7 +81,7 @@ export const cache = {
 
   delete: async (key: string): Promise<boolean> => {
     try {
-      return await redisCache.delete(key);
+      return await getCache().delete(key);
     } catch (error) {
       logger.error('Cache delete failed', error as Error, { key });
       return false;
@@ -82,7 +90,7 @@ export const cache = {
 
   clear: async (): Promise<boolean> => {
     try {
-      return await redisCache.flush();
+      return await getCache().flush();
     } catch (error) {
       logger.error('Cache clear failed', error as Error);
       return false;
@@ -91,12 +99,12 @@ export const cache = {
 
   exists: async (key: string): Promise<boolean> => {
     try {
-      return await redisCache.exists(key);
+      return await getCache().exists(key);
     } catch (error) {
       logger.error('Cache exists check failed', error as Error, { key });
       return false;
     }
   },
 
-  getStatus: () => redisCache.getStatus(),
+  getStatus: () => getCache().getStatus(),
 };

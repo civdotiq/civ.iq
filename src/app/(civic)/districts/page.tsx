@@ -15,6 +15,7 @@ import { Users, Building2, MapPin } from 'lucide-react';
 import NationalStatsCards from '@/shared/components/ui/NationalStatsCards';
 import StateInfoPanel from '@/shared/components/ui/StateInfoPanel';
 import CongressSessionInfo from '@/features/districts/components/CongressSessionInfo';
+import { ApiErrorBoundary } from '@/components/ErrorBoundary';
 
 // Dynamic import of the REAL district map component to avoid SSR issues
 const RealDistrictMapContainer = dynamic(
@@ -644,7 +645,9 @@ export default function DistrictsPage() {
         ) : (
           <>
             {/* National Statistics Cards */}
-            <NationalStatsCards districts={districts} />
+            <ApiErrorBoundary context="national-stats">
+              <NationalStatsCards districts={districts} />
+            </ApiErrorBoundary>
 
             {/* Filters */}
             <div className="bg-white border-2 border-black p-6 mb-8">
@@ -704,15 +707,17 @@ export default function DistrictsPage() {
                 states to see senators and district information.
               </p>
               <div className="relative">
-                <RealDistrictMapContainer
-                  selectedDistrict={selectedDistrict}
-                  onDistrictClick={district => {
-                    setSelectedDistrict(district.id || '');
-                  }}
-                  height="500px"
-                  showControls={true}
-                  enableInteraction={true}
-                />
+                <ApiErrorBoundary context="district-map">
+                  <RealDistrictMapContainer
+                    selectedDistrict={selectedDistrict}
+                    onDistrictClick={district => {
+                      setSelectedDistrict(district.id || '');
+                    }}
+                    height="500px"
+                    showControls={true}
+                    enableInteraction={true}
+                  />
+                </ApiErrorBoundary>
                 {/* State Info Panel */}
                 <StateInfoPanel state={selectedState} onClose={() => setSelectedState(null)} />
               </div>
@@ -720,7 +725,9 @@ export default function DistrictsPage() {
 
             {/* Demographics Dashboard */}
             <div className="mb-8">
-              <DemographicsDashboard districts={filteredDistricts} selectedState={stateFilter} />
+              <ApiErrorBoundary context="demographics-dashboard">
+                <DemographicsDashboard districts={filteredDistricts} selectedState={stateFilter} />
+              </ApiErrorBoundary>
             </div>
 
             {/* District grid */}

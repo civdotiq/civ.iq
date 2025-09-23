@@ -56,7 +56,7 @@ export class RollCallParser {
     try {
       const response = await fetch(url);
       if (!response.ok) {
-        console.error(`Failed to fetch roll call from ${url}: ${response.status}`);
+        // Failed to fetch roll call data
         return null;
       }
 
@@ -70,8 +70,7 @@ export class RollCallParser {
       }
 
       return null;
-    } catch (error) {
-      console.error(`Error parsing roll call from ${url}:`, error);
+    } catch {
       return null;
     }
   }
@@ -79,7 +78,7 @@ export class RollCallParser {
   private parseSenateRollCall(parsed: unknown, _url: string): RollCallData | null {
     try {
       if (!parsed || typeof parsed !== 'object') return null;
-      const parsedObj = parsed as any;
+      const parsedObj = parsed as Record<string, any>;
       const vote = parsedObj.roll_call_vote;
       if (!vote) return null;
 
@@ -129,8 +128,7 @@ export class RollCallParser {
         votes,
         totals,
       };
-    } catch (error) {
-      console.error('Error parsing Senate roll call:', error);
+    } catch {
       return null;
     }
   }
@@ -138,7 +136,7 @@ export class RollCallParser {
   private parseHouseRollCall(parsed: unknown, _url: string): RollCallData | null {
     try {
       if (!parsed || typeof parsed !== 'object') return null;
-      const parsedObj = parsed as any;
+      const parsedObj = parsed as Record<string, any>;
       const rollCall = parsedObj['rollcall-vote'];
       if (!rollCall) return null;
 
@@ -188,8 +186,7 @@ export class RollCallParser {
         votes,
         totals,
       };
-    } catch (error) {
-      console.error('Error parsing House roll call:', error);
+    } catch {
       return null;
     }
   }

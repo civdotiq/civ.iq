@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import Redis from 'ioredis';
+import type Redis from 'ioredis';
 import logger from '@/lib/logging/simple-logger';
 import { monitorCache } from '@/lib/monitoring/telemetry';
 
@@ -17,21 +17,42 @@ interface CacheConfig {
   keyPrefix?: string;
 }
 
-interface CacheEntry<T = any> {
+interface CacheEntry<T = unknown> {
   data: T;
   timestamp: number;
   ttl: number;
 }
 
 export class RedisCache {
-  private client: Redis;
+  private client: Redis | null = null;
   private fallbackCache: Map<string, CacheEntry>;
   private isConnected: boolean = false;
   private readonly keyPrefix: string;
+  private redisAvailable: boolean;
 
   constructor(config?: Partial<CacheConfig>) {
     this.keyPrefix = config?.keyPrefix || 'civiq:';
     this.fallbackCache = new Map();
+
+    // Don't even try to connect during build phase
+    const isBuildPhase =
+      process.env.NEXT_PHASE === 'phase-production-build' ||
+      (process.env.NODE_ENV === 'production' && !process.env.REDIS_URL);
+
+    if (isBuildPhase) {
+      logger.info('Build phase detected, using memory cache only');
+      this.redisAvailable = false;
+      this.startCleanupTask();
+      return;
+    }
+
+    this.redisAvailable = Boolean(process.env.REDIS_URL || process.env.REDIS_HOST);
+
+    if (!this.redisAvailable) {
+      logger.info('Redis not configured, using fallback cache only');
+      this.startCleanupTask();
+      return;
+    }
 
     // Default Redis configuration
     const defaultConfig: CacheConfig = {
@@ -46,52 +67,64 @@ export class RedisCache {
 
     const finalConfig = { ...defaultConfig, ...config };
 
-    // DEBUG: Log connection config
-    logger.info('🔧 Redis Config:', {
-      host: finalConfig.host,
-      port: finalConfig.port,
-      db: finalConfig.db,
-      password: finalConfig.password ? '***' : 'none',
-      lazyConnect: finalConfig.lazyConnect,
-    });
-
-    // Create Redis client
-    this.client = new Redis({
-      host: finalConfig.host,
-      port: finalConfig.port,
-      password: finalConfig.password,
-      db: finalConfig.db,
-      maxRetriesPerRequest: finalConfig.maxRetriesPerRequest,
-      lazyConnect: finalConfig.lazyConnect,
-      keyPrefix: finalConfig.keyPrefix,
-
-      // Connection retry strategy
-      retryStrategy: times => {
-        // In development, fail fast after a few attempts
-        if (process.env.NODE_ENV === 'development' && times > 3) {
-          logger.warn('Redis connection failed in development, using fallback cache');
-          return null; // Stop retrying
-        }
-        const delay = Math.min(times * 50, 2000);
-        logger.warn('Redis connection retry', { attempt: times, delay });
-        return delay;
-      },
-
-      // Reconnect on error
-      reconnectOnError: err => {
-        const targetError = 'READONLY';
-        return err.message.includes(targetError);
-      },
-    });
-
-    this.setupEventHandlers();
+    // Dynamically import Redis only when needed
+    this.initializeRedis(finalConfig);
     this.startCleanupTask();
+  }
 
-    // DEBUG: Force initial connection for debugging
-    this.forceConnect();
+  private async initializeRedis(config: CacheConfig): Promise<void> {
+    try {
+      const { default: Redis } = await import('ioredis');
+
+      logger.info('🔧 Redis Config:', {
+        host: config.host,
+        port: config.port,
+        db: config.db,
+        password: config.password ? '***' : 'none',
+        lazyConnect: config.lazyConnect,
+      });
+
+      // Create Redis client
+      this.client = new Redis({
+        host: config.host,
+        port: config.port,
+        password: config.password,
+        db: config.db,
+        maxRetriesPerRequest: config.maxRetriesPerRequest,
+        lazyConnect: config.lazyConnect,
+        keyPrefix: config.keyPrefix,
+
+        // Connection retry strategy
+        retryStrategy: times => {
+          // In development, fail fast after a few attempts
+          if (process.env.NODE_ENV === 'development' && times > 3) {
+            logger.warn('Redis connection failed in development, using fallback cache');
+            return null; // Stop retrying
+          }
+          const delay = Math.min(times * 50, 2000);
+          logger.warn('Redis connection retry', { attempt: times, delay });
+          return delay;
+        },
+
+        // Reconnect on error
+        reconnectOnError: err => {
+          const targetError = 'READONLY';
+          return err.message.includes(targetError);
+        },
+      });
+
+      this.setupEventHandlers();
+      this.forceConnect();
+    } catch (error) {
+      logger.warn('Failed to initialize Redis, falling back to memory cache', error as Error);
+      this.redisAvailable = false;
+      this.client = null;
+    }
   }
 
   private setupEventHandlers(): void {
+    if (!this.client) return;
+
     this.client.on('connect', () => {
       this.isConnected = true;
       logger.info('Redis connected successfully');
@@ -150,6 +183,8 @@ export class RedisCache {
   }
 
   private async forceConnect(): Promise<void> {
+    if (!this.client) return;
+
     try {
       logger.info('🔌 Attempting Redis connection...');
       await this.client.ping();
@@ -162,11 +197,11 @@ export class RedisCache {
     }
   }
 
-  async get<T = any>(key: string): Promise<T | null> {
+  async get<T = unknown>(key: string): Promise<T | null> {
     const monitor = monitorCache('get', key);
 
     try {
-      if (this.isConnected) {
+      if (this.isConnected && this.client) {
         const value = await this.client.get(key);
 
         if (value) {
@@ -186,7 +221,7 @@ export class RedisCache {
         if (entry && Date.now() - entry.timestamp < entry.ttl) {
           monitor.end(true);
           logger.debug('[Cache] hit', key, { source: 'fallback' });
-          return entry.data;
+          return entry.data as T;
         } else {
           if (entry) {
             this.fallbackCache.delete(fallbackKey);
@@ -205,20 +240,20 @@ export class RedisCache {
       const entry = this.fallbackCache.get(fallbackKey);
 
       if (entry && Date.now() - entry.timestamp < entry.ttl) {
-        return entry.data;
+        return entry.data as T;
       }
 
       return null;
     }
   }
 
-  async set<T = any>(key: string, value: T, ttlSeconds: number = 3600): Promise<boolean> {
+  async set<T = unknown>(key: string, value: T, ttlSeconds: number = 3600): Promise<boolean> {
     const monitor = monitorCache('set', key);
 
     try {
       const serializedValue = JSON.stringify(value);
 
-      if (this.isConnected) {
+      if (this.isConnected && this.client) {
         await this.client.setex(key, ttlSeconds, serializedValue);
         monitor.end();
         logger.debug('[Cache] set', key, { ttl: ttlSeconds });
@@ -261,7 +296,7 @@ export class RedisCache {
     const monitor = monitorCache('delete', key);
 
     try {
-      if (this.isConnected) {
+      if (this.isConnected && this.client) {
         const result = await this.client.del(key);
         monitor.end();
         logger.debug('[Cache] delete', key, { deleted: result > 0 });
@@ -292,7 +327,7 @@ export class RedisCache {
 
   async flush(): Promise<boolean> {
     try {
-      if (this.isConnected) {
+      if (this.isConnected && this.client) {
         await this.client.flushdb();
         logger.info('Redis cache flushed');
       }
@@ -313,7 +348,7 @@ export class RedisCache {
 
   async exists(key: string): Promise<boolean> {
     try {
-      if (this.isConnected) {
+      if (this.isConnected && this.client) {
         const result = await this.client.exists(key);
         return result === 1;
       } else {
@@ -336,7 +371,7 @@ export class RedisCache {
 
   async keys(pattern: string): Promise<string[]> {
     try {
-      if (this.isConnected) {
+      if (this.isConnected && this.client) {
         return await this.client.keys(pattern);
       } else {
         // Search fallback cache
@@ -353,15 +388,19 @@ export class RedisCache {
     isConnected: boolean;
     fallbackCacheSize: number;
     redisStatus: string;
+    redisAvailable: boolean;
   } {
     return {
       isConnected: this.isConnected,
       fallbackCacheSize: this.fallbackCache.size,
-      redisStatus: this.client.status,
+      redisStatus: this.client?.status || 'not-available',
+      redisAvailable: this.redisAvailable,
     };
   }
 
   async disconnect(): Promise<void> {
+    if (!this.client) return;
+
     try {
       await this.client.quit();
       logger.info('Redis client disconnected');

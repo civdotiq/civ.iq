@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDistrictNews } from '@/lib/services/news';
+import logger from '@/lib/logging/simple-logger';
 
 export async function GET(
   request: NextRequest,
@@ -29,11 +30,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    // Log error for debugging in development
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.error('District news API error:', error);
-    }
+    logger.error('District news API error', error as Error);
     return NextResponse.json({ error: 'Failed to fetch district news' }, { status: 500 });
   }
 }
