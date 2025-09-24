@@ -42,6 +42,7 @@ export function DistrictSelector({
   className = '',
 }: DistrictSelectorProps) {
   const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(null);
+  const [hoveredDistrictId, setHoveredDistrictId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDistrictSelect = async (district: DistrictInfo) => {
@@ -89,99 +90,116 @@ export function DistrictSelector({
             const representative = getRepresentativeForDistrict(district);
             const districtId = `${district.state}-${district.district}`;
             const isSelected = selectedDistrictId === districtId;
+            const isHovered = hoveredDistrictId === districtId;
 
             return (
-              <Card
+              <div
                 key={districtId}
-                className={`
-         transition-all duration-200 hover:border-2 border-black
-         ${
-           isSelected
-             ? 'ring-2 ring-civiq-blue border-civiq-blue bg-civiq-blue/5'
-             : 'border-gray-200 hover:border-civiq-blue/50'
-         }
-         ${district.primary ? 'border-civiq-green/50 bg-civiq-green/5' : ''}
-        `}
-                padding="none"
+                onMouseEnter={() => setHoveredDistrictId(districtId)}
+                onMouseLeave={() => setHoveredDistrictId(null)}
                 onClick={() => handleDistrictSelect(district)}
+                className="cursor-pointer"
               >
-                <div className="p-6">
-                  {/* District Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {formatDistrictName(district)}
-                      </h3>
-                      {district.primary && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-civiq-green text-white mt-1">
-                          Primary District
-                        </span>
-                      )}
-                      {district.confidence && district.confidence !== 'high' && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mt-1">
-                          {district.confidence} confidence
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-2xl">{isSelected ? '✓' : `${index + 1}`}</div>
-                  </div>
-
-                  {/* Representative Info */}
-                  {representative ? (
-                    <div className="flex items-center space-x-3">
-                      <RepresentativePhoto
-                        bioguideId={representative.bioguideId}
-                        name={representative.name}
-                        size="md"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {representative.name}
-                        </p>
-                        <p className="text-sm text-gray-600 truncate">{representative.title}</p>
-                        <div
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border mt-1 ${getPartyColor(representative.party)}`}
-                        >
-                          {representative.party}
+                <Card
+                  className={`
+                    transition-all duration-300 border-2 h-full
+                    ${
+                      isSelected
+                        ? 'ring-2 ring-civiq-blue border-civiq-blue bg-civiq-blue/5 transform scale-[1.02]'
+                        : isHovered
+                          ? 'border-civiq-blue bg-civiq-blue/5'
+                          : 'border-gray-200 hover:border-civiq-blue/50'
+                    }
+                    ${district.primary ? 'border-civiq-green/50 bg-civiq-green/5' : ''}
+                  `}
+                  padding="none"
+                >
+                  <div className="p-5">
+                    {/* District Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {formatDistrictName(district)}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-2">
+                          {district.primary && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-civiq-green text-white">
+                              Primary District
+                            </span>
+                          )}
+                          {district.confidence && district.confidence !== 'high' && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              {district.confidence} confidence
+                            </span>
+                          )}
                         </div>
                       </div>
+                      <div className="text-2xl font-bold text-gray-400">{index + 1}</div>
                     </div>
-                  ) : (
-                    <div className="text-sm text-gray-500">
-                      Representative information not available
-                    </div>
-                  )}
 
-                  {/* Selection Indicator */}
-                  {isSelected && isLoading && (
-                    <div className="mt-4 flex items-center justify-center">
-                      <div className="flex items-center space-x-2 text-civiq-blue">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-civiq-blue"></div>
-                        <span className="text-sm">Loading representatives...</span>
+                    {/* Representative Info */}
+                    {representative ? (
+                      <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+                        <RepresentativePhoto
+                          bioguideId={representative.bioguideId}
+                          name={representative.name}
+                          size="md"
+                          className="flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900">{representative.name}</p>
+                          <p className="text-sm text-gray-600">{representative.title}</p>
+                          <div
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border mt-2 ${getPartyColor(representative.party)}`}
+                          >
+                            {representative.party}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </Card>
+                    ) : (
+                      <div className="text-sm text-gray-500 pt-3 border-t border-gray-100">
+                        Representative information not available
+                      </div>
+                    )}
+
+                    {/* Selection Indicator */}
+                    {isSelected && isLoading && (
+                      <div className="mt-4 flex items-center justify-center">
+                        <div className="flex items-center space-x-2 text-civiq-blue">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-civiq-blue"></div>
+                          <span className="text-sm">Loading representatives...</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </div>
             );
           })}
         </div>
 
         {/* Address Refinement Option */}
         {onRefineAddress && (
-          <div className="text-center">
-            <div className="inline-flex flex-col items-center space-y-3 p-6 bg-white border border-gray-200">
-              <div className="text-sm text-gray-600">Not sure which district you're in?</div>
+          <div className="text-center mt-6">
+            <div className="inline-flex flex-col items-center space-y-3 p-6 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="text-sm text-gray-600">Not sure which district you&apos;re in?</div>
               <Button
                 onClick={onRefineAddress}
                 variant="secondary"
-                className="inline-flex items-center space-x-2"
+                className="inline-flex items-center gap-2"
               >
-                <span>🏠</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                  />
+                </svg>
                 <span>Enter your full address for exact match</span>
               </Button>
               <div className="text-xs text-gray-500">
-                We'll use your street address to determine your exact district
+                We&apos;ll use your street address to determine your exact district
               </div>
             </div>
           </div>
@@ -190,8 +208,8 @@ export function DistrictSelector({
         {/* Help Text */}
         <div className="text-center text-sm text-gray-500 max-w-2xl mx-auto">
           <p>
-            Congressional districts can change due to redistricting. If you're unsure, using your
-            full street address will provide the most accurate results.
+            Congressional districts can change due to redistricting. If you&apos;re unsure, using
+            your full street address will provide the most accurate results.
           </p>
         </div>
       </div>

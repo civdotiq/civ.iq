@@ -5,7 +5,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState, Suspense, useCallback, memo } from 'react';
 import { SearchHistory } from '@/lib/searchHistory';
@@ -532,7 +532,6 @@ const StateRepresentativesTab = memo(function StateRepresentativesTab({
 
 function ResultsContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const zipCode = searchParams.get('zip');
   const address = searchParams.get('address');
   const query = searchParams.get('q');
@@ -828,17 +827,38 @@ function ResultsContent() {
   );
 
   const handleDistrictSelect = async (district: DistrictInfo) => {
-    // Navigate to representatives page with district parameters
-    router.push(`/representatives?district=${district.district}&state=${district.state}`);
+    // Fetch representatives for selected district instead of navigating away
+    setSelectedDistrict(district);
+    setMultiDistrictData(null); // Clear multi-district selector
+    setShowAddressRefinement(false); // Hide address refinement if shown
+
+    // Use the existing fetchRepresentatives function with district override
+    await fetchRepresentatives(district);
   };
 
   const handleAddressRefinement = () => {
     setShowAddressRefinement(true);
   };
 
-  const handleAddressSuccess = async (state: string, district: string, _address: string) => {
-    // Navigate directly to the representatives page with the district info
-    router.push(`/representatives?state=${state}&district=${district}`);
+  const handleAddressSuccess = async (state: string, district: string, address: string) => {
+    // Create district info from geocoded result and fetch representatives in-place
+    const geocodedDistrict: DistrictInfo = {
+      state,
+      district,
+      primary: true,
+      confidence: 'high',
+    };
+
+    setSelectedDistrict(geocodedDistrict);
+    setMultiDistrictData(null); // Clear multi-district selector
+    setShowAddressRefinement(false); // Hide address refinement form
+
+    // Update search query to show the address that was used
+    setSearchQuery(address);
+    setSearchType('address');
+
+    // Fetch representatives for the geocoded district
+    await fetchRepresentatives(geocodedDistrict);
   };
 
   const handleAddressCancel = () => {

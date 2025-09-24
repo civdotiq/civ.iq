@@ -52,6 +52,9 @@
     "test:performance:quick": "node scripts/quick-performance-baseline.mjs",
     "test:load": "node scripts/load-test.mjs",
     "test:redis": "tsx scripts/test-redis-performance.ts",
+    "validate:production": "tsx scripts/run-production-validation.ts",
+    "validate:production:critical": "tsx scripts/run-production-validation.ts -- --critical-only",
+    "validate:production:parallel": "tsx scripts/run-production-validation.ts -- --parallel",
     "analyze": "npx @next/bundle-analyzer"
   },
   "dependencies": {

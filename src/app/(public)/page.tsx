@@ -10,6 +10,14 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { SmartSearchInput } from '@/features/search/components/search/SmartSearchInput';
+import { MultiDistrictNotification } from '@/components/search/MultiDistrictNotification';
+import { GeolocationLookup } from '@/components/search/GeolocationLookup';
+import { AddressRefinementInput } from '@/components/search/AddressRefinementInput';
+import {
+  checkMultiDistrict,
+  DistrictInfo,
+  MultiDistrictResponse,
+} from '@/lib/multi-district/detection';
 
 function CiviqLogo({ className = 'w-10 h-15' }: { className?: string }) {
   return (
@@ -70,6 +78,66 @@ function CiviqLogo({ className = 'w-10 h-15' }: { className?: string }) {
 export default function Home() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [multiDistrictData, setMultiDistrictData] = useState<MultiDistrictResponse | null>(null);
+  const [showGeolocation, setShowGeolocation] = useState(false);
+  const [showAddressInput, setShowAddressInput] = useState(false);
+  const [currentZipCode, setCurrentZipCode] = useState('');
+
+  const handleSearch = async (value: string) => {
+    const isZipCode = /^\d{5}$/.test(value.trim());
+    const isAddress = !isZipCode && value.trim().length > 5;
+
+    if (isZipCode) {
+      setCurrentZipCode(value.trim());
+      // Check if this ZIP code has multiple districts
+      const multiDistrictCheck = await checkMultiDistrict(value.trim());
+
+      if (multiDistrictCheck.success && multiDistrictCheck.isMultiDistrict) {
+        // Show multi-district notification
+        setMultiDistrictData(multiDistrictCheck);
+        return;
+      } else {
+        // Single district or failed check - proceed to results
+        router.push(`/results?zip=${encodeURIComponent(value.trim())}`);
+      }
+    } else if (isAddress) {
+      router.push(`/results?address=${encodeURIComponent(value.trim())}`);
+    } else {
+      router.push(`/representatives?search=${encodeURIComponent(value.trim())}`);
+    }
+  };
+
+  const handleDistrictSelect = (district: DistrictInfo) => {
+    router.push(
+      `/results?zip=${encodeURIComponent(currentZipCode)}&district=${district.state}-${district.district}`
+    );
+  };
+
+  const handleGeolocationSuccess = (latitude: number, longitude: number) => {
+    setShowGeolocation(false);
+    // Navigate to results with coordinates
+    router.push(
+      `/results?lat=${latitude}&lng=${longitude}&zip=${encodeURIComponent(currentZipCode)}`
+    );
+  };
+
+  const handleGeolocationError = () => {
+    setShowGeolocation(false);
+    // Fallback to address input
+    setShowAddressInput(true);
+  };
+
+  const handleAddressSuccess = (address: string) => {
+    setShowAddressInput(false);
+    router.push(`/results?address=${encodeURIComponent(address)}`);
+  };
+
+  const handleCloseNotifications = () => {
+    setMultiDistrictData(null);
+    setShowGeolocation(false);
+    setShowAddressInput(false);
+    setCurrentZipCode('');
+  };
 
   return (
     <>
@@ -209,23 +277,49 @@ export default function Home() {
                   className="w-full"
                   showRecentSearches={true}
                   showExamples={true}
-                  onSearch={value => {
-                    const isZipCode = /^\d{5}$/.test(value.trim());
-                    const isAddress = !isZipCode && value.trim().length > 5;
-
-                    if (isZipCode) {
-                      router.push(`/results?zip=${encodeURIComponent(value.trim())}`);
-                    } else if (isAddress) {
-                      router.push(`/results?address=${encodeURIComponent(value.trim())}`);
-                    } else {
-                      router.push(`/representatives?search=${encodeURIComponent(value.trim())}`);
-                    }
-                  }}
+                  onSearch={handleSearch}
                 />
               </div>
             </div>
           </div>
         </div>
+
+        {/* Multi-District Notification */}
+        {multiDistrictData && multiDistrictData.isMultiDistrict && (
+          <div className="mt-8">
+            <MultiDistrictNotification
+              zipCode={currentZipCode}
+              districts={multiDistrictData.districts}
+              onSelectDistrict={handleDistrictSelect}
+              onUseLocation={() => setShowGeolocation(true)}
+              onRefineAddress={() => setShowAddressInput(true)}
+              onClose={handleCloseNotifications}
+            />
+          </div>
+        )}
+
+        {/* Geolocation Lookup */}
+        {showGeolocation && (
+          <div className="mt-8">
+            <GeolocationLookup
+              zipCode={currentZipCode}
+              onSuccess={handleGeolocationSuccess}
+              onError={handleGeolocationError}
+              onCancel={handleCloseNotifications}
+            />
+          </div>
+        )}
+
+        {/* Address Refinement Input */}
+        {showAddressInput && (
+          <div className="mt-8">
+            <AddressRefinementInput
+              zipCode={currentZipCode}
+              onSuccess={handleAddressSuccess}
+              onCancel={handleCloseNotifications}
+            />
+          </div>
+        )}
       </section>
 
       <section className="py-24 bg-gradient-to-b from-white to-gray-50">
@@ -601,6 +695,9 @@ export default function Home() {
             <div className="text-center pt-8 border-t border-gray-700 space-y-2">
               <p className="text-gray-400 text-lg font-medium">
                 © 2025 CIV.IQ | Code: MIT License | Docs: CC BY-SA 4.0
+              </p>
+              <p className="text-gray-500 text-sm">
+                This site aggregates public data for educational purposes
               </p>
               <p className="text-gray-500 text-sm">Built exclusively with public government data</p>
               <p className="text-gray-500 text-sm">

@@ -552,22 +552,22 @@ export function AdaptiveGridSkeleton({
     switch (type) {
       case 'representatives': {
         const RepresentativeSkeleton = () => (
-          <div className="bg-white border border-gray-200 p-6">
+          <div className="bg-white aicher-card-flat h-52">
             <div className="flex items-start gap-4">
-              <div className="w-20 h-20 bg-gray-200 rounded-full animate-pulse flex-shrink-0" />
-              <div className="flex-1 space-y-3">
-                <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse" />
-                <div className="flex items-center gap-3">
-                  <div className="h-6 bg-gray-200 rounded-full w-20 animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-32 animate-pulse" />
+              <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-5 bg-gray-200 rounded w-1/2 animate-pulse" />
+                <div className="flex items-center gap-2">
+                  <div className="h-5 bg-gray-200 rounded-full w-16 animate-pulse" />
+                  <div className="h-3 bg-gray-200 rounded w-20 animate-pulse" />
                 </div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+                <div className="space-y-1">
+                  <div className="h-3 bg-gray-200 rounded w-3/4 animate-pulse" />
+                  <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse" />
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <div className="h-8 bg-gray-200 rounded w-24 animate-pulse" />
-                  <div className="h-8 bg-gray-200 rounded w-20 animate-pulse" />
+                  <div className="h-6 bg-gray-200 rounded w-20 animate-pulse" />
+                  <div className="h-6 bg-gray-200 rounded w-16 animate-pulse" />
                 </div>
               </div>
             </div>
