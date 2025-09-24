@@ -99,10 +99,10 @@
     }
   },
   "metadata": {
-    "timestamp": "2025-09-23T01:25:07.665Z",
+    "timestamp": "2025-09-24T00:32:06.223Z",
     "dataSource": "congress-legislators",
     "cacheable": true,
     "generatedBy": "scripts/seed-congress-data.ts",
-    "processingTime": 619
+    "processingTime": 1015
   }
 }
