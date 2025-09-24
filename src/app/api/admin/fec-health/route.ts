@@ -11,14 +11,36 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { fecPerformanceMonitor } from '@/lib/fec/fec-performance-monitor';
 import logger from '@/lib/logging/simple-logger';
 
 export async function GET(_request: NextRequest) {
   const startTime = Date.now();
 
   try {
+    // Check if FEC_API_KEY is available at runtime
+    const fecApiKey = process.env.FEC_API_KEY;
+    if (!fecApiKey) {
+      logger.warn('[FEC Health API] FEC_API_KEY not available, returning degraded health report');
+      return NextResponse.json({
+        status: 'success',
+        data: {
+          overall: 'needs-attention' as const,
+          error: 'FEC_API_KEY not configured',
+          message: 'FEC health monitoring is disabled - API key not available',
+          timestamp: new Date().toISOString(),
+        },
+        metadata: {
+          endpoint: '/api/admin/fec-health',
+          responseTime: Date.now() - startTime,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
     logger.info('[FEC Health API] Generating system health report');
+
+    // Dynamic import only when FEC_API_KEY is available
+    const { fecPerformanceMonitor } = await import('@/lib/fec/fec-performance-monitor');
 
     // Generate comprehensive health report
     const healthReport = await fecPerformanceMonitor.generateSystemHealthReport();
@@ -81,7 +103,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if FEC_API_KEY is available at runtime
+    const fecApiKey = process.env.FEC_API_KEY;
+    if (!fecApiKey) {
+      return NextResponse.json(
+        {
+          status: 'error',
+          error: 'FEC_API_KEY not configured',
+          message: 'FEC validation is disabled - API key not available',
+        },
+        { status: 503 }
+      );
+    }
+
     logger.info('[FEC Health API] Validating representative', { bioguideId });
+
+    // Dynamic import only when FEC_API_KEY is available
+    const { fecPerformanceMonitor } = await import('@/lib/fec/fec-performance-monitor');
 
     // Validate specific representative
     const validation = await fecPerformanceMonitor.validateRepresentative(bioguideId);
