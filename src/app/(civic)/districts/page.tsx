@@ -8,13 +8,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import logger from '@/lib/logging/simple-logger';
 import Link from 'next/link';
-import Image from 'next/image';
 import dynamic from 'next/dynamic';
 // D3 imports removed - not used in current implementation
-import { Users, Building2, MapPin } from 'lucide-react';
+import { Suspense } from 'react';
 import NationalStatsCards from '@/shared/components/ui/NationalStatsCards';
 import StateInfoPanel from '@/shared/components/ui/StateInfoPanel';
 import CongressSessionInfo from '@/features/districts/components/CongressSessionInfo';
+import { CiviqLogo } from '@/shared/components/branding/CiviqLogo';
+import { DistrictCard } from '@/features/districts/components/DistrictCard';
+import { DemographicsDashboard } from '@/features/districts/components/DemographicsDashboard';
 import { ApiErrorBoundary } from '@/components/ErrorBoundary';
 
 // Dynamic import of the REAL district map component to avoid SSR issues
@@ -35,46 +37,6 @@ const RealDistrictMapContainer = dynamic(
     ),
   }
 );
-
-// Logo component
-function CiviqLogo() {
-  return (
-    <div className="flex items-center group">
-      <svg
-        className="w-10 h-10 transition-transform group-hover:scale-110"
-        viewBox="0 0 100 100"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <rect x="36" y="51" width="28" height="30" fill="#0b983c" />
-        <circle cx="50" cy="31" r="22" fill="#ffffff" />
-        <circle cx="50" cy="31" r="20" fill="#e11d07" />
-        <circle cx="38" cy="89" r="2" fill="#3ea2d4" className="animate-pulse" />
-        <circle
-          cx="46"
-          cy="89"
-          r="2"
-          fill="#3ea2d4"
-          className="animate-pulse animation-delay-100"
-        />
-        <circle
-          cx="54"
-          cy="89"
-          r="2"
-          fill="#3ea2d4"
-          className="animate-pulse animation-delay-200"
-        />
-        <circle
-          cx="62"
-          cy="89"
-          r="2"
-          fill="#3ea2d4"
-          className="animate-pulse animation-delay-300"
-        />
-      </svg>
-      <span className="ml-3 text-xl font-bold text-gray-900">CIV.IQ</span>
-    </div>
-  );
-}
 
 // Types
 interface District {
@@ -116,352 +78,6 @@ interface StateInfo {
   population: number;
   districts: number;
   senators: string[];
-}
-
-// District card component
-function DistrictCard({ district }: { district: District }) {
-  const getPVIColor = (pvi: string) => {
-    if (pvi.startsWith('D+')) return 'text-blue-600';
-    if (pvi.startsWith('R+')) return 'text-red-600';
-    return 'text-gray-600';
-  };
-
-  const getPVIBackground = (pvi: string) => {
-    if (pvi.startsWith('D+')) return 'bg-blue-100';
-    if (pvi.startsWith('R+')) return 'bg-red-100';
-    return 'bg-white border-2 border-gray-300';
-  };
-
-  return (
-    <div className="bg-white border-2 border-black hover:border-2 border-black transition-border-2 border-black p-6">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h3 className="text-xl font-bold text-gray-900">
-            {district.state}-{district.number}
-          </h3>
-          <p className="text-sm text-gray-600">{district.name}</p>
-        </div>
-        <span
-          className={`px-3 py-1 rounded-full text-sm font-medium ${getPVIBackground(district.political.cookPVI)} ${getPVIColor(district.political.cookPVI)}`}
-        >
-          {district.political.cookPVI}
-        </span>
-      </div>
-
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
-          {district.representative.imageUrl ? (
-            <Image
-              src={district.representative.imageUrl}
-              alt={district.representative.name}
-              width={48}
-              height={48}
-              className="w-12 h-12 object-cover"
-            />
-          ) : (
-            <span className="text-xs text-gray-600">Photo</span>
-          )}
-        </div>
-        <div>
-          <p className="font-medium text-gray-900">{district.representative.name}</p>
-          <p className="text-sm text-gray-600">
-            {district.representative.party === 'D' ? 'Democrat' : 'Republican'}
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <p className="text-sm text-gray-600">Population</p>
-          <p className="font-semibold">{district.demographics.population.toLocaleString()}</p>
-        </div>
-        <div>
-          <p className="text-sm text-gray-600">Median Income</p>
-          <p className="font-semibold">${district.demographics.medianIncome.toLocaleString()}</p>
-        </div>
-        <div>
-          <p className="text-sm text-gray-600">Last Election</p>
-          <p className="font-semibold">
-            {district.political.lastElection.margin.toFixed(1)}% margin
-          </p>
-        </div>
-        <div>
-          <p className="text-sm text-gray-600">Turnout</p>
-          <p className="font-semibold">{district.political.lastElection.turnout}%</p>
-        </div>
-      </div>
-
-      <Link
-        href={`/districts/${district.state}-${district.number}`}
-        className="block w-full text-center py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-      >
-        View Details
-      </Link>
-    </div>
-  );
-}
-
-// Enhanced Demographics Dashboard
-function DemographicsDashboard({
-  districts,
-  selectedState,
-}: {
-  districts: District[];
-  selectedState?: string;
-}) {
-  // Handle empty districts array
-  if (!districts || districts.length === 0) {
-    return (
-      <div className="bg-white border-2 border-black p-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
-          {selectedState ? `${selectedState} Demographics` : 'National Demographics Overview'}
-        </h2>
-        <p className="text-gray-600">Loading district data...</p>
-      </div>
-    );
-  }
-
-  // Filter districts by state if selected
-  const filteredDistricts =
-    selectedState && selectedState !== 'all'
-      ? districts.filter(d => d.state === selectedState)
-      : districts;
-
-  // Calculate comprehensive statistics
-  const stats = {
-    // Basic counts
-    totalDistricts: filteredDistricts.length,
-    democraticDistricts: filteredDistricts.filter(d => d.representative.party === 'D').length,
-    republicanDistricts: filteredDistricts.filter(d => d.representative.party === 'R').length,
-
-    // Population stats
-    totalPopulation: filteredDistricts.reduce((sum, d) => sum + d.demographics.population, 0),
-    avgPopulation:
-      filteredDistricts.reduce((sum, d) => sum + d.demographics.population, 0) /
-      filteredDistricts.length,
-
-    // Economic stats
-    avgMedianIncome:
-      filteredDistricts.reduce((sum, d) => sum + d.demographics.medianIncome, 0) /
-      filteredDistricts.length,
-    highestIncome: Math.max(...filteredDistricts.map(d => d.demographics.medianIncome)),
-    lowestIncome: Math.min(...filteredDistricts.map(d => d.demographics.medianIncome)),
-
-    // Demographics
-    avgMedianAge:
-      filteredDistricts.reduce((sum, d) => sum + d.demographics.medianAge, 0) /
-      filteredDistricts.length,
-    avgUrbanPercentage:
-      filteredDistricts.reduce((sum, d) => sum + d.demographics.urbanPercentage, 0) /
-      filteredDistricts.length,
-    avgDiversityIndex:
-      filteredDistricts.reduce((sum, d) => sum + d.demographics.diversityIndex, 0) /
-      filteredDistricts.length,
-
-    // Political stats
-    avgElectionMargin:
-      filteredDistricts.reduce((sum, d) => sum + d.political.lastElection.margin, 0) /
-      filteredDistricts.length,
-    avgTurnout:
-      filteredDistricts.reduce((sum, d) => sum + d.political.lastElection.turnout, 0) /
-      filteredDistricts.length,
-    competitiveDistricts: filteredDistricts.filter(d => {
-      const pvi = d.political.cookPVI;
-      if (pvi === 'EVEN') return true;
-      const match = pvi.match(/[DR]\+(\d+)/);
-      return match && parseInt(match[1] || '0') <= 5;
-    }).length,
-  };
-
-  // Get top districts by various metrics
-  const topByPopulation = [...filteredDistricts]
-    .sort((a, b) => b.demographics.population - a.demographics.population)
-    .slice(0, 5);
-
-  const topByIncome = [...filteredDistricts]
-    .sort((a, b) => b.demographics.medianIncome - a.demographics.medianIncome)
-    .slice(0, 5);
-
-  const mostUrban = [...filteredDistricts]
-    .sort((a, b) => b.demographics.urbanPercentage - a.demographics.urbanPercentage)
-    .slice(0, 5);
-
-  return (
-    <div className="bg-white border-2 border-black p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          {selectedState && selectedState !== 'all'
-            ? `${selectedState} Demographics`
-            : 'National Demographics Overview'}
-        </h2>
-        <p className="text-gray-600">
-          Comprehensive demographic and political analysis of {stats.totalDistricts} congressional
-          districts
-        </p>
-      </div>
-
-      {/* Main Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-        <div className="text-center p-4 bg-white">
-          <div className="text-3xl font-bold text-blue-600">{stats.totalDistricts}</div>
-          <p className="text-sm text-gray-600 mt-1">Total Districts</p>
-          <p className="text-xs text-gray-500 mt-1">
-            D: {stats.democraticDistricts} | R: {stats.republicanDistricts}
-          </p>
-        </div>
-
-        <div className="text-center p-4 bg-white">
-          <div className="text-3xl font-bold text-green-600">
-            {(stats.totalPopulation / 1000000).toFixed(1)}M
-          </div>
-          <p className="text-sm text-gray-600 mt-1">Total Population</p>
-          <p className="text-xs text-gray-500 mt-1">
-            Avg: {Math.round(stats.avgPopulation).toLocaleString()}
-          </p>
-        </div>
-
-        <div className="text-center p-4 bg-white">
-          <div className="text-3xl font-bold text-purple-600">
-            ${Math.round(stats.avgMedianIncome / 1000)}k
-          </div>
-          <p className="text-sm text-gray-600 mt-1">Avg. Median Income</p>
-          <p className="text-xs text-gray-500 mt-1">
-            Range: ${Math.round(stats.lowestIncome / 1000)}k - $
-            {Math.round(stats.highestIncome / 1000)}k
-          </p>
-        </div>
-
-        <div className="text-center p-4 bg-white">
-          <div className="text-3xl font-bold text-orange-600">
-            {stats.avgUrbanPercentage.toFixed(0)}%
-          </div>
-          <p className="text-sm text-gray-600 mt-1">Urban Population</p>
-          <p className="text-xs text-gray-500 mt-1">
-            Diversity Index: {stats.avgDiversityIndex.toFixed(1)}
-          </p>
-        </div>
-      </div>
-
-      {/* Secondary Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 p-4 bg-blue-50">
-        <div className="text-center">
-          <div className="text-xl font-semibold text-blue-900">{stats.avgMedianAge.toFixed(1)}</div>
-          <p className="text-xs text-blue-700">Median Age</p>
-        </div>
-        <div className="text-center">
-          <div className="text-xl font-semibold text-blue-900">{stats.competitiveDistricts}</div>
-          <p className="text-xs text-blue-700">Competitive Districts</p>
-        </div>
-        <div className="text-center">
-          <div className="text-xl font-semibold text-blue-900">{stats.avgTurnout.toFixed(0)}%</div>
-          <p className="text-xs text-blue-700">Avg. Voter Turnout</p>
-        </div>
-        <div className="text-center">
-          <div className="text-xl font-semibold text-blue-900">
-            {stats.avgElectionMargin.toFixed(1)}%
-          </div>
-          <p className="text-xs text-blue-700">Avg. Victory Margin</p>
-        </div>
-        <div className="text-center">
-          <div className="text-xl font-semibold text-blue-900">
-            {Math.round(
-              filteredDistricts.reduce((sum, d) => sum + d.political.registeredVoters, 0) / 1000000
-            )}
-            M
-          </div>
-          <p className="text-xs text-blue-700">Registered Voters</p>
-        </div>
-      </div>
-
-      {/* Rankings Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Most Populous Districts */}
-        <div className="bg-white p-4">
-          <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
-            <Users className="w-4 h-4 mr-2 text-blue-600" />
-            Most Populous Districts
-          </h3>
-          <div className="space-y-2">
-            {topByPopulation.map((district, index) => (
-              <div key={district.id} className="flex items-center justify-between text-sm">
-                <span className="text-gray-700">
-                  {index + 1}. {district.state}-{district.number}
-                </span>
-                <span className="font-medium text-gray-900">
-                  {district.demographics.population.toLocaleString()}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Highest Income Districts */}
-        <div className="bg-white p-4">
-          <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
-            <Building2 className="w-4 h-4 mr-2 text-green-600" />
-            Highest Income Districts
-          </h3>
-          <div className="space-y-2">
-            {topByIncome.map((district, index) => (
-              <div key={district.id} className="flex items-center justify-between text-sm">
-                <span className="text-gray-700">
-                  {index + 1}. {district.state}-{district.number}
-                </span>
-                <span className="font-medium text-gray-900">
-                  ${district.demographics.medianIncome.toLocaleString()}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Most Urban Districts */}
-        <div className="bg-white p-4">
-          <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
-            <MapPin className="w-4 h-4 mr-2 text-purple-600" />
-            Most Urban Districts
-          </h3>
-          <div className="space-y-2">
-            {mostUrban.map((district, index) => (
-              <div key={district.id} className="flex items-center justify-between text-sm">
-                <span className="text-gray-700">
-                  {index + 1}. {district.state}-{district.number}
-                </span>
-                <span className="font-medium text-gray-900">
-                  {district.demographics.urbanPercentage.toFixed(0)}%
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Political Balance Visualization */}
-      <div className="mt-6 p-4 bg-white">
-        <h3 className="font-semibold text-gray-800 mb-3">Political Balance</h3>
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-600">Party Control</span>
-          <span className="text-sm text-gray-600">
-            D: {((stats.democraticDistricts / stats.totalDistricts) * 100).toFixed(1)}% | R:{' '}
-            {((stats.republicanDistricts / stats.totalDistricts) * 100).toFixed(1)}%
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-          <div className="h-full flex">
-            <div
-              className="bg-blue-600 h-full transition-all duration-500"
-              style={{ width: `${(stats.democraticDistricts / stats.totalDistricts) * 100}%` }}
-            />
-            <div
-              className="bg-red-600 h-full transition-all duration-500"
-              style={{ width: `${(stats.republicanDistricts / stats.totalDistricts) * 100}%` }}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 // Main Districts Page
@@ -726,7 +342,18 @@ export default function DistrictsPage() {
             {/* Demographics Dashboard */}
             <div className="mb-8">
               <ApiErrorBoundary context="demographics-dashboard">
-                <DemographicsDashboard districts={filteredDistricts} selectedState={stateFilter} />
+                <Suspense
+                  fallback={
+                    <div className="bg-white border-2 border-black p-8">
+                      <p className="text-gray-600">Loading demographics...</p>
+                    </div>
+                  }
+                >
+                  <DemographicsDashboard
+                    districts={filteredDistricts}
+                    selectedState={stateFilter}
+                  />
+                </Suspense>
               </ApiErrorBoundary>
             </div>
 
@@ -737,7 +364,16 @@ export default function DistrictsPage() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredDistricts.map(district => (
-                  <DistrictCard key={district.id} district={district} />
+                  <Suspense
+                    key={district.id}
+                    fallback={
+                      <div className="bg-white border-2 border-black p-6 animate-pulse">
+                        <div className="h-40 bg-gray-200 rounded"></div>
+                      </div>
+                    }
+                  >
+                    <DistrictCard district={district} />
+                  </Suspense>
                 ))}
               </div>
             </div>

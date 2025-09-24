@@ -7,13 +7,13 @@
 
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useEffect, useState, Suspense, useCallback, memo } from 'react';
+import { useEffect, useState, Suspense, useCallback } from 'react';
+import { CiviqLogo } from '@/shared/components/branding/CiviqLogo';
+import { RepresentativeCard } from '@/features/representatives/components/RepresentativeCard';
+import { StateRepresentativesTab } from '@/features/representatives/components/StateRepresentativesTab';
 import { SearchHistory } from '@/lib/searchHistory';
-import {
-  RepresentativeSkeleton,
-  SearchResultsSkeleton,
-} from '@/shared/components/ui/SkeletonComponents';
-import { LoadingStateWrapper, LoadingMessage, Spinner } from '@/shared/components/ui/LoadingStates';
+import { SearchResultsSkeleton } from '@/shared/components/ui/SkeletonComponents';
+import { LoadingStateWrapper, LoadingMessage } from '@/shared/components/ui/LoadingStates';
 import { useMultiStageLoading } from '@/hooks/shared/useSmartLoading';
 import { InteractiveDistrictMap } from '@/features/districts/components/InteractiveDistrictMap';
 import { DataQualityIndicator, DataSourceBadge } from '@/components/shared/ui/DataQualityIndicator';
@@ -21,7 +21,6 @@ import {
   InlineQualityScore,
   DataTrustIndicator,
 } from '@/shared/components/ui/DataQualityDashboard';
-import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { DistrictSelector } from '@/features/districts/components/DistrictSelector';
 import { AddressRefinement } from '@/features/districts/components/AddressRefinement';
 import {
@@ -29,23 +28,6 @@ import {
   DistrictInfo,
   MultiDistrictResponse,
 } from '@/lib/multi-district/detection';
-
-function CiviqLogo() {
-  return (
-    <div className="flex items-center">
-      <svg className="w-10 h-10" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <rect x="36" y="51" width="28" height="30" fill="#0b983c" />
-        <circle cx="50" cy="31" r="22" fill="#ffffff" />
-        <circle cx="50" cy="31" r="20" fill="#e11d07" />
-        <circle cx="38" cy="89" r="2" fill="#3ea2d4" />
-        <circle cx="46" cy="89" r="2" fill="#3ea2d4" />
-        <circle cx="54" cy="89" r="2" fill="#3ea2d4" />
-        <circle cx="62" cy="89" r="2" fill="#3ea2d4" />
-      </svg>
-      <span className="ml-3 text-xl font-bold text-gray-900">CIV.IQ</span>
-    </div>
-  );
-}
 
 interface Representative {
   bioguideId: string;
@@ -102,433 +84,6 @@ interface ApiResponse {
     freshness?: string;
   };
 }
-
-interface StateLegislator {
-  id: string;
-  name: string;
-  party: string;
-  chamber: 'upper' | 'lower';
-  district: string;
-  state: string;
-  image?: string;
-  email?: string;
-  phone?: string;
-  website?: string;
-  offices?: Array<{
-    name: string;
-    address?: string;
-    phone?: string;
-    email?: string;
-  }>;
-  currentRole?: {
-    title: string;
-    org_classification: string;
-    district: string;
-    party: string;
-    start_date: string;
-    end_date?: string;
-  };
-}
-
-interface StateApiResponse {
-  zipCode: string;
-  state: string;
-  stateName: string;
-  legislators: StateLegislator[];
-  jurisdiction?: {
-    name: string;
-    classification: string;
-    chambers: Array<{
-      name: string;
-      classification: string;
-    }>;
-  };
-}
-
-const RepresentativeCard = memo(function RepresentativeCard({
-  representative,
-}: {
-  representative: Representative;
-}) {
-  const getPartyColor = (party: string) => {
-    if (party.toLowerCase().includes('democrat')) return 'text-blue-600 bg-blue-50';
-    if (party.toLowerCase().includes('republican')) return 'text-red-600 bg-red-50';
-    return 'text-gray-600 bg-white';
-  };
-
-  return (
-    <div className="bg-white border-2 border-black border border-gray-200 overflow-hidden">
-      {/* Header Section */}
-      <div className="p-6 pb-4">
-        <div className="flex items-start gap-4">
-          <RepresentativePhoto
-            bioguideId={representative.bioguideId}
-            name={representative.name}
-            size="lg"
-          />
-          <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-semibold text-gray-900 mb-1">{representative.name}</h3>
-            <p className="text-gray-600 mb-2">{representative.title}</p>
-
-            <div className="flex flex-wrap gap-2 mb-3">
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${getPartyColor(representative.party)}`}
-              >
-                {representative.party}
-              </span>
-              {representative.chamber === 'House' && representative.district && (
-                <span className="px-2 py-1 bg-white border-2 border-gray-300 text-gray-700 rounded-full text-xs font-medium">
-                  District {representative.district}
-                </span>
-              )}
-              {representative.yearsInOffice && (
-                <span className="px-2 py-1 bg-civiq-green/10 text-civiq-green rounded-full text-xs font-medium">
-                  {representative.yearsInOffice} years in office
-                </span>
-              )}
-            </div>
-
-            {representative.nextElection && (
-              <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
-                <span className="font-medium">Next Election:</span>
-                <span>{representative.nextElection}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Committee Assignments */}
-      {representative.committees && representative.committees.length > 0 && (
-        <div className="px-6 pb-4">
-          <h4 className="text-sm font-semibold text-gray-700 mb-2">Key Committee Assignments</h4>
-          <div className="space-y-1">
-            {representative.committees.slice(0, 3).map((committee, index) => (
-              <div key={index} className="text-sm text-gray-600">
-                <span className="font-medium">{committee.name}</span>
-                {committee.role && <span className="text-civiq-blue ml-1">({committee.role})</span>}
-              </div>
-            ))}
-            {representative.committees.length > 3 && (
-              <div className="text-xs text-gray-500">
-                +{representative.committees.length - 3} more committees
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Contact Information */}
-      <div className="px-6 pb-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-          {representative.phone && (
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-700">📞</span>
-              <span className="text-gray-600">{representative.phone}</span>
-            </div>
-          )}
-          {representative.email && (
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-700">✉️</span>
-              <a
-                href={`mailto:${representative.email}`}
-                className="text-civiq-blue hover:underline truncate"
-              >
-                {representative.email}
-              </a>
-            </div>
-          )}
-          {representative.website && (
-            <div className="flex items-center gap-2 md:col-span-2">
-              <span className="font-medium text-gray-700">🌐</span>
-              <a
-                href={representative.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-civiq-blue hover:underline"
-              >
-                Official Website
-              </a>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Data Completeness & Action */}
-      <div className="px-6 py-4 bg-white border-t border-gray-100">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 flex-1">
-            <div className="flex-1 bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-civiq-green h-2 rounded-full"
-                style={{ width: `${representative.dataComplete}%` }}
-              ></div>
-            </div>
-            <span className="text-xs text-gray-600">{representative.dataComplete}% complete</span>
-          </div>
-          <Link
-            href={`/representative/${representative.bioguideId}`}
-            className="ml-4 bg-civiq-blue text-white px-4 py-2 rounded hover:bg-civiq-blue/90 transition-colors text-sm font-medium"
-          >
-            View Profile
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-});
-
-const StateLegislatorCard = memo(function StateLegislatorCard({
-  legislator,
-}: {
-  legislator: StateLegislator;
-}) {
-  const getPartyColor = (party: string) => {
-    if (party.toLowerCase().includes('democrat')) return 'text-blue-600 bg-blue-50';
-    if (party.toLowerCase().includes('republican')) return 'text-red-600 bg-red-50';
-    return 'text-gray-600 bg-white';
-  };
-
-  const getChamberInfo = (chamber: string) => {
-    if (chamber === 'upper')
-      return { name: 'State Senate', color: 'bg-purple-100 text-purple-800' };
-    if (chamber === 'lower') return { name: 'State House', color: 'bg-green-100 text-green-800' };
-    return { name: 'Legislature', color: 'bg-white border-2 border-gray-300 text-gray-800' };
-  };
-
-  const chamberInfo = getChamberInfo(legislator.chamber);
-
-  return (
-    <div className="bg-white border-2 border-black border border-gray-200 overflow-hidden">
-      {/* Header Section */}
-      <div className="p-6 pb-4">
-        <div className="flex items-start gap-4">
-          <RepresentativePhoto bioguideId={legislator.id} name={legislator.name} size="md" />
-          <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">{legislator.name}</h3>
-            <p className="text-gray-600 mb-2">
-              {legislator.currentRole?.title || `${chamberInfo.name} Member`}
-            </p>
-
-            <div className="flex flex-wrap gap-2 mb-3">
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${getPartyColor(legislator.party)}`}
-              >
-                {legislator.party}
-              </span>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${chamberInfo.color}`}>
-                {chamberInfo.name}
-              </span>
-              <span className="px-2 py-1 bg-white border-2 border-gray-300 text-gray-700 rounded-full text-xs font-medium">
-                District {legislator.district}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Contact Information */}
-      <div className="px-6 pb-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-          {legislator.phone && (
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-700">📞</span>
-              <span className="text-gray-600">{legislator.phone}</span>
-            </div>
-          )}
-          {legislator.email && (
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-700">✉️</span>
-              <a
-                href={`mailto:${legislator.email}`}
-                className="text-civiq-blue hover:underline truncate"
-              >
-                {legislator.email}
-              </a>
-            </div>
-          )}
-          {legislator.website && (
-            <div className="flex items-center gap-2 md:col-span-2">
-              <span className="font-medium text-gray-700">🌐</span>
-              <a
-                href={legislator.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-civiq-blue hover:underline"
-              >
-                Official Website
-              </a>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Offices */}
-      {legislator.offices && legislator.offices.length > 0 && (
-        <div className="px-6 pb-4">
-          <h4 className="text-sm font-semibold text-gray-700 mb-2">Offices</h4>
-          <div className="space-y-2">
-            {legislator.offices.slice(0, 2).map((office, index) => (
-              <div key={index} className="text-sm text-gray-600">
-                <span className="font-medium">{office.name}</span>
-                {office.address && (
-                  <div className="text-xs text-gray-500 mt-1">{office.address}</div>
-                )}
-                {office.phone && <div className="text-xs text-gray-500">Phone: {office.phone}</div>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Footer */}
-      <div className="px-6 py-3 bg-white border-t border-gray-100">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600">{legislator.state} State Legislature</span>
-          {legislator.currentRole?.start_date && (
-            <span className="text-gray-500">
-              Since {new Date(legislator.currentRole.start_date).getFullYear()}
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-});
-
-const StateRepresentativesTab = memo(function StateRepresentativesTab({
-  zipCode,
-}: {
-  zipCode: string;
-}) {
-  const [stateData, setStateData] = useState<StateApiResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchStateRepresentatives = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(
-          `/api/state-representatives?zip=${encodeURIComponent(zipCode)}`
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch state representatives');
-        }
-
-        const data: StateApiResponse = await response.json();
-        setStateData(data);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-        setStateData(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (zipCode) {
-      fetchStateRepresentatives();
-    }
-  }, [zipCode]);
-
-  if (loading) {
-    return (
-      <>
-        <div className="text-center py-8">
-          <Spinner size="lg" />
-          <p className="mt-4 text-gray-600">Finding your state representatives...</p>
-        </div>
-
-        <div className="space-y-6">
-          <RepresentativeSkeleton />
-          <RepresentativeSkeleton />
-          <RepresentativeSkeleton />
-        </div>
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 p-6 text-center">
-        <p className="text-red-800 font-medium">Error</p>
-        <p className="text-red-600 mt-1">{error}</p>
-      </div>
-    );
-  }
-
-  if (!stateData || stateData.legislators.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-600">
-        <p>No state representatives found for this ZIP code.</p>
-      </div>
-    );
-  }
-
-  const senators = stateData.legislators.filter(leg => leg.chamber === 'upper');
-  const representatives = stateData.legislators.filter(leg => leg.chamber === 'lower');
-
-  return (
-    <div className="space-y-8">
-      {/* State Info */}
-      <div className="bg-white border border-gray-200 p-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          {stateData.stateName} State Legislature
-        </h3>
-        <p className="text-gray-600">
-          State representatives for ZIP code <span className="font-semibold">{zipCode}</span>
-        </p>
-        {stateData.jurisdiction && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {stateData.jurisdiction.chambers.map((chamber, index) => (
-              <span
-                key={index}
-                className="px-3 py-1 bg-white border-2 border-gray-300 text-gray-700 rounded-full text-sm"
-              >
-                {chamber.name}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* State Senators */}
-      {senators.length > 0 && (
-        <div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">
-            State Senators ({senators.length})
-          </h3>
-          <div className="space-y-4">
-            {senators.map(senator => (
-              <StateLegislatorCard key={senator.id} legislator={senator} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* State Representatives */}
-      {representatives.length > 0 && (
-        <div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">
-            State Representatives ({representatives.length})
-          </h3>
-          <div className="space-y-4">
-            {representatives.map(representative => (
-              <StateLegislatorCard key={representative.id} legislator={representative} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="text-center text-sm text-gray-500">
-        State legislature data sourced from the OpenStates Project
-      </div>
-    </div>
-  );
-});
 
 function ResultsContent() {
   const searchParams = useSearchParams();
@@ -1112,7 +667,16 @@ function ResultsContent() {
 
                       <div className="space-y-6">
                         {data.representatives.map((rep, index) => (
-                          <RepresentativeCard key={`${rep.name}-${index}`} representative={rep} />
+                          <Suspense
+                            key={`${rep.name}-${index}`}
+                            fallback={
+                              <div className="bg-white border-2 border-black p-6 animate-pulse">
+                                <div className="h-40 bg-gray-200 rounded"></div>
+                              </div>
+                            }
+                          >
+                            <RepresentativeCard representative={rep} />
+                          </Suspense>
                         ))}
                       </div>
 
@@ -1128,7 +692,16 @@ function ResultsContent() {
               )}
 
               {activeTab === 'state' && (zipCode || query) && (
-                <StateRepresentativesTab zipCode={zipCode || query || ''} />
+                <Suspense
+                  fallback={
+                    <div className="text-center py-8">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      <p className="mt-4 text-gray-600">Loading state representatives...</p>
+                    </div>
+                  }
+                >
+                  <StateRepresentativesTab zipCode={zipCode || query || ''} />
+                </Suspense>
               )}
 
               {activeTab === 'map' && (zipCode || query) && (
