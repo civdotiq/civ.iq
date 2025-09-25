@@ -451,3 +451,6 @@ export interface EndpointResponse<T = unknown> {
   cached?: boolean;
   executionTime?: number;
 }
+
+// Note: BiographyApiResponse removed - now using direct client-side API calls
+// See WikipediaBiography and WikidataBiography types in respective API files

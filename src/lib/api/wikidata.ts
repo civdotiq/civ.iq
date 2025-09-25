@@ -4,106 +4,72 @@
  */
 
 /**
- * Wikidata integration for representative and district data
- * Maps bioguide IDs to Wikidata IDs and fetches birth dates via SPARQL
- * Also fetches district information when available
- * Follows CLAUDE.MD rules for real data only
+ * Wikidata API client - Direct client-side implementation
+ *
+ * This client makes direct SPARQL calls to Wikidata for biographical data.
+ * It includes enhanced mappings and intelligent fallback strategies.
+ *
+ * Features:
+ * - Direct Wikidata SPARQL queries
+ * - Enhanced bioguide-to-Wikidata mappings
+ * - Comprehensive biographical data extraction
+ * - Network retry logic with timeouts
  */
 
 import {
   hasEnhancedWikidataMapping,
   getEnhancedWikidataId,
-} from '../data/enhanced-wikidata-mappings';
+} from '@/lib/data/enhanced-wikidata-mappings';
 
-// Legacy mappings (now supplemented by enhanced mappings)
+// Legacy mappings for fallback
 const BIOGUIDE_TO_WIKIDATA: Record<string, string> = {
-  T000488: 'Q115604581', // Shri Thanedar
-  P000197: 'Q170581', // Nancy Pelosi
-  A000374: 'Q5584301', // Ralph Abraham
-  B001298: 'Q28038204', // Don Bacon
-  B001291: 'Q22966652', // Brian Babin
-  S000033: 'Q359442', // Bernie Sanders
-  // Add more mappings as needed
+  T000488: 'Q115604581',
+  P000197: 'Q170581',
+  A000374: 'Q5584301',
+  B001298: 'Q28038204',
+  B001291: 'Q22966652',
+  S000033: 'Q359442',
 };
 
+// Network configuration
+const REQUEST_TIMEOUT = 10000; // 10 seconds for SPARQL queries
+const MAX_RETRIES = 3;
+const RETRY_DELAY_BASE = 1000;
+
 /**
- * Dynamically find Wikidata ID by bioguide ID using SPARQL
- * @param bioguideId - Official bioguide ID from Congress
- * @returns Wikidata ID or null if not found
+ * Comprehensive biographical data from Wikidata
  */
-export async function findWikidataId(bioguideId: string): Promise<string | null> {
-  try {
-    // Check enhanced mappings first
-    if (hasEnhancedWikidataMapping(bioguideId)) {
-      return getEnhancedWikidataId(bioguideId);
-    }
-
-    // Check legacy mapping as fallback
-    if (BIOGUIDE_TO_WIKIDATA[bioguideId]) {
-      return BIOGUIDE_TO_WIKIDATA[bioguideId];
-    }
-
-    // Query Wikidata for bioguide ID
-    const query = `
-      SELECT ?person WHERE {
-        ?person wdt:P1157 "${bioguideId}" .
-      }
-    `;
-
-    const encodedQuery = encodeURIComponent(query);
-    const sparqlUrl = `https://query.wikidata.org/sparql?query=${encodedQuery}&format=json`;
-
-    const response = await fetch(sparqlUrl, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Government Data Portal',
-      },
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = await response.json();
-    if (!data.results?.bindings?.length) {
-      return null;
-    }
-
-    const binding = data.results.bindings[0];
-    if (!binding?.person?.value) return null;
-
-    const wikidataUri = binding.person.value;
-    const wikidataId = wikidataUri.split('/').pop();
-
-    if (wikidataId) {
-      // Cache the mapping for future use
-      BIOGUIDE_TO_WIKIDATA[bioguideId] = wikidataId;
-    }
-
-    return wikidataId ?? null;
-  } catch {
-    return null;
-  }
+export interface WikidataBiography {
+  birthDate?: string;
+  birthPlace?: string;
+  education?: string[];
+  occupations?: string[];
+  spouse?: string;
+  children?: number;
+  awards?: string[];
+  wikidataDescription?: string;
+  wikipediaUrl?: string;
 }
 
-interface WikidataResponse {
-  results: {
-    bindings: Array<{
-      birthDate?: {
-        value: string;
-        type: string;
-      };
-      [key: string]:
-        | {
-            value: string;
-            type: string;
-          }
-        | undefined;
-    }>;
-  };
+/**
+ * Wikidata SPARQL binding structure with proper typing
+ */
+interface WikidataSparqlBinding {
+  birthDate?: { value: string };
+  birthPlaceLabel?: { value: string };
+  educationLabel?: { value: string };
+  occupationLabel?: { value: string };
+  spouseLabel?: { value: string };
+  children?: { value: string };
+  awardLabel?: { value: string };
+  description?: { value: string };
+  wikipediaUrl?: { value: string };
 }
 
-interface WikidataBiography {
+/**
+ * Legacy interface for backward compatibility
+ */
+interface LegacyWikidataBiography {
   birthDate?: string;
   birthPlace?: string;
   education?: string[];
@@ -116,81 +82,99 @@ interface WikidataBiography {
 }
 
 /**
- * Fetch birth date from Wikidata SPARQL endpoint
- * @param bioguideId - Official bioguide ID from Congress
- * @returns Age in years or null if not found
+ * Fetch with timeout and retry logic for SPARQL queries
  */
-export async function getAgeFromWikidata(bioguideId: string): Promise<number | null> {
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit = {},
+  retries = MAX_RETRIES
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
   try {
-    const wikidataId = await findWikidataId(bioguideId);
-    if (!wikidataId) {
-      return null;
-    }
-
-    // SPARQL query to get birth date
-    const query = `
-      SELECT ?birthDate WHERE {
-        wd:${wikidataId} wdt:P569 ?birthDate.
-      }
-    `;
-
-    const encodedQuery = encodeURIComponent(query);
-    const sparqlUrl = `https://query.wikidata.org/sparql?query=${encodedQuery}&format=json`;
-
-    const response = await fetch(sparqlUrl, {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
       headers: {
         Accept: 'application/json',
         'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Government Data Portal',
+        ...options.headers,
       },
     });
 
-    if (!response.ok) {
-      return null;
+    clearTimeout(timeoutId);
+
+    if (!response.ok && retries > 0) {
+      const delay = RETRY_DELAY_BASE * Math.pow(2, MAX_RETRIES - retries);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return fetchWithRetry(url, options, retries - 1);
     }
 
-    const data: WikidataResponse = await response.json();
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
 
-    if (!data.results.bindings.length || !data.results.bindings[0]) {
-      return null;
+    if (retries > 0) {
+      const delay = RETRY_DELAY_BASE * Math.pow(2, MAX_RETRIES - retries);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return fetchWithRetry(url, options, retries - 1);
     }
 
-    const birthDateStr = data.results.bindings[0].birthDate?.value;
-    if (!birthDateStr) {
-      return null;
+    throw error;
+  }
+}
+
+/**
+ * Find Wikidata ID for bioguide ID
+ */
+async function findWikidataId(bioguideId: string): Promise<string | null> {
+  try {
+    // Check enhanced mappings first
+    if (hasEnhancedWikidataMapping(bioguideId)) {
+      return getEnhancedWikidataId(bioguideId);
     }
-    const birthDate = new Date(birthDateStr);
-    const today = new Date();
 
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+    // Check legacy mapping
+    if (BIOGUIDE_TO_WIKIDATA[bioguideId]) {
+      return BIOGUIDE_TO_WIKIDATA[bioguideId];
     }
 
-    return age;
-  } catch {
+    // Query Wikidata SPARQL endpoint
+    const query = `SELECT ?person WHERE { ?person wdt:P1157 "${bioguideId}" . }`;
+    const encodedQuery = encodeURIComponent(query);
+    const sparqlUrl = `https://query.wikidata.org/sparql?query=${encodedQuery}&format=json`;
+
+    const response = await fetchWithRetry(sparqlUrl);
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    if (!data.results?.bindings?.length) return null;
+
+    const wikidataUri = data.results.bindings[0]?.person?.value;
+    if (!wikidataUri) return null;
+
+    const wikidataId = wikidataUri.split('/').pop();
+    if (wikidataId) {
+      // Cache for future use
+      BIOGUIDE_TO_WIKIDATA[bioguideId] = wikidataId;
+    }
+
+    return wikidataId || null;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(`Error finding Wikidata ID for ${bioguideId}:`, error);
     return null;
   }
 }
 
 /**
  * Fetch comprehensive biographical information from Wikidata
- * @param bioguideId - Official bioguide ID from Congress
- * @returns Biographical information or null if not found
  */
-export async function getBiographyFromWikidata(
-  bioguideId: string
-): Promise<WikidataBiography | null> {
+async function fetchWikidataInfo(wikidataId: string): Promise<WikidataBiography | null> {
   try {
-    const wikidataId = await findWikidataId(bioguideId);
-    if (!wikidataId) {
-      return null;
-    }
-
-    // Comprehensive SPARQL query for biographical information
     const query = `
-      SELECT ?birthDate ?birthPlaceLabel ?educationLabel ?occupationLabel ?spouseLabel 
+      SELECT ?birthDate ?birthPlaceLabel ?educationLabel ?occupationLabel ?spouseLabel
              ?children ?awardLabel ?description ?wikipediaUrl WHERE {
         wd:${wikidataId} wdt:P569 ?birthDate .
         OPTIONAL { wd:${wikidataId} wdt:P19 ?birthPlace . }
@@ -211,33 +195,21 @@ export async function getBiographyFromWikidata(
     const encodedQuery = encodeURIComponent(query);
     const sparqlUrl = `https://query.wikidata.org/sparql?query=${encodedQuery}&format=json`;
 
-    const response = await fetch(sparqlUrl, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Government Data Portal',
-      },
-    });
+    const response = await fetchWithRetry(sparqlUrl);
+    if (!response.ok) return null;
 
-    if (!response.ok) {
-      return null;
-    }
+    const data = await response.json();
+    if (!data.results?.bindings?.length) return null;
 
-    const data: WikidataResponse = await response.json();
-    if (!data.results?.bindings?.length) {
-      return null;
-    }
-
-    const bindings = data.results.bindings;
-
-    // Process the results
+    const bindings = data.results.bindings as WikidataSparqlBinding[];
     const education = new Set<string>();
     const occupations = new Set<string>();
     const awards = new Set<string>();
-    let birthDate: string | undefined;
     let birthPlace: string | undefined;
     let spouse: string | undefined;
     let children: number | undefined;
     let description: string | undefined;
+    let birthDate: string | undefined;
     let wikipediaUrl: string | undefined;
 
     bindings.forEach(binding => {
@@ -260,8 +232,81 @@ export async function getBiographyFromWikidata(
       spouse,
       children,
       awards: Array.from(awards),
-      description,
+      wikidataDescription: description,
       wikipediaUrl,
+    };
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(`Error fetching Wikidata info for ${wikidataId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Calculate age from birth date string
+ */
+function calculateAge(birthDateStr: string): number | null {
+  try {
+    const birthDate = new Date(birthDateStr);
+    const today = new Date();
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    return age;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetch birth date and calculate age using direct Wikidata access
+ * @param bioguideId - Official bioguide ID from Congress
+ * @returns Age in years or null if not found
+ */
+export async function getAgeFromWikidata(bioguideId: string): Promise<number | null> {
+  try {
+    const wikidataId = await findWikidataId(bioguideId);
+    if (!wikidataId) return null;
+
+    const biography = await fetchWikidataInfo(wikidataId);
+    if (!biography?.birthDate) return null;
+
+    return calculateAge(biography.birthDate);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetch comprehensive biographical information using direct Wikidata access
+ * @param bioguideId - Official bioguide ID from Congress
+ * @returns Biographical information or null if not found
+ */
+export async function getBiographyFromWikidata(
+  bioguideId: string
+): Promise<LegacyWikidataBiography | null> {
+  try {
+    const wikidataId = await findWikidataId(bioguideId);
+    if (!wikidataId) return null;
+
+    const biography = await fetchWikidataInfo(wikidataId);
+    if (!biography) return null;
+
+    return {
+      birthDate: biography.birthDate,
+      birthPlace: biography.birthPlace,
+      education: biography.education,
+      occupations: biography.occupations,
+      spouse: biography.spouse,
+      children: biography.children,
+      awards: biography.awards,
+      description: biography.wikidataDescription,
+      wikipediaUrl: biography.wikipediaUrl,
     };
   } catch {
     return null;
@@ -269,14 +314,51 @@ export async function getBiographyFromWikidata(
 }
 
 /**
- * Check if bioguide ID has Wikidata mapping
- * @param bioguideId - Official bioguide ID
- * @returns boolean indicating if mapping exists
+ * Main function to fetch Wikidata biographical data
+ * @param bioguideId - Official bioguide ID from Congress
+ * @returns Complete biographical data or null if not found
  */
-export function hasWikidataMapping(bioguideId: string): boolean {
-  return hasEnhancedWikidataMapping(bioguideId) || bioguideId in BIOGUIDE_TO_WIKIDATA;
+export async function fetchWikidataBiography(
+  bioguideId: string
+): Promise<WikidataBiography | null> {
+  try {
+    const wikidataId = await findWikidataId(bioguideId);
+    if (!wikidataId) return null;
+
+    return await fetchWikidataInfo(wikidataId);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(`Error fetching Wikidata biography for ${bioguideId}:`, error);
+    return null;
+  }
 }
 
+/**
+ * Check if bioguide ID has Wikidata biographical data
+ * @param bioguideId - Official bioguide ID
+ * @returns Promise resolving to boolean indicating if data exists
+ */
+export async function hasWikidataMapping(bioguideId: string): Promise<boolean> {
+  try {
+    // Check enhanced mappings first for quick lookup
+    if (hasEnhancedWikidataMapping(bioguideId)) {
+      return true;
+    }
+
+    // Check legacy mapping
+    if (BIOGUIDE_TO_WIKIDATA[bioguideId]) {
+      return true;
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * District information interface
+ */
 interface DistrictWikidataInfo {
   established?: string;
   area?: number;
@@ -286,6 +368,9 @@ interface DistrictWikidataInfo {
 
 /**
  * Fetch district information from Wikidata
+ * Note: This functionality is preserved as-is since it's not part of
+ * the biography refactor and still needs direct Wikidata access.
+ *
  * @param state - State code (e.g., "MI")
  * @param district - District number (e.g., "12")
  * @returns District information or null if not found
@@ -328,12 +413,7 @@ export async function getDistrictFromWikidata(
     `;
 
     const url = `https://query.wikidata.org/sparql?query=${encodeURIComponent(query)}&format=json`;
-    const response = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'CivIQ/1.0 (https://civiq.org; contact@civiq.org)',
-      },
-    });
+    const response = await fetchWithRetry(url);
 
     if (!response.ok) {
       return null;
@@ -353,15 +433,6 @@ export async function getDistrictFromWikidata(
   } catch {
     return null;
   }
-}
-
-/**
- * Get Wikidata ID for bioguide ID
- * @param bioguideId - Official bioguide ID
- * @returns Wikidata ID or null
- */
-export function getWikidataId(bioguideId: string): string | null {
-  return BIOGUIDE_TO_WIKIDATA[bioguideId] || null;
 }
 
 interface StateWikidataInfo {
@@ -450,11 +521,11 @@ export async function getStateFromWikidata(stateCode: string): Promise<StateWiki
 
     // Comprehensive SPARQL query for state information
     const query = `
-      SELECT ?name ?capital ?capitalLabel ?statehood ?population ?area ?nickname ?motto 
+      SELECT ?name ?capital ?capitalLabel ?statehood ?population ?area ?nickname ?motto
              ?flag ?seal ?governor ?governorLabel ?wikipediaUrl ?website ?timezone WHERE {
         wd:${wikidataId} rdfs:label ?name .
         FILTER(lang(?name) = "en")
-        
+
         OPTIONAL { wd:${wikidataId} wdt:P36 ?capital . }
         OPTIONAL { wd:${wikidataId} wdt:P571 ?statehood . }
         OPTIONAL { wd:${wikidataId} wdt:P1082 ?population . }
@@ -477,12 +548,7 @@ export async function getStateFromWikidata(stateCode: string): Promise<StateWiki
     const encodedQuery = encodeURIComponent(query);
     const sparqlUrl = `https://query.wikidata.org/sparql?query=${encodedQuery}&format=json`;
 
-    const response = await fetch(sparqlUrl, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Government Data Portal',
-      },
-    });
+    const response = await fetchWithRetry(sparqlUrl);
 
     if (!response.ok) {
       return null;

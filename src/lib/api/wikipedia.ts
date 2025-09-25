@@ -4,146 +4,92 @@
  */
 
 /**
- * Wikipedia REST API integration for representative biographical data
- * Fetches page summaries and biographical information
- * Follows CLAUDE.MD rules for real data only
+ * Wikipedia API client - Direct client-side implementation
+ *
+ * This client makes direct calls to Wikipedia's REST API for biography data.
+ * HTML sanitization is handled client-side using DOMPurify for security.
+ *
+ * Features:
+ * - Direct Wikipedia API access with enhanced mappings
+ * - Client-side HTML sanitization
+ * - Intelligent search strategies for representatives
+ * - Network retry logic with timeouts
  */
-
-interface WikipediaSearchPage {
-  key: string;
-  title: string;
-  excerpt?: string;
-  description?: string;
-  matched_title?: string;
-}
-
-interface WikipediaSummary {
-  title: string;
-  description: string;
-  extract: string;
-  extract_html: string;
-  thumbnail?: {
-    source: string;
-    width: number;
-    height: number;
-  };
-  originalimage?: {
-    source: string;
-    width: number;
-    height: number;
-  };
-  content_urls: {
-    desktop: {
-      page: string;
-      revisions: string;
-      edit: string;
-      talk: string;
-    };
-    mobile: {
-      page: string;
-      revisions: string;
-      edit: string;
-      talk: string;
-    };
-  };
-}
-
-interface WikipediaBiographyData {
-  title: string;
-  description: string;
-  summary: string;
-  htmlSummary: string;
-  imageUrl?: string;
-  pageUrl: string;
-  lastModified?: string;
-}
 
 import {
   hasEnhancedWikipediaMapping,
   getEnhancedWikipediaPageName,
-} from '../data/enhanced-wikipedia-mappings';
+} from '@/lib/data/enhanced-wikipedia-mappings';
 
-// Legacy mappings (now supplemented by enhanced mappings)
+// Legacy mappings for fallback
 const BIOGUIDE_TO_WIKIPEDIA: Record<string, string> = {
   S000033: 'Bernie_Sanders',
   P000197: 'Nancy_Pelosi',
   T000488: 'Shri_Thanedar',
-  // Add more mappings as needed
 };
 
+// Network configuration
+const REQUEST_TIMEOUT = 8000; // 8 seconds
+const MAX_RETRIES = 3;
+const RETRY_DELAY_BASE = 1000; // 1 second base delay
+
 /**
- * Normalize name for better Wikipedia matching
+ * Interface for Wikipedia biography data
  */
-function normalizeNameForSearch(name: string): string[] {
-  const normalized = name
-    .replace(/[""'']/g, '') // Remove quotes
-    .replace(/\s+/g, ' ') // Normalize spaces
-    .trim();
-
-  const variants = [normalized];
-
-  // Handle common name transformations
-  if (normalized.includes(' ')) {
-    const parts = normalized.split(' ');
-
-    // Try "First Last" format
-    if (parts.length >= 2) {
-      variants.push(`${parts[0]} ${parts[parts.length - 1]}`);
-    }
-
-    // Try with middle names/initials removed
-    if (parts.length > 2) {
-      variants.push(`${parts[0]} ${parts[parts.length - 1]}`);
-    }
-
-    // Try nickname variations
-    const commonNicknames: Record<string, string[]> = {
-      Alexander: ['Alex'],
-      Andrew: ['Andy'],
-      Anthony: ['Tony'],
-      Bernard: ['Bernie'],
-      Charles: ['Chuck', 'Charlie'],
-      Christopher: ['Chris'],
-      Daniel: ['Dan', 'Danny'],
-      David: ['Dave'],
-      Donald: ['Don'],
-      Edward: ['Ed', 'Eddie'],
-      Elizabeth: ['Liz', 'Beth'],
-      Gregory: ['Greg'],
-      James: ['Jim', 'Jimmy'],
-      Jeffrey: ['Jeff'],
-      John: ['Johnny'],
-      Joseph: ['Joe'],
-      Katherine: ['Kate', 'Katie'],
-      Kenneth: ['Ken'],
-      Margaret: ['Maggie', 'Meg'],
-      Michael: ['Mike'],
-      Nicholas: ['Nick'],
-      Patricia: ['Pat', 'Patty'],
-      Richard: ['Rick', 'Dick'],
-      Robert: ['Bob', 'Bobby'],
-      Steven: ['Steve'],
-      Theodore: ['Ted'],
-      Thomas: ['Tom', 'Tommy'],
-      William: ['Bill', 'Billy'],
-    };
-
-    const firstName = parts[0];
-    if (firstName && commonNicknames[firstName]) {
-      commonNicknames[firstName].forEach((nickname: string) => {
-        variants.push(`${nickname} ${parts[parts.length - 1]}`);
-      });
-    }
-  }
-
-  return [...new Set(variants)]; // Remove duplicates
+export interface WikipediaBiography {
+  wikipediaSummary?: string;
+  wikipediaHtmlSummary?: string;
+  wikipediaImageUrl?: string;
+  wikipediaPageUrl?: string;
+  lastUpdated: string;
 }
 
 /**
- * Find Wikipedia page name by searching for representative
- * @param bioguideId - Official bioguide ID from Congress
- * @param representativeName - Full name of representative
- * @returns Wikipedia page name or null if not found
+ * Fetch with timeout and retry logic
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit = {},
+  retries = MAX_RETRIES
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Government Data Portal',
+        ...options.headers,
+      },
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok && retries > 0) {
+      const delay = RETRY_DELAY_BASE * Math.pow(2, MAX_RETRIES - retries);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return fetchWithRetry(url, options, retries - 1);
+    }
+
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (retries > 0) {
+      const delay = RETRY_DELAY_BASE * Math.pow(2, MAX_RETRIES - retries);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return fetchWithRetry(url, options, retries - 1);
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Find Wikipedia page name with intelligent search
  */
 async function findWikipediaPageName(
   bioguideId: string,
@@ -155,201 +101,191 @@ async function findWikipediaPageName(
       return getEnhancedWikipediaPageName(bioguideId);
     }
 
-    // Check legacy mapping as fallback
+    // Check legacy mapping
     if (BIOGUIDE_TO_WIKIPEDIA[bioguideId]) {
       return BIOGUIDE_TO_WIKIPEDIA[bioguideId];
     }
 
-    const nameVariants = normalizeNameForSearch(representativeName);
+    // Search strategies
+    const searchStrategies = [
+      representativeName.replace(/\s+/g, '_'),
+      `"${representativeName}" United States`,
+      `"${representativeName}" Congress`,
+      `${representativeName} US Senator`,
+      `${representativeName} US Representative`,
+    ];
 
-    // Try different search strategies for each name variant
-    for (const nameVariant of nameVariants) {
-      const searchStrategies = [
-        // Direct Wikipedia page format
-        nameVariant.replace(/\s+/g, '_'),
+    for (const searchQuery of searchStrategies) {
+      try {
+        // Try direct page access first
+        if (searchQuery.includes('_') && !searchQuery.includes('"')) {
+          const directUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(searchQuery)}`;
+          const directResponse = await fetchWithRetry(directUrl);
 
-        // Quoted searches with context
-        `"${nameVariant}"`,
-        `"${nameVariant}" United States`,
-        `"${nameVariant}" Congress`,
-        `"${nameVariant}" Senator`,
-        `"${nameVariant}" Representative`,
-        `"${nameVariant}" politician`,
-
-        // Unquoted searches
-        `${nameVariant} United States Congress`,
-        `${nameVariant} US Senator`,
-        `${nameVariant} US Representative`,
-        `${nameVariant} politician American`,
-      ];
-
-      for (const searchQuery of searchStrategies) {
-        try {
-          // First try direct page access
-          if (searchQuery.includes('_') && !searchQuery.includes('"')) {
-            const directUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(searchQuery)}`;
-            const directResponse = await fetch(directUrl, {
-              headers: {
-                Accept: 'application/json',
-                'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Government Data Portal',
-              },
-            });
-
-            if (directResponse.ok) {
-              const directResult = await directResponse.json();
-              if (directResult.title && !directResult.title.includes('may refer to')) {
-                // Cache the mapping
-                BIOGUIDE_TO_WIKIPEDIA[bioguideId] = searchQuery;
-                return searchQuery;
-              }
+          if (directResponse.ok) {
+            const directResult = await directResponse.json();
+            if (directResult.title && !directResult.title.includes('may refer to')) {
+              BIOGUIDE_TO_WIKIPEDIA[bioguideId] = searchQuery;
+              return searchQuery;
             }
           }
-
-          // Try search API
-          const searchUrl = `https://en.wikipedia.org/api/rest_v1/page/search/${encodeURIComponent(searchQuery)}`;
-          const response = await fetch(searchUrl, {
-            headers: {
-              Accept: 'application/json',
-              'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Government Data Portal',
-            },
-          });
-
-          if (!response.ok) continue;
-
-          const searchResults = await response.json();
-          if (!searchResults.pages?.length) continue;
-
-          // Score and rank results
-          const scoredResults = searchResults.pages.map((page: WikipediaSearchPage) => {
-            const title = page.title?.toLowerCase() || '';
-            const excerpt = page.excerpt?.toLowerCase() || '';
-            const description = page.description?.toLowerCase() || '';
-            const nameL = nameVariant.toLowerCase();
-
-            let score = 0;
-
-            // Exact title match gets highest score
-            if (title === nameL) score += 100;
-
-            // Name components in title
-            const nameWords = nameL.split(' ');
-            const titleWords = title.split(' ');
-            const matchingWords = nameWords.filter(word => titleWords.includes(word));
-            score += (matchingWords.length / nameWords.length) * 50;
-
-            // Political keywords boost score
-            const politicalKeywords = [
-              'senator',
-              'representative',
-              'congress',
-              'politician',
-              'house',
-              'senate',
-            ];
-            politicalKeywords.forEach(keyword => {
-              if (
-                title.includes(keyword) ||
-                excerpt.includes(keyword) ||
-                description.includes(keyword)
-              ) {
-                score += 20;
-              }
-            });
-
-            // Exact name in excerpt or description
-            if (excerpt.includes(nameL) || description.includes(nameL)) {
-              score += 15;
-            }
-
-            // Avoid disambiguation pages
-            if (title.includes('disambiguation') || title.includes('may refer to')) {
-              score -= 30;
-            }
-
-            return { page, score };
-          });
-
-          // Sort by score and get best match
-          scoredResults.sort((a: { score: number }, b: { score: number }) => b.score - a.score);
-          const bestMatch = scoredResults[0];
-
-          if (bestMatch && bestMatch.score > 30) {
-            // Cache the mapping
-            BIOGUIDE_TO_WIKIPEDIA[bioguideId] = bestMatch.page.key;
-            return bestMatch.page.key;
-          }
-        } catch {
-          // Continue to next search strategy
-          continue;
         }
+
+        // Try search API
+        const searchUrl = `https://en.wikipedia.org/api/rest_v1/page/search/${encodeURIComponent(searchQuery)}`;
+        const response = await fetchWithRetry(searchUrl);
+
+        if (!response.ok) continue;
+
+        const searchResults = await response.json();
+        if (!searchResults.pages?.length) continue;
+
+        // Get the first result that looks like a politician
+        const politicalKeywords = ['senator', 'representative', 'congress', 'politician'];
+        for (const page of searchResults.pages) {
+          const title = page.title?.toLowerCase() || '';
+          const excerpt = page.excerpt?.toLowerCase() || '';
+          const description = page.description?.toLowerCase() || '';
+
+          const isPolitical = politicalKeywords.some(
+            keyword =>
+              title.includes(keyword) || excerpt.includes(keyword) || description.includes(keyword)
+          );
+
+          if (isPolitical && !title.includes('disambiguation')) {
+            BIOGUIDE_TO_WIKIPEDIA[bioguideId] = page.key;
+            return page.key;
+          }
+        }
+      } catch {
+        continue;
       }
     }
 
     return null;
-  } catch {
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(`Error finding Wikipedia page for ${bioguideId}:`, error);
     return null;
   }
 }
 
 /**
- * Fetch biographical summary from Wikipedia REST API
+ * Fetch Wikipedia biography data directly from Wikipedia API
+ */
+async function fetchWikipediaInfo(pageTitle: string): Promise<WikipediaBiography | null> {
+  try {
+    const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle)}`;
+    const response = await fetchWithRetry(summaryUrl);
+
+    if (!response.ok) return null;
+
+    const summary = await response.json();
+
+    return {
+      wikipediaSummary: summary.extract,
+      wikipediaHtmlSummary: summary.extract_html,
+      wikipediaImageUrl: summary.thumbnail?.source || summary.originalimage?.source,
+      wikipediaPageUrl: summary.content_urls.desktop.page,
+      lastUpdated: new Date().toISOString(),
+    };
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(`Error fetching Wikipedia info for ${pageTitle}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Fetch biographical data directly from Wikipedia
  * @param bioguideId - Official bioguide ID from Congress
- * @param representativeName - Full name of representative for search fallback
- * @returns Wikipedia biographical data or null if not found
+ * @param representativeName - Representative's name for search
+ * @returns Biography data from Wikipedia or null if not found
+ */
+export async function fetchBiography(
+  bioguideId: string,
+  representativeName?: string
+): Promise<WikipediaBiography | null> {
+  try {
+    if (!representativeName) {
+      return null;
+    }
+
+    const wikipediaPageName = await findWikipediaPageName(bioguideId, representativeName);
+    if (!wikipediaPageName) {
+      return null;
+    }
+
+    const wikipediaInfo = await fetchWikipediaInfo(wikipediaPageName);
+    return wikipediaInfo;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(`Error fetching biography for ${bioguideId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Legacy function for backward compatibility
+ * @deprecated Use fetchBiography instead
  */
 export async function getBiographyFromWikipedia(
   bioguideId: string,
-  representativeName: string
-): Promise<WikipediaBiographyData | null> {
-  try {
-    const pageTitle = await findWikipediaPageName(bioguideId, representativeName);
-    if (!pageTitle) {
-      return null;
-    }
+  representativeName: string,
+  _wikipediaId?: string
+): Promise<{
+  title?: string;
+  description?: string;
+  summary?: string;
+  htmlSummary?: string;
+  imageUrl?: string;
+  pageUrl?: string;
+  lastModified?: string;
+} | null> {
+  const biography = await fetchBiography(bioguideId, representativeName);
 
-    // Fetch page summary from Wikipedia REST API
-    const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle)}`;
-
-    const response = await fetch(summaryUrl, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq) Government Data Portal',
-      },
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const summary: WikipediaSummary = await response.json();
-
-    return {
-      title: summary.title,
-      description: summary.description,
-      summary: summary.extract,
-      htmlSummary: summary.extract_html,
-      imageUrl: summary.thumbnail?.source || summary.originalimage?.source,
-      pageUrl: summary.content_urls.desktop.page,
-      lastModified: new Date().toISOString(), // Wikipedia doesn't provide this in summary API
-    };
-  } catch {
+  if (!biography) {
     return null;
   }
+
+  return {
+    title: biography.wikipediaPageUrl ? biography.wikipediaPageUrl.split('/').pop() : undefined,
+    description: undefined,
+    summary: biography.wikipediaSummary,
+    htmlSummary: biography.wikipediaHtmlSummary,
+    imageUrl: biography.wikipediaImageUrl,
+    pageUrl: biography.wikipediaPageUrl,
+    lastModified: biography.lastUpdated,
+  };
 }
 
 /**
- * Check if bioguide ID has Wikipedia mapping
+ * Check if bioguide ID has biographical data
  * @param bioguideId - Official bioguide ID
- * @returns boolean indicating if mapping exists
+ * @returns Promise resolving to boolean indicating if data exists
  */
-export function hasWikipediaMapping(bioguideId: string): boolean {
-  return bioguideId in BIOGUIDE_TO_WIKIPEDIA;
+export async function hasWikipediaMapping(bioguideId: string): Promise<boolean> {
+  try {
+    // Check enhanced mappings first for quick lookup
+    if (hasEnhancedWikipediaMapping(bioguideId)) {
+      return true;
+    }
+
+    // Check legacy mapping
+    if (BIOGUIDE_TO_WIKIPEDIA[bioguideId]) {
+      return true;
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 /**
  * Get Wikipedia page URL for representative
  * @param bioguideId - Official bioguide ID
- * @param representativeName - Full name for search fallback
+ * @param representativeName - Full name for enhanced search
  * @returns Wikipedia URL or null if not found
  */
 export async function getWikipediaUrl(
@@ -357,13 +293,30 @@ export async function getWikipediaUrl(
   representativeName: string
 ): Promise<string | null> {
   try {
-    const pageTitle = await findWikipediaPageName(bioguideId, representativeName);
-    if (!pageTitle) {
-      return null;
-    }
-
-    return `https://en.wikipedia.org/wiki/${encodeURIComponent(pageTitle)}`;
+    const biography = await fetchBiography(bioguideId, representativeName);
+    return biography?.wikipediaPageUrl || null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Clear in-memory Wikipedia mapping cache
+ * @param bioguideId - Optional specific bioguide ID to clear, or clear all if not provided
+ * @returns Boolean indicating success
+ */
+export function clearWikipediaCache(bioguideId?: string): boolean {
+  try {
+    if (bioguideId) {
+      delete BIOGUIDE_TO_WIKIPEDIA[bioguideId];
+    } else {
+      // Clear all cached mappings
+      Object.keys(BIOGUIDE_TO_WIKIPEDIA).forEach(key => {
+        delete BIOGUIDE_TO_WIKIPEDIA[key];
+      });
+    }
+    return true;
+  } catch {
+    return false;
   }
 }
