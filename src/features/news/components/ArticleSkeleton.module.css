@@ -1,0 +1,132 @@
+/**
+ * ArticleSkeleton Styles - Loading State Animation
+ *
+ * Skeleton loading patterns following Otl Aicher design principles
+ * Uses subtle animations for better perceived performance
+ */
+
+/* Skeleton Card - Matches article card structure */
+.skeletonCard {
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border-light, #e5e5e5);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Card Content Layout */
+.cardContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Text Content Area */
+.textContent {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Title Skeleton Lines */
+.titleSkeleton {
+  height: 1.25rem;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+  width: 90%;
+}
+
+.titleSkeleton2 {
+  height: 1.25rem;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.25rem;
+  width: 60%;
+}
+
+/* Thumbnail Skeleton */
+.thumbnailSkeleton {
+  flex-shrink: 0;
+  width: 4rem;
+  height: 3rem;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.25rem;
+  border: 1px solid #e5e5e5;
+}
+
+/* Metadata Skeleton */
+.metadataSkeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sourceSkeleton {
+  height: 0.875rem;
+  width: 5rem;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.25rem;
+}
+
+.timestampSkeleton {
+  height: 0.875rem;
+  width: 3rem;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.25rem;
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .skeletonCard {
+    padding: 1rem;
+  }
+
+  .cardContent {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .thumbnailSkeleton {
+    align-self: flex-start;
+    width: 5rem;
+    height: 3.75rem;
+  }
+
+  .metadataSkeleton {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}

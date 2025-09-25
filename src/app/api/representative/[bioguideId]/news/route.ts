@@ -38,6 +38,12 @@ interface NewsResponse {
   searchTerms: string[];
   dataSource: 'gdelt' | 'cached' | 'fallback';
   cacheStatus?: string;
+  pagination?: {
+    currentPage: number;
+    limit: number;
+    hasNextPage: boolean;
+    totalPages: number;
+  };
 }
 
 export async function GET(
@@ -47,6 +53,7 @@ export async function GET(
   const { bioguideId } = await params;
   const { searchParams } = request.nextUrl;
   const limit = parseInt(searchParams.get('limit') || '15');
+  const page = parseInt(searchParams.get('page') || '1');
   const enableAdvanced = searchParams.get('advanced') === 'true';
   const includeTelevision = searchParams.get('tv') === 'true';
   const includeTrending = searchParams.get('trending') === 'true';
@@ -103,7 +110,7 @@ export async function GET(
 
   try {
     // Use cached fetch with 30-minute TTL as specified in project docs
-    const cacheKey = `news-${bioguideId}-${limit}-v4`; // v4 to include expanded district mappings
+    const cacheKey = `news-${bioguideId}-${limit}-${page}-v4`; // v4 to include expanded district mappings
     const TTL_30_MINUTES = 30 * 60; // 30 minutes in seconds
 
     const newsData = await cachedFetch(
@@ -266,8 +273,13 @@ export async function GET(
           request
         );
 
+        // Calculate pagination offset
+        const offset = (page - 1) * limit;
+
         // Fetch news from GDELT with intelligent deduplication
-        const articlesPerTerm = Math.ceil((limit * 1.5) / searchTerms.length); // Fetch more to account for deduplication
+        // Fetch extra articles to account for pagination and deduplication
+        const totalNeeded = offset + limit;
+        const articlesPerTerm = Math.ceil((totalNeeded * 1.5) / searchTerms.length); // Fetch more to account for deduplication
         let totalDuplicatesRemoved = 0;
 
         const fetchPromises = searchTerms.map(async (searchTerm, _index) => {
@@ -441,7 +453,7 @@ export async function GET(
 
         const sortedArticles = uniqueArticles
           .sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime())
-          .slice(0, limit);
+          .slice(offset, offset + limit);
 
         // Log deduplication statistics
         logger.info(
@@ -467,11 +479,19 @@ export async function GET(
           });
         }
 
+        const totalArticlesBeforePagination = uniqueArticles.length;
+
         return {
           articles: sortedArticles,
-          totalResults: sortedArticles.length,
+          totalResults: totalArticlesBeforePagination,
           searchTerms,
           dataSource: sortedArticles.length > 0 ? 'gdelt' : 'fallback',
+          pagination: {
+            currentPage: page,
+            limit: limit,
+            hasNextPage: offset + limit < totalArticlesBeforePagination,
+            totalPages: Math.ceil(totalArticlesBeforePagination / limit),
+          },
         };
       },
       TTL_30_MINUTES
@@ -489,6 +509,12 @@ export async function GET(
         searchTerms: newsData.searchTerms,
         dataSource: 'gdelt',
         cacheStatus: 'No news articles currently available for this representative',
+        pagination: {
+          currentPage: page,
+          limit: limit,
+          hasNextPage: false,
+          totalPages: 0,
+        },
       };
 
       return NextResponse.json(emptyResponse);
@@ -519,6 +545,12 @@ export async function GET(
       searchTerms: [],
       dataSource: 'fallback',
       cacheStatus: 'API temporarily unavailable',
+      pagination: {
+        currentPage: page,
+        limit: limit,
+        hasNextPage: false,
+        totalPages: 0,
+      },
     };
 
     return NextResponse.json(errorResponse, { status: 200 }); // Return 200 to avoid breaking UI
