@@ -9,7 +9,7 @@ import { useState, useMemo, useCallback, CSSProperties } from 'react';
 import { VariableSizeList as List } from 'react-window';
 import Link from 'next/link';
 
-interface SponsoredBill {
+export interface SponsoredBill {
   billId: string;
   number: string;
   title: string;

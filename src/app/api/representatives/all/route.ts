@@ -106,22 +106,57 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match expected format
-    const representatives = filteredRepresentatives.map(rep => ({
-      bioguideId: rep.bioguideId,
-      name: rep.name,
-      party: rep.party,
-      state: rep.state,
-      district: rep.district,
-      chamber: rep.chamber,
-      title: rep.title,
-      phone: rep.contact?.dcOffice?.phone || rep.phone,
-      website: rep.website,
-      contactInfo: {
-        phone: rep.contact?.dcOffice?.phone || rep.phone || '',
-        website: rep.website || '',
-        office: rep.contact?.dcOffice?.address || '',
-      },
-    }));
+    const representatives = filteredRepresentatives.map(rep => {
+      // Calculate years in office
+      const currentYear = new Date().getFullYear();
+      let yearsInOffice = 0;
+      if (rep.terms && rep.terms.length > 0) {
+        const earliestTerm = rep.terms[rep.terms.length - 1];
+        if (earliestTerm) {
+          const startYear = parseInt(earliestTerm.startYear || '0');
+          if (startYear > 0) {
+            yearsInOffice = currentYear - startYear;
+          }
+        }
+      }
+
+      // Determine next election
+      let nextElection = '';
+      if (rep.chamber === 'House') {
+        // House elections are every 2 years, always on even years
+        nextElection =
+          currentYear % 2 === 0 ? currentYear.toString() : (currentYear + 1).toString();
+      } else if (rep.chamber === 'Senate') {
+        // Senate terms are 6 years
+        const currentTerm = rep.terms?.[0];
+        if (currentTerm?.endYear) {
+          const endYear = parseInt(currentTerm.endYear);
+          nextElection = endYear.toString();
+        } else {
+          // Fallback: calculate based on class
+          nextElection = (currentYear + 2).toString(); // Default fallback
+        }
+      }
+
+      return {
+        bioguideId: rep.bioguideId,
+        name: rep.name,
+        party: rep.party,
+        state: rep.state,
+        district: rep.district,
+        chamber: rep.chamber,
+        title: rep.title,
+        phone: rep.contact?.dcOffice?.phone || rep.phone,
+        website: rep.website,
+        contactInfo: {
+          phone: rep.contact?.dcOffice?.phone || rep.phone || '',
+          website: rep.website || '',
+          office: rep.contact?.dcOffice?.address || '',
+        },
+        yearsInOffice,
+        nextElection,
+      };
+    });
 
     const processingTime = Date.now() - startTime;
 

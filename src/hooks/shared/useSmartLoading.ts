@@ -190,7 +190,8 @@ export function useSmartLoading(
 // Specialized hook for multi-stage operations
 export function useMultiStageLoading(stages: string[]) {
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
-  const loading = useSmartLoading(undefined, { stages });
+  const loading = useSmartLoading(undefined, { stages, timeout: 30000 }); // 30 second timeout
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const nextStage = useCallback(() => {
     if (currentStageIndex < stages.length - 1) {
@@ -205,15 +206,42 @@ export function useMultiStageLoading(stages: string[]) {
   }, [currentStageIndex, stages, loading]);
 
   const start = useCallback(() => {
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
     setCurrentStageIndex(0);
     loading.start(stages[0]);
+
+    // Add failsafe timeout to prevent infinite loading
+    timeoutRef.current = setTimeout(() => {
+      // eslint-disable-next-line no-console
+      console.warn('Multi-stage loading timed out after 30 seconds, force completing...');
+      loading.complete();
+    }, 30000);
   }, [stages, loading]);
 
   const complete = useCallback(() => {
+    // Clear timeout when completing
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
     setCurrentStageIndex(stages.length - 1);
     loading.setProgress(100);
     loading.complete();
   }, [stages.length, loading]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return {
     ...loading,

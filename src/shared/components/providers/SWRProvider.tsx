@@ -8,13 +8,32 @@
 import { SWRConfig } from 'swr';
 import logger from '@/lib/logging/simple-logger';
 
+// Enhanced fetcher with better error handling and performance
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    const error = new Error(`HTTP ${response.status}: ${response.statusText}`) as Error & {
+      statusCode: number;
+    };
+    error.statusCode = response.status;
+    throw error;
+  }
+  return response.json();
+};
+
 // Global SWR configuration for the entire application
 const swrConfig = {
-  // Cache management
+  fetcher,
+
+  // Enhanced cache management
   revalidateOnFocus: false, // Don't revalidate when window regains focus
   revalidateOnReconnect: true, // Revalidate when reconnecting to internet
   refreshInterval: 0, // Disable automatic polling by default (set per hook)
-  dedupingInterval: 5000, // Dedupe requests within 5 seconds
+  dedupingInterval: 2000, // Dedupe identical requests within 2 seconds (reduced for better performance)
+
+  // Background revalidation for better UX
+  revalidateIfStale: true, // Revalidate stale data in background
+  revalidateOnMount: true, // Always revalidate on component mount
 
   // Error handling and retries
   errorRetryCount: 3, // Retry failed requests 3 times
@@ -58,6 +77,15 @@ const swrConfig = {
 
   // Memory management
   keepPreviousData: true, // Keep previous data while fetching new data
+
+  // Cache time-to-live (5 minutes for representative data)
+  compare: (a: unknown, b: unknown) => {
+    // Custom comparison for representative data to prevent unnecessary re-renders
+    if (typeof a === 'object' && typeof b === 'object' && a && b) {
+      return JSON.stringify(a) === JSON.stringify(b);
+    }
+    return a === b;
+  },
 };
 
 interface SWRProviderProps {

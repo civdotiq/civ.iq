@@ -111,7 +111,12 @@
       "Bash(do:*)",
       "Bash(done)",
       "Bash(xargs:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(PORT=3000 npm run dev)",
+      "WebFetch(domain:www.cookpolitical.com)",
+      "WebFetch(domain:www.census.gov)",
+      "WebFetch(domain:catalog.data.gov)",
+      "Bash(time timeout:*)"
     ],
     "deny": [],
     "ask": []

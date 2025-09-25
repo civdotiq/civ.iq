@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Representative Shri Thanedar - CIV.IQ</title>
+    <style>
+        /* Otl Aicher Design System - Enhanced Version */
+        :root {
+            /* Brand Colors */
+            --aicher-red: #e11d0a;
+            --aicher-green: #0b953b;
+            --aicher-blue: #39a3d5;
+
+            /* Color Tints */
+            --red-light: #fef2f2;
+            --green-light: #f0fdf4;
+            --blue-light: #f0f9ff;
+
+            /* Grids */
+            --grid-unit: 8px;
+            --border-width: 3px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #f8fafc;
+            line-height: 1.5;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header Component */
+        .header-card {
+            background: white;
+            border: var(--border-width) solid black;
+            padding: 32px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .header-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--aicher-red) 0%, var(--aicher-green) 50%, var(--aicher-blue) 100%);
+        }
+
+        .header-content {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .profile-photo {
+            width: 120px;
+            height: 120px;
+            border: var(--border-width) solid black;
+            object-fit: cover;
+        }
+
+        .profile-info h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .profile-title {
+            font-size: 1.5rem;
+            color: #6b7280;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .profile-badges {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 6px 16px;
+            border: var(--border-width) solid black;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.875rem;
+        }
+
+        .badge-democrat {
+            background: var(--blue-light);
+            color: var(--aicher-blue);
+            border-color: var(--aicher-blue);
+        }
+
+        .badge-age {
+            background: var(--green-light);
+            color: var(--aicher-green);
+            border-color: var(--aicher-green);
+        }
+
+        /* Metrics Bar */
+        .metrics-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .metric-card {
+            background: white;
+            border: var(--border-width) solid black;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+        }
+
+        .metric-card:nth-child(1)::before { background: var(--aicher-blue); }
+        .metric-card:nth-child(2)::before { background: var(--aicher-green); }
+        .metric-card:nth-child(3)::before { background: var(--aicher-red); }
+        .metric-card:nth-child(4)::before { background: var(--aicher-blue); }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .metric-icon {
+            width: 32px;
+            height: 32px;
+            padding: 6px;
+            border: 2px solid;
+        }
+
+        .metric-card:nth-child(1) .metric-icon {
+            color: var(--aicher-blue);
+            border-color: var(--aicher-blue);
+            background: var(--blue-light);
+        }
+        .metric-card:nth-child(2) .metric-icon {
+            color: var(--aicher-green);
+            border-color: var(--aicher-green);
+            background: var(--green-light);
+        }
+        .metric-card:nth-child(3) .metric-icon {
+            color: var(--aicher-red);
+            border-color: var(--aicher-red);
+            background: var(--red-light);
+        }
+        .metric-card:nth-child(4) .metric-icon {
+            color: var(--aicher-blue);
+            border-color: var(--aicher-blue);
+            background: var(--blue-light);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #6b7280;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .metric-subtitle {
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 32px;
+        }
+
+        /* Tabs */
+        .tab-container {
+            background: white;
+            border: var(--border-width) solid black;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: var(--border-width) solid black;
+            background: #f9fafb;
+        }
+
+        .tab {
+            padding: 16px 24px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.875rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-right: var(--border-width) solid black;
+            position: relative;
+        }
+
+        .tab:last-child {
+            border-right: none;
+        }
+
+        .tab.active {
+            background: var(--aicher-red);
+            color: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--aicher-red);
+        }
+
+        .tab-content {
+            padding: 32px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            margin-bottom: 24px;
+            color: #111827;
+        }
+
+        .info-section {
+            margin-bottom: 32px;
+        }
+
+        .info-section h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--aicher-red);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-top: 24px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .sidebar-card {
+            border: var(--border-width) solid black;
+            overflow: hidden;
+        }
+
+        .sidebar-card.highlight {
+            background: var(--blue-light);
+            border-color: var(--aicher-blue);
+        }
+
+        .sidebar-card.warning {
+            background: var(--red-light);
+            border-color: var(--aicher-red);
+        }
+
+        .sidebar-header {
+            padding: 16px 20px;
+            background: white;
+            border-bottom: var(--border-width) solid black;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-card.highlight .sidebar-header {
+            background: var(--aicher-blue);
+            color: white;
+            border-color: var(--aicher-blue);
+        }
+
+        .sidebar-card.warning .sidebar-header {
+            background: var(--aicher-red);
+            color: white;
+            border-color: var(--aicher-red);
+        }
+
+        .sidebar-icon {
+            width: 20px;
+            height: 20px;
+            background: rgba(0,0,0,0.1);
+            padding: 4px;
+        }
+
+        .sidebar-title {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.875rem;
+        }
+
+        .sidebar-content {
+            padding: 20px;
+        }
+
+        /* District Info */
+        .district-info {
+            text-align: center;
+            padding: 24px 20px;
+        }
+
+        .district-code {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .district-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        /* Contact Methods */
+        .contact-method {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .contact-method:last-child {
+            border-bottom: none;
+        }
+
+        .contact-icon {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            color: #6b7280;
+        }
+
+        .contact-info {
+            flex: 1;
+        }
+
+        .contact-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #9ca3af;
+            margin-bottom: 2px;
+        }
+
+        .contact-value {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .action-button {
+            padding: 12px 20px;
+            border: var(--border-width) solid black;
+            background: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.875rem;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            color: black;
+            transition: all 0.2s;
+        }
+
+        .action-button.primary {
+            background: var(--aicher-blue);
+            color: white;
+            border-color: var(--aicher-blue);
+        }
+
+        .action-button:hover {
+            background: black;
+            color: white;
+        }
+
+        .action-button.primary:hover {
+            background: white;
+            color: var(--aicher-blue);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin: 16px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border: 2px solid black;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--aicher-green);
+            width: 65%;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 8px;
+            color: #6b7280;
+        }
+
+        /* Data Sources */
+        .data-sources {
+            background: white;
+            border: var(--border-width) solid black;
+            padding: 24px;
+            margin-top: 32px;
+        }
+
+        .sources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-top: 16px;
+        }
+
+        .source-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .source-dot {
+            width: 16px;
+            height: 16px;
+            border: 2px solid black;
+        }
+
+        .source-dot.congress { background: var(--aicher-blue); }
+        .source-dot.fec { background: var(--aicher-green); }
+        .source-dot.legislators { background: var(--aicher-red); }
+
+        .source-info {
+            flex: 1;
+        }
+
+        .source-name {
+            font-weight: 700;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .source-desc {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 20px;
+            }
+
+            .metrics-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .metrics-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .tab {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header-card">
+            <div class="header-content">
+                <img src="https://images.clerk.house.gov/member-photos/T/member_T000488.jpg"
+                     alt="Shri Thanedar"
+                     class="profile-photo">
+                <div class="profile-info">
+                    <h1>Shri Thanedar</h1>
+                    <p class="profile-title">U.S. Representative, MI-13</p>
+                    <div class="profile-badges">
+                        <span class="badge badge-democrat">Democrat</span>
+                        <span class="badge badge-age">71 years old</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics -->
+        <div class="metrics-bar">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    <span class="metric-label">Bills Sponsored</span>
+                </div>
+                <div class="metric-value">44</div>
+                <div class="metric-subtitle">Current Congress</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9,11 12,14 22,4"/>
+                        <path d="M21,12v7a2,2 0 0,1 -2,2H5a2,2 0 0,1 -2,-2V5a2,2 0 0,1 2,-2h11"/>
+                    </svg>
+                    <span class="metric-label">Votes Cast</span>
+                </div>
+                <div class="metric-value">—</div>
+                <div class="metric-subtitle">This term</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    <span class="metric-label">Total Raised</span>
+                </div>
+                <div class="metric-value">—</div>
+                <div class="metric-subtitle">Current cycle</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span class="metric-label">Committees</span>
+                </div>
+                <div class="metric-value">4</div>
+                <div class="metric-subtitle">Current</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-layout">
+            <div class="tab-container">
+                <div class="tabs">
+                    <button class="tab active">Overview</button>
+                    <button class="tab">Voting Records</button>
+                    <button class="tab">Sponsored Bills</button>
+                    <button class="tab">Campaign Finance</button>
+                    <button class="tab">Recent News</button>
+                </div>
+
+                <div class="tab-content">
+                    <h2 class="section-title">Detailed Information</h2>
+
+                    <div class="info-section">
+                        <h3>📋 Biography</h3>
+                        <p>Shri Thanedar is a serving MI for 2 years, focused on Healthcare.</p>
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-section">
+                            <h3>🏛️ Committee Memberships</h3>
+                            <p><strong>House Committee on Agriculture</strong><br>
+                            <span style="background: var(--blue-light); padding: 2px 8px; border: 1px solid var(--aicher-blue); font-size: 0.75rem; font-weight: 600;">Member</span></p>
+
+                            <p style="margin-top: 16px;"><strong>House Committee on Homeland Security</strong><br>
+                            <span style="background: var(--red-light); padding: 2px 8px; border: 1px solid var(--aicher-red); font-size: 0.75rem; font-weight: 600;">Ranking Member</span></p>
+                        </div>
+
+                        <div class="info-section">
+                            <h3>📈 Federal Service History</h3>
+                            <div style="background: var(--green-light); padding: 16px; border: 2px solid var(--aicher-green); margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                    <div style="width: 32px; height: 32px; background: var(--aicher-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.75rem;">US</div>
+                                    <strong>U.S. House of Representatives</strong>
+                                </div>
+                                <div style="font-size: 0.875rem; color: #374151;">
+                                    <strong>2023 – Present</strong> • 2 terms
+                                </div>
+                            </div>
+
+                            <div style="font-size: 0.875rem; color: #6b7280;">
+                                <strong>Congressional Terms:</strong><br>
+                                119th Congress* 2025-2027 (Yenai: MI-13)<br>
+                                118th Congress* 2023-2025 (Yenai: MI-13)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- District -->
+                <div class="sidebar-card highlight">
+                    <div class="sidebar-header">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        <span class="sidebar-title">District</span>
+                    </div>
+                    <div class="district-info">
+                        <div class="district-code">MI-13</div>
+                        <div class="district-label">Congressional District</div>
+                        <p style="font-size: 0.875rem; color: #6b7280; margin-top: 12px;">~760,000 constituents<br>
+                        Based on 2020 Census apportionment</p>
+                    </div>
+                </div>
+
+                <!-- Contact -->
+                <div class="sidebar-card">
+                    <div class="sidebar-header">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                        <span class="sidebar-title">Contact Information</span>
+                    </div>
+                    <div class="sidebar-content">
+                        <div class="contact-method">
+                            <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            </svg>
+                            <div class="contact-info">
+                                <div class="contact-label">Washington Office</div>
+                                <div class="contact-value">1st Cannon House Office Building</div>
+                            </div>
+                        </div>
+
+                        <div class="contact-method">
+                            <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                            </svg>
+                            <div class="contact-info">
+                                <div class="contact-label">Phone</div>
+                                <div class="contact-value">202-225-5126</div>
+                            </div>
+                        </div>
+
+                        <div class="contact-method">
+                            <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                <polyline points="15,3 21,3 21,9"/>
+                                <line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                            <div class="contact-info">
+                                <div class="contact-label">Official Website</div>
+                                <div class="contact-value">Visit Website</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Term -->
+                <div class="sidebar-card">
+                    <div class="sidebar-header">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <span class="sidebar-title">Current Term</span>
+                    </div>
+                    <div class="sidebar-content">
+                        <div style="margin-bottom: 16px;">
+                            <div style="font-weight: 700; margin-bottom: 4px;">2025 - 2027</div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                                <div class="progress-text">
+                                    <span>Progress</span>
+                                    <span>65%</span>
+                                </div>
+                            </div>
+                            <div style="font-size: 0.875rem; color: #6b7280;">682 days remaining</div>
+                        </div>
+
+                        <div>
+                            <div class="contact-label">Next Election</div>
+                            <div style="font-weight: 600;">2026</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="sidebar-card">
+                    <div class="sidebar-header">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12,6 12,12 16,14"/>
+                        </svg>
+                        <span class="sidebar-title">Quick Actions</span>
+                    </div>
+                    <div class="sidebar-content">
+                        <div class="action-buttons">
+                            <a href="#" class="action-button primary">Send Message</a>
+                            <a href="#" class="action-button">Visit Website</a>
+                            <a href="#" class="action-button">Find Local Offices</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Need Help -->
+                <div class="sidebar-card warning">
+                    <div class="sidebar-header">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <span class="sidebar-title">Need Help?</span>
+                    </div>
+                    <div class="sidebar-content">
+                        <p style="font-size: 0.875rem; line-height: 1.5; margin-bottom: 12px;">
+                            Having trouble reaching your representative? Contact information is updated regularly from official sources.
+                        </p>
+                        <a href="#" style="color: var(--aicher-red); font-weight: 600; font-size: 0.75rem; text-decoration: underline;">
+                            Find alternative contact methods →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Sources -->
+        <div class="data-sources">
+            <h3 class="section-title" style="font-size: 1.125rem;">Data Sources</h3>
+            <div class="sources-grid">
+                <div class="source-item">
+                    <div class="source-dot congress"></div>
+                    <div class="source-info">
+                        <div class="source-name">Congress.gov</div>
+                        <div class="source-desc">Bills, votes, committees</div>
+                    </div>
+                </div>
+
+                <div class="source-item">
+                    <div class="source-dot fec"></div>
+                    <div class="source-info">
+                        <div class="source-name">FEC.gov</div>
+                        <div class="source-desc">Campaign finance data</div>
+                    </div>
+                </div>
+
+                <div class="source-item">
+                    <div class="source-dot legislators"></div>
+                    <div class="source-info">
+                        <div class="source-name">Congress-Legislators</div>
+                        <div class="source-desc">Biographical information</div>
+                    </div>
+                </div>
+            </div>
+            <p style="font-size: 0.875rem; color: #6b7280; margin-top: 16px;">
+                All data is sourced from official government APIs and repositories. Data is refreshed automatically and reflects the most current available information.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

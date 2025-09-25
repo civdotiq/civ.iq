@@ -117,32 +117,33 @@ export function TabNavigation({
     );
   }
 
-  // Underline variant (default)
+  // Aicher geometric bordered variant (default)
   return (
-    <div className={`aicher-card aicher-no-radius aicher-border-b ${className}`}>
+    <div className={`aicher-tabs ${className}`}>
       <nav className="flex overflow-x-auto">
-        {tabs.map(tab => (
+        {tabs.map((tab, index) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`
-       aicher-button inline-flex items-center gap-2 ${sizeClasses[size]} aicher-heading-wide aicher-border-b transition-all duration-200 whitespace-nowrap aicher-focus
-       ${
-         activeTab === tab.id
-           ? 'aicher-border-blue text-blue-600'
-           : 'border-transparent text-gray-500 aicher-hover'
-       }
-      `}
+            className={`aicher-tab ${activeTab === tab.id ? 'active' : ''} ${
+              index === tabs.length - 1 ? 'border-r-0' : ''
+            }`}
+            style={{
+              padding: 'calc(var(--grid) * 2) calc(var(--grid) * 3)',
+              gap: 'calc(var(--grid) * 1)',
+            }}
             title={tab.description}
           >
             <span className={iconSizes[size]}>{tab.icon}</span>
             <span>{tab.label}</span>
             {tab.badge && (
               <span
-                className={`
-         inline-flex items-center justify-center min-w-5 h-5 aicher-heading text-xs aicher-no-radius
-         ${activeTab === tab.id ? 'aicher-status-info' : 'aicher-border bg-white text-gray-600'}
-        `}
+                className="inline-flex items-center justify-center aicher-heading type-xs border-2 border-black"
+                style={{
+                  minWidth: 'calc(var(--grid) * 3)',
+                  height: 'calc(var(--grid) * 2.5)',
+                  padding: '0 calc(var(--grid) * 1)',
+                }}
               >
                 {tab.badge}
               </span>

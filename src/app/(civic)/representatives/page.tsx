@@ -98,12 +98,6 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
               >
                 Districts
               </Link>
-              <Link
-                href="/analytics"
-                className="text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                Analytics
-              </Link>
             </nav>
           </div>
         </div>

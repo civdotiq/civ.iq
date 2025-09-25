@@ -17,47 +17,13 @@ import {
   Calendar,
   Clock,
   AlertCircle,
-  Info,
 } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
+import { AicherSidebarCard } from './AicherSidebarCard';
 
 interface DistrictSidebarProps {
   representative: EnhancedRepresentative;
   className?: string;
-}
-
-interface SidebarCardProps {
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
-  variant?: 'default' | 'highlight' | 'warning';
-}
-
-function SidebarCard({
-  title,
-  icon,
-  children,
-  className = '',
-  variant = 'default',
-}: SidebarCardProps) {
-  const variants = {
-    default: 'bg-white border-gray-200',
-    highlight: 'bg-blue-50 border-blue-200',
-    warning: 'bg-yellow-50 border-yellow-200',
-  };
-
-  return (
-    <div className={` border border-2 border-black ${variants[variant]} ${className}`}>
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <div className="text-gray-500">{icon}</div>
-          <h3 className="font-semibold text-gray-900 text-sm">{title}</h3>
-        </div>
-      </div>
-      <div className="p-4">{children}</div>
-    </div>
-  );
 }
 
 interface ContactMethodProps {
@@ -76,19 +42,20 @@ function ContactMethod({ icon, label, value, href, copyable = false }: ContactMe
   };
 
   const content = (
-    <div className="flex items-start gap-2 p-2 rounded hover:bg-white transition-colors">
-      <div className="text-gray-400 mt-0.5">{icon}</div>
+    <div className="aicher-contact-method">
+      <div className="text-gray-500 p-1 bg-gray-100">{icon}</div>
       <div className="flex-1 min-w-0">
-        <div className="text-xs font-medium text-gray-600 mb-0.5">{label}</div>
-        <div className="text-sm text-gray-900 break-all">{value}</div>
+        <div className="aicher-heading-wide type-xs text-gray-600 mb-1">{label}</div>
+        <div className="type-sm text-gray-900 break-all font-medium">{value}</div>
       </div>
       {copyable && (
         <button
           onClick={handleCopy}
-          className="text-gray-400 hover:text-gray-600 p-1"
+          className="text-gray-400 hover:text-gray-600 transition-colors"
+          style={{ padding: 'calc(var(--grid) * 1)' }}
           title="Copy to clipboard"
         >
-          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
             <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
           </svg>
@@ -99,7 +66,12 @@ function ContactMethod({ icon, label, value, href, copyable = false }: ContactMe
 
   if (href) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className="block">
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block hover:bg-blue-50 transition-colors"
+      >
         {content}
       </a>
     );
@@ -171,9 +143,12 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
   }, [representative.chamber, representative.currentTerm]);
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div
+      className={className}
+      style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--grid) * 2)' }}
+    >
       {/* District Information */}
-      <SidebarCard title="District" icon={<MapPin className="w-4 h-4" />} variant="highlight">
+      <AicherSidebarCard title="District" icon={MapPin} variant="highlight">
         <div className="space-y-3">
           <div>
             {representative.chamber === 'Senate' ? (
@@ -229,10 +204,10 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
             </div>
           )}
         </div>
-      </SidebarCard>
+      </AicherSidebarCard>
 
       {/* Contact Information */}
-      <SidebarCard title="Contact Information" icon={<Phone className="w-4 h-4" />}>
+      <AicherSidebarCard title="Contact Information" icon={Phone}>
         <div className="space-y-1">
           {/* Washington Office */}
           {representative.currentTerm?.office && (
@@ -272,10 +247,10 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
             />
           )}
         </div>
-      </SidebarCard>
+      </AicherSidebarCard>
 
       {/* Term Information */}
-      <SidebarCard title="Current Term" icon={<Calendar className="w-4 h-4" />}>
+      <AicherSidebarCard title="Current Term" icon={Calendar}>
         <div className="space-y-3">
           {representative.currentTerm?.start && representative.currentTerm?.end && (
             <div>
@@ -289,9 +264,9 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
                     <span>Progress</span>
                     <span>{termProgress.progress}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 border-2 border-black h-2">
                     <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      className="bg-civiq-green h-full transition-all duration-300"
                       style={{ width: `${termProgress.progress}%` }}
                     ></div>
                   </div>
@@ -305,29 +280,31 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
 
           {nextElection && (
             <div>
-              <div className="text-xs font-medium text-gray-600 mb-1">Next Election</div>
-              <div className="text-sm text-gray-900">{nextElection}</div>
+              <div className="aicher-heading-wide text-xs text-gray-600 mb-1">Next Election</div>
+              <div className="text-sm font-semibold text-gray-900">{nextElection}</div>
             </div>
           )}
 
           {representative.chamber === 'Senate' && representative.currentTerm?.class && (
             <div>
-              <div className="text-xs font-medium text-gray-600 mb-1">Senate Class</div>
-              <div className="text-sm text-gray-900">Class {representative.currentTerm.class}</div>
+              <div className="aicher-heading-wide text-xs text-gray-600 mb-1">Senate Class</div>
+              <div className="text-sm font-semibold text-gray-900">
+                Class {representative.currentTerm.class}
+              </div>
             </div>
           )}
         </div>
-      </SidebarCard>
+      </AicherSidebarCard>
 
       {/* Quick Actions */}
-      <SidebarCard title="Quick Actions" icon={<Clock className="w-4 h-4" />}>
-        <div className="space-y-2">
+      <AicherSidebarCard title="Quick Actions" icon={Clock}>
+        <div className="space-y-3">
           {representative.currentTerm?.contactForm && (
             <a
               href={representative.currentTerm.contactForm}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full bg-blue-600 text-white text-center py-2 px-3 text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="block w-full text-center py-3 px-5 text-sm aicher-heading transition-all duration-200 bg-civiq-blue text-white aicher-border border-civiq-blue hover:bg-white hover:text-civiq-blue"
             >
               Send Message
             </a>
@@ -338,43 +315,22 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
               href={representative.currentTerm.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full bg-white border border-gray-300 text-gray-700 text-center py-2 px-3 text-sm font-medium hover:bg-white transition-colors"
+              className="block w-full text-center py-3 px-5 text-sm aicher-heading transition-all duration-200 bg-white text-black aicher-border border-black hover:bg-black hover:text-white"
             >
               Visit Website
             </a>
           )}
 
-          <button className="block w-full bg-white border border-gray-300 text-gray-700 text-center py-2 px-3 text-sm font-medium hover:bg-white transition-colors">
+          <button className="block w-full text-center py-3 px-5 text-sm aicher-heading transition-all duration-200 bg-white text-black aicher-border border-black hover:bg-black hover:text-white">
             Find Local Offices
           </button>
         </div>
-      </SidebarCard>
+      </AicherSidebarCard>
 
-      {/* Data Transparency */}
-      <SidebarCard title="Data Sources" icon={<Info className="w-4 h-4" />}>
-        <div className="space-y-2 text-xs text-gray-600">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-            <span>Congress.gov</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-            <span>Congress Legislators</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
-            <span>FEC Campaign Finance</span>
-          </div>
-          <div className="text-xs text-gray-500 mt-2">
-            All data from official government sources
-          </div>
-        </div>
-      </SidebarCard>
-
-      {/* Help Notice */}
-      <SidebarCard title="Need Help?" icon={<AlertCircle className="w-4 h-4" />} variant="warning">
-        <div className="text-sm text-gray-700">
-          <p className="mb-2">
+      {/* Need Help? */}
+      <AicherSidebarCard title="Need Help?" icon={AlertCircle} variant="warning">
+        <div className="text-sm text-gray-700 leading-relaxed">
+          <p className="mb-3">
             Having trouble reaching your representative? Contact information is updated regularly
             from official sources.
           </p>
@@ -382,12 +338,12 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
             href="https://www.house.gov/representatives/find-your-representative"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 text-xs"
+            className="text-civiq-red hover:underline text-xs font-semibold aicher-heading-wide"
           >
             Find alternative contact methods →
           </a>
         </div>
-      </SidebarCard>
+      </AicherSidebarCard>
     </div>
   );
 }

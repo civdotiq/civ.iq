@@ -71,12 +71,6 @@ export default function SearchPage() {
               >
                 Districts
               </Link>
-              <Link
-                href="/analytics"
-                className="text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                Analytics
-              </Link>
               <Link href="/compare" className="text-gray-700 hover:text-blue-600 transition-colors">
                 Compare
               </Link>
