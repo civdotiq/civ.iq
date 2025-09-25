@@ -57,6 +57,8 @@ jobs:
           echo "✅ Geospatial utilities validated"
 
       - name: 🌐 API Integration Tests
+        env:
+          FEC_API_KEY: ${{ secrets.FEC_API_KEY }}
         run: |
           echo "🚀 Starting development server for API tests..."
           npm run build
@@ -219,6 +221,8 @@ jobs:
         run: npm ci --prefer-offline --no-audit
 
       - name: 🏗️ Production Build
+        env:
+          FEC_API_KEY: ${{ secrets.FEC_API_KEY }}
         run: |
           echo "🔨 Building for production..."
           npm run build
