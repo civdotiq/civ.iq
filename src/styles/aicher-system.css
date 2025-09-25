@@ -1,13 +1,120 @@
-/* Otl Aicher Design System - Based on 1972 Munich Olympics */
+/* Otl Aicher Design System - Complete 1972 Munich Olympics Implementation */
 :root {
-  --grid-unit: 8px;
+  /* 8px grid system - ALL spacing/sizing must be multiples */
+  --grid: 8px;
   --border-width: 2px;
   --border-color: #000000;
 
-  /* Exact logo colors */
-  --aicher-red: #e11d09;
+  /* Typography scale with 1.25 ratio (12/15/19/24/30/37px) */
+  --type-ratio: 1.25;
+  --type-xs: 0.75rem; /* 12px */
+  --type-sm: 0.9375rem; /* 15px */
+  --type-base: 1rem; /* 16px - adjust base if needed */
+  --type-lg: 1.1875rem; /* 19px */
+  --type-xl: 1.5rem; /* 24px */
+  --type-2xl: 1.875rem; /* 30px */
+  --type-3xl: 2.3125rem; /* 37px */
+
+  /* Exact logo colors with variants */
+  --aicher-red: #e11d07;
   --aicher-green: #0a9338;
-  --aicher-blue: #3ea0d2;
+  --aicher-blue: #3ea2d4;
+
+  /* Color variants */
+  --aicher-red-hover: #c41a06;
+  --aicher-red-active: #a31605;
+  --aicher-red-muted: #f5948a;
+
+  --aicher-green-hover: #088030;
+  --aicher-green-active: #066a28;
+  --aicher-green-muted: #86d4a5;
+
+  --aicher-blue-hover: #3293c2;
+  --aicher-blue-active: #2a7aa3;
+  --aicher-blue-muted: #a8d4e8;
+}
+
+/* Grid utilities - 1 through 8 multipliers */
+.grid-1 {
+  margin: calc(var(--grid) * 1);
+}
+.grid-2 {
+  margin: calc(var(--grid) * 2);
+}
+.grid-3 {
+  margin: calc(var(--grid) * 3);
+}
+.grid-4 {
+  margin: calc(var(--grid) * 4);
+}
+.grid-5 {
+  margin: calc(var(--grid) * 5);
+}
+.grid-6 {
+  margin: calc(var(--grid) * 6);
+}
+.grid-7 {
+  margin: calc(var(--grid) * 7);
+}
+.grid-8 {
+  margin: calc(var(--grid) * 8);
+}
+
+/* Padding variants */
+.p-1 {
+  padding: calc(var(--grid) * 1);
+}
+.p-2 {
+  padding: calc(var(--grid) * 2);
+}
+.p-3 {
+  padding: calc(var(--grid) * 3);
+}
+.p-4 {
+  padding: calc(var(--grid) * 4);
+}
+.p-5 {
+  padding: calc(var(--grid) * 5);
+}
+.p-6 {
+  padding: calc(var(--grid) * 6);
+}
+
+/* Typography utilities */
+.type-xs {
+  font-size: var(--type-xs);
+}
+.type-sm {
+  font-size: var(--type-sm);
+}
+.type-base {
+  font-size: var(--type-base);
+}
+.type-lg {
+  font-size: var(--type-lg);
+}
+.type-xl {
+  font-size: var(--type-xl);
+}
+.type-2xl {
+  font-size: var(--type-2xl);
+}
+.type-3xl {
+  font-size: var(--type-3xl);
+}
+
+/* Border utilities */
+.border-red {
+  border: 2px solid var(--aicher-red);
+}
+.border-green {
+  border: 2px solid var(--aicher-green);
+}
+.border-blue {
+  border: 2px solid var(--aicher-blue);
+}
+.border-black {
+  border: 2px solid #000000;
 }
 
 /* Typography */
@@ -46,7 +153,7 @@
 
 /* Grid-aligned sections */
 .aicher-section {
-  padding: calc(var(--grid-unit) * 6) 0;
+  padding: calc(var(--grid) * 6) 0;
 }
 
 /* Geometric shapes */
@@ -78,7 +185,7 @@
 
 /* Button styles */
 .aicher-button {
-  padding: calc(var(--grid-unit) * 2) calc(var(--grid-unit) * 3);
+  padding: calc(var(--grid) * 2) calc(var(--grid) * 3);
   border: 2px solid #000000;
   background: white;
   text-transform: uppercase;
@@ -105,7 +212,7 @@
 
 /* Card styles */
 .aicher-card {
-  padding: calc(var(--grid-unit) * 3);
+  padding: calc(var(--grid) * 3);
   border: 2px solid #000000;
   background: white;
 }
@@ -129,7 +236,7 @@
 
 /* Data visualization containers */
 .aicher-chart-container {
-  padding: calc(var(--grid-unit) * 2);
+  padding: calc(var(--grid) * 2);
   border: 2px solid #000000;
   background: white;
 }
@@ -153,7 +260,7 @@
 /* Grid layout utilities */
 .aicher-grid {
   display: grid;
-  gap: calc(var(--grid-unit) * 2);
+  gap: calc(var(--grid) * 2);
 }
 
 .aicher-grid-2 {
@@ -174,6 +281,7 @@
   .aicher-grid-3,
   .aicher-grid-4 {
     grid-template-columns: 1fr;
+    gap: calc(var(--grid) * 3); /* Increased spacing on mobile */
   }
 }
 
@@ -181,5 +289,240 @@
   .aicher-grid-3,
   .aicher-grid-4 {
     grid-template-columns: repeat(2, 1fr);
+    gap: calc(var(--grid) * 3);
   }
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  .aicher-tabs {
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+  }
+
+  .aicher-tabs::-webkit-scrollbar {
+    display: none; /* WebKit */
+  }
+
+  .aicher-tab {
+    flex-shrink: 0;
+    padding: calc(var(--grid) * 1.5) calc(var(--grid) * 2);
+    font-size: var(--type-xs);
+    min-width: auto;
+  }
+
+  /* Reduce header padding on mobile */
+  .aicher-display-title {
+    font-size: calc(var(--type-3xl) * 0.9);
+  }
+}
+
+/* Metric Card Components */
+.aicher-metric-card {
+  background: white;
+  border: 2px solid #000000;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.aicher-metric-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--aicher-blue);
+}
+
+.aicher-metric-accent-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+}
+
+.aicher-metric-accent-red {
+  background: var(--aicher-red);
+}
+
+.aicher-metric-accent-green {
+  background: var(--aicher-green);
+}
+
+.aicher-metric-accent-blue {
+  background: var(--aicher-blue);
+}
+
+/* Sidebar Card Components */
+.aicher-sidebar-card {
+  border: 2px solid #000000;
+  overflow: hidden;
+  background: white;
+}
+
+.aicher-sidebar-card.highlight {
+  background: #f0f9ff;
+  border-color: var(--aicher-blue);
+}
+
+.aicher-sidebar-card.warning {
+  background: #fef2f2;
+  border-color: var(--aicher-red);
+}
+
+.aicher-sidebar-header {
+  padding: 16px 20px;
+  background: white;
+  border-bottom: 2px solid #000000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aicher-sidebar-card.highlight .aicher-sidebar-header {
+  background: var(--aicher-blue);
+  color: white;
+  border-color: var(--aicher-blue);
+}
+
+.aicher-sidebar-card.warning .aicher-sidebar-header {
+  background: var(--aicher-red);
+  color: white;
+  border-color: var(--aicher-red);
+}
+
+/* Tab Navigation */
+.aicher-tabs {
+  background: #f9fafb;
+  border-bottom: 2px solid #000000;
+}
+
+.aicher-tab {
+  padding: calc(var(--grid) * 2) calc(var(--grid) * 3);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: var(--type-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-right: 2px solid #000000;
+  position: relative;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--grid) * 1);
+  min-height: calc(var(--grid) * 6);
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.aicher-tab:last-child {
+  border-right: none;
+}
+
+.aicher-tab.active {
+  background: var(--aicher-red);
+  color: white;
+}
+
+.aicher-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: calc(var(--grid) * 0.75);
+  background: var(--aicher-red);
+}
+
+.aicher-tab:hover:not(.active) {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* Progress Bars */
+.aicher-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border: 2px solid #000000;
+  overflow: hidden;
+}
+
+.aicher-progress-fill {
+  height: 100%;
+  background: var(--aicher-green);
+  transition: width 0.3s ease;
+}
+
+/* Action Buttons */
+.aicher-action-button {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 12px 20px;
+  border: 2px solid #000000;
+  background: white;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-decoration: none;
+  color: black;
+  transition: all 0.2s ease;
+}
+
+.aicher-action-button:hover {
+  background: #000000;
+  color: white;
+}
+
+.aicher-action-button.primary {
+  background: var(--aicher-blue);
+  color: white;
+  border-color: var(--aicher-blue);
+}
+
+.aicher-action-button.primary:hover {
+  background: white;
+  color: var(--aicher-blue);
+}
+
+/* Contact Method Styling */
+.aicher-contact-method {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.aicher-contact-method:last-child {
+  border-bottom: none;
+}
+
+.aicher-contact-method:hover {
+  background: #f9fafb;
+  margin: 0 -12px;
+  padding: 12px;
+  border-radius: 0;
+}
+
+/* Typography Enhancements */
+.aicher-display-title {
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+.aicher-section-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #111827;
+  margin-bottom: 24px;
 }

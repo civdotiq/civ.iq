@@ -17,24 +17,32 @@ interface ContactInfoTabProps {
 
 export function ContactInfoTab({ representative }: ContactInfoTabProps) {
   return (
-    <div className="bg-white border border-gray-200 border-2 border-black">
-      <div className="p-6">
-        <h2 className="text-xl font-semibold mb-6">Detailed Information</h2>
+    <div style={{ gap: 'calc(var(--grid) * 4)' }} className="flex flex-col">
+      {/* Section Header */}
+      <div>
+        <h2
+          className="aicher-heading type-2xl text-gray-900"
+          style={{ marginBottom: 'calc(var(--grid) * 3)' }}
+        >
+          Detailed Information
+        </h2>
+      </div>
 
-        {/* Biography Section - Full Width */}
-        <BiographyCard representative={representative} className="mb-6" />
+      {/* Biography Section - Full Width */}
+      <div style={{ marginBottom: 'calc(var(--grid) * 4)' }}>
+        <BiographyCard representative={representative} />
+      </div>
 
-        {/* Two-column grid layout - removed duplicated content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Committee Details */}
-          <div className="space-y-6">
-            <CommitteeMembershipsCard representative={representative} />
-          </div>
+      {/* Two-column grid layout with proper spacing */}
+      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'calc(var(--grid) * 4)' }}>
+        {/* Left Column - Committee Details */}
+        <div>
+          <CommitteeMembershipsCard representative={representative} />
+        </div>
 
-          {/* Right Column - Service History */}
-          <div className="space-y-6">
-            <ServiceTermsCard representative={representative} />
-          </div>
+        {/* Right Column - Service History */}
+        <div>
+          <ServiceTermsCard representative={representative} />
         </div>
       </div>
     </div>

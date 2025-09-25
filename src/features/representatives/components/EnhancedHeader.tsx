@@ -74,26 +74,38 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
   };
 
   return (
-    <div className="bg-white border-2 border-black border border-gray-200 overflow-hidden mb-6">
-      {/* Simple horizontal header layout like June 2025 */}
-      <div className="p-6">
-        <div className="flex items-center gap-6">
-          {/* Photo - smaller and circular like June version */}
-          <div className="flex-shrink-0">
+    <div className="bg-white aicher-border relative">
+      {/* Colored top accent bar - CIV.IQ brand gradient */}
+      <div
+        className="absolute top-0 left-0 right-0 bg-gradient-to-r from-civiq-red via-civiq-green to-civiq-blue"
+        style={{ height: 'calc(var(--grid) * 0.75)' }}
+      ></div>
+
+      <div style={{ padding: 'calc(var(--grid) * 6) calc(var(--grid) * 4) calc(var(--grid) * 4)' }}>
+        <div
+          className="grid grid-cols-1 md:grid-cols-[auto_1fr] items-center"
+          style={{ gap: 'calc(var(--grid) * 6)' }}
+        >
+          {/* Photo - Geometric framing with consistent sizing */}
+          <div className="flex-shrink-0 justify-self-center md:justify-self-start">
             {!imageError ? (
               <Image
                 src={photoUrl}
                 alt={getDisplayName()}
-                width={80}
-                height={80}
-                className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                width={128}
+                height={128}
+                className="object-cover aicher-border"
+                style={{ width: 'calc(var(--grid) * 16)', height: 'calc(var(--grid) * 16)' }}
                 onError={() => setImageError(true)}
                 data-testid="representative-photo"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 border-2 border-gray-200">
+              <div
+                className="bg-gray-100 flex items-center justify-center text-gray-400 aicher-border"
+                style={{ width: 'calc(var(--grid) * 16)', height: 'calc(var(--grid) * 16)' }}
+              >
                 <svg
-                  className="w-10 h-10"
+                  className="w-12 h-12"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
@@ -104,33 +116,64 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
             )}
           </div>
 
-          {/* Name and Title - cleaner layout */}
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-1">
-              <h1 data-testid="representative-name" className="text-3xl font-bold text-gray-900">
-                {getDisplayName()}
-              </h1>
-              {getAge() && (
-                <span className="text-lg text-gray-500 font-medium">{getAge()} years old</span>
-              )}
+          {/* Name and Title - Improved typography hierarchy */}
+          <div className="text-center md:text-left">
+            <h1
+              data-testid="representative-name"
+              className="aicher-display-title text-gray-900 leading-tight"
+              style={{
+                marginBottom: 'calc(var(--grid) * 2)',
+                fontSize: 'calc(var(--type-3xl) * 1.1)',
+                lineHeight: '1.1',
+              }}
+            >
+              {getDisplayName()}
+            </h1>
+
+            <p
+              data-testid="representative-state"
+              className="type-xl text-gray-600 font-medium"
+              style={{ marginBottom: 'calc(var(--grid) * 3)' }}
+            >
+              {getTitle()}
+            </p>
+
+            {/* Geometric badges with improved spacing */}
+            <div
+              className="flex flex-wrap items-center justify-center md:justify-start"
+              style={{ gap: 'calc(var(--grid) * 2)' }}
+            >
               {representative.party && (
                 <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  className={`aicher-heading type-sm font-bold aicher-border ${
                     representative.party === 'Republican'
-                      ? 'bg-red-100 text-red-800 border border-red-200'
+                      ? 'bg-red-50 text-red-800 border-red'
                       : representative.party === 'Democrat'
-                        ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                        : 'bg-white border-2 border-gray-300 text-gray-800 border border-gray-200'
+                        ? 'bg-blue-50 text-blue-800 border-blue'
+                        : 'bg-gray-50 text-gray-800 border-black'
                   }`}
+                  style={{ padding: 'calc(var(--grid) * 1.5) calc(var(--grid) * 3)' }}
                 >
                   {representative.party}
                 </span>
               )}
+              {getAge() && (
+                <span
+                  className="aicher-heading type-sm font-bold bg-green-50 text-green-800 border-green aicher-border"
+                  style={{ padding: 'calc(var(--grid) * 1.5) calc(var(--grid) * 3)' }}
+                >
+                  {getAge()} years old
+                </span>
+              )}
+              {getStateRank() && (
+                <span
+                  className="aicher-heading type-sm font-bold bg-purple-50 text-purple-800 border-black aicher-border"
+                  style={{ padding: 'calc(var(--grid) * 1.5) calc(var(--grid) * 3)' }}
+                >
+                  {getStateRank()}
+                </span>
+              )}
             </div>
-            <p data-testid="representative-state" className="text-lg text-gray-600 mb-2">
-              {getTitle()}
-            </p>
-            {getStateRank() && <p className="text-base text-gray-500">{getStateRank()}</p>}
           </div>
         </div>
       </div>

@@ -150,81 +150,108 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gray-50">
+      <div
+        className="max-w-7xl mx-auto px-4 md:px-8"
+        style={{ padding: 'calc(var(--grid) * 2) calc(var(--grid) * 2) calc(var(--grid) * 4)' }}
+      >
         {/* Header Section */}
-        <EnhancedHeader representative={representative} />
+        <div style={{ marginBottom: 'calc(var(--grid) * 4)' }}>
+          <EnhancedHeader representative={representative} />
+        </div>
 
         {/* Key Stats Bar */}
-        <KeyStatsBar
-          stats={{
-            billsSponsored: summaryData?.success
-              ? (summaryData.data?.billsSponsored ??
-                batchData?.data?.bills?.totalSponsored ??
-                batchData?.data?.bills?.currentCongress?.count)
-              : undefined,
-            committees: representative.committees?.length ?? 0,
-            totalRaised: summaryData?.success
-              ? summaryData.data?.totalRaised
-              : batchData?.success
-                ? batchData.data?.finance?.totalRaised
+        <div style={{ marginBottom: 'calc(var(--grid) * 4)' }}>
+          <KeyStatsBar
+            stats={{
+              billsSponsored: summaryData?.success
+                ? (summaryData.data?.billsSponsored ??
+                  batchData?.data?.bills?.totalSponsored ??
+                  batchData?.data?.bills?.currentCongress?.count)
                 : undefined,
-            votesParticipated: summaryData?.success
-              ? summaryData.data?.votesParticipated
-              : undefined,
+              committees: representative.committees?.length ?? 0,
+              totalRaised: summaryData?.success
+                ? summaryData.data?.totalRaised
+                : batchData?.success
+                  ? batchData.data?.finance?.totalRaised
+                  : undefined,
+              votesParticipated: summaryData?.success
+                ? summaryData.data?.votesParticipated
+                : undefined,
+            }}
+            loading={summaryLoading}
+          />
+        </div>
+
+        {/* Main Content Layout - 2 column with improved spacing */}
+        <div
+          className="grid grid-cols-1 lg:grid-cols-[1fr_320px]"
+          style={{
+            gap: 'calc(var(--grid) * 4)',
+            marginBottom: 'calc(var(--grid) * 6)',
           }}
-          loading={summaryLoading}
-        />
+        >
+          {/* Main Content Area - White bordered box */}
+          <div className="bg-white aicher-border">
+            {/* Tab Navigation */}
+            <TabNavigation tabs={profileTabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Main Content Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
-          {/* Main Content Area */}
-          <div className="lg:col-span-3">
-            <div className="bg-white border-2 border-black">
-              {/* Tab Navigation */}
-              <TabNavigation tabs={profileTabs} activeTab={activeTab} onTabChange={setActiveTab} />
-
-              {/* Tab Content */}
-              <div className="p-6">{renderActiveTab()}</div>
-            </div>
+            {/* Tab Content with consistent padding */}
+            <div style={{ padding: 'calc(var(--grid) * 4)' }}>{renderActiveTab()}</div>
           </div>
 
-          {/* District Sidebar */}
-          <div className="lg:col-span-1">
+          {/* Sidebar - Stack of bordered cards */}
+          <div>
             <DistrictSidebar representative={representative} />
           </div>
         </div>
 
-        {/* Data Sources Attribution */}
-        <div className="mt-8 bg-white border-2 border-black border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Data Sources</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+        {/* Data Sources Attribution - improved spacing */}
+        <div className="bg-white aicher-border" style={{ padding: 'calc(var(--grid) * 4)' }}>
+          <h3
+            className="aicher-heading type-lg text-gray-900"
+            style={{ marginBottom: 'calc(var(--grid) * 3)' }}
+          >
+            Data Sources
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 'calc(var(--grid) * 3)' }}>
+            <div className="flex items-center" style={{ gap: 'calc(var(--grid) * 2)' }}>
+              <div
+                className="aicher-border border-civiq-blue bg-civiq-blue"
+                style={{ width: 'calc(var(--grid) * 2)', height: 'calc(var(--grid) * 2)' }}
+              ></div>
               <div>
-                <div className="font-medium text-sm text-gray-900">Congress.gov</div>
-                <div className="text-xs text-gray-500">Bills, votes, committees</div>
+                <div className="aicher-heading-wide type-sm text-gray-900">Congress.gov</div>
+                <div className="type-xs text-gray-600">Bills, votes, committees</div>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <div className="flex items-center" style={{ gap: 'calc(var(--grid) * 2)' }}>
+              <div
+                className="aicher-border border-civiq-green bg-civiq-green"
+                style={{ width: 'calc(var(--grid) * 2)', height: 'calc(var(--grid) * 2)' }}
+              ></div>
               <div>
-                <div className="font-medium text-sm text-gray-900">FEC.gov</div>
-                <div className="text-xs text-gray-500">Campaign finance data</div>
+                <div className="aicher-heading-wide type-sm text-gray-900">FEC.gov</div>
+                <div className="type-xs text-gray-600">Campaign finance data</div>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+            <div className="flex items-center" style={{ gap: 'calc(var(--grid) * 2)' }}>
+              <div
+                className="aicher-border border-civiq-red bg-civiq-red"
+                style={{ width: 'calc(var(--grid) * 2)', height: 'calc(var(--grid) * 2)' }}
+              ></div>
               <div>
-                <div className="font-medium text-sm text-gray-900">congress-legislators</div>
-                <div className="text-xs text-gray-500">Biographical information</div>
+                <div className="aicher-heading-wide type-sm text-gray-900">
+                  Congress-Legislators
+                </div>
+                <div className="type-xs text-gray-600">Biographical information</div>
               </div>
             </div>
           </div>
-          <div className="mt-4 text-xs text-gray-400">
+          <p className="type-sm text-gray-500" style={{ marginTop: 'calc(var(--grid) * 3)' }}>
             All data is sourced from official government APIs and repositories. Data is refreshed
             automatically and reflects the most current available information.
-          </div>
+          </p>
         </div>
       </div>
     </div>
