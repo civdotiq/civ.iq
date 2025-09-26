@@ -1,0 +1,72 @@
+{
+  "T000480": {
+    "name": "William Timmons",
+    "feeds": [
+      "https://timmons.house.gov/press-releases/feed/",
+      "https://news.google.com/rss/search?q=\"William Timmons\""
+    ]
+  },
+  "K000367": {
+    "name": "Amy Klobuchar",
+    "feeds": [
+      "https://www.klobuchar.senate.gov/news/feed",
+      "https://news.google.com/rss/search?q=\"Amy Klobuchar\""
+    ]
+  },
+  "P000595": {
+    "name": "Gary Peters",
+    "feeds": [
+      "https://www.peters.senate.gov/newsroom/press-releases/feed",
+      "https://news.google.com/rss/search?q=\"Gary Peters\" senator"
+    ]
+  },
+  "S000148": {
+    "name": "Chuck Schumer",
+    "feeds": [
+      "https://www.schumer.senate.gov/newsroom/press-releases/feed",
+      "https://news.google.com/rss/search?q=\"Chuck Schumer\""
+    ]
+  },
+  "M000639": {
+    "name": "Mitch McConnell",
+    "feeds": [
+      "https://www.mcconnell.senate.gov/news/feed",
+      "https://news.google.com/rss/search?q=\"Mitch McConnell\""
+    ]
+  },
+  "P000197": {
+    "name": "Nancy Pelosi",
+    "feeds": [
+      "https://pelosi.house.gov/news/feed",
+      "https://news.google.com/rss/search?q=\"Nancy Pelosi\""
+    ]
+  },
+  "G000568": {
+    "name": "Morgan Griffith",
+    "feeds": [
+      "https://morgangriffith.house.gov/news/feed",
+      "https://news.google.com/rss/search?q=\"Morgan Griffith\""
+    ]
+  },
+  "C001117": {
+    "name": "Angie Craig",
+    "feeds": [
+      "https://craig.house.gov/news/feed",
+      "https://news.google.com/rss/search?q=\"Angie Craig\""
+    ]
+  },
+  "A000370": {
+    "name": "Alma Adams",
+    "feeds": [
+      "https://adams.house.gov/news/feed",
+      "https://news.google.com/rss/search?q=\"Alma Adams\""
+    ]
+  },
+  "B001298": {
+    "name": "Don Bacon",
+    "feeds": [
+      "https://bacon.house.gov/news/feed",
+      "https://news.google.com/rss/search?q=\"Don Bacon\" congressman"
+    ]
+  }
+}
