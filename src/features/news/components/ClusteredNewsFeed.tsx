@@ -8,7 +8,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, memo, useMemo } from 'react';
 import { EnhancedRepresentative } from '@/types/representative';
 import { NewsClusteringEngine, NewsCluster } from '../services/news-clustering-engine';
 import { enhanceGdeltArticle, EnhancedArticle } from '../types/news';
@@ -49,7 +49,7 @@ export interface ClusteredNewsFeedProps {
 /**
  * Main ClusteredNewsFeed component
  */
-export function ClusteredNewsFeed({
+export const ClusteredNewsFeed = memo(function ClusteredNewsFeed({
   representative,
   viewMode = 'headlines',
   maxClusters = 10,
@@ -74,23 +74,58 @@ export function ClusteredNewsFeed({
     processingTime: number;
   } | null>(null);
 
-  // Initialize clustering engine
-  const clusteringEngine = useMemo(
-    () =>
-      new NewsClusteringEngine({
-        minClusterSize: 2,
-        maxClusterSize: 15,
-        similarityThreshold: 0.4,
-        timeWindowHours: getTimeWindowHours(filters.timeframe),
-        visualPriorityWeights: {
-          recency: 0.3,
-          sourceQuality: 0.25,
-          topicImportance: 0.25,
-          engagementPrediction: 0.2,
-        },
-      }),
-    [filters.timeframe]
+  // Initialize clustering engine with useRef for better performance
+  // Avoids recreating the engine on every render, only updates when timeframe changes
+  const clusteringEngineRef = useRef<NewsClusteringEngine | null>(null);
+  const lastTimeframeRef = useRef<string>('');
+
+  // Only create new engine when timeframe actually changes
+  if (!clusteringEngineRef.current || lastTimeframeRef.current !== filters.timeframe) {
+    clusteringEngineRef.current = new NewsClusteringEngine({
+      minClusterSize: 2,
+      maxClusterSize: 15,
+      similarityThreshold: 0.4,
+      timeWindowHours: getTimeWindowHours(filters.timeframe),
+      visualPriorityWeights: {
+        recency: 0.3,
+        sourceQuality: 0.25,
+        topicImportance: 0.25,
+        engagementPrediction: 0.2,
+      },
+    });
+    lastTimeframeRef.current = filters.timeframe;
+  }
+
+  const clusteringEngine = clusteringEngineRef.current;
+
+  // Memoized calculations for performance
+  const focusKeywords = useMemo(
+    () => [
+      representative.firstName,
+      representative.lastName,
+      representative.state,
+      'congress',
+      'senate',
+      'house',
+    ],
+    [representative.firstName, representative.lastName, representative.state]
   );
+
+  const layoutClasses = useMemo(() => {
+    const baseClasses = 'grid gap-6';
+    switch (activeViewMode) {
+      case 'headlines':
+        return `${baseClasses} grid-cols-1`;
+      case 'topics':
+        return `${baseClasses} grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`;
+      case 'timeline':
+        return `${baseClasses} grid-cols-1 max-w-4xl mx-auto`;
+      case 'coverage':
+        return `${baseClasses} grid-cols-12 gap-4`;
+      default:
+        return `${baseClasses} grid-cols-1`;
+    }
+  }, [activeViewMode]);
 
   /**
    * Convert timeframe filter to hours
@@ -179,14 +214,7 @@ export function ClusteredNewsFeed({
       // Cluster articles using the enhanced engine
       const newsClusters = await clusteringEngine.clusterArticles(enhancedArticles, {
         maxClusters,
-        focusKeywords: [
-          representative.firstName,
-          representative.lastName,
-          representative.state,
-          'congress',
-          'senate',
-          'house',
-        ],
+        focusKeywords,
       });
 
       // Apply additional filters
@@ -218,7 +246,7 @@ export function ClusteredNewsFeed({
     } finally {
       setLoading(false);
     }
-  }, [representative, filters, maxClusters, activeViewMode, clusteringEngine]);
+  }, [representative, filters, maxClusters, activeViewMode, clusteringEngine, focusKeywords]);
 
   /**
    * Apply filters to clusters
@@ -319,25 +347,6 @@ export function ClusteredNewsFeed({
   }, [fetchNews, autoRefresh, refreshInterval]);
 
   /**
-   * Get layout classes based on view mode
-   */
-  const getLayoutClasses = (): string => {
-    const baseClasses = 'grid gap-6';
-    switch (activeViewMode) {
-      case 'headlines':
-        return `${baseClasses} grid-cols-1`;
-      case 'topics':
-        return `${baseClasses} grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`;
-      case 'timeline':
-        return `${baseClasses} grid-cols-1 max-w-4xl mx-auto`;
-      case 'coverage':
-        return `${baseClasses} grid-cols-12 gap-4`;
-      default:
-        return `${baseClasses} grid-cols-1`;
-    }
-  };
-
-  /**
    * Render main content based on state
    */
   const renderContent = () => {
@@ -375,7 +384,7 @@ export function ClusteredNewsFeed({
     }
 
     return (
-      <div className={getLayoutClasses()}>
+      <div className={layoutClasses}>
         {clusters.map((cluster, index) => (
           <NewsClusterComponent
             key={cluster.id}
@@ -463,6 +472,6 @@ export function ClusteredNewsFeed({
       )}
     </div>
   );
-}
+});
 
 export default ClusteredNewsFeed;
