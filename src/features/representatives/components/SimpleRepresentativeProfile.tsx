@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import { EnhancedRepresentative } from '@/types/representative';
@@ -15,7 +15,7 @@ import { TabNavigation, profileTabs } from './TabNavigation';
 import { DistrictSidebar } from './DistrictSidebar';
 import { ContactInfoTab } from './ContactInfoTab';
 import { TabLoadingSpinner } from '@/lib/utils/code-splitting';
-import { ClusteredNewsFeed } from '@/features/news/components/ClusteredNewsFeed';
+import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
 
 // Dynamically import heavy tabs to reduce initial bundle size
 const FinanceTab = dynamic(
@@ -135,12 +135,9 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
         );
       case 'news':
         return (
-          <ClusteredNewsFeed
+          <SimpleNewsSection
             representative={representative}
-            viewMode="headlines"
-            maxClusters={8}
-            autoRefresh={true}
-            refreshInterval={300000}
+            initialLimit={8}
             className="-mx-6 -my-6 p-6"
           />
         );
@@ -196,13 +193,30 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
             {/* Tab Navigation */}
             <TabNavigation tabs={profileTabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-            {/* Tab Content with consistent padding */}
-            <div style={{ padding: 'calc(var(--grid) * 4)' }}>{renderActiveTab()}</div>
+            {/* Tab Content with consistent padding and Suspense boundary */}
+            <div style={{ padding: 'calc(var(--grid) * 4)' }}>
+              <Suspense fallback={<TabLoadingSpinner />}>{renderActiveTab()}</Suspense>
+            </div>
           </div>
 
-          {/* Sidebar - Stack of bordered cards */}
+          {/* Sidebar - Stack of bordered cards with Suspense boundary */}
           <div>
-            <DistrictSidebar representative={representative} />
+            <Suspense
+              fallback={
+                <div className="bg-white aicher-border p-6">
+                  <div className="animate-pulse">
+                    <div className="h-6 bg-gray-200 rounded mb-4"></div>
+                    <div className="space-y-3">
+                      <div className="h-4 bg-gray-200 rounded"></div>
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                </div>
+              }
+            >
+              <DistrictSidebar representative={representative} />
+            </Suspense>
           </div>
         </div>
 

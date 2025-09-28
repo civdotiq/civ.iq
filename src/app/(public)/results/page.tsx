@@ -7,15 +7,70 @@
 
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useEffect, useState, Suspense, useCallback } from 'react';
 import { CiviqLogo } from '@/shared/components/branding/CiviqLogo';
-import { RepresentativeCard } from '@/features/representatives/components/RepresentativeCard';
-import { StateRepresentativesTab } from '@/features/representatives/components/StateRepresentativesTab';
+// Dynamic imports for code splitting - reduces initial bundle size
+const RepresentativeCard = dynamic(
+  () =>
+    import('@/features/representatives/components/RepresentativeCard').then(mod => ({
+      default: mod.RepresentativeCard,
+    })),
+  {
+    loading: () => (
+      <div className="bg-white border border-gray-200 rounded-lg p-6 animate-pulse">
+        <div className="flex items-center space-x-4">
+          <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
+          <div className="flex-1">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </div>
+      </div>
+    ),
+  }
+);
+
+const StateRepresentativesTab = dynamic(
+  () =>
+    import('@/features/representatives/components/StateRepresentativesTab').then(mod => ({
+      default: mod.StateRepresentativesTab,
+    })),
+  {
+    loading: () => (
+      <div className="animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-24 bg-gray-200 rounded"></div>
+          ))}
+        </div>
+      </div>
+    ),
+  }
+);
 import { SearchHistory } from '@/lib/searchHistory';
 import { SearchResultsSkeleton } from '@/shared/components/ui/SkeletonComponents';
 import { LoadingStateWrapper, LoadingMessage } from '@/shared/components/ui/LoadingStates';
 import { useMultiStageLoading } from '@/hooks/shared/useSmartLoading';
-import { InteractiveDistrictMap } from '@/features/districts/components/InteractiveDistrictMap';
+// Dynamic import for code splitting - reduces initial bundle size
+const InteractiveDistrictMap = dynamic(
+  () =>
+    import('@/features/districts/components/InteractiveDistrictMap').then(mod => ({
+      default: mod.InteractiveDistrictMap,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-96 bg-white border border-gray-200 rounded-lg">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+          <p className="text-sm text-gray-600">Loading district map...</p>
+        </div>
+      </div>
+    ),
+  }
+);
 import { DataQualityIndicator, DataSourceBadge } from '@/components/shared/ui/DataQualityIndicator';
 import {
   InlineQualityScore,

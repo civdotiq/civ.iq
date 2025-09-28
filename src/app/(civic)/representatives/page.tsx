@@ -5,11 +5,31 @@
 
 import { Suspense } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { getRepresentativesByLocation } from '@/features/representatives/services/congress-api';
 import { CiviqLogo } from '@/shared/ui/CiviqLogo';
-import { RepresentativesClient } from '@/features/representatives/components/RepresentativesClient';
 import { AdaptiveGridSkeleton } from '@/shared/components/ui/LoadingStates';
-import { PerformanceDashboard } from '@/components/performance/PerformanceDashboard';
+
+// Dynamic imports for better code splitting
+const RepresentativesClient = dynamic(
+  () =>
+    import('@/features/representatives/components/RepresentativesClient').then(mod => ({
+      default: mod.RepresentativesClient,
+    })),
+  {
+    loading: () => <AdaptiveGridSkeleton type="representatives" count={6} />,
+  }
+);
+
+const PerformanceDashboard = dynamic(
+  () =>
+    import('@/components/performance/PerformanceDashboard').then(mod => ({
+      default: mod.PerformanceDashboard,
+    })),
+  {
+    loading: () => null,
+  }
+);
 
 interface SearchParams {
   searchParams: Promise<{

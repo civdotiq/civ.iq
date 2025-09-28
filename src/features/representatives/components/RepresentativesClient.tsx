@@ -7,16 +7,25 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { Representative } from '@/features/representatives/services/congress-api';
 import { SearchForm } from './SearchForm';
 import { RepresentativeGrid } from './RepresentativeGrid';
-import { FilterSidebar } from './FilterSidebar';
 import { ErrorState } from '@/components/shared/ui/DataQualityIndicator';
 import CongressHeader from './CongressHeader';
 import { AddressPrompt } from './AddressPrompt';
 import { DistrictHeader } from '@/components/DistrictHeader';
 import { DistrictInfo } from '@/lib/multi-district/detection';
 import logger from '@/lib/logging/simple-logger';
+
+// Dynamic imports for heavy components
+const FilterSidebar = dynamic(
+  () => import('./FilterSidebar').then(mod => ({ default: mod.FilterSidebar })),
+  {
+    loading: () => <div className="w-64 h-96 bg-gray-50 animate-pulse rounded-lg"></div>,
+    ssr: false,
+  }
+);
 
 interface RepresentativesClientProps {
   initialRepresentatives: Representative[];

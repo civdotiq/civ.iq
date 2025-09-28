@@ -4,7 +4,7 @@
  */
 
 import { notFound } from 'next/navigation';
-import { SimpleRepresentativeProfile } from '@/features/representatives/components/SimpleRepresentativeProfile';
+import dynamicImport from 'next/dynamic';
 import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErrorBoundary';
 import { SiteHeader } from '@/components/shared/layout/SiteHeader';
@@ -12,6 +12,33 @@ import Link from 'next/link';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 
 export const dynamic = 'force-dynamic';
+
+// Dynamic import for the main profile component to reduce initial bundle size
+const SimpleRepresentativeProfile = dynamicImport(
+  () =>
+    import('@/features/representatives/components/SimpleRepresentativeProfile').then(mod => ({
+      default: mod.SimpleRepresentativeProfile,
+    })),
+  {
+    loading: () => (
+      <div className="min-h-screen bg-gray-50">
+        <div
+          className="max-w-7xl mx-auto px-4 md:px-8"
+          style={{ padding: 'calc(var(--grid) * 2)' }}
+        >
+          <div className="animate-pulse">
+            <div className="h-32 bg-gray-200 rounded-lg mb-6"></div>
+            <div className="h-16 bg-gray-200 rounded-lg mb-6"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+              <div className="h-96 bg-gray-200 rounded-lg"></div>
+              <div className="h-96 bg-gray-200 rounded-lg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+  }
+);
 
 interface RepresentativeDetails {
   bioguideId: string;
