@@ -7,11 +7,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
+import { withPerformanceTiming } from '@/lib/performance/api-timer';
 import type { EnhancedRepresentative } from '@/types/representative';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(
+async function getHandler(
   request: NextRequest,
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
@@ -98,43 +99,57 @@ export async function GET(
         },
       };
 
-      // Optionally fetch additional data
+      // Optionally fetch additional data in parallel for better performance
       const additionalData: Record<string, unknown> = {};
 
+      // Prepare parallel fetch requests
+      const fetchPromises: Array<Promise<{ type: string; data: unknown; error?: Error }>> = [];
+
       if (includeCommittees || includeAll) {
-        try {
-          const committeeResponse = await fetch(
-            `${request.nextUrl.origin}/api/representative/${upperBioguideId}/committees`
-          );
-          if (committeeResponse.ok) {
-            additionalData.committees = await committeeResponse.json();
-            representative.metadata!.dataSources.push('congress.gov');
-          }
-        } catch (error) {
-          logger.warn('Failed to fetch committee data', {
-            bioguideId,
-            error: (error as Error).message,
-          });
-        }
+        fetchPromises.push(
+          fetch(`${request.nextUrl.origin}/api/representative/${upperBioguideId}/committees`)
+            .then(async response => {
+              if (response.ok) {
+                const data = await response.json();
+                return { type: 'committees', data };
+              }
+              throw new Error(`Committee fetch failed: ${response.status}`);
+            })
+            .catch(error => ({ type: 'committees', data: null, error: error as Error }))
+        );
       }
 
       if (includeLeadership || includeAll) {
-        try {
-          const leadershipResponse = await fetch(
-            `${request.nextUrl.origin}/api/representative/${upperBioguideId}/leadership`
-          );
-          if (leadershipResponse.ok) {
-            additionalData.leadership = await leadershipResponse.json();
+        fetchPromises.push(
+          fetch(`${request.nextUrl.origin}/api/representative/${upperBioguideId}/leadership`)
+            .then(async response => {
+              if (response.ok) {
+                const data = await response.json();
+                return { type: 'leadership', data };
+              }
+              throw new Error(`Leadership fetch failed: ${response.status}`);
+            })
+            .catch(error => ({ type: 'leadership', data: null, error: error as Error }))
+        );
+      }
+
+      // Execute all fetches in parallel
+      if (fetchPromises.length > 0) {
+        const results = await Promise.all(fetchPromises);
+
+        results.forEach(result => {
+          if (result.error) {
+            logger.warn(`Failed to fetch ${result.type} data`, {
+              bioguideId,
+              error: result.error.message,
+            });
+          } else if (result.data) {
+            additionalData[result.type] = result.data;
             if (!representative.metadata!.dataSources.includes('congress.gov')) {
               representative.metadata!.dataSources.push('congress.gov');
             }
           }
-        } catch (error) {
-          logger.warn('Failed to fetch leadership data', {
-            bioguideId,
-            error: (error as Error).message,
-          });
-        }
+        });
       }
 
       logger.info('Successfully processed representative data', {
@@ -468,3 +483,6 @@ export async function GET(
     );
   }
 }
+
+// Export the wrapped handler with performance timing
+export const GET = withPerformanceTiming('/api/representative/[bioguideId]', getHandler);

@@ -3,6 +3,7 @@ import { getCookPVI as getRealCookPVI } from '../cook-pvi-data';
 
 export const dynamic = 'force-dynamic';
 import { fetchAllDistrictDemographics } from '../census-helpers';
+import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
 import type { CongressApiMember, CongressApiMembersResponse } from '@/types/api-responses';
 
@@ -40,11 +41,6 @@ interface District {
   };
 }
 
-// Cache the data for 1 hour to avoid excessive API calls
-let cachedData: District[] | null = null;
-let cacheTime = 0;
-const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
-
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
@@ -53,17 +49,20 @@ export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl;
     const bustCache = searchParams.get('bust') === 'true';
 
-    // Check cache
-    if (!bustCache && cachedData && Date.now() - cacheTime < CACHE_DURATION) {
-      logger.info('Cache hit for districts-all');
-      logger.info('Returning cached districts data', {
-        cacheAge: Date.now() - cacheTime,
-        districtCount: cachedData.length,
-      });
-      return NextResponse.json({ districts: cachedData });
+    const cacheKey = 'districts:all';
+
+    // Check unified cache first
+    if (!bustCache) {
+      const cachedDistricts = await govCache.get<District[]>(cacheKey);
+      if (cachedDistricts) {
+        logger.info('Cache hit for districts-all', {
+          districtCount: cachedDistricts.length,
+        });
+        return NextResponse.json({ districts: cachedDistricts });
+      }
     }
 
-    logger.info('Cache miss for districts-all');
+    logger.info('Cache miss for districts-all, fetching fresh data');
 
     // Add timing for actual performance measurement
     const totalProcessingStart = Date.now();
@@ -75,63 +74,102 @@ export async function GET(request: NextRequest) {
       throw new Error('Missing required API keys');
     }
 
-    // Get current Congress members from Congress.gov API
-    // We need to handle pagination as the API limits results
+    // Get current Congress members from Congress.gov API with optimized parallel batching
+    // We know there are ~441 House members (435 voting + 6 non-voting)
     const congressApiStart = Date.now();
-    logger.info('Fetching House members from Congress.gov API');
-    const allMembers: CongressApiMember[] = [];
-    let offset = 0;
+    logger.info('Fetching House members from Congress.gov API using parallel batching');
+
     const limit = 250; // API max limit per request
-    let hasMore = true;
+    const expectedMemberCount = 441; // 435 voting + 6 non-voting delegates
+    const expectedBatches = Math.ceil(expectedMemberCount / limit); // Should be 2 batches
 
-    while (hasMore) {
+    // Create parallel fetch requests for known batches
+    const batchPromises = Array.from({ length: expectedBatches }, (_, batchIndex) => {
+      const offset = batchIndex * limit;
       const url = `https://api.congress.gov/v3/member?format=json&limit=${limit}&offset=${offset}&currentMember=true&chamber=house`;
-      const apiStartTime = Date.now();
-      logger.debug(`Fetching members with offset ${offset}`, { offset, limit });
 
-      const membersResponse = await fetch(url, {
+      return fetch(url, {
         headers: {
           'X-API-Key': congressApiKey,
         },
-      });
+      })
+        .then(async response => {
+          const apiDuration = Date.now() - congressApiStart;
 
-      const apiDuration = Date.now() - apiStartTime;
-
-      if (!membersResponse.ok) {
-        const errorText = await membersResponse.text();
-        logger.error(
-          'Congress API error',
-          new Error(`HTTP ${membersResponse.status}: ${errorText}`),
-          {
-            url,
-            status: membersResponse.status,
-            duration: apiDuration,
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
           }
-        );
-        throw new Error(`Congress API error: ${membersResponse.status}`);
-      }
 
-      const membersData: CongressApiMembersResponse = await membersResponse.json();
-      const members = membersData.members || [];
+          const membersData: CongressApiMembersResponse = await response.json();
+          const members = membersData.members || [];
 
-      logger.info('Congress.gov API call completed', {
-        operation: 'fetch-members',
-        duration: apiDuration,
-        success: true,
-        offset,
-        membersReceived: members.length,
+          logger.info('Congress.gov API batch completed', {
+            operation: 'fetch-members-batch',
+            duration: apiDuration,
+            success: true,
+            batchIndex,
+            offset,
+            membersReceived: members.length,
+          });
+
+          return members;
+        })
+        .catch(error => {
+          logger.error('Congress API batch error', error as Error, {
+            batchIndex,
+            offset,
+            url,
+          });
+          throw error;
+        });
+    });
+
+    // Execute all batches in parallel and flatten results
+    let allMembers: CongressApiMember[] = [];
+    try {
+      const batchResults = await Promise.all(batchPromises);
+      allMembers = batchResults.flat();
+
+      logger.info('All Congress.gov API batches completed', {
+        batchCount: batchResults.length,
+        totalMembers: allMembers.length,
+        expectedMembers: expectedMemberCount,
       });
+    } catch (error) {
+      logger.error(
+        'Failed to fetch some batches, falling back to sequential approach',
+        error as Error
+      );
 
-      if (members.length === 0) {
-        hasMore = false;
-      } else {
-        allMembers.push(...members);
-        offset += members.length;
+      // Fallback to sequential approach if parallel fails
+      let offset = 0;
+      let hasMore = true;
+      allMembers = [];
 
-        // Check if we have more pages
-        if (members.length < limit || allMembers.length >= 441) {
-          // 435 + 6 non-voting
+      while (hasMore && allMembers.length < expectedMemberCount) {
+        const url = `https://api.congress.gov/v3/member?format=json&limit=${limit}&offset=${offset}&currentMember=true&chamber=house`;
+        const response = await fetch(url, {
+          headers: {
+            'X-API-Key': congressApiKey,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Congress API error: ${response.status}`);
+        }
+
+        const membersData: CongressApiMembersResponse = await response.json();
+        const members = membersData.members || [];
+
+        if (members.length === 0) {
           hasMore = false;
+        } else {
+          allMembers.push(...members);
+          offset += members.length;
+          if (members.length < limit) {
+            hasMore = false;
+          }
         }
       }
     }
@@ -318,12 +356,14 @@ export async function GET(request: NextRequest) {
       processingTime: Date.now() - startTime,
     });
 
-    // Cache the data
-    cachedData = districtsArray;
-    cacheTime = Date.now();
-    logger.info('Cache set for districts-all', {
+    // Cache the data using unified cache service
+    await govCache.set(cacheKey, districtsArray, {
+      dataType: 'districts',
+      source: 'congress-api-parallel',
+    });
+    logger.info('Cache set for districts-all using unified cache', {
       districtCount: districtsArray.length,
-      cacheTime: new Date(cacheTime).toISOString(),
+      cacheKey,
     });
 
     return NextResponse.json({ districts: districtsArray });

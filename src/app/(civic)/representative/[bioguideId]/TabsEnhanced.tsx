@@ -14,7 +14,7 @@ import {
   Globe,
   Clock,
 } from 'lucide-react';
-import { ClusteredNewsFeed } from '@/features/news/components/ClusteredNewsFeed';
+import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
 import { EnhancedRepresentative } from '@/types/representative';
 
 interface TabsEnhancedProps {
@@ -403,17 +403,10 @@ function NewsContent({
     );
   }
 
-  // Use ClusteredNewsFeed for advanced news display
+  // Use SimpleNewsSection for clean news display
   return (
     <div className="-mx-6 -my-6">
-      <ClusteredNewsFeed
-        representative={representative}
-        viewMode="headlines"
-        maxClusters={8}
-        autoRefresh={true}
-        refreshInterval={300000} // 5 minutes
-        className="p-6"
-      />
+      <SimpleNewsSection representative={representative} initialLimit={8} className="p-6" />
     </div>
   );
 }

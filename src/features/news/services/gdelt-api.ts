@@ -105,7 +105,7 @@ async function retryWithBackoff<T>(
 }
 
 // High-profile member nickname mapping for better GDELT coverage
-const REPRESENTATIVE_NICKNAMES: Record<string, string[]> = {
+export const REPRESENTATIVE_NICKNAMES: Record<string, string[]> = {
   // House Representatives
   'Alexandria Ocasio-Cortez': ['AOC'],
   'Ilhan Omar': ['Rep. Omar'],
@@ -630,8 +630,8 @@ export async function fetchGDELTNews(
     }
   }
 
-  // Try different timespans with fallback: 24h -> 7d -> 30d
-  const timespans = ['24h', '7d', '30d'];
+  // Try different timespans with fallback: 7d -> 30d -> 24h (prioritize broader coverage)
+  const timespans = ['7d', '30d', '24h'];
 
   for (const timespan of timespans) {
     try {
@@ -685,9 +685,14 @@ async function fetchGDELTNewsWithTimespan(
       'CONGRESSIONAL_POLITICS',
       'GOVERNMENT_LEGISLATION',
       'POLITICAL_COMMUNICATIONS',
+      'LOCAL_GOVERNMENT',
+      'COMMUNITY_POLITICS',
+      'PUBLIC_POLICY',
+      'GOVERNMENT_OFFICIAL',
+      'LEGISLATIVE_PROCESS',
     ].join(',');
 
-    const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodedQuery}&mode=artlist&maxrecords=${maxRecords}&format=json&sort=socialimage&timespan=${timespan}&theme=${themes}&contenttype=NEWS&dedupresults=true`;
+    const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodedQuery}&mode=artlist&maxrecords=${maxRecords}&format=json&sort=seendate&timespan=${timespan}&theme=${themes}&contenttype=NEWS&dedupresults=true`;
 
     logger.info('Fetching GDELT news with specific timespan', {
       searchTerm: searchTerm.slice(0, 100),
@@ -972,33 +977,82 @@ function extractSourceName(domain: string): string {
 // Normalize date format from GDELT
 function normalizeDate(dateString: string): string {
   if (!dateString || typeof dateString !== 'string') {
+    logger.warn('Invalid dateString provided to normalizeDate', {
+      dateString,
+      type: typeof dateString,
+      operation: 'gdelt_date_normalize_invalid_input',
+    });
     return new Date().toISOString();
   }
 
   try {
-    // Handle different GDELT date formats
+    // Handle GDELT format: 20250925T143000Z
     if (dateString.includes('T') && dateString.includes('Z')) {
-      // Format: 20250709T193000Z
-      const cleanDate = dateString.replace(/T(\d{6})Z/, 'T$1:00:00Z');
-      // Insert colons: 20250709T193000Z -> 2025-07-09T19:30:00Z
-      const year = cleanDate.slice(0, 4);
-      const month = cleanDate.slice(4, 6);
-      const day = cleanDate.slice(6, 8);
-      const time = cleanDate.slice(9, 15); // HHMMSS
-      const hour = time.slice(0, 2) || '00';
-      const minute = time.slice(2, 4) || '00';
-      const second = time.slice(4, 6) || '00';
+      // Extract components directly from format like "20250925T143000Z"
+      const parts = dateString.split('T');
+      if (parts.length !== 2 || !parts[0] || !parts[1]) {
+        throw new Error(`Unexpected T-Z format: ${dateString}`);
+      }
+
+      const datePart = parts[0]; // "20250925"
+      const timePart = parts[1].replace('Z', ''); // "143000"
+
+      if (datePart.length !== 8 || timePart.length !== 6) {
+        throw new Error(
+          `Invalid date/time component lengths: date=${datePart.length}, time=${timePart.length}`
+        );
+      }
+
+      const year = datePart.slice(0, 4);
+      const month = datePart.slice(4, 6);
+      const day = datePart.slice(6, 8);
+      const hour = timePart.slice(0, 2);
+      const minute = timePart.slice(2, 4);
+      const second = timePart.slice(4, 6);
+
+      // Validate numeric components
+      const numericComponents = { year, month, day, hour, minute, second };
+      for (const [name, value] of Object.entries(numericComponents)) {
+        if (!/^\d{2,4}$/.test(value)) {
+          throw new Error(`Invalid ${name} component: ${value}`);
+        }
+      }
+
+      // Validate ranges
+      const monthNum = parseInt(month);
+      const dayNum = parseInt(day);
+      const hourNum = parseInt(hour);
+      const minuteNum = parseInt(minute);
+      const secondNum = parseInt(second);
+
+      if (monthNum < 1 || monthNum > 12) {
+        throw new Error(`Invalid month: ${monthNum}`);
+      }
+      if (dayNum < 1 || dayNum > 31) {
+        throw new Error(`Invalid day: ${dayNum}`);
+      }
+      if (hourNum > 23) {
+        throw new Error(`Invalid hour: ${hourNum}`);
+      }
+      if (minuteNum > 59) {
+        throw new Error(`Invalid minute: ${minuteNum}`);
+      }
+      if (secondNum > 59) {
+        throw new Error(`Invalid second: ${secondNum}`);
+      }
 
       const isoString = `${year}-${month}-${day}T${hour}:${minute}:${second}Z`;
       const date = new Date(isoString);
 
       if (isNaN(date.getTime())) {
-        throw new Error(`Invalid date components: ${isoString}`);
+        throw new Error(`Failed to create valid Date object from: ${isoString}`);
       }
 
       return date.toISOString();
-    } else if (dateString.length >= 8) {
-      // Traditional format: YYYYMMDDHHMMSS
+    }
+
+    // Handle traditional GDELT format: YYYYMMDDHHMMSS
+    else if (dateString.length >= 8 && /^\d+$/.test(dateString)) {
       const year = dateString.slice(0, 4);
       const month = dateString.slice(4, 6);
       const day = dateString.slice(6, 8);
@@ -1006,49 +1060,74 @@ function normalizeDate(dateString: string): string {
       const minute = dateString.slice(10, 12) || '00';
       const second = dateString.slice(12, 14) || '00';
 
-      // Validate components
-      if (parseInt(month) < 1 || parseInt(month) > 12) {
-        throw new Error(`Invalid month: ${month}`);
+      // Validate ranges
+      const monthNum = parseInt(month);
+      const dayNum = parseInt(day);
+      const hourNum = parseInt(hour);
+      const minuteNum = parseInt(minute);
+      const secondNum = parseInt(second);
+
+      if (monthNum < 1 || monthNum > 12) {
+        throw new Error(`Invalid month: ${monthNum}`);
       }
-      if (parseInt(day) < 1 || parseInt(day) > 31) {
-        throw new Error(`Invalid day: ${day}`);
+      if (dayNum < 1 || dayNum > 31) {
+        throw new Error(`Invalid day: ${dayNum}`);
       }
-      if (parseInt(hour) > 23) {
-        throw new Error(`Invalid hour: ${hour}`);
+      if (hourNum > 23) {
+        throw new Error(`Invalid hour: ${hourNum}`);
       }
-      if (parseInt(minute) > 59) {
-        throw new Error(`Invalid minute: ${minute}`);
+      if (minuteNum > 59) {
+        throw new Error(`Invalid minute: ${minuteNum}`);
       }
-      if (parseInt(second) > 59) {
-        throw new Error(`Invalid second: ${second}`);
+      if (secondNum > 59) {
+        throw new Error(`Invalid second: ${secondNum}`);
       }
 
       const isoString = `${year}-${month}-${day}T${hour}:${minute}:${second}Z`;
       const date = new Date(isoString);
 
       if (isNaN(date.getTime())) {
-        throw new Error(`Invalid date: ${isoString}`);
+        throw new Error(`Failed to create valid Date object from: ${isoString}`);
       }
 
       return date.toISOString();
-    } else {
-      // Try direct parsing for other formats
+    }
+
+    // Handle standard ISO date strings
+    else if (dateString.includes('-') && (dateString.includes('T') || dateString.includes(' '))) {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
-        throw new Error(`Unable to parse date: ${dateString}`);
+        throw new Error(`Unable to parse ISO-like date: ${dateString}`);
+      }
+      return date.toISOString();
+    }
+
+    // Last resort: try direct parsing
+    else {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        throw new Error(`Unable to parse date with any known format: ${dateString}`);
       }
       return date.toISOString();
     }
   } catch (error) {
-    logger.error('Error parsing GDELT date', error as Error, {
+    logger.warn('Date parsing failed, using fallback', {
       dateString,
       dateStringLength: dateString.length,
-      operation: 'gdelt_date_parse_error',
+      errorMessage: error instanceof Error ? error.message : String(error),
+      operation: 'gdelt_date_parse_fallback',
     });
   }
 
-  // Fallback to current time if parsing fails
-  return new Date().toISOString();
+  // Fallback: return a date from 24 hours ago to avoid showing "now"
+  const fallbackDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  logger.info('Using 24-hour fallback date for failed parsing', {
+    originalDateString: dateString,
+    fallbackDate: fallbackDate.toISOString(),
+    operation: 'gdelt_date_fallback_applied',
+  });
+
+  return fallbackDate.toISOString();
 }
 
 /**

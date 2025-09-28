@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
+import { getRedisCache } from '@/lib/cache/redis-client';
 import {
   normalizeGDELTArticle,
   fetchGDELTNews,
@@ -15,6 +16,14 @@ import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
 export const dynamic = 'force-dynamic';
+
+interface SimpleNewsArticle {
+  url: string;
+  title: string;
+  seendate: string;
+  domain: string;
+  socialimage?: string | null;
+}
 
 interface NewsArticle {
   title: string;
@@ -60,6 +69,62 @@ export async function GET(
 
   if (!bioguideId) {
     return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
+  }
+
+  // Feature flag: Check if RSS news source is enabled
+  const newsSource = process.env.NEWS_SOURCE;
+  if (newsSource === 'RSS') {
+    try {
+      const cache = getRedisCache();
+      const cacheKey = `news:${bioguideId}`;
+      const rssArticles = await cache.get<SimpleNewsArticle[]>(cacheKey);
+
+      if (rssArticles && rssArticles.length > 0) {
+        // Apply pagination to RSS articles
+        const offset = (page - 1) * limit;
+        const paginatedArticles = rssArticles.slice(offset, offset + limit);
+
+        // Convert RSS articles to match existing NewsArticle interface
+        const convertedArticles = paginatedArticles.map(article => ({
+          title: article.title,
+          url: article.url,
+          source: article.domain,
+          publishedDate: article.seendate,
+          language: 'English',
+          domain: article.domain,
+          imageUrl: article.socialimage || undefined,
+        }));
+
+        const response: NewsResponse = {
+          articles: convertedArticles,
+          totalResults: rssArticles.length,
+          searchTerms: [`RSS feeds for ${bioguideId}`],
+          dataSource: 'cached',
+          cacheStatus: 'RSS news data from feeds',
+          pagination: {
+            currentPage: page,
+            limit: limit,
+            hasNextPage: offset + limit < rssArticles.length,
+            totalPages: Math.ceil(rssArticles.length / limit),
+          },
+        };
+
+        logger.info('Served RSS news data', {
+          bioguideId,
+          articlesCount: convertedArticles.length,
+          totalAvailable: rssArticles.length,
+          source: 'RSS',
+        });
+
+        return NextResponse.json(response);
+      } else {
+        logger.info('No RSS news data available, falling back to GDELT', { bioguideId });
+      }
+    } catch (error) {
+      logger.error('Failed to fetch RSS news data, falling back to GDELT', error as Error, {
+        bioguideId,
+      });
+    }
   }
 
   // Use advanced GDELT service if requested
@@ -247,7 +312,8 @@ export async function GET(
 
         const fullStateName = stateNameMap[state] || state;
 
-        const searchTerms = [
+        // Enhanced search terms with nicknames, districts, and geographic variations
+        const baseSearchTerms = [
           // Simple full name search
           simpleName,
           // Last name with full state name (not abbreviation)
@@ -256,7 +322,93 @@ export async function GET(
           representative.chamber === 'Senate'
             ? `Senator ${lastName}`
             : `Representative ${lastName}`,
-        ].filter(term => term && term.trim().length > 0);
+        ];
+
+        // Add nickname variations from GDELT API service
+        const nicknameVariations = [];
+        try {
+          // Import the nickname mapping from gdelt-api.ts
+          const { REPRESENTATIVE_NICKNAMES } = await import('@/features/news/services/gdelt-api');
+          const nicknames = REPRESENTATIVE_NICKNAMES[simpleName] || [];
+          nicknameVariations.push(...nicknames);
+        } catch {
+          // If import fails, continue without nicknames
+        }
+
+        // Add district-specific terms for House members
+        const districtTerms = [];
+        if (representative.chamber === 'House' && representative.district && state) {
+          const districtNum = representative.district;
+          districtTerms.push(
+            // District identifier: "SC-4"
+            `${state}-${districtNum}`,
+            // Full district name: "South Carolina 4th District"
+            `${fullStateName} ${districtNum}th District`,
+            // Congressional district: "Congressional District 4"
+            `Congressional District ${districtNum}`,
+            // Alternative format: "4th Congressional District"
+            `${districtNum}th Congressional District`,
+            // District-wide news (broader coverage)
+            `${fullStateName} ${districtNum}th District news`,
+            `${state}-${districtNum} politics`,
+            `${fullStateName} ${districtNum}th District election`
+          );
+        }
+
+        // Add Congressional press release and legislative action terms
+        const pressReleaseTerms = [];
+        pressReleaseTerms.push(
+          `${lastName} press release`,
+          `${lastName} statement`,
+          `${lastName} announces`,
+          `${lastName} votes on`,
+          `${lastName} supports`,
+          `${lastName} introduces bill`,
+          `${lastName} cosponsors`,
+          `${lastName} legislation`
+        );
+
+        // Add local newspaper coverage terms
+        const localNewsTerms = [];
+        if (fullStateName && state) {
+          // State-specific newspaper coverage
+          localNewsTerms.push(
+            `${lastName} ${fullStateName} news`,
+            `${lastName} ${state} newspaper`,
+            `${fullStateName} delegation ${lastName}`,
+            `${state} congressman ${lastName}`,
+            `${state} representative ${lastName}`
+          );
+        }
+
+        // Add committee-based search terms
+        const committeeTerms = [];
+        if (representative.committees && representative.committees.length > 0) {
+          // Use primary committee for additional context
+          const primaryCommittee = representative.committees[0];
+          if (primaryCommittee?.name) {
+            // Extract key committee words (avoid very long names)
+            const committeeKeywords = primaryCommittee.name
+              .split(' ')
+              .filter(word => word.length > 4 && !['Committee', 'Subcommittee'].includes(word))
+              .slice(0, 2) // Take first 2 meaningful words
+              .join(' ');
+
+            if (committeeKeywords) {
+              committeeTerms.push(`${lastName} ${committeeKeywords}`);
+            }
+          }
+        }
+
+        // Combine all search terms
+        const searchTerms = [
+          ...baseSearchTerms,
+          ...nicknameVariations,
+          ...districtTerms,
+          ...pressReleaseTerms,
+          ...localNewsTerms,
+          ...committeeTerms,
+        ].filter(term => term && term.trim().length > 0 && term.length < 100); // Avoid overly long terms
 
         logger.info(
           'Generated optimized search terms',
@@ -318,10 +470,10 @@ export async function GET(
             language: article.language || 'en',
           })),
           {
-            maxClusters: 5,
+            maxClusters: 8,
             minClusterSize: 2,
-            titleSimilarityThreshold: 0.75,
-            timespanHours: 48,
+            titleSimilarityThreshold: 0.6,
+            timespanHours: 72,
           }
         );
 
@@ -352,7 +504,7 @@ export async function GET(
 
         // Apply quality filters and final deduplication to the clustered articles
         const now = new Date();
-        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
         const qualityFilteredArticles = finalArticles.filter((article: unknown) => {
           const articleData = article as {
@@ -365,9 +517,9 @@ export async function GET(
 
           return (
             articleData.language === 'English' &&
-            articleData.title.length > 15 &&
+            articleData.title.length > 10 &&
             articleData.title.length < 300 &&
-            articleDate >= thirtyDaysAgo &&
+            articleDate >= ninetyDaysAgo &&
             !articleData.title.toLowerCase().includes('404') &&
             !articleData.title.toLowerCase().includes('error') &&
             !articleData.domain.includes('facebook.com') &&

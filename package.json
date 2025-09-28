@@ -55,7 +55,11 @@
     "validate:production": "tsx scripts/run-production-validation.ts",
     "validate:production:critical": "tsx scripts/run-production-validation.ts -- --critical-only",
     "validate:production:parallel": "tsx scripts/run-production-validation.ts -- --parallel",
-    "analyze": "npx @next/bundle-analyzer"
+    "analyze": "npx @next/bundle-analyzer",
+    "perf:benchmark": "PERF_LOGGING=true tsx scripts/performance-benchmark.ts",
+    "perf:analyze": "ANALYZE=true npm run build",
+    "perf:report": "tsx -e \"const {metricsCollector} = require('./src/lib/performance/metrics-collector'); console.log(metricsCollector.generateReport())\"",
+    "perf:baseline": "npm run perf:benchmark && mv performance-results-*.json performance-baseline.json"
   },
   "dependencies": {
     "@heroicons/react": "2.2.0",

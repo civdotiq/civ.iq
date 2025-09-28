@@ -34,6 +34,19 @@ interface Vote {
   rollNumber?: number;
   isKeyVote?: boolean;
   description?: string;
+  congressUrl?: string; // Direct link to Congress.gov vote page
+  // Enhanced context fields for meaningful political insight
+  total?: {
+    yes: number;
+    no: number;
+    not_voting: number;
+    present: number;
+  };
+  party_breakdown?: {
+    democratic: { yes: number; no: number; not_voting: number; present: number };
+    republican: { yes: number; no: number; not_voting: number; present: number };
+    independent?: { yes: number; no: number; not_voting: number; present: number };
+  };
 }
 
 interface VotingRecordsTableProps {
@@ -65,7 +78,7 @@ const VotesList = memo(
         const isExpanded = expandedRows.has(vote.voteId);
 
         return (
-          <div style={style} className="px-1 py-1">
+          <div style={style} className="px-3 py-2">
             <div
               className={`aicher-card aicher-hover transition-all duration-200 cursor-pointer ${
                 isExpanded
@@ -74,10 +87,10 @@ const VotesList = memo(
               }`}
               onClick={() => toggleRowExpansion(vote.voteId)}
             >
-              <div className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1 pr-4">
+                    <div className="flex items-center gap-3 mb-3 flex-wrap">
                       <Link
                         href={`/bill/${vote.bill.number.replace(/\s+/g, '')}`}
                         className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
@@ -85,6 +98,30 @@ const VotesList = memo(
                       >
                         {vote.bill.number}
                       </Link>
+                      {vote.congressUrl && (
+                        <a
+                          href={vote.congressUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-green-700 hover:text-green-900 hover:underline"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <span>View on Congress.gov</span>
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                            />
+                          </svg>
+                        </a>
+                      )}
                       {vote.isKeyVote && (
                         <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">
                           Key Vote
@@ -93,52 +130,169 @@ const VotesList = memo(
                     </div>
                     <Link
                       href={`/bill/${vote.bill.number.replace(/\s+/g, '')}`}
-                      className="block text-gray-900 font-medium mb-2 line-clamp-2 hover:text-blue-600 transition-colors"
+                      className="block text-gray-900 font-medium mb-3 line-clamp-2 hover:text-blue-600 transition-colors leading-relaxed"
                       onClick={e => e.stopPropagation()}
                     >
                       {vote.bill.title}
                     </Link>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-600 mb-1">
                       {new Date(vote.date).toLocaleDateString('en-US', {
-                        month: 'numeric',
+                        month: 'long',
                         day: 'numeric',
                         year: 'numeric',
                       })}
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2 ml-4">
+                  <div className="flex flex-col items-end gap-3 ml-6">
                     <span
-                      className={`aicher-button px-2.5 py-1 aicher-heading text-xs aicher-no-radius ${getPositionColor(vote.position)}`}
+                      className={`aicher-button px-3 py-1.5 aicher-heading text-sm aicher-no-radius ${getPositionColor(vote.position)}`}
                     >
                       {vote.position}
                     </span>
-                    <span className={`aicher-heading text-sm ${getResultColor(vote.result)}`}>
-                      {vote.result}
-                    </span>
+                    <div className="text-right">
+                      <span
+                        className={`aicher-heading text-sm font-medium ${getResultColor(vote.result)} block`}
+                      >
+                        {vote.result}
+                      </span>
+                      {vote.total && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {vote.total.yes} Yea • {vote.total.no} Nay
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Expanded Details */}
                 {isExpanded && (
-                  <div className="mt-3 pt-3 aicher-border-t border-gray-100">
-                    <div className="space-y-2 text-sm text-gray-600">
-                      <p>
-                        <span className="font-medium">Question:</span> {vote.question}
-                      </p>
-                      {vote.rollNumber && (
-                        <p>
-                          <span className="font-medium">Roll Call:</span> {vote.chamber} Roll #
-                          {vote.rollNumber}
-                        </p>
-                      )}
-                      {vote.description && (
-                        <p>
-                          <span className="font-medium">Description:</span> {vote.description}
-                        </p>
-                      )}
-                      <p>
-                        <span className="font-medium">Congress:</span> {vote.bill.congress}
-                      </p>
+                  <div className="mt-4 pt-4 aicher-border-t border-gray-200">
+                    <div className="space-y-3 text-sm text-gray-600">
+                      <div className="space-y-3">
+                        <div className="bg-gray-50 p-3 rounded-md">
+                          <p className="leading-relaxed text-sm">
+                            <span className="font-medium text-gray-900">Question:</span>{' '}
+                            {vote.question}
+                          </p>
+                        </div>
+
+                        {vote.rollNumber && vote.rollNumber > 0 && (
+                          <p className="leading-relaxed">
+                            <span className="font-medium text-gray-900">Roll Call:</span>{' '}
+                            <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                              {vote.chamber} Roll #{vote.rollNumber}
+                            </span>
+                          </p>
+                        )}
+
+                        {vote.description && vote.description !== vote.question && (
+                          <p className="leading-relaxed">
+                            <span className="font-medium text-gray-900">Description:</span>{' '}
+                            {vote.description}
+                          </p>
+                        )}
+
+                        <div className="flex items-center justify-between text-sm">
+                          <p>
+                            <span className="font-medium text-gray-900">Congress:</span>{' '}
+                            <span className="font-mono bg-gray-100 px-2 py-1 rounded">
+                              {vote.bill.congress}th Congress
+                            </span>
+                          </p>
+
+                          {vote.congressUrl && (
+                            <a
+                              href={vote.congressUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              <span>Official Vote Record</span>
+                              <svg
+                                className="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                />
+                              </svg>
+                            </a>
+                          )}
+                        </div>
+
+                        {vote.total && (
+                          <div className="bg-blue-50 p-3 rounded-md">
+                            <h4 className="font-medium text-gray-900 mb-2">Final Tally</h4>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div className="text-green-700">
+                                <span className="font-medium">{vote.total.yes}</span> Yea
+                              </div>
+                              <div className="text-red-700">
+                                <span className="font-medium">{vote.total.no}</span> Nay
+                              </div>
+                              {vote.total.present > 0 && (
+                                <div className="text-blue-700">
+                                  <span className="font-medium">{vote.total.present}</span> Present
+                                </div>
+                              )}
+                              {vote.total.not_voting > 0 && (
+                                <div className="text-gray-600">
+                                  <span className="font-medium">{vote.total.not_voting}</span> Not
+                                  Voting
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {vote.party_breakdown && (
+                          <div className="bg-purple-50 p-3 rounded-md">
+                            <h4 className="font-medium text-gray-900 mb-2">Party Breakdown</h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-blue-700 font-medium">Democratic:</span>
+                                <span>
+                                  {vote.party_breakdown.democratic.yes} Yea,{' '}
+                                  {vote.party_breakdown.democratic.no} Nay
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-red-700 font-medium">Republican:</span>
+                                <span>
+                                  {vote.party_breakdown.republican.yes} Yea,{' '}
+                                  {vote.party_breakdown.republican.no} Nay
+                                </span>
+                              </div>
+                              {vote.party_breakdown.independent && (
+                                <div className="flex justify-between">
+                                  <span className="text-green-700 font-medium">Independent:</span>
+                                  <span>
+                                    {vote.party_breakdown.independent.yes} Yea,{' '}
+                                    {vote.party_breakdown.independent.no} Nay
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="border-t border-gray-200 pt-2 mt-2">
+                          <p className="text-xs text-gray-500">
+                            💡 <strong>What this means:</strong> This vote determines the official
+                            position of Congress members on the proposed legislation.
+                            {vote.result.toLowerCase().includes('passed') ||
+                            vote.result.toLowerCase().includes('agreed')
+                              ? ' The measure was approved and moves forward in the legislative process.'
+                              : ' The measure did not receive sufficient support to advance.'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -158,13 +312,13 @@ const VotesList = memo(
     // Calculate item height based on whether it's expanded
     const getItemSize = (index: number) => {
       const vote = votes[index];
-      if (!vote) return 120;
+      if (!vote) return 140;
       const isExpanded = expandedRows.has(vote.voteId);
-      return isExpanded ? 200 : 120; // Approximate heights
+      return isExpanded ? 240 : 140; // Increased heights for better spacing
     };
 
     return (
-      <div className="bg-white p-2">
+      <div className="bg-white p-4">
         <List
           height={600} // Max height of the list container
           itemCount={votes.length}

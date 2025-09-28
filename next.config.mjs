@@ -2,6 +2,14 @@
  * Next.js configuration optimized for Vercel deployment
  */
 
+// Bundle analyzer configuration
+const withBundleAnalyzer = process.env.ANALYZE === 'true'
+  ? require('@next/bundle-analyzer')({
+      enabled: true,
+      openAnalyzer: true,
+    })
+  : (config) => config;
+
 const nextConfig = {
   eslint: {
     ignoreDuringBuilds: false, // Enable ESLint in production builds
@@ -96,4 +104,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

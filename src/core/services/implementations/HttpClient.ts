@@ -12,6 +12,7 @@
 
 import * as https from 'https';
 import type { IHttpClient, HttpOptions, HttpResponse, HttpError } from '../interfaces/IHttpClient';
+import { RequestDeduplicator } from '../../cache/RequestDeduplicator';
 
 interface ConnectionPoolMetrics {
   activeConnections: number;
@@ -23,6 +24,7 @@ interface ConnectionPoolMetrics {
 export class HttpClient implements IHttpClient {
   private agent: https.Agent;
   private defaultHeaders: Record<string, string> = {};
+  private deduplicator: RequestDeduplicator;
   private metrics: ConnectionPoolMetrics = {
     activeConnections: 0,
     queuedRequests: 0,
@@ -38,6 +40,7 @@ export class HttpClient implements IHttpClient {
       timeout: 60000,
       scheduling: 'lifo',
     });
+    this.deduplicator = new RequestDeduplicator();
   }
 
   async get<T = unknown>(url: string, options?: HttpOptions): Promise<HttpResponse<T>> {
@@ -69,16 +72,40 @@ export class HttpClient implements IHttpClient {
   }
 
   getMetrics() {
+    const deduplicationMetrics = this.deduplicator.getMetrics();
     return {
       ...this.metrics,
       averageResponseTime:
         this.metrics.totalRequests > 0
           ? this.metrics.totalResponseTime / this.metrics.totalRequests
           : 0,
+      deduplication: deduplicationMetrics,
     };
   }
 
   private async request<T = unknown>(
+    method: string,
+    url: string,
+    data?: unknown,
+    options: HttpOptions = {}
+  ): Promise<HttpResponse<T>> {
+    // Generate deduplication key
+    const deduplicationKey = this.generateRequestKey(method, url, data, options);
+
+    // Use deduplication for GET requests only (idempotent)
+    if (method === 'GET') {
+      return this.deduplicator.deduplicate(
+        deduplicationKey,
+        () => this.executeRequestWithRetries<T>(method, url, data, options),
+        { maxAge: 5000 } // 5 second deduplication window
+      );
+    }
+
+    // For non-idempotent requests, execute directly
+    return this.executeRequestWithRetries<T>(method, url, data, options);
+  }
+
+  private async executeRequestWithRetries<T = unknown>(
     method: string,
     url: string,
     data?: unknown,
@@ -114,6 +141,20 @@ export class HttpClient implements IHttpClient {
     } finally {
       this.metrics.queuedRequests--;
     }
+  }
+
+  private generateRequestKey(
+    method: string,
+    url: string,
+    data?: unknown,
+    options?: HttpOptions
+  ): string {
+    // Include relevant cache-affecting options
+    const cacheOptions = {
+      headers: options?.headers,
+      timeout: options?.timeout,
+    };
+    return RequestDeduplicator.generateKey(method, url, cacheOptions, data);
   }
 
   private async executeRequest<T = unknown>(

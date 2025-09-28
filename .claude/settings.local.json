@@ -116,7 +116,13 @@
       "WebFetch(domain:www.cookpolitical.com)",
       "WebFetch(domain:www.census.gov)",
       "WebFetch(domain:catalog.data.gov)",
-      "Bash(time timeout:*)"
+      "Bash(time timeout:*)",
+      "Bash(PORT=3001 npm run dev)",
+      "Bash(PORT=3002 npm run dev)",
+      "Bash(NEWS_SOURCE=RSS npm run dev)",
+      "Bash(mkdir:*)",
+      "Bash(killall:*)",
+      "Bash(PERF_LOGGING=true timeout 10 curl -s http://localhost:3000/api/representative/T000480)"
     ],
     "deny": [],
     "ask": []
