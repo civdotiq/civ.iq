@@ -40,9 +40,9 @@ const nextConfig = {
         pathname: '/api/photo/**',
       },
       {
-        // Production API photo proxy (update with your domain)
+        // Production API photo proxy (Vercel deployment)
         protocol: 'https',
-        hostname: process.env.NEXT_PUBLIC_APP_URL?.replace('https://', '') || 'your-app.vercel.app',
+        hostname: process.env.VERCEL_URL || 'civic-intel-hub.vercel.app',
         port: '',
         pathname: '/api/photo/**',
       },
