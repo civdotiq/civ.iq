@@ -71,60 +71,57 @@ export async function GET(
     return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
   }
 
-  // Feature flag: Check if RSS news source is enabled
-  const newsSource = process.env.NEWS_SOURCE;
-  if (newsSource === 'RSS') {
-    try {
-      const cache = getRedisCache();
-      const cacheKey = `news:${bioguideId}`;
-      const rssArticles = await cache.get<SimpleNewsArticle[]>(cacheKey);
+  // Try Google News RSS first (better quality, less noise for common names)
+  try {
+    const cache = getRedisCache();
+    const cacheKey = `news:${bioguideId}`;
+    const rssArticles = await cache.get<SimpleNewsArticle[]>(cacheKey);
 
-      if (rssArticles && rssArticles.length > 0) {
-        // Apply pagination to RSS articles
-        const offset = (page - 1) * limit;
-        const paginatedArticles = rssArticles.slice(offset, offset + limit);
+    if (rssArticles && rssArticles.length > 0) {
+      // Apply pagination to RSS articles
+      const offset = (page - 1) * limit;
+      const paginatedArticles = rssArticles.slice(offset, offset + limit);
 
-        // Convert RSS articles to match existing NewsArticle interface
-        const convertedArticles = paginatedArticles.map(article => ({
-          title: article.title,
-          url: article.url,
-          source: article.domain,
-          publishedDate: article.seendate,
-          language: 'English',
-          domain: article.domain,
-          imageUrl: article.socialimage || undefined,
-        }));
+      // Convert RSS articles to match existing NewsArticle interface
+      const convertedArticles = paginatedArticles.map(article => ({
+        title: article.title,
+        url: article.url,
+        source: article.domain,
+        publishedDate: article.seendate,
+        language: 'English',
+        domain: article.domain,
+        imageUrl: article.socialimage || undefined,
+      }));
 
-        const response: NewsResponse = {
-          articles: convertedArticles,
-          totalResults: rssArticles.length,
-          searchTerms: [`RSS feeds for ${bioguideId}`],
-          dataSource: 'cached',
-          cacheStatus: 'RSS news data from feeds',
-          pagination: {
-            currentPage: page,
-            limit: limit,
-            hasNextPage: offset + limit < rssArticles.length,
-            totalPages: Math.ceil(rssArticles.length / limit),
-          },
-        };
+      const response: NewsResponse = {
+        articles: convertedArticles,
+        totalResults: rssArticles.length,
+        searchTerms: [`RSS feeds for ${bioguideId}`],
+        dataSource: 'cached',
+        cacheStatus: 'RSS news data from feeds',
+        pagination: {
+          currentPage: page,
+          limit: limit,
+          hasNextPage: offset + limit < rssArticles.length,
+          totalPages: Math.ceil(rssArticles.length / limit),
+        },
+      };
 
-        logger.info('Served RSS news data', {
-          bioguideId,
-          articlesCount: convertedArticles.length,
-          totalAvailable: rssArticles.length,
-          source: 'RSS',
-        });
-
-        return NextResponse.json(response);
-      } else {
-        logger.info('No RSS news data available, falling back to GDELT', { bioguideId });
-      }
-    } catch (error) {
-      logger.error('Failed to fetch RSS news data, falling back to GDELT', error as Error, {
+      logger.info('Served RSS news data', {
         bioguideId,
+        articlesCount: convertedArticles.length,
+        totalAvailable: rssArticles.length,
+        source: 'RSS',
       });
+
+      return NextResponse.json(response);
+    } else {
+      logger.info('No RSS news data available, falling back to GDELT', { bioguideId });
     }
+  } catch (error) {
+    logger.error('Failed to fetch RSS news data, falling back to GDELT', error as Error, {
+      bioguideId,
+    });
   }
 
   // Use advanced GDELT service if requested
@@ -248,14 +245,42 @@ export async function GET(
           request
         );
 
-        // Use simpler, more effective queries that actually return results
-        // Build simple but effective search terms
+        // Build more precise search terms to avoid irrelevant results
         const simpleName =
           representative.name || `${representative.firstName} ${representative.lastName}`;
-        const lastName = representative.lastName || representative.name?.split(' ').pop() || '';
+
+        // Extract first and last name for better filtering
+        const nameParts = simpleName.split(' ').filter(part => part.length > 0);
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts[nameParts.length - 1] || '';
         const state = representative.state || '';
 
-        // Create multiple simple queries that are more likely to return results
+        // For common names, we need to be extra careful about relevance
+        // Common first names that need special handling
+        const commonFirstNames = [
+          'John',
+          'James',
+          'Robert',
+          'Michael',
+          'David',
+          'William',
+          'Mary',
+          'Sarah',
+          'Jennifer',
+        ];
+        const hasCommonFirstName = commonFirstNames.includes(firstName);
+        const hasCommonLastName = [
+          'James',
+          'Johnson',
+          'Smith',
+          'Brown',
+          'Jones',
+          'Davis',
+          'Miller',
+          'Wilson',
+        ].includes(lastName);
+
+        // Create more precise queries with better context
         // GDELT requires keywords to be at least 3 characters, so we need to use full state names
         const stateNameMap: Record<string, string> = {
           AL: 'Alabama',
@@ -312,17 +337,54 @@ export async function GET(
 
         const fullStateName = stateNameMap[state] || state;
 
-        // Enhanced search terms with nicknames, districts, and geographic variations
-        const baseSearchTerms = [
-          // Simple full name search
-          simpleName,
-          // Last name with full state name (not abbreviation)
-          fullStateName && fullStateName.length >= 3 ? `${lastName} ${fullStateName}` : lastName,
+        // Build more targeted search terms based on name commonality
+        const baseSearchTerms = [];
+
+        // For common names like "John James", be more specific
+        if (hasCommonFirstName || hasCommonLastName) {
+          // Always use full name with quotes for exact matching
+          baseSearchTerms.push(`"${simpleName}"`);
+
+          // Add title + full name for better precision
+          if (representative.chamber === 'Senate') {
+            baseSearchTerms.push(`"Senator ${simpleName}"`);
+            baseSearchTerms.push(`"Sen. ${simpleName}"`);
+          } else {
+            baseSearchTerms.push(`"Representative ${simpleName}"`);
+            baseSearchTerms.push(`"Rep. ${simpleName}"`);
+            baseSearchTerms.push(`"Congressman ${simpleName}"`);
+            baseSearchTerms.push(`"Congresswoman ${simpleName}"`);
+          }
+
+          // Add state context with full name
+          if (fullStateName && fullStateName.length >= 3) {
+            baseSearchTerms.push(`"${simpleName}" "${fullStateName}"`);
+            baseSearchTerms.push(`"${simpleName}" ${state}`);
+          }
+
+          // Add district context for House members
+          if (representative.chamber === 'House' && representative.district) {
+            baseSearchTerms.push(`"${simpleName}" "${state}-${representative.district}"`);
+            baseSearchTerms.push(`"${simpleName}" "District ${representative.district}"`);
+          }
+
+          // DO NOT add standalone last name for common names
+        } else {
+          // For unique names, we can be less strict
+          baseSearchTerms.push(`"${simpleName}"`);
+
+          // Last name with context is OK for unique names
+          if (fullStateName && fullStateName.length >= 3) {
+            baseSearchTerms.push(`"${lastName}" "${fullStateName}"`);
+          }
+
           // Name with title
-          representative.chamber === 'Senate'
-            ? `Senator ${lastName}`
-            : `Representative ${lastName}`,
-        ];
+          if (representative.chamber === 'Senate') {
+            baseSearchTerms.push(`"Senator ${lastName}"`);
+          } else {
+            baseSearchTerms.push(`"Representative ${lastName}"`);
+          }
+        }
 
         // Add nickname variations from GDELT API service
         const nicknameVariations = [];
@@ -506,6 +568,7 @@ export async function GET(
         const now = new Date();
         const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
+        // Enhanced relevance filtering for common names
         const qualityFilteredArticles = finalArticles.filter((article: unknown) => {
           const articleData = article as {
             publishedDate: string;
@@ -515,7 +578,8 @@ export async function GET(
           };
           const articleDate = new Date(articleData.publishedDate);
 
-          return (
+          // Basic quality checks
+          const passesBasicQuality =
             articleData.language === 'English' &&
             articleData.title.length > 10 &&
             articleData.title.length < 300 &&
@@ -523,8 +587,118 @@ export async function GET(
             !articleData.title.toLowerCase().includes('404') &&
             !articleData.title.toLowerCase().includes('error') &&
             !articleData.domain.includes('facebook.com') &&
-            !articleData.domain.includes('twitter.com')
-          );
+            !articleData.domain.includes('twitter.com');
+
+          if (!passesBasicQuality) return false;
+
+          // Enhanced relevance check for common names
+          if (hasCommonFirstName || hasCommonLastName) {
+            const titleLower = articleData.title.toLowerCase();
+            const firstNameLower = firstName.toLowerCase();
+            const lastNameLower = lastName.toLowerCase();
+            const fullNameLower = simpleName.toLowerCase();
+
+            // Check if the full name appears (best case)
+            if (titleLower.includes(fullNameLower)) {
+              return true;
+            }
+
+            // For common names, require both first and last name to appear
+            // This filters out articles about other people named "James"
+            if (firstName && lastName && firstName !== lastName) {
+              const hasFirstName = titleLower.includes(firstNameLower);
+              const hasLastName = titleLower.includes(lastNameLower);
+
+              // Both names must appear for common names
+              if (!hasFirstName || !hasLastName) {
+                logger.debug('Filtering out article - missing name components for common name', {
+                  title: articleData.title.slice(0, 100),
+                  representativeName: simpleName,
+                  hasFirstName,
+                  hasLastName,
+                });
+                return false;
+              }
+
+              // Additional check: names should be reasonably close to each other
+              // This helps filter out articles that happen to have both common words
+              if (hasFirstName && hasLastName) {
+                const firstIndex = titleLower.indexOf(firstNameLower);
+                const lastIndex = titleLower.indexOf(lastNameLower);
+                const distance = Math.abs(lastIndex - firstIndex);
+
+                // Names should be within ~50 characters of each other
+                if (distance > 50) {
+                  logger.debug('Filtering out article - names too far apart', {
+                    title: articleData.title.slice(0, 100),
+                    distance,
+                    representativeName: simpleName,
+                  });
+                  return false;
+                }
+              }
+            }
+
+            // Check for title + last name pattern (e.g., "Senator James", "Rep. James")
+            const titlePatterns = [
+              `senator ${lastNameLower}`,
+              `sen. ${lastNameLower}`,
+              `representative ${lastNameLower}`,
+              `rep. ${lastNameLower}`,
+              `congressman ${lastNameLower}`,
+              `congresswoman ${lastNameLower}`,
+            ];
+
+            if (titlePatterns.some(pattern => titleLower.includes(pattern))) {
+              // But also verify state context for common last names
+              if (hasCommonLastName && state) {
+                const hasStateContext =
+                  titleLower.includes(state.toLowerCase()) ||
+                  titleLower.includes(fullStateName.toLowerCase());
+
+                if (!hasStateContext) {
+                  logger.debug('Filtering out article - title+lastname but no state context', {
+                    title: articleData.title.slice(0, 100),
+                    representativeName: simpleName,
+                    state,
+                  });
+                  return false;
+                }
+              }
+              return true;
+            }
+
+            // For House members, check district references
+            if (representative.chamber === 'House' && representative.district) {
+              const districtPatterns = [
+                `${state}-${representative.district}`,
+                `${state} ${representative.district}`,
+                `district ${representative.district}`,
+                `${representative.district}th district`,
+                `${representative.district}st district`,
+                `${representative.district}nd district`,
+                `${representative.district}rd district`,
+              ];
+
+              const hasDistrictContext = districtPatterns.some(pattern =>
+                titleLower.includes(pattern.toLowerCase())
+              );
+
+              if (hasDistrictContext && titleLower.includes(lastNameLower)) {
+                return true;
+              }
+            }
+
+            // If we get here for common names and didn't find strong evidence, filter out
+            logger.debug('Filtering out article - insufficient evidence for common name', {
+              title: articleData.title.slice(0, 100),
+              representativeName: simpleName,
+            });
+            return false;
+          }
+
+          // For non-common names, be less strict
+          return passesBasicQuality;
         });
 
         // Final cross-term deduplication using enhanced system
