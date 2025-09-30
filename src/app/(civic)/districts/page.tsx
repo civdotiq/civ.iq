@@ -28,10 +28,12 @@ const RealDistrictMapContainer = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex items-center justify-center h-96 bg-white border-2 border-gray-300">
+      <div className="flex items-center justify-center h-96 bg-white border-2 border-black">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
-          <p className="text-sm text-gray-600">Loading real district boundaries...</p>
+          <div className="inline-block animate-spin h-8 w-8 border-2 border-civiq-blue border-t-transparent mb-2"></div>
+          <p className="text-sm uppercase tracking-aicher font-bold text-gray-600">
+            Loading district boundaries...
+          </p>
         </div>
       </div>
     ),

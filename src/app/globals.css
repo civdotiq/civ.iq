@@ -401,35 +401,31 @@ select:disabled {
   @apply opacity-50 cursor-not-allowed;
 }
 
-/* Enhanced card styles */
+/* Enhanced card styles - Ulm School: no shadows, only borders */
 .card-hover {
-  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  @apply transition-all duration-300 border-2 border-gray-300 hover:border-civiq-blue hover:-translate-y-1;
 }
 
 .card-glass {
-  @apply bg-white/90 backdrop-blur-sm border border-white/20;
+  @apply bg-white border-2 border-black;
 }
 
-/* Enhanced button styles */
+/* Enhanced button styles - Ulm School: no gradients, solid colors */
 .btn-gradient {
-  background: linear-gradient(135deg, #3ea2d4, #0a9338);
-  @apply text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 hover:shadow-lg active:scale-95;
+  @apply bg-civiq-blue text-white font-bold uppercase tracking-aicher px-6 py-3 border-2 border-black transition-all duration-300 hover:bg-civiq-green active:scale-95;
 }
 
 .btn-gradient:hover {
-  background: linear-gradient(135deg, #3391c1, #087d2f);
   transform: translateY(-2px);
 }
 
-/* Enhanced shadows */
-.shadow-xl-colored {
-  box-shadow:
-    0 20px 25px -5px rgba(62, 162, 212, 0.1),
-    0 10px 10px -5px rgba(62, 162, 212, 0.04);
+/* Enhanced borders replace shadows - Ulm School functionalism */
+.border-xl-colored {
+  border: 2px solid #3ea2d4;
 }
 
-.shadow-2xl-colored {
-  box-shadow: 0 25px 50px -12px rgba(62, 162, 212, 0.15);
+.border-2xl-colored {
+  border: 3px solid #3ea2d4;
 }
 
 /* Loading dots animation */
@@ -456,13 +452,13 @@ select:disabled {
   animation-delay: 0.4s;
 }
 
-/* Representative card hover effect */
+/* Representative card hover effect - Ulm School: borders, no shadows */
 .rep-card {
-  @apply transition-all duration-200;
+  @apply transition-all duration-200 border-2 border-gray-300;
 }
 
 .rep-card:hover {
-  @apply shadow-md border-gray-200;
+  @apply border-civiq-blue;
 }
 
 .rep-card:hover .rep-image {
@@ -473,18 +469,18 @@ select:disabled {
   @apply transition-transform duration-200;
 }
 
-/* Tooltip styles */
+/* Tooltip styles - Ulm School: geometric rectangles */
 .tooltip {
-  @apply absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg opacity-0 pointer-events-none transition-opacity duration-200;
+  @apply absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 border-2 border-black opacity-0 pointer-events-none transition-opacity duration-200;
 }
 
 .tooltip-visible {
   @apply opacity-100;
 }
 
-/* Progress bar */
+/* Progress bar - Ulm School: geometric rectangles */
 .progress-bar {
-  @apply relative h-2 bg-gray-200 rounded-full overflow-hidden;
+  @apply relative h-2 bg-gray-200 border-2 border-black overflow-hidden;
 }
 
 .progress-bar-fill {

@@ -5,15 +5,21 @@
   --border-width: 2px;
   --border-color: #000000;
 
-  /* Typography scale with 1.25 ratio (12/15/19/24/30/37px) */
-  --type-ratio: 1.25;
-  --type-xs: 0.75rem; /* 12px */
-  --type-sm: 0.9375rem; /* 15px */
-  --type-base: 1rem; /* 16px - adjust base if needed */
-  --type-lg: 1.1875rem; /* 19px */
-  --type-xl: 1.5rem; /* 24px */
-  --type-2xl: 1.875rem; /* 30px */
-  --type-3xl: 2.3125rem; /* 37px */
+  /* Ulm School Typography - Neo-grotesque sans-serif stack */
+  /* Prioritizes Akzidenz-Grotesk (Aicher's typeface for 1972 Olympics) */
+  --font-primary:
+    'Helvetica Neue', 'Helvetica', 'Arial', 'Nimbus Sans L', 'Liberation Sans', sans-serif;
+  --font-display: var(--font-primary);
+
+  /* Typography scale - Ulm School systematic hierarchy */
+  --type-xs: 0.75rem; /* 12px - Labels, meta */
+  --type-sm: 0.875rem; /* 14px - Small body, captions */
+  --type-base: 1rem; /* 16px - Body text */
+  --type-lg: 1.125rem; /* 18px - Subheadings */
+  --type-xl: 1.5rem; /* 24px - Section headers */
+  --type-2xl: 2rem; /* 32px - Major headers */
+  --type-3xl: 3rem; /* 48px - Display (statistics) */
+  --type-4xl: 4rem; /* 64px - Hero display (names) */
 
   /* Exact logo colors with variants */
   --aicher-red: #e11d07;
@@ -117,21 +123,64 @@
   border: 2px solid #000000;
 }
 
-/* Typography */
-.aicher-heading {
+/* Base Typography - Ulm School Principles */
+body {
+  font-family: var(--font-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* Typography Hierarchy - Ulm School System */
+.aicher-display {
+  font-family: var(--font-display);
+  font-size: var(--type-4xl);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
+}
+
+.aicher-title {
+  font-family: var(--font-primary);
+  font-size: var(--type-2xl);
+  font-weight: 700;
+  line-height: 1.2;
   letter-spacing: 0.05em;
-  font-weight: 900;
-  font-family:
-    system-ui,
-    -apple-system,
-    sans-serif;
+  text-transform: uppercase;
+}
+
+.aicher-heading {
+  font-family: var(--font-primary);
+  font-size: var(--type-xl);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .aicher-heading-wide {
-  text-transform: uppercase;
+  font-family: var(--font-primary);
+  font-size: var(--type-lg);
+  font-weight: 600;
   letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.aicher-label {
+  font-family: var(--font-primary);
+  font-size: var(--type-xs);
   font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.aicher-body {
+  font-family: var(--font-primary);
+  font-size: var(--type-base);
+  font-weight: 400;
+  line-height: 1.5;
 }
 
 /* Borders replace shadows */
@@ -593,4 +642,230 @@
   letter-spacing: 0.02em;
   color: #111827;
   margin-bottom: 24px;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* ULM SCHOOL ACCENT BAR SYSTEM - Systematic Color Coding       */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* 6px Accent Bars - Left side */
+.accent-bar-red {
+  border-left: 6px solid var(--aicher-red);
+}
+
+.accent-bar-green {
+  border-left: 6px solid var(--aicher-green);
+}
+
+.accent-bar-blue {
+  border-left: 6px solid var(--aicher-blue);
+}
+
+.accent-bar-yellow {
+  border-left: 6px solid #fbbf24;
+}
+
+/* Hover state expands accent bar */
+.accent-bar-hover:hover {
+  border-left-width: 12px;
+  transition: border-left-width 0.2s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* PROFILE PAGE COMPONENTS - Representative Profiles            */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* Hero Section - Name Display */
+.profile-hero-name {
+  font-size: var(--type-4xl);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  margin: 0;
+  font-family: var(--font-display);
+}
+
+.profile-hero-title {
+  font-size: var(--type-2xl);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0;
+  color: #000000;
+}
+
+.profile-hero-meta {
+  font-size: var(--type-lg);
+  font-weight: 400;
+  line-height: 1.4;
+  color: #4b5563;
+}
+
+/* Statistics Cards with Accent Bars */
+.stat-card {
+  background: white;
+  border: 2px solid #000000;
+  padding: calc(var(--grid) * 3);
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--aicher-blue);
+}
+
+.stat-number {
+  font-size: var(--type-3xl);
+  font-weight: 700;
+  line-height: 1;
+  margin: 0;
+  font-family: var(--font-display);
+}
+
+.stat-label {
+  font-size: var(--type-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-top: calc(var(--grid) * 1);
+}
+
+/* Profile Photo Frame - Square Geometric */
+.profile-photo-frame {
+  width: 120px;
+  height: 120px;
+  border: 2px solid #000000;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-photo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Progress Bars for Data Visualization */
+.data-bar-container {
+  width: 100%;
+  height: 16px;
+  background: #e5e7eb;
+  border: 2px solid #000000;
+  position: relative;
+  overflow: hidden;
+  margin: calc(var(--grid) * 1) 0;
+}
+
+.data-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.data-bar-fill-green {
+  background: var(--aicher-green);
+}
+
+.data-bar-fill-blue {
+  background: var(--aicher-blue);
+}
+
+.data-bar-fill-red {
+  background: var(--aicher-red);
+}
+
+/* Bill/Legislation Cards */
+.legislation-card {
+  background: white;
+  border: 2px solid #000000;
+  padding: calc(var(--grid) * 2);
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.legislation-card:hover {
+  border-color: var(--aicher-blue);
+}
+
+.legislation-status {
+  display: inline-block;
+  padding: calc(var(--grid) * 1) calc(var(--grid) * 2);
+  font-size: var(--type-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 2px solid #000000;
+  background: white;
+}
+
+.legislation-status-passed {
+  background: #d1fae5;
+  color: #065f46;
+  border-color: var(--aicher-green);
+}
+
+.legislation-status-active {
+  background: #dbeafe;
+  color: #1e3a8a;
+  border-color: var(--aicher-blue);
+}
+
+.legislation-status-failed {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: var(--aicher-red);
+}
+
+/* Committee Cards with Rotating Colors */
+.committee-card {
+  background: white;
+  border: 2px solid #000000;
+  padding: calc(var(--grid) * 2);
+  margin-bottom: calc(var(--grid) * 2);
+  transition: all 0.2s ease;
+}
+
+.committee-card:hover {
+  border-color: var(--aicher-blue);
+}
+
+.committee-name {
+  font-size: var(--type-sm);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.committee-role {
+  font-size: var(--type-xs);
+  font-weight: 400;
+  color: #6b7280;
+  margin-top: calc(var(--grid) * 0.5);
+}
+
+/* Mobile Responsive Typography */
+@media (max-width: 768px) {
+  .profile-hero-name {
+    font-size: 2.5rem; /* 40px */
+  }
+
+  .profile-hero-title {
+    font-size: 1.5rem; /* 24px */
+  }
+
+  .stat-number {
+    font-size: var(--type-2xl);
+  }
+
+  .aicher-display {
+    font-size: 2.5rem;
+  }
+
+  .aicher-title {
+    font-size: 1.5rem;
+  }
 }

@@ -27,11 +27,11 @@ const SimpleRepresentativeProfile = dynamicImport(
           style={{ padding: 'calc(var(--grid) * 2)' }}
         >
           <div className="animate-pulse">
-            <div className="h-32 bg-gray-200 rounded-lg mb-6"></div>
-            <div className="h-16 bg-gray-200 rounded-lg mb-6"></div>
+            <div className="h-32 bg-gray-200 border-2 border-gray-300 mb-6"></div>
+            <div className="h-16 bg-gray-200 border-2 border-gray-300 mb-6"></div>
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
-              <div className="h-96 bg-gray-200 rounded-lg"></div>
-              <div className="h-96 bg-gray-200 rounded-lg"></div>
+              <div className="h-96 bg-gray-200 border-2 border-gray-300"></div>
+              <div className="h-96 bg-gray-200 border-2 border-gray-300"></div>
             </div>
           </div>
         </div>

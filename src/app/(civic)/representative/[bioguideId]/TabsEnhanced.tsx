@@ -247,19 +247,22 @@ function VotesContent({ data }: { data: Record<string, any> }) {
 
         <div className="space-y-3">
           {votes.slice(0, 10).map((vote: any, index: number) => (
-            <div key={index} className="border p-4 hover:bg-white transition-colors">
+            <div
+              key={index}
+              className="border-2 border-gray-300 p-4 hover:border-civiq-blue transition-colors"
+            >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <span
-                      className={`px-2 py-1 rounded text-sm font-medium ${
+                      className={`px-2 py-1 text-sm font-bold uppercase tracking-aicher border-2 ${
                         vote.position === 'Yea'
-                          ? 'bg-green-100 text-green-700'
+                          ? 'bg-green-100 text-green-700 border-civiq-green'
                           : vote.position === 'Nay'
-                            ? 'bg-red-100 text-red-700'
+                            ? 'bg-red-100 text-red-700 border-civiq-red'
                             : vote.position === 'Present'
-                              ? 'bg-yellow-100 text-yellow-700'
-                              : 'bg-white border-2 border-gray-300 text-gray-700'
+                              ? 'bg-yellow-100 text-yellow-700 border-yellow-600'
+                              : 'bg-white border-gray-300 text-gray-700'
                       }`}
                     >
                       {vote.position}
@@ -561,20 +564,16 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
 
   return (
     <div className="space-y-4">
-      {/* Enhanced Tab Navigation */}
-      <div className="border-b border-gray-200 bg-white">
-        <nav className="flex space-x-8 px-4">
+      {/* Olympic-style Tab Navigation - Aicher System */}
+      <div className="aicher-tabs">
+        <nav className="flex overflow-x-auto">
           {tabs.map(tab => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`aicher-tab ${activeTab === tab.id ? 'active' : ''}`}
               >
                 <Icon className="h-4 w-4" />
                 {tab.label}

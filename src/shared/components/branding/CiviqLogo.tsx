@@ -1,44 +1,47 @@
 /**
- * Reusable CIV.IQ Logo component
+ * CIV.IQ Logo Component - Ulm School Functionalism
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
+ *
+ * Systematic logo lockup following Otl Aicher principles:
+ * - Uses actual PNG logo (pure geometric forms)
+ * - Variants for desktop/mobile sizing
+ * - No decorative animations (form follows function)
+ * - Consistent grid-based spacing
  */
 
-export function CiviqLogo() {
+import Image from 'next/image';
+
+interface CiviqLogoProps {
+  size?: 'small' | 'medium' | 'large';
+  showText?: boolean;
+  className?: string;
+}
+
+export function CiviqLogo({ size = 'medium', showText = true, className = '' }: CiviqLogoProps) {
+  const sizes = {
+    small: { logo: 32, text: 'text-base' },
+    medium: { logo: 48, text: 'text-xl' },
+    large: { logo: 64, text: 'text-2xl' },
+  };
+
+  const config = sizes[size];
+
   return (
-    <div className="flex items-center group">
-      <svg
-        className="w-10 h-10 transition-transform group-hover:scale-110"
-        viewBox="0 0 100 100"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <rect x="36" y="51" width="28" height="30" fill="#0b983c" />
-        <circle cx="50" cy="31" r="22" fill="#ffffff" />
-        <circle cx="50" cy="31" r="20" fill="#e11d07" />
-        <circle cx="38" cy="89" r="2" fill="#3ea2d4" className="animate-pulse" />
-        <circle
-          cx="46"
-          cy="89"
-          r="2"
-          fill="#3ea2d4"
-          className="animate-pulse animation-delay-100"
-        />
-        <circle
-          cx="54"
-          cy="89"
-          r="2"
-          fill="#3ea2d4"
-          className="animate-pulse animation-delay-200"
-        />
-        <circle
-          cx="62"
-          cy="89"
-          r="2"
-          fill="#3ea2d4"
-          className="animate-pulse animation-delay-300"
-        />
-      </svg>
-      <span className="ml-3 text-xl font-bold text-gray-900">CIV.IQ</span>
+    <div className={`flex items-center gap-3 ${className}`}>
+      <Image
+        src="/images/civiq-logo.png"
+        alt="CIV.IQ Logo"
+        width={config.logo}
+        height={config.logo}
+        className="flex-shrink-0"
+        priority
+      />
+      {showText && (
+        <span className={`aicher-heading ${config.text} text-gray-900 tracking-aicher`}>
+          CIV.IQ
+        </span>
+      )}
     </div>
   );
 }

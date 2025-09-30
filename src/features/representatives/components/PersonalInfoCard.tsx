@@ -48,64 +48,60 @@ export function PersonalInfoCard({ representative, className = '' }: PersonalInf
         : 'border-gray-200 bg-white text-gray-700';
 
   return (
-    <div className={`aicher-card aicher-hover transition-colors duration-200 ${className}`}>
-      <div className="p-grid-3 border-b-aicher border-black aicher-background">
-        <div className="flex items-center gap-2.5">
-          <div className="p-grid-1 bg-civiq-red border border-black">
-            <RepresentativesIcon className="w-5 h-5 text-white" />
-          </div>
-          <h3 className="text-lg font-bold text-civiq-red aicher-heading">Personal Information</h3>
+    <div className={`bg-white border-2 border-black accent-bar-red ${className}`}>
+      <div className="p-6 border-b-2 border-black">
+        <div className="flex items-center gap-3">
+          <RepresentativesIcon className="w-6 h-6 text-civiq-red" />
+          <h3 className="aicher-heading text-lg text-civiq-red">Personal Information</h3>
         </div>
       </div>
-      <div className="p-grid-3 space-y-grid-2">
-        <div className="group">
-          <label className="text-xs font-bold text-gray-700 aicher-heading">Full Name</label>
+      <div className="p-6 space-y-4">
+        <div>
+          <label className="aicher-heading text-xs text-gray-700">FULL NAME</label>
           <div className="mt-1 text-lg font-medium text-gray-900">
             {representative.fullName?.official || representative.name}
           </div>
         </div>
 
         {representative.bio?.gender && (
-          <div className="group">
-            <label className="text-xs font-bold text-gray-700 aicher-heading">Gender</label>
+          <div>
+            <label className="aicher-heading text-xs text-gray-700">GENDER</label>
             <div className="mt-1 text-base text-gray-900">
               {representative.bio.gender === 'M' ? 'Male' : 'Female'}
             </div>
           </div>
         )}
 
-        <div className="group">
-          <label className="text-xs font-bold text-gray-700 aicher-heading">Age</label>
+        <div>
+          <label className="aicher-heading text-xs text-gray-700">AGE</label>
           <div className="mt-1 text-base text-gray-900">
             {isLoading ? (
               <span className="inline-flex items-center gap-2">
-                <span className="animate-pulse h-4 w-16 bg-gray-200 rounded"></span>
+                <span className="animate-pulse h-4 w-16 bg-gray-200"></span>
               </span>
             ) : age !== null ? (
               <span className="font-medium">{age} years old</span>
             ) : (
-              <span className="text-gray-400 italic">Not available</span>
+              <span className="text-gray-400">Not available</span>
             )}
           </div>
         </div>
 
         {birthPlace && (
-          <div className="group">
-            <label className="text-xs font-bold text-gray-700 aicher-heading">
+          <div>
+            <label className="aicher-heading text-xs text-gray-700">
               <LocationIcon className="w-3 h-3 inline mr-1" />
-              Birthplace
+              BIRTHPLACE
             </label>
             <div className="mt-1 text-base text-gray-900">{birthPlace}</div>
           </div>
         )}
 
-        <div className="group">
-          <label className="text-xs font-bold text-gray-700 aicher-heading">
-            Party Affiliation
-          </label>
-          <div className="mt-1">
+        <div>
+          <label className="aicher-heading text-xs text-gray-700">PARTY AFFILIATION</label>
+          <div className="mt-2">
             <span
-              className={`inline-flex items-center px-grid-1 py-1 text-sm font-bold aicher-heading border border-black ${partyColor}`}
+              className={`inline-flex items-center px-3 py-1.5 text-sm font-bold aicher-heading border-2 ${partyColor}`}
             >
               {representative.party}
             </span>

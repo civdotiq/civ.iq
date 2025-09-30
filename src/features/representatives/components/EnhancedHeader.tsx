@@ -73,32 +73,33 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
     }
   };
 
-  return (
-    <div className="bg-white aicher-border relative">
-      {/* Colored top accent bar - CIV.IQ brand gradient */}
-      <div
-        className="absolute top-0 left-0 right-0 bg-gradient-to-r from-civiq-red via-civiq-green to-civiq-blue"
-        style={{ height: 'calc(var(--grid) * 0.75)' }}
-      ></div>
+  // Get accent bar color based on party affiliation
+  const getAccentBarClass = () => {
+    if (representative.party === 'Republican') return 'accent-bar-red';
+    if (representative.party === 'Democrat') return 'accent-bar-blue';
+    return 'accent-bar-green';
+  };
 
-      <div className="p-4 sm:p-6 md:p-8 pt-8 sm:pt-10 md:pt-12">
+  return (
+    <div className={`bg-white border-2 border-black relative ${getAccentBarClass()}`}>
+      <div className="p-4 sm:p-6 md:p-8">
         <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] items-center gap-4 sm:gap-6 md:gap-12">
-          {/* Photo - Geometric framing with consistent sizing */}
+          {/* Photo - Square geometric frame */}
           <div className="flex-shrink-0 justify-self-center md:justify-self-start">
             {!imageError ? (
               <Image
                 src={photoUrl}
                 alt={getDisplayName()}
-                width={128}
-                height={128}
-                className="object-cover aicher-border w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32"
+                width={160}
+                height={160}
+                className="profile-photo-frame"
                 onError={() => setImageError(true)}
                 data-testid="representative-photo"
               />
             ) : (
-              <div className="bg-gray-100 flex items-center justify-center text-gray-400 aicher-border w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32">
+              <div className="profile-photo-frame bg-gray-100 flex items-center justify-center text-gray-400">
                 <svg
-                  className="w-12 h-12"
+                  className="w-16 h-16"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
@@ -109,31 +110,25 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
             )}
           </div>
 
-          {/* Name and Title - Improved typography hierarchy */}
+          {/* Name and Title - Ulm School large typography */}
           <div className="text-center md:text-left">
-            <h1
-              data-testid="representative-name"
-              className="aicher-display-title text-gray-900 leading-tight text-2xl sm:text-3xl md:text-4xl mb-2 sm:mb-3"
-            >
+            <h1 data-testid="representative-name" className="profile-hero-name mb-4">
               {getDisplayName()}
             </h1>
 
-            <p
-              data-testid="representative-state"
-              className="text-base sm:text-lg md:type-xl text-gray-600 font-medium mb-4 sm:mb-5 md:mb-6"
-            >
+            <p data-testid="representative-state" className="profile-hero-title mb-6">
               {getTitle()}
             </p>
 
-            {/* Geometric badges with improved spacing */}
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 sm:gap-3">
+            {/* Geometric badges with systematic spacing */}
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
               {representative.party && (
                 <span
-                  className={`aicher-heading text-xs sm:type-sm font-bold aicher-border px-2 sm:px-3 py-1.5 sm:py-2 ${
+                  className={`aicher-heading text-xs sm:text-sm font-bold border-2 px-3 py-2 ${
                     representative.party === 'Republican'
-                      ? 'bg-red-50 text-red-800 border-red'
+                      ? 'bg-red-50 text-red-800 border-civiq-red'
                       : representative.party === 'Democrat'
-                        ? 'bg-blue-50 text-blue-800 border-blue'
+                        ? 'bg-blue-50 text-blue-800 border-civiq-blue'
                         : 'bg-gray-50 text-gray-800 border-black'
                   }`}
                 >
@@ -141,12 +136,12 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
                 </span>
               )}
               {getAge() && (
-                <span className="aicher-heading text-xs sm:type-sm font-bold bg-green-50 text-green-800 border-green aicher-border px-2 sm:px-3 py-1.5 sm:py-2">
-                  {getAge()} years old
+                <span className="aicher-heading text-xs sm:text-sm font-bold bg-white text-gray-800 border-2 border-black px-3 py-2">
+                  AGE {getAge()}
                 </span>
               )}
               {getStateRank() && (
-                <span className="aicher-heading text-xs sm:type-sm font-bold bg-purple-50 text-purple-800 border-black aicher-border px-2 sm:px-3 py-1.5 sm:py-2">
+                <span className="aicher-heading text-xs sm:text-sm font-bold bg-white text-gray-800 border-2 border-black px-3 py-2">
                   {getStateRank()}
                 </span>
               )}

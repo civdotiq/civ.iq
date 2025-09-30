@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { SiteHeader } from '@/components/shared/layout/SiteHeader';
 
 // Lazy load comparison components for better performance
 const ComparisonHeader = dynamic(
@@ -187,6 +188,7 @@ export default function ComparePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SiteHeader />
       <ComparisonHeader
         selectedReps={selectedRepresentatives.map(rep => ({
           bioguideId: rep.bioguideId,

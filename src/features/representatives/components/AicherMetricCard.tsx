@@ -30,42 +30,32 @@ export function AicherMetricCard({
   const getAccentClass = () => {
     switch (accentColor) {
       case 'red':
-        return 'aicher-metric-accent-red';
+        return 'accent-bar-red';
       case 'green':
-        return 'aicher-metric-accent-green';
+        return 'accent-bar-green';
       case 'blue':
-        return 'aicher-metric-accent-blue';
+        return 'accent-bar-blue';
     }
   };
 
   return (
-    <div className={`aicher-metric-card ${className}`}>
-      {/* Colored accent bar */}
-      <div className={`aicher-metric-accent-bar ${getAccentClass()}`}></div>
-
-      <div className="p-3 sm:p-4 sm:pl-8">
-        {/* Metric header with icon */}
-        <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-          <div className="w-6 h-6 opacity-80">
-            <Icon className="w-full h-full" strokeWidth={2} />
-          </div>
-          <span className="aicher-heading-wide type-xs text-gray-600">{label}</span>
+    <div className={`stat-card ${getAccentClass()} ${className}`}>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-6 h-6 opacity-60">
+          <Icon className="w-full h-full" strokeWidth={2} />
         </div>
-
-        {/* Metric value */}
-        <div className="mb-1">
-          {isLoading ? (
-            <div className="aicher-loading h-10 sm:h-12 w-16 sm:w-20"></div>
-          ) : (
-            <div className="text-2xl sm:text-3xl md:type-3xl font-black leading-none text-gray-900">
-              {value === null || value === undefined ? '—' : value}
-            </div>
-          )}
-        </div>
-
-        {/* Subtitle */}
-        {subtitle && <div className="type-xs sm:type-sm text-gray-600 font-medium">{subtitle}</div>}
+        <span className="stat-label">{label}</span>
       </div>
+
+      {isLoading ? (
+        <div className="h-12 w-20 bg-gray-200 animate-pulse"></div>
+      ) : (
+        <div className="stat-number mb-2">
+          {value === null || value === undefined ? '—' : value}
+        </div>
+      )}
+
+      {subtitle && <div className="stat-subtitle">{subtitle}</div>}
     </div>
   );
 }

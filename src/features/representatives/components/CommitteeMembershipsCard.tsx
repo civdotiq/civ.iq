@@ -76,84 +76,68 @@ export function CommitteeMembershipsCard({
   }, [committees]);
 
   return (
-    <div
-      className={`bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200 ${className}`}
-    >
-      <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-blue-50">
-            <Users className="w-5 h-5" style={{ color: '#3aa3d5' }} />
-          </div>
-          <h3 className="text-lg font-bold" style={{ color: '#3aa3d5' }}>
-            Committee Memberships
-          </h3>
+    <div className={`bg-white border-2 border-black accent-bar-blue ${className}`}>
+      <div className="p-6 border-b-2 border-black">
+        <div className="flex items-center gap-3">
+          <Users className="w-6 h-6 text-civiq-blue" />
+          <h3 className="aicher-heading text-lg text-civiq-blue">Committee Memberships</h3>
         </div>
       </div>
       <div className="p-6">
         {deduplicatedCommittees.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {deduplicatedCommittees.map((committee, index) => (
               <div
                 key={`${committee.name}-${index}`}
-                className="group border border-gray-200 p-4 hover:border-blue-300 hover:border-2 border-black transition-all duration-200 bg-gradient-to-r from-white to-gray-50 hover:from-blue-50 hover:to-white"
+                className="committee-card accent-bar-blue p-4"
               >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-base leading-5">
-                      {(() => {
-                        const committeeId = findCommitteeId(committee.name);
-                        const href = committeeId
-                          ? `/committee/${committeeId.toLowerCase()}`
-                          : `/committee/${committee.name
-                              .replace(/\s+/g, '-')
-                              .toLowerCase()
-                              .replace(/[^a-z0-9-]/g, '')}`;
+                <h4 className="aicher-heading text-base mb-3">
+                  {(() => {
+                    const committeeId = findCommitteeId(committee.name);
+                    const href = committeeId
+                      ? `/committee/${committeeId.toLowerCase()}`
+                      : `/committee/${committee.name
+                          .replace(/\s+/g, '-')
+                          .toLowerCase()
+                          .replace(/[^a-z0-9-]/g, '')}`;
 
-                        return (
-                          <Link
-                            href={href}
-                            className="text-blue-600 hover:text-blue-800 hover:underline group-hover:text-blue-700 transition-colors"
-                          >
-                            {committee.name}
-                          </Link>
-                        );
-                      })()}
-                    </h4>
-                    {committee.roles.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {committee.roles.map((role, roleIndex) => (
-                          <span
-                            key={roleIndex}
-                            className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full border-2 border-black ${
-                              role === 'Chair'
-                                ? 'bg-gradient-to-r text-white'
-                                : role === 'Ranking Member'
-                                  ? 'bg-gradient-to-r text-white'
-                                  : 'bg-white border-2 border-gray-300 text-gray-700 border border-gray-200'
-                            }`}
-                            style={{
-                              background:
-                                role === 'Chair'
-                                  ? 'linear-gradient(to right, #3aa3d5, #1e40af)'
-                                  : role === 'Ranking Member'
-                                    ? 'linear-gradient(to right, #e21f0a, #dc2626)'
-                                    : undefined,
-                            }}
-                          >
-                            {role}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    return (
+                      <Link
+                        href={href}
+                        className="text-civiq-blue hover:text-black transition-colors"
+                      >
+                        {committee.name}
+                      </Link>
+                    );
+                  })()}
+                </h4>
+                {committee.roles.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {committee.roles.map((role, roleIndex) => (
+                      <span
+                        key={roleIndex}
+                        className={`aicher-heading text-xs px-3 py-1.5 border-2 ${
+                          role === 'Chair'
+                            ? 'bg-civiq-blue text-white border-civiq-blue'
+                            : role === 'Ranking Member'
+                              ? 'bg-civiq-red text-white border-civiq-red'
+                              : 'bg-white text-gray-700 border-black'
+                        }`}
+                      >
+                        {role}
+                      </span>
+                    ))}
                   </div>
-                </div>
+                )}
               </div>
             ))}
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-400 italic">No committee memberships available</p>
-            <p className="text-xs text-gray-300 mt-2">Data sourced from Congress.gov</p>
+            <p className="text-gray-500 aicher-heading text-sm">
+              No committee memberships available
+            </p>
+            <p className="text-xs text-gray-400 mt-2">Data sourced from Congress.gov</p>
           </div>
         )}
       </div>

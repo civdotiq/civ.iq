@@ -172,7 +172,7 @@ export default function SearchForm() {
   return (
     <div className="max-w-2xl mx-auto mb-8 sm:mb-12 px-4 sm:px-0">
       <form onSubmit={handleSearch} className="relative">
-        <div className="relative">
+        <div className="relative border-2 border-black">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <SearchIcon className="h-5 w-5 text-gray-400" />
           </div>
@@ -181,18 +181,18 @@ export default function SearchForm() {
             placeholder="Enter ZIP code or address..."
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
-            className="block w-full pl-10 sm:pl-grid-5 pr-24 sm:pr-grid-12 py-3 sm:py-grid-2 text-base sm:text-lg border-2 border-gray-300 focus:outline-none focus:border-civiq-blue"
+            className="block w-full pl-10 sm:pl-grid-5 pr-24 sm:pr-grid-12 py-3 sm:py-grid-2 text-base sm:text-lg border-0 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-civiq-blue"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={!searchInput.trim() || isLoading}
-            className="absolute inset-y-0 right-0 flex items-center px-4 sm:px-grid-3 text-white bg-civiq-blue hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors aicher-heading text-sm sm:text-base"
+            className="absolute inset-y-0 right-0 flex items-center px-4 sm:px-grid-3 text-white bg-civiq-blue hover:bg-civiq-green disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors aicher-heading text-sm sm:text-base border-l-2 border-black"
           >
             {isLoading ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent"></div>
             ) : (
-              'Search'
+              'SEARCH'
             )}
           </button>
         </div>
@@ -203,25 +203,25 @@ export default function SearchForm() {
         <button
           onClick={handleGeolocation}
           disabled={isGeolocating || isLoading}
-          className="inline-flex items-center justify-center space-x-2 px-4 py-3 text-sm font-medium text-civiq-blue bg-white border-2 border-civiq-blue hover:bg-civiq-blue hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] w-full sm:w-auto"
+          className="inline-flex items-center justify-center space-x-2 px-4 py-3 text-sm font-bold uppercase tracking-aicher text-civiq-blue bg-white border-2 border-civiq-blue hover:bg-civiq-blue hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] w-full sm:w-auto"
         >
           {isGeolocating ? (
             <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-civiq-blue"></div>
+              <div className="animate-spin h-4 w-4 border-2 border-civiq-blue border-t-transparent"></div>
               <span>Finding location...</span>
             </>
           ) : (
             <>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  strokeLinecap="square"
+                  strokeLinejoin="miter"
                   strokeWidth={2}
                   d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
                 />
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  strokeLinecap="square"
+                  strokeLinejoin="miter"
                   strokeWidth={2}
                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                 />
@@ -232,7 +232,7 @@ export default function SearchForm() {
         </button>
       </div>
       {multiDistrictWarning && (
-        <div className="mt-3 p-3 sm:p-4 bg-blue-50 border-2 border-blue-200 text-sm text-blue-800">
+        <div className="mt-3 p-3 sm:p-4 bg-blue-50 border-2 border-civiq-blue text-sm text-blue-800">
           <div className="flex items-start">
             <svg
               className="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0"
@@ -240,21 +240,17 @@ export default function SearchForm() {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+              <circle cx="12" cy="12" r="9" strokeWidth={2} />
+              <path strokeLinecap="square" strokeWidth={2} d="M12 8v4m0 4h.01" />
             </svg>
             <div className="flex-1">
-              <p className="font-semibold">Multi-District ZIP Code</p>
+              <p className="font-bold uppercase tracking-aicher">Multi-District ZIP Code</p>
               <p className="mt-1 text-sm">
                 This ZIP spans multiple districts. Use advanced search to select yours.
               </p>
               <button
                 onClick={handleAdvancedSearch}
-                className="mt-2 inline-flex items-center justify-center px-4 py-2 bg-civiq-blue text-white text-sm font-medium hover:bg-blue-700 transition-colors min-h-[44px] w-full sm:w-auto"
+                className="mt-2 inline-flex items-center justify-center px-4 py-2 bg-civiq-blue text-white text-sm font-bold uppercase tracking-aicher hover:bg-civiq-green transition-colors min-h-[44px] w-full sm:w-auto"
               >
                 Choose Your District →
               </button>
@@ -263,36 +259,32 @@ export default function SearchForm() {
         </div>
       )}
       {error && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mt-3 p-3 bg-red-50 border-2 border-civiq-red text-sm text-red-800">
           <div className="flex items-start">
             <svg
-              className="w-4 h-4 text-red-500 mt-0.5 mr-2 flex-shrink-0"
+              className="w-5 h-5 text-red-500 mt-0.5 mr-2 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+              <circle cx="12" cy="12" r="9" strokeWidth={2} />
+              <path strokeLinecap="square" strokeWidth={2} d="M12 8v4m0 4h.01" />
             </svg>
             <div className="flex-1">
-              <p className="font-medium">{error.message}</p>
+              <p className="font-bold uppercase tracking-aicher">{error.message}</p>
               <p className="mt-1">{error.suggestion}</p>
               <div className="mt-2 flex space-x-3">
                 {error.type !== 'invalid_zip' && (
                   <button
                     onClick={handleRetry}
-                    className="inline-flex items-center px-3 py-1 bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
+                    className="inline-flex items-center px-3 py-2 bg-civiq-red text-white text-sm font-bold uppercase tracking-aicher hover:bg-red-700 transition-colors border-2 border-black"
                   >
                     Try Again
                   </button>
                 )}
                 <button
                   onClick={handleClearError}
-                  className="inline-flex items-center px-3 py-1 bg-white border border-red-300 text-red-700 text-sm font-medium hover:bg-red-50 transition-colors"
+                  className="inline-flex items-center px-3 py-2 bg-white border-2 border-civiq-red text-red-700 text-sm font-bold uppercase tracking-aicher hover:bg-red-50 transition-colors"
                 >
                   Dismiss
                 </button>
