@@ -120,14 +120,14 @@ export function TabNavigation({
   // Aicher geometric bordered variant (default)
   return (
     <div className={`aicher-tabs ${className}`}>
-      <nav className="flex overflow-x-auto">
+      <nav className="flex">
         {tabs.map((tab, index) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
             className={`aicher-tab ${activeTab === tab.id ? 'active' : ''} ${
               index === tabs.length - 1 ? 'border-r-0' : ''
-            } px-3 sm:px-4 md:px-6 py-2 sm:py-3 gap-1 sm:gap-2 whitespace-nowrap`}
+            }`}
             title={tab.description}
           >
             <span className={iconSizes[size]}>{tab.icon}</span>

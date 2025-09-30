@@ -148,14 +148,14 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Header Section */}
-        <div className="mb-4 sm:mb-6 md:mb-8">
+        <div className="mb-4 sm:mb-6">
           <EnhancedHeader representative={representative} />
         </div>
 
         {/* Key Stats Bar */}
-        <div className="mb-4 sm:mb-6 md:mb-8">
+        <div className="mb-4 sm:mb-6">
           <KeyStatsBar
             stats={{
               billsSponsored: summaryData?.success
@@ -177,15 +177,15 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
           />
         </div>
 
-        {/* Main Content Layout - 2 column with improved spacing */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 sm:gap-6 md:gap-8 mb-6 sm:mb-8 md:mb-12">
+        {/* Main Content Layout - 2 column with responsive spacing */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 sm:gap-6 mb-4 sm:mb-6">
           {/* Main Content Area - White bordered box */}
           <div className="bg-white aicher-border">
             {/* Tab Navigation */}
             <TabNavigation tabs={profileTabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-            {/* Tab Content with consistent padding and Suspense boundary */}
-            <div className="p-3 sm:p-4 md:p-6 lg:p-8">
+            {/* Tab Content with responsive padding and Suspense boundary */}
+            <div className="p-4 sm:p-6">
               <Suspense fallback={<TabLoadingSpinner />}>{renderActiveTab()}</Suspense>
             </div>
           </div>
@@ -211,8 +211,8 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
           </div>
         </div>
 
-        {/* Data Sources Attribution - improved spacing */}
-        <div className="bg-white aicher-border p-4 sm:p-6 md:p-8">
+        {/* Data Sources Attribution - responsive spacing */}
+        <div className="bg-white aicher-border p-4 sm:p-6">
           <h3 className="aicher-heading type-lg text-gray-900 mb-4 sm:mb-6">Data Sources</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             <div className="flex items-center gap-3">
