@@ -127,24 +127,13 @@ export function TabNavigation({
             onClick={() => onTabChange(tab.id)}
             className={`aicher-tab ${activeTab === tab.id ? 'active' : ''} ${
               index === tabs.length - 1 ? 'border-r-0' : ''
-            }`}
-            style={{
-              padding: 'calc(var(--grid) * 2) calc(var(--grid) * 3)',
-              gap: 'calc(var(--grid) * 1)',
-            }}
+            } px-3 sm:px-4 md:px-6 py-2 sm:py-3 gap-1 sm:gap-2 whitespace-nowrap`}
             title={tab.description}
           >
             <span className={iconSizes[size]}>{tab.icon}</span>
             <span>{tab.label}</span>
             {tab.badge && (
-              <span
-                className="inline-flex items-center justify-center aicher-heading type-xs border-2 border-black"
-                style={{
-                  minWidth: 'calc(var(--grid) * 3)',
-                  height: 'calc(var(--grid) * 2.5)',
-                  padding: '0 calc(var(--grid) * 1)',
-                }}
-              >
+              <span className="inline-flex items-center justify-center aicher-heading type-xs border-2 border-black min-w-[20px] h-5 px-1">
                 {tab.badge}
               </span>
             )}

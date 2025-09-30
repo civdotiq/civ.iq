@@ -6804,6 +6804,24 @@
     }
   ],
   [
+    "TX-23",
+    {
+      "population": 806245,
+      "white": 551203,
+      "black": 30026,
+      "asian": 14752,
+      "hispanic": 558860,
+      "medianAge": 34.2,
+      "medianIncome": 63224,
+      "housingUnits": 297603,
+      "educationBachelors": 81458,
+      "votingAgePopulation": 515881,
+      "diversityIndex": 5.040155167175109,
+      "urbanPercentage": 67.7282319062644,
+      "state": "TX"
+    }
+  ],
+  [
     "TX-20",
     {
       "population": 798649,
@@ -6854,24 +6872,6 @@
       "votingAgePopulation": 599579,
       "diversityIndex": 59.93698808686534,
       "urbanPercentage": 71.97817093592074,
-      "state": "TX"
-    }
-  ],
-  [
-    "TX-23",
-    {
-      "population": 806245,
-      "white": 551203,
-      "black": 30026,
-      "asian": 14752,
-      "hispanic": 558860,
-      "medianAge": 34.2,
-      "medianIncome": 63224,
-      "housingUnits": 297603,
-      "educationBachelors": 81458,
-      "votingAgePopulation": 515881,
-      "diversityIndex": 5.040155167175109,
-      "urbanPercentage": 67.7282319062644,
       "state": "TX"
     }
   ],

@@ -33,25 +33,25 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
 
   return (
     <header className={`fixed top-0 w-full ${headerClasses} z-50 ${className}`}>
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 group">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
           <div className="transform transition-all duration-300 group-hover:scale-105">
-            <div className="w-8 h-12">
+            <div className="w-7 h-11 sm:w-8 sm:h-12">
               <CiviqLogo />
             </div>
           </div>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-4 lg:gap-6">
           {navigation.map(item => {
             const isActive = pathname.startsWith(item.href);
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`aicher-heading-wide relative transition-all duration-200 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] after:transition-all after:duration-200 hover:after:w-full ${
+                className={`aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] after:transition-all after:duration-200 hover:after:w-full ${
                   isActive ? 'text-[#3ea2d4] after:w-full' : 'text-gray-700 hover:text-[#3ea2d4]'
                 }`}
               >
@@ -63,7 +63,7 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
 
         {/* Mobile Menu Button */}
         <button
-          className="aicher-button md:hidden flex items-center justify-center w-10 h-10 text-gray-700 transition-colors"
+          className="md:hidden flex items-center justify-center min-w-[44px] min-h-[44px] text-gray-700 border-2 border-gray-300 hover:border-civiq-blue transition-colors"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle mobile menu"
           aria-expanded={mobileMenuOpen}

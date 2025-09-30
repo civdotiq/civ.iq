@@ -148,17 +148,14 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div
-        className="max-w-7xl mx-auto px-4 md:px-8"
-        style={{ padding: 'calc(var(--grid) * 2) calc(var(--grid) * 2) calc(var(--grid) * 4)' }}
-      >
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-8">
         {/* Header Section */}
-        <div style={{ marginBottom: 'calc(var(--grid) * 4)' }}>
+        <div className="mb-4 sm:mb-6 md:mb-8">
           <EnhancedHeader representative={representative} />
         </div>
 
         {/* Key Stats Bar */}
-        <div style={{ marginBottom: 'calc(var(--grid) * 4)' }}>
+        <div className="mb-4 sm:mb-6 md:mb-8">
           <KeyStatsBar
             stats={{
               billsSponsored: summaryData?.success
@@ -181,29 +178,23 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
         </div>
 
         {/* Main Content Layout - 2 column with improved spacing */}
-        <div
-          className="grid grid-cols-1 lg:grid-cols-[1fr_320px]"
-          style={{
-            gap: 'calc(var(--grid) * 4)',
-            marginBottom: 'calc(var(--grid) * 6)',
-          }}
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 sm:gap-6 md:gap-8 mb-6 sm:mb-8 md:mb-12">
           {/* Main Content Area - White bordered box */}
           <div className="bg-white aicher-border">
             {/* Tab Navigation */}
             <TabNavigation tabs={profileTabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
             {/* Tab Content with consistent padding and Suspense boundary */}
-            <div style={{ padding: 'calc(var(--grid) * 4)' }}>
+            <div className="p-3 sm:p-4 md:p-6 lg:p-8">
               <Suspense fallback={<TabLoadingSpinner />}>{renderActiveTab()}</Suspense>
             </div>
           </div>
 
           {/* Sidebar - Stack of bordered cards with Suspense boundary */}
-          <div>
+          <div className="lg:sticky lg:top-4 lg:self-start">
             <Suspense
               fallback={
-                <div className="bg-white aicher-border p-6">
+                <div className="bg-white aicher-border p-4 sm:p-6">
                   <div className="animate-pulse">
                     <div className="h-6 bg-gray-200 rounded mb-4"></div>
                     <div className="space-y-3">
@@ -221,39 +212,25 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
         </div>
 
         {/* Data Sources Attribution - improved spacing */}
-        <div className="bg-white aicher-border" style={{ padding: 'calc(var(--grid) * 4)' }}>
-          <h3
-            className="aicher-heading type-lg text-gray-900"
-            style={{ marginBottom: 'calc(var(--grid) * 3)' }}
-          >
-            Data Sources
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 'calc(var(--grid) * 3)' }}>
-            <div className="flex items-center" style={{ gap: 'calc(var(--grid) * 2)' }}>
-              <div
-                className="aicher-border border-civiq-blue bg-civiq-blue"
-                style={{ width: 'calc(var(--grid) * 2)', height: 'calc(var(--grid) * 2)' }}
-              ></div>
+        <div className="bg-white aicher-border p-4 sm:p-6 md:p-8">
+          <h3 className="aicher-heading type-lg text-gray-900 mb-4 sm:mb-6">Data Sources</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            <div className="flex items-center gap-3">
+              <div className="aicher-border border-civiq-blue bg-civiq-blue w-4 h-4"></div>
               <div>
                 <div className="aicher-heading-wide type-sm text-gray-900">Congress.gov</div>
                 <div className="type-xs text-gray-600">Bills, votes, committees</div>
               </div>
             </div>
-            <div className="flex items-center" style={{ gap: 'calc(var(--grid) * 2)' }}>
-              <div
-                className="aicher-border border-civiq-green bg-civiq-green"
-                style={{ width: 'calc(var(--grid) * 2)', height: 'calc(var(--grid) * 2)' }}
-              ></div>
+            <div className="flex items-center gap-3">
+              <div className="aicher-border border-civiq-green bg-civiq-green w-4 h-4"></div>
               <div>
                 <div className="aicher-heading-wide type-sm text-gray-900">FEC.gov</div>
                 <div className="type-xs text-gray-600">Campaign finance data</div>
               </div>
             </div>
-            <div className="flex items-center" style={{ gap: 'calc(var(--grid) * 2)' }}>
-              <div
-                className="aicher-border border-civiq-red bg-civiq-red"
-                style={{ width: 'calc(var(--grid) * 2)', height: 'calc(var(--grid) * 2)' }}
-              ></div>
+            <div className="flex items-center gap-3">
+              <div className="aicher-border border-civiq-red bg-civiq-red w-4 h-4"></div>
               <div>
                 <div className="aicher-heading-wide type-sm text-gray-900">
                   Congress-Legislators
@@ -262,7 +239,7 @@ export function SimpleRepresentativeProfile({ representative }: SimpleRepresenta
               </div>
             </div>
           </div>
-          <p className="type-sm text-gray-500" style={{ marginTop: 'calc(var(--grid) * 3)' }}>
+          <p className="type-sm text-gray-500 mt-4 sm:mt-6">
             All data is sourced from official government APIs and repositories. Data is refreshed
             automatically and reflects the most current available information.
           </p>

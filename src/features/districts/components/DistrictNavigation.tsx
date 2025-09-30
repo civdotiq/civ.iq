@@ -35,21 +35,25 @@ export default function DistrictNavigation({
           </Link>
         </div>
 
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Major Counties</h4>
-          <div className="text-sm text-gray-600">
-            {counties.slice(0, 3).join(', ')}
-            {counties.length > 3 && ` and ${counties.length - 3} more`}
+        {counties.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Major Counties</h4>
+            <div className="text-sm text-gray-600">
+              {counties.slice(0, 3).join(', ')}
+              {counties.length > 3 && ` and ${counties.length - 3} more`}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Major Cities</h4>
-          <div className="text-sm text-gray-600">
-            {majorCities.slice(0, 3).join(', ')}
-            {majorCities.length > 3 && ` and ${majorCities.length - 3} more`}
+        {majorCities.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Major Cities</h4>
+            <div className="text-sm text-gray-600">
+              {majorCities.slice(0, 3).join(', ')}
+              {majorCities.length > 3 && ` and ${majorCities.length - 3} more`}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="border-t pt-4">
           <h4 className="text-sm font-medium text-gray-700 mb-2">Related Pages</h4>

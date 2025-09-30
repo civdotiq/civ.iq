@@ -81,11 +81,8 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
         style={{ height: 'calc(var(--grid) * 0.75)' }}
       ></div>
 
-      <div style={{ padding: 'calc(var(--grid) * 6) calc(var(--grid) * 4) calc(var(--grid) * 4)' }}>
-        <div
-          className="grid grid-cols-1 md:grid-cols-[auto_1fr] items-center"
-          style={{ gap: 'calc(var(--grid) * 6)' }}
-        >
+      <div className="p-4 sm:p-6 md:p-8 pt-8 sm:pt-10 md:pt-12">
+        <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] items-center gap-4 sm:gap-6 md:gap-12">
           {/* Photo - Geometric framing with consistent sizing */}
           <div className="flex-shrink-0 justify-self-center md:justify-self-start">
             {!imageError ? (
@@ -94,16 +91,12 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
                 alt={getDisplayName()}
                 width={128}
                 height={128}
-                className="object-cover aicher-border"
-                style={{ width: 'calc(var(--grid) * 16)', height: 'calc(var(--grid) * 16)' }}
+                className="object-cover aicher-border w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32"
                 onError={() => setImageError(true)}
                 data-testid="representative-photo"
               />
             ) : (
-              <div
-                className="bg-gray-100 flex items-center justify-center text-gray-400 aicher-border"
-                style={{ width: 'calc(var(--grid) * 16)', height: 'calc(var(--grid) * 16)' }}
-              >
+              <div className="bg-gray-100 flex items-center justify-center text-gray-400 aicher-border w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32">
                 <svg
                   className="w-12 h-12"
                   fill="currentColor"
@@ -120,56 +113,40 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
           <div className="text-center md:text-left">
             <h1
               data-testid="representative-name"
-              className="aicher-display-title text-gray-900 leading-tight"
-              style={{
-                marginBottom: 'calc(var(--grid) * 2)',
-                fontSize: 'calc(var(--type-3xl) * 1.1)',
-                lineHeight: '1.1',
-              }}
+              className="aicher-display-title text-gray-900 leading-tight text-2xl sm:text-3xl md:text-4xl mb-2 sm:mb-3"
             >
               {getDisplayName()}
             </h1>
 
             <p
               data-testid="representative-state"
-              className="type-xl text-gray-600 font-medium"
-              style={{ marginBottom: 'calc(var(--grid) * 3)' }}
+              className="text-base sm:text-lg md:type-xl text-gray-600 font-medium mb-4 sm:mb-5 md:mb-6"
             >
               {getTitle()}
             </p>
 
             {/* Geometric badges with improved spacing */}
-            <div
-              className="flex flex-wrap items-center justify-center md:justify-start"
-              style={{ gap: 'calc(var(--grid) * 2)' }}
-            >
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 sm:gap-3">
               {representative.party && (
                 <span
-                  className={`aicher-heading type-sm font-bold aicher-border ${
+                  className={`aicher-heading text-xs sm:type-sm font-bold aicher-border px-2 sm:px-3 py-1.5 sm:py-2 ${
                     representative.party === 'Republican'
                       ? 'bg-red-50 text-red-800 border-red'
                       : representative.party === 'Democrat'
                         ? 'bg-blue-50 text-blue-800 border-blue'
                         : 'bg-gray-50 text-gray-800 border-black'
                   }`}
-                  style={{ padding: 'calc(var(--grid) * 1.5) calc(var(--grid) * 3)' }}
                 >
                   {representative.party}
                 </span>
               )}
               {getAge() && (
-                <span
-                  className="aicher-heading type-sm font-bold bg-green-50 text-green-800 border-green aicher-border"
-                  style={{ padding: 'calc(var(--grid) * 1.5) calc(var(--grid) * 3)' }}
-                >
+                <span className="aicher-heading text-xs sm:type-sm font-bold bg-green-50 text-green-800 border-green aicher-border px-2 sm:px-3 py-1.5 sm:py-2">
                   {getAge()} years old
                 </span>
               )}
               {getStateRank() && (
-                <span
-                  className="aicher-heading type-sm font-bold bg-purple-50 text-purple-800 border-black aicher-border"
-                  style={{ padding: 'calc(var(--grid) * 1.5) calc(var(--grid) * 3)' }}
-                >
+                <span className="aicher-heading text-xs sm:type-sm font-bold bg-purple-50 text-purple-800 border-black aicher-border px-2 sm:px-3 py-1.5 sm:py-2">
                   {getStateRank()}
                 </span>
               )}

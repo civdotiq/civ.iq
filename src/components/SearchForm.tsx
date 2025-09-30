@@ -170,7 +170,7 @@ export default function SearchForm() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mb-12">
+    <div className="max-w-2xl mx-auto mb-8 sm:mb-12 px-4 sm:px-0">
       <form onSubmit={handleSearch} className="relative">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -178,16 +178,16 @@ export default function SearchForm() {
           </div>
           <input
             type="text"
-            placeholder="Enter your ZIP code or address..."
+            placeholder="Enter ZIP code or address..."
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
-            className="block w-full pl-grid-5 pr-grid-12 py-grid-2 text-lg border-aicher border-gray-300 focus:outline-none focus:border-civiq-blue"
+            className="block w-full pl-10 sm:pl-grid-5 pr-24 sm:pr-grid-12 py-3 sm:py-grid-2 text-base sm:text-lg border-2 border-gray-300 focus:outline-none focus:border-civiq-blue"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={!searchInput.trim() || isLoading}
-            className="absolute inset-y-0 right-0 flex items-center px-grid-3 text-white bg-civiq-blue hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors aicher-heading"
+            className="absolute inset-y-0 right-0 flex items-center px-4 sm:px-grid-3 text-white bg-civiq-blue hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors aicher-heading text-sm sm:text-base"
           >
             {isLoading ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
@@ -203,16 +203,16 @@ export default function SearchForm() {
         <button
           onClick={handleGeolocation}
           disabled={isGeolocating || isLoading}
-          className="inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium text-civiq-blue bg-white border border-civiq-blue hover:bg-civiq-blue hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center justify-center space-x-2 px-4 py-3 text-sm font-medium text-civiq-blue bg-white border-2 border-civiq-blue hover:bg-civiq-blue hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] w-full sm:w-auto"
         >
           {isGeolocating ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-civiq-blue"></div>
-              <span>Finding your location...</span>
+              <span>Finding location...</span>
             </>
           ) : (
             <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -232,10 +232,10 @@ export default function SearchForm() {
         </button>
       </div>
       {multiDistrictWarning && (
-        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 text-sm text-blue-800">
+        <div className="mt-3 p-3 sm:p-4 bg-blue-50 border-2 border-blue-200 text-sm text-blue-800">
           <div className="flex items-start">
             <svg
-              className="w-4 h-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0"
+              className="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -248,14 +248,13 @@ export default function SearchForm() {
               />
             </svg>
             <div className="flex-1">
-              <p className="font-medium">Multi-District ZIP Code Detected</p>
-              <p className="mt-1">
-                This ZIP code spans multiple congressional districts. Use our advanced search to
-                select your exact district or provide your street address.
+              <p className="font-semibold">Multi-District ZIP Code</p>
+              <p className="mt-1 text-sm">
+                This ZIP spans multiple districts. Use advanced search to select yours.
               </p>
               <button
                 onClick={handleAdvancedSearch}
-                className="mt-2 inline-flex items-center px-3 py-1 bg-civiq-blue text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+                className="mt-2 inline-flex items-center justify-center px-4 py-2 bg-civiq-blue text-white text-sm font-medium hover:bg-blue-700 transition-colors min-h-[44px] w-full sm:w-auto"
               >
                 Choose Your District →
               </button>

@@ -43,9 +43,9 @@ export function AicherMetricCard({
       {/* Colored accent bar */}
       <div className={`aicher-metric-accent-bar ${getAccentClass()}`}></div>
 
-      <div className="p-3" style={{ paddingLeft: 'calc(var(--grid) * 4)' }}>
+      <div className="p-3 sm:p-4 sm:pl-8">
         {/* Metric header with icon */}
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
           <div className="w-6 h-6 opacity-80">
             <Icon className="w-full h-full" strokeWidth={2} />
           </div>
@@ -55,16 +55,16 @@ export function AicherMetricCard({
         {/* Metric value */}
         <div className="mb-1">
           {isLoading ? (
-            <div className="aicher-loading h-12 w-20"></div>
+            <div className="aicher-loading h-10 sm:h-12 w-16 sm:w-20"></div>
           ) : (
-            <div className="type-3xl font-black leading-none text-gray-900">
+            <div className="text-2xl sm:text-3xl md:type-3xl font-black leading-none text-gray-900">
               {value === null || value === undefined ? '—' : value}
             </div>
           )}
         </div>
 
         {/* Subtitle */}
-        {subtitle && <div className="type-sm text-gray-600 font-medium">{subtitle}</div>}
+        {subtitle && <div className="type-xs sm:type-sm text-gray-600 font-medium">{subtitle}</div>}
       </div>
     </div>
   );

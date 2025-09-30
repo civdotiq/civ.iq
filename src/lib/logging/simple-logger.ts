@@ -17,6 +17,9 @@ const logger = {
   debug: (...args: unknown[]) =>
     // eslint-disable-next-line no-console
     console.log('[DEBUG]', ...args),
+  metric: (name: string, data: Record<string, unknown>) =>
+    // eslint-disable-next-line no-console
+    console.log('[METRIC]', name, JSON.stringify(data)),
 };
 
 export default logger;

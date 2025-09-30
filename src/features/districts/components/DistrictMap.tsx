@@ -31,7 +31,6 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const [geoJsonData, setGeoJsonData] = useState<GeoJSON.Feature | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [coordinateCount, setCoordinateCount] = useState(0);
   const [dataSource, setDataSource] = useState<string>('');
@@ -48,6 +47,8 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
 
     // Small delay to ensure DOM is ready
     const timer = setTimeout(() => {
+      if (!mapContainer.current) return; // Exit if no container
+      if (mapRef.current) return; // Exit if map already exists
       logger.info('🔍 Map useEffect triggered - checking conditions:', {
         hasContainer: !!mapContainer.current,
         hasExistingMap: !!mapRef.current,
@@ -184,11 +185,20 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
 
   // Update map with district data
   useEffect(() => {
-    if (!mapRef.current || !geoJsonData || !isClient) return;
+    logger.info('🔄 District data useEffect triggered:', {
+      hasMap: !!mapRef.current,
+      hasGeoJson: !!geoJsonData,
+      isClient,
+    });
+
+    if (!mapRef.current || !geoJsonData || !isClient) {
+      logger.warn('⚠️ Skipping district layer update - missing requirements');
+      return;
+    }
 
     const map = mapRef.current;
 
-    logger.info('Updating map with district data:', {
+    logger.info('✅ Updating map with district data:', {
       hasMap: !!mapRef.current,
       hasGeoJson: !!geoJsonData,
       geoJsonType: geoJsonData?.type,
@@ -198,7 +208,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
 
     const addDistrictLayers = () => {
       try {
-        console.log('▶️ Attempting to load district boundaries...');
+        logger.info('▶️ Attempting to load district boundaries...');
 
         // Remove existing district layer if present
         if (map.getSource('district-boundary')) {
@@ -216,10 +226,10 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           type: 'geojson' as const,
           data: geoJsonData,
         };
-        console.log(' Adding source with config:', sourceConfig);
+        logger.info(' Adding source with config:', sourceConfig);
 
         map.addSource('district-boundary', sourceConfig);
-        console.log(' ✅ Source added successfully.');
+        logger.info(' ✅ Source added successfully.');
 
         const isRealPolygon = dataSource === 'real_polygon_extraction';
         const fillColor = isRealPolygon ? '#22C55E' : '#3B82F6';
@@ -235,10 +245,10 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
             'fill-opacity': 0.3,
           },
         };
-        console.log(' Adding fill layer with config:', fillLayerConfig);
+        logger.info(' Adding fill layer with config:', fillLayerConfig);
 
         map.addLayer(fillLayerConfig);
-        console.log(' ✅ Fill layer added successfully.');
+        logger.info(' ✅ Fill layer added successfully.');
 
         // Add stroke layer
         const strokeLayerConfig = {
@@ -251,10 +261,10 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
             'line-opacity': 0.9,
           },
         };
-        console.log(' Adding stroke layer with config:', strokeLayerConfig);
+        logger.info(' Adding stroke layer with config:', strokeLayerConfig);
 
         map.addLayer(strokeLayerConfig);
-        console.log(' ✅ Stroke layer added successfully.');
+        logger.info(' ✅ Stroke layer added successfully.');
 
         logger.info('✅ District layers added successfully');
 
@@ -312,12 +322,18 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
   }, [geoJsonData, dataSource, isClient]);
 
   useEffect(() => {
+    logger.info('🎯 Boundary fetch useEffect triggered:', {
+      state,
+      district,
+      isClient,
+    });
+
     async function fetchDistrictBoundary() {
       try {
-        setLoading(true);
         setError(null);
 
         const districtId = `${state}-${district.padStart(2, '0')}`;
+        logger.info('🌐 Fetching district boundary:', districtId);
         const response = await fetch(`/api/district-boundaries/${districtId}`);
 
         if (!response.ok) {
@@ -330,9 +346,18 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           }
         } else {
           const data = await response.json();
+          logger.info('✅ District boundary received:', {
+            hasData: !!data,
+            type: data?.type,
+            hasGeometry: !!data?.geometry,
+          });
 
           // The API returns the GeoJSON directly, not wrapped in a boundary property
           const boundary = data.boundary || data; // Support both formats
+          logger.info('📍 Setting geoJsonData:', {
+            boundaryType: boundary?.type,
+            geometryType: boundary?.geometry?.type,
+          });
           setGeoJsonData(boundary);
 
           // Count coordinates properly for both Polygon and MultiPolygon
@@ -358,21 +383,11 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load district boundary');
         setGeoJsonData(null);
-      } finally {
-        setLoading(false);
       }
     }
 
     fetchDistrictBoundary();
   }, [state, district, isClient]);
-
-  if (loading) {
-    return (
-      <div className="w-full h-[400px] bg-white border-2 border-gray-300 flex items-center justify-center">
-        <div className="text-gray-500">Loading district map...</div>
-      </div>
-    );
-  }
 
   if (error && !geoJsonData) {
     return (

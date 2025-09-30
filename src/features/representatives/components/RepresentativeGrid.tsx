@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { Representative } from '@/features/representatives/services/congress-api';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { DataSourceBadge, CacheStatusIndicator } from '@/components/shared/ui/DataTransparency';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface RepresentativeGridProps {
   representatives: Representative[];
@@ -129,14 +130,14 @@ const RepresentativeCard = memo(function RepresentativeCard({
 
   return (
     <div className="aicher-card aicher-hover">
-      <div className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-4">
+      <div className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start justify-between mb-4 gap-3 sm:gap-0">
+          <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
             <RepresentativePhoto bioguideId={rep.bioguideId} name={rep.name} size="md" />
-            <div>
-              <h3 className="aicher-heading text-lg text-gray-900">{rep.name}</h3>
-              <p className="aicher-heading-wide text-sm text-gray-600">{rep.chamber}</p>
-              <div className="flex items-center gap-2 mt-1">
+            <div className="flex-1 sm:flex-initial">
+              <h3 className="aicher-heading text-base sm:text-lg text-gray-900">{rep.name}</h3>
+              <p className="aicher-heading-wide text-xs sm:text-sm text-gray-600">{rep.chamber}</p>
+              <div className="flex items-center flex-wrap gap-2 mt-1">
                 <span
                   className={`aicher-button px-2 py-1 text-xs aicher-no-radius ${getPartyBgColor(rep.party)}`}
                 >
@@ -161,11 +162,11 @@ const RepresentativeCard = memo(function RepresentativeCard({
           </div>
         )}
 
-        <div className="space-y-3 mb-4">
+        <div className="space-y-2 sm:space-y-3 mb-4">
           {rep.phone && (
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
               <svg
-                className="w-4 h-4 text-gray-400"
+                className="w-4 h-4 text-gray-400 flex-shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -177,15 +178,18 @@ const RepresentativeCard = memo(function RepresentativeCard({
                   d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                 />
               </svg>
-              <a href={`tel:${rep.phone}`} className="aicher-button-primary text-sm aicher-focus">
+              <a
+                href={`tel:${rep.phone}`}
+                className="aicher-button-primary text-xs sm:text-sm aicher-focus min-h-[44px] flex items-center"
+              >
                 {rep.phone}
               </a>
             </div>
           )}
 
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
             <svg
-              className="w-4 h-4 text-gray-400"
+              className="w-4 h-4 text-gray-400 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -197,12 +201,12 @@ const RepresentativeCard = memo(function RepresentativeCard({
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-            <span>Next Election: {rep.nextElection}</span>
+            <span className="truncate">Next Election: {rep.nextElection}</span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
             <svg
-              className="w-4 h-4 text-gray-400"
+              className="w-4 h-4 text-gray-400 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -218,10 +222,10 @@ const RepresentativeCard = memo(function RepresentativeCard({
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={() => router.push(`/representative/${rep.bioguideId}`)}
-            className="flex-1 aicher-button-primary aicher-focus"
+            className="flex-1 aicher-button-primary aicher-focus text-sm sm:text-base min-h-[44px]"
           >
             View Profile
           </button>
@@ -239,7 +243,7 @@ const RepresentativeCard = memo(function RepresentativeCard({
                 alert('You can only compare 2 representatives at a time');
               }
             }}
-            className="aicher-button aicher-focus"
+            className="sm:flex-initial aicher-button aicher-focus text-sm sm:text-base min-h-[44px]"
           >
             Compare
           </button>
@@ -254,15 +258,18 @@ export function RepresentativeGrid({
   compareIds,
   metadata,
 }: RepresentativeGridProps) {
+  // Properly detect mobile with responsive hook
+  const isMobile = useIsMobile();
+
   return (
     <VirtualizedGrid
       items={representatives}
       renderItem={rep => (
         <RepresentativeCard rep={rep} compareIds={compareIds} metadata={metadata} />
       )}
-      itemHeight={metadata ? 250 : 220} // Increase height when showing metadata
+      itemHeight={metadata ? (isMobile ? 320 : 250) : isMobile ? 280 : 220} // Adjust for mobile
       containerHeight={800}
-      columnsPerRow={3}
+      columnsPerRow={isMobile ? 1 : 3} // Single column on mobile
     />
   );
 }

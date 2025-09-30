@@ -122,7 +122,15 @@
       "Bash(NEWS_SOURCE=RSS npm run dev)",
       "Bash(mkdir:*)",
       "Bash(killall:*)",
-      "Bash(PERF_LOGGING=true timeout 10 curl -s http://localhost:3000/api/representative/T000480)"
+      "Bash(PERF_LOGGING=true timeout 10 curl -s http://localhost:3000/api/representative/T000480)",
+      "Bash(Get-Process -Name \"node\")",
+      "Bash(Stop-Process -Force)",
+      "Bash(chmod:*)",
+      "Bash(bash:*)",
+      "Bash(/mnt/d/civic-intel-hub/scripts/cleanup-processes.sh:*)",
+      "Bash(./scripts/cleanup-processes.sh:*)",
+      "WebFetch(domain:ballotpedia.org)",
+      "WebFetch(domain:docs.google.com)"
     ],
     "deny": [],
     "ask": []

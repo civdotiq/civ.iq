@@ -281,7 +281,7 @@
   .aicher-grid-3,
   .aicher-grid-4 {
     grid-template-columns: 1fr;
-    gap: calc(var(--grid) * 3); /* Increased spacing on mobile */
+    gap: calc(var(--grid) * 2); /* Optimized spacing on mobile */
   }
 }
 
@@ -295,26 +295,94 @@
 
 /* Mobile-specific improvements */
 @media (max-width: 768px) {
+  /* Base typography scaling */
+  html {
+    font-size: 16px; /* Ensure readable base size */
+  }
+
+  /* Container padding reduction */
+  .container {
+    padding-left: calc(var(--grid) * 2);
+    padding-right: calc(var(--grid) * 2);
+  }
+
+  /* Typography adjustments */
+  .aicher-display-title {
+    font-size: 2rem; /* 32px instead of 48px */
+    line-height: 1.2;
+  }
+
+  .aicher-section-title {
+    font-size: 1.25rem; /* 20px instead of 24px */
+  }
+
+  /* Cards */
+  .aicher-card {
+    padding: calc(var(--grid) * 2); /* Reduce from 3 to 2 */
+  }
+
+  /* Buttons - ensure minimum touch target */
+  .aicher-button,
+  .aicher-button-primary {
+    min-height: 44px; /* iOS minimum touch target */
+    min-width: 44px;
+    padding: calc(var(--grid) * 1.5) calc(var(--grid) * 2);
+  }
+
+  /* Tab navigation with horizontal scroll */
   .aicher-tabs {
     overflow-x: auto;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
 
   .aicher-tabs::-webkit-scrollbar {
-    display: none; /* WebKit */
+    height: 4px;
+  }
+
+  .aicher-tabs::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  .aicher-tabs::-webkit-scrollbar-thumb {
+    background: var(--aicher-blue);
+    border-radius: 2px;
   }
 
   .aicher-tab {
     flex-shrink: 0;
     padding: calc(var(--grid) * 1.5) calc(var(--grid) * 2);
-    font-size: var(--type-xs);
+    font-size: var(--type-sm);
     min-width: auto;
+    min-height: 44px; /* Touch target */
   }
 
-  /* Reduce header padding on mobile */
-  .aicher-display-title {
-    font-size: calc(var(--type-3xl) * 0.9);
+  /* Input fields */
+  input[type='text'],
+  input[type='email'],
+  input[type='tel'],
+  input[type='search'],
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevent iOS zoom on focus */
+    min-height: 44px;
+  }
+
+  /* Spacing utilities */
+  .mb-grid-6 {
+    margin-bottom: calc(var(--grid) * 3);
+  }
+
+  .mb-grid-4 {
+    margin-bottom: calc(var(--grid) * 2);
+  }
+
+  .py-6,
+  .py-8 {
+    padding-top: calc(var(--grid) * 2);
+    padding-bottom: calc(var(--grid) * 2);
   }
 }
 

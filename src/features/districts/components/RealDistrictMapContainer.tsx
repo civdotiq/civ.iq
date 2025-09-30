@@ -34,7 +34,7 @@ interface MapState {
 
 export function RealDistrictMapContainer({
   selectedState,
-  selectedDistrict,
+  selectedDistrict: _selectedDistrict,
   onDistrictClick,
   className = '',
   showControls = true,
@@ -81,8 +81,16 @@ export function RealDistrictMapContainer({
 
     const initializeMap = async () => {
       try {
-        // Dynamic import MapLibre GL
+        // Dynamic import MapLibre GL and PMTiles
         const maplibregl = (await import('maplibre-gl')).default;
+        const { Protocol } = await import('pmtiles');
+
+        // Register PMTiles protocol with MapLibre GL
+        const protocol = new Protocol();
+        maplibregl.addProtocol('pmtiles', protocol.tile);
+        logger.info('PMTiles protocol registered with MapLibre GL', {
+          component: 'RealDistrictMapContainer',
+        });
 
         // Create map instance
         const map = new maplibregl.Map({
@@ -120,7 +128,9 @@ export function RealDistrictMapContainer({
 
         // Wait for map to load
         map.on('load', () => {
-          console.log('🗺️ Map load event fired - ready for district data');
+          logger.info('Map load event fired - ready for district data', {
+            component: 'RealDistrictMapContainer',
+          });
           setMapState(prev => ({ ...prev, mapLoaded: true }));
           loadDistrictBoundaries();
         });
@@ -155,6 +165,10 @@ export function RealDistrictMapContainer({
         mapRef.current.remove();
         mapRef.current = null;
       }
+      // Remove PMTiles protocol
+      import('maplibre-gl').then(({ default: maplibregl }) => {
+        maplibregl.removeProtocol('pmtiles');
+      });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialCenter, initialZoom, enableInteraction, showControls]);
@@ -164,7 +178,9 @@ export function RealDistrictMapContainer({
     if (!mapRef.current || !mapState.mapLoaded) return;
 
     try {
-      console.log('▶️ Attempting to load district boundaries...');
+      logger.info('Attempting to load district boundaries', {
+        component: 'RealDistrictMapContainer',
+      });
       setMapState(prev => ({ ...prev, loading: true }));
 
       const map = mapRef.current;
@@ -183,10 +199,15 @@ export function RealDistrictMapContainer({
         type: 'vector' as const,
         url: `pmtiles://${pmtilesUrl}`,
       };
-      console.log(' Adding source with config:', sourceConfig);
+      logger.debug('Adding PMTiles source', {
+        component: 'RealDistrictMapContainer',
+        config: sourceConfig,
+      });
 
       map.addSource('district-boundaries', sourceConfig);
-      console.log(' ✅ Source added successfully.');
+      logger.info('PMTiles source added successfully', {
+        component: 'RealDistrictMapContainer',
+      });
 
       // Add district boundary layers using REAL Census data
       const fillLayerConfig = {
@@ -199,10 +220,15 @@ export function RealDistrictMapContainer({
           'fill-opacity': 0.6,
         },
       };
-      console.log(' Adding fill layer with config:', fillLayerConfig);
+      logger.debug('Adding fill layer', {
+        component: 'RealDistrictMapContainer',
+        config: fillLayerConfig,
+      });
 
       map.addLayer(fillLayerConfig);
-      console.log(' ✅ Fill layer added successfully.');
+      logger.info('Fill layer added successfully', {
+        component: 'RealDistrictMapContainer',
+      });
 
       const strokeLayerConfig = {
         id: 'district-stroke',
@@ -214,10 +240,15 @@ export function RealDistrictMapContainer({
           'line-width': 1,
         },
       };
-      console.log(' Adding stroke layer with config:', strokeLayerConfig);
+      logger.debug('Adding stroke layer', {
+        component: 'RealDistrictMapContainer',
+        config: strokeLayerConfig,
+      });
 
       map.addLayer(strokeLayerConfig);
-      console.log(' ✅ Stroke layer added successfully.');
+      logger.info('Stroke layer added successfully', {
+        component: 'RealDistrictMapContainer',
+      });
 
       // Add district labels showing real district names
       const labelsLayerConfig = {
@@ -236,10 +267,26 @@ export function RealDistrictMapContainer({
           'text-halo-width': 1,
         },
       };
-      console.log(' Adding labels layer with config:', labelsLayerConfig);
+      logger.debug('Adding labels layer', {
+        component: 'RealDistrictMapContainer',
+        config: labelsLayerConfig,
+      });
 
       map.addLayer(labelsLayerConfig);
-      console.log(' ✅ Labels layer added successfully.');
+      logger.info('Labels layer added successfully', {
+        component: 'RealDistrictMapContainer',
+      });
+
+      // Add PMTiles loading verification
+      map.on('sourcedata', e => {
+        if (e.sourceId === 'district-boundaries' && e.isSourceLoaded) {
+          logger.info('✅ PMTiles loaded successfully', {
+            component: 'RealDistrictMapContainer',
+            sourceId: e.sourceId,
+            tile: e.tile,
+          });
+        }
+      });
 
       // Add click handlers
       if (enableInteraction) {
@@ -284,9 +331,6 @@ export function RealDistrictMapContainer({
         });
       }
 
-      // Load actual district data
-      await loadDistrictData();
-
       setMapState(prev => ({ ...prev, loading: false }));
     } catch (error) {
       logger.error('Failed to load district boundaries', {
@@ -301,113 +345,6 @@ export function RealDistrictMapContainer({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapState.mapLoaded, enableInteraction, onDistrictClick]);
-
-  // Load district data from existing Census TIGER integration
-  const loadDistrictData = useCallback(async () => {
-    if (!mapRef.current) return;
-
-    try {
-      // Use our existing district API that has real Census TIGER data
-      const response = await fetch('/api/districts/all');
-      if (!response.ok) throw new Error('Failed to fetch districts');
-
-      const districtsData = await response.json();
-      const map = mapRef.current;
-
-      // Convert districts to GeoJSON features
-      const features =
-        districtsData.districts?.map(
-          (district: {
-            id: string;
-            stateFips: string;
-            stateName: string;
-            stateAbbr: string;
-            districtNumber: number;
-            latitude: number;
-            longitude: number;
-          }) => {
-            // Get boundaries from our district boundary service or fallback to the API
-            const boundaryData = districtBoundaryService.getDistrictById(district.id);
-
-            return {
-              type: 'Feature',
-              properties: {
-                district_id: district.id,
-                state_fips: district.stateFips,
-                state_name: district.stateName,
-                state_abbr: district.stateAbbr,
-                district_num: district.districtNumber.toString().padStart(2, '0'),
-                name: `${district.stateAbbr}-${district.districtNumber.toString().padStart(2, '0')}`,
-                full_name: `${district.stateName} Congressional District ${district.districtNumber}`,
-                centroid_lng: boundaryData?.centroid[0] || district.longitude || -95.7129,
-                centroid_lat: boundaryData?.centroid[1] || district.latitude || 37.0902,
-                bbox_minlng: boundaryData?.bbox[0] || district.longitude - 1,
-                bbox_minlat: boundaryData?.bbox[1] || district.latitude - 1,
-                bbox_maxlng: boundaryData?.bbox[2] || district.longitude + 1,
-                bbox_maxlat: boundaryData?.bbox[3] || district.latitude + 1,
-                area_sqm: boundaryData?.area_sqm || 0,
-                geoid: district.id,
-                selected: selectedDistrict === district.id,
-              },
-              geometry: boundaryData
-                ? {
-                    type: 'Polygon',
-                    coordinates: [
-                      [
-                        [boundaryData.bbox[0], boundaryData.bbox[1]],
-                        [boundaryData.bbox[2], boundaryData.bbox[1]],
-                        [boundaryData.bbox[2], boundaryData.bbox[3]],
-                        [boundaryData.bbox[0], boundaryData.bbox[3]],
-                        [boundaryData.bbox[0], boundaryData.bbox[1]],
-                      ],
-                    ],
-                  }
-                : {
-                    // Fallback: create a small polygon around the center point
-                    type: 'Polygon',
-                    coordinates: [
-                      [
-                        [district.longitude - 0.5, district.latitude - 0.5],
-                        [district.longitude + 0.5, district.latitude - 0.5],
-                        [district.longitude + 0.5, district.latitude + 0.5],
-                        [district.longitude - 0.5, district.latitude + 0.5],
-                        [district.longitude - 0.5, district.latitude - 0.5],
-                      ],
-                    ],
-                  },
-            };
-          }
-        ) || [];
-
-      // Update the map source with real data
-      const source = map.getSource('district-boundaries') as unknown;
-      if (source && typeof source === 'object' && 'setData' in source) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (source as { setData: (data: any) => void }).setData({
-          type: 'FeatureCollection',
-          features,
-        });
-      }
-
-      setMapState(prev => ({
-        ...prev,
-        districtCount: features.length,
-      }));
-    } catch (error) {
-      logger.error('Failed to load district data', {
-        component: 'RealDistrictMapContainer',
-        error: error as Error,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDistrict]);
-
-  // Update selected district when props change
-  useEffect(() => {
-    if (selectedDistrict && mapRef.current) {
-      loadDistrictData();
-    }
-  }, [selectedDistrict, loadDistrictData]);
 
   // Fit map to selected state
   useEffect(() => {
