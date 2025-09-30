@@ -9,6 +9,7 @@ import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
 import { districtBoundaryService } from '@/lib/helpers/district-boundary-utils';
 import { getStateFromWikidata } from '@/lib/api/wikidata';
+import districtGeography from '@/data/district-geography.json';
 
 // State names mapping for Census API
 const STATE_NAMES: Record<string, string> = {
@@ -711,84 +712,33 @@ function getPost2023DistrictData(
 
   logger.info('getPost2023DistrictData called', { state, district, districtNum });
 
-  // Michigan post-2023 redistricting (accurate county assignments)
-  if (state === 'MI') {
-    const michiganDistricts: Record<number, { counties: string[]; cities: string[] }> = {
-      1: { counties: ['Marquette', 'Alger', 'Schoolcraft'], cities: ['Marquette', 'Escanaba'] },
-      2: { counties: ['Muskegon', 'Oceana', 'Newaygo'], cities: ['Muskegon', 'Holland'] },
-      3: { counties: ['Kent', 'Ionia', 'Barry'], cities: ['Grand Rapids', 'Ionia'] },
-      4: {
-        counties: ['Kalamazoo', 'Calhoun', 'St. Joseph'],
-        cities: ['Kalamazoo', 'Battle Creek'],
-      },
-      5: { counties: ['Berrien', 'Cass', 'Van Buren'], cities: ['Benton Harbor', 'Niles'] },
-      6: { counties: ['Jackson', 'Hillsdale', 'Lenawee'], cities: ['Jackson', 'Adrian'] },
-      7: { counties: ['Livingston', 'Shiawassee', 'Ingham'], cities: ['Brighton', 'Howell'] },
-      8: { counties: ['Ingham', 'Eaton', 'Clinton'], cities: ['Lansing', 'East Lansing'] },
-      9: { counties: ['Saginaw', 'Bay', 'Midland'], cities: ['Saginaw', 'Bay City'] },
-      10: { counties: ['Macomb'], cities: ['Sterling Heights', 'Warren'] },
-      11: { counties: ['Oakland'], cities: ['Troy', 'Rochester Hills'] },
-      12: { counties: ['Wayne', 'Washtenaw'], cities: ['Ann Arbor', 'Ypsilanti'] }, // SE Michigan
-      13: { counties: ['Wayne'], cities: ['Detroit', 'Dearborn'] }, // Detroit proper
-    };
+  // Load geographic data from JSON file
+  type DistrictGeographyData = Record<
+    string,
+    Record<string, { counties: string[]; cities: string[] }>
+  >;
+  const geographyData = districtGeography as DistrictGeographyData;
 
-    const districtData = michiganDistricts[districtNum];
-    if (districtData) {
-      return districtData;
-    }
+  // Look up state data
+  const stateData = geographyData[state];
+  if (!stateData) {
+    logger.warn('No geographic data available for state', { state, district });
+    return { counties: [], cities: [] };
   }
 
-  // Washington state congressional districts
-  if (state === 'WA') {
-    const washingtonDistricts: Record<number, { counties: string[]; cities: string[] }> = {
-      1: { counties: ['Whatcom', 'Skagit', 'San Juan'], cities: ['Bellingham', 'Mount Vernon'] },
-      2: { counties: ['Snohomish', 'Skagit', 'Whatcom'], cities: ['Everett', 'Bellingham'] },
-      3: { counties: ['Clark', 'Skamania', 'Klickitat'], cities: ['Vancouver', 'Longview'] },
-      4: { counties: ['Yakima', 'Benton', 'Franklin'], cities: ['Yakima', 'Richland'] },
-      5: { counties: ['Spokane', 'Stevens', 'Pend Oreille'], cities: ['Spokane', 'Colville'] },
-      6: { counties: ['Mason', 'Kitsap', 'Jefferson'], cities: ['Bremerton', 'Port Townsend'] },
-      7: { counties: ['King'], cities: ['Seattle', 'Burien'] },
-      8: { counties: ['King', 'Pierce'], cities: ['Bellevue', 'Issaquah'] },
-      9: { counties: ['King', 'Pierce'], cities: ['Tacoma', 'Federal Way'] },
-      10: { counties: ['Thurston', 'Mason', 'Pierce'], cities: ['Olympia', 'Lacey'] },
-    };
-
-    const districtData = washingtonDistricts[districtNum];
-    if (districtData) {
-      return districtData;
-    }
+  // Look up district data
+  const districtData = stateData[districtNum.toString()];
+  if (!districtData) {
+    logger.warn('No geographic data available for district', {
+      state,
+      district,
+      districtNum,
+      message: 'Returning empty arrays instead of fake data',
+    });
+    return { counties: [], cities: [] };
   }
 
-  // Fallback for other states - use general state data
-  const stateDefaults: Record<string, { counties: string[]; cities: string[] }> = {
-    CA: {
-      counties: ['Los Angeles', 'Orange', 'San Diego'],
-      cities: ['Los Angeles', 'San Diego', 'San Francisco'],
-    },
-    TX: {
-      counties: ['Harris', 'Dallas', 'Bexar'],
-      cities: ['Houston', 'Dallas', 'San Antonio'],
-    },
-    FL: {
-      counties: ['Miami-Dade', 'Orange', 'Hillsborough'],
-      cities: ['Miami', 'Orlando', 'Tampa'],
-    },
-    NY: {
-      counties: ['New York', 'Kings', 'Queens'],
-      cities: ['New York City', 'Buffalo', 'Rochester'],
-    },
-    WA: {
-      counties: ['King', 'Pierce', 'Snohomish'],
-      cities: ['Seattle', 'Spokane', 'Tacoma'],
-    },
-  };
-
-  const defaultData = stateDefaults[state] || {
-    counties: [`${STATE_NAMES[state]} County`],
-    cities: [`${STATE_NAMES[state]} City`],
-  };
-
-  return defaultData;
+  return districtData;
 }
 
 // State name to code mapping - placed at module level for reuse

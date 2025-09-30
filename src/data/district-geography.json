@@ -1,0 +1,2034 @@
+{
+  "MI": {
+    "1": {
+      "counties": ["Marquette", "Alger", "Schoolcraft"],
+      "cities": ["Marquette", "Escanaba"]
+    },
+    "2": {
+      "counties": ["Muskegon", "Oceana", "Newaygo"],
+      "cities": ["Muskegon", "Holland"]
+    },
+    "3": {
+      "counties": ["Kent", "Ionia", "Barry"],
+      "cities": ["Grand Rapids", "Ionia"]
+    },
+    "4": {
+      "counties": ["Kalamazoo", "Calhoun", "St. Joseph"],
+      "cities": ["Kalamazoo", "Battle Creek"]
+    },
+    "5": {
+      "counties": ["Berrien", "Cass", "Van Buren"],
+      "cities": ["Benton Harbor", "Niles"]
+    },
+    "6": {
+      "counties": ["Jackson", "Hillsdale", "Lenawee"],
+      "cities": ["Jackson", "Adrian"]
+    },
+    "7": {
+      "counties": ["Livingston", "Shiawassee", "Ingham"],
+      "cities": ["Brighton", "Howell"]
+    },
+    "8": {
+      "counties": ["Ingham", "Eaton", "Clinton"],
+      "cities": ["Lansing", "East Lansing"]
+    },
+    "9": {
+      "counties": ["Saginaw", "Bay", "Midland"],
+      "cities": ["Saginaw", "Bay City"]
+    },
+    "10": {
+      "counties": ["Macomb"],
+      "cities": ["Sterling Heights", "Warren"]
+    },
+    "11": {
+      "counties": ["Oakland"],
+      "cities": ["Troy", "Rochester Hills"]
+    },
+    "12": {
+      "counties": ["Wayne", "Washtenaw"],
+      "cities": ["Ann Arbor", "Ypsilanti"]
+    },
+    "13": {
+      "counties": ["Wayne"],
+      "cities": ["Detroit", "Dearborn"]
+    }
+  },
+  "CA": {
+    "1": {
+      "counties": ["Butte", "Colusa", "Glenn", "Lassen", "Modoc"],
+      "cities": ["Chico", "Redding", "Yuba City"]
+    },
+    "2": {
+      "counties": ["Del Norte", "Humboldt", "Marin", "Mendocino", "Sonoma"],
+      "cities": ["Santa Rosa", "San Rafael", "Petaluma"]
+    },
+    "3": {
+      "counties": ["Alpine", "El Dorado", "Nevada", "Placer", "Sacramento"],
+      "cities": ["Roseville", "Folsom", "Rocklin"]
+    },
+    "4": {
+      "counties": ["Lake", "Napa", "Yolo", "Solano", "Sonoma"],
+      "cities": ["Santa Rosa", "Vacaville", "Napa"]
+    },
+    "5": {
+      "counties": ["Amador", "Calaveras", "Madera", "Mariposa", "Stanislaus"],
+      "cities": ["Fresno", "Modesto", "Turlock"]
+    },
+    "6": {
+      "counties": ["Sacramento", "Yolo", "Solano"],
+      "cities": ["Sacramento", "Elk Grove", "West Sacramento"]
+    },
+    "7": {
+      "counties": ["Sacramento"],
+      "cities": ["Sacramento", "Elk Grove"]
+    },
+    "8": {
+      "counties": ["Contra Costa", "Solano"],
+      "cities": ["Vallejo", "Fairfield", "Richmond"]
+    },
+    "9": {
+      "counties": ["San Joaquin", "Contra Costa", "Stanislaus"],
+      "cities": ["Stockton", "Tracy", "Manteca"]
+    },
+    "10": {
+      "counties": ["Contra Costa", "Alameda"],
+      "cities": ["Concord", "Antioch", "San Ramon"]
+    },
+    "11": {
+      "counties": ["San Francisco"],
+      "cities": ["San Francisco"]
+    },
+    "12": {
+      "counties": ["Alameda"],
+      "cities": ["Oakland", "Berkeley", "San Leandro"]
+    },
+    "13": {
+      "counties": ["Merced", "Madera", "San Joaquin", "Stanislaus", "Fresno"],
+      "cities": ["Modesto", "Merced", "Turlock"]
+    },
+    "14": {
+      "counties": ["Alameda"],
+      "cities": ["Fremont", "Hayward", "San Leandro"]
+    },
+    "15": {
+      "counties": ["San Mateo", "San Francisco"],
+      "cities": ["San Francisco", "San Mateo", "Daly City"]
+    },
+    "16": {
+      "counties": ["Santa Clara", "San Mateo", "Santa Cruz"],
+      "cities": ["San Jose", "Mountain View", "Palo Alto"]
+    },
+    "17": {
+      "counties": ["Alameda", "Santa Clara"],
+      "cities": ["San Jose", "Fremont", "Sunnyvale"]
+    },
+    "18": {
+      "counties": ["Monterey", "San Benito", "Santa Clara"],
+      "cities": ["San Jose", "Salinas", "Gilroy"]
+    },
+    "19": {
+      "counties": ["Monterey", "San Benito", "Santa Cruz", "Santa Clara"],
+      "cities": ["San Jose", "Santa Cruz", "Monterey"]
+    },
+    "20": {
+      "counties": ["Fresno", "Kern", "Kings", "Tulare"],
+      "cities": ["Fresno", "Bakersfield", "Visalia"]
+    },
+    "21": {
+      "counties": ["Fresno", "Tulare"],
+      "cities": ["Fresno", "Visalia", "Sanger"]
+    },
+    "22": {
+      "counties": ["Kings", "Tulare", "Kern"],
+      "cities": ["Bakersfield", "Tulare", "Porterville"]
+    },
+    "23": {
+      "counties": ["San Bernardino", "Kern", "Los Angeles"],
+      "cities": ["San Bernardino", "Victorville", "Hesperia"]
+    },
+    "24": {
+      "counties": ["Santa Barbara", "San Luis Obispo", "Ventura"],
+      "cities": ["Ventura", "Santa Maria", "Santa Barbara"]
+    },
+    "25": {
+      "counties": ["Imperial", "Riverside", "San Bernardino"],
+      "cities": ["Indio", "Hemet", "San Jacinto"]
+    },
+    "26": {
+      "counties": ["Los Angeles", "Ventura"],
+      "cities": ["Oxnard", "Thousand Oaks", "Simi Valley"]
+    },
+    "27": {
+      "counties": ["Los Angeles"],
+      "cities": ["Santa Clarita", "Lancaster", "Palmdale"]
+    },
+    "28": {
+      "counties": ["Los Angeles", "San Bernardino"],
+      "cities": ["Rancho Cucamonga", "Pasadena", "Alhambra"]
+    },
+    "29": {
+      "counties": ["Los Angeles"],
+      "cities": ["Los Angeles", "San Fernando", "Van Nuys"]
+    },
+    "30": {
+      "counties": ["Los Angeles"],
+      "cities": ["Los Angeles", "Glendale", "Pasadena"]
+    },
+    "31": {
+      "counties": ["Los Angeles"],
+      "cities": ["El Monte", "West Covina", "Baldwin Park"]
+    },
+    "32": {
+      "counties": ["Los Angeles", "Ventura"],
+      "cities": ["Los Angeles", "Malibu"]
+    },
+    "33": {
+      "counties": ["San Bernardino"],
+      "cities": ["San Bernardino", "Fontana", "Rancho Cucamonga"]
+    },
+    "34": {
+      "counties": ["Los Angeles"],
+      "cities": ["Los Angeles", "East Los Angeles"]
+    },
+    "35": {
+      "counties": ["Los Angeles", "San Bernardino", "Riverside"],
+      "cities": ["Fontana", "Ontario", "Rancho Cucamonga"]
+    },
+    "36": {
+      "counties": ["Los Angeles"],
+      "cities": ["Los Angeles", "Torrance", "Santa Monica"]
+    },
+    "37": {
+      "counties": ["Los Angeles"],
+      "cities": ["Los Angeles", "Culver City"]
+    },
+    "38": {
+      "counties": ["Los Angeles", "Orange"],
+      "cities": ["Pomona", "Downey", "Norwalk"]
+    },
+    "39": {
+      "counties": ["Riverside"],
+      "cities": ["Riverside", "Moreno Valley", "Jurupa Valley"]
+    },
+    "40": {
+      "counties": ["Orange", "Riverside", "San Bernardino"],
+      "cities": ["Anaheim", "Orange", "Mission Viejo"]
+    },
+    "41": {
+      "counties": ["Riverside"],
+      "cities": ["Riverside", "Corona", "Menifee"]
+    },
+    "42": {
+      "counties": ["Los Angeles"],
+      "cities": ["Long Beach", "Downey", "Lakewood"]
+    },
+    "43": {
+      "counties": ["Los Angeles"],
+      "cities": ["Los Angeles", "Torrance", "Inglewood"]
+    },
+    "44": {
+      "counties": ["Los Angeles"],
+      "cities": ["Los Angeles", "Long Beach", "Carson"]
+    },
+    "45": {
+      "counties": ["Orange", "Los Angeles"],
+      "cities": ["Garden Grove", "Fullerton", "Westminster"]
+    },
+    "46": {
+      "counties": ["Orange"],
+      "cities": ["Anaheim", "Santa Ana", "Fullerton"]
+    },
+    "47": {
+      "counties": ["Orange"],
+      "cities": ["Irvine", "Huntington Beach", "Costa Mesa"]
+    },
+    "48": {
+      "counties": ["Riverside", "San Diego"],
+      "cities": ["Escondido", "Murrieta", "Temecula"]
+    },
+    "49": {
+      "counties": ["San Diego", "Orange"],
+      "cities": ["Oceanside", "Carlsbad", "Vista"]
+    },
+    "50": {
+      "counties": ["San Diego"],
+      "cities": ["San Diego", "Escondido", "San Marcos"]
+    },
+    "51": {
+      "counties": ["San Diego"],
+      "cities": ["San Diego", "El Cajon", "La Mesa"]
+    },
+    "52": {
+      "counties": ["San Diego"],
+      "cities": ["San Diego", "Chula Vista", "National City"]
+    }
+  },
+  "NY": {
+    "1": {
+      "counties": ["Suffolk"],
+      "cities": ["Brookhaven", "Huntington", "Smithtown"]
+    },
+    "2": {
+      "counties": ["Nassau", "Suffolk"],
+      "cities": ["Massapequa Park", "Oyster Bay", "Amityville"]
+    },
+    "3": {
+      "counties": ["Nassau", "Queens", "Suffolk"],
+      "cities": ["Glen Cove", "Oyster Bay"]
+    },
+    "4": {
+      "counties": ["Nassau"],
+      "cities": ["Hempstead", "Rockville Centre", "Long Beach"]
+    },
+    "5": {
+      "counties": ["Queens"],
+      "cities": ["Jamaica", "Howard Beach", "Queens Village"]
+    },
+    "6": {
+      "counties": ["Queens"],
+      "cities": ["Flushing", "Elmhurst", "Forest Hills"]
+    },
+    "7": {
+      "counties": ["Kings", "Queens"],
+      "cities": ["Bushwick", "Williamsburg", "Long Island City"]
+    },
+    "8": {
+      "counties": ["Kings"],
+      "cities": ["Bedford-Stuyvesant", "Brownsville", "Canarsie"]
+    },
+    "9": {
+      "counties": ["Kings"],
+      "cities": ["Flatbush", "Crown Heights", "Midwood"]
+    },
+    "10": {
+      "counties": ["New York", "Kings"],
+      "cities": ["Lower Manhattan", "Brooklyn Heights", "Park Slope"]
+    },
+    "11": {
+      "counties": ["Richmond", "Kings"],
+      "cities": ["Staten Island", "Bay Ridge"]
+    },
+    "12": {
+      "counties": ["New York"],
+      "cities": ["Upper West Side", "Upper East Side", "Midtown Manhattan"]
+    },
+    "13": {
+      "counties": ["Bronx", "New York"],
+      "cities": ["Harlem", "Washington Heights"]
+    },
+    "14": {
+      "counties": ["Bronx", "Queens"],
+      "cities": ["Astoria", "Corona", "Jackson Heights"]
+    },
+    "15": {
+      "counties": ["Bronx"],
+      "cities": ["South Bronx", "West Bronx", "Mott Haven"]
+    },
+    "16": {
+      "counties": ["Bronx", "Westchester"],
+      "cities": ["Yonkers", "New Rochelle", "White Plains"]
+    },
+    "17": {
+      "counties": ["Dutchess", "Putnam", "Rockland", "Westchester"],
+      "cities": ["Pearl River", "Nyack", "Mount Kisco"]
+    },
+    "18": {
+      "counties": ["Orange", "Dutchess", "Ulster"],
+      "cities": ["Newburgh", "Beacon", "Kingston"]
+    },
+    "19": {
+      "counties": ["Broome", "Tompkins", "Ulster"],
+      "cities": ["Ithaca", "Binghamton"]
+    },
+    "20": {
+      "counties": ["Albany", "Saratoga", "Schenectady"],
+      "cities": ["Albany", "Troy", "Amsterdam"]
+    },
+    "21": {
+      "counties": ["Clinton", "Essex", "Franklin", "St. Lawrence"],
+      "cities": ["Plattsburgh", "Rome", "Ogdensburg"]
+    },
+    "22": {
+      "counties": ["Madison", "Onondaga", "Oneida"],
+      "cities": ["Syracuse", "Utica", "Auburn"]
+    },
+    "23": {
+      "counties": ["Allegany", "Cattaraugus", "Chautauqua"],
+      "cities": ["Jamestown", "Elmira"]
+    },
+    "24": {
+      "counties": ["Cayuga", "Jefferson", "Oswego", "Wayne"],
+      "cities": ["Watertown", "Canandaigua", "Geneva"]
+    },
+    "25": {
+      "counties": ["Monroe", "Ontario"],
+      "cities": ["Rochester", "Irondequoit", "Victor"]
+    },
+    "26": {
+      "counties": ["Erie", "Niagara"],
+      "cities": ["Buffalo", "Niagara Falls", "Tonawanda"]
+    }
+  },
+  "TX": {
+    "1": {
+      "counties": ["Smith", "Gregg", "Bowie", "Harrison", "Rusk"],
+      "cities": ["Tyler", "Longview", "Texarkana"]
+    },
+    "2": {
+      "counties": ["Harris", "Montgomery"],
+      "cities": ["Houston", "Humble", "Atascocita"]
+    },
+    "3": {
+      "counties": ["Collin", "Hunt"],
+      "cities": ["McKinney", "Allen", "Plano"]
+    },
+    "4": {
+      "counties": ["Collin", "Rockwall", "Grayson", "Lamar"],
+      "cities": ["Frisco", "Plano", "Sherman"]
+    },
+    "5": {
+      "counties": ["Kaufman", "Henderson", "Dallas", "Van Zandt"],
+      "cities": ["Mesquite", "Garland", "Terrell"]
+    },
+    "6": {
+      "counties": ["Ellis", "Navarro", "Tarrant", "Anderson"],
+      "cities": ["Arlington", "Mansfield", "Corsicana"]
+    },
+    "7": {
+      "counties": ["Harris", "Fort Bend"],
+      "cities": ["Houston", "Bellaire", "West University Place"]
+    },
+    "8": {
+      "counties": ["Montgomery", "Harris", "Walker", "Polk"],
+      "cities": ["Conroe", "Magnolia", "Huntsville"]
+    },
+    "9": {
+      "counties": ["Harris", "Fort Bend", "Brazoria"],
+      "cities": ["Houston", "Missouri City", "Pearland"]
+    },
+    "10": {
+      "counties": ["Travis", "Harris", "Williamson", "Bastrop"],
+      "cities": ["Austin", "Katy", "College Station"]
+    },
+    "11": {
+      "counties": ["Midland", "Ector", "Tom Green", "Bell"],
+      "cities": ["Midland", "Odessa", "San Angelo"]
+    },
+    "12": {
+      "counties": ["Tarrant", "Parker"],
+      "cities": ["Fort Worth", "Weatherford", "Benbrook"]
+    },
+    "13": {
+      "counties": ["Potter", "Randall", "Wichita", "Gray"],
+      "cities": ["Amarillo", "Wichita Falls"]
+    },
+    "14": {
+      "counties": ["Galveston", "Jefferson", "Brazoria"],
+      "cities": ["Galveston", "Beaumont", "Port Arthur"]
+    },
+    "15": {
+      "counties": ["Hidalgo", "Guadalupe", "Jim Wells"],
+      "cities": ["McAllen", "Edinburg", "Seguin"]
+    },
+    "16": {
+      "counties": ["El Paso"],
+      "cities": ["El Paso"]
+    },
+    "17": {
+      "counties": ["McLennan", "Bell", "Williamson", "Angelina"],
+      "cities": ["Waco", "Round Rock", "Lufkin"]
+    },
+    "18": {
+      "counties": ["Harris"],
+      "cities": ["Houston", "Humble", "Jacinto City"]
+    },
+    "19": {
+      "counties": ["Lubbock", "Taylor", "Howard", "Hale"],
+      "cities": ["Lubbock", "Abilene"]
+    },
+    "20": {
+      "counties": ["Bexar"],
+      "cities": ["San Antonio", "Leon Valley"]
+    },
+    "21": {
+      "counties": ["Bexar", "Travis", "Comal", "Hays"],
+      "cities": ["San Antonio", "Austin", "New Braunfels"]
+    },
+    "22": {
+      "counties": ["Fort Bend", "Brazoria", "Wharton"],
+      "cities": ["Sugar Land", "Pearland", "Rosenberg"]
+    },
+    "23": {
+      "counties": ["Bexar", "El Paso", "Medina", "Maverick"],
+      "cities": ["San Antonio", "El Paso", "Eagle Pass"]
+    },
+    "24": {
+      "counties": ["Tarrant", "Dallas"],
+      "cities": ["Irving", "Carrollton", "Grapevine"]
+    },
+    "25": {
+      "counties": ["Tarrant", "Parker", "Johnson", "Hood"],
+      "cities": ["Fort Worth", "Arlington", "Weatherford"]
+    },
+    "26": {
+      "counties": ["Denton", "Wise", "Cooke"],
+      "cities": ["Denton", "Lewisville", "Flower Mound"]
+    },
+    "27": {
+      "counties": ["Nueces", "Victoria", "San Patricio"],
+      "cities": ["Corpus Christi", "Victoria"]
+    },
+    "28": {
+      "counties": ["Webb", "Bexar", "Starr", "Atascosa"],
+      "cities": ["Laredo", "San Antonio", "Rio Grande City"]
+    },
+    "29": {
+      "counties": ["Harris"],
+      "cities": ["Houston", "Pasadena", "South Houston"]
+    },
+    "30": {
+      "counties": ["Dallas", "Tarrant"],
+      "cities": ["Dallas", "Grand Prairie", "DeSoto"]
+    },
+    "31": {
+      "counties": ["Williamson", "Bell"],
+      "cities": ["Round Rock", "Killeen", "Temple"]
+    },
+    "32": {
+      "counties": ["Dallas", "Collin"],
+      "cities": ["Dallas", "Garland", "Richardson"]
+    },
+    "33": {
+      "counties": ["Dallas", "Tarrant"],
+      "cities": ["Dallas", "Fort Worth", "Irving"]
+    },
+    "34": {
+      "counties": ["Cameron", "Hidalgo", "Willacy", "Kleberg"],
+      "cities": ["Brownsville", "Harlingen", "McAllen"]
+    },
+    "35": {
+      "counties": ["Bexar", "Travis", "Hays", "Comal"],
+      "cities": ["San Antonio", "Austin", "San Marcos"]
+    },
+    "36": {
+      "counties": ["Harris", "Liberty", "Chambers", "Hardin"],
+      "cities": ["Baytown", "Deer Park", "La Porte"]
+    },
+    "37": {
+      "counties": ["Travis", "Williamson"],
+      "cities": ["Austin"]
+    },
+    "38": {
+      "counties": ["Harris"],
+      "cities": ["Houston", "Cypress", "Tomball"]
+    }
+  },
+  "FL": {
+    "1": {
+      "counties": ["Escambia", "Santa Rosa", "Okaloosa"],
+      "cities": ["Pensacola", "Fort Walton Beach", "Navarre"]
+    },
+    "2": {
+      "counties": ["Leon", "Bay", "Gadsden", "Jackson"],
+      "cities": ["Tallahassee", "Panama City"]
+    },
+    "3": {
+      "counties": ["Alachua", "Marion", "Columbia", "Levy"],
+      "cities": ["Gainesville", "Ocala"]
+    },
+    "4": {
+      "counties": ["Duval", "Clay", "Nassau"],
+      "cities": ["Jacksonville", "Orange Park", "Fernandina Beach"]
+    },
+    "5": {
+      "counties": ["Duval", "St. Johns"],
+      "cities": ["Jacksonville", "St. Augustine", "Jacksonville Beach"]
+    },
+    "6": {
+      "counties": ["Volusia", "Flagler", "St. Johns"],
+      "cities": ["Daytona Beach", "Port Orange", "Palm Coast"]
+    },
+    "7": {
+      "counties": ["Seminole", "Volusia"],
+      "cities": ["Deltona", "Sanford", "Altamonte Springs"]
+    },
+    "8": {
+      "counties": ["Brevard", "Indian River"],
+      "cities": ["Melbourne", "Titusville", "Vero Beach"]
+    },
+    "9": {
+      "counties": ["Osceola", "Orange", "Polk"],
+      "cities": ["Orlando", "Kissimmee", "St. Cloud"]
+    },
+    "10": {
+      "counties": ["Orange"],
+      "cities": ["Orlando", "Winter Park", "Apopka"]
+    },
+    "11": {
+      "counties": ["Sumter", "Lake", "Orange", "Polk"],
+      "cities": ["The Villages", "Clermont", "Leesburg"]
+    },
+    "12": {
+      "counties": ["Pasco", "Hernando", "Citrus"],
+      "cities": ["New Port Richey", "Spring Hill", "Dade City"]
+    },
+    "13": {
+      "counties": ["Pinellas"],
+      "cities": ["Clearwater", "Largo", "St. Petersburg"]
+    },
+    "14": {
+      "counties": ["Hillsborough", "Pinellas"],
+      "cities": ["Tampa", "St. Petersburg"]
+    },
+    "15": {
+      "counties": ["Hillsborough", "Pasco", "Polk"],
+      "cities": ["Brandon", "Lakeland", "Plant City"]
+    },
+    "16": {
+      "counties": ["Manatee", "Hillsborough"],
+      "cities": ["Bradenton", "Riverview", "Sun City Center"]
+    },
+    "17": {
+      "counties": ["Sarasota", "Charlotte", "Lee"],
+      "cities": ["Sarasota", "North Port", "Punta Gorda"]
+    },
+    "18": {
+      "counties": ["Polk", "Highlands", "Hardee", "Hendry"],
+      "cities": ["Lakeland", "Winter Haven", "Sebring"]
+    },
+    "19": {
+      "counties": ["Lee", "Collier"],
+      "cities": ["Cape Coral", "Fort Myers", "Naples"]
+    },
+    "20": {
+      "counties": ["Broward", "Palm Beach"],
+      "cities": ["Fort Lauderdale", "Pompano Beach", "Riviera Beach"]
+    },
+    "21": {
+      "counties": ["St. Lucie", "Martin", "Palm Beach"],
+      "cities": ["Port St. Lucie", "Jupiter", "Fort Pierce"]
+    },
+    "22": {
+      "counties": ["Palm Beach"],
+      "cities": ["West Palm Beach", "Boynton Beach", "Delray Beach"]
+    },
+    "23": {
+      "counties": ["Broward", "Palm Beach"],
+      "cities": ["Fort Lauderdale", "Boca Raton", "Coral Springs"]
+    },
+    "24": {
+      "counties": ["Miami-Dade", "Broward"],
+      "cities": ["Miami", "Miami Gardens", "Miramar"]
+    },
+    "25": {
+      "counties": ["Broward"],
+      "cities": ["Pembroke Pines", "Hollywood", "Davie"]
+    },
+    "26": {
+      "counties": ["Miami-Dade", "Collier"],
+      "cities": ["Hialeah", "Doral", "Miami Lakes"]
+    },
+    "27": {
+      "counties": ["Miami-Dade"],
+      "cities": ["Miami", "Coral Gables", "Kendall"]
+    },
+    "28": {
+      "counties": ["Miami-Dade", "Monroe"],
+      "cities": ["Homestead", "Key West", "The Hammocks"]
+    }
+  },
+  "WA": {
+    "1": {
+      "counties": ["Whatcom", "Skagit", "San Juan"],
+      "cities": ["Bellingham", "Mount Vernon"]
+    },
+    "2": {
+      "counties": ["Snohomish", "Skagit", "Whatcom"],
+      "cities": ["Everett", "Bellingham"]
+    },
+    "3": {
+      "counties": ["Clark", "Skamania", "Klickitat"],
+      "cities": ["Vancouver", "Longview"]
+    },
+    "4": {
+      "counties": ["Yakima", "Benton", "Franklin"],
+      "cities": ["Yakima", "Richland"]
+    },
+    "5": {
+      "counties": ["Spokane", "Stevens", "Pend Oreille"],
+      "cities": ["Spokane", "Colville"]
+    },
+    "6": {
+      "counties": ["Mason", "Kitsap", "Jefferson"],
+      "cities": ["Bremerton", "Port Townsend"]
+    },
+    "7": {
+      "counties": ["King"],
+      "cities": ["Seattle", "Burien"]
+    },
+    "8": {
+      "counties": ["King", "Pierce"],
+      "cities": ["Bellevue", "Issaquah"]
+    },
+    "9": {
+      "counties": ["King", "Pierce"],
+      "cities": ["Tacoma", "Federal Way"]
+    },
+    "10": {
+      "counties": ["Thurston", "Mason", "Pierce"],
+      "cities": ["Olympia", "Lacey"]
+    }
+  },
+  "PA": {
+    "1": {
+      "counties": ["Bucks", "Montgomery"],
+      "cities": ["Bensalem", "Levittown", "Bristol"]
+    },
+    "2": {
+      "counties": ["Philadelphia"],
+      "cities": ["Philadelphia"]
+    },
+    "3": {
+      "counties": ["Philadelphia"],
+      "cities": ["Philadelphia"]
+    },
+    "4": {
+      "counties": ["Montgomery", "Berks"],
+      "cities": ["Norristown", "Reading", "Pottstown"]
+    },
+    "5": {
+      "counties": ["Delaware", "Chester", "Montgomery", "Philadelphia"],
+      "cities": ["Chester", "Upper Darby", "Norristown"]
+    },
+    "6": {
+      "counties": ["Chester", "Berks"],
+      "cities": ["Reading", "West Chester", "Phoenixville"]
+    },
+    "7": {
+      "counties": ["Carbon", "Lehigh", "Northampton", "Monroe"],
+      "cities": ["Allentown", "Bethlehem", "Easton"]
+    },
+    "8": {
+      "counties": ["Lackawanna", "Luzerne", "Wayne", "Pike", "Monroe"],
+      "cities": ["Scranton", "Wilkes-Barre"]
+    },
+    "9": {
+      "counties": [
+        "Schuylkill",
+        "Northumberland",
+        "Lebanon",
+        "Berks",
+        "Luzerne"
+      ],
+      "cities": ["Pottsville", "Lebanon", "Bloomsburg"]
+    },
+    "10": {
+      "counties": ["Dauphin", "York", "Cumberland"],
+      "cities": ["Harrisburg", "York"]
+    },
+    "11": {
+      "counties": ["Lancaster", "York"],
+      "cities": ["Lancaster", "Hanover"]
+    },
+    "12": {
+      "counties": ["Allegheny", "Westmoreland"],
+      "cities": ["Pittsburgh"]
+    },
+    "13": {
+      "counties": ["Blair", "Cambria", "Franklin", "Adams", "Bedford"],
+      "cities": ["Altoona", "Johnstown", "Chambersburg"]
+    },
+    "14": {
+      "counties": [
+        "Westmoreland",
+        "Washington",
+        "Fayette",
+        "Indiana",
+        "Greene"
+      ],
+      "cities": ["Greensburg", "Washington", "Uniontown"]
+    },
+    "15": {
+      "counties": ["Centre", "Lycoming", "Clearfield", "Indiana", "Cameron"],
+      "cities": ["State College", "Williamsport"]
+    },
+    "16": {
+      "counties": ["Erie", "Crawford", "Mercer", "Lawrence", "Butler"],
+      "cities": ["Erie", "Butler", "New Castle"]
+    },
+    "17": {
+      "counties": ["Beaver", "Allegheny"],
+      "cities": ["Aliquippa", "Beaver Falls", "Bethel Park"]
+    }
+  },
+  "IL": {
+    "1": {
+      "counties": ["Cook", "Will", "Kankakee"],
+      "cities": ["Chicago", "New Lenox", "Homer Glen"]
+    },
+    "2": {
+      "counties": ["Cook", "Kankakee", "Will", "Iroquois", "Vermilion"],
+      "cities": ["Chicago", "Kankakee", "Chicago Heights", "Dolton"]
+    },
+    "3": {
+      "counties": ["Cook", "DuPage"],
+      "cities": ["Chicago", "West Chicago", "Wheaton", "Addison"]
+    },
+    "4": {
+      "counties": ["Cook", "DuPage"],
+      "cities": ["Chicago", "Cicero", "Berwyn", "Oak Lawn"]
+    },
+    "5": {
+      "counties": ["Cook", "Lake"],
+      "cities": ["Chicago", "Arlington Heights", "Des Plaines", "Palatine"]
+    },
+    "6": {
+      "counties": ["Cook", "DuPage"],
+      "cities": ["Downers Grove", "Wheaton", "Lisle", "Orland Park"]
+    },
+    "7": {
+      "counties": ["Cook"],
+      "cities": ["Chicago", "Oak Park", "Maywood", "Forest Park"]
+    },
+    "8": {
+      "counties": ["Cook", "DuPage", "Kane"],
+      "cities": ["Schaumburg", "Elgin", "Hoffman Estates", "Elk Grove Village"]
+    },
+    "9": {
+      "counties": ["Cook", "Lake", "McHenry"],
+      "cities": ["Chicago", "Evanston", "Skokie", "Crystal Lake"]
+    },
+    "10": {
+      "counties": ["Cook", "Lake"],
+      "cities": ["Waukegan", "Highland Park", "Buffalo Grove", "Northbrook"]
+    },
+    "11": {
+      "counties": ["Cook", "DuPage", "Kane", "Kendall", "Will"],
+      "cities": ["Aurora", "Joliet", "Naperville", "Bolingbrook"]
+    },
+    "12": {
+      "counties": [
+        "Madison",
+        "St. Clair",
+        "Jackson",
+        "Williamson",
+        "Jefferson"
+      ],
+      "cities": ["Belleville", "Carbondale", "East St. Louis", "Granite City"]
+    },
+    "13": {
+      "counties": ["Champaign", "Macon", "Madison", "Sangamon", "St. Clair"],
+      "cities": ["Champaign", "Urbana", "Decatur", "Springfield"]
+    },
+    "14": {
+      "counties": ["DeKalb", "DuPage", "Kane", "Kendall", "McHenry", "Will"],
+      "cities": ["Aurora", "Naperville", "Joliet", "Plainfield"]
+    },
+    "15": {
+      "counties": ["Champaign", "Coles", "Madison", "Sangamon", "Vermilion"],
+      "cities": ["Champaign", "Danville", "Decatur", "Springfield"]
+    },
+    "16": {
+      "counties": [
+        "Boone",
+        "Bureau",
+        "DeKalb",
+        "LaSalle",
+        "Lee",
+        "Ogle",
+        "Winnebago"
+      ],
+      "cities": ["Rockford", "DeKalb", "Ottawa", "Dixon"]
+    },
+    "17": {
+      "counties": ["Peoria", "Rock Island", "Tazewell", "Winnebago"],
+      "cities": ["Peoria", "Rockford", "Moline", "Rock Island"]
+    }
+  },
+  "OH": {
+    "1": {
+      "counties": ["Hamilton", "Warren"],
+      "cities": ["Cincinnati", "Lebanon", "Mason"]
+    },
+    "2": {
+      "counties": [
+        "Hamilton",
+        "Clermont",
+        "Brown",
+        "Adams",
+        "Highland",
+        "Pike",
+        "Ross",
+        "Scioto"
+      ],
+      "cities": ["Cincinnati", "Chillicothe", "Portsmouth"]
+    },
+    "3": {
+      "counties": ["Franklin"],
+      "cities": ["Columbus"]
+    },
+    "4": {
+      "counties": [
+        "Allen",
+        "Auglaize",
+        "Champaign",
+        "Crawford",
+        "Logan",
+        "Richland",
+        "Shelby",
+        "Union"
+      ],
+      "cities": ["Lima", "Mansfield", "Marion"]
+    },
+    "5": {
+      "counties": [
+        "Defiance",
+        "Fulton",
+        "Henry",
+        "Lucas",
+        "Ottawa",
+        "Sandusky",
+        "Williams",
+        "Wood"
+      ],
+      "cities": ["Toledo", "Bowling Green", "Perrysburg"]
+    },
+    "6": {
+      "counties": [
+        "Belmont",
+        "Carroll",
+        "Columbiana",
+        "Harrison",
+        "Jefferson",
+        "Mahoning",
+        "Monroe",
+        "Noble",
+        "Stark",
+        "Tuscarawas",
+        "Washington"
+      ],
+      "cities": ["Youngstown", "Steubenville", "Marietta"]
+    },
+    "7": {
+      "counties": ["Cuyahoga", "Lorain", "Medina", "Huron"],
+      "cities": ["Cleveland", "Lorain", "Elyria"]
+    },
+    "8": {
+      "counties": ["Butler", "Clark", "Darke", "Miami", "Preble"],
+      "cities": ["Hamilton", "Springfield", "Middletown"]
+    },
+    "9": {
+      "counties": ["Cuyahoga", "Erie", "Huron", "Lorain", "Ottawa"],
+      "cities": ["Toledo", "Cleveland", "Sandusky"]
+    },
+    "10": {
+      "counties": ["Montgomery", "Greene", "Clark"],
+      "cities": ["Dayton", "Springfield", "Xenia"]
+    },
+    "11": {
+      "counties": ["Cuyahoga"],
+      "cities": ["Cleveland", "Euclid", "Cleveland Heights"]
+    },
+    "12": {
+      "counties": [
+        "Licking",
+        "Fairfield",
+        "Knox",
+        "Muskingum",
+        "Coshocton",
+        "Guernsey",
+        "Morgan",
+        "Perry",
+        "Athens",
+        "Delaware",
+        "Holmes",
+        "Tuscarawas"
+      ],
+      "cities": ["Newark", "Zanesville", "Lancaster"]
+    },
+    "13": {
+      "counties": ["Summit", "Stark", "Portage"],
+      "cities": ["Akron", "Canton", "Youngstown"]
+    },
+    "14": {
+      "counties": ["Ashtabula", "Lake", "Trumbull", "Geauga", "Portage"],
+      "cities": ["Warren", "Ashtabula", "Mentor"]
+    },
+    "15": {
+      "counties": ["Franklin", "Madison", "Pickaway", "Fayette", "Ross"],
+      "cities": ["Columbus", "Grove City", "Hilliard"]
+    }
+  },
+  "GA": {
+    "1": {
+      "counties": ["Chatham", "Glynn", "Camden", "Liberty", "Bryan"],
+      "cities": ["Savannah", "Brunswick", "St. Marys"]
+    },
+    "2": {
+      "counties": ["Muscogee", "Dougherty", "Bibb", "Houston", "Terrell"],
+      "cities": ["Columbus", "Albany", "Macon"]
+    },
+    "3": {
+      "counties": ["Coweta", "Fayette", "Muscogee", "Troup", "Spalding"],
+      "cities": ["Columbus", "Newnan", "Peachtree City"]
+    },
+    "4": {
+      "counties": ["DeKalb", "Gwinnett", "Rockdale", "Newton"],
+      "cities": ["Decatur", "Stonecrest", "Lithonia"]
+    },
+    "5": {
+      "counties": ["Fulton", "DeKalb", "Clayton"],
+      "cities": ["Atlanta", "East Point", "Forest Park"]
+    },
+    "6": {
+      "counties": ["Cobb", "Fulton", "Douglas", "Fayette"],
+      "cities": ["Marietta", "Smyrna", "Sandy Springs"]
+    },
+    "7": {
+      "counties": ["Gwinnett", "Forsyth"],
+      "cities": ["Lawrenceville", "Duluth", "Norcross"]
+    },
+    "8": {
+      "counties": ["Bibb", "Houston", "Lowndes", "Colquitt", "Thomas"],
+      "cities": ["Macon", "Warner Robins", "Valdosta"]
+    },
+    "9": {
+      "counties": ["Hall", "Gwinnett", "Forsyth", "Jackson", "Lumpkin"],
+      "cities": ["Gainesville", "Lawrenceville", "Cumming"]
+    },
+    "10": {
+      "counties": ["Clarke", "Oconee", "Walton", "Barrow", "Jackson"],
+      "cities": ["Athens", "Monroe", "Winder"]
+    },
+    "11": {
+      "counties": ["Cobb", "Cherokee", "Bartow", "Gordon"],
+      "cities": ["Marietta", "Kennesaw", "Woodstock"]
+    },
+    "12": {
+      "counties": ["Richmond", "Columbia", "Burke", "Screven", "Effingham"],
+      "cities": ["Augusta", "Evans", "Martinez"]
+    },
+    "13": {
+      "counties": ["Clayton", "Fayette", "Henry", "Spalding", "Upson"],
+      "cities": ["Jonesboro", "McDonough", "Griffin"]
+    },
+    "14": {
+      "counties": ["Floyd", "Walker", "Catoosa", "Whitfield", "Gordon"],
+      "cities": ["Rome", "Dalton", "Calhoun"]
+    }
+  },
+  "NC": {
+    "1": {
+      "counties": ["Pitt", "Nash", "Wayne", "Wilson", "Edgecombe"],
+      "cities": ["Greenville", "Rocky Mount", "Wilson"]
+    },
+    "2": {
+      "counties": ["Wake"],
+      "cities": ["Raleigh", "Cary", "Apex"]
+    },
+    "3": {
+      "counties": ["Onslow", "Craven", "Carteret", "Duplin", "Wayne"],
+      "cities": ["Jacksonville", "New Bern", "Goldsboro"]
+    },
+    "4": {
+      "counties": ["Durham", "Orange", "Alamance", "Person", "Granville"],
+      "cities": ["Durham", "Chapel Hill", "Burlington"]
+    },
+    "5": {
+      "counties": ["Forsyth", "Watauga", "Surry", "Wilkes", "Stokes"],
+      "cities": ["Winston-Salem", "Boone", "Clemmons"]
+    },
+    "6": {
+      "counties": ["Guilford", "Forsyth", "Rockingham"],
+      "cities": ["Greensboro", "High Point", "Winston-Salem"]
+    },
+    "7": {
+      "counties": ["New Hanover", "Brunswick", "Robeson", "Pender", "Columbus"],
+      "cities": ["Wilmington", "Leland", "Lumberton"]
+    },
+    "8": {
+      "counties": ["Cabarrus", "Union", "Rowan", "Stanly", "Anson"],
+      "cities": ["Concord", "Kannapolis", "Salisbury"]
+    },
+    "9": {
+      "counties": ["Cumberland", "Moore", "Randolph", "Harnett", "Chatham"],
+      "cities": ["Fayetteville", "Asheboro", "Pinehurst"]
+    },
+    "10": {
+      "counties": ["Gaston", "Catawba", "Iredell", "Lincoln", "Cleveland"],
+      "cities": ["Gastonia", "Hickory", "Statesville"]
+    },
+    "11": {
+      "counties": [
+        "Buncombe",
+        "Henderson",
+        "Haywood",
+        "Rutherford",
+        "McDowell"
+      ],
+      "cities": ["Asheville", "Hendersonville", "Waynesville"]
+    },
+    "12": {
+      "counties": ["Mecklenburg"],
+      "cities": ["Charlotte", "Huntersville", "Cornelius"]
+    },
+    "13": {
+      "counties": ["Wake", "Johnston", "Harnett", "Wayne"],
+      "cities": ["Raleigh", "Clayton", "Fuquay-Varina"]
+    },
+    "14": {
+      "counties": ["Mecklenburg", "Gaston"],
+      "cities": ["Charlotte", "Gastonia", "Belmont"]
+    }
+  },
+  "NJ": {
+    "1": {
+      "counties": ["Camden", "Gloucester", "Burlington"],
+      "cities": ["Camden", "Cherry Hill", "Glassboro"]
+    },
+    "2": {
+      "counties": ["Atlantic", "Cape May", "Cumberland", "Salem"],
+      "cities": ["Atlantic City", "Vineland", "Cape May"]
+    },
+    "3": {
+      "counties": ["Monmouth", "Mercer", "Burlington"],
+      "cities": ["Hamilton Township", "Toms River", "Freehold"]
+    },
+    "4": {
+      "counties": ["Ocean", "Monmouth"],
+      "cities": ["Lakewood", "Toms River", "Jackson"]
+    },
+    "5": {
+      "counties": ["Bergen", "Passaic", "Sussex", "Warren"],
+      "cities": ["Hackensack", "Teaneck", "Ridgewood"]
+    },
+    "6": {
+      "counties": ["Middlesex", "Monmouth"],
+      "cities": ["New Brunswick", "Edison", "Woodbridge"]
+    },
+    "7": {
+      "counties": ["Hunterdon", "Morris", "Somerset", "Union", "Warren"],
+      "cities": ["Phillipsburg", "Westfield", "Scotch Plains"]
+    },
+    "8": {
+      "counties": ["Hudson", "Bergen", "Essex", "Union"],
+      "cities": ["Newark", "Jersey City", "Elizabeth"]
+    },
+    "9": {
+      "counties": ["Bergen", "Passaic", "Hudson"],
+      "cities": ["Paterson", "Passaic", "Clifton"]
+    },
+    "10": {
+      "counties": ["Essex", "Hudson", "Union"],
+      "cities": ["Newark", "Jersey City", "Irvington"]
+    },
+    "11": {
+      "counties": ["Morris", "Essex", "Passaic"],
+      "cities": ["Morristown", "Wayne", "Montclair"]
+    },
+    "12": {
+      "counties": ["Mercer", "Middlesex", "Somerset", "Union"],
+      "cities": ["Trenton", "Princeton", "Franklin Township"]
+    }
+  },
+  "VA": {
+    "1": {
+      "counties": [
+        "Chesterfield",
+        "Hanover",
+        "Henrico",
+        "James City",
+        "New Kent"
+      ],
+      "cities": ["Williamsburg", "Mechanicsville", "Chester"]
+    },
+    "2": {
+      "counties": ["Accomack", "Isle of Wight", "Northampton"],
+      "cities": ["Virginia Beach", "Chesapeake", "Norfolk"]
+    },
+    "3": {
+      "counties": ["Isle of Wight", "Southampton"],
+      "cities": ["Newport News", "Hampton", "Norfolk", "Portsmouth"]
+    },
+    "4": {
+      "counties": ["Chesterfield", "Henrico", "Dinwiddie", "Prince George"],
+      "cities": ["Richmond", "Petersburg", "Hopewell"]
+    },
+    "5": {
+      "counties": [
+        "Albemarle",
+        "Campbell",
+        "Pittsylvania",
+        "Bedford",
+        "Franklin"
+      ],
+      "cities": ["Charlottesville", "Lynchburg", "Danville"]
+    },
+    "6": {
+      "counties": ["Roanoke", "Augusta", "Rockingham", "Shenandoah"],
+      "cities": ["Roanoke", "Harrisonburg", "Staunton"]
+    },
+    "7": {
+      "counties": ["Prince William", "Stafford", "Spotsylvania", "Culpeper"],
+      "cities": ["Woodbridge", "Fredericksburg", "Dale City"]
+    },
+    "8": {
+      "counties": ["Arlington", "Fairfax"],
+      "cities": ["Alexandria", "Arlington", "Falls Church"]
+    },
+    "9": {
+      "counties": ["Montgomery", "Washington", "Wise", "Tazewell", "Pulaski"],
+      "cities": ["Blacksburg", "Bristol", "Christiansburg"]
+    },
+    "10": {
+      "counties": ["Loudoun", "Prince William", "Fauquier", "Frederick"],
+      "cities": ["Leesburg", "Winchester", "Manassas"]
+    },
+    "11": {
+      "counties": ["Fairfax", "Prince William"],
+      "cities": ["Fairfax", "Reston", "Centreville"]
+    }
+  },
+  "MA": {
+    "1": {
+      "counties": [
+        "Hampden",
+        "Berkshire",
+        "Hampshire",
+        "Franklin",
+        "Worcester"
+      ],
+      "cities": ["Springfield", "Pittsfield", "Holyoke"]
+    },
+    "2": {
+      "counties": ["Worcester", "Middlesex", "Norfolk", "Hampshire"],
+      "cities": ["Worcester", "Leominster", "Shrewsbury"]
+    },
+    "3": {
+      "counties": ["Essex", "Middlesex"],
+      "cities": ["Lowell", "Lawrence", "Haverhill"]
+    },
+    "4": {
+      "counties": ["Bristol", "Middlesex", "Norfolk", "Plymouth"],
+      "cities": ["Fall River", "Newton", "Brookline"]
+    },
+    "5": {
+      "counties": ["Middlesex", "Suffolk", "Worcester"],
+      "cities": ["Cambridge", "Somerville", "Medford"]
+    },
+    "6": {
+      "counties": ["Essex", "Middlesex"],
+      "cities": ["Lynn", "Salem", "Peabody"]
+    },
+    "7": {
+      "counties": ["Suffolk", "Middlesex", "Norfolk"],
+      "cities": ["Boston", "Cambridge", "Somerville"]
+    },
+    "8": {
+      "counties": ["Suffolk", "Norfolk", "Plymouth"],
+      "cities": ["Boston", "Quincy", "Brockton"]
+    },
+    "9": {
+      "counties": ["Bristol", "Plymouth", "Barnstable", "Dukes", "Nantucket"],
+      "cities": ["New Bedford", "Fall River", "Hyannis"]
+    }
+  },
+  "TN": {
+    "1": {
+      "counties": ["Sullivan", "Washington", "Carter", "Greene", "Hawkins"],
+      "cities": ["Kingsport", "Johnson City", "Bristol"]
+    },
+    "2": {
+      "counties": ["Knox", "Blount", "Sevier", "Jefferson", "Grainger"],
+      "cities": ["Knoxville", "Maryville", "Sevierville"]
+    },
+    "3": {
+      "counties": ["Hamilton", "Bradley", "Roane", "Anderson", "Campbell"],
+      "cities": ["Chattanooga", "Cleveland", "Oak Ridge"]
+    },
+    "4": {
+      "counties": ["Rutherford", "Williamson", "Wilson", "Bedford", "Maury"],
+      "cities": ["Murfreesboro", "Franklin", "Smyrna"]
+    },
+    "5": {
+      "counties": ["Davidson", "Williamson", "Maury"],
+      "cities": ["Nashville", "Franklin", "Columbia"]
+    },
+    "6": {
+      "counties": ["Wilson", "Sumner", "Putnam", "Jackson", "Smith"],
+      "cities": ["Lebanon", "Gallatin", "Cookeville"]
+    },
+    "7": {
+      "counties": [
+        "Montgomery",
+        "Williamson",
+        "Cheatham",
+        "Dickson",
+        "Hickman"
+      ],
+      "cities": ["Clarksville", "Franklin", "Brentwood"]
+    },
+    "8": {
+      "counties": ["Shelby", "Madison", "Gibson", "Tipton", "Fayette"],
+      "cities": ["Jackson", "Bartlett", "Collierville"]
+    },
+    "9": {
+      "counties": ["Shelby"],
+      "cities": ["Memphis", "Germantown", "Bartlett"]
+    }
+  },
+  "IN": {
+    "1": {
+      "counties": ["Lake", "Porter"],
+      "cities": ["Gary", "Hammond", "Portage"]
+    },
+    "2": {
+      "counties": ["St. Joseph", "Elkhart", "LaPorte", "Marshall", "Starke"],
+      "cities": ["South Bend", "Elkhart", "Mishawaka"]
+    },
+    "3": {
+      "counties": ["Allen", "Whitley", "Noble", "DeKalb", "Kosciusko"],
+      "cities": ["Fort Wayne", "Warsaw", "Auburn"]
+    },
+    "4": {
+      "counties": ["Tippecanoe", "Boone", "Clinton", "Montgomery", "Hendricks"],
+      "cities": ["Lafayette", "West Lafayette", "Zionsville"]
+    },
+    "5": {
+      "counties": ["Hamilton", "Marion", "Madison", "Tipton", "Grant"],
+      "cities": ["Carmel", "Fishers", "Anderson"]
+    },
+    "6": {
+      "counties": ["Delaware", "Henry", "Wayne", "Fayette", "Union"],
+      "cities": ["Muncie", "Richmond", "New Castle"]
+    },
+    "7": {
+      "counties": ["Marion"],
+      "cities": ["Indianapolis"]
+    },
+    "8": {
+      "counties": ["Vanderburgh", "Warrick", "Gibson", "Posey", "Pike"],
+      "cities": ["Evansville", "Newburgh", "Princeton"]
+    },
+    "9": {
+      "counties": ["Monroe", "Johnson", "Brown", "Morgan", "Lawrence"],
+      "cities": ["Bloomington", "Greenwood", "Franklin"]
+    }
+  },
+  "AZ": {
+    "1": {
+      "counties": ["Maricopa"],
+      "cities": ["Phoenix", "Scottsdale", "Paradise Valley"]
+    },
+    "2": {
+      "counties": ["Coconino", "Yavapai", "Apache", "Navajo", "Gila"],
+      "cities": ["Flagstaff", "Prescott", "Payson"]
+    },
+    "3": {
+      "counties": ["Maricopa"],
+      "cities": ["Phoenix", "Glendale", "Peoria"]
+    },
+    "4": {
+      "counties": ["Maricopa"],
+      "cities": ["Phoenix", "Mesa", "Chandler"]
+    },
+    "5": {
+      "counties": ["Maricopa"],
+      "cities": ["Mesa", "Gilbert", "Queen Creek"]
+    },
+    "6": {
+      "counties": ["Pima", "Pinal", "Graham", "Greenlee"],
+      "cities": ["Tucson", "Casa Grande", "Oro Valley"]
+    },
+    "7": {
+      "counties": ["Pima", "Santa Cruz", "Cochise"],
+      "cities": ["Tucson", "Nogales", "Sierra Vista"]
+    },
+    "8": {
+      "counties": ["Maricopa"],
+      "cities": ["Glendale", "Peoria", "Sun City"]
+    },
+    "9": {
+      "counties": ["Maricopa"],
+      "cities": ["Phoenix", "Tempe", "Mesa"]
+    }
+  },
+  "MO": {
+    "1": {
+      "counties": ["St. Louis"],
+      "cities": ["St. Louis", "Ferguson", "Florissant"]
+    },
+    "2": {
+      "counties": ["St. Louis", "St. Charles", "Jefferson"],
+      "cities": ["Chesterfield", "Wildwood", "St. Peters"]
+    },
+    "3": {
+      "counties": ["St. Charles", "Jefferson", "Franklin", "Warren", "Lincoln"],
+      "cities": ["O", ", ", ", "]
+    },
+    "4": {
+      "counties": ["Jackson", "Cass", "Johnson", "Pettis", "Henry"],
+      "cities": ["Kansas City", "Independence", "Lee"]
+    },
+    "5": {
+      "counties": ["Jackson", "Clay", "Platte"],
+      "cities": ["Kansas City", "Independence", "Liberty"]
+    },
+    "6": {
+      "counties": ["Buchanan", "Platte", "Andrew", "Clay", "Clinton"],
+      "cities": ["St. Joseph", "Kansas City", "Gladstone"]
+    },
+    "7": {
+      "counties": ["Greene", "Jasper", "Newton", "McDonald", "Barry"],
+      "cities": ["Springfield", "Joplin", "Nixa"]
+    },
+    "8": {
+      "counties": [
+        "St. Francois",
+        "Jefferson",
+        "Cape Girardeau",
+        "Perry",
+        "Ste. Genevieve"
+      ],
+      "cities": ["Cape Girardeau", "Farmington", "Poplar Bluff"]
+    }
+  },
+  "MD": {
+    "1": {
+      "counties": ["Harford", "Baltimore", "Carroll", "Cecil", "Queen Anne"],
+      "cities": ["Bel Air", "Towson", "Westminster"]
+    },
+    "2": {
+      "counties": ["Baltimore", "Anne Arundel", "Harford"],
+      "cities": ["Dundalk", "Towson", "Glen Burnie"]
+    },
+    "3": {
+      "counties": ["Baltimore", "Anne Arundel", "Howard"],
+      "cities": ["Baltimore", "Columbia", "Ellicott City"]
+    },
+    "4": {
+      "counties": ["Prince George", ", "],
+      "cities": ["Bowie", "Upper Marlboro", "Largo"]
+    },
+    "5": {
+      "counties": [
+        "Prince George",
+        ", ",
+        "s",
+        "Charles",
+        "Calvert",
+        "Anne Arundel"
+      ],
+      "cities": ["Waldorf", "Bowie", "Lexington Park"]
+    },
+    "6": {
+      "counties": [
+        "Montgomery",
+        "Frederick",
+        "Garrett",
+        "Allegany",
+        "Washington"
+      ],
+      "cities": ["Gaithersburg", "Frederick", "Hagerstown"]
+    },
+    "7": {
+      "counties": ["Baltimore", "Howard"],
+      "cities": ["Baltimore", "Ellicott City", "Catonsville"]
+    },
+    "8": {
+      "counties": ["Montgomery", "Frederick", "Carroll"],
+      "cities": ["Rockville", "Bethesda", "Silver Spring"]
+    }
+  },
+  "WI": {
+    "1": {
+      "counties": ["Kenosha", "Racine", "Walworth", "Rock", "Waukesha"],
+      "cities": ["Kenosha", "Racine", "Janesville"]
+    },
+    "2": {
+      "counties": ["Dane", "Iowa", "Lafayette", "Green", "Sauk"],
+      "cities": ["Madison", "Fitchburg", "Sun Prairie"]
+    },
+    "3": {
+      "counties": ["La Crosse", "Eau Claire", "Dunn", "St. Croix", "Pepin"],
+      "cities": ["La Crosse", "Eau Claire", "Menomonie"]
+    },
+    "4": {
+      "counties": ["Milwaukee"],
+      "cities": ["Milwaukee", "Wauwatosa", "West Allis"]
+    },
+    "5": {
+      "counties": ["Waukesha", "Washington", "Jefferson", "Dodge"],
+      "cities": ["Waukesha", "West Bend", "Brookfield"]
+    },
+    "6": {
+      "counties": [
+        "Sheboygan",
+        "Fond du Lac",
+        "Winnebago",
+        "Manitowoc",
+        "Ozaukee"
+      ],
+      "cities": ["Sheboygan", "Fond du Lac", "Oshkosh"]
+    },
+    "7": {
+      "counties": ["Marathon", "St. Croix", "Barron", "Polk", "Douglas"],
+      "cities": ["Wausau", "Superior", "Hudson"]
+    },
+    "8": {
+      "counties": ["Brown", "Outagamie", "Oconto", "Marinette", "Door"],
+      "cities": ["Green Bay", "Appleton", "De Pere"]
+    }
+  },
+  "MN": {
+    "1": {
+      "counties": ["Olmsted", "Blue Earth", "Winona", "Mower", "Freeborn"],
+      "cities": ["Rochester", "Mankato", "Winona"]
+    },
+    "2": {
+      "counties": ["Dakota", "Scott", "Le Sueur", "Rice", "Goodhue"],
+      "cities": ["Burnsville", "Eagan", "Apple Valley"]
+    },
+    "3": {
+      "counties": ["Hennepin", "Anoka"],
+      "cities": ["Bloomington", "Brooklyn Park", "Eden Prairie"]
+    },
+    "4": {
+      "counties": ["Ramsey", "Washington"],
+      "cities": ["St. Paul", "Woodbury", "Maplewood"]
+    },
+    "5": {
+      "counties": ["Hennepin", "Anoka", "Ramsey"],
+      "cities": ["Minneapolis", "St. Louis Park", "Fridley"]
+    },
+    "6": {
+      "counties": ["Anoka", "Sherburne", "Stearns", "Wright", "Benton"],
+      "cities": ["Blaine", "Coon Rapids", "St. Cloud"]
+    },
+    "7": {
+      "counties": ["Clay", "Otter Tail", "Stearns", "Douglas", "Becker"],
+      "cities": ["Moorhead", "St. Cloud", "Willmar"]
+    },
+    "8": {
+      "counties": ["St. Louis", "Itasca", "Aitkin", "Carlton", "Crow Wing"],
+      "cities": ["Duluth", "Hibbing", "Brainerd"]
+    }
+  },
+  "CO": {
+    "1": {
+      "counties": ["Denver", "Arapahoe", "Jefferson"],
+      "cities": ["Denver", "Littleton", "Englewood"]
+    },
+    "2": {
+      "counties": ["Boulder", "Larimer", "Jefferson", "Broomfield", "Gilpin"],
+      "cities": ["Boulder", "Fort Collins", "Longmont"]
+    },
+    "3": {
+      "counties": ["Pueblo", "Mesa", "Garfield", "La Plata", "Montezuma"],
+      "cities": ["Pueblo", "Grand Junction", "Durango"]
+    },
+    "4": {
+      "counties": ["Douglas", "Weld", "Larimer", "Elbert"],
+      "cities": ["Greeley", "Castle Rock", "Loveland"]
+    },
+    "5": {
+      "counties": ["El Paso", "Teller", "Fremont", "Park", "Chaffee"],
+      "cities": ["Colorado Springs", "Security-Widefield", "Fountain"]
+    },
+    "6": {
+      "counties": ["Arapahoe", "Douglas", "Adams"],
+      "cities": ["Aurora", "Centennial", "Littleton"]
+    },
+    "7": {
+      "counties": ["Jefferson", "Adams", "Arapahoe"],
+      "cities": ["Lakewood", "Arvada", "Westminster"]
+    },
+    "8": {
+      "counties": ["Adams", "Weld", "Larimer"],
+      "cities": ["Thornton", "Westminster", "Greeley"]
+    }
+  },
+  "AL": {
+    "1": {
+      "counties": ["Mobile", "Baldwin", "Escambia", "Monroe", "Washington"],
+      "cities": ["Mobile", "Daphne", "Fairhope"]
+    },
+    "2": {
+      "counties": ["Montgomery", "Houston", "Autauga", "Elmore", "Dale"],
+      "cities": ["Montgomery", "Dothan", "Prattville"]
+    },
+    "3": {
+      "counties": ["Calhoun", "Talladega", "Lee", "St. Clair", "Cherokee"],
+      "cities": ["Anniston", "Auburn", "Opelika"]
+    },
+    "4": {
+      "counties": ["Etowah", "Marshall", "DeKalb", "Cullman", "Blount"],
+      "cities": ["Gadsden", "Albertville", "Cullman"]
+    },
+    "5": {
+      "counties": ["Madison", "Limestone", "Morgan", "Jackson", "Lauderdale"],
+      "cities": ["Huntsville", "Decatur", "Florence"]
+    },
+    "6": {
+      "counties": ["Jefferson", "Shelby", "St. Clair", "Blount"],
+      "cities": ["Birmingham", "Hoover", "Vestavia Hills"]
+    },
+    "7": {
+      "counties": ["Jefferson", "Tuscaloosa", "Dallas", "Choctaw", "Clarke"],
+      "cities": ["Birmingham", "Tuscaloosa", "Selma"]
+    }
+  },
+  "SC": {
+    "1": {
+      "counties": [
+        "Charleston",
+        "Beaufort",
+        "Dorchester",
+        "Berkeley",
+        "Colleton"
+      ],
+      "cities": ["Charleston", "Mount Pleasant", "Hilton Head Island"]
+    },
+    "2": {
+      "counties": ["Lexington", "Aiken", "Richland", "Barnwell", "Orangeburg"],
+      "cities": ["Columbia", "Aiken", "Lexington"]
+    },
+    "3": {
+      "counties": ["Anderson", "Pickens", "Oconee", "Greenwood", "Laurens"],
+      "cities": ["Anderson", "Greenwood", "Easley"]
+    },
+    "4": {
+      "counties": ["Greenville", "Spartanburg"],
+      "cities": ["Greenville", "Spartanburg", "Greer"]
+    },
+    "5": {
+      "counties": ["York", "Lancaster", "Cherokee", "Chester", "Sumter"],
+      "cities": ["Rock Hill", "Sumter", "Gaffney"]
+    },
+    "6": {
+      "counties": ["Richland", "Florence", "Horry", "Marion", "Dillon"],
+      "cities": ["Columbia", "Florence", "Sumter"]
+    },
+    "7": {
+      "counties": ["Horry", "Georgetown", "Florence", "Marion", "Darlington"],
+      "cities": ["Myrtle Beach", "Conway", "Florence"]
+    }
+  },
+  "LA": {
+    "1": {
+      "counties": [
+        "Jefferson",
+        "St. Tammany",
+        "Orleans",
+        "Lafourche",
+        "Terrebonne"
+      ],
+      "cities": ["Metairie", "Kenner", "Slidell"]
+    },
+    "2": {
+      "counties": ["Orleans", "Jefferson"],
+      "cities": ["New Orleans", "Metairie", "Baton Rouge"]
+    },
+    "3": {
+      "counties": [
+        "St. Mary",
+        "Iberia",
+        "St. Martin",
+        "Lafayette",
+        "Terrebonne"
+      ],
+      "cities": ["New Iberia", "Houma", "Lafayette"]
+    },
+    "4": {
+      "counties": ["Caddo", "Bossier", "Ouachita", "Webster", "DeSoto"],
+      "cities": ["Shreveport", "Bossier City", "Monroe"]
+    },
+    "5": {
+      "counties": ["Ouachita", "Rapides", "Caddo", "Morehouse", "Lincoln"],
+      "cities": ["Monroe", "Alexandria", "Ruston"]
+    },
+    "6": {
+      "counties": ["East Baton Rouge", "Livingston", "Ascension", "Tangipahoa"],
+      "cities": ["Baton Rouge", "Prairieville", "Central"]
+    }
+  },
+  "KY": {
+    "1": {
+      "counties": ["McCracken", "Christian", "Henderson", "Daviess", "Hopkins"],
+      "cities": ["Paducah", "Hopkinsville", "Henderson"]
+    },
+    "2": {
+      "counties": ["Warren", "Daviess", "Hardin", "Nelson", "Bullitt"],
+      "cities": ["Bowling Green", "Owensboro", "Elizabethtown"]
+    },
+    "3": {
+      "counties": ["Jefferson"],
+      "cities": ["Louisville"]
+    },
+    "4": {
+      "counties": ["Boone", "Kenton", "Campbell", "Oldham", "Jefferson"],
+      "cities": ["Covington", "Florence", "Independence"]
+    },
+    "5": {
+      "counties": ["Pulaski", "Laurel", "Pike", "Whitley", "Harlan"],
+      "cities": ["Somerset", "London", "Pikeville"]
+    },
+    "6": {
+      "counties": ["Fayette", "Scott", "Franklin", "Jessamine", "Woodford"],
+      "cities": ["Lexington", "Georgetown", "Richmond"]
+    }
+  },
+  "OR": {
+    "1": {
+      "counties": ["Washington", "Yamhill", "Clatsop", "Columbia"],
+      "cities": ["Beaverton", "Hillsboro", "Tigard"]
+    },
+    "2": {
+      "counties": ["Deschutes", "Jackson", "Umatilla", "Klamath", "Wasco"],
+      "cities": ["Bend", "Medford", "Redmond"]
+    },
+    "3": {
+      "counties": ["Multnomah", "Clackamas"],
+      "cities": ["Portland", "Gresham"]
+    },
+    "4": {
+      "counties": ["Multnomah", "Washington"],
+      "cities": ["Portland", "Beaverton", "Tigard"]
+    },
+    "5": {
+      "counties": ["Clackamas", "Multnomah", "Marion"],
+      "cities": ["Happy Valley", "Oregon City", "West Linn"]
+    },
+    "6": {
+      "counties": ["Marion", "Polk", "Yamhill", "Benton", "Linn"],
+      "cities": ["Salem", "Keizer", "McMinnville"]
+    }
+  },
+  "OK": {
+    "1": {
+      "counties": ["Tulsa", "Washington", "Wagoner", "Rogers"],
+      "cities": ["Tulsa", "Broken Arrow", "Bartlesville"]
+    },
+    "2": {
+      "counties": ["Muskogee", "Cherokee", "Sequoyah", "Adair", "McIntosh"],
+      "cities": ["Muskogee", "Tahlequah", "McAlester"]
+    },
+    "3": {
+      "counties": ["Oklahoma", "Canadian", "Logan", "Payne", "Lincoln"],
+      "cities": ["Oklahoma City", "Yukon", "Stillwater"]
+    },
+    "4": {
+      "counties": ["Comanche", "Cleveland", "Garvin", "McClain", "Stephens"],
+      "cities": ["Lawton", "Norman", "Moore"]
+    },
+    "5": {
+      "counties": ["Oklahoma", "Pottawatomie", "Seminole"],
+      "cities": ["Oklahoma City", "Edmond", "Shawnee"]
+    }
+  },
+  "CT": {
+    "1": {
+      "counties": ["Hartford", "Middlesex", "Litchfield"],
+      "cities": ["Hartford", "New Britain", "West Hartford"]
+    },
+    "2": {
+      "counties": ["New London", "Tolland", "Windham", "Middlesex"],
+      "cities": ["Norwich", "New London", "Groton"]
+    },
+    "3": {
+      "counties": ["New Haven", "Fairfield", "Middlesex"],
+      "cities": ["New Haven", "Milford", "Stratford"]
+    },
+    "4": {
+      "counties": ["Fairfield", "New Haven"],
+      "cities": ["Bridgeport", "Stamford", "Norwalk"]
+    },
+    "5": {
+      "counties": ["Fairfield", "Litchfield", "Hartford", "New Haven"],
+      "cities": ["Danbury", "Waterbury", "Meriden"]
+    }
+  },
+  "UT": {
+    "1": {
+      "counties": ["Weber", "Davis", "Cache", "Box Elder", "Morgan"],
+      "cities": ["Ogden", "Layton", "Logan"]
+    },
+    "2": {
+      "counties": ["Salt Lake", "Davis", "Tooele", "Washington"],
+      "cities": ["Salt Lake City", "West Valley City", "St. George"]
+    },
+    "3": {
+      "counties": ["Utah", "Salt Lake", "Wasatch", "Carbon", "Emery"],
+      "cities": ["Provo", "Orem", "West Jordan"]
+    },
+    "4": {
+      "counties": ["Salt Lake", "Utah", "Juab", "Sanpete"],
+      "cities": ["South Jordan", "Sandy", "Lehi"]
+    }
+  },
+  "IA": {
+    "1": {
+      "counties": ["Linn", "Scott", "Muscatine", "Clinton", "Cedar"],
+      "cities": ["Cedar Rapids", "Davenport", "Iowa City"]
+    },
+    "2": {
+      "counties": ["Black Hawk", "Cerro Gordo", "Dubuque", "Story", "Woodbury"],
+      "cities": ["Dubuque", "Waterloo", "Ames"]
+    },
+    "3": {
+      "counties": ["Polk", "Dallas", "Guthrie", "Warren"],
+      "cities": ["Des Moines", "West Des Moines", "Ankeny"]
+    },
+    "4": {
+      "counties": ["Story", "Pottawattamie", "Woodbury", "Webster"],
+      "cities": ["Ames", "Council Bluffs", "Sioux City"]
+    }
+  },
+  "NV": {
+    "1": {
+      "counties": ["Clark"],
+      "cities": ["Las Vegas", "North Las Vegas", "Sunrise Manor"]
+    },
+    "2": {
+      "counties": ["Washoe", "Elko", "Carson City", "Douglas", "Lyon"],
+      "cities": ["Reno", "Sparks", "Carson City"]
+    },
+    "3": {
+      "counties": ["Clark"],
+      "cities": ["Henderson", "Paradise", "Enterprise"]
+    },
+    "4": {
+      "counties": ["Clark", "Lyon", "Nye", "White Pine"],
+      "cities": ["North Las Vegas", "Sunrise Manor", "Mesquite"]
+    }
+  },
+  "AR": {
+    "1": {
+      "counties": [
+        "Pulaski",
+        "Craighead",
+        "Crittenden",
+        "Mississippi",
+        "Poinsett"
+      ],
+      "cities": ["Little Rock", "Jonesboro", "West Memphis"]
+    },
+    "2": {
+      "counties": ["Pulaski", "Saline", "Faulkner", "White"],
+      "cities": ["Little Rock", "Conway", "North Little Rock"]
+    },
+    "3": {
+      "counties": ["Washington", "Benton", "Sebastian", "Crawford"],
+      "cities": ["Fayetteville", "Fort Smith", "Springdale"]
+    },
+    "4": {
+      "counties": ["Garland", "Jefferson", "Union", "Ouachita", "Miller"],
+      "cities": ["Hot Springs", "Pine Bluff", "Texarkana"]
+    }
+  },
+  "KS": {
+    "1": {
+      "counties": ["Saline", "Reno", "Finney", "Ford", "Riley"],
+      "cities": ["Salina", "Hutchinson", "Manhattan"]
+    },
+    "2": {
+      "counties": ["Shawnee", "Douglas", "Leavenworth", "Crawford"],
+      "cities": ["Topeka", "Lawrence", "Leavenworth"]
+    },
+    "3": {
+      "counties": ["Johnson", "Wyandotte"],
+      "cities": ["Kansas City", "Overland Park", "Olathe"]
+    },
+    "4": {
+      "counties": ["Sedgwick", "Butler", "Harvey"],
+      "cities": ["Wichita", "Derby", "El Dorado"]
+    }
+  },
+  "MS": {
+    "1": {
+      "counties": ["DeSoto", "Lee", "Lowndes", "Lafayette", "Alcorn"],
+      "cities": ["Southaven", "Tupelo", "Columbus"]
+    },
+    "2": {
+      "counties": ["Hinds", "Madison", "Rankin", "Warren"],
+      "cities": ["Jackson", "Vicksburg", "Clinton"]
+    },
+    "3": {
+      "counties": ["Rankin", "Lamar", "Forrest", "Lauderdale", "Jones"],
+      "cities": ["Meridian", "Hattiesburg", "Pearl"]
+    },
+    "4": {
+      "counties": ["Harrison", "Jackson", "Hancock", "Forrest"],
+      "cities": ["Gulfport", "Biloxi", "Hattiesburg"]
+    }
+  },
+  "NM": {
+    "1": {
+      "counties": ["Bernalillo", "Torrance", "Valencia", "Sandoval"],
+      "cities": ["Albuquerque", "Rio Rancho", "Belen"]
+    },
+    "2": {
+      "counties": ["Do\u00f1a Ana", "Otero", "Sierra", "Lea", "Eddy"],
+      "cities": ["Las Cruces", "Roswell", "Hobbs"]
+    },
+    "3": {
+      "counties": ["Santa Fe", "San Juan", "McKinley", "Rio Arriba"],
+      "cities": ["Santa Fe", "Farmington", "Gallup"]
+    }
+  },
+  "NE": {
+    "1": {
+      "counties": ["Lancaster", "Sarpy", "Cass", "Saunders"],
+      "cities": ["Lincoln", "Bellevue", "Fremont"]
+    },
+    "2": {
+      "counties": ["Douglas", "Sarpy"],
+      "cities": ["Omaha", "Papillion", "La Vista"]
+    },
+    "3": {
+      "counties": ["Hall", "Buffalo", "Platte", "Adams", "Scotts Bluff"],
+      "cities": ["Grand Island", "Kearney", "Hastings"]
+    }
+  },
+  "ID": {
+    "1": {
+      "counties": ["Kootenai", "Nez Perce", "Latah", "Bonner", "Shoshone"],
+      "cities": ["Coeur d", ", ", ", "]
+    },
+    "2": {
+      "counties": ["Ada", "Canyon", "Bannock", "Bonneville", "Twin Falls"],
+      "cities": ["Boise", "Meridian", "Nampa"]
+    }
+  },
+  "WV": {
+    "1": {
+      "counties": ["Monongalia", "Ohio", "Marion", "Harrison", "Wood"],
+      "cities": ["Morgantown", "Wheeling", "Parkersburg"]
+    },
+    "2": {
+      "counties": ["Kanawha", "Cabell", "Raleigh", "Berkeley", "Putnam"],
+      "cities": ["Charleston", "Huntington", "Beckley"]
+    }
+  },
+  "NH": {
+    "1": {
+      "counties": [
+        "Hillsborough",
+        "Rockingham",
+        "Strafford",
+        "Belknap",
+        "Carroll"
+      ],
+      "cities": ["Manchester", "Nashua", "Dover"]
+    },
+    "2": {
+      "counties": [
+        "Hillsborough",
+        "Merrimack",
+        "Cheshire",
+        "Grafton",
+        "Sullivan"
+      ],
+      "cities": ["Nashua", "Concord", "Keene"]
+    }
+  },
+  "ME": {
+    "1": {
+      "counties": ["Cumberland", "York", "Kennebec", "Sagadahoc", "Lincoln"],
+      "cities": ["Portland", "Lewiston", "Augusta"]
+    },
+    "2": {
+      "counties": ["Penobscot", "Aroostook", "Hancock", "Washington"],
+      "cities": ["Bangor", "Presque Isle", "Ellsworth"]
+    }
+  },
+  "HI": {
+    "1": {
+      "counties": ["Honolulu"],
+      "cities": ["Honolulu", "Pearl City", "Waipahu"]
+    },
+    "2": {
+      "counties": ["Maui", "Hawaii", "Kauai"],
+      "cities": ["Hilo", "Kailua", "Kahului"]
+    }
+  },
+  "RI": {
+    "1": {
+      "counties": ["Providence", "Newport"],
+      "cities": ["Providence", "Pawtucket", "East Providence"]
+    },
+    "2": {
+      "counties": ["Kent", "Washington"],
+      "cities": ["Warwick", "Cranston", "Westerly"]
+    }
+  },
+  "MT": {
+    "1": {
+      "counties": [
+        "Yellowstone",
+        "Gallatin",
+        "Silver Bow",
+        "Cascade",
+        "Missoula"
+      ],
+      "cities": ["Billings", "Bozeman", "Butte"]
+    },
+    "2": {
+      "counties": [
+        "Missoula",
+        "Flathead",
+        "Cascade",
+        "Lewis and Clark",
+        "Ravalli"
+      ],
+      "cities": ["Missoula", "Great Falls", "Kalispell"]
+    }
+  },
+  "DE": {
+    "1": {
+      "counties": ["New Castle", "Sussex", "Kent"],
+      "cities": ["Wilmington", "Dover", "Newark"]
+    }
+  },
+  "SD": {
+    "1": {
+      "counties": ["Minnehaha", "Pennington", "Lincoln", "Brown", "Brookings"],
+      "cities": ["Sioux Falls", "Rapid City", "Aberdeen"]
+    }
+  },
+  "ND": {
+    "1": {
+      "counties": ["Cass", "Burleigh", "Grand Forks", "Ward", "Williams"],
+      "cities": ["Fargo", "Bismarck", "Grand Forks"]
+    }
+  },
+  "AK": {
+    "1": {
+      "counties": [
+        "Anchorage Municipality",
+        "Matanuska-Susitna Borough",
+        "Fairbanks North Star Borough",
+        "Kenai Peninsula Borough"
+      ],
+      "cities": ["Anchorage", "Fairbanks", "Juneau"]
+    }
+  },
+  "VT": {
+    "1": {
+      "counties": [
+        "Chittenden",
+        "Rutland",
+        "Washington",
+        "Windsor",
+        "Franklin"
+      ],
+      "cities": ["Burlington", "South Burlington", "Rutland"]
+    }
+  },
+  "WY": {
+    "1": {
+      "counties": ["Laramie", "Natrona", "Campbell", "Sweetwater", "Fremont"],
+      "cities": ["Cheyenne", "Casper", "Laramie"]
+    }
+  }
+}
