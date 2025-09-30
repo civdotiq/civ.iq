@@ -1,289 +1,360 @@
 # Contributing to CIV.IQ
 
-Thank you for your interest in contributing to CIV.IQ! We're building a transparent civic engagement platform, and every contribution helps make government data more accessible to citizens.
+Thank you for your interest in contributing to CIV.IQ! This guide will help you get started.
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
 - [Getting Started](#getting-started)
-- [How to Contribute](#how-to-contribute)
-- [Development Setup](#development-setup)
+- [Development Process](#development-process)
 - [Coding Standards](#coding-standards)
-- [Commit Guidelines](#commit-guidelines)
+- [Testing Requirements](#testing-requirements)
 - [Pull Request Process](#pull-request-process)
-- [Reporting Issues](#reporting-issues)
+- [Areas for Contribution](#areas-for-contribution)
 
-## 📜 Code of Conduct
+## Code of Conduct
 
-We are committed to providing a welcoming and inclusive environment. Please read and follow our Code of Conduct:
+### Our Pledge
 
-- Be respectful and inclusive
-- Welcome newcomers and help them get started
-- Focus on constructive criticism
+We are committed to providing a welcoming and inclusive environment for all contributors, regardless of background, identity, or experience level.
+
+### Expected Behavior
+
+- Use welcoming and inclusive language
 - Respect differing viewpoints and experiences
-- Show empathy towards other community members
+- Accept constructive criticism gracefully
+- Focus on what's best for the community
+- Show empathy toward other community members
 
-## 🚀 Getting Started
+### Unacceptable Behavior
 
-1. Fork the repository
-2. Clone your fork: `git clone https://github.com/yourusername/civic-intel-hub.git`
-3. Add upstream remote: `git remote add upstream https://github.com/original/civic-intel-hub.git`
-4. Create a feature branch: `git checkout -b feature/your-feature-name`
+- Harassment, discriminatory language, or personal attacks
+- Publishing others' private information
+- Trolling or inflammatory comments
+- Other unprofessional conduct
 
-## 🤝 How to Contribute
-
-### Types of Contributions
-
-#### 🐛 Bug Reports
-- Use the issue tracker to report bugs
-- Describe the bug in detail
-- Include steps to reproduce
-- Add screenshots if applicable
-- Mention your environment (OS, browser, Node version)
-
-#### ✨ Feature Requests
-- Check existing issues first
-- Clearly describe the feature
-- Explain why it would be useful
-- Consider the project scope
-
-#### 💻 Code Contributions
-Areas where we especially need help:
-- Adding state and local representative data
-- Improving search functionality
-- Creating data visualizations
-- Writing tests
-- Improving accessibility
-- Documentation
-
-## 🛠️ Development Setup
+## Getting Started
 
 ### Prerequisites
-```bash
-node --version  # Should be 18+
-npm --version   # Should be 8+
-```
 
-### Local Development
-```bash
-# Install dependencies
-npm install
+- Node.js 18 or higher
+- Git
+- A GitHub account
+- Basic knowledge of TypeScript and React
 
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your API keys
+### Fork and Clone
 
-# Run development server
-npm run dev
+1. Fork the repository on GitHub
+2. Clone your fork locally:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/civic-intel-hub.git
+   cd civic-intel-hub
+   ```
+3. Add the upstream repository:
+   ```bash
+   git remote add upstream https://github.com/ORIGINAL_OWNER/civic-intel-hub.git
+   ```
 
-# Run tests
-npm test
+### Development Setup
 
-# Run linter
-npm run lint
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-# Build for production
-npm run build
-```
+2. Copy environment variables:
+   ```bash
+   cp .env.example .env.local
+   ```
 
-## 📝 Coding Standards
+3. Obtain API keys (see [README.md](README.md#required-api-keys))
+
+4. Start development server:
+   ```bash
+   npm run dev
+   ```
+
+5. Run tests to verify setup:
+   ```bash
+   npm test
+   ```
+
+## Development Process
+
+### Before You Start
+
+1. **Check existing issues** to avoid duplicate work
+2. **Open an issue** for major changes to discuss your approach
+3. **Keep changes focused** - one feature/fix per pull request
+
+### Workflow
+
+1. **Create a branch** from `main`:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+   Use prefixes: `feature/`, `fix/`, `docs/`, `refactor/`, `test/`
+
+2. **Make your changes** following coding standards
+
+3. **Test your changes** thoroughly:
+   ```bash
+   npm test
+   npm run type-check
+   npm run lint
+   ```
+
+4. **Commit with clear messages**:
+   ```bash
+   git commit -m "feat: add district boundary visualization"
+   ```
+   Follow [Conventional Commits](https://www.conventionalcommits.org/)
+
+5. **Keep your branch updated**:
+   ```bash
+   git fetch upstream
+   git rebase upstream/main
+   ```
+
+6. **Push to your fork**:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+## Coding Standards
 
 ### TypeScript
-- Use TypeScript for all new code
-- Define proper types, avoid `any`
-- Use interfaces for object shapes
-- Export types from a central location
 
-### React/Next.js
-- Use functional components with hooks
-- Keep components small and focused
-- Use semantic HTML elements
-- Implement proper error boundaries
+- **Strict mode enabled** - no `any` types without justification
+- **Use interfaces** for object shapes
+- **Null safety** - handle undefined/null explicitly
+- **Readonly arrays** where appropriate
+- **Descriptive variable names** - avoid single letters except in loops
 
-### Example Component Structure
+Example:
 ```typescript
-// components/RepresentativeCard.tsx
-import { FC } from 'react';
-import { Representative } from '@/types';
+// Good
+interface RepresentativeProfile {
+  readonly bioguideId: string;
+  readonly name: string;
+  readonly party?: string;
+}
 
+// Avoid
+let x: any = getData();
+```
+
+### React Components
+
+- **Functional components** with hooks
+- **TypeScript props** with interfaces
+- **Meaningful component names** - descriptive and specific
+- **Keep components focused** - single responsibility
+- **Use React.memo** for expensive renders
+
+Example:
+```typescript
 interface RepresentativeCardProps {
   representative: Representative;
   onSelect?: (id: string) => void;
 }
 
-export const RepresentativeCard: FC<RepresentativeCardProps> = ({ 
-  representative, 
-  onSelect 
-}) => {
-  // Component logic here
-  return (
-    <article className="...">
-      {/* Component JSX */}
-    </article>
-  );
-};
+export const RepresentativeCard: React.FC<RepresentativeCardProps> = React.memo(
+  ({ representative, onSelect }) => {
+    // Component implementation
+  }
+);
 ```
+
+### Code Organization
+
+```
+src/
+├── app/              # Next.js routes
+├── components/       # Reusable UI components
+├── lib/             # Utilities and services
+├── hooks/           # Custom React hooks
+└── types/           # TypeScript definitions
+```
+
+- **Colocate related code** - keep files near where they're used
+- **Avoid deep nesting** - max 3-4 levels
+- **Single export per file** for components
+- **Named exports** for utilities
 
 ### Styling
-- Use Tailwind CSS classes
-- Follow the existing design system
-- Ensure responsive design
-- Maintain consistent spacing
 
-### API Integration
-- Use the existing API client functions
-- Handle errors gracefully
-- Implement proper loading states
-- Cache responses when appropriate
+- **Tailwind CSS** for styling
+- **Consistent spacing** - use Tailwind's scale (4px increments)
+- **Responsive design** - mobile-first approach
+- **Accessibility** - proper ARIA labels, semantic HTML
 
-## 💬 Commit Guidelines
+### API Routes
 
-We follow Conventional Commits specification:
+- **Input validation** on all endpoints
+- **Error handling** with proper HTTP status codes
+- **Rate limiting** where appropriate
+- **Type-safe responses** using TypeScript interfaces
 
+Example:
+```typescript
+export async function GET(request: Request) {
+  try {
+    // Validate input
+    const { searchParams } = new URL(request.url);
+    const zip = searchParams.get('zip');
+    
+    if (!zip || !/^\d{5}$/.test(zip)) {
+      return NextResponse.json(
+        { error: 'Invalid ZIP code format' },
+        { status: 400 }
+      );
+    }
+
+    // Process request
+    const data = await fetchData(zip);
+    
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    console.error('API error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
 ```
-<type>(<scope>): <subject>
 
-<body>
+## Testing Requirements
 
-<footer>
-```
+### Test Coverage
 
-### Types
-- **feat**: New feature
-- **fix**: Bug fix
-- **docs**: Documentation changes
-- **style**: Code style changes (formatting, etc)
-- **refactor**: Code refactoring
-- **test**: Adding or updating tests
-- **chore**: Maintenance tasks
+- **New features** must include tests
+- **Bug fixes** should include regression tests
+- **Aim for 80%+ coverage** for critical paths
 
-### Examples
+### Running Tests
+
 ```bash
-feat(search): add address-based representative lookup
-fix(api): handle rate limiting in Congress API calls
-docs(readme): update installation instructions
-test(components): add tests for RepresentativeCard
+# All tests
+npm test
+
+# Watch mode
+npm test -- --watch
+
+# Coverage report
+npm run test:coverage
+
+# Type checking
+npm run type-check
 ```
 
-## 🔄 Pull Request Process
+### Writing Tests
 
-1. **Update your fork**
-   ```bash
-   git fetch upstream
-   git checkout main
-   git merge upstream/main
-   ```
+Use descriptive test names:
 
-2. **Create feature branch**
-   ```bash
-   git checkout -b feature/your-feature
-   ```
+```typescript
+describe('RepresentativeCard', () => {
+  it('should display representative name and party', () => {
+    // Test implementation
+  });
 
-3. **Make your changes**
-   - Write clean, documented code
-   - Add tests for new features
-   - Update documentation
+  it('should call onSelect when clicked', () => {
+    // Test implementation
+  });
 
-4. **Test your changes**
-   ```bash
-   npm run lint
-   npm test
-   npm run build
-   ```
-
-5. **Submit PR**
-   - Use a clear, descriptive title
-   - Reference any related issues
-   - Describe what changes you made
-   - Include screenshots for UI changes
-
-### PR Template
-```markdown
-## Description
-Brief description of changes
-
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation update
-
-## Testing
-- [ ] Tests pass locally
-- [ ] Added new tests
-- [ ] Manual testing completed
-
-## Screenshots (if applicable)
-
-## Related Issues
-Fixes #(issue number)
+  it('should handle missing photo gracefully', () => {
+    // Test implementation
+  });
+});
 ```
 
-## 🐛 Reporting Issues
+## Pull Request Process
 
 ### Before Submitting
-- Check existing issues
-- Try the latest version
-- Verify it's reproducible
 
-### Issue Template
+- [ ] All tests pass (`npm test`)
+- [ ] No TypeScript errors (`npm run type-check`)
+- [ ] No linting errors (`npm run lint`)
+- [ ] Code follows style guidelines
+- [ ] Commits follow conventional commits format
+- [ ] Documentation updated if needed
+
+### PR Template
+
+Your PR description should include:
+
+1. **What** - What changes are being made?
+2. **Why** - Why are these changes necessary?
+3. **How** - How do the changes work?
+4. **Testing** - How were the changes tested?
+5. **Screenshots** - For UI changes, include before/after screenshots
+6. **Related Issues** - Link to relevant issues
+
+Example:
 ```markdown
 ## Description
-Clear description of the issue
+Adds interactive district boundary visualization using Leaflet.js
 
-## Steps to Reproduce
-1. Go to '...'
-2. Click on '...'
-3. See error
+## Why
+Users need to see visual representations of congressional districts to better understand geographic boundaries.
 
-## Expected Behavior
-What should happen
+## Changes
+- Added Leaflet.js integration
+- Created DistrictMap component
+- Added district boundary API endpoint
+- Updated district pages with map display
 
-## Actual Behavior
-What actually happens
+## Testing
+- Tested with multiple districts (CA-12, NY-14, TX-10)
+- Verified map loads correctly with boundaries
+- Tested error handling when boundary data unavailable
 
-## Environment
-- OS: [e.g., Windows 11]
-- Browser: [e.g., Chrome 120]
-- Node Version: [e.g., 18.17.0]
+## Screenshots
+[Before/After images]
 
-## Additional Context
-Any other relevant information
+Fixes #123
 ```
 
-## 🎯 Priority Areas
+### Review Process
 
-Current priorities for contributions:
+1. **Automated checks** must pass (tests, linting, type checking)
+2. **Code review** by at least one maintainer
+3. **Address feedback** - respond to review comments
+4. **Squash commits** if requested
+5. **Merge** - maintainer will merge when approved
 
-1. **Data Coverage**
-   - State legislature integration
-   - Local government officials
-   - Historical voting data
+## Areas for Contribution
 
-2. **Features**
-   - Advanced search filters
-   - Bill tracking
-   - Email notifications
-   - Data exports
+### High Priority
 
-3. **Technical Improvements**
-   - Performance optimization
-   - Test coverage
-   - Accessibility improvements
-   - Mobile responsiveness
+- **State Legislature Integration** - OpenStates API implementation
+- **Local Government Data** - City/county official tracking
+- **Accessibility** - WCAG 2.1 AA compliance improvements
+- **Test Coverage** - Expand unit and integration tests
+- **Performance** - Bundle size optimization, caching improvements
 
-## 📚 Resources
+### Medium Priority
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [Tailwind CSS Docs](https://tailwindcss.com/docs)
-- [Congress.gov API Docs](https://api.congress.gov/)
-- [FEC API Docs](https://api.open.fec.gov/developers/)
+- **Documentation** - API docs, user guides, architecture docs
+- **UI/UX** - Design improvements, mobile optimization
+- **Data Validation** - Additional API cross-validation
+- **Error Handling** - Improved error messages and recovery
 
-## ❓ Questions?
+### Good First Issues
 
-- Open a [Discussion](https://github.com/yourusername/civic-intel-hub/discussions)
-- Join our [Discord/Slack] community
-- Email: contribute@civiq.org
+Look for issues labeled `good-first-issue` or `help-wanted` in the GitHub issue tracker.
 
-Thank you for helping make government data more accessible! 🙏
+## Questions?
+
+- **General questions**: Open a [GitHub Discussion](https://github.com/OWNER/civic-intel-hub/discussions)
+- **Bug reports**: Open an [Issue](https://github.com/OWNER/civic-intel-hub/issues)
+- **Email**: mark@marksandford.dev
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License with attribution requirements. See [LICENSE](LICENSE) for details.
+
+---
+
+**Thank you for contributing to CIV.IQ and helping make government data more accessible!**
