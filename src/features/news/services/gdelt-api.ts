@@ -537,9 +537,42 @@ export function generateOptimizedSearchTerms(
     }
   }
 
-  // Add fallback with just last name if we have a multi-word name
+  // Only add fallback with just last name for UNCOMMON names
+  // Common last names should NOT be searched in isolation
+  const commonLastNames = [
+    'James',
+    'Johnson',
+    'Smith',
+    'Brown',
+    'Jones',
+    'Davis',
+    'Miller',
+    'Wilson',
+    'Anderson',
+    'Taylor',
+    'Thomas',
+    'Jackson',
+    'White',
+    'Harris',
+    'Martin',
+    'Thompson',
+    'Garcia',
+    'Martinez',
+    'Robinson',
+    'Clark',
+  ];
+
   if (lastName && lastName !== cleanName && lastName.length > 3) {
-    searchTerms.push(`"${lastName}"`);
+    // Only add standalone last name if it's not a common one
+    if (!commonLastNames.includes(lastName)) {
+      searchTerms.push(`"${lastName}"`);
+    } else {
+      // For common last names, always require additional context
+      logger.debug(`Skipping standalone search for common last name: ${lastName}`, {
+        representativeName: fullName,
+        operation: 'gdelt_search_terms_filtering',
+      });
+    }
   }
 
   logger.debug(`Generated search terms for ${fullName}`, {

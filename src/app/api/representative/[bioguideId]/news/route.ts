@@ -15,6 +15,8 @@ import { getAdvancedRepresentativeNews } from '@/lib/services/news';
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
+// Vercel serverless function configuration
+export const maxDuration = 20; // 20 seconds for news aggregation
 export const dynamic = 'force-dynamic';
 
 interface SimpleNewsArticle {
@@ -45,7 +47,7 @@ interface NewsResponse {
   articles: NewsArticle[];
   totalResults: number;
   searchTerms: string[];
-  dataSource: 'gdelt' | 'cached' | 'fallback';
+  dataSource: 'gdelt' | 'google-news' | 'fallback';
   cacheStatus?: string;
   pagination?: {
     currentPage: number;
@@ -97,8 +99,8 @@ export async function GET(
         articles: convertedArticles,
         totalResults: rssArticles.length,
         searchTerms: [`RSS feeds for ${bioguideId}`],
-        dataSource: 'cached',
-        cacheStatus: 'RSS news data from feeds',
+        dataSource: 'google-news',
+        cacheStatus: 'RSS news data from Google News feeds',
         pagination: {
           currentPage: page,
           limit: limit,

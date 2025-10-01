@@ -6,11 +6,23 @@
   "framework": "nextjs",
   "regions": ["iad1", "sfo1"],
   "functions": {
-    "src/app/api/**/*.ts": {
-      "maxDuration": 60
+    "src/app/api/representative/[bioguideId]/votes/route.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    },
+    "src/app/api/representative/[bioguideId]/news/route.ts": {
+      "maxDuration": 20,
+      "memory": 1024
+    },
+    "src/app/api/districts/all/route.ts": {
+      "maxDuration": 15,
+      "memory": 1024
     },
     "src/app/api/cron/**/*.ts": {
       "maxDuration": 300
+    },
+    "src/app/api/**/*.ts": {
+      "maxDuration": 10
     }
   },
   "crons": [

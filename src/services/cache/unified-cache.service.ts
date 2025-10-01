@@ -31,8 +31,8 @@ export class UnifiedCacheService {
 
     // Legislative data - variable based on activity
     bills: { redis: 2 * 60 * 60, memory: 10 * 60 * 1000 }, // 2h / 10min (active during sessions)
-    votes: { redis: 60 * 60, memory: 5 * 60 * 1000 }, // 1h / 5min (frequent during voting periods)
-    voting: { redis: 2 * 60 * 60, memory: 15 * 60 * 1000 }, // 2h / 15min (voting history accumulates)
+    votes: { redis: 15 * 60, memory: 3 * 60 * 1000 }, // 15min / 3min (frequent during voting periods - need fresh data)
+    voting: { redis: 15 * 60, memory: 3 * 60 * 1000 }, // 15min / 3min (voting history accumulates during active sessions)
 
     // Heavy computation endpoints - balanced for performance vs freshness
     batch: { redis: 30 * 60, memory: 5 * 60 * 1000 }, // 30min / 5min (multi-API aggregation)

@@ -15,7 +15,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
-import { cachedHeavyEndpoint, govCache as _govCache } from '@/services/cache';
+import { cachedFetch, govCache as _govCache } from '@/services/cache';
+
+// Vercel serverless function configuration
+export const maxDuration = 30; // 30 seconds for vote enrichment
+export const dynamic = 'force-dynamic';
 
 interface VoteResponse {
   votes: Vote[];
@@ -862,35 +866,47 @@ export async function GET(
     const cacheKey = `votes:${bioguideId}:${chamber}:${limit}`;
 
     try {
-      const votesResult = await cachedHeavyEndpoint(
-        cacheKey,
-        async () => {
-          if (chamber === 'Senate') {
-            // Phase 2: For Senators, fetch real votes from XML feed
-            logger.info('Senator detected - fetching real votes from XML feed (Background)', {
-              bioguideId,
-              name,
-            });
-            const senateVotes = await getSenateVotes(bioguideId, limit);
-            return { votes: senateVotes, source: 'senate-xml-feed' };
-          } else {
-            // Phase 3: For House members, use N+1 enrichment for full context
-            logger.info(
-              'House member detected - enriching votes with roll-call data (Background)',
-              {
+      // Bypass cache if requested
+      let votesResult;
+      if (bypassCache) {
+        if (chamber === 'Senate') {
+          const senateVotes = await getSenateVotes(bioguideId, limit);
+          votesResult = { votes: senateVotes, source: 'senate-xml-feed' };
+        } else {
+          const houseVotes = await getHouseVotes(bioguideId, limit, bypassCache);
+          votesResult = { votes: houseVotes, source: 'house-congress-api-enriched' };
+        }
+      } else {
+        votesResult = await cachedFetch(
+          cacheKey,
+          async () => {
+            if (chamber === 'Senate') {
+              // Phase 2: For Senators, fetch real votes from XML feed
+              logger.info('Senator detected - fetching real votes from XML feed (Background)', {
                 bioguideId,
                 name,
-              }
-            );
-            const houseVotes = await getHouseVotes(bioguideId, limit, bypassCache);
-            return { votes: houseVotes, source: 'house-congress-api-enriched' };
+              });
+              const senateVotes = await getSenateVotes(bioguideId, limit);
+              return { votes: senateVotes, source: 'senate-xml-feed' };
+            } else {
+              // Phase 3: For House members, use N+1 enrichment for full context
+              logger.info(
+                'House member detected - enriching votes with roll-call data (Background)',
+                {
+                  bioguideId,
+                  name,
+                }
+              );
+              const houseVotes = await getHouseVotes(bioguideId, limit, bypassCache);
+              return { votes: houseVotes, source: 'house-congress-api-enriched' };
+            }
+          },
+          {
+            dataType: 'votes', // Use 15-minute cache for fresh voting data
+            source: 'votes-enriched-processing',
           }
-        },
-        {
-          source: 'votes-enriched-processing',
-          bypassCache,
-        }
-      );
+        );
+      }
 
       votes = votesResult.votes;
       dataSource = votesResult.source;

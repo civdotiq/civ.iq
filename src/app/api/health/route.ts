@@ -5,6 +5,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+// Vercel Edge Runtime for ultra-fast cold starts
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+
 interface SimpleHealthCheck {
   status: 'healthy' | 'unhealthy';
   timestamp: string;
