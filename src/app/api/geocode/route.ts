@@ -45,6 +45,124 @@ interface GeocodeResponse {
   };
 }
 
+// GET handler for simple coordinate-to-ZIP lookups
+export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+  const { searchParams } = new URL(request.url);
+
+  try {
+    const lat = searchParams.get('lat');
+    const lng = searchParams.get('lng');
+
+    if (!lat || !lng) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Missing lat or lng parameters',
+        },
+        { status: 400 }
+      );
+    }
+
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lng);
+
+    if (isNaN(latitude) || isNaN(longitude)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid lat or lng values',
+        },
+        { status: 400 }
+      );
+    }
+
+    logger.info('Geocode GET request', { latitude, longitude });
+
+    // Initialize district lookup service
+    await districtLookupService.initialize();
+
+    // Find district by coordinates
+    const result = await districtLookupService.findDistrictByCoordinates(latitude, longitude);
+
+    if (!result.found || !result.district) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Could not find district for these coordinates',
+        },
+        { status: 404 }
+      );
+    }
+
+    // Try to get ZIP code from the geocoded address if available
+    let zipCode: string | undefined;
+
+    // The district lookup service might provide additional geocoded info
+    // For now, we'll use a reverse geocoding service to get the ZIP
+    try {
+      const censusUrl = `https://geocoding.geo.census.gov/geocoder/geographies/coordinates?x=${longitude}&y=${latitude}&benchmark=Public_AR_Current&vintage=Current_Current&format=json&layers=all`;
+      const censusResponse = await fetch(censusUrl);
+
+      if (censusResponse.ok) {
+        const censusData = await censusResponse.json();
+
+        // Check if we can extract ZIP from the matched address
+        if (censusData.result?.addressMatches?.[0]?.matchedAddress) {
+          const addressMatch = censusData.result.addressMatches[0].matchedAddress;
+          const zipMatch = addressMatch.match(/\b(\d{5})\b/);
+          if (zipMatch) {
+            zipCode = zipMatch[1];
+          }
+        }
+      }
+    } catch (error) {
+      logger.warn('Failed to get ZIP from Census geocoding', {
+        error: error instanceof Error ? error.message : 'Unknown',
+      });
+    }
+
+    logger.info('Geocode GET successful', {
+      latitude,
+      longitude,
+      state: result.district.state_abbr,
+      district: result.district.district_num,
+      zipCode,
+      processingTime: Date.now() - startTime,
+    });
+
+    return NextResponse.json(
+      {
+        success: true,
+        zipCode,
+        district: {
+          state: result.district.state_abbr,
+          district: result.district.district_num,
+          districtId: result.district.id,
+          name: result.district.name,
+        },
+        coordinates: {
+          latitude,
+          longitude,
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    logger.error('Geocode GET error', error as Error, {
+      processingTime: Date.now() - startTime,
+    });
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Internal server error during geocoding',
+      },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 

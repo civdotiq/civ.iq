@@ -137,9 +137,9 @@ export default function SearchForm() {
 
       const { latitude, longitude } = position.coords;
 
-      // Use Census Geocoding API to get ZIP from coordinates
+      // Use Census Geocoding API for reverse geocoding (coordinates to address)
       const response = await fetch(
-        `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${latitude},${longitude}&benchmark=2020&format=json`
+        `https://geocoding.geo.census.gov/geocoder/geographies/coordinates?x=${longitude}&y=${latitude}&benchmark=Public_AR_Current&vintage=Current_Current&format=json`
       );
 
       if (!response.ok) {
@@ -147,13 +147,27 @@ export default function SearchForm() {
       }
 
       const data = await response.json();
-      const result = data.result?.addressMatches?.[0];
+      const result = data.result?.geographies?.['Census Tracts']?.[0];
 
-      if (!result?.components?.zip) {
-        throw new Error('No ZIP code found');
+      if (!result?.GEOID) {
+        throw new Error('No location data found');
       }
 
-      const zipCode = result.components.zip;
+      // Extract ZIP code from address components or use /api/geocode endpoint
+      // For now, use the internal geocode API which handles this properly
+      const geocodeResponse = await fetch(`/api/geocode?lat=${latitude}&lng=${longitude}`);
+
+      if (!geocodeResponse.ok) {
+        throw new Error('Failed to get ZIP code from location');
+      }
+
+      const geocodeData = await geocodeResponse.json();
+
+      if (!geocodeData.zipCode) {
+        throw new Error('No ZIP code found for this location');
+      }
+
+      const zipCode = geocodeData.zipCode;
       setSearchInput(zipCode);
       setIsGeolocating(false);
 

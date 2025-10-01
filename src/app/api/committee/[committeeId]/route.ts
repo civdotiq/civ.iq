@@ -15,6 +15,8 @@ import {
   getAllEnhancedRepresentatives,
 } from '@/features/representatives/services/congress.service';
 
+export const dynamic = 'force-dynamic';
+
 // Helper function to get committee metadata
 function getCommitteeMetadata(committeeId: string) {
   const upperCommitteeId = committeeId.toUpperCase();

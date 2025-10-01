@@ -15,6 +15,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { XMLParser } from 'fast-xml-parser';
 import logger from '@/lib/logging/simple-logger';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Map LIS Member ID to Bioguide ID for current senators
  * This mapping is essential for creating clickable links to senator profiles

@@ -12,6 +12,8 @@ import {
 } from '@/services/congress/optimized-congress.service';
 import { cachedHeavyEndpoint } from '@/services/cache';
 
+export const dynamic = 'force-dynamic';
+
 // Helper function to create legacy response format
 function createLegacyResponse(result: OptimizedBillsResponse, congress: number) {
   const sponsoredCount = result.metadata?.sponsoredCount || 0;
