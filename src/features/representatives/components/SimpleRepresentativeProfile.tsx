@@ -16,6 +16,7 @@ import { DistrictSidebar } from './DistrictSidebar';
 import { ContactInfoTab } from './ContactInfoTab';
 import { TabLoadingSpinner } from '@/lib/utils/code-splitting';
 import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
+import { useIsDesktop } from '@/hooks/useMediaQuery';
 
 // Dynamically import heavy tabs to reduce initial bundle size
 const FinanceTab = dynamic(
@@ -49,6 +50,7 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
     const [activeTab, setActiveTab] = useState('overview');
     const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set(['overview']));
     const prefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const isDesktop = useIsDesktop();
 
     // Fetch lightweight summary data for Key Stats
     const {
@@ -275,25 +277,46 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
               </div>
             </div>
 
-            {/* Sidebar - Stack of bordered cards with Suspense boundary */}
-            <div className="lg:sticky lg:top-4 lg:self-start">
-              <Suspense
-                fallback={
-                  <div className="bg-white aicher-border p-4 sm:p-6">
-                    <div className="animate-pulse">
-                      <div className="h-6 bg-gray-200 rounded mb-4"></div>
-                      <div className="space-y-3">
-                        <div className="h-4 bg-gray-200 rounded"></div>
-                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            {/* Sidebar - Conditionally render based on screen size for better mobile performance */}
+            {isDesktop ? (
+              <div className="sticky top-4 self-start">
+                <Suspense
+                  fallback={
+                    <div className="bg-white aicher-border p-4 sm:p-6">
+                      <div className="animate-pulse">
+                        <div className="h-6 bg-gray-200 rounded mb-4"></div>
+                        <div className="space-y-3">
+                          <div className="h-4 bg-gray-200 rounded"></div>
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                }
-              >
-                <DistrictSidebar representative={representative} />
-              </Suspense>
-            </div>
+                  }
+                >
+                  <DistrictSidebar representative={representative} />
+                </Suspense>
+              </div>
+            ) : (
+              <details className="bg-white aicher-border">
+                <summary className="p-4 font-bold cursor-pointer list-none flex justify-between items-center aicher-heading">
+                  <span>District Information</span>
+                  <span className="text-civiq-blue">▼</span>
+                </summary>
+                <div className="px-4 pb-4">
+                  <Suspense
+                    fallback={
+                      <div className="animate-pulse space-y-3">
+                        <div className="h-4 bg-gray-200 rounded"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      </div>
+                    }
+                  >
+                    <DistrictSidebar representative={representative} />
+                  </Suspense>
+                </div>
+              </details>
+            )}
           </div>
 
           {/* Data Sources Attribution - responsive spacing */}

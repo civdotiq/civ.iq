@@ -178,11 +178,16 @@ export default function SearchForm() {
           </div>
           <input
             type="text"
-            placeholder="Enter ZIP code or address..."
+            inputMode="numeric"
+            pattern="[0-9]{5}(-[0-9]{4})?"
+            placeholder="Enter ZIP code (e.g., 48221)"
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
+            autoComplete="postal-code"
+            enterKeyHint="search"
             className="block w-full pl-10 sm:pl-grid-5 pr-24 sm:pr-grid-12 py-3 sm:py-grid-2 text-base sm:text-lg border-0 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-civiq-blue"
             disabled={isLoading}
+            aria-label="Search by ZIP code or address"
           />
           <button
             type="submit"

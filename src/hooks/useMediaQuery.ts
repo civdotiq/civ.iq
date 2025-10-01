@@ -48,3 +48,15 @@ export function useIsDesktop(): boolean {
 export function useIsSmallMobile(): boolean {
   return useMediaQuery('(max-width: 375px)');
 }
+
+export function useSupportsHover(): boolean {
+  return useMediaQuery('(hover: hover) and (pointer: fine)');
+}
+
+export function usePrefersReducedMotion(): boolean {
+  return useMediaQuery('(prefers-reduced-motion: reduce)');
+}
+
+export function useIsRetina(): boolean {
+  return useMediaQuery('(-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi)');
+}

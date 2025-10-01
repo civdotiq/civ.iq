@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import MapLibre GL CSS for maps */
-@import 'maplibre-gl/dist/maplibre-gl.css';
-
 /* Import Otl Aicher Design System */
 @import '../styles/aicher-system.css';
 
@@ -551,5 +548,53 @@ select:disabled {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mobile-Specific Optimizations */
+@media (max-width: 640px) {
+  /* Improve tap performance */
+  a,
+  button,
+  [role='button'] {
+    -webkit-tap-highlight-color: rgba(62, 162, 212, 0.3);
+    touch-action: manipulation;
+  }
+
+  /* Prevent text size adjustment on orientation change */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Optimize scrolling performance */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Reduce motion complexity for better performance */
+  .animate-fadeIn,
+  .animate-fadeInUp {
+    animation-duration: 0.25s;
+  }
+
+  /* Simplify hover effects to active states on mobile */
+  .card:hover {
+    transform: none;
+  }
+
+  .card:active {
+    opacity: 0.9;
+  }
+}
+
+/* High DPI / Retina Display Optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Use higher quality images on retina */
+  .rep-image,
+  .district-image,
+  img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
 }

@@ -183,12 +183,17 @@ export function ExtendedTabNavigation({
 
   return (
     <div className={`aicher-card aicher-no-radius aicher-border-b ${className}`}>
-      <nav className="flex overflow-x-auto">
-        {tabs.map(tab => (
-          <div key={tab.id} className="relative">
-            <button
-              onClick={() => onTabChange(tab.id)}
-              className={`
+      <div className="relative">
+        {/* Scroll indicators for mobile */}
+        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 md:hidden" />
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 md:hidden" />
+
+        <nav className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {tabs.map(tab => (
+            <div key={tab.id} className="relative">
+              <button
+                onClick={() => onTabChange(tab.id)}
+                className={`
         aicher-button inline-flex items-center gap-2 ${sizeClasses[size]} aicher-heading-wide aicher-border-b transition-all duration-200 whitespace-nowrap relative aicher-focus
         ${
           activeTab === tab.id
@@ -196,44 +201,45 @@ export function ExtendedTabNavigation({
             : 'border-transparent text-gray-500 aicher-hover'
         }
        `}
-              title={tab.description}
-            >
-              <span className={iconSizes[size]}>{tab.icon}</span>
-              <div className="flex flex-col items-start">
-                <div className="flex items-center gap-2">
-                  <span>{tab.label}</span>
-                  {tab.badge && (
-                    <span
-                      className={`
+                title={tab.description}
+              >
+                <span className={iconSizes[size]}>{tab.icon}</span>
+                <div className="flex flex-col items-start">
+                  <div className="flex items-center gap-2">
+                    <span>{tab.label}</span>
+                    {tab.badge && (
+                      <span
+                        className={`
             inline-flex items-center justify-center min-w-5 h-5 aicher-heading text-xs aicher-no-radius
             ${activeTab === tab.id ? 'aicher-status-info' : 'aicher-border bg-white text-gray-600'}
            `}
-                    >
-                      {tab.badge}
-                    </span>
-                  )}
-                  {tab.isNew && (
-                    <span className="aicher-status-success px-1.5 py-0.5 aicher-heading text-xs aicher-no-radius">
-                      New
-                    </span>
-                  )}
-                  {tab.isUpdated && (
-                    <span className="aicher-status-error px-1.5 py-0.5 aicher-heading text-xs aicher-no-radius">
-                      Updated
-                    </span>
+                      >
+                        {tab.badge}
+                      </span>
+                    )}
+                    {tab.isNew && (
+                      <span className="aicher-status-success px-1.5 py-0.5 aicher-heading text-xs aicher-no-radius">
+                        New
+                      </span>
+                    )}
+                    {tab.isUpdated && (
+                      <span className="aicher-status-error px-1.5 py-0.5 aicher-heading text-xs aicher-no-radius">
+                        Updated
+                      </span>
+                    )}
+                  </div>
+                  {showLastUpdated && tab.lastUpdated && (
+                    <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
+                      <Clock className="w-3 h-3" />
+                      <span>{tab.lastUpdated}</span>
+                    </div>
                   )}
                 </div>
-                {showLastUpdated && tab.lastUpdated && (
-                  <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
-                    <Clock className="w-3 h-3" />
-                    <span>{tab.lastUpdated}</span>
-                  </div>
-                )}
-              </div>
-            </button>
-          </div>
-        ))}
-      </nav>
+              </button>
+            </div>
+          ))}
+        </nav>
+      </div>
     </div>
   );
 }

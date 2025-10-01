@@ -40,7 +40,7 @@ interface NewsResponse {
   articles: SimpleNewsArticle[];
   totalResults: number;
   searchTerms: string[];
-  dataSource: 'gdelt' | 'cached' | 'fallback';
+  dataSource: 'gdelt' | 'cached' | 'fallback' | 'google-news';
   cacheStatus?: string;
   pagination?: {
     currentPage: number;
@@ -173,6 +173,7 @@ export function SimpleNewsSection({
   const isLoadingMore = size > 0 && isValidating;
   const reachedPageLimit = size >= maxPages;
   const canLoadMore = hasNextPage && !reachedPageLimit;
+  const dataSource = data?.[0]?.dataSource;
 
   /**
    * Load more handler (used by both button and auto-load)
@@ -461,8 +462,11 @@ export function SimpleNewsSection({
                     <FallbackImage
                       src={article.socialimage}
                       alt={`News from ${getSourceName(article.domain)}`}
-                      width={64}
-                      height={48}
+                      width={128}
+                      height={96}
+                      loading="lazy"
+                      quality={75}
+                      sizes="(max-width: 640px) 64px, 80px"
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -520,17 +524,35 @@ export function SimpleNewsSection({
       </section>
 
       {/* Footer Attribution */}
-      <div className={styles.footer}>
-        Real news data from{' '}
-        <a
-          href="https://www.gdeltproject.org/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.footerLink}
-        >
-          GDELT Project
-        </a>
-      </div>
+      {dataSource && (
+        <div className={styles.footer}>
+          {dataSource === 'google-news' ? (
+            <>
+              News data from{' '}
+              <a
+                href="https://news.google.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.footerLink}
+              >
+                Google News RSS
+              </a>
+            </>
+          ) : (
+            <>
+              News data from{' '}
+              <a
+                href="https://www.gdeltproject.org/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.footerLink}
+              >
+                GDELT Project
+              </a>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

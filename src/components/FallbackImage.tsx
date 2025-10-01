@@ -10,6 +10,9 @@ interface FallbackImageProps {
   height: number;
   className?: string;
   fallbackIcon?: React.ReactNode;
+  loading?: 'lazy' | 'eager';
+  quality?: number;
+  sizes?: string;
 }
 
 export function FallbackImage({
@@ -19,6 +22,9 @@ export function FallbackImage({
   height,
   className = '',
   fallbackIcon,
+  loading = 'lazy',
+  quality = 75,
+  sizes,
 }: FallbackImageProps) {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,6 +86,9 @@ export function FallbackImage({
         className={className}
         onError={handleError}
         onLoad={handleLoad}
+        loading={loading}
+        quality={quality}
+        sizes={sizes}
         style={isLoading ? { opacity: 0 } : { opacity: 1 }}
       />
     </div>

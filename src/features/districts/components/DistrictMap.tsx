@@ -36,9 +36,18 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
   const [dataSource, setDataSource] = useState<string>('');
   const [isClient, setIsClient] = useState(false);
 
-  // Ensure we're on the client side
+  // Ensure we're on the client side and load MapLibre CSS
   useEffect(() => {
     setIsClient(true);
+
+    // Dynamically load MapLibre CSS only when map component mounts
+    if (typeof document !== 'undefined' && !document.getElementById('maplibre-css')) {
+      const link = document.createElement('link');
+      link.id = 'maplibre-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css';
+      document.head.appendChild(link);
+    }
   }, []);
 
   // Initialize MapLibre map
