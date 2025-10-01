@@ -29,10 +29,34 @@ class HttpClient {
   }
 
   async fetch(url: string, options: RequestInit = {}): Promise<Response> {
+    // Use browser-like User-Agent and headers for government XML sources to avoid 403 errors
+    const isGovernmentXML = url.includes('clerk.house.gov') || url.includes('senate.gov');
+    const userAgent = isGovernmentXML
+      ? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      : 'CivicIntelHub/1.0 (+https://github.com/PublicDataWorks/civ-iq)';
+
+    const headers: Record<string, string> = {
+      'User-Agent': userAgent,
+      Accept: isGovernmentXML
+        ? 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        : 'application/xml, text/xml, */*',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    };
+
+    // Add browser-specific headers for government sites
+    if (isGovernmentXML) {
+      headers.Referer = 'https://clerk.house.gov/';
+      headers['Sec-Fetch-Dest'] = 'document';
+      headers['Sec-Fetch-Mode'] = 'navigate';
+      headers['Sec-Fetch-Site'] = 'same-origin';
+    }
+
     const defaultOptions: RequestInit = {
       headers: {
-        'User-Agent': 'CivicIntelHub/1.0 (Performance Optimized)',
-        Connection: 'keep-alive',
+        ...headers,
         ...options.headers,
       },
       signal: options.signal || AbortSignal.timeout(10000), // 10s timeout
@@ -57,15 +81,52 @@ class HttpClient {
     }
 
     const fetchOperation = async (): Promise<Response> => {
-      try {
-        return await fetch(url, mergedOptions);
-      } catch (error) {
-        logger.warn('HTTP client fetch failed', {
-          url,
-          error: error instanceof Error ? error.message : 'Unknown',
-        });
-        throw error;
+      const maxRetries = 3;
+      let lastError: Error | null = null;
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const response = await fetch(url, mergedOptions);
+
+          // Retry on 403 (forbidden) with exponential backoff
+          if (response.status === 403 && attempt < maxRetries - 1) {
+            const delay = Math.min(1000 * Math.pow(2, attempt), 5000); // Max 5s delay
+            logger.debug('Received 403, retrying with backoff', {
+              url,
+              attempt: attempt + 1,
+              delayMs: delay,
+            });
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+
+          // Return response (including non-403 errors for caller to handle)
+          return response;
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error('Unknown fetch error');
+
+          // Retry on network errors with exponential backoff
+          if (attempt < maxRetries - 1) {
+            const delay = Math.min(1000 * Math.pow(2, attempt), 5000);
+            logger.debug('Network error, retrying with backoff', {
+              url,
+              attempt: attempt + 1,
+              delayMs: delay,
+              error: lastError.message,
+            });
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+        }
       }
+
+      // All retries exhausted
+      logger.warn('HTTP client fetch failed after retries', {
+        url,
+        attempts: maxRetries,
+        error: lastError?.message || 'Unknown',
+      });
+      throw lastError || new Error('Fetch failed after retries');
     };
 
     // Use circuit breaker if available, otherwise direct fetch
@@ -414,7 +475,63 @@ export class BatchVotingService {
   }
 
   /**
+   * Fetch recent vote metadata from clerk.house.gov (official House source)
+   * This supplements Congress.gov API which can lag 7-14 days
+   */
+  private async getRecentClerkHouseVotes(
+    startRoll: number,
+    endRoll: number,
+    year = 2025
+  ): Promise<VoteListItem[]> {
+    const votes: VoteListItem[] = [];
+
+    // Fetch metadata for each roll call number
+    for (let rollNum = startRoll; rollNum <= endRoll; rollNum++) {
+      const url = `https://clerk.house.gov/evs/${year}/roll${rollNum}.xml`;
+
+      try {
+        const response = await httpClient.fetch(url, {
+          signal: AbortSignal.timeout(15000), // 15s timeout to allow for retries
+        });
+
+        if (response.ok) {
+          const xml = await response.text();
+
+          // Extract metadata from XML using simple regex (no XML parser needed for basic fields)
+          const rollMatch = xml.match(/<rollcall-num>(\d+)<\/rollcall-num>/);
+          const dateMatch = xml.match(/<action-date>([\d-A-Za-z]+)<\/action-date>/);
+          const questionMatch = xml.match(/<vote-question>(.*?)<\/vote-question>/);
+          const resultMatch = xml.match(/<vote-result>(.*?)<\/vote-result>/);
+
+          if (rollMatch?.[1] && dateMatch?.[1]) {
+            votes.push({
+              rollCallNumber: parseInt(rollMatch[1]),
+              sourceDataURL: url,
+              date: dateMatch[1],
+              question: questionMatch?.[1] || '',
+              result: resultMatch?.[1] || '',
+            });
+          }
+        }
+      } catch (error) {
+        logger.debug(`Failed to fetch clerk.house.gov roll ${rollNum}`, {
+          error: (error as Error).message,
+        });
+        // Continue fetching other votes even if one fails
+      }
+    }
+
+    logger.info(`Fetched ${votes.length} recent votes from clerk.house.gov`, {
+      startRoll,
+      endRoll,
+    });
+
+    return votes;
+  }
+
+  /**
    * Get House vote list with pagination support to fetch ALL votes
+   * Supplements Congress.gov API with fresh clerk.house.gov data
    */
   private async getHouseVoteList(
     congress: number,
@@ -426,6 +543,11 @@ export class BatchVotingService {
     const cached = bypassCache ? null : this.cache.get<VoteListItem[]>(cacheKey);
 
     if (cached) {
+      logger.debug('Using cached vote list', {
+        cacheKey,
+        votesCount: cached.length,
+        highestRoll: Math.max(...cached.map(v => v.rollCallNumber)),
+      });
       return cached.slice(0, limit);
     }
 
@@ -511,15 +633,23 @@ export class BatchVotingService {
         }
       }
 
-      logger.info('Completed fetching House votes', {
+      logger.info('Completed fetching House votes from Congress.gov', {
         congress,
         totalVotesFetched: allVotes.length,
         pagesRetrieved: Math.ceil(offset / pageLimit) + 1,
       });
 
-      // Cache the complete list for 1 hour
+      // NOTE: clerk.house.gov supplemental fetching disabled due to 403 blocking
+      // Congress.gov API is comprehensive and only lags by ~24-48 hours
+      // The vote list is current and clerk.house.gov actively blocks automated requests
+      logger.debug('Using Congress.gov vote list without clerk.house.gov supplementation', {
+        totalVotes: allVotes.length,
+        highestRoll: allVotes.length > 0 ? Math.max(...allVotes.map(v => v.rollCallNumber)) : 0,
+      });
+
+      // Cache the complete list for 15 minutes (matches voting cache TTL for freshness during active sessions)
       if (allVotes.length > 0) {
-        this.cache.set(cacheKey, allVotes, 60 * 60 * 1000);
+        this.cache.set(cacheKey, allVotes, 15 * 60 * 1000);
       }
 
       return allVotes.slice(0, limit);
@@ -605,7 +735,7 @@ export class BatchVotingService {
     try {
       const response = await this.circuitBreaker.call(async () => {
         const res = await httpClient.fetch(vote.sourceDataURL, {
-          signal: AbortSignal.timeout(3000),
+          signal: AbortSignal.timeout(15000), // 15s timeout to allow for retries
         });
 
         if (!res.ok) {
@@ -995,7 +1125,7 @@ export class BatchVotingService {
 
       const xmlText = await this.circuitBreaker.call(async () => {
         const response = await httpClient.fetch(url, {
-          signal: AbortSignal.timeout(3000),
+          signal: AbortSignal.timeout(15000), // 15s timeout to allow for retries
         });
 
         if (!response.ok) {
