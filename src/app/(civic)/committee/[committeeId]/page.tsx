@@ -7,10 +7,11 @@ import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowLeft, Users, MapPin, Calendar, ExternalLink, Phone } from 'lucide-react';
+import { Users, MapPin, Calendar, ExternalLink, Phone } from 'lucide-react';
 import { getCommitteeDisplayName } from '@/types/committee';
 import type { Committee, CommitteeAPIResponse } from '@/types/committee';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
+import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 
 // Dynamically import client components
 const SubcommitteeCard = dynamic(
@@ -52,6 +53,7 @@ const CommitteeMembers = dynamic(
 
 interface CommitteePageProps {
   params: Promise<{ committeeId: string }>;
+  searchParams: Promise<{ from?: string; name?: string }>;
 }
 
 // Fetch committee data
@@ -157,20 +159,30 @@ function CommitteeLoading() {
 }
 
 // Committee content component
-async function CommitteeContent({ committeeId }: { committeeId: string }) {
+async function CommitteeContent({
+  committeeId,
+  fromBioguideId,
+  fromRepName,
+}: {
+  committeeId: string;
+  fromBioguideId?: string;
+  fromRepName?: string;
+}) {
   const committee = await getCommitteeData(committeeId);
 
   if (!committee) {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Link
-            href="/representatives"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Representatives
-          </Link>
+          {fromBioguideId && fromRepName ? (
+            <Breadcrumb
+              currentPage="Committee Not Found"
+              fromBioguideId={fromBioguideId}
+              fromRepName={fromRepName}
+            />
+          ) : (
+            <SimpleBreadcrumb />
+          )}
 
           <div className="bg-white border-2 border-black p-8 text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Committee Not Found</h1>
@@ -189,14 +201,16 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back button */}
-        <Link
-          href="/representatives"
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Representatives
-        </Link>
+        {/* Breadcrumb navigation */}
+        {fromBioguideId && fromRepName ? (
+          <Breadcrumb
+            currentPage={committee.name}
+            fromBioguideId={fromBioguideId}
+            fromRepName={fromRepName}
+          />
+        ) : (
+          <SimpleBreadcrumb />
+        )}
 
         {/* Committee Header */}
         <div className="bg-white border-2 border-black p-8 mb-8">
@@ -341,12 +355,17 @@ async function CommitteeContent({ committeeId }: { committeeId: string }) {
 }
 
 // Main committee page component
-export default async function CommitteePage({ params }: CommitteePageProps) {
+export default async function CommitteePage({ params, searchParams }: CommitteePageProps) {
   const { committeeId } = await params;
+  const { from: fromBioguideId, name: fromRepName } = await searchParams;
 
   return (
     <Suspense fallback={<CommitteeLoading />}>
-      <CommitteeContent committeeId={committeeId} />
+      <CommitteeContent
+        committeeId={committeeId}
+        fromBioguideId={fromBioguideId}
+        fromRepName={fromRepName}
+      />
     </Suspense>
   );
 }

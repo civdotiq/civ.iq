@@ -5,14 +5,14 @@
 
 import { Suspense } from 'react';
 import { Metadata } from 'next';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import type { Bill } from '@/types/bill';
 import { getBillDisplayStatus } from '@/types/bill';
 import { ClientBillContent } from './ClientBillContent';
+import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 
 interface BillPageProps {
   params: Promise<{ billId: string }>;
+  searchParams: Promise<{ from?: string; name?: string }>;
 }
 
 // For SSR, we'll use a simple approach - return null and let the client handle the data fetching
@@ -87,18 +87,28 @@ function BillLoading() {
 }
 
 // Bill content component
-function BillContent({ billId }: { billId: string }) {
+function BillContent({
+  billId,
+  fromBioguideId,
+  fromRepName,
+}: {
+  billId: string;
+  fromBioguideId?: string;
+  fromRepName?: string;
+}) {
   return (
     <div className="min-h-screen aicher-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back button */}
-        <Link
-          href="/representatives"
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Representatives
-        </Link>
+        {/* Breadcrumb navigation */}
+        {fromBioguideId && fromRepName ? (
+          <Breadcrumb
+            currentPage={`Bill ${billId}`}
+            fromBioguideId={fromBioguideId}
+            fromRepName={fromRepName}
+          />
+        ) : (
+          <SimpleBreadcrumb />
+        )}
 
         {/* Client-side content */}
         <ClientBillContent billId={billId} />
@@ -108,12 +118,13 @@ function BillContent({ billId }: { billId: string }) {
 }
 
 // Main bill page component
-export default async function BillPage({ params }: BillPageProps) {
+export default async function BillPage({ params, searchParams }: BillPageProps) {
   const { billId } = await params;
+  const { from: fromBioguideId, name: fromRepName } = await searchParams;
 
   return (
     <Suspense fallback={<BillLoading />}>
-      <BillContent billId={billId} />
+      <BillContent billId={billId} fromBioguideId={fromBioguideId} fromRepName={fromRepName} />
     </Suspense>
   );
 }

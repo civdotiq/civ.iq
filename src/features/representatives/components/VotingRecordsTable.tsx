@@ -52,6 +52,7 @@ interface Vote {
 interface VotingRecordsTableProps {
   bioguideId: string;
   chamber: 'House' | 'Senate';
+  representativeName?: string; // For breadcrumb navigation context
 }
 
 interface VotesListProps {
@@ -60,6 +61,8 @@ interface VotesListProps {
   toggleRowExpansion: (voteId: string) => void;
   getPositionColor: (position: string) => string;
   getResultColor: (result: string) => string;
+  bioguideId?: string;
+  representativeName?: string;
 }
 
 // Virtual scrolling component for votes - memoized for performance
@@ -70,6 +73,8 @@ const VotesList = memo(
     toggleRowExpansion,
     getPositionColor,
     getResultColor,
+    bioguideId,
+    representativeName,
   }: VotesListProps) => {
     const VoteRow = useCallback(
       ({ index, style }: { index: number; style: CSSProperties }) => {
@@ -92,7 +97,7 @@ const VotesList = memo(
                   <div className="flex-1 pr-4">
                     <div className="flex items-center gap-3 mb-3 flex-wrap">
                       <Link
-                        href={`/bill/${vote.bill.number.replace(/\s+/g, '')}`}
+                        href={`/bill/${vote.bill.number.replace(/\s+/g, '')}${representativeName ? `?from=${bioguideId}&name=${encodeURIComponent(representativeName)}` : ''}`}
                         className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
                         onClick={e => e.stopPropagation()}
                       >
@@ -129,7 +134,7 @@ const VotesList = memo(
                       )}
                     </div>
                     <Link
-                      href={`/bill/${vote.bill.number.replace(/\s+/g, '')}`}
+                      href={`/bill/${vote.bill.number.replace(/\s+/g, '')}${representativeName ? `?from=${bioguideId}&name=${encodeURIComponent(representativeName)}` : ''}`}
                       className="block text-gray-900 font-medium mb-3 line-clamp-2 hover:text-blue-600 transition-colors leading-relaxed"
                       onClick={e => e.stopPropagation()}
                     >
@@ -301,7 +306,15 @@ const VotesList = memo(
           </div>
         );
       },
-      [votes, expandedRows, toggleRowExpansion, getPositionColor, getResultColor]
+      [
+        votes,
+        expandedRows,
+        toggleRowExpansion,
+        getPositionColor,
+        getResultColor,
+        bioguideId,
+        representativeName,
+      ]
     );
 
     // Don't render anything if no votes
@@ -337,6 +350,7 @@ VotesList.displayName = 'VotesList';
 export const VotingRecordsTable = memo(function VotingRecordsTable({
   bioguideId,
   chamber: _chamber,
+  representativeName: _representativeName, // Optional: for breadcrumb context (not yet wired through all components)
 }: VotingRecordsTableProps) {
   const [sortField, setSortField] = useState<'date' | 'bill' | 'result'>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');

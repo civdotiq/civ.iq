@@ -94,12 +94,15 @@ export function CommitteeMembershipsCard({
                 <h4 className="aicher-heading text-base mb-3">
                   {(() => {
                     const committeeId = findCommitteeId(committee.name);
-                    const href = committeeId
+                    const baseHref = committeeId
                       ? `/committee/${committeeId.toLowerCase()}`
                       : `/committee/${committee.name
                           .replace(/\s+/g, '-')
                           .toLowerCase()
                           .replace(/[^a-z0-9-]/g, '')}`;
+
+                    // Add breadcrumb context to the URL
+                    const href = `${baseHref}?from=${representative.bioguideId}&name=${encodeURIComponent(representative.name)}`;
 
                     return (
                       <Link

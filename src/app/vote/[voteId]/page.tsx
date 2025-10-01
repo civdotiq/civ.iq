@@ -12,18 +12,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import {
-  ArrowLeft,
-  Calendar,
-  FileText,
-  Users,
-  CheckCircle,
-  XCircle,
-  Clock,
-  User,
-} from 'lucide-react';
+import { Calendar, FileText, Users, CheckCircle, XCircle, Clock, User } from 'lucide-react';
 import logger from '@/lib/logging/simple-logger';
 import { findBioguideId } from '@/lib/data/senate-member-mappings';
+import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 
 // Types for the vote detail data
 interface VoteDetail {
@@ -74,6 +66,7 @@ interface SenatorVote {
 
 interface VoteDetailPageProps {
   params: Promise<{ voteId: string }>;
+  searchParams: Promise<{ from?: string; name?: string }>;
 }
 
 // Extract numeric vote ID from various formats
@@ -118,21 +111,25 @@ async function fetchVoteDetails(voteId: string): Promise<VoteDetail | null> {
 }
 
 // Main page component
-export default async function VoteDetailPage({ params }: VoteDetailPageProps) {
+export default async function VoteDetailPage({ params, searchParams }: VoteDetailPageProps) {
   const { voteId } = await params;
+  const { from: fromBioguideId, name: fromRepName } = await searchParams;
   const voteDetail = await fetchVoteDetails(voteId);
 
   if (!voteDetail) {
     return (
       <div className="min-h-screen aicher-background py-8">
         <div className="max-w-4xl mx-auto px-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-blue-600 hover:underline mb-6"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Representatives
-          </Link>
+          {/* Breadcrumb navigation */}
+          {fromBioguideId && fromRepName ? (
+            <Breadcrumb
+              currentPage="Vote Not Found"
+              fromBioguideId={fromBioguideId}
+              fromRepName={fromRepName}
+            />
+          ) : (
+            <SimpleBreadcrumb />
+          )}
 
           <div className="aicher-card p-8 text-center">
             <h1 className="aicher-heading text-2xl text-gray-900 mb-4">Vote Not Found</h1>
@@ -143,7 +140,6 @@ export default async function VoteDetailPage({ params }: VoteDetailPageProps) {
               href="/"
               className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors"
             >
-              <ArrowLeft className="h-4 w-4" />
               Return Home
             </Link>
           </div>
@@ -191,14 +187,16 @@ export default async function VoteDetailPage({ params }: VoteDetailPageProps) {
   return (
     <div className="min-h-screen aicher-background py-8">
       <div className="max-w-6xl mx-auto px-4">
-        {/* Navigation */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-blue-600 hover:underline mb-6"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Representatives
-        </Link>
+        {/* Breadcrumb navigation */}
+        {fromBioguideId && fromRepName ? (
+          <Breadcrumb
+            currentPage={voteDetail.title}
+            fromBioguideId={fromBioguideId}
+            fromRepName={fromRepName}
+          />
+        ) : (
+          <SimpleBreadcrumb />
+        )}
 
         {/* Vote Header */}
         <div className="aicher-card mb-6 p-6">
