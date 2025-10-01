@@ -19,6 +19,7 @@ export interface TabItem {
 interface TabNavigationProps {
   activeTab: string;
   onTabChange: (tabId: string) => void;
+  onTabHover?: (tabId: string) => void;
   tabs: TabItem[];
   variant?: 'pills' | 'underline';
   size?: 'sm' | 'md' | 'lg';
@@ -67,6 +68,7 @@ const defaultTabs: TabItem[] = [
 export function TabNavigation({
   activeTab,
   onTabChange,
+  onTabHover,
   tabs = defaultTabs,
   variant = 'underline',
   size = 'md',
@@ -92,6 +94,7 @@ export function TabNavigation({
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
+              onMouseEnter={onTabHover ? () => onTabHover(tab.id) : undefined}
               className={`
         aicher-button inline-flex items-center gap-2 ${sizeClasses[size]} aicher-heading-wide transition-all duration-200 aicher-focus
         ${activeTab === tab.id ? 'aicher-button-primary' : 'aicher-button aicher-hover'}
@@ -125,6 +128,7 @@ export function TabNavigation({
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
+            onMouseEnter={onTabHover ? () => onTabHover(tab.id) : undefined}
             className={`aicher-tab ${activeTab === tab.id ? 'active' : ''} ${
               index === tabs.length - 1 ? 'border-r-0' : ''
             }`}

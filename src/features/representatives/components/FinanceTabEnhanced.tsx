@@ -255,255 +255,256 @@ function ContributionTrendsChart({
   );
 }
 
-export function FinanceTabEnhanced({
-  bioguideId,
-  sharedData,
-  sharedLoading,
-  sharedError,
-}: FinanceTabEnhancedProps) {
-  const [showAllContributors, setShowAllContributors] = useState(false);
+export const FinanceTabEnhanced = React.memo(
+  ({ bioguideId, sharedData, sharedLoading, sharedError }: FinanceTabEnhancedProps) => {
+    const [showAllContributors, setShowAllContributors] = useState(false);
 
-  // Fetch contributor data with enhanced information
-  const { data: contributorData } = useSWR<ContributorData>(
-    `/api/representative/${bioguideId}/finance/contributors`,
-    (url: string) => fetch(url).then(res => res.json()),
-    { revalidateOnFocus: false }
-  );
+    // Fetch contributor data with enhanced information
+    const { data: contributorData } = useSWR<ContributorData>(
+      `/api/representative/${bioguideId}/finance/contributors`,
+      (url: string) => fetch(url).then(res => res.json()),
+      { revalidateOnFocus: false }
+    );
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount || 0);
-  };
+    const formatCurrency = (amount: number) => {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(amount || 0);
+    };
 
-  const data = sharedData;
-  const error = sharedError;
-  const isLoading = sharedLoading;
+    const data = sharedData;
+    const error = sharedError;
+    const isLoading = sharedLoading;
 
-  if (isLoading) {
-    return <div className="animate-pulse space-y-6">Loading...</div>;
-  }
+    if (isLoading) {
+      return <div className="animate-pulse space-y-6">Loading...</div>;
+    }
 
-  if (error) {
-    return <div className="text-center py-8 text-red-600">Failed to load financial data</div>;
-  }
+    if (error) {
+      return <div className="text-center py-8 text-red-600">Failed to load financial data</div>;
+    }
 
-  if (!data) {
-    return <div className="text-center py-8 text-gray-600">No campaign finance data available</div>;
-  }
+    if (!data) {
+      return (
+        <div className="text-center py-8 text-gray-600">No campaign finance data available</div>
+      );
+    }
 
-  return (
-    <div>
-      <h2 className="text-xl font-bold mb-6">Campaign Finance</h2>
+    return (
+      <div>
+        <h2 className="text-xl font-bold mb-6">Campaign Finance</h2>
 
-      {/* Financial Overview with Enhanced FEC Links */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 border border-green-200">
-          <div className="flex items-center">
-            <h3 className="text-lg font-semibold text-green-700">Total Raised</h3>
-            <InfoTooltip text="Total contributions received during the current election cycle as reported to the FEC" />
-          </div>
-          <div className="text-3xl font-bold text-green-900 mb-2">
-            {formatCurrency(data.totalRaised)}
-          </div>
-          <a
-            href={
-              contributorData?.metadata?.fecReceiptsLink ||
-              data.fecTransparencyLinks?.contributions ||
-              'https://www.fec.gov/data/receipts/'
-            }
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full hover:bg-green-300 transition-colors"
-          >
-            View Receipts on FEC.gov →
-          </a>
-        </div>
-
-        <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 border border-red-200">
-          <div className="flex items-center">
-            <h3 className="text-lg font-semibold text-red-700">Total Spent</h3>
-            <InfoTooltip text="Total disbursements made by the campaign as reported to the FEC" />
-          </div>
-          <div className="text-3xl font-bold text-red-900 mb-2">
-            {formatCurrency(data.totalSpent)}
-          </div>
-          <a
-            href={
-              data.fecTransparencyLinks?.disbursements ||
-              (contributorData?.metadata?.fecCommitteeId
-                ? `https://www.fec.gov/data/disbursements/?committee_id=${contributorData.metadata.fecCommitteeId}`
-                : 'https://www.fec.gov/data/disbursements/')
-            }
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center text-xs bg-red-200 text-red-800 px-2 py-1 rounded-full hover:bg-red-300 transition-colors"
-          >
-            View Spending on FEC.gov →
-          </a>
-        </div>
-
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 border border-blue-200">
-          <div className="flex items-center">
-            <h3 className="text-lg font-semibold text-blue-700">Cash on Hand</h3>
-            <InfoTooltip text="Available campaign funds at the end of the last reporting period" />
-          </div>
-          <div className="text-3xl font-bold text-blue-900 mb-2">
-            {formatCurrency(data.cashOnHand)}
-          </div>
-          <a
-            href={
-              contributorData?.metadata?.fecCommitteeId
-                ? `https://www.fec.gov/data/committee/${contributorData.metadata.fecCommitteeId}/`
-                : data.fecTransparencyLinks?.financialSummary ||
-                  'https://www.fec.gov/data/candidate/'
-            }
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full hover:bg-blue-300 transition-colors"
-          >
-            View Committee Page →
-          </a>
-        </div>
-      </div>
-
-      {/* Conduit Aggregates (ActBlue/WinRed) */}
-      {contributorData?.conduitAggregates && (
-        <div className="bg-yellow-50 p-6 border border-yellow-200 mb-8">
-          <div className="flex items-center mb-4">
-            <h3 className="text-lg font-semibold">Online Fundraising Platforms</h3>
-            <InfoTooltip text="ActBlue (Democrats) and WinRed (Republicans) are conduit organizations that process small-dollar online donations" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {contributorData.conduitAggregates.actblue && (
-              <div>
-                <h4 className="font-medium text-blue-700 mb-2">ActBlue</h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>Total Raised:</span>
-                    <span className="font-medium">
-                      {formatCurrency(contributorData.conduitAggregates.actblue.totalAmount)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Individual Donations:</span>
-                    <span className="font-medium">
-                      {contributorData.conduitAggregates.actblue.contributionCount.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Unique Locations:</span>
-                    <span className="font-medium">
-                      {contributorData.conduitAggregates.actblue.individualDonors.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-            {contributorData.conduitAggregates.winred && (
-              <div>
-                <h4 className="font-medium text-red-700 mb-2">WinRed</h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>Total Raised:</span>
-                    <span className="font-medium">
-                      {formatCurrency(contributorData.conduitAggregates.winred.totalAmount)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Individual Donations:</span>
-                    <span className="font-medium">
-                      {contributorData.conduitAggregates.winred.contributionCount.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Unique Locations:</span>
-                    <span className="font-medium">
-                      {contributorData.conduitAggregates.winred.individualDonors.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Contribution Trends */}
-      {contributorData?.contributionTrends && contributorData.contributionTrends.length > 0 && (
-        <div className="mb-8">
-          <ContributionTrendsChart trends={contributorData.contributionTrends} />
-        </div>
-      )}
-
-      {/* Top Individual Contributors */}
-      <div className="bg-white p-6 border border-gray-200">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center">
-            <h3 className="text-lg font-semibold">Top Individual Contributors</h3>
-            <InfoTooltip text="Largest individual contributors excluding committees and PACs. Committee transfers are filtered out to show actual donors." />
-          </div>
-          <div className="flex gap-2">
-            {contributorData?.topContributors && contributorData.topContributors.length > 10 && (
-              <button
-                onClick={() => setShowAllContributors(true)}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-              >
-                View All {contributorData.topContributors.length} →
-              </button>
-            )}
-          </div>
-        </div>
-        <div className="space-y-3">
-          {contributorData?.topContributors?.slice(0, 10).map((contributor, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-center p-2 hover:bg-white rounded"
+        {/* Financial Overview with Enhanced FEC Links */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 border border-green-200">
+            <div className="flex items-center">
+              <h3 className="text-lg font-semibold text-green-700">Total Raised</h3>
+              <InfoTooltip text="Total contributions received during the current election cycle as reported to the FEC" />
+            </div>
+            <div className="text-3xl font-bold text-green-900 mb-2">
+              {formatCurrency(data.totalRaised)}
+            </div>
+            <a
+              href={
+                contributorData?.metadata?.fecReceiptsLink ||
+                data.fecTransparencyLinks?.contributions ||
+                'https://www.fec.gov/data/receipts/'
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full hover:bg-green-300 transition-colors"
             >
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-900">{contributor.name}</span>
-                  {contributor.fecTransparencyLink && (
-                    <a
-                      href={contributor.fecTransparencyLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:text-blue-800"
-                      title="View on FEC.gov"
-                    >
-                      FEC↗
-                    </a>
+              View Receipts on FEC.gov →
+            </a>
+          </div>
+
+          <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 border border-red-200">
+            <div className="flex items-center">
+              <h3 className="text-lg font-semibold text-red-700">Total Spent</h3>
+              <InfoTooltip text="Total disbursements made by the campaign as reported to the FEC" />
+            </div>
+            <div className="text-3xl font-bold text-red-900 mb-2">
+              {formatCurrency(data.totalSpent)}
+            </div>
+            <a
+              href={
+                data.fecTransparencyLinks?.disbursements ||
+                (contributorData?.metadata?.fecCommitteeId
+                  ? `https://www.fec.gov/data/disbursements/?committee_id=${contributorData.metadata.fecCommitteeId}`
+                  : 'https://www.fec.gov/data/disbursements/')
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center text-xs bg-red-200 text-red-800 px-2 py-1 rounded-full hover:bg-red-300 transition-colors"
+            >
+              View Spending on FEC.gov →
+            </a>
+          </div>
+
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 border border-blue-200">
+            <div className="flex items-center">
+              <h3 className="text-lg font-semibold text-blue-700">Cash on Hand</h3>
+              <InfoTooltip text="Available campaign funds at the end of the last reporting period" />
+            </div>
+            <div className="text-3xl font-bold text-blue-900 mb-2">
+              {formatCurrency(data.cashOnHand)}
+            </div>
+            <a
+              href={
+                contributorData?.metadata?.fecCommitteeId
+                  ? `https://www.fec.gov/data/committee/${contributorData.metadata.fecCommitteeId}/`
+                  : data.fecTransparencyLinks?.financialSummary ||
+                    'https://www.fec.gov/data/candidate/'
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full hover:bg-blue-300 transition-colors"
+            >
+              View Committee Page →
+            </a>
+          </div>
+        </div>
+
+        {/* Conduit Aggregates (ActBlue/WinRed) */}
+        {contributorData?.conduitAggregates && (
+          <div className="bg-yellow-50 p-6 border border-yellow-200 mb-8">
+            <div className="flex items-center mb-4">
+              <h3 className="text-lg font-semibold">Online Fundraising Platforms</h3>
+              <InfoTooltip text="ActBlue (Democrats) and WinRed (Republicans) are conduit organizations that process small-dollar online donations" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {contributorData.conduitAggregates.actblue && (
+                <div>
+                  <h4 className="font-medium text-blue-700 mb-2">ActBlue</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>Total Raised:</span>
+                      <span className="font-medium">
+                        {formatCurrency(contributorData.conduitAggregates.actblue.totalAmount)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Individual Donations:</span>
+                      <span className="font-medium">
+                        {contributorData.conduitAggregates.actblue.contributionCount.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Unique Locations:</span>
+                      <span className="font-medium">
+                        {contributorData.conduitAggregates.actblue.individualDonors.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {contributorData.conduitAggregates.winred && (
+                <div>
+                  <h4 className="font-medium text-red-700 mb-2">WinRed</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>Total Raised:</span>
+                      <span className="font-medium">
+                        {formatCurrency(contributorData.conduitAggregates.winred.totalAmount)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Individual Donations:</span>
+                      <span className="font-medium">
+                        {contributorData.conduitAggregates.winred.contributionCount.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Unique Locations:</span>
+                      <span className="font-medium">
+                        {contributorData.conduitAggregates.winred.individualDonors.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Contribution Trends */}
+        {contributorData?.contributionTrends && contributorData.contributionTrends.length > 0 && (
+          <div className="mb-8">
+            <ContributionTrendsChart trends={contributorData.contributionTrends} />
+          </div>
+        )}
+
+        {/* Top Individual Contributors */}
+        <div className="bg-white p-6 border border-gray-200">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center">
+              <h3 className="text-lg font-semibold">Top Individual Contributors</h3>
+              <InfoTooltip text="Largest individual contributors excluding committees and PACs. Committee transfers are filtered out to show actual donors." />
+            </div>
+            <div className="flex gap-2">
+              {contributorData?.topContributors && contributorData.topContributors.length > 10 && (
+                <button
+                  onClick={() => setShowAllContributors(true)}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  View All {contributorData.topContributors.length} →
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="space-y-3">
+            {contributorData?.topContributors?.slice(0, 10).map((contributor, index) => (
+              <div
+                key={index}
+                className="flex justify-between items-center p-2 hover:bg-white rounded"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-900">{contributor.name}</span>
+                    {contributor.fecTransparencyLink && (
+                      <a
+                        href={contributor.fecTransparencyLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:text-blue-800"
+                        title="View on FEC.gov"
+                      >
+                        FEC↗
+                      </a>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {contributor.city}, {contributor.state} • {contributor.contributionCount}{' '}
+                    contributions
+                  </div>
+                  {contributor.employer && (
+                    <div className="text-xs text-gray-400">
+                      {contributor.employer}
+                      {contributor.occupation && ` • ${contributor.occupation}`}
+                    </div>
                   )}
                 </div>
-                <div className="text-xs text-gray-500">
-                  {contributor.city}, {contributor.state} • {contributor.contributionCount}{' '}
-                  contributions
-                </div>
-                {contributor.employer && (
-                  <div className="text-xs text-gray-400">
-                    {contributor.employer}
-                    {contributor.occupation && ` • ${contributor.occupation}`}
-                  </div>
-                )}
+                <span className="text-sm font-medium ml-2">
+                  {formatCurrency(contributor.totalAmount)}
+                </span>
               </div>
-              <span className="text-sm font-medium ml-2">
-                {formatCurrency(contributor.totalAmount)}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Contributors Modal */}
-      <ContributorsModal
-        isOpen={showAllContributors}
-        onClose={() => setShowAllContributors(false)}
-        contributors={contributorData?.topContributors}
-        metadata={contributorData?.metadata}
-      />
-    </div>
-  );
-}
+        {/* Contributors Modal */}
+        <ContributorsModal
+          isOpen={showAllContributors}
+          onClose={() => setShowAllContributors(false)}
+          contributors={contributorData?.topContributors}
+          metadata={contributorData?.metadata}
+        />
+      </div>
+    );
+  }
+);
+
+FinanceTabEnhanced.displayName = 'FinanceTabEnhanced';
