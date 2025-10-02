@@ -97,7 +97,7 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
 
             if (loadedTabs.has('legislation')) {
               endpoints.push('bills');
-              options.bills = { summaryOnly: true };
+              options.bills = { summaryOnly: false, limit: 25 }; // Fetch actual bills with limit
             }
             if (loadedTabs.has('finance')) {
               endpoints.push('finance');
