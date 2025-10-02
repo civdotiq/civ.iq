@@ -1,5 +1,3 @@
-import fs from 'fs/promises';
-import path from 'path';
 import logger from '@/lib/logging/simple-logger';
 
 // District demographics interface for type safety
@@ -206,51 +204,36 @@ export async function fetchStateDistrictDemographics(
   return districtMap;
 }
 
-// Fetch all states' district demographics with file-based caching
+// In-memory cache for Census data (since we can't use filesystem in serverless)
+const censusCache = new Map<
+  string,
+  { data: Map<string, DistrictDemographics & { state: string }>; timestamp: number }
+>();
+
+// Fetch all states' district demographics with in-memory caching
 export async function fetchAllDistrictDemographics(
   censusApiKey: string
 ): Promise<Map<string, DistrictDemographics & { state: string }>> {
-  // Define cache file path
-  const cacheDir = path.join(process.cwd(), '.cache');
-  const cacheFile = path.join(cacheDir, 'census-cache.json');
   const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+  const cacheKey = 'census-data';
 
   try {
-    // Ensure cache directory exists
-    await fs.mkdir(cacheDir, { recursive: true });
-
-    // Check if cache file exists and is recent
-    try {
-      const stats = await fs.stat(cacheFile);
-      const cacheAge = Date.now() - stats.mtime.getTime();
+    // Check in-memory cache
+    const cached = censusCache.get(cacheKey);
+    if (cached) {
+      const cacheAge = Date.now() - cached.timestamp;
 
       if (cacheAge < CACHE_DURATION_MS) {
-        logger.info('Census data: Loading from cache', {
+        logger.info('Census data: Loading from in-memory cache', {
           ageHours: Math.round(cacheAge / (60 * 60 * 1000)),
         });
 
-        const cachedData = await fs.readFile(cacheFile, 'utf-8');
-        let parsed;
-        try {
-          parsed = JSON.parse(cachedData);
-        } catch {
-          logger.warn('Cache file corrupted, fetching fresh data');
-          throw new Error('Cache corrupted');
-        }
-
-        // Convert back to Map from serialized array format
-        const allDistricts = new Map();
-        if (Array.isArray(parsed)) {
-          parsed.forEach(([key, value]: [string, DistrictDemographics]) => {
-            allDistricts.set(key, value);
-          });
-        }
-
-        logger.info('Loaded districts from cache', { count: allDistricts.size });
-        return allDistricts;
+        logger.info('Loaded districts from cache', { count: cached.data.size });
+        return cached.data;
+      } else {
+        logger.info('Census data: Cache expired, fetching fresh data');
       }
-    } catch {
-      // Cache file doesn't exist or can't be read, proceed with API fetch
+    } else {
       logger.info('Census data: Cache miss, fetching from API');
     }
 
@@ -423,16 +406,12 @@ export async function fetchAllDistrictDemographics(
 
     logger.info('Successfully processed districts', { count: allDistricts.size });
 
-    // Cache the results
-    try {
-      // Convert Map to array format for JSON serialization
-      const serializedData = Array.from(allDistricts.entries());
-      await fs.writeFile(cacheFile, JSON.stringify(serializedData, null, 2));
-      logger.info('Census data cached successfully');
-    } catch (cacheError) {
-      logger.warn('Failed to write cache file', cacheError as Error);
-      // Don't throw - return the data anyway
-    }
+    // Cache the results in memory
+    censusCache.set(cacheKey, {
+      data: allDistricts,
+      timestamp: Date.now(),
+    });
+    logger.info('Census data cached successfully in memory');
 
     return allDistricts;
   } catch (error) {

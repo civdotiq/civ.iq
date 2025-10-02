@@ -4,8 +4,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import type { DistrictBoundary, StateMetadata } from '@/lib/helpers/district-boundary-utils';
@@ -31,18 +29,23 @@ export async function GET(request: NextRequest) {
     const metadata = await cachedFetch(
       cacheKey,
       async (): Promise<DistrictMetadataResponse> => {
+        // Get base URL from request headers for fetching static files
+        const protocol = request.headers.get('x-forwarded-proto') || 'http';
+        const host = request.headers.get('host') || 'localhost:3000';
+        const baseUrl = `${protocol}://${host}`;
+
         // Try to load from the REAL Census data file first, fall back to demo
-        const realDataPath = join(
-          process.cwd(),
-          'data',
-          'districts',
-          'district_metadata_real.json'
-        );
-        const _demoDataPath = join(process.cwd(), 'data', 'districts', 'district_metadata.json');
+        const realDataUrl = `${baseUrl}/data/districts/district_metadata_real.json`;
 
         try {
-          const fileContent = readFileSync(realDataPath, 'utf8');
-          const parsedData = JSON.parse(fileContent);
+          logger.debug('Fetching district metadata from URL', { url: realDataUrl });
+          const response = await fetch(realDataUrl);
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const parsedData = await response.json();
 
           logger.info(
             'Loaded REAL district metadata from Census data',
@@ -62,7 +65,7 @@ export async function GET(request: NextRequest) {
             {
               operation: 'district_metadata_fallback',
               error: fileError instanceof Error ? fileError.message : 'Unknown error',
-              path: realDataPath,
+              url: realDataUrl,
             },
             request
           );

@@ -4,8 +4,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -84,16 +82,27 @@ export async function GET(request: NextRequest) {
 
     logger.info('Request parameters', { chamber });
 
-    // Read pre-built statistics from JSON file
-    const statsFilePath = path.join(process.cwd(), 'public', 'data', 'congress-stats.json');
+    // Get base URL from request headers for fetching static files
+    const protocol = request.headers.get('x-forwarded-proto') || 'http';
+    const host = request.headers.get('host') || 'localhost:3000';
+    const baseUrl = `${protocol}://${host}`;
+
+    // Fetch pre-built statistics from public directory
+    const statsFileUrl = `${baseUrl}/data/congress-stats.json`;
 
     let statsData;
     try {
-      const statsFileContent = await fs.readFile(statsFilePath, 'utf8');
-      statsData = JSON.parse(statsFileContent);
+      logger.debug('Fetching congress stats from URL', { url: statsFileUrl });
+      const response = await fetch(statsFileUrl);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      statsData = await response.json();
     } catch (fileError) {
-      logger.error('Failed to read congress statistics file', {
-        filePath: statsFilePath,
+      logger.error('Failed to fetch congress statistics file', {
+        url: statsFileUrl,
         error: fileError,
       });
 
