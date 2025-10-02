@@ -6,12 +6,33 @@
   "framework": "nextjs",
   "regions": ["iad1"],
   "functions": {
+    "src/app/api/health/route.ts": {
+      "memory": 128
+    },
+    "src/app/api/cache/status/route.ts": {
+      "memory": 256
+    },
+    "src/app/api/gdelt/cache/status/route.ts": {
+      "memory": 256
+    },
     "src/app/api/representative/[bioguideId]/votes/route.ts": {
       "maxDuration": 30,
       "memory": 1024
     },
     "src/app/api/representative/[bioguideId]/news/route.ts": {
       "maxDuration": 20,
+      "memory": 1024
+    },
+    "src/app/api/news/batch/route.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/representative/[bioguideId]/batch/route.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    },
+    "src/app/api/representatives/all/route.ts": {
+      "maxDuration": 30,
       "memory": 1024
     },
     "src/app/api/districts/all/route.ts": {

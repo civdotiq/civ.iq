@@ -48,6 +48,12 @@ Thumbs.db
 data-sources/
 
 # Large data files
+
+# Backup files
+*.backup
+*.bak
+*-backup.*
+.archive/
 data/districts/congressional_districts_119_real.geojson
 public/maps/congressional_districts_119_real.pmtiles
 public/maps/congressional_districts_119_real.pmtiles-journal

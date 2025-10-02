@@ -601,7 +601,7 @@ export async function executeBatchRequest(request: BatchRequest): Promise<BatchR
  */
 export async function getRepresentativeSummary(bioguideId: string) {
   const cacheKey = `representative-summary:${bioguideId}`;
-  const cached = govCache.get<{
+  const cached = await govCache.get<{
     billsSponsored?: number;
     totalRaised?: number;
     votesParticipated?: number;

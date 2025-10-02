@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCookPVI as getRealCookPVI } from '../cook-pvi-data';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 15; // Can take ~9s for full district data load
 import { fetchAllDistrictDemographics } from '../census-helpers';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';

@@ -130,7 +130,11 @@
       "Bash(/mnt/d/civic-intel-hub/scripts/cleanup-processes.sh:*)",
       "Bash(./scripts/cleanup-processes.sh:*)",
       "WebFetch(domain:ballotpedia.org)",
-      "WebFetch(domain:docs.google.com)"
+      "WebFetch(domain:docs.google.com)",
+      "Bash(while read f)",
+      "Bash(PORT=3005 npm run dev)",
+      "Bash(fuser:*)",
+      "Bash(npx depcheck:*)"
     ],
     "deny": [],
     "ask": []

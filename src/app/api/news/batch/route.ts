@@ -18,6 +18,9 @@ import {
   fetchGDELTNewsWithDeduplication,
 } from '@/features/news/services/gdelt-api';
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // Batch news fetching can be slow with multiple GDELT calls
+
 interface BatchNewsRequest {
   bioguideIds: string[];
   limit?: number;

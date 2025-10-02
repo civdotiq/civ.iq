@@ -42,7 +42,7 @@ export function SearchForm({ onSearch, apiMetadata }: SearchFormProps) {
   return (
     <div className="bg-white border-2 border-black p-4 mb-6">
       <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-4 mb-4">
-        <div className="flex-1 min-w-[300px]">
+        <div className="flex-1 min-w-full sm:min-w-[300px]">
           <div className="relative">
             <input
               type="text"

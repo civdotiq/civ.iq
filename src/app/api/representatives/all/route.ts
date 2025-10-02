@@ -8,6 +8,7 @@ import { getAllEnhancedRepresentatives } from '@/features/representatives/servic
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30; // Heavy data load for all representatives
 
 // Response interface for all representatives
 interface AllRepresentativesResponse {

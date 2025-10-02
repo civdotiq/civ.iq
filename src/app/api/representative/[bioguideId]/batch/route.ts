@@ -11,6 +11,9 @@ import {
 } from '@/services/batch/representative-batch.service';
 import { container, initializeServices } from '@/core/services/container';
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 30; // Concurrent API calls for multiple endpoints
+
 // POST handler for optimized batch requests
 export async function POST(
   request: NextRequest,
