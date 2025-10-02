@@ -16,8 +16,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
-import fs from 'fs/promises';
-import path from 'path';
 
 interface DistrictManifest {
   total_districts: number;
@@ -187,15 +185,18 @@ function normalizeDistrictId(districtId: string): string | null {
  * Load and cache the district manifest
  */
 let manifestCache: DistrictManifest | null = null;
-async function loadManifest(): Promise<DistrictManifest> {
+async function loadManifest(baseUrl: string): Promise<DistrictManifest> {
   if (manifestCache) {
     return manifestCache;
   }
 
   try {
-    const manifestPath = path.join(process.cwd(), 'public/data/districts/manifest.json');
-    const manifestData = await fs.readFile(manifestPath, 'utf-8');
-    manifestCache = JSON.parse(manifestData) as DistrictManifest;
+    const manifestUrl = `${baseUrl}/data/districts/manifest.json`;
+    const response = await fetch(manifestUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch manifest: ${response.statusText}`);
+    }
+    manifestCache = (await response.json()) as DistrictManifest;
     return manifestCache;
   } catch (error) {
     throw new Error(
@@ -205,12 +206,13 @@ async function loadManifest(): Promise<DistrictManifest> {
 }
 
 /**
- * Get file size for a district file
+ * Get file size for a district file (from Content-Length header)
  */
-async function getFileSize(filePath: string): Promise<number> {
+async function getFileSize(fileUrl: string): Promise<number> {
   try {
-    const stats = await fs.stat(filePath);
-    return stats.size;
+    const response = await fetch(fileUrl, { method: 'HEAD' });
+    const contentLength = response.headers.get('Content-Length');
+    return contentLength ? parseInt(contentLength, 10) : 0;
   } catch {
     return 0;
   }
@@ -256,8 +258,13 @@ export async function GET(
       );
     }
 
+    // Get base URL for fetching static files
+    const protocol = request.headers.get('x-forwarded-proto') || 'http';
+    const host = request.headers.get('host') || 'localhost:3000';
+    const baseUrl = `${protocol}://${host}`;
+
     // Load manifest for validation
-    const manifest = await loadManifest();
+    const manifest = await loadManifest(baseUrl);
 
     if (!manifest.districts.includes(normalizedId)) {
       // Helpful error with similar districts
@@ -281,17 +288,15 @@ export async function GET(
     }
 
     // Load district GeoJSON file
-    const filePath = path.join(
-      process.cwd(),
-      'public/data/districts',
-      detail,
-      `${normalizedId}.json`
-    );
+    const fileUrl = `${baseUrl}/data/districts/${detail}/${normalizedId}.json`;
 
     let geoJson: DistrictGeoJSON;
     try {
-      const fileContent = await fs.readFile(filePath, 'utf-8');
-      geoJson = JSON.parse(fileContent) as DistrictGeoJSON;
+      const response = await fetch(fileUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch: ${response.statusText}`);
+      }
+      geoJson = (await response.json()) as DistrictGeoJSON;
     } catch {
       // File not found or parse error - return helpful message
       return NextResponse.json(
@@ -305,7 +310,7 @@ export async function GET(
     }
 
     // Add API metadata
-    const fileSize = await getFileSize(filePath);
+    const fileSize = await getFileSize(fileUrl);
     geoJson.properties = {
       ...geoJson.properties,
       detail_level: detail,
