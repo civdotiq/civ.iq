@@ -87,12 +87,14 @@ async function fetchVoteDetails(voteId: string): Promise<VoteDetail | null> {
     // Extract numeric vote ID for API call
     const numericVoteId = extractNumericVoteId(voteId);
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/vote/${numericVoteId}`,
-      {
-        cache: 'force-cache', // Cache the response since vote data doesn't change
-      }
-    );
+    // Use absolute URL only in server-side context
+    // Next.js will resolve relative URLs correctly in production
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/vote/${numericVoteId}`, {
+      cache: 'force-cache', // Cache the response since vote data doesn't change
+    });
 
     if (!response.ok) {
       logger.error('Failed to fetch vote details', new Error(`HTTP ${response.status}`), {

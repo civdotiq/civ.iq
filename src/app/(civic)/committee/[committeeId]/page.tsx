@@ -59,7 +59,11 @@ interface CommitteePageProps {
 // Fetch committee data
 async function getCommitteeData(committeeId: string): Promise<Committee | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    // Use absolute URL only in server-side context
+    // Next.js will resolve relative URLs correctly in production
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
     const response = await fetch(`${baseUrl}/api/committee/${committeeId}`, {
       next: { revalidate: 3600 }, // Revalidate every hour
     });
