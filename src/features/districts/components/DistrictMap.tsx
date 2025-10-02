@@ -341,17 +341,78 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
       try {
         setError(null);
 
-        const districtId = `${state}-${district.padStart(2, '0')}`;
-        logger.info('🌐 Fetching district boundary:', districtId);
-        const response = await fetch(`/api/district-boundaries/${districtId}`);
+        // Normalize district ID format (state FIPS + district number)
+        const stateFipsMap: Record<string, string> = {
+          AL: '01',
+          AK: '02',
+          AZ: '04',
+          AR: '05',
+          CA: '06',
+          CO: '08',
+          CT: '09',
+          DE: '10',
+          FL: '12',
+          GA: '13',
+          HI: '15',
+          ID: '16',
+          IL: '17',
+          IN: '18',
+          IA: '19',
+          KS: '20',
+          KY: '21',
+          LA: '22',
+          ME: '23',
+          MD: '24',
+          MA: '25',
+          MI: '26',
+          MN: '27',
+          MS: '28',
+          MO: '29',
+          MT: '30',
+          NE: '31',
+          NV: '32',
+          NH: '33',
+          NJ: '34',
+          NM: '35',
+          NY: '36',
+          NC: '37',
+          ND: '38',
+          OH: '39',
+          OK: '40',
+          OR: '41',
+          PA: '42',
+          RI: '44',
+          SC: '45',
+          SD: '46',
+          TN: '47',
+          TX: '48',
+          UT: '49',
+          VT: '50',
+          VA: '51',
+          WA: '53',
+          WV: '54',
+          WI: '55',
+          WY: '56',
+        };
+
+        const stateFips = stateFipsMap[state];
+        if (!stateFips) {
+          throw new Error(`Unknown state: ${state}`);
+        }
+
+        const normalizedDistrictId = stateFips + district.padStart(2, '0');
+        logger.info('🌐 Fetching district boundary:', normalizedDistrictId);
+
+        // Fetch directly from static files instead of API route
+        // This ensures it works on Vercel's CDN
+        const response = await fetch(`/data/districts/standard/${normalizedDistrictId}.json`);
 
         if (!response.ok) {
-          const errorData = await response.json();
           if (response.status === 404) {
             setError('District boundaries not available');
             setGeoJsonData(null);
           } else {
-            throw new Error(errorData.message || 'Failed to fetch district boundary');
+            throw new Error('Failed to fetch district boundary');
           }
         } else {
           const data = await response.json();
@@ -361,8 +422,8 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
             hasGeometry: !!data?.geometry,
           });
 
-          // The API returns the GeoJSON directly, not wrapped in a boundary property
-          const boundary = data.boundary || data; // Support both formats
+          // The data is already in GeoJSON format
+          const boundary = data;
           logger.info('📍 Setting geoJsonData:', {
             boundaryType: boundary?.type,
             geometryType: boundary?.geometry?.type,
@@ -385,11 +446,14 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           setCoordinateCount(totalCoords);
           // Check for metadata in different locations
           setDataSource(
-            data.metadata?.method || data.properties?.api_metadata?.detail_level || 'standard'
+            boundary.properties?.api_metadata?.detail_level ||
+              boundary.properties?.detail_level ||
+              'standard'
           );
           setError(null);
         }
       } catch (err) {
+        logger.error('Failed to load district boundary:', err);
         setError(err instanceof Error ? err.message : 'Failed to load district boundary');
         setGeoJsonData(null);
       }
