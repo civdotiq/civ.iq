@@ -16,6 +16,7 @@ import { Calendar, FileText, Users, CheckCircle, XCircle, Clock, User } from 'lu
 import logger from '@/lib/logging/simple-logger';
 import { findBioguideId } from '@/lib/data/senate-member-mappings';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 // Types for the vote detail data
 interface VoteDetail {
@@ -84,16 +85,10 @@ function extractNumericVoteId(voteId: string): string {
 // Fetch vote details from our API
 async function fetchVoteDetails(voteId: string): Promise<VoteDetail | null> {
   try {
-    // Extract numeric vote ID for API call
     const numericVoteId = extractNumericVoteId(voteId);
-
-    // Use absolute URL only in server-side context
-    // Next.js will resolve relative URLs correctly in production
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000';
+    const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/vote/${numericVoteId}`, {
-      cache: 'force-cache', // Cache the response since vote data doesn't change
+      cache: 'force-cache',
     });
 
     if (!response.ok) {

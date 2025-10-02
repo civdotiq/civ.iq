@@ -12,6 +12,7 @@ import { getCommitteeDisplayName } from '@/types/committee';
 import type { Committee, CommitteeAPIResponse } from '@/types/committee';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 // Dynamically import client components
 const SubcommitteeCard = dynamic(
@@ -59,11 +60,7 @@ interface CommitteePageProps {
 // Fetch committee data
 async function getCommitteeData(committeeId: string): Promise<Committee | null> {
   try {
-    // Use absolute URL only in server-side context
-    // Next.js will resolve relative URLs correctly in production
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000';
+    const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/committee/${committeeId}`, {
       next: { revalidate: 3600 }, // Revalidate every hour
     });
