@@ -127,7 +127,8 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
         revalidateOnFocus: false,
         dedupingInterval: 60000, // Cache for 1 minute
         shouldRetryOnError: true,
-        errorRetryCount: 2,
+        errorRetryCount: 1, // Reduced from 2 to 1 to fail faster and let individual tabs fetch
+        errorRetryInterval: 2000, // Retry after 2 seconds instead of default exponential backoff
       }
     );
 

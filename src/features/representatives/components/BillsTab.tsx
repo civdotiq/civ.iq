@@ -47,21 +47,25 @@ interface BillsTabProps {
 export const BillsTab = React.memo(
   ({ bioguideId, sharedData, sharedLoading, sharedError }: BillsTabProps) => {
     // Use shared data if available, otherwise fetch individually using direct bills endpoint
+    // Only skip individual fetch if we have sharedData OR sharedLoading is true (batch is in progress)
+    // If batch failed (sharedError), we should fetch individually
+    const shouldFetchIndividually = !sharedData && (!sharedLoading || sharedError);
+
     const {
       data: individualData,
       error: fetchError,
       isLoading: fetchLoading,
     } = useSWR<BillsResponse>(
-      sharedData ? null : `/api/representative/${bioguideId}/bills`,
-      sharedData
-        ? null
-        : async (url: string) => {
+      shouldFetchIndividually ? `/api/representative/${bioguideId}/bills` : null,
+      shouldFetchIndividually
+        ? async (url: string) => {
             const response = await fetch(url);
             if (!response.ok) {
               throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             return await response.json();
-          },
+          }
+        : null,
       {
         revalidateOnFocus: false,
         dedupingInterval: 60000, // Cache for 1 minute
@@ -70,7 +74,7 @@ export const BillsTab = React.memo(
 
     const data: BillsResponse | undefined = sharedData || individualData;
     const error = sharedError || fetchError;
-    const isLoading = sharedLoading || fetchLoading;
+    const isLoading = (sharedLoading && !sharedError) || fetchLoading;
 
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(25);

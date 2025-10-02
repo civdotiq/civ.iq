@@ -122,20 +122,24 @@ const VotingTabComponent = React.memo(
     const [votesPerPage, setVotesPerPage] = useState(25);
 
     // Use shared data if available, otherwise fetch individually
+    // Only skip individual fetch if we have sharedData OR sharedLoading is true (batch is in progress)
+    // If batch failed (sharedError), we should fetch individually
+    const shouldFetchIndividually = !sharedData && (!sharedLoading || sharedError);
+
     const {
       data: batchData,
       error: fetchError,
       isLoading: fetchLoading,
     } = useSWR<BatchApiResponse>(
-      sharedData ? null : `/api/representative/${bioguideId}/batch`,
-      sharedData
-        ? null
-        : () =>
+      shouldFetchIndividually ? `/api/representative/${bioguideId}/batch` : null,
+      shouldFetchIndividually
+        ? () =>
             fetch(`/api/representative/${bioguideId}/batch`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ endpoints: ['votes'] }),
-            }).then(res => res.json()),
+            }).then(res => res.json())
+        : null,
       {
         revalidateOnFocus: false,
         dedupingInterval: 60000, // Cache for 1 minute
@@ -144,7 +148,7 @@ const VotingTabComponent = React.memo(
 
     const data: VoteResponse | undefined = sharedData || batchData?.data?.votes;
     const error = sharedError || fetchError;
-    const isLoading = sharedLoading || fetchLoading;
+    const isLoading = (sharedLoading && !sharedError) || fetchLoading;
 
     // Apply filters before early returns to ensure hooks are called consistently
     const filteredVotes = useMemo(() => {

@@ -259,6 +259,32 @@ export const FinanceTabEnhanced = React.memo(
   ({ bioguideId, sharedData, sharedLoading, sharedError }: FinanceTabEnhancedProps) => {
     const [showAllContributors, setShowAllContributors] = useState(false);
 
+    // Use shared data if available, otherwise fetch individually
+    // Only skip individual fetch if we have sharedData OR sharedLoading is true (batch is in progress)
+    // If batch failed (sharedError), we should fetch individually
+    const shouldFetchIndividually = !sharedData && (!sharedLoading || sharedError);
+
+    const {
+      data: individualData,
+      error: fetchError,
+      isLoading: fetchLoading,
+    } = useSWR<FinanceData>(
+      shouldFetchIndividually ? `/api/representative/${bioguideId}/finance` : null,
+      shouldFetchIndividually
+        ? async (url: string) => {
+            const response = await fetch(url);
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return await response.json();
+          }
+        : null,
+      {
+        revalidateOnFocus: false,
+        dedupingInterval: 60000, // Cache for 1 minute
+      }
+    );
+
     // Fetch contributor data with enhanced information
     const { data: contributorData } = useSWR<ContributorData>(
       `/api/representative/${bioguideId}/finance/contributors`,
@@ -275,9 +301,9 @@ export const FinanceTabEnhanced = React.memo(
       }).format(amount || 0);
     };
 
-    const data = sharedData;
-    const error = sharedError;
-    const isLoading = sharedLoading;
+    const data = sharedData || individualData;
+    const error = sharedError || fetchError;
+    const isLoading = (sharedLoading && !sharedError) || fetchLoading;
 
     if (isLoading) {
       return <div className="animate-pulse space-y-6">Loading...</div>;
