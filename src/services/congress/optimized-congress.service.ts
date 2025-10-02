@@ -206,7 +206,7 @@ async function fetchCosponsoredLegislation(
   let totalCount = 0;
   let currentOffset = 0;
   const pageSize = 250; // Max allowed by Congress.gov API
-  const maxPages = fetchAll ? 20 : 10; // Increased limit: 10 pages = 2500 bills, covers most representatives
+  const maxPages = fetchAll ? 20 : 2; // Reduced to 2 pages (500 bills) to prevent timeouts - most reps have <500 cosponsorships
   let pagesFeched = 0;
 
   // For cosponsored bills, there can be MANY (1000+), so we need pagination
