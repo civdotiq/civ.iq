@@ -420,11 +420,29 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Get base URL for API calls - critical for Vercel deployment
+  const getBaseUrl = () => {
+    // In browser, use NEXT_PUBLIC_APP_URL if available (Vercel production)
+    if (typeof window !== 'undefined') {
+      if (process.env.NEXT_PUBLIC_APP_URL) {
+        return process.env.NEXT_PUBLIC_APP_URL;
+      }
+      // Fallback to window.location.origin
+      return window.location.origin;
+    }
+    // Server-side fallback (shouldn't be needed in client component)
+    return '';
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       setData(null);
+
+      // Get base URL outside try block for error logging
+      const baseUrl = getBaseUrl();
+      let url = '';
 
       // STEP 3 DEBUG: Individual tab component data structure
       if (process.env.NODE_ENV === 'development') {
@@ -436,11 +454,11 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
         console.log('🔍 Server data available:', !!serverData);
         // eslint-disable-next-line no-console
         console.log('🔍 Server data structure:', serverData);
+        // eslint-disable-next-line no-console
+        console.log('🔍 Base URL:', baseUrl);
       }
 
       try {
-        let url = '';
-
         switch (activeTab) {
           case 'profile':
             // Just show the representative data we already have
@@ -467,7 +485,7 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
               setLoading(false);
               return;
             }
-            url = `/api/representative/${bioguideId}/bills`;
+            url = `${baseUrl}/api/representative/${bioguideId}/bills`;
             break;
 
           case 'votes':
@@ -485,7 +503,7 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
               setLoading(false);
               return;
             }
-            url = `/api/representative/${bioguideId}/votes`;
+            url = `${baseUrl}/api/representative/${bioguideId}/votes`;
             break;
 
           case 'finance':
@@ -499,7 +517,7 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
               setLoading(false);
               return;
             }
-            url = `/api/representative/${bioguideId}/finance`;
+            url = `${baseUrl}/api/representative/${bioguideId}/finance`;
             break;
 
           case 'news':
@@ -513,7 +531,7 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
               setLoading(false);
               return;
             }
-            url = `/api/representative/${bioguideId}/news`;
+            url = `${baseUrl}/api/representative/${bioguideId}/news`;
             break;
 
           default:
@@ -527,10 +545,28 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
           // eslint-disable-next-line no-console
           console.log(`🔍 No server data for ${activeTab}, fetching from API:`, url);
         }
-        const response = await fetch(url);
+
+        const response = await fetch(url, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // Add timeout to prevent hanging requests
+          signal: AbortSignal.timeout(30000), // 30 second timeout
+        });
 
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+          const errorText = await response.text().catch(() => 'Unknown error');
+          // Enhanced error logging for Vercel debugging
+          // eslint-disable-next-line no-console
+          console.error(`❌ API ${activeTab} failed:`, {
+            url,
+            status: response.status,
+            statusText: response.statusText,
+            errorBody: errorText,
+            baseUrl,
+            bioguideId,
+          });
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
         const jsonData = await response.json();
@@ -540,10 +576,17 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
         }
         setData(jsonData);
       } catch (err) {
-        if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
-          console.error(`❌ Error fetching ${activeTab} data:`, err);
-        }
+        // Enhanced error logging
+        // eslint-disable-next-line no-console
+        console.error(`❌ Error fetching ${activeTab} data:`, {
+          error: err,
+          bioguideId,
+          activeTab,
+          apiUrl: url,
+          baseUrl,
+          errorMessage: err instanceof Error ? err.message : 'Unknown error',
+          errorStack: err instanceof Error ? err.stack : undefined,
+        });
         setError(err instanceof Error ? err.message : 'Failed to fetch');
         setData(null);
       } finally {

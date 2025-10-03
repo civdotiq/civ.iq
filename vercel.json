@@ -9,6 +9,10 @@
     "src/app/api/health/route.ts": {
       "memory": 128
     },
+    "src/app/api/debug/route.ts": {
+      "memory": 512,
+      "maxDuration": 30
+    },
     "src/app/api/cache/status/route.ts": {
       "memory": 256
     },

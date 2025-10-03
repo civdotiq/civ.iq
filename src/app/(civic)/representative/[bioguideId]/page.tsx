@@ -12,6 +12,8 @@ import Link from 'next/link';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 3600; // Revalidate every hour
 
 // Dynamic import for the main profile component to reduce initial bundle size
 const SimpleRepresentativeProfile = dynamicImport(
