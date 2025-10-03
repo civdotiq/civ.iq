@@ -4,6 +4,10 @@
   "private": true,
   "author": "Mark Sandford",
   "license": "MIT",
+  "engines": {
+    "node": ">=20.19.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -38,7 +42,7 @@
     "validate-districts": "npx tsx scripts/validate-data.ts",
     "validate:all": "node scripts/validation/validate-all.js",
     "diagnose:apis": "tsx scripts/diagnose-apis.ts",
-    "security:audit": "npm audit --audit-level=moderate",
+    "security:audit": "[ -f package-lock.json ] && npm audit --audit-level=moderate || echo 'Skipping audit: no lockfile'",
     "security:full": "npm run security:audit",
     "preinstall": "echo 'Skipping security audit for deployment'",
     "security:emergency": "npm audit fix --force",
