@@ -24,14 +24,11 @@ const SimpleRepresentativeProfile = dynamicImport(
   {
     loading: () => (
       <div className="min-h-screen bg-gray-50">
-        <div
-          className="max-w-7xl mx-auto px-4 md:px-8"
-          style={{ padding: 'calc(var(--grid) * 2)' }}
-        >
+        <div className="max-w-7xl mx-auto px-grid-2 md:px-grid-4 py-grid-3">
           <div className="animate-pulse">
-            <div className="h-32 bg-gray-200 border-2 border-gray-300 mb-6"></div>
-            <div className="h-16 bg-gray-200 border-2 border-gray-300 mb-6"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+            <div className="h-32 bg-gray-200 border-2 border-gray-300 mb-grid-3"></div>
+            <div className="h-16 bg-gray-200 border-2 border-gray-300 mb-grid-3"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-grid-4">
               <div className="h-96 bg-gray-200 border-2 border-gray-300"></div>
               <div className="h-96 bg-gray-200 border-2 border-gray-300"></div>
             </div>
@@ -216,8 +213,8 @@ export default async function RepresentativeProfilePage({
       <SiteHeader />
 
       <main id="main-content">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex justify-between items-center mb-6">
+        <div className="container mx-auto px-grid-2 md:px-grid-4 py-grid-3">
+          <div className="flex justify-between items-center mb-grid-3">
             <div></div>
             <Link
               href="/"

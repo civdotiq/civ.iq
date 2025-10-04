@@ -24,7 +24,7 @@ export default {
         'civiq-green': '#0a9338',
         'civiq-blue': '#3ea0d2',
       },
-      // Otl Aicher 8px grid system
+      // Otl Aicher 8px grid system - Complete scale
       spacing: {
         'grid-1': '8px',
         'grid-2': '16px',
@@ -32,9 +32,12 @@ export default {
         'grid-4': '32px',
         'grid-5': '40px',
         'grid-6': '48px',
+        'grid-7': '56px',
         'grid-8': '64px',
+        'grid-9': '72px',
         'grid-10': '80px',
         'grid-12': '96px',
+        'grid-16': '128px',
       },
       borderWidth: {
         aicher: '2px',

@@ -349,33 +349,33 @@ body {
     font-size: 16px; /* Ensure readable base size */
   }
 
-  /* Container padding reduction */
+  /* Container padding - aligned to grid */
   .container {
-    padding-left: calc(var(--grid) * 2);
-    padding-right: calc(var(--grid) * 2);
+    padding-left: calc(var(--grid) * 2); /* 16px */
+    padding-right: calc(var(--grid) * 2); /* 16px */
   }
 
   /* Typography adjustments */
   .aicher-display-title {
-    font-size: 2rem; /* 32px instead of 48px */
+    font-size: 2rem; /* 32px = 4 * grid */
     line-height: 1.2;
   }
 
   .aicher-section-title {
-    font-size: 1.25rem; /* 20px instead of 24px */
+    font-size: 1.25rem; /* 20px - close to grid-3 (24px) */
   }
 
-  /* Cards */
+  /* Cards - maintain readable spacing */
   .aicher-card {
-    padding: calc(var(--grid) * 2); /* Reduce from 3 to 2 */
+    padding: calc(var(--grid) * 3); /* 24px for better mobile readability */
   }
 
-  /* Buttons - ensure minimum touch target */
+  /* Buttons - ensure minimum 44px touch target */
   .aicher-button,
   .aicher-button-primary {
-    min-height: 44px; /* iOS minimum touch target */
+    min-height: 44px; /* iOS minimum touch target (5.5 * grid) */
     min-width: 44px;
-    padding: calc(var(--grid) * 1.5) calc(var(--grid) * 2);
+    padding: calc(var(--grid) * 2) calc(var(--grid) * 2); /* 16px aligned */
   }
 
   /* Tab navigation with horizontal scroll */
@@ -402,13 +402,13 @@ body {
 
   .aicher-tab {
     flex-shrink: 0;
-    padding: calc(var(--grid) * 1.5) calc(var(--grid) * 2);
+    padding: calc(var(--grid) * 2) calc(var(--grid) * 2); /* 16px aligned */
     font-size: var(--type-sm);
     min-width: auto;
     min-height: 44px; /* Touch target */
   }
 
-  /* Input fields */
+  /* Input fields - prevent iOS zoom */
   input[type='text'],
   input[type='email'],
   input[type='tel'],
@@ -416,23 +416,10 @@ body {
   select,
   textarea {
     font-size: 16px !important; /* Prevent iOS zoom on focus */
-    min-height: 44px;
+    min-height: 44px; /* Touch target aligned */
   }
 
-  /* Spacing utilities */
-  .mb-grid-6 {
-    margin-bottom: calc(var(--grid) * 3);
-  }
-
-  .mb-grid-4 {
-    margin-bottom: calc(var(--grid) * 2);
-  }
-
-  .py-6,
-  .py-8 {
-    padding-top: calc(var(--grid) * 2);
-    padding-bottom: calc(var(--grid) * 2);
-  }
+  /* Remove spacing utility overrides - let Tailwind responsive classes handle it */
 }
 
 /* Metric Card Components */
