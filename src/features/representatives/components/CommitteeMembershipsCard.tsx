@@ -9,25 +9,11 @@ import React from 'react';
 import Link from 'next/link';
 import { Users } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
-import { COMMITTEE_ID_MAP } from '@/types/committee';
 import { getCommitteeName } from '@/lib/data/committee-names';
 
 interface CommitteeMembershipsCardProps {
   representative: EnhancedRepresentative;
   className?: string;
-}
-
-// Helper function to find thomas_id from committee name
-function findCommitteeId(committeeName: string): string | null {
-  // Try to find matching committee by name
-  const matchingEntry = Object.entries(COMMITTEE_ID_MAP).find(
-    ([_, info]) =>
-      info.name.toLowerCase() === committeeName.toLowerCase() ||
-      info.name.toLowerCase().includes(committeeName.toLowerCase()) ||
-      committeeName.toLowerCase().includes(info.name.toLowerCase())
-  );
-
-  return matchingEntry ? matchingEntry[0] : null;
 }
 
 export function CommitteeMembershipsCard({
@@ -53,7 +39,9 @@ export function CommitteeMembershipsCard({
     >();
 
     committees.forEach(committee => {
-      const displayName = getCommitteeName(committee.name);
+      // committee.name is the thomas_id (e.g., "SSBA12")
+      const thomasId = (committee as { thomas_id?: string }).thomas_id || committee.name;
+      const displayName = getCommitteeName(thomasId);
 
       if (committeeMap.has(displayName)) {
         // Add role to existing committee entry
@@ -64,8 +52,8 @@ export function CommitteeMembershipsCard({
       } else {
         // Create new committee entry
         committeeMap.set(displayName, {
-          name: displayName,
-          thomas_id: (committee as { thomas_id?: string }).thomas_id || committee.name,
+          name: displayName, // Human-readable name for display
+          thomas_id: thomasId, // Original thomas_id for routing
           roles: committee.role ? [committee.role] : [],
           originalCommittee: committee,
         });
@@ -92,27 +80,12 @@ export function CommitteeMembershipsCard({
                 className="committee-card accent-bar-blue p-4"
               >
                 <h4 className="aicher-heading text-base mb-3">
-                  {(() => {
-                    const committeeId = findCommitteeId(committee.name);
-                    const baseHref = committeeId
-                      ? `/committee/${committeeId.toLowerCase()}`
-                      : `/committee/${committee.name
-                          .replace(/\s+/g, '-')
-                          .toLowerCase()
-                          .replace(/[^a-z0-9-]/g, '')}`;
-
-                    // Add breadcrumb context to the URL
-                    const href = `${baseHref}?from=${representative.bioguideId}&name=${encodeURIComponent(representative.name)}`;
-
-                    return (
-                      <Link
-                        href={href}
-                        className="text-civiq-blue hover:text-black transition-colors"
-                      >
-                        {committee.name}
-                      </Link>
-                    );
-                  })()}
+                  <Link
+                    href={`/committee/${committee.thomas_id.toLowerCase()}?from=${representative.bioguideId}&name=${encodeURIComponent(representative.name)}`}
+                    className="text-civiq-blue hover:text-black transition-colors"
+                  >
+                    {committee.name}
+                  </Link>
                 </h4>
                 {committee.roles.length > 0 && (
                   <div className="flex flex-wrap gap-2">

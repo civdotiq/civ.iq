@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import { memo } from 'react';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
+import { getCommitteeName } from '@/lib/data/committee-names';
 
 interface Representative {
   bioguideId: string;
@@ -94,7 +95,7 @@ export const RepresentativeCard = memo(function RepresentativeCard({
           <div className="space-y-1">
             {representative.committees.slice(0, 3).map((committee, index) => (
               <div key={index} className="text-sm text-gray-600">
-                <span className="font-medium">{committee.name}</span>
+                <span className="font-medium">{getCommitteeName(committee.name)}</span>
                 {committee.role && <span className="text-civiq-blue ml-1">({committee.role})</span>}
               </div>
             ))}

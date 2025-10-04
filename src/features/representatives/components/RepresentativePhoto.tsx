@@ -138,13 +138,14 @@ export const RepresentativePhoto = memo(function RepresentativePhoto({
   // Show photo if available
   if (photoState.photoUrl && !photoState.hasError) {
     return (
-      <div ref={imgRef} className={combinedClasses}>
+      <div ref={imgRef} className={combinedClasses} style={{ aspectRatio: '1/1' }}>
         <Image
           src={photoState.photoUrl}
           alt={`Photo of ${name}`}
           width={sizeDimensions[size]}
           height={sizeDimensions[size]}
           className="w-full h-full object-cover rounded-full"
+          style={{ aspectRatio: '1/1' }}
           priority={size === 'xl'} // Prioritize larger images
           placeholder="blur"
           blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
