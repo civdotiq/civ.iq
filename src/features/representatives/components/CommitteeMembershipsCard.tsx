@@ -7,9 +7,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Users } from 'lucide-react';
+import { Users, Info } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
-import { getCommitteeName } from '@/lib/data/committee-names';
+import { getCommitteeName, COMMITTEE_INFO } from '@/lib/data/committee-names';
 
 interface CommitteeMembershipsCardProps {
   representative: EnhancedRepresentative;
@@ -77,16 +77,29 @@ export function CommitteeMembershipsCard({
             {deduplicatedCommittees.map((committee, index) => (
               <div
                 key={`${committee.name}-${index}`}
-                className="committee-card accent-bar-blue p-4"
+                className="committee-card accent-bar-blue p-4 group"
               >
-                <h4 className="aicher-heading text-base mb-3">
-                  <Link
-                    href={`/committee/${committee.thomas_id.toLowerCase()}?from=${representative.bioguideId}&name=${encodeURIComponent(representative.name)}`}
-                    className="text-civiq-blue hover:text-black transition-colors"
-                  >
-                    {committee.name}
-                  </Link>
-                </h4>
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <h4 className="aicher-heading text-base flex-1">
+                    <Link
+                      href={`/committee/${committee.thomas_id}`}
+                      className="text-civiq-blue hover:text-black transition-colors"
+                    >
+                      {committee.name}
+                    </Link>
+                  </h4>
+                  {COMMITTEE_INFO[committee.thomas_id]?.description && (
+                    <div className="relative group/tooltip">
+                      <Info className="w-4 h-4 text-gray-400 hover:text-civiq-blue cursor-help transition-colors" />
+                      <div className="absolute right-0 top-6 w-64 bg-black text-white text-xs p-3 rounded opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-10 shadow-lg">
+                        <p className="leading-relaxed">
+                          {COMMITTEE_INFO[committee.thomas_id]?.description ?? ''}
+                        </p>
+                        <div className="absolute -top-1 right-4 w-2 h-2 bg-black transform rotate-45"></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 {committee.roles.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {committee.roles.map((role, roleIndex) => (

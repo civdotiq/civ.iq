@@ -84,22 +84,23 @@ export function EnhancedHeader({ representative }: EnhancedHeaderProps) {
     <div className={`bg-white border-2 border-black relative ${getAccentBarClass()}`}>
       <div className="p-4 sm:p-6 md:p-8">
         <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] items-center gap-4 sm:gap-6 md:gap-12">
-          {/* Photo - Square geometric frame */}
+          {/* Photo - Square geometric frame - Larger on desktop */}
           <div className="flex-shrink-0 justify-self-center md:justify-self-start">
             {!imageError ? (
               <Image
                 src={photoUrl}
                 alt={getDisplayName()}
-                width={160}
-                height={160}
-                className="profile-photo-frame"
+                width={240}
+                height={240}
+                className="profile-photo-frame w-40 h-40 md:w-60 md:h-60 object-cover"
                 onError={() => setImageError(true)}
                 data-testid="representative-photo"
+                priority
               />
             ) : (
-              <div className="profile-photo-frame bg-gray-100 flex items-center justify-center text-gray-400">
+              <div className="profile-photo-frame bg-gray-100 flex items-center justify-center text-gray-400 w-40 h-40 md:w-60 md:h-60">
                 <svg
-                  className="w-16 h-16"
+                  className="w-16 h-16 md:w-24 md:h-24"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
