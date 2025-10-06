@@ -446,13 +446,20 @@ async function parseHouseVote(
   rollNumber: string
 ): Promise<UnifiedVoteDetail | null> {
   try {
+    // Calculate session number: 119th Congress started in 2025
+    // Congressional sessions: odd years = Session 1, even years = Session 2
+    const currentYear = new Date().getFullYear();
+    const sessionNumber = currentYear % 2 === 1 ? 1 : 2;
+
     // Fetch House vote data from Congress.gov API
-    // Try the new House roll call votes endpoint structure (available from May 2025)
-    // Format: /v3/house-vote/{congress}/{rollNumber}
-    const apiUrl = `https://api.congress.gov/v3/house-vote/${congress}/${rollNumber}?api_key=${process.env.CONGRESS_API_KEY || ''}`;
+    // Format: /v3/house-vote/{congress}/{session}/{rollNumber} (available from May 2025)
+    const apiUrl = `https://api.congress.gov/v3/house-vote/${congress}/${sessionNumber}/${rollNumber}?api_key=${process.env.CONGRESS_API_KEY || ''}`;
 
     logger.info('Fetching detailed House vote from Congress API', {
       voteId,
+      congress,
+      session: sessionNumber,
+      rollNumber,
       apiUrl: apiUrl.replace(process.env.CONGRESS_API_KEY || '', '[REDACTED]'),
     });
 
@@ -570,7 +577,7 @@ async function parseHouseVote(
     const voteDetail: UnifiedVoteDetail = {
       voteId,
       congress: String(congress),
-      session: String(vote.session || '1'),
+      session: String(vote.session || sessionNumber),
       rollNumber: parseInt(rollNumber),
       date: String(vote.date || ''),
       title: String(vote.question || vote.description || 'House Vote'),
