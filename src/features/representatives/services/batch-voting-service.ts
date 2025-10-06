@@ -647,7 +647,25 @@ export class BatchVotingService {
         highestRoll: allVotes.length > 0 ? Math.max(...allVotes.map(v => v.rollCallNumber)) : 0,
       });
 
-      // Cache the complete list for 15 minutes (matches voting cache TTL for freshness during active sessions)
+      // CRITICAL FIX: Congress.gov API sort parameter does NOT work correctly
+      // Votes are returned in random order despite sort=date:desc parameter
+      // Must sort client-side to ensure most recent votes are returned
+      allVotes.sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateB - dateA; // Descending order (newest first)
+      });
+
+      const newestVote = allVotes[0];
+      const oldestVote = allVotes[allVotes.length - 1];
+
+      logger.debug('Sorted votes client-side by date', {
+        totalVotes: allVotes.length,
+        newestVote: newestVote ? `Roll ${newestVote.rollCallNumber} on ${newestVote.date}` : 'none',
+        oldestVote: oldestVote ? `Roll ${oldestVote.rollCallNumber} on ${oldestVote.date}` : 'none',
+      });
+
+      // Cache the complete sorted list for 15 minutes (matches voting cache TTL for freshness during active sessions)
       if (allVotes.length > 0) {
         this.cache.set(cacheKey, allVotes, 15 * 60 * 1000);
       }
