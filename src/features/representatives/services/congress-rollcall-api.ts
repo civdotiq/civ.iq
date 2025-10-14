@@ -393,9 +393,9 @@ export class CongressRollCallAPI {
       const xmlText = await response.text();
 
       // Parse XML to find the specific member's vote
-      // Look for: <legislator name-id="J000299">...</legislator><vote>Yea</vote>
+      // Actual structure: <recorded-vote><legislator name-id="A000370"...>Adams</legislator><vote>Present</vote></recorded-vote>
       const memberPattern = new RegExp(
-        `<legislator name-id="${bioguideId}"[^>]*>.*?</legislator><vote>([^<]+)</vote>`,
+        `<recorded-vote><legislator name-id="${bioguideId}"[^>]*>.*?</legislator><vote>([^<]+)</vote></recorded-vote>`,
         'i'
       );
 

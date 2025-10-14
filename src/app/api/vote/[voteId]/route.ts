@@ -312,9 +312,9 @@ async function parseHouseVoteXML(sourceDataURL: string): Promise<MemberVote[]> {
     }
 
     // Parse all legislator entries from XML using regex
-    // Pattern matches: <legislator name-id="J000299" ...>...</legislator><vote>Yea</vote>
+    // Actual structure: <recorded-vote><legislator name-id="A000370"...>Adams</legislator><vote>Present</vote></recorded-vote>
     const memberPattern =
-      /<legislator name-id="([^"]+)"[^>]*>([^<]*)<\/legislator><vote>([^<]+)<\/vote>/gi;
+      /<recorded-vote><legislator name-id="([^"]+)"[^>]*>([^<]*)<\/legislator><vote>([^<]+)<\/vote><\/recorded-vote>/gi;
     const members: MemberVote[] = [];
     const invalidEntries: Array<{ reason: string; data: unknown }> = [];
     let match;
@@ -487,7 +487,7 @@ async function parseHouseVote(
       return null;
     }
 
-    const vote = apiData.vote;
+    const vote = apiData.houseRollCallVote;
     if (!vote || typeof vote !== 'object') {
       logger.warn('Missing or invalid vote data in API response', {
         voteId,
@@ -497,13 +497,13 @@ async function parseHouseVote(
       return null;
     }
 
-    // Validate required vote fields
+    // Validate required vote fields (Congress API uses camelCase)
     const requiredFields = [
       'congress',
-      'session',
-      'rollcall_number',
-      'vote_question',
-      'vote_result',
+      'sessionNumber',
+      'rollCallNumber',
+      'voteQuestion',
+      'result',
     ];
     const missingFields = requiredFields.filter(field => !vote[field]);
 
@@ -515,39 +515,38 @@ async function parseHouseVote(
       });
     }
 
-    // Validate vote totals if present
-    if (vote.yeas !== undefined && vote.nays !== undefined) {
-      const totalVotes =
-        (vote.yeas || 0) + (vote.nays || 0) + (vote.present || 0) + (vote.not_voting || 0);
+    // Parse vote counts from votePartyTotal array
+    let yeas = 0;
+    let nays = 0;
+    let present = 0;
+    let absent = 0;
+
+    if (vote.votePartyTotal && Array.isArray(vote.votePartyTotal)) {
+      for (const partyTotal of vote.votePartyTotal) {
+        yeas += partyTotal.yeaTotal || 0;
+        nays += partyTotal.nayTotal || 0;
+        present += partyTotal.presentTotal || 0;
+        absent += partyTotal.notVotingTotal || 0;
+      }
+
+      const totalVotes = yeas + nays + present + absent;
       if (totalVotes < 400 || totalVotes > 450) {
         logger.info('House vote totals outside expected range', {
           voteId,
           totalVotes,
-          breakdown: {
-            yeas: vote.yeas,
-            nays: vote.nays,
-            present: vote.present,
-            not_voting: vote.not_voting,
-          },
+          breakdown: { yeas, nays, present, absent },
         });
       }
     }
 
-    // Parse vote counts
-    const totals = vote.totals || {};
-    const yeas = parseInt(String(totals.yea || '0'));
-    const nays = parseInt(String(totals.nay || '0'));
-    const present = parseInt(String(totals.present || '0'));
-    const absent = parseInt(String(totals.notVoting || '0'));
-
     // Extract bill information if available
     let bill = undefined;
-    if (vote.bill) {
+    if (vote.legislationType && vote.legislationNumber) {
       bill = {
-        number: String(vote.bill.number || 'N/A'),
-        title: String(vote.bill.title || 'Vote without associated bill'),
-        type: String(vote.bill.type || 'House Resolution'),
-        url: vote.bill.url || undefined,
+        number: vote.legislationNumber,
+        title: `${vote.legislationType} ${vote.legislationNumber}`,
+        type: vote.legislationType,
+        url: vote.legislationUrl || undefined,
       };
     }
 
@@ -577,12 +576,12 @@ async function parseHouseVote(
     const voteDetail: UnifiedVoteDetail = {
       voteId,
       congress: String(congress),
-      session: String(vote.session || sessionNumber),
+      session: String(vote.sessionNumber || sessionNumber),
       rollNumber: parseInt(rollNumber),
-      date: String(vote.date || ''),
-      title: String(vote.question || vote.description || 'House Vote'),
-      question: String(vote.question || vote.description || ''),
-      description: String(vote.description || vote.question || ''),
+      date: String(vote.startDate || ''),
+      title: String(vote.voteQuestion || 'House Vote'),
+      question: String(vote.voteQuestion || ''),
+      description: String(vote.voteQuestion || ''),
       result: String(vote.result || 'Unknown'),
       chamber: 'House',
       yeas,
