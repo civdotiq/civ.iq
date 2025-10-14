@@ -9,8 +9,7 @@ import React, { useState, Suspense, useCallback, useMemo, useEffect, useRef } fr
 import dynamic from 'next/dynamic';
 import useSWR, { preload } from 'swr';
 import { EnhancedRepresentative } from '@/types/representative';
-import { EnhancedHeader } from './EnhancedHeader';
-import { KeyStatsBar } from './KeyStatsBar';
+import { HeroStatsHeader } from './HeroStatsHeader';
 import { TabNavigation, profileTabs } from './TabNavigation';
 import { DistrictSidebar } from './DistrictSidebar';
 import { ContactInfoTab } from './ContactInfoTab';
@@ -232,14 +231,10 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-          {/* Header Section */}
+          {/* Unified Hero Section with Stats */}
           <div className="mb-4 sm:mb-6">
-            <EnhancedHeader representative={representative} />
-          </div>
-
-          {/* Key Stats Bar */}
-          <div className="mb-4 sm:mb-6">
-            <KeyStatsBar
+            <HeroStatsHeader
+              representative={representative}
               stats={{
                 billsSponsored: summaryData?.success
                   ? (summaryData.data?.billsSponsored ??

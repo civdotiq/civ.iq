@@ -109,6 +109,39 @@ class FECApiError extends Error {
 }
 
 /**
+ * Classify PAC type based on FEC committee type codes
+ * Reference: https://www.fec.gov/campaign-finance-data/committee-type-code-descriptions/
+ */
+export function classifyPACType(
+  committeeType: string,
+  designation: string
+): 'superPac' | 'traditional' | 'leadership' | 'hybrid' | null {
+  // Super PACs (Independent Expenditure-Only Committees)
+  if (committeeType === 'O') {
+    return 'superPac';
+  }
+
+  // Leadership PACs (typically designated 'J' - Joint Fundraiser, or 'D' - Delegate Committee)
+  if (designation === 'D' || designation === 'J') {
+    return 'leadership';
+  }
+
+  // Hybrid PACs (can operate as both traditional PAC and Super PAC)
+  // These are relatively rare and would be indicated by specific designations
+  if (designation === 'B' && committeeType === 'N') {
+    return 'hybrid';
+  }
+
+  // Traditional PACs
+  if (committeeType === 'N' || committeeType === 'Q') {
+    return 'traditional';
+  }
+
+  // If it doesn't match any PAC category, return null
+  return null;
+}
+
+/**
  * Core FEC API Service
  * Handles all direct communication with FEC.gov API
  */
@@ -826,6 +859,122 @@ export class FECApiService {
       return [];
     } catch (error) {
       logger.error(`[FEC API] Failed to get election cycles for ${candidateId}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Get committee information including type classifications
+   */
+  async getCommitteeInfo(committeeId: string): Promise<FECCommitteeResponse | null> {
+    try {
+      logger.info(`[FEC API] Fetching committee info for ${committeeId}`);
+
+      const response = await this.makeRequest<FECApiResponse<FECCommitteeResponse>>(
+        `/committee/${committeeId}/`
+      );
+
+      if (response.results && response.results.length > 0) {
+        return response.results[0] || null;
+      }
+
+      return null;
+    } catch (error) {
+      logger.error(`[FEC API] Failed to get committee info for ${committeeId}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Get independent expenditures (Schedule E) supporting or opposing a candidate
+   */
+  async getIndependentExpenditures(
+    candidateId: string,
+    cycle: number
+  ): Promise<
+    Array<{
+      committee_id: string;
+      committee_name: string;
+      support_oppose_indicator: 'S' | 'O';
+      expenditure_amount: number;
+      expenditure_date: string;
+      payee_name: string;
+      expenditure_description: string;
+    }>
+  > {
+    try {
+      logger.info(`[FEC API] Fetching independent expenditures for ${candidateId} cycle ${cycle}`);
+
+      const response = await this.makeRequest<
+        FECApiResponse<{
+          committee_id: string;
+          committee_name: string;
+          support_oppose_indicator: 'S' | 'O';
+          expenditure_amount: number;
+          expenditure_date: string;
+          payee_name: string;
+          expenditure_description: string;
+        }>
+      >(
+        `/schedules/schedule_e/by_candidate/?candidate_id=${candidateId}&cycle=${cycle}&per_page=100`
+      );
+
+      if (response.results && response.results.length > 0) {
+        logger.info(
+          `[FEC API] Found ${response.results.length} independent expenditures for ${candidateId}`
+        );
+        return response.results;
+      }
+
+      return [];
+    } catch (error) {
+      logger.error(`[FEC API] Failed to get independent expenditures for ${candidateId}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Get PAC contributions (Schedule A) to a candidate
+   * Filters for non-individual contributions (PACs, parties, etc.)
+   */
+  async getPACContributions(
+    candidateId: string,
+    cycle: number
+  ): Promise<
+    Array<{
+      committee_id: string;
+      committee_name: string;
+      contribution_receipt_amount: number;
+      contribution_receipt_date: string;
+      entity_type: string;
+    }>
+  > {
+    try {
+      logger.info(`[FEC API] Fetching PAC contributions for ${candidateId} cycle ${cycle}`);
+
+      const response = await this.makeRequest<
+        FECApiResponse<{
+          committee_id: string;
+          committee_name: string;
+          contribution_receipt_amount: number;
+          contribution_receipt_date: string;
+          entity_type: string;
+          is_individual: boolean;
+        }>
+      >(
+        `/schedules/schedule_a/?candidate_id=${candidateId}&two_year_transaction_period=${cycle}&is_individual=false&per_page=100`
+      );
+
+      if (response.results && response.results.length > 0) {
+        logger.info(
+          `[FEC API] Found ${response.results.length} PAC contributions for ${candidateId}`
+        );
+        return response.results;
+      }
+
+      return [];
+    } catch (error) {
+      logger.error(`[FEC API] Failed to get PAC contributions for ${candidateId}:`, error);
       return [];
     }
   }
