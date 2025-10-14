@@ -1,0 +1,27 @@
+# Large data files - not needed for deployment
+data/districts/congressional_districts_119_real.geojson
+
+# Development files
+.session.log
+vercel-deploy.log
+*.log
+
+# Test files
+**/__tests__/**
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
