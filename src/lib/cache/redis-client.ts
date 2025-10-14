@@ -46,12 +46,25 @@ export class RedisCache {
       return;
     }
 
-    this.redisAvailable = Boolean(process.env.REDIS_URL || process.env.REDIS_HOST);
+    this.redisAvailable = Boolean(
+      process.env.REDIS_URL ||
+        process.env.REDIS_HOST ||
+        (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
+    );
 
     if (!this.redisAvailable) {
       logger.info('Redis not configured, using fallback cache only');
       this.startCleanupTask();
       return;
+    }
+
+    // If we have REST API credentials, log that we'll use them
+    if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+      logger.info('✅ Upstash REST API credentials detected - using REST for serverless');
+      this.redisAvailable = true;
+      this.isConnected = true; // REST API doesn't need persistent connection
+      this.startCleanupTask();
+      return; // Skip ioredis setup, use REST API via fetch
     }
 
     // Default Redis configuration
