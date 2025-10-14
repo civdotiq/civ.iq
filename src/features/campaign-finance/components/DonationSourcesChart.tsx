@@ -13,6 +13,7 @@ interface DonationSource {
   value: number;
   color: string;
   description?: string;
+  [key: string]: string | number | undefined; // Index signature for Recharts compatibility
 }
 
 interface DonationSourcesChartProps {
