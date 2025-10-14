@@ -214,6 +214,44 @@ export class RedisCache {
     const monitor = monitorCache('get', key);
 
     try {
+      // Try Upstash REST API first if available
+      if (
+        this.isConnected &&
+        !this.client &&
+        process.env.UPSTASH_REDIS_REST_URL &&
+        process.env.UPSTASH_REDIS_REST_TOKEN
+      ) {
+        try {
+          const response = await fetch(
+            `${process.env.UPSTASH_REDIS_REST_URL}/get/${encodeURIComponent(this.keyPrefix + key)}`,
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.result) {
+              monitor.end(true);
+              logger.debug('[Cache] REST API hit', key);
+              return JSON.parse(data.result) as T;
+            }
+          }
+
+          monitor.end(false);
+          logger.debug('[Cache] REST API miss', key);
+          return null;
+        } catch (restError) {
+          logger.warn('[Cache] REST API error, falling back to memory', {
+            key,
+            error: (restError as Error).message,
+          });
+          // Fall through to memory cache
+        }
+      }
+
       if (this.isConnected && this.client) {
         const value = await this.client.get(key);
 
@@ -266,6 +304,40 @@ export class RedisCache {
     try {
       const serializedValue = JSON.stringify(value);
 
+      // Try Upstash REST API first if available
+      if (
+        this.isConnected &&
+        !this.client &&
+        process.env.UPSTASH_REDIS_REST_URL &&
+        process.env.UPSTASH_REDIS_REST_TOKEN
+      ) {
+        try {
+          const response = await fetch(
+            `${process.env.UPSTASH_REDIS_REST_URL}/set/${encodeURIComponent(this.keyPrefix + key)}/${serializedValue}/EX/${ttlSeconds}`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            monitor.end();
+            logger.debug('[Cache] REST API set', key, { ttl: ttlSeconds });
+            return true;
+          }
+
+          throw new Error(`REST API failed: ${response.status}`);
+        } catch (restError) {
+          logger.warn('[Cache] REST API error on set, falling back to memory', {
+            key,
+            error: (restError as Error).message,
+          });
+          // Fall through to memory cache
+        }
+      }
+
       if (this.isConnected && this.client) {
         await this.client.setex(key, ttlSeconds, serializedValue);
         monitor.end();
@@ -309,6 +381,41 @@ export class RedisCache {
     const monitor = monitorCache('delete', key);
 
     try {
+      // Try Upstash REST API first if available
+      if (
+        this.isConnected &&
+        !this.client &&
+        process.env.UPSTASH_REDIS_REST_URL &&
+        process.env.UPSTASH_REDIS_REST_TOKEN
+      ) {
+        try {
+          const response = await fetch(
+            `${process.env.UPSTASH_REDIS_REST_URL}/del/${encodeURIComponent(this.keyPrefix + key)}`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            monitor.end();
+            logger.debug('[Cache] REST API delete', key, { deleted: data.result > 0 });
+            return data.result > 0;
+          }
+
+          throw new Error(`REST API failed: ${response.status}`);
+        } catch (restError) {
+          logger.warn('[Cache] REST API error on delete, falling back to memory', {
+            key,
+            error: (restError as Error).message,
+          });
+          // Fall through to memory cache
+        }
+      }
+
       if (this.isConnected && this.client) {
         const result = await this.client.del(key);
         monitor.end();
@@ -340,6 +447,34 @@ export class RedisCache {
 
   async flush(): Promise<boolean> {
     try {
+      // Try Upstash REST API first if available
+      if (
+        this.isConnected &&
+        !this.client &&
+        process.env.UPSTASH_REDIS_REST_URL &&
+        process.env.UPSTASH_REDIS_REST_TOKEN
+      ) {
+        try {
+          const response = await fetch(`${process.env.UPSTASH_REDIS_REST_URL}/flushdb`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+            },
+          });
+
+          if (response.ok) {
+            logger.info('REST API cache flushed');
+          } else {
+            throw new Error(`REST API failed: ${response.status}`);
+          }
+        } catch (restError) {
+          logger.warn('[Cache] REST API error on flush', {
+            error: (restError as Error).message,
+          });
+          // Continue anyway - we'll clear memory cache
+        }
+      }
+
       if (this.isConnected && this.client) {
         await this.client.flushdb();
         logger.info('Redis cache flushed');
@@ -361,6 +496,38 @@ export class RedisCache {
 
   async exists(key: string): Promise<boolean> {
     try {
+      // Try Upstash REST API first if available
+      if (
+        this.isConnected &&
+        !this.client &&
+        process.env.UPSTASH_REDIS_REST_URL &&
+        process.env.UPSTASH_REDIS_REST_TOKEN
+      ) {
+        try {
+          const response = await fetch(
+            `${process.env.UPSTASH_REDIS_REST_URL}/exists/${encodeURIComponent(this.keyPrefix + key)}`,
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            return data.result === 1;
+          }
+
+          throw new Error(`REST API failed: ${response.status}`);
+        } catch (restError) {
+          logger.warn('[Cache] REST API error on exists, falling back to memory', {
+            key,
+            error: (restError as Error).message,
+          });
+          // Fall through to memory cache
+        }
+      }
+
       if (this.isConnected && this.client) {
         const result = await this.client.exists(key);
         return result === 1;
