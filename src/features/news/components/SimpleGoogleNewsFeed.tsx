@@ -8,6 +8,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { EnhancedRepresentative } from '@/types/representative';
 import { LoadingSkeleton } from './LoadingSkeleton';
 import { TopicNavigation } from './TopicNavigation';
@@ -278,72 +279,202 @@ export function SimpleGoogleNewsFeed({
     }
 
     return (
-      <div className="space-y-6">
-        {clusters.map(cluster => (
-          <div
-            key={cluster.id}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
-          >
-            {/* Header */}
-            <div className="p-4 border-b border-gray-100">
-              <div className="flex items-center justify-between mb-2">
-                <span
-                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${
-                    cluster.topicType === 'breaking'
-                      ? 'bg-red-100 text-red-800 border-red-200'
-                      : cluster.topicType === 'developing'
-                        ? 'bg-orange-100 text-orange-800 border-orange-200'
-                        : 'bg-blue-100 text-blue-800 border-blue-200'
-                  }`}
-                >
-                  {cluster.topicType === 'breaking'
-                    ? '🚨 Breaking'
-                    : cluster.topicType === 'developing'
-                      ? '📈 Developing'
-                      : '📰 Ongoing'}
-                </span>
-                <div className="text-sm text-gray-500">
-                  {cluster.articles.length} article{cluster.articles.length !== 1 ? 's' : ''}
-                </div>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">{cluster.primaryTopic}</h3>
-              <div className="text-sm text-gray-600">
-                {cluster.uniqueSources} source{cluster.uniqueSources !== 1 ? 's' : ''} •{' '}
-                {cluster.timeSpan} hour span • {(cluster.relevanceScore * 100).toFixed(0)}%
-                relevance
-              </div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {clusters.map(cluster => {
+          // Find first article with image for featured display
+          const featuredArticle = cluster.articles.find(a => a.imageUrl) || cluster.articles[0];
+          const otherArticles = cluster.articles.filter(a => a !== featuredArticle);
 
-            {/* Main Article */}
-            <div className="p-4">
-              {cluster.articles.map((article, index) => (
-                <div
-                  key={article.url}
-                  className={index > 0 ? 'mt-4 pt-4 border-t border-gray-100' : ''}
+          return (
+            <div
+              key={cluster.id}
+              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 hover:border-blue-300"
+            >
+              {/* Featured Article with Image */}
+              {featuredArticle && (
+                <a
+                  href={featuredArticle.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block group"
                 >
-                  <a
-                    href={article.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block hover:bg-gray-50 -m-2 p-2 rounded"
-                  >
-                    <h4 className="text-base font-medium text-gray-900 mb-2">{article.title}</h4>
-                    {article.summary && (
-                      <p className="text-sm text-gray-600 mb-2">{article.summary}</p>
-                    )}
-                    <div className="flex items-center text-xs text-gray-500">
-                      <span className="font-medium">{article.source}</span>
-                      <span className="mx-2">•</span>
-                      <span>{new Date(article.publishedDate).toLocaleString()}</span>
-                      <span className="mx-2">•</span>
-                      <span className="text-green-600 font-medium">✓ Verified</span>
+                  {/* Image */}
+                  {featuredArticle.imageUrl && (
+                    <div className="relative h-48 overflow-hidden bg-gray-100">
+                      <Image
+                        src={featuredArticle.imageUrl}
+                        alt={featuredArticle.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        unoptimized
+                      />
+                      {/* Topic Badge Overlay */}
+                      <div className="absolute top-4 left-4 z-10">
+                        <span
+                          className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm ${
+                            cluster.topicType === 'breaking'
+                              ? 'bg-red-500/90 text-white'
+                              : cluster.topicType === 'developing'
+                                ? 'bg-orange-500/90 text-white'
+                                : 'bg-blue-500/90 text-white'
+                          }`}
+                        >
+                          {cluster.topicType === 'breaking'
+                            ? '🚨 Breaking'
+                            : cluster.topicType === 'developing'
+                              ? '📈 Developing'
+                              : '📰 Ongoing'}
+                        </span>
+                      </div>
                     </div>
-                  </a>
+                  )}
+
+                  {/* Content */}
+                  <div className="p-5">
+                    {/* Topic Badge (if no image) */}
+                    {!featuredArticle.imageUrl && (
+                      <div className="mb-3">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                            cluster.topicType === 'breaking'
+                              ? 'bg-red-100 text-red-800'
+                              : cluster.topicType === 'developing'
+                                ? 'bg-orange-100 text-orange-800'
+                                : 'bg-blue-100 text-blue-800'
+                          }`}
+                        >
+                          {cluster.topicType === 'breaking'
+                            ? '🚨 Breaking'
+                            : cluster.topicType === 'developing'
+                              ? '📈 Developing'
+                              : '📰 Ongoing'}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Title */}
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
+                      {featuredArticle.title}
+                    </h3>
+
+                    {/* Summary */}
+                    {featuredArticle.summary && (
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                        {featuredArticle.summary}
+                      </p>
+                    )}
+
+                    {/* Metadata */}
+                    <div className="flex items-center gap-3 text-xs">
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-gray-900 bg-gray-100 px-2.5 py-1 rounded-md">
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                          <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
+                        </svg>
+                        {featuredArticle.source}
+                      </span>
+                      <span className="text-gray-500">
+                        {new Date(featuredArticle.publishedDate).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              )}
+
+              {/* Related Articles */}
+              {otherArticles.length > 0 && (
+                <div className="border-t border-gray-100 bg-gray-50 px-5 py-4">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                    Related Coverage ({otherArticles.length})
+                  </div>
+                  <div className="space-y-3">
+                    {otherArticles.slice(0, 2).map(article => (
+                      <a
+                        key={article.url}
+                        href={article.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block group"
+                      >
+                        <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-1.5">
+                          {article.title}
+                        </h4>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <span className="font-medium">{article.source}</span>
+                          <span>•</span>
+                          <span>
+                            {new Date(article.publishedDate).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </span>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+
+                  {/* Cluster Stats */}
+                  <div className="mt-4 pt-3 border-t border-gray-200">
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span className="inline-flex items-center gap-1">
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                        </svg>
+                        {cluster.uniqueSources} sources
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {cluster.timeSpan}h span
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-green-600 font-medium">
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {(cluster.relevanceScore * 100).toFixed(0)}% match
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };

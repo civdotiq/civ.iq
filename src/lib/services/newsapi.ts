@@ -130,7 +130,7 @@ export async function fetchNewsAPI(options: NewsAPIOptions): Promise<NewsAPIResp
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout (fail fast)
 
     const response = await fetch(url, {
       method: 'GET',
@@ -170,7 +170,7 @@ export async function fetchNewsAPI(options: NewsAPIOptions): Promise<NewsAPIResp
   } catch (error) {
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
-        throw new Error('NewsAPI request timeout after 20 seconds');
+        throw new Error('NewsAPI request timeout after 5 seconds');
       }
       throw error;
     }
@@ -194,41 +194,31 @@ export async function fetchRepresentativeNewsAPI(
   options: Partial<NewsAPIOptions> = {}
 ): Promise<NormalizedNewsArticle[]> {
   try {
-    // Build search query with multiple strategies
-    const queries: string[] = [];
+    // Build simple, targeted search query
+    // Extract last name for simpler queries
+    const nameParts = name.split(' ').filter(part => part.length > 0);
+    const lastName = nameParts[nameParts.length - 1] || name;
 
     // Get nicknames for this representative
     const nicknames = REPRESENTATIVE_NICKNAMES[name] || [];
 
-    // Try primary name first (most specific)
-    if (chamber === 'Senate') {
-      queries.push(`"Senator ${name}"`);
-      queries.push(`"Sen. ${name}"`);
-    } else if (chamber === 'House') {
-      queries.push(`"Representative ${name}"`);
-      queries.push(`"Rep. ${name}"`);
-    }
+    // Use the simplest query that will work with NewsAPI
+    // Avoid complex OR statements that cause timeouts
+    let combinedQuery: string;
 
-    // Add state context for precision
-    if (state) {
-      queries.push(`"${name}" AND ${state}`);
-    }
-
-    // Try first nickname if available (e.g., "Will Timmons")
-    if (nicknames.length > 0) {
+    if (nicknames.length > 0 && chamber) {
+      // If nickname exists, use it with title (e.g., "Rep. Will Timmons")
       const nickname = nicknames[0];
-      if (chamber === 'House') {
-        queries.push(`"Rep. ${nickname}"`);
-      } else if (chamber === 'Senate') {
-        queries.push(`"Sen. ${nickname}"`);
-      }
-      if (state) {
-        queries.push(`"${nickname}" AND ${state}`);
-      }
+      const title = chamber === 'House' ? 'Rep.' : 'Senator';
+      combinedQuery = `"${title} ${nickname}"`;
+    } else if (chamber) {
+      // Use last name with title (e.g., "Rep. Timmons")
+      const title = chamber === 'House' ? 'Rep.' : 'Senator';
+      combinedQuery = `"${title} ${lastName}"`;
+    } else {
+      // Fallback to last name with state
+      combinedQuery = state ? `"${lastName}" AND ${state}` : `"${lastName}"`;
     }
-
-    // Combine queries with OR operator (keep under 500 char limit)
-    const combinedQuery = queries.join(' OR ');
 
     // Calculate date range (last 30 days for better relevance)
     const to = new Date().toISOString().split('T')[0]; // Today

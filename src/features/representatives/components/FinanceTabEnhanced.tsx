@@ -63,6 +63,19 @@ interface ContributorData {
   };
 }
 
+interface IndustryData {
+  topIndustries?: Array<{
+    industry: string;
+    amount: number;
+    percentage: number;
+    contributionCount: number;
+  }>;
+  metadata?: {
+    totalAnalyzed: number;
+    lastUpdated: string;
+  };
+}
+
 interface FinanceTabEnhancedProps {
   bioguideId: string;
   sharedData?: FinanceData;
@@ -124,20 +137,27 @@ function ContributorsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white max-w-4xl w-full max-h-[80vh] flex flex-col">
-        <div className="p-6 border-b flex justify-between items-center">
+    <div
+      className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-start justify-center p-4 sm:pt-12"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white max-w-4xl w-full max-h-[90vh] flex flex-col border-2 border-black my-4"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="p-4 sm:p-6 border-b-2 border-black flex justify-between items-center bg-white sticky top-0 z-10">
           <div>
-            <h2 className="text-2xl font-bold">All Individual Contributors</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <h2 className="text-xl sm:text-2xl font-bold">All Individual Contributors</h2>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">
               Showing {contributors?.length || 0} of {metadata?.totalIndividualContributors || 0}{' '}
               individual contributors
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="ml-4 flex-shrink-0 text-gray-700 hover:text-black hover:bg-gray-100 p-2 rounded-full transition-colors border-2 border-black"
             aria-label="Close modal"
+            title="Close (or click outside)"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -288,6 +308,13 @@ export const FinanceTabEnhanced = React.memo(
     // Fetch contributor data with enhanced information
     const { data: contributorData } = useSWR<ContributorData>(
       `/api/representative/${bioguideId}/finance/contributors`,
+      (url: string) => fetch(url).then(res => res.json()),
+      { revalidateOnFocus: false }
+    );
+
+    // Fetch industry breakdown data
+    const { data: industryData } = useSWR<IndustryData>(
+      `/api/representative/${bioguideId}/finance/industries`,
       (url: string) => fetch(url).then(res => res.json()),
       { revalidateOnFocus: false }
     );
@@ -460,6 +487,51 @@ export const FinanceTabEnhanced = React.memo(
         {contributorData?.contributionTrends && contributorData.contributionTrends.length > 0 && (
           <div className="mb-8">
             <ContributionTrendsChart trends={contributorData.contributionTrends} />
+          </div>
+        )}
+
+        {/* Industry Breakdown */}
+        {industryData?.topIndustries && industryData.topIndustries.length > 0 && (
+          <div className="bg-white p-6 border border-gray-200 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold">Top Contributing Industries</h3>
+                <InfoTooltip text="Industries are identified by analyzing employer and occupation data from FEC contribution records" />
+              </div>
+              {industryData.metadata?.totalAnalyzed && (
+                <span className="text-xs text-gray-500">
+                  {industryData.metadata.totalAnalyzed.toLocaleString()} contributions analyzed
+                </span>
+              )}
+            </div>
+            <div className="space-y-3">
+              {industryData.topIndustries.slice(0, 10).map((industry, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-gray-900">{industry.industry}</span>
+                      <span className="text-sm font-semibold text-gray-900 ml-4">
+                        {formatCurrency(industry.amount)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full transition-all"
+                          style={{ width: `${Math.min(industry.percentage, 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-500 w-12 text-right">
+                        {industry.percentage.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {industry.contributionCount.toLocaleString()} contributions
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

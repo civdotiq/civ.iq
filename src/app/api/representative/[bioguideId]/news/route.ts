@@ -720,13 +720,14 @@ export async function GET(
 
               // Additional check: names should be reasonably close to each other
               // This helps filter out articles that happen to have both common words
+              // Made less aggressive: increased from 50 to 100 characters
               if (hasFirstName && hasLastName) {
                 const firstIndex = titleLower.indexOf(firstNameLower);
                 const lastIndex = titleLower.indexOf(lastNameLower);
                 const distance = Math.abs(lastIndex - firstIndex);
 
-                // Names should be within ~50 characters of each other
-                if (distance > 50) {
+                // Names should be within ~100 characters of each other (relaxed)
+                if (distance > 100) {
                   logger.debug('Filtering out article - names too far apart', {
                     title: articleData.title.slice(0, 100),
                     distance,
@@ -735,6 +736,9 @@ export async function GET(
                   return false;
                 }
               }
+
+              // If we have both first and last name, that's good enough
+              return true;
             }
 
             // Check for title + last name pattern (e.g., "Senator James", "Rep. James")
@@ -748,21 +752,7 @@ export async function GET(
             ];
 
             if (titlePatterns.some(pattern => titleLower.includes(pattern))) {
-              // But also verify state context for common last names
-              if (hasCommonLastName && state) {
-                const hasStateContext =
-                  titleLower.includes(state.toLowerCase()) ||
-                  titleLower.includes(fullStateName.toLowerCase());
-
-                if (!hasStateContext) {
-                  logger.debug('Filtering out article - title+lastname but no state context', {
-                    title: articleData.title.slice(0, 100),
-                    representativeName: simpleName,
-                    state,
-                  });
-                  return false;
-                }
-              }
+              // Accept title + lastname without state check (less aggressive)
               return true;
             }
 

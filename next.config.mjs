@@ -53,6 +53,12 @@ const nextConfig = {
         port: '',
         pathname: '/unitedstates/images/**',
       },
+      {
+        // Allow all news article images from any source
+        // This is necessary because news articles come from various domains
+        protocol: 'https',
+        hostname: '**',
+      },
     ],
   },
   // Production-optimized webpack config

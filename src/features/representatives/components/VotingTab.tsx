@@ -227,10 +227,15 @@ const VotingTabComponent = React.memo(
       (vote: Vote) => {
         const voteId = extractVoteId(vote);
         if (voteId) {
-          router.push(`/vote/${voteId}`);
+          // Include representative context for breadcrumb navigation
+          const memberName = data?.member?.name;
+          const queryParams = memberName
+            ? `?from=${bioguideId}&name=${encodeURIComponent(memberName)}`
+            : '';
+          router.push(`/vote/${voteId}${queryParams}`);
         }
       },
-      [router]
+      [router, bioguideId, data?.member?.name]
     );
 
     // Memoized filter handlers to prevent unnecessary re-renders

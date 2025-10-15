@@ -1026,9 +1026,11 @@ export class BatchVotingService {
       (currentDate.getTime() - sessionStart.getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    // Senate averages ~1.5 votes per session day (more realistic than fixed 230)
-    const dynamicEstimate = Math.max(1, Math.floor(daysSinceSessionStart * 1.5));
-    const safeEstimate = Math.min(dynamicEstimate, 350); // Cap at reasonable max
+    // Senate averages ~2.0 votes per session day in active sessions
+    // Increased from 1.5 to account for higher activity in 2025
+    const dynamicEstimate = Math.max(1, Math.floor(daysSinceSessionStart * 2.0));
+    // Cap increased from 350 to 700 to support full year of active sessions
+    const safeEstimate = Math.min(dynamicEstimate, 700);
 
     const numbers: number[] = [];
 

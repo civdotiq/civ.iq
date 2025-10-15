@@ -624,7 +624,7 @@ export async function getRepresentativeSummary(bioguideId: string) {
       executeBatchRequest({
         bioguideId,
         endpoints: ['votes'],
-        options: { votes: { limit: 1 } }, // Just get count, not full data
+        options: { votes: { limit: 50 } }, // Fetch reasonable number to get accurate count (default limit in batch service)
       }),
     ]);
 
