@@ -5,7 +5,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
-import { getRedisCache } from '@/lib/cache/redis-client';
 import {
   normalizeGDELTArticle,
   fetchGDELTNews,
@@ -18,14 +17,6 @@ import type { EnhancedRepresentative } from '@/types/representative';
 // Vercel serverless function configuration
 export const maxDuration = 20; // 20 seconds for news aggregation
 export const dynamic = 'force-dynamic';
-
-interface SimpleNewsArticle {
-  url: string;
-  title: string;
-  seendate: string;
-  domain: string;
-  socialimage?: string | null;
-}
 
 interface NewsArticle {
   title: string;
@@ -47,7 +38,7 @@ interface NewsResponse {
   articles: NewsArticle[];
   totalResults: number;
   searchTerms: string[];
-  dataSource: 'gdelt' | 'google-news' | 'fallback';
+  dataSource: 'newsapi' | 'gdelt' | 'google-news' | 'fallback';
   cacheStatus?: string;
   pagination?: {
     currentPage: number;
@@ -73,55 +64,160 @@ export async function GET(
     return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
   }
 
-  // Try Google News RSS first (better quality, less noise for common names)
+  // Try NewsAPI.org first (primary source - best quality, most reliable)
   try {
-    const cache = getRedisCache();
-    const cacheKey = `news:${bioguideId}`;
-    const rssArticles = await cache.get<SimpleNewsArticle[]>(cacheKey);
+    // Get representative info for building search query
+    const repResponse = await fetch(`${request.nextUrl.origin}/api/representative/${bioguideId}`);
 
-    if (rssArticles && rssArticles.length > 0) {
-      // Apply pagination to RSS articles
-      const offset = (page - 1) * limit;
-      const paginatedArticles = rssArticles.slice(offset, offset + limit);
+    if (repResponse.ok) {
+      const repData = await repResponse.json();
+      const representative = repData.representative as EnhancedRepresentative;
 
-      // Convert RSS articles to match existing NewsArticle interface
-      const convertedArticles = paginatedArticles.map(article => ({
-        title: article.title,
-        url: article.url,
-        source: article.domain,
-        publishedDate: article.seendate,
-        language: 'English',
-        domain: article.domain,
-        imageUrl: article.socialimage || undefined,
-      }));
+      // Import NewsAPI service
+      const { fetchRepresentativeNewsAPI } = await import('@/lib/services/newsapi');
 
-      const response: NewsResponse = {
-        articles: convertedArticles,
-        totalResults: rssArticles.length,
-        searchTerms: [`RSS feeds for ${bioguideId}`],
-        dataSource: 'google-news',
-        cacheStatus: 'RSS news data from Google News feeds',
-        pagination: {
-          currentPage: page,
-          limit: limit,
-          hasNextPage: offset + limit < rssArticles.length,
-          totalPages: Math.ceil(rssArticles.length / limit),
-        },
-      };
-
-      logger.info('Served RSS news data', {
+      logger.info('Fetching NewsAPI for representative', {
         bioguideId,
-        articlesCount: convertedArticles.length,
-        totalAvailable: rssArticles.length,
-        source: 'RSS',
+        name: representative.name,
+        state: representative.state,
+        chamber: representative.chamber,
       });
 
-      return NextResponse.json(response);
-    } else {
-      logger.info('No RSS news data available, falling back to GDELT', { bioguideId });
+      // Fetch from NewsAPI
+      const newsAPIArticles = await fetchRepresentativeNewsAPI(
+        representative.name,
+        representative.state,
+        representative.chamber,
+        {
+          pageSize: limit * 2, // Fetch more for better selection
+        }
+      );
+
+      if (newsAPIArticles.length > 0) {
+        // Apply pagination to NewsAPI articles
+        const offset = (page - 1) * limit;
+        const paginatedArticles = newsAPIArticles.slice(offset, offset + limit);
+
+        // Convert to NewsArticle interface
+        const convertedArticles = paginatedArticles.map(article => ({
+          title: article.title,
+          url: article.url,
+          source: article.source,
+          publishedDate: article.publishedDate,
+          language: article.language,
+          domain: article.domain,
+          imageUrl: article.imageUrl,
+          summary: article.summary,
+        }));
+
+        const response: NewsResponse = {
+          articles: convertedArticles,
+          totalResults: newsAPIArticles.length,
+          searchTerms: [`NewsAPI for ${representative.name}`],
+          dataSource: 'newsapi',
+          cacheStatus: 'Live NewsAPI.org data',
+          pagination: {
+            currentPage: page,
+            limit: limit,
+            hasNextPage: offset + limit < newsAPIArticles.length,
+            totalPages: Math.ceil(newsAPIArticles.length / limit),
+          },
+        };
+
+        logger.info('Served NewsAPI data', {
+          bioguideId,
+          articlesCount: convertedArticles.length,
+          totalAvailable: newsAPIArticles.length,
+          source: 'newsapi',
+        });
+
+        return NextResponse.json(response);
+      } else {
+        logger.info('No NewsAPI articles found, falling back to Google News', { bioguideId });
+      }
     }
   } catch (error) {
-    logger.error('Failed to fetch RSS news data, falling back to GDELT', error as Error, {
+    logger.error('Failed to fetch NewsAPI, falling back to Google News', error as Error, {
+      bioguideId,
+    });
+  }
+
+  // Try Google News RSS second (better quality, less noise for common names)
+  try {
+    // Get representative info for building search query
+    const repResponse = await fetch(`${request.nextUrl.origin}/api/representative/${bioguideId}`);
+
+    if (repResponse.ok) {
+      const repData = await repResponse.json();
+      const representative = repData.representative as EnhancedRepresentative;
+
+      // Import Google News RSS service
+      const { fetchRepresentativeGoogleNews } = await import('@/lib/services/google-news-rss');
+
+      logger.info('Fetching Google News RSS for representative', {
+        bioguideId,
+        name: representative.name,
+        state: representative.state,
+        chamber: representative.chamber,
+      });
+
+      // Fetch from Google News RSS
+      const googleNewsArticles = await fetchRepresentativeGoogleNews(
+        representative.name,
+        representative.state,
+        representative.chamber,
+        {
+          limit: limit * 2, // Fetch more for better selection
+          language: 'en',
+          country: 'US',
+        }
+      );
+
+      if (googleNewsArticles.length > 0) {
+        // Apply pagination to Google News articles
+        const offset = (page - 1) * limit;
+        const paginatedArticles = googleNewsArticles.slice(offset, offset + limit);
+
+        // Convert to NewsArticle interface
+        const convertedArticles = paginatedArticles.map(article => ({
+          title: article.title,
+          url: article.url,
+          source: article.source,
+          publishedDate: article.seendate,
+          language: 'English',
+          domain: article.domain,
+          imageUrl: article.socialimage || undefined,
+          summary: article.description,
+        }));
+
+        const response: NewsResponse = {
+          articles: convertedArticles,
+          totalResults: googleNewsArticles.length,
+          searchTerms: [`Google News for ${representative.name}`],
+          dataSource: 'google-news',
+          cacheStatus: 'Live Google News RSS data',
+          pagination: {
+            currentPage: page,
+            limit: limit,
+            hasNextPage: offset + limit < googleNewsArticles.length,
+            totalPages: Math.ceil(googleNewsArticles.length / limit),
+          },
+        };
+
+        logger.info('Served Google News RSS data', {
+          bioguideId,
+          articlesCount: convertedArticles.length,
+          totalAvailable: googleNewsArticles.length,
+          source: 'google-news',
+        });
+
+        return NextResponse.json(response);
+      } else {
+        logger.info('No Google News articles found, falling back to GDELT', { bioguideId });
+      }
+    }
+  } catch (error) {
+    logger.error('Failed to fetch Google News RSS, falling back to GDELT', error as Error, {
       bioguideId,
     });
   }
