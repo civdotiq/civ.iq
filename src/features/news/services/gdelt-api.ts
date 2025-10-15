@@ -137,6 +137,10 @@ export const REPRESENTATIVE_NICKNAMES: Record<string, string[]> = {
   'Addison McConnell': ['Mitch McConnell', 'Leader McConnell'], // Map formal to common
   'Joe Manchin': ['Sen. Manchin'],
   'Joseph Manchin': ['Joe Manchin', 'Sen. Manchin'], // Map formal to common
+
+  // House Representatives - Common Nicknames
+  'William Timmons': ['Will Timmons', 'Rep. Timmons'],
+  'William R. Timmons IV': ['Will Timmons', 'William Timmons', 'Rep. Timmons'], // Map formal to common
   'Kyrsten Sinema': ['Sen. Sinema'],
   'Susan Collins': ['Sen. Collins'],
   'Lisa Murkowski': ['Sen. Murkowski'],
