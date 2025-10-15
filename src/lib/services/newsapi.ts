@@ -245,18 +245,10 @@ export async function fetchRepresentativeNewsAPI(
     // Filter and normalize articles
     const normalizedArticles: NormalizedNewsArticle[] = response.articles
       .filter(article => {
-        // Quality filters
+        // Quality filters only - trust NewsAPI's relevance algorithm
         if (!article.title || article.title.includes('[Removed]')) return false;
         if (!article.url || article.url.includes('removed')) return false;
         if (article.title.length < 10 || article.title.length > 300) return false;
-
-        // Relevance filters
-        const titleLower = article.title.toLowerCase();
-        const nameParts = name.toLowerCase().split(' ');
-        const lastName = nameParts[nameParts.length - 1];
-
-        // Must contain at least the last name
-        if (!lastName || !titleLower.includes(lastName)) return false;
 
         return true;
       })
