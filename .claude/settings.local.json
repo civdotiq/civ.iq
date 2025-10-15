@@ -134,7 +134,18 @@
       "Bash(while read f)",
       "Bash(PORT=3005 npm run dev)",
       "Bash(fuser:*)",
-      "Bash(npx depcheck:*)"
+      "Bash(npx depcheck:*)",
+      "Read(//root/**)",
+      "Bash(git rm:*)",
+      "WebFetch(domain:civiq.vercel.app)",
+      "Bash(API_KEY=\"9hGCfXcar1zZ8XwDGBHQ3QVU6rcCJ0v6SXWBcRR9\")",
+      "Bash(export API_KEY=\"9hGCfXcar1zZ8XwDGBHQ3QVU6rcCJ0v6SXWBcRR9\")",
+      "Bash(dos2unix:*)",
+      "Bash(openssl rand:*)",
+      "Bash(printf \"redis://default:AWAOAAIncDJmMjM4ZWExMTk0NDk0N2EzOTM4MDE1YTg0NDg5YWUxZnAyMjQ1OTA@teaching-seahorse-24590.upstash.io:6379\")",
+      "Bash(printf \"https://teaching-seahorse-24590.upstash.io\")",
+      "Bash(printf \"AmAOAAIgcDLjJ4nqPEicKxyhDn3gSWCKiNtq5YmmJq2QGzYiH1xFyg\")",
+      "WebFetch(domain:newsapi.org)"
     ],
     "deny": [],
     "ask": []

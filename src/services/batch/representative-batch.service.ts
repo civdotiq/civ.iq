@@ -613,13 +613,18 @@ export async function getRepresentativeSummary(bioguideId: string) {
   }
 
   try {
-    // Execute minimal requests for summary data
-    const [billsSummary, financeSummary] = await Promise.allSettled([
+    // Execute minimal requests for summary data including votes count
+    const [billsSummary, financeSummary, votesSummary] = await Promise.allSettled([
       getBillsSummary(bioguideId),
       executeBatchRequest({
         bioguideId,
         endpoints: ['finance'],
         options: { finance: { summaryOnly: true } },
+      }),
+      executeBatchRequest({
+        bioguideId,
+        endpoints: ['votes'],
+        options: { votes: { limit: 1 } }, // Just get count, not full data
       }),
     ]);
 
@@ -629,14 +634,23 @@ export async function getRepresentativeSummary(bioguideId: string) {
       financeSummary.status === 'fulfilled' && financeSummary.value.success
         ? financeSummary.value.data.finance
         : null;
+    const votesData =
+      votesSummary.status === 'fulfilled' && votesSummary.value.success
+        ? votesSummary.value.data.votes
+        : null;
 
     const result = {
       billsSponsored:
-        (billsData as any)?.totalSponsored ?? (billsData as any)?.currentCongress?.count ?? 0,
-      totalRaised: (financeData as any)?.totalRaised ?? 0,
-      // For votes, we'll use a placeholder since fetching real voting data is expensive
-      // The UI will show a dash (—) when this is undefined
-      votesParticipated: undefined, // Avoid expensive vote counting
+        (billsData as { totalSponsored?: number; currentCongress?: { count: number } })
+          ?.totalSponsored ??
+        (billsData as { totalSponsored?: number; currentCongress?: { count: number } })
+          ?.currentCongress?.count ??
+        0,
+      totalRaised: (financeData as { totalRaised?: number })?.totalRaised ?? 0,
+      votesParticipated:
+        (votesData as { totalResults?: number; votes?: unknown[] })?.totalResults ??
+        (votesData as { totalResults?: number; votes?: unknown[] })?.votes?.length ??
+        0,
       lastUpdated: new Date().toISOString(),
     };
 

@@ -186,6 +186,17 @@
   color: var(--color-accent);
 }
 
+.summary {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: var(--space-2) 0 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* ========================================
    Image Thumbnail
 ======================================== */

@@ -16,6 +16,7 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
+import { REPRESENTATIVE_NICKNAMES } from '@/features/news/services/gdelt-api';
 
 /**
  * NewsAPI Article Response Interface
@@ -196,24 +197,40 @@ export async function fetchRepresentativeNewsAPI(
     // Build search query with multiple strategies
     const queries: string[] = [];
 
-    // Strategy 1: Exact name with title
-    if (chamber === 'Senate') {
-      queries.push(`"Senator ${name}"`);
-      queries.push(`"Sen. ${name}"`);
-    } else if (chamber === 'House') {
-      queries.push(`"Representative ${name}"`);
-      queries.push(`"Rep. ${name}"`);
-      queries.push(`"Congressman ${name}"`);
-      queries.push(`"Congresswoman ${name}"`);
+    // Get nicknames for this representative
+    const nicknames = REPRESENTATIVE_NICKNAMES[name] || [];
+    const searchNames = [name, ...nicknames];
+
+    // Strategy 1: Exact name with title (including nicknames)
+    for (const searchName of searchNames) {
+      if (chamber === 'Senate') {
+        queries.push(`"Senator ${searchName}"`);
+        queries.push(`"Sen. ${searchName}"`);
+      } else if (chamber === 'House') {
+        queries.push(`"Representative ${searchName}"`);
+        queries.push(`"Rep. ${searchName}"`);
+        queries.push(`"Congressman ${searchName}"`);
+        queries.push(`"Congresswoman ${searchName}"`);
+      }
     }
 
-    // Strategy 2: Name with state context
+    // Strategy 2: Name with state context (including nicknames)
     if (state) {
-      queries.push(`"${name}" AND ${state}`);
+      for (const searchName of searchNames) {
+        queries.push(`"${searchName}" AND ${state}`);
+      }
     }
 
-    // Strategy 3: Just the full name in quotes
-    queries.push(`"${name}"`);
+    // Strategy 3: Just the names in quotes (including nicknames)
+    for (const searchName of searchNames) {
+      queries.push(`"${searchName}"`);
+    }
+
+    // Strategy 4: Last name only (broader search)
+    const lastName = name.split(' ').pop();
+    if (lastName && state) {
+      queries.push(`"${lastName}" AND ${state}`);
+    }
 
     // Combine queries with OR operator
     const combinedQuery = queries.join(' OR ');

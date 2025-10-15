@@ -29,8 +29,12 @@ interface SimpleNewsArticle {
   url: string;
   title: string;
   seendate: string;
+  publishedDate?: string;
   domain: string;
   socialimage?: string | null;
+  imageUrl?: string | null;
+  summary?: string;
+  source?: string;
 }
 
 /**
@@ -40,7 +44,7 @@ interface NewsResponse {
   articles: SimpleNewsArticle[];
   totalResults: number;
   searchTerms: string[];
-  dataSource: 'gdelt' | 'cached' | 'fallback' | 'google-news';
+  dataSource: 'newsapi' | 'gdelt' | 'cached' | 'fallback' | 'google-news';
   cacheStatus?: string;
   pagination?: {
     currentPage: number;
@@ -442,43 +446,50 @@ export function SimpleNewsSection({
         </div>
 
         <div className={styles.articlesGrid}>
-          {allArticles.map((article, index) => (
-            <article key={`${article.url}-${index}`} className={styles.card}>
-              <div className={styles.cardContent}>
-                <div className={styles.textContent}>
-                  <h3 className={styles.title}>
-                    <a
-                      href={article.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.titleLink}
-                    >
-                      {cleanTitle(article.title)}
-                    </a>
-                  </h3>
-                </div>
-                {article.socialimage && (
-                  <div className={styles.thumbnail}>
-                    <FallbackImage
-                      src={article.socialimage}
-                      alt={`News from ${getSourceName(article.domain)}`}
-                      width={128}
-                      height={96}
-                      loading="lazy"
-                      quality={75}
-                      sizes="(max-width: 640px) 64px, 80px"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-              </div>
+          {allArticles.map((article, index) => {
+            const imageUrl = article.imageUrl || article.socialimage;
+            const displayDate = article.publishedDate || article.seendate;
+            const sourceName = article.source || getSourceName(article.domain);
 
-              <div className={styles.metadata}>
-                <span className={styles.source}>{getSourceName(article.domain)}</span>
-                <time className={styles.timestamp}>{formatDate(article.seendate)}</time>
-              </div>
-            </article>
-          ))}
+            return (
+              <article key={`${article.url}-${index}`} className={styles.card}>
+                <div className={styles.cardContent}>
+                  <div className={styles.textContent}>
+                    <h3 className={styles.title}>
+                      <a
+                        href={article.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.titleLink}
+                      >
+                        {cleanTitle(article.title)}
+                      </a>
+                    </h3>
+                    {article.summary && <p className={styles.summary}>{article.summary}</p>}
+                  </div>
+                  {imageUrl && (
+                    <div className={styles.thumbnail}>
+                      <FallbackImage
+                        src={imageUrl}
+                        alt={`News from ${sourceName}`}
+                        width={128}
+                        height={96}
+                        loading="lazy"
+                        quality={75}
+                        sizes="(max-width: 640px) 64px, 80px"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className={styles.metadata}>
+                  <span className={styles.source}>{sourceName}</span>
+                  <time className={styles.timestamp}>{formatDate(displayDate)}</time>
+                </div>
+              </article>
+            );
+          })}
 
           {/* Loading skeleton for next page */}
           {isLoadingMore && (
@@ -526,7 +537,19 @@ export function SimpleNewsSection({
       {/* Footer Attribution */}
       {dataSource && (
         <div className={styles.footer}>
-          {dataSource === 'google-news' ? (
+          {dataSource === 'newsapi' ? (
+            <>
+              News data from{' '}
+              <a
+                href="https://newsapi.org/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.footerLink}
+              >
+                NewsAPI.org
+              </a>
+            </>
+          ) : dataSource === 'google-news' ? (
             <>
               News data from{' '}
               <a
