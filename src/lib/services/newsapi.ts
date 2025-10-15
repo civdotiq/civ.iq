@@ -199,40 +199,35 @@ export async function fetchRepresentativeNewsAPI(
 
     // Get nicknames for this representative
     const nicknames = REPRESENTATIVE_NICKNAMES[name] || [];
-    const searchNames = [name, ...nicknames];
 
-    // Strategy 1: Exact name with title (including nicknames)
-    for (const searchName of searchNames) {
-      if (chamber === 'Senate') {
-        queries.push(`"Senator ${searchName}"`);
-        queries.push(`"Sen. ${searchName}"`);
-      } else if (chamber === 'House') {
-        queries.push(`"Representative ${searchName}"`);
-        queries.push(`"Rep. ${searchName}"`);
-        queries.push(`"Congressman ${searchName}"`);
-        queries.push(`"Congresswoman ${searchName}"`);
-      }
+    // Try primary name first (most specific)
+    if (chamber === 'Senate') {
+      queries.push(`"Senator ${name}"`);
+      queries.push(`"Sen. ${name}"`);
+    } else if (chamber === 'House') {
+      queries.push(`"Representative ${name}"`);
+      queries.push(`"Rep. ${name}"`);
     }
 
-    // Strategy 2: Name with state context (including nicknames)
+    // Add state context for precision
     if (state) {
-      for (const searchName of searchNames) {
-        queries.push(`"${searchName}" AND ${state}`);
+      queries.push(`"${name}" AND ${state}`);
+    }
+
+    // Try first nickname if available (e.g., "Will Timmons")
+    if (nicknames.length > 0) {
+      const nickname = nicknames[0];
+      if (chamber === 'House') {
+        queries.push(`"Rep. ${nickname}"`);
+      } else if (chamber === 'Senate') {
+        queries.push(`"Sen. ${nickname}"`);
+      }
+      if (state) {
+        queries.push(`"${nickname}" AND ${state}`);
       }
     }
 
-    // Strategy 3: Just the names in quotes (including nicknames)
-    for (const searchName of searchNames) {
-      queries.push(`"${searchName}"`);
-    }
-
-    // Strategy 4: Last name only (broader search)
-    const lastName = name.split(' ').pop();
-    if (lastName && state) {
-      queries.push(`"${lastName}" AND ${state}`);
-    }
-
-    // Combine queries with OR operator
+    // Combine queries with OR operator (keep under 500 char limit)
     const combinedQuery = queries.join(' OR ');
 
     // Calculate date range (last 30 days for better relevance)
