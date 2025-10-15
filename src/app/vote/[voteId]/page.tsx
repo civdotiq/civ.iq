@@ -12,7 +12,16 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Calendar, FileText, Users, CheckCircle, XCircle, Clock, User } from 'lucide-react';
+import {
+  Calendar,
+  FileText,
+  Users,
+  CheckCircle,
+  XCircle,
+  Clock,
+  User,
+  ExternalLink,
+} from 'lucide-react';
 import logger from '@/lib/logging/simple-logger';
 import { findBioguideId } from '@/lib/data/senate-member-mappings';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
@@ -219,6 +228,84 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
               <div className="text-sm text-gray-500">Roll Call #{voteDetail.rollNumber}</div>
             </div>
           </div>
+
+          {/* What This Vote Means */}
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg mb-4">
+            <h3 className="font-semibold text-blue-900 mb-2">What This Vote Means</h3>
+            <p className="text-sm text-blue-800">
+              {(() => {
+                const q = voteDetail.question.toLowerCase();
+                const r = voteDetail.result.toLowerCase();
+
+                if (q.includes('cloture')) {
+                  if (r.includes('agreed') || r.includes('invoked')) {
+                    return 'The Senate voted to end debate and move forward with this bill. This breaks any filibuster and allows the Senate to proceed to a final vote.';
+                  }
+                  return 'The Senate voted NOT to end debate. The filibuster continues, and the bill cannot move forward to a final vote at this time. 60 votes were needed.';
+                }
+                if (q.includes('passage') || q.includes('pass the bill')) {
+                  if (r.includes('passed')) {
+                    return 'The bill PASSED the Senate and will now move to the House of Representatives (or to the President if already passed by the House).';
+                  }
+                  return 'The bill FAILED to pass. It will not become law unless reconsidered.';
+                }
+                if (q.includes('confirmation')) {
+                  if (r.includes('confirmed')) {
+                    return 'The Senate CONFIRMED this nomination. The nominee will assume their position.';
+                  }
+                  return 'The Senate REJECTED this nomination. The nominee will not assume the position.';
+                }
+                if (q.includes('amendment')) {
+                  if (r.includes('agreed')) {
+                    return 'This amendment was ADOPTED and will be included in the bill.';
+                  }
+                  return 'This amendment was REJECTED and will not be included in the bill.';
+                }
+                if (q.includes('motion to')) {
+                  if (r.includes('agreed')) {
+                    return 'The Senate APPROVED this procedural motion.';
+                  }
+                  return 'The Senate REJECTED this procedural motion.';
+                }
+                if (r.includes('passed') || r.includes('agreed')) {
+                  return 'This measure PASSED the Senate.';
+                }
+                return 'This measure did NOT pass the Senate.';
+              })()}
+            </p>
+            {voteDetail.requiredMajority && (
+              <p className="text-xs text-blue-700 mt-2">
+                <strong>Required to pass:</strong> {voteDetail.requiredMajority} majority
+                {voteDetail.requiredMajority === '3/5' && ' (60 votes)'}
+                {voteDetail.requiredMajority === '2/3' && ' (67 votes)'}
+                {voteDetail.requiredMajority === '1/2' && ' (51 votes, or 50 + VP)'}
+              </p>
+            )}
+            {voteDetail.metadata?.xmlUrl && (
+              <div className="mt-3 pt-3 border-t border-blue-200">
+                <a
+                  href={voteDetail.metadata.xmlUrl.replace('.xml', '.htm')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 hover:underline transition-colors"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  View official vote record on Senate.gov
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* Bill Context */}
+          {voteDetail.bill && voteDetail.bill.title && (
+            <div className="bg-gray-50 border-l-4 border-gray-400 p-4 rounded-r-lg">
+              <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                About {voteDetail.bill.number}
+              </h3>
+              <p className="text-sm text-gray-700">{voteDetail.bill.title}</p>
+            </div>
+          )}
 
           {/* Vote Metadata */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
