@@ -11,6 +11,7 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
+import { govCache } from '@/services/cache';
 
 const FEC_API_BASE = 'https://api.open.fec.gov/v1';
 const FEC_API_KEY = process.env.FEC_API_KEY;
@@ -18,6 +19,9 @@ const FEC_API_KEY = process.env.FEC_API_KEY;
 if (!FEC_API_KEY) {
   throw new Error('FEC_API_KEY environment variable is required');
 }
+
+// In-memory request deduplication for concurrent identical requests
+const pendingRequests = new Map<string, Promise<unknown>>();
 
 // Raw FEC API Response Types - exactly as returned by FEC
 export interface FECFinancialSummary {
@@ -865,20 +869,63 @@ export class FECApiService {
 
   /**
    * Get committee information including type classifications
+   * Uses 30-day cache (committee data rarely changes) + request deduplication
    */
   async getCommitteeInfo(committeeId: string): Promise<FECCommitteeResponse | null> {
+    const cacheKey = `fec:committee:${committeeId}`;
+
     try {
-      logger.info(`[FEC API] Fetching committee info for ${committeeId}`);
-
-      const response = await this.makeRequest<FECApiResponse<FECCommitteeResponse>>(
-        `/committee/${committeeId}/`
-      );
-
-      if (response.results && response.results.length > 0) {
-        return response.results[0] || null;
+      // Check cache first (30-day TTL)
+      const cached = await govCache.get<FECCommitteeResponse>(cacheKey);
+      if (cached) {
+        logger.debug(`[FEC API] Committee info cache hit: ${committeeId}`);
+        return cached;
       }
 
-      return null;
+      // Check if there's already a pending request for this committee
+      const pendingKey = `committee:${committeeId}`;
+      const existingRequest = pendingRequests.get(pendingKey) as
+        | Promise<FECCommitteeResponse | null>
+        | undefined;
+
+      if (existingRequest) {
+        logger.debug(`[FEC API] Deduplicating concurrent request for committee ${committeeId}`);
+        return existingRequest;
+      }
+
+      // Create new request and track it
+      const requestPromise = (async () => {
+        try {
+          logger.info(`[FEC API] Fetching committee info for ${committeeId}`);
+
+          const response = await this.makeRequest<FECApiResponse<FECCommitteeResponse>>(
+            `/committee/${committeeId}/`
+          );
+
+          const result =
+            response.results && response.results.length > 0 ? response.results[0] || null : null;
+
+          // Cache successful response for 30 days
+          if (result) {
+            await govCache.set(cacheKey, result, {
+              ttl: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+              source: 'fec-committee-api',
+              dataType: 'committees',
+            });
+            logger.debug(`[FEC API] Cached committee info for ${committeeId} (30 days)`);
+          }
+
+          return result;
+        } finally {
+          // Always clean up the pending request tracker
+          pendingRequests.delete(pendingKey);
+        }
+      })();
+
+      // Store the promise so concurrent requests can use it
+      pendingRequests.set(pendingKey, requestPromise);
+
+      return requestPromise;
     } catch (error) {
       logger.error(`[FEC API] Failed to get committee info for ${committeeId}:`, error);
       return null;
