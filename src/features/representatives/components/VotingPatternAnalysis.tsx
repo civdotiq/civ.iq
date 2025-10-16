@@ -41,10 +41,14 @@ export function VotingPatternAnalysis({
   useEffect(() => {
     const fetchVotingAnalysis = async () => {
       try {
-        // Fetch voting statistics
-        const response = await fetch(`/api/representative/${bioguideId}/votes?limit=500`);
-        if (response.ok) {
-          const data = await response.json();
+        // Fetch both voting statistics and party alignment data in parallel
+        const [votesResponse, alignmentResponse] = await Promise.all([
+          fetch(`/api/representative/${bioguideId}/votes?limit=500`),
+          fetch(`/api/representative/${bioguideId}/party-alignment`),
+        ]);
+
+        if (votesResponse.ok) {
+          const data = await votesResponse.json();
           const votes: Vote[] = data.votes || [];
 
           // Calculate statistics from real vote data
@@ -55,11 +59,15 @@ export function VotingPatternAnalysis({
           const notVotingCount = votes.filter((v: Vote) => v.position === 'Not Voting').length;
           const keyVotesCount = votes.filter((v: Vote) => v.isKeyVote).length;
 
-          // Party alignment data unavailable - would require party line vote comparison
-          const partyAlignment = 0; // Data unavailable without party line vote data
+          // Get party alignment data from new API endpoint
+          let partyAlignment = 0;
+          let bipartisanVotes = 0;
 
-          // Bipartisan votes data unavailable - would need vote context and party positions
-          const bipartisanVotes = 0; // Data unavailable without additional vote context
+          if (alignmentResponse.ok) {
+            const alignmentData = await alignmentResponse.json();
+            partyAlignment = alignmentData.overall_alignment || 0;
+            bipartisanVotes = alignmentData.bipartisan_votes || 0;
+          }
 
           setStats({
             totalVotes,
