@@ -468,7 +468,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
 
   const totalPages = Math.ceil(filteredAndSortedVotes.length / votesPerPage);
 
-  const _handleSort = (field: 'date' | 'bill' | 'result') => {
+  const handleSort = (field: 'date' | 'bill' | 'result') => {
     // Use transition for non-urgent sorting updates
     startTransition(() => {
       if (sortField === field) {
@@ -566,7 +566,7 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
         ) : (
           <div className="aicher-card aicher-no-radius overflow-hidden">
             {/* Header with filters */}
-            <div className="p-4 border-b border-gray-200 bg-white">
+            <div className="p-4 border-b border-gray-200 bg-white space-y-3">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h3 className="text-lg font-semibold text-gray-900">Recent Votes</h3>
                 <div className="flex flex-wrap gap-2">
@@ -612,6 +612,53 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
                     Failed
                   </button>
                 </div>
+              </div>
+
+              {/* Sort Controls */}
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="text-gray-600">Sort by:</span>
+                <button
+                  onClick={() => handleSort('date')}
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${
+                    sortField === 'date'
+                      ? 'bg-gray-700 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  aria-label={`Sort by date ${sortField === 'date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : ''}`}
+                >
+                  Date
+                  {sortField === 'date' && (
+                    <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                  )}
+                </button>
+                <button
+                  onClick={() => handleSort('bill')}
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${
+                    sortField === 'bill'
+                      ? 'bg-gray-700 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  aria-label={`Sort by bill ${sortField === 'bill' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : ''}`}
+                >
+                  Bill
+                  {sortField === 'bill' && (
+                    <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                  )}
+                </button>
+                <button
+                  onClick={() => handleSort('result')}
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${
+                    sortField === 'result'
+                      ? 'bg-gray-700 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  aria-label={`Sort by result ${sortField === 'result' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : ''}`}
+                >
+                  Result
+                  {sortField === 'result' && (
+                    <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                  )}
+                </button>
               </div>
             </div>
 

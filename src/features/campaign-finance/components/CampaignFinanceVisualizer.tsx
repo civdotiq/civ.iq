@@ -449,40 +449,101 @@ export function CampaignFinanceVisualizer({
                 <h4 className="text-md font-semibold text-gray-900 mb-3">Contribution Breakdown</h4>
                 <hr className="border-gray-300 mb-4" />
 
-                <div className="space-y-2 font-mono text-sm">
-                  <div className="flex justify-between">
-                    <span>Individual:</span>
-                    <span>
-                      {formatCurrency(individualContributions)} (
-                      {formatPercent(individualContributions, totalRaised)})
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>PAC:</span>
-                    <span>
-                      {formatCurrency(pacContributions)} (
-                      {formatPercent(pacContributions, totalRaised)})
-                    </span>
-                  </div>
-                  {partyContributions > 0 && (
+                <div className="space-y-3 font-mono text-sm">
+                  <div className="flex flex-col gap-1">
                     <div className="flex justify-between">
-                      <span>Party:</span>
-                      <span>
-                        {formatCurrency(partyContributions)} (
-                        {formatPercent(partyContributions, totalRaised)})
+                      <span>Individual:</span>
+                      <span className="font-semibold">
+                        {formatCurrency(individualContributions)} (
+                        {formatPercent(individualContributions, totalRaised)})
                       </span>
                     </div>
-                  )}
-                  {candidateContributions > 0 && (
+                    {individualContributions > 0 && totalRaised > 0 && (
+                      <div className="text-xs text-gray-500 text-right">
+                        {((individualContributions / totalRaised) * 100).toFixed(1)}% of total
+                        raised
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-1">
                     <div className="flex justify-between">
-                      <span>Self-Funded:</span>
-                      <span>
-                        {formatCurrency(candidateContributions)} (
-                        {formatPercent(candidateContributions, totalRaised)})
+                      <span className="flex items-center gap-1">
+                        <abbr
+                          title="Political Action Committee - Organizations that pool campaign contributions from members and donate those funds to campaigns"
+                          className="no-underline cursor-help border-b border-dotted border-gray-400"
+                        >
+                          PAC
+                        </abbr>
+                        :
                       </span>
+                      <span className="font-semibold">
+                        {formatCurrency(pacContributions)} (
+                        {formatPercent(pacContributions, totalRaised)})
+                      </span>
+                    </div>
+                    {pacContributions > 0 && totalRaised > 0 && (
+                      <div className="text-xs text-gray-500 text-right">
+                        {((pacContributions / totalRaised) * 100).toFixed(1)}% of total raised
+                      </div>
+                    )}
+                  </div>
+
+                  {partyContributions > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <div className="flex justify-between">
+                        <span>Party:</span>
+                        <span className="font-semibold">
+                          {formatCurrency(partyContributions)} (
+                          {formatPercent(partyContributions, totalRaised)})
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 text-right">
+                        {((partyContributions / totalRaised) * 100).toFixed(1)}% of total raised
+                      </div>
+                    </div>
+                  )}
+
+                  {candidateContributions > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <div className="flex justify-between">
+                        <span>Self-Funded:</span>
+                        <span className="font-semibold">
+                          {formatCurrency(candidateContributions)} (
+                          {formatPercent(candidateContributions, totalRaised)})
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 text-right">
+                        {((candidateContributions / totalRaised) * 100).toFixed(1)}% of total raised
+                      </div>
                     </div>
                   )}
                 </div>
+
+                {/* Contextual Comparison */}
+                {totalRaised > 0 && (individualContributions > 0 || pacContributions > 0) && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <h5 className="text-xs font-semibold text-blue-900 mb-2">💡 Context</h5>
+                    <div className="text-xs text-blue-800 space-y-1">
+                      {individualContributions > 0 && (
+                        <div>
+                          <strong>Individual Contributions:</strong>{' '}
+                          {(individualContributions / totalRaised) * 100 >= 50
+                            ? 'Majority grassroots funding indicates broad voter support.'
+                            : 'Supplemental to other funding sources.'}
+                        </div>
+                      )}
+                      {pacContributions > 0 && (
+                        <div>
+                          <strong>PAC Contributions:</strong>{' '}
+                          {(pacContributions / totalRaised) * 100 >= 30
+                            ? 'Significant institutional support from political action committees.'
+                            : 'Moderate PAC engagement typical for this office.'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* PAC Types Breakdown */}
@@ -574,7 +635,13 @@ export function CampaignFinanceVisualizer({
               {financeData?.fecTransparencyLinks && (
                 <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
                   <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                    FEC Data Sources
+                    <abbr
+                      title="Federal Election Commission - Independent agency that regulates campaign finance in federal elections"
+                      className="no-underline cursor-help border-b border-dotted border-gray-500"
+                    >
+                      FEC
+                    </abbr>{' '}
+                    Data Sources
                     {financeData.dataQuality && (
                       <DataQualityIndicator
                         confidence={financeData.dataQuality.overallDataConfidence}
