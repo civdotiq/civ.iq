@@ -2,9 +2,12 @@
  * Unified Cache Service
  * Redis primary with in-memory fallback for high availability
  * Replaces both simple-government-cache and redis-government-cache
+ *
+ * NOTE: Migrated to use redis-client.ts for better Upstash REST API support
+ * and improved serverless compatibility.
  */
 
-import { redisService } from './redis.service';
+import { getRedisCache } from '@/lib/cache/redis-client';
 import logger from '@/lib/logging/simple-logger';
 
 interface CacheEntry<T = unknown> {
@@ -17,6 +20,7 @@ interface CacheEntry<T = unknown> {
 export class UnifiedCacheService {
   private fallbackCache = new Map<string, CacheEntry>();
   private readonly DEFAULT_TTL_SECONDS = 3600; // 1 hour
+  private redisCache = getRedisCache();
 
   // TTL configuration optimized for data volatility patterns
   // Redis TTLs: seconds, Memory TTLs: milliseconds
@@ -58,10 +62,10 @@ export class UnifiedCacheService {
   async get<T>(key: string): Promise<T | null> {
     // Try Redis first
     try {
-      const redisResult = await redisService.get<CacheEntry<T>>(key);
+      const redisResult = await this.redisCache.get<CacheEntry<T>>(key);
 
-      if (redisResult.success && redisResult.data) {
-        const entry = redisResult.data;
+      if (redisResult) {
+        const entry = redisResult;
 
         // Double-check expiry (Redis should handle this automatically)
         if (Date.now() <= entry.expiresAt) {
@@ -69,7 +73,7 @@ export class UnifiedCacheService {
           return entry.data;
         } else {
           logger.debug(`[Unified Cache EXPIRED-Redis] ${key}`);
-          await redisService.delete(key);
+          await this.redisCache.delete(key);
         }
       }
     } catch (error) {
@@ -126,7 +130,7 @@ export class UnifiedCacheService {
 
     // Set in Redis (primary)
     try {
-      await redisService.set(key, entry, redisTtl);
+      await this.redisCache.set(key, entry, redisTtl);
       logger.debug(`[Unified Cache SET-Redis] ${key} (TTL: ${redisTtl}s, source: ${entry.source})`);
     } catch (error) {
       logger.warn('[Unified Cache] Redis set failed, fallback only', {
@@ -156,15 +160,15 @@ export class UnifiedCacheService {
     // Clear Redis
     try {
       if (!pattern) {
-        await redisService.flush();
+        await this.redisCache.flush();
         logger.info('[Unified Cache CLEAR-Redis] Flushed all entries');
       } else {
-        const keysResult = await redisService.keys(`*${pattern}*`);
-        if (keysResult.success && keysResult.data) {
-          for (const key of keysResult.data) {
-            await redisService.delete(key);
+        const keysResult = await this.redisCache.keys(`*${pattern}*`);
+        if (keysResult && keysResult.length > 0) {
+          for (const key of keysResult) {
+            await this.redisCache.delete(key);
           }
-          redisCleared = keysResult.data.length;
+          redisCleared = keysResult.length;
           logger.info(
             `[Unified Cache CLEAR-Redis] Removed ${redisCleared} entries matching "${pattern}"`
           );
@@ -205,22 +209,22 @@ export class UnifiedCacheService {
     // Invalidate in Redis - try both with and without prefix
     try {
       // Try with Redis prefix
-      let keysResult = await redisService.keys(`*${pattern}*`);
-      if (keysResult.success && keysResult.data) {
-        for (const key of keysResult.data) {
-          await redisService.delete(key);
+      let keysResult = await this.redisCache.keys(`*${pattern}*`);
+      if (keysResult && keysResult.length > 0) {
+        for (const key of keysResult) {
+          await this.redisCache.delete(key);
         }
-        redisCount = keysResult.data.length;
+        redisCount = keysResult.length;
       }
 
       // If no results and pattern doesn't start with prefix, try with prefix
       if (redisCount === 0 && !pattern.startsWith('civiq:')) {
-        keysResult = await redisService.keys(`*civiq:${pattern}*`);
-        if (keysResult.success && keysResult.data) {
-          for (const key of keysResult.data) {
-            await redisService.delete(key);
+        keysResult = await this.redisCache.keys(`*civiq:${pattern}*`);
+        if (keysResult && keysResult.length > 0) {
+          for (const key of keysResult) {
+            await this.redisCache.delete(key);
           }
-          redisCount = keysResult.data.length;
+          redisCount = keysResult.length;
         }
       }
     } catch (error) {
@@ -249,12 +253,12 @@ export class UnifiedCacheService {
    */
   async getStats() {
     // Get Redis status
-    const redisStatus = redisService.getStatus();
+    const redisStatus = this.redisCache.getStatus();
     let redisKeyCount = 0;
 
     try {
-      const keysResult = await redisService.keys('*');
-      redisKeyCount = keysResult.success && keysResult.data ? keysResult.data.length : 0;
+      const keysResult = await this.redisCache.keys('*');
+      redisKeyCount = keysResult ? keysResult.length : 0;
     } catch (error) {
       logger.warn('[Unified Cache] Failed to get Redis key count', {
         error: (error as Error).message,

@@ -3,6 +3,19 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+/**
+ * @deprecated This service is deprecated as of 2025-10-17.
+ * Use @/lib/cache/redis-client.ts (getRedisCache()) instead for better Upstash REST API support
+ * and improved serverless compatibility.
+ *
+ * Migration path:
+ * - Replace `redisService.get()` with `getRedisCache().get()`
+ * - Replace `redisService.set()` with `getRedisCache().set()`
+ * - For high-level caching, use @/services/cache/unified-cache.service.ts
+ *
+ * This file is kept for backward compatibility and will be removed in a future version.
+ */
+
 import Redis from 'ioredis';
 import logger from '@/lib/logging/simple-logger';
 import { monitorCache } from '@/lib/monitoring/telemetry';

@@ -4,32 +4,35 @@
  */
 
 import { NextResponse } from 'next/server';
-import { redisService } from '@/services/cache/redis.service';
 import { govCache } from '@/services/cache';
+import { getRedisCache } from '@/lib/cache/redis-client';
 import logger from '@/lib/logging/simple-logger';
 
 export async function GET() {
   try {
     const startTime = Date.now();
 
+    // Get Redis client
+    const redisClient = getRedisCache();
+
     // Test Redis connection and basic operations
     const testKey = 'health-check-test';
     const testValue = { timestamp: Date.now(), test: 'redis-health' };
 
     // Test SET operation
-    const setResult = await redisService.set(testKey, testValue, 60); // 1 minute TTL
+    const setResult = await redisClient.set(testKey, testValue, 60); // 1 minute TTL
 
     // Test GET operation
-    const getResult = await redisService.get(testKey);
+    const getResult = await redisClient.get(testKey);
 
     // Test EXISTS operation
-    const existsResult = await redisService.exists(testKey);
+    const existsResult = await redisClient.exists(testKey);
 
     // Clean up test key
-    await redisService.delete(testKey);
+    await redisClient.delete(testKey);
 
     // Get Redis status
-    const redisStatus = redisService.getStatus();
+    const redisStatus = redisClient.getStatus();
 
     // Get cache stats
     const cacheStats = await govCache.getStats();
@@ -42,11 +45,11 @@ export async function GET() {
         connected: redisStatus.isConnected,
         status: redisStatus.redisStatus,
         fallbackCacheSize: redisStatus.fallbackCacheSize,
-        keyPrefix: redisStatus.keyPrefix,
+        redisAvailable: redisStatus.redisAvailable,
         operations: {
-          set: setResult.success,
-          get: getResult.success && getResult.data !== undefined,
-          exists: existsResult.success && existsResult.data === false, // Should be false after delete
+          set: setResult === true,
+          get: getResult !== null && getResult !== undefined,
+          exists: existsResult === false, // Should be false after delete
         },
       },
       cache: {
