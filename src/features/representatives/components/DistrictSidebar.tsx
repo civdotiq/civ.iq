@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
 import { AicherSidebarCard } from './AicherSidebarCard';
+import { StateMapCard } from './StateMapCard';
 
 interface DistrictSidebarProps {
   representative: EnhancedRepresentative;
@@ -205,6 +206,11 @@ export function DistrictSidebar({ representative, className = '' }: DistrictSide
           )}
         </div>
       </AicherSidebarCard>
+
+      {/* State Map for Senators */}
+      {representative.chamber === 'Senate' && representative.state && (
+        <StateMapCard stateCode={representative.state} />
+      )}
 
       {/* Contact Information */}
       <AicherSidebarCard title="Contact Information" icon={Phone}>

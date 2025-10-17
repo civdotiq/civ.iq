@@ -14,6 +14,7 @@ import DistrictNavigation from '@/features/districts/components/DistrictNavigati
 import DistrictDemographics from '@/features/districts/components/DistrictDemographics';
 import NeighboringDistricts from '@/features/districts/components/NeighboringDistricts';
 import logger from '@/lib/logging/simple-logger';
+import { SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 
 // Dynamic import of the map component to avoid SSR issues
 const DistrictMap = dynamic(() => import('@/features/districts/components/DistrictMap'), {
@@ -197,6 +198,9 @@ export default function DistrictPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
+        {/* Breadcrumb Navigation */}
+        <SimpleBreadcrumb />
+
         {/* Page Title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{district.name}</h1>
