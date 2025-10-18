@@ -341,7 +341,52 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
       try {
         setError(null);
 
-        // Normalize district ID format (state FIPS + district number)
+        const paddedDistrict = district.padStart(2, '0');
+        const isAtLarge = paddedDistrict === '00';
+        const isSenate = paddedDistrict.startsWith('S');
+
+        // For at-large districts or Senate, show state boundary instead
+        if (isAtLarge || isSenate) {
+          logger.info('🗺️ Fetching state boundary (at-large/Senate):', { state, district });
+
+          const response = await fetch(`/data/states/full/${state}.json`);
+
+          if (!response.ok) {
+            logger.error('State boundary file not found:', { state, status: response.status });
+            setError('State boundaries not available');
+            setGeoJsonData(null);
+            return;
+          }
+
+          const boundary = await response.json();
+          logger.info('✅ State boundary loaded:', {
+            state,
+            hasGeometry: !!boundary?.geometry,
+            geometryType: boundary?.geometry?.type,
+          });
+
+          setGeoJsonData(boundary);
+
+          // Count coordinates
+          let totalCoords = 0;
+          const geometry = boundary?.geometry;
+          if (geometry?.type === 'Polygon' && geometry.coordinates[0]) {
+            totalCoords = geometry.coordinates[0].length;
+          } else if (geometry?.type === 'MultiPolygon' && geometry.coordinates) {
+            for (const polygon of geometry.coordinates) {
+              if (polygon[0]) {
+                totalCoords += polygon[0].length;
+              }
+            }
+          }
+
+          setCoordinateCount(totalCoords);
+          setDataSource('state-boundary');
+          setError(null);
+          return;
+        }
+
+        // For regular House districts, fetch from Census TIGER API
         const stateFipsMap: Record<string, string> = {
           AL: '01',
           AK: '02',
@@ -400,58 +445,68 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           throw new Error(`Unknown state: ${state}`);
         }
 
-        const normalizedDistrictId = stateFips + district.padStart(2, '0');
-        logger.info('🌐 Fetching district boundary:', normalizedDistrictId);
+        logger.info('🌐 Fetching district boundary from Census TIGER:', {
+          state,
+          stateFips,
+          district: paddedDistrict,
+        });
 
-        // Fetch directly from static files instead of API route
-        // This ensures it works on Vercel's CDN
-        const response = await fetch(`/data/districts/standard/${normalizedDistrictId}.json`);
+        // Fetch directly from Census TIGER API (119th Congress districts)
+        const whereClause = `STATE='${stateFips}' AND CD119='${paddedDistrict}'`;
+        const tigerUrl = `https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/0/query?where=${encodeURIComponent(whereClause)}&outFields=*&outSR=4326&f=geojson`;
+
+        const response = await fetch(tigerUrl);
 
         if (!response.ok) {
-          if (response.status === 404) {
-            setError('District boundaries not available');
-            setGeoJsonData(null);
-          } else {
-            throw new Error('Failed to fetch district boundary');
-          }
-        } else {
-          const data = await response.json();
-          logger.info('✅ District boundary received:', {
-            hasData: !!data,
-            type: data?.type,
-            hasGeometry: !!data?.geometry,
+          logger.error('Census TIGER API error:', {
+            status: response.status,
+            stateFips,
+            district: paddedDistrict,
           });
+          setError('District boundaries not available');
+          setGeoJsonData(null);
+          return;
+        }
 
-          // The data is already in GeoJSON format
-          const boundary = data;
-          logger.info('📍 Setting geoJsonData:', {
-            boundaryType: boundary?.type,
-            geometryType: boundary?.geometry?.type,
+        const data = await response.json();
+
+        if (!data.features || data.features.length === 0) {
+          logger.warn('No district found in Census TIGER:', {
+            stateFips,
+            district: paddedDistrict,
           });
-          setGeoJsonData(boundary);
+          setError('District boundaries not available');
+          setGeoJsonData(null);
+          return;
+        }
 
-          // Count coordinates properly for both Polygon and MultiPolygon
-          let totalCoords = 0;
-          const geometry = boundary?.geometry;
-          if (geometry?.type === 'Polygon' && geometry.coordinates[0]) {
-            totalCoords = geometry.coordinates[0].length;
-          } else if (geometry?.type === 'MultiPolygon' && geometry.coordinates) {
-            for (const polygon of geometry.coordinates) {
-              if (polygon[0]) {
-                totalCoords += polygon[0].length;
-              }
+        // Extract the first feature (should be the only one)
+        const boundary = data.features[0];
+        logger.info('✅ District boundary received from Census TIGER:', {
+          hasData: !!boundary,
+          type: boundary?.type,
+          hasGeometry: !!boundary?.geometry,
+          geometryType: boundary?.geometry?.type,
+        });
+
+        setGeoJsonData(boundary);
+
+        // Count coordinates properly for both Polygon and MultiPolygon
+        let totalCoords = 0;
+        const geometry = boundary?.geometry;
+        if (geometry?.type === 'Polygon' && geometry.coordinates[0]) {
+          totalCoords = geometry.coordinates[0].length;
+        } else if (geometry?.type === 'MultiPolygon' && geometry.coordinates) {
+          for (const polygon of geometry.coordinates) {
+            if (polygon[0]) {
+              totalCoords += polygon[0].length;
             }
           }
-
-          setCoordinateCount(totalCoords);
-          // Check for metadata in different locations
-          setDataSource(
-            boundary.properties?.api_metadata?.detail_level ||
-              boundary.properties?.detail_level ||
-              'standard'
-          );
-          setError(null);
         }
+
+        setCoordinateCount(totalCoords);
+        setDataSource('census-tiger-live');
+        setError(null);
       } catch (err) {
         logger.error('Failed to load district boundary:', err);
         setError(err instanceof Error ? err.message : 'Failed to load district boundary');
@@ -487,8 +542,8 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
     );
   }
 
-  const isRealPolygon = dataSource === 'real_polygon_extraction';
-  const isFallback = dataSource === 'bounding_box_fallback';
+  const isLiveCensusTiger = dataSource === 'census-tiger-live';
+  const isStateBoundary = dataSource === 'state-boundary';
 
   return (
     <div className="w-full">
@@ -506,19 +561,18 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
       </div>
       {coordinateCount > 0 && (
         <div className="mt-2 text-xs text-center">
-          {isRealPolygon ? (
+          {isLiveCensusTiger ? (
             <span className="text-green-600 font-medium">
-              ✅ Actual district boundaries ({coordinateCount.toLocaleString()} coordinate points)
+              ✅ Live from Census TIGER API • 119th Congress ({coordinateCount.toLocaleString()}{' '}
+              coordinate points)
             </span>
-          ) : isFallback ? (
-            <span className="text-orange-600">
-              ⚠️ Approximate boundaries (bounding box) - PMTiles parsing in development
+          ) : isStateBoundary ? (
+            <span className="text-blue-600 font-medium">
+              ✅ State boundaries ({coordinateCount.toLocaleString()} coordinate points)
             </span>
           ) : (
             <span className="text-gray-500">
-              {coordinateCount > 100
-                ? `District boundaries (${coordinateCount.toLocaleString()} coordinate points)`
-                : 'Approximate district boundaries'}
+              District boundaries ({coordinateCount.toLocaleString()} coordinate points)
             </span>
           )}
         </div>
