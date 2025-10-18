@@ -90,9 +90,13 @@ const nextConfig = {
 
     return config;
   },
+  // Enable compression for production
+  compress: true,
   // Production-ready features
   experimental: {
     scrollRestoration: true,
+    // Optimize package imports for better tree-shaking
+    optimizePackageImports: ['recharts', 'lucide-react', 'date-fns'],
   },
   // Headers for security and performance
   async headers() {
@@ -103,6 +107,19 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 's-maxage=300, stale-while-revalidate=600',
+          },
+          {
+            key: 'Vary',
+            value: 'Accept-Encoding',
+          },
+        ],
+      },
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
           },
         ],
       },

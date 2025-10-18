@@ -41,6 +41,13 @@ interface District {
   };
 }
 
+interface PaginationInfo {
+  total: number;
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
+
 interface UseDistrictsDataReturn {
   districts: District[];
   apiLoading: boolean;
@@ -51,6 +58,8 @@ interface UseDistrictsDataReturn {
   fetchDuration: number | null;
   cacheStatus: 'hit' | 'miss' | 'stale' | 'none';
   circuitState: 'closed' | 'open' | 'half-open';
+  pagination?: PaginationInfo;
+  loadMore?: () => void;
 }
 
 interface CachedData {
@@ -60,6 +69,7 @@ interface CachedData {
 
 interface ApiResponse {
   districts: District[];
+  pagination?: PaginationInfo;
 }
 
 // Configuration
@@ -134,8 +144,10 @@ async function fetcher(url: string): Promise<ApiResponse> {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      const error = new Error(`HTTP ${response.status}: ${response.statusText}`);
-      (error as any).status = response.status;
+      const error = new Error(`HTTP ${response.status}: ${response.statusText}`) as Error & {
+        status: number;
+      };
+      error.status = response.status;
       throw error;
     }
 
@@ -218,5 +230,6 @@ export function useDistrictsData(): UseDistrictsDataReturn {
     fetchDuration: null, // Simplified - not tracking granular timing
     cacheStatus,
     circuitState: 'closed', // Removed circuit breaker complexity
+    pagination: data?.pagination,
   };
 }

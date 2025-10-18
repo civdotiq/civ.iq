@@ -29,8 +29,12 @@ import { categorizeIntoBaskets, getInterestGroupMetrics } from '@/lib/fec/intere
 
 /**
  * Analyze industry breakdown from contribution employer data
+ * Excludes candidate self-contributions to prevent inflated industry numbers
  */
-function analyzeIndustryBreakdown(contributions: FECContribution[]): Array<{
+function analyzeIndustryBreakdown(
+  contributions: FECContribution[],
+  candidateName?: string
+): Array<{
   sector: string;
   amount: number;
   percentage: number;
@@ -40,7 +44,18 @@ function analyzeIndustryBreakdown(contributions: FECContribution[]): Array<{
   const industryMap = new Map<string, number>();
   let totalAnalyzed = 0;
 
+  // Extract candidate's last name for matching
+  const candidateLastName = candidateName?.split(',')[0]?.trim().toUpperCase();
+
   contributions.forEach(contrib => {
+    // Skip candidate self-contributions
+    if (candidateLastName && contrib.contributor_name) {
+      const contributorLastName = contrib.contributor_name.split(',')[0]?.trim().toUpperCase();
+      if (contributorLastName === candidateLastName) {
+        return; // Skip this contribution
+      }
+    }
+
     if (contrib.contributor_employer && contrib.contributor_employer.trim()) {
       const employer = contrib.contributor_employer.trim().toUpperCase();
       const amount = contrib.contribution_receipt_amount || 0;
@@ -93,8 +108,12 @@ function analyzeGeographicBreakdown(contributions: FECContribution[]): Array<{
 
 /**
  * Analyze top contributors from contribution data
+ * Excludes candidate self-contributions
  */
-function analyzeTopContributors(contributions: FECContribution[]): Array<{
+function analyzeTopContributors(
+  contributions: FECContribution[],
+  candidateName?: string
+): Array<{
   name: string;
   total_amount: number;
   count: number;
@@ -113,9 +132,21 @@ function analyzeTopContributors(contributions: FECContribution[]): Array<{
     }
   >();
 
+  // Extract candidate's last name for matching
+  const candidateLastName = candidateName?.split(',')[0]?.trim().toUpperCase();
+
   contributions.forEach(contrib => {
     if (contrib.contributor_name && contrib.contributor_name.trim()) {
       const name = contrib.contributor_name.trim();
+
+      // Skip candidate self-contributions
+      if (candidateLastName) {
+        const contributorLastName = name.split(',')[0]?.trim().toUpperCase();
+        if (contributorLastName === candidateLastName) {
+          return; // Skip this contribution
+        }
+      }
+
       const amount = contrib.contribution_receipt_amount || 0;
       const existing = contributorMap.get(name) || { total_amount: 0, count: 0 };
 
@@ -530,13 +561,15 @@ export async function GET(
     });
 
     // Analyze industry breakdown from employer data (legacy)
-    const industryBreakdown = analyzeIndustryBreakdown(sampleContributions);
+    // Exclude candidate self-contributions using their name from FEC mapping
+    const industryBreakdown = analyzeIndustryBreakdown(sampleContributions, fecMapping.name);
 
     // Analyze geographic distribution
     const geographicBreakdown = analyzeGeographicBreakdown(sampleContributions);
 
     // Get top contributors (legacy)
-    const topContributors = analyzeTopContributors(sampleContributions);
+    // Exclude candidate self-contributions using their name from FEC mapping
+    const topContributors = analyzeTopContributors(sampleContributions, fecMapping.name);
 
     // Get recent contributions (last 20)
     const recentContributions = sampleContributions

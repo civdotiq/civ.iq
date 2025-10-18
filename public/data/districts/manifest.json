@@ -1,17 +1,11 @@
 {
-  "generated": "2025-09-01T21:23:37.997Z",
-  "methodology": "gzip-decompression-vector-tile-parsing",
-  "extraction_breakthrough": "Vector tiles were gzip-compressed - decompression resolved all parsing issues",
-  "total_districts": 444,
-  "target_districts": 435,
-  "completion_percentage": 102,
+  "generated": "2025-10-17T19:26:44.448Z",
+  "total_districts": 445,
+  "source": "Census TIGER/Line 2025 (119th Congress)",
+  "source_url": "https://www2.census.gov/geo/tiger/TIGER2025/CD/",
   "extraction_stats": {
-    "tiles_processed": 1193,
-    "gzip_decompressions": 1193,
-    "districts_found": 444,
-    "optimizations_created": 1332,
-    "parse_errors": 0,
-    "duration_ms": 4730
+    "duration_ms": 116326,
+    "errors": 0
   },
   "districts": [
     "0101",
@@ -47,6 +41,7 @@
     "0610",
     "0611",
     "0612",
+    "0612_fixed",
     "0613",
     "0614",
     "0615",
@@ -460,8 +455,8 @@
     "7898"
   ],
   "detail_levels": {
-    "full": "Original resolution from MBTiles",
-    "standard": "1% simplified with mapshaper",
-    "simple": "0.1% simplified with mapshaper"
+    "full": "Original resolution from Census TIGER/Line",
+    "standard": "1% simplified with mapshaper (web optimized)",
+    "simple": "0.1% simplified with mapshaper (overview maps)"
   }
 }

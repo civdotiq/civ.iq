@@ -3,6 +3,7 @@ import { getCookPVI as getRealCookPVI } from '../cook-pvi-data';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 15; // Can take ~9s for full district data load
+export const revalidate = 604800; // 7 days - district data is very static
 import { fetchAllDistrictDemographics } from '../census-helpers';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
@@ -46,9 +47,12 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Check for cache-busting parameter
+    // Check for cache-busting parameter, pagination, and field selection
     const { searchParams } = request.nextUrl;
     const bustCache = searchParams.get('bust') === 'true';
+    const pageLimit = parseInt(searchParams.get('limit') || '0', 10);
+    const pageOffset = parseInt(searchParams.get('offset') || '0', 10);
+    const fieldsParam = searchParams.get('fields'); // Comma-separated list of fields to include
 
     const cacheKey = 'districts:all';
 
@@ -59,7 +63,32 @@ export async function GET(request: NextRequest) {
         logger.info('Cache hit for districts-all', {
           districtCount: cachedDistricts.length,
         });
-        return NextResponse.json({ districts: cachedDistricts });
+
+        // Apply pagination if requested
+        if (pageLimit > 0) {
+          const paginatedDistricts = cachedDistricts.slice(pageOffset, pageOffset + pageLimit);
+          // Apply field filtering if requested
+          const filteredDistricts = fieldsParam
+            ? paginatedDistricts.map(d => filterDistrictFields(d, fieldsParam))
+            : paginatedDistricts;
+
+          return NextResponse.json({
+            districts: filteredDistricts,
+            pagination: {
+              total: cachedDistricts.length,
+              limit: pageLimit,
+              offset: pageOffset,
+              hasMore: pageOffset + pageLimit < cachedDistricts.length,
+            },
+          });
+        }
+
+        // Apply field filtering to full response if requested
+        const filteredDistricts = fieldsParam
+          ? cachedDistricts.map(d => filterDistrictFields(d, fieldsParam))
+          : cachedDistricts;
+
+        return NextResponse.json({ districts: filteredDistricts });
       }
     }
 
@@ -367,7 +396,31 @@ export async function GET(request: NextRequest) {
       cacheKey,
     });
 
-    return NextResponse.json({ districts: districtsArray });
+    // Apply pagination if requested
+    if (pageLimit > 0) {
+      const paginatedDistricts = districtsArray.slice(pageOffset, pageOffset + pageLimit);
+      // Apply field filtering if requested
+      const filteredDistricts = fieldsParam
+        ? paginatedDistricts.map(d => filterDistrictFields(d, fieldsParam))
+        : paginatedDistricts;
+
+      return NextResponse.json({
+        districts: filteredDistricts,
+        pagination: {
+          total: districtsArray.length,
+          limit: pageLimit,
+          offset: pageOffset,
+          hasMore: pageOffset + pageLimit < districtsArray.length,
+        },
+      });
+    }
+
+    // Apply field filtering to full response if requested
+    const filteredDistricts = fieldsParam
+      ? districtsArray.map(d => filterDistrictFields(d, fieldsParam))
+      : districtsArray;
+
+    return NextResponse.json({ districts: filteredDistricts });
   } catch (error) {
     const errorDuration = Date.now() - startTime;
     logger.error(
@@ -453,4 +506,22 @@ function getOrdinal(n: number): string {
   const s = ['th', 'st', 'nd', 'rd'];
   const v = n % 100;
   return n + (s[(v - 20) % 10] || s[v] || s[0] || 'th');
+}
+
+// Helper function to filter district fields based on requested fields
+function filterDistrictFields(district: District, fields?: string): Partial<District> {
+  if (!fields) return district;
+
+  const requestedFields = fields.split(',').map(f => f.trim());
+  const filtered: Partial<District> = {};
+
+  for (const field of requestedFields) {
+    if (field in district) {
+      (filtered as unknown as Record<string, unknown>)[field] = (
+        district as unknown as Record<string, unknown>
+      )[field];
+    }
+  }
+
+  return filtered;
 }

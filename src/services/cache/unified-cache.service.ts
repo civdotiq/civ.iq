@@ -9,6 +9,7 @@
 
 import { getRedisCache } from '@/lib/cache/redis-client';
 import logger from '@/lib/logging/simple-logger';
+import { requestCoalescer } from '@/lib/cache/request-coalescer';
 
 interface CacheEntry<T = unknown> {
   data: T;
@@ -341,7 +342,7 @@ export class UnifiedCacheService {
 export const unifiedCache = new UnifiedCacheService();
 
 /**
- * Generic cached fetch helper
+ * Generic cached fetch helper with request coalescing
  */
 export async function cachedFetch<T>(
   cacheKey: string,
@@ -356,13 +357,20 @@ export async function cachedFetch<T>(
   const cached = await unifiedCache.get<T>(cacheKey);
   if (cached) return cached;
 
-  // Fetch fresh data
-  const fresh = await fetcher();
+  // Use request coalescing to prevent duplicate simultaneous requests
+  return requestCoalescer.coalesce(cacheKey, async () => {
+    // Double-check cache in case another request just populated it
+    const doubleCheck = await unifiedCache.get<T>(cacheKey);
+    if (doubleCheck) return doubleCheck;
 
-  // Cache for next time
-  await unifiedCache.set(cacheKey, fresh, options);
+    // Fetch fresh data
+    const fresh = await fetcher();
 
-  return fresh;
+    // Cache for next time
+    await unifiedCache.set(cacheKey, fresh, options);
+
+    return fresh;
+  });
 }
 
 /**
@@ -387,6 +395,46 @@ export async function cachedHeavyEndpoint<T>(
     dataType: 'heavyEndpoints',
     source: options?.source || 'heavy-endpoint',
   });
+}
+
+/**
+ * Stale-while-revalidate caching strategy
+ * Serves stale cache immediately while fetching fresh data in background
+ */
+export async function cachedStaleWhileRevalidate<T>(
+  cacheKey: string,
+  fetcher: () => Promise<T>,
+  options?: {
+    ttl?: number;
+    source?: string;
+    dataType?: keyof UnifiedCacheService['ttls'];
+    maxStaleTime?: number; // How long to serve stale data (default: 2x TTL)
+  }
+): Promise<T> {
+  const cached = await unifiedCache.get<T>(cacheKey);
+
+  // If we have cached data, return it immediately
+  if (cached) {
+    // Trigger background revalidation
+    // Don't await this - let it run in background
+    void (async () => {
+      try {
+        const fresh = await fetcher();
+        await unifiedCache.set(cacheKey, fresh, options);
+        logger.debug(`[SWR] Background revalidation complete for ${cacheKey}`);
+      } catch (error) {
+        logger.warn('[SWR] Background revalidation failed', {
+          key: cacheKey,
+          error: (error as Error).message,
+        });
+      }
+    })();
+
+    return cached;
+  }
+
+  // No cache - fetch normally with coalescing
+  return cachedFetch(cacheKey, fetcher, options);
 }
 
 // Backwards compatibility exports

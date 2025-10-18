@@ -145,7 +145,17 @@
       "Bash(printf \"redis://default:AWAOAAIncDJmMjM4ZWExMTk0NDk0N2EzOTM4MDE1YTg0NDg5YWUxZnAyMjQ1OTA@teaching-seahorse-24590.upstash.io:6379\")",
       "Bash(printf \"https://teaching-seahorse-24590.upstash.io\")",
       "Bash(printf \"AmAOAAIgcDLjJ4nqPEicKxyhDn3gSWCKiNtq5YmmJq2QGzYiH1xFyg\")",
-      "WebFetch(domain:newsapi.org)"
+      "WebFetch(domain:newsapi.org)",
+      "WebFetch(domain:api.open.fec.gov)",
+      "WebFetch(domain:www.senate.gov)",
+      "Bash(if [ -f \"public/data/districts/standard/4504.json\" ])",
+      "Bash(then echo \"File exists\")",
+      "Bash(jq:*)",
+      "Bash(else echo \"File not found\")",
+      "Bash(fi)",
+      "WebFetch(domain:civdotiq.org)",
+      "WebFetch(domain:www.fec.gov)",
+      "Bash(du:*)"
     ],
     "deny": [],
     "ask": []

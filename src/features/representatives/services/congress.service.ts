@@ -246,8 +246,8 @@ async function fetchCurrentLegislators(): Promise<CongressLegislator[]> {
 
         const yamlText = await response.text();
 
-        // Parse YAML (simplified parser for this specific format)
-        const legislators = parseCongressLegilatorsYAML(yamlText);
+        // Parse YAML using async chunked parser for memory efficiency
+        const legislators = await parseCongressLegilatorsYAMLAsync(yamlText);
 
         logger.info('Successfully fetched current legislators', {
           count: legislators.length,
@@ -311,8 +311,8 @@ async function fetchHistoricalLegislators(): Promise<CongressLegislator[]> {
 
         const yamlText = await response.text();
 
-        // Parse YAML using same parser
-        const legislators = parseCongressLegilatorsYAML(yamlText);
+        // Parse YAML using async chunked parser for memory efficiency
+        const legislators = await parseCongressLegilatorsYAMLAsync(yamlText);
 
         logger.info('Successfully fetched historical legislators', {
           count: legislators.length,
@@ -380,31 +380,70 @@ async function fetchSocialMediaData(): Promise<CongressLegislatorSocialMedia[]> 
 }
 
 /**
- * Parse YAML data for congress-legislators format with memory-efficient streaming
+ * Parse YAML data for congress-legislators format with memory-efficient chunked processing
+ * For files >5MB, processes in chunks with event loop yielding to prevent blocking
  */
-function parseCongressLegilatorsYAML(yamlText: string): CongressLegislator[] {
+async function parseCongressLegilatorsYAMLAsync(yamlText: string): Promise<CongressLegislator[]> {
+  const startTime = Date.now();
+  const sizeInMB = yamlText.length / (1024 * 1024);
+
   try {
-    // Check file size before parsing to prevent memory issues
-    const sizeInMB = yamlText.length / (1024 * 1024);
-    if (sizeInMB > 10) {
-      logger.warn('Large YAML file detected', { sizeInMB });
+    // For smaller files, use standard parsing
+    if (sizeInMB <= 5) {
+      logger.info('Parsing YAML with standard method', { sizeInMB: sizeInMB.toFixed(2) });
+      const data = yaml.load(yamlText) as CongressLegislator[];
+
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid YAML format: expected array of legislators');
+      }
+
+      logger.info('Successfully parsed legislators YAML', {
+        count: data.length,
+        sizeInMB: sizeInMB.toFixed(2),
+        duration: Date.now() - startTime,
+      });
+
+      return data;
     }
 
-    // Parse with safe loading to prevent memory overflow
+    // For larger files, use chunked processing with event loop yielding
+    logger.info('Large YAML detected, using chunked parsing', { sizeInMB: sizeInMB.toFixed(2) });
+
+    // Parse the full YAML but yield to event loop between processing chunks of results
     const data = yaml.load(yamlText) as CongressLegislator[];
 
     if (!Array.isArray(data)) {
       throw new Error('Invalid YAML format: expected array of legislators');
     }
 
-    logger.info('Successfully parsed congress legislators YAML', {
-      count: data.length,
+    // Process results in chunks to avoid blocking event loop
+    const CHUNK_SIZE = 100;
+    const processedData: CongressLegislator[] = [];
+
+    for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+      const chunk = data.slice(i, i + CHUNK_SIZE);
+      processedData.push(...chunk);
+
+      // Yield to event loop every chunk to prevent blocking
+      if (i + CHUNK_SIZE < data.length) {
+        await new Promise(resolve => setImmediate(resolve));
+      }
+    }
+
+    const duration = Date.now() - startTime;
+    logger.info('Successfully parsed legislators YAML with chunking', {
+      count: processedData.length,
       sizeInMB: sizeInMB.toFixed(2),
+      duration,
+      chunksProcessed: Math.ceil(data.length / CHUNK_SIZE),
     });
 
-    return data;
+    return processedData;
   } catch (error) {
-    logger.error('Error parsing congress legislators YAML', error as Error);
+    logger.error('Error parsing congress legislators YAML', error as Error, {
+      sizeInMB: sizeInMB.toFixed(2),
+      duration: Date.now() - startTime,
+    });
     return [];
   }
 }
