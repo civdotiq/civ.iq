@@ -899,9 +899,21 @@ export const FinanceTabEnhanced = React.memo(
         {/* PAC Type Breakdown */}
         {interestGroupData?.pacContributions?.byType && (
           <div className="bg-white p-6 border border-gray-200 mb-8">
-            <div className="flex items-center mb-4">
-              <h3 className="text-lg font-semibold">PAC Contributions by Type</h3>
-              <InfoTooltip text="Breakdown of Political Action Committee contributions by PAC type" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold">PAC Contributions by Type</h3>
+                <InfoTooltip text="Breakdown of Political Action Committee contributions by PAC type" />
+              </div>
+              {contributorData?.metadata?.fecCommitteeId && (
+                <a
+                  href={`https://www.fec.gov/data/receipts/?committee_id=${contributorData.metadata.fecCommitteeId}&two_year_transaction_period=2024&is_individual=false`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Verify PACs on FEC.gov →
+                </a>
+              )}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-purple-50 border border-purple-200 rounded">
@@ -935,9 +947,21 @@ export const FinanceTabEnhanced = React.memo(
         {/* Geographic Breakdown */}
         {geographicData?.topStates && geographicData.topStates.length > 0 && (
           <div className="bg-white p-6 border border-gray-200 mb-8">
-            <div className="flex items-center mb-4">
-              <h3 className="text-lg font-semibold">Top Contributing States</h3>
-              <InfoTooltip text="States with the most campaign contributions by total dollar amount" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold">Top Contributing States</h3>
+                <InfoTooltip text="States with the most campaign contributions by total dollar amount" />
+              </div>
+              {contributorData?.metadata?.fecCommitteeId && (
+                <a
+                  href={`https://www.fec.gov/data/receipts/?committee_id=${contributorData.metadata.fecCommitteeId}&two_year_transaction_period=2024`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  View by State on FEC.gov →
+                </a>
+              )}
             </div>
             <div className="space-y-3">
               {geographicData.topStates.slice(0, 10).map((state, index) => (
@@ -973,9 +997,21 @@ export const FinanceTabEnhanced = React.memo(
         {/* Recent Contributions Timeline */}
         {recentContributions && recentContributions.length > 0 && (
           <div className="bg-white p-6 border border-gray-200 mb-8">
-            <div className="flex items-center mb-4">
-              <h3 className="text-lg font-semibold">Recent Contributions</h3>
-              <InfoTooltip text="Most recent campaign contributions from FEC filings" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold">Recent Contributions</h3>
+                <InfoTooltip text="Most recent campaign contributions from FEC filings" />
+              </div>
+              {contributorData?.metadata?.fecReceiptsLink && (
+                <a
+                  href={contributorData.metadata.fecReceiptsLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  View All Receipts on FEC.gov →
+                </a>
+              )}
             </div>
             <div className="space-y-2">
               {recentContributions.slice(0, 20).map((contribution, index) => (
@@ -1005,9 +1041,21 @@ export const FinanceTabEnhanced = React.memo(
         {/* Enhanced Donor Metrics */}
         {donorMetrics && (
           <div className="bg-white p-6 border border-gray-200 mb-8">
-            <div className="flex items-center mb-4">
-              <h3 className="text-lg font-semibold">Donor Statistics</h3>
-              <InfoTooltip text="Statistical analysis of donation patterns and donor behavior" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold">Donor Statistics</h3>
+                <InfoTooltip text="Statistical analysis of donation patterns and donor behavior" />
+              </div>
+              {contributorData?.metadata?.fecReceiptsLink && (
+                <a
+                  href={contributorData.metadata.fecReceiptsLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Verify Data on FEC.gov →
+                </a>
+              )}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded">
