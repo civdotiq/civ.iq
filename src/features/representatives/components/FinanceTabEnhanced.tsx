@@ -123,6 +123,44 @@ interface InterestGroupData {
   };
 }
 
+interface GeographicData {
+  topStates: Array<{
+    state: string;
+    amount: number;
+    percentage: number;
+    contributionCount: number;
+  }>;
+  inDistrict?: {
+    amount: number;
+    percentage: number;
+    contributionCount: number;
+  };
+  outOfDistrict?: {
+    amount: number;
+    percentage: number;
+    contributionCount: number;
+  };
+}
+
+interface RecentContribution {
+  name: string;
+  amount: number;
+  date: string;
+  city: string;
+  state: string;
+  employer?: string;
+}
+
+interface DonorMetrics {
+  totalDonors: number;
+  smallDonors: number;
+  smallDonorPercentage: number;
+  averageSmallDonation: number;
+  medianDonation: number;
+  averageDonation: number;
+  largestDonation: number;
+}
+
 interface FinanceTabEnhancedProps {
   bioguideId: string;
   sharedData?: FinanceData;
@@ -392,6 +430,13 @@ export const FinanceTabEnhanced = React.memo(
       : undefined;
 
     const interestGroupData: InterestGroupData | undefined = comprehensiveData?.interestGroups;
+
+    const geographicData: GeographicData | undefined = comprehensiveData?.geographic;
+
+    const recentContributions: RecentContribution[] | undefined =
+      comprehensiveData?.recentContributions;
+
+    const donorMetrics: DonorMetrics | undefined = comprehensiveData?.donorMetrics;
 
     const formatCurrency = (amount: number) => {
       return new Intl.NumberFormat('en-US', {
@@ -698,7 +743,7 @@ export const FinanceTabEnhanced = React.memo(
         )}
 
         {/* Top Individual Contributors */}
-        <div className="bg-white p-6 border border-gray-200">
+        <div className="bg-white p-6 border border-gray-200 mb-8">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center">
               <h3 className="text-lg font-semibold">Top Individual Contributors</h3>
@@ -771,6 +816,241 @@ export const FinanceTabEnhanced = React.memo(
             ))}
           </div>
         </div>
+
+        {/* Independent Expenditures (PACs Supporting/Opposing) */}
+        {interestGroupData?.pacContributions &&
+          (interestGroupData.pacContributions.supportingExpenditures.length > 0 ||
+            interestGroupData.pacContributions.opposingExpenditures.length > 0) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Supporting PACs */}
+              {interestGroupData.pacContributions.supportingExpenditures.length > 0 && (
+                <div className="bg-green-50 p-6 border border-green-200">
+                  <div className="flex items-center mb-4">
+                    <h3 className="text-lg font-semibold text-green-800">
+                      PACs Supporting (
+                      {interestGroupData.pacContributions.supportingExpenditures.length})
+                    </h3>
+                    <InfoTooltip text="Independent expenditures made by PACs in support of this candidate" />
+                  </div>
+                  <div className="space-y-3">
+                    {interestGroupData.pacContributions.supportingExpenditures
+                      .slice(0, 5)
+                      .map((expenditure, index) => (
+                        <div key={index} className="bg-white p-3 rounded border border-green-100">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="font-medium text-sm">{expenditure.pacName}</span>
+                            <span className="text-green-700 font-semibold">
+                              {formatCurrency(expenditure.amount)}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {expenditure.pacType} •{' '}
+                            {new Date(expenditure.date).toLocaleDateString()}
+                          </div>
+                          {expenditure.description && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              {expenditure.description}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Opposing PACs */}
+              {interestGroupData.pacContributions.opposingExpenditures.length > 0 && (
+                <div className="bg-red-50 p-6 border border-red-200">
+                  <div className="flex items-center mb-4">
+                    <h3 className="text-lg font-semibold text-red-800">
+                      PACs Opposing (
+                      {interestGroupData.pacContributions.opposingExpenditures.length})
+                    </h3>
+                    <InfoTooltip text="Independent expenditures made by PACs in opposition to this candidate" />
+                  </div>
+                  <div className="space-y-3">
+                    {interestGroupData.pacContributions.opposingExpenditures
+                      .slice(0, 5)
+                      .map((expenditure, index) => (
+                        <div key={index} className="bg-white p-3 rounded border border-red-100">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="font-medium text-sm">{expenditure.pacName}</span>
+                            <span className="text-red-700 font-semibold">
+                              {formatCurrency(expenditure.amount)}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {expenditure.pacType} •{' '}
+                            {new Date(expenditure.date).toLocaleDateString()}
+                          </div>
+                          {expenditure.description && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              {expenditure.description}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+        {/* PAC Type Breakdown */}
+        {interestGroupData?.pacContributions?.byType && (
+          <div className="bg-white p-6 border border-gray-200 mb-8">
+            <div className="flex items-center mb-4">
+              <h3 className="text-lg font-semibold">PAC Contributions by Type</h3>
+              <InfoTooltip text="Breakdown of Political Action Committee contributions by PAC type" />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 bg-purple-50 border border-purple-200 rounded">
+                <div className="text-2xl font-bold text-purple-700">
+                  {formatCurrency(interestGroupData.pacContributions.byType.superPac)}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">Super PAC</div>
+              </div>
+              <div className="text-center p-4 bg-blue-50 border border-blue-200 rounded">
+                <div className="text-2xl font-bold text-blue-700">
+                  {formatCurrency(interestGroupData.pacContributions.byType.traditional)}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">Traditional PAC</div>
+              </div>
+              <div className="text-center p-4 bg-indigo-50 border border-indigo-200 rounded">
+                <div className="text-2xl font-bold text-indigo-700">
+                  {formatCurrency(interestGroupData.pacContributions.byType.leadership)}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">Leadership PAC</div>
+              </div>
+              <div className="text-center p-4 bg-teal-50 border border-teal-200 rounded">
+                <div className="text-2xl font-bold text-teal-700">
+                  {formatCurrency(interestGroupData.pacContributions.byType.hybrid)}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">Hybrid PAC</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Geographic Breakdown */}
+        {geographicData?.topStates && geographicData.topStates.length > 0 && (
+          <div className="bg-white p-6 border border-gray-200 mb-8">
+            <div className="flex items-center mb-4">
+              <h3 className="text-lg font-semibold">Top Contributing States</h3>
+              <InfoTooltip text="States with the most campaign contributions by total dollar amount" />
+            </div>
+            <div className="space-y-3">
+              {geographicData.topStates.slice(0, 10).map((state, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-gray-900">{state.state}</span>
+                      <span className="text-sm font-semibold text-gray-900 ml-4">
+                        {formatCurrency(state.amount)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-indigo-600 h-2 rounded-full transition-all"
+                          style={{ width: `${Math.min(state.percentage, 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-500 w-12 text-right">
+                        {state.percentage.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {state.contributionCount.toLocaleString()} contributions
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Contributions Timeline */}
+        {recentContributions && recentContributions.length > 0 && (
+          <div className="bg-white p-6 border border-gray-200 mb-8">
+            <div className="flex items-center mb-4">
+              <h3 className="text-lg font-semibold">Recent Contributions</h3>
+              <InfoTooltip text="Most recent campaign contributions from FEC filings" />
+            </div>
+            <div className="space-y-2">
+              {recentContributions.slice(0, 20).map((contribution, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-start p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">{contribution.name}</div>
+                    <div className="text-xs text-gray-600">
+                      {contribution.city}, {contribution.state}
+                      {contribution.employer && ` • ${contribution.employer}`}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {new Date(contribution.date).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold text-green-600 ml-4">
+                    {formatCurrency(contribution.amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced Donor Metrics */}
+        {donorMetrics && (
+          <div className="bg-white p-6 border border-gray-200 mb-8">
+            <div className="flex items-center mb-4">
+              <h3 className="text-lg font-semibold">Donor Statistics</h3>
+              <InfoTooltip text="Statistical analysis of donation patterns and donor behavior" />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 bg-blue-50 rounded">
+                <div className="text-2xl font-bold text-blue-700">
+                  {donorMetrics.totalDonors.toLocaleString()}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">Total Donors</div>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded">
+                <div className="text-2xl font-bold text-green-700">
+                  {donorMetrics.smallDonorPercentage.toFixed(1)}%
+                </div>
+                <div className="text-xs text-gray-600 mt-1">Small Donors (≤$200)</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded">
+                <div className="text-2xl font-bold text-purple-700">
+                  {formatCurrency(donorMetrics.medianDonation)}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">Median Donation</div>
+              </div>
+              <div className="text-center p-4 bg-orange-50 rounded">
+                <div className="text-2xl font-bold text-orange-700">
+                  {formatCurrency(donorMetrics.averageDonation)}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">Average Donation</div>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <div className="text-center p-4 bg-teal-50 rounded">
+                <div className="text-xl font-bold text-teal-700">
+                  {formatCurrency(donorMetrics.averageSmallDonation)}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">Avg Small Donation</div>
+              </div>
+              <div className="text-center p-4 bg-red-50 rounded">
+                <div className="text-xl font-bold text-red-700">
+                  {formatCurrency(donorMetrics.largestDonation)}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">Largest Single Donation</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Contributors Modal */}
         <ContributorsModal

@@ -143,6 +143,47 @@ interface ComprehensiveFinanceResponse {
     };
   };
 
+  // Geographic Breakdown
+  geographic?: {
+    topStates: Array<{
+      state: string;
+      amount: number;
+      percentage: number;
+      contributionCount: number;
+    }>;
+    inDistrict?: {
+      amount: number;
+      percentage: number;
+      contributionCount: number;
+    };
+    outOfDistrict?: {
+      amount: number;
+      percentage: number;
+      contributionCount: number;
+    };
+  };
+
+  // Recent Contributions
+  recentContributions?: Array<{
+    name: string;
+    amount: number;
+    date: string;
+    city: string;
+    state: string;
+    employer?: string;
+  }>;
+
+  // Enhanced Donor Metrics
+  donorMetrics?: {
+    totalDonors: number;
+    smallDonors: number; // ≤$200
+    smallDonorPercentage: number;
+    averageSmallDonation: number;
+    medianDonation: number;
+    averageDonation: number;
+    largestDonation: number;
+  };
+
   // Metadata
   metadata: {
     bioguideId: string;
@@ -485,6 +526,84 @@ export async function GET(
       independentExpenditures: independentExpenditures.length,
     });
 
+    // Calculate geographic breakdown
+    const stateMap = new Map<string, { amount: number; count: number }>();
+    let totalGeographic = 0;
+
+    contributions.forEach(contrib => {
+      if (contrib.contributor_state) {
+        const state = contrib.contributor_state.trim().toUpperCase();
+        const amount = contrib.contribution_receipt_amount || 0;
+        const existing = stateMap.get(state) || { amount: 0, count: 0 };
+        stateMap.set(state, {
+          amount: existing.amount + amount,
+          count: existing.count + 1,
+        });
+        totalGeographic += amount;
+      }
+    });
+
+    const topStates = Array.from(stateMap.entries())
+      .map(([state, data]) => ({
+        state,
+        amount: data.amount,
+        percentage: totalGeographic > 0 ? (data.amount / totalGeographic) * 100 : 0,
+        contributionCount: data.count,
+      }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 10);
+
+    // Get recent contributions (last 20)
+    const recentContribs = contributions
+      .filter(c => c.contribution_receipt_date)
+      .sort((a, b) => {
+        const dateA = new Date(a.contribution_receipt_date || '');
+        const dateB = new Date(b.contribution_receipt_date || '');
+        return dateB.getTime() - dateA.getTime();
+      })
+      .slice(0, 20)
+      .map(c => ({
+        name: c.contributor_name || 'Unknown',
+        amount: c.contribution_receipt_amount || 0,
+        date: c.contribution_receipt_date || '',
+        city: c.contributor_city || '',
+        state: c.contributor_state || '',
+        employer: c.contributor_employer,
+      }));
+
+    // Calculate enhanced donor metrics
+    const allDonationAmounts = contributions
+      .map(c => c.contribution_receipt_amount || 0)
+      .filter(amt => amt > 0);
+    const smallDonations = allDonationAmounts.filter(amt => amt <= 200);
+    const sortedAmounts = [...allDonationAmounts].sort((a, b) => a - b);
+
+    const donorMetrics = {
+      totalDonors: allContributors.length,
+      smallDonors: smallDonations.length,
+      smallDonorPercentage:
+        allDonationAmounts.length > 0
+          ? (smallDonations.length / allDonationAmounts.length) * 100
+          : 0,
+      averageSmallDonation:
+        smallDonations.length > 0
+          ? smallDonations.reduce((sum, amt) => sum + amt, 0) / smallDonations.length
+          : 0,
+      medianDonation:
+        sortedAmounts.length > 0 ? sortedAmounts[Math.floor(sortedAmounts.length / 2)] || 0 : 0,
+      averageDonation:
+        allDonationAmounts.length > 0
+          ? allDonationAmounts.reduce((sum, amt) => sum + amt, 0) / allDonationAmounts.length
+          : 0,
+      largestDonation: sortedAmounts.length > 0 ? sortedAmounts[sortedAmounts.length - 1] || 0 : 0,
+    };
+
+    logger.info('[Comprehensive Finance API] Geographic and donor analysis complete', {
+      topStates: topStates.length,
+      recentContributions: recentContribs.length,
+      totalDonors: donorMetrics.totalDonors,
+    });
+
     // Build comprehensive response
     const response: ComprehensiveFinanceResponse = {
       finance: {
@@ -563,6 +682,11 @@ export async function GET(
         },
         metrics: interestGroupMetrics,
       },
+      geographic: {
+        topStates,
+      },
+      recentContributions: recentContribs,
+      donorMetrics,
       metadata: {
         bioguideId,
         cycle: 2024,
