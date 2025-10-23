@@ -524,7 +524,7 @@ export const FinanceTabEnhanced = React.memo(
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <h3 className="text-lg font-semibold">Top Contributing Industries</h3>
-                <InfoTooltip text="Industries are identified by analyzing employer and occupation data from FEC contribution records" />
+                <InfoTooltip text="Industries are categorized using OpenSecrets.org-inspired taxonomy by analyzing employer and occupation data from FEC contribution records. Based on a representative sample for performance." />
               </div>
               {industryData.metadata?.totalAnalyzed && (
                 <span className="text-xs text-gray-500">
@@ -532,6 +532,17 @@ export const FinanceTabEnhanced = React.memo(
                 </span>
               )}
             </div>
+            {comprehensiveData?.metadata?.sampleSize && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-gray-700">
+                <strong>Representative sample:</strong> Industry breakdown based on{' '}
+                {comprehensiveData.metadata.sampleSize.toLocaleString()} recent contributions.
+                Percentages reflect contribution patterns within this sample.{' '}
+                <span className="text-gray-600">
+                  Total raised: ${(comprehensiveData.finance.totalRaised / 1000000).toFixed(2)}M
+                  from all sources.
+                </span>
+              </div>
+            )}
             <div className="space-y-3">
               {industryData.topIndustries.slice(0, 10).map((industry, index) => (
                 <div key={index} className="flex items-center justify-between">
@@ -596,6 +607,23 @@ export const FinanceTabEnhanced = React.memo(
               )}
             </div>
           </div>
+          {comprehensiveData?.metadata?.sampleSize && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-gray-700">
+              <strong>Sample-based analysis:</strong> Top contributors shown are based on analysis
+              of {comprehensiveData.metadata.sampleSize.toLocaleString()} recent contributions (not
+              exhaustive). This represents the largest donors in our sample.{' '}
+              {contributorData?.metadata?.fecReceiptsLink && (
+                <a
+                  href={contributorData.metadata.fecReceiptsLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >
+                  View all contributions on FEC.gov↗
+                </a>
+              )}
+            </div>
+          )}
           <div className="space-y-3">
             {contributorData?.topContributors?.slice(0, 10).map((contributor, index) => (
               <div
