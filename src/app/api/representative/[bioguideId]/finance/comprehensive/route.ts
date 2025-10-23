@@ -19,9 +19,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
-import { fecApiService } from '@/lib/fec/fec-api-service';
+import { fecApiService, classifyPACType } from '@/lib/fec/fec-api-service';
 import { govCache } from '@/services/cache';
 import { getTopCategories } from '@/lib/fec/industry-taxonomy';
+import { categorizeIntoBaskets, getInterestGroupMetrics } from '@/lib/fec/interest-groups';
 
 interface ComprehensiveFinanceResponse {
   // Basic Finance Summary
@@ -94,6 +95,51 @@ interface ComprehensiveFinanceResponse {
     }>;
     metadata: {
       totalAnalyzed: number;
+    };
+  };
+
+  // Interest Groups & PACs (OpenSecrets-inspired)
+  interestGroups?: {
+    baskets: Array<{
+      basket: string; // e.g., "Big Tech & Internet", "Wall Street & Finance"
+      totalAmount: number;
+      percentage: number;
+      contributionCount: number;
+      description: string;
+      icon: string; // emoji
+      color: string; // hex color
+      topCategories: Array<{
+        category: string;
+        amount: number;
+      }>;
+    }>;
+    pacContributions: {
+      byType: {
+        superPac: number;
+        traditional: number;
+        leadership: number;
+        hybrid: number;
+      };
+      supportingExpenditures: Array<{
+        amount: number;
+        date: string;
+        pacName: string;
+        pacType: string;
+        description: string;
+      }>;
+      opposingExpenditures: Array<{
+        amount: number;
+        date: string;
+        pacName: string;
+        pacType: string;
+        description: string;
+      }>;
+    };
+    metrics: {
+      topInfluencer: string | null;
+      grassrootsPercentage: number;
+      corporatePercentage: number;
+      diversityScore: number;
     };
   };
 
@@ -353,6 +399,92 @@ export async function GET(
         : `https://www.fec.gov/data/receipts/individual-contributions/?two_year_transaction_period=2024&candidate_id=${fecMapping.fecId}&min_amount=1`,
     }));
 
+    // Fetch PAC contributions and Independent Expenditures
+    logger.info('[Comprehensive Finance API] Fetching PAC/Interest Group data');
+    const pacContributions = await fecApiService.getPACContributions(fecMapping.fecId, 2024);
+    const independentExpenditures = await fecApiService.getIndependentExpenditures(
+      fecMapping.fecId,
+      2024
+    );
+
+    // Process PAC contributions by type
+    const pacByType = {
+      superPac: 0,
+      traditional: 0,
+      leadership: 0,
+      hybrid: 0,
+    };
+
+    // Deduplicate committee lookups
+    const uniqueCommitteeIds = new Set<string>();
+    pacContributions.forEach(c => uniqueCommitteeIds.add(c.committee_id));
+    independentExpenditures.forEach(e => uniqueCommitteeIds.add(e.committee_id));
+
+    const committeeInfoCache = new Map();
+    for (const committeeId of uniqueCommitteeIds) {
+      const info = await fecApiService.getCommitteeInfo(committeeId);
+      committeeInfoCache.set(committeeId, info);
+    }
+
+    // Classify PAC contributions
+    for (const contribution of pacContributions) {
+      const committeeInfo = committeeInfoCache.get(contribution.committee_id);
+      if (committeeInfo) {
+        const pacType = classifyPACType(committeeInfo.committee_type, committeeInfo.designation);
+        if (pacType) {
+          pacByType[pacType] += contribution.contribution_receipt_amount || 0;
+        }
+      }
+    }
+
+    // Classify independent expenditures
+    const supportingExpenditures: Array<{
+      amount: number;
+      date: string;
+      pacName: string;
+      pacType: string;
+      description: string;
+    }> = [];
+    const opposingExpenditures: Array<{
+      amount: number;
+      date: string;
+      pacName: string;
+      pacType: string;
+      description: string;
+    }> = [];
+
+    for (const expenditure of independentExpenditures) {
+      const committeeInfo = committeeInfoCache.get(expenditure.committee_id);
+      const classifiedType = committeeInfo
+        ? classifyPACType(committeeInfo.committee_type, committeeInfo.designation)
+        : null;
+      const pacType = classifiedType || 'unknown';
+
+      const expData = {
+        amount: expenditure.expenditure_amount || 0,
+        date: expenditure.expenditure_date || '',
+        pacName: expenditure.committee_name || '',
+        pacType,
+        description: expenditure.expenditure_description || '',
+      };
+
+      if (expenditure.support_oppose_indicator === 'S') {
+        supportingExpenditures.push(expData);
+      } else if (expenditure.support_oppose_indicator === 'O') {
+        opposingExpenditures.push(expData);
+      }
+    }
+
+    // Calculate Interest Group Baskets
+    const interestGroupBaskets = categorizeIntoBaskets(contributions);
+    const interestGroupMetrics = getInterestGroupMetrics(interestGroupBaskets);
+
+    logger.info('[Comprehensive Finance API] Interest Group data processed', {
+      baskets: interestGroupBaskets.length,
+      pacContributions: pacContributions.length,
+      independentExpenditures: independentExpenditures.length,
+    });
+
     // Build comprehensive response
     const response: ComprehensiveFinanceResponse = {
       finance: {
@@ -412,6 +544,24 @@ export async function GET(
         metadata: {
           totalAnalyzed: contributions.length,
         },
+      },
+      interestGroups: {
+        baskets: interestGroupBaskets.map(basket => ({
+          basket: basket.basket,
+          totalAmount: basket.totalAmount,
+          percentage: basket.percentage,
+          contributionCount: basket.contributionCount,
+          description: basket.description,
+          icon: basket.icon,
+          color: basket.color,
+          topCategories: basket.topCategories,
+        })),
+        pacContributions: {
+          byType: pacByType,
+          supportingExpenditures,
+          opposingExpenditures,
+        },
+        metrics: interestGroupMetrics,
       },
       metadata: {
         bioguideId,

@@ -79,6 +79,50 @@ interface IndustryData {
   };
 }
 
+interface InterestGroupData {
+  baskets?: Array<{
+    basket: string;
+    totalAmount: number;
+    percentage: number;
+    contributionCount: number;
+    description: string;
+    icon: string;
+    color: string;
+    topCategories: Array<{
+      category: string;
+      amount: number;
+    }>;
+  }>;
+  pacContributions?: {
+    byType: {
+      superPac: number;
+      traditional: number;
+      leadership: number;
+      hybrid: number;
+    };
+    supportingExpenditures: Array<{
+      amount: number;
+      date: string;
+      pacName: string;
+      pacType: string;
+      description: string;
+    }>;
+    opposingExpenditures: Array<{
+      amount: number;
+      date: string;
+      pacName: string;
+      pacType: string;
+      description: string;
+    }>;
+  };
+  metrics?: {
+    topInfluencer: string | null;
+    grassrootsPercentage: number;
+    corporatePercentage: number;
+    diversityScore: number;
+  };
+}
+
 interface FinanceTabEnhancedProps {
   bioguideId: string;
   sharedData?: FinanceData;
@@ -347,6 +391,8 @@ export const FinanceTabEnhanced = React.memo(
         }
       : undefined;
 
+    const interestGroupData: InterestGroupData | undefined = comprehensiveData?.interestGroups;
+
     const formatCurrency = (amount: number) => {
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -586,6 +632,68 @@ export const FinanceTabEnhanced = React.memo(
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Interest Groups & PACs */}
+        {interestGroupData?.baskets && interestGroupData.baskets.length > 0 && (
+          <div className="bg-white p-6 border border-gray-200 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold">Top Interest Groups</h3>
+                <InfoTooltip text="Campaign contributions categorized by interest group sectors. Inspired by OpenSecrets.org methodology with FEC data." />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {interestGroupData.baskets.slice(0, 8).map((basket, index) => (
+                <div key={index} className="flex items-center p-3 bg-gray-50 rounded">
+                  <span className="text-2xl mr-3">{basket.icon}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-gray-900">{basket.basket}</span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {formatCurrency(basket.totalAmount)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="h-2 rounded-full transition-all"
+                          style={{
+                            width: `${Math.min(basket.percentage, 100)}%`,
+                            backgroundColor: basket.color,
+                          }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-500 w-12 text-right">
+                        {basket.percentage.toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Grassroots vs Corporate */}
+            {interestGroupData.metrics && (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">Funding Breakdown</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-4 bg-green-50 rounded">
+                    <div className="text-2xl font-bold text-green-700">
+                      {interestGroupData.metrics.grassrootsPercentage.toFixed(1)}%
+                    </div>
+                    <div className="text-xs text-gray-600 mt-1">Grassroots (≤$200)</div>
+                  </div>
+                  <div className="text-center p-4 bg-blue-50 rounded">
+                    <div className="text-2xl font-bold text-blue-700">
+                      {interestGroupData.metrics.corporatePercentage.toFixed(1)}%
+                    </div>
+                    <div className="text-xs text-gray-600 mt-1">Corporate/PAC</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
