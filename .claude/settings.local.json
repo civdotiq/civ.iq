@@ -155,7 +155,8 @@
       "Bash(fi)",
       "WebFetch(domain:civdotiq.org)",
       "WebFetch(domain:www.fec.gov)",
-      "Bash(du:*)"
+      "Bash(du:*)",
+      "Bash(sort -t: -k2 -n)"
     ],
     "deny": [],
     "ask": []

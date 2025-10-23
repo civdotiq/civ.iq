@@ -635,10 +635,30 @@ export async function GET(
       hybrid: 0,
     };
 
+    // OPTIMIZATION: Deduplicate committee info lookups to reduce FEC API calls
+    // Collect all unique committee IDs from both contributions and expenditures
+    const uniqueCommitteeIds = new Set<string>();
+    pacContributions.forEach(c => uniqueCommitteeIds.add(c.committee_id));
+    independentExpenditures.forEach(e => uniqueCommitteeIds.add(e.committee_id));
+
+    // Fetch committee info once per unique committee ID
+    logger.info(
+      `[Finance API] Fetching info for ${uniqueCommitteeIds.size} unique committees (optimized)`
+    );
+    const committeeInfoCache = new Map<
+      string,
+      Awaited<ReturnType<typeof fecApiService.getCommitteeInfo>>
+    >();
+
+    for (const committeeId of uniqueCommitteeIds) {
+      const info = await fecApiService.getCommitteeInfo(committeeId);
+      committeeInfoCache.set(committeeId, info);
+    }
+
     // Process PAC contributions (Schedule A) - these are actual contributions TO the candidate
     logger.info(`[Finance API] Processing ${pacContributions.length} PAC contributions`);
     for (const contribution of pacContributions) {
-      const committeeInfo = await fecApiService.getCommitteeInfo(contribution.committee_id);
+      const committeeInfo = committeeInfoCache.get(contribution.committee_id);
 
       if (committeeInfo) {
         const pacType = classifyPACType(committeeInfo.committee_type, committeeInfo.designation);
@@ -654,9 +674,9 @@ export async function GET(
 
     logger.info('[Finance API] PAC contribution breakdown complete', pacBreakdown);
 
-    // Classify independent expenditures by type using committee information
+    // Classify independent expenditures by type using cached committee information
     for (const expenditure of independentExpenditures) {
-      const committeeInfo = await fecApiService.getCommitteeInfo(expenditure.committee_id);
+      const committeeInfo = committeeInfoCache.get(expenditure.committee_id);
 
       const pacType = committeeInfo
         ? classifyPACType(committeeInfo.committee_type, committeeInfo.designation)
@@ -777,9 +797,9 @@ export async function GET(
       interestGroupMetrics,
     };
 
-    // Cache successful response for longer time
+    // Cache successful response aligned with FEC API 1-hour cache policy
     await govCache.set(cacheKey, response, {
-      ttl: 21600000, // 6 hours
+      ttl: 3600000, // 1 hour (aligned with FEC cache policy)
       source: 'fec-api',
       dataType: 'finance',
     });
@@ -791,7 +811,14 @@ export async function GET(
       responseTime: Date.now() - startTime,
     });
 
-    return NextResponse.json(response);
+    // Add HTTP cache headers aligned with FEC API 1-hour cache policy
+    const headers = new Headers({
+      'Cache-Control': 'public, max-age=3600, stale-while-revalidate=1800',
+      'CDN-Cache-Control': 'public, max-age=3600',
+      Vary: 'Accept-Encoding',
+    });
+
+    return NextResponse.json(response, { headers });
   } catch (error) {
     logger.error('[Finance API] Error fetching finance data', error as Error, {
       bioguideId,

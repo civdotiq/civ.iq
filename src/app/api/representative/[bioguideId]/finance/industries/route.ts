@@ -107,8 +107,9 @@ export async function GET(
       },
     };
 
+    // Align with FEC API 1-hour cache policy (3600000ms = 1 hour)
     await govCache.set(cacheKey, response, {
-      ttl: 21600000,
+      ttl: 3600000,
       source: 'fec-api',
       dataType: 'finance',
     });
@@ -118,7 +119,14 @@ export async function GET(
       responseTime: Date.now() - startTime,
     });
 
-    return NextResponse.json(response);
+    // Add HTTP cache headers aligned with FEC API 1-hour cache policy
+    const headers = new Headers({
+      'Cache-Control': 'public, max-age=3600, stale-while-revalidate=1800',
+      'CDN-Cache-Control': 'public, max-age=3600',
+      Vary: 'Accept-Encoding',
+    });
+
+    return NextResponse.json(response, { headers });
   } catch (error) {
     logger.error('[Industries API] Error', error as Error, { bioguideId });
     return NextResponse.json({ error: 'Failed to fetch industry analysis' }, { status: 500 });

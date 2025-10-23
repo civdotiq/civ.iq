@@ -279,45 +279,70 @@ export const FinanceTabEnhanced = React.memo(
   ({ bioguideId, sharedData, sharedLoading, sharedError }: FinanceTabEnhancedProps) => {
     const [showAllContributors, setShowAllContributors] = useState(false);
 
-    // Use shared data if available, otherwise fetch individually
-    // Only skip individual fetch if we have sharedData OR sharedLoading is true (batch is in progress)
-    // If batch failed (sharedError), we should fetch individually
-    const shouldFetchIndividually = !sharedData && (!sharedLoading || sharedError);
-
+    // OPTIMIZATION: Use comprehensive endpoint to fetch all finance data in single request
+    // This replaces 3 separate API calls with 1 unified call
     const {
-      data: individualData,
+      data: comprehensiveData,
       error: fetchError,
       isLoading: fetchLoading,
-    } = useSWR<FinanceData>(
-      shouldFetchIndividually ? `/api/representative/${bioguideId}/finance` : null,
-      shouldFetchIndividually
-        ? async (url: string) => {
-            const response = await fetch(url);
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return await response.json();
-          }
-        : null,
+    } = useSWR(
+      `/api/representative/${bioguideId}/finance/comprehensive`,
+      async (url: string) => {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return await response.json();
+      },
       {
         revalidateOnFocus: false,
         dedupingInterval: 60000, // Cache for 1 minute
+        keepPreviousData: true, // Show stale data while revalidating
       }
     );
 
-    // Fetch contributor data with enhanced information
-    const { data: contributorData } = useSWR<ContributorData>(
-      `/api/representative/${bioguideId}/finance/contributors`,
-      (url: string) => fetch(url).then(res => res.json()),
-      { revalidateOnFocus: false }
-    );
+    // Map comprehensive data to existing component interfaces for backward compatibility
+    const individualData: FinanceData | undefined = comprehensiveData
+      ? {
+          ...comprehensiveData.finance,
+          totalRaised: comprehensiveData.finance.totalRaised,
+          totalSpent: comprehensiveData.finance.totalSpent,
+          cashOnHand: comprehensiveData.finance.cashOnHand,
+          individualContributions: comprehensiveData.finance.individualContributions,
+          pacContributions: comprehensiveData.finance.pacContributions,
+          partyContributions: comprehensiveData.finance.partyContributions,
+          candidateContributions: comprehensiveData.finance.candidateContributions,
+          candidateId: comprehensiveData.finance.candidateId,
+          fecTransparencyLinks: comprehensiveData.finance.fecTransparencyLinks,
+        }
+      : undefined;
 
-    // Fetch industry breakdown data
-    const { data: industryData } = useSWR<IndustryData>(
-      `/api/representative/${bioguideId}/finance/industries`,
-      (url: string) => fetch(url).then(res => res.json()),
-      { revalidateOnFocus: false }
-    );
+    const contributorData: ContributorData | undefined = comprehensiveData
+      ? {
+          topContributors: comprehensiveData.contributors.topContributors,
+          conduitAggregates: comprehensiveData.contributors.conduitAggregates,
+          contributionTrends: comprehensiveData.contributors.contributionTrends,
+          metadata: {
+            fecCandidateLink: comprehensiveData.contributors.metadata.fecCandidateLink,
+            fecCommitteeId: comprehensiveData.contributors.metadata.fecCommitteeId,
+            fecReceiptsLink: comprehensiveData.contributors.metadata.fecReceiptsLink,
+            totalIndividualContributors:
+              comprehensiveData.contributors.metadata.totalIndividualContributors,
+            totalCommitteeContributors:
+              comprehensiveData.contributors.metadata.totalCommitteeContributors,
+          },
+        }
+      : undefined;
+
+    const industryData: IndustryData | undefined = comprehensiveData
+      ? {
+          topIndustries: comprehensiveData.industries.topIndustries,
+          metadata: {
+            totalAnalyzed: comprehensiveData.industries.metadata.totalAnalyzed,
+            lastUpdated: comprehensiveData.metadata.lastUpdated,
+          },
+        }
+      : undefined;
 
     const formatCurrency = (amount: number) => {
       return new Intl.NumberFormat('en-US', {

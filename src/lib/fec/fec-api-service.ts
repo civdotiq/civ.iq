@@ -334,50 +334,42 @@ export class FECApiService {
 
     logger.info(`[FEC API] Fetching sample contributions using committee IDs:`, committeeIds);
 
-    // Define cycles to try - current cycle and next election cycle
-    const cyclesToTry = [cycle, cycle + 2, cycle - 2].filter(c => c >= 2020 && c <= 2030);
-    logger.info(`[FEC API] Will try cycles: ${cyclesToTry.join(', ')} for contributions`);
-
+    // OPTIMIZATION: Only try the requested cycle to reduce API calls
+    // Fallback cycles removed for better performance
     try {
-      // Try each cycle with each committee until we find data
-      for (const testCycle of cyclesToTry) {
-        logger.info(`[FEC API] Trying cycle ${testCycle} for contributions`);
+      // Try each committee for the requested cycle until we find data
+      for (let i = 0; i < committeeIds.length; i++) {
+        const committeeId = committeeIds[i];
+        try {
+          const response = await this.makeRequest<FECApiResponse<FECContribution>>(
+            `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&cycle=${cycle}&per_page=${Math.min(count, 100)}&page=1`
+          );
 
-        for (let i = 0; i < committeeIds.length; i++) {
-          const committeeId = committeeIds[i];
-          try {
-            const response = await this.makeRequest<FECApiResponse<FECContribution>>(
-              `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&cycle=${testCycle}&per_page=${Math.min(count, 100)}&page=1`
+          if (response.results && response.results.length > 0) {
+            logger.info(
+              `[FEC API] ✅ SUCCESS: Found ${response.results.length} contributions from committee ${committeeId} in cycle ${cycle}`
             );
-
-            if (response.results && response.results.length > 0) {
-              logger.info(
-                `[FEC API] ✅ SUCCESS: Found ${response.results.length} contributions from committee ${committeeId} in cycle ${testCycle}`
-              );
-              return response.results;
-            } else {
-              logger.info(
-                `[FEC API] No contributions found for committee ${committeeId} in cycle ${testCycle}`
-              );
-            }
-          } catch (cycleError) {
-            if (cycleError instanceof FECApiError && cycleError.status === 422) {
-              logger.info(
-                `[FEC API] No data available for committee ${committeeId} in cycle ${testCycle} (422 error)`
-              );
-            } else {
-              logger.warn(
-                `[FEC API] Error fetching from committee ${committeeId} cycle ${testCycle}:`,
-                cycleError instanceof Error ? cycleError.message : String(cycleError)
-              );
-            }
+            return response.results;
+          } else {
+            logger.info(
+              `[FEC API] No contributions found for committee ${committeeId} in cycle ${cycle}`
+            );
+          }
+        } catch (committeeError) {
+          if (committeeError instanceof FECApiError && committeeError.status === 422) {
+            logger.info(
+              `[FEC API] No data available for committee ${committeeId} in cycle ${cycle} (422 error)`
+            );
+          } else {
+            logger.warn(
+              `[FEC API] Error fetching from committee ${committeeId} cycle ${cycle}:`,
+              committeeError instanceof Error ? committeeError.message : String(committeeError)
+            );
           }
         }
       }
 
-      logger.warn(
-        `[FEC API] No contributions found across ${committeeIds.length} committees and ${cyclesToTry.length} cycles`
-      );
+      logger.warn(`[FEC API] No contributions found across ${committeeIds.length} committees`);
       return [];
     } catch (error) {
       logger.error(`[FEC API] Failed to get sample contributions for ${candidateId}:`, error);
