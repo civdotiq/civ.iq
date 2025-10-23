@@ -65,10 +65,13 @@ interface ContributorData {
 
 interface IndustryData {
   topIndustries?: Array<{
-    industry: string;
+    sector: string; // e.g., "Health", "Finance/Insurance/Real Estate"
+    category: string; // e.g., "Health Professionals", "Commercial Banks"
+    industry: string; // Display name: "Health: Health Professionals"
     amount: number;
     percentage: number;
     contributionCount: number;
+    fecVerifyLink: string; // Link to verify on FEC.gov
   }>;
   metadata?: {
     totalAnalyzed: number;
@@ -534,7 +537,22 @@ export const FinanceTabEnhanced = React.memo(
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-900">{industry.industry}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900">
+                          {industry.industry}
+                        </span>
+                        {industry.fecVerifyLink && (
+                          <a
+                            href={industry.fecVerifyLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:text-blue-800 underline"
+                            title="Verify on FEC.gov"
+                          >
+                            FEC↗
+                          </a>
+                        )}
+                      </div>
                       <span className="text-sm font-semibold text-gray-900 ml-4">
                         {formatCurrency(industry.amount)}
                       </span>

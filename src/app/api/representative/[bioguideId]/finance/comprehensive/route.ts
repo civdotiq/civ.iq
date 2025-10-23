@@ -21,6 +21,7 @@ import logger from '@/lib/logging/simple-logger';
 import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { govCache } from '@/services/cache';
+import { getTopCategories } from '@/lib/fec/industry-taxonomy';
 
 interface ComprehensiveFinanceResponse {
   // Basic Finance Summary
@@ -80,13 +81,16 @@ interface ComprehensiveFinanceResponse {
     };
   };
 
-  // Industry Breakdown
+  // Industry Breakdown (OpenSecrets-inspired taxonomy)
   industries: {
     topIndustries: Array<{
-      industry: string;
+      sector: string; // e.g., "Health", "Finance/Insurance/Real Estate"
+      category: string; // e.g., "Health Professionals", "Commercial Banks"
+      industry: string; // Display name: "Health: Health Professionals"
       amount: number;
       percentage: number;
       contributionCount: number;
+      fecVerifyLink: string; // Link to verify on FEC.gov
     }>;
     metadata: {
       totalAnalyzed: number;
@@ -236,7 +240,6 @@ export async function GET(
     };
 
     const trendMap = new Map<string, { amount: number; count: number }>();
-    const industryMap = new Map<string, { amount: number; count: number }>();
 
     // Single pass through contributions - process everything at once
     for (const contribution of contributions) {
@@ -250,16 +253,6 @@ export async function GET(
         const monthKey = date.substring(0, 7); // YYYY-MM
         const existing = trendMap.get(monthKey) || { amount: 0, count: 0 };
         trendMap.set(monthKey, {
-          amount: existing.amount + amount,
-          count: existing.count + 1,
-        });
-      }
-
-      // Track industries
-      if (contribution.contributor_employer && contribution.contributor_employer.trim()) {
-        const employer = contribution.contributor_employer.trim().toUpperCase();
-        const existing = industryMap.get(employer) || { amount: 0, count: 0 };
-        industryMap.set(employer, {
           amount: existing.amount + amount,
           count: existing.count + 1,
         });
@@ -346,20 +339,19 @@ export async function GET(
       .sort((a, b) => a.month.localeCompare(b.month))
       .slice(-12);
 
-    // Format industries
-    const totalIndustryAmount = Array.from(industryMap.values()).reduce(
-      (sum, i) => sum + i.amount,
-      0
-    );
-    const topIndustries = Array.from(industryMap.entries())
-      .map(([industry, data]) => ({
-        industry,
-        amount: data.amount,
-        percentage: totalIndustryAmount > 0 ? (data.amount / totalIndustryAmount) * 100 : 0,
-        contributionCount: data.count,
-      }))
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 10);
+    // Format industries using OpenSecrets-inspired taxonomy system
+    const topCategorizedIndustries = getTopCategories(contributions, 10);
+    const topIndustries = topCategorizedIndustries.map(cat => ({
+      sector: cat.sector,
+      category: cat.category,
+      industry: `${cat.sector}: ${cat.category}`, // Display name
+      amount: cat.totalAmount,
+      percentage: cat.percentage,
+      contributionCount: cat.contributionCount,
+      fecVerifyLink: principalCommitteeId
+        ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=2024&committee_id=${principalCommitteeId}&min_amount=1`
+        : `https://www.fec.gov/data/receipts/individual-contributions/?two_year_transaction_period=2024&candidate_id=${fecMapping.fecId}&min_amount=1`,
+    }));
 
     // Build comprehensive response
     const response: ComprehensiveFinanceResponse = {
