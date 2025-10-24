@@ -20,6 +20,10 @@ import {
 } from 'recharts';
 import { InterestGroupBaskets } from './InterestGroupBaskets';
 import { DataQualityBadge, DataQualityIndicator } from './DataQualityBadge';
+import { HeroSummary } from './HeroSummary';
+import { FundraisingSources } from './FundraisingSources';
+import { TopIndustries } from './TopIndustries';
+import { TopContributors } from './TopContributors';
 
 // Chart colors
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
@@ -314,7 +318,7 @@ export function CampaignFinanceVisualizer({
     return `$${amount.toLocaleString()}`;
   };
 
-  const formatPercent = (numerator: number, denominator: number): string => {
+  const _formatPercent = (numerator: number, denominator: number): string => {
     if (!denominator || denominator === 0) return '0%';
     return `${Math.round((numerator / denominator) * 100)}%`;
   };
@@ -416,135 +420,51 @@ export function CampaignFinanceVisualizer({
               tabIndex={0}
               className="space-y-6"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <h3 className="text-lg font-semibold text-gray-900">Financial Summary</h3>
-                {financeData?.dataQuality && (
-                  <DataQualityBadge
-                    confidence={financeData.dataQuality.overallDataConfidence}
-                    completeness={financeData.dataQuality.industry.completenessPercentage}
-                    label="Data Quality"
-                    showTooltip={true}
-                    size="small"
-                  />
-                )}
-              </div>
-              <hr className="border-gray-300" />
+              {/* Hero Summary - Enhanced Overview */}
+              <HeroSummary
+                representativeName={_representative?.name || 'Representative'}
+                party={
+                  (_representative?.party || 'Independent') as
+                    | 'Democrat'
+                    | 'Republican'
+                    | 'Independent'
+                }
+                totalRaised={totalRaised}
+                totalSpent={totalSpent}
+                cashOnHand={cashOnHand}
+                individualContributions={individualContributions}
+                pacContributions={pacContributions}
+                candidateContributions={candidateContributions}
+                cycle={currentCycleData?.cycle || new Date().getFullYear()}
+              />
 
-              <div className="space-y-3 font-mono text-sm">
-                <div className="flex justify-between">
-                  <span>Total Raised:</span>
-                  <span className="font-semibold">{formatCurrency(totalRaised)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Total Spent:</span>
-                  <span className="font-semibold">{formatCurrency(totalSpent)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Cash on Hand:</span>
-                  <span className="font-semibold">{formatCurrency(cashOnHand)}</span>
-                </div>
-              </div>
+              {/* Fundraising Sources Breakdown */}
+              <FundraisingSources
+                totalRaised={totalRaised}
+                individualContributions={individualContributions}
+                pacContributions={pacContributions}
+                partyContributions={partyContributions}
+                candidateContributions={candidateContributions}
+                party={
+                  (_representative?.party || 'Independent') as
+                    | 'Democrat'
+                    | 'Republican'
+                    | 'Independent'
+                }
+              />
 
-              <div className="mt-6">
-                <h4 className="text-md font-semibold text-gray-900 mb-3">Contribution Breakdown</h4>
-                <hr className="border-gray-300 mb-4" />
+              {/* Top Industries */}
+              {financeData?.industry_breakdown && financeData.industry_breakdown.length > 0 && (
+                <TopIndustries
+                  industries={financeData.industry_breakdown}
+                  totalRaised={totalRaised}
+                />
+              )}
 
-                <div className="space-y-3 font-mono text-sm">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex justify-between">
-                      <span>Individual:</span>
-                      <span className="font-semibold">
-                        {formatCurrency(individualContributions)} (
-                        {formatPercent(individualContributions, totalRaised)})
-                      </span>
-                    </div>
-                    {individualContributions > 0 && totalRaised > 0 && (
-                      <div className="text-xs text-gray-500 text-right">
-                        {((individualContributions / totalRaised) * 100).toFixed(1)}% of total
-                        raised
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <div className="flex justify-between">
-                      <span className="flex items-center gap-1">
-                        <abbr
-                          title="Political Action Committee - Organizations that pool campaign contributions from members and donate those funds to campaigns"
-                          className="no-underline cursor-help border-b border-dotted border-gray-400"
-                        >
-                          PAC
-                        </abbr>
-                        :
-                      </span>
-                      <span className="font-semibold">
-                        {formatCurrency(pacContributions)} (
-                        {formatPercent(pacContributions, totalRaised)})
-                      </span>
-                    </div>
-                    {pacContributions > 0 && totalRaised > 0 && (
-                      <div className="text-xs text-gray-500 text-right">
-                        {((pacContributions / totalRaised) * 100).toFixed(1)}% of total raised
-                      </div>
-                    )}
-                  </div>
-
-                  {partyContributions > 0 && (
-                    <div className="flex flex-col gap-1">
-                      <div className="flex justify-between">
-                        <span>Party:</span>
-                        <span className="font-semibold">
-                          {formatCurrency(partyContributions)} (
-                          {formatPercent(partyContributions, totalRaised)})
-                        </span>
-                      </div>
-                      <div className="text-xs text-gray-500 text-right">
-                        {((partyContributions / totalRaised) * 100).toFixed(1)}% of total raised
-                      </div>
-                    </div>
-                  )}
-
-                  {candidateContributions > 0 && (
-                    <div className="flex flex-col gap-1">
-                      <div className="flex justify-between">
-                        <span>Self-Funded:</span>
-                        <span className="font-semibold">
-                          {formatCurrency(candidateContributions)} (
-                          {formatPercent(candidateContributions, totalRaised)})
-                        </span>
-                      </div>
-                      <div className="text-xs text-gray-500 text-right">
-                        {((candidateContributions / totalRaised) * 100).toFixed(1)}% of total raised
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Contextual Comparison */}
-                {totalRaised > 0 && (individualContributions > 0 || pacContributions > 0) && (
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                    <h5 className="text-xs font-semibold text-blue-900 mb-2">💡 Context</h5>
-                    <div className="text-xs text-blue-800 space-y-1">
-                      {individualContributions > 0 && (
-                        <div>
-                          <strong>Individual Contributions:</strong>{' '}
-                          {(individualContributions / totalRaised) * 100 >= 50
-                            ? 'Majority grassroots funding indicates broad voter support.'
-                            : 'Supplemental to other funding sources.'}
-                        </div>
-                      )}
-                      {pacContributions > 0 && (
-                        <div>
-                          <strong>PAC Contributions:</strong>{' '}
-                          {(pacContributions / totalRaised) * 100 >= 30
-                            ? 'Significant institutional support from political action committees.'
-                            : 'Moderate PAC engagement typical for this office.'}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Top Contributors */}
+              {financeData?.top_contributors && financeData.top_contributors.length > 0 && (
+                <TopContributors contributors={financeData.top_contributors} />
+              )}
 
               {/* PAC Types Breakdown */}
               {financeData?.pacContributionsByType && (
