@@ -334,22 +334,66 @@ export class FECApiService {
 
     logger.info(`[FEC API] Fetching sample contributions using committee IDs:`, committeeIds);
 
-    // OPTIMIZATION: Only try the requested cycle to reduce API calls
-    // Fallback cycles removed for better performance
+    // Helper function to check if a contribution is a conduit
+    const isConduit = (contribution: FECContribution): boolean => {
+      const name = contribution.contributor_name?.toUpperCase() || '';
+      return name.includes('ACTBLUE') || name.includes('WINRED');
+    };
+
+    // ENHANCED: Fetch multiple pages and filter out conduits to get real contributor data
     try {
-      // Try each committee for the requested cycle until we find data
+      // Try each committee for the requested cycle until we have enough data
       for (let i = 0; i < committeeIds.length; i++) {
         const committeeId = committeeIds[i];
-        try {
-          const response = await this.makeRequest<FECApiResponse<FECContribution>>(
-            `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&cycle=${cycle}&per_page=${Math.min(count, 100)}&page=1`
-          );
+        const allContributions: FECContribution[] = [];
+        const nonConduitContributions: FECContribution[] = [];
 
-          if (response.results && response.results.length > 0) {
-            logger.info(
-              `[FEC API] ✅ SUCCESS: Found ${response.results.length} contributions from committee ${committeeId} in cycle ${cycle}`
+        try {
+          // Fetch up to 5 pages (500 contributions) to find enough non-conduit data
+          const maxPages = 5;
+          const perPage = 100;
+
+          for (let page = 1; page <= maxPages; page++) {
+            const response = await this.makeRequest<FECApiResponse<FECContribution>>(
+              `/schedules/schedule_a/?candidate_id=${candidateId}&committee_id=${committeeId}&cycle=${cycle}&per_page=${perPage}&page=${page}&sort=-contribution_receipt_amount`
             );
-            return response.results;
+
+            if (response.results && response.results.length > 0) {
+              allContributions.push(...response.results);
+
+              // Filter out conduits
+              const pageNonConduits = response.results.filter(c => !isConduit(c));
+              nonConduitContributions.push(...pageNonConduits);
+
+              logger.info(
+                `[FEC API] Page ${page}: Found ${response.results.length} total (${pageNonConduits.length} non-conduit) contributions from committee ${committeeId}`
+              );
+
+              // Stop if we have enough non-conduit contributions
+              if (nonConduitContributions.length >= count) {
+                break;
+              }
+
+              // Stop if this page had fewer results than requested (last page)
+              if (response.results.length < perPage) {
+                break;
+              }
+            } else {
+              break; // No more pages
+            }
+          }
+
+          if (nonConduitContributions.length > 0) {
+            logger.info(
+              `[FEC API] ✅ SUCCESS: Found ${nonConduitContributions.length} non-conduit contributions (${allContributions.length} total) from committee ${committeeId} in cycle ${cycle}`
+            );
+            // Return up to the requested count of non-conduit contributions
+            return nonConduitContributions.slice(0, count);
+          } else if (allContributions.length > 0) {
+            logger.warn(
+              `[FEC API] ⚠️ WARNING: Only found conduit contributions for committee ${committeeId}, returning them anyway`
+            );
+            return allContributions.slice(0, count);
           } else {
             logger.info(
               `[FEC API] No contributions found for committee ${committeeId} in cycle ${cycle}`
