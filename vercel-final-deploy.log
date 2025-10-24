@@ -1,0 +1,17 @@
+Vercel CLI 48.2.9
+Retrieving project…
+Deploying marks-projects-47d52265/civiq-4aog
+Uploading [--------------------] (0.0B/532.2KB)
+Uploading [=====---------------] (140.5KB/532.2KB)
+Uploading [==========----------] (268.5KB/532.2KB)
+Uploading [===============-----] (412.5KB/532.2KB)
+Uploading [====================] (532.2KB/532.2KB)
+Inspect: https://vercel.com/marks-projects-47d52265/civiq-4aog/AaZMF7isGHQNrHsPwk9bjKm63TTi [5s]
+Production: https://civiq-4aog-it0zgovfw-marks-projects-47d52265.vercel.app [5s]
+https://civiq-4aog-it0zgovfw-marks-projects-47d52265.vercel.appQueued
+Building
+Completing
+
+Common next commands:
+- `vercel inspect civiq-4aog-it0zgovfw-marks-projects-47d52265.vercel.app --logs`
+- `vercel redeploy civiq-4aog-it0zgovfw-marks-projects-47d52265.vercel.app`

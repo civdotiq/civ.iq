@@ -1,0 +1,12 @@
+Vercel CLI 48.2.9
+Retrieving project…
+Deploying marks-projects-47d52265/civiq-4aog
+Inspect: https://vercel.com/marks-projects-47d52265/civiq-4aog/3JLPKJVKLeaEVucZUGAgwQ4a4Vq1 [3s]
+Production: https://civiq-4aog-5n6s7ixat-marks-projects-47d52265.vercel.app [3s]
+https://civiq-4aog-5n6s7ixat-marks-projects-47d52265.vercel.appQueued
+Building
+Completing
+
+Common next commands:
+- `vercel inspect civiq-4aog-5n6s7ixat-marks-projects-47d52265.vercel.app --logs`
+- `vercel redeploy civiq-4aog-5n6s7ixat-marks-projects-47d52265.vercel.app`
