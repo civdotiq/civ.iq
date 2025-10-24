@@ -1,0 +1,122 @@
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+'use client';
+
+import React, { useState, useMemo } from 'react';
+
+interface Column<T> {
+  key: keyof T;
+  label: string;
+  sortable?: boolean;
+  format?: (value: unknown) => React.ReactNode;
+}
+
+interface SortableDataTableProps<T> {
+  data: T[];
+  columns: Column<T>[];
+  defaultSortKey?: keyof T;
+  showInitially?: number;
+  title?: string;
+}
+
+/**
+ * Sortable data table with progressive disclosure
+ * Follows Otl Aicher design system with clean table layout
+ */
+export function SortableDataTable<T extends Record<string, unknown>>({
+  data,
+  columns,
+  defaultSortKey,
+  showInitially = 5,
+  title,
+}: SortableDataTableProps<T>) {
+  const [sortKey, setSortKey] = useState<keyof T | undefined>(defaultSortKey);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [showAll, setShowAll] = useState(false);
+
+  const sortedData = useMemo(() => {
+    if (!sortKey) return data;
+
+    return [...data].sort((a, b) => {
+      const aVal = a[sortKey];
+      const bVal = b[sortKey];
+
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+
+      return sortDirection === 'asc'
+        ? String(aVal).localeCompare(String(bVal))
+        : String(bVal).localeCompare(String(aVal));
+    });
+  }, [data, sortKey, sortDirection]);
+
+  const displayedData = showAll ? sortedData : sortedData.slice(0, showInitially);
+
+  const handleSort = (key: keyof T) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('desc');
+    }
+  };
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+      {title && (
+        <div className="border-b border-neutral-200 px-6 py-4">
+          <h3 className="text-lg font-semibold">{title}</h3>
+        </div>
+      )}
+
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="border-b border-neutral-200 bg-neutral-50">
+            <tr>
+              {columns.map(column => (
+                <th
+                  key={String(column.key)}
+                  className={`px-6 py-3 text-left text-xs font-medium uppercase ${
+                    column.sortable !== false ? 'cursor-pointer hover:bg-neutral-100' : ''
+                  }`}
+                  onClick={() => column.sortable !== false && handleSort(column.key)}
+                >
+                  {column.label}
+                  {column.sortable !== false && sortKey === column.key && (
+                    <span className="ml-2">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-neutral-200">
+            {displayedData.map((row, idx) => (
+              <tr key={idx} className="hover:bg-neutral-50">
+                {columns.map(column => (
+                  <td key={String(column.key)} className="px-6 py-4 text-sm">
+                    {column.format ? column.format(row[column.key]) : String(row[column.key] ?? '')}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {data.length > showInitially && (
+        <div className="border-t border-neutral-200 px-6 py-4">
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="text-sm font-medium text-civiq-blue hover:text-civiq-blue/80"
+          >
+            {showAll ? 'Show less' : `Show all ${data.length} items`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

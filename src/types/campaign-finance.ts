@@ -254,3 +254,40 @@ export interface FinanceResponse {
     diversityScore: number; // 0-100, funding source diversity
   };
 }
+
+/**
+ * PHASE 5: UX Redesign - Comparison & Context Metrics
+ */
+
+/**
+ * Comparison metrics providing context for campaign finance data
+ */
+export interface ComparisonMetrics {
+  houseAverage: number; // Average for all House members
+  partyAverage: number; // Average for representative's party
+  percentileRank: number; // 0-100, where they rank among peers
+  percentDifference: number; // % difference from party average
+  outlierStatus: 'normal' | 'high' | 'low' | 'extreme';
+}
+
+/**
+ * Fundraising source category with comparison context
+ */
+export interface FundraisingSourceWithComparison {
+  category: string; // E.g., "Individual Contributions", "PAC Contributions"
+  amount: number;
+  percentage: number;
+  comparison: ComparisonMetrics;
+  contributorCount?: number; // Number of unique contributors
+}
+
+/**
+ * Enhanced financial summary with comparison metrics and insights
+ */
+export interface EnhancedFinancialSummary extends FinanceResponse {
+  totalRaisedComparison?: ComparisonMetrics;
+  selfFinancingComparison?: ComparisonMetrics;
+  fundraisingSources?: FundraisingSourceWithComparison[];
+  keyInsights?: string[]; // Auto-generated insights
+  comparisonDataAvailable: boolean; // Whether comparison data is included
+}
