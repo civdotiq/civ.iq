@@ -19,7 +19,10 @@ import { useIsDesktop } from '@/hooks/useMediaQuery';
 
 // Dynamically import heavy tabs to reduce initial bundle size
 const FinanceTab = dynamic(
-  () => import('./FinanceTabEnhanced').then(mod => ({ default: mod.FinanceTabEnhanced })),
+  () =>
+    import('@/features/campaign-finance/components/CampaignFinanceVisualizer').then(mod => ({
+      default: mod.CampaignFinanceVisualizer,
+    })),
   {
     loading: TabLoadingSpinner,
     ssr: false,
@@ -209,10 +212,12 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
         case 'finance':
           return (
             <FinanceTab
+              financeData={batchData?.data?.finance || {}}
+              representative={{
+                name: representative.name,
+                party: representative.party,
+              }}
               bioguideId={representative.bioguideId}
-              sharedData={batchData?.data?.finance}
-              sharedLoading={batchLoading}
-              sharedError={batchError}
             />
           );
         case 'news':
