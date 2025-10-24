@@ -184,7 +184,7 @@ const PACTypeBadge: React.FC<{ type: string }> = ({ type }) => {
 };
 
 export function CampaignFinanceVisualizer({
-  financeData,
+  financeData: initialFinanceData,
   representative: _representative,
   bioguideId: _bioguideId,
 }: CampaignFinanceVisualizerProps) {
@@ -194,6 +194,29 @@ export function CampaignFinanceVisualizer({
   const [lobbyingData, setLobbyingData] = useState<LobbyingData | null>(null);
   const [isLoadingLobbying, setIsLoadingLobbying] = useState(false);
   const [announcement, setAnnouncement] = useState('');
+  const [comprehensiveData, setComprehensiveData] = useState<CampaignFinanceData | null>(null);
+
+  // Fetch comprehensive finance data
+  useEffect(() => {
+    if (_bioguideId) {
+      fetch(`/api/representative/${_bioguideId}/finance/comprehensive`)
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to fetch comprehensive data');
+          return response.json();
+        })
+        .then(data => {
+          // Extract finance data from comprehensive response
+          setComprehensiveData(data?.finance || data);
+        })
+        .catch(() => {
+          // Fall back to initial data if comprehensive fetch fails
+          setComprehensiveData(initialFinanceData || null);
+        });
+    }
+  }, [_bioguideId, initialFinanceData]);
+
+  // Use comprehensive data if available, otherwise fall back to initial data
+  const financeData = comprehensiveData || initialFinanceData;
 
   // Get financial data - prefer direct fields, fallback to financial_summary
   const currentCycleData = financeData?.financial_summary?.[0];
@@ -360,12 +383,12 @@ export function CampaignFinanceVisualizer({
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {[
-              { id: 'overview', name: 'Basic Overview', shortName: 'Overview' },
-              { id: 'charts', name: 'Visual Charts', shortName: 'Charts' },
-              { id: 'interest-groups', name: 'Interest Groups', shortName: 'Groups' },
-              { id: 'lobbying', name: 'Corporate Lobbying', shortName: 'Lobbying' },
-              { id: 'expenditures', name: 'Expenditures', shortName: 'Spending' },
-              { id: 'contributions', name: 'Contributions', shortName: 'Donors' },
+              { id: 'overview', name: 'Overview' },
+              { id: 'charts', name: 'Charts' },
+              { id: 'interest-groups', name: 'Interest Groups' },
+              { id: 'lobbying', name: 'Lobbying' },
+              { id: 'expenditures', name: 'Expenditures' },
+              { id: 'contributions', name: 'Contributors' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -403,8 +426,7 @@ export function CampaignFinanceVisualizer({
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 } flex-shrink-0 whitespace-nowrap py-4 px-4 sm:px-6 border-b-2 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
               >
-                <span className="hidden sm:inline">{tab.name}</span>
-                <span className="sm:hidden">{tab.shortName}</span>
+                {tab.name}
               </button>
             ))}
           </nav>
