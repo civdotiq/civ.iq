@@ -212,7 +212,7 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
         case 'finance':
           return (
             <FinanceTab
-              financeData={batchData?.data?.finance || {}}
+              financeData={batchData?.data?.finance || summaryData?.data?.finance || {}}
               representative={{
                 name: representative.name,
                 party: representative.party,

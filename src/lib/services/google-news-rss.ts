@@ -11,6 +11,7 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
+import { XMLParser } from 'fast-xml-parser';
 
 export interface GoogleNewsArticle {
   title: string;
@@ -86,28 +87,29 @@ export async function fetchGoogleNewsRSS(
 }
 
 /**
- * Parse Google News RSS XML
+ * Parse Google News RSS XML using fast-xml-parser (Node.js compatible)
  */
 function parseGoogleNewsRSS(xmlText: string, limit: number): GoogleNewsArticle[] {
   try {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(xmlText, 'application/xml');
+    // Use fast-xml-parser for server-side XML parsing
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: '@_',
+    });
 
-    // Check for parsing errors
-    const parseError = doc.querySelector('parsererror');
-    if (parseError) {
-      throw new Error('XML parsing error');
-    }
+    const result = parser.parse(xmlText);
 
-    const items = Array.from(doc.querySelectorAll('item'));
+    // Navigate to items array
+    const items = result?.rss?.channel?.item || [];
+    const itemsArray = Array.isArray(items) ? items : [items];
     const articles: GoogleNewsArticle[] = [];
 
-    for (const item of items.slice(0, limit)) {
-      const title = item.querySelector('title')?.textContent?.trim();
-      const link = item.querySelector('link')?.textContent?.trim();
-      const pubDate = item.querySelector('pubDate')?.textContent?.trim();
-      const description = item.querySelector('description')?.textContent?.trim();
-      const source = item.querySelector('source')?.textContent?.trim();
+    for (const item of itemsArray.slice(0, limit)) {
+      const title = item.title;
+      const link = item.link;
+      const pubDate = item.pubDate;
+      const description = item.description;
+      const source = item.source;
 
       if (!title || !link) continue;
 

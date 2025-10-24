@@ -198,15 +198,19 @@ export async function fetchRepresentativeNewsAPI(
     // Extract last name for simpler queries
     const nameParts = name.split(' ').filter(part => part.length > 0);
     const lastName = nameParts[nameParts.length - 1] || name;
+    const firstName = nameParts[0] || '';
 
     // Get nicknames for this representative
     const nicknames = REPRESENTATIVE_NICKNAMES[name] || [];
 
     // Use the simplest query that will work with NewsAPI
-    // Avoid complex OR statements that cause timeouts
+    // For prominent politicians, use full name first for better coverage
     let combinedQuery: string;
 
-    if (nicknames.length > 0 && chamber) {
+    // For well-known politicians (2-word names), try full name first
+    if (nameParts.length === 2 && firstName && lastName) {
+      combinedQuery = `"${firstName} ${lastName}"`;
+    } else if (nicknames.length > 0 && chamber) {
       // If nickname exists, use it with title (e.g., "Rep. Will Timmons")
       const nickname = nicknames[0];
       const title = chamber === 'House' ? 'Rep.' : 'Senator';
