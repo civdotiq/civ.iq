@@ -180,36 +180,71 @@ export function SimpleDistrictMap({ zipCode, className = '' }: SimpleDistrictMap
       <div className="p-6 bg-gray-50">
         {boundary ? (
           <div className="space-y-4">
-            {/* Map Container with static map background */}
+            {/* Map Container with geographic context */}
             <div
-              className="relative w-full border-2 border-black bg-gray-100"
-              style={{ height: '500px' }}
+              className="relative w-full border-2 border-black"
+              style={{
+                height: '500px',
+                background: 'linear-gradient(135deg, #e8f4f8 0%, #d4e9f2 100%)',
+              }}
             >
-              {/* Static map image background */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`https://staticmap.openstreetmap.de/staticmap.php?center=${mapData.coordinates.lat},${mapData.coordinates.lng}&zoom=11&size=800x600&maptype=mapnik`}
-                alt="District map"
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{ opacity: 0.7 }}
-              />
+              <svg viewBox="0 0 800 600" className="w-full h-full">
+                {/* Background with subtle grid */}
+                <defs>
+                  <pattern id="geo-grid" width="50" height="50" patternUnits="userSpaceOnUse">
+                    <circle cx="0" cy="0" r="1" fill="#b8d4e0" opacity="0.3" />
+                  </pattern>
+                </defs>
+                <rect width="800" height="600" fill="url(#geo-grid)" />
 
-              {/* SVG Overlay for district boundary */}
-              <svg
-                viewBox="0 0 800 600"
-                className="absolute top-0 left-0 w-full h-full pointer-events-none"
-              >
-                {/* District Boundary */}
+                {/* Reference grid lines */}
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <line
+                    key={`lat-${i}`}
+                    x1="40"
+                    y1={80 + i * 70}
+                    x2="760"
+                    y2={80 + i * 70}
+                    stroke="#c5dce6"
+                    strokeWidth="1"
+                    strokeDasharray="5,5"
+                  />
+                ))}
+                {Array.from({ length: 9 }).map((_, i) => (
+                  <line
+                    key={`lng-${i}`}
+                    x1={40 + i * 90}
+                    y1="80"
+                    x2={40 + i * 90}
+                    y2="520"
+                    stroke="#c5dce6"
+                    strokeWidth="1"
+                    strokeDasharray="5,5"
+                  />
+                ))}
+
+                {/* Border frame */}
+                <rect
+                  x="40"
+                  y="80"
+                  width="720"
+                  height="440"
+                  fill="none"
+                  stroke="#7a9fb0"
+                  strokeWidth="2"
+                />
+
+                {/* District Boundary - scaled and centered */}
                 <path
                   d={coordinatesToPath(boundary.coordinates, mapData.bbox)}
                   fill={layerInfo?.color || '#e11d07'}
-                  fillOpacity="0.3"
+                  fillOpacity="0.35"
                   stroke={layerInfo?.color || '#e11d07'}
-                  strokeWidth="4"
+                  strokeWidth="3"
                   strokeOpacity="1"
                 />
 
-                {/* ZIP Code Location Marker */}
+                {/* ZIP Code Location Marker with label */}
                 {(() => {
                   const [x, y] = projectToSVG(
                     mapData.coordinates.lng,
@@ -217,12 +252,53 @@ export function SimpleDistrictMap({ zipCode, className = '' }: SimpleDistrictMap
                     mapData.bbox
                   );
                   return (
-                    <>
-                      <circle cx={x} cy={y} r="12" fill="#000000" opacity="0.9" />
-                      <circle cx={x} cy={y} r="6" fill="#ffffff" />
-                    </>
+                    <g>
+                      {/* Marker pin */}
+                      <circle cx={x} cy={y} r="14" fill="#FFD700" opacity="0.3" />
+                      <circle cx={x} cy={y} r="8" fill="#000000" opacity="0.9" />
+                      <circle cx={x} cy={y} r="4" fill="#FFD700" />
+                      {/* Label */}
+                      <text
+                        x={x}
+                        y={y - 20}
+                        fontSize="14"
+                        fontWeight="bold"
+                        fill="#000000"
+                        textAnchor="middle"
+                        style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.8)' }}
+                      >
+                        ZIP {mapData.zipCode}
+                      </text>
+                    </g>
                   );
                 })()}
+
+                {/* State label */}
+                <text
+                  x="400"
+                  y="40"
+                  fontSize="24"
+                  fontWeight="bold"
+                  fill="#2c5f75"
+                  textAnchor="middle"
+                  fontFamily="sans-serif"
+                >
+                  {mapData.state} - {boundary.properties.name}
+                </text>
+
+                {/* Coordinate labels */}
+                <text x="45" y="75" fontSize="11" fill="#5a7a8a" fontFamily="monospace">
+                  {mapData.bbox.maxLat.toFixed(4)}°N
+                </text>
+                <text x="45" y="535" fontSize="11" fill="#5a7a8a" fontFamily="monospace">
+                  {mapData.bbox.minLat.toFixed(4)}°N
+                </text>
+                <text x="35" y="300" fontSize="11" fill="#5a7a8a" fontFamily="monospace">
+                  {mapData.bbox.minLng.toFixed(4)}°W
+                </text>
+                <text x="665" y="300" fontSize="11" fill="#5a7a8a" fontFamily="monospace">
+                  {mapData.bbox.maxLng.toFixed(4)}°W
+                </text>
               </svg>
             </div>
 
