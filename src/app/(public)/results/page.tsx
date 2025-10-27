@@ -54,10 +54,10 @@ import { SearchResultsSkeleton } from '@/shared/components/ui/SkeletonComponents
 import { LoadingStateWrapper, LoadingMessage } from '@/shared/components/ui/LoadingStates';
 import { useMultiStageLoading } from '@/hooks/shared/useSmartLoading';
 // Dynamic import for code splitting - reduces initial bundle size
-const SimpleDistrictMap = dynamic(
+const InteractiveDistrictMap = dynamic(
   () =>
-    import('@/features/districts/components/SimpleDistrictMap').then(mod => ({
-      default: mod.SimpleDistrictMap,
+    import('@/features/districts/components/InteractiveDistrictMap').then(mod => ({
+      default: mod.InteractiveDistrictMap,
     })),
   {
     ssr: false,
@@ -738,7 +738,7 @@ function ResultsContent() {
 
               {activeTab === 'map' && (zipCode || query) && (
                 <div className="space-y-4">
-                  <SimpleDistrictMap zipCode={zipCode || query || ''} />
+                  <InteractiveDistrictMap zipCode={zipCode || query || ''} />
                 </div>
               )}
             </div>
