@@ -71,19 +71,21 @@ export const RepresentativeCard = memo(function RepresentativeCard({
                   District {representative.district}
                 </span>
               )}
-              {representative.yearsInOffice && (
+              {representative.yearsInOffice && representative.yearsInOffice > 0 && (
                 <span className="px-2 py-1 bg-civiq-green/10 text-civiq-green rounded-full text-xs font-medium">
                   {representative.yearsInOffice} years in office
                 </span>
               )}
             </div>
 
-            {representative.nextElection && (
-              <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
-                <span className="font-medium">Next Election:</span>
-                <span>{representative.nextElection}</span>
-              </div>
-            )}
+            {representative.nextElection &&
+              representative.nextElection !== '' &&
+              representative.nextElection !== '0' && (
+                <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
+                  <span className="font-medium">Next Election:</span>
+                  <span>{representative.nextElection}</span>
+                </div>
+              )}
           </div>
         </div>
       </div>
