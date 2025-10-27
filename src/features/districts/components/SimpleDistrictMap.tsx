@@ -180,36 +180,55 @@ export function SimpleDistrictMap({ zipCode, className = '' }: SimpleDistrictMap
       <div className="p-6 bg-gray-50">
         {boundary ? (
           <div className="space-y-4">
-            {/* Map Container with OSM base layer */}
+            {/* Map Container with SVG visualization */}
             <div
-              className="relative w-full border-2 border-black bg-white"
+              className="relative w-full border-2 border-black bg-gray-100"
               style={{ height: '500px' }}
             >
-              {/* OpenStreetMap base layer as background */}
-              <iframe
-                src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapData.bbox.minLng},${mapData.bbox.minLat},${mapData.bbox.maxLng},${mapData.bbox.maxLat}&layer=mapnik&marker=${mapData.coordinates.lat},${mapData.coordinates.lng}`}
-                style={{
-                  position: 'absolute',
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                }}
-                title="OpenStreetMap base layer"
-              />
-
-              {/* SVG Overlay for district boundary */}
               <svg
                 viewBox="0 0 800 600"
-                className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                style={{ zIndex: 10 }}
+                className="w-full h-full"
+                style={{ backgroundColor: '#f5f5f5' }}
               >
+                {/* Background grid for geographic reference */}
+                <defs>
+                  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e0e0e0" strokeWidth="1" />
+                  </pattern>
+                </defs>
+                <rect width="800" height="600" fill="url(#grid)" />
+
+                {/* Major grid lines */}
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <line
+                    key={`h-${i}`}
+                    x1="0"
+                    y1={i * 150}
+                    x2="800"
+                    y2={i * 150}
+                    stroke="#d0d0d0"
+                    strokeWidth="1"
+                  />
+                ))}
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <line
+                    key={`v-${i}`}
+                    x1={i * 160}
+                    y1="0"
+                    x2={i * 160}
+                    y2="600"
+                    stroke="#d0d0d0"
+                    strokeWidth="1"
+                  />
+                ))}
+
                 {/* District Boundary */}
                 <path
                   d={coordinatesToPath(boundary.coordinates, mapData.bbox)}
                   fill={layerInfo?.color || '#e11d07'}
-                  fillOpacity="0.2"
+                  fillOpacity="0.25"
                   stroke={layerInfo?.color || '#e11d07'}
-                  strokeWidth="4"
+                  strokeWidth="3"
                   strokeOpacity="1"
                 />
 
@@ -222,11 +241,26 @@ export function SimpleDistrictMap({ zipCode, className = '' }: SimpleDistrictMap
                   );
                   return (
                     <>
-                      <circle cx={x} cy={y} r="12" fill="#000000" opacity="0.8" />
-                      <circle cx={x} cy={y} r="6" fill="#ffffff" />
+                      <circle cx={x} cy={y} r="10" fill="#000000" opacity="0.9" />
+                      <circle cx={x} cy={y} r="5" fill="#ffffff" />
                     </>
                   );
                 })()}
+
+                {/* Geographic coordinates labels */}
+                <text x="10" y="590" fontSize="12" fill="#666" fontFamily="monospace">
+                  {mapData.bbox.minLat.toFixed(4)}°, {mapData.bbox.minLng.toFixed(4)}°
+                </text>
+                <text
+                  x="600"
+                  y="20"
+                  fontSize="12"
+                  fill="#666"
+                  fontFamily="monospace"
+                  textAnchor="end"
+                >
+                  {mapData.bbox.maxLat.toFixed(4)}°, {mapData.bbox.maxLng.toFixed(4)}°
+                </text>
               </svg>
             </div>
 
