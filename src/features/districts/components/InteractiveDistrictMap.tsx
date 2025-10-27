@@ -7,6 +7,7 @@
 
 import { useEffect, useState, useMemo, useRef } from 'react';
 import type { Map } from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 interface DistrictBoundary {
   type: string;
