@@ -54,10 +54,10 @@ import { SearchResultsSkeleton } from '@/shared/components/ui/SkeletonComponents
 import { LoadingStateWrapper, LoadingMessage } from '@/shared/components/ui/LoadingStates';
 import { useMultiStageLoading } from '@/hooks/shared/useSmartLoading';
 // Dynamic import for code splitting - reduces initial bundle size
-const InteractiveDistrictMap = dynamic(
+const SimpleDistrictMap = dynamic(
   () =>
-    import('@/features/districts/components/InteractiveDistrictMap').then(mod => ({
-      default: mod.InteractiveDistrictMap,
+    import('@/features/districts/components/SimpleDistrictMap').then(mod => ({
+      default: mod.SimpleDistrictMap,
     })),
   {
     ssr: false,
@@ -143,7 +143,6 @@ function ResultsContent() {
   const query = searchParams.get('q');
   const [data, setData] = useState<ApiResponse | null>(null);
   const [activeTab, setActiveTab] = useState<'federal' | 'state' | 'map'>('federal');
-  const [useInteractiveMap, setUseInteractiveMap] = useState(true);
   const [districtInfo, setDistrictInfo] = useState<{ state: string; district: string } | null>(
     null
   );
@@ -739,25 +738,7 @@ function ResultsContent() {
 
               {activeTab === 'map' && (zipCode || query) && (
                 <div className="space-y-4">
-                  {/* Map Type Toggle */}
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">District Boundaries</h3>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">Map type:</span>
-                      <button
-                        onClick={() => setUseInteractiveMap(!useInteractiveMap)}
-                        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                          useInteractiveMap
-                            ? 'bg-civiq-blue text-white'
-                            : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {useInteractiveMap ? 'Interactive' : 'Static'}
-                      </button>
-                    </div>
-                  </div>
-
-                  <InteractiveDistrictMap zipCode={zipCode || query || ''} />
+                  <SimpleDistrictMap zipCode={zipCode || query || ''} />
                 </div>
               )}
             </div>
