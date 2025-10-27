@@ -144,21 +144,12 @@ export const RepresentativeCard = memo(function RepresentativeCard({
         </div>
       </div>
 
-      {/* Data Completeness & Action */}
+      {/* Action Button */}
       <div className="px-6 py-4 bg-white border-t border-gray-100">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 flex-1">
-            <div className="flex-1 bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-civiq-green h-2 rounded-full"
-                style={{ width: `${representative.dataComplete}%` }}
-              ></div>
-            </div>
-            <span className="text-xs text-gray-600">{representative.dataComplete}% complete</span>
-          </div>
+        <div className="flex justify-end">
           <Link
             href={`/representative/${representative.bioguideId}`}
-            className="ml-4 bg-civiq-blue text-white px-4 py-2 rounded hover:bg-civiq-blue/90 transition-colors text-sm font-medium"
+            className="bg-civiq-blue text-white px-4 py-2 rounded hover:bg-civiq-blue/90 transition-colors text-sm font-medium"
           >
             View Profile
           </Link>

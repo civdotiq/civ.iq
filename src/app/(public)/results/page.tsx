@@ -71,11 +71,7 @@ const InteractiveDistrictMap = dynamic(
     ),
   }
 );
-import { DataQualityIndicator, DataSourceBadge } from '@/components/shared/ui/DataQualityIndicator';
-import {
-  InlineQualityScore,
-  DataTrustIndicator,
-} from '@/shared/components/ui/DataQualityDashboard';
+import { DataSourceBadge } from '@/components/shared/ui/DataQualityIndicator';
 import { DistrictSelector } from '@/features/districts/components/DistrictSelector';
 import { AddressRefinement } from '@/features/districts/components/AddressRefinement';
 import {
@@ -238,7 +234,7 @@ function ResultsContent() {
                     yearsInOffice: 0,
                     nextElection: '',
                     imageUrl: '',
-                    dataComplete: 85,
+                    dataComplete: 0,
                   })
                 ),
                 metadata: {
@@ -307,7 +303,7 @@ function ResultsContent() {
                   yearsInOffice: 0,
                   nextElection: '',
                   imageUrl: '',
-                  dataComplete: 85,
+                  dataComplete: 0,
                 })
               ),
               metadata: {
@@ -551,32 +547,14 @@ function ResultsContent() {
             )}
           </p>
 
-          {/* Data Quality Indicator */}
+          {/* Data status - simplified */}
           {data?.metadata && (
-            <div className="mt-4 space-y-2">
-              <div className="flex items-center gap-3 text-sm flex-wrap">
-                <DataQualityIndicator
-                  quality={data.metadata?.dataQuality}
-                  source={data.metadata?.dataSource}
-                  freshness={data.metadata?.freshness}
-                />
-                <DataSourceBadge source={data.metadata?.dataSource} showTrustLevel={true} />
-                <InlineQualityScore
-                  score={85}
-                  label="Data Quality"
-                  showTrend={true}
-                  trend="stable"
-                />
-                <DataTrustIndicator
-                  sources={data.metadata?.dataSource ? [data.metadata.dataSource] : []}
-                />
-              </div>
+            <div className="mt-4">
               <div className="text-xs text-gray-500">
                 Retrieved:{' '}
                 {data.metadata?.timestamp
                   ? new Date(data.metadata.timestamp).toLocaleString()
-                  : 'Unknown'}{' '}
-                • Status: validated • Cacheable: {data.metadata.cacheable ? 'yes' : 'no'}
+                  : 'Unknown'}
               </div>
             </div>
           )}
