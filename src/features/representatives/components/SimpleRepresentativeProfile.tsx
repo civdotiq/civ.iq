@@ -11,11 +11,9 @@ import useSWR, { preload } from 'swr';
 import { EnhancedRepresentative } from '@/types/representative';
 import { HeroStatsHeader } from './HeroStatsHeader';
 import { TabNavigation, profileTabs } from './TabNavigation';
-import { DistrictSidebar } from './DistrictSidebar';
 import { ContactInfoTab } from './ContactInfoTab';
 import { TabLoadingSpinner } from '@/lib/utils/code-splitting';
 import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
-import { useIsDesktop } from '@/hooks/useMediaQuery';
 
 // Dynamically import heavy tabs to reduce initial bundle size
 const FinanceTab = dynamic(
@@ -52,7 +50,6 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
     const [activeTab, setActiveTab] = useState('overview');
     const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set(['overview']));
     const prefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const isDesktop = useIsDesktop();
 
     // Fetch lightweight summary data for Key Stats
     const {
@@ -231,7 +228,8 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
         default:
           return <ContactInfoTab representative={representative} />;
       }
-    }, [activeTab, representative, batchData, batchLoading, batchError]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab, representative, batchData, batchLoading, batchError, summaryData]);
 
     return (
       <div className="min-h-screen bg-gray-50">
@@ -260,64 +258,20 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
             />
           </div>
 
-          {/* Main Content Layout - 2 column with responsive spacing */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 sm:gap-6 mb-4 sm:mb-6">
-            {/* Main Content Area - White bordered box */}
-            <div className="bg-white aicher-border">
-              {/* Tab Navigation with hover prefetch */}
-              <TabNavigation
-                tabs={profileTabs}
-                activeTab={activeTab}
-                onTabChange={handleTabChange}
-                onTabHover={handleTabHover}
-              />
+          {/* Main Content Area - Full width with tabs */}
+          <div className="bg-white aicher-border mb-4 sm:mb-6">
+            {/* Tab Navigation with hover prefetch */}
+            <TabNavigation
+              tabs={profileTabs}
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              onTabHover={handleTabHover}
+            />
 
-              {/* Tab Content with responsive padding and Suspense boundary */}
-              <div className="p-4 sm:p-6">
-                <Suspense fallback={<TabLoadingSpinner />}>{renderActiveTab}</Suspense>
-              </div>
+            {/* Tab Content with responsive padding and Suspense boundary */}
+            <div className="p-4 sm:p-6">
+              <Suspense fallback={<TabLoadingSpinner />}>{renderActiveTab}</Suspense>
             </div>
-
-            {/* Sidebar - Conditionally render based on screen size for better mobile performance */}
-            {isDesktop ? (
-              <div className="sticky top-4 self-start">
-                <Suspense
-                  fallback={
-                    <div className="bg-white aicher-border p-4 sm:p-6">
-                      <div className="animate-pulse">
-                        <div className="h-6 bg-gray-200 rounded mb-4"></div>
-                        <div className="space-y-3">
-                          <div className="h-4 bg-gray-200 rounded"></div>
-                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                        </div>
-                      </div>
-                    </div>
-                  }
-                >
-                  <DistrictSidebar representative={representative} />
-                </Suspense>
-              </div>
-            ) : (
-              <details className="bg-white aicher-border">
-                <summary className="p-4 font-bold cursor-pointer list-none flex justify-between items-center aicher-heading">
-                  <span>District Information</span>
-                  <span className="text-civiq-blue">▼</span>
-                </summary>
-                <div className="px-4 pb-4">
-                  <Suspense
-                    fallback={
-                      <div className="animate-pulse space-y-3">
-                        <div className="h-4 bg-gray-200 rounded"></div>
-                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      </div>
-                    }
-                  >
-                    <DistrictSidebar representative={representative} />
-                  </Suspense>
-                </div>
-              </details>
-            )}
           </div>
 
           {/* Data Sources Attribution - responsive spacing */}

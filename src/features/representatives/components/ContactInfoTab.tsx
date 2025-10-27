@@ -10,6 +10,7 @@ import { EnhancedRepresentative } from '@/types/representative';
 import { ServiceTermsCard } from './ServiceTermsCard';
 import { CommitteeMembershipsCard } from './CommitteeMembershipsCard';
 import { BiographyCard } from './BiographyCard';
+import { OverviewSidebar } from './OverviewSidebar';
 
 interface ContactInfoTabProps {
   representative: EnhancedRepresentative;
@@ -28,21 +29,32 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
         </h2>
       </div>
 
-      {/* Biography Section - Full Width */}
-      <div style={{ marginBottom: 'calc(var(--grid) * 4)' }}>
-        <BiographyCard representative={representative} />
-      </div>
+      {/* Two-column grid layout: 2/3 main content, 1/3 sidebar */}
+      <div
+        className="grid grid-cols-1 lg:grid-cols-[2fr_1fr]"
+        style={{ gap: 'calc(var(--grid) * 4)' }}
+      >
+        {/* LEFT COLUMN (2/3) - Main Content */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--grid) * 4)' }}>
+          {/* Biography Section */}
+          <div>
+            <BiographyCard representative={representative} />
+          </div>
 
-      {/* Two-column grid layout with proper spacing */}
-      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'calc(var(--grid) * 4)' }}>
-        {/* Left Column - Committee Details */}
-        <div>
-          <CommitteeMembershipsCard representative={representative} />
+          {/* Committee Memberships */}
+          <div>
+            <CommitteeMembershipsCard representative={representative} />
+          </div>
+
+          {/* Federal Service History */}
+          <div>
+            <ServiceTermsCard representative={representative} />
+          </div>
         </div>
 
-        {/* Right Column - Service History */}
-        <div>
-          <ServiceTermsCard representative={representative} />
+        {/* RIGHT COLUMN (1/3) - Sidebar */}
+        <div className="lg:sticky lg:top-4 lg:self-start">
+          <OverviewSidebar representative={representative} />
         </div>
       </div>
     </div>
