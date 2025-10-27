@@ -180,45 +180,55 @@ export function SimpleDistrictMap({ zipCode, className = '' }: SimpleDistrictMap
       <div className="p-6 bg-gray-50">
         {boundary ? (
           <div className="space-y-4">
-            {/* SVG Map */}
-            <svg
-              viewBox="0 0 800 600"
-              className="w-full h-auto bg-white border-2 border-black"
-              style={{ maxHeight: '500px' }}
+            {/* Map Container with OSM base layer */}
+            <div
+              className="relative w-full border-2 border-black bg-white"
+              style={{ height: '500px' }}
             >
-              {/* Grid lines for reference */}
-              <defs>
-                <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-                  <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#e5e7eb" strokeWidth="1" />
-                </pattern>
-              </defs>
-              <rect width="800" height="600" fill="url(#grid)" />
-
-              {/* District Boundary */}
-              <path
-                d={coordinatesToPath(boundary.coordinates, mapData.bbox)}
-                fill={layerInfo?.color || '#e11d07'}
-                fillOpacity="0.3"
-                stroke={layerInfo?.color || '#e11d07'}
-                strokeWidth="3"
-                strokeOpacity="0.8"
+              {/* OpenStreetMap base layer as background */}
+              <iframe
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapData.bbox.minLng},${mapData.bbox.minLat},${mapData.bbox.maxLng},${mapData.bbox.maxLat}&layer=mapnik&marker=${mapData.coordinates.lat},${mapData.coordinates.lng}`}
+                style={{
+                  position: 'absolute',
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                }}
+                title="OpenStreetMap base layer"
               />
 
-              {/* ZIP Code Location Marker */}
-              {(() => {
-                const [x, y] = projectToSVG(
-                  mapData.coordinates.lng,
-                  mapData.coordinates.lat,
-                  mapData.bbox
-                );
-                return (
-                  <>
-                    <circle cx={x} cy={y} r="8" fill="#000000" />
-                    <circle cx={x} cy={y} r="4" fill="#ffffff" />
-                  </>
-                );
-              })()}
-            </svg>
+              {/* SVG Overlay for district boundary */}
+              <svg
+                viewBox="0 0 800 600"
+                className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                style={{ zIndex: 10 }}
+              >
+                {/* District Boundary */}
+                <path
+                  d={coordinatesToPath(boundary.coordinates, mapData.bbox)}
+                  fill={layerInfo?.color || '#e11d07'}
+                  fillOpacity="0.2"
+                  stroke={layerInfo?.color || '#e11d07'}
+                  strokeWidth="4"
+                  strokeOpacity="1"
+                />
+
+                {/* ZIP Code Location Marker */}
+                {(() => {
+                  const [x, y] = projectToSVG(
+                    mapData.coordinates.lng,
+                    mapData.coordinates.lat,
+                    mapData.bbox
+                  );
+                  return (
+                    <>
+                      <circle cx={x} cy={y} r="12" fill="#000000" opacity="0.8" />
+                      <circle cx={x} cy={y} r="6" fill="#ffffff" />
+                    </>
+                  );
+                })()}
+              </svg>
+            </div>
 
             {/* Legend */}
             <div className="flex items-center justify-center gap-6 text-sm">
