@@ -3,43 +3,38 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+/**
+ * State Representatives API Route
+ *
+ * Returns state legislators for a given ZIP code using the StateLegislatureCoreService.
+ * Replaces direct OpenStates HTTP calls with core service (GraphQL + caching).
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
+import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import logger from '@/lib/logging/simple-logger';
+import type { EnhancedStateLegislator, StateJurisdiction } from '@/types/state-legislature';
+import { getAllCongressionalDistrictsForZip } from '@/lib/data/zip-district-mapping';
 
 export const dynamic = 'force-dynamic';
 
-interface StateLegislator {
-  id: string;
-  name: string;
-  party: string;
-  chamber: 'upper' | 'lower';
-  district: string;
-  state: string;
-  image?: string;
-  email?: string;
-  phone?: string;
-  website?: string;
-  offices?: Array<{
-    name: string;
-    address?: string;
-    phone?: string;
-    email?: string;
-  }>;
-  currentRole?: {
-    title: string;
-    org_classification: string;
-    district: string;
-    party: string;
-    start_date: string;
-    end_date?: string;
-  };
-}
-
+// API Response shape (for backwards compatibility with existing frontend)
 interface StateApiResponse {
   zipCode: string;
   state: string;
   stateName: string;
-  legislators: StateLegislator[];
+  legislators: Array<{
+    id: string;
+    name: string;
+    party: string;
+    chamber: 'upper' | 'lower';
+    district: string;
+    state: string;
+    image?: string;
+    email?: string;
+    phone?: string;
+    website?: string;
+  }>;
   jurisdiction?: {
     name: string;
     classification: string;
@@ -50,72 +45,27 @@ interface StateApiResponse {
   };
 }
 
-// Helper function to get state abbreviation from full name
-function getStateAbbreviation(state: string): string {
-  const stateMap: { [key: string]: string } = {
-    Alabama: 'al',
-    Alaska: 'ak',
-    Arizona: 'az',
-    Arkansas: 'ar',
-    California: 'ca',
-    Colorado: 'co',
-    Connecticut: 'ct',
-    Delaware: 'de',
-    Florida: 'fl',
-    Georgia: 'ga',
-    Hawaii: 'hi',
-    Idaho: 'id',
-    Illinois: 'il',
-    Indiana: 'in',
-    Iowa: 'ia',
-    Kansas: 'ks',
-    Kentucky: 'ky',
-    Louisiana: 'la',
-    Maine: 'me',
-    Maryland: 'md',
-    Massachusetts: 'ma',
-    Michigan: 'mi',
-    Minnesota: 'mn',
-    Mississippi: 'ms',
-    Missouri: 'mo',
-    Montana: 'mt',
-    Nebraska: 'ne',
-    Nevada: 'nv',
-    'New Hampshire': 'nh',
-    'New Jersey': 'nj',
-    'New Mexico': 'nm',
-    'New York': 'ny',
-    'North Carolina': 'nc',
-    'North Dakota': 'nd',
-    Ohio: 'oh',
-    Oklahoma: 'ok',
-    Oregon: 'or',
-    Pennsylvania: 'pa',
-    'Rhode Island': 'ri',
-    'South Carolina': 'sc',
-    'South Dakota': 'sd',
-    Tennessee: 'tn',
-    Texas: 'tx',
-    Utah: 'ut',
-    Vermont: 'vt',
-    Virginia: 'va',
-    Washington: 'wa',
-    'West Virginia': 'wv',
-    Wisconsin: 'wi',
-    Wyoming: 'wy',
-  };
+// Helper function to get state from ZIP code using our ZIP-to-district mapping
+function getStateFromZip(zipCode: string): string | null {
+  try {
+    const districts = getAllCongressionalDistrictsForZip(zipCode);
 
-  // Handle direct abbreviation inputs
-  const directMatch = Object.values(stateMap).includes(state.toLowerCase());
-  if (directMatch) return state.toLowerCase();
+    if (districts && districts.length > 0) {
+      // Return the state from the first district
+      const firstDistrict = districts[0];
+      return firstDistrict?.state || null;
+    }
 
-  // Handle full state name inputs
-  return stateMap[state] || state.toLowerCase();
+    return null;
+  } catch (error) {
+    logger.error('Failed to get state from ZIP', error as Error, { zipCode });
+    return null;
+  }
 }
 
 // Get full state name from abbreviation
 function getStateName(abbreviation: string): string {
-  const stateNameMap: { [key: string]: string } = {
+  const stateNameMap: Record<string, string> = {
     al: 'Alabama',
     ak: 'Alaska',
     az: 'Arizona',
@@ -171,218 +121,135 @@ function getStateName(abbreviation: string): string {
   return stateNameMap[abbreviation.toLowerCase()] || abbreviation.toUpperCase();
 }
 
-// Helper function to get state from ZIP code using Census API
-async function getStateFromZip(zipCode: string): Promise<string | null> {
-  try {
-    const response = await fetch(
-      `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${zipCode}&benchmark=2020&format=json`
-    );
-
-    if (!response.ok) {
-      throw new Error(`Census geocoding API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (data.result?.addressMatches?.[0]?.addressComponents?.state) {
-      return data.result.addressMatches[0].addressComponents.state;
-    }
-
-    return null;
-  } catch {
-    // Error logged in monitoring system
-    return null;
-  }
+/**
+ * Transform EnhancedStateLegislator to API response format
+ */
+function transformLegislatorForResponse(legislator: EnhancedStateLegislator) {
+  return {
+    id: legislator.id,
+    name: legislator.name,
+    party: legislator.party,
+    chamber: legislator.chamber,
+    district: legislator.district,
+    state: legislator.state,
+    image: legislator.photo_url,
+    email: legislator.email,
+    phone: legislator.phone,
+    website: legislator.links?.find(link => link.note === 'website')?.url,
+  };
 }
 
-// Fetch state jurisdiction info from OpenStates
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
-  try {
-    const response = await fetch(`https://v3.openstates.org/jurisdictions/${stateAbbrev}`, {
-      headers: {
-        'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenStates jurisdiction API error: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch {
-    // Error logged in monitoring system
-    return null;
-  }
-}
-
-// Fetch state legislators from OpenStates
-async function fetchStateLegislators(stateAbbrev: string): Promise<StateLegislator[]> {
-  try {
-    const response = await fetch(
-      `https://v3.openstates.org/people?jurisdiction=${stateAbbrev}&current_role=true&per_page=50`,
+/**
+ * Transform StateJurisdiction to API response format
+ */
+function transformJurisdictionForResponse(jurisdiction: StateJurisdiction) {
+  return {
+    name: jurisdiction.name,
+    classification: jurisdiction.classification,
+    chambers: [
       {
-        headers: {
-          'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`OpenStates people API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    return (
-      data.results?.map(
-        (person: {
-          id: string;
-          name: string;
-          current_role?: {
-            party?: string;
-            org_classification?: string;
-            district?: string;
-            title?: string;
-            start_date?: string;
-            end_date?: string;
-          };
-          image?: string;
-          email?: string;
-          phone?: string;
-          links?: Array<{ note?: string; url?: string }>;
-          offices?: Array<{ name?: string; address?: string; phone?: string; email?: string }>;
-        }) => ({
-          id: person.id,
-          name: person.name,
-          party: person.current_role?.party || 'Unknown',
-          chamber: person.current_role?.org_classification || 'lower',
-          district: person.current_role?.district || 'Unknown',
-          state: stateAbbrev.toUpperCase(),
-          image: person.image,
-          email: person.email,
-          phone: person.phone,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          website: person.links?.find((link: any) => link.note === 'website')?.url,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          offices: person.offices?.map((office: any) => ({
-            name: office.name || 'Office',
-            address: office.address,
-            phone: office.phone,
-            email: office.email,
-          })),
-          currentRole: person.current_role
-            ? {
-                title:
-                  person.current_role.title ||
-                  `${person.current_role.org_classification === 'upper' ? 'State Senator' : 'State Representative'}`,
-                org_classification: person.current_role.org_classification,
-                district: person.current_role.district,
-                party: person.current_role.party,
-                start_date: person.current_role.start_date,
-                end_date: person.current_role.end_date,
-              }
-            : undefined,
-        })
-      ) || []
-    );
-  } catch {
-    // Error logged in monitoring system
-    return [];
-  }
-}
-
-// EMERGENCY FIX: Never return fake state legislators
-// Previously returned 5 fake legislators: Sen. District 1/2, Rep. District A/B/C
-// This could mislead citizens about their actual state representation
-function _generateEmptyLegislatorResponse(state: string, stateAbbrev: string): StateLegislator[] {
-  logger.warn('Cannot create fake state legislators', {
-    state,
-    stateAbbrev,
-    reason: 'Misrepresenting actual state government officials is prohibited',
-  });
-
-  return []; // NEVER return fake legislators
+        name: jurisdiction.chambers.upper.name,
+        classification: 'upper',
+      },
+      {
+        name: jurisdiction.chambers.lower.name,
+        classification: 'lower',
+      },
+    ],
+  };
 }
 
 export async function GET(request: NextRequest) {
+  const startTime = Date.now();
   const { searchParams } = request.nextUrl;
   const zipCode = searchParams.get('zip');
 
   if (!zipCode) {
+    logger.warn('State representatives request missing ZIP code');
     return NextResponse.json({ error: 'ZIP code is required' }, { status: 400 });
   }
 
   try {
-    // Get state from ZIP code
-    const stateFromZip = await getStateFromZip(zipCode);
+    // Get state from ZIP code using our ZIP-to-district mapping
+    const stateAbbrev = getStateFromZip(zipCode);
 
-    if (!stateFromZip) {
+    if (!stateAbbrev) {
+      logger.warn('Could not determine state from ZIP code', { zipCode });
       return NextResponse.json(
         { error: 'Could not determine state from ZIP code' },
         { status: 400 }
       );
     }
 
-    const stateAbbrev = getStateAbbreviation(stateFromZip);
     const stateName = getStateName(stateAbbrev);
+    const stateAbbrevUpper = stateAbbrev.toUpperCase();
 
-    if (process.env.OPENSTATES_API_KEY) {
-      // Fetch real data from OpenStates API
-      const [jurisdiction, legislators] = await Promise.all([
-        fetchStateJurisdiction(stateAbbrev),
-        fetchStateLegislators(stateAbbrev),
-      ]);
+    logger.info('Fetching state legislators via core service', {
+      zipCode,
+      state: stateAbbrevUpper,
+    });
 
-      const response: StateApiResponse = {
+    // Use StateLegislatureCoreService for direct access (NO HTTP calls!)
+    const [legislators, jurisdiction] = await Promise.all([
+      StateLegislatureCoreService.getAllStateLegislators(stateAbbrevUpper),
+      StateLegislatureCoreService.getStateJurisdiction(stateAbbrevUpper),
+    ]);
+
+    if (legislators.length === 0) {
+      logger.warn('No state legislators found', {
         zipCode,
-        state: stateAbbrev.toUpperCase(),
-        stateName,
-        legislators: legislators.sort((a, b) => {
-          // Sort by chamber (Senate first), then by district
-          if (a.chamber !== b.chamber) {
-            return a.chamber === 'upper' ? -1 : 1;
-          }
-          return a.district.localeCompare(b.district);
-        }),
-        jurisdiction: jurisdiction || {
-          name: stateName,
-          classification: 'state',
-          chambers: [
-            { name: 'House of Representatives', classification: 'lower' },
-            { name: 'Senate', classification: 'upper' },
-          ],
-        },
-      };
-
-      return NextResponse.json(response);
+        state: stateAbbrevUpper,
+        reason: 'OpenStates returned empty results or API unavailable',
+      });
     }
 
-    // EMERGENCY FIX: Never return fake legislators when OpenStates API unavailable
-    logger.warn('State legislators unavailable - OpenStates API key missing', {
-      zipCode,
-      stateAbbrev,
-      reason: 'No API key for OpenStates - cannot return fake legislators',
+    // Transform and sort legislators
+    const transformedLegislators = legislators.map(transformLegislatorForResponse).sort((a, b) => {
+      // Sort by chamber (Senate first), then by district
+      if (a.chamber !== b.chamber) {
+        return a.chamber === 'upper' ? -1 : 1;
+      }
+      // Natural sort for districts (handles "1", "2", "10" correctly)
+      return a.district.localeCompare(b.district, undefined, { numeric: true });
     });
 
     const response: StateApiResponse = {
       zipCode,
-      state: stateAbbrev.toUpperCase(),
+      state: stateAbbrevUpper,
       stateName,
-      legislators: [], // NEVER return fake legislators
-      jurisdiction: {
-        name: stateName,
-        classification: 'state',
-        chambers: [
-          { name: 'House of Representatives', classification: 'lower' },
-          { name: 'Senate', classification: 'upper' },
-        ],
-      },
+      legislators: transformedLegislators,
+      jurisdiction: jurisdiction
+        ? transformJurisdictionForResponse(jurisdiction)
+        : {
+            name: stateName,
+            classification: 'state',
+            chambers: [
+              { name: 'House of Representatives', classification: 'lower' },
+              { name: 'Senate', classification: 'upper' },
+            ],
+          },
     };
 
+    logger.info('State representatives request successful', {
+      zipCode,
+      state: stateAbbrevUpper,
+      legislatorCount: transformedLegislators.length,
+      responseTime: Date.now() - startTime,
+    });
+
     return NextResponse.json(response);
-  } catch {
-    // Error logged in monitoring system
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (error) {
+    logger.error('State representatives request failed', error as Error, {
+      zipCode,
+      responseTime: Date.now() - startTime,
+    });
+
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch state representatives',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
