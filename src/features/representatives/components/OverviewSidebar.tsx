@@ -7,17 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import {
-  MapPin,
-  Users,
-  Building,
-  Phone,
-  Mail,
-  ExternalLink,
-  Calendar,
-  Clock,
-  AlertCircle,
-} from 'lucide-react';
+import { MapPin, Users, Building, Phone, Mail, ExternalLink, Calendar, Clock } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
 import { AicherSidebarCard } from './AicherSidebarCard';
 import { StateMapCard } from './StateMapCard';
@@ -326,24 +316,6 @@ export function OverviewSidebar({ representative }: OverviewSidebarProps) {
           <button className="block w-full text-center py-3 px-5 text-sm aicher-heading transition-all duration-200 bg-white text-black aicher-border border-black hover:bg-black hover:text-white">
             Find Local Offices
           </button>
-        </div>
-      </AicherSidebarCard>
-
-      {/* Need Help? */}
-      <AicherSidebarCard title="Need Help?" icon={AlertCircle} variant="warning">
-        <div className="text-sm text-gray-700 leading-relaxed">
-          <p className="mb-3">
-            Having trouble reaching your representative? Contact information is updated regularly
-            from official sources.
-          </p>
-          <a
-            href="https://www.house.gov/representatives/find-your-representative"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-civiq-red hover:underline text-xs font-semibold aicher-heading-wide"
-          >
-            Find alternative contact methods →
-          </a>
         </div>
       </AicherSidebarCard>
     </div>
