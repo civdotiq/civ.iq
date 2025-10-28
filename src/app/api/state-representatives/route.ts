@@ -190,8 +190,9 @@ export async function GET(request: NextRequest) {
     });
 
     // Use StateLegislatureCoreService for direct access (NO HTTP calls!)
+    // NOTE: ZIP-based filtering not yet implemented - returns all state legislators
     const [legislators, jurisdiction] = await Promise.all([
-      StateLegislatureCoreService.getAllStateLegislators(stateAbbrevUpper),
+      StateLegislatureCoreService.getAllStateLegislators(stateAbbrevUpper, undefined),
       StateLegislatureCoreService.getStateJurisdiction(stateAbbrevUpper),
     ]);
 
