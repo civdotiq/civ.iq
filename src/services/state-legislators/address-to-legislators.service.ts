@@ -271,17 +271,34 @@ export class AddressToLegislatorsService {
   static validateAddress(request: AddressLookupRequest): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
+    // Street validation with max length
     if (!request.street || request.street.trim().length === 0) {
       errors.push('Street address is required');
+    } else if (request.street.length > 200) {
+      errors.push('Street address must be less than 200 characters');
     }
+
+    // City validation with max length
     if (!request.city || request.city.trim().length === 0) {
       errors.push('City is required');
+    } else if (request.city.length > 100) {
+      errors.push('City must be less than 100 characters');
     }
+
+    // State validation with uppercase check
     if (!request.state || request.state.trim().length === 0) {
       errors.push('State is required');
-    }
-    if (request.state && request.state.length !== 2) {
+    } else if (request.state.length !== 2) {
       errors.push('State must be a 2-letter abbreviation (e.g., "MI")');
+    } else if (!/^[A-Z]{2}$/.test(request.state)) {
+      errors.push('State must be uppercase (e.g., "MI" not "mi")');
+    }
+
+    // ZIP code format validation (optional but validated if provided)
+    if (request.zip) {
+      if (!/^\d{5}(-\d{4})?$/.test(request.zip)) {
+        errors.push('ZIP code must be in format 12345 or 12345-6789');
+      }
     }
 
     return {

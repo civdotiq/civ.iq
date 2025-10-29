@@ -17,7 +17,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { addressToLegislators } from '@/services/state-legislators/address-to-legislators.service';
+import {
+  addressToLegislators,
+  AddressLookupException,
+  AddressLookupError,
+} from '@/services/state-legislators/address-to-legislators.service';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -79,13 +83,34 @@ export async function POST(request: NextRequest) {
       responseTime: Date.now() - startTime,
     });
 
-    // Return user-friendly error message
-    const errorMessage =
-      error instanceof Error ? error.message : 'Failed to find state legislators';
+    // Map service errors to appropriate HTTP status codes
+    if (error instanceof AddressLookupException) {
+      const statusCode =
+        {
+          [AddressLookupError.INVALID_ADDRESS]: 400,
+          [AddressLookupError.ADDRESS_NOT_FOUND]: 404,
+          [AddressLookupError.NO_DISTRICTS_FOUND]: 404,
+          [AddressLookupError.NO_LEGISLATORS_FOUND]: 404,
+          [AddressLookupError.CENSUS_API_ERROR]: 502, // Bad Gateway (upstream API failure)
+          [AddressLookupError.OPENSTATES_API_ERROR]: 502,
+          [AddressLookupError.UNKNOWN_ERROR]: 500,
+        }[error.errorType] || 500;
+
+      return NextResponse.json(
+        {
+          error: error.errorType,
+          message: error.message,
+        },
+        { status: statusCode }
+      );
+    }
+
+    // Fallback for unexpected errors
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
 
     return NextResponse.json(
       {
-        error: 'Lookup failed',
+        error: 'Internal server error',
         message: errorMessage,
       },
       { status: 500 }

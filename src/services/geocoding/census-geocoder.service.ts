@@ -30,7 +30,7 @@ export class CensusGeocoderService {
     'https://geocoding.geo.census.gov/geocoder/geographies/address';
   private static readonly DEFAULT_BENCHMARK = 'Public_AR_Current';
   private static readonly DEFAULT_VINTAGE = 'Current_Current';
-  private static readonly CACHE_TTL = 7 * 24 * 60 * 60; // 7 days (addresses don't change districts often)
+  private static readonly CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds (addresses don't change districts often)
   private static readonly REQUEST_TIMEOUT = 15000; // 15 seconds
 
   /**
