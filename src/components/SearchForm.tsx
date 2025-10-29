@@ -119,7 +119,7 @@ export default function SearchForm() {
       setError({
         type: 'geolocation',
         message: 'Geolocation not supported',
-        suggestion: 'Please enter your ZIP code manually',
+        suggestion: 'Please enter your address or ZIP code manually',
       });
       return;
     }
@@ -139,7 +139,7 @@ export default function SearchForm() {
 
       // Use Census Geocoding API for reverse geocoding (coordinates to address)
       const response = await fetch(
-        `https://geocoding.geo.census.gov/geocoder/geographies/coordinates?x=${longitude}&y=${latitude}&benchmark=Public_AR_Current&vintage=Current_Current&format=json`
+        `https://geocoding.geo.census.gov/geocoder/locations/coordinates?x=${longitude}&y=${latitude}&benchmark=Public_AR_Current&vintage=Current_Current&format=json`
       );
 
       if (!response.ok) {
@@ -147,38 +147,27 @@ export default function SearchForm() {
       }
 
       const data = await response.json();
-      const result = data.result?.geographies?.['Census Tracts']?.[0];
+      const addressMatch = data.result?.addressMatches?.[0];
 
-      if (!result?.GEOID) {
-        throw new Error('No location data found');
+      if (!addressMatch) {
+        throw new Error('No address found for this location');
       }
 
-      // Extract ZIP code from address components or use /api/geocode endpoint
-      // For now, use the internal geocode API which handles this properly
-      const geocodeResponse = await fetch(`/api/geocode?lat=${latitude}&lng=${longitude}`);
+      // Extract address components
+      const { matchedAddress } = addressMatch;
 
-      if (!geocodeResponse.ok) {
-        throw new Error('Failed to get ZIP code from location');
-      }
-
-      const geocodeData = await geocodeResponse.json();
-
-      if (!geocodeData.zipCode) {
-        throw new Error('No ZIP code found for this location');
-      }
-
-      const zipCode = geocodeData.zipCode;
-      setSearchInput(zipCode);
+      // Navigate to results page with the address - it will handle the unified geocode flow
+      setSearchInput(matchedAddress);
       setIsGeolocating(false);
 
-      // Automatically trigger search with the found ZIP
-      router.push(`/representatives?zip=${zipCode}`);
+      // Navigate with the matched address
+      router.push(`/results?q=${encodeURIComponent(matchedAddress)}`);
     } catch {
       setIsGeolocating(false);
       setError({
         type: 'geolocation',
         message: 'Location detection failed',
-        suggestion: 'Please check location permissions or enter your ZIP code manually',
+        suggestion: 'Please check location permissions or enter your address manually',
       });
     }
   };
@@ -192,16 +181,14 @@ export default function SearchForm() {
           </div>
           <input
             type="text"
-            inputMode="numeric"
-            pattern="[0-9]{5}(-[0-9]{4})?"
-            placeholder="Enter ZIP code (e.g., 48221)"
+            placeholder="Enter address or ZIP code"
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
-            autoComplete="postal-code"
+            autoComplete="street-address"
             enterKeyHint="search"
             className="block w-full pl-grid-5 pr-grid-10 sm:pr-grid-12 py-grid-2 text-base sm:text-lg border-0 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-civiq-blue"
             disabled={isLoading}
-            aria-label="Search by ZIP code or address"
+            aria-label="Search by address or ZIP code"
           />
           <button
             type="submit"
@@ -313,8 +300,8 @@ export default function SearchForm() {
         </div>
       )}
       <p className="text-sm text-gray-500 mt-grid-2">
-        Try: &ldquo;48221&rdquo;, &ldquo;1600 Pennsylvania Avenue&rdquo;, or &ldquo;Detroit,
-        MI&rdquo;
+        Try: &ldquo;123 Main St, Detroit, MI&rdquo;, &ldquo;1600 Pennsylvania Ave&rdquo;, or
+        &ldquo;48221&rdquo;
       </p>
     </div>
   );
