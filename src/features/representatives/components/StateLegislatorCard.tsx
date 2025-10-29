@@ -5,6 +5,7 @@
  */
 
 import { memo } from 'react';
+import Link from 'next/link';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 
 interface StateLegislator {
@@ -54,8 +55,14 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
 
   const chamberInfo = getChamberInfo(legislator.chamber);
 
+  // Generate profile URL
+  const profileUrl = `/state-legislature/${legislator.state.toLowerCase()}/legislator/${legislator.id}`;
+
   return (
-    <div className="bg-white border-2 border-black border border-gray-200 overflow-hidden">
+    <Link
+      href={profileUrl}
+      className="block bg-white border-2 border-black hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
+    >
       {/* Header Section */}
       <div className="p-6 pb-4">
         <div className="flex items-start gap-4">
@@ -148,6 +155,6 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 });
