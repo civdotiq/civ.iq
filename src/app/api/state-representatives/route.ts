@@ -135,7 +135,9 @@ function transformLegislatorForResponse(legislator: EnhancedStateLegislator) {
     image: legislator.photo_url,
     email: legislator.email,
     phone: legislator.phone,
-    website: legislator.links?.find(link => link.note === 'website')?.url,
+    website: legislator.links?.find(
+      (link: { note?: string; url?: string }) => link.note === 'website'
+    )?.url,
   };
 }
 
@@ -189,14 +191,16 @@ export async function GET(request: NextRequest) {
       state: stateAbbrevUpper,
     });
 
-    // Use StateLegislatureCoreService for direct access (NO HTTP calls!)
-    // NOTE: ZIP-based filtering not yet implemented - returns all state legislators
-    const [legislators, jurisdiction] = await Promise.all([
-      StateLegislatureCoreService.getAllStateLegislators(stateAbbrevUpper, undefined),
-      StateLegislatureCoreService.getStateJurisdiction(stateAbbrevUpper),
-    ]);
+    // Get jurisdiction info
+    const jurisdiction = await StateLegislatureCoreService.getStateJurisdiction(stateAbbrevUpper);
 
-    if (legislators.length === 0) {
+    // Get all state legislators first
+    const allLegislators = await StateLegislatureCoreService.getAllStateLegislators(
+      stateAbbrevUpper,
+      undefined
+    );
+
+    if (allLegislators.length === 0) {
       logger.warn('No state legislators found', {
         zipCode,
         state: stateAbbrevUpper,
@@ -204,15 +208,28 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Transform and sort legislators
-    const transformedLegislators = legislators.map(transformLegislatorForResponse).sort((a, b) => {
-      // Sort by chamber (Senate first), then by district
-      if (a.chamber !== b.chamber) {
-        return a.chamber === 'upper' ? -1 : 1;
+    // ZIP codes don't map precisely to state legislative districts
+    // Return all legislators with a note that address-based lookup is more accurate
+    logger.info(
+      'ZIP-based lookup: returning all state legislators (address-based lookup recommended)',
+      {
+        zipCode,
+        state: stateAbbrevUpper,
+        legislatorCount: allLegislators.length,
       }
-      // Natural sort for districts (handles "1", "2", "10" correctly)
-      return a.district.localeCompare(b.district, undefined, { numeric: true });
-    });
+    );
+
+    // Transform and sort legislators
+    const transformedLegislators = allLegislators
+      .map(transformLegislatorForResponse)
+      .sort((a, b) => {
+        // Sort by chamber (Senate first), then by district
+        if (a.chamber !== b.chamber) {
+          return a.chamber === 'upper' ? -1 : 1;
+        }
+        // Natural sort for districts (handles "1", "2", "10" correctly)
+        return a.district.localeCompare(b.district, undefined, { numeric: true });
+      });
 
     const response: StateApiResponse = {
       zipCode,
