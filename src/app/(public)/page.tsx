@@ -141,7 +141,7 @@ export default function Home() {
 
   return (
     <>
-      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md z-50 border-b border-gray-100 border-2 border-black">
+      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md z-50 border-b border-gray-200">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="transform transition-all duration-300 group-hover:scale-105">
@@ -174,7 +174,7 @@ export default function Home() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden flex items-center justify-center w-10 h-10 text-gray-700 hover:bg-white border-2 border-gray-300 transition-colors"
+            className="md:hidden flex items-center justify-center w-10 h-10 text-gray-700 hover:bg-gray-50 rounded transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle mobile menu"
           >
@@ -200,7 +200,7 @@ export default function Home() {
 
         {/* Mobile Menu Dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 border-2 border-black z-40">
+          <div className="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 shadow-lg z-40">
             <nav className="container mx-auto px-4 py-4">
               <div className="space-y-4">
                 <Link
@@ -231,27 +231,28 @@ export default function Home() {
       </header>
 
       <section className="min-h-screen flex items-center justify-center px-4 pt-16 bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
-        <div className="max-w-4xl w-full text-center space-y-10">
+        <div className="max-w-4xl w-full text-center space-y-6 md:space-y-10">
           <div className="animate-fade-in-up">
-            <CiviqLogo className="w-24 h-36 mx-auto mb-8" />
+            <CiviqLogo className="w-16 h-24 md:w-24 md:h-36 mx-auto mb-6 md:mb-8" />
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-4 md:space-y-8">
             <h1
-              className="text-5xl md:text-7xl font-bold tracking-tight animate-fade-in-up leading-tight"
+              className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight animate-fade-in-up leading-tight px-2"
               style={{ animationDelay: '200ms' }}
             >
-              Know Your{' '}
-              <span className="bg-gradient-to-r from-[#e11d07] via-[#0a9338] to-[#3ea2d4] bg-clip-text text-transparent font-bold">
-                Representatives
+              <span className="block sm:inline">KNOW YOUR </span>
+              <span className="block sm:inline bg-gradient-to-r from-[#e11d07] via-[#0a9338] to-[#3ea2d4] bg-clip-text text-transparent font-bold">
+                REPRESENTATIVES
               </span>
             </h1>
 
             <p
-              className="text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto animate-fade-in-up leading-relaxed font-medium"
+              className="text-lg sm:text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto animate-fade-in-up leading-relaxed font-medium px-4"
               style={{ animationDelay: '400ms' }}
             >
-              Transparent access to government data. Find who represents you at every level.
+              Connect with your federal representatives through real government data from
+              Congress.gov, FEC, and Census Bureau
             </p>
 
             <div className="text-center animate-fade-in-up" style={{ animationDelay: '500ms' }}>
@@ -271,7 +272,7 @@ export default function Home() {
           >
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-[#3ea2d4]/20 to-[#0a9338]/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
-              <div className="relative border-2 border-black-2xl rounded-xl overflow-hidden border border-gray-200 bg-white">
+              <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
                 <SmartSearchInput
                   placeholder="Enter ZIP code or address (e.g., 10001 or 123 Main St, City, State)"
                   className="w-full"
