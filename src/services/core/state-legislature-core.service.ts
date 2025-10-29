@@ -27,6 +27,7 @@ import type {
   OpenStatesLegislator,
   OpenStatesBill,
   OpenStatesJurisdiction,
+  OpenStatesPersonVote,
 } from '@/lib/openstates-api';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
@@ -39,6 +40,7 @@ import type {
   StateBillSummary,
   StateJurisdiction,
   ZipCodeStateLegislators,
+  StatePersonVote,
 } from '@/types/state-legislature';
 
 export class StateLegislatureCoreService {
@@ -418,6 +420,78 @@ export class StateLegislatureCoreService {
   }
 
   /**
+   * Get voting records for a specific state legislator - DIRECT function call, no HTTP
+   */
+  static async getStateLegislatorVotes(
+    state: string,
+    legislatorId: string,
+    limit = 50
+  ): Promise<StatePersonVote[]> {
+    const cacheKey = `core:state-legislator-votes:${state}:${legislatorId}:${limit}`;
+    const startTime = Date.now();
+
+    try {
+      // Check cache first
+      const cached = await govCache.get<StatePersonVote[]>(cacheKey);
+      if (cached) {
+        logger.info('Core service cache hit for state legislator votes', {
+          state,
+          legislatorId,
+          voteCount: cached.length,
+          responseTime: Date.now() - startTime,
+        });
+        return cached;
+      }
+
+      // Fetch votes directly from OpenStates API
+      const osVotes: OpenStatesPersonVote[] = await openStatesAPI.getVotesByPerson(
+        legislatorId,
+        limit
+      );
+
+      // Transform to StatePersonVote format
+      const votes: StatePersonVote[] = osVotes.map(osVote => ({
+        vote_id: osVote.vote_id,
+        identifier: osVote.identifier,
+        motion_text: osVote.motion_text,
+        start_date: osVote.start_date,
+        result: osVote.result === 'pass' ? 'passed' : 'failed',
+        option: osVote.option,
+        bill_identifier: osVote.bill_identifier,
+        bill_title: osVote.bill_title,
+        bill_id: osVote.bill_id,
+        organization_name: osVote.organization_name,
+        chamber: osVote.chamber,
+      }));
+
+      // Cache the transformed votes for 1 hour
+      await govCache.set(cacheKey, votes, {
+        ttl: 3600000, // 60 minutes
+        source: 'openstates-votes',
+        dataType: 'voting',
+      });
+
+      logger.info('Successfully fetched state legislator votes', {
+        state,
+        legislatorId,
+        voteCount: votes.length,
+        limit,
+        responseTime: Date.now() - startTime,
+      });
+
+      return votes;
+    } catch (error) {
+      logger.error('Failed to get state legislator votes', error as Error, {
+        state,
+        legislatorId,
+        limit,
+        responseTime: Date.now() - startTime,
+      });
+      return [];
+    }
+  }
+
+  /**
    * Get state legislators by ZIP code - DIRECT lookup with state mapping
    */
   static async getStateLegislatorsByZip(zipCode: string): Promise<ZipCodeStateLegislators | null> {
@@ -593,6 +667,67 @@ export class StateLegislatureCoreService {
         responseTime: Date.now() - startTime,
       });
       return null;
+    }
+  }
+
+  /**
+   * Get bills sponsored or cosponsored by a specific state legislator
+   * Uses server-side filtering for optimal performance
+   * @param state - State abbreviation
+   * @param legislatorId - OpenStates person ID
+   * @param session - Optional session identifier
+   * @param limit - Maximum number of bills to return
+   */
+  static async getStateLegislatorBills(
+    state: string,
+    legislatorId: string,
+    session?: string,
+    limit = 50
+  ): Promise<StateBill[]> {
+    const cacheKey = `core:state-legislator-bills:${state}:${legislatorId}:${session || 'latest'}:${limit}`;
+    const startTime = Date.now();
+
+    try {
+      // Check cache first
+      const cached = await govCache.get<StateBill[]>(cacheKey);
+      if (cached) {
+        logger.info('Core service cache hit for legislator bills', {
+          state,
+          legislatorId,
+          billCount: cached.length,
+          responseTime: Date.now() - startTime,
+        });
+        return cached;
+      }
+
+      // Use server-side sponsor filtering (efficient!)
+      const osBills = await openStatesAPI.getBillsBySponsor(legislatorId, state, session, limit);
+
+      // Transform to our type system
+      const bills = osBills.map(bill => this.transformBill(bill, state));
+
+      // Cache for 1 hour
+      await govCache.set(cacheKey, bills, {
+        ttl: 3600000, // 60 minutes
+        source: 'openstates-bills',
+        dataType: 'bills',
+      });
+
+      logger.info('Successfully fetched legislator bills via sponsor filtering', {
+        state,
+        legislatorId,
+        billCount: bills.length,
+        responseTime: Date.now() - startTime,
+      });
+
+      return bills;
+    } catch (error) {
+      logger.error('Failed to get legislator bills', error as Error, {
+        state,
+        legislatorId,
+        responseTime: Date.now() - startTime,
+      });
+      return [];
     }
   }
 

@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { getChamberName, getLegislatorTitle } from '@/types/state-legislature';
+import { StateVotingTab } from './StateVotingTab';
 
 interface SimpleStateLegislatorProfileProps {
   legislator: EnhancedStateLegislator;
@@ -98,6 +99,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
           {[
             { id: 'overview', label: 'Overview' },
             { id: 'committees', label: 'Committees' },
+            { id: 'votes', label: 'Voting Record' },
             { id: 'bills', label: 'Legislation' },
             { id: 'contact', label: 'Contact' },
           ].map(tab => (
@@ -184,6 +186,14 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                 <p className="text-gray-600">No committee information available.</p>
               )}
             </div>
+          )}
+
+          {activeTab === 'votes' && (
+            <StateVotingTab
+              state={legislator.state}
+              legislatorId={legislator.id}
+              legislatorName={legislator.name}
+            />
           )}
 
           {activeTab === 'bills' && (

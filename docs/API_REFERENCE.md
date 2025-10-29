@@ -795,6 +795,243 @@ Get federal investment and social services data for a congressional district.
 - **Congress.gov**: Bills affecting district, legislative impact tracking
 - **Federal Facilities**: Government installations and their economic impact
 
+### State Legislators
+
+State legislator endpoints provide access to state-level legislative data using OpenStates v3 API.
+
+**API Architecture:**
+
+- All endpoints use `StateLegislatureCoreService` for consistent data access
+- OpenStates v3 REST API integration with proper caching
+- Supports all 50 states + DC, Puerto Rico, and territories
+
+#### GET /api/state-legislature/[state]
+
+Get all legislators for a specific state.
+
+**Parameters:**
+
+- `state` (path): Two-letter state code (e.g., "MI", "CA", "NY")
+
+**Query Parameters:**
+
+- `chamber` (optional): "upper" | "lower" - Filter by legislative chamber
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "legislators": [
+    {
+      "id": "ocd-person-...",
+      "name": "string",
+      "party": "Democratic" | "Republican" | "Independent" | "Green" | "Libertarian",
+      "chamber": "upper" | "lower",
+      "district": "string",
+      "state": "string",
+      "title": "string",
+      "photoUrl": "string",
+      "email": "string",
+      "phoneNumbers": [{"type": "string", "number": "string"}],
+      "addresses": [{"type": "string", "address": "string"}],
+      "links": [{"url": "string", "note": "string"}],
+      "committees": [{"name": "string", "role": "string"}]
+    }
+  ],
+  "count": 0,
+  "state": "string",
+  "chamber": "string"
+}
+```
+
+**Example:**
+
+```bash
+curl "http://localhost:3000/api/state-legislature/MI?chamber=lower"
+```
+
+#### GET /api/state-legislature/[state]/legislator/[id]
+
+**⭐ CANONICAL ENDPOINT** - Get detailed information about a specific state legislator.
+
+**Parameters:**
+
+- `state` (path): Two-letter state code
+- `id` (path): OpenStates person ID (format: `ocd-person-{uuid}`)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "legislator": {
+    "id": "string",
+    "name": "string",
+    "party": "string",
+    "chamber": "upper" | "lower",
+    "district": "string",
+    "state": "string",
+    "title": "string",
+    "chamberTitle": "string",
+    "photoUrl": "string",
+    "email": "string",
+    "phoneNumbers": [{"type": "string", "number": "string"}],
+    "addresses": [{"type": "string", "address": "string", "city": "string", "state": "string", "zip": "string"}],
+    "links": [{"url": "string", "note": "string"}],
+    "socialMedia": {"twitter": "string", "facebook": "string"},
+    "bio": "string",
+    "committees": [
+      {
+        "name": "string",
+        "role": "Chair" | "Vice Chair" | "Member",
+        "chamber": "upper" | "lower"
+      }
+    ],
+    "currentRole": {
+      "title": "string",
+      "chamber": "string",
+      "district": "string",
+      "startDate": "string",
+      "endDate": "string"
+    }
+  }
+}
+```
+
+**Example:**
+
+```bash
+curl "http://localhost:3000/api/state-legislature/MI/legislator/ocd-person-dc6ff9c0-f2b1-433d-a96b-292cf05bcb50"
+```
+
+**Migration Note:**
+
+The deprecated endpoint `/api/state-legislator/[state]/[id]` will redirect to this canonical endpoint with a 301 status.
+
+#### GET /api/state-legislature/[state]/legislator/[id]/bills
+
+Get bills sponsored by a specific state legislator.
+
+**Parameters:**
+
+- `state` (path): Two-letter state code
+- `id` (path): OpenStates person ID
+
+**Query Parameters:**
+
+- `session` (optional): Legislative session identifier
+- `limit` (optional): Maximum number of results (default: 50, max: 200)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "bills": [
+    {
+      "id": "string",
+      "identifier": "string",
+      "title": "string",
+      "classification": ["bill" | "resolution" | "concurrent resolution"],
+      "subject": ["string"],
+      "session": "string",
+      "chamber": "upper" | "lower",
+      "sponsors": [
+        {
+          "name": "string",
+          "role": "primary" | "cosponsor",
+          "personId": "string"
+        }
+      ],
+      "status": "string",
+      "latestAction": {
+        "description": "string",
+        "date": "string"
+      },
+      "createdAt": "string",
+      "updatedAt": "string"
+    }
+  ],
+  "count": 0,
+  "legislatorName": "string",
+  "state": "string"
+}
+```
+
+**Example:**
+
+```bash
+curl "http://localhost:3000/api/state-legislature/MI/legislator/ocd-person-dc6ff9c0-f2b1-433d-a96b-292cf05bcb50/bills?limit=25"
+```
+
+#### GET /api/state-legislators-by-address
+
+Find state legislators by full address (uses Census Bureau geocoding).
+
+**Query Parameters:**
+
+- `street` (required): Street address
+- `city` (optional but recommended): City name
+- `state` (optional but recommended): State abbreviation
+- `zip` (optional but recommended): ZIP code
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "address": {
+    "input": "string",
+    "matched": "string",
+    "coordinates": { "lat": 0, "lng": 0 }
+  },
+  "legislators": {
+    "upper": [
+      {
+        "id": "string",
+        "name": "string",
+        "party": "string",
+        "district": "string",
+        "chamber": "upper"
+      }
+    ],
+    "lower": [
+      {
+        "id": "string",
+        "name": "string",
+        "party": "string",
+        "district": "string",
+        "chamber": "lower"
+      }
+    ]
+  },
+  "districts": {
+    "upper": "string",
+    "lower": "string"
+  },
+  "state": "string"
+}
+```
+
+**Example:**
+
+```bash
+curl "http://localhost:3000/api/state-legislators-by-address?street=1200%20N%20Telegraph%20Rd&city=Pontiac&state=MI&zip=48341"
+```
+
+**Data Sources:**
+
+- **OpenStates v3 API**: State legislator profiles, bills, committees
+- **U.S. Census Bureau**: Address geocoding and legislative district mapping
+- **State Legislatures**: Official government sources via OpenStates
+
+**State-Specific Notes:**
+
+- **Nebraska**: Unicameral legislature (only "lower" chamber, officially called "Legislature")
+- **DC**: Uses "lower" chamber designation (Council of the District of Columbia)
+- **Territories**: Puerto Rico, Guam, Virgin Islands, American Samoa, Northern Mariana Islands supported
+
 ### Search
 
 #### GET /api/search

@@ -177,6 +177,56 @@ export interface OpenStatesJurisdiction {
   }>;
 }
 
+/**
+ * OpenStates v3 Vote Event (Individual Vote Record)
+ */
+export interface OpenStatesVote {
+  id: string;
+  identifier: string;
+  motion_text: string;
+  motion_classification: string[];
+  start_date: string;
+  result: 'pass' | 'fail';
+  organization: {
+    id: string;
+    name: string;
+    classification: string;
+  };
+  votes: Array<{
+    option: 'yes' | 'no' | 'abstain' | 'not voting' | 'absent' | 'excused';
+    voter_name: string;
+    voter_id: string | null;
+  }>;
+  counts: Array<{
+    option: string;
+    value: number;
+  }>;
+  bill: {
+    id: string;
+    identifier: string;
+    title: string;
+  } | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * OpenStates v3 Person Vote (vote cast by a specific person)
+ */
+export interface OpenStatesPersonVote {
+  vote_id: string;
+  identifier: string;
+  motion_text: string;
+  start_date: string;
+  result: 'pass' | 'fail';
+  option: 'yes' | 'no' | 'abstain' | 'not voting' | 'absent' | 'excused';
+  bill_identifier: string | null;
+  bill_title: string | null;
+  bill_id: string | null;
+  organization_name: string;
+  chamber: 'upper' | 'lower';
+}
+
 class OpenStatesAPI {
   private config: OpenStatesConfig;
   private cache: Map<string, { data: unknown; timestamp: number; ttl: number }>;
@@ -446,6 +496,48 @@ class OpenStatesAPI {
   }
 
   /**
+   * Get bills sponsored or cosponsored by a specific person
+   * Uses server-side filtering for better performance
+   * @param personId - OpenStates person ID (e.g., 'ocd-person/...')
+   * @param state - State abbreviation (e.g., 'MI')
+   * @param session - Optional session identifier
+   * @param limit - Maximum number of bills to return (default 50, max 100)
+   */
+  async getBillsBySponsor(
+    personId: string,
+    state: string,
+    session?: string,
+    limit = 50
+  ): Promise<OpenStatesBill[]> {
+    const jurisdiction = state.toLowerCase();
+
+    let allBills: V3Bill[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    // OpenStates v3 API may paginate sponsor results
+    while (hasMore && allBills.length < limit) {
+      const params: Record<string, string | number> = {
+        jurisdiction,
+        sponsor: personId,
+        per_page: Math.min(100, limit - allBills.length), // v3 max is 100 per page
+        page,
+      };
+
+      if (session) params.session = session;
+
+      const response = await this.makeRequest<V3PaginatedResponse<V3Bill>>('/bills', params);
+      allBills = allBills.concat(response.results);
+
+      // Check if there are more pages
+      hasMore = page < response.pagination.max_page && allBills.length < limit;
+      page++;
+    }
+
+    return allBills.slice(0, limit).map(bill => this.transformBill(bill));
+  }
+
+  /**
    * Transform v3 Bill to our OpenStatesBill format
    */
   private transformBill(bill: V3Bill): OpenStatesBill {
@@ -514,6 +606,148 @@ class OpenStatesAPI {
       const response = await this.makeRequest<V3Person>(`/people/${personId}`);
       const state = response.jurisdiction.name;
       return this.transformPerson(response, state);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('404')) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Get votes cast by a specific person (legislator)
+   * @param personId - OpenStates person ID (format: ocd-person-{uuid})
+   * @param limit - Maximum number of votes to return (default: 50, max: 100)
+   * @param page - Page number for pagination (default: 1)
+   * @returns Array of votes cast by this person
+   */
+  async getVotesByPerson(
+    personId: string,
+    limit: number = 50,
+    page: number = 1
+  ): Promise<OpenStatesPersonVote[]> {
+    try {
+      // OpenStates v3 API endpoint: /people/{id}/votes
+      const params: Record<string, string | number> = {
+        per_page: Math.min(limit, 100), // API max is 100
+        page,
+      };
+
+      interface V3PersonVoteResponse {
+        results: Array<{
+          vote_event_id: string;
+          option: string;
+          vote_event: {
+            id: string;
+            identifier: string;
+            motion_text: string;
+            motion_classification: string[];
+            start_date: string;
+            result: string;
+            organization: {
+              id: string;
+              name: string;
+              classification: string;
+            };
+            bill: {
+              id: string;
+              identifier: string;
+              title: string;
+            } | null;
+          };
+        }>;
+        pagination: {
+          per_page: number;
+          page: number;
+          max_page: number;
+          total_items: number;
+        };
+      }
+
+      const response = await this.makeRequest<V3PersonVoteResponse>(
+        `/people/${personId}/votes`,
+        params
+      );
+
+      // Transform v3 response to our interface
+      return response.results.map(vote => ({
+        vote_id: vote.vote_event.id,
+        identifier: vote.vote_event.identifier,
+        motion_text: vote.vote_event.motion_text,
+        start_date: vote.vote_event.start_date,
+        result: vote.vote_event.result as 'pass' | 'fail',
+        option: vote.option as 'yes' | 'no' | 'abstain' | 'not voting' | 'absent' | 'excused',
+        bill_identifier: vote.vote_event.bill?.identifier || null,
+        bill_title: vote.vote_event.bill?.title || null,
+        bill_id: vote.vote_event.bill?.id || null,
+        organization_name: vote.vote_event.organization.name,
+        chamber: vote.vote_event.organization.classification === 'upper' ? 'upper' : 'lower',
+      }));
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('404')) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Get a specific vote event by ID
+   * @param voteId - OpenStates vote event ID
+   * @returns Full vote event details including all voter positions
+   */
+  async getVoteById(voteId: string): Promise<OpenStatesVote | null> {
+    try {
+      interface V3VoteEvent {
+        id: string;
+        identifier: string;
+        motion_text: string;
+        motion_classification: string[];
+        start_date: string;
+        result: string;
+        organization: {
+          id: string;
+          name: string;
+          classification: string;
+        };
+        votes: Array<{
+          option: string;
+          voter_name: string;
+          voter_id: string | null;
+        }>;
+        counts: Array<{
+          option: string;
+          value: number;
+        }>;
+        bill: {
+          id: string;
+          identifier: string;
+          title: string;
+        } | null;
+        created_at: string;
+        updated_at: string;
+      }
+
+      const response = await this.makeRequest<V3VoteEvent>(`/vote_events/${voteId}`);
+
+      return {
+        id: response.id,
+        identifier: response.identifier,
+        motion_text: response.motion_text,
+        motion_classification: response.motion_classification,
+        start_date: response.start_date,
+        result: response.result as 'pass' | 'fail',
+        organization: response.organization,
+        votes: response.votes.map(v => ({
+          option: v.option as 'yes' | 'no' | 'abstain' | 'not voting' | 'absent' | 'excused',
+          voter_name: v.voter_name,
+          voter_id: v.voter_id,
+        })),
+        counts: response.counts,
+        bill: response.bill,
+        created_at: response.created_at,
+        updated_at: response.updated_at,
+      };
     } catch (error) {
       if (error instanceof Error && error.message.includes('404')) {
         return null;

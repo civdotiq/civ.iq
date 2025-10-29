@@ -385,6 +385,7 @@ async function fetchStateLegislativeDistrict(
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const zipCode = searchParams.get('zip');
+  const districtParam = searchParams.get('district'); // Format: "MI-13"
 
   if (!zipCode) {
     return NextResponse.json({ error: 'ZIP code is required' }, { status: 400 });
@@ -425,44 +426,70 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Could not geocode ZIP code' }, { status: 400 });
     }
 
-    // Get congressional district info from our existing API
+    // Get congressional district info - use parameter override if provided
     let district = '01'; // Default
-    try {
-      const repResponse = await fetch(
-        `${request.nextUrl.origin}/api/representatives?zip=${encodeURIComponent(zipCode)}`
-      );
+    let districtState = zipInfo.state;
 
-      if (repResponse.ok) {
-        const repData = await repResponse.json();
-
-        // Find the House representative to get the district number
-        if (repData.success && repData.representatives) {
-          const houseRep = repData.representatives.find(
-            (rep: { chamber: string; district?: string }) => rep.chamber === 'House' && rep.district
-          );
-
-          if (houseRep && houseRep.district) {
-            // Ensure district is properly formatted as 2-digit string
-            district = houseRep.district.toString().padStart(2, '0');
-          }
-        }
+    if (districtParam) {
+      // Parse district parameter (format: "MI-13")
+      const parts = districtParam.split('-');
+      if (parts.length === 2 && parts[0] && parts[1]) {
+        districtState = parts[0];
+        district = parts[1].padStart(2, '0');
+        logger.info('Using district parameter override', {
+          zipCode,
+          districtParam,
+          parsedState: districtState,
+          parsedDistrict: district,
+        });
+      } else {
+        logger.warn('Invalid district parameter format, falling back to API lookup', {
+          districtParam,
+        });
       }
-    } catch (error) {
-      // If representatives API fails, continue with default district
-      logger.warn('Representatives API failed, using default district', {
-        zipCode,
-        defaultDistrict: district,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
     }
 
-    const stateFips = getStateFips(zipInfo.state);
+    if (!districtParam) {
+      // Lookup district from representatives API if not provided
+      try {
+        const repResponse = await fetch(
+          `${request.nextUrl.origin}/api/representatives?zip=${encodeURIComponent(zipCode)}`
+        );
+
+        if (repResponse.ok) {
+          const repData = await repResponse.json();
+
+          // Find the House representative to get the district number
+          if (repData.success && repData.representatives) {
+            const houseRep = repData.representatives.find(
+              (rep: { chamber: string; district?: string }) =>
+                rep.chamber === 'House' && rep.district
+            );
+
+            if (houseRep && houseRep.district) {
+              // Ensure district is properly formatted as 2-digit string
+              district = houseRep.district.toString().padStart(2, '0');
+            }
+          }
+        }
+      } catch (error) {
+        // If representatives API fails, continue with default district
+        logger.warn('Representatives API failed, using default district', {
+          zipCode,
+          defaultDistrict: district,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    // Use districtState if provided via parameter, otherwise use zipInfo.state
+    const stateFips = getStateFips(districtState);
 
     // Try to fetch real boundary data from Census TIGER
     logger.info('Fetching district boundaries', {
       zipCode,
       district,
-      state: zipInfo.state,
+      state: districtState,
       stateFips,
     });
 
@@ -487,7 +514,7 @@ export async function GET(request: NextRequest) {
             coordinates: (congressionalBoundary.geometry as GeoJSON.Polygon).coordinates,
             properties: {
               district: district,
-              state: zipInfo.state,
+              state: districtState,
               name: congressionalBoundary.properties?.NAME || `Congressional District ${district}`,
               type: 'congressional' as const,
               source: 'census-tiger',
@@ -504,7 +531,7 @@ export async function GET(request: NextRequest) {
                 stateSenateBounder.properties?.SLDUST ||
                 stateSenateBounder.properties?.DISTRICT ||
                 '1',
-              state: zipInfo.state,
+              state: districtState,
               name:
                 stateSenateBounder.properties?.NAME ||
                 `State Senate District ${stateSenateBounder.properties?.SLDUST || '1'}`,
@@ -523,7 +550,7 @@ export async function GET(request: NextRequest) {
                 stateHouseBoundary.properties?.SLDLST ||
                 stateHouseBoundary.properties?.DISTRICT ||
                 'A',
-              state: zipInfo.state,
+              state: districtState,
               name:
                 stateHouseBoundary.properties?.NAME ||
                 `State House District ${stateHouseBoundary.properties?.SLDLST || 'A'}`,
@@ -559,7 +586,7 @@ export async function GET(request: NextRequest) {
 
     const mapData: MapData = {
       zipCode,
-      state: zipInfo.state,
+      state: districtState,
       coordinates: {
         lat: zipInfo.lat,
         lng: zipInfo.lng,

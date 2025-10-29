@@ -156,7 +156,13 @@
       "WebFetch(domain:civdotiq.org)",
       "WebFetch(domain:www.fec.gov)",
       "Bash(du:*)",
-      "Bash(sort -t: -k2 -n)"
+      "Bash(sort -t: -k2 -n)",
+      "WebFetch(domain:civiq-4aog-o1z0iuj2b-marks-projects-47d52265.vercel.app)",
+      "Bash(git restore --staged .claude/settings.local.json vercel-*.log)",
+      "WebFetch(domain:api.votesmart.org)",
+      "WebFetch(domain:docs.openstates.org)",
+      "WebFetch(domain:v3.openstates.org)",
+      "WebFetch(domain:pillarsapp.us)"
     ],
     "deny": [],
     "ask": []

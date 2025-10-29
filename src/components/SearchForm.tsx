@@ -85,7 +85,8 @@ export default function SearchForm() {
         setIsLoading(false);
         return;
       } else {
-        router.push(`/representatives?query=${encodeURIComponent(cleanInput)}`);
+        // Route to results page which has geocoding support for addresses
+        router.push(`/results?q=${encodeURIComponent(cleanInput)}`);
       }
     } catch {
       setError({
@@ -119,7 +120,8 @@ export default function SearchForm() {
       setError({
         type: 'geolocation',
         message: 'Geolocation not supported',
-        suggestion: 'Please enter your address or ZIP code manually',
+        suggestion:
+          'Your browser does not support geolocation. Please enter your address manually.',
       });
       return;
     }
@@ -128,29 +130,31 @@ export default function SearchForm() {
     setError(null);
 
     try {
+      // Get browser geolocation with specific error handling
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
-          timeout: 10000,
+          timeout: 15000, // Increased timeout to 15 seconds
           maximumAge: 300000,
+          enableHighAccuracy: false, // Faster response, lower accuracy is fine for congressional districts
         });
       });
 
       const { latitude, longitude } = position.coords;
 
-      // Use Census Geocoding API for reverse geocoding (coordinates to address)
+      // Use Census Geocoding API with geographies endpoint to get district data
       const response = await fetch(
-        `https://geocoding.geo.census.gov/geocoder/locations/coordinates?x=${longitude}&y=${latitude}&benchmark=Public_AR_Current&vintage=Current_Current&format=json`
+        `https://geocoding.geo.census.gov/geocoder/geographies/coordinates?x=${longitude}&y=${latitude}&benchmark=Public_AR_Current&vintage=Current_Current&format=json&layers=all`
       );
 
       if (!response.ok) {
-        throw new Error('Geocoding failed');
+        throw new Error('CENSUS_API_ERROR');
       }
 
       const data = await response.json();
       const addressMatch = data.result?.addressMatches?.[0];
 
       if (!addressMatch) {
-        throw new Error('No address found for this location');
+        throw new Error('NO_ADDRESS_FOUND');
       }
 
       // Extract address components
@@ -162,13 +166,69 @@ export default function SearchForm() {
 
       // Navigate with the matched address
       router.push(`/results?q=${encodeURIComponent(matchedAddress)}`);
-    } catch {
+    } catch (error) {
       setIsGeolocating(false);
-      setError({
-        type: 'geolocation',
-        message: 'Location detection failed',
-        suggestion: 'Please check location permissions or enter your address manually',
-      });
+
+      // Handle specific geolocation errors
+      if (error && typeof error === 'object' && 'code' in error) {
+        const geoError = error as GeolocationPositionError;
+
+        if (geoError.code === 1) {
+          // PERMISSION_DENIED
+          setError({
+            type: 'geolocation',
+            message: 'Location permission denied',
+            suggestion:
+              'Please enable location permissions in your browser settings, or enter your address manually.',
+          });
+        } else if (geoError.code === 2) {
+          // POSITION_UNAVAILABLE
+          setError({
+            type: 'geolocation',
+            message: 'Location unavailable',
+            suggestion:
+              'Your device could not determine your location. Please enter your address manually.',
+          });
+        } else if (geoError.code === 3) {
+          // TIMEOUT
+          setError({
+            type: 'geolocation',
+            message: 'Location request timed out',
+            suggestion:
+              'The request took too long. Please try again or enter your address manually.',
+          });
+        }
+      } else if (error instanceof Error) {
+        // Handle Census API errors
+        if (error.message === 'CENSUS_API_ERROR') {
+          setError({
+            type: 'api_error',
+            message: 'Geocoding service unavailable',
+            suggestion:
+              'The address lookup service is currently unavailable. Please enter your address manually.',
+          });
+        } else if (error.message === 'NO_ADDRESS_FOUND') {
+          setError({
+            type: 'geolocation',
+            message: 'No address found',
+            suggestion:
+              'Could not find an address for your location. Please enter your address manually.',
+          });
+        } else {
+          setError({
+            type: 'unknown',
+            message: 'Location detection failed',
+            suggestion: 'An unexpected error occurred. Please enter your address manually.',
+          });
+        }
+      } else {
+        // Generic fallback
+        setError({
+          type: 'geolocation',
+          message: 'Location detection failed',
+          suggestion: 'Please check location permissions or enter your address manually.',
+        });
+      }
     }
   };
 

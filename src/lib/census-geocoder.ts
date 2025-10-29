@@ -13,13 +13,23 @@ export interface GeocodeResult {
     y: number; // latitude
   };
   geographies: {
-    congressionalDistricts: Array<{
+    '119th Congressional Districts'?: Array<{
       GEOID: string;
       CENTLAT: string;
       CENTLON: string;
       NAME: string;
       STATE: string;
-      CD: string; // Congressional District number
+      BASENAME: string; // Congressional District number
+      CDSESSN: string; // Congress session number
+    }>;
+    // Legacy field for backwards compatibility
+    congressionalDistricts?: Array<{
+      GEOID: string;
+      CENTLAT: string;
+      CENTLON: string;
+      NAME: string;
+      STATE: string;
+      CD: string;
     }>;
   };
   addressComponents: {
@@ -124,7 +134,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
       params = new URLSearchParams({
         benchmark: 'Public_AR_Current',
         vintage: 'Current_Current',
-        layers: '20', // Congressional Districts (current)
+        layers: 'all', // Get all geographic layers including 119th Congressional Districts
         format: 'json',
       });
 
@@ -140,7 +150,7 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
         address: cleanedAddress,
         benchmark: 'Public_AR_Current',
         vintage: 'Current_Current',
-        layers: '20', // Congressional Districts (current)
+        layers: 'all', // Get all geographic layers including 119th Congressional Districts
         format: 'json',
       });
 
@@ -177,9 +187,13 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
     }
 
     // Process results to ensure we have congressional district data
-    const validMatches = data.result.addressMatches.filter(
-      match => match.geographies?.congressionalDistricts?.length > 0
-    );
+    // Check for both new (119th Congressional Districts) and legacy (congressionalDistricts) fields
+    const validMatches = data.result.addressMatches.filter(match => {
+      const has119thDistricts =
+        match.geographies?.['119th Congressional Districts']?.length ?? 0 > 0;
+      const hasLegacyDistricts = match.geographies?.congressionalDistricts?.length ?? 0 > 0;
+      return has119thDistricts || hasLegacyDistricts;
+    });
 
     if (validMatches.length === 0) {
       logger.warn('Addresses found but no congressional district data', {
@@ -206,7 +220,18 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
       address: cleanedAddress,
       matchCount: validMatches.length,
       districts: validMatches
-        .map(m => m.geographies.congressionalDistricts.map(d => `${d.STATE}-${d.CD}`))
+        .map(m => {
+          // Prefer 119th Congressional Districts, fall back to legacy
+          const districts =
+            m.geographies['119th Congressional Districts'] || m.geographies.congressionalDistricts;
+          if (!districts) return [];
+
+          return districts.map(d => {
+            // Use BASENAME for 119th, CD for legacy
+            const districtNum = 'BASENAME' in d ? d.BASENAME : d.CD;
+            return `${d.STATE}-${districtNum}`;
+          });
+        })
         .flat(),
     });
 
@@ -233,6 +258,66 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult[] |
   }
 }
 
+// FIPS state code to two-letter abbreviation mapping
+const FIPS_TO_STATE: { [key: string]: string } = {
+  '01': 'AL',
+  '02': 'AK',
+  '04': 'AZ',
+  '05': 'AR',
+  '06': 'CA',
+  '08': 'CO',
+  '09': 'CT',
+  '10': 'DE',
+  '11': 'DC',
+  '12': 'FL',
+  '13': 'GA',
+  '15': 'HI',
+  '16': 'ID',
+  '17': 'IL',
+  '18': 'IN',
+  '19': 'IA',
+  '20': 'KS',
+  '21': 'KY',
+  '22': 'LA',
+  '23': 'ME',
+  '24': 'MD',
+  '25': 'MA',
+  '26': 'MI',
+  '27': 'MN',
+  '28': 'MS',
+  '29': 'MO',
+  '30': 'MT',
+  '31': 'NE',
+  '32': 'NV',
+  '33': 'NH',
+  '34': 'NJ',
+  '35': 'NM',
+  '36': 'NY',
+  '37': 'NC',
+  '38': 'ND',
+  '39': 'OH',
+  '40': 'OK',
+  '41': 'OR',
+  '42': 'PA',
+  '44': 'RI',
+  '45': 'SC',
+  '46': 'SD',
+  '47': 'TN',
+  '48': 'TX',
+  '49': 'UT',
+  '50': 'VT',
+  '51': 'VA',
+  '53': 'WA',
+  '54': 'WV',
+  '55': 'WI',
+  '56': 'WY',
+  '60': 'AS',
+  '66': 'GU',
+  '69': 'MP',
+  '72': 'PR',
+  '78': 'VI',
+};
+
 /**
  * Extract congressional district from geocode result
  */
@@ -241,16 +326,28 @@ export function extractDistrictFromResult(result: GeocodeResult): {
   district: string;
   fullDistrict: string;
 } | null {
-  const cd = result.geographies?.congressionalDistricts?.[0];
+  // Try new 119th Congressional Districts format first
+  const cd119th = result.geographies?.['119th Congressional Districts']?.[0];
+  const cdLegacy = result.geographies?.congressionalDistricts?.[0];
+
+  const cd = cd119th || cdLegacy;
   if (!cd) return null;
 
-  // Handle at-large districts (CD = "00" or "98")
-  const districtNumber = cd.CD === '00' || cd.CD === '98' ? 'AL' : cd.CD;
+  // Get district number from appropriate field
+  // 119th format uses BASENAME, legacy uses CD
+  const rawDistrictNumber = 'BASENAME' in cd ? cd.BASENAME : cd.CD;
+
+  // Handle at-large districts ("00", "98", or "AL")
+  const districtNumber =
+    rawDistrictNumber === '00' || rawDistrictNumber === '98' ? 'AL' : rawDistrictNumber;
+
+  // Convert FIPS code to state abbreviation
+  const stateCode = FIPS_TO_STATE[cd.STATE] || cd.STATE;
 
   return {
-    state: cd.STATE,
+    state: stateCode,
     district: districtNumber,
-    fullDistrict: `${cd.STATE}-${districtNumber}`,
+    fullDistrict: `${stateCode}-${districtNumber}`,
   };
 }
 

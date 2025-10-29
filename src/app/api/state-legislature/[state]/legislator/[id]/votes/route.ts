@@ -4,10 +4,10 @@
  */
 
 /**
- * State Legislator Bills API
+ * State Legislator Voting Records API
  *
- * GET /api/state-legislature/[state]/legislator/[id]/bills
- * Returns bills sponsored or cosponsored by a specific state legislator.
+ * GET /api/state-legislature/[state]/legislator/[id]/votes
+ * Returns voting records for a specific state legislator using OpenStates v3 API.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -26,31 +26,29 @@ export async function GET(
   try {
     const { state, id } = await params;
     const limit = parseInt(searchParams.get('limit') || '50', 10);
-    const session = searchParams.get('session') || undefined;
 
     if (!state || !id) {
-      logger.warn('State legislator bills API request missing parameters', { state, id });
+      logger.warn('State legislator votes API request missing parameters', { state, id });
       return NextResponse.json(
         { success: false, error: 'State and legislator ID are required' },
         { status: 400 }
       );
     }
 
-    logger.info('Fetching state legislator bills', {
+    logger.info('Fetching state legislator voting records', {
       state: state.toUpperCase(),
       legislatorId: id,
       limit,
-      session,
     });
 
-    // First, verify the legislator exists
+    // Verify the legislator exists first
     const legislator = await StateLegislatureCoreService.getStateLegislatorById(
       state.toUpperCase(),
       id
     );
 
     if (!legislator) {
-      logger.warn('State legislator not found', {
+      logger.warn('State legislator not found for votes request', {
         state: state.toUpperCase(),
         legislatorId: id,
       });
@@ -60,47 +58,46 @@ export async function GET(
       );
     }
 
-    // Use efficient server-side sponsor filtering (ONE API call!)
-    const legislatorBills = await StateLegislatureCoreService.getStateLegislatorBills(
+    // Fetch voting records using core service
+    const votes = await StateLegislatureCoreService.getStateLegislatorVotes(
       state.toUpperCase(),
       id,
-      session,
       limit
     );
 
-    logger.info('State legislator bills request successful', {
+    logger.info('State legislator votes request successful', {
       state: state.toUpperCase(),
       legislatorId: id,
       legislatorName: legislator.name,
-      totalBills: legislatorBills.length,
-      returnedBills: legislatorBills.length,
+      voteCount: votes.length,
       responseTime: Date.now() - startTime,
     });
 
     return NextResponse.json(
       {
         success: true,
-        bills: legislatorBills,
-        total: legislatorBills.length,
-        returned: legislatorBills.length,
+        votes,
+        count: votes.length,
         legislator: {
           id: legislator.id,
           name: legislator.name,
           chamber: legislator.chamber,
           district: legislator.district,
+          party: legislator.party,
         },
+        state: state.toUpperCase(),
       },
       { status: 200 }
     );
   } catch (error) {
-    logger.error('State legislator bills request failed', error as Error, {
+    logger.error('State legislator votes request failed', error as Error, {
       responseTime: Date.now() - startTime,
     });
 
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch state legislator bills',
+        error: 'Failed to fetch state legislator voting records',
         message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }

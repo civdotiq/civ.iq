@@ -8,6 +8,7 @@ import { districtLookupService } from '@/services/district-lookup';
 import logger from '@/lib/logging/simple-logger';
 import { getAllCongressionalDistrictsForZip } from '@/lib/data/zip-district-mapping';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
+import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,12 @@ interface GeocodeResponse {
     name: string;
   };
   representatives?: unknown[];
+  stateLegislators?: unknown[];
+  stateInfo?: {
+    state: string;
+    stateName: string;
+    legislatorCount: number;
+  };
   geocoded?: {
     latitude: number;
     longitude: number;
@@ -285,7 +292,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fetch representatives for the found district
+    // Fetch federal representatives for the found district
     let representatives: unknown[] = [];
     try {
       const allReps = await RepresentativesCoreService.getAllRepresentatives();
@@ -309,6 +316,27 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Fetch state legislators for the state
+    let stateLegislators: unknown[] = [];
+    let stateInfo;
+    try {
+      const legislators = await StateLegislatureCoreService.getAllStateLegislators(state);
+      stateLegislators = legislators;
+
+      // Get state name from the jurisdiction
+      const jurisdiction = await StateLegislatureCoreService.getStateJurisdiction(state);
+
+      stateInfo = {
+        state,
+        stateName: jurisdiction?.name || state,
+        legislatorCount: legislators.length,
+      };
+    } catch (error) {
+      logger.error('Error fetching state legislators for geocoded location', error as Error, {
+        state,
+      });
+    }
+
     const response: GeocodeResponse = {
       success: true,
       district: {
@@ -318,6 +346,8 @@ export async function POST(request: NextRequest) {
         name: result.district.name,
       },
       representatives,
+      stateLegislators,
+      stateInfo,
       geocoded,
       isMultiDistrict,
       ...(isMultiDistrict && { allDistricts }),
@@ -330,6 +360,7 @@ export async function POST(request: NextRequest) {
       confidence: result.confidence,
       method: result.method,
       representativeCount: representatives.length,
+      stateLegislatorCount: stateLegislators.length,
       processingTime: Date.now() - startTime,
     });
 

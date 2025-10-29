@@ -287,6 +287,24 @@ export interface StateBillVote {
 }
 
 /**
+ * State legislator individual vote record
+ * Represents a single vote cast by a specific legislator
+ */
+export interface StatePersonVote {
+  vote_id: string;
+  identifier: string;
+  motion_text: string;
+  start_date: string;
+  result: 'passed' | 'failed';
+  option: 'yes' | 'no' | 'abstain' | 'not voting' | 'absent' | 'excused';
+  bill_identifier: string | null;
+  bill_title: string | null;
+  bill_id: string | null;
+  organization_name: string;
+  chamber: StateChamber;
+}
+
+/**
  * State bill (comprehensive)
  */
 export interface StateBill {

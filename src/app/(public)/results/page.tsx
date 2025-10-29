@@ -10,6 +10,8 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useEffect, useState, Suspense, useCallback } from 'react';
 import { CiviqLogo } from '@/shared/components/branding/CiviqLogo';
+import logger from '@/lib/logging/simple-logger';
+import { parseAddressComponents } from '@/lib/census-geocoder';
 // Dynamic imports for code splitting - reduces initial bundle size
 const RepresentativeCard = dynamic(
   () =>
@@ -385,6 +387,39 @@ function ResultsContent() {
               const displayName = `${firstRep.state}${firstRep.district && firstRep.district !== '00' ? ` District ${firstRep.district}` : ''}`;
               SearchHistory.updateSearchDisplayName(query || '', displayName);
             }
+
+            // If this was an address search (not just ZIP), also fetch state legislators
+            // Check if query contains address components (numbers, street names, etc.)
+            const looksLikeAddress = searchQuery.length > 10 && /\d+.*[A-Za-z]/.test(searchQuery);
+            if (looksLikeAddress) {
+              try {
+                // Try to call unified geocode endpoint for state legislators
+                // Parse address components from the search query using census-geocoder utility
+                const components = parseAddressComponents(searchQuery);
+                if (components.street && (components.city || components.zip) && components.state) {
+                  const unifiedResponse = await fetch('/api/unified-geocode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      street: components.street,
+                      city: components.city || '',
+                      state: components.state,
+                      zip: components.zip,
+                    }),
+                  });
+
+                  if (unifiedResponse.ok) {
+                    const unifiedData = await unifiedResponse.json();
+                    if (unifiedData.success) {
+                      setUnifiedGeocodeResult(unifiedData);
+                    }
+                  }
+                }
+              } catch (error) {
+                // Silently fail - state legislators are optional enhancement
+                logger.error('Failed to fetch state legislators', error as Error);
+              }
+            }
           }
           clearTimeout(loadingTimeout); // Clear timeout before completing
           completeLoading();
@@ -662,26 +697,28 @@ function ResultsContent() {
                     </div>
                   )}
 
-                  {loading.loading && !(multiDistrictData && !showAddressRefinement) && (
-                    <LoadingStateWrapper
-                      loading={loading.loading}
-                      error={loading.error}
-                      retry={loading.retry}
-                      loadingComponent={
-                        <>
-                          <LoadingMessage
-                            message={loading.currentStage || 'Loading...'}
-                            submessage={`Step ${loading.currentStageIndex + 1} of 5`}
-                            className="mb-8"
-                          />
-                          <SearchResultsSkeleton count={3} />
-                        </>
-                      }
-                      loadingMessage={loading.currentStage}
-                    >
-                      <div></div>
-                    </LoadingStateWrapper>
-                  )}
+                  {loading.loading &&
+                    !data?.success &&
+                    !(multiDistrictData && !showAddressRefinement) && (
+                      <LoadingStateWrapper
+                        loading={loading.loading}
+                        error={loading.error}
+                        retry={loading.retry}
+                        loadingComponent={
+                          <>
+                            <LoadingMessage
+                              message={loading.currentStage || 'Loading...'}
+                              submessage={`Step ${loading.currentStageIndex + 1} of 5`}
+                              className="mb-8"
+                            />
+                            <SearchResultsSkeleton count={3} />
+                          </>
+                        }
+                        loadingMessage={loading.currentStage}
+                      >
+                        <div></div>
+                      </LoadingStateWrapper>
+                    )}
 
                   {loading.error && (
                     <div className="bg-red-50 border border-red-200 p-6 text-center">
@@ -771,7 +808,7 @@ function ResultsContent() {
                   }
                 >
                   <StateRepresentativesTab
-                    zipCode={zipCode || query || ''}
+                    zipCode={zipCode || (query ? query.match(/\b\d{5}\b/)?.[0] || query : '') || ''}
                     stateSenator={unifiedGeocodeResult?.stateLegislators?.senator}
                     stateRepresentative={unifiedGeocodeResult?.stateLegislators?.representative}
                   />
