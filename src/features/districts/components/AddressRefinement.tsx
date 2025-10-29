@@ -10,12 +10,12 @@ import { Card } from '@/shared/components/ui/Card';
 import { Button } from '@/shared/components/ui/Button';
 import { ComponentErrorBoundary } from '@/shared/components/error-boundaries';
 import { SmartSearchInput } from '@/features/search/components/search/SmartSearchInput';
-import { geocodeAddress, extractDistrictFromResult } from '@/lib/census-geocoder';
 import { logger } from '@/lib/logging/logger-client';
+import type { UnifiedGeocodeResult } from '@/types/unified-geocode';
 
 interface AddressRefinementProps {
   zipCode: string;
-  onSuccess: (state: string, district: string, address: string) => void;
+  onSuccess: (result: UnifiedGeocodeResult) => void;
   onCancel: () => void;
   className?: string;
 }
@@ -41,36 +41,80 @@ export function AddressRefinement({
         addressLength: fullAddress.length,
       });
 
-      const result = await geocodeAddress(fullAddress);
+      // Parse the address into components
+      // Expected format: "street, city, state zip" or variations
+      const addressParts = fullAddress.split(',').map(part => part.trim());
 
-      if ('error' in result) {
-        throw new Error(result.error);
+      let street = '';
+      let city = '';
+      let state = '';
+      let zip = zipCode;
+
+      if (addressParts.length >= 3) {
+        // Format: "street, city, state zip"
+        street = addressParts[0] || '';
+        city = addressParts[1] || '';
+        const lastPart = addressParts[2] || '';
+        const stateZipMatch = lastPart.match(/^([A-Z]{2})\s*(\d{5})?$/i);
+        if (stateZipMatch) {
+          state = stateZipMatch[1] || '';
+          zip = stateZipMatch[2] || zip;
+        } else {
+          state = lastPart;
+        }
+      } else if (addressParts.length === 2) {
+        // Format: "street, city state" or "street, state"
+        street = addressParts[0] || '';
+        const secondPart = addressParts[1] || '';
+        const cityStateMatch = secondPart.match(/^(.+?)\s+([A-Z]{2})$/i);
+        if (cityStateMatch) {
+          city = cityStateMatch[1] || '';
+          state = cityStateMatch[2] || '';
+        } else {
+          state = secondPart;
+        }
+      } else {
+        // Single part - just treat as street, require more info
+        street = fullAddress;
       }
 
-      if (result.length === 0) {
-        throw new Error('No congressional district found for this address');
+      if (!street || !state) {
+        throw new Error(
+          'Please provide at least a street address and state (e.g., "123 Main St, Springfield, IL")'
+        );
       }
 
-      // Use the first (most confident) result
-      const match = result[0];
-      if (!match) {
-        throw new Error('No geocoding result available');
-      }
-      const districtInfo = extractDistrictFromResult(match);
+      // Call unified geocode API
+      const response = await fetch('/api/unified-geocode', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          street,
+          city: city || 'Unknown',
+          state,
+          zip,
+        }),
+      });
 
-      if (!districtInfo) {
-        throw new Error('No congressional district information found in the geocoding result');
+      const result: UnifiedGeocodeResult = await response.json();
+
+      if (!result.success || !result.districts) {
+        throw new Error(
+          result.error?.userMessage || result.error?.message || 'Failed to geocode address'
+        );
       }
 
       logger.info('Address refinement successful', {
         zipCode,
-        state: districtInfo.state,
-        district: districtInfo.district,
-        fullDistrict: districtInfo.fullDistrict,
-        matchedAddress: match.matchedAddress,
+        matchedAddress: result.matchedAddress,
+        federalDistrict: result.districts.federal,
+        stateSenate: result.districts.stateSenate?.number,
+        stateHouse: result.districts.stateHouse?.number,
       });
 
-      onSuccess(districtInfo.state, districtInfo.district, fullAddress);
+      onSuccess(result);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to geocode address';
       setError(errorMessage);
@@ -191,27 +235,46 @@ export function InlineAddressRefinement({
     setError(null);
 
     try {
-      const result = await geocodeAddress(fullAddress);
+      // Parse address (simplified for inline version)
+      const addressParts = fullAddress.split(',').map(part => part.trim());
 
-      if ('error' in result) {
-        throw new Error(result.error);
+      const street = addressParts[0] || '';
+      let city = '';
+      let state = '';
+
+      if (addressParts.length >= 3) {
+        city = addressParts[1] || '';
+        state = addressParts[2]?.match(/([A-Z]{2})/i)?.[1] || '';
+      } else if (addressParts.length === 2) {
+        const secondPart = addressParts[1] || '';
+        const cityStateMatch = secondPart.match(/^(.+?)\s+([A-Z]{2})$/i);
+        if (cityStateMatch) {
+          city = cityStateMatch[1] || '';
+          state = cityStateMatch[2] || '';
+        }
       }
 
-      if (result.length === 0) {
-        throw new Error('Address not found');
+      if (!street || !state) {
+        throw new Error('Please provide street address and state');
       }
 
-      const match = result[0];
-      if (!match) {
-        throw new Error('No geocoding result available');
-      }
-      const districtInfo = extractDistrictFromResult(match);
+      const response = await fetch('/api/unified-geocode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          street,
+          city: city || 'Unknown',
+          state,
+        }),
+      });
 
-      if (!districtInfo) {
-        throw new Error('No district information found');
+      const result: UnifiedGeocodeResult = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error?.userMessage || 'Address not found');
       }
 
-      onSuccess(districtInfo.state, districtInfo.district, fullAddress);
+      onSuccess(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to find address');
     } finally {

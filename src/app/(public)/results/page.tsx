@@ -53,6 +53,7 @@ import { SearchHistory } from '@/lib/searchHistory';
 import { SearchResultsSkeleton } from '@/shared/components/ui/SkeletonComponents';
 import { LoadingStateWrapper, LoadingMessage } from '@/shared/components/ui/LoadingStates';
 import { useMultiStageLoading } from '@/hooks/shared/useSmartLoading';
+import type { UnifiedGeocodeResult } from '@/types/unified-geocode';
 // Dynamic import for code splitting - reduces initial bundle size
 const InteractiveDistrictMap = dynamic(
   () =>
@@ -152,6 +153,9 @@ function ResultsContent() {
   const [showAddressRefinement, setShowAddressRefinement] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictInfo | null>(null);
   const [_error, setError] = useState<string | null>(null);
+  const [unifiedGeocodeResult, setUnifiedGeocodeResult] = useState<UnifiedGeocodeResult | null>(
+    null
+  );
 
   // Multi-stage loading for the search process
   const loading = useMultiStageLoading([
@@ -445,11 +449,19 @@ function ResultsContent() {
     setShowAddressRefinement(true);
   };
 
-  const handleAddressSuccess = async (state: string, district: string, address: string) => {
-    // Create district info from geocoded result and fetch representatives in-place
+  const handleAddressSuccess = async (result: UnifiedGeocodeResult) => {
+    if (!result.success || !result.districts) {
+      setError('Failed to geocode address');
+      return;
+    }
+
+    // Store the complete unified geocode result for state legislators
+    setUnifiedGeocodeResult(result);
+
+    // Create district info from geocoded result
     const geocodedDistrict: DistrictInfo = {
-      state,
-      district,
+      state: result.districts.federal.state,
+      district: result.districts.federal.district,
       primary: true,
       confidence: 'high',
     };
@@ -458,12 +470,35 @@ function ResultsContent() {
     setMultiDistrictData(null); // Clear multi-district selector
     setShowAddressRefinement(false); // Hide address refinement form
 
-    // Update search query to show the address that was used
-    setSearchQuery(address);
+    // Update search query to show the matched address
+    setSearchQuery(result.matchedAddress || 'Address');
     setSearchType('address');
 
-    // Fetch representatives for the geocoded district
-    await fetchRepresentatives(geocodedDistrict);
+    // Use the unified geocode result data directly instead of fetching again
+    // Convert unified result to legacy format for display
+    const legacyData: ApiResponse = {
+      success: true,
+      representatives: (result.federalRepresentatives as Representative[]) || [],
+      metadata: {
+        timestamp: new Date().toISOString(),
+        zipCode: result.matchedAddress || '',
+        dataQuality: 'high',
+        dataSource: 'unified-geocode',
+        cacheable: true,
+        freshness: 'live',
+      },
+    };
+
+    setData(legacyData);
+    setError(null);
+
+    // Set district info
+    setDistrictInfo({
+      state: result.districts.federal.state,
+      district: result.districts.federal.district,
+    });
+
+    completeLoading();
   };
 
   const handleAddressCancel = () => {
@@ -584,16 +619,19 @@ function ResultsContent() {
                 >
                   State Representatives
                 </button>
-                <button
-                  onClick={() => setActiveTab('map')}
-                  className={`px-6 py-4 text-sm font-medium border-b-2 ${
-                    activeTab === 'map'
-                      ? 'border-civiq-blue text-civiq-blue'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  District Map
-                </button>
+                {/* Only show District Map tab when a single district is determined */}
+                {(districtInfo || selectedDistrict) && !multiDistrictData && (
+                  <button
+                    onClick={() => setActiveTab('map')}
+                    className={`px-6 py-4 text-sm font-medium border-b-2 ${
+                      activeTab === 'map'
+                        ? 'border-civiq-blue text-civiq-blue'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    District Map
+                  </button>
+                )}
               </nav>
             </div>
 
@@ -732,13 +770,26 @@ function ResultsContent() {
                     </div>
                   }
                 >
-                  <StateRepresentativesTab zipCode={zipCode || query || ''} />
+                  <StateRepresentativesTab
+                    zipCode={zipCode || query || ''}
+                    stateSenator={unifiedGeocodeResult?.stateLegislators?.senator}
+                    stateRepresentative={unifiedGeocodeResult?.stateLegislators?.representative}
+                  />
                 </Suspense>
               )}
 
               {activeTab === 'map' && (zipCode || query) && (
                 <div className="space-y-4">
-                  <InteractiveDistrictMap zipCode={zipCode || query || ''} />
+                  <InteractiveDistrictMap
+                    zipCode={zipCode || query || ''}
+                    district={
+                      selectedDistrict
+                        ? `${selectedDistrict.state}-${selectedDistrict.district}`
+                        : districtInfo
+                          ? `${districtInfo.state}-${districtInfo.district}`
+                          : undefined
+                    }
+                  />
                 </div>
               )}
             </div>

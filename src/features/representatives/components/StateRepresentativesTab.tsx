@@ -51,16 +51,93 @@ interface StateApiResponse {
   };
 }
 
+interface StateRepresentativesTabProps {
+  zipCode: string;
+  /** Optional specific state senator from unified geocode result */
+  stateSenator?: {
+    id: string;
+    name: string;
+    party: string;
+    district: string;
+    chamber: 'upper';
+    image?: string;
+    email?: string;
+    phone?: string;
+    website?: string;
+  };
+  /** Optional specific state representative from unified geocode result */
+  stateRepresentative?: {
+    id: string;
+    name: string;
+    party: string;
+    district: string;
+    chamber: 'lower';
+    image?: string;
+    email?: string;
+    phone?: string;
+    website?: string;
+  };
+}
+
 export const StateRepresentativesTab = memo(function StateRepresentativesTab({
   zipCode,
-}: {
-  zipCode: string;
-}) {
+  stateSenator,
+  stateRepresentative,
+}: StateRepresentativesTabProps) {
   const [stateData, setStateData] = useState<StateApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // If specific legislators are provided from unified geocode, use them directly
+  const useSpecificLegislators = stateSenator || stateRepresentative;
+
   useEffect(() => {
+    // If we have specific legislators from unified geocode, skip the API call
+    if (useSpecificLegislators) {
+      const legislators: StateLegislator[] = [];
+
+      if (stateSenator) {
+        legislators.push({
+          id: stateSenator.id,
+          name: stateSenator.name,
+          party: stateSenator.party,
+          chamber: 'upper',
+          district: stateSenator.district,
+          state: '', // Will be inferred from context
+          image: stateSenator.image,
+          email: stateSenator.email,
+          phone: stateSenator.phone,
+          website: stateSenator.website,
+        });
+      }
+
+      if (stateRepresentative) {
+        legislators.push({
+          id: stateRepresentative.id,
+          name: stateRepresentative.name,
+          party: stateRepresentative.party,
+          chamber: 'lower',
+          district: stateRepresentative.district,
+          state: '', // Will be inferred from context
+          image: stateRepresentative.image,
+          email: stateRepresentative.email,
+          phone: stateRepresentative.phone,
+          website: stateRepresentative.website,
+        });
+      }
+
+      setStateData({
+        zipCode,
+        state: '', // State info not critical when showing specific legislators
+        stateName: 'Your State',
+        legislators,
+      });
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    // Otherwise, fetch all legislators for the ZIP code (fallback behavior)
     const fetchStateRepresentatives = async () => {
       try {
         setLoading(true);
@@ -87,7 +164,7 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
     if (zipCode) {
       fetchStateRepresentatives();
     }
-  }, [zipCode]);
+  }, [zipCode, stateSenator, stateRepresentative, useSpecificLegislators]);
 
   if (loading) {
     return (
