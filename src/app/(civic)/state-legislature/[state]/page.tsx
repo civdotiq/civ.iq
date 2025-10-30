@@ -145,9 +145,11 @@ interface StateBill {
 function LegislatorCard({
   legislator,
   chamberTitle,
+  state,
 }: {
   legislator: StateLegislator;
   chamberTitle: string;
+  state: string;
 }) {
   const getPartyColor = (party: string) => {
     switch (party) {
@@ -170,7 +172,10 @@ function LegislatorCard({
       : 0;
 
   return (
-    <div className="bg-white border border-gray-200 p-6 hover:border-2 border-black transition-border-2 border-black">
+    <Link
+      href={`/state-legislature/${state}/legislator/${legislator.id}`}
+      className="block bg-white border border-gray-200 p-6 hover:border-2 hover:border-black transition-all cursor-pointer"
+    >
       <div className="flex items-start gap-4">
         <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center relative overflow-hidden">
           {legislator.photoUrl ? (
@@ -275,7 +280,7 @@ function LegislatorCard({
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -639,6 +644,7 @@ export default function StateLegislaturePage() {
                         key={legislator.id}
                         legislator={legislator}
                         chamberTitle={legislatureData.chambers[activeTab].title}
+                        state={state}
                       />
                     ))}
                 </div>

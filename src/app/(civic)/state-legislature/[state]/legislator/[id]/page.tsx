@@ -38,9 +38,15 @@ async function getLegislator(state: string, id: string) {
     }
 
     const data = await response.json();
-    logger.info(`[StateLegislatorPage] Successfully fetched legislator: ${data.name}`);
 
-    return data;
+    // API returns { success: true, legislator: {...} }
+    if (data.success && data.legislator) {
+      logger.info(`[StateLegislatorPage] Successfully fetched legislator: ${data.legislator.name}`);
+      return data.legislator;
+    }
+
+    logger.error(`[StateLegislatorPage] Invalid API response format`);
+    return null;
   } catch (error) {
     logger.error(`[StateLegislatorPage] Error fetching legislator:`, error);
     return null;
