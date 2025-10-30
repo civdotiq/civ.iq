@@ -132,7 +132,7 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
       setStateData({
         zipCode,
         state: state || '', // Use provided state or empty string
-        stateName: 'Your State',
+        stateName: state ? `${state}` : 'State',
         legislators,
       });
       setLoading(false);
@@ -213,9 +213,7 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
         <h3 className="text-xl font-semibold text-gray-900 mb-2">
           {stateData.stateName} State Legislature
         </h3>
-        <p className="text-gray-600">
-          State representatives for ZIP code <span className="font-semibold">{zipCode}</span>
-        </p>
+        <p className="text-gray-600">State representatives for your address</p>
         {stateData.jurisdiction && (
           <div className="mt-4 flex flex-wrap gap-2">
             {stateData.jurisdiction.chambers.map((chamber, index) => (
