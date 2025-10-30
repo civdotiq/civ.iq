@@ -12,10 +12,10 @@ import { SimpleStateLegislatorProfile } from '@/features/state-legislature/compo
 import logger from '@/lib/logging/simple-logger';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     state: string;
     id: string;
-  };
+  }>;
 }
 
 /**
@@ -51,7 +51,8 @@ async function getLegislator(state: string, id: string) {
  * Generate metadata for SEO
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const legislator = await getLegislator(params.state, params.id);
+  const { state, id } = await params;
+  const legislator = await getLegislator(state, id);
 
   if (!legislator) {
     return {
@@ -62,7 +63,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const chamber = legislator.chamber === 'upper' ? 'State Senator' : 'State Representative';
   const title = `${legislator.name} - ${chamber} | CIV.IQ`;
-  const description = `View ${legislator.name}'s profile, sponsored bills, voting record, and contact information. ${chamber} representing District ${legislator.district} in ${params.state.toUpperCase()}.`;
+  const description = `View ${legislator.name}'s profile, sponsored bills, voting record, and contact information. ${chamber} representing District ${legislator.district} in ${state.toUpperCase()}.`;
 
   return {
     title,
@@ -84,10 +85,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * State Legislator Profile Page Component
  */
 export default async function StateLegislatorPage({ params }: PageProps) {
-  const legislator = await getLegislator(params.state, params.id);
+  const { state, id } = await params;
+  const legislator = await getLegislator(state, id);
 
   if (!legislator) {
-    logger.warn(`[StateLegislatorPage] Legislator not found: ${params.state}/${params.id}`);
+    logger.warn(`[StateLegislatorPage] Legislator not found: ${state}/${id}`);
     notFound();
   }
 
@@ -102,10 +104,10 @@ export default async function StateLegislatorPage({ params }: PageProps) {
             </Link>
             <span className="text-gray-300">|</span>
             <Link
-              href={`/state-legislature/${params.state}`}
+              href={`/state-legislature/${state}`}
               className="text-civiq-blue hover:underline text-sm font-medium"
             >
-              {params.state.toUpperCase()} Legislature
+              {state.toUpperCase()} Legislature
             </Link>
           </div>
         </div>
