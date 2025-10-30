@@ -53,6 +53,8 @@ interface StateApiResponse {
 
 interface StateRepresentativesTabProps {
   zipCode: string;
+  /** State abbreviation (e.g., 'MI', 'CA') */
+  state?: string;
   /** Optional specific state senator from unified geocode result */
   stateSenator?: {
     id: string;
@@ -81,6 +83,7 @@ interface StateRepresentativesTabProps {
 
 export const StateRepresentativesTab = memo(function StateRepresentativesTab({
   zipCode,
+  state,
   stateSenator,
   stateRepresentative,
 }: StateRepresentativesTabProps) {
@@ -103,7 +106,7 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
           party: stateSenator.party,
           chamber: 'upper',
           district: stateSenator.district,
-          state: '', // Will be inferred from context
+          state: state || '', // Use provided state or empty string as fallback
           image: stateSenator.image,
           email: stateSenator.email,
           phone: stateSenator.phone,
@@ -118,7 +121,7 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
           party: stateRepresentative.party,
           chamber: 'lower',
           district: stateRepresentative.district,
-          state: '', // Will be inferred from context
+          state: state || '', // Use provided state or empty string as fallback
           image: stateRepresentative.image,
           email: stateRepresentative.email,
           phone: stateRepresentative.phone,
@@ -128,7 +131,7 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
 
       setStateData({
         zipCode,
-        state: '', // State info not critical when showing specific legislators
+        state: state || '', // Use provided state or empty string
         stateName: 'Your State',
         legislators,
       });
@@ -164,7 +167,7 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
     if (zipCode) {
       fetchStateRepresentatives();
     }
-  }, [zipCode, stateSenator, stateRepresentative, useSpecificLegislators]);
+  }, [zipCode, state, stateSenator, stateRepresentative, useSpecificLegislators]);
 
   if (loading) {
     return (

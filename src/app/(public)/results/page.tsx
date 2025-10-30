@@ -809,6 +809,7 @@ function ResultsContent() {
                 >
                   <StateRepresentativesTab
                     zipCode={zipCode || (query ? query.match(/\b\d{5}\b/)?.[0] || query : '') || ''}
+                    state={unifiedGeocodeResult?.districts?.federal?.state}
                     stateSenator={unifiedGeocodeResult?.stateLegislators?.senator}
                     stateRepresentative={unifiedGeocodeResult?.stateLegislators?.representative}
                   />
