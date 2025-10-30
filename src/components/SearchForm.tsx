@@ -233,11 +233,11 @@ export default function SearchForm() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mb-grid-4 sm:mb-grid-6 px-grid-2 sm:px-0">
+    <div className="max-w-2xl mx-auto mb-grid-2 sm:mb-grid-6 px-grid-2 sm:px-0">
       <form onSubmit={handleSearch} className="relative">
         <div className="relative border-2 border-black">
           <div className="absolute inset-y-0 left-0 pl-grid-2 flex items-center pointer-events-none">
-            <SearchIcon className="h-5 w-5 text-gray-400" />
+            <SearchIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
           </div>
           <input
             type="text"
@@ -246,17 +246,17 @@ export default function SearchForm() {
             onChange={e => setSearchInput(e.target.value)}
             autoComplete="street-address"
             enterKeyHint="search"
-            className="block w-full pl-grid-5 pr-grid-10 sm:pr-grid-12 py-grid-2 text-base sm:text-lg border-0 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-civiq-blue"
+            className="block w-full pl-grid-4 sm:pl-grid-5 pr-grid-8 sm:pr-grid-12 py-grid-2 text-sm sm:text-lg border-0 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-civiq-blue"
             disabled={isLoading}
             aria-label="Search by address or ZIP code"
           />
           <button
             type="submit"
             disabled={!searchInput.trim() || isLoading}
-            className="absolute inset-y-0 right-0 flex items-center px-grid-3 text-white bg-civiq-blue hover:bg-civiq-green disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors aicher-heading text-sm sm:text-base border-l-2 border-black"
+            className="absolute inset-y-0 right-0 flex items-center px-grid-2 sm:px-grid-3 text-white bg-civiq-blue hover:bg-civiq-green disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors aicher-heading text-xs sm:text-base border-l-2 border-black"
           >
             {isLoading ? (
-              <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent"></div>
+              <div className="animate-spin h-4 sm:h-5 w-4 sm:w-5 border-2 border-white border-t-transparent"></div>
             ) : (
               'SEARCH'
             )}
@@ -269,7 +269,7 @@ export default function SearchForm() {
         <button
           onClick={handleGeolocation}
           disabled={isGeolocating || isLoading}
-          className="inline-flex items-center justify-center space-x-2 px-grid-2 py-grid-2 text-sm font-bold uppercase tracking-aicher text-civiq-blue bg-white border-2 border-civiq-blue hover:bg-civiq-blue hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] w-full sm:w-auto"
+          className="inline-flex items-center justify-center space-x-2 px-grid-2 py-grid-2 text-xs sm:text-sm font-bold uppercase tracking-aicher text-civiq-blue bg-white border-2 border-civiq-blue hover:bg-civiq-blue hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] w-full sm:w-auto"
         >
           {isGeolocating ? (
             <>
@@ -298,10 +298,10 @@ export default function SearchForm() {
         </button>
       </div>
       {multiDistrictWarning && (
-        <div className="mt-grid-2 p-grid-2 sm:p-grid-3 bg-blue-50 border-2 border-civiq-blue text-sm text-blue-800">
+        <div className="mt-grid-2 p-grid-2 sm:p-grid-3 bg-blue-50 border-2 border-civiq-blue text-xs sm:text-sm text-blue-800">
           <div className="flex items-start">
             <svg
-              className="w-5 h-5 text-blue-500 mt-0.5 mr-grid-1 flex-shrink-0"
+              className="w-4 sm:w-5 h-4 sm:h-5 text-blue-500 mt-0.5 mr-grid-1 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -310,13 +310,15 @@ export default function SearchForm() {
               <path strokeLinecap="square" strokeWidth={2} d="M12 8v4m0 4h.01" />
             </svg>
             <div className="flex-1">
-              <p className="font-bold uppercase tracking-aicher">Multi-District ZIP Code</p>
-              <p className="mt-grid-1 text-sm">
+              <p className="font-bold uppercase tracking-aicher text-xs sm:text-sm">
+                Multi-District ZIP Code
+              </p>
+              <p className="mt-grid-1 text-xs sm:text-sm">
                 This ZIP spans multiple districts. Use advanced search to select yours.
               </p>
               <button
                 onClick={handleAdvancedSearch}
-                className="mt-grid-2 inline-flex items-center justify-center px-grid-2 py-grid-2 bg-civiq-blue text-white text-sm font-bold uppercase tracking-aicher hover:bg-civiq-green transition-colors min-h-[44px] w-full sm:w-auto"
+                className="mt-grid-2 inline-flex items-center justify-center px-grid-2 py-grid-2 bg-civiq-blue text-white text-xs sm:text-sm font-bold uppercase tracking-aicher hover:bg-civiq-green transition-colors min-h-[44px] w-full sm:w-auto"
               >
                 Choose Your District →
               </button>
@@ -325,10 +327,10 @@ export default function SearchForm() {
         </div>
       )}
       {error && (
-        <div className="mt-grid-2 p-grid-2 sm:p-grid-3 bg-red-50 border-2 border-civiq-red text-sm text-red-800">
+        <div className="mt-grid-2 p-grid-2 sm:p-grid-3 bg-red-50 border-2 border-civiq-red text-xs sm:text-sm text-red-800">
           <div className="flex items-start">
             <svg
-              className="w-5 h-5 text-red-500 mt-0.5 mr-grid-1 flex-shrink-0"
+              className="w-4 sm:w-5 h-4 sm:h-5 text-red-500 mt-0.5 mr-grid-1 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -337,9 +339,11 @@ export default function SearchForm() {
               <path strokeLinecap="square" strokeWidth={2} d="M12 8v4m0 4h.01" />
             </svg>
             <div className="flex-1">
-              <p className="font-bold uppercase tracking-aicher">{error.message}</p>
-              <p className="mt-grid-1">{error.suggestion}</p>
-              <div className="mt-grid-2 flex space-x-grid-2">
+              <p className="font-bold uppercase tracking-aicher text-xs sm:text-sm">
+                {error.message}
+              </p>
+              <p className="mt-grid-1 text-xs sm:text-sm">{error.suggestion}</p>
+              <div className="mt-grid-2 flex flex-col sm:flex-row space-y-grid-1 sm:space-y-0 sm:space-x-grid-2">
                 {error.type !== 'invalid_zip' && (
                   <button
                     onClick={handleRetry}
@@ -359,7 +363,7 @@ export default function SearchForm() {
           </div>
         </div>
       )}
-      <p className="text-sm text-gray-500 mt-grid-2">
+      <p className="text-xs sm:text-sm text-gray-500 mt-grid-1 sm:mt-grid-2 px-grid-1">
         Try: &ldquo;123 Main St, Detroit, MI&rdquo;, &ldquo;1600 Pennsylvania Ave&rdquo;, or
         &ldquo;48221&rdquo;
       </p>
