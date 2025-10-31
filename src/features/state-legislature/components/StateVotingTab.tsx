@@ -45,8 +45,10 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
       setError(null);
 
       try {
+        // Replace slashes with colons for URL safety (e.g., ocd-person/... → ocd-person:...)
+        const urlSafeId = legislatorId.replace(/\//g, ':');
         const response = await fetch(
-          `/api/state-legislature/${state}/legislator/${encodeURIComponent(legislatorId)}/votes?limit=${limit}`
+          `/api/state-legislature/${state}/legislator/${urlSafeId}/votes?limit=${limit}`
         );
 
         if (!response.ok) {

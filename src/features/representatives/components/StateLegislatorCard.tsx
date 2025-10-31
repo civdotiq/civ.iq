@@ -55,8 +55,9 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
 
   const chamberInfo = getChamberInfo(legislator.chamber);
 
-  // Generate profile URL - encode ID since it contains slashes (e.g., ocd-person/...)
-  const profileUrl = `/state-legislature/${legislator.state.toLowerCase()}/legislator/${encodeURIComponent(legislator.id)}`;
+  // Generate profile URL - replace slashes with colons for URL safety (e.g., ocd-person/... → ocd-person:...)
+  const urlSafeId = legislator.id.replace(/\//g, ':');
+  const profileUrl = `/state-legislature/${legislator.state.toLowerCase()}/legislator/${urlSafeId}`;
 
   return (
     <Link

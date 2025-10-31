@@ -24,7 +24,7 @@ export async function GET(
 
   try {
     const { state, id } = await params;
-    const legislatorId = decodeURIComponent(id); // Decode URL-encoded ID
+    const legislatorId = id.replace(/:/g, '/'); // Convert colon delimiter back to slash
 
     if (!state || !legislatorId) {
       logger.warn('State legislator API request missing parameters', { state, id: legislatorId });

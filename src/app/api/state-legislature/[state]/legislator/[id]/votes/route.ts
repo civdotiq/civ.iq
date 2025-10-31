@@ -25,7 +25,7 @@ export async function GET(
 
   try {
     const { state, id } = await params;
-    const legislatorId = decodeURIComponent(id); // Decode URL-encoded ID
+    const legislatorId = id.replace(/:/g, '/'); // Convert colon delimiter back to slash
     const limit = parseInt(searchParams.get('limit') || '50', 10);
 
     if (!state || !legislatorId) {

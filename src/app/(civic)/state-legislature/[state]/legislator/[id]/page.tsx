@@ -58,7 +58,7 @@ async function getLegislator(state: string, id: string) {
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { state, id } = await params;
-  const legislatorId = decodeURIComponent(id); // Decode URL-encoded ID
+  const legislatorId = id.replace(/:/g, '/'); // Convert colon delimiter back to slash
   const legislator = await getLegislator(state, legislatorId);
 
   if (!legislator) {
@@ -93,7 +93,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  */
 export default async function StateLegislatorPage({ params }: PageProps) {
   const { state, id } = await params;
-  const legislatorId = decodeURIComponent(id); // Decode URL-encoded ID
+  const legislatorId = id.replace(/:/g, '/'); // Convert colon delimiter back to slash
   const legislator = await getLegislator(state, legislatorId);
 
   if (!legislator) {

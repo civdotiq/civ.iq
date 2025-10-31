@@ -171,9 +171,12 @@ function LegislatorCard({
         )
       : 0;
 
+  // Replace slashes with colons for URL safety (e.g., ocd-person/... → ocd-person:...)
+  const urlSafeId = legislator.id.replace(/\//g, ':');
+
   return (
     <Link
-      href={`/state-legislature/${state}/legislator/${encodeURIComponent(legislator.id)}`}
+      href={`/state-legislature/${state}/legislator/${urlSafeId}`}
       className="block bg-white border border-gray-200 p-6 hover:border-2 hover:border-black transition-all cursor-pointer"
     >
       <div className="flex items-start gap-4">
