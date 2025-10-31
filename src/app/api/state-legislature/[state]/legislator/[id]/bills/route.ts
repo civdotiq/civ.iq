@@ -25,11 +25,15 @@ export async function GET(
 
   try {
     const { state, id } = await params;
+    const legislatorId = decodeURIComponent(id); // Decode URL-encoded ID
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const session = searchParams.get('session') || undefined;
 
-    if (!state || !id) {
-      logger.warn('State legislator bills API request missing parameters', { state, id });
+    if (!state || !legislatorId) {
+      logger.warn('State legislator bills API request missing parameters', {
+        state,
+        id: legislatorId,
+      });
       return NextResponse.json(
         { success: false, error: 'State and legislator ID are required' },
         { status: 400 }
@@ -38,7 +42,7 @@ export async function GET(
 
     logger.info('Fetching state legislator bills', {
       state: state.toUpperCase(),
-      legislatorId: id,
+      legislatorId,
       limit,
       session,
     });
@@ -46,13 +50,13 @@ export async function GET(
     // First, verify the legislator exists
     const legislator = await StateLegislatureCoreService.getStateLegislatorById(
       state.toUpperCase(),
-      id
+      legislatorId
     );
 
     if (!legislator) {
       logger.warn('State legislator not found', {
         state: state.toUpperCase(),
-        legislatorId: id,
+        legislatorId,
       });
       return NextResponse.json(
         { success: false, error: 'State legislator not found' },
@@ -63,14 +67,14 @@ export async function GET(
     // Use efficient server-side sponsor filtering (ONE API call!)
     const legislatorBills = await StateLegislatureCoreService.getStateLegislatorBills(
       state.toUpperCase(),
-      id,
+      legislatorId,
       session,
       limit
     );
 
     logger.info('State legislator bills request successful', {
       state: state.toUpperCase(),
-      legislatorId: id,
+      legislatorId,
       legislatorName: legislator.name,
       totalBills: legislatorBills.length,
       returnedBills: legislatorBills.length,

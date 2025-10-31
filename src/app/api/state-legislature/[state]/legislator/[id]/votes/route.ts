@@ -25,10 +25,14 @@ export async function GET(
 
   try {
     const { state, id } = await params;
+    const legislatorId = decodeURIComponent(id); // Decode URL-encoded ID
     const limit = parseInt(searchParams.get('limit') || '50', 10);
 
-    if (!state || !id) {
-      logger.warn('State legislator votes API request missing parameters', { state, id });
+    if (!state || !legislatorId) {
+      logger.warn('State legislator votes API request missing parameters', {
+        state,
+        id: legislatorId,
+      });
       return NextResponse.json(
         { success: false, error: 'State and legislator ID are required' },
         { status: 400 }
@@ -37,20 +41,20 @@ export async function GET(
 
     logger.info('Fetching state legislator voting records', {
       state: state.toUpperCase(),
-      legislatorId: id,
+      legislatorId,
       limit,
     });
 
     // Verify the legislator exists first
     const legislator = await StateLegislatureCoreService.getStateLegislatorById(
       state.toUpperCase(),
-      id
+      legislatorId
     );
 
     if (!legislator) {
       logger.warn('State legislator not found for votes request', {
         state: state.toUpperCase(),
-        legislatorId: id,
+        legislatorId,
       });
       return NextResponse.json(
         { success: false, error: 'State legislator not found' },
@@ -61,13 +65,13 @@ export async function GET(
     // Fetch voting records using core service
     const votes = await StateLegislatureCoreService.getStateLegislatorVotes(
       state.toUpperCase(),
-      id,
+      legislatorId,
       limit
     );
 
     logger.info('State legislator votes request successful', {
       state: state.toUpperCase(),
-      legislatorId: id,
+      legislatorId,
       legislatorName: legislator.name,
       voteCount: votes.length,
       responseTime: Date.now() - startTime,

@@ -24,9 +24,10 @@ export async function GET(
 
   try {
     const { state, id } = await params;
+    const legislatorId = decodeURIComponent(id); // Decode URL-encoded ID
 
-    if (!state || !id) {
-      logger.warn('State legislator API request missing parameters', { state, id });
+    if (!state || !legislatorId) {
+      logger.warn('State legislator API request missing parameters', { state, id: legislatorId });
       return NextResponse.json(
         { success: false, error: 'State and legislator ID are required' },
         { status: 400 }
@@ -35,19 +36,19 @@ export async function GET(
 
     logger.info('Fetching state legislator via core service', {
       state: state.toUpperCase(),
-      legislatorId: id,
+      legislatorId,
     });
 
     // Use StateLegislatureCoreService for direct access (NO HTTP calls!)
     const legislator = await StateLegislatureCoreService.getStateLegislatorById(
       state.toUpperCase(),
-      id
+      legislatorId
     );
 
     if (!legislator) {
       logger.warn('State legislator not found', {
         state: state.toUpperCase(),
-        legislatorId: id,
+        legislatorId,
       });
       return NextResponse.json(
         { success: false, error: 'State legislator not found' },
@@ -57,7 +58,7 @@ export async function GET(
 
     logger.info('State legislator request successful', {
       state: state.toUpperCase(),
-      legislatorId: id,
+      legislatorId,
       legislatorName: legislator.name,
       chamber: legislator.chamber,
       responseTime: Date.now() - startTime,

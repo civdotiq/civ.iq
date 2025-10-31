@@ -173,7 +173,7 @@ function LegislatorCard({
 
   return (
     <Link
-      href={`/state-legislature/${state}/legislator/${legislator.id}`}
+      href={`/state-legislature/${state}/legislator/${encodeURIComponent(legislator.id)}`}
       className="block bg-white border border-gray-200 p-6 hover:border-2 hover:border-black transition-all cursor-pointer"
     >
       <div className="flex items-start gap-4">

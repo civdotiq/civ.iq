@@ -46,7 +46,7 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
 
       try {
         const response = await fetch(
-          `/api/state-legislature/${state}/legislator/${legislatorId}/votes?limit=${limit}`
+          `/api/state-legislature/${state}/legislator/${encodeURIComponent(legislatorId)}/votes?limit=${limit}`
         );
 
         if (!response.ok) {
