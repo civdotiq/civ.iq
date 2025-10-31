@@ -7,6 +7,7 @@
 import { memo } from 'react';
 import Link from 'next/link';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
+import { encodeBase64Url } from '@/lib/url-encoding';
 
 interface StateLegislator {
   id: string;
@@ -56,7 +57,7 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
   const chamberInfo = getChamberInfo(legislator.chamber);
 
   // Generate profile URL - Base64 encode the ID for URL safety
-  const base64Id = Buffer.from(legislator.id).toString('base64url');
+  const base64Id = encodeBase64Url(legislator.id);
   const profileUrl = `/state-legislature/${legislator.state.toLowerCase()}/legislator/${base64Id}`;
 
   return (

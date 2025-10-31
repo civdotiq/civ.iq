@@ -7,6 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import type { StatePersonVote } from '@/types/state-legislature';
+import { encodeBase64Url } from '@/lib/url-encoding';
 
 interface StateVotingTabProps {
   state: string;
@@ -46,7 +47,7 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
 
       try {
         // Base64 encode the legislator ID for URL safety
-        const base64Id = Buffer.from(legislatorId).toString('base64url');
+        const base64Id = encodeBase64Url(legislatorId);
         const response = await fetch(
           `/api/state-legislature/${state}/legislator/${base64Id}/votes?limit=${limit}`
         );

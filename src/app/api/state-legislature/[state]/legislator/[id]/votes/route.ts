@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import logger from '@/lib/logging/simple-logger';
+import { decodeBase64Url } from '@/lib/url-encoding';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +26,7 @@ export async function GET(
 
   try {
     const { state, id } = await params;
-    const legislatorId = Buffer.from(id, 'base64url').toString(); // Decode Base64 ID
+    const legislatorId = decodeBase64Url(id); // Decode Base64 ID
     const limit = parseInt(searchParams.get('limit') || '50', 10);
 
     if (!state || !legislatorId) {

@@ -20,6 +20,7 @@ import {
   TrendingUp,
   Calendar,
 } from 'lucide-react';
+import { encodeBase64Url } from '@/lib/url-encoding';
 
 // Logo component
 function CiviqLogo() {
@@ -172,7 +173,7 @@ function LegislatorCard({
       : 0;
 
   // Base64 encode the ID for URL safety
-  const base64Id = Buffer.from(legislator.id).toString('base64url');
+  const base64Id = encodeBase64Url(legislator.id);
 
   return (
     <Link
