@@ -25,7 +25,7 @@ export async function GET(
 
   try {
     const { state, id } = await params;
-    const legislatorId = id.replace(/:/g, '/'); // Convert colon delimiter back to slash
+    const legislatorId = Buffer.from(id, 'base64url').toString(); // Decode Base64 ID
     const limit = parseInt(searchParams.get('limit') || '50', 10);
 
     if (!state || !legislatorId) {

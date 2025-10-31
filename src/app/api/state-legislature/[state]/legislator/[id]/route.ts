@@ -24,7 +24,7 @@ export async function GET(
 
   try {
     const { state, id } = await params;
-    const legislatorId = id.replace(/:/g, '/'); // Convert colon delimiter back to slash
+    const legislatorId = Buffer.from(id, 'base64url').toString(); // Decode Base64 ID
 
     if (!state || !legislatorId) {
       logger.warn('State legislator API request missing parameters', { state, id: legislatorId });
