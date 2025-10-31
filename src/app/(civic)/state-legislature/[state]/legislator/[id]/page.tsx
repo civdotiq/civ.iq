@@ -59,8 +59,8 @@ async function getLegislator(state: string, id: string) {
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { state, id } = await params;
-  const legislatorId = decodeBase64Url(id); // Decode Base64 ID
-  const legislator = await getLegislator(state, legislatorId);
+  // Pass Base64-encoded ID to getLegislator (it constructs the API URL)
+  const legislator = await getLegislator(state, id);
 
   if (!legislator) {
     return {
@@ -94,10 +94,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  */
 export default async function StateLegislatorPage({ params }: PageProps) {
   const { state, id } = await params;
-  const legislatorId = decodeBase64Url(id); // Decode Base64 ID
-  const legislator = await getLegislator(state, legislatorId);
+  // Pass Base64-encoded ID to getLegislator (it constructs the API URL)
+  const legislator = await getLegislator(state, id);
 
   if (!legislator) {
+    const legislatorId = decodeBase64Url(id); // Decode for logging only
     logger.warn(`[StateLegislatorPage] Legislator not found: ${state}/${legislatorId}`);
     notFound();
   }
