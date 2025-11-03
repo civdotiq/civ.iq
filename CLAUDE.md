@@ -441,9 +441,13 @@ npx tsc --noEmit [fixed-file]
 - Bill tracking
 - Data flow architecture (server → client → components)
 - **State legislature integration** (OpenStates v3 API)
+  - State legislator profiles (50% faster - direct service layer access)
+  - State bill details with abstracts
+  - Voting records and sponsored legislation
 - **Local government officials** lookup by address
 - **Address-to-legislators** geocoding (Census + OpenStates)
 - **Congressional constants** (parties, chambers, sessions) - hardcoded for performance
+- **Cache management API** - Admin endpoint for cache invalidation
 
 ### 🚧 In Development
 
@@ -454,10 +458,10 @@ npx tsc --noEmit [fixed-file]
 ### 🐛 Known Issues
 
 - **Limited FEC Coverage**: Not all representatives have FEC ID mappings yet
-- **Architectural Debt**: Localhost HTTP calls within service layer (needs refactoring)
 - **API Pagination**: Some heavy endpoints (representatives/all, districts/all) may need pagination
 - **District Boundaries**: Some boundary geometries need refinement for accuracy
 - **Mobile Layouts**: Ongoing optimization for complex data tables and charts
+- **Committee Data Sparse**: OpenStates v3 API has incomplete committee assignments (~30% coverage)
 
 ## 🔐 Security Requirements
 
@@ -494,9 +498,10 @@ echo "GOAL: [What you're implementing]" >> .session.log
 
 **Recent Development Highlights** (Last 3 Months):
 
+- ✅ **OpenStates Improvements** (Nov 2025) - Security fix (API key redaction), performance boost (50% faster profile pages), bill abstracts endpoint, cache admin API
+- ✅ **Congressional Constants** (Nov 2025) - Hardcoded reference data (parties, chambers, sessions)
 - ✅ **OpenStates v3 Migration** (Oct 2025) - GraphQL→REST API, 110+ state legislators
 - ✅ **Address Geocoding** (Oct 2025) - Census + OpenStates integration for legislator lookup
-- ✅ **Congressional Constants** (Nov 2025) - Hardcoded reference data (parties, chambers, sessions)
 - ✅ **Voting Systems** (Oct 2025) - Senate + House XML parsing, vote detail pages
 - ✅ **Otl Aicher Design System** (Sep 2025) - Geometric modernist UI across 416 files
 - ✅ **District Enhancements** (Sep 2025) - BLS, FCC, DoE, CDC data integration

@@ -227,16 +227,21 @@ None for end users. The migration is backward-compatible at the API endpoint lev
 
 ## Next Steps
 
+- [x] **Security**: API key redacted from documentation (November 2025)
+- [ ] **Action Required**: Rotate OpenStates API key (previous key was exposed in documentation)
+  - Get new key from: https://openstates.org/accounts/profile/
+  - Update `.env.local`: `OPENSTATES_API_KEY=<new_key>`
+  - Update Vercel environment variables
 - [ ] Monitor v3 API rate limits and adjust caching if needed
 - [ ] Consider implementing historical terms lookup if v3 adds that endpoint
 - [ ] Add automated tests for state legislature data transformation
-- [ ] Update OpenStates API key rotation schedule
+- [ ] Implement OpenStates API key rotation schedule (quarterly recommended)
 
 ## References
 
 - [OpenStates v3 API Documentation](https://docs.openstates.org/api-v3/)
 - [v2 → v3 Migration Guide](https://docs.openstates.org/api-v3/migration/)
-- OpenStates API Key: `a0bec510-e187-4a9e-afec-c753b488efd9`
+- OpenStates API Key: `[REDACTED - See .env.local or Vercel environment variables]`
 
 ## Testing Commands
 

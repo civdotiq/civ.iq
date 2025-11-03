@@ -162,7 +162,11 @@
       "WebFetch(domain:api.votesmart.org)",
       "WebFetch(domain:docs.openstates.org)",
       "WebFetch(domain:v3.openstates.org)",
-      "WebFetch(domain:pillarsapp.us)"
+      "WebFetch(domain:pillarsapp.us)",
+      "Bash(git log:*)",
+      "Bash(cd:*)",
+      "Bash(npx next build:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []

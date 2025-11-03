@@ -134,11 +134,15 @@ export class StateLegislatureCoreService {
    * Transform OpenStates bill to StateBill
    */
   private static transformBill(osBill: OpenStatesBill, state: string): StateBill {
+    // Extract abstract from v3 API response (uses first abstract if multiple exist)
+    const abstract =
+      osBill.abstracts && osBill.abstracts.length > 0 ? osBill.abstracts[0]?.abstract : undefined;
+
     return {
       id: osBill.id,
       identifier: osBill.identifier,
       title: osBill.title,
-      abstract: undefined, // v3 API doesn't provide abstract in simplified format
+      abstract,
       classification: (osBill.classification ?? []) as StateBill['classification'],
       subject: osBill.subject ?? [],
       chamber: (osBill.chamber ?? 'lower') as StateChamber,
@@ -628,10 +632,8 @@ export class StateLegislatureCoreService {
         return cached;
       }
 
-      // Get recent bills and find specific one
-      // Note: This is not ideal for large datasets; consider direct bill lookup API
-      const allBills = await openStatesAPI.getBills(state, undefined, undefined, undefined, 200);
-      const osBill = allBills.find(bill => bill.id === billId);
+      // Use direct bill lookup API for efficiency
+      const osBill = await openStatesAPI.getBillById(billId);
 
       if (osBill) {
         const bill = this.transformBill(osBill, state);
@@ -647,6 +649,7 @@ export class StateLegislatureCoreService {
           state,
           billId,
           identifier: bill.identifier,
+          hasAbstract: !!(bill.abstract && bill.abstract.length > 0),
           responseTime: Date.now() - startTime,
         });
 

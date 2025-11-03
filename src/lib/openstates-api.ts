@@ -138,6 +138,10 @@ export interface OpenStatesBill {
   chamber?: 'upper' | 'lower';
   classification?: string[];
   subject?: string[];
+  abstracts?: Array<{
+    abstract: string;
+    note?: string;
+  }>;
   sponsorships?: Array<{
     name: string;
     entity_type: string;
@@ -554,6 +558,11 @@ class OpenStatesAPI {
       chamber,
       classification: bill.classification,
       subject: bill.subject,
+      abstracts:
+        bill.abstracts?.map(a => ({
+          abstract: a.abstract,
+          note: a.note ?? undefined,
+        })) ?? [],
       sponsorships: bill.sponsorships.map(s => ({
         name: s.name,
         entity_type: s.entity_type,

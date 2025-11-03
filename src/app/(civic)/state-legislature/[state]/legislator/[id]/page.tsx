@@ -9,6 +9,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { SimpleStateLegislatorProfile } from '@/features/state-legislature/components/SimpleStateLegislatorProfile';
+import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 
@@ -20,34 +21,29 @@ interface PageProps {
 }
 
 /**
- * Fetch legislator data from API
+ * Fetch legislator data directly from core service
+ * No longer makes HTTP calls to localhost - uses service layer directly
  */
-async function getLegislator(state: string, id: string) {
+async function getLegislator(state: string, base64Id: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const url = `${baseUrl}/api/state-legislature/${state}/legislator/${id}`;
+    // Decode Base64 ID to get OCD ID
+    const legislatorId = decodeBase64Url(base64Id);
 
-    logger.info(`[StateLegislatorPage] Fetching legislator from: ${url}`);
+    logger.info(`[StateLegislatorPage] Fetching legislator: ${state}/${legislatorId}`);
 
-    const response = await fetch(url, {
-      cache: 'no-store', // Always fetch fresh data for profile pages
-    });
+    // Call core service directly (no HTTP overhead)
+    const legislator = await StateLegislatureCoreService.getStateLegislatorById(
+      state,
+      legislatorId
+    );
 
-    if (!response.ok) {
-      logger.error(`[StateLegislatorPage] Failed to fetch legislator: ${response.status}`);
-      return null;
+    if (legislator) {
+      logger.info(`[StateLegislatorPage] Successfully fetched legislator: ${legislator.name}`);
+    } else {
+      logger.warn(`[StateLegislatorPage] Legislator not found: ${state}/${legislatorId}`);
     }
 
-    const data = await response.json();
-
-    // API returns { success: true, legislator: {...} }
-    if (data.success && data.legislator) {
-      logger.info(`[StateLegislatorPage] Successfully fetched legislator: ${data.legislator.name}`);
-      return data.legislator;
-    }
-
-    logger.error(`[StateLegislatorPage] Invalid API response format`);
-    return null;
+    return legislator;
   } catch (error) {
     logger.error(`[StateLegislatorPage] Error fetching legislator:`, error);
     return null;
@@ -94,12 +90,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  */
 export default async function StateLegislatorPage({ params }: PageProps) {
   const { state, id } = await params;
-  // Pass Base64-encoded ID to getLegislator (it constructs the API URL)
+  // Pass Base64-encoded ID to getLegislator (it decodes and fetches from core service)
   const legislator = await getLegislator(state, id);
 
   if (!legislator) {
-    const legislatorId = decodeBase64Url(id); // Decode for logging only
-    logger.warn(`[StateLegislatorPage] Legislator not found: ${state}/${legislatorId}`);
+    // getLegislator already logs the error with decoded ID
     notFound();
   }
 
