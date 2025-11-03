@@ -2,10 +2,10 @@
 
 ## 🎯 Quick Context
 
-**Project**: civic-intel-hub | **Location**: D:\civic-intel-hub | **Stack**: Next.js 15 + TypeScript + React 18  
-**Purpose**: Federal civic data platform using ONLY real government APIs (no mock data ever)  
-**Methodology**: Claude Code best practices + OODA debugging framework  
-**Status**: ✅ **100% TypeScript Compliant** - ZERO compilation errors (December 17, 2025)
+**Project**: civic-intel-hub | **Location**: D:\civic-intel-hub | **Stack**: Next.js 15 + TypeScript + React 18
+**Purpose**: Federal civic data platform using ONLY real government APIs (no mock data ever)
+**Methodology**: Claude Code best practices + OODA debugging framework
+**Status**: ✅ **100% TypeScript Compliant** - ZERO compilation errors (November 2025)
 
 # Guidance Principles
 
@@ -440,19 +440,24 @@ npx tsc --noEmit [fixed-file]
 - Committee profiles
 - Bill tracking
 - Data flow architecture (server → client → components)
+- **State legislature integration** (OpenStates v3 API)
+- **Local government officials** lookup by address
+- **Address-to-legislators** geocoding (Census + OpenStates)
+- **Congressional constants** (parties, chambers, sessions) - hardcoded for performance
 
 ### 🚧 In Development
 
-- State legislature integration
-- Local government officials
-- Enhanced analytics
-- Performance optimizations
+- Enhanced district analytics and visualizations
+- Performance optimizations (caching strategies, API batching)
+- Mobile layout refinements
 
 ### 🐛 Known Issues
 
-- Heavy API responses may need pagination
-- Some district boundaries need refinement
-- Mobile layout optimization ongoing
+- **Limited FEC Coverage**: Not all representatives have FEC ID mappings yet
+- **Architectural Debt**: Localhost HTTP calls within service layer (needs refactoring)
+- **API Pagination**: Some heavy endpoints (representatives/all, districts/all) may need pagination
+- **District Boundaries**: Some boundary geometries need refinement for accuracy
+- **Mobile Layouts**: Ongoing optimization for complex data tables and charts
 
 ## 🔐 Security Requirements
 
@@ -487,161 +492,18 @@ echo "GOAL: [What you're implementing]" >> .session.log
 # 5. Note current focus below
 ```
 
-**Current Focus**: OpenStates API v3 Migration Complete (2025-10-28):
+**Recent Development Highlights** (Last 3 Months):
 
-**MAJOR API MIGRATION COMPLETED** ✅: OpenStates v2 → v3 REST API
+- ✅ **OpenStates v3 Migration** (Oct 2025) - GraphQL→REST API, 110+ state legislators
+- ✅ **Address Geocoding** (Oct 2025) - Census + OpenStates integration for legislator lookup
+- ✅ **Congressional Constants** (Nov 2025) - Hardcoded reference data (parties, chambers, sessions)
+- ✅ **Voting Systems** (Oct 2025) - Senate + House XML parsing, vote detail pages
+- ✅ **Otl Aicher Design System** (Sep 2025) - Geometric modernist UI across 416 files
+- ✅ **District Enhancements** (Sep 2025) - BLS, FCC, DoE, CDC data integration
+- ✅ **Demographics Fix** (Sep 2025) - State name→code mapping for Census API
+- ✅ **Wikidata Integration** (Sep 2025) - 119th Congress metadata, biographical data
 
-- ✅ **API Client Rewritten**: Migrated from GraphQL (v2) to REST (v3) with proper pagination
-- ✅ **Cache Resolution**: Killed 10+ zombie dev servers, cleared all Next.js build caches
-- ✅ **Type Safety Fixed**: Resolved all 23 TypeScript errors from v2→v3 data shape changes
-- ✅ **Data Transformation**: Updated transformLegislator, transformBill, transformJurisdiction for v3 schema
-- ✅ **Production Ready**: 110+ Michigan state legislators now loading with complete data
-- ✅ **Zero Runtime Errors**: All optional chaining and null checks properly implemented
-- ✅ **Documentation**: Complete migration guide at docs/development/OPENSTATES_V3_MIGRATION.md
-- ✅ **Backward Compatible**: All public API endpoints maintain same interface
-
-**Previous Focus**: Otl Aicher Design System Complete (2025-09-22):
-
-**MAJOR TRANSFORMATION COMPLETED** ✅: Complete Otl Aicher Design System Implementation
-
-- ✅ **System-Wide Redesign**: Applied Otl Aicher's geometric modernist principles across entire application
-- ✅ **Visual Consistency**: Unified design language with systematic spacing, typography, and color palette
-- ✅ **Component Architecture**: 416 files transformed while preserving all functionality and data integrity
-- ✅ **Landing Page**: Complete Aicher-inspired layout with geometric elements and CIV.IQ branding integration
-- ✅ **Representative Profiles**: Clean card designs with systematic visual organization and information hierarchy
-- ✅ **District Visualizations**: Modernist data presentation following Aicher's Olympic Games design principles
-- ✅ **Navigation & UI**: Streamlined components with consistent geometric patterns and mobile-first approach
-- ✅ **Performance Maintained**: All existing functionality preserved with enhanced visual presentation
-- ✅ **Quality Assurance**: Zero TypeScript errors, ESLint/Prettier compliance, systematic backup preservation
-
-**Previous Focus**: District Enhancement APIs Complete (2025-09-16):
-
-**MAJOR FEATURE COMPLETED** ✅: Comprehensive District Enhancement System
-
-- ✅ **Economic & Infrastructure**: BLS employment data, FCC broadband access, infrastructure health ratings
-- ✅ **Education & Healthcare**: Department of Education graduation rates, CDC PLACES health outcomes
-- ✅ **Government Investment**: USASpending.gov federal investments, enhanced Congress.gov legislative tracking
-- ✅ **New API Endpoints**: `/api/districts/[districtId]/economic-profile`, `/services-health`, `/government-spending`
-- ✅ **React Components**: EconomicProfile, ServicesHealthProfile, GovernmentServicesProfile with responsive design
-- ✅ **TypeScript Safety**: Complete type definitions for all government API responses
-- ✅ **Performance**: 30-minute caching, graceful error handling, source attribution
-- ✅ **Real Data Only**: BLS, FCC, DoE, CDC, USASpending.gov - no mock data ever
-
-**Previous Focus**: Demographics Data Integration Complete (2025-09-05):
-
-**MAJOR FIX COMPLETED** ✅: District Demographics Now Populated with Real Data
-
-- ✅ **Root Cause Identified**: Congress API returns full state names ("West Virginia") while Census API expects abbreviations ("WV")
-- ✅ **Data Mapping Fixed**: Added inline state name-to-abbreviation mapping in districts/all API route:191-203
-- ✅ **Demographics Populated**: Real Census data now flowing (620k+ populations, $50k+ median incomes)
-- ✅ **Key Metrics**: 431 Census districts → 390 House representatives correctly matched
-- ✅ **Performance**: ~9 seconds for full dataset with proper caching (1-hour TTL)
-- ✅ **Data Integrity**: All demographic fields populated with authentic Census.gov 2021 ACS data
-
-**Previous Focus**: Wikidata Congress Session Info Complete (2025-09-05):
-
-**MAJOR FEATURE COMPLETED** ✅: 119th Congress Contextual Information
-
-- ✅ **CongressSessionInfo Component**: New React component displaying 119th Congress information from Wikidata Q113893555
-- ✅ **Districts Page Integration**: Component added to /districts page providing legislative context
-- ✅ **Wikidata Sourcing**: Uses official Wikidata entity for authentic government data
-- ✅ **Responsive Design**: Blue-themed card with mobile-friendly layout and accessibility features
-- ✅ **Documentation**: Complete implementation guide in docs/development/CONGRESS_SESSION_INFO_INTEGRATION.md
-- ✅ **Code Quality**: Zero TypeScript errors, ESLint/Prettier compliant, proper type safety
-
-**Current Focus**: Address-to-State-Legislators Lookup Complete (2025-10-28):
-
-**MAJOR FEATURE COMPLETED** ✅: Full Address-Based State Legislator Lookup System
-
-- ✅ **Census Geocoder Integration**: U.S. Census Bureau API for address→district resolution
-- ✅ **OpenStates v3 Integration**: Real state legislator data with full profiles
-- ✅ **Two-API Chain Architecture**: Census (geocoding) → OpenStates (legislators)
-- ✅ **Critical Bug Fixed**: Census API uses plural "Districts" not singular "District" in geography keys
-- ✅ **District Extraction**: Successfully parsing upper/lower state legislative districts from Census data
-- ✅ **API Endpoint**: `/api/state-legislators-by-address` (POST with address, GET with query params)
-- ✅ **Performance**: 3-second average response time (Census 800ms + OpenStates 2s)
-- ✅ **Caching**: 7-day TTL for geocoded addresses, 1-hour for legislator data
-- ✅ **Special Cases**: Handles Nebraska unicameral, DC wards, vacant seats
-- ✅ **Testing**: Validated with Detroit (MI-Senate-3, MI-House-9), Lincoln NE, Washington DC
-- ✅ **Code Quality**: Zero TypeScript errors, full null safety, comprehensive error handling
-
-**Services Implemented**:
-
-- `src/services/geocoding/census-geocoder.service.ts` - Address geocoding with district extraction
-- `src/services/state-legislators/district-lookup.service.ts` - Maps districts to legislators
-- `src/services/state-legislators/address-to-legislators.service.ts` - Main orchestrator
-
-**Previous Focus**: House Voting XML Parsing Complete (2025-10-14):
-
-**MAJOR VOTING SYSTEMS FIX** ✅: Both Senate and House Voting Fully Operational
-
-- ✅ **Senate Voting Data**: Production-ready with real XML parsing from Senate.gov
-- ✅ **House Voting Data**: Production-ready with XML parsing from Clerk.house.gov via Congress.gov API
-- ✅ **XML Regex Fix**: Updated pattern to match actual `<recorded-vote>` wrapper structure
-- ✅ **Congress API Integration**: Fixed field name mapping (camelCase: voteQuestion, rollCallNumber, sourceDataURL)
-- ✅ **Individual Member Votes**: Successfully parsing all 435 House representative positions from XML
-- ✅ **Vote Detail Pages**: Unified API endpoint handles both House and Senate votes
-- ✅ **Committee Integration**: Added committees endpoint to batch service with real congress-legislators data
-- ✅ **Chamber-Aware Architecture**: Intelligent routing between Senate XML and House Roll Call APIs
-- ✅ **Code Quality**: Zero TypeScript errors, proper error handling, authentic data sources only
-
-**House Roll Call Implementation - COMPLETED**:
-
-- ✅ **API Endpoints**: Congress.gov `/house-vote/119/1` working correctly
-- ✅ **Response Parsing**: HouseRollCallVoteResponse interfaces match actual API structure
-- ✅ **XML Parsing**: Individual member votes extracted from `sourceDataURL` XML field
-- ✅ **Batch Integration**: getMemberVotingHistory() returns real voting positions
-- ✅ **Vote Details**: `/api/vote/house-119-{rollNumber}` endpoint fully functional
-- ✅ **Testing**: Verified with Rep. Alma Adams (A000370) - all votes parsed correctly
-
-**Known Issues Documented**:
-
-- ⚠️ **Limited FEC Coverage**: Not all representatives have FEC ID mappings yet
-- ⚠️ **Architectural Debt**: Localhost HTTP calls within service layer (needs refactoring)
-
-**Previous Focus**: Voting Systems Refactor Partially Complete (2025-09-04):
-
-- ✅ **Senate Voting Data**: Production-ready with real XML parsing from Senate.gov (vote #503 from today)
-- ✅ **Congress.gov House API**: Fixed endpoints (/house-vote/) and response parsing, ready for enhanced access
-- ⚠️ **House Individual Votes**: API structure ready, but individual member positions require XML parsing implementation
-- 📋 **Next**: Implement House Roll Call XML parsing using August 2025 Congress.gov enhanced access
-
-**Previous Focus**: Detailed Vote Analysis Pages Complete (2025-08-25):
-
-**MAJOR FEATURE COMPLETED** ✅: Interactive Vote Detail System
-
-- ✅ **Backend API**: `/api/vote/[voteId]` endpoint with comprehensive Senate XML parsing
-- ✅ **Frontend Navigation**: Clickable Senate votes in representative profiles
-- ✅ **Detail Pages**: Dynamic `/vote/[voteId]` pages with full senator voting records
-- ✅ **Party Analysis**: Complete breakdown by Democratic/Republican/Independent positions
-- ✅ **UI Components**: Vote count summaries, party statistics, and senator listings
-- ✅ **Error Handling**: Graceful XML parsing failures and vote-not-found scenarios
-- ✅ **Performance**: Cached responses with proper TTL and response time logging
-- ✅ **Quality**: Zero TypeScript errors, ESLint/Prettier passing, full type safety
-
-**Previous Focus**: Representative Profile Three-Column Redesign Complete (2025-08-17):
-
-**MAJOR REDESIGN COMPLETED** ✅: Enhanced Profile Layout & Wikidata Integration
-
-- ✅ **Layout**: Three-column grid (Personal+Committees, Service+Contact, District)
-- ✅ **Components**: PersonalInfoCard, ServiceTermsCard, CommitteeMembershipsCard, DistrictInfoCard
-- ✅ **Wikidata**: SPARQL integration for biographical data (age calculation from birth date)
-- ✅ **API Compliance**: Strict government-only APIs (Congress.gov, FEC, Census, Wikidata)
-- ✅ **Navigation**: Updated tab labels ("Contact Information", "Sponsored Bills")
-- ✅ **Quality**: Zero TypeScript errors, ESLint/Prettier passing, full null safety
-
-**Previous Focus**: Infrastructure Stability & OpenTelemetry Resolution (2025-08-14):
-
-- ✅ **OpenTelemetry Fix**: Resolved RSC bundling issues, simplified telemetry implementation
-- ✅ **Client Mounting**: Representative pages load 200 OK, React hydration successful
-- ✅ **Session Management**: Enhanced with checkpoint tracking and API validation patterns
-
-**Previous Session**: Frontend Data Flow Resolution (2025-08-13):
-
-- Fixed server-fetched data not reaching client tabs
-- BillsTrackerWrapper now uses initialData prop
-- All representative profile tabs now working correctly
-- Production verified with Amy Klobuchar profile (294 bills displayed)
+_For complete feature history, see git commits or docs/PHASE_TRACKER.md_
 
 ## 🆘 When Stuck
 
@@ -685,8 +547,9 @@ npm run validate:all
 
 - `docs/PHASE_TRACKER.md` - Feature completion tracking
 - `docs/ZIP_CODE_MAPPING_SYSTEM.md` - ZIP to district mapping
-- `docs/development/NEWS_INTEGRATION.md` - NewsAPI + Google News setup
 - `docs/development/CAMPAIGN_FINANCE_FIX.md` - FEC integration
+- `docs/development/OPENSTATES_V3_MIGRATION.md` - OpenStates API v2→v3 migration
+- `docs/development/ADDRESS_TO_LEGISLATORS_INTEGRATION.md` - Address geocoding system
 
 ### Security & Deployment:
 
