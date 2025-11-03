@@ -3,19 +3,22 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import type { CommitteeType } from './congressional-constants';
+
 /**
  * Committee name mappings for common House and Senate committees
  * Based on Thomas Committee IDs used by congress-legislators
  */
 
 /**
- * Committee information including name, description, and jurisdiction
+ * Committee information including name, description, jurisdiction, and type
  */
 export interface CommitteeInfo {
   name: string;
   description: string;
   jurisdiction: string[];
   chamber: 'house' | 'senate' | 'joint';
+  type: CommitteeType;
 }
 
 /**
@@ -35,6 +38,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Crop insurance and disaster assistance',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSAP: {
     name: 'House Committee on Appropriations',
@@ -48,6 +52,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Federal agency funding',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSAS: {
     name: 'House Committee on Armed Services',
@@ -61,6 +66,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'National security strategy',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSBA: {
     name: 'House Committee on Small Business',
@@ -73,6 +79,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Small business regulatory issues',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSBU: {
     name: 'House Committee on Budget',
@@ -85,6 +92,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Budget enforcement',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSED: {
     name: 'House Committee on Education and Labor',
@@ -97,6 +105,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Employment standards',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSFA: {
     name: 'House Committee on Foreign Affairs',
@@ -109,6 +118,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'International trade policy',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSGO: {
     name: 'House Committee on Oversight and Reform',
@@ -122,6 +132,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Government efficiency',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSHA: {
     name: 'House Committee on House Administration',
@@ -134,6 +145,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Election security',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSIF: {
     name: 'House Committee on Energy and Commerce',
@@ -146,6 +158,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Consumer protection',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSIG: {
     name: 'House Committee on Intelligence',
@@ -159,6 +172,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Intelligence operations',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSII: {
     name: 'House Committee on Natural Resources',
@@ -171,6 +185,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Water resources',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSJU: {
     name: 'House Committee on Judiciary',
@@ -183,6 +198,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Antitrust law',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSPO: {
     name: 'House Committee on Ethics',
@@ -196,6 +212,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Ethics training',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSPW: {
     name: 'House Committee on Transportation and Infrastructure',
@@ -208,6 +225,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Water infrastructure',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSRU: {
     name: 'House Committee on Rules',
@@ -221,6 +239,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Amendment procedures',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSSO: {
     name: 'House Committee on Science, Space, and Technology',
@@ -233,6 +252,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'NASA policy',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSWM: {
     name: 'House Committee on Ways and Means',
@@ -245,6 +265,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Customs and tariffs',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSVY: {
     name: "House Committee on Veterans' Affairs",
@@ -257,6 +278,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Veterans education',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSFS: {
     name: 'House Committee on Financial Services',
@@ -269,6 +291,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Consumer financial protection',
     ],
     chamber: 'house',
+    type: 'standing',
   },
   HSHL: {
     name: 'House Committee on Homeland Security',
@@ -281,6 +304,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Immigration enforcement',
     ],
     chamber: 'house',
+    type: 'standing',
   },
 
   // Senate Committees
@@ -295,6 +319,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Food safety',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSAP: {
     name: 'Senate Committee on Appropriations',
@@ -307,6 +332,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Emergency appropriations',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSAS: {
     name: 'Senate Committee on Armed Services',
@@ -319,6 +345,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Military personnel',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSBA: {
     name: 'Senate Committee on Banking, Housing, and Urban Affairs',
@@ -331,6 +358,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Securities regulation',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSBU: {
     name: 'Senate Committee on Budget',
@@ -343,6 +371,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Budget enforcement',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSCM: {
     name: 'Senate Committee on Commerce, Science, and Transportation',
@@ -355,6 +384,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Consumer protection',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSEG: {
     name: 'Senate Committee on Energy and Natural Resources',
@@ -367,6 +397,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Energy development',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSEV: {
     name: 'Senate Committee on Environment and Public Works',
@@ -379,6 +410,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Clean air and water',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSFI: {
     name: 'Senate Committee on Finance',
@@ -391,6 +423,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Healthcare financing',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSFO: {
     name: 'Senate Committee on Foreign Relations',
@@ -403,6 +436,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Diplomatic affairs',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSGA: {
     name: 'Senate Committee on Homeland Security and Governmental Affairs',
@@ -415,6 +449,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Emergency management',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSHR: {
     name: 'Senate Committee on Health, Education, Labor and Pensions',
@@ -427,6 +462,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Public health',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSIG: {
     name: 'Senate Committee on Intelligence',
@@ -439,6 +475,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Intelligence operations',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSJU: {
     name: 'Senate Committee on Judiciary',
@@ -451,6 +488,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Criminal justice',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSRU: {
     name: 'Senate Committee on Rules and Administration',
@@ -463,6 +501,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Campaign finance',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSSB: {
     name: 'Senate Committee on Small Business and Entrepreneurship',
@@ -475,6 +514,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Business development',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSVA: {
     name: "Senate Committee on Veterans' Affairs",
@@ -487,6 +527,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Veterans education',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
   SSIN: {
     name: 'Senate Committee on Indian Affairs',
@@ -499,6 +540,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Indigenous rights',
     ],
     chamber: 'senate',
+    type: 'standing',
   },
 
   // Joint Committees
@@ -513,6 +555,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Economic forecasting',
     ],
     chamber: 'joint',
+    type: 'joint',
   },
   JCLC: {
     name: 'Joint Committee on the Library',
@@ -525,6 +568,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Congressional records',
     ],
     chamber: 'joint',
+    type: 'joint',
   },
   JCPR: {
     name: 'Joint Committee on Printing',
@@ -537,6 +581,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Publication oversight',
     ],
     chamber: 'joint',
+    type: 'joint',
   },
   JCTX: {
     name: 'Joint Committee on Taxation',
@@ -549,6 +594,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Tax administration',
     ],
     chamber: 'joint',
+    type: 'joint',
   },
 
   // Select Committees
@@ -563,6 +609,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Climate adaptation',
     ],
     chamber: 'house',
+    type: 'select',
   },
   SCCH: {
     name: 'House Select Committee on the Chinese Communist Party',
@@ -575,6 +622,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Human rights',
     ],
     chamber: 'house',
+    type: 'select',
   },
   SCWG: {
     name: 'House Select Committee on the Weaponization of the Federal Government',
@@ -587,6 +635,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Constitutional rights',
     ],
     chamber: 'house',
+    type: 'select',
   },
 
   // Special Committees
@@ -601,6 +650,7 @@ export const COMMITTEE_INFO: Record<string, CommitteeInfo> = {
       'Long-term care',
     ],
     chamber: 'senate',
+    type: 'special',
   },
 };
 
@@ -827,6 +877,24 @@ export function getCommitteeChamber(thomasId: string): 'house' | 'senate' | 'joi
  */
 export function isSelectCommittee(thomasId: string): boolean {
   return thomasId.startsWith('SC') || thomasId.startsWith('SP');
+}
+
+/**
+ * Get committee type from Thomas ID
+ * Uses the committee info if available, otherwise determines from ID prefix
+ */
+export function getCommitteeType(thomasId: string): CommitteeType {
+  // Check if we have detailed info for this committee
+  const info = COMMITTEE_INFO[thomasId];
+  if (info) {
+    return info.type;
+  }
+
+  // Otherwise, determine from ID prefix
+  if (thomasId.startsWith('J')) return 'joint';
+  if (thomasId.startsWith('SC')) return 'select';
+  if (thomasId.startsWith('SP')) return 'special';
+  return 'standing';
 }
 
 /**

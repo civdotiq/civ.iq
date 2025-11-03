@@ -2,7 +2,14 @@
  * Utility functions for displaying party information consistently across the UI
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
+ *
+ * Now uses centralized congressional constants for consistency
  */
+
+import {
+  getPartyInfo,
+  getPartyColors as getPartyColorsFromConstants,
+} from '../data/congressional-constants';
 
 export type PartyColor = {
   bg: string;
@@ -11,20 +18,11 @@ export type PartyColor = {
 
 /**
  * Get standardized party colors for UI badges/chips
+ * Uses centralized congressional constants
  */
 export function getPartyColors(party: string): PartyColor {
-  const normalizedParty = party.toLowerCase();
-
-  if (normalizedParty === 'democrat' || normalizedParty === 'd') {
-    return { bg: 'bg-blue-100', text: 'text-blue-800' };
-  }
-
-  if (normalizedParty === 'independent') {
-    return { bg: 'bg-purple-100', text: 'text-purple-800' };
-  }
-
-  // Default to Republican for 'R', 'Republican', or anything else
-  return { bg: 'bg-red-100', text: 'text-red-800' };
+  const colors = getPartyColorsFromConstants(party);
+  return { bg: colors.bg, text: colors.text };
 }
 
 /**
@@ -36,18 +34,10 @@ export function formatPartyName(party: string): string {
 }
 
 /**
- * Legacy function to handle old 'D'/'R' format
- * @deprecated Use the actual party names from API instead
+ * Expand party abbreviation to full name
+ * Uses centralized congressional constants
  */
 export function expandPartyAbbreviation(party: string): string {
-  switch (party) {
-    case 'D':
-      return 'Democrat';
-    case 'R':
-      return 'Republican';
-    case 'I':
-      return 'Independent';
-    default:
-      return party; // Return as-is for full names
-  }
+  const partyInfo = getPartyInfo(party);
+  return partyInfo.name;
 }
