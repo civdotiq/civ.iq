@@ -249,10 +249,14 @@ class OpenStatesAPI {
 
   /**
    * Make a REST API request to OpenStates v3
+   * @param endpoint - API endpoint
+   * @param params - Query parameters
+   * @param cacheTTL - Optional cache TTL in milliseconds (default: smart based on endpoint)
    */
   private async makeRequest<T = unknown>(
     endpoint: string,
-    params?: Record<string, string | number | boolean | undefined>
+    params?: Record<string, string | number | boolean | undefined>,
+    cacheTTL?: number
   ): Promise<T> {
     // Build cache key
     const cacheKey = JSON.stringify({ endpoint, params });
@@ -307,11 +311,30 @@ class OpenStatesAPI {
 
         const data = await response.json();
 
-        // Cache successful response for 30 minutes
+        // Smart cache TTL based on data type:
+        // - Votes: 6 months (immutable historical records)
+        // - Bills with session: 7 days (historical sessions immutable, current changes slowly)
+        // - People/legislators: 24 hours (changes infrequently)
+        // - Default: 30 minutes
+        let ttl: number;
+        if (cacheTTL) {
+          ttl = cacheTTL;
+        } else if (endpoint.includes('/votes')) {
+          ttl = 15552000000; // 6 months for vote records (immutable)
+        } else if (endpoint.includes('/bills') && params?.session) {
+          ttl = 604800000; // 7 days for bills with specific session
+        } else if (endpoint.includes('/bills')) {
+          ttl = 86400000; // 24 hours for current bills
+        } else if (endpoint.includes('/people')) {
+          ttl = 86400000; // 24 hours for legislators
+        } else {
+          ttl = 1800000; // 30 minutes default
+        }
+
         this.cache.set(cacheKey, {
           data,
           timestamp: Date.now(),
-          ttl: 30 * 60 * 1000,
+          ttl,
         });
 
         return data as T;

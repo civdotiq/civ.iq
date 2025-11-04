@@ -15,7 +15,8 @@ import { StateLegislatureCoreService } from '@/services/core/state-legislature-c
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 
-export const dynamic = 'force-dynamic';
+// Votes are immutable historical records - use long-term caching
+export const revalidate = 15552000; // 6 months in seconds
 
 export async function GET(
   request: NextRequest,
@@ -78,6 +79,13 @@ export async function GET(
       responseTime: Date.now() - startTime,
     });
 
+    // Votes never change once cast - use long-term cache headers
+    const headers = new Headers({
+      'Cache-Control': 'public, max-age=15552000, stale-while-revalidate=86400', // 6 months cache
+      'CDN-Cache-Control': 'public, max-age=15552000',
+      Vary: 'Accept-Encoding',
+    });
+
     return NextResponse.json(
       {
         success: true,
@@ -92,7 +100,7 @@ export async function GET(
         },
         state: state.toUpperCase(),
       },
-      { status: 200 }
+      { status: 200, headers }
     );
   } catch (error) {
     logger.error('State legislator votes request failed', error as Error, {

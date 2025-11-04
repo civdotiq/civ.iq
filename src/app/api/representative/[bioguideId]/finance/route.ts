@@ -797,9 +797,9 @@ export async function GET(
       interestGroupMetrics,
     };
 
-    // Cache successful response aligned with FEC API 1-hour cache policy
+    // Cache successful response - FEC data updates quarterly (30 day cache)
     await govCache.set(cacheKey, response, {
-      ttl: 3600000, // 1 hour (aligned with FEC cache policy)
+      ttl: 2592000000, // 30 days (FEC quarterly reporting cycle)
       source: 'fec-api',
       dataType: 'finance',
     });
@@ -811,10 +811,10 @@ export async function GET(
       responseTime: Date.now() - startTime,
     });
 
-    // Add HTTP cache headers aligned with FEC API 1-hour cache policy
+    // Add HTTP cache headers - FEC data updates quarterly (30 day cache)
     const headers = new Headers({
-      'Cache-Control': 'public, max-age=3600, stale-while-revalidate=1800',
-      'CDN-Cache-Control': 'public, max-age=3600',
+      'Cache-Control': 'public, max-age=2592000, stale-while-revalidate=86400',
+      'CDN-Cache-Control': 'public, max-age=2592000',
       Vary: 'Accept-Encoding',
     });
 

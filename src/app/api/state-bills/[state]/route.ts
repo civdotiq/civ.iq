@@ -8,7 +8,8 @@ import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
-export const dynamic = 'force-dynamic';
+// Bills can be cached - 24 hours for current session data
+export const revalidate = 86400; // 24 hours
 
 interface StateBill {
   id: string;
@@ -415,8 +416,10 @@ export async function GET(
   }
 
   try {
-    const cacheKey = `state-bills-${state.toUpperCase()}-${status || 'all'}-${chamber || 'all'}-${subject || 'all'}-${sponsor || 'all'}-${page}`;
-    const TTL_30_MINUTES = 30 * 60;
+    const session = searchParams.get('session') || undefined;
+    const cacheKey = `state-bills-${state.toUpperCase()}-${status || 'all'}-${chamber || 'all'}-${subject || 'all'}-${sponsor || 'all'}-${session || 'current'}-${page}`;
+    // Session-aware caching: specific session gets 7 days, current/all gets 24 hours
+    const cacheTTL = session ? 7 * 24 * 60 * 60 : 24 * 60 * 60;
 
     const billsData = await cachedFetch(
       cacheKey,
@@ -438,6 +441,7 @@ export async function GET(
         const bills = await fetchStateBills(stateAbbrev, {
           chamber: chamber || undefined,
           subject: subject || undefined,
+          session: session || undefined,
           perPage: limit,
           page,
         });
@@ -492,7 +496,7 @@ export async function GET(
           },
         };
       },
-      TTL_30_MINUTES
+      cacheTTL
     );
 
     // Apply filters
@@ -540,7 +544,15 @@ export async function GET(
       },
     };
 
-    return NextResponse.json(response);
+    // Session-aware HTTP cache headers
+    const cacheMaxAge = session ? 604800 : 86400; // 7 days vs 24 hours
+    const headers = new Headers({
+      'Cache-Control': `public, max-age=${cacheMaxAge}, stale-while-revalidate=86400`,
+      'CDN-Cache-Control': `public, max-age=${cacheMaxAge}`,
+      Vary: 'Accept-Encoding',
+    });
+
+    return NextResponse.json(response, { headers });
   } catch (error) {
     logger.error(
       'State Bills API Error',

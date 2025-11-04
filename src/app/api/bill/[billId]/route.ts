@@ -12,6 +12,9 @@ import { parseBillNumber } from '@/types/bill';
 import type { EnhancedRepresentative } from '@/types/representative';
 import { parseRollCallXML } from '@/features/legislation/services/rollcall-parser';
 
+// Congress-aware revalidation: 24 hours for current congress bills
+export const revalidate = 86400; // 24 hours
+
 // Congress.gov API response types
 interface CongressAction {
   actionDate: string;
@@ -644,9 +647,20 @@ export async function GET(
       },
     };
 
+    // Congress-aware caching:
+    // - Past congresses (118th and earlier): Indefinite cache (immutable historical data)
+    // - Current congress (119th): 24 hours (active legislation)
+    const CURRENT_CONGRESS = 119;
+    const billCongress = parseInt(bill.congress);
+    const isHistorical = billCongress < CURRENT_CONGRESS;
+
+    const cacheMaxAge = isHistorical ? 31536000 : 86400; // 1 year vs 24 hours
+    const staleWhileRevalidate = isHistorical ? 86400 : 3600; // 1 day vs 1 hour
+
     return NextResponse.json(response, {
       headers: {
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200', // 1 hour cache
+        'Cache-Control': `public, s-maxage=${cacheMaxAge}, stale-while-revalidate=${staleWhileRevalidate}`,
+        'CDN-Cache-Control': `public, max-age=${cacheMaxAge}`,
       },
     });
   } catch (error) {

@@ -15,7 +15,9 @@ import { StateLegislatureCoreService } from '@/services/core/state-legislature-c
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 
-export const dynamic = 'force-dynamic';
+// Bills can be cached based on session activity
+// Default: 24h for current session, 7d for historical sessions
+export const revalidate = 86400; // 24 hours default
 
 export async function GET(
   request: NextRequest,
@@ -82,6 +84,16 @@ export async function GET(
       responseTime: Date.now() - startTime,
     });
 
+    // Session-aware caching:
+    // - Specific session: 7 days (historical sessions are immutable, current sessions change slowly)
+    // - No session (recent bills): 24 hours (may include active legislation)
+    const cacheMaxAge = session ? 604800 : 86400; // 7 days vs 24 hours
+    const headers = new Headers({
+      'Cache-Control': `public, max-age=${cacheMaxAge}, stale-while-revalidate=86400`,
+      'CDN-Cache-Control': `public, max-age=${cacheMaxAge}`,
+      Vary: 'Accept-Encoding',
+    });
+
     return NextResponse.json(
       {
         success: true,
@@ -95,7 +107,7 @@ export async function GET(
           district: legislator.district,
         },
       },
-      { status: 200 }
+      { status: 200, headers }
     );
   } catch (error) {
     logger.error('State legislator bills request failed', error as Error, {
