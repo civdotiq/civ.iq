@@ -223,7 +223,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                 <div>
                   <h3 className="aicher-section-label mb-3 flex items-center gap-2 text-civiq-green">
                     <span className="w-1 h-4 bg-civiq-green"></span>
-                    Federal Service History
+                    State Service History
                   </h3>
                   <div className="bg-gray-50 border-2 border-gray-300 p-4">
                     {legislator.terms.map((term, index) => (
