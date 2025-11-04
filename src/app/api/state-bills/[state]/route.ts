@@ -151,9 +151,10 @@ async function fetchStateBills(
   try {
     const url = new URL('https://v3.openstates.org/bills');
     url.searchParams.set('jurisdiction', stateAbbrev);
-    url.searchParams.set('per_page', (options.perPage || 50).toString());
+    // OpenStates bills API has a maximum of 20 items per page (different from people API)
+    const perPage = Math.min(options.perPage || 20, 20);
+    url.searchParams.set('per_page', perPage.toString());
     url.searchParams.set('page', (options.page || 1).toString());
-    url.searchParams.set('sort', 'updated_desc'); // Get most recently updated bills first
 
     if (options.chamber) {
       url.searchParams.set('chamber', options.chamber);
@@ -206,11 +207,9 @@ async function fetchStateBills(
 
 // Transform OpenStates bill data to our format
 function transformBill(bill: unknown, stateAbbrev: string): StateBill {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sponsors = (bill as any).sponsorships || [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const primarySponsor = sponsors.find((s: any) => s.primary) || sponsors[0];
+  const billData = bill as Record<string, unknown>;
+  const sponsors = (billData.sponsorships as Record<string, unknown>[]) || [];
+  const primarySponsor = sponsors.find(s => s.primary as boolean) || sponsors[0];
 
   // Map OpenStates bill status to our simplified status
   const mapStatus = (classification: string[], latestAction?: string): StateBill['status'] => {
@@ -228,83 +227,103 @@ function transformBill(bill: unknown, stateAbbrev: string): StateBill {
   };
 
   // Extract voting data from actions
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const votes =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (bill as any).actions
-      ?.filter(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (action: any) =>
-          action.classification?.includes('passage') ||
-          action.classification?.includes('committee-passage')
-      )
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((action: any) => ({
-        chamber: action.organization?.chamber || 'unknown',
-        date: action.date,
-        type: action.classification?.includes('committee') ? 'committee' : 'passage',
+  const actions = (billData.actions as Record<string, unknown>[]) || [];
+  const votes: Array<{
+    chamber: 'upper' | 'lower';
+    date: string;
+    type: 'passage' | 'committee' | 'amendment';
+    yesVotes: number;
+    noVotes: number;
+    absentVotes: number;
+    result: 'pass' | 'fail';
+  }> = actions
+    .filter(
+      action =>
+        (action.classification as string[])?.includes('passage') ||
+        (action.classification as string[])?.includes('committee-passage')
+    )
+    .map(action => {
+      const chamber = ((action.organization as Record<string, unknown>)?.chamber as string) || '';
+      return {
+        chamber: (chamber === 'upper' || chamber === 'lower' ? chamber : 'lower') as
+          | 'upper'
+          | 'lower',
+        date: (action.date as string) || '',
+        type: (action.classification as string[])?.includes('committee')
+          ? ('committee' as const)
+          : ('passage' as const),
         yesVotes: 0, // Would need to fetch actual vote data
         noVotes: 0,
         absentVotes: 0,
-        result: action.description?.toLowerCase().includes('passed') ? 'pass' : 'fail',
-      })) || [];
+        result: (action.description as string)?.toLowerCase().includes('passed')
+          ? ('pass' as const)
+          : ('fail' as const),
+      };
+    });
+
+  const fromOrganization = billData.from_organization as Record<string, unknown> | undefined;
 
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    id: (bill as any).id || `${stateAbbrev}-${(bill as any).identifier}`,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    billNumber: (bill as any).identifier || 'Unknown',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    title: (bill as any).title || 'No title available',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    summary: (bill as any).abstract || (bill as any).title || 'No summary available',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    chamber: (bill as any).from_organization?.chamber === 'upper' ? 'upper' : 'lower',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    status: mapStatus((bill as any).classification || [], (bill as any).latest_action_description),
+    id: (billData.id as string) || `${stateAbbrev}-${billData.identifier as string}`,
+    billNumber: (billData.identifier as string) || 'Unknown',
+    title: (billData.title as string) || 'No title available',
+    summary: (billData.abstract as string) || (billData.title as string) || 'No summary available',
+    chamber: fromOrganization?.chamber === 'upper' ? 'upper' : 'lower',
+    status: mapStatus(
+      (billData.classification as string[]) || [],
+      billData.latest_action_description as string | undefined
+    ),
     sponsor: {
-      name: primarySponsor?.name || 'Unknown',
-      party: normalizeParty(primarySponsor?.person?.party) || 'Independent',
-      district: primarySponsor?.person?.current_role?.district || 'Unknown',
+      name: (primarySponsor?.name as string) || 'Unknown',
+      party:
+        normalizeParty(
+          ((primarySponsor?.person as Record<string, unknown>)?.party as string) || undefined
+        ) || 'Independent',
+      district:
+        ((
+          (primarySponsor?.person as Record<string, unknown>)?.current_role as Record<
+            string,
+            unknown
+          >
+        )?.district as string) || 'Unknown',
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cosponsors: sponsors
-      .filter((s: any) => !s.primary)
+      .filter(s => !(s.primary as boolean))
       .slice(0, 10)
-      .map((s: any) => ({
-        name: s.name || 'Unknown',
-        party: normalizeParty(s.person?.party) || 'Independent',
-        district: s.person?.current_role?.district || 'Unknown',
+      .map(s => ({
+        name: (s.name as string) || 'Unknown',
+        party:
+          normalizeParty(((s.person as Record<string, unknown>)?.party as string) || undefined) ||
+          'Independent',
+        district:
+          (((s.person as Record<string, unknown>)?.current_role as Record<string, unknown>)
+            ?.district as string) || 'Unknown',
       })),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    committee: (bill as any).actions?.find(
-      (a: any) => a.organization?.classification === 'committee'
+    committee: actions.find(
+      a => ((a.organization as Record<string, unknown>)?.classification as string) === 'committee'
     )
       ? {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           name:
-            (bill as any).actions.find((a: any) => a.organization?.classification === 'committee')
-              ?.organization?.name || 'Unknown Committee',
+            ((
+              actions.find(
+                a =>
+                  ((a.organization as Record<string, unknown>)?.classification as string) ===
+                  'committee'
+              )?.organization as Record<string, unknown>
+            )?.name as string) || 'Unknown Committee',
           chairman: 'Unknown', // Would need separate API call
         }
       : undefined,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    introducedDate:
-      (bill as any).first_action_date ||
-      (bill as any).created_at ||
-      new Date().toISOString().split('T')[0],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    lastActionDate:
-      (bill as any).latest_action_date ||
-      (bill as any).updated_at ||
-      new Date().toISOString().split('T')[0],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    lastAction: (bill as any).latest_action_description || 'No action recorded',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    subjects: (bill as any).subject || [],
+    introducedDate: ((billData.first_action_date as string | undefined) ||
+      (billData.created_at as string | undefined) ||
+      new Date().toISOString().split('T')[0]) as string,
+    lastActionDate: ((billData.latest_action_date as string | undefined) ||
+      (billData.updated_at as string | undefined) ||
+      new Date().toISOString().split('T')[0]) as string,
+    lastAction: (billData.latest_action_description as string) || 'No action recorded',
+    subjects: (billData.subject as string[]) || [],
     votes,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    fullTextUrl: (bill as any).sources?.[0]?.url,
+    fullTextUrl: ((billData.sources as Record<string, unknown>[])?.[0]?.url as string) || undefined,
     trackingCount: 0, // Data unavailable - would need citizen engagement API
   };
 }

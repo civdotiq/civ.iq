@@ -186,7 +186,7 @@ async function fetchStateLegislators(
     const url = new URL('https://v3.openstates.org/people');
     url.searchParams.set('jurisdiction', stateAbbrev);
     url.searchParams.set('current_role', 'true');
-    url.searchParams.set('per_page', '200'); // Get more results
+    url.searchParams.set('per_page', '50'); // OpenStates API maximum is 50
 
     if (chamber) {
       url.searchParams.set('chamber', chamber);

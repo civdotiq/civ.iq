@@ -458,10 +458,10 @@ npx tsc --noEmit [fixed-file]
 ### 🐛 Known Issues
 
 - **Limited FEC Coverage**: Not all representatives have FEC ID mappings yet
-- **API Pagination**: Some heavy endpoints (representatives/all, districts/all) may need pagination
 - **District Boundaries**: Some boundary geometries need refinement for accuracy
 - **Mobile Layouts**: Ongoing optimization for complex data tables and charts
 - **Committee Data Sparse**: OpenStates v3 API has incomplete committee assignments (~30% coverage)
+- **OpenStates Pagination**: State endpoints limited to 50 legislators and 20 bills per page (API maximum)
 
 ## 🔐 Security Requirements
 
@@ -498,6 +498,7 @@ echo "GOAL: [What you're implementing]" >> .session.log
 
 **Recent Development Highlights** (Last 3 Months):
 
+- ✅ **OpenStates Pagination Fix** (Nov 2025) - Fixed API pagination limits (legislators: 50/page, bills: 20/page), improved type safety (removed all `as any` assertions)
 - ✅ **OpenStates Improvements** (Nov 2025) - Security fix (API key redaction), performance boost (50% faster profile pages), bill abstracts endpoint, cache admin API
 - ✅ **Congressional Constants** (Nov 2025) - Hardcoded reference data (parties, chambers, sessions)
 - ✅ **OpenStates v3 Migration** (Oct 2025) - GraphQL→REST API, 110+ state legislators
