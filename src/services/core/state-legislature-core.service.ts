@@ -23,6 +23,7 @@
  */
 
 import { openStatesAPI, OpenStatesUtils } from '@/lib/openstates-api';
+import { getStateDistrictDemographics } from '@/lib/services/state-census-api.service';
 import type {
   OpenStatesLegislator,
   OpenStatesBill,
@@ -390,6 +391,33 @@ export class StateLegislatureCoreService {
       const legislator = allLegislators.find(leg => leg.id === legislatorId);
 
       if (legislator) {
+        // Fetch district demographics from Census API
+        try {
+          const demographics = await getStateDistrictDemographics(
+            state,
+            legislator.district,
+            legislator.chamber
+          );
+
+          if (demographics) {
+            legislator.demographics = demographics;
+            logger.info('Enriched state legislator with district demographics', {
+              state,
+              legislatorId,
+              district: legislator.district,
+              chamber: legislator.chamber,
+              population: demographics.population,
+            });
+          }
+        } catch (error) {
+          logger.warn('Failed to fetch district demographics, continuing without', {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            state,
+            legislatorId,
+            district: legislator.district,
+          });
+        }
+
         // Cache individual legislator
         await govCache.set(cacheKey, legislator, {
           ttl: 3600000, // 60 minutes
@@ -401,6 +429,7 @@ export class StateLegislatureCoreService {
           state,
           legislatorId,
           name: legislator.name,
+          hasDemographics: !!legislator.demographics,
           responseTime: Date.now() - startTime,
         });
       } else {

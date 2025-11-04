@@ -173,6 +173,21 @@ export interface EnhancedStateLegislator extends BaseStateLegislator {
     legiscan?: string;
   };
 
+  // District demographics from Census ACS API
+  demographics?: {
+    population: number;
+    medianIncome: number;
+    medianAge: number;
+    diversityIndex: number;
+    urbanPercentage: number;
+    white_percent: number;
+    black_percent: number;
+    hispanic_percent: number;
+    asian_percent: number;
+    poverty_rate: number;
+    bachelor_degree_percent: number;
+  };
+
   // Additional links
   links?: Array<{
     url: string;

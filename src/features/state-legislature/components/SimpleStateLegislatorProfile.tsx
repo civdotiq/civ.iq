@@ -10,6 +10,7 @@ import Image from 'next/image';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { getChamberName } from '@/types/state-legislature';
 import { StateVotingTab } from './StateVotingTab';
+import { StateDistrictDemographics } from './StateDistrictDemographics';
 import { FileText, Users, Award, MapPin, Phone, Mail, ExternalLink } from 'lucide-react';
 
 interface SimpleStateLegislatorProfileProps {
@@ -428,6 +429,9 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
               <div className="text-sm text-gray-600">{chamberName}</div>
             </div>
           </div>
+
+          {/* District Demographics */}
+          <StateDistrictDemographics legislator={legislator} />
 
           {/* Contact Info Quick Access */}
           {(legislator.email || legislator.phone) && (
