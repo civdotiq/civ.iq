@@ -7,11 +7,11 @@
 
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { SimpleStateLegislatorProfile } from '@/features/state-legislature/components/SimpleStateLegislatorProfile';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
+import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
 
 interface PageProps {
   params: Promise<{
@@ -98,23 +98,19 @@ export default async function StateLegislatorPage({ params }: PageProps) {
     notFound();
   }
 
+  // Breadcrumb navigation with preserved search context
+  const breadcrumbItems = [
+    { label: 'Search', href: '/' },
+    { label: 'Your Representatives', href: '/results', preserveSearch: true },
+    { label: legislator.name, href: '#' },
+  ];
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
+      {/* Header with Breadcrumbs */}
       <div className="bg-gray-50 border-b-2 border-black py-6">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-civiq-blue hover:underline text-sm font-medium">
-              ← Back to Search
-            </Link>
-            <span className="text-gray-300">|</span>
-            <Link
-              href={`/state-legislature/${state}`}
-              className="text-civiq-blue hover:underline text-sm font-medium"
-            >
-              {state.toUpperCase()} Legislature
-            </Link>
-          </div>
+          <BreadcrumbsWithContext items={breadcrumbItems} />
         </div>
       </div>
 

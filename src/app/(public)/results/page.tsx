@@ -56,6 +56,7 @@ import { SearchResultsSkeleton } from '@/shared/components/ui/SkeletonComponents
 import { LoadingStateWrapper, LoadingMessage } from '@/shared/components/ui/LoadingStates';
 import { useMultiStageLoading } from '@/hooks/shared/useSmartLoading';
 import type { UnifiedGeocodeResult } from '@/types/unified-geocode';
+import { saveSearchContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
 // Dynamic import for code splitting - reduces initial bundle size
 const InteractiveDistrictMap = dynamic(
   () =>
@@ -259,6 +260,13 @@ function ResultsContent() {
               nextStage(); //"Loading additional data..."
               setData(legacyData);
 
+              // Save search context for breadcrumb navigation
+              saveSearchContext({
+                zip: zipCode || undefined,
+                address: address || undefined,
+                q: query || undefined,
+              });
+
               // Set district info
               if (apiData.primaryDistrict) {
                 setDistrictInfo({
@@ -330,6 +338,13 @@ function ResultsContent() {
             setMultiDistrictData(null); // Clear multi-district selector
             setSelectedDistrict(selectedDistrictOverride);
 
+            // Save search context for breadcrumb navigation
+            saveSearchContext({
+              zip: zipCode || undefined,
+              address: address || undefined,
+              q: query || undefined,
+            });
+
             // Set district info
             setDistrictInfo({
               state: selectedDistrictOverride.state,
@@ -370,6 +385,13 @@ function ResultsContent() {
         };
 
         setData(apiData);
+
+        // Save search context for breadcrumb navigation
+        saveSearchContext({
+          zip: zipCode || undefined,
+          address: address || undefined,
+          q: query || undefined,
+        });
 
         if (apiData.success && apiData.representatives && apiData.representatives.length > 0) {
           setError(null);
@@ -526,6 +548,13 @@ function ResultsContent() {
 
     setData(legacyData);
     setError(null);
+
+    // Save search context for breadcrumb navigation
+    saveSearchContext({
+      zip: zipCode || undefined,
+      address: address || undefined,
+      q: query || undefined,
+    });
 
     // Set district info
     setDistrictInfo({

@@ -8,8 +8,8 @@ import dynamicImport from 'next/dynamic';
 import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErrorBoundary';
 import { SiteHeader } from '@/components/shared/layout/SiteHeader';
-import Link from 'next/link';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -208,21 +208,20 @@ export default async function RepresentativeProfilePage({
 
   // Debug logging removed - was causing RSC serialization issues
 
+  // Breadcrumb navigation with preserved search context
+  const breadcrumbItems = [
+    { label: 'Search', href: '/' },
+    { label: 'Your Representatives', href: '/results', preserveSearch: true },
+    { label: representative.name, href: '#' },
+  ];
+
   return (
     <>
       <SiteHeader />
 
       <main id="main-content">
         <div className="container mx-auto px-grid-2 md:px-grid-4 py-grid-3">
-          <div className="flex justify-between items-center mb-grid-3">
-            <div></div>
-            <Link
-              href="/"
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm"
-            >
-              ← Back to Search
-            </Link>
-          </div>
+          <BreadcrumbsWithContext items={breadcrumbItems} className="mb-grid-3" />
         </div>
 
         <ChunkLoadErrorBoundary>
