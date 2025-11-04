@@ -7,9 +7,10 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import logger from '@/lib/logging/simple-logger';
 
 export interface BreadcrumbItem {
   label: string;
@@ -24,25 +25,22 @@ interface BreadcrumbsWithContextProps {
 
 const SEARCH_CONTEXT_KEY = 'civiq_last_search';
 
-/**
- * Retrieves the last search context from sessionStorage
- */
-function getLastSearch(): string | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    return sessionStorage.getItem(SEARCH_CONTEXT_KEY);
-  } catch {
-    return null;
-  }
-}
-
 export function BreadcrumbsWithContext({ items, className = '' }: BreadcrumbsWithContextProps) {
-  const [searchContext, setSearchContext] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Load search context from sessionStorage on mount
-    setSearchContext(getLastSearch());
-  }, []);
+  // Initialize state with current search context (runs during render, not after)
+  const [searchContext] = useState<string | null>(() => {
+    // This initialization function runs once during initial render
+    if (typeof window !== 'undefined') {
+      try {
+        const value = sessionStorage.getItem(SEARCH_CONTEXT_KEY);
+        logger.debug('[BreadcrumbContext] Initialized with search context:', value);
+        return value;
+      } catch (error) {
+        logger.error('[BreadcrumbContext] Failed to initialize search context:', error);
+        return null;
+      }
+    }
+    return null;
+  });
 
   if (items.length === 0) return null;
 
@@ -93,9 +91,13 @@ export function saveSearchContext(searchParams: { zip?: string; address?: string
 
     const queryString = params.toString();
     if (queryString) {
-      sessionStorage.setItem(SEARCH_CONTEXT_KEY, `?${queryString}`);
+      const savedValue = `?${queryString}`;
+      sessionStorage.setItem(SEARCH_CONTEXT_KEY, savedValue);
+      logger.info('[BreadcrumbContext] Saved search context:', savedValue);
+    } else {
+      logger.warn('[BreadcrumbContext] No search params provided to save');
     }
-  } catch {
-    // Silently fail if sessionStorage is not available
+  } catch (error) {
+    logger.error('[BreadcrumbContext] Failed to save search context:', error);
   }
 }
