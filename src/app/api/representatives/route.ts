@@ -407,7 +407,7 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
     // Cache the successful result
     if (result.success && representatives.length > 0) {
       govCache.set(cacheKey, result, {
-        ttl: 30 * 60 * 1000, // 30 minutes for representatives
+        ttl: 86400000, // 24 hours - Congressional rosters change rarely (elections every 2 years)
         source: 'congress-legislators + census',
       });
       logger.info(`Cached representatives for ZIP ${zipCode}`, {

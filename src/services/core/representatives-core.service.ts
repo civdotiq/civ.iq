@@ -96,7 +96,7 @@ export class RepresentativesCoreService {
 
       // Cache state-specific results
       await govCache.set(cacheKey, stateReps, {
-        ttl: 43200000, // 12 hours
+        ttl: 86400000, // 24 hours - state delegations change rarely
         source: 'congress-legislators-filtered',
         dataType: 'representatives',
       });
@@ -142,9 +142,10 @@ export class RepresentativesCoreService {
       const representative = allReps.find(rep => rep.bioguideId === bioguideId);
 
       if (representative) {
-        // Cache individual representative
+        // Cache individual representative with biographical data
+        // Biographical info changes rarely (elections every 2 years)
         await govCache.set(cacheKey, representative, {
-          ttl: 3600000, // 1 hour
+          ttl: 15552000000, // 6 months - biographical data is nearly static
           source: 'congress-legislators-individual',
           dataType: 'representatives',
         });

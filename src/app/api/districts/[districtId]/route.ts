@@ -1035,7 +1035,7 @@ export async function GET(
     const district = await cachedFetch(
       `district-details-${districtId}`,
       () => getDistrictDetails(districtId),
-      30 * 60 * 1000 // 30 minutes cache
+      15552000000 // 6 months - demographics change annually, districts rarely change
     );
 
     if (!district) {
