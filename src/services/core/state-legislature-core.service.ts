@@ -287,8 +287,9 @@ export class StateLegislatureCoreService {
       const enhancedLegislators = legislators.map(leg => this.transformLegislator(leg));
 
       // Cache the result with appropriate TTL
+      // Legislator lists change infrequently (elections, appointments)
       await govCache.set(cacheKey, enhancedLegislators, {
-        ttl: 3600000, // 60 minutes in milliseconds
+        ttl: 86400000, // 24 hours - rosters change rarely
         source: 'openstates-direct',
         dataType: 'representatives', // Using representatives dataType for similar data
       });
@@ -418,9 +419,10 @@ export class StateLegislatureCoreService {
           });
         }
 
-        // Cache individual legislator
+        // Cache individual legislator with demographics
+        // Demographics from Census ACS change annually, so long TTL is appropriate
         await govCache.set(cacheKey, legislator, {
-          ttl: 3600000, // 60 minutes
+          ttl: 15552000000, // 6 months (180 days) - demographics are nearly static
           source: 'openstates-individual',
           dataType: 'representatives',
         });
