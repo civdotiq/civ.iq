@@ -231,6 +231,40 @@ export interface OpenStatesPersonVote {
   chamber: 'upper' | 'lower';
 }
 
+/**
+ * OpenStates v3 Committee
+ */
+export interface OpenStatesCommittee {
+  id: string;
+  name: string;
+  classification: 'committee' | 'subcommittee';
+  chamber: 'upper' | 'lower' | null;
+  parent_id: string | null;
+  memberships?: Array<{
+    person_name: string;
+    role: string;
+    person_id?: string;
+    person?: {
+      id: string;
+      name: string;
+      party: string | null;
+      current_role: {
+        title: string;
+        district: string | null;
+      } | null;
+    };
+  }>;
+  links?: Array<{
+    url: string;
+    note: string | null;
+  }>;
+  sources?: Array<{
+    url: string;
+    note: string | null;
+  }>;
+  extras?: Record<string, unknown>;
+}
+
 class OpenStatesAPI {
   private config: OpenStatesConfig;
   private cache: Map<string, { data: unknown; timestamp: number; ttl: number }>;
@@ -786,6 +820,121 @@ class OpenStatesAPI {
       }
       throw error;
     }
+  }
+
+  /**
+   * Get committees for a specific state
+   * @param state - State abbreviation (e.g., 'MI' or 'michigan')
+   * @param chamber - Optional chamber filter ('upper' or 'lower')
+   * @param classification - Optional classification filter ('committee' or 'subcommittee')
+   * @param includeMemberships - Whether to include member rosters (default: true)
+   * @returns Array of committees
+   */
+  async getCommittees(
+    state: string,
+    chamber?: 'upper' | 'lower',
+    classification?: 'committee' | 'subcommittee',
+    includeMemberships: boolean = true
+  ): Promise<OpenStatesCommittee[]> {
+    const jurisdiction = state.toLowerCase();
+
+    let allResults: OpenStatesCommittee[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const params: Record<string, string | number> = {
+        jurisdiction,
+        per_page: 50, // v3 API max for committees
+        page,
+      };
+
+      if (chamber) params.chamber = chamber;
+      if (classification) params.classification = classification;
+      if (includeMemberships) params.include = 'memberships';
+
+      interface CommitteeListResponse {
+        results: OpenStatesCommittee[];
+        pagination: {
+          per_page: number;
+          page: number;
+          max_page: number;
+          total_items: number;
+        };
+      }
+
+      const response = await this.makeRequest<CommitteeListResponse>('/committees', params);
+      allResults = allResults.concat(response.results);
+
+      // Check if there are more pages
+      hasMore = page < response.pagination.max_page;
+      page++;
+    }
+
+    // Normalize chamber data from organization classification
+    return allResults.map(committee => ({
+      ...committee,
+      chamber: this.normalizeCommitteeChamber(committee),
+    }));
+  }
+
+  /**
+   * Get a specific committee by ID
+   * @param committeeId - OpenStates committee ID (e.g., 'ocd-organization/...')
+   * @param includeMemberships - Whether to include member roster (default: true)
+   * @returns Committee details or null if not found
+   */
+  async getCommitteeById(
+    committeeId: string,
+    includeMemberships: boolean = true
+  ): Promise<OpenStatesCommittee | null> {
+    try {
+      const params: Record<string, string> = {};
+      if (includeMemberships) {
+        params.include = 'memberships';
+      }
+
+      const response = await this.makeRequest<OpenStatesCommittee>(
+        `/committees/${committeeId}`,
+        params
+      );
+
+      return {
+        ...response,
+        chamber: this.normalizeCommitteeChamber(response),
+      };
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('404')) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Normalize committee chamber from various sources
+   * @private
+   */
+  private normalizeCommitteeChamber(committee: OpenStatesCommittee): 'upper' | 'lower' | null {
+    // If chamber is already set, use it
+    if (committee.chamber) return committee.chamber;
+
+    // Try to infer from committee name
+    const name = committee.name.toLowerCase();
+    if (name.includes('senate')) return 'upper';
+    if (name.includes('house') || name.includes('assembly')) return 'lower';
+
+    // Try to infer from first membership
+    if (committee.memberships && committee.memberships.length > 0) {
+      const firstMember = committee.memberships[0];
+      if (firstMember && firstMember.person?.current_role?.title) {
+        const title = firstMember.person.current_role.title.toLowerCase();
+        if (title.includes('senator')) return 'upper';
+        if (title.includes('representative') || title.includes('delegate')) return 'lower';
+      }
+    }
+
+    return null;
   }
 }
 
