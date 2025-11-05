@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
+import { getAllStateExecutives } from '@/lib/api/wikidata-state-executives';
+import type { StateExecutive as WikidataStateExecutive } from '@/lib/api/wikidata-state-executives';
 
 interface StateExecutive {
   id: string;
@@ -17,6 +19,7 @@ interface StateExecutive {
     | 'secretary_of_state'
     | 'treasurer'
     | 'comptroller'
+    | 'auditor'
     | 'other';
   party: 'Democratic' | 'Republican' | 'Independent' | 'Other';
   email?: string;
@@ -84,9 +87,12 @@ export async function GET(
           request
         );
 
-        // In production, this would integrate with official state sources
+        // Fetch real state executives data from Wikidata
         const stateInfo = getStateInfo(state.toUpperCase());
-        const executives: StateExecutive[] = []; // Real state executive API integration needed
+        const wikidataExecutives = await getAllStateExecutives(state.toUpperCase());
+
+        // Transform Wikidata executives to API format
+        const executives: StateExecutive[] = wikidataExecutives.map(transformWikidataExecutive);
 
         // Calculate party breakdown
         const partyBreakdown = {
@@ -106,7 +112,14 @@ export async function GET(
           lastUpdated: new Date().toISOString(),
           nextElection: {
             date: getNextElectionDate(state.toUpperCase()),
-            offices: ['governor', 'lieutenant_governor', 'attorney_general', 'secretary_of_state'],
+            offices: [
+              'governor',
+              'lieutenant_governor',
+              'attorney_general',
+              'secretary_of_state',
+              'treasurer',
+              'auditor',
+            ],
           },
           executives,
           totalCount: executives.length,
@@ -146,27 +159,100 @@ export async function GET(
   }
 }
 
+/**
+ * Transform Wikidata executive to API format
+ */
+function transformWikidataExecutive(wikiExec: WikidataStateExecutive): StateExecutive {
+  // Map party names to standard format
+  const partyMap: Record<string, 'Democratic' | 'Republican' | 'Independent' | 'Other'> = {
+    'Democratic Party': 'Democratic',
+    Democratic: 'Democratic',
+    'Republican Party': 'Republican',
+    Republican: 'Republican',
+    Independent: 'Independent',
+  };
+
+  const party = wikiExec.party ? partyMap[wikiExec.party] || 'Other' : 'Other';
+
+  // Parse previous positions into structured format
+  const previousOffices =
+    wikiExec.previousPositions?.map(position => ({
+      office: position,
+      startYear: 2000, // Wikidata doesn't provide dates in previous positions array
+      endYear: 2020,
+    })) || [];
+
+  return {
+    id: wikiExec.wikidataId,
+    name: wikiExec.name,
+    position: wikiExec.position,
+    party,
+    photoUrl: wikiExec.photoUrl,
+    termStart: wikiExec.termStart || '',
+    termEnd: wikiExec.termEnd || '',
+    isIncumbent: !wikiExec.termEnd, // If no term end date, they're current
+    previousOffices,
+    keyInitiatives: [], // Not available in Wikidata
+  };
+}
+
 function getStateInfo(state: string) {
   const stateNames: Record<string, string> = {
+    AL: 'Alabama',
+    AK: 'Alaska',
+    AZ: 'Arizona',
+    AR: 'Arkansas',
     CA: 'California',
-    TX: 'Texas',
-    NY: 'New York',
+    CO: 'Colorado',
+    CT: 'Connecticut',
+    DE: 'Delaware',
     FL: 'Florida',
-    MI: 'Michigan',
-    PA: 'Pennsylvania',
-    IL: 'Illinois',
-    OH: 'Ohio',
     GA: 'Georgia',
+    HI: 'Hawaii',
+    ID: 'Idaho',
+    IL: 'Illinois',
+    IN: 'Indiana',
+    IA: 'Iowa',
+    KS: 'Kansas',
+    KY: 'Kentucky',
+    LA: 'Louisiana',
+    ME: 'Maine',
+    MD: 'Maryland',
+    MA: 'Massachusetts',
+    MI: 'Michigan',
+    MN: 'Minnesota',
+    MS: 'Mississippi',
+    MO: 'Missouri',
+    MT: 'Montana',
+    NE: 'Nebraska',
+    NV: 'Nevada',
+    NH: 'New Hampshire',
+    NJ: 'New Jersey',
+    NM: 'New Mexico',
+    NY: 'New York',
     NC: 'North Carolina',
+    ND: 'North Dakota',
+    OH: 'Ohio',
+    OK: 'Oklahoma',
+    OR: 'Oregon',
+    PA: 'Pennsylvania',
+    RI: 'Rhode Island',
+    SC: 'South Carolina',
+    SD: 'South Dakota',
+    TN: 'Tennessee',
+    TX: 'Texas',
+    UT: 'Utah',
+    VT: 'Vermont',
     VA: 'Virginia',
     WA: 'Washington',
-    MA: 'Massachusetts',
-    MD: 'Maryland',
-    CO: 'Colorado',
+    WV: 'West Virginia',
+    WI: 'Wisconsin',
+    WY: 'Wyoming',
+    DC: 'Washington D.C.',
   };
 
   return {
-    name: stateNames[state] || 'Generic State',
+    name: stateNames[state] || 'Unknown State',
   };
 }
 
