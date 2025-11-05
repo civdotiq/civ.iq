@@ -12,7 +12,8 @@ import { getChamberName } from '@/types/state-legislature';
 import { StateVotingTab } from './StateVotingTab';
 import { StateDistrictDemographics } from './StateDistrictDemographics';
 import { StateLegislatorBillsList } from './StateLegislatorBillsList';
-import { FileText, Users, Award, MapPin, Phone, Mail, ExternalLink } from 'lucide-react';
+import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
+import { FileText, Users, Award, MapPin, Phone, Mail, ExternalLink, Newspaper } from 'lucide-react';
 
 interface SimpleStateLegislatorProfileProps {
   legislator: EnhancedStateLegislator;
@@ -168,13 +169,14 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
             { id: 'voting', label: 'VOTING RECORDS' },
             { id: 'bills', label: 'SPONSORED BILLS' },
             { id: 'committees', label: 'COMMITTEES' },
+            { id: 'news', label: 'RECENT NEWS' },
             { id: 'contact', label: 'CONTACT' },
           ].map((tab, index) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`aicher-tab ${activeTab === tab.id ? 'active' : ''} ${
-                index === 4 ? 'border-r-0' : ''
+                index === 5 ? 'border-r-0' : ''
               }`}
             >
               {tab.label}
@@ -318,6 +320,33 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
               ) : (
                 <p className="text-gray-600">No committee information available.</p>
               )}
+            </div>
+          )}
+
+          {activeTab === 'news' && (
+            <div className="bg-white border-2 border-black">
+              <div className="p-6">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <Newspaper className="w-6 h-6 text-civiq-blue" />
+                  RECENT NEWS
+                </h2>
+                <SimpleNewsSection
+                  apiEndpoint={`/api/state-legislature/${legislator.state}/legislator/${legislator.id}/news`}
+                  representative={
+                    {
+                      bioguideId: legislator.id,
+                      name: legislator.name,
+                      firstName: legislator.name.split(' ')[0] || legislator.name,
+                      lastName: legislator.name.split(' ').slice(1).join(' ') || legislator.name,
+                      state: legislator.state,
+                      party: legislator.party,
+                      chamber: legislator.chamber === 'upper' ? 'Senate' : 'House',
+                      title: '',
+                      terms: [],
+                    } as any
+                  }
+                />
+              </div>
             </div>
           )}
 

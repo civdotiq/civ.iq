@@ -63,6 +63,7 @@ export interface SimpleNewsSectionProps {
   className?: string;
   maxPages?: number;
   enableAutoLoad?: boolean; // Allow users to control auto-loading
+  apiEndpoint?: string; // Optional custom endpoint (for state legislators)
 }
 
 /**
@@ -109,6 +110,7 @@ export function SimpleNewsSection({
   className = '',
   maxPages = 10,
   enableAutoLoad = true,
+  apiEndpoint,
 }: SimpleNewsSectionProps) {
   const loadMoreButtonRef = useRef<HTMLButtonElement>(null);
   const ariaLiveRef = useRef<HTMLDivElement>(null);
@@ -138,9 +140,9 @@ export function SimpleNewsSection({
       }
 
       // Generate the API key for the current page (pageIndex is 0-based, so add 1)
-      return `/api/representative/${representative.bioguideId}/news?limit=${initialLimit}&page=${
-        pageIndex + 1
-      }`;
+      // Use custom endpoint if provided (for state legislators), otherwise use federal endpoint
+      const baseEndpoint = apiEndpoint || `/api/representative/${representative.bioguideId}/news`;
+      return `${baseEndpoint}?limit=${initialLimit}&page=${pageIndex + 1}`;
     },
     fetcher,
     {
