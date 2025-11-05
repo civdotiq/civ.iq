@@ -1,249 +1,177 @@
-'use client';
-
-/**
- * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
- */
-
-import { FileText, Scale, Users, AlertTriangle, CheckCircle, Info, Globe, Ban } from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 pt-24 pb-16">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
-            <FileText className="w-8 h-8 text-purple-600" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Terms of Service</h1>
-          <p className="text-xl text-gray-600">Last updated: July 2025</p>
+    <div className="min-h-screen aicher-background">
+      <div className="max-w-4xl mx-auto px-grid-2 sm:px-grid-4 py-grid-4 sm:py-grid-8">
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-grid-4 sm:mb-grid-6">
+          <Link href="/" className="flex flex-col items-center hover:opacity-80 transition-opacity">
+            <Image
+              src="/images/civiq-logo.png"
+              alt="CIV.IQ Logo"
+              width={80}
+              height={80}
+              className="border-2 border-black mb-grid-2"
+            />
+            <div className="text-2xl font-bold text-civiq-red aicher-heading">CIV.IQ</div>
+          </Link>
         </div>
 
-        <div className="bg-white rounded-2xl border-2 border-black p-8 md:p-12 space-y-8">
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <Globe className="w-6 h-6 text-blue-600" />
-              Welcome to CIV.IQ
-            </h2>
-            <p className="text-gray-700 leading-relaxed mb-4">
-              CIV.IQ is a free public utility that provides transparent access to government data.
-              By using our service, you agree to these terms. We&apos;ve written them to be clear
-              and fair, reflecting our mission to serve the public interest.
-            </p>
-            <div className="bg-blue-50 rounded-xl p-6">
-              <p className="text-blue-900 font-medium">
-                CIV.IQ is not affiliated with any government agency. We aggregate publicly available
-                data to make it more accessible to citizens.
+        {/* Content */}
+        <div className="aicher-card p-grid-3 sm:p-grid-6">
+          <h1 className="text-3xl sm:text-4xl font-bold text-black mb-grid-3 sm:mb-grid-4 aicher-heading">
+            Terms of Service
+          </h1>
+
+          <p className="text-sm text-gray-500 mb-grid-4">
+            Last Updated:{' '}
+            {new Date().toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+            })}
+          </p>
+
+          <div className="prose prose-gray max-w-none">
+            <section className="mb-grid-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                Acceptance of Terms
+              </h2>
+              <p className="text-gray-700 leading-relaxed">
+                By accessing and using CIV.IQ, you agree to be bound by these Terms of Service and
+                all applicable laws and regulations. If you do not agree with any of these terms,
+                you are prohibited from using or accessing this site.
               </p>
-            </div>
-          </section>
+            </section>
 
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <Users className="w-6 h-6 text-green-600" />
-              Use of Service
-            </h2>
-
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Acceptable Use</h3>
-                <p className="text-gray-700 mb-3">You may use CIV.IQ to:</p>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                    <span className="text-gray-700">
-                      Research your representatives and their voting records
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                    <span className="text-gray-700">
-                      Access public campaign finance information
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                    <span className="text-gray-700">View district demographics and boundaries</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                    <span className="text-gray-700">
-                      Share information for educational or journalistic purposes
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                    <span className="text-gray-700">
-                      Build upon our open-source code (under MIT License)
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Prohibited Use</h3>
-                <p className="text-gray-700 mb-3">You may not:</p>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-3">
-                    <Ban className="w-5 h-5 text-red-600 mt-0.5" />
-                    <span className="text-gray-700">
-                      Use automated tools to scrape data excessively
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Ban className="w-5 h-5 text-red-600 mt-0.5" />
-                    <span className="text-gray-700">
-                      Attempt to overwhelm or disrupt our servers
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Ban className="w-5 h-5 text-red-600 mt-0.5" />
-                    <span className="text-gray-700">
-                      Misrepresent data or create misleading content
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Ban className="w-5 h-5 text-red-600 mt-0.5" />
-                    <span className="text-gray-700">
-                      Violate any applicable laws or regulations
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Ban className="w-5 h-5 text-red-600 mt-0.5" />
-                    <span className="text-gray-700">
-                      Use the service for harassment or harmful purposes
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <Info className="w-6 h-6 text-purple-600" />
-              Data Accuracy and Sources
-            </h2>
-            <div className="bg-purple-50 rounded-xl p-6 space-y-4">
-              <p className="text-gray-700">
-                <strong>Government Data:</strong> We aggregate data from official government
-                sources. While we strive for accuracy, we cannot guarantee that all information is
-                current or error-free.
+            <section className="mb-grid-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                Use License
+              </h2>
+              <p className="text-gray-700 leading-relaxed mb-grid-2">
+                Permission is granted to temporarily access CIV.IQ for personal, non-commercial use
+                only. This license does not include:
               </p>
-              <p className="text-gray-700">
-                <strong>No Warranty:</strong> Data is provided &quot;as is&quot; without warranties
-                of any kind. Always verify important information with official sources.
-              </p>
-              <p className="text-gray-700">
-                <strong>Updates:</strong> We update data based on source availability, but there may
-                be delays between official updates and our system.
-              </p>
-            </div>
-          </section>
+              <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2">
+                <li>Modifying or copying the materials</li>
+                <li>Using the materials for commercial purposes</li>
+                <li>Attempting to reverse engineer any software</li>
+                <li>Removing copyright or proprietary notations</li>
+                <li>Transferring the materials to another person</li>
+              </ul>
+            </section>
 
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <Scale className="w-6 h-6 text-orange-600" />
-              Intellectual Property
-            </h2>
-            <div className="space-y-6">
-              <div className="bg-white rounded-xl p-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Our Content</h3>
-                <ul className="space-y-2 text-gray-700">
-                  <li>
-                    • <strong>Code:</strong> Licensed under MIT License (see GitHub repository)
-                  </li>
-                  <li>
-                    • <strong>Documentation:</strong> Licensed under CC BY-SA 4.0
-                  </li>
-                  <li>
-                    • <strong>Design & UI:</strong> Copyright © 2025 CIV.IQ
-                  </li>
-                  <li>
-                    • <strong>Logo & Branding:</strong> Trademark of CIV.IQ
-                  </li>
-                </ul>
-              </div>
-
-              <div className="bg-white rounded-xl p-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Government Data</h3>
-                <p className="text-gray-700">
-                  All government data remains in the public domain. We claim no ownership over this
-                  data, and you are free to use it in accordance with each source&apos;s terms.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <AlertTriangle className="w-6 h-6 text-red-600" />
-              Disclaimers and Limitations
-            </h2>
-            <div className="bg-red-50 rounded-xl p-6 space-y-4">
-              <p className="text-gray-700">
-                <strong>No Legal Advice:</strong> CIV.IQ provides information only. Nothing on this
-                site constitutes legal, financial, or professional advice.
+            <section className="mb-grid-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                Data and Information
+              </h2>
+              <p className="text-gray-700 leading-relaxed mb-grid-2">
+                CIV.IQ aggregates data from official government sources including:
               </p>
-              <p className="text-gray-700">
-                <strong>No Endorsement:</strong> Display of representative information does not
-                imply endorsement of any person, party, or position.
+              <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2 mb-grid-3">
+                <li>Congress.gov API</li>
+                <li>Federal Election Commission (FEC)</li>
+                <li>U.S. Census Bureau</li>
+                <li>OpenStates</li>
+              </ul>
+              <p className="text-gray-700 leading-relaxed">
+                While we strive for accuracy, we cannot guarantee the completeness or accuracy of
+                information provided. Users should verify critical information with official
+                sources.
               </p>
-              <p className="text-gray-700">
-                <strong>Third-Party Content:</strong> We are not responsible for content on external
-                sites we link to, including official government websites.
+            </section>
+
+            <section className="mb-grid-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                Disclaimer
+              </h2>
+              <p className="text-gray-700 leading-relaxed mb-grid-2">
+                The materials on CIV.IQ are provided on an &ldquo;as is&rdquo; basis. CIV.IQ makes
+                no warranties, expressed or implied, and hereby disclaims and negates all other
+                warranties including:
               </p>
-              <p className="text-gray-700">
-                <strong>Service Availability:</strong> We strive for reliability but cannot
-                guarantee uninterrupted service. Downtime may occur for maintenance or other
-                reasons.
+              <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2">
+                <li>Implied warranties of merchantability and fitness for a particular purpose</li>
+                <li>Non-infringement of intellectual property or other violation of rights</li>
+              </ul>
+            </section>
+
+            <section className="mb-grid-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                Limitations
+              </h2>
+              <p className="text-gray-700 leading-relaxed">
+                In no event shall CIV.IQ or its suppliers be liable for any damages arising out of
+                the use or inability to use the materials on CIV.IQ, even if CIV.IQ has been
+                notified of the possibility of such damage.
               </p>
-            </div>
-          </section>
+            </section>
 
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Limitation of Liability</h2>
-            <p className="text-gray-700 mb-4">
-              To the fullest extent permitted by law, CIV.IQ and its contributors shall not be
-              liable for:
-            </p>
-            <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
-              <li>Any indirect, incidental, or consequential damages</li>
-              <li>Loss of data, profits, or business opportunities</li>
-              <li>Errors or omissions in the data provided</li>
-              <li>Actions taken based on information from our service</li>
-            </ul>
-          </section>
+            <section className="mb-grid-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                User Conduct
+              </h2>
+              <p className="text-gray-700 leading-relaxed mb-grid-2">You agree not to:</p>
+              <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2">
+                <li>Use the platform for any unlawful purpose</li>
+                <li>Attempt to gain unauthorized access to our systems</li>
+                <li>Interfere with or disrupt the platform or servers</li>
+                <li>Collect or harvest personal data of other users</li>
+                <li>Impersonate any person or entity</li>
+              </ul>
+            </section>
 
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Changes to Terms</h2>
-            <p className="text-gray-700">
-              We may update these terms occasionally. Continued use of CIV.IQ after changes
-              constitutes acceptance of the new terms. For significant changes, we&apos;ll provide
-              notice on our homepage.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Contact Information</h2>
-            <div className="bg-blue-50 rounded-xl p-6">
-              <p className="text-gray-700 mb-2">For questions about these terms:</p>
-              <p className="text-gray-900 font-medium">Email: legal@civ.iq</p>
-              <p className="text-gray-900 font-medium">Web: https://civ.iq/contact</p>
-            </div>
-          </section>
-
-          <div className="mt-12 pt-8 border-t border-gray-200">
-            <div className="bg-white rounded-xl p-6">
-              <h3 className="font-semibold text-gray-900 mb-3 text-center">
-                Open Source and Transparency
-              </h3>
-              <p className="text-sm text-gray-600 text-center">
-                CIV.IQ is committed to transparency. Our code is open source and available on
-                GitHub. We believe civic technology should be open, accessible, and serve the public
-                good.
+            <section className="mb-grid-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                Intellectual Property
+              </h2>
+              <p className="text-gray-700 leading-relaxed">
+                The platform design, logo, and original content are owned by CIV.IQ and protected by
+                copyright laws. Government data presented on the platform is public domain.
               </p>
-            </div>
+            </section>
+
+            <section className="mb-grid-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                Modifications to Terms
+              </h2>
+              <p className="text-gray-700 leading-relaxed">
+                CIV.IQ may revise these terms of service at any time without notice. By using this
+                platform, you agree to be bound by the current version of these Terms of Service.
+              </p>
+            </section>
+
+            <section className="mb-grid-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                Governing Law
+              </h2>
+              <p className="text-gray-700 leading-relaxed">
+                These terms shall be governed by and construed in accordance with the laws of the
+                United States, without regard to its conflict of law provisions.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                Contact Information
+              </h2>
+              <p className="text-gray-700 leading-relaxed">
+                If you have any questions about these Terms of Service, please contact us through
+                our GitHub repository or support channels.
+              </p>
+            </section>
+          </div>
+
+          {/* Back to Home */}
+          <div className="mt-grid-6 pt-grid-4 border-t border-gray-200 text-center">
+            <Link
+              href="/"
+              className="inline-block px-grid-3 py-grid-2 bg-civiq-blue text-white font-semibold aicher-border hover:opacity-90 transition-opacity"
+            >
+              Back to Home
+            </Link>
           </div>
         </div>
       </div>

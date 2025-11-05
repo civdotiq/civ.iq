@@ -1,233 +1,98 @@
-'use client';
-
-/**
- * Copyright (c) 2019-2025 Mark Sandford
- * Licensed under the MIT License. See LICENSE and NOTICE files.
- */
-
 import Link from 'next/link';
-
-function CiviqLogo({ className = 'w-10 h-15' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 300 450" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="150" cy="100" r="70" fill="#e11d09" />
-      <rect x="100" y="200" width="100" height="120" fill="#0a9338" />
-      <circle cx="90" cy="370" r="12" fill="#3ea0d2" />
-      <circle cx="130" cy="370" r="12" fill="#3ea0d2" />
-      <circle cx="170" cy="370" r="12" fill="#3ea0d2" />
-      <circle cx="210" cy="370" r="12" fill="#3ea0d2" />
-    </svg>
-  );
-}
+import Image from 'next/image';
 
 export default function AboutPage() {
   return (
-    <>
-      {/* Header */}
-      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-gray-100">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3">
-            <CiviqLogo className="w-8 h-12" />
-            <span className="text-2xl font-bold tracking-tight">CIV.IQ</span>
+    <div className="min-h-screen aicher-background">
+      <div className="max-w-4xl mx-auto px-grid-2 sm:px-grid-4 py-grid-4 sm:py-grid-8">
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-grid-4 sm:mb-grid-6">
+          <Link href="/" className="flex flex-col items-center hover:opacity-80 transition-opacity">
+            <Image
+              src="/images/civiq-logo.png"
+              alt="CIV.IQ Logo"
+              width={80}
+              height={80}
+              className="border-2 border-black mb-grid-2"
+            />
+            <div className="text-2xl font-bold text-civiq-red aicher-heading">CIV.IQ</div>
           </Link>
-          <nav className="hidden md:flex items-center gap-8">
-            <Link
-              href="/representatives"
-              className="font-medium hover:text-civiq-blue transition-colors"
-            >
-              Representatives
-            </Link>
-            <Link href="/districts" className="font-medium hover:text-civiq-blue transition-colors">
-              Districts
-            </Link>
-            <Link href="/states" className="font-medium hover:text-civiq-blue transition-colors">
-              States
-            </Link>
-            <Link href="/local" className="font-medium hover:text-civiq-blue transition-colors">
-              Local
-            </Link>
-            <Link
-              href="/legislation"
-              className="font-medium hover:text-civiq-blue transition-colors"
-            >
-              Legislation
-            </Link>
-            <Link href="/about" className="font-medium text-civiq-blue transition-colors">
-              About
-            </Link>
-          </nav>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="min-h-screen pt-24 px-4 pb-16">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-center mb-8">About CIV.IQ</h1>
+        {/* Content */}
+        <div className="aicher-card p-grid-3 sm:p-grid-6">
+          <h1 className="text-3xl sm:text-4xl font-bold text-black mb-grid-3 sm:mb-grid-4 aicher-heading">
+            About CIV.IQ
+          </h1>
 
-          <div className="prose prose-lg mx-auto">
-            <p className="text-xl text-gray-600 text-center mb-12">
-              CIV.IQ is a civic information platform that empowers citizens with transparent access
-              to government data and democratic engagement tools.
-            </p>
-
-            <section className="mb-12">
-              <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
-              <p className="text-gray-700">
-                To democratize access to government information, enabling every citizen to
-                understand their representation, track legislative activities, and engage
-                meaningfully with their elected officials at all levels of government.
+          <div className="prose prose-gray max-w-none">
+            <section className="mb-grid-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                Our Mission
+              </h2>
+              <p className="text-gray-700 leading-relaxed mb-grid-2">
+                CIV.IQ is a civic engagement platform dedicated to making government more accessible
+                and transparent. We believe that informed citizens are essential to a healthy
+                democracy.
+              </p>
+              <p className="text-gray-700 leading-relaxed">
+                By aggregating real government data from official sources like Congress.gov, the
+                Federal Election Commission, and the U.S. Census Bureau, we provide citizens with
+                the tools they need to stay informed about their representatives and the legislative
+                process.
               </p>
             </section>
 
-            <section className="mb-12">
-              <h2 className="text-2xl font-semibold mb-4">What We Do</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div className="bg-white p-6">
-                  <h3 className="text-xl font-semibold mb-3 text-civiq-red">
-                    Aggregate Official Data
-                  </h3>
-                  <p className="text-gray-600">
-                    We collect and organize data from official government sources including
-                    Congress.gov, FEC.gov, and Census.gov to provide accurate, up-to-date
-                    information.
-                  </p>
-                </div>
-                <div className="bg-white p-6">
-                  <h3 className="text-xl font-semibold mb-3 text-civiq-green">
-                    Simplify Complexity
-                  </h3>
-                  <p className="text-gray-600">
-                    Government data can be overwhelming. We present it in clear, understandable
-                    formats that make civic engagement accessible to everyone.
-                  </p>
-                </div>
-                <div className="bg-white p-6">
-                  <h3 className="text-xl font-semibold mb-3 text-civiq-blue">Enable Engagement</h3>
-                  <p className="text-gray-600">
-                    From finding your representatives to tracking legislation, we provide tools that
-                    help you participate actively in democracy.
-                  </p>
-                </div>
-                <div className="bg-white p-6">
-                  <h3 className="text-xl font-semibold mb-3 text-gray-700">Maintain Neutrality</h3>
-                  <p className="text-gray-600">
-                    We present information without partisan bias, allowing citizens to form their
-                    own informed opinions based on facts.
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            <section className="mb-12">
-              <h2 className="text-2xl font-semibold mb-4">Our Principles</h2>
-              <ul className="space-y-4">
-                <li className="flex items-start">
-                  <span className="text-civiq-green mr-3 text-2xl">✓</span>
-                  <div>
-                    <strong>Transparency:</strong> All data sources are clearly cited and linked to
-                    official government websites.
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-civiq-green mr-3 text-2xl">✓</span>
-                  <div>
-                    <strong>Accessibility:</strong> Free access for all citizens, no registration
-                    required, fully compliant with WCAG standards.
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-civiq-green mr-3 text-2xl">✓</span>
-                  <div>
-                    <strong>Accuracy:</strong> Real-time validation against official sources with
-                    99.9% accuracy targets.
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-civiq-green mr-3 text-2xl">✓</span>
-                  <div>
-                    <strong>Privacy:</strong> No tracking, no personal data collection, no
-                    advertising.
-                  </div>
-                </li>
+            <section className="mb-grid-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                Real Data, No Guesswork
+              </h2>
+              <p className="text-gray-700 leading-relaxed mb-grid-2">
+                We are committed to data integrity. Every piece of information on CIV.IQ comes
+                directly from official government APIs:
+              </p>
+              <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2">
+                <li>Congressional data from Congress.gov API</li>
+                <li>Campaign finance from Federal Election Commission</li>
+                <li>Demographic data from U.S. Census Bureau</li>
+                <li>State legislature data from OpenStates</li>
+                <li>News from verified sources like NewsAPI and Google News</li>
               </ul>
             </section>
 
-            <section className="mb-12">
-              <h2 className="text-2xl font-semibold mb-4">Data Sources</h2>
-              <p className="text-gray-700 mb-4">
-                CIV.IQ aggregates data from trusted government sources:
-              </p>
-              <div className="bg-white p-6">
-                <ul className="space-y-3">
-                  <li>
-                    <strong>Congress.gov:</strong> Federal legislative data, member information,
-                    voting records
-                  </li>
-                  <li>
-                    <strong>FEC.gov:</strong> Campaign finance data, contribution records, spending
-                    reports
-                  </li>
-                  <li>
-                    <strong>Census.gov:</strong> District boundaries, demographic information,
-                    geographic data
-                  </li>
-                  <li>
-                    <strong>OpenStates.org:</strong> State legislature information and voting
-                    records
-                  </li>
-                  <li>
-                    <strong>GDELT Project:</strong> News aggregation for representative-related
-                    current events
-                  </li>
-                </ul>
-              </div>
-            </section>
-
-            <section className="mb-12">
-              <h2 className="text-2xl font-semibold mb-4">Open Source</h2>
-              <p className="text-gray-700">
-                CIV.IQ is an open-source project. We believe civic technology should be transparent
-                and collaborative. Visit our{' '}
-                <a
-                  href="https://github.com/Sandford28/civiq"
-                  className="text-civiq-blue hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  GitHub repository
-                </a>{' '}
-                to contribute or learn more about our technology.
+            <section className="mb-grid-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                Open Source & Transparent
+              </h2>
+              <p className="text-gray-700 leading-relaxed">
+                CIV.IQ is built with transparency in mind. Our platform is open source, and we
+                welcome contributions from developers and civic-minded individuals who want to help
+                improve government accessibility.
               </p>
             </section>
 
-            <section className="mb-12">
-              <h2 className="text-2xl font-semibold mb-4">Contact</h2>
-              <p className="text-gray-700">
-                Have questions, suggestions, or found an issue? We&apos;d love to hear from you.
-                This is a public utility project designed to strengthen democratic participation.
+            <section>
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                Contact Us
+              </h2>
+              <p className="text-gray-700 leading-relaxed">
+                Have questions, feedback, or want to contribute? Reach out to us through our GitHub
+                repository or contact our team directly.
               </p>
-              <div className="mt-6 flex gap-4">
-                <a
-                  href="https://github.com/Sandford28/civiq/issues"
-                  className="bg-gray-900 text-white px-6 py-3 rounded hover:bg-gray-800 transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Report an Issue
-                </a>
-                <a
-                  href="https://github.com/Sandford28/civiq"
-                  className="bg-civiq-blue text-white px-6 py-3 rounded hover:bg-blue-700 transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View on GitHub
-                </a>
-              </div>
             </section>
           </div>
+
+          {/* Back to Home */}
+          <div className="mt-grid-6 pt-grid-4 border-t border-gray-200 text-center">
+            <Link
+              href="/"
+              className="inline-block px-grid-3 py-grid-2 bg-civiq-blue text-white font-semibold aicher-border hover:opacity-90 transition-opacity"
+            >
+              Back to Home
+            </Link>
+          </div>
         </div>
-      </main>
-    </>
+      </div>
+    </div>
   );
 }
