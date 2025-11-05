@@ -21,6 +21,8 @@ import {
   Calendar,
 } from 'lucide-react';
 import { encodeBase64Url } from '@/lib/url-encoding';
+import { StateExecutivesTab } from '@/features/state-government/components/StateExecutivesTab';
+import { StateJudiciaryTab } from '@/features/state-government/components/StateJudiciaryTab';
 
 // Logo component
 function CiviqLogo() {
@@ -343,7 +345,7 @@ function ChamberOverview({ chamber, data }: { chamber: 'upper' | 'lower'; data: 
   );
 }
 
-function RecentBills({ bills }: { bills: StateBill[] }) {
+function RecentBills({ bills, state }: { bills: StateBill[]; state: string }) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'signed':
@@ -367,7 +369,10 @@ function RecentBills({ bills }: { bills: StateBill[] }) {
     <div className="bg-white border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Recent Bills</h3>
-        <Link href="#" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+        <Link
+          href={`/state-bills/${state.toUpperCase()}`}
+          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+        >
           View All Bills →
         </Link>
       </div>
@@ -411,7 +416,9 @@ export default function StateLegislaturePage() {
   const [legislatureData, setLegislatureData] = useState<StateLegislatureData | null>(null);
   const [recentBills, setRecentBills] = useState<StateBill[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'upper' | 'lower' | 'bills'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'upper' | 'lower' | 'executives' | 'judiciary' | 'bills'
+  >('overview');
   const [filters, setFilters] = useState({
     chamber: 'all',
     party: 'all',
@@ -569,26 +576,32 @@ export default function StateLegislaturePage() {
 
         {/* Tabs */}
         <div className="bg-white border-2 border-black p-1 mb-8">
-          <nav className="flex">
-            {(['overview', 'upper', 'lower', 'bills'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === tab
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-white border-2 border-gray-300'
-                }`}
-              >
-                {tab === 'overview'
-                  ? 'Overview'
-                  : tab === 'upper'
-                    ? legislatureData.chambers.upper.name
-                    : tab === 'lower'
-                      ? legislatureData.chambers.lower.name
-                      : 'Recent Bills'}
-              </button>
-            ))}
+          <nav className="flex flex-wrap">
+            {(['overview', 'upper', 'lower', 'executives', 'judiciary', 'bills'] as const).map(
+              tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                    activeTab === tab
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-700 hover:bg-white border-2 border-gray-300'
+                  }`}
+                >
+                  {tab === 'overview'
+                    ? 'Overview'
+                    : tab === 'upper'
+                      ? legislatureData.chambers.upper.name
+                      : tab === 'lower'
+                        ? legislatureData.chambers.lower.name
+                        : tab === 'executives'
+                          ? 'Executives'
+                          : tab === 'judiciary'
+                            ? 'Judiciary'
+                            : 'Recent Bills'}
+                </button>
+              )
+            )}
           </nav>
         </div>
 
@@ -600,7 +613,7 @@ export default function StateLegislaturePage() {
                 <ChamberOverview chamber="upper" data={legislatureData} />
                 <ChamberOverview chamber="lower" data={legislatureData} />
               </div>
-              <RecentBills bills={recentBills} />
+              <RecentBills bills={recentBills} state={state} />
             </>
           )}
 
@@ -656,7 +669,11 @@ export default function StateLegislaturePage() {
             </>
           )}
 
-          {activeTab === 'bills' && <RecentBills bills={recentBills} />}
+          {activeTab === 'bills' && <RecentBills bills={recentBills} state={state} />}
+
+          {activeTab === 'executives' && <StateExecutivesTab state={state} />}
+
+          {activeTab === 'judiciary' && <StateJudiciaryTab state={state} />}
         </div>
       </main>
 
