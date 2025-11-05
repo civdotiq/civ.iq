@@ -11,6 +11,7 @@ import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { getChamberName } from '@/types/state-legislature';
 import { StateVotingTab } from './StateVotingTab';
 import { StateDistrictDemographics } from './StateDistrictDemographics';
+import { StateLegislatorBillsList } from './StateLegislatorBillsList';
 import { FileText, Users, Award, MapPin, Phone, Mail, ExternalLink } from 'lucide-react';
 
 interface SimpleStateLegislatorProfileProps {
@@ -261,30 +262,11 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
 
           {activeTab === 'bills' && (
             <div className="bg-white border-2 border-black p-6">
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <FileText className="w-6 h-6 text-civiq-blue" />
-                SPONSORED LEGISLATION
-              </h2>
-              {legislator.legislation ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 border-2 border-gray-300 p-4">
-                    <div className="text-4xl font-bold text-blue-600 mb-2">
-                      {legislator.legislation.sponsored}
-                    </div>
-                    <div className="text-sm text-gray-600">Bills Sponsored</div>
-                  </div>
-                  <div className="bg-gray-50 border-2 border-gray-300 p-4">
-                    <div className="text-4xl font-bold text-green-600 mb-2">
-                      {legislator.legislation.cosponsored}
-                    </div>
-                    <div className="text-sm text-gray-600">Bills Co-sponsored</div>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-gray-600">
-                  Detailed legislation information will be available soon.
-                </p>
-              )}
+              <StateLegislatorBillsList
+                state={legislator.state}
+                legislatorId={legislator.id}
+                legislatorName={legislator.name}
+              />
             </div>
           )}
 
@@ -298,18 +280,37 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                 <div className="space-y-3">
                   {legislator.committees.map((committee, index) => (
                     <div key={index} className="bg-gray-50 border-2 border-gray-300 p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="mt-1 flex-shrink-0">
-                          <span className="inline-block w-2 h-2 bg-civiq-blue rounded-full"></span>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <div className="mt-1 flex-shrink-0">
+                            <span className="inline-block w-2 h-2 bg-civiq-blue rounded-full"></span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            {committee.id ? (
+                              <a
+                                href={`/state-legislature/${legislator.state}/committee/${committee.id}`}
+                                className="font-bold text-gray-900 hover:text-civiq-blue transition-colors"
+                              >
+                                {committee.name}
+                              </a>
+                            ) : (
+                              <h3 className="font-bold text-gray-900">{committee.name}</h3>
+                            )}
+                            {committee.role && (
+                              <span className="inline-block mt-2 px-2 py-1 bg-white border-2 border-black text-xs font-bold">
+                                {committee.role}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <h3 className="font-bold text-gray-900">{committee.name}</h3>
-                          {committee.role && (
-                            <span className="inline-block mt-2 px-2 py-1 bg-white border-2 border-black text-xs font-bold">
-                              {committee.role}
-                            </span>
-                          )}
-                        </div>
+                        {committee.id && (
+                          <a
+                            href={`/state-legislature/${legislator.state}/committee/${committee.id}`}
+                            className="flex-shrink-0 text-civiq-blue hover:underline text-sm font-semibold"
+                          >
+                            View →
+                          </a>
+                        )}
                       </div>
                     </div>
                   ))}
