@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
+import { getStateLegislatorBiography } from '@/lib/api/wikidata-state-legislators';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,6 +56,50 @@ export async function GET(
         { success: false, error: 'State legislator not found' },
         { status: 404 }
       );
+    }
+
+    // Enrich with Wikidata biographical information
+    logger.info('Enriching state legislator with Wikidata', {
+      legislatorName: legislator.name,
+      chamber: legislator.chamber,
+    });
+
+    const wikidataBio = await getStateLegislatorBiography(
+      legislator.name,
+      state.toUpperCase(),
+      legislator.chamber
+    );
+
+    // Merge Wikidata biographical data if available
+    if (wikidataBio) {
+      legislator.bio = {
+        ...legislator.bio,
+        birthday: wikidataBio.birthDate || legislator.bio?.birthday,
+        birthplace: wikidataBio.birthPlace || legislator.bio?.birthplace,
+        education: wikidataBio.education || legislator.bio?.education,
+      };
+
+      // Add Wikipedia URL if available
+      if (wikidataBio.wikipediaUrl && legislator.links) {
+        const hasWikipedia = legislator.links.some(link => link.url === wikidataBio.wikipediaUrl);
+        if (!hasWikipedia) {
+          legislator.links.push({
+            url: wikidataBio.wikipediaUrl,
+            note: 'Wikipedia',
+          });
+        }
+      }
+
+      logger.info('State legislator enriched with Wikidata', {
+        legislatorName: legislator.name,
+        hasEducation: !!wikidataBio.education?.length,
+        hasBirthplace: !!wikidataBio.birthPlace,
+        hasWikipedia: !!wikidataBio.wikipediaUrl,
+      });
+    } else {
+      logger.info('No Wikidata biographical data found for legislator', {
+        legislatorName: legislator.name,
+      });
     }
 
     logger.info('State legislator request successful', {
