@@ -10,10 +10,10 @@ import { StateCommitteeProfile } from '@/features/state-legislature/components/S
 import type { StateCommittee } from '@/types/state-legislature';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     state: string;
     id: string;
-  };
+  }>;
 }
 
 // Fetch committee data
@@ -41,7 +41,8 @@ async function getCommittee(state: string, id: string): Promise<StateCommittee |
 
 // Generate metadata
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const committee = await getCommittee(params.state, params.id);
+  const { state, id } = await params;
+  const committee = await getCommittee(state, id);
 
   if (!committee) {
     return {
@@ -51,18 +52,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${committee.name} | ${params.state.toUpperCase()} Legislature`,
-    description: `View committee membership, leadership, and information for ${committee.name} in the ${params.state.toUpperCase()} state legislature. See full roster, party composition, and more.`,
+    title: `${committee.name} | ${state.toUpperCase()} Legislature`,
+    description: `View committee membership, leadership, and information for ${committee.name} in the ${state.toUpperCase()} state legislature. See full roster, party composition, and more.`,
     openGraph: {
       title: committee.name,
-      description: `${params.state.toUpperCase()} state legislative committee with ${committee.members?.length || 0} members`,
+      description: `${state.toUpperCase()} state legislative committee with ${committee.members?.length || 0} members`,
       type: 'website',
     },
   };
 }
 
 export default async function StateCommitteePage({ params }: PageProps) {
-  const committee = await getCommittee(params.state, params.id);
+  const { state, id } = await params;
+  const committee = await getCommittee(state, id);
 
   if (!committee) {
     notFound();
@@ -80,16 +82,13 @@ export default async function StateCommitteePage({ params }: PageProps) {
           </li>
           <li>/</li>
           <li>
-            <Link href={`/state-legislature/${params.state}`} className="hover:text-civiq-blue">
-              {params.state.toUpperCase()} Legislature
+            <Link href={`/state-legislature/${state}`} className="hover:text-civiq-blue">
+              {state.toUpperCase()} Legislature
             </Link>
           </li>
           <li>/</li>
           <li>
-            <Link
-              href={`/state-legislature/${params.state}/committees`}
-              className="hover:text-civiq-blue"
-            >
+            <Link href={`/state-legislature/${state}/committees`} className="hover:text-civiq-blue">
               Committees
             </Link>
           </li>
@@ -98,7 +97,7 @@ export default async function StateCommitteePage({ params }: PageProps) {
         </ol>
       </nav>
 
-      <StateCommitteeProfile committee={committee} state={params.state} />
+      <StateCommitteeProfile committee={committee} state={state} />
     </main>
   );
 }

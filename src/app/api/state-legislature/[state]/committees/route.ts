@@ -18,11 +18,14 @@ import type { StateCommitteesApiResponse, StateParty } from '@/types/state-legis
  *
  * Returns: StateCommitteesApiResponse
  */
-export async function GET(request: NextRequest, { params }: { params: { state: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ state: string }> }
+) {
   const startTime = Date.now();
+  const { state } = await params;
 
   try {
-    const { state } = params;
     const searchParams = request.nextUrl.searchParams;
     const chamber = searchParams.get('chamber') as 'upper' | 'lower' | null;
     const classification = searchParams.get('classification') as
@@ -128,7 +131,7 @@ export async function GET(request: NextRequest, { params }: { params: { state: s
       success: false,
       committees: [],
       total: 0,
-      state: params.state.toUpperCase(),
+      state: state.toUpperCase(),
       error:
         error instanceof Error
           ? error.message

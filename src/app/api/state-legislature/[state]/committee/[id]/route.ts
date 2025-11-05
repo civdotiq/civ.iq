@@ -20,12 +20,12 @@ import type { StateCommittee, StateParty } from '@/types/state-legislature';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { state: string; id: string } }
+  { params }: { params: Promise<{ state: string; id: string }> }
 ) {
   const startTime = Date.now();
 
   try {
-    const { state, id } = params;
+    const { state, id } = await params;
 
     // Validate state parameter
     if (!state || state.length !== 2) {

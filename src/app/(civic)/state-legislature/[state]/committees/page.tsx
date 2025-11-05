@@ -11,12 +11,12 @@ import type { StateCommitteesApiResponse } from '@/types/state-legislature';
 import { Building2, Users } from 'lucide-react';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     state: string;
-  };
-  searchParams: {
+  }>;
+  searchParams: Promise<{
     chamber?: 'upper' | 'lower';
-  };
+  }>;
 }
 
 // Fetch committees
@@ -48,15 +48,15 @@ async function getCommittees(
 
 // Generate metadata
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
-  const chamberName = searchParams.chamber
-    ? getChamberName(params.state, searchParams.chamber)
-    : 'Legislature';
+  const { state } = await params;
+  const { chamber } = await searchParams;
+  const chamberName = chamber ? getChamberName(state, chamber) : 'Legislature';
 
   return {
-    title: `${params.state.toUpperCase()} ${chamberName} Committees | CIV.IQ`,
-    description: `Browse committees in the ${params.state.toUpperCase()} state ${chamberName.toLowerCase()}. View committee leadership, membership rosters, and jurisdiction information.`,
+    title: `${state.toUpperCase()} ${chamberName} Committees | CIV.IQ`,
+    description: `Browse committees in the ${state.toUpperCase()} state ${chamberName.toLowerCase()}. View committee leadership, membership rosters, and jurisdiction information.`,
     openGraph: {
-      title: `${params.state.toUpperCase()} ${chamberName} Committees`,
+      title: `${state.toUpperCase()} ${chamberName} Committees`,
       description: `Explore state legislative committees with full membership rosters and leadership information`,
       type: 'website',
     },
@@ -64,7 +64,9 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 }
 
 export default async function StateCommitteesPage({ params, searchParams }: PageProps) {
-  const data = await getCommittees(params.state, searchParams.chamber);
+  const { state } = await params;
+  const { chamber: searchChamber } = await searchParams;
+  const data = await getCommittees(state, searchChamber);
 
   if (!data || !data.success) {
     return (
@@ -80,7 +82,7 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
   }
 
   const { committees, total, chamber } = data;
-  const chamberName = chamber ? getChamberName(params.state, chamber) : 'Legislature';
+  const chamberName = chamber ? getChamberName(state, chamber) : 'Legislature';
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -94,8 +96,8 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
           </li>
           <li>/</li>
           <li>
-            <Link href={`/state-legislature/${params.state}`} className="hover:text-civiq-blue">
-              {params.state.toUpperCase()} Legislature
+            <Link href={`/state-legislature/${state}`} className="hover:text-civiq-blue">
+              {state.toUpperCase()} Legislature
             </Link>
           </li>
           <li>/</li>
@@ -114,7 +116,7 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
             </div>
             <div className="flex-1">
               <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                {params.state.toUpperCase()} {chamberName} Committees
+                {state.toUpperCase()} {chamberName} Committees
               </h1>
               <p className="text-gray-600">
                 Browse {total} committees with full membership rosters and leadership information
@@ -127,7 +129,7 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
             <span className="text-sm font-bold text-gray-700">FILTER BY CHAMBER:</span>
             <div className="flex gap-2">
               <Link
-                href={`/state-legislature/${params.state}/committees`}
+                href={`/state-legislature/${state}/committees`}
                 className={`px-4 py-2 border-2 font-bold text-sm transition-colors ${
                   !chamber
                     ? 'bg-civiq-blue text-white border-civiq-blue'
@@ -137,24 +139,24 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
                 ALL
               </Link>
               <Link
-                href={`/state-legislature/${params.state}/committees?chamber=upper`}
+                href={`/state-legislature/${state}/committees?chamber=upper`}
                 className={`px-4 py-2 border-2 font-bold text-sm transition-colors ${
                   chamber === 'upper'
                     ? 'bg-civiq-blue text-white border-civiq-blue'
                     : 'bg-white text-gray-700 border-black hover:border-civiq-blue'
                 }`}
               >
-                {getChamberName(params.state, 'upper').toUpperCase()}
+                {getChamberName(state, 'upper').toUpperCase()}
               </Link>
               <Link
-                href={`/state-legislature/${params.state}/committees?chamber=lower`}
+                href={`/state-legislature/${state}/committees?chamber=lower`}
                 className={`px-4 py-2 border-2 font-bold text-sm transition-colors ${
                   chamber === 'lower'
                     ? 'bg-civiq-blue text-white border-civiq-blue'
                     : 'bg-white text-gray-700 border-black hover:border-civiq-blue'
                 }`}
               >
-                {getChamberName(params.state, 'lower').toUpperCase()}
+                {getChamberName(state, 'lower').toUpperCase()}
               </Link>
             </div>
           </div>
@@ -165,7 +167,7 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
       {committees.length > 0 ? (
         <div className="space-y-4">
           {committees.map(committee => (
-            <StateCommitteeCard key={committee.id} committee={committee} state={params.state} />
+            <StateCommitteeCard key={committee.id} committee={committee} state={state} />
           ))}
         </div>
       ) : (
