@@ -158,70 +158,155 @@ export default async function StateDistrictPage({ params }: PageProps) {
 
 function LegislatorCard({ legislator }: { legislator: EnhancedStateLegislator }) {
   return (
-    <Link
-      href={`/state-legislature/${legislator.state}/legislator/${legislator.id}`}
-      className="block bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-blue transition-colors"
-    >
-      <div className="flex items-start gap-4">
+    <div className="bg-gray-50 border-2 border-gray-300 p-6">
+      <div className="flex items-start gap-6">
         {legislator.photo_url && (
           <Image
             src={legislator.photo_url}
             alt={legislator.name}
-            width={80}
-            height={80}
+            width={100}
+            height={100}
             className="rounded-full border-2 border-gray-300"
           />
         )}
         <div className="flex-1">
-          <h3 className="font-bold text-lg mb-1">{legislator.name}</h3>
-          <div className="text-sm text-gray-600 space-y-1">
-            <div>{legislator.party}</div>
-            <div>
-              {legislator.state} - District {legislator.district}
+          <h3 className="font-bold text-2xl mb-2">{legislator.name}</h3>
+          <div className="text-sm text-gray-600 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">
+                Representative for {legislator.state} District {legislator.district}
+              </span>
             </div>
-            {legislator.email && <div className="text-civiq-blue">{legislator.email}</div>}
+            <div className="flex items-center gap-2">
+              <span
+                className={`inline-block px-2 py-1 rounded text-xs font-bold ${
+                  legislator.party === 'Democratic'
+                    ? 'bg-blue-100 text-blue-800'
+                    : legislator.party === 'Republican'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-gray-100 text-gray-800'
+                }`}
+              >
+                {legislator.party}
+              </span>
+            </div>
+            {legislator.email && (
+              <div className="text-civiq-blue hover:underline">
+                <a href={`mailto:${legislator.email}`}>{legislator.email}</a>
+              </div>
+            )}
           </div>
+          <Link
+            href={`/state-legislature/${legislator.state}/legislator/${legislator.id}`}
+            className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+          >
+            View Full Profile
+          </Link>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
 function DemographicsDisplay({ demographics }: { demographics: StateDistrictDemographics }) {
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        {demographics.population && (
-          <div>
-            <div className="text-sm text-gray-600">Population</div>
-            <div className="font-semibold">{demographics.population.toLocaleString()}</div>
+    <div className="space-y-6">
+      {/* Colored Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-blue-600 p-4 rounded">
+          <div className="text-2xl font-bold text-white">
+            {demographics.population.toLocaleString()}
           </div>
-        )}
-        {demographics.medianIncome && (
-          <div>
-            <div className="text-sm text-gray-600">Median Income</div>
-            <div className="font-semibold">${demographics.medianIncome.toLocaleString()}</div>
+          <p className="text-sm text-white mt-1 uppercase tracking-wide">Total Population</p>
+        </div>
+
+        <div className="bg-green-600 p-4 rounded">
+          <div className="text-2xl font-bold text-white">
+            {formatCurrency(demographics.medianIncome)}
           </div>
-        )}
+          <p className="text-sm text-white mt-1 uppercase tracking-wide">Median Income</p>
+        </div>
+
+        <div className="bg-purple-100 border-2 border-black p-4 rounded">
+          <div className="text-2xl font-bold text-purple-900">
+            {demographics.medianAge.toFixed(1)}
+          </div>
+          <p className="text-sm text-purple-700 mt-1 uppercase tracking-wide">Median Age</p>
+        </div>
+
+        <div className="bg-red-600 p-4 rounded">
+          <div className="text-2xl font-bold text-white">
+            {demographics.urbanPercentage.toFixed(0)}%
+          </div>
+          <p className="text-sm text-white mt-1 uppercase tracking-wide">Urban Population</p>
+        </div>
       </div>
 
-      <div>
-        <h3 className="text-sm font-medium text-gray-700 mb-2">Racial Composition</h3>
-        <div className="space-y-2">
-          {[
-            { label: 'White', value: demographics.white_percent },
-            { label: 'Black', value: demographics.black_percent },
-            { label: 'Hispanic', value: demographics.hispanic_percent },
-            { label: 'Asian', value: demographics.asian_percent },
-          ].map(({ label, value }) => (
-            <div key={label} className="flex items-center gap-2">
-              <div className="text-sm text-gray-600 w-24">{label}</div>
-              <div className="flex-1 bg-gray-200 rounded-full h-2">
-                <div className="bg-civiq-blue h-2 rounded-full" style={{ width: `${value}%` }} />
-              </div>
-              <div className="text-sm text-gray-600 w-12 text-right">{value.toFixed(1)}%</div>
+      {/* Racial & Ethnic Composition */}
+      <div className="bg-gray-50 border-2 border-gray-300 p-6 rounded">
+        <h3 className="text-md font-bold text-gray-900 mb-4 uppercase tracking-wide">
+          Racial & Ethnic Composition
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-xl font-bold text-blue-600">
+              {demographics.white_percent.toFixed(1)}%
             </div>
-          ))}
+            <p className="text-sm text-gray-600">White</p>
+          </div>
+          <div className="text-center">
+            <div className="text-xl font-bold text-green-600">
+              {demographics.black_percent.toFixed(1)}%
+            </div>
+            <p className="text-sm text-gray-600">Black</p>
+          </div>
+          <div className="text-center">
+            <div className="text-xl font-bold text-purple-600">
+              {demographics.hispanic_percent.toFixed(1)}%
+            </div>
+            <p className="text-sm text-gray-600">Hispanic</p>
+          </div>
+          <div className="text-center">
+            <div className="text-xl font-bold text-orange-600">
+              {demographics.asian_percent.toFixed(1)}%
+            </div>
+            <p className="text-sm text-gray-600">Asian</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Education & Economy */}
+      <div className="bg-gray-50 border-2 border-gray-300 p-6 rounded">
+        <h3 className="text-md font-bold text-gray-900 mb-4 uppercase tracking-wide">
+          Education & Economy
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <div className="text-lg font-bold text-green-600">
+              {demographics.bachelor_degree_percent.toFixed(1)}%
+            </div>
+            <p className="text-sm text-gray-600">Bachelor&apos;s Degree+</p>
+          </div>
+          <div>
+            <div className="text-lg font-bold text-red-600">
+              {demographics.poverty_rate.toFixed(1)}%
+            </div>
+            <p className="text-sm text-gray-600">Poverty Rate</p>
+          </div>
+          <div>
+            <div className="text-lg font-bold text-purple-600">
+              {demographics.diversityIndex.toFixed(1)}
+            </div>
+            <p className="text-sm text-gray-600">Diversity Index</p>
+          </div>
         </div>
       </div>
     </div>
