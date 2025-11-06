@@ -215,6 +215,34 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                 DETAILED INFORMATION
               </h2>
 
+              {legislator.wikipedia?.summary && (
+                <div className="mb-6">
+                  <h3 className="aicher-section-label mb-3 flex items-center gap-2 text-civiq-blue">
+                    <span className="w-1 h-4 bg-civiq-blue"></span>
+                    Wikipedia Biography
+                  </h3>
+                  <div className="bg-gray-50 border-2 border-gray-300 p-4">
+                    <div
+                      className="prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{
+                        __html: legislator.wikipedia.htmlSummary || legislator.wikipedia.summary,
+                      }}
+                    />
+                    {legislator.wikipedia.pageUrl && (
+                      <a
+                        href={legislator.wikipedia.pageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 mt-3 text-blue-600 hover:underline text-sm"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Read more on Wikipedia
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {legislator.bio && (
                 <div className="mb-6">
                   <h3 className="aicher-section-label mb-3 flex items-center gap-2 text-civiq-red">

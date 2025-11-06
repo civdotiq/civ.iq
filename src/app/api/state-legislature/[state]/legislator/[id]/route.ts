@@ -15,6 +15,7 @@ import { StateLegislatureCoreService } from '@/services/core/state-legislature-c
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 import { getStateLegislatorBiography } from '@/lib/api/wikidata-state-legislators';
+import { fetchBiography } from '@/lib/api/wikipedia';
 
 export const dynamic = 'force-dynamic';
 
@@ -99,6 +100,41 @@ export async function GET(
     } else {
       logger.info('No Wikidata biographical data found for legislator', {
         legislatorName: legislator.name,
+      });
+    }
+
+    // Enrich with Wikipedia article content
+    logger.info('Enriching state legislator with Wikipedia', {
+      legislatorName: legislator.name,
+    });
+
+    try {
+      const wikipediaBio = await fetchBiography(legislator.name, 'state-legislator');
+
+      if (wikipediaBio?.wikipediaSummary) {
+        // Add Wikipedia fields to legislator object
+        legislator.wikipedia = {
+          summary: wikipediaBio.wikipediaSummary,
+          htmlSummary: wikipediaBio.wikipediaHtmlSummary,
+          imageUrl: wikipediaBio.wikipediaImageUrl,
+          pageUrl: wikipediaBio.wikipediaPageUrl,
+          lastUpdated: wikipediaBio.lastUpdated,
+        };
+
+        logger.info('State legislator enriched with Wikipedia', {
+          legislatorName: legislator.name,
+          hasSummary: !!wikipediaBio.wikipediaSummary,
+          hasImage: !!wikipediaBio.wikipediaImageUrl,
+        });
+      } else {
+        logger.info('No Wikipedia article found for legislator', {
+          legislatorName: legislator.name,
+        });
+      }
+    } catch (error) {
+      logger.warn('Wikipedia enrichment failed for state legislator', {
+        legislatorName: legislator.name,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
 

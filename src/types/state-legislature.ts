@@ -188,6 +188,15 @@ export interface EnhancedStateLegislator extends BaseStateLegislator {
     bachelor_degree_percent: number;
   };
 
+  // Wikipedia article content
+  wikipedia?: {
+    summary?: string;
+    htmlSummary?: string;
+    imageUrl?: string;
+    pageUrl?: string;
+    lastUpdated?: string;
+  };
+
   // Additional links
   links?: Array<{
     url: string;
