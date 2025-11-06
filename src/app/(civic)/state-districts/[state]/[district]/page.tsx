@@ -16,6 +16,7 @@ import { SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { MapPin, Users } from 'lucide-react';
 import Image from 'next/image';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
+import { normalizeStateIdentifier, getStateName } from '@/lib/data/us-states';
 
 interface PageProps {
   params: Promise<{ state: string; district: string }>;
@@ -23,17 +24,25 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { state, district } = await params;
+  const stateCode = normalizeStateIdentifier(state);
+  const stateName = stateCode ? getStateName(stateCode) || state : state;
   return {
-    title: `${state} State District ${district} - CIV.IQ`,
-    description: `View information about ${state} State District ${district}, including representatives and demographics.`,
+    title: `${stateName} State District ${district} - CIV.IQ`,
+    description: `View information about ${stateName} State District ${district}, including representatives and demographics.`,
   };
 }
 
 export default async function StateDistrictPage({ params }: PageProps) {
   const { state, district } = await params;
 
+  // Normalize state parameter (handles both full names like "South Carolina" and codes like "SC")
+  const stateCode = normalizeStateIdentifier(state);
+  if (!stateCode) {
+    notFound();
+  }
+
   // Fetch all legislators for the state
-  const allLegislators = await StateLegislatureCoreService.getAllStateLegislators(state);
+  const allLegislators = await StateLegislatureCoreService.getAllStateLegislators(stateCode);
 
   // Filter legislators by district
   const districtLegislators = allLegislators.filter(leg => leg.district === district);
@@ -46,10 +55,13 @@ export default async function StateDistrictPage({ params }: PageProps) {
   const chamber = districtLegislators[0]?.chamber || 'lower';
 
   // Fetch demographics
-  const demographics = await getStateDistrictDemographics(state, district, chamber);
+  const demographics = await getStateDistrictDemographics(stateCode, district, chamber);
 
   // Get chamber info
-  const chamberName = getChamberName(state, chamber);
+  const chamberName = getChamberName(stateCode, chamber);
+
+  // Get full state name for display
+  const stateName = getStateName(stateCode) || stateCode;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -60,7 +72,7 @@ export default async function StateDistrictPage({ params }: PageProps) {
         {/* Page Title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {state} State District {district}
+            {stateName} State District {district}
           </h1>
           <p className="text-gray-600">
             {chamberName} • {districtLegislators.length}{' '}
@@ -105,7 +117,7 @@ export default async function StateDistrictPage({ params }: PageProps) {
               <div className="space-y-3">
                 <div>
                   <span className="text-sm font-medium text-gray-700">State: </span>
-                  <span className="text-sm text-gray-600">{state}</span>
+                  <span className="text-sm text-gray-600">{stateName}</span>
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-700">District: </span>
@@ -123,10 +135,10 @@ export default async function StateDistrictPage({ params }: PageProps) {
               <h3 className="aicher-section-label mb-3 text-civiq-blue">QUICK LINKS</h3>
               <div className="space-y-2">
                 <Link
-                  href={`/state-legislature/${state}`}
+                  href={`/state-legislature/${stateCode}`}
                   className="block text-sm text-civiq-blue hover:underline"
                 >
-                  ← Back to {state} Legislature
+                  ← Back to {stateName} Legislature
                 </Link>
               </div>
             </div>
