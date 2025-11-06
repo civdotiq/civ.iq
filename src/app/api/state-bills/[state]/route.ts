@@ -143,6 +143,7 @@ async function fetchStateBills(
     chamber?: string;
     subject?: string;
     session?: string;
+    search?: string;
     perPage?: number;
     page?: number;
   } = {}
@@ -167,6 +168,11 @@ async function fetchStateBills(
 
     if (options.session) {
       url.searchParams.set('session', options.session);
+    }
+
+    // Add full-text search support using OpenStates 'q' parameter
+    if (options.search && options.search.trim().length > 0) {
+      url.searchParams.set('q', options.search.trim());
     }
 
     const response = await fetch(url.toString(), {
@@ -408,6 +414,7 @@ export async function GET(
   const chamber = searchParams.get('chamber') || undefined;
   const subject = searchParams.get('subject') || undefined;
   const sponsor = searchParams.get('sponsor') || undefined;
+  const search = searchParams.get('search') || searchParams.get('q') || undefined;
   const limit = parseInt(searchParams.get('limit') || '50');
   const page = parseInt(searchParams.get('page') || '1');
 
@@ -417,9 +424,10 @@ export async function GET(
 
   try {
     const session = searchParams.get('session') || undefined;
-    const cacheKey = `state-bills-${state.toUpperCase()}-${status || 'all'}-${chamber || 'all'}-${subject || 'all'}-${sponsor || 'all'}-${session || 'current'}-${page}`;
+    const cacheKey = `state-bills-${state.toUpperCase()}-${status || 'all'}-${chamber || 'all'}-${subject || 'all'}-${sponsor || 'all'}-${search || 'none'}-${session || 'current'}-${page}`;
     // Session-aware caching: specific session gets 7 days, current/all gets 24 hours
-    const cacheTTL = session ? 7 * 24 * 60 * 60 : 24 * 60 * 60;
+    // Search queries get shorter cache (1 hour) since results may change frequently
+    const cacheTTL = search ? 60 * 60 : session ? 7 * 24 * 60 * 60 : 24 * 60 * 60;
 
     const billsData = await cachedFetch(
       cacheKey,
@@ -429,7 +437,7 @@ export async function GET(
           {
             state: state.toUpperCase(),
             operation: 'state_bills_fetch',
-            filters: { status, chamber, subject, sponsor },
+            filters: { status, chamber, subject, sponsor, search },
             pagination: { limit, page },
           },
           request
@@ -442,6 +450,7 @@ export async function GET(
           chamber: chamber || undefined,
           subject: subject || undefined,
           session: session || undefined,
+          search: search || undefined,
           perPage: limit,
           page,
         });
@@ -451,7 +460,7 @@ export async function GET(
           logger.warn('No bills found from OpenStates API', {
             state: state.toUpperCase(),
             stateAbbrev,
-            filters: { status, chamber, subject, sponsor },
+            filters: { status, chamber, subject, sponsor, search },
           });
 
           return {
@@ -499,7 +508,7 @@ export async function GET(
       cacheTTL
     );
 
-    // Apply filters
+    // Apply client-side filters (for refined filtering beyond API search)
     let filteredBills = billsData.bills;
 
     if (status) {
@@ -522,6 +531,9 @@ export async function GET(
       );
     }
 
+    // Note: Full-text search is handled server-side by OpenStates API via 'q' parameter
+    // No need for client-side search filtering as API already returns filtered results
+
     // Apply pagination
     const startIndex = (page - 1) * limit;
     const paginatedBills = filteredBills.slice(startIndex, startIndex + limit);
@@ -535,6 +547,7 @@ export async function GET(
         chamber,
         subject,
         sponsor,
+        search,
       },
       pagination: {
         currentPage: page,
@@ -560,7 +573,7 @@ export async function GET(
       {
         state: state.toUpperCase(),
         operation: 'state_bills_api_error',
-        filters: { status, chamber, subject, sponsor },
+        filters: { status, chamber, subject, sponsor, search },
       },
       request
     );

@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Filter,
 } from 'lucide-react';
+import { encodeBase64Url } from '@/lib/url-encoding';
 
 // Logo component
 function CiviqLogo() {
@@ -174,12 +175,19 @@ function BillCard({ bill }: { bill: StateBill }) {
     return chamber === 'upper' ? 'Senate' : 'House';
   };
 
+  const billDetailUrl = `/state-bills/${bill.id.split('/')[3]?.split('-')[0]?.toUpperCase() || 'XX'}/${encodeBase64Url(bill.id)}`;
+
   return (
-    <div className="bg-white border border-gray-200 p-6 hover:border-2 border-black transition-border-2 border-black">
+    <Link
+      href={billDetailUrl}
+      className="block bg-white border border-gray-200 p-6 hover:border-2 hover:border-black transition-all cursor-pointer"
+    >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <h3 className="text-lg font-semibold text-gray-900">{bill.billNumber}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600">
+              {bill.billNumber}
+            </h3>
             <span
               className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(bill.status)}`}
             >
@@ -282,7 +290,7 @@ function BillCard({ bill }: { bill: StateBill }) {
           ))}
         </div>
       )}
-    </div>
+    </Link>
   );
 }
 
@@ -370,6 +378,11 @@ export default function StateBillsPage() {
       if (filters.status !== 'all') params.append('status', filters.status);
       if (filters.chamber !== 'all') params.append('chamber', filters.chamber);
       if (filters.subject !== 'all') params.append('subject', filters.subject);
+
+      // Add full-text search parameter if user has entered a search term
+      if (filters.search && filters.search.trim().length > 0) {
+        params.append('search', filters.search.trim());
+      }
 
       const response = await fetch(`/api/state-bills/${state.toUpperCase()}?${params}`);
 
@@ -534,12 +547,31 @@ export default function StateBillsPage() {
                 <Search className="w-5 h-5 absolute left-3 top-3 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search bills by title, sponsor, or bill number..."
+                  placeholder="Search bills by title, text, sponsor, or bill number... (Full-text search)"
                   value={filters.search}
                   onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      fetchBills();
+                    }
+                  }}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+              {filters.search && filters.search.trim().length > 0 && (
+                <div className="mt-2 text-sm text-gray-600">
+                  <span className="font-medium">Searching:</span> &quot;{filters.search}&quot;
+                  <button
+                    onClick={() => {
+                      setFilters(prev => ({ ...prev, search: '' }));
+                      fetchBills();
+                    }}
+                    className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Clear search
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Bills List */}
