@@ -388,16 +388,32 @@ export class StateLegislatureCoreService {
         return cached;
       }
 
-      // Use direct person lookup API for detailed profile data
+      // Try direct person lookup API first for detailed profile data
       const osLegislator = await openStatesAPI.getPersonById(legislatorId);
 
+      // Fallback to list endpoint if direct lookup fails
+      // Some legislators may not be available via direct endpoint but exist in the list
       if (!osLegislator) {
-        logger.warn('State legislator not found', {
+        logger.info('Direct person lookup failed, falling back to list endpoint', {
           state,
           legislatorId,
-          responseTime: Date.now() - startTime,
         });
-        return null;
+
+        const allLegislators = await this.getAllStateLegislators(state);
+        const legislatorFromList = allLegislators.find(leg => leg.id === legislatorId);
+
+        if (!legislatorFromList) {
+          logger.warn('State legislator not found in list either', {
+            state,
+            legislatorId,
+            totalLegsSearched: allLegislators.length,
+            responseTime: Date.now() - startTime,
+          });
+          return null;
+        }
+
+        // Return the legislator from the list (won't have enhanced bio data, but will work)
+        return legislatorFromList;
       }
 
       // Transform to our enhanced type
