@@ -12,8 +12,7 @@ import {
   type StateDistrictDemographics,
 } from '@/lib/services/state-census-api.service';
 import { getChamberName } from '@/types/state-legislature';
-import { SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
-import { MapPin, Users } from 'lucide-react';
+import { MapPin, Users, Home } from 'lucide-react';
 import Image from 'next/image';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { normalizeStateIdentifier, getStateName } from '@/lib/data/us-states';
@@ -67,7 +66,15 @@ export default async function StateDistrictPage({ params }: PageProps) {
     <div className="min-h-screen bg-gray-50">
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
-        <SimpleBreadcrumb />
+        <nav className="mb-6">
+          <Link
+            href={`/state-legislature/${stateCode}`}
+            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            <Home className="w-4 h-4" />
+            <span>Back to {stateName} Legislature</span>
+          </Link>
+        </nav>
 
         {/* Page Title */}
         <div className="mb-8">
