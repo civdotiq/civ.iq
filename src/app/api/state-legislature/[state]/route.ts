@@ -174,7 +174,7 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
 // Fetch state legislators from OpenStates API
 async function fetchStateLegislators(
   stateAbbrev: string,
-  chamber?: string
+  requestedChamber?: string
 ): Promise<StateLegislator[]> {
   const monitor = monitorExternalApi(
     'openstates',
@@ -183,46 +183,79 @@ async function fetchStateLegislators(
   );
 
   try {
-    const url = new URL('https://v3.openstates.org/people');
-    url.searchParams.set('jurisdiction', stateAbbrev);
-    url.searchParams.set('current_role', 'true');
-    url.searchParams.set('per_page', '50'); // OpenStates API maximum is 50
+    // NOTE: OpenStates API's 'chamber' parameter is unreliable (returns wrong data for some states like MI)
+    // So we fetch ALL legislators with pagination and filter by org_classification ourselves
+    const allLegislators: StateLegislator[] = [];
+    let page = 1;
+    let hasMore = true;
 
-    if (chamber) {
-      url.searchParams.set('chamber', chamber);
-    }
+    while (hasMore) {
+      const url = new URL('https://v3.openstates.org/people');
+      url.searchParams.set('jurisdiction', stateAbbrev);
+      url.searchParams.set('current_role', 'true');
+      url.searchParams.set('per_page', '50'); // OpenStates API maximum is 50
+      url.searchParams.set('page', page.toString());
 
-    const response = await fetch(url.toString(), {
-      headers: {
-        'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
-      },
-    });
-
-    if (!response.ok) {
-      monitor.end(false, response.status);
-      logger.error('OpenStates legislators API error', new Error(`HTTP ${response.status}`), {
-        stateAbbrev,
-        chamber,
-        statusCode: response.status,
+      const response = await fetch(url.toString(), {
+        headers: {
+          'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
+        },
       });
-      return [];
+
+      if (!response.ok) {
+        monitor.end(false, response.status);
+        logger.error('OpenStates legislators API error', new Error(`HTTP ${response.status}`), {
+          stateAbbrev,
+          requestedChamber,
+          page,
+          statusCode: response.status,
+        });
+        break;
+      }
+
+      const data = await response.json();
+      const results = data.results || [];
+
+      if (results.length === 0) {
+        hasMore = false;
+      } else {
+        const transformed = results.map((person: unknown) =>
+          transformLegislator(person, stateAbbrev)
+        );
+        allLegislators.push(...transformed);
+        page++;
+        hasMore = results.length === 50; // If we got exactly 50, there might be more
+      }
     }
 
     monitor.end(true, 200);
-    const data = await response.json();
 
-    logger.info('Successfully fetched state legislators', {
+    logger.info('Fetched all state legislators from OpenStates', {
       stateAbbrev,
-      chamber,
-      count: data.results?.length || 0,
+      requestedChamber,
+      totalPages: page - 1,
+      totalFetched: allLegislators.length,
     });
 
-    return data.results?.map((person: unknown) => transformLegislator(person, stateAbbrev)) || [];
+    // Filter by chamber if requested (using org_classification from transform)
+    if (requestedChamber) {
+      const filtered = allLegislators.filter(
+        (leg: StateLegislator) => leg.chamber === requestedChamber
+      );
+      logger.info('Filtered legislators by chamber', {
+        requestedChamber,
+        beforeFilter: allLegislators.length,
+        afterFilter: filtered.length,
+      });
+      return filtered;
+    }
+
+    return allLegislators;
   } catch (error) {
     monitor.end(false, undefined, error as Error);
     logger.error('Error fetching state legislators', error as Error, {
       stateAbbrev,
-      chamber,
+      requestedChamber,
     });
     return [];
   }
@@ -232,6 +265,9 @@ async function fetchStateLegislators(
 function transformLegislator(person: unknown, stateAbbrev: string): StateLegislator {
   const personData = person as Record<string, unknown>;
   const currentRole = personData.current_role as Record<string, unknown> | undefined;
+
+  // OpenStates v3 uses 'org_classification' not 'chamber'
+  const orgClassification = currentRole?.org_classification as string | undefined;
   const contactDetails = (personData.contact_details as Record<string, unknown>[]) || [];
 
   const email = contactDetails.find((c: Record<string, unknown>) => c.type === 'email')?.value as
@@ -242,12 +278,10 @@ function transformLegislator(person: unknown, stateAbbrev: string): StateLegisla
     | undefined;
 
   return {
-    id:
-      (personData.id as string) ||
-      `${stateAbbrev}-${currentRole?.chamber}-${currentRole?.district}`,
+    id: (personData.id as string) || `${stateAbbrev}-${orgClassification}-${currentRole?.district}`,
     name: (personData.name as string) || 'Unknown',
     party: normalizeParty(personData.party as string) || 'Other',
-    chamber: currentRole?.chamber === 'upper' ? 'upper' : 'lower',
+    chamber: orgClassification === 'upper' ? 'upper' : 'lower',
     district: (currentRole?.district as string) || 'Unknown',
     email,
     phone,
@@ -263,10 +297,10 @@ function transformLegislator(person: unknown, stateAbbrev: string): StateLegisla
           : 2023,
         endYear: currentRole?.end_date
           ? new Date(currentRole.end_date as string).getFullYear()
-          : currentRole?.chamber === 'upper'
+          : orgClassification === 'upper'
             ? 2027
             : 2025,
-        chamber: currentRole?.chamber === 'upper' ? 'upper' : 'lower',
+        chamber: orgClassification === 'upper' ? 'upper' : 'lower',
       },
     ],
     bills: {
