@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import type { StatePersonVote } from '@/types/state-legislature';
 import { encodeBase64Url } from '@/lib/url-encoding';
 
@@ -175,7 +176,11 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
       {/* Votes List */}
       <div className="space-y-grid-2">
         {votes.map((vote, index) => (
-          <div key={vote.vote_id || index} className="bg-white border-2 border-gray-300 p-grid-3">
+          <Link
+            key={vote.vote_id || index}
+            href={`/state-legislature/${state}/vote/${encodeBase64Url(vote.vote_id)}`}
+            className="block bg-white border-2 border-gray-300 p-grid-3 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer"
+          >
             {/* Vote Header */}
             <div className="flex items-start justify-between mb-grid-2">
               <div className="flex-1">
@@ -195,7 +200,7 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
                     {vote.result === 'passed' ? 'PASSED' : 'FAILED'}
                   </span>
                 </div>
-                <h3 className="font-bold text-lg">{vote.motion_text}</h3>
+                <h3 className="font-bold text-lg hover:text-blue-600">{vote.motion_text}</h3>
               </div>
               <div className="text-right text-sm text-gray-600">
                 <p>{formatDate(vote.start_date)}</p>
@@ -221,7 +226,7 @@ export const StateVotingTab: React.FC<StateVotingTabProps> = ({
             <div className="text-sm text-gray-600">
               <span className="font-bold">{vote.organization_name}</span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

@@ -320,6 +320,35 @@ export interface StatePersonVote {
 }
 
 /**
+ * Comprehensive vote detail with full voter information
+ * Used for vote detail pages showing who voted how
+ */
+export interface StateVoteDetail {
+  id: string;
+  identifier: string;
+  motion_text: string;
+  motion_classification: string[];
+  start_date: string;
+  result: 'passed' | 'failed';
+  chamber: StateChamber;
+  organization_name: string;
+  counts: Array<{
+    option: 'yes' | 'no' | 'abstain' | 'not voting' | 'absent' | 'excused';
+    value: number;
+  }>;
+  votes: Array<{
+    option: 'yes' | 'no' | 'abstain' | 'not voting' | 'absent' | 'excused';
+    voter_name: string;
+    voter_id: string | null;
+  }>;
+  bill?: {
+    id: string;
+    identifier: string;
+    title: string;
+  } | null;
+}
+
+/**
  * State bill (comprehensive)
  */
 export interface StateBill {

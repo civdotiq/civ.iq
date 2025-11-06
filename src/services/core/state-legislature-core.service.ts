@@ -42,6 +42,7 @@ import type {
   StateJurisdiction,
   ZipCodeStateLegislators,
   StatePersonVote,
+  StateVoteDetail,
 } from '@/types/state-legislature';
 
 export class StateLegislatureCoreService {
@@ -387,63 +388,65 @@ export class StateLegislatureCoreService {
         return cached;
       }
 
-      // Get all legislators and find specific one
-      const allLegislators = await this.getAllStateLegislators(state);
-      const legislator = allLegislators.find(leg => leg.id === legislatorId);
+      // Use direct person lookup API for detailed profile data
+      const osLegislator = await openStatesAPI.getPersonById(legislatorId);
 
-      if (legislator) {
-        // Fetch district demographics from Census API
-        try {
-          const demographics = await getStateDistrictDemographics(
-            state,
-            legislator.district,
-            legislator.chamber
-          );
-
-          if (demographics) {
-            legislator.demographics = demographics;
-            logger.info('Enriched state legislator with district demographics', {
-              state,
-              legislatorId,
-              district: legislator.district,
-              chamber: legislator.chamber,
-              population: demographics.population,
-            });
-          }
-        } catch (error) {
-          logger.warn('Failed to fetch district demographics, continuing without', {
-            error: error instanceof Error ? error.message : 'Unknown error',
-            state,
-            legislatorId,
-            district: legislator.district,
-          });
-        }
-
-        // Cache individual legislator with demographics
-        // Demographics from Census ACS change annually, so long TTL is appropriate
-        await govCache.set(cacheKey, legislator, {
-          ttl: 15552000000, // 6 months (180 days) - demographics are nearly static
-          source: 'openstates-individual',
-          dataType: 'representatives',
-        });
-
-        logger.info('Successfully found state legislator', {
-          state,
-          legislatorId,
-          name: legislator.name,
-          hasDemographics: !!legislator.demographics,
-          responseTime: Date.now() - startTime,
-        });
-      } else {
+      if (!osLegislator) {
         logger.warn('State legislator not found', {
           state,
           legislatorId,
-          totalLegsSearched: allLegislators.length,
           responseTime: Date.now() - startTime,
+        });
+        return null;
+      }
+
+      // Transform to our enhanced type
+      const legislator = this.transformLegislator(osLegislator);
+
+      // Fetch district demographics from Census API
+      try {
+        const demographics = await getStateDistrictDemographics(
+          state,
+          legislator.district,
+          legislator.chamber
+        );
+
+        if (demographics) {
+          legislator.demographics = demographics;
+          logger.info('Enriched state legislator with district demographics', {
+            state,
+            legislatorId,
+            district: legislator.district,
+            chamber: legislator.chamber,
+            population: demographics.population,
+          });
+        }
+      } catch (error) {
+        logger.warn('Failed to fetch district demographics, continuing without', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          state,
+          legislatorId,
+          district: legislator.district,
         });
       }
 
-      return legislator || null;
+      // Cache individual legislator with demographics
+      // Demographics from Census ACS change annually, so long TTL is appropriate
+      await govCache.set(cacheKey, legislator, {
+        ttl: 15552000000, // 6 months (180 days) - demographics are nearly static
+        source: 'openstates-individual',
+        dataType: 'representatives',
+      });
+
+      logger.info('Successfully found state legislator', {
+        state,
+        legislatorId,
+        name: legislator.name,
+        hasDemographics: !!legislator.demographics,
+        responseTime: Date.now() - startTime,
+      });
+
+      return legislator;
     } catch (error) {
       logger.error('Failed to get state legislator by ID', error as Error, {
         state,
@@ -523,6 +526,81 @@ export class StateLegislatureCoreService {
         responseTime: Date.now() - startTime,
       });
       return [];
+    }
+  }
+
+  /**
+   * Get detailed vote information by vote ID - DIRECT function call, no HTTP
+   */
+  static async getStateVoteById(state: string, voteId: string): Promise<StateVoteDetail | null> {
+    const cacheKey = `core:state-vote:${state}:${voteId}`;
+    const startTime = Date.now();
+
+    try {
+      // Check cache first
+      const cached = await govCache.get<StateVoteDetail>(cacheKey);
+      if (cached) {
+        logger.info('Core service cache hit for state vote detail', {
+          state,
+          voteId,
+          responseTime: Date.now() - startTime,
+        });
+        return cached;
+      }
+
+      // Fetch vote details from OpenStates API
+      const osVote = await openStatesAPI.getVoteById(voteId);
+
+      if (!osVote) {
+        logger.warn('State vote not found', {
+          state,
+          voteId,
+          responseTime: Date.now() - startTime,
+        });
+        return null;
+      }
+
+      // Transform to StateVoteDetail format
+      const voteDetail: StateVoteDetail = {
+        id: osVote.id,
+        identifier: osVote.identifier,
+        motion_text: osVote.motion_text,
+        motion_classification: osVote.motion_classification,
+        start_date: osVote.start_date,
+        result: osVote.result === 'pass' ? 'passed' : 'failed',
+        chamber: osVote.organization.classification === 'upper' ? 'upper' : 'lower',
+        organization_name: osVote.organization.name,
+        counts: osVote.counts.map(c => ({
+          option: c.option as 'yes' | 'no' | 'abstain' | 'not voting' | 'absent' | 'excused',
+          value: c.value,
+        })),
+        votes: osVote.votes,
+        bill: osVote.bill,
+      };
+
+      // Cache the vote detail with long TTL (votes are immutable historical records)
+      await govCache.set(cacheKey, voteDetail, {
+        ttl: 15552000000, // 6 months - vote records don't change
+        source: 'openstates-vote',
+        dataType: 'voting',
+      });
+
+      logger.info('Successfully fetched state vote detail', {
+        state,
+        voteId,
+        voterCount: voteDetail.votes.length,
+        result: voteDetail.result,
+        responseTime: Date.now() - startTime,
+      });
+
+      return voteDetail;
+    } catch (error) {
+      logger.error('Failed to get state vote by ID', error as Error, {
+        state,
+        voteId,
+        responseTime: Date.now() - startTime,
+      });
+      return null;
     }
   }
 
