@@ -18,6 +18,7 @@ interface PageProps {
     state: string;
     id: string;
   }>;
+  searchParams?: Promise<{ address?: string }>;
 }
 
 /**
@@ -88,8 +89,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 /**
  * State Legislator Profile Page Component
  */
-export default async function StateLegislatorPage({ params }: PageProps) {
+export default async function StateLegislatorPage({ params, searchParams }: PageProps) {
   const { state, id } = await params;
+  const search = searchParams ? await searchParams : {};
+
   // Pass Base64-encoded ID to getLegislator (it decodes and fetches from core service)
   const legislator = await getLegislator(state, id);
 
@@ -97,6 +100,9 @@ export default async function StateLegislatorPage({ params }: PageProps) {
     // getLegislator already logs the error with decoded ID
     notFound();
   }
+
+  // Get address from search params
+  const fromAddress = search?.address;
 
   // Breadcrumb navigation with preserved search context
   const breadcrumbItems = [
@@ -116,7 +122,7 @@ export default async function StateLegislatorPage({ params }: PageProps) {
 
       {/* Profile Content */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <SimpleStateLegislatorProfile legislator={legislator} />
+        <SimpleStateLegislatorProfile legislator={legislator} fromAddress={fromAddress} />
       </div>
     </div>
   );

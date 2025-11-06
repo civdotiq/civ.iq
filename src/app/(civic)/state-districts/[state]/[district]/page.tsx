@@ -31,14 +31,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function StateDistrictPage({ params }: PageProps) {
+export default async function StateDistrictPage({
+  params,
+  searchParams,
+}: PageProps & { searchParams?: Promise<{ address?: string; from?: string }> }) {
   const { state, district } = await params;
+  const search = searchParams ? await searchParams : {};
 
   // Normalize state parameter (handles both full names like "South Carolina" and codes like "SC")
   const stateCode = normalizeStateIdentifier(state);
   if (!stateCode) {
     notFound();
   }
+
+  // Get address from query params for breadcrumb
+  const fromAddress = search?.address || search?.from;
 
   // Fetch all legislators for the state
   const allLegislators = await StateLegislatureCoreService.getAllStateLegislators(stateCode);
@@ -68,11 +75,17 @@ export default async function StateDistrictPage({ params }: PageProps) {
         {/* Breadcrumb Navigation */}
         <nav className="mb-6">
           <Link
-            href={`/state-legislature/${stateCode}`}
+            href={
+              fromAddress
+                ? `/representatives?address=${encodeURIComponent(fromAddress)}`
+                : `/state-legislature/${stateCode}`
+            }
             className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
           >
             <Home className="w-4 h-4" />
-            <span>Back to {stateName} Legislature</span>
+            <span>
+              {fromAddress ? `Back to All Representatives` : `Back to ${stateName} Legislature`}
+            </span>
           </Link>
         </nav>
 

@@ -18,10 +18,12 @@ import { FileText, Users, Award, MapPin, Phone, Mail, ExternalLink, Newspaper } 
 
 interface SimpleStateLegislatorProfileProps {
   legislator: EnhancedStateLegislator;
+  fromAddress?: string;
 }
 
 export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfileProps> = ({
   legislator,
+  fromAddress,
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [imageError, setImageError] = useState(false);
@@ -501,7 +503,11 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
               DISTRICT
             </h3>
             <Link
-              href={`/state-districts/${legislator.state}/${legislator.district}`}
+              href={
+                fromAddress
+                  ? `/state-districts/${legislator.state}/${legislator.district}?address=${encodeURIComponent(fromAddress)}`
+                  : `/state-districts/${legislator.state}/${legislator.district}`
+              }
               className="block bg-gray-50 border-2 border-gray-300 p-3 hover:bg-gray-100 hover:border-civiq-blue transition-colors cursor-pointer"
             >
               <div className="font-bold text-lg mb-1">
