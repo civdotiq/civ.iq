@@ -7,6 +7,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { getChamberName } from '@/types/state-legislature';
 import { StateVotingTab } from './StateVotingTab';
@@ -499,7 +500,10 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
               <MapPin className="w-4 h-4" />
               DISTRICT
             </h3>
-            <div className="bg-gray-50 border-2 border-gray-300 p-3">
+            <Link
+              href={`/state-districts/${legislator.state}/${legislator.district}`}
+              className="block bg-gray-50 border-2 border-gray-300 p-3 hover:bg-gray-100 hover:border-civiq-blue transition-colors cursor-pointer"
+            >
               <div className="font-bold text-lg mb-1">
                 {legislator.state} - District {legislator.district}
               </div>
@@ -509,7 +513,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                   <span className="font-semibold">Counties:</span> {getCountiesRepresented()}
                 </div>
               )}
-            </div>
+            </Link>
           </div>
 
           {/* District Demographics */}
