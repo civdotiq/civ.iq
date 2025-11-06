@@ -670,12 +670,33 @@ class OpenStatesAPI {
   /**
    * Get a single person by ID
    * @param personId - OpenStates person ID (e.g., 'ocd-person/...')
+   *
+   * NOTE: OpenStates v3 API does NOT have a /people/{id} endpoint.
+   * Instead, we use the /people list endpoint with id filter parameter.
    */
   async getPersonById(personId: string): Promise<OpenStatesLegislator | null> {
     try {
-      const response = await this.makeRequest<V3Person>(`/people/${personId}`);
-      const state = response.jurisdiction.name;
-      return this.transformPerson(response, state);
+      // Use the /people list endpoint with id filter (OpenStates v3 API design)
+      // The id parameter should be passed as a string (the API accepts single ID)
+      const params: Record<string, string> = {
+        id: personId,
+      };
+
+      const response = await this.makeRequest<V3PaginatedResponse<V3Person>>('/people', params);
+
+      // Check if we got results
+      if (!response.results || response.results.length === 0) {
+        return null;
+      }
+
+      // Return the first (and should be only) result
+      const person = response.results[0];
+      if (!person) {
+        return null;
+      }
+
+      const state = person.jurisdiction.name;
+      return this.transformPerson(person, state);
     } catch (error) {
       if (error instanceof Error && error.message.includes('404')) {
         return null;

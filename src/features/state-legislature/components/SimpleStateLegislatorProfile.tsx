@@ -34,10 +34,29 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
 
   // Get full title with state
   const getFullTitle = () => {
+    const stateName = legislator.state || legislator.state.toUpperCase();
     if (legislator.chamber === 'upper') {
-      return `State Senator from ${legislator.state.toUpperCase()}`;
+      return `State Senator from ${stateName}`;
     }
-    return `State Representative, ${legislator.state.toUpperCase()} District ${legislator.district}`;
+    return `State Representative, ${stateName} District ${legislator.district}`;
+  };
+
+  // Extract home phone from extras if available
+  const getHomePhone = (): string | undefined => {
+    if (legislator.extras && typeof legislator.extras === 'object') {
+      const homePhone = (legislator.extras as Record<string, unknown>)['Home Address Home Phone'];
+      return typeof homePhone === 'string' ? homePhone : undefined;
+    }
+    return undefined;
+  };
+
+  // Extract counties represented from extras
+  const getCountiesRepresented = (): string | undefined => {
+    if (legislator.extras && typeof legislator.extras === 'object') {
+      const counties = (legislator.extras as Record<string, unknown>)['counties represented'];
+      return typeof counties === 'string' ? counties : undefined;
+    }
+    return undefined;
   };
 
   // Get accent bar color based on party
@@ -343,7 +362,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                       chamber: legislator.chamber === 'upper' ? 'Senate' : 'House',
                       title: '',
                       terms: [],
-                    } as any
+                    } as unknown as Parameters<typeof SimpleNewsSection>[0]['representative']
                   }
                 />
               </div>
@@ -454,9 +473,14 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
             </h3>
             <div className="bg-gray-50 border-2 border-gray-300 p-3">
               <div className="font-bold text-lg mb-1">
-                {legislator.state.toUpperCase()}-{legislator.district}
+                {legislator.state} - District {legislator.district}
               </div>
               <div className="text-sm text-gray-600">{chamberName}</div>
+              {getCountiesRepresented() && (
+                <div className="text-sm text-gray-600 mt-2 pt-2 border-t border-gray-300">
+                  <span className="font-semibold">Counties:</span> {getCountiesRepresented()}
+                </div>
+              )}
             </div>
           </div>
 
@@ -464,7 +488,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
           <StateDistrictDemographics legislator={legislator} />
 
           {/* Contact Info Quick Access */}
-          {(legislator.email || legislator.phone) && (
+          {(legislator.email || legislator.phone || getHomePhone()) && (
             <div className="bg-white border-2 border-black p-4">
               <h3 className="aicher-section-label mb-3 flex items-center gap-2 text-civiq-green">
                 <Phone className="w-4 h-4" />
@@ -490,6 +514,17 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                       className="text-blue-600 hover:underline text-sm"
                     >
                       {legislator.phone}
+                    </a>
+                  </div>
+                )}
+                {getHomePhone() && !legislator.phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-civiq-green flex-shrink-0" />
+                    <a
+                      href={`tel:${getHomePhone()}`}
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      {getHomePhone()}
                     </a>
                   </div>
                 )}
