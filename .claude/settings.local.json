@@ -166,7 +166,12 @@
       "Bash(git log:*)",
       "Bash(cd:*)",
       "Bash(npx next build:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash([ -f .env.local ])",
+      "WebFetch(domain:api.ballotpedia.org)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(/tmp/prod-mi.json)",
+      "Bash(git diff:*)"
     ],
     "deny": [],
     "ask": []

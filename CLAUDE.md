@@ -15,6 +15,36 @@
 
 3. **Focus exactly** - Answer exactly what is asked, no assumptions or tangents
 
+## 🎯 CLARIFICATION-FIRST PRINCIPLE
+
+Before implementing ANY feature:
+
+1. **Ask explicit questions** - Don't assume based on similar projects
+   - "Should this use the existing [pattern] or create new?"
+   - "Which approach fits better: [Option A] or [Option B]?"
+   - "What's the expected behavior when [edge case]?"
+
+2. **Find existing patterns** - Search codebase before creating new
+
+   ```bash
+   # Look for similar implementations first
+   grep -r "similar-pattern" src/ --include="*.ts*" | head -5
+   find src -name "*similar-feature*" -type f
+   ```
+
+3. **Choose simplest approach** - One solution before abstraction
+   - Simple: Direct API call in route.ts → validate → iterate
+   - Complex: Service layer + caching + retry logic (only if needed)
+
+4. **Validate assumptions** - State your approach and confirm
+   ```
+   "Based on patterns in [files], I'll implement this as [approach].
+   This matches the existing [pattern] used in [location].
+   Proceed with this approach?"
+   ```
+
+**Example**: "I see we could add this as a new endpoint or extend the existing `/api/representative` route. The existing pattern in `src/app/api/representative/[bioguideId]/votes/route.ts` suggests separate routes for distinct data. Should I follow that pattern?"
+
 ## ⚡ CRITICAL RULES (NEVER VIOLATE)
 
 1. **Quality Gates**: ALL code must pass `npm run lint && npm test` - NO exceptions
