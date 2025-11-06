@@ -576,12 +576,12 @@ class OpenStatesAPI {
     let page = 1;
     let hasMore = true;
 
-    // OpenStates v3 API may paginate sponsor results
+    // OpenStates v3 /bills API has a max per_page of 20 (not 100 like other endpoints)
     while (hasMore && allBills.length < limit) {
       const params: Record<string, string | number> = {
         jurisdiction,
         sponsor: personId,
-        per_page: Math.min(100, limit - allBills.length), // v3 max is 100 per page
+        per_page: Math.min(20, limit - allBills.length), // /bills endpoint max is 20 per page
         page,
       };
 
@@ -620,28 +620,32 @@ class OpenStatesAPI {
           abstract: a.abstract,
           note: a.note ?? undefined,
         })) ?? [],
-      sponsorships: bill.sponsorships.map(s => ({
-        name: s.name,
-        entity_type: s.entity_type,
-        classification: s.classification,
-        primary: s.primary,
-      })),
-      actions: bill.actions.map(a => ({
-        description: a.description,
-        date: a.date,
-        classification: a.classification,
-      })),
-      votes: bill.votes.map(v => ({
-        id: v.id,
-        motion_text: v.motion_text,
-        start_date: v.start_date,
-        result: v.result,
-        counts: v.counts,
-      })),
-      sources: bill.sources.map(source => ({
-        url: source.url,
-        note: source.note ?? undefined,
-      })),
+      sponsorships:
+        bill.sponsorships?.map(s => ({
+          name: s.name,
+          entity_type: s.entity_type,
+          classification: s.classification,
+          primary: s.primary,
+        })) ?? [],
+      actions:
+        bill.actions?.map(a => ({
+          description: a.description,
+          date: a.date,
+          classification: a.classification,
+        })) ?? [],
+      votes:
+        bill.votes?.map(v => ({
+          id: v.id,
+          motion_text: v.motion_text,
+          start_date: v.start_date,
+          result: v.result,
+          counts: v.counts,
+        })) ?? [],
+      sources:
+        bill.sources?.map(source => ({
+          url: source.url,
+          note: source.note ?? undefined,
+        })) ?? [],
       created_at: bill.created_at,
       updated_at: bill.updated_at,
     };
