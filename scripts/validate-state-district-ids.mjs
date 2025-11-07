@@ -26,7 +26,7 @@ const __dirname = path.dirname(__filename);
 
 // Configuration
 const CONFIG = {
-  manifestPath: path.join(process.cwd(), 'data', 'state-districts', 'state-districts-manifest.json'),
+  manifestPath: path.join(process.cwd(), 'public', 'data', 'state-districts', 'state-districts-manifest.json'),
   openstatesApiKey: process.env.OPENSTATES_API_KEY,
   openstatesBaseUrl: 'https://v3.openstates.org',
 

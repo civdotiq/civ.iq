@@ -99,7 +99,7 @@ export default function StateDistrictBoundaryMap({
             sources: {
               'state-districts': {
                 type: 'vector',
-                url: 'pmtiles:///maps/state_legislative_districts.pmtiles',
+                url: 'pmtiles:///data/state_legislative_districts.pmtiles',
               },
               osm: {
                 type: 'raster',

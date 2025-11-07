@@ -96,7 +96,7 @@ const nextConfig = {
   experimental: {
     scrollRestoration: true,
     // Optimize package imports for better tree-shaking
-    optimizePackageImports: ['recharts', 'lucide-react', 'date-fns'],
+    optimizePackageImports: ['d3', 'recharts', 'lucide-react', 'date-fns'],
   },
   // Headers for security and performance
   async headers() {
