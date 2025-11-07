@@ -21,19 +21,29 @@ CIV.IQ makes government data accessible by connecting citizens with their repres
 ## Key Features
 
 ### Federal Government Coverage
+
 - **Representative Search**: Find representatives by ZIP code or address
 - **Voting Records**: Real-time House and Senate voting data from Congress.gov and Senate.gov
 - **Campaign Finance**: FEC integration with industry categorization and contribution analysis
 - **Legislative Tracking**: Bill monitoring, sponsorship networks, and committee assignments
 - **District Intelligence**: Census demographics, economic data, and interactive boundary maps
 
+### State Legislature Coverage
+
+- **State District Mapping**: Interactive boundary maps for all 7,383 state legislative districts
+- **State Representative Profiles**: Complete information from OpenStates API
+- **State Bills & Votes**: Legislative tracking for all 50 states
+- **Address-to-Legislator**: Find your state house and senate representatives by address
+
 ### Data Integrity
+
 - **Zero Mock Data**: All displayed information is real government data or clearly marked as unavailable
 - **Live API Integration**: Congress.gov, FEC.gov, Census Bureau, GDELT, OpenStates
 - **Transparent Sources**: Clear attribution and data quality indicators
 - **Validated Coordinates**: Comprehensive test suite prevents geospatial bugs
 
 ### Performance
+
 - **PWA Ready**: Offline functionality and mobile installation
 - **Smart Caching**: Redis-backed caching with automatic fallbacks
 - **Optimized Loading**: Server components, lazy loading, and batch APIs
@@ -42,6 +52,7 @@ CIV.IQ makes government data accessible by connecting citizens with their repres
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - npm or yarn
 - Redis (optional for development, recommended for production)
@@ -72,6 +83,7 @@ OPENSTATES_API_KEY=your_openstates_api_key_here
 ```
 
 **Getting API Keys:**
+
 - Congress.gov: https://api.congress.gov/sign-up/
 - FEC.gov: https://api.open.fec.gov/developers/
 - Census Bureau: https://api.census.gov/data/key_signup.html

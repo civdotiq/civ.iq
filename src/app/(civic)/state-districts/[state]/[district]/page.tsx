@@ -16,6 +16,7 @@ import { MapPin, Users, Home } from 'lucide-react';
 import Image from 'next/image';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { normalizeStateIdentifier, getStateName } from '@/lib/data/us-states';
+import StateDistrictBoundaryMap from '@/features/districts/components/StateDistrictBoundaryMap';
 
 interface PageProps {
   params: Promise<{ state: string; district: string }>;
@@ -104,6 +105,20 @@ export default async function StateDistrictPage({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
+            {/* District Map */}
+            <div className="bg-white border-2 border-black p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <MapPin className="w-5 h-5" />
+                District Boundaries
+              </h2>
+              <StateDistrictBoundaryMap
+                stateCode={stateCode}
+                chamber={chamber}
+                district={district}
+                height={500}
+              />
+            </div>
+
             {/* Representatives */}
             <div className="bg-white border-2 border-black p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
