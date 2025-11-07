@@ -184,20 +184,6 @@ export async function GET(
 
   try {
     const { stateCode } = await params;
-    const { searchParams } = request.nextUrl;
-    const detail = searchParams.get('detail') || 'standard';
-
-    // Validate detail level
-    if (!['simple', 'standard', 'full'].includes(detail)) {
-      return NextResponse.json(
-        {
-          error: 'Invalid detail level',
-          message: 'Detail must be one of: simple, standard, full',
-          example: `/api/state-boundaries/${stateCode}?detail=standard`,
-        },
-        { status: 400 }
-      );
-    }
 
     // Normalize state code
     const normalizedCode = normalizeStateCode(stateCode);
@@ -233,8 +219,8 @@ export async function GET(
       );
     }
 
-    // Load state GeoJSON file
-    const fileUrl = `${baseUrl}/data/states/${detail}/${normalizedCode}.json`;
+    // Load state GeoJSON file (using standard detail level)
+    const fileUrl = `${baseUrl}/data/states/standard/${normalizedCode}.json`;
 
     let geoJson: StateGeoJSON;
     try {
@@ -248,8 +234,7 @@ export async function GET(
       return NextResponse.json(
         {
           error: 'State file not found',
-          message: `State ${normalizedCode} exists but ${detail} detail file is missing`,
-          available_details: Object.keys(manifest.detail_levels),
+          message: `State ${normalizedCode} boundary file not found`,
         },
         { status: 404 }
       );
@@ -259,7 +244,7 @@ export async function GET(
     const fileSize = await getFileSize(fileUrl);
     geoJson.properties = {
       ...geoJson.properties,
-      detail_level: detail,
+      detail_level: 'standard',
       api_metadata: {
         normalized_code: normalizedCode,
         original_request: stateCode,
@@ -275,14 +260,14 @@ export async function GET(
         // Cache for 7 days (state boundaries change rarely)
         'Cache-Control': 'public, max-age=604800, s-maxage=2592000, immutable',
         // ETag for client-side caching
-        ETag: `"${normalizedCode}-${detail}-v1"`,
+        ETag: `"${normalizedCode}-standard-v1"`,
         // CORS for frontend access
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         // Performance metadata
         'X-State-Code': normalizedCode,
-        'X-Detail-Level': detail,
+        'X-Detail-Level': 'standard',
         'X-Processing-Time': `${processingTime}ms`,
         'X-File-Size': fileSize.toString(),
         'X-Total-States': manifest.total_states.toString(),

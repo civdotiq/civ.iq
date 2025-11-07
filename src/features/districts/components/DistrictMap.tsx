@@ -349,7 +349,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
         if (isAtLarge || isSenate) {
           logger.info('🗺️ Fetching state boundary (at-large/Senate):', { state, district });
 
-          const response = await fetch(`/data/states/full/${state}.json`);
+          const response = await fetch(`/data/states/standard/${state}.json`);
 
           if (!response.ok) {
             logger.error('State boundary file not found:', { state, status: response.status });

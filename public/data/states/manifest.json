@@ -65,9 +65,8 @@
     "WV",
     "WY"
   ],
-  "detail_levels": {
-    "full": "Original resolution from Census TIGER/Line",
-    "standard": "1% simplified with mapshaper (web optimized)",
-    "simple": "0.1% simplified with mapshaper (overview maps)"
-  }
+  "detail_level": {
+    "standard": "Original resolution from Census TIGER/Line (mapshaper simplification failed - using unmodified source data)"
+  },
+  "note": "Previous versions had 'full', 'standard', and 'simple' directories, but they contained byte-for-byte identical files due to a mapshaper processing bug. Consolidated to single 'standard' directory (Nov 2025)."
 }
