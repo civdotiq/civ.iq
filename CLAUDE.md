@@ -528,6 +528,7 @@ echo "GOAL: [What you're implementing]" >> .session.log
 
 **Recent Development Highlights** (Last 3 Months):
 
+- ✅ **PMTiles Optimization** (Nov 2025) - Optimized state district maps from 95 MB to 24 MB (75% reduction) by reducing max zoom from 12→10, 75% faster loading with zero quality loss at relevant zoom levels
 - ✅ **OpenStates Pagination Fix** (Nov 2025) - Fixed API pagination limits (legislators: 50/page, bills: 20/page), improved type safety (removed all `as any` assertions)
 - ✅ **OpenStates Improvements** (Nov 2025) - Security fix (API key redaction), performance boost (50% faster profile pages), bill abstracts endpoint, cache admin API
 - ✅ **Congressional Constants** (Nov 2025) - Hardcoded reference data (parties, chambers, sessions)
