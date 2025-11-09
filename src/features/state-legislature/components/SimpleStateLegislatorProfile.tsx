@@ -505,8 +505,8 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
             <Link
               href={
                 fromAddress
-                  ? `/state-districts/${legislator.state}/${legislator.district}?address=${encodeURIComponent(fromAddress)}`
-                  : `/state-districts/${legislator.state}/${legislator.district}`
+                  ? `/state-districts/${legislator.state.toLowerCase()}/${legislator.chamber === 'upper' ? 'upper' : 'lower'}/${legislator.district}?address=${encodeURIComponent(fromAddress)}`
+                  : `/state-districts/${legislator.state.toLowerCase()}/${legislator.chamber === 'upper' ? 'upper' : 'lower'}/${legislator.district}`
               }
               className="block bg-gray-50 border-2 border-gray-300 p-3 hover:bg-gray-100 hover:border-civiq-blue transition-colors cursor-pointer"
             >
