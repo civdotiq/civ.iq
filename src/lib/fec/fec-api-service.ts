@@ -14,10 +14,14 @@ import logger from '@/lib/logging/simple-logger';
 import { govCache } from '@/services/cache';
 
 const FEC_API_BASE = 'https://api.open.fec.gov/v1';
-const FEC_API_KEY = process.env.FEC_API_KEY;
 
-if (!FEC_API_KEY) {
-  throw new Error('FEC_API_KEY environment variable is required');
+// Get API key lazily to avoid build-time errors
+function getFECApiKey(): string {
+  const apiKey = process.env.FEC_API_KEY;
+  if (!apiKey) {
+    throw new Error('FEC_API_KEY environment variable is required');
+  }
+  return apiKey;
 }
 
 // In-memory request deduplication for concurrent identical requests
@@ -154,10 +158,7 @@ export class FECApiService {
   private readonly baseUrl: string;
 
   constructor() {
-    if (!FEC_API_KEY) {
-      throw new Error('FEC_API_KEY is required but not provided');
-    }
-    this.apiKey = FEC_API_KEY;
+    this.apiKey = getFECApiKey();
     this.baseUrl = FEC_API_BASE;
   }
 
