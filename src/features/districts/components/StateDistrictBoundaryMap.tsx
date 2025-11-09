@@ -21,11 +21,8 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import maplibregl from 'maplibre-gl';
-import { Protocol } from 'pmtiles';
 import { Loader2, Maximize2, Minimize2 } from 'lucide-react';
 import logger from '@/lib/logging/simple-logger';
-import 'maplibre-gl/dist/maplibre-gl.css';
 
 interface StateDistrictBoundaryMapProps {
   stateCode: string; // e.g., "CA"
@@ -51,56 +48,65 @@ export default function StateDistrictBoundaryMap({
   height = 500,
   className = '',
 }: StateDistrictBoundaryMapProps) {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<maplibregl.Map | null>(null);
+  const [mapContainer, setMapContainer] = useState<HTMLDivElement | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const map = useRef<any>(null); // Using any because maplibre-gl is dynamically imported
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [metadata, setMetadata] = useState<DistrictMetadata | null>(null);
 
-  const loadDistrictMetadata = useCallback(async (districtId: string) => {
-    try {
-      const response = await fetch('/data/state-districts/state-districts-manifest.json');
-      if (!response.ok) {
-        throw new Error('Manifest not found');
-      }
-
-      const manifest = await response.json();
-      const districtData = manifest.districts[districtId];
-
-      if (!districtData) {
-        throw new Error(`District ${districtId} not found in manifest`);
-      }
-
-      setMetadata(districtData);
-    } catch (err) {
-      logger.error('Failed to load district metadata', err as Error);
-      setError('District boundaries not yet available');
+  // Callback ref to track when DOM element is actually mounted
+  const setMapContainerRef = useCallback((node: HTMLDivElement | null) => {
+    logger.info('[StateDistrictBoundaryMap] Callback ref invoked', { hasNode: !!node });
+    if (node) {
+      logger.info('[StateDistrictBoundaryMap] Container DOM element attached, setting state');
+      setMapContainer(node);
+    } else {
+      logger.info('[StateDistrictBoundaryMap] Callback ref invoked with null (cleanup)');
     }
   }, []);
 
   const initializeMap = useCallback(
     async (districtId: string, districtMetadata: DistrictMetadata | null) => {
-      if (!mapContainer.current) return;
+      if (!mapContainer) {
+        logger.info('[StateDistrictBoundaryMap] initializeMap called but container not ready', {
+          hasContainer: !!mapContainer,
+        });
+        return;
+      }
+
+      logger.info('[StateDistrictBoundaryMap] Starting map initialization', { districtId });
 
       try {
+        // Dynamically import MapLibre GL and PMTiles
+        logger.info('[StateDistrictBoundaryMap] Loading MapLibre and PMTiles libraries...');
+        const [maplibregl, pmtiles] = await Promise.all([import('maplibre-gl'), import('pmtiles')]);
+        logger.info('[StateDistrictBoundaryMap] Libraries loaded successfully');
+
+        // Dynamically load CSS
+        if (typeof document !== 'undefined' && !document.getElementById('maplibre-css')) {
+          const link = document.createElement('link');
+          link.id = 'maplibre-css';
+          link.rel = 'stylesheet';
+          link.href = 'https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css';
+          document.head.appendChild(link);
+        }
+
         // Register PMTiles protocol
-        const protocol = new Protocol();
-        maplibregl.addProtocol('pmtiles', protocol.tile);
+        const protocol = new pmtiles.Protocol();
+        maplibregl.default.addProtocol('pmtiles', protocol.tile);
 
         // Determine which layer to use (sldl or sldu)
         const layerName = chamber === 'lower' ? 'sldl' : 'sldu';
 
-        // Initialize map with PMTiles source
-        map.current = new maplibregl.Map({
-          container: mapContainer.current,
+        // Initialize map with only OSM base tiles (PMTiles added after map loads)
+        logger.info('[StateDistrictBoundaryMap] Creating MapLibre map instance...');
+        map.current = new maplibregl.default.Map({
+          container: mapContainer,
           style: {
             version: 8,
             sources: {
-              'state-districts': {
-                type: 'vector',
-                url: 'pmtiles:///data/state_legislative_districts.pmtiles',
-              },
               osm: {
                 type: 'raster',
                 tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
@@ -123,9 +129,29 @@ export default function StateDistrictBoundaryMap({
           center: [-98.5795, 39.8283], // US center default
           zoom: 4,
         });
+        logger.info('[StateDistrictBoundaryMap] Map instance created, waiting for load event...');
 
         map.current.on('load', () => {
-          if (!map.current) return;
+          logger.info('[StateDistrictBoundaryMap] Map load event fired!');
+          if (!map.current) {
+            logger.warn('[StateDistrictBoundaryMap] map.current is null in load handler');
+            return;
+          }
+
+          try {
+            // Add PMTiles source after map is loaded
+            logger.info('[StateDistrictBoundaryMap] Adding PMTiles source...');
+            map.current.addSource('state-districts', {
+              type: 'vector',
+              url: 'pmtiles:///data/state_legislative_districts.pmtiles',
+            });
+            logger.info('[StateDistrictBoundaryMap] PMTiles source added successfully');
+          } catch (error) {
+            logger.error('Failed to add PMTiles source', error as Error);
+            setError('Failed to load district boundaries');
+            setLoading(false);
+            return;
+          }
 
           // Add neighboring districts layer (light gray outlines)
           map.current.addLayer({
@@ -181,7 +207,8 @@ export default function StateDistrictBoundaryMap({
           }
 
           // Add click handler for neighboring districts
-          map.current!.on('click', 'neighboring-districts', e => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          map.current!.on('click', 'neighboring-districts', (e: any) => {
             if (!e.features || e.features.length === 0) return;
 
             const feature = e.features[0];
@@ -209,10 +236,12 @@ export default function StateDistrictBoundaryMap({
             }
           });
 
+          logger.info('[StateDistrictBoundaryMap] Map fully loaded and configured!');
           setLoading(false);
         });
 
-        map.current.on('error', e => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        map.current.on('error', (e: any) => {
           logger.error('Map error', e.error);
           setError('Failed to load map');
           setLoading(false);
@@ -223,20 +252,57 @@ export default function StateDistrictBoundaryMap({
         setLoading(false);
       }
     },
-    [chamber, stateCode]
+    [chamber, stateCode, mapContainer]
   );
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer) {
+      logger.info('[StateDistrictBoundaryMap] useEffect - container not ready', {
+        hasContainer: !!mapContainer,
+      });
+      return;
+    }
 
     // Build district ID
     const districtId = `${stateCode}-${chamber}-${district}`;
+    logger.info('[StateDistrictBoundaryMap] useEffect executing', { districtId });
 
-    // Load district metadata
-    loadDistrictMetadata(districtId).then(() => {
-      // Initialize map after metadata is loaded
-      initializeMap(districtId, metadata);
-    });
+    // Load district metadata and initialize map
+    const initMap = async () => {
+      try {
+        // Load metadata first
+        logger.info('[StateDistrictBoundaryMap] Fetching metadata...');
+        const response = await fetch('/data/state-districts/state-districts-manifest.json');
+        if (response.ok) {
+          const manifest = await response.json();
+          const districtData = manifest.districts[districtId];
+          if (districtData) {
+            logger.info('[StateDistrictBoundaryMap] Metadata found', districtData);
+            setMetadata(districtData);
+            // Initialize map with the loaded metadata
+            await initializeMap(districtId, districtData);
+          } else {
+            logger.info(
+              '[StateDistrictBoundaryMap] No metadata found for district, initializing without it'
+            );
+            // No metadata found, initialize map anyway
+            await initializeMap(districtId, null);
+          }
+        } else {
+          logger.warn(
+            '[StateDistrictBoundaryMap] Manifest not found, initializing map without metadata'
+          );
+          // Manifest not found, initialize map anyway
+          await initializeMap(districtId, null);
+        }
+      } catch (err) {
+        logger.error('Failed to load map', err as Error);
+        setError('Failed to load map');
+        setLoading(false);
+      }
+    };
+
+    initMap();
 
     return () => {
       // Cleanup
@@ -245,45 +311,10 @@ export default function StateDistrictBoundaryMap({
         map.current = null;
       }
     };
-  }, [stateCode, chamber, district, loadDistrictMetadata, initializeMap, metadata]);
+  }, [stateCode, chamber, district, mapContainer, initializeMap]);
 
   function toggleFullscreen() {
     setIsFullscreen(!isFullscreen);
-  }
-
-  // Loading state
-  if (loading && !map.current) {
-    return (
-      <div
-        className={`flex items-center justify-center bg-white border-2 border-gray-300 ${className}`}
-        style={{ width, height }}
-      >
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
-          <p className="text-sm text-gray-600">Loading district boundaries...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div
-        className={`flex items-center justify-center bg-white border-2 border-dashed border-gray-300 ${className}`}
-        style={{ width, height }}
-      >
-        <div className="text-center p-8">
-          <p className="text-sm text-gray-600 mb-2">{error}</p>
-          <p className="text-xs text-gray-500">
-            District: {stateCode}-{chamber}-{district}
-          </p>
-          <p className="text-xs text-gray-400 mt-2">
-            Run <code>npm run process:state-districts</code> to generate boundaries
-          </p>
-        </div>
-      </div>
-    );
   }
 
   const chamberName = chamber === 'upper' ? 'State Senate' : 'State House';
@@ -313,12 +344,37 @@ export default function StateDistrictBoundaryMap({
 
       {/* Map Container */}
       <div
-        ref={mapContainer}
+        ref={setMapContainerRef}
         style={{
           width: '100%',
           height: '100%',
         }}
       />
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-[999]">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
+            <p className="text-sm text-gray-600">Loading district boundaries...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error Overlay */}
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-95 z-[999]">
+          <div className="text-center p-8">
+            <p className="text-sm text-gray-600 mb-2">{error}</p>
+            <p className="text-xs text-gray-500">
+              District: {stateCode}-{chamber}-{district}
+            </p>
+            <p className="text-xs text-gray-400 mt-2">
+              Run <code>npm run process:state-districts</code> to generate boundaries
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Map Info Footer */}
       <div className="absolute bottom-0 left-0 right-0 p-3 bg-white border-t-2 border-black text-xs text-gray-600">

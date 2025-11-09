@@ -16,6 +16,7 @@
 
 import dynamic from 'next/dynamic';
 import { Loader2 } from 'lucide-react';
+import logger from '@/lib/logging/simple-logger';
 
 interface StateDistrictBoundaryMapProps {
   stateCode: string;
@@ -49,5 +50,10 @@ const StateDistrictBoundaryMap = dynamic(
 );
 
 export default function StateDistrictBoundaryMapClient(props: StateDistrictBoundaryMapProps) {
+  logger.info('[StateDistrictBoundaryMapClient] Rendering with props:', {
+    stateCode: props.stateCode,
+    chamber: props.chamber,
+    district: props.district,
+  });
   return <StateDistrictBoundaryMap {...props} />;
 }
