@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { Users, UserCheck, Award, ExternalLink, Building2 } from 'lucide-react';
 import type { StateCommittee } from '@/types/state-legislature';
 import { getChamberName } from '@/types/state-legislature';
+import { encodeBase64Url } from '@/lib/url-encoding';
 
 interface StateCommitteeProfileProps {
   committee: StateCommittee;
@@ -105,7 +106,7 @@ export const StateCommitteeProfile: React.FC<StateCommitteeProfileProps> = ({
                       </div>
                       {member.legislator_id ? (
                         <Link
-                          href={`/state-legislature/${state}/legislator/${member.legislator_id}`}
+                          href={`/state-legislature/${state}/legislator/${encodeBase64Url(member.legislator_id)}`}
                           className="font-bold text-gray-900 hover:text-civiq-blue transition-colors"
                         >
                           {member.legislator_name}
@@ -146,7 +147,7 @@ export const StateCommitteeProfile: React.FC<StateCommitteeProfileProps> = ({
                     <div className="flex-1 min-w-0">
                       {member.legislator_id ? (
                         <Link
-                          href={`/state-legislature/${state}/legislator/${member.legislator_id}`}
+                          href={`/state-legislature/${state}/legislator/${encodeBase64Url(member.legislator_id)}`}
                           className="font-semibold text-gray-900 hover:text-civiq-blue transition-colors truncate block"
                         >
                           {member.legislator_name}

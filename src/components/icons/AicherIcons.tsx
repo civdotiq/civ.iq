@@ -36,7 +36,7 @@ export const SearchIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     {/* Magnifying glass as geometric shapes */}
     <circle cx="10" cy="10" r="6" />
-    <path d="21 21l-6-6" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M15 15l6 6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 

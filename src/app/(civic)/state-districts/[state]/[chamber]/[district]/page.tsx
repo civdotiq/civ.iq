@@ -18,6 +18,7 @@ import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { normalizeStateIdentifier, getStateName } from '@/lib/data/us-states';
 import StateDistrictBoundaryMap from '@/features/districts/components/StateDistrictBoundaryMapClient';
 import logger from '@/lib/logging/simple-logger';
+import { encodeBase64Url } from '@/lib/url-encoding';
 
 interface PageProps {
   params: Promise<{ state: string; chamber: string; district: string }>;
@@ -262,7 +263,7 @@ function LegislatorCard({ legislator }: { legislator: EnhancedStateLegislator })
             )}
           </div>
           <Link
-            href={`/state-legislature/${legislator.state}/legislator/${legislator.id}`}
+            href={`/state-legislature/${legislator.state}/legislator/${encodeBase64Url(legislator.id)}`}
             className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
           >
             View Full Profile
