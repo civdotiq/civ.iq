@@ -16,19 +16,25 @@ import { MapPin, Users, Home } from 'lucide-react';
 import Image from 'next/image';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { normalizeStateIdentifier, getStateName } from '@/lib/data/us-states';
-import StateDistrictBoundaryMap from '@/features/districts/components/StateDistrictBoundaryMap';
+import StateDistrictBoundaryMap from '@/features/districts/components/StateDistrictBoundaryMapClient';
+import logger from '@/lib/logging/simple-logger';
 
 interface PageProps {
-  params: Promise<{ state: string; district: string }>;
+  params: Promise<{ state: string; chamber: string; district: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { state, district } = await params;
+  const { state, chamber, district } = await params;
   const stateCode = normalizeStateIdentifier(state);
   const stateName = stateCode ? getStateName(stateCode) || state : state;
+
+  // Validate chamber
+  const validChamber = chamber === 'lower' || chamber === 'upper' ? chamber : 'lower';
+  const chamberName = stateCode ? getChamberName(stateCode, validChamber) : 'Legislature';
+
   return {
-    title: `${stateName} State District ${district} - CIV.IQ`,
-    description: `View information about ${stateName} State District ${district}, including representatives and demographics.`,
+    title: `${stateName} ${chamberName} District ${district} - CIV.IQ`,
+    description: `View information about ${stateName} ${chamberName} District ${district}, including representatives and demographics.`,
   };
 }
 
@@ -36,7 +42,7 @@ export default async function StateDistrictPage({
   params,
   searchParams,
 }: PageProps & { searchParams?: Promise<{ address?: string; from?: string }> }) {
-  const { state, district } = await params;
+  const { state, chamber: rawChamber, district } = await params;
   const search = searchParams ? await searchParams : {};
 
   // Normalize state parameter (handles both full names like "South Carolina" and codes like "SC")
@@ -45,24 +51,49 @@ export default async function StateDistrictPage({
     notFound();
   }
 
-  // Get address from query params for breadcrumb
-  const fromAddress = search?.address || search?.from;
-
-  // Fetch all legislators for the state
-  const allLegislators = await StateLegislatureCoreService.getAllStateLegislators(stateCode);
-
-  // Filter legislators by district
-  const districtLegislators = allLegislators.filter(leg => leg.district === district);
-
-  if (districtLegislators.length === 0) {
+  // Validate chamber parameter
+  const chamber = rawChamber === 'lower' || rawChamber === 'upper' ? rawChamber : null;
+  if (!chamber) {
     notFound();
   }
 
-  // Get chamber from first legislator
-  const chamber = districtLegislators[0]?.chamber || 'lower';
+  // Get address from query params for breadcrumb
+  const fromAddress = search?.address || search?.from;
 
-  // Fetch demographics
-  const demographics = await getStateDistrictDemographics(stateCode, district, chamber);
+  // Try to fetch legislators for this district
+  // Note: This may fail due to API rate limits, but we still want to show the map
+  let districtLegislators: EnhancedStateLegislator[] = [];
+
+  try {
+    // Fetch all legislators for the state
+    const allLegislators = await StateLegislatureCoreService.getAllStateLegislators(stateCode);
+
+    // Filter legislators by BOTH district AND chamber
+    districtLegislators = allLegislators.filter(
+      leg => leg.district === district && leg.chamber === chamber
+    );
+  } catch (error) {
+    // API rate limit or other error - continue rendering without legislator data
+    logger.warn('Failed to fetch legislators (continuing without data)', {
+      stateCode,
+      district,
+      chamber,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  // Fetch demographics (also handle errors gracefully)
+  let demographics: StateDistrictDemographics | null = null;
+  try {
+    demographics = await getStateDistrictDemographics(stateCode, district, chamber);
+  } catch (error) {
+    logger.warn('Failed to fetch demographics', {
+      stateCode,
+      district,
+      chamber,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 
   // Get chamber info
   const chamberName = getChamberName(stateCode, chamber);
@@ -93,7 +124,7 @@ export default async function StateDistrictPage({
         {/* Page Title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {stateName} State District {district}
+            {stateName} {chamberName} District {district}
           </h1>
           <p className="text-gray-600">
             {chamberName} • {districtLegislators.length}{' '}
@@ -125,11 +156,17 @@ export default async function StateDistrictPage({
                 <Users className="w-5 h-5" />
                 {districtLegislators.length === 1 ? 'Representative' : 'Representatives'}
               </h2>
-              <div className="space-y-4">
-                {districtLegislators.map(legislator => (
-                  <LegislatorCard key={legislator.id} legislator={legislator} />
-                ))}
-              </div>
+              {districtLegislators.length > 0 ? (
+                <div className="space-y-4">
+                  {districtLegislators.map(legislator => (
+                    <LegislatorCard key={legislator.id} legislator={legislator} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-600 text-center py-8">
+                  No legislators found for this district.
+                </div>
+              )}
             </div>
 
             {/* Demographics */}
