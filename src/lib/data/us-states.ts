@@ -238,7 +238,7 @@ export function isTerritory(code: string): boolean {
 
 /**
  * Normalize state identifier to code (handles both codes and full names)
- * @param identifier - State code or full name
+ * @param identifier - State code or full name (case-insensitive)
  * @returns Normalized state code or undefined
  */
 export function normalizeStateIdentifier(identifier: string): StateCode | undefined {
@@ -247,6 +247,11 @@ export function normalizeStateIdentifier(identifier: string): StateCode | undefi
     return identifier.toUpperCase() as StateCode;
   }
 
-  // Try as full name
-  return getStateCode(identifier);
+  // Try as full name (case-insensitive)
+  const normalizedName = identifier
+    .split(/[\s-]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+
+  return getStateCode(normalizedName);
 }
