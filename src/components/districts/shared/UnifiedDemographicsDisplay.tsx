@@ -3,11 +3,17 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+'use client';
+
+import WaffleChart from '@/components/visualizations/WaffleChart';
+import StackedBar from '@/components/visualizations/StackedBar';
+
 /**
  * Unified Demographics Display Component
  *
  * Displays demographic information for both federal and state districts.
  * Uses Aicher design system for consistent styling across the application.
+ * Includes Aicher/Rams-inspired visualizations for percentage data.
  *
  * Compatible with:
  * - Federal district demographics (Census API)
@@ -79,43 +85,51 @@ export default function UnifiedDemographicsDisplay({
           <p className="aicher-heading-wide text-sm text-purple-700 mt-1">Median Age</p>
         </div>
 
-        <div className="aicher-card aicher-status-error p-6">
-          <div className="aicher-heading text-2xl text-white">
-            {demographics.urbanPercentage.toFixed(0)}%
+        <div className="aicher-card aicher-border bg-gray-50 p-6">
+          <div className="aicher-heading text-2xl text-gray-900 mb-3">
+            {demographics.urbanPercentage.toFixed(1)}%
           </div>
-          <p className="aicher-heading-wide text-sm text-white mt-1">Urban Population</p>
+          <p className="aicher-heading-wide text-sm text-gray-700 mb-3">Urban Population</p>
+          <div className="flex justify-center">
+            <WaffleChart
+              percentage={demographics.urbanPercentage}
+              color="#3ea2d4"
+              label="Urban Population"
+              size="default"
+            />
+          </div>
         </div>
       </div>
 
       {/* Racial & Ethnic Composition */}
       <div className="mt-6 aicher-card p-6">
         <h4 className="aicher-heading text-md text-gray-900 mb-4">Racial & Ethnic Composition</h4>
-        <div className="aicher-grid aicher-grid-4 gap-4">
-          <div className="text-center">
-            <div className="text-xl font-bold text-blue-600">
-              {demographics.white_percent.toFixed(1)}%
-            </div>
-            <p className="text-sm text-gray-600">White</p>
-          </div>
-          <div className="text-center">
-            <div className="text-xl font-bold text-green-600">
-              {demographics.black_percent.toFixed(1)}%
-            </div>
-            <p className="text-sm text-gray-600">Black</p>
-          </div>
-          <div className="text-center">
-            <div className="text-xl font-bold text-purple-600">
-              {demographics.hispanic_percent.toFixed(1)}%
-            </div>
-            <p className="text-sm text-gray-600">Hispanic</p>
-          </div>
-          <div className="text-center">
-            <div className="text-xl font-bold text-orange-600">
-              {demographics.asian_percent.toFixed(1)}%
-            </div>
-            <p className="text-sm text-gray-600">Asian</p>
-          </div>
-        </div>
+        <StackedBar
+          segments={[
+            {
+              label: 'White',
+              percentage: demographics.white_percent,
+              color: '#5A8DDE',
+            },
+            {
+              label: 'Black',
+              percentage: demographics.black_percent,
+              color: '#DE5A6B',
+            },
+            {
+              label: 'Hispanic',
+              percentage: demographics.hispanic_percent,
+              color: '#DED65A',
+            },
+            {
+              label: 'Asian',
+              percentage: demographics.asian_percent,
+              color: '#6BDE5A',
+            },
+          ]}
+          height={32}
+          showLabels={true}
+        />
       </div>
 
       {/* Education & Economy */}

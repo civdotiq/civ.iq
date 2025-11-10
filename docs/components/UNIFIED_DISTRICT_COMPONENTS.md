@@ -93,16 +93,18 @@ type UnifiedRepresentativeData = FederalRepresentative | StateLegislator;
 
 **File**: `src/components/districts/shared/UnifiedDemographicsDisplay.tsx`
 
-Displays demographic information for both federal and state districts with consistent styling.
+Displays demographic information for both federal and state districts with consistent styling and Aicher/Rams-inspired data visualizations.
 
 #### Features
 
 - ✅ Key metrics cards (population, income, age, urbanization)
-- ✅ Racial & ethnic composition breakdown
+- ✅ **WaffleChart visualization** for urban population percentage (10×10 grid)
+- ✅ **StackedBar visualization** for racial & ethnic composition
 - ✅ Education & economy statistics
 - ✅ Aicher design system integration
 - ✅ 100% compatible with both federal and state data structures
 - ✅ Graceful handling of missing data
+- ✅ Pure CSS/HTML visualizations (no chart libraries, ~2KB total)
 
 #### Usage
 
@@ -228,6 +230,81 @@ interface UnifiedDistrictSidebarProps {
 2. **Conditional Rendering**: Sections only appear when data is provided
 3. **Smart Truncation**: Shows first 3 items for counties/cities, indicates "and X more"
 4. **Consistent Styling**: Uses same card design across both page types
+
+---
+
+## Visualization Components (Aicher/Rams Design Philosophy)
+
+### 4. WaffleChart
+
+**File**: `src/components/visualizations/WaffleChart.tsx`
+
+A 10×10 grid visualization where each square represents 1% of the total. Based on Otto Neurath's Isotype system, which heavily influenced Otl Aicher's work. Follows Dieter Rams' principle: "Good design is honest."
+
+#### Features
+
+- ✅ Pure geometric forms (squares, no rounded corners)
+- ✅ 8px grid system (Aicher standard)
+- ✅ Three size variants (small/default/large)
+- ✅ Accessible with ARIA labels and tooltips
+- ✅ Honest representation (1 square = 1%)
+- ✅ Lightweight (no dependencies, pure CSS Grid)
+
+#### Usage
+
+```tsx
+import WaffleChart from '@/components/visualizations/WaffleChart';
+
+<WaffleChart percentage={82.3} color="#3ea2d4" label="Urban Population" size="default" />;
+```
+
+#### Design Principles
+
+- **Minimal**: No decoration, pure data visualization
+- **8px Grid**: squareSize follows Aicher standard (6px/8px/12px)
+- **No Rounding**: Pure squares with no border-radius
+- **Accessible**: Full ARIA labels and title attributes
+
+---
+
+### 5. StackedBar
+
+**File**: `src/components/visualizations/StackedBar.tsx`
+
+A horizontal stacked bar chart showing proportional segments, perfect for displaying composition data (e.g., racial demographics, vote breakdowns). Follows Dieter Rams' principle: "Good design is honest" - shows the whole (100%) and how it breaks down.
+
+#### Features
+
+- ✅ Clean horizontal layout (Aicher system)
+- ✅ Automatic percentage normalization
+- ✅ Optional labels below bar with color indicators
+- ✅ Accessible with tooltips and ARIA labels
+- ✅ Pure CSS Flexbox (no chart libraries)
+- ✅ Customizable segment colors
+
+#### Usage
+
+```tsx
+import StackedBar from '@/components/visualizations/StackedBar';
+
+<StackedBar
+  segments={[
+    { label: 'White', percentage: 73.8, color: '#5A8DDE' },
+    { label: 'Asian', percentage: 16.9, color: '#6BDE5A' },
+    { label: 'Black', percentage: 3.7, color: '#DE5A6B' },
+    { label: 'Hispanic', percentage: 3.1, color: '#DED65A' },
+  ]}
+  height={32}
+  showLabels={true}
+/>;
+```
+
+#### Design Features
+
+- **No Decoration**: Pure data visualization
+- **Space-Efficient**: More economical than donut charts
+- **Aicher Colors**: Recommended palette for segments
+- **Smart Tooltips**: Hover to see exact percentages
 
 ---
 
@@ -396,11 +473,13 @@ npm run lint
 
 ## Files Modified
 
-### New Components (3 files)
+### New Components (5 files)
 
 - `src/components/districts/shared/UnifiedRepresentativeCard.tsx` (155 lines)
-- `src/components/districts/shared/UnifiedDemographicsDisplay.tsx` (148 lines)
+- `src/components/districts/shared/UnifiedDemographicsDisplay.tsx` (148 lines, updated with visualizations)
 - `src/components/districts/shared/UnifiedDistrictSidebar.tsx` (146 lines)
+- `src/components/visualizations/WaffleChart.tsx` (115 lines) ⭐ NEW
+- `src/components/visualizations/StackedBar.tsx` (178 lines) ⭐ NEW
 
 ### Updated Pages (2 files)
 
