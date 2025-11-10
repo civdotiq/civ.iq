@@ -13,12 +13,30 @@ import {
 } from '@/lib/services/state-census-api.service';
 import { getChamberName } from '@/types/state-legislature';
 import { MapPin, Users, Home } from 'lucide-react';
-import Image from 'next/image';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { normalizeStateIdentifier, getStateName } from '@/lib/data/us-states';
 import StateDistrictBoundaryMap from '@/features/districts/components/StateDistrictBoundaryMapClient';
 import logger from '@/lib/logging/simple-logger';
-import { encodeBase64Url } from '@/lib/url-encoding';
+import UnifiedRepresentativeCard from '@/components/districts/shared/UnifiedRepresentativeCard';
+import UnifiedDemographicsDisplay from '@/components/districts/shared/UnifiedDemographicsDisplay';
+import UnifiedDistrictSidebar from '@/components/districts/shared/UnifiedDistrictSidebar';
+
+function CiviqLogo() {
+  return (
+    <div className="flex items-center">
+      <svg className="w-8 h-8" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect x="36" y="51" width="28" height="30" fill="#0b983c" />
+        <circle cx="50" cy="31" r="22" fill="#ffffff" />
+        <circle cx="50" cy="31" r="20" fill="#e11d07" />
+        <circle cx="38" cy="89" r="2" fill="#3ea2d4" />
+        <circle cx="46" cy="89" r="2" fill="#3ea2d4" />
+        <circle cx="54" cy="89" r="2" fill="#3ea2d4" />
+        <circle cx="62" cy="89" r="2" fill="#3ea2d4" />
+      </svg>
+      <span className="ml-2 text-lg font-bold text-gray-900">CIV.IQ</span>
+    </div>
+  );
+}
 
 interface PageProps {
   params: Promise<{ state: string; chamber: string; district: string }>;
@@ -103,7 +121,27 @@ export default async function StateDistrictPage({
   const stateName = getStateName(stateCode) || stateCode;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="bg-white border-2 border-black border-b border-gray-100">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
+              <CiviqLogo />
+            </Link>
+            <nav className="flex items-center space-x-6">
+              <Link href="/representatives" className="text-gray-600 font-medium">
+                Representatives
+              </Link>
+              <Link href="/state-legislature" className="text-blue-600 font-medium">
+                State Legislatures
+              </Link>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="mb-6">
@@ -152,229 +190,62 @@ export default async function StateDistrictPage({
             </div>
 
             {/* Representatives */}
-            <div className="bg-white border-2 border-black p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                {districtLegislators.length === 1 ? 'Representative' : 'Representatives'}
-              </h2>
-              {districtLegislators.length > 0 ? (
-                <div className="space-y-4">
-                  {districtLegislators.map(legislator => (
-                    <LegislatorCard key={legislator.id} legislator={legislator} />
-                  ))}
-                </div>
-              ) : (
+            {districtLegislators.length > 0 ? (
+              <div className="space-y-4">
+                {districtLegislators.map(legislator => (
+                  <UnifiedRepresentativeCard
+                    key={legislator.id}
+                    representative={legislator}
+                    districtName={`${stateName} ${chamberName} District ${district}`}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white border-2 border-black p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Representatives
+                </h2>
                 <div className="text-gray-600 text-center py-8">
                   No legislators found for this district.
                 </div>
-              )}
-            </div>
-
-            {/* Demographics */}
-            {demographics && (
-              <div className="bg-white border-2 border-black p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Demographics</h2>
-                <DemographicsDisplay demographics={demographics} />
               </div>
             )}
+
+            {/* Demographics */}
+            {demographics && <UnifiedDemographicsDisplay demographics={demographics} />}
           </div>
 
           {/* Sidebar */}
           <div className="space-y-8">
-            {/* District Info */}
-            <div className="bg-white border-2 border-black p-6">
-              <h3 className="aicher-section-label mb-3 flex items-center gap-2 text-civiq-blue">
-                <MapPin className="w-4 h-4" />
-                DISTRICT INFO
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <span className="text-sm font-medium text-gray-700">State: </span>
-                  <span className="text-sm text-gray-600">{stateName}</span>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-700">District: </span>
-                  <span className="text-sm text-gray-600">{district}</span>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-700">Chamber: </span>
-                  <span className="text-sm text-gray-600">{chamberName}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Navigation */}
-            <div className="bg-white border-2 border-black p-6">
-              <h3 className="aicher-section-label mb-3 text-civiq-blue">QUICK LINKS</h3>
-              <div className="space-y-2">
-                <Link
-                  href={`/state-legislature/${stateCode}`}
-                  className="block text-sm text-civiq-blue hover:underline"
-                >
-                  ← Back to {stateName} Legislature
-                </Link>
-              </div>
-            </div>
+            <UnifiedDistrictSidebar
+              districtInfo={{
+                state: stateName,
+                district: district,
+                chamber: chamberName,
+              }}
+              quickLinks={[
+                {
+                  href: `/state-legislature/${stateCode}`,
+                  label: `← Back to ${stateName} Legislature`,
+                },
+              ]}
+            />
           </div>
         </div>
       </main>
-    </div>
-  );
-}
 
-function LegislatorCard({ legislator }: { legislator: EnhancedStateLegislator }) {
-  return (
-    <div className="bg-gray-50 border-2 border-gray-300 p-6">
-      <div className="flex items-start gap-6">
-        {legislator.photo_url && (
-          <Image
-            src={legislator.photo_url}
-            alt={legislator.name}
-            width={100}
-            height={100}
-            className="rounded-full border-2 border-gray-300"
-          />
-        )}
-        <div className="flex-1">
-          <h3 className="font-bold text-2xl mb-2">{legislator.name}</h3>
-          <div className="text-sm text-gray-600 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">
-                Representative for {legislator.state} District {legislator.district}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span
-                className={`inline-block px-2 py-1 rounded text-xs font-bold ${
-                  legislator.party === 'Democratic'
-                    ? 'bg-blue-100 text-blue-800'
-                    : legislator.party === 'Republican'
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-gray-100 text-gray-800'
-                }`}
-              >
-                {legislator.party}
-              </span>
-            </div>
-            {legislator.email && (
-              <div className="text-civiq-blue hover:underline">
-                <a href={`mailto:${legislator.email}`}>{legislator.email}</a>
-              </div>
-            )}
-          </div>
-          <Link
-            href={`/state-legislature/${legislator.state}/legislator/${encodeBase64Url(legislator.id)}`}
-            className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
-          >
-            View Full Profile
-          </Link>
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-8 mt-16">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-gray-400">
+            Data sourced from OpenStates.org, Census.gov, and local government APIs
+          </p>
+          <p className="text-gray-500 text-sm mt-2">
+            © 2019-2025 Mark Sandford. CIV.IQ™ - The Original Civic Information Platform
+          </p>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function DemographicsDisplay({ demographics }: { demographics: StateDistrictDemographics }) {
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Colored Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-blue-600 p-4 rounded">
-          <div className="text-2xl font-bold text-white">
-            {demographics.population.toLocaleString()}
-          </div>
-          <p className="text-sm text-white mt-1 uppercase tracking-wide">Total Population</p>
-        </div>
-
-        <div className="bg-green-600 p-4 rounded">
-          <div className="text-2xl font-bold text-white">
-            {formatCurrency(demographics.medianIncome)}
-          </div>
-          <p className="text-sm text-white mt-1 uppercase tracking-wide">Median Income</p>
-        </div>
-
-        <div className="bg-purple-100 border-2 border-black p-4 rounded">
-          <div className="text-2xl font-bold text-purple-900">
-            {demographics.medianAge.toFixed(1)}
-          </div>
-          <p className="text-sm text-purple-700 mt-1 uppercase tracking-wide">Median Age</p>
-        </div>
-
-        <div className="bg-red-600 p-4 rounded">
-          <div className="text-2xl font-bold text-white">
-            {demographics.urbanPercentage.toFixed(0)}%
-          </div>
-          <p className="text-sm text-white mt-1 uppercase tracking-wide">Urban Population</p>
-        </div>
-      </div>
-
-      {/* Racial & Ethnic Composition */}
-      <div className="bg-gray-50 border-2 border-gray-300 p-6 rounded">
-        <h3 className="text-md font-bold text-gray-900 mb-4 uppercase tracking-wide">
-          Racial & Ethnic Composition
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="text-xl font-bold text-blue-600">
-              {demographics.white_percent.toFixed(1)}%
-            </div>
-            <p className="text-sm text-gray-600">White</p>
-          </div>
-          <div className="text-center">
-            <div className="text-xl font-bold text-green-600">
-              {demographics.black_percent.toFixed(1)}%
-            </div>
-            <p className="text-sm text-gray-600">Black</p>
-          </div>
-          <div className="text-center">
-            <div className="text-xl font-bold text-purple-600">
-              {demographics.hispanic_percent.toFixed(1)}%
-            </div>
-            <p className="text-sm text-gray-600">Hispanic</p>
-          </div>
-          <div className="text-center">
-            <div className="text-xl font-bold text-orange-600">
-              {demographics.asian_percent.toFixed(1)}%
-            </div>
-            <p className="text-sm text-gray-600">Asian</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Education & Economy */}
-      <div className="bg-gray-50 border-2 border-gray-300 p-6 rounded">
-        <h3 className="text-md font-bold text-gray-900 mb-4 uppercase tracking-wide">
-          Education & Economy
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <div className="text-lg font-bold text-green-600">
-              {demographics.bachelor_degree_percent.toFixed(1)}%
-            </div>
-            <p className="text-sm text-gray-600">Bachelor&apos;s Degree+</p>
-          </div>
-          <div>
-            <div className="text-lg font-bold text-red-600">
-              {demographics.poverty_rate.toFixed(1)}%
-            </div>
-            <p className="text-sm text-gray-600">Poverty Rate</p>
-          </div>
-          <div>
-            <div className="text-lg font-bold text-purple-600">
-              {demographics.diversityIndex.toFixed(1)}
-            </div>
-            <p className="text-sm text-gray-600">Diversity Index</p>
-          </div>
-        </div>
-      </div>
+      </footer>
     </div>
   );
 }

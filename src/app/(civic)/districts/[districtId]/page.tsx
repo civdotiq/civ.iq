@@ -9,9 +9,9 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import DistrictRepresentative from '@/features/districts/components/DistrictRepresentative';
-import DistrictNavigation from '@/features/districts/components/DistrictNavigation';
-import DistrictDemographics from '@/features/districts/components/DistrictDemographics';
+import UnifiedRepresentativeCard from '@/components/districts/shared/UnifiedRepresentativeCard';
+import UnifiedDistrictSidebar from '@/components/districts/shared/UnifiedDistrictSidebar';
+import UnifiedDemographicsDisplay from '@/components/districts/shared/UnifiedDemographicsDisplay';
 import NeighboringDistricts from '@/features/districts/components/NeighboringDistricts';
 import logger from '@/lib/logging/simple-logger';
 import { SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
@@ -215,7 +215,7 @@ export default function DistrictPage() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Representative */}
-            <DistrictRepresentative
+            <UnifiedRepresentativeCard
               representative={district.representative}
               districtName={district.name}
             />
@@ -227,18 +227,25 @@ export default function DistrictPage() {
             </div>
 
             {/* Demographics */}
-            <DistrictDemographics demographics={district.demographics} />
+            <UnifiedDemographicsDisplay demographics={district.demographics} />
           </div>
 
           {/* Sidebar */}
           <div className="space-y-8">
             {/* Navigation */}
-            <DistrictNavigation
-              state={district.state}
+            <UnifiedDistrictSidebar
               representativeName={district.representative.name}
-              bioguideId={district.representative.bioguideId}
+              representativeLink={`/representative/${district.representative.bioguideId}`}
               counties={district.geography.counties}
               majorCities={district.geography.majorCities}
+              quickLinks={[
+                { href: '/representatives', label: 'All Representatives' },
+                { href: '/districts', label: 'All Districts' },
+                {
+                  href: `/districts/${district.state}-Senate`,
+                  label: `${district.state} Senate Seats`,
+                },
+              ]}
             />
 
             {/* Wikidata Facts */}
