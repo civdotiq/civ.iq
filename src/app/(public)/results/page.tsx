@@ -146,7 +146,9 @@ function ResultsContent() {
   const address = searchParams.get('address');
   const query = searchParams.get('q');
   const [data, setData] = useState<ApiResponse | null>(null);
-  const [activeTab, setActiveTab] = useState<'federal' | 'state' | 'map'>('federal');
+  const [activeTab, setActiveTab] = useState<'federal' | 'state' | 'federal-map' | 'state-map'>(
+    'federal'
+  );
   const [districtInfo, setDistrictInfo] = useState<{ state: string; district: string } | null>(
     null
   );
@@ -662,7 +664,7 @@ function ResultsContent() {
         {(zipCode || query) && (
           <div className="bg-white border border-gray-200 overflow-hidden mb-8">
             <div className="border-b border-gray-200">
-              <nav className="flex">
+              <nav className="flex flex-wrap">
                 <button
                   onClick={() => setActiveTab('federal')}
                   className={`px-6 py-4 text-sm font-medium border-b-2 ${
@@ -683,19 +685,26 @@ function ResultsContent() {
                 >
                   State Representatives
                 </button>
-                {/* Only show District Map tab when a single district is determined */}
-                {(districtInfo || selectedDistrict) && !multiDistrictData && (
-                  <button
-                    onClick={() => setActiveTab('map')}
-                    className={`px-6 py-4 text-sm font-medium border-b-2 ${
-                      activeTab === 'map'
-                        ? 'border-civiq-blue text-civiq-blue'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    District Map
-                  </button>
-                )}
+                <button
+                  onClick={() => setActiveTab('federal-map')}
+                  className={`px-6 py-4 text-sm font-medium border-b-2 ${
+                    activeTab === 'federal-map'
+                      ? 'border-civiq-blue text-civiq-blue'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Federal District Maps
+                </button>
+                <button
+                  onClick={() => setActiveTab('state-map')}
+                  className={`px-6 py-4 text-sm font-medium border-b-2 ${
+                    activeTab === 'state-map'
+                      ? 'border-civiq-green text-civiq-green'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  State District Maps
+                </button>
               </nav>
             </div>
 
@@ -828,37 +837,73 @@ function ResultsContent() {
               )}
 
               {activeTab === 'state' && (zipCode || query) && (
-                <Suspense
-                  fallback={
-                    <div className="text-center py-8">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                      <p className="mt-4 text-gray-600">Loading state representatives...</p>
-                    </div>
-                  }
-                >
-                  <StateRepresentativesTab
-                    zipCode={zipCode || (query ? query.match(/\b\d{5}\b/)?.[0] || query : '') || ''}
-                    state={unifiedGeocodeResult?.districts?.federal?.state}
-                    stateSenator={unifiedGeocodeResult?.stateLegislators?.senator}
-                    stateRepresentative={unifiedGeocodeResult?.stateLegislators?.representative}
-                  />
-                </Suspense>
+                <>
+                  <Suspense
+                    fallback={
+                      <div className="text-center py-8">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <p className="mt-4 text-gray-600">Loading state representatives...</p>
+                      </div>
+                    }
+                  >
+                    <StateRepresentativesTab
+                      zipCode={
+                        zipCode || (query ? query.match(/\b\d{5}\b/)?.[0] || query : '') || ''
+                      }
+                      state={unifiedGeocodeResult?.districts?.federal?.state}
+                      stateSenator={unifiedGeocodeResult?.stateLegislators?.senator}
+                      stateRepresentative={unifiedGeocodeResult?.stateLegislators?.representative}
+                    />
+                  </Suspense>
+                </>
               )}
 
-              {activeTab === 'map' && (zipCode || query) && (
-                <div className="space-y-4">
-                  <InteractiveDistrictMap
-                    zipCode={zipCode || query || ''}
-                    district={
-                      selectedDistrict
-                        ? `${selectedDistrict.state}-${selectedDistrict.district}`
-                        : districtInfo
-                          ? `${districtInfo.state}-${districtInfo.district}`
-                          : undefined
-                    }
-                  />
-                </div>
-              )}
+              {activeTab === 'federal-map' &&
+                (zipCode || query) &&
+                (districtInfo || selectedDistrict) && (
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 p-4 mb-4">
+                      <h3 className="font-medium text-blue-900 mb-2">Congressional District Map</h3>
+                      <p className="text-sm text-blue-800">
+                        Interactive map showing your Congressional district boundaries. Zoom and pan
+                        to explore your district in detail.
+                      </p>
+                    </div>
+                    <InteractiveDistrictMap
+                      zipCode={zipCode || query || ''}
+                      district={
+                        selectedDistrict
+                          ? `${selectedDistrict.state}-${selectedDistrict.district}`
+                          : districtInfo
+                            ? `${districtInfo.state}-${districtInfo.district}`
+                            : undefined
+                      }
+                    />
+                  </div>
+                )}
+
+              {activeTab === 'state-map' &&
+                (zipCode || query) &&
+                unifiedGeocodeResult?.districts && (
+                  <div className="space-y-4">
+                    <div className="bg-green-50 border border-green-200 p-4 mb-4">
+                      <h3 className="font-medium text-green-900 mb-2">
+                        State Legislative District Maps
+                      </h3>
+                      <p className="text-sm text-green-800 mb-2">
+                        Interactive map showing your state legislative district boundaries. Use the
+                        layer toggle buttons above the map to switch between State Senate and State
+                        House districts.
+                      </p>
+                    </div>
+                    <InteractiveDistrictMap
+                      zipCode={zipCode || query || ''}
+                      district={
+                        districtInfo ? `${districtInfo.state}-${districtInfo.district}` : undefined
+                      }
+                    />
+                  </div>
+                )}
             </div>
           </div>
         )}
