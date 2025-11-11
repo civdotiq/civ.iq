@@ -109,10 +109,16 @@ export default function StateDistrictBoundaryMap({
             sources: {
               osm: {
                 type: 'raster',
-                tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                tiles: [
+                  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                ],
                 tileSize: 256,
                 attribution:
                   '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxzoom: 19,
               },
             },
             layers: [

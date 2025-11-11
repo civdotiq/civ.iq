@@ -217,6 +217,11 @@ function checkRateLimit(
   const url = new URL(request.url);
   const now = Date.now();
 
+  // Skip rate limiting for static data files (PMTiles, GeoJSON, etc.)
+  if (url.pathname.startsWith('/data/') || url.pathname.startsWith('/_next/static/')) {
+    return { allowed: true, limit: 999999, current: 0, resetTime: now + 60000 };
+  }
+
   // Determine rate limit configuration
   const defaultConfig: RateLimitConfig = { requests: 200, windowMs: 60000 };
   let config: RateLimitConfig = RATE_LIMITS.default || defaultConfig;

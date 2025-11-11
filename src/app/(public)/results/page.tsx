@@ -57,19 +57,30 @@ import { LoadingStateWrapper, LoadingMessage } from '@/shared/components/ui/Load
 import { useMultiStageLoading } from '@/hooks/shared/useSmartLoading';
 import type { UnifiedGeocodeResult } from '@/types/unified-geocode';
 import { saveSearchContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
-// Dynamic import for code splitting - reduces initial bundle size
-const InteractiveDistrictMap = dynamic(
-  () =>
-    import('@/features/districts/components/InteractiveDistrictMap').then(mod => ({
-      default: mod.InteractiveDistrictMap,
-    })),
+// Dynamic imports for district maps - reduces initial bundle size
+// Federal districts use DistrictMap (GeoJSON/Census API approach)
+const DistrictMap = dynamic(() => import('@/features/districts/components/DistrictMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-96 bg-white border border-gray-200 rounded-lg">
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+        <p className="text-sm text-gray-600">Loading congressional district map...</p>
+      </div>
+    </div>
+  ),
+});
+
+// State districts use StateDistrictBoundaryMap (PMTiles approach)
+const StateDistrictBoundaryMap = dynamic(
+  () => import('@/features/districts/components/StateDistrictBoundaryMapClient'),
   {
     ssr: false,
     loading: () => (
       <div className="flex items-center justify-center h-96 bg-white border border-gray-200 rounded-lg">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
-          <p className="text-sm text-gray-600">Loading district map...</p>
+          <p className="text-sm text-gray-600">Loading state district map...</p>
         </div>
       </div>
     ),
@@ -398,8 +409,10 @@ function ResultsContent() {
         if (apiData.success && apiData.representatives && apiData.representatives.length > 0) {
           setError(null);
 
-          // Extract district info from first representative
-          const firstRep = apiData.representatives[0];
+          // Extract district info from House representative (not Senate)
+          // Senators don't have districts, so we need to find a House member for the map
+          const houseRep = apiData.representatives.find(rep => rep.chamber === 'House');
+          const firstRep = houseRep || apiData.representatives[0];
           if (firstRep) {
             setDistrictInfo({
               state: firstRep.state,
@@ -869,16 +882,29 @@ function ResultsContent() {
                         to explore your district in detail.
                       </p>
                     </div>
-                    <InteractiveDistrictMap
-                      zipCode={zipCode || query || ''}
-                      district={
-                        selectedDistrict
-                          ? `${selectedDistrict.state}-${selectedDistrict.district}`
-                          : districtInfo
-                            ? `${districtInfo.state}-${districtInfo.district}`
-                            : undefined
+                    {(() => {
+                      const currentDistrict =
+                        selectedDistrict?.district || districtInfo?.district || '';
+                      const currentState = selectedDistrict?.state || districtInfo?.state || '';
+
+                      // Only show district map if we have a valid House district (not at-large/Senate)
+                      if (
+                        !currentDistrict ||
+                        currentDistrict === '00' ||
+                        currentDistrict.startsWith('S')
+                      ) {
+                        return (
+                          <div className="bg-yellow-50 border border-yellow-200 p-6 text-center">
+                            <p className="text-yellow-800">
+                              Congressional district map is only available for numbered House
+                              districts. Your location is in an at-large or statewide district.
+                            </p>
+                          </div>
+                        );
                       }
-                    />
+
+                      return <DistrictMap state={currentState} district={currentDistrict} />;
+                    })()}
                   </div>
                 )}
 
@@ -891,18 +917,31 @@ function ResultsContent() {
                         State Legislative District Maps
                       </h3>
                       <p className="text-sm text-green-800 mb-2">
-                        Interactive map showing your state legislative district boundaries. Use the
-                        layer toggle buttons above the map to switch between State Senate and State
-                        House districts.
+                        Interactive map showing your state legislative district boundaries.
                       </p>
                     </div>
-                    <InteractiveDistrictMap
-                      zipCode={zipCode || query || ''}
-                      district={
-                        districtInfo ? `${districtInfo.state}-${districtInfo.district}` : undefined
-                      }
-                      mode="state"
-                    />
+                    {unifiedGeocodeResult.districts.stateSenate && (
+                      <div className="mb-6">
+                        <h4 className="text-lg font-semibold mb-3">State Senate District</h4>
+                        <StateDistrictBoundaryMap
+                          stateCode={unifiedGeocodeResult.districts.federal.state}
+                          chamber="upper"
+                          district={unifiedGeocodeResult.districts.stateSenate.number}
+                          height={400}
+                        />
+                      </div>
+                    )}
+                    {unifiedGeocodeResult.districts.stateHouse && (
+                      <div>
+                        <h4 className="text-lg font-semibold mb-3">State House District</h4>
+                        <StateDistrictBoundaryMap
+                          stateCode={unifiedGeocodeResult.districts.federal.state}
+                          chamber="lower"
+                          district={unifiedGeocodeResult.districts.stateHouse.number}
+                          height={400}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
             </div>
