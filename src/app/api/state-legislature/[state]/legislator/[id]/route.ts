@@ -109,7 +109,7 @@ export async function GET(
     });
 
     try {
-      const wikipediaBio = await fetchBiography(legislator.name, 'state-legislator');
+      const wikipediaBio = await fetchBiography(legislator.id, legislator.name);
 
       if (wikipediaBio?.wikipediaSummary) {
         // Add Wikipedia fields to legislator object
