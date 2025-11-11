@@ -5,7 +5,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import type { Map } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -44,6 +44,7 @@ interface InteractiveDistrictMapProps {
   zipCode: string;
   district?: string; // Optional district override (format: "MI-13")
   className?: string;
+  mode?: 'federal' | 'state'; // Display mode: federal (congressional) or state (legislative)
 }
 
 interface MapLayer {
@@ -57,23 +58,51 @@ export function InteractiveDistrictMap({
   zipCode,
   district,
   className = '',
+  mode = 'federal', // Default to federal (congressional) mode
 }: InteractiveDistrictMapProps) {
   // eslint-disable-next-line no-console
-  console.log('[MapLibre Debug] Component rendering with zipCode:', zipCode, 'district:', district);
+  console.log(
+    '[MapLibre Debug] Component rendering with zipCode:',
+    zipCode,
+    'district:',
+    district,
+    'mode:',
+    mode
+  );
 
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const [mapData, setMapData] = useState<MapData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedLayer, setSelectedLayer] = useState<string>('congressional');
   const [isClient, setIsClient] = useState(false);
+  const [containerMounted, setContainerMounted] = useState(false);
 
-  const layers: MapLayer[] = [
+  // Define all available layers
+  const allLayers: MapLayer[] = [
     { id: 'congressional', name: 'Congressional District', color: '#e11d07', visible: true },
     { id: 'state_senate', name: 'State Senate District', color: '#0b983c', visible: false },
     { id: 'state_house', name: 'State House District', color: '#3ea2d4', visible: false },
   ];
+
+  // Filter layers based on mode
+  const layers: MapLayer[] =
+    mode === 'state' ? allLayers.filter(layer => layer.id !== 'congressional') : allLayers;
+
+  // Determine default layer based on mode
+  const defaultLayer = mode === 'state' ? 'state_senate' : 'congressional';
+  const [selectedLayer, setSelectedLayer] = useState<string>(defaultLayer);
+
+  // Callback ref to trigger re-render when container is mounted
+  const setMapContainerRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      // @ts-expect-error - Assigning to ref object
+      mapContainer.current = node;
+      setContainerMounted(true);
+      // eslint-disable-next-line no-console
+      console.log('[MapLibre Debug] Container mounted via callback ref');
+    }
+  }, []);
 
   // Ensure we're on the client side
   useEffect(() => {
@@ -90,7 +119,14 @@ export function InteractiveDistrictMap({
     });
 
     // Wait for: client-side, no existing map, container exists
-    if (!isClient || mapRef.current || !mapContainer.current) {
+    if (!isClient || mapRef.current) {
+      return;
+    }
+
+    // If container isn't ready yet, try again on next render
+    if (!mapContainer.current) {
+      // eslint-disable-next-line no-console
+      console.log('[MapLibre Debug] Container not ready yet, will retry on next render');
       return;
     }
 
@@ -171,7 +207,7 @@ export function InteractiveDistrictMap({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isClient]);
+  }, [isClient, containerMounted]); // Re-run when container is mounted
 
   // Fetch map data
   useEffect(() => {
@@ -464,7 +500,7 @@ export function InteractiveDistrictMap({
         {/* Interactive MapLibre Map */}
         <div className="h-96 w-full">
           <div
-            ref={mapContainer}
+            ref={setMapContainerRef}
             className="h-full w-full rounded-b-lg"
             style={{ height: '384px' }}
           />

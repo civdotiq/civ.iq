@@ -901,6 +901,7 @@ function ResultsContent() {
                       district={
                         districtInfo ? `${districtInfo.state}-${districtInfo.district}` : undefined
                       }
+                      mode="state"
                     />
                   </div>
                 )}

@@ -20,6 +20,8 @@ import logger from '@/lib/logging/simple-logger';
 import UnifiedRepresentativeCard from '@/components/districts/shared/UnifiedRepresentativeCard';
 import UnifiedDemographicsDisplay from '@/components/districts/shared/UnifiedDemographicsDisplay';
 import UnifiedDistrictSidebar from '@/components/districts/shared/UnifiedDistrictSidebar';
+import { fetchDistrictBiography } from '@/lib/api/wikipedia';
+import type { WikipediaBiography } from '@/lib/api/wikipedia';
 
 function CiviqLogo() {
   return (
@@ -120,6 +122,19 @@ export default async function StateDistrictPage({
   // Get full state name for display
   const stateName = getStateName(stateCode) || stateCode;
 
+  // Fetch Wikipedia biography for the district (graceful fallback - shows nothing if not available)
+  let wikipediaBio: WikipediaBiography | null = null;
+  try {
+    wikipediaBio = await fetchDistrictBiography(stateName, parseInt(district, 10), chamber);
+  } catch {
+    // Silently fail - Wikipedia data is optional enhancement
+    logger.debug('Wikipedia data not available for this district', {
+      stateName,
+      district,
+      chamber,
+    });
+  }
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -188,6 +203,27 @@ export default async function StateDistrictPage({
                 height={500}
               />
             </div>
+
+            {/* Wikipedia Info - Only show if available */}
+            {wikipediaBio && wikipediaBio.wikipediaSummary && (
+              <div className="bg-white border-2 border-black p-6">
+                <div className="prose max-w-none">
+                  <p className="text-gray-700 leading-relaxed">{wikipediaBio.wikipediaSummary}</p>
+                  {wikipediaBio.wikipediaPageUrl && (
+                    <p className="mt-4">
+                      <a
+                        href={wikipediaBio.wikipediaPageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline text-sm"
+                      >
+                        Read more on Wikipedia →
+                      </a>
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Representatives */}
             {districtLegislators.length > 0 ? (
