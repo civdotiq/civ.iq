@@ -283,6 +283,70 @@ export async function hasWikipediaMapping(bioguideId: string): Promise<boolean> 
 }
 
 /**
+ * Convert district number to ordinal (e.g., 1 → "1st", 22 → "22nd")
+ */
+function toOrdinal(num: number): string {
+  const suffix = ['th', 'st', 'nd', 'rd'];
+  const value = num % 100;
+  const suffixIndex = (value - 20) % 10;
+  return num + (suffix[suffixIndex] || suffix[value] || 'th');
+}
+
+/**
+ * Fetch Wikipedia data for a state legislative district
+ * @param stateName - Full state name (e.g., "Michigan", not "MI")
+ * @param districtNumber - District number (e.g., 22)
+ * @param chamber - "upper" for Senate or "lower" for House
+ * @returns Wikipedia biography data or null if not found
+ * @public Exported for state district pages
+ */
+export async function fetchDistrictBiography(
+  stateName: string,
+  districtNumber: number,
+  chamber: 'upper' | 'lower'
+): Promise<WikipediaBiography | null> {
+  try {
+    const chamberName = chamber === 'upper' ? 'Senate' : 'House';
+    const ordinal = toOrdinal(districtNumber);
+
+    // Wikipedia naming pattern: "{State}'s {ordinal} State {Chamber} district"
+    const wikipediaPageName = `${stateName}'s_${ordinal}_State_${chamberName}_district`;
+
+    // Try direct fetch first
+    const wikipediaInfo = await fetchWikipediaInfo(wikipediaPageName);
+    if (wikipediaInfo) {
+      return wikipediaInfo;
+    }
+
+    // Try search as fallback
+    const searchQuery = `${stateName} ${ordinal} State ${chamberName} district`;
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(searchQuery)}&limit=1&format=json&origin=*`;
+
+    const response = await fetchWithRetry(searchUrl);
+    if (!response.ok) {
+      return null;
+    }
+
+    const searchResults = (await response.json()) as [string, string[], string[], string[]];
+    const titles = searchResults[1];
+
+    if (titles && titles.length > 0 && titles[0]) {
+      const foundPageName = titles[0].replace(/ /g, '_');
+      return await fetchWikipediaInfo(foundPageName);
+    }
+
+    return null;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(
+      `Error fetching district biography for ${stateName} ${chamber} ${districtNumber}:`,
+      error
+    );
+    return null;
+  }
+}
+
+/**
  * Get Wikipedia page URL for representative
  * @param bioguideId - Official bioguide ID
  * @param representativeName - Full name for enhanced search
