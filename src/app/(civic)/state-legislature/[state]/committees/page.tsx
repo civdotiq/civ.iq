@@ -7,8 +7,10 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { StateCommitteeCard } from '@/features/state-legislature/components/StateCommitteeCard';
 import { getChamberName } from '@/types/state-legislature';
-import type { StateCommitteesApiResponse } from '@/types/state-legislature';
+import type { StateCommitteesApiResponse, StateParty } from '@/types/state-legislature';
 import { Building2, Users } from 'lucide-react';
+import { openStatesAPI } from '@/lib/openstates-api';
+import logger from '@/lib/logging/simple-logger';
 
 interface PageProps {
   params: Promise<{
@@ -19,30 +21,96 @@ interface PageProps {
   }>;
 }
 
-// Fetch committees
+// Fetch committees directly from service layer (no HTTP calls during SSR)
 async function getCommittees(
   state: string,
   chamber?: 'upper' | 'lower'
 ): Promise<StateCommitteesApiResponse | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  const chamberParam = chamber ? `?chamber=${chamber}` : '';
-
   try {
-    const response = await fetch(
-      `${baseUrl}/api/state-legislature/${state}/committees${chamberParam}`,
-      {
-        next: { revalidate: 86400 }, // 24 hours
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch committees: ${response.statusText}`);
+    // Validate state parameter
+    if (!state || state.length !== 2) {
+      logger.warn('[StateCommitteesPage] Invalid state code', { state });
+      return {
+        success: false,
+        committees: [],
+        total: 0,
+        state,
+        error: 'Invalid state code. Please provide a 2-letter state abbreviation.',
+      };
     }
 
-    const data = await response.json();
-    return data;
-  } catch {
-    return null;
+    // Get committees from OpenStates API
+    logger.info('[StateCommitteesPage] Fetching committees', { state, chamber });
+    const committees = await openStatesAPI.getCommittees(
+      state,
+      chamber || undefined,
+      undefined, // classification
+      true // Include memberships
+    );
+
+    // Helper to normalize party string to StateParty
+    const normalizeParty = (party: string | null | undefined): StateParty | undefined => {
+      if (!party) return undefined;
+      if (party === 'Democratic' || party === 'Democrat') return 'Democratic';
+      if (party === 'Republican') return 'Republican';
+      if (party === 'Independent') return 'Independent';
+      if (party === 'Green') return 'Green';
+      if (party === 'Libertarian') return 'Libertarian';
+      return 'Other';
+    };
+
+    // Transform to StateCommittee interface, filtering out committees without chamber
+    const transformedCommittees = committees
+      .filter(committee => committee.chamber !== null)
+      .map(committee => ({
+        id: committee.id,
+        name: committee.name,
+        chamber: committee.chamber as 'upper' | 'lower',
+        state: state.toUpperCase(),
+        classification:
+          committee.classification === 'committee' ? ('standing' as const) : undefined,
+        members: committee.memberships?.map(m => ({
+          legislator_id: m.person_id || '',
+          legislator_name: m.person_name,
+          role: m.role as 'Chair' | 'Vice Chair' | 'Ranking Member' | 'Member',
+          party: normalizeParty(m.person?.party),
+        })),
+        website: committee.links?.[0]?.url,
+        sources: committee.sources?.map(s => ({
+          url: s.url,
+          note: s.note || undefined,
+        })),
+        parent_id: committee.parent_id || undefined,
+      }));
+
+    logger.info('[StateCommitteesPage] Successfully fetched committees', {
+      state,
+      chamber,
+      count: transformedCommittees.length,
+    });
+
+    return {
+      success: true,
+      committees: transformedCommittees,
+      total: transformedCommittees.length,
+      state: state.toUpperCase(),
+      chamber: chamber || undefined,
+    };
+  } catch (error) {
+    logger.error('[StateCommitteesPage] Failed to fetch committees', error as Error, {
+      state,
+      chamber,
+    });
+    return {
+      success: false,
+      committees: [],
+      total: 0,
+      state: state.toUpperCase(),
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to fetch state committees. Please try again later.',
+    };
   }
 }
 
