@@ -354,20 +354,150 @@ npm run diagnose:apis          # Test API connectivity
 
 ## 🌐 API Endpoints
 
-All endpoints return real data or appropriate error messages:
+**Total: 89 API Endpoints** - All return real data or appropriate error messages.
+
+### Federal Representatives (15 endpoints)
 
 ```typescript
-GET /api/representatives?zip=48221           # List by ZIP
-GET /api/representative/[bioguideId]        # Member details
-GET /api/representative/[bioguideId]/votes  # Voting records
-GET /api/representative/[bioguideId]/bills  # Sponsored bills
-GET /api/representative/[bioguideId]/finance # FEC data
-GET /api/representative/[bioguideId]/news   # NewsAPI + Google News
-GET /api/committee/[committeeId]            # Committee info
-GET /api/bill/[billId]                      # Bill details
-GET /api/districts/[districtId]             # District data
-GET /api/search                             # Advanced search
+GET /api/representatives?zip=48221                           # List by ZIP code
+GET /api/representatives/all                                 # All current members
+GET /api/representatives/by-district                         # Filter by district
+GET /api/representatives-multi-district                      # Multi-district lookup
+GET /api/representative/[bioguideId]                        # Member profile
+GET /api/representative/[bioguideId]/simple                 # Lightweight profile
+GET /api/representative/[bioguideId]/batch                  # Batch data fetch
+GET /api/representative/[bioguideId]/bills                  # Sponsored bills
+GET /api/representative/[bioguideId]/votes                  # Voting records
+GET /api/representative/[bioguideId]/votes-simple           # Lightweight votes
+GET /api/representative/[bioguideId]/voting-record          # Full voting history
+GET /api/representative/[bioguideId]/committees             # Committee assignments
+GET /api/representative/[bioguideId]/leadership             # Leadership positions
+GET /api/representative/[bioguideId]/party-alignment        # Party voting alignment
+GET /api/representative/[bioguideId]/trending               # Trending topics
 ```
+
+### Campaign Finance (8 endpoints)
+
+```typescript
+GET /api/representative/[bioguideId]/finance                # FEC overview
+GET /api/representative/[bioguideId]/finance/comprehensive  # Complete finance data
+GET /api/representative/[bioguideId]/finance/contributors   # Top contributors
+GET /api/representative/[bioguideId]/finance/expenditures   # Campaign spending
+GET /api/representative/[bioguideId]/finance/funding-sources # Funding breakdown
+GET /api/representative/[bioguideId]/finance/geography      # Geographic donors
+GET /api/representative/[bioguideId]/finance/industries     # Industry contributions
+GET /api/representative/[bioguideId]/election-cycles        # Election cycle data
+```
+
+### News & Media (3 endpoints)
+
+```typescript
+GET /api/representative/[bioguideId]/news                   # NewsAPI + Google News
+GET /api/state-legislature/[state]/legislator/[id]/news     # State legislator news
+GET /api/news/batch                                         # Batch news processing
+```
+
+### State Legislature (15 endpoints)
+
+```typescript
+GET /api/state-legislature/[state]                          # State overview
+GET /api/state-legislature/[state]/legislator/[id]          # Legislator profile
+GET /api/state-legislature/[state]/legislator/[id]/bills    # Legislator bills
+GET /api/state-legislature/[state]/legislator/[id]/votes    # Legislator votes
+GET /api/state-legislature/[state]/legislator/[id]/news     # Legislator news
+GET /api/state-legislature/[state]/bill/[id]                # State bill details
+GET /api/state-legislature/[state]/committee/[id]           # State committee
+GET /api/state-legislature/[state]/committees               # All committees
+GET /api/state-bills/[state]                                # State bills list
+GET /api/state-representatives                              # State reps lookup
+GET /api/state-legislators-by-address                       # Find by address
+GET /api/state-executives/[state]                           # Governors, etc.
+GET /api/state-judiciary/[state]                            # State judges
+GET /api/representative/[bioguideId]/state-legislature      # Related state data
+GET /api/representative/[bioguideId]/lobbying               # Lobbying disclosure
+```
+
+### Districts & Geography (13 endpoints)
+
+```typescript
+GET /api/districts/all                                      # All US districts
+GET /api/districts/[districtId]                             # District profile
+GET /api/districts/[districtId]/economic-profile            # Economic data
+GET /api/districts/[districtId]/government-spending         # Federal spending
+GET /api/districts/[districtId]/neighbors                   # Neighboring districts
+GET /api/districts/[districtId]/news                        # District news
+GET /api/districts/[districtId]/services-health             # Public services
+GET /api/district-boundaries/[districtId]                   # Boundary GeoJSON
+GET /api/district-boundaries/metadata                       # Boundary metadata
+GET /api/district-map                                       # Interactive map data
+GET /api/state-boundaries/[stateCode]                       # State boundaries
+GET /api/state-demographics/[stateCode]                     # Census demographics
+GET /api/representative/[bioguideId]/district               # Rep's district
+```
+
+### Committees & Bills (9 endpoints)
+
+```typescript
+GET /api/committees                                         # All committees
+GET /api/committee/[committeeId]                            # Committee details
+GET /api/committee/[committeeId]/bills                      # Committee bills
+GET /api/committee/[committeeId]/reports                    # Committee reports
+GET /api/committee/[committeeId]/timeline                   # Activity timeline
+GET /api/committee/[committeeId]/wikipedia                  # Wikipedia data
+GET /api/bills/latest                                       # Latest bills
+GET /api/bill/[billId]                                      # Bill details
+GET /api/bill/[billId]/summary                              # Bill summary
+```
+
+### Votes & Comparison (4 endpoints)
+
+```typescript
+GET /api/vote/[voteId]                                      # Vote details
+GET /api/senate-votes/[voteNumber]                          # Senate vote
+GET /api/compare                                            # Compare members
+GET /api/congress/119th/stats                               # Session statistics
+```
+
+### Geocoding & Location (4 endpoints)
+
+```typescript
+GET /api/geocode                                            # Address geocoding
+GET /api/unified-geocode                                    # Unified geocoding
+GET /api/local-government/[location]                        # Local officials
+GET /api/representative-photo/[id]                          # Official photos
+```
+
+### Infrastructure & Admin (12 endpoints)
+
+```typescript
+GET /api/health                                             # Health check
+GET /api/health/redis                                       # Redis status
+GET /api/warmup                                             # Cache warmup
+GET /api/cache/status                                       # Cache status
+GET /api/cache/warm                                         # Warm cache
+GET /api/cache/refresh                                      # Refresh cache
+GET /api/cache/invalidate                                   # Invalidate cache
+GET /api/admin/cache                                        # Admin cache mgmt
+GET /api/admin/fec-health                                   # FEC API health
+GET /api/debug                                              # Debug info
+GET /api/cron/rss-aggregator                                # RSS cron job
+GET /api/agent                                              # AI agent endpoint
+```
+
+### API Versioning (2 endpoints)
+
+```typescript
+GET /api/v2/representatives                                 # V2 API - list
+GET /api/v2/representatives/[id]                            # V2 API - details
+```
+
+### Search & Discovery (1 endpoint)
+
+```typescript
+GET /api/search                                             # Advanced search
+```
+
+**Note**: Legacy GDELT endpoints (`/api/gdelt/*`) exist but are deprecated and not actively used.
 
 ## 🔧 Common Implementation Patterns
 
@@ -461,23 +591,73 @@ npx tsc --noEmit [fixed-file]
 
 ### ✅ Production Ready
 
-- Federal representatives with Congress.gov data
-- ZIP code lookup (39,363 ZIPs mapped)
-- Campaign finance (FEC integration)
-- Voting records (House + Senate)
-- NewsAPI + Google News integration
-- Interactive district maps
-- Committee profiles
-- Bill tracking
-- Data flow architecture (server → client → components)
+**Federal Government Data:**
+
+- Federal representatives with Congress.gov data (435 House + 100 Senate)
+- ZIP code lookup (39,363 ZIPs mapped to congressional districts)
+- Campaign finance (FEC integration with 8 specialized endpoints)
+- Voting records (House + Senate with XML parsing)
+- Committee profiles with Wikipedia integration
+- Bill tracking and legislative timelines
+- 119th Congress statistics and metadata
+
+**State & Local Government:**
+
 - **State legislature integration** (OpenStates v3 API)
   - State legislator profiles (50% faster - direct service layer access)
   - State bill details with abstracts
   - Voting records and sponsored legislation
+  - State legislative district maps (all 50 states + DC)
+- **State executives & judiciary** (Wikidata integration)
+  - Governors, lieutenant governors, attorneys general
+  - State supreme court justices
+  - Searchable by state code
+- **State legislative district maps** (PMTiles-based)
+  - Interactive boundary maps for all 7,383 state districts
+  - 24MB optimized dataset (75% reduction from 95MB)
+  - Covers all 50 states + DC (house + senate districts)
+  - Chamber-based URL routing (/state-districts/[state]/[chamber]/[district])
 - **Local government officials** lookup by address
+
+**News & Media:**
+
+- NewsAPI.org integration (primary news source)
+- Google News RSS feed integration (fallback)
+- Parallel fetching with automatic failover
+- Note: GDELT integration removed (Oct 2023) - 77% performance improvement
+
+**Geographic & Demographic Data:**
+
 - **Address-to-legislators** geocoding (Census + OpenStates)
+- Federal district boundaries (GeoJSON + PMTiles)
+- State boundaries and demographics (Census Bureau)
+- District economic profiles (BLS, FCC, DoE, CDC integration)
+- Government spending by district
+- Neighboring district analysis
+
+**Wikipedia Integration:**
+
+- Federal representative biographical data
+- State legislator Wikipedia links
+- Committee Wikipedia pages
+- Wikidata for state executives & judiciary
+
+**Infrastructure & Performance:**
+
 - **Congressional constants** (parties, chambers, sessions) - hardcoded for performance
-- **Cache management API** - Admin endpoint for cache invalidation
+- **Cache management API** - Admin endpoints for cache invalidation
+- Redis health monitoring
+- FEC API health checks
+- API versioning (V2 endpoints)
+- Batch data processing endpoints
+- AI agent endpoint for enhanced queries
+
+**Data Architecture:**
+
+- Server → client → components flow
+- Type-safe TypeScript throughout
+- Real government APIs only (no mock data)
+- Graceful degradation when APIs unavailable
 
 ### 🚧 In Development
 
@@ -528,17 +708,34 @@ echo "GOAL: [What you're implementing]" >> .session.log
 
 **Recent Development Highlights** (Last 3 Months):
 
-- ✅ **PMTiles Optimization** (Nov 2025) - Optimized state district maps from 95 MB to 24 MB (75% reduction) by reducing max zoom from 12→10, 75% faster loading with zero quality loss at relevant zoom levels
-- ✅ **OpenStates Pagination Fix** (Nov 2025) - Fixed API pagination limits (legislators: 50/page, bills: 20/page), improved type safety (removed all `as any` assertions)
-- ✅ **OpenStates Improvements** (Nov 2025) - Security fix (API key redaction), performance boost (50% faster profile pages), bill abstracts endpoint, cache admin API
-- ✅ **Congressional Constants** (Nov 2025) - Hardcoded reference data (parties, chambers, sessions)
-- ✅ **OpenStates v3 Migration** (Oct 2025) - GraphQL→REST API, 110+ state legislators
-- ✅ **Address Geocoding** (Oct 2025) - Census + OpenStates integration for legislator lookup
-- ✅ **Voting Systems** (Oct 2025) - Senate + House XML parsing, vote detail pages
-- ✅ **Otl Aicher Design System** (Sep 2025) - Geometric modernist UI across 416 files
-- ✅ **District Enhancements** (Sep 2025) - BLS, FCC, DoE, CDC data integration
-- ✅ **Demographics Fix** (Sep 2025) - State name→code mapping for Census API
-- ✅ **Wikidata Integration** (Sep 2025) - 119th Congress metadata, biographical data
+**November 2025:**
+
+- ✅ **Wikipedia Integration** - Added Wikipedia biographical data for state legislators, federal representatives, and committees
+- ✅ **4-Tab UI Restructure** - Converted district pages to 4-tab structure (Overview, Bills, Map, State District Maps) for better discoverability
+- ✅ **Unified District Pages** - Merged federal and state district page components for consistent UX
+- ✅ **Aicher/Rams Visualizations** - Added geometric modernist data visualizations for district pages
+- ✅ **Chamber-Based Routing** - Migrated state district routes to `/state-districts/[state]/[chamber]/[district]` format
+- ✅ **PMTiles Optimization** - Optimized state district maps from 95 MB to 24 MB (75% reduction) by reducing max zoom from 12→10, 75% faster loading with zero quality loss
+- ✅ **State District Maps Complete** - Added interactive PMTiles maps for all 7,383 state legislative districts (50 states + DC)
+- ✅ **OpenStates Pagination Fix** - Fixed API pagination limits (legislators: 50/page, bills: 20/page), improved type safety (removed all `as any` assertions)
+- ✅ **OpenStates Performance** - Security fix (API key redaction), performance boost (50% faster profile pages), bill abstracts endpoint
+- ✅ **Congressional Constants** - Hardcoded reference data (parties, chambers, sessions) for performance
+- ✅ **State Executives & Judiciary** - Added Wikidata integration for governors, attorneys general, and state supreme court justices
+
+**October 2025:**
+
+- ✅ **GDELT Removal** - Removed GDELT integration (77% file size reduction, 50% faster news endpoint) - replaced with NewsAPI + Google News
+- ✅ **OpenStates v3 Migration** - GraphQL→REST API, 110+ state legislators
+- ✅ **Address Geocoding** - Census + OpenStates integration for legislator lookup
+- ✅ **Voting Systems** - Senate + House XML parsing, vote detail pages
+- ✅ **FEC Build Fix** - Prevented API key validation during build phase
+
+**September 2025:**
+
+- ✅ **Otl Aicher Design System** - Geometric modernist UI across 416 files
+- ✅ **District Enhancements** - BLS, FCC, DoE, CDC data integration
+- ✅ **Demographics Fix** - State name→code mapping for Census API
+- ✅ **Wikidata Integration** - 119th Congress metadata, biographical data
 
 _For complete feature history, see git commits or docs/PHASE_TRACKER.md_
 

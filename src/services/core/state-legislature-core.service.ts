@@ -419,46 +419,191 @@ export class StateLegislatureCoreService {
       // Transform to our enhanced type
       const legislator = this.transformLegislator(osLegislator);
 
-      // Fetch district demographics from Census API
-      try {
-        const demographics = await getStateDistrictDemographics(
-          state,
-          legislator.district,
-          legislator.chamber
-        );
+      // ENRICHMENT PHASE: Fetch additional data in parallel for better performance
+      await Promise.allSettled([
+        // 1. Fetch district demographics from Census API
+        (async () => {
+          try {
+            const demographics = await getStateDistrictDemographics(
+              state,
+              legislator.district,
+              legislator.chamber
+            );
 
-        if (demographics) {
-          legislator.demographics = demographics;
-          logger.info('Enriched state legislator with district demographics', {
-            state,
-            legislatorId,
-            district: legislator.district,
-            chamber: legislator.chamber,
-            population: demographics.population,
-          });
-        }
-      } catch (error) {
-        logger.warn('Failed to fetch district demographics, continuing without', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          state,
-          legislatorId,
-          district: legislator.district,
-        });
-      }
+            if (demographics) {
+              legislator.demographics = demographics;
+              logger.info('Enriched state legislator with district demographics', {
+                state,
+                legislatorId,
+                district: legislator.district,
+                chamber: legislator.chamber,
+                population: demographics.population,
+              });
+            }
+          } catch (error) {
+            logger.warn('Failed to fetch district demographics, continuing without', {
+              error: error instanceof Error ? error.message : 'Unknown error',
+              state,
+              legislatorId,
+              district: legislator.district,
+            });
+          }
+        })(),
 
-      // Cache individual legislator with demographics
-      // Demographics from Census ACS change annually, so long TTL is appropriate
+        // 2. Fetch committees for this legislator
+        (async () => {
+          try {
+            const allCommittees = await openStatesAPI.getCommittees(
+              state,
+              legislator.chamber,
+              undefined,
+              true // include memberships
+            );
+
+            // Filter to committees where this legislator is a member
+            const legislatorCommittees = allCommittees
+              .filter(committee =>
+                committee.memberships?.some(member => member.person_id === legislatorId)
+              )
+              .map(committee => {
+                const membership = committee.memberships?.find(m => m.person_id === legislatorId);
+                return {
+                  id: committee.id,
+                  name: committee.name,
+                  role: membership?.role as
+                    | 'Chair'
+                    | 'Vice Chair'
+                    | 'Ranking Member'
+                    | 'Member'
+                    | undefined,
+                  chamber: committee.chamber || legislator.chamber,
+                };
+              });
+
+            if (legislatorCommittees.length > 0) {
+              legislator.committees = legislatorCommittees;
+              logger.info('Enriched state legislator with committees', {
+                state,
+                legislatorId,
+                committeeCount: legislatorCommittees.length,
+              });
+            }
+
+            // Update completeness metadata
+            if (legislator.metadata?.completeness) {
+              legislator.metadata.completeness.committees = legislatorCommittees.length > 0;
+            }
+          } catch (error) {
+            logger.warn('Failed to fetch committees, continuing without', {
+              error: error instanceof Error ? error.message : 'Unknown error',
+              state,
+              legislatorId,
+            });
+          }
+        })(),
+
+        // 3. Fetch bills to get sponsored/cosponsored counts
+        (async () => {
+          try {
+            const bills = await openStatesAPI.getBillsBySponsor(
+              legislatorId,
+              state,
+              undefined,
+              100
+            );
+
+            if (bills.length > 0) {
+              // Count primary sponsorships vs cosponsorships
+              let sponsoredCount = 0;
+              let cosponsoredCount = 0;
+
+              bills.forEach(bill => {
+                const sponsorship = bill.sponsorships?.find(
+                  s => s.name === legislator.name || s.entity_type === 'person'
+                );
+                if (sponsorship?.primary) {
+                  sponsoredCount++;
+                } else if (sponsorship) {
+                  cosponsoredCount++;
+                }
+              });
+
+              legislator.legislation = {
+                sponsored: sponsoredCount,
+                cosponsored: cosponsoredCount,
+                passed: 0, // Future enhancement: Calculate from bill.status
+                failed: 0,
+                pending: 0,
+              };
+
+              logger.info('Enriched state legislator with legislation counts', {
+                state,
+                legislatorId,
+                sponsored: sponsoredCount,
+                cosponsored: cosponsoredCount,
+              });
+            }
+
+            // Update completeness metadata
+            if (legislator.metadata?.completeness) {
+              legislator.metadata.completeness.legislation = bills.length > 0;
+            }
+          } catch (error) {
+            logger.warn('Failed to fetch bills, continuing without', {
+              error: error instanceof Error ? error.message : 'Unknown error',
+              state,
+              legislatorId,
+            });
+          }
+        })(),
+
+        // 4. Fetch Wikipedia biography
+        (async () => {
+          try {
+            const wikipediaData = await this.fetchWikipediaForStateLegislator(
+              legislator.name,
+              state
+            );
+
+            if (wikipediaData) {
+              legislator.wikipedia = wikipediaData;
+              logger.info('Enriched state legislator with Wikipedia data', {
+                state,
+                legislatorId,
+                hasWikipedia: true,
+              });
+            }
+
+            // Update completeness metadata
+            if (legislator.metadata?.completeness) {
+              legislator.metadata.completeness.biography = !!wikipediaData;
+            }
+          } catch (error) {
+            logger.warn('Failed to fetch Wikipedia data, continuing without', {
+              error: error instanceof Error ? error.message : 'Unknown error',
+              state,
+              legislatorId,
+            });
+          }
+        })(),
+      ]);
+
+      // Cache individual legislator with all enrichments
+      // Use shorter TTL (1 hour) to allow for legislative activity updates
       await govCache.set(cacheKey, legislator, {
-        ttl: 15552000000, // 6 months (180 days) - demographics are nearly static
-        source: 'openstates-individual',
+        ttl: 3600000, // 1 hour - legislative data changes frequently
+        source: 'openstates-individual-enriched',
         dataType: 'representatives',
       });
 
-      logger.info('Successfully found state legislator', {
+      logger.info('Successfully found and enriched state legislator', {
         state,
         legislatorId,
         name: legislator.name,
         hasDemographics: !!legislator.demographics,
+        hasCommittees: !!legislator.committees && legislator.committees.length > 0,
+        hasLegislation: !!legislator.legislation,
+        hasWikipedia: !!legislator.wikipedia,
         responseTime: Date.now() - startTime,
       });
 
@@ -915,6 +1060,66 @@ export class StateLegislatureCoreService {
       logger.error('Failed to get state jurisdiction', error as Error, {
         state,
         responseTime: Date.now() - startTime,
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Fetch Wikipedia data for a state legislator
+   * Uses Wikipedia REST API with intelligent search
+   * @param legislatorName - Full name of the legislator
+   * @param state - State code (e.g., 'MI')
+   * @returns Wikipedia data or null if not found
+   */
+  private static async fetchWikipediaForStateLegislator(
+    legislatorName: string,
+    state: string
+  ): Promise<{
+    summary: string;
+    htmlSummary: string;
+    pageUrl: string;
+  } | null> {
+    try {
+      // Search Wikipedia for the legislator
+      const searchQuery = `${legislatorName} ${state} state legislator`;
+      const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(searchQuery)}&format=json&origin=*`;
+
+      const searchResponse = await fetch(searchUrl, {
+        headers: {
+          'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq)',
+        },
+      });
+
+      if (!searchResponse.ok) return null;
+
+      const searchData = await searchResponse.json();
+      if (!searchData.query?.search?.[0]) return null;
+
+      const pageTitle = searchData.query.search[0].title;
+
+      // Fetch page summary
+      const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle)}`;
+      const summaryResponse = await fetch(summaryUrl, {
+        headers: {
+          'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq)',
+        },
+      });
+
+      if (!summaryResponse.ok) return null;
+
+      const summary = await summaryResponse.json();
+
+      return {
+        summary: summary.extract,
+        htmlSummary: summary.extract_html,
+        pageUrl: summary.content_urls.desktop.page,
+      };
+    } catch (error) {
+      logger.warn('Failed to fetch Wikipedia data for state legislator', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        legislatorName,
+        state,
       });
       return null;
     }

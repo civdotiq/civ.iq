@@ -8,17 +8,11 @@ import { useState, useEffect, memo } from 'react';
 import { StateLegislatorCard } from '@/features/representatives/components/StateLegislatorCard';
 import { RepresentativeSkeleton } from '@/shared/components/ui/SkeletonComponents';
 import { Spinner } from '@/shared/components/ui/LoadingStates';
+import type { StateLegislatorSummary } from '@/types/state-legislature';
 
-interface StateLegislator {
-  id: string;
-  name: string;
-  party: string;
-  chamber: 'upper' | 'lower';
-  district: string;
-  state: string;
-  image?: string;
-  email?: string;
-  phone?: string;
+// API response type for state legislators by ZIP
+interface StateLegislator extends StateLegislatorSummary {
+  image?: string; // Alias for photo_url (API compatibility)
   website?: string;
   offices?: Array<{
     name: string;
@@ -103,10 +97,11 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
         legislators.push({
           id: stateSenator.id,
           name: stateSenator.name,
-          party: stateSenator.party,
+          party: stateSenator.party as StateLegislator['party'],
           chamber: 'upper',
           district: stateSenator.district,
           state: state || '', // Use provided state or empty string as fallback
+          photo_url: stateSenator.image,
           image: stateSenator.image,
           email: stateSenator.email,
           phone: stateSenator.phone,
@@ -118,10 +113,11 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
         legislators.push({
           id: stateRepresentative.id,
           name: stateRepresentative.name,
-          party: stateRepresentative.party,
+          party: stateRepresentative.party as StateLegislator['party'],
           chamber: 'lower',
           district: stateRepresentative.district,
           state: state || '', // Use provided state or empty string as fallback
+          photo_url: stateRepresentative.image,
           image: stateRepresentative.image,
           email: stateRepresentative.email,
           phone: stateRepresentative.phone,

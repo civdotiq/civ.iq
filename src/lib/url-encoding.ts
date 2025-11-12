@@ -10,12 +10,13 @@
  * Replaces + with -, / with _, and removes padding =
  */
 export function encodeBase64Url(str: string): string {
+  const trimmed = str.trim(); // Remove leading/trailing whitespace
   if (typeof window === 'undefined') {
     // Server-side (Node.js)
-    return Buffer.from(str).toString('base64url');
+    return Buffer.from(trimmed).toString('base64url');
   } else {
     // Client-side (browser)
-    const base64 = btoa(str);
+    const base64 = btoa(trimmed);
     return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   }
 }
@@ -25,13 +26,14 @@ export function encodeBase64Url(str: string): string {
  * Reverses the URL-safe replacements before decoding
  */
 export function decodeBase64Url(str: string): string {
+  const trimmed = str.trim(); // Remove leading/trailing whitespace including newlines
   if (typeof window === 'undefined') {
     // Server-side (Node.js)
-    return Buffer.from(str, 'base64url').toString();
+    return Buffer.from(trimmed, 'base64url').toString();
   } else {
     // Client-side (browser)
     // Reverse URL-safe replacements
-    let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+    let base64 = trimmed.replace(/-/g, '+').replace(/_/g, '/');
     // Add padding if needed
     while (base64.length % 4) {
       base64 += '=';
