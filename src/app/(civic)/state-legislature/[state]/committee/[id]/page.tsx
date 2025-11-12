@@ -7,7 +7,10 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { StateCommitteeProfile } from '@/features/state-legislature/components/StateCommitteeProfile';
-import type { StateCommittee } from '@/types/state-legislature';
+import type { StateCommittee, StateParty } from '@/types/state-legislature';
+import { openStatesAPI } from '@/lib/openstates-api';
+import { decodeBase64Url } from '@/lib/url-encoding';
+import logger from '@/lib/logging/simple-logger';
 
 interface PageProps {
   params: Promise<{
@@ -16,25 +19,67 @@ interface PageProps {
   }>;
 }
 
-// Fetch committee data
-async function getCommittee(state: string, id: string): Promise<StateCommittee | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-
+// Fetch committee data directly from service layer (no HTTP calls during SSR)
+async function getCommittee(state: string, base64Id: string): Promise<StateCommittee | null> {
   try {
-    const response = await fetch(`${baseUrl}/api/state-legislature/${state}/committee/${id}`, {
-      next: { revalidate: 86400 }, // 24 hours
-    });
+    // Decode Base64 ID to get OCD committee ID
+    const committeeId = decodeBase64Url(base64Id);
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
-      throw new Error(`Failed to fetch committee: ${response.statusText}`);
+    logger.info('[StateCommitteePage] Fetching committee', { state, committeeId });
+
+    // Get committee from OpenStates API
+    const committee = await openStatesAPI.getCommitteeById(committeeId, true);
+
+    if (!committee) {
+      logger.warn('[StateCommitteePage] Committee not found', { state, committeeId });
+      return null;
     }
 
-    const data = await response.json();
-    return data.success ? data.committee : null;
-  } catch {
+    // Helper to normalize party string to StateParty
+    const normalizeParty = (party: string | null | undefined): StateParty | undefined => {
+      if (!party) return undefined;
+      if (party === 'Democratic' || party === 'Democrat') return 'Democratic';
+      if (party === 'Republican') return 'Republican';
+      if (party === 'Independent') return 'Independent';
+      if (party === 'Green') return 'Green';
+      if (party === 'Libertarian') return 'Libertarian';
+      return 'Other';
+    };
+
+    // Transform to StateCommittee interface
+    const transformedCommittee: StateCommittee = {
+      id: committee.id,
+      name: committee.name,
+      chamber: committee.chamber as 'upper' | 'lower',
+      state: state.toUpperCase(),
+      classification: committee.classification === 'committee' ? ('standing' as const) : undefined,
+      members: committee.memberships?.map(m => ({
+        legislator_id: m.person_id || '',
+        legislator_name: m.person_name,
+        role: m.role as 'Chair' | 'Vice Chair' | 'Ranking Member' | 'Member',
+        party: normalizeParty(m.person?.party),
+      })),
+      website: committee.links?.[0]?.url,
+      sources: committee.sources?.map(s => ({
+        url: s.url,
+        note: s.note || undefined,
+      })),
+      parent_id: committee.parent_id || undefined,
+    };
+
+    logger.info('[StateCommitteePage] Successfully fetched committee', {
+      state,
+      committeeId,
+      name: transformedCommittee.name,
+      memberCount: transformedCommittee.members?.length || 0,
+    });
+
+    return transformedCommittee;
+  } catch (error) {
+    logger.error('[StateCommitteePage] Failed to fetch committee', error as Error, {
+      state,
+      base64Id,
+    });
     return null;
   }
 }

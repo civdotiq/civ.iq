@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { Users, UserCheck, ExternalLink } from 'lucide-react';
 import type { StateCommittee } from '@/types/state-legislature';
 import { getChamberName } from '@/types/state-legislature';
+import { encodeBase64Url } from '@/lib/url-encoding';
 
 interface StateCommitteeCardProps {
   committee: StateCommittee;
@@ -28,6 +29,9 @@ export const StateCommitteeCard: React.FC<StateCommitteeCardProps> = ({ committe
   // Get chamber display name
   const chamberName = getChamberName(state, committee.chamber);
 
+  // Encode committee ID for URL (handles slashes in OCD IDs)
+  const encodedId = encodeBase64Url(committee.id);
+
   // Get party badge color for chair
   const getPartyColor = (party?: string) => {
     if (party === 'Democratic') return 'text-blue-700 bg-blue-50 border-blue-200';
@@ -41,7 +45,7 @@ export const StateCommitteeCard: React.FC<StateCommitteeCardProps> = ({ committe
         {/* Committee Name and Chamber */}
         <div className="mb-3">
           <Link
-            href={`/state-legislature/${state}/committee/${committee.id}`}
+            href={`/state-legislature/${state}/committee/${encodedId}`}
             className="text-lg font-bold hover:text-civiq-blue transition-colors"
           >
             {committee.name}
@@ -99,7 +103,7 @@ export const StateCommitteeCard: React.FC<StateCommitteeCardProps> = ({ committe
               </span>
             </div>
             <Link
-              href={`/state-legislature/${state}/committee/${committee.id}`}
+              href={`/state-legislature/${state}/committee/${encodedId}`}
               className="flex items-center gap-1 text-civiq-blue hover:underline text-sm font-semibold"
             >
               View
