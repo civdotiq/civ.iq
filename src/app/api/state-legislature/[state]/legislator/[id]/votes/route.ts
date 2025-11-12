@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
+import { normalizeStateIdentifier } from '@/lib/data/us-states';
 
 // Votes are immutable historical records - use long-term caching
 export const revalidate = 15552000; // 6 months in seconds
@@ -30,9 +31,13 @@ export async function GET(
     const legislatorId = decodeBase64Url(id); // Decode Base64 ID
     const limit = parseInt(searchParams.get('limit') || '50', 10);
 
-    if (!state || !legislatorId) {
+    // Normalize state identifier (handles both "MI" and "Michigan")
+    const stateCode = normalizeStateIdentifier(state);
+
+    if (!stateCode || !legislatorId) {
       logger.warn('State legislator votes API request missing parameters', {
         state,
+        stateCode,
         id: legislatorId,
       });
       return NextResponse.json(
@@ -42,20 +47,20 @@ export async function GET(
     }
 
     logger.info('Fetching state legislator voting records', {
-      state: state.toUpperCase(),
+      state: stateCode,
       legislatorId,
       limit,
     });
 
     // Verify the legislator exists first
     const legislator = await StateLegislatureCoreService.getStateLegislatorById(
-      state.toUpperCase(),
+      stateCode,
       legislatorId
     );
 
     if (!legislator) {
       logger.warn('State legislator not found for votes request', {
-        state: state.toUpperCase(),
+        state: stateCode,
         legislatorId,
       });
       return NextResponse.json(
@@ -66,13 +71,13 @@ export async function GET(
 
     // Fetch voting records using core service
     const votes = await StateLegislatureCoreService.getStateLegislatorVotes(
-      state.toUpperCase(),
+      stateCode,
       legislatorId,
       limit
     );
 
     logger.info('State legislator votes request successful', {
-      state: state.toUpperCase(),
+      state: stateCode,
       legislatorId,
       legislatorName: legislator.name,
       voteCount: votes.length,
@@ -98,7 +103,7 @@ export async function GET(
           district: legislator.district,
           party: legislator.party,
         },
-        state: state.toUpperCase(),
+        state: stateCode,
       },
       { status: 200, headers }
     );

@@ -13,6 +13,8 @@
  * Migration from v2 GraphQL to v3 REST (Dec 2023)
  */
 
+import { getStateCode } from '@/lib/data/us-states';
+
 interface OpenStatesConfig {
   apiKey?: string;
   baseUrl: string;
@@ -695,8 +697,13 @@ class OpenStatesAPI {
         return null;
       }
 
-      const state = person.jurisdiction.name;
-      return this.transformPerson(person, state);
+      // Convert jurisdiction name (e.g., "Michigan") to state code (e.g., "MI")
+      const stateName = person.jurisdiction.name;
+      const stateCode = getStateCode(stateName);
+      if (!stateCode) {
+        throw new Error(`Unable to map jurisdiction "${stateName}" to state code`);
+      }
+      return this.transformPerson(person, stateCode);
     } catch (error) {
       if (error instanceof Error && error.message.includes('404')) {
         return null;
@@ -870,7 +877,7 @@ class OpenStatesAPI {
     while (hasMore) {
       const params: Record<string, string | number> = {
         jurisdiction,
-        per_page: 50, // v3 API max for committees
+        per_page: 20, // v3 API max for committees (not 50)
         page,
       };
 
