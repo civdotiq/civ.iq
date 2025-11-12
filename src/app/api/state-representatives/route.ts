@@ -165,6 +165,7 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
   const { searchParams } = request.nextUrl;
   const zipCode = searchParams.get('zip');
+  const stateParam = searchParams.get('state'); // Optional state parameter
 
   if (!zipCode) {
     logger.warn('State representatives request missing ZIP code');
@@ -172,8 +173,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Get state from ZIP code using our ZIP-to-district mapping
-    const stateAbbrev = getStateFromZip(zipCode);
+    // Get state from param first, then fall back to ZIP-to-district mapping
+    const stateAbbrev = stateParam || getStateFromZip(zipCode);
 
     if (!stateAbbrev) {
       logger.warn('Could not determine state from ZIP code', { zipCode });

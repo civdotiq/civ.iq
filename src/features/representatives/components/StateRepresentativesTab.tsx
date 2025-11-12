@@ -140,9 +140,14 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
     const fetchStateRepresentatives = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `/api/state-representatives?zip=${encodeURIComponent(zipCode)}`
-        );
+
+        // Build API URL - include state param if available
+        let apiUrl = `/api/state-representatives?zip=${encodeURIComponent(zipCode)}`;
+        if (state) {
+          apiUrl += `&state=${encodeURIComponent(state)}`;
+        }
+
+        const response = await fetch(apiUrl);
 
         if (!response.ok) {
           const errorData = await response.json();
