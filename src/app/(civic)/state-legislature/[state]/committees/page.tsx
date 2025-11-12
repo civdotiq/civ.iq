@@ -11,6 +11,7 @@ import type { StateCommitteesApiResponse, StateParty } from '@/types/state-legis
 import { Building2, Users } from 'lucide-react';
 import { openStatesAPI } from '@/lib/openstates-api';
 import logger from '@/lib/logging/simple-logger';
+import { getStateLegislatureName, getStateLegislatureType } from '@/lib/data/us-states';
 
 interface PageProps {
   params: Promise<{
@@ -118,11 +119,15 @@ async function getCommittees(
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { state } = await params;
   const { chamber } = await searchParams;
-  const chamberName = chamber ? getChamberName(state, chamber) : 'Legislature';
+  const legislatureName =
+    getStateLegislatureName(state.toUpperCase()) || `${state.toUpperCase()} Legislature`;
+  const chamberName = chamber
+    ? getChamberName(state, chamber)
+    : getStateLegislatureType(state.toUpperCase());
 
   return {
     title: `${state.toUpperCase()} ${chamberName} Committees | CIV.IQ`,
-    description: `Browse committees in the ${state.toUpperCase()} state ${chamberName.toLowerCase()}. View committee leadership, membership rosters, and jurisdiction information.`,
+    description: `Browse committees in the ${legislatureName}. View committee leadership, membership rosters, and jurisdiction information.`,
     openGraph: {
       title: `${state.toUpperCase()} ${chamberName} Committees`,
       description: `Explore state legislative committees with full membership rosters and leadership information`,
@@ -150,7 +155,8 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
   }
 
   const { committees, total, chamber } = data;
-  const chamberName = chamber ? getChamberName(state, chamber) : 'Legislature';
+  const legislatureType = getStateLegislatureType(state.toUpperCase());
+  const chamberName = chamber ? getChamberName(state, chamber) : legislatureType;
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -165,7 +171,7 @@ export default async function StateCommitteesPage({ params, searchParams }: Page
           <li>/</li>
           <li>
             <Link href={`/state-legislature/${state}`} className="hover:text-civiq-blue">
-              {state.toUpperCase()} Legislature
+              {state.toUpperCase()} {legislatureType}
             </Link>
           </li>
           <li>/</li>

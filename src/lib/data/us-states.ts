@@ -255,3 +255,112 @@ export function normalizeStateIdentifier(identifier: string): StateCode | undefi
 
   return getStateCode(normalizedName);
 }
+
+// ============================================================================
+// LEGISLATURE NAMES BY STATE
+// ============================================================================
+
+/**
+ * Official names for state legislative bodies
+ * Source: National Conference of State Legislatures (NCSL)
+ *
+ * 27 states: "Legislature" or "State Legislature"
+ * 19 states: "General Assembly"
+ * 2 states: "General Court" (Massachusetts, New Hampshire)
+ * 2 states: "Legislative Assembly" (North Dakota, Oregon)
+ */
+export const STATE_LEGISLATURE_NAMES: Record<StateCode, string> = {
+  // Legislature (27 states)
+  AL: 'Alabama Legislature',
+  AK: 'Alaska State Legislature',
+  AZ: 'Arizona State Legislature',
+  CA: 'California State Legislature',
+  FL: 'Florida Legislature',
+  HI: 'Hawaii State Legislature',
+  ID: 'Idaho Legislature',
+  KS: 'Kansas Legislature',
+  LA: 'Louisiana Legislature',
+  ME: 'Maine Legislature',
+  MI: 'Michigan Legislature',
+  MN: 'Minnesota Legislature',
+  MS: 'Mississippi Legislature',
+  MT: 'Montana Legislature',
+  NE: 'Nebraska Legislature',
+  NV: 'Nevada Legislature',
+  NJ: 'New Jersey Legislature',
+  NM: 'New Mexico Legislature',
+  NY: 'New York State Legislature',
+  OK: 'Oklahoma Legislature',
+  SD: 'South Dakota Legislature',
+  TX: 'Texas Legislature',
+  UT: 'Utah State Legislature',
+  WA: 'Washington State Legislature',
+  WV: 'West Virginia Legislature',
+  WI: 'Wisconsin Legislature',
+  WY: 'Wyoming Legislature',
+
+  // General Assembly (19 states)
+  AR: 'Arkansas General Assembly',
+  CO: 'Colorado General Assembly',
+  CT: 'Connecticut General Assembly',
+  DE: 'Delaware General Assembly',
+  GA: 'Georgia General Assembly',
+  IL: 'Illinois General Assembly',
+  IN: 'Indiana General Assembly',
+  IA: 'Iowa General Assembly',
+  KY: 'Kentucky General Assembly',
+  MD: 'Maryland General Assembly',
+  MO: 'Missouri General Assembly',
+  NC: 'North Carolina General Assembly',
+  OH: 'Ohio General Assembly',
+  PA: 'Pennsylvania General Assembly',
+  RI: 'Rhode Island General Assembly',
+  SC: 'South Carolina General Assembly',
+  TN: 'Tennessee General Assembly',
+  VT: 'Vermont General Assembly',
+  VA: 'Virginia General Assembly',
+
+  // General Court (2 states)
+  MA: 'Massachusetts General Court',
+  NH: 'New Hampshire General Court',
+
+  // Legislative Assembly (2 states)
+  ND: 'North Dakota Legislative Assembly',
+  OR: 'Oregon Legislative Assembly',
+
+  // District and Territories
+  DC: 'Council of the District of Columbia',
+  PR: 'Legislative Assembly of Puerto Rico',
+  VI: 'Legislature of the Virgin Islands',
+  GU: 'Guam Legislature',
+  AS: 'American Samoa Fono',
+  MP: 'Northern Mariana Islands Commonwealth Legislature',
+};
+
+/**
+ * Get the official name of a state's legislative body
+ * @param stateCode - State abbreviation (e.g., "MI", "MA", "ND")
+ * @returns Official legislature name (e.g., "Michigan Legislature", "Massachusetts General Court")
+ */
+export function getStateLegislatureName(stateCode: string): string | undefined {
+  const upperCode = stateCode.toUpperCase() as StateCode;
+  return STATE_LEGISLATURE_NAMES[upperCode];
+}
+
+/**
+ * Get the short form of the legislature name (e.g., "Legislature", "General Assembly")
+ * @param stateCode - State abbreviation
+ * @returns Short form name (e.g., "Legislature", "General Assembly", "General Court", "Legislative Assembly")
+ */
+export function getStateLegislatureType(stateCode: string): string {
+  const fullName = getStateLegislatureName(stateCode);
+  if (!fullName) return 'Legislature';
+
+  // Extract the type from the full name
+  if (fullName.includes('General Assembly')) return 'General Assembly';
+  if (fullName.includes('General Court')) return 'General Court';
+  if (fullName.includes('Legislative Assembly')) return 'Legislative Assembly';
+  if (fullName.includes('Council')) return 'Council';
+  if (fullName.includes('Fono')) return 'Fono';
+  return 'Legislature';
+}
