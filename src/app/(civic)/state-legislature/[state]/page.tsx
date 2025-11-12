@@ -454,7 +454,8 @@ export default function StateLegislaturePage() {
     if (state) {
       fetchData();
     }
-  }, [state, fetchData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]); // fetchData is stable via useCallback - don't include to avoid infinite loop
 
   if (loading) {
     return (
