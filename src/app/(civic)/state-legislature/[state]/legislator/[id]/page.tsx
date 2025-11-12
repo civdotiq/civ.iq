@@ -30,18 +30,21 @@ async function getLegislator(state: string, base64Id: string) {
     // Decode Base64 ID to get OCD ID
     const legislatorId = decodeBase64Url(base64Id);
 
-    logger.info(`[StateLegislatorPage] Fetching legislator: ${state}/${legislatorId}`);
+    // Normalize state to uppercase for consistent caching
+    const normalizedState = state.toUpperCase();
+
+    logger.info(`[StateLegislatorPage] Fetching legislator: ${normalizedState}/${legislatorId}`);
 
     // Call core service directly (no HTTP overhead)
     const legislator = await StateLegislatureCoreService.getStateLegislatorById(
-      state,
+      normalizedState,
       legislatorId
     );
 
     if (legislator) {
       logger.info(`[StateLegislatorPage] Successfully fetched legislator: ${legislator.name}`);
     } else {
-      logger.warn(`[StateLegislatorPage] Legislator not found: ${state}/${legislatorId}`);
+      logger.warn(`[StateLegislatorPage] Legislator not found: ${normalizedState}/${legislatorId}`);
     }
 
     return legislator;

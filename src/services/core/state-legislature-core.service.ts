@@ -372,7 +372,9 @@ export class StateLegislatureCoreService {
     state: string,
     legislatorId: string
   ): Promise<EnhancedStateLegislator | null> {
-    const cacheKey = `core:state-legislator:${state}:${legislatorId}`;
+    // Normalize state to uppercase for consistent caching across all endpoints
+    const normalizedState = state.toUpperCase();
+    const cacheKey = `core:state-legislator:${normalizedState}:${legislatorId}`;
     const startTime = Date.now();
 
     try {
@@ -380,7 +382,7 @@ export class StateLegislatureCoreService {
       const cached = await govCache.get<EnhancedStateLegislator>(cacheKey);
       if (cached) {
         logger.info('Core service cache hit for individual state legislator', {
-          state,
+          state: normalizedState,
           legislatorId,
           name: cached.name,
           responseTime: Date.now() - startTime,
@@ -395,16 +397,16 @@ export class StateLegislatureCoreService {
       // Some legislators may not be available via direct endpoint but exist in the list
       if (!osLegislator) {
         logger.info('Direct person lookup failed, falling back to list endpoint', {
-          state,
+          state: normalizedState,
           legislatorId,
         });
 
-        const allLegislators = await this.getAllStateLegislators(state);
+        const allLegislators = await this.getAllStateLegislators(normalizedState);
         const legislatorFromList = allLegislators.find(leg => leg.id === legislatorId);
 
         if (!legislatorFromList) {
           logger.warn('State legislator not found in list either', {
-            state,
+            state: normalizedState,
             legislatorId,
             totalLegsSearched: allLegislators.length,
             responseTime: Date.now() - startTime,
@@ -425,7 +427,7 @@ export class StateLegislatureCoreService {
         (async () => {
           try {
             const demographics = await getStateDistrictDemographics(
-              state,
+              normalizedState,
               legislator.district,
               legislator.chamber
             );
@@ -433,7 +435,7 @@ export class StateLegislatureCoreService {
             if (demographics) {
               legislator.demographics = demographics;
               logger.info('Enriched state legislator with district demographics', {
-                state,
+                state: normalizedState,
                 legislatorId,
                 district: legislator.district,
                 chamber: legislator.chamber,
@@ -443,7 +445,7 @@ export class StateLegislatureCoreService {
           } catch (error) {
             logger.warn('Failed to fetch district demographics, continuing without', {
               error: error instanceof Error ? error.message : 'Unknown error',
-              state,
+              state: normalizedState,
               legislatorId,
               district: legislator.district,
             });
@@ -454,7 +456,7 @@ export class StateLegislatureCoreService {
         (async () => {
           try {
             const allCommittees = await openStatesAPI.getCommittees(
-              state,
+              normalizedState,
               legislator.chamber,
               undefined,
               true // include memberships
@@ -483,7 +485,7 @@ export class StateLegislatureCoreService {
             if (legislatorCommittees.length > 0) {
               legislator.committees = legislatorCommittees;
               logger.info('Enriched state legislator with committees', {
-                state,
+                state: normalizedState,
                 legislatorId,
                 committeeCount: legislatorCommittees.length,
               });
@@ -496,7 +498,7 @@ export class StateLegislatureCoreService {
           } catch (error) {
             logger.warn('Failed to fetch committees, continuing without', {
               error: error instanceof Error ? error.message : 'Unknown error',
-              state,
+              state: normalizedState,
               legislatorId,
             });
           }
@@ -507,7 +509,7 @@ export class StateLegislatureCoreService {
           try {
             const bills = await openStatesAPI.getBillsBySponsor(
               legislatorId,
-              state,
+              normalizedState,
               undefined,
               100
             );
@@ -537,7 +539,7 @@ export class StateLegislatureCoreService {
               };
 
               logger.info('Enriched state legislator with legislation counts', {
-                state,
+                state: normalizedState,
                 legislatorId,
                 sponsored: sponsoredCount,
                 cosponsored: cosponsoredCount,
@@ -551,7 +553,7 @@ export class StateLegislatureCoreService {
           } catch (error) {
             logger.warn('Failed to fetch bills, continuing without', {
               error: error instanceof Error ? error.message : 'Unknown error',
-              state,
+              state: normalizedState,
               legislatorId,
             });
           }
@@ -562,13 +564,13 @@ export class StateLegislatureCoreService {
           try {
             const wikipediaData = await this.fetchWikipediaForStateLegislator(
               legislator.name,
-              state
+              normalizedState
             );
 
             if (wikipediaData) {
               legislator.wikipedia = wikipediaData;
               logger.info('Enriched state legislator with Wikipedia data', {
-                state,
+                state: normalizedState,
                 legislatorId,
                 hasWikipedia: true,
               });
@@ -581,7 +583,7 @@ export class StateLegislatureCoreService {
           } catch (error) {
             logger.warn('Failed to fetch Wikipedia data, continuing without', {
               error: error instanceof Error ? error.message : 'Unknown error',
-              state,
+              state: normalizedState,
               legislatorId,
             });
           }
@@ -597,7 +599,7 @@ export class StateLegislatureCoreService {
       });
 
       logger.info('Successfully found and enriched state legislator', {
-        state,
+        state: normalizedState,
         legislatorId,
         name: legislator.name,
         hasDemographics: !!legislator.demographics,
@@ -610,7 +612,7 @@ export class StateLegislatureCoreService {
       return legislator;
     } catch (error) {
       logger.error('Failed to get state legislator by ID', error as Error, {
-        state,
+        state: normalizedState,
         legislatorId,
         responseTime: Date.now() - startTime,
       });
