@@ -22,6 +22,34 @@ const logger = {
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 // Security headers configuration
+// Environment-aware CSP: Strict in production, permissive in development
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+// Production CSP: No unsafe-inline, no unsafe-eval
+const PRODUCTION_CSP =
+  "default-src 'self'; " +
+  "script-src 'self' blob:; " + // Removed unsafe-inline and unsafe-eval
+  "style-src 'self' https://fonts.googleapis.com; " + // Removed unsafe-inline, added Google Fonts
+  "img-src 'self' data: https:; " +
+  "font-src 'self' data: https://fonts.gstatic.com; " +
+  "connect-src 'self' https:; " +
+  "worker-src 'self' blob:; " +
+  "frame-ancestors 'none'; " +
+  "base-uri 'self'; " +
+  "form-action 'self'; " +
+  'upgrade-insecure-requests;';
+
+// Development CSP: More permissive for hot reload and debugging
+const DEVELOPMENT_CSP =
+  "default-src 'self'; " +
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; " +
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+  "img-src 'self' data: https: blob:; " +
+  "font-src 'self' data: https://fonts.gstatic.com; " +
+  "connect-src 'self' https: ws: wss:; " + // WebSocket for hot reload
+  "worker-src 'self' blob:; " +
+  "frame-ancestors 'none';";
+
 const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
@@ -29,8 +57,7 @@ const SECURITY_HEADERS = {
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'geolocation=(self), microphone=(), camera=(), payment=()',
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-  'Content-Security-Policy':
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; frame-ancestors 'none';",
+  'Content-Security-Policy': isDevelopment ? DEVELOPMENT_CSP : PRODUCTION_CSP,
 } as const;
 
 // Rate limiting configuration

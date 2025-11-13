@@ -1,0 +1,59 @@
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '04:00'
+      timezone: 'America/New_York'
+    open-pull-requests-limit: 10
+    reviewers:
+      - 'mark-sandford'
+    labels:
+      - 'dependencies'
+      - 'security'
+    commit-message:
+      prefix: 'chore(deps)'
+      include: 'scope'
+    # Group minor and patch updates
+    groups:
+      development-dependencies:
+        dependency-type: 'development'
+        update-types:
+          - 'minor'
+          - 'patch'
+      production-dependencies:
+        dependency-type: 'production'
+        update-types:
+          - 'patch'
+    # Allow specific dependencies to be updated
+    allow:
+      - dependency-type: 'direct'
+      - dependency-type: 'indirect'
+    # Ignore specific packages if needed
+    ignore:
+      # Ignore major version updates for Next.js (require manual migration)
+      - dependency-name: 'next'
+        update-types: ['version-update:semver-major']
+      # Ignore major React updates (require testing)
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '04:00'
+    open-pull-requests-limit: 5
+    labels:
+      - 'ci/cd'
+      - 'dependencies'
+    commit-message:
+      prefix: 'ci'
+      include: 'scope'
