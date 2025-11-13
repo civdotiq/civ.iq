@@ -35,6 +35,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
   const [coordinateCount, setCoordinateCount] = useState(0);
   const [dataSource, setDataSource] = useState<string>('');
   const [isClient, setIsClient] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   // Ensure we're on the client side and load MapLibre CSS
   useEffect(() => {
@@ -150,6 +151,8 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
             logger.info('Map center:', map.getCenter());
             logger.info('Map zoom:', map.getZoom());
 
+            setMapLoaded(true);
+
             // Force a resize to ensure proper rendering
             setTimeout(() => {
               map.resize();
@@ -198,9 +201,10 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
       hasMap: !!mapRef.current,
       hasGeoJson: !!geoJsonData,
       isClient,
+      mapLoaded,
     });
 
-    if (!mapRef.current || !geoJsonData || !isClient) {
+    if (!mapRef.current || !geoJsonData || !isClient || !mapLoaded) {
       logger.warn('⚠️ Skipping district layer update - missing requirements');
       return;
     }
@@ -328,7 +332,7 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
       logger.info('⏳ Map not yet loaded, waiting for load event...');
       map.once('load', addDistrictLayers);
     }
-  }, [geoJsonData, dataSource, isClient]);
+  }, [geoJsonData, dataSource, isClient, mapLoaded]);
 
   useEffect(() => {
     logger.info('🎯 Boundary fetch useEffect triggered:', {

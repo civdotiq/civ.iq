@@ -5,6 +5,7 @@
  */
 
 import { Users, Building2, MapPin } from 'lucide-react';
+import { ComparisonIndicator, US_AVERAGES } from '@/components/demographics/ComparisonIndicator';
 
 interface District {
   id: string;
@@ -163,6 +164,11 @@ export function DemographicsDashboard({
             ${Math.round(stats.avgMedianIncome / 1000)}k
           </div>
           <p className="text-sm text-gray-600 mt-1">Avg. Median Income</p>
+          <ComparisonIndicator
+            value={stats.avgMedianIncome}
+            average={US_AVERAGES.medianIncome}
+            higherIsBetter={true}
+          />
           <p className="text-xs text-gray-500 mt-1">
             Range: ${Math.round(stats.lowestIncome / 1000)}k - $
             {Math.round(stats.highestIncome / 1000)}k
@@ -174,6 +180,12 @@ export function DemographicsDashboard({
             {stats.avgUrbanPercentage.toFixed(0)}%
           </div>
           <p className="text-sm text-gray-600 mt-1">Urban Population</p>
+          <ComparisonIndicator
+            value={stats.avgUrbanPercentage}
+            average={US_AVERAGES.urbanPercentage}
+            higherIsBetter={false}
+            suffix="%"
+          />
           <p className="text-xs text-gray-500 mt-1">
             Diversity Index: {stats.avgDiversityIndex.toFixed(1)}
           </p>

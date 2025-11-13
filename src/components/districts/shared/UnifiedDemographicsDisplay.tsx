@@ -7,6 +7,7 @@
 
 import WaffleChart from '@/components/visualizations/WaffleChart';
 import StackedBar from '@/components/visualizations/StackedBar';
+import { ComparisonIndicator, US_AVERAGES } from '@/components/demographics/ComparisonIndicator';
 
 /**
  * Unified Demographics Display Component
@@ -76,6 +77,13 @@ export default function UnifiedDemographicsDisplay({
             {formatCurrency(demographics.medianIncome)}
           </div>
           <p className="aicher-heading-wide text-sm text-white mt-1">Median Income</p>
+          <div className="text-white opacity-80">
+            <ComparisonIndicator
+              value={demographics.medianIncome}
+              average={US_AVERAGES.medianIncome}
+              higherIsBetter={true}
+            />
+          </div>
         </div>
 
         <div className="aicher-card aicher-border bg-purple-100 p-6">
@@ -83,14 +91,25 @@ export default function UnifiedDemographicsDisplay({
             {demographics.medianAge.toFixed(1)}
           </div>
           <p className="aicher-heading-wide text-sm text-purple-700 mt-1">Median Age</p>
+          <ComparisonIndicator
+            value={demographics.medianAge}
+            average={US_AVERAGES.medianAge}
+            higherIsBetter={false}
+          />
         </div>
 
         <div className="aicher-card aicher-border bg-gray-50 p-6">
-          <div className="aicher-heading text-2xl text-gray-900 mb-3">
+          <div className="aicher-heading text-2xl text-gray-900 mb-1">
             {demographics.urbanPercentage.toFixed(1)}%
           </div>
-          <p className="aicher-heading-wide text-sm text-gray-700 mb-3">Urban Population</p>
-          <div className="flex justify-center">
+          <p className="aicher-heading-wide text-sm text-gray-700 mb-1">Urban Population</p>
+          <ComparisonIndicator
+            value={demographics.urbanPercentage}
+            average={US_AVERAGES.urbanPercentage}
+            higherIsBetter={false}
+            suffix="%"
+          />
+          <div className="flex justify-center mt-2">
             <WaffleChart
               percentage={demographics.urbanPercentage}
               color="#3ea2d4"
@@ -140,19 +159,39 @@ export default function UnifiedDemographicsDisplay({
             <div className="text-lg font-bold text-green-600">
               {demographics.bachelor_degree_percent.toFixed(1)}%
             </div>
-            <p className="text-sm text-gray-600">Bachelor&apos;s Degree+</p>
+            <p className="text-sm text-gray-600 mb-1">Bachelor&apos;s Degree+</p>
+            <ComparisonIndicator
+              value={demographics.bachelor_degree_percent}
+              average={US_AVERAGES.bachelorDegreePercent}
+              higherIsBetter={true}
+              suffix="%"
+            />
           </div>
           <div>
             <div className="text-lg font-bold text-red-600">
               {demographics.poverty_rate.toFixed(1)}%
             </div>
-            <p className="text-sm text-gray-600">Poverty Rate</p>
+            <p className="text-sm text-gray-600 mb-1">Poverty Rate</p>
+            <ComparisonIndicator
+              value={demographics.poverty_rate}
+              average={US_AVERAGES.povertyRate}
+              higherIsBetter={false}
+              suffix="%"
+            />
           </div>
           <div>
             <div className="text-lg font-bold text-purple-600">
               {demographics.diversityIndex.toFixed(1)}
             </div>
-            <p className="text-sm text-gray-600">Diversity Index</p>
+            <p className="text-sm text-gray-600 mb-1">Diversity Index</p>
+            <ComparisonIndicator
+              value={demographics.diversityIndex}
+              average={US_AVERAGES.diversityIndex}
+              higherIsBetter={false}
+            />
+            <p className="text-xs text-gray-500 mt-2 italic">
+              0 = no diversity, 100 = maximum diversity
+            </p>
           </div>
         </div>
       </div>
