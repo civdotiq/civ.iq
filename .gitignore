@@ -84,3 +84,11 @@ test-*/
 
 # Session logs
 logs/
+*.log
+
+# Temporary directories
+temp/
+
+# Test scripts (development only)
+test-*.mjs
+test-*.js
