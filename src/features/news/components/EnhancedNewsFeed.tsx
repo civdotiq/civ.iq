@@ -48,6 +48,8 @@ export function EnhancedNewsFeed({ bioguideId, representative }: EnhancedNewsFee
           : representative.party === 'Democratic'
             ? 'Rep.'
             : 'Rep.',
+      votingMember: true, // Default to true; actual value will be set by the API
+      role: 'Representative', // Default to Representative; will be enhanced by the API
       terms: [], // Will be populated by the GoogleNewsStyleFeed component if needed
       committees: [], // Will be populated by the GoogleNewsStyleFeed component if needed
     }),

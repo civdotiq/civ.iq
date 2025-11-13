@@ -275,6 +275,19 @@ async function getHandler(
         const data = await response.json();
         const member = data.member;
 
+        // Determine voting status based on state (territories are non-voting)
+        const nonVotingTerritories = ['DC', 'PR', 'VI', 'GU', 'AS', 'MP'];
+        const isTerritory = nonVotingTerritories.includes(member.state);
+        const votingMember = member.chamber === 'Senate' ? true : !isTerritory;
+        const role =
+          member.chamber === 'Senate'
+            ? 'Senator'
+            : isTerritory
+              ? member.state === 'PR'
+                ? 'Resident Commissioner'
+                : 'Delegate'
+              : 'Representative';
+
         const representative: EnhancedRepresentative = {
           bioguideId: member.bioguideId,
           name: `${member.firstName} ${member.lastName}`,
@@ -285,6 +298,8 @@ async function getHandler(
           district: member.district,
           chamber: member.chamber,
           title: member.chamber === 'Senate' ? 'U.S. Senator' : 'U.S. Representative',
+          votingMember,
+          role,
           phone: member.phone,
           email: member.email,
           website: member.url,

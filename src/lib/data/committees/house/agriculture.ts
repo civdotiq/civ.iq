@@ -29,6 +29,8 @@ const createRepresentative = (
   district,
   chamber: 'House',
   title: `Representative for ${state}-${district}`,
+  votingMember: true,
+  role: 'Representative',
   terms: [
     {
       congress: '119',

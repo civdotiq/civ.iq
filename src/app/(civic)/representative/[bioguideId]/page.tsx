@@ -49,6 +49,8 @@ interface RepresentativeDetails {
   district?: string;
   chamber: 'House' | 'Senate';
   title: string;
+  votingMember: boolean;
+  role: 'Representative' | 'Senator' | 'Delegate' | 'Resident Commissioner';
   phone?: string;
   email?: string;
   website?: string;

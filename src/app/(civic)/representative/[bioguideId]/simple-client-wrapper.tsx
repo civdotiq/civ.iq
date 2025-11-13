@@ -10,6 +10,8 @@ interface SimpleClientWrapperProps {
     party: string;
     state: string;
     district?: string;
+    votingMember?: boolean;
+    role?: 'Representative' | 'Senator' | 'Delegate' | 'Resident Commissioner';
   };
   bioguideId: string;
   serverData?: {
@@ -72,6 +74,10 @@ export function SimpleClientWrapper({
           state: representative.state,
           district: representative.district,
           title: representative.chamber === 'House' ? 'Representative' : 'Senator',
+          votingMember: representative.votingMember ?? true,
+          role:
+            representative.role ??
+            (representative.chamber === 'House' ? 'Representative' : 'Senator'),
           terms: [],
         }}
         serverData={serverData}

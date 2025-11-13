@@ -28,6 +28,8 @@ const createRepresentative = (
   district,
   chamber: district ? 'House' : 'Senate', // Adjust based on committee type
   title: district ? `Representative for ${state}-${district}` : `Senator for ${state}`,
+  votingMember: true, // Committee members are voting members
+  role: district ? 'Representative' : 'Senator',
   terms: [
     {
       congress: '119',
