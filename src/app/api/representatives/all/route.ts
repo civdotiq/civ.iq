@@ -147,6 +147,8 @@ export async function GET(request: NextRequest) {
         district: rep.district,
         chamber: rep.chamber,
         title: rep.title,
+        votingMember: rep.votingMember,
+        role: rep.role,
         phone: rep.contact?.dcOffice?.phone || rep.phone,
         website: rep.website,
         contactInfo: {

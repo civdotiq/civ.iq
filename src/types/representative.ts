@@ -47,10 +47,23 @@ export interface BaseRepresentative {
   nextElection?: string;
 }
 
+// Representative roles (constitutional distinction)
+export type RepresentativeRole =
+  | 'Representative' // Voting member of House (Article I, Section 2)
+  | 'Senator' // Voting member of Senate (Article I, Section 3)
+  | 'Delegate' // Non-voting delegate from territory (Article IV, Section 3)
+  | 'Resident Commissioner'; // Non-voting delegate from Puerto Rico (4-year term)
+
 // Enhanced representative with congress-legislators data
 export interface EnhancedRepresentative extends BaseRepresentative {
   // Status information
   isHistorical?: boolean;
+
+  // Constitutional representation status
+  // Article I grants voting power only to state representatives/senators
+  // Article IV, Section 3 allows territorial delegates (non-voting)
+  votingMember: boolean;
+  role: RepresentativeRole;
 
   // Enhanced name information
   fullName?: {

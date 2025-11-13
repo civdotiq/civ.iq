@@ -19,7 +19,7 @@
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import yaml from 'js-yaml';
-import type { EnhancedRepresentative } from '@/types/representative';
+import type { EnhancedRepresentative, RepresentativeRole } from '@/types/representative';
 import { filterCurrent119thCongress, is119thCongressTerm } from '@/lib/helpers/congress-validation';
 import { getFileCache } from '@/lib/cache/file-cache';
 
@@ -55,6 +55,39 @@ class RateLimiter {
 
 const githubRateLimiter = new RateLimiter();
 const fileCache = getFileCache();
+
+/**
+ * Determine voting status and role based on constitutional authority
+ * Article I: Only state representatives/senators have voting power
+ * Article IV, Section 3: Territorial delegates are non-voting
+ */
+function determineVotingStatusAndRole(
+  state: string,
+  termType: 'sen' | 'rep'
+): {
+  votingMember: boolean;
+  role: RepresentativeRole;
+} {
+  const nonVotingTerritories = ['DC', 'PR', 'VI', 'GU', 'AS', 'MP'];
+  const isTerritory = nonVotingTerritories.includes(state);
+
+  if (termType === 'sen') {
+    // All senators are voting members from states (Article I, Section 3)
+    return { votingMember: true, role: 'Senator' };
+  }
+
+  // House members
+  if (isTerritory) {
+    // Puerto Rico has a Resident Commissioner (4-year term)
+    // Other territories have Delegates (2-year terms)
+    // All are non-voting per Article IV, Section 3
+    const role = state === 'PR' ? 'Resident Commissioner' : 'Delegate';
+    return { votingMember: false, role };
+  }
+
+  // State representatives are voting members (Article I, Section 2)
+  return { votingMember: true, role: 'Representative' };
+}
 
 /**
  * Enhanced caching with file persistence for large congress data
@@ -687,6 +720,12 @@ export async function getEnhancedRepresentative(
       return `/api/representative-photo/${bioguideId}`;
     };
 
+    // Determine voting status and role (constitutional authority)
+    const { votingMember, role } = determineVotingStatusAndRole(
+      currentTerm.state,
+      currentTerm.type
+    );
+
     // Build enhanced representative object
     const enhanced: EnhancedRepresentative = {
       bioguideId: legislator.id.bioguide,
@@ -698,6 +737,8 @@ export async function getEnhancedRepresentative(
       district: currentTerm.district?.toString(),
       chamber: (currentTerm.type === 'sen' ? 'Senate' : 'House') as 'House' | 'Senate',
       title: currentTerm.type === 'sen' ? 'U.S. Senator' : 'U.S. Representative',
+      votingMember,
+      role,
       phone: currentTerm.phone,
       website: currentTerm.url,
       imageUrl: buildPhotoUrl(legislator.id.bioguide), // Add photo URL
@@ -822,47 +863,41 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
     // Filter for current 119th Congress members only
     const currentLegislators = filterCurrent119thCongress(legislators);
 
-    // Filter out non-voting delegates from territories
-    // These are representatives from DC, PR, VI, GU, AS, MP who are not part of the 435 voting House members
-    const votingLegislators = currentLegislators.filter(legislator => {
+    // Include ALL current members (voting + non-voting delegates)
+    // Constitutional distinction: Article I grants voting power only to state representatives
+    // Article IV, Section 3 allows territorial delegates with non-voting status
+    const allCurrentMembers = currentLegislators.filter(legislator => {
       const currentTerm = legislator.terms[legislator.terms.length - 1];
-      if (!currentTerm) return false;
-
-      // Include all senators
-      if (currentTerm.type === 'sen') return true;
-
-      // For House representatives, exclude non-voting delegates from territories
-      if (currentTerm.type === 'rep') {
-        const nonVotingTerritories = ['DC', 'PR', 'VI', 'GU', 'AS', 'MP'];
-        return !nonVotingTerritories.includes(currentTerm.state);
-      }
-
-      return false;
+      return !!currentTerm; // Include if they have a current term
     });
 
-    // Debug chamber breakdown for voting members only
-    const chamberBreakdown = votingLegislators.reduce(
+    // Count breakdown for logging
+    const memberBreakdown = allCurrentMembers.reduce(
       (acc, leg) => {
         const currentTerm = leg.terms[leg.terms.length - 1];
         if (currentTerm) {
+          const nonVotingTerritories = ['DC', 'PR', 'VI', 'GU', 'AS', 'MP'];
+          const isNonVoting = nonVotingTerritories.includes(currentTerm.state);
+
           if (currentTerm.type === 'sen') acc.senators++;
-          else if (currentTerm.type === 'rep') acc.representatives++;
+          else if (currentTerm.type === 'rep' && !isNonVoting) acc.votingRepresentatives++;
+          else if (currentTerm.type === 'rep' && isNonVoting) acc.nonVotingDelegates++;
           else acc.other++;
         }
         return acc;
       },
-      { senators: 0, representatives: 0, other: 0 }
+      { senators: 0, votingRepresentatives: 0, nonVotingDelegates: 0, other: 0 }
     );
 
-    logger.debug('Filtered to voting members of 119th Congress', {
+    logger.debug('Loaded all current 119th Congress members (including territorial delegates)', {
       originalCount: legislators.length,
       current119thCount: currentLegislators.length,
-      votingMembersCount: votingLegislators.length,
-      nonVotingDelegatesExcluded: currentLegislators.length - votingLegislators.length,
-      breakdown: chamberBreakdown,
+      allMembersCount: allCurrentMembers.length,
+      breakdown: memberBreakdown,
+      note: 'Non-voting delegates marked per Article IV, Section 3',
     });
 
-    const enhanced: EnhancedRepresentative[] = votingLegislators
+    const enhanced: EnhancedRepresentative[] = allCurrentMembers
       .map(legislator => {
         const bioguideId = legislator.id.bioguide;
         const social = socialMedia.find(s => s.bioguide === bioguideId);
@@ -921,6 +956,12 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
           }
         };
 
+        // Determine voting status and role (constitutional authority)
+        const { votingMember, role } = determineVotingStatusAndRole(
+          currentTerm.state,
+          currentTerm.type
+        );
+
         return {
           bioguideId: legislator.id.bioguide,
           name: `${legislator.name.first} ${legislator.name.last}`,
@@ -931,6 +972,8 @@ export async function getAllEnhancedRepresentatives(): Promise<EnhancedRepresent
           district: currentTerm.district?.toString(),
           chamber: currentTerm.type === 'sen' ? 'Senate' : 'House',
           title: currentTerm.type === 'sen' ? 'U.S. Senator' : 'U.S. Representative',
+          votingMember,
+          role,
           imageUrl: `/api/representative-photo/${legislator.id.bioguide}`, // Add photo URL
           yearsInOffice: calculateYearsInOffice(),
           nextElection: calculateNextElection(),

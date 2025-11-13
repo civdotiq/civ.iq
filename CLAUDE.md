@@ -358,12 +358,14 @@ npm run diagnose:apis          # Test API connectivity
 
 ### Federal Representatives (15 endpoints)
 
+**Includes territorial delegates:** All 5 U.S. territories are represented with non-voting delegates (PR, VI, GU, AS, MP)
+
 ```typescript
-GET /api/representatives?zip=48221                           # List by ZIP code
-GET /api/representatives/all                                 # All current members
+GET /api/representatives?zip=48221                           # List by ZIP code (includes territories)
+GET /api/representatives/all                                 # All current members (540 total: 435 House + 100 Senate + 5 delegates)
 GET /api/representatives/by-district                         # Filter by district
 GET /api/representatives-multi-district                      # Multi-district lookup
-GET /api/representative/[bioguideId]                        # Member profile
+GET /api/representative/[bioguideId]                        # Member profile (includes votingMember and role fields)
 GET /api/representative/[bioguideId]/simple                 # Lightweight profile
 GET /api/representative/[bioguideId]/batch                  # Batch data fetch
 GET /api/representative/[bioguideId]/bills                  # Sponsored bills
@@ -593,8 +595,19 @@ npx tsc --noEmit [fixed-file]
 
 **Federal Government Data:**
 
-- Federal representatives with Congress.gov data (435 House + 100 Senate)
-- ZIP code lookup (39,363 ZIPs mapped to congressional districts)
+- **Federal representatives** with Congress.gov data (540 total members)
+  - 435 voting House representatives (50 states)
+  - 100 voting Senators (50 states)
+  - 5 non-voting territorial delegates (PR, VI, GU, AS, MP)
+  - Constitutional distinction: `votingMember` and `role` fields per Article I & IV
+- **Territorial representation** (Article IV, Section 3)
+  - Puerto Rico: Resident Commissioner (4-year term, Republican)
+  - Virgin Islands: Delegate (2-year term, Democrat)
+  - Guam: Delegate (2-year term, Republican)
+  - American Samoa: Delegate (2-year term, Republican)
+  - Northern Mariana Islands: Delegate (2-year term, Republican)
+  - UI badges with constitutional explanation tooltips
+- ZIP code lookup (39,495 ZIPs including 132 territorial ZIPs)
 - Campaign finance (FEC integration with 8 specialized endpoints)
 - Voting records (House + Senate with XML parsing)
 - Committee profiles with Wikipedia integration

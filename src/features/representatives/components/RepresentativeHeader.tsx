@@ -8,6 +8,8 @@
 import React from 'react';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { DataSourceBadge } from '@/components/shared/ui/DataTransparency';
+import { NonVotingBadge } from './NonVotingBadge';
+import type { RepresentativeRole } from '@/types/representative';
 
 interface RepresentativeHeaderProps {
   representative: {
@@ -18,6 +20,8 @@ interface RepresentativeHeaderProps {
     state: string;
     district?: string;
     title: string;
+    votingMember?: boolean;
+    role?: RepresentativeRole;
     currentTerm?: {
       start: string;
       end: string;
@@ -123,6 +127,15 @@ export function RepresentativeHeader({ representative, metrics }: Representative
                   {representative.state}
                   {representative.district ? `-${representative.district}` : ''}
                 </span>
+                {representative.votingMember !== undefined &&
+                  representative.role &&
+                  !representative.votingMember && (
+                    <NonVotingBadge
+                      votingMember={representative.votingMember}
+                      role={representative.role}
+                      size="sm"
+                    />
+                  )}
               </div>
 
               {/* Contact Links */}
