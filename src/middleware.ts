@@ -25,11 +25,13 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 // Environment-aware CSP: Strict in production, permissive in development
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-// Production CSP: No unsafe-inline, no unsafe-eval
+// Production CSP: Balanced security for Next.js App Router
+// Note: 'unsafe-inline' required for Next.js hydration scripts
+// Future: Implement nonce-based CSP for stricter security
 const PRODUCTION_CSP =
   "default-src 'self'; " +
-  "script-src 'self' blob:; " + // Removed unsafe-inline and unsafe-eval
-  "style-src 'self' https://fonts.googleapis.com; " + // Removed unsafe-inline, added Google Fonts
+  "script-src 'self' 'unsafe-inline' blob:; " + // unsafe-inline required for Next.js App Router hydration
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " + // unsafe-inline for styled-components/CSS-in-JS
   "img-src 'self' data: https:; " +
   "font-src 'self' data: https://fonts.gstatic.com; " +
   "connect-src 'self' https:; " +
