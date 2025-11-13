@@ -12,6 +12,7 @@ import { EnhancedRepresentative } from '@/types/representative';
 import { fetchBiography } from '@/lib/api/wikipedia';
 import { fetchWikidataBiography } from '@/lib/api/wikidata';
 import { sanitizeAndValidateWikipediaHtml } from '@/utils/sanitize';
+import { loadStaticBiography } from '@/lib/data/static-biographies';
 
 interface BiographyCardProps {
   representative: EnhancedRepresentative;
@@ -147,17 +148,45 @@ function calculateYearsInOffice(terms?: Term[]): number {
 
 /**
  * Production-hardened SWR fetcher with graceful degradation and persistent caching
+ * HYBRID APPROACH: Check static data first, fall back to API if not found
  */
 const biographyFetcher = async (
   bioguideId: string,
   representativeName: string
 ): Promise<CombinedBiography> => {
-  // Check persistent cache first
+  // 1. Check persistent localStorage cache first
   const cached = getCachedData(bioguideId);
   if (cached) {
     return cached;
   }
 
+  // 2. Check static pre-generated data (99% of cases - NO API CALLS!)
+  const staticData = await loadStaticBiography(bioguideId);
+  if (staticData) {
+    // Convert static data to CombinedBiography format
+    const combined: CombinedBiography = {
+      wikipediaSummary: staticData.wikipediaSummary || undefined,
+      wikipediaHtmlSummary: staticData.wikipediaHtmlSummary || undefined,
+      wikipediaImageUrl: staticData.wikipediaImageUrl || undefined,
+      wikipediaPageUrl: staticData.wikipediaPageUrl || undefined,
+      birthPlace: staticData.birthPlace || undefined,
+      education: staticData.education || undefined,
+      occupations: staticData.occupations || undefined,
+      spouse: staticData.spouse || undefined,
+      children: staticData.children || undefined,
+      awards: staticData.awards || undefined,
+      wikidataDescription: staticData.wikidataDescription || undefined,
+      lastUpdated: staticData.lastUpdated,
+      wikipediaSuccess: staticData.wikipediaSuccess,
+      wikidataSuccess: staticData.wikidataSuccess,
+    };
+
+    // Cache it in localStorage for next time
+    setCachedData(bioguideId, combined);
+    return combined;
+  }
+
+  // 3. Fall back to API for new representatives not in static data
   // Use Promise.allSettled to handle partial failures gracefully
   const [wikipediaResult, wikidataResult] = await Promise.allSettled([
     fetchBiography(bioguideId, representativeName),

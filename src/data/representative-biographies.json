@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "generatedAt": "2025-11-13T20:38:09.919Z",
+    "totalRepresentatives": 3,
+    "successfulFetches": 3,
+    "failedFetches": 0,
+    "wikipediaSuccessRate": "100%",
+    "wikidataSuccessRate": "100%"
+  },
+  "biographies": {
+    "S000033": {
+      "bioguideId": "S000033",
+      "wikipediaPageName": "Bernie_Sanders",
+      "wikipediaSummary": "Bernard  Sanders (born September 8, 1941) is an American politician and activist serving as the senior United States senator from Vermont, a seat he has held since 2007. He is the longest-serving independent in U.S. congressional history, but maintains a close relationship with the Democratic Party, having caucused with House and Senate Democrats for most of his congressional career and sought the party's presidential nomination in 2016 and 2020. Ideologically a democratic socialist, Sanders is regarded as one of the main leaders of the modern American progressive movement.\nBorn into a working-class Jewish family and raised in New York, Sanders attended Brooklyn College before graduating from the University of Chicago in 1964. While a student, he was a protest organizer for the Congress of Racial Equality (CORE) and the Student Nonviolent Coordinating Committee (SNCC) during the civil rights movement. After settling in Vermont in 1968, he ran unsuccessful third-party political campaigns in the 1970s. He was elected mayor of Burlington in 1981 as an independent and was reelected three times.\nSanders was elected to the U.S. House of Representatives in 1990, representing Vermont's at-large congressional district. In 1991, he and five other House members co-founded the Congressional Progressive Caucus. Sanders was a U.S. representative for 16 years before being elected to the U.S. Senate in 2006, becoming the first non-Republican elected to Vermont's Class 1 seat since Solomon Foot, a Whig, in 1850. Sanders was reelected in 2012, 2018, and 2024. He chaired the Senate Veterans' Affairs Committee from 2013 to 2015, the Senate Budget Committee from 2021 to 2023, and the Senate Health, Education, Labor and Pensions Committee from 2023 to 2025. He is the senior senator and dean of the Vermont congressional delegation.\nSanders was a candidate for the Democratic presidential nomination in 2016 and 2020, finishing second both times. His 2016 campaign generated significant grassroots enthusiasm and funding from small-dollar donors, helping him win 23 primaries and caucuses. In 2020, his strong showing in early primaries and caucuses made him the front-runner in a large field of Democratic candidates. He became a close ally of Joe Biden after the 2020 primaries. Since Donald Trump's reelection as president in 2024, Sanders has vocally opposed Trump's administration and perceived corruption as what he calls a right-wing oligarchy, rallying an organization tour against Trump and his allies, especially Elon Musk, in an effort to reshape the Democratic Party.\nSanders is credited with influencing a leftward shift in the Democratic Party after his 2016 campaign. An advocate of progressive policies, he opposes neoliberalism and supports workers' self-management. He supports universal and single-payer healthcare, paid parental leave, tuition-free tertiary education, a Green New Deal, and worker control of production through cooperatives, unions, and democratic public enterprises. On foreign policy, he supports reducing military spending, more diplomacy and international cooperation, and greater emphasis on labor rights and environmental concerns in negotiating international trade agreements. Sanders supports workplace democracy and has praised elements of the Nordic model.",
+      "wikipediaHtmlSummary": "Bernard  Sanders (born September 8, 1941) is an American politician and activist serving as the senior United States senator from Vermont, a seat he has held since 2007. He is the longest-serving independent in U.S. congressional history, but maintains a close relationship with the Democratic Party, having caucused with House and Senate Democrats for most of his congressional career and sought the party's presidential nomination in 2016 and 2020. Ideologically a democratic socialist, Sanders is regarded as one of the main leaders of the modern American progressive movement.\nBorn into a working-class Jewish family and raised in New York, Sanders attended Brooklyn College before graduating from the University of Chicago in 1964. While a student, he was a protest organizer for the Congress of Racial Equality (CORE) and the Student Nonviolent Coordinating Committee (SNCC) during the civil rights movement. After settling in Vermont in 1968, he ran unsuccessful third-party political campaigns in the 1970s. He was elected mayor of Burlington in 1981 as an independent and was reelected three times.\nSanders was elected to the U.S. House of Representatives in 1990, representing Vermont's at-large congressional district. In 1991, he and five other House members co-founded the Congressional Progressive Caucus. Sanders was a U.S. representative for 16 years before being elected to the U.S. Senate in 2006, becoming the first non-Republican elected to Vermont's Class 1 seat since Solomon Foot, a Whig, in 1850. Sanders was reelected in 2012, 2018, and 2024. He chaired the Senate Veterans' Affairs Committee from 2013 to 2015, the Senate Budget Committee from 2021 to 2023, and the Senate Health, Education, Labor and Pensions Committee from 2023 to 2025. He is the senior senator and dean of the Vermont congressional delegation.\nSanders was a candidate for the Democratic presidential nomination in 2016 and 2020, finishing second both times. His 2016 campaign generated significant grassroots enthusiasm and funding from small-dollar donors, helping him win 23 primaries and caucuses. In 2020, his strong showing in early primaries and caucuses made him the front-runner in a large field of Democratic candidates. He became a close ally of Joe Biden after the 2020 primaries. Since Donald Trump's reelection as president in 2024, Sanders has vocally opposed Trump's administration and perceived corruption as what he calls a right-wing oligarchy, rallying an organization tour against Trump and his allies, especially Elon Musk, in an effort to reshape the Democratic Party.\nSanders is credited with influencing a leftward shift in the Democratic Party after his 2016 campaign. An advocate of progressive policies, he opposes neoliberalism and supports workers' self-management. He supports universal and single-payer healthcare, paid parental leave, tuition-free tertiary education, a Green New Deal, and worker control of production through cooperatives, unions, and democratic public enterprises. On foreign policy, he supports reducing military spending, more diplomacy and international cooperation, and greater emphasis on labor rights and environmental concerns in negotiating international trade agreements. Sanders supports workplace democracy and has praised elements of the Nordic model.",
+      "wikipediaImageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Bernie_Sanders_in_March_2020.jpg/330px-Bernie_Sanders_in_March_2020.jpg",
+      "wikipediaPageUrl": "https://en.wikipedia.org/wiki/Bernie_Sanders",
+      "birthPlace": "Brooklyn",
+      "education": [
+        "James Madison High School",
+        "Brooklyn College",
+        "University of Chicago"
+      ],
+      "occupations": ["politician"],
+      "spouse": "Jane O'Meara Sanders",
+      "children": 4,
+      "awards": [
+        "Congressional Activism Award",
+        "Col. Arthur T. Marix Congressional Leadership Award"
+      ],
+      "wikidataDescription": "United States Senator from Vermont since 2007",
+      "lastUpdated": "2025-11-13T20:38:05.494Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": true
+    },
+    "C000127": {
+      "bioguideId": "C000127",
+      "wikipediaPageName": "Maria_Cantwell",
+      "wikipediaSummary": "Maria Ellen Cantwell (; born October 13, 1958) is an American politician serving as the junior U.S. senator from Washington since 2001. A member of the Democratic Party, she previously served in the Washington House of Representatives from 1987 to 1993 and in the United States House of Representatives from 1993 to 1995.\nBorn and raised in Indianapolis, Indiana, Cantwell graduated from Miami University before moving to Seattle to work on Alan Cranston's 1984 presidential campaign. In 1986, she was elected to the state house of representatives, where she served until her election to Congress in 1992. Cantwell served one term in Congress before losing her seat to Republican Rick White in the 1994 election. She then briefly worked in the private sector as vice president of marketing for RealNetworks.\nDespite having vowed to remain out of politics, Cantwell ran for the United States Senate in 2000. She defeated Republican incumbent Slade Gorton in one of the closest elections in the state's history. Cantwell was reelected in 2006, 2012, 2018, and 2024. After Jeff Sessions resigned from the Senate in February 2017 to become United States Attorney General, Cantwell became the most senior junior senator. She is the second female senator from Washington, after Patty Murray.",
+      "wikipediaHtmlSummary": "Maria Ellen Cantwell (; born October 13, 1958) is an American politician serving as the junior U.S. senator from Washington since 2001. A member of the Democratic Party, she previously served in the Washington House of Representatives from 1987 to 1993 and in the United States House of Representatives from 1993 to 1995.\nBorn and raised in Indianapolis, Indiana, Cantwell graduated from Miami University before moving to Seattle to work on Alan Cranston's 1984 presidential campaign. In 1986, she was elected to the state house of representatives, where she served until her election to Congress in 1992. Cantwell served one term in Congress before losing her seat to Republican Rick White in the 1994 election. She then briefly worked in the private sector as vice president of marketing for RealNetworks.\nDespite having vowed to remain out of politics, Cantwell ran for the United States Senate in 2000. She defeated Republican incumbent Slade Gorton in one of the closest elections in the state's history. Cantwell was reelected in 2006, 2012, 2018, and 2024. After Jeff Sessions resigned from the Senate in February 2017 to become United States Attorney General, Cantwell became the most senior junior senator. She is the second female senator from Washington, after Patty Murray.",
+      "wikipediaImageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Maria_Cantwell_%28cropped%29.jpg/330px-Maria_Cantwell_%28cropped%29.jpg",
+      "wikipediaPageUrl": "https://en.wikipedia.org/wiki/Maria_Cantwell",
+      "birthPlace": "Indianapolis",
+      "education": ["Emmerich Manual High School", "Miami University"],
+      "occupations": ["public relations executive", "politician"],
+      "spouse": null,
+      "children": null,
+      "awards": null,
+      "wikidataDescription": "American politician and businesswoman (born 1958)",
+      "lastUpdated": "2025-11-13T20:38:07.717Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": true
+    },
+    "K000367": {
+      "bioguideId": "K000367",
+      "wikipediaPageName": "Amy_Klobuchar",
+      "wikipediaSummary": "Amy Jean Klobuchar ( KLOH-bə-shar; born May 25, 1960) is an American politician and lawyer serving as the senior United States senator from Minnesota, a seat she has held since 2007. A member of the Minnesota Democratic–Farmer–Labor Party (DFL), Minnesota's affiliate of the Democratic Party, she previously served as the county attorney of Hennepin County, Minnesota.\nBorn in Plymouth, Minnesota, Klobuchar graduated from Yale University and the University of Chicago Law School. She was a partner at two Minneapolis law firms before being elected county attorney of Hennepin County in 1998, making her responsible for all criminal prosecution in Minnesota's most populous county. Klobuchar was first elected to the Senate in 2006, succeeding Mark Dayton to become Minnesota's first elected female United States senator. She became Minnesota's senior senator in 2009, when Norm Coleman left the Senate following his defeat. She was reelected by a landslide in 2012, winning 85 of the state's 87 counties, before being reelected again in 2018. Klobuchar's political positions align with modern liberalism. She has focused on healthcare reform, consumer protection, abortion rights, agriculture, and climate change.\nOn February 10, 2019, Klobuchar announced her candidacy for the Democratic nomination for president of the United States in the 2020 election; on March 2, 2020, she suspended her campaign and endorsed Joe Biden. In 2021, she became the chair of the Senate Rules Committee. She was reelected to a fourth Senate term in 2024, defeating Republican nominee Royce White.",
+      "wikipediaHtmlSummary": "Amy Jean Klobuchar ( KLOH-bə-shar; born May 25, 1960) is an American politician and lawyer serving as the senior United States senator from Minnesota, a seat she has held since 2007. A member of the Minnesota Democratic–Farmer–Labor Party (DFL), Minnesota's affiliate of the Democratic Party, she previously served as the county attorney of Hennepin County, Minnesota.\nBorn in Plymouth, Minnesota, Klobuchar graduated from Yale University and the University of Chicago Law School. She was a partner at two Minneapolis law firms before being elected county attorney of Hennepin County in 1998, making her responsible for all criminal prosecution in Minnesota's most populous county. Klobuchar was first elected to the Senate in 2006, succeeding Mark Dayton to become Minnesota's first elected female United States senator. She became Minnesota's senior senator in 2009, when Norm Coleman left the Senate following his defeat. She was reelected by a landslide in 2012, winning 85 of the state's 87 counties, before being reelected again in 2018. Klobuchar's political positions align with modern liberalism. She has focused on healthcare reform, consumer protection, abortion rights, agriculture, and climate change.\nOn February 10, 2019, Klobuchar announced her candidacy for the Democratic nomination for president of the United States in the 2020 election; on March 2, 2020, she suspended her campaign and endorsed Joe Biden. In 2021, she became the chair of the Senate Rules Committee. She was reelected to a fourth Senate term in 2024, defeating Republican nominee Royce White.",
+      "wikipediaImageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Amy_Klobuchar%2C_official_portrait%2C_113th_Congress.jpg/330px-Amy_Klobuchar%2C_official_portrait%2C_113th_Congress.jpg",
+      "wikipediaPageUrl": "https://en.wikipedia.org/wiki/Amy_Klobuchar",
+      "birthPlace": "Plymouth",
+      "education": [
+        "Wayzata High School",
+        "University of Chicago Law School",
+        "Jonathan Edwards College",
+        "Yale University"
+      ],
+      "occupations": [
+        "lawyer",
+        "autobiographer",
+        "jurist",
+        "politician",
+        "writer"
+      ],
+      "spouse": "John Bessler",
+      "children": 1,
+      "awards": ["Alfred E. Kahn Award", "Order of Merit, 1st class"],
+      "wikidataDescription": "American lawyer and politician (born 1960)",
+      "lastUpdated": "2025-11-13T20:38:09.919Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": true
+    }
+  }
+}
