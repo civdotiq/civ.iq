@@ -16,6 +16,9 @@ import logger from '@/lib/logging/simple-logger';
 import type { EnhancedStateLegislator, StateJurisdiction } from '@/types/state-legislature';
 import { getAllCongressionalDistrictsForZip } from '@/lib/data/zip-district-mapping';
 
+// ISR: Revalidate every 1 hour
+export const revalidate = 3600;
+
 export const dynamic = 'force-dynamic';
 
 // API Response shape (for backwards compatibility with existing frontend)

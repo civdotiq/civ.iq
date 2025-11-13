@@ -8,6 +8,9 @@ import { getEnhancedRepresentative } from '@/features/representatives/services/c
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
+// ISR: Revalidate every 1 day
+export const revalidate = 86400;
+
 // Include options for sub-resource data
 interface IncludeOptions {
   votes: boolean;

@@ -11,6 +11,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logging/logger-edge';
 
+// ISR: Revalidate every 1 hour
+export const revalidate = 3600;
+
 // Cache for storing fetched XML data
 const voteCache = new Map<string, { data: string; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes

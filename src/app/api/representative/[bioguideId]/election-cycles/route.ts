@@ -8,6 +8,9 @@ import { fecApiService } from '@/lib/fec/fec-api-service';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 
+// ISR: Revalidate every 1 hour
+export const revalidate = 3600;
+
 /**
  * Select the appropriate FEC ID based on the representative's current office
  * Senate candidates have FEC IDs starting with 'S', House candidates start with 'H'

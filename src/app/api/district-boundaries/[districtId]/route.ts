@@ -15,6 +15,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+// ISR: Revalidate every 1 week
+export const revalidate = 604800;
+
 export const dynamic = 'force-dynamic';
 
 interface DistrictManifest {

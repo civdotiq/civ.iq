@@ -17,6 +17,9 @@ import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { cachedFetch, govCache as _govCache } from '@/services/cache';
 
+// ISR: Revalidate every 1 hour
+export const revalidate = 3600;
+
 // Vercel serverless function configuration
 export const maxDuration = 30; // 30 seconds for vote enrichment
 export const dynamic = 'force-dynamic';

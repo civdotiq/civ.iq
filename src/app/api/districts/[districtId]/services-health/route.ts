@@ -7,6 +7,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import type { ServicesHealthProfile } from '@/types/district-enhancements';
 
+// ISR: Revalidate every 1 day
+export const revalidate = 86400;
+
 // State-to-FIPS mapping for various APIs
 const STATE_FIPS: Record<string, string> = {
   AL: '01',

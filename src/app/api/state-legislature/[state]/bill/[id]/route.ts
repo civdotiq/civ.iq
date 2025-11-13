@@ -12,6 +12,9 @@ import { decodeBase64Url } from '@/lib/url-encoding';
 import logger from '@/lib/logging/simple-logger';
 import type { StateBillApiResponse } from '@/types/state-legislature';
 
+// ISR: Revalidate every 1 hour
+export const revalidate = 3600;
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ state: string; id: string }> }

@@ -8,6 +8,9 @@ import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { votingDataService } from '@/features/representatives/services/voting-data-service';
 
+// ISR: Revalidate every 1 hour
+export const revalidate = 3600;
+
 export const dynamic = 'force-dynamic';
 
 interface ComparisonData {

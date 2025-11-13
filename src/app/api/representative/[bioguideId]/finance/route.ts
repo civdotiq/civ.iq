@@ -27,6 +27,9 @@ import {
 } from '@/lib/fec/industry-taxonomy';
 import { categorizeIntoBaskets, getInterestGroupMetrics } from '@/lib/fec/interest-groups';
 
+// ISR: Revalidate every 1 hour
+export const revalidate = 3600;
+
 /**
  * Analyze industry breakdown from contribution employer data
  * Excludes candidate self-contributions to prevent inflated industry numbers

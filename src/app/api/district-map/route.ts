@@ -7,6 +7,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logging/logger-edge';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry-edge';
 
+// ISR: Revalidate every 1 week
+export const revalidate = 604800;
+
 export const dynamic = 'force-dynamic';
 
 interface DistrictBoundary {

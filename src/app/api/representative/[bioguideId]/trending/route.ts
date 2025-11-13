@@ -9,6 +9,9 @@ import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 import type { GDELTTrendingTopic } from '@/types/gdelt';
 
+// ISR: Revalidate every 5 minutes
+export const revalidate = 300;
+
 export const dynamic = 'force-dynamic';
 
 interface TrendingResponse {

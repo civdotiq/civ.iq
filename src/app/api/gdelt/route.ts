@@ -14,6 +14,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GDELTResponse, GDELTErrorType } from '@/types/gdelt';
 import { GDELTService } from '@/lib/services/gdelt';
 
+// ISR: Revalidate every 5 minutes
+export const revalidate = 300;
+
 /**
  * GET handler for GDELT API proxy
  */

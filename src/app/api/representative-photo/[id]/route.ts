@@ -5,6 +5,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import fs from 'fs/promises';
+import path from 'path';
+
+// ISR: Revalidate every 1 week
+export const revalidate = 604800;
 
 // Get secure CORS origins
 function getSecureCorsOrigins(): string {
@@ -50,7 +55,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   const bioguideId = id.toUpperCase();
 
-  // Check cache first
+  // Check in-memory cache first
   const cached = photoCache.get(bioguideId);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return new NextResponse(cached.data, {
@@ -62,7 +67,38 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
   }
 
-  // Try each photo source in order
+  // Try loading from local file system (WebP first, then JPG)
+  const localPaths = [
+    path.join(process.cwd(), 'public', 'photos', 'webp', `${bioguideId}.webp`),
+    path.join(process.cwd(), 'public', 'photos', `${bioguideId}.jpg`),
+  ];
+
+  for (const localPath of localPaths) {
+    try {
+      const buffer = await fs.readFile(localPath);
+      const contentType = localPath.endsWith('.webp') ? 'image/webp' : 'image/jpeg';
+
+      // Cache the successful response
+      photoCache.set(bioguideId, {
+        data: buffer,
+        contentType,
+        timestamp: Date.now(),
+      });
+
+      return new NextResponse(buffer, {
+        headers: {
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+          'Access-Control-Allow-Origin': getSecureCorsOrigins(),
+        },
+      });
+    } catch {
+      // File doesn't exist, try next path or fallback to remote
+      continue;
+    }
+  }
+
+  // Fallback to remote sources if not found locally
   for (const source of PHOTO_SOURCES) {
     try {
       const url = source.urlPattern(bioguideId);
@@ -106,8 +142,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 // Clean up old cache entries periodically
-if (typeof global !== 'undefined' && !(global as any)._photoCleanupInterval) {
-  (global as any)._photoCleanupInterval = setInterval(
+interface GlobalWithCleanupInterval {
+  _photoCleanupInterval?: NodeJS.Timeout;
+}
+
+const globalWithInterval = global as unknown as GlobalWithCleanupInterval;
+
+if (typeof global !== 'undefined' && !globalWithInterval._photoCleanupInterval) {
+  globalWithInterval._photoCleanupInterval = setInterval(
     () => {
       const now = Date.now();
       for (const [key, value] of photoCache.entries()) {

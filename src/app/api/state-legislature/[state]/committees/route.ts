@@ -7,6 +7,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { openStatesAPI } from '@/lib/openstates-api';
 import type { StateCommitteesApiResponse, StateParty } from '@/types/state-legislature';
 
+// ISR: Revalidate every 1 day
+export const revalidate = 86400;
+
 /**
  * GET /api/state-legislature/[state]/committees
  *

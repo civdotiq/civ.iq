@@ -15,6 +15,8 @@ import {
   getAllEnhancedRepresentatives,
 } from '@/features/representatives/services/congress.service';
 
+// ISR: Revalidate every 1 day
+export const revalidate = 86400;
 export const dynamic = 'force-dynamic';
 
 // Helper function to get committee metadata

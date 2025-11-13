@@ -19,6 +19,9 @@ import { GDELTCongressQueue, BatchProcessingOptions } from '@/lib/gdelt/GDELTCon
 import { BaseRepresentative } from '@/types/representative';
 import { GDELTArticle } from '@/types/gdelt';
 
+// ISR: Revalidate every 5 minutes
+export const revalidate = 300;
+
 interface BatchRequest {
   bioguideIds: string[];
   options?: BatchProcessingOptions;

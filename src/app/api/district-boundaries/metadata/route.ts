@@ -8,6 +8,9 @@ import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import type { DistrictBoundary, StateMetadata } from '@/lib/helpers/district-boundary-utils';
 
+// ISR: Revalidate every 1 week
+export const revalidate = 604800;
+
 export const dynamic = 'force-dynamic';
 
 interface DistrictMetadataResponse {

@@ -9,6 +9,9 @@ import { getRedisCache, type RedisCache } from '@/lib/cache/redis-client';
 import logger from '@/lib/logging/simple-logger';
 import rssFeedMap from '@/config/rss-feed-map.json';
 
+// ISR: Revalidate every 5 minutes
+export const revalidate = 300;
+
 export const dynamic = 'force-dynamic';
 
 interface SimpleNewsArticle {

@@ -7,7 +7,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { wikipediaService, type CommitteeBiographicalData } from '@/lib/services/wikipedia.service';
 import logger from '@/lib/logging/simple-logger';
+import {
+  loadStaticCommitteeBiography,
+  convertToCommitteeBiographicalData,
+} from '@/lib/data/static-committee-biographies';
 
+// ISR: Revalidate every 1 week
+export const revalidate = 604800;
 export const dynamic = 'force-dynamic';
 
 interface WikipediaAPIResponse {
@@ -123,12 +129,22 @@ export async function GET(
 
     logger.info(`Fetching Wikipedia data for committee: ${committeeId} (${committeeInfo.name})`);
 
-    // Fetch biographical data using the Wikipedia service
-    const biographicalData = await wikipediaService.getCommitteeBiographicalData(
-      committeeInfo.name,
-      committeeInfo.chamber,
-      committeeId
-    );
+    // Try loading from static cache first (instant, pre-generated data)
+    const staticData = await loadStaticCommitteeBiography(committeeId);
+    let biographicalData: CommitteeBiographicalData | null = null;
+
+    if (staticData) {
+      logger.info(`Using cached biography data for ${committeeId}`);
+      biographicalData = convertToCommitteeBiographicalData(staticData);
+    } else {
+      // Fallback to live Wikipedia API if not in cache
+      logger.info(`Fetching live Wikipedia data for ${committeeId}`);
+      biographicalData = await wikipediaService.getCommitteeBiographicalData(
+        committeeInfo.name,
+        committeeInfo.chamber,
+        committeeId
+      );
+    }
 
     const executionTime = Date.now() - startTime;
     logger.info(`Wikipedia API completed for ${committeeId} in ${executionTime}ms`);

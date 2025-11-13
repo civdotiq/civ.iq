@@ -14,6 +14,9 @@ import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { govCache } from '@/services/cache';
 
+// ISR: Revalidate every 1 hour
+export const revalidate = 3600;
+
 interface ExpenditureAnalysisResponse {
   totalDisbursements: number;
   expenditureCategories: Array<{

@@ -18,6 +18,8 @@ import {
   fetchGDELTNewsWithDeduplication,
 } from '@/features/news/services/gdelt-api';
 
+// ISR: Revalidate every 5 minutes
+export const revalidate = 300;
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Batch news fetching can be slow with multiple GDELT calls
 

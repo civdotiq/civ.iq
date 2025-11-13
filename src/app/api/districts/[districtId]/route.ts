@@ -11,6 +11,9 @@ import { districtBoundaryService } from '@/lib/helpers/district-boundary-utils';
 import { getStateFromWikidata } from '@/lib/api/wikidata';
 import districtGeography from '@/data/district-geography.json';
 
+// ISR: Revalidate every 1 day
+export const revalidate = 86400;
+
 // State names mapping for Census API
 const STATE_NAMES: Record<string, string> = {
   AL: 'Alabama',

@@ -1,0 +1,695 @@
+{
+  "metadata": {
+    "generatedAt": "2025-11-13T21:53:44.357Z",
+    "totalCommittees": 34,
+    "successfulFetches": 34,
+    "failedFetches": 0,
+    "wikipediaSuccessRate": "100%",
+    "wikidataSuccessRate": "0%"
+  },
+  "biographies": {
+    "SSJU": {
+      "committeeId": "SSJU",
+      "committeeName": "Committee on the Judiciary",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on the Judiciary",
+        "extract": "The United States Senate Committee on the Judiciary, informally known as the Senate Judiciary Committee, is a standing committee of 22 U.S. senators whose role is to oversee the Department of Justice (DOJ), consider executive and judicial nominations, and review pending legislation.\nIn addition, the Standing Rules of the Senate confer jurisdiction to the Senate Judiciary Committee in certain areas, such as considering proposed constitutional amendments and legislation related to federal criminal law, human rights law, immigration, intellectual property, antitrust law, and internet privacy.",
+        "extract_html": "The United States Senate Committee on the Judiciary, informally known as the Senate Judiciary Committee, is a standing committee of 22 U.S. senators whose role is to oversee the Department of Justice (DOJ), consider executive and judicial nominations, and review pending legislation.\nIn addition, the Standing Rules of the Senate confer jurisdiction to the Senate Judiciary Committee in certain areas, such as considering proposed constitutional amendments and legislation related to federal criminal law, human rights law, immigration, intellectual property, antitrust law, and internet privacy.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_the_Judiciary"
+      },
+      "lastUpdated": "2025-11-13T21:52:13.318Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSAP": {
+      "committeeId": "SSAP",
+      "committeeName": "Committee on Appropriations",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Appropriations",
+        "extract": "The United States Senate Committee on Appropriations, informally known as the Senate Appropriations Committee, is a standing committee of the United States Senate. It has jurisdiction over all discretionary spending legislation in the Senate.\n\nThe Senate Appropriations Committee is the largest committee in the U.S. Senate, with 30 members in the 117th Congress. Its role is defined by the U.S. Constitution, which requires \"appropriations made by law\" prior to the expenditure of any money from the Treasury, and the committee is therefore one of the most powerful committees in the Senate.[1] The committee was first organized on March 6, 1867, when power over appropriations was taken out of the hands of the Finance Committee.[2]\nThe chair of the Appropriations Committee has enormous power to bring home special projects (sometimes referred to as \"pork barrel spending\") for their state as well as having the final say on other senators' appropriation requests.[3] For example, in fiscal year 2005, per capita federal spending in Alaska, the home state of Chair Ted Stevens, was $12,000, double the national average. Alaska has 11,772 special earmarked projects for a combined cost of $15,780,623,000. This represents about four percent of the overall spending in the $388 billion Consolidated Appropriations Act of 2005 passed by Congress.[4]\nFrom 2001 to 2021, every Senate Majority Leader was a previous or concurrently serving member of the Appropriations Committee: Tom Daschle (committee member, 1991–1999; majority leader, 2001–2003), Bill Frist (committee member, 1995–2002; majority leader, 2003–2007), Harry Reid (committee member, 1989–2006; majority leader, 2007–2015), and Mitch McConnell (current committee member; majority leader, 2015–2021).\n\n",
+        "extract_html": "The United States Senate Committee on Appropriations, informally known as the Senate Appropriations Committee, is a standing committee of the United States Senate. It has jurisdiction over all discretionary spending legislation in the Senate.\n\nThe Senate Appropriations Committee is the largest committee in the U.S. Senate, with 30 members in the 117th Congress. Its role is defined by the U.S. Constitution, which requires \"appropriations made by law\" prior to the expenditure of any money from the Treasury, and the committee is therefore one of the most powerful committees in the Senate.[1] The committee was first organized on March 6, 1867, when power over appropriations was taken out of the hands of the Finance Committee.[2]\nThe chair of the Appropriations Committee has enormous power to bring home special projects (sometimes referred to as \"pork barrel spending\") for their state as well as having the final say on other senators' appropriation requests.[3] For example, in fiscal year 2005, per capita federal spending in Alaska, the home state of Chair Ted Stevens, was $12,000, double the national average. Alaska has 11,772 special earmarked projects for a combined cost of $15,780,623,000. This represents about four percent of the overall spending in the $388 billion Consolidated Appropriations Act of 2005 passed by Congress.[4]\nFrom 2001 to 2021, every Senate Majority Leader was a previous or concurrently serving member of the Appropriations Committee: Tom Daschle (committee member, 1991–1999; majority leader, 2001–2003), Bill Frist (committee member, 1995–2002; majority leader, 2003–2007), Harry Reid (committee member, 1989–2006; majority leader, 2007–2015), and Mitch McConnell (current committee member; majority leader, 2015–2021).\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Appropriations"
+      },
+      "jurisdiction": "all discretionary spending legislation in the Senate",
+      "lastUpdated": "2025-11-13T21:52:16.188Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSAS": {
+      "committeeId": "SSAS",
+      "committeeName": "Committee on Armed Services",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Armed Services Subcommittee on Airland",
+        "extract": "The Senate Armed Services Subcommittee on Airland is one of seven subcommittees within the Senate Armed Services Committee.\n\n",
+        "extract_html": "The Senate Armed Services Subcommittee on Airland is one of seven subcommittees within the Senate Armed Services Committee.\n\n",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Armed_Services_Subcommittee_on_Airland"
+      },
+      "lastUpdated": "2025-11-13T21:52:18.825Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSBK": {
+      "committeeId": "SSBK",
+      "committeeName": "Committee on Banking, Housing, and Urban Affairs",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Banking, Housing, and Urban Affairs",
+        "extract": "The United States Senate Committee on Banking, Housing, and Urban Affairs (formerly the Committee on Banking and Currency), also known as the Senate Banking Committee, has jurisdiction over matters related to banks and banking, price controls, deposit insurance, export promotion and controls, federal monetary policy, financial aid to commerce and industry, issuance of redemption of notes, currency and coinage, public and private housing, urban development, mass transit, and government contracts.\nThe current chair of the committee is Republican Tim Scott of South Carolina, and the ranking member is Democrat Elizabeth Warren of Massachusetts.",
+        "extract_html": "The United States Senate Committee on Banking, Housing, and Urban Affairs (formerly the Committee on Banking and Currency), also known as the Senate Banking Committee, has jurisdiction over matters related to banks and banking, price controls, deposit insurance, export promotion and controls, federal monetary policy, financial aid to commerce and industry, issuance of redemption of notes, currency and coinage, public and private housing, urban development, mass transit, and government contracts.\nThe current chair of the committee is Republican Tim Scott of South Carolina, and the ranking member is Democrat Elizabeth Warren of Massachusetts.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Banking,_Housing,_and_Urban_Affairs"
+      },
+      "jurisdiction": "matters related to banks and banking, price controls, deposit insurance, export promotion and controls, federal monetary policy, financial aid to commerce and industry, issuance of redemption of notes, currency and coinage, public and private housing, urban development, mass transit, and government contracts",
+      "lastUpdated": "2025-11-13T21:52:21.515Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSBU": {
+      "committeeId": "SSBU",
+      "committeeName": "Committee on the Budget",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on the Budget",
+        "extract": "The United States Senate Committee on the Budget was established by the Congressional Budget and Impoundment Control Act of 1974. It is responsible for drafting Congress's annual budget plan and monitoring action on the budget for the Federal Government. The committee has jurisdiction over the Congressional Budget Office. The committee briefly operated as a special committee from 1919 to 1920 during the 66th Congress, before being made a standing committee in 1974.\nThe current Chair is South Carolina Senator Lindsey Graham, and the Ranking Member is Oregon Senator Jeff Merkley.",
+        "extract_html": "The United States Senate Committee on the Budget was established by the Congressional Budget and Impoundment Control Act of 1974. It is responsible for drafting Congress's annual budget plan and monitoring action on the budget for the Federal Government. The committee has jurisdiction over the Congressional Budget Office. The committee briefly operated as a special committee from 1919 to 1920 during the 66th Congress, before being made a standing committee in 1974.\nThe current Chair is South Carolina Senator Lindsey Graham, and the Ranking Member is Oregon Senator Jeff Merkley.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_the_Budget"
+      },
+      "jurisdiction": "the Congressional Budget Office",
+      "lastUpdated": "2025-11-13T21:52:24.125Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSCM": {
+      "committeeId": "SSCM",
+      "committeeName": "Committee on Commerce, Science, and Transportation",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Commerce, Science, and Transportation",
+        "extract": "The United States Senate Committee on Commerce, Science, and Transportation is a standing committee of the United States Senate. Besides having broad jurisdiction over all matters concerning interstate commerce, science and technology policy, and transportation, the Senate Commerce Committee is one of the largest of the Senate's standing committees, with 28 members in the 117th Congress. The Commerce Committee has six subcommittees. It is chaired by Sen. Ted Cruz (R-TX) with Sen. Maria Cantwell (D-WA) as ranking member. The majority office is housed in the Dirksen Senate Office Building, and the minority office is located in the Hart Senate Office Building.\n\n",
+        "extract_html": "The United States Senate Committee on Commerce, Science, and Transportation is a standing committee of the United States Senate. Besides having broad jurisdiction over all matters concerning interstate commerce, science and technology policy, and transportation, the Senate Commerce Committee is one of the largest of the Senate's standing committees, with 28 members in the 117th Congress. The Commerce Committee has six subcommittees. It is chaired by Sen. Ted Cruz (R-TX) with Sen. Maria Cantwell (D-WA) as ranking member. The majority office is housed in the Dirksen Senate Office Building, and the minority office is located in the Hart Senate Office Building.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Commerce,_Science,_and_Transportation"
+      },
+      "lastUpdated": "2025-11-13T21:52:27.033Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSEG": {
+      "committeeId": "SSEG",
+      "committeeName": "Committee on Energy and Natural Resources",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Energy and Natural Resources",
+        "extract": "The United States Senate Committee on Energy and Natural Resources is a standing committee of the United States Senate. It has jurisdiction over matters related to energy and mineral resources, including nuclear development; irrigation and reclamation, territorial possessions of the United States, trust lands appertaining to America's indigenous peoples, and the conservation, use, and disposition of federal lands. Its roots go back to the Committee on Interior and Insulars Affairs. In 1977, it became the Committee on Energy and Natural Resources, and most matters regarding Native Americans, Alaska Natives, and Native Hawaiians were removed from its jurisdiction and transferred to the Committee on Indian Affairs.",
+        "extract_html": "The United States Senate Committee on Energy and Natural Resources is a standing committee of the United States Senate. It has jurisdiction over matters related to energy and mineral resources, including nuclear development; irrigation and reclamation, territorial possessions of the United States, trust lands appertaining to America's indigenous peoples, and the conservation, use, and disposition of federal lands. Its roots go back to the Committee on Interior and Insulars Affairs. In 1977, it became the Committee on Energy and Natural Resources, and most matters regarding Native Americans, Alaska Natives, and Native Hawaiians were removed from its jurisdiction and transferred to the Committee on Indian Affairs.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Energy_and_Natural_Resources"
+      },
+      "jurisdiction": "matters related to energy and mineral resources, including nuclear development; irrigation and reclamation, territorial possessions of the United States, trust lands appertaining to America's indigenous peoples, and the conservation, use, and disposition of federal lands",
+      "lastUpdated": "2025-11-13T21:52:29.641Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSEV": {
+      "committeeId": "SSEV",
+      "committeeName": "Committee on Environment and Public Works",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Environment and Public Works",
+        "extract": "The United States Senate Committee on Environment and Public Works is responsible for legislation and oversight of the natural and built environment and for studying matters concerning environmental protection and resource conservation and utilitization.",
+        "extract_html": "The United States Senate Committee on Environment and Public Works is responsible for legislation and oversight of the natural and built environment and for studying matters concerning environmental protection and resource conservation and utilitization.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Environment_and_Public_Works"
+      },
+      "jurisdiction": "legislation and oversight of the natural and built environment and for studying matters concerning environmental protection and resource conservation and utilitization",
+      "lastUpdated": "2025-11-13T21:52:32.978Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSFI": {
+      "committeeId": "SSFI",
+      "committeeName": "Committee on Finance",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Finance",
+        "extract": "The United States Senate Committee on Finance (or, less formally, Senate Finance Committee) is a standing committee of the United States Senate. The committee concerns itself with matters relating to taxation and other revenue measures generally, and those relating to the insular possessions; bonded debt of the United States; customs, collection districts, and ports of entry and delivery; deposit of public moneys; general revenue sharing; health programs under the Social Security Act (notably Medicare and Medicaid) and health programs financed by a specific tax or trust fund; national social security; reciprocal trade agreements; tariff and import quotas, and related matters thereto; and the transportation of dutiable goods. It is considered to be one of the most powerful committees in Congress.\n\n",
+        "extract_html": "The United States Senate Committee on Finance (or, less formally, Senate Finance Committee) is a standing committee of the United States Senate. The committee concerns itself with matters relating to taxation and other revenue measures generally, and those relating to the insular possessions; bonded debt of the United States; customs, collection districts, and ports of entry and delivery; deposit of public moneys; general revenue sharing; health programs under the Social Security Act (notably Medicare and Medicaid) and health programs financed by a specific tax or trust fund; national social security; reciprocal trade agreements; tariff and import quotas, and related matters thereto; and the transportation of dutiable goods. It is considered to be one of the most powerful committees in Congress.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Finance"
+      },
+      "lastUpdated": "2025-11-13T21:52:35.743Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSFO": {
+      "committeeId": "SSFO",
+      "committeeName": "Committee on Foreign Relations",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Foreign Relations",
+        "extract": "The United States Senate Committee on Foreign Relations is a standing committee of the U.S. Senate charged with leading foreign-policy legislation and debate in the Senate. It is generally responsible for authorizing and overseeing foreign aid programs; arms sales and training for national allies; and holding confirmation hearings for high-level positions in the Department of State. Its sister committee in the House of Representatives is the Committee on Foreign Affairs.\nAlong with the Finance and Judiciary committees, the Foreign Relations Committee is among the oldest in the Senate, dating to the initial creation of committees in 1816. It has played a leading role in several important treaties and foreign policy initiatives throughout U.S. history, including the Alaska Purchase, the establishment of the United Nations, and the passage of the Marshall Plan. The committee has also produced eight U.S. presidents—Andrew Jackson, James Buchanan, Andrew Johnson, Benjamin Harrison, Warren Harding, John F. Kennedy, Barack Obama, and Joe Biden (Buchanan and Biden serving as chair)—and 19 secretaries of state. Notable members have included Arthur Vandenberg, Henry Cabot Lodge, and William Fulbright.\nThe Foreign Relations Committee is considered one of the most powerful and prestigious in the Senate, due to its long history, broad influence on U.S. foreign policy, jurisdiction over all diplomatic nominations, and its being the only Senate committee to deliberate and report treaties.\nFrom 2021 to 2023, the Foreign Relations Committee was chaired by Democratic senator Bob Menendez of New Jersey, until he stepped down as chair after facing federal corruption charges.",
+        "extract_html": "The United States Senate Committee on Foreign Relations is a standing committee of the U.S. Senate charged with leading foreign-policy legislation and debate in the Senate. It is generally responsible for authorizing and overseeing foreign aid programs; arms sales and training for national allies; and holding confirmation hearings for high-level positions in the Department of State. Its sister committee in the House of Representatives is the Committee on Foreign Affairs.\nAlong with the Finance and Judiciary committees, the Foreign Relations Committee is among the oldest in the Senate, dating to the initial creation of committees in 1816. It has played a leading role in several important treaties and foreign policy initiatives throughout U.S. history, including the Alaska Purchase, the establishment of the United Nations, and the passage of the Marshall Plan. The committee has also produced eight U.S. presidents—Andrew Jackson, James Buchanan, Andrew Johnson, Benjamin Harrison, Warren Harding, John F. Kennedy, Barack Obama, and Joe Biden (Buchanan and Biden serving as chair)—and 19 secretaries of state. Notable members have included Arthur Vandenberg, Henry Cabot Lodge, and William Fulbright.\nThe Foreign Relations Committee is considered one of the most powerful and prestigious in the Senate, due to its long history, broad influence on U.S. foreign policy, jurisdiction over all diplomatic nominations, and its being the only Senate committee to deliberate and report treaties.\nFrom 2021 to 2023, the Foreign Relations Committee was chaired by Democratic senator Bob Menendez of New Jersey, until he stepped down as chair after facing federal corruption charges.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Foreign_Relations"
+      },
+      "jurisdiction": "authorizing and overseeing foreign aid programs; arms sales and training for national allies; and holding confirmation hearings for high-level positions in the Department of State",
+      "lastUpdated": "2025-11-13T21:52:38.349Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSGA": {
+      "committeeId": "SSGA",
+      "committeeName": "Committee on Homeland Security and Governmental Affairs",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Homeland Security and Governmental Affairs",
+        "extract": "The United States Senate Committee on Homeland Security and Governmental Affairs is the chief oversight committee of the United States Senate. It has jurisdiction over matters related to the Department of Homeland Security and other homeland security concerns, as well as the functioning of the government itself, including the National Archives, budget and accounting measures other than appropriations, the census, the federal civil service, the affairs of the District of Columbia and the United States Postal Service.  It was called the United States Senate Committee on Governmental Affairs before homeland security was added to its responsibilities in 2004. It serves as the Senate's chief investigative and oversight committee. Its chair is the only Senate committee chair who can issue subpoenas without a committee vote.\n\n",
+        "extract_html": "The United States Senate Committee on Homeland Security and Governmental Affairs is the chief oversight committee of the United States Senate. It has jurisdiction over matters related to the Department of Homeland Security and other homeland security concerns, as well as the functioning of the government itself, including the National Archives, budget and accounting measures other than appropriations, the census, the federal civil service, the affairs of the District of Columbia and the United States Postal Service.  It was called the United States Senate Committee on Governmental Affairs before homeland security was added to its responsibilities in 2004. It serves as the Senate's chief investigative and oversight committee. Its chair is the only Senate committee chair who can issue subpoenas without a committee vote.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Homeland_Security_and_Governmental_Affairs"
+      },
+      "jurisdiction": "matters related to the Department of Homeland Security and other homeland security concerns, as well as the functioning of the government itself, including the National Archives, budget and accounting measures other than appropriations, the census, the federal civil service, the affairs of the District of Columbia and the United States Postal Service",
+      "lastUpdated": "2025-11-13T21:52:41.063Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSHR": {
+      "committeeId": "SSHR",
+      "committeeName": "Committee on Health, Education, Labor and Pensions",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Health, Education, Labor and Pensions",
+        "extract": "The United States Senate Committee on Health, Education, Labor and Pensions (HELP) generally considers matters relating to these issues. Its jurisdiction also extends beyond these issues to include several more specific areas, as defined by Senate rules.\n\n",
+        "extract_html": "The United States Senate Committee on Health, Education, Labor and Pensions (HELP) generally considers matters relating to these issues. Its jurisdiction also extends beyond these issues to include several more specific areas, as defined by Senate rules.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Health,_Education,_Labor_and_Pensions"
+      },
+      "lastUpdated": "2025-11-13T21:52:43.677Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SLIA": {
+      "committeeId": "SLIA",
+      "committeeName": "Committee on Indian Affairs",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Indian Affairs",
+        "extract": "The Senate Committee on Indian Affairs is a committee of the United States Senate charged with oversight in matters related to the American Indian, Native Hawaiian, and Alaska Native peoples. A Committee on Indian Affairs existed from 1820 to 1947, after which it was folded into the Committee on Interior and Insular Affairs. A new Native Affairs Committee was created in 1977, initially as a select committee, as a result of the detachment of indigenous affairs from the new Committee on Energy and National Resources, which had succeeded the old Committee on Interior and Insular Affairs.  The committee was initially intended to be temporary, but was made permanent in 1984. The committee tends to include senators from Western and Plains states, who have more Native American constituents.\n\n",
+        "extract_html": "The Senate Committee on Indian Affairs is a committee of the United States Senate charged with oversight in matters related to the American Indian, Native Hawaiian, and Alaska Native peoples. A Committee on Indian Affairs existed from 1820 to 1947, after which it was folded into the Committee on Interior and Insular Affairs. A new Native Affairs Committee was created in 1977, initially as a select committee, as a result of the detachment of indigenous affairs from the new Committee on Energy and National Resources, which had succeeded the old Committee on Interior and Insular Affairs.  The committee was initially intended to be temporary, but was made permanent in 1984. The committee tends to include senators from Western and Plains states, who have more Native American constituents.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Indian_Affairs"
+      },
+      "lastUpdated": "2025-11-13T21:52:46.534Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSRA": {
+      "committeeId": "SSRA",
+      "committeeName": "Committee on Rules and Administration",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Rules and Administration",
+        "extract": "The Senate Committee on Rules and Administration, also called the Senate Rules and Administration Committee, is responsible for the rules of the United States Senate, administration of congressional buildings, and with credentials and qualifications of members of the Senate, including responsibility for contested elections. The committee is not as powerful as its House counterpart, the House Committee on Rules, as it does not set the terms of debate for individual legislative proposals, since the Senate has a tradition of open debate. Some members of the committee are also ex officio members of the Joint Committee on the Library and the Joint Committee on Printing.",
+        "extract_html": "The Senate Committee on Rules and Administration, also called the Senate Rules and Administration Committee, is responsible for the rules of the United States Senate, administration of congressional buildings, and with credentials and qualifications of members of the Senate, including responsibility for contested elections. The committee is not as powerful as its House counterpart, the House Committee on Rules, as it does not set the terms of debate for individual legislative proposals, since the Senate has a tradition of open debate. Some members of the committee are also ex officio members of the Joint Committee on the Library and the Joint Committee on Printing.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Rules_and_Administration"
+      },
+      "jurisdiction": "the rules of the United States Senate, administration of congressional buildings, and with credentials and qualifications of members of the Senate, including responsibility for contested elections",
+      "lastUpdated": "2025-11-13T21:52:50.288Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSSB": {
+      "committeeId": "SSSB",
+      "committeeName": "Committee on Small Business and Entrepreneurship",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Small Business and Entrepreneurship",
+        "extract": "The U.S. Senate Committee on Small Business and Entrepreneurship is a standing committee of the United States Senate. It has jurisdiction over the Small Business Administration and is also charged with researching and investigating all problems of American small business enterprises.\n\n",
+        "extract_html": "The U.S. Senate Committee on Small Business and Entrepreneurship is a standing committee of the United States Senate. It has jurisdiction over the Small Business Administration and is also charged with researching and investigating all problems of American small business enterprises.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Small_Business_and_Entrepreneurship"
+      },
+      "jurisdiction": "the Small Business Administration and is also charged with researching and investigating all problems of American small business enterprises",
+      "lastUpdated": "2025-11-13T21:52:52.918Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSVA": {
+      "committeeId": "SSVA",
+      "committeeName": "Committee on Veterans' Affairs",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Veterans' Affairs",
+        "extract": "The United States Senate Committee on Veterans' Affairs deals with oversight of United States veterans' problems and issues.\n\n",
+        "extract_html": "The United States Senate Committee on Veterans' Affairs deals with oversight of United States veterans' problems and issues.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Veterans%27_Affairs"
+      },
+      "lastUpdated": "2025-11-13T21:52:55.771Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSAG": {
+      "committeeId": "HSAG",
+      "committeeName": "Committee on Agriculture",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Agriculture",
+        "extract": "The United States House of Representatives Committee on Agriculture, or Agriculture Committee is a standing committee of the United States House of Representatives. The House Committee on Agriculture has general jurisdiction over federal agriculture policy and oversight of some federal agencies, and it can recommend funding appropriations for various governmental agencies, programs, and activities, as defined by House rules.",
+        "extract_html": "The United States House of Representatives Committee on Agriculture, or Agriculture Committee is a standing committee of the United States House of Representatives. The House Committee on Agriculture has general jurisdiction over federal agriculture policy and oversight of some federal agencies, and it can recommend funding appropriations for various governmental agencies, programs, and activities, as defined by House rules.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Agriculture"
+      },
+      "lastUpdated": "2025-11-13T21:52:58.406Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSAP": {
+      "committeeId": "HSAP",
+      "committeeName": "Committee on Appropriations",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Appropriations",
+        "extract": "The United States House Committee on Appropriations is a committee of the United States House of Representatives that is responsible for passing appropriation bills along with its Senate counterpart. The bills passed by the Appropriations Committee regulate expenditures of money by the government of the United States. As such, it is one of the most powerful committees, and its members are seen as influential.",
+        "extract_html": "The United States House Committee on Appropriations is a committee of the United States House of Representatives that is responsible for passing appropriation bills along with its Senate counterpart. The bills passed by the Appropriations Committee regulate expenditures of money by the government of the United States. As such, it is one of the most powerful committees, and its members are seen as influential.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Appropriations"
+      },
+      "jurisdiction": "passing appropriation bills along with its Senate counterpart",
+      "lastUpdated": "2025-11-13T21:53:01.016Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSAS": {
+      "committeeId": "HSAS",
+      "committeeName": "Committee on Armed Services",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Armed Services",
+        "extract": "The U.S. House Committee on Armed Services, commonly known as the House Armed Services Committee or HASC, is a standing committee of the United States House of Representatives. It is responsible for funding and oversight of the Department of Defense (DoD) and the United States Armed Forces, as well as substantial portions of the Department of Energy. Its regular legislative product is the National Defense Authorization Act, which has been passed by Congress and signed into law each year since 1962.\n\n",
+        "extract_html": "The U.S. House Committee on Armed Services, commonly known as the House Armed Services Committee or HASC, is a standing committee of the United States House of Representatives. It is responsible for funding and oversight of the Department of Defense (DoD) and the United States Armed Forces, as well as substantial portions of the Department of Energy. Its regular legislative product is the National Defense Authorization Act, which has been passed by Congress and signed into law each year since 1962.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Armed_Services"
+      },
+      "jurisdiction": "funding and oversight of the Department of Defense (DoD) and the United States Armed Forces, as well as substantial portions of the Department of Energy",
+      "lastUpdated": "2025-11-13T21:53:04.124Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSBA": {
+      "committeeId": "HSBA",
+      "committeeName": "Committee on Financial Services",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Financial Services",
+        "extract": "The United States House Committee on Financial Services, also referred to as the House Banking Committee and previously known as the Committee on Banking and Currency, is the committee of the United States House of Representatives that oversees the entire financial services industry, including the securities, insurance, banking and housing industries. The Financial Services Committee also oversees the work of the Federal Reserve, the United States Department of the Treasury, the U.S. Securities and Exchange Commission and other financial services regulators.\nThe House Committee on Financial Services is considered to be one of the House's most powerful committees.\nIt is currently chaired by Republican French Hill from Arkansas, having assumed office in 2025. The ranking member is Democrat Maxine Waters from California, who previously chaired the committee under a Democratic majority in the House.",
+        "extract_html": "The United States House Committee on Financial Services, also referred to as the House Banking Committee and previously known as the Committee on Banking and Currency, is the committee of the United States House of Representatives that oversees the entire financial services industry, including the securities, insurance, banking and housing industries. The Financial Services Committee also oversees the work of the Federal Reserve, the United States Department of the Treasury, the U.S. Securities and Exchange Commission and other financial services regulators.\nThe House Committee on Financial Services is considered to be one of the House's most powerful committees.\nIt is currently chaired by Republican French Hill from Arkansas, having assumed office in 2025. The ranking member is Democrat Maxine Waters from California, who previously chaired the committee under a Democratic majority in the House.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Financial_Services"
+      },
+      "history": {
+        "previousNames": [
+          {
+            "name": "Committee on Banking and Currency, is the committee of the United States House of Representatives that oversees the entire financial services industry, including the securities, insurance, banking and housing industries",
+            "period": "Historical"
+          }
+        ]
+      },
+      "oversight": [
+        {
+          "agency": "Securities and Exchange Commission",
+          "acronym": "SEC",
+          "wikipediaUrl": "https://en.wikipedia.org/wiki/Securities_and_Exchange_Commission"
+        }
+      ],
+      "lastUpdated": "2025-11-13T21:53:06.797Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSBU": {
+      "committeeId": "HSBU",
+      "committeeName": "Committee on the Budget",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on the Budget",
+        "extract": "The United States House Committee on the Budget, commonly known as the House Budget Committee, is a standing committee of the United States House of Representatives. Its responsibilities include legislative oversight of the federal budget process, reviewing all bills and resolutions on the budget, and monitoring agencies and programs funded outside of the budgetary process. The committee briefly operated as a select committee in 1919 and 1921, during the 66th and 67th United States Congresses, before being made a standing committee in 1974.",
+        "extract_html": "The United States House Committee on the Budget, commonly known as the House Budget Committee, is a standing committee of the United States House of Representatives. Its responsibilities include legislative oversight of the federal budget process, reviewing all bills and resolutions on the budget, and monitoring agencies and programs funded outside of the budgetary process. The committee briefly operated as a select committee in 1919 and 1921, during the 66th and 67th United States Congresses, before being made a standing committee in 1974.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_the_Budget"
+      },
+      "lastUpdated": "2025-11-13T21:53:09.558Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSED": {
+      "committeeId": "HSED",
+      "committeeName": "Committee on Education and the Workforce",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Education and Workforce",
+        "extract": "The Committee on Education and Workforce (also known as Committee on Education and the Workforce) is a standing committee of the United States House of Representatives. There are 45 members of this committee. Since 2025, the chair of the Education and Workforce committee is Republican Tim Walberg of Michigan.\n\n",
+        "extract_html": "The Committee on Education and Workforce (also known as Committee on Education and the Workforce) is a standing committee of the United States House of Representatives. There are 45 members of this committee. Since 2025, the chair of the Education and Workforce committee is Republican Tim Walberg of Michigan.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Education_and_Workforce"
+      },
+      "lastUpdated": "2025-11-13T21:53:12.248Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSIF": {
+      "committeeId": "HSIF",
+      "committeeName": "Committee on Energy and Commerce",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Energy and Commerce",
+        "extract": "The Committee on Energy and Commerce is one of the oldest standing committees of the United States House of Representatives. Established in 1795, it has operated continuously—with various name changes and jurisdictional changes—for more than 200 years. The two other House standing committees with such continuous operation are the House Ways and Means Committee and the House Rules Committee. The committee has served as the principal guide for the House in matters relating to the promotion of commerce and to the public's health and marketplace interests, with the relatively recent addition of energy considerations among them. Due to its broad jurisdiction, it is considered one of the most powerful committees in the House.\n\n",
+        "extract_html": "The Committee on Energy and Commerce is one of the oldest standing committees of the United States House of Representatives. Established in 1795, it has operated continuously—with various name changes and jurisdictional changes—for more than 200 years. The two other House standing committees with such continuous operation are the House Ways and Means Committee and the House Rules Committee. The committee has served as the principal guide for the House in matters relating to the promotion of commerce and to the public's health and marketplace interests, with the relatively recent addition of energy considerations among them. Due to its broad jurisdiction, it is considered one of the most powerful committees in the House.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Energy_and_Commerce"
+      },
+      "history": {
+        "establishedDate": "1795"
+      },
+      "lastUpdated": "2025-11-13T21:53:14.861Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSFA": {
+      "committeeId": "HSFA",
+      "committeeName": "Committee on Foreign Affairs",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Foreign Affairs",
+        "extract": "The United States House Committee on Foreign Affairs, also known as the House Foreign Affairs Committee, is a standing committee of the U.S. House of Representatives with jurisdiction over bills and investigations concerning the foreign affairs of the United States. Since 2025, the chair of the Foreign Affairs Committee has been Brian Mast of Florida.\nThe committee has a broad mandate to oversee legislation regarding the impact of national security developments on foreign policy; war powers, treaties, executive agreements, and military deployments abroad; foreign assistance; arms control; international economic policy; and other matters. Many of its responsibilities are delegated to one of six standing subcommittees, which have jurisdiction over issues related to their respective region in the world. The committee also oversees the U.S. Department of State, American embassies and diplomats, and the U.S. Agency for International Development.\nDuring two separate periods, 1975 to 1978 and 1995 to 2007, the Foreign Affairs Committee was renamed the Committee on International Relations; its duties and jurisdiction remained unchanged.\nIts counterpart in the Senate is the Committee on Foreign Relations.\n\n",
+        "extract_html": "The United States House Committee on Foreign Affairs, also known as the House Foreign Affairs Committee, is a standing committee of the U.S. House of Representatives with jurisdiction over bills and investigations concerning the foreign affairs of the United States. Since 2025, the chair of the Foreign Affairs Committee has been Brian Mast of Florida.\nThe committee has a broad mandate to oversee legislation regarding the impact of national security developments on foreign policy; war powers, treaties, executive agreements, and military deployments abroad; foreign assistance; arms control; international economic policy; and other matters. Many of its responsibilities are delegated to one of six standing subcommittees, which have jurisdiction over issues related to their respective region in the world. The committee also oversees the U.S. Department of State, American embassies and diplomats, and the U.S. Agency for International Development.\nDuring two separate periods, 1975 to 1978 and 1995 to 2007, the Foreign Affairs Committee was renamed the Committee on International Relations; its duties and jurisdiction remained unchanged.\nIts counterpart in the Senate is the Committee on Foreign Relations.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Foreign_Affairs"
+      },
+      "lastUpdated": "2025-11-13T21:53:17.530Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSGO": {
+      "committeeId": "HSGO",
+      "committeeName": "Committee on Oversight and Accountability",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "Kimberly Cheatle",
+        "extract": "Kimberly A. Cheatle (born 1970 or 1971) is an American former law enforcement officer who served as the 27th director of the United States Secret Service from 2022 until 2024. After serving in the Secret Service from 1995 to 2019, she worked as senior director of global security at PepsiCo from 2019 to 2022. Appointed director of the Secret Service by President Joe Biden, she assumed the office on 17 September 2022, becoming the second woman to hold the position.\nFollowing the attempted assassination of Donald Trump at a campaign rally on July 13, 2024, the Secret Service was widely criticized over security lapses. On July 22, Cheatle testified before the United States House Committee on Oversight and Accountability, where she faced bipartisan calls for her resignation. She resigned on July 23 and was succeeded by acting director Ronald L. Rowe Jr.",
+        "extract_html": "Kimberly A. Cheatle (born 1970 or 1971) is an American former law enforcement officer who served as the 27th director of the United States Secret Service from 2022 until 2024. After serving in the Secret Service from 1995 to 2019, she worked as senior director of global security at PepsiCo from 2019 to 2022. Appointed director of the Secret Service by President Joe Biden, she assumed the office on 17 September 2022, becoming the second woman to hold the position.\nFollowing the attempted assassination of Donald Trump at a campaign rally on July 13, 2024, the Secret Service was widely criticized over security lapses. On July 22, Cheatle testified before the United States House Committee on Oversight and Accountability, where she faced bipartisan calls for her resignation. She resigned on July 23 and was succeeded by acting director Ronald L. Rowe Jr.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Kimberly_Cheatle%2C_Secret_Service_Assistant_Director_%283x4_cropped%29.jpg/330px-Kimberly_Cheatle%2C_Secret_Service_Assistant_Director_%283x4_cropped%29.jpg",
+          "width": 300,
+          "height": 400
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/Kimberly_Cheatle"
+      },
+      "lastUpdated": "2025-11-13T21:53:20.151Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSHA": {
+      "committeeId": "HSHA",
+      "committeeName": "Committee on House Administration",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on House Administration",
+        "extract": "The United States House Committee on House Administration deals with the general administration matters of the United States House of Representatives, the security of the United States Capitol, and federal elections.\n\n",
+        "extract_html": "The United States House Committee on House Administration deals with the general administration matters of the United States House of Representatives, the security of the United States Capitol, and federal elections.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_House_Administration"
+      },
+      "lastUpdated": "2025-11-13T21:53:22.779Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSII": {
+      "committeeId": "HSII",
+      "committeeName": "Committee on Natural Resources",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Natural Resources",
+        "extract": "The U.S. House Committee on Natural Resources or Natural Resources Committee (often referred to as simply Resources) is a Congressional committee of the United States House of Representatives.  Originally called the Committee on Interior and Insular Affairs (1951), the name was changed to the Committee on Natural Resources in 1991.  The name was shortened to the Committee on Resources in 1995 by the new chair, Don Young (at the same time, the committee took over the duties of the now-defunct Merchant Marine and Fisheries Committee). Following the Democratic takeover of the House of Representatives in 2006, the name of the committee was changed back to its title used between 1991 and 1995.",
+        "extract_html": "The U.S. House Committee on Natural Resources or Natural Resources Committee (often referred to as simply Resources) is a Congressional committee of the United States House of Representatives.  Originally called the Committee on Interior and Insular Affairs (1951), the name was changed to the Committee on Natural Resources in 1991.  The name was shortened to the Committee on Resources in 1995 by the new chair, Don Young (at the same time, the committee took over the duties of the now-defunct Merchant Marine and Fisheries Committee). Following the Democratic takeover of the House of Representatives in 2006, the name of the committee was changed back to its title used between 1991 and 1995.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Natural_Resources"
+      },
+      "lastUpdated": "2025-11-13T21:53:25.450Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSJU": {
+      "committeeId": "HSJU",
+      "committeeName": "Committee on the Judiciary",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on the Judiciary",
+        "extract": "The U.S. House Committee on the Judiciary, also called the House Judiciary Committee, is a standing committee of the United States House of Representatives. It is charged with overseeing the administration of justice within the federal courts, federal administrative agencies, and federal law enforcement entities. The Judiciary Committee is often involved in the impeachment process against federal officials. Because of the legal nature of its oversight, committee members usually have a legal background, but this is not required.\nIn the 119th Congress, the chair of the committee is Republican Jim Jordan of Ohio, and the ranking minority member is Democrat Jamie Raskin of Maryland.",
+        "extract_html": "The U.S. House Committee on the Judiciary, also called the House Judiciary Committee, is a standing committee of the United States House of Representatives. It is charged with overseeing the administration of justice within the federal courts, federal administrative agencies, and federal law enforcement entities. The Judiciary Committee is often involved in the impeachment process against federal officials. Because of the legal nature of its oversight, committee members usually have a legal background, but this is not required.\nIn the 119th Congress, the chair of the committee is Republican Jim Jordan of Ohio, and the ranking minority member is Democrat Jamie Raskin of Maryland.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_the_Judiciary"
+      },
+      "lastUpdated": "2025-11-13T21:53:28.153Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSPW": {
+      "committeeId": "HSPW",
+      "committeeName": "Committee on Transportation and Infrastructure",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Transportation and Infrastructure",
+        "extract": "The U.S. House Committee on Transportation and Infrastructure is a standing committee of the United States House of Representatives.\n\n",
+        "extract_html": "The U.S. House Committee on Transportation and Infrastructure is a standing committee of the United States House of Representatives.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Transportation_and_Infrastructure"
+      },
+      "lastUpdated": "2025-11-13T21:53:30.803Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSRU": {
+      "committeeId": "HSRU",
+      "committeeName": "Committee on Rules",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Rules",
+        "extract": "The Committee on Rules (or more commonly the Rules Committee) is a committee of the United States House of Representatives. It is responsible for the rules under which bills will be presented to the House of Representatives, unlike other committees, which often deal with a specific area of policy. The committee is often considered one of the most powerful committees as it influences the introduction and process of legislation through the House. Thus it has garnered the nickname the \"traffic cop of Congress\". A \"special rule\" resolution (also referred to simply as a \"rule\") is a simple resolution of the House of Representatives, usually reported by the Committee on Rules, to permit the immediate consideration of a legislative measure, notwithstanding the usual order of business, and to prescribe conditions for its debate and amendment.\n\n",
+        "extract_html": "The Committee on Rules (or more commonly the Rules Committee) is a committee of the United States House of Representatives. It is responsible for the rules under which bills will be presented to the House of Representatives, unlike other committees, which often deal with a specific area of policy. The committee is often considered one of the most powerful committees as it influences the introduction and process of legislation through the House. Thus it has garnered the nickname the \"traffic cop of Congress\". A \"special rule\" resolution (also referred to simply as a \"rule\") is a simple resolution of the House of Representatives, usually reported by the Committee on Rules, to permit the immediate consideration of a legislative measure, notwithstanding the usual order of business, and to prescribe conditions for its debate and amendment.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Rules"
+      },
+      "jurisdiction": "the rules under which bills will be presented to the House of Representatives, unlike other committees, which often deal with a specific area of policy",
+      "lastUpdated": "2025-11-13T21:53:33.630Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSSM": {
+      "committeeId": "HSSM",
+      "committeeName": "Committee on Small Business",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Small Business",
+        "extract": "The United States House Committee on Small Business is a standing committee of the United States House of Representatives. It was established in 1941 as the House Select Committee on Small Business.\n\n",
+        "extract_html": "The United States House Committee on Small Business is a standing committee of the United States House of Representatives. It was established in 1941 as the House Select Committee on Small Business.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Small_Business"
+      },
+      "history": {
+        "establishedDate": "1941"
+      },
+      "lastUpdated": "2025-11-13T21:53:36.309Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSSY": {
+      "committeeId": "HSSY",
+      "committeeName": "Committee on Science, Space, and Technology",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Science, Space, and Technology",
+        "extract": "The Committee on Science, Space, and Technology is a committee of the United States House of Representatives. It has jurisdiction over non-defense federal scientific research and development. More specifically, the committee has complete jurisdiction over the following federal agencies: NASA, NSF, NIST, and the OSTP. The committee also has authority over R&D activities at the Department of Energy, the EPA, FAA, NOAA, the DOT, the NWS, the DHS and the U.S. Fire Administration.\n\n",
+        "extract_html": "The Committee on Science, Space, and Technology is a committee of the United States House of Representatives. It has jurisdiction over non-defense federal scientific research and development. More specifically, the committee has complete jurisdiction over the following federal agencies: NASA, NSF, NIST, and the OSTP. The committee also has authority over R&D activities at the Department of Energy, the EPA, FAA, NOAA, the DOT, the NWS, the DHS and the U.S. Fire Administration.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Science,_Space,_and_Technology"
+      },
+      "jurisdiction": "non-defense federal scientific research and development",
+      "oversight": [
+        {
+          "agency": "Environmental Protection Agency",
+          "acronym": "EPA",
+          "wikipediaUrl": "https://en.wikipedia.org/wiki/Environmental_Protection_Agency"
+        }
+      ],
+      "lastUpdated": "2025-11-13T21:53:38.964Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSVR": {
+      "committeeId": "HSVR",
+      "committeeName": "Committee on Veterans' Affairs",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Veterans' Affairs",
+        "extract": "The standing Committee on Veterans' Affairs in the United States House of Representatives oversees agencies, reviews current legislation, and recommends new bills or amendments concerning U.S. military veterans. Jurisdiction includes retiring and disability pensions, life insurance, education (including the G.I. Bill), vocational training, medical care, and home loan guarantees. The committee oversees the Department of Veterans Affairs (VA), veterans' hospitals, and veterans' cemeteries, except cemeteries under the Secretary of the Interior.\nThe Veterans' Affairs Committee does not have legislative jurisdiction over the following issues:\n\nTax status of veterans benefits and contributions to Veterans Service Organizations (Committee on Ways and Means);\nMilitary retiree issues, including COLA's and disability pay (Committee on Armed Services);\nCHAMPUS and Tri-Care (Committee on Armed Services);\nSurvivor Benefit Program (Committee on Armed Services);\nVeterans Preference in Federal civil service hiring practice (Committee on Government Reform and Oversight);\nCongressional charters for veterans service organizations (Committee on Judiciary);\nImmigration issues relating to veterans (Committee on Judiciary); and\nIssues dealing with Prisoners of War (POWs) and service members missing in action (MIAs) (Committee on Armed Services)\nThe committee was created by Section 121(a) of the Legislative Reorganization Act of 1946 (Public Law 79-601), which authorized a standing committee of 27 members.",
+        "extract_html": "The standing Committee on Veterans' Affairs in the United States House of Representatives oversees agencies, reviews current legislation, and recommends new bills or amendments concerning U.S. military veterans. Jurisdiction includes retiring and disability pensions, life insurance, education (including the G.I. Bill), vocational training, medical care, and home loan guarantees. The committee oversees the Department of Veterans Affairs (VA), veterans' hospitals, and veterans' cemeteries, except cemeteries under the Secretary of the Interior.\nThe Veterans' Affairs Committee does not have legislative jurisdiction over the following issues:\n\nTax status of veterans benefits and contributions to Veterans Service Organizations (Committee on Ways and Means);\nMilitary retiree issues, including COLA's and disability pay (Committee on Armed Services);\nCHAMPUS and Tri-Care (Committee on Armed Services);\nSurvivor Benefit Program (Committee on Armed Services);\nVeterans Preference in Federal civil service hiring practice (Committee on Government Reform and Oversight);\nCongressional charters for veterans service organizations (Committee on Judiciary);\nImmigration issues relating to veterans (Committee on Judiciary); and\nIssues dealing with Prisoners of War (POWs) and service members missing in action (MIAs) (Committee on Armed Services)\nThe committee was created by Section 121(a) of the Legislative Reorganization Act of 1946 (Public Law 79-601), which authorized a standing committee of 27 members.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Veterans%27_Affairs"
+      },
+      "lastUpdated": "2025-11-13T21:53:41.695Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSWM": {
+      "committeeId": "HSWM",
+      "committeeName": "Committee on Ways and Means",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Ways and Means",
+        "extract": "The Committee on Ways and Means is the chief tax-writing committee of the United States House of Representatives. The committee has jurisdiction over all taxation, tariffs, and other revenue-raising measures, as well as a number of other programs including Social Security, unemployment benefits, Medicare, the enforcement of child support laws, Temporary Assistance for Needy Families, foster care, and adoption programs. Members of the Ways and Means Committee are not allowed to serve on any other House Committee unless they are granted a waiver from their party's congressional leadership. It has long been regarded as the most prestigious committee of the House of Representatives.\nThe United States Constitution requires that all bills regarding taxation must originate in the U.S. House of Representatives, and House rules dictate that all bills regarding taxation must pass through Ways and Means. This system imparts upon the committee and its members a significant degree of influence over other representatives, committees, and public policy. Its Senate counterpart is the U.S. Senate Committee on Finance.\nIn the 119th Congress, the committee's chair is Jason T. Smith. Recent chairs have included Bill Thomas, Charlie Rangel, Sander Levin, Dave Camp, Paul Ryan, Kevin Brady, and Richard Neal.\n\n",
+        "extract_html": "The Committee on Ways and Means is the chief tax-writing committee of the United States House of Representatives. The committee has jurisdiction over all taxation, tariffs, and other revenue-raising measures, as well as a number of other programs including Social Security, unemployment benefits, Medicare, the enforcement of child support laws, Temporary Assistance for Needy Families, foster care, and adoption programs. Members of the Ways and Means Committee are not allowed to serve on any other House Committee unless they are granted a waiver from their party's congressional leadership. It has long been regarded as the most prestigious committee of the House of Representatives.\nThe United States Constitution requires that all bills regarding taxation must originate in the U.S. House of Representatives, and House rules dictate that all bills regarding taxation must pass through Ways and Means. This system imparts upon the committee and its members a significant degree of influence over other representatives, committees, and public policy. Its Senate counterpart is the U.S. Senate Committee on Finance.\nIn the 119th Congress, the committee's chair is Jason T. Smith. Recent chairs have included Bill Thomas, Charlie Rangel, Sander Levin, Dave Camp, Paul Ryan, Kevin Brady, and Richard Neal.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Ways_and_Means"
+      },
+      "jurisdiction": "all taxation, tariffs, and other revenue-raising measures, as well as a number of other programs including Social Security, unemployment benefits, Medicare, the enforcement of child support laws, Temporary Assistance for Needy Families, foster care, and adoption programs",
+      "lastUpdated": "2025-11-13T21:53:44.357Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    }
+  }
+}

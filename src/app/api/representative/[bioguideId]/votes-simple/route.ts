@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// ISR: Revalidate every 1 hour
+export const revalidate = 3600;
+
 // Simplified votes endpoint for immediate testing
 export async function GET(
   request: NextRequest,

@@ -18,6 +18,9 @@ import { getEnhancedRepresentative } from '@/features/representatives/services/c
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
+// ISR: Revalidate every 5 minutes
+export const revalidate = 300;
+
 // Vercel serverless function configuration
 export const maxDuration = 10; // Reduced from 20s (GDELT was slow)
 export const dynamic = 'force-dynamic';

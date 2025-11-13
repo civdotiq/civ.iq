@@ -17,6 +17,9 @@ import { decodeBase64Url } from '@/lib/url-encoding';
 import { getStateLegislatorBiography } from '@/lib/api/wikidata-state-legislators';
 import { fetchBiography } from '@/lib/api/wikipedia';
 
+// ISR: Revalidate every 1 day
+export const revalidate = 86400;
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(

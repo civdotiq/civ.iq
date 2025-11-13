@@ -1,0 +1,809 @@
+{
+  "metadata": {
+    "lastUpdated": "2025-01-13",
+    "version": "1.0.0",
+    "description": "Static metadata for all 50 U.S. state legislatures + DC Council",
+    "source": "National Conference of State Legislatures (NCSL)"
+  },
+  "legislatures": {
+    "AL": {
+      "name": "Alabama Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 105,
+          "termLength": 4
+        },
+        "upper": { "name": "Senate", "seats": 35, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "105 legislative days over 4 years",
+      "capitolCity": "Montgomery",
+      "website": "https://www.legislature.state.al.us",
+      "unicameral": false
+    },
+    "AK": {
+      "name": "Alaska Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 40,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 20, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "90 calendar days (Jan - Apr)",
+      "capitolCity": "Juneau",
+      "website": "https://www.akleg.gov",
+      "unicameral": false
+    },
+    "AZ": {
+      "name": "Arizona Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 60,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 30, "termLength": 2 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "Typically adjourns by April or May",
+      "capitolCity": "Phoenix",
+      "website": "https://www.azleg.gov",
+      "unicameral": false
+    },
+    "AR": {
+      "name": "Arkansas General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 100,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 35, "termLength": 4 }
+      },
+      "sessionType": "Biennial (odd years regular, even years fiscal)",
+      "sessionLength": "60 days regular, 30 days fiscal",
+      "capitolCity": "Little Rock",
+      "website": "https://www.arkleg.state.ar.us",
+      "unicameral": false
+    },
+    "CA": {
+      "name": "California State Legislature",
+      "chambers": {
+        "lower": { "name": "Assembly", "seats": 80, "termLength": 2 },
+        "upper": { "name": "Senate", "seats": 40, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "2-year session (odd year - even year)",
+      "capitolCity": "Sacramento",
+      "website": "https://www.legislature.ca.gov",
+      "unicameral": false
+    },
+    "CO": {
+      "name": "Colorado General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 65,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 35, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "120 calendar days (Jan - May)",
+      "capitolCity": "Denver",
+      "website": "https://leg.colorado.gov",
+      "unicameral": false
+    },
+    "CT": {
+      "name": "Connecticut General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 151,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 36, "termLength": 2 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "Feb - early June (odd), Feb - early May (even)",
+      "capitolCity": "Hartford",
+      "website": "https://www.cga.ct.gov",
+      "unicameral": false
+    },
+    "DE": {
+      "name": "Delaware General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 41,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 21, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "Jan - June",
+      "capitolCity": "Dover",
+      "website": "https://legis.delaware.gov",
+      "unicameral": false
+    },
+    "FL": {
+      "name": "Florida Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 120,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 40, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "60 consecutive days (Mar - May)",
+      "capitolCity": "Tallahassee",
+      "website": "https://www.flsenate.gov",
+      "unicameral": false
+    },
+    "GA": {
+      "name": "Georgia General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 180,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 56, "termLength": 2 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "40 legislative days (Jan - Apr)",
+      "capitolCity": "Atlanta",
+      "website": "https://www.legis.ga.gov",
+      "unicameral": false
+    },
+    "HI": {
+      "name": "Hawaii State Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 51,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 25, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "60 legislative days (Jan - early May)",
+      "capitolCity": "Honolulu",
+      "website": "https://www.capitol.hawaii.gov",
+      "unicameral": false
+    },
+    "ID": {
+      "name": "Idaho Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 70,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 35, "termLength": 2 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "No limit (typically Jan - Apr)",
+      "capitolCity": "Boise",
+      "website": "https://legislature.idaho.gov",
+      "unicameral": false
+    },
+    "IL": {
+      "name": "Illinois General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 118,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 59, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "Jan - May (spring), varies (fall veto session)",
+      "capitolCity": "Springfield",
+      "website": "https://www.ilga.gov",
+      "unicameral": false
+    },
+    "IN": {
+      "name": "Indiana General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 100,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 50, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "61 days (odd), 30 days (even)",
+      "capitolCity": "Indianapolis",
+      "website": "https://iga.in.gov",
+      "unicameral": false
+    },
+    "IA": {
+      "name": "Iowa General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 100,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 50, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "No limit (typically Jan - May)",
+      "capitolCity": "Des Moines",
+      "website": "https://www.legis.iowa.gov",
+      "unicameral": false
+    },
+    "KS": {
+      "name": "Kansas Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 125,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 40, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "90 calendar days (Jan - May)",
+      "capitolCity": "Topeka",
+      "website": "http://www.kslegislature.org",
+      "unicameral": false
+    },
+    "KY": {
+      "name": "Kentucky General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 100,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 38, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "60 legislative days over 2 years",
+      "capitolCity": "Frankfort",
+      "website": "https://legislature.ky.gov",
+      "unicameral": false
+    },
+    "LA": {
+      "name": "Louisiana Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 105,
+          "termLength": 4
+        },
+        "upper": { "name": "Senate", "seats": 39, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "60 legislative days (odd), 30 days (even)",
+      "capitolCity": "Baton Rouge",
+      "website": "https://legis.la.gov",
+      "unicameral": false
+    },
+    "ME": {
+      "name": "Maine Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 151,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 35, "termLength": 2 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "2-year session",
+      "capitolCity": "Augusta",
+      "website": "https://legislature.maine.gov",
+      "unicameral": false
+    },
+    "MD": {
+      "name": "Maryland General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Delegates",
+          "seats": 141,
+          "termLength": 4
+        },
+        "upper": { "name": "Senate", "seats": 47, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "90 calendar days (Jan - Apr)",
+      "capitolCity": "Annapolis",
+      "website": "https://mgaleg.maryland.gov",
+      "unicameral": false
+    },
+    "MA": {
+      "name": "Massachusetts General Court",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 160,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 40, "termLength": 2 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "2-year session (Jan - Jul odd, Jan - Nov even)",
+      "capitolCity": "Boston",
+      "website": "https://malegislature.gov",
+      "unicameral": false
+    },
+    "MI": {
+      "name": "Michigan Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 110,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 38, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "2-year session",
+      "capitolCity": "Lansing",
+      "website": "https://legislature.mi.gov",
+      "unicameral": false
+    },
+    "MN": {
+      "name": "Minnesota Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 134,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 67, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "120 legislative days over 2 years",
+      "capitolCity": "Saint Paul",
+      "website": "https://www.leg.mn.gov",
+      "unicameral": false
+    },
+    "MS": {
+      "name": "Mississippi Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 122,
+          "termLength": 4
+        },
+        "upper": { "name": "Senate", "seats": 52, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "90 calendar days (Jan - Apr)",
+      "capitolCity": "Jackson",
+      "website": "https://www.legislature.ms.gov",
+      "unicameral": false
+    },
+    "MO": {
+      "name": "Missouri General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 163,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 34, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "Jan - mid-May",
+      "capitolCity": "Jefferson City",
+      "website": "https://www.mo.gov/government/legislative-branch",
+      "unicameral": false
+    },
+    "MT": {
+      "name": "Montana Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 100,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 50, "termLength": 4 }
+      },
+      "sessionType": "Biennial (odd years)",
+      "sessionLength": "90 legislative days",
+      "capitolCity": "Helena",
+      "website": "https://leg.mt.gov",
+      "unicameral": false
+    },
+    "NE": {
+      "name": "Nebraska Legislature",
+      "chambers": {
+        "lower": {
+          "name": "Unicameral Legislature",
+          "seats": 49,
+          "termLength": 4
+        },
+        "upper": {
+          "name": "Unicameral Legislature",
+          "seats": 49,
+          "termLength": 4
+        }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "90 legislative days over 2 years",
+      "capitolCity": "Lincoln",
+      "website": "https://nebraskalegislature.gov",
+      "unicameral": true,
+      "note": "Nebraska has the only unicameral (single-chamber) state legislature in the United States"
+    },
+    "NV": {
+      "name": "Nevada Legislature",
+      "chambers": {
+        "lower": { "name": "Assembly", "seats": 42, "termLength": 2 },
+        "upper": { "name": "Senate", "seats": 21, "termLength": 4 }
+      },
+      "sessionType": "Biennial (odd years)",
+      "sessionLength": "120 calendar days",
+      "capitolCity": "Carson City",
+      "website": "https://www.leg.state.nv.us",
+      "unicameral": false
+    },
+    "NH": {
+      "name": "New Hampshire General Court",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 400,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 24, "termLength": 2 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "Jan - June",
+      "capitolCity": "Concord",
+      "website": "https://www.gencourt.state.nh.us",
+      "unicameral": false,
+      "note": "Largest state legislature in the US (400 House members)"
+    },
+    "NJ": {
+      "name": "New Jersey Legislature",
+      "chambers": {
+        "lower": { "name": "General Assembly", "seats": 80, "termLength": 2 },
+        "upper": { "name": "Senate", "seats": 40, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "2-year session",
+      "capitolCity": "Trenton",
+      "website": "https://www.njleg.state.nj.us",
+      "unicameral": false
+    },
+    "NM": {
+      "name": "New Mexico Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 70,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 42, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "60 days (odd), 30 days (even)",
+      "capitolCity": "Santa Fe",
+      "website": "https://www.nmlegis.gov",
+      "unicameral": false
+    },
+    "NY": {
+      "name": "New York State Legislature",
+      "chambers": {
+        "lower": { "name": "Assembly", "seats": 150, "termLength": 2 },
+        "upper": { "name": "Senate", "seats": 63, "termLength": 2 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "Jan - June",
+      "capitolCity": "Albany",
+      "website": "https://www.nysenate.gov",
+      "unicameral": false
+    },
+    "NC": {
+      "name": "North Carolina General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 120,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 50, "termLength": 2 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "2-year session (odd long, even short)",
+      "capitolCity": "Raleigh",
+      "website": "https://www.ncleg.gov",
+      "unicameral": false
+    },
+    "ND": {
+      "name": "North Dakota Legislative Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 94,
+          "termLength": 4
+        },
+        "upper": { "name": "Senate", "seats": 47, "termLength": 4 }
+      },
+      "sessionType": "Biennial (odd years)",
+      "sessionLength": "80 legislative days",
+      "capitolCity": "Bismarck",
+      "website": "https://www.legis.nd.gov",
+      "unicameral": false
+    },
+    "OH": {
+      "name": "Ohio General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 99,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 33, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "2-year session",
+      "capitolCity": "Columbus",
+      "website": "https://www.legislature.ohio.gov",
+      "unicameral": false
+    },
+    "OK": {
+      "name": "Oklahoma Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 101,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 48, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "Feb - late May",
+      "capitolCity": "Oklahoma City",
+      "website": "http://www.oklegislature.gov",
+      "unicameral": false
+    },
+    "OR": {
+      "name": "Oregon Legislative Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 60,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 30, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "160 days (odd), 35 days (even)",
+      "capitolCity": "Salem",
+      "website": "https://www.oregonlegislature.gov",
+      "unicameral": false
+    },
+    "PA": {
+      "name": "Pennsylvania General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 203,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 50, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "2-year session",
+      "capitolCity": "Harrisburg",
+      "website": "https://www.legis.state.pa.us",
+      "unicameral": false
+    },
+    "RI": {
+      "name": "Rhode Island General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 75,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 38, "termLength": 2 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "Jan - June",
+      "capitolCity": "Providence",
+      "website": "http://www.rilegislature.gov",
+      "unicameral": false
+    },
+    "SC": {
+      "name": "South Carolina General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 124,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 46, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "Jan - May",
+      "capitolCity": "Columbia",
+      "website": "https://www.scstatehouse.gov",
+      "unicameral": false
+    },
+    "SD": {
+      "name": "South Dakota Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 70,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 35, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "40 legislative days",
+      "capitolCity": "Pierre",
+      "website": "https://sdlegislature.gov",
+      "unicameral": false
+    },
+    "TN": {
+      "name": "Tennessee General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 99,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 33, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "Jan - late April/early May",
+      "capitolCity": "Nashville",
+      "website": "https://www.capitol.tn.gov",
+      "unicameral": false
+    },
+    "TX": {
+      "name": "Texas Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 150,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 31, "termLength": 4 }
+      },
+      "sessionType": "Biennial (odd years)",
+      "sessionLength": "140 calendar days",
+      "capitolCity": "Austin",
+      "website": "https://capitol.texas.gov",
+      "unicameral": false
+    },
+    "UT": {
+      "name": "Utah State Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 75,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 29, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "45 calendar days (Jan - Mar)",
+      "capitolCity": "Salt Lake City",
+      "website": "https://le.utah.gov",
+      "unicameral": false
+    },
+    "VT": {
+      "name": "Vermont General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 150,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 30, "termLength": 2 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "Jan - May",
+      "capitolCity": "Montpelier",
+      "website": "https://legislature.vermont.gov",
+      "unicameral": false
+    },
+    "VA": {
+      "name": "Virginia General Assembly",
+      "chambers": {
+        "lower": {
+          "name": "House of Delegates",
+          "seats": 100,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 40, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "60 days (odd), 30 days (even)",
+      "capitolCity": "Richmond",
+      "website": "https://lis.virginia.gov",
+      "unicameral": false
+    },
+    "WA": {
+      "name": "Washington State Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 98,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 49, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "105 days (odd), 60 days (even)",
+      "capitolCity": "Olympia",
+      "website": "https://leg.wa.gov",
+      "unicameral": false
+    },
+    "WV": {
+      "name": "West Virginia Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Delegates",
+          "seats": 100,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 34, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "60 calendar days",
+      "capitolCity": "Charleston",
+      "website": "https://www.wvlegislature.gov",
+      "unicameral": false
+    },
+    "WI": {
+      "name": "Wisconsin Legislature",
+      "chambers": {
+        "lower": { "name": "Assembly", "seats": 99, "termLength": 2 },
+        "upper": { "name": "Senate", "seats": 33, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "2-year session",
+      "capitolCity": "Madison",
+      "website": "https://legis.wisconsin.gov",
+      "unicameral": false
+    },
+    "WY": {
+      "name": "Wyoming Legislature",
+      "chambers": {
+        "lower": {
+          "name": "House of Representatives",
+          "seats": 62,
+          "termLength": 2
+        },
+        "upper": { "name": "Senate", "seats": 31, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "40 legislative days (budget) or 20 days (general)",
+      "capitolCity": "Cheyenne",
+      "website": "https://www.wyoleg.gov",
+      "unicameral": false
+    },
+    "DC": {
+      "name": "Council of the District of Columbia",
+      "chambers": {
+        "lower": { "name": "Council", "seats": 13, "termLength": 4 },
+        "upper": { "name": "Council", "seats": 13, "termLength": 4 }
+      },
+      "sessionType": "Annual",
+      "sessionLength": "Year-round (unicameral council)",
+      "capitolCity": "Washington",
+      "website": "https://dccouncil.gov",
+      "unicameral": true,
+      "note": "DC has a unicameral council with 13 members (8 ward representatives, 5 at-large members including the Chairman)"
+    }
+  }
+}

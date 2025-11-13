@@ -7,6 +7,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import type { GovernmentServicesProfile } from '@/types/district-enhancements';
 
+// ISR: Revalidate every 1 day
+export const revalidate = 86400;
+
 // State-to-FIPS mapping for government spending APIs
 const STATE_FIPS: Record<string, string> = {
   AL: '01',

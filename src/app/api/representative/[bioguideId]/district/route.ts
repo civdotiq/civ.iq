@@ -7,6 +7,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import { logger } from '@/lib/logging/logger-client';
 
+// ISR: Revalidate every 1 day
+export const revalidate = 86400;
+
 interface DemographicData {
   population: {
     total: number;

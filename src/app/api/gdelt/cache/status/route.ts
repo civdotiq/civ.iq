@@ -19,6 +19,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { gdeltCache } from '@/lib/gdelt/cache';
 import logger from '@/lib/logging/simple-logger';
 
+// ISR: Revalidate every 5 minutes
+export const revalidate = 300;
+
 export async function GET(_request: NextRequest) {
   try {
     // Get cache statistics

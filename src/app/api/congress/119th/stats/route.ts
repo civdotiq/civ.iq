@@ -6,6 +6,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
+// ISR: Revalidate every 1 week
+export const revalidate = 604800;
+
 export const dynamic = 'force-dynamic';
 
 // Force recompilation - updated to serve pre-built JSON data

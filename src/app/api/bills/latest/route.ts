@@ -6,6 +6,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
+// ISR: Revalidate every 1 hour
+export const revalidate = 3600;
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest): Promise<NextResponse> {

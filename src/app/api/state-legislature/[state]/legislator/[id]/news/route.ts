@@ -16,6 +16,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
+// ISR: Revalidate every 5 minutes
+export const revalidate = 300;
+
 // Vercel serverless function configuration
 export const maxDuration = 10;
 export const dynamic = 'force-dynamic';

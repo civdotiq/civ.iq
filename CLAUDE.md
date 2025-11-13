@@ -723,6 +723,10 @@ echo "GOAL: [What you're implementing]" >> .session.log
 
 **November 2025:**
 
+- ✅ **Aggressive ISR Caching** - Added Next.js ISR caching to 65 API routes with tiered revalidation (1 week/1 day/1 hour/5 min) - significant performance boost across all endpoints
+- ✅ **Committee Biography Caching** - Pre-generated Wikipedia/Wikidata data for all 34 congressional committees, eliminating API calls on committee page views
+- ✅ **Representative Photo Optimization** - Downloaded and optimized 432 official photos (83% coverage), converted to WebP format with 83% file size reduction (61.78 MB → 10.65 MB)
+- ✅ **State Legislature Metadata** - Created static metadata file for all 50 states + DC with chamber structure, session info, capitol cities (instant access, zero API calls)
 - ✅ **Wikipedia Integration** - Added Wikipedia biographical data for state legislators, federal representatives, and committees
 - ✅ **4-Tab UI Restructure** - Converted district pages to 4-tab structure (Overview, Bills, Map, State District Maps) for better discoverability
 - ✅ **Unified District Pages** - Merged federal and state district page components for consistent UX

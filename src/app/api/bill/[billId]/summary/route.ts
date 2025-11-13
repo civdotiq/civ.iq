@@ -12,6 +12,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+// ISR: Revalidate every 1 hour
+export const revalidate = 3600;
+
 export const dynamic = 'force-dynamic';
 import { BillSummarizer } from '@/features/legislation/services/ai/bill-summarizer';
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';

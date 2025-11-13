@@ -6,6 +6,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
+// ISR: Revalidate every 1 day
+export const revalidate = 86400;
+
 // Simple neighbor mapping based on geographic adjacency
 // This is a simplified version - in production you'd use actual boundary data
 const DISTRICT_NEIGHBORS: Record<string, string[]> = {

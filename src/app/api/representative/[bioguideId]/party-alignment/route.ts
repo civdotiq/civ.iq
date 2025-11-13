@@ -7,6 +7,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 
+// ISR: Revalidate every 1 hour
+export const revalidate = 3600;
+
 interface PartyAlignment {
   overall_alignment: number;
   party_loyalty_score: number;
