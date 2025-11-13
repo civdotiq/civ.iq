@@ -1967,7 +1967,11 @@ export const ZIP_TO_DISTRICT_MAP_119TH: Record<string, ZipDistrictMapping | ZipD
     '05492': { state: 'VT', district: '00' },
     '05494': { state: 'VT', district: '00' },
     '05495': { state: 'VT', district: '00' },
+    '05601': { state: 'VT', district: '00' }, // Montpelier (Capital)
     '05602': { state: 'VT', district: '00' },
+    '05603': { state: 'VT', district: '00' }, // Montpelier
+    '05604': { state: 'VT', district: '00' }, // Montpelier
+    '05633': { state: 'VT', district: '00' }, // East Montpelier
     '05640': { state: 'VT', district: '00' },
     '05641': { state: 'VT', district: '00' },
     '05647': { state: 'VT', district: '00' },

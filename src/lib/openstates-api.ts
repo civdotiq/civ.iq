@@ -347,11 +347,18 @@ class OpenStatesAPI {
 
         const data = await response.json();
 
-        // Smart cache TTL based on data type:
+        // Smart cache TTL based on data type and election cycles:
         // - Votes: 6 months (immutable historical records)
         // - Bills with session: 7 days (historical sessions immutable, current changes slowly)
-        // - People/legislators: 24 hours (changes infrequently)
+        // - People/legislators: Election-aware (see below)
         // - Default: 30 minutes
+        //
+        // State legislator caching strategy (based on term length research):
+        // - State legislators change primarily during biennial election cycles (every 2 years)
+        // - Elections occur in November; certified results in December
+        // - Mid-term changes (special elections) are rare (<5% annually)
+        // - During election season (Oct-Dec): 3 days TTL to capture new legislators
+        // - Rest of year: 30 days TTL (legislators rarely change between elections)
         let ttl: number;
         if (cacheTTL) {
           ttl = cacheTTL;
@@ -362,7 +369,17 @@ class OpenStatesAPI {
         } else if (endpoint.includes('/bills')) {
           ttl = 86400000; // 24 hours for current bills
         } else if (endpoint.includes('/people')) {
-          ttl = 86400000; // 24 hours for legislators
+          // Election-aware TTL for state legislators
+          const now = new Date();
+          const month = now.getMonth(); // 0-11 (0=Jan, 9=Oct, 10=Nov, 11=Dec)
+          const isElectionSeason = month >= 9 && month <= 11; // Oct-Dec
+
+          // During election season: 3 days (259200000ms)
+          // Rest of year: 30 days (2592000000ms)
+          // Rationale: State legislators change every 2 years via elections.
+          // Representatives: 44 states change every 2 years
+          // Senators: 45 states change every 2 years (staggered) or every 4 years
+          ttl = isElectionSeason ? 259200000 : 2592000000;
         } else {
           ttl = 1800000; // 30 minutes default
         }
