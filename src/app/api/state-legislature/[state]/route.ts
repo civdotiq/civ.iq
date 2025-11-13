@@ -129,6 +129,47 @@ function getStateAbbreviation(state: string): string {
   return stateMap[state.toUpperCase()] || state.toLowerCase();
 }
 
+// Helper: Sleep for rate limiting
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Helper: Retry with exponential backoff for rate limiting
+async function fetchWithRetry(
+  url: string,
+  maxRetries = 3,
+  baseDelay = 1000
+): Promise<Response | null> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
+        },
+      });
+
+      // If rate limited (429), wait and retry
+      if (response.status === 429) {
+        const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
+        logger.warn('OpenStates rate limit hit, retrying...', {
+          attempt: attempt + 1,
+          maxRetries,
+          delayMs: delay,
+          url,
+        });
+        await sleep(delay);
+        continue;
+      }
+
+      return response;
+    } catch (error) {
+      if (attempt === maxRetries - 1) throw error;
+      await sleep(baseDelay * Math.pow(2, attempt));
+    }
+  }
+  return null;
+}
+
 // Fetch state jurisdiction info from OpenStates API
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
@@ -139,17 +180,13 @@ async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
   );
 
   try {
-    const response = await fetch(`https://v3.openstates.org/jurisdictions/${stateAbbrev}`, {
-      headers: {
-        'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
-      },
-    });
+    const response = await fetchWithRetry(`https://v3.openstates.org/jurisdictions/${stateAbbrev}`);
 
-    if (!response.ok) {
-      monitor.end(false, response.status);
-      logger.error('OpenStates jurisdiction API error', new Error(`HTTP ${response.status}`), {
+    if (!response || !response.ok) {
+      monitor.end(false, response?.status);
+      logger.error('OpenStates jurisdiction API error', new Error(`HTTP ${response?.status}`), {
         stateAbbrev,
-        statusCode: response.status,
+        statusCode: response?.status,
       });
       return null;
     }
@@ -196,19 +233,15 @@ async function fetchStateLegislators(
       url.searchParams.set('per_page', '50'); // OpenStates API maximum is 50
       url.searchParams.set('page', page.toString());
 
-      const response = await fetch(url.toString(), {
-        headers: {
-          'X-API-KEY': process.env.OPENSTATES_API_KEY || '',
-        },
-      });
+      const response = await fetchWithRetry(url.toString());
 
-      if (!response.ok) {
-        monitor.end(false, response.status);
-        logger.error('OpenStates legislators API error', new Error(`HTTP ${response.status}`), {
+      if (!response || !response.ok) {
+        monitor.end(false, response?.status);
+        logger.error('OpenStates legislators API error', new Error(`HTTP ${response?.status}`), {
           stateAbbrev,
           requestedChamber,
           page,
-          statusCode: response.status,
+          statusCode: response?.status,
         });
         break;
       }
