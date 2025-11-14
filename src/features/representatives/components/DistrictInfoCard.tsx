@@ -181,22 +181,54 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
         </div>
         <div className="p-6">
           <div className="space-y-3">
-            <div className="flex items-center gap-3 group">
+            <a
+              href="https://www.congress.gov/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 group hover:bg-blue-50 -mx-2 px-2 py-1 rounded transition-colors"
+            >
               <div className="w-2.5 h-2.5 bg-blue-600 rounded-full ring-4 ring-blue-100 group-hover:ring-blue-200"></div>
-              <span className="text-sm font-medium text-gray-700">Congress.gov</span>
-            </div>
-            <div className="flex items-center gap-3 group">
+              <span className="text-sm font-medium text-gray-700 group-hover:text-civiq-blue group-hover:underline">
+                Congress.gov
+              </span>
+              <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-civiq-blue ml-auto" />
+            </a>
+            <a
+              href="https://github.com/unitedstates/congress-legislators"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 group hover:bg-green-50 -mx-2 px-2 py-1 rounded transition-colors"
+            >
               <div className="w-2.5 h-2.5 bg-green-600 rounded-full ring-4 ring-green-100 group-hover:ring-green-200"></div>
-              <span className="text-sm font-medium text-gray-700">Congress Legislators</span>
-            </div>
-            <div className="flex items-center gap-3 group">
+              <span className="text-sm font-medium text-gray-700 group-hover:text-civiq-green group-hover:underline">
+                Congress Legislators
+              </span>
+              <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-civiq-green ml-auto" />
+            </a>
+            <a
+              href="https://www.fec.gov/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 group hover:bg-purple-50 -mx-2 px-2 py-1 rounded transition-colors"
+            >
               <div className="w-2.5 h-2.5 bg-purple-600 rounded-full ring-4 ring-purple-100 group-hover:ring-purple-200"></div>
-              <span className="text-sm font-medium text-gray-700">FEC Campaign Finance</span>
-            </div>
-            <div className="flex items-center gap-3 group">
+              <span className="text-sm font-medium text-gray-700 group-hover:text-purple-600 group-hover:underline">
+                FEC Campaign Finance
+              </span>
+              <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-purple-600 ml-auto" />
+            </a>
+            <a
+              href="https://www.census.gov/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 group hover:bg-orange-50 -mx-2 px-2 py-1 rounded transition-colors"
+            >
               <div className="w-2.5 h-2.5 bg-orange-600 rounded-full ring-4 ring-orange-100 group-hover:ring-orange-200"></div>
-              <span className="text-sm font-medium text-gray-700">U.S. Census Bureau</span>
-            </div>
+              <span className="text-sm font-medium text-gray-700 group-hover:text-orange-600 group-hover:underline">
+                U.S. Census Bureau
+              </span>
+              <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-orange-600 ml-auto" />
+            </a>
             <div className="mt-4 pt-4 border-t border-gray-100">
               <p className="text-xs text-gray-500 italic">
                 All data from official government sources

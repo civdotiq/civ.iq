@@ -173,7 +173,18 @@ export function OverviewSidebar({ representative }: OverviewSidebarProps) {
                 <Users className="w-3 h-3" />
                 <span>~760,000 constituents</span>
               </div>
-              <div className="text-xs text-gray-500">Based on 2020 Census apportionment</div>
+              <div className="text-xs text-gray-500">
+                Based on{' '}
+                <a
+                  href="https://www.census.gov/programs-surveys/decennial-census/decade/2020/2020-census-main.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-civiq-blue hover:underline"
+                >
+                  2020 Census
+                </a>{' '}
+                apportionment
+              </div>
             </div>
           )}
 

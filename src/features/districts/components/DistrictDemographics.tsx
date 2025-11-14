@@ -34,7 +34,17 @@ export default function DistrictDemographics({ demographics }: DistrictDemograph
     return (
       <div className="aicher-card text-center p-8">
         <p className="text-gray-600">Demographic data not available for this district</p>
-        <p className="text-sm text-gray-500 mt-2">Census API data is currently unavailable</p>
+        <p className="text-sm text-gray-500 mt-2">
+          <a
+            href="https://www.census.gov/data/developers/data-sets.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-civiq-blue hover:underline"
+          >
+            Census API
+          </a>{' '}
+          data is currently unavailable
+        </p>
       </div>
     );
   }

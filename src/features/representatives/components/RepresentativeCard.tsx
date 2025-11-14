@@ -97,7 +97,12 @@ export const RepresentativeCard = memo(function RepresentativeCard({
           <div className="space-y-1">
             {representative.committees.slice(0, 3).map((committee, index) => (
               <div key={index} className="text-sm text-gray-600">
-                <span className="font-medium">{getCommitteeName(committee.name)}</span>
+                <Link
+                  href={`/committee/${committee.name}`}
+                  className="font-medium hover:text-civiq-blue hover:underline"
+                >
+                  {getCommitteeName(committee.name)}
+                </Link>
                 {committee.role && <span className="text-civiq-blue ml-1">({committee.role})</span>}
               </div>
             ))}
