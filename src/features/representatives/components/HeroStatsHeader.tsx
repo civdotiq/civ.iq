@@ -19,9 +19,15 @@ interface HeroStatsHeaderProps {
     committees?: number;
   };
   loading?: boolean;
+  onStatClick?: (tabId: string) => void;
 }
 
-export function HeroStatsHeader({ representative, stats, loading = false }: HeroStatsHeaderProps) {
+export function HeroStatsHeader({
+  representative,
+  stats,
+  loading = false,
+  onStatClick,
+}: HeroStatsHeaderProps) {
   const [imageError, setImageError] = useState(false);
 
   // Get photo URL - use API-provided imageUrl or fallback to proxy
@@ -174,7 +180,12 @@ export function HeroStatsHeader({ representative, stats, loading = false }: Hero
         <div className="border-t-2 border-gray-200 pt-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Bills Sponsored */}
-            <div className="bg-gray-50 border-2 border-gray-300 p-4">
+            <button
+              onClick={() => onStatClick?.('legislation')}
+              className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-blue transition-colors cursor-pointer text-left"
+              type="button"
+              aria-label="View sponsored bills"
+            >
               <div className="flex items-center gap-2 mb-2">
                 <FileText className="w-4 h-4 text-civiq-blue" />
                 <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
@@ -191,10 +202,15 @@ export function HeroStatsHeader({ representative, stats, loading = false }: Hero
                   <div className="text-xs text-gray-500 mt-1">Current Congress</div>
                 </>
               )}
-            </div>
+            </button>
 
             {/* Votes Cast */}
-            <div className="bg-gray-50 border-2 border-gray-300 p-4">
+            <button
+              onClick={() => onStatClick?.('voting')}
+              className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-green transition-colors cursor-pointer text-left"
+              type="button"
+              aria-label="View voting records"
+            >
               <div className="flex items-center gap-2 mb-2">
                 <Users className="w-4 h-4 text-civiq-green" />
                 <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
@@ -211,10 +227,15 @@ export function HeroStatsHeader({ representative, stats, loading = false }: Hero
                   <div className="text-xs text-gray-500 mt-1">This term</div>
                 </>
               )}
-            </div>
+            </button>
 
             {/* Total Raised */}
-            <div className="bg-gray-50 border-2 border-gray-300 p-4">
+            <button
+              onClick={() => onStatClick?.('finance')}
+              className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-red transition-colors cursor-pointer text-left"
+              type="button"
+              aria-label="View campaign finance data"
+            >
               <div className="flex items-center gap-2 mb-2">
                 <DollarSign className="w-4 h-4 text-civiq-red" />
                 <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
@@ -231,10 +252,15 @@ export function HeroStatsHeader({ representative, stats, loading = false }: Hero
                   <div className="text-xs text-gray-500 mt-1">Current cycle</div>
                 </>
               )}
-            </div>
+            </button>
 
             {/* Committees */}
-            <div className="bg-gray-50 border-2 border-gray-300 p-4">
+            <button
+              onClick={() => onStatClick?.('overview')}
+              className="bg-gray-50 border-2 border-gray-300 p-4 hover:bg-gray-100 hover:border-civiq-blue transition-colors cursor-pointer text-left"
+              type="button"
+              aria-label="View committee memberships"
+            >
               <div className="flex items-center gap-2 mb-2">
                 <Award className="w-4 h-4 text-civiq-blue" />
                 <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
@@ -251,7 +277,7 @@ export function HeroStatsHeader({ representative, stats, loading = false }: Hero
                   <div className="text-xs text-gray-500 mt-1">Current</div>
                 </>
               )}
-            </div>
+            </button>
           </div>
         </div>
       </div>

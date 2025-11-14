@@ -171,7 +171,10 @@
       "WebFetch(domain:api.ballotpedia.org)",
       "WebFetch(domain:api.github.com)",
       "Bash(/tmp/prod-mi.json)",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Bash(TEST_MODE=true node scripts/generate-committee-biographies.mjs:*)",
+      "Bash(TEST_MODE=true node scripts/download-representative-photos.mjs:*)",
+      "Bash(TEST_MODE=true node scripts/optimize-photos-to-webp.mjs:*)"
     ],
     "deny": [],
     "ask": []

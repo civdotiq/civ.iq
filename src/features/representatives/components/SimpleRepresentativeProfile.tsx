@@ -255,6 +255,7 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
                   : undefined,
               }}
               loading={summaryLoading}
+              onStatClick={handleTabChange}
             />
           </div>
 
