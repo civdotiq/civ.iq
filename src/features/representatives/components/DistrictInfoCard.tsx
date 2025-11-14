@@ -182,7 +182,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
         <div className="p-6">
           <div className="space-y-3">
             <a
-              href="https://www.congress.gov/"
+              href={`https://www.congress.gov/member/${representative.bioguideId}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 group hover:bg-blue-50 -mx-2 px-2 py-1 rounded transition-colors"
@@ -194,7 +194,7 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
               <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-civiq-blue ml-auto" />
             </a>
             <a
-              href="https://github.com/unitedstates/congress-legislators"
+              href={`https://github.com/unitedstates/congress-legislators/search?q=${encodeURIComponent(representative.name)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 group hover:bg-green-50 -mx-2 px-2 py-1 rounded transition-colors"
@@ -205,20 +205,32 @@ export function DistrictInfoCard({ representative, className = '' }: DistrictInf
               </span>
               <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-civiq-green ml-auto" />
             </a>
+            {representative.ids?.fec && representative.ids.fec.length > 0 ? (
+              <a
+                href={`https://www.fec.gov/data/candidate/${representative.ids.fec[0]}/`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 group hover:bg-purple-50 -mx-2 px-2 py-1 rounded transition-colors"
+              >
+                <div className="w-2.5 h-2.5 bg-purple-600 rounded-full ring-4 ring-purple-100 group-hover:ring-purple-200"></div>
+                <span className="text-sm font-medium text-gray-700 group-hover:text-purple-600 group-hover:underline">
+                  FEC Campaign Finance
+                </span>
+                <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-purple-600 ml-auto" />
+              </a>
+            ) : (
+              <div className="flex items-center gap-3 -mx-2 px-2 py-1 opacity-50">
+                <div className="w-2.5 h-2.5 bg-purple-600 rounded-full ring-4 ring-purple-100"></div>
+                <span className="text-sm font-medium text-gray-700">FEC Campaign Finance</span>
+                <span className="text-xs text-gray-500 ml-auto">(N/A)</span>
+              </div>
+            )}
             <a
-              href="https://www.fec.gov/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 group hover:bg-purple-50 -mx-2 px-2 py-1 rounded transition-colors"
-            >
-              <div className="w-2.5 h-2.5 bg-purple-600 rounded-full ring-4 ring-purple-100 group-hover:ring-purple-200"></div>
-              <span className="text-sm font-medium text-gray-700 group-hover:text-purple-600 group-hover:underline">
-                FEC Campaign Finance
-              </span>
-              <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-purple-600 ml-auto" />
-            </a>
-            <a
-              href="https://www.census.gov/"
+              href={
+                representative.district
+                  ? `https://data.census.gov/profile/${representative.state}_Congressional_District_${representative.district}_(118th_Congress),_${representative.state}`
+                  : `https://data.census.gov/profile/${representative.state}`
+              }
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 group hover:bg-orange-50 -mx-2 px-2 py-1 rounded transition-colors"
