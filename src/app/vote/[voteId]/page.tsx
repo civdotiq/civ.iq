@@ -296,14 +296,26 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
             )}
           </div>
 
-          {/* Bill Context */}
-          {voteDetail.bill && voteDetail.bill.title && (
+          {/* Bill Context - CRITICAL HYPERLINK */}
+          {voteDetail.bill && voteDetail.bill.number && (
             <div className="bg-gray-50 border-l-4 border-gray-400 p-4 rounded-r-lg">
               <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 About {voteDetail.bill.number}
               </h3>
-              <p className="text-sm text-gray-700">{voteDetail.bill.title}</p>
+              {voteDetail.bill.title && (
+                <p className="text-sm text-gray-700 mb-3">{voteDetail.bill.title}</p>
+              )}
+              <Link
+                href={`/bill/${voteDetail.congress}-${voteDetail.bill.type?.toLowerCase() || 's'}-${voteDetail.bill.number.replace(/[^\d]/g, '')}`}
+                className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                <FileText className="h-4 w-4" />
+                View Full Bill Details →
+              </Link>
+              <p className="text-xs text-gray-500 mt-2">
+                See sponsors, cosponsors, summary, and legislative timeline
+              </p>
             </div>
           )}
 

@@ -7,7 +7,17 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { MapPin, Users, Building, Phone, Mail, ExternalLink, Calendar, Clock } from 'lucide-react';
+import {
+  MapPin,
+  Users,
+  Building,
+  Phone,
+  Mail,
+  ExternalLink,
+  Calendar,
+  Clock,
+  FileText,
+} from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
 import { AicherSidebarCard } from './AicherSidebarCard';
 import { StateMapCard } from './StateMapCard';
@@ -296,6 +306,52 @@ export function OverviewSidebar({ representative }: OverviewSidebarProps) {
               </div>
             </div>
           )}
+        </div>
+      </AicherSidebarCard>
+
+      {/* Legislation Links */}
+      <AicherSidebarCard title="Legislation" icon={FileText}>
+        <div className="space-y-3">
+          <Link
+            href={`/representative/${representative.bioguideId}?tab=bills`}
+            className="block hover:bg-blue-50 -m-3 p-3 transition-colors group"
+          >
+            <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
+              Sponsored Bills
+            </div>
+            <div className="text-xs text-gray-600">
+              View all legislation sponsored by this representative
+            </div>
+            <div className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+              View all bills →
+            </div>
+          </Link>
+
+          <Link
+            href={`/representative/${representative.bioguideId}?tab=votes`}
+            className="block hover:bg-blue-50 -m-3 p-3 transition-colors group"
+          >
+            <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
+              Voting Record
+            </div>
+            <div className="text-xs text-gray-600">See how they voted on key legislation</div>
+            <div className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+              View voting record →
+            </div>
+          </Link>
+
+          <Link
+            href="/legislation"
+            className="block hover:bg-blue-50 -m-3 p-3 transition-colors group"
+          >
+            <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
+              All Recent Legislation
+            </div>
+            <div className="text-xs text-gray-600">Browse the latest bills in Congress</div>
+            <div className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+              Browse legislation →
+            </div>
+          </Link>
         </div>
       </AicherSidebarCard>
 

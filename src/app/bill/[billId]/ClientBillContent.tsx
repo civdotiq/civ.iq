@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ExternalLink, Calendar, FileText } from 'lucide-react';
-import type { Bill } from '@/types/bill';
+import { ExternalLink, Calendar, FileText, Vote, CheckCircle, XCircle } from 'lucide-react';
+import type { Bill, BillVote } from '@/types/bill';
 import { getBillDisplayStatus, getBillStatusColor } from '@/types/bill';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 
@@ -183,6 +183,119 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                 </div>
                 <p className="text-xs text-gray-500 mt-3">
                   Summary not yet available from Congress.gov
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Congressional Votes - The Critical Link */}
+          <div className="bg-white border-2 border-black p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Vote className="w-5 h-5 text-blue-600" />
+              Congressional Votes ({bill.votes?.length || 0})
+            </h3>
+
+            {bill.votes && bill.votes.length > 0 ? (
+              <div className="space-y-4">
+                {bill.votes.map((vote: BillVote, index: number) => {
+                  const isPassed = vote.result === 'Passed' || vote.result === 'Agreed to';
+
+                  return (
+                    <Link
+                      key={vote.voteId || index}
+                      href={`/vote/${vote.rollNumber || vote.voteId}`}
+                      className="block p-4 border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            {isPassed ? (
+                              <CheckCircle className="w-5 h-5 text-green-600" />
+                            ) : (
+                              <XCircle className="w-5 h-5 text-red-600" />
+                            )}
+                            <span
+                              className={`font-semibold ${isPassed ? 'text-green-700' : 'text-red-700'}`}
+                            >
+                              {vote.result}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              {vote.chamber} • Roll Call #{vote.rollNumber}
+                            </span>
+                          </div>
+                          <p className="text-gray-800 font-medium">{vote.question}</p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {new Date(vote.date).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Vote Breakdown */}
+                      <div className="grid grid-cols-4 gap-3 mb-3">
+                        <div className="text-center p-2 bg-green-50 rounded">
+                          <div className="text-lg font-bold text-green-700">{vote.votes.yea}</div>
+                          <div className="text-xs text-green-600">Yea</div>
+                        </div>
+                        <div className="text-center p-2 bg-red-50 rounded">
+                          <div className="text-lg font-bold text-red-700">{vote.votes.nay}</div>
+                          <div className="text-xs text-red-600">Nay</div>
+                        </div>
+                        <div className="text-center p-2 bg-yellow-50 rounded">
+                          <div className="text-lg font-bold text-yellow-700">
+                            {vote.votes.present}
+                          </div>
+                          <div className="text-xs text-yellow-600">Present</div>
+                        </div>
+                        <div className="text-center p-2 bg-gray-50 rounded">
+                          <div className="text-lg font-bold text-gray-700">
+                            {vote.votes.notVoting}
+                          </div>
+                          <div className="text-xs text-gray-600">Not Voting</div>
+                        </div>
+                      </div>
+
+                      {/* Party Breakdown */}
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="bg-blue-50 p-2 rounded">
+                          <div className="font-medium text-blue-800 mb-1">Democrats</div>
+                          <div className="text-blue-700">
+                            {vote.breakdown.democratic.yea} Yea / {vote.breakdown.democratic.nay}{' '}
+                            Nay
+                          </div>
+                        </div>
+                        <div className="bg-red-50 p-2 rounded">
+                          <div className="font-medium text-red-800 mb-1">Republicans</div>
+                          <div className="text-red-700">
+                            {vote.breakdown.republican.yea} Yea / {vote.breakdown.republican.nay}{' '}
+                            Nay
+                          </div>
+                        </div>
+                        <div className="bg-purple-50 p-2 rounded">
+                          <div className="font-medium text-purple-800 mb-1">Independents</div>
+                          <div className="text-purple-700">
+                            {vote.breakdown.independent.yea} Yea / {vote.breakdown.independent.nay}{' '}
+                            Nay
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 text-sm text-blue-600 font-medium flex items-center gap-1">
+                        View all {vote.chamber === 'Senate' ? '100' : '435'} member votes →
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-gray-50 rounded">
+                <Vote className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600 font-medium">No recorded votes yet</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Roll call votes will appear here as the bill moves through Congress
                 </p>
               </div>
             )}
@@ -426,39 +539,62 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                 Related Bills ({bill.relatedBills.length})
               </h3>
               <div className="space-y-3">
-                {bill.relatedBills.map((relatedBill, index) => (
-                  <div key={index} className="p-3 border border-gray-200 hover:bg-white">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-blue-600">{relatedBill.number}</p>
-                        <p className="text-xs text-gray-700 mt-1 line-clamp-2">
-                          {relatedBill.title}
-                        </p>
-                        <div className="mt-2">
-                          <span
-                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                              relatedBill.relationship === 'identical'
-                                ? 'bg-green-100 text-green-800'
+                {bill.relatedBills.map((relatedBill, index) => {
+                  // Parse bill number like "H.R. 1234" or "S. 567" into route format
+                  const billMatch = relatedBill.number.match(
+                    /^(H\.R\.|S\.|H\.Res\.|S\.Res\.|H\.J\.Res\.|S\.J\.Res\.|H\.Con\.Res\.|S\.Con\.Res\.)\s*(\d+)/i
+                  );
+                  const billType =
+                    billMatch?.[1]?.toLowerCase().replace(/\./g, '').replace(/\s+/g, '') ?? '';
+                  const billNum = billMatch?.[2] ?? '';
+                  const billRoute =
+                    billMatch && billType && billNum
+                      ? `/bill/${bill.congress}-${billType}-${billNum}`
+                      : null;
+
+                  return (
+                    <Link
+                      key={index}
+                      href={billRoute || '#'}
+                      className={`block p-3 border border-gray-200 transition-colors ${billRoute ? 'hover:bg-blue-50 hover:border-blue-300' : ''}`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                            {relatedBill.number}
+                          </p>
+                          <p className="text-xs text-gray-700 mt-1 line-clamp-2">
+                            {relatedBill.title}
+                          </p>
+                          <div className="mt-2 flex items-center justify-between">
+                            <span
+                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                relatedBill.relationship === 'identical'
+                                  ? 'bg-green-100 text-green-800'
+                                  : relatedBill.relationship === 'supersedes'
+                                    ? 'bg-orange-100 text-orange-800'
+                                    : relatedBill.relationship === 'superseded'
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-blue-100 text-blue-800'
+                              }`}
+                            >
+                              {relatedBill.relationship === 'identical'
+                                ? 'Identical'
                                 : relatedBill.relationship === 'supersedes'
-                                  ? 'bg-orange-100 text-orange-800'
+                                  ? 'Supersedes'
                                   : relatedBill.relationship === 'superseded'
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-blue-100 text-blue-800'
-                            }`}
-                          >
-                            {relatedBill.relationship === 'identical'
-                              ? 'Identical'
-                              : relatedBill.relationship === 'supersedes'
-                                ? 'Supersedes'
-                                : relatedBill.relationship === 'superseded'
-                                  ? 'Superseded by'
-                                  : 'Related'}
-                          </span>
+                                    ? 'Superseded by'
+                                    : 'Related'}
+                            </span>
+                            {billRoute && (
+                              <span className="text-xs text-blue-600">View bill →</span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -471,14 +607,23 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
               </h3>
               <div className="space-y-2">
                 {bill.committees.map((committee, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-white">
+                  <Link
+                    key={index}
+                    href={`/committee/${committee.committeeId}`}
+                    className="flex items-center justify-between p-3 bg-white hover:bg-blue-50 border border-transparent hover:border-blue-300 transition-colors group"
+                  >
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{committee.name}</p>
+                      <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
+                        {committee.name}
+                      </p>
                       {committee.chamber && (
                         <p className="text-xs text-gray-500">{committee.chamber}</p>
                       )}
                     </div>
-                  </div>
+                    <span className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                      View committee →
+                    </span>
+                  </Link>
                 ))}
               </div>
             </div>
