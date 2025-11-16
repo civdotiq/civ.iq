@@ -66,6 +66,16 @@ export const RepresentativeCard = memo(function RepresentativeCard({
               >
                 {representative.party}
               </span>
+              {representative.chamber === 'Senate' && (
+                <span className="px-2 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-xs font-medium">
+                  U.S. Senator
+                </span>
+              )}
+              {representative.chamber === 'House' && (
+                <span className="px-2 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-medium">
+                  U.S. Representative
+                </span>
+              )}
               {representative.chamber === 'House' && representative.district && (
                 <span className="px-2 py-1 bg-white border-2 border-gray-300 text-gray-700 rounded-full text-xs font-medium">
                   District {representative.district}
