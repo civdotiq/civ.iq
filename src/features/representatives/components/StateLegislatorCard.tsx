@@ -61,16 +61,13 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
   const profileUrl = `/state-legislature/${legislator.state.toLowerCase()}/legislator/${base64Id}`;
 
   return (
-    <Link
-      href={profileUrl}
-      className="block bg-white border-2 border-black hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
-    >
+    <div className="bg-white border-2 border-black border border-gray-200 overflow-hidden">
       {/* Header Section */}
       <div className="p-6 pb-4">
         <div className="flex items-start gap-4">
-          <RepresentativePhoto bioguideId={legislator.id} name={legislator.name} size="md" />
+          <RepresentativePhoto bioguideId={legislator.id} name={legislator.name} size="lg" />
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">{legislator.name}</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-1">{legislator.name}</h3>
             <p className="text-gray-600 mb-2">
               {legislator.currentRole?.title || `${chamberInfo.name} Member`}
             </p>
@@ -87,6 +84,11 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
               <span className="px-2 py-1 bg-white border-2 border-gray-300 text-gray-700 rounded-full text-xs font-medium">
                 District {legislator.district}
               </span>
+              {legislator.currentRole?.start_date && (
+                <span className="px-2 py-1 bg-civiq-green/10 text-civiq-green rounded-full text-xs font-medium">
+                  Since {new Date(legislator.currentRole.start_date).getFullYear()}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -104,59 +106,29 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
           {legislator.email && (
             <div className="flex items-center gap-2">
               <span className="font-medium text-gray-700">✉️</span>
-              <a
-                href={`mailto:${legislator.email}`}
-                className="text-civiq-blue hover:underline truncate"
-              >
-                {legislator.email}
-              </a>
+              <span className="text-civiq-blue truncate">{legislator.email}</span>
             </div>
           )}
           {legislator.website && (
             <div className="flex items-center gap-2 md:col-span-2">
               <span className="font-medium text-gray-700">🌐</span>
-              <a
-                href={legislator.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-civiq-blue hover:underline"
-              >
-                Official Website
-              </a>
+              <span className="text-civiq-blue">Official Website</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Offices */}
-      {legislator.offices && legislator.offices.length > 0 && (
-        <div className="px-6 pb-4">
-          <h4 className="text-sm font-semibold text-gray-700 mb-2">Offices</h4>
-          <div className="space-y-2">
-            {legislator.offices.slice(0, 2).map((office, index) => (
-              <div key={index} className="text-sm text-gray-600">
-                <span className="font-medium">{office.name}</span>
-                {office.address && (
-                  <div className="text-xs text-gray-500 mt-1">{office.address}</div>
-                )}
-                {office.phone && <div className="text-xs text-gray-500">Phone: {office.phone}</div>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Footer */}
-      <div className="px-6 py-3 bg-white border-t border-gray-100">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600">{legislator.state} State Legislature</span>
-          {legislator.currentRole?.start_date && (
-            <span className="text-gray-500">
-              Since {new Date(legislator.currentRole.start_date).getFullYear()}
-            </span>
-          )}
+      {/* Action Button */}
+      <div className="px-6 py-4 bg-white border-t border-gray-100">
+        <div className="flex justify-end">
+          <Link
+            href={profileUrl}
+            className="bg-civiq-blue text-white px-4 py-2 rounded hover:bg-civiq-blue/90 transition-colors text-sm font-medium"
+          >
+            View Profile
+          </Link>
         </div>
       </div>
-    </Link>
+    </div>
   );
 });
