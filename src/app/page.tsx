@@ -12,29 +12,29 @@ export default function HomePage() {
   return (
     <div className="min-h-screen aicher-background">
       {/* Hero Section */}
-      <div className="flex flex-col justify-center items-center min-h-screen px-grid-2 sm:px-grid-3 lg:px-grid-4 py-grid-3 sm:py-grid-4">
-        <div className="max-w-4xl mx-auto text-center">
+      <div className="flex flex-col justify-center items-center min-h-screen px-grid-2 sm:px-grid-3 lg:px-grid-4 py-grid-4 sm:py-grid-4">
+        <div className="max-w-4xl mx-auto text-center w-full">
           {/* Logo */}
-          <div className="mb-grid-3 sm:mb-grid-4">
-            <div className="flex flex-col items-center mb-grid-2 sm:mb-grid-3">
-              <div className="mb-grid-2">
+          <div className="mb-grid-2 sm:mb-grid-4">
+            <div className="flex flex-col items-center mb-grid-1 sm:mb-grid-3">
+              <div className="mb-grid-1 sm:mb-grid-2">
                 <Image
                   src="/images/civiq-logo.png"
                   alt="CIV.IQ Logo"
                   width={120}
                   height={120}
-                  className="border-2 border-black"
+                  className="border-2 border-black w-[80px] h-[80px] sm:w-[120px] sm:h-[120px]"
                   priority
                 />
               </div>
-              <div className="text-3xl sm:text-4xl font-bold text-civiq-red aicher-heading">
+              <div className="text-2xl sm:text-4xl font-bold text-civiq-red aicher-heading">
                 CIV.IQ
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-black sm:text-5xl lg:text-6xl mb-grid-2 sm:mb-grid-4 lg:mb-grid-6 aicher-heading leading-tight">
+            <h1 className="text-xl font-bold text-black sm:text-5xl lg:text-6xl mb-grid-1 sm:mb-grid-4 lg:mb-grid-6 aicher-heading leading-tight">
               Know Your Representatives
             </h1>
-            <p className="text-sm sm:text-xl text-gray-600 max-w-2xl mx-auto px-grid-1 sm:px-0">
+            <p className="text-xs sm:text-xl text-gray-600 max-w-2xl mx-auto px-grid-1 sm:px-0">
               Connect with your federal representatives through real government data from
               Congress.gov, FEC, and Census Bureau
             </p>

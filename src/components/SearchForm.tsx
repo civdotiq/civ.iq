@@ -151,21 +151,46 @@ export default function SearchForm() {
       }
 
       const data = await response.json();
-      const addressMatch = data.result?.addressMatches?.[0];
+      const geographies = data.result?.geographies;
 
-      if (!addressMatch) {
-        throw new Error('NO_ADDRESS_FOUND');
+      if (!geographies) {
+        throw new Error('NO_GEOGRAPHY_DATA');
       }
 
-      // Extract address components
-      const { matchedAddress } = addressMatch;
+      // Extract congressional district and state from geography layers
+      const congressionalDistricts = geographies['119th Congressional Districts'] || [];
+      const states = geographies['States'] || [];
+      const zipAreas = geographies['2020 Census ZIP Code Tabulation Areas'] || [];
 
-      // Navigate to results page with the address - it will handle the unified geocode flow
-      setSearchInput(matchedAddress);
+      if (congressionalDistricts.length === 0 || states.length === 0) {
+        throw new Error('NO_DISTRICT_FOUND');
+      }
+
+      const districtName = congressionalDistricts[0]?.NAME || '';
+      const stateCode = states[0]?.STUSAB || '';
+      const zipCode = zipAreas[0]?.ZCTA5CE20 || '';
+
+      // Parse district number from name (e.g., "Congressional District 13" -> "13")
+      const districtMatch = districtName.match(/Congressional District (\d+)/);
+      const districtNumber = districtMatch ? districtMatch[1] : '';
+
+      // Create a descriptive location string
+      const locationDescription = zipCode
+        ? `${stateCode}-${districtNumber} (ZIP ${zipCode})`
+        : `${stateCode}-${districtNumber}`;
+
+      setSearchInput(locationDescription);
       setIsGeolocating(false);
 
-      // Navigate with the matched address
-      router.push(`/results?q=${encodeURIComponent(matchedAddress)}`);
+      // Navigate to representatives page with state and district info
+      if (zipCode) {
+        // If we have a ZIP, use it for more precise results
+        router.push(`/representatives?zip=${zipCode}`);
+      } else {
+        // Otherwise, navigate to district page directly
+        const districtId = `${stateCode.toLowerCase()}${districtNumber.padStart(2, '0')}`;
+        router.push(`/districts/${districtId}`);
+      }
     } catch (error) {
       setIsGeolocating(false);
 
@@ -207,12 +232,12 @@ export default function SearchForm() {
             suggestion:
               'The address lookup service is currently unavailable. Please enter your address manually.',
           });
-        } else if (error.message === 'NO_ADDRESS_FOUND') {
+        } else if (error.message === 'NO_GEOGRAPHY_DATA' || error.message === 'NO_DISTRICT_FOUND') {
           setError({
             type: 'geolocation',
-            message: 'No address found',
+            message: 'No district found',
             suggestion:
-              'Could not find an address for your location. Please enter your address manually.',
+              'Could not determine your congressional district. Please enter your address or ZIP code manually.',
           });
         } else {
           setError({
@@ -347,14 +372,14 @@ export default function SearchForm() {
                 {error.type !== 'invalid_zip' && (
                   <button
                     onClick={handleRetry}
-                    className="inline-flex items-center px-grid-2 py-grid-2 bg-civiq-red text-white text-sm font-bold uppercase tracking-aicher hover:bg-red-700 transition-colors border-2 border-black"
+                    className="inline-flex items-center justify-center w-full sm:w-auto px-grid-2 py-grid-2 bg-civiq-red text-white text-sm font-bold uppercase tracking-aicher hover:bg-red-700 transition-colors border-2 border-black"
                   >
                     Try Again
                   </button>
                 )}
                 <button
                   onClick={handleClearError}
-                  className="inline-flex items-center px-grid-2 py-grid-2 bg-white border-2 border-civiq-red text-red-700 text-sm font-bold uppercase tracking-aicher hover:bg-red-50 transition-colors"
+                  className="inline-flex items-center justify-center w-full sm:w-auto px-grid-2 py-grid-2 bg-white border-2 border-civiq-red text-red-700 text-sm font-bold uppercase tracking-aicher hover:bg-red-50 transition-colors"
                 >
                   Dismiss
                 </button>

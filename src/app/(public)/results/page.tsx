@@ -599,7 +599,7 @@ function ResultsContent() {
             <Link href="/">
               <CiviqLogo />
             </Link>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               {/* Quick search history in header */}
               <div className="hidden md:flex items-center gap-2">
                 {typeof window !== 'undefined' &&
@@ -615,16 +615,16 @@ function ResultsContent() {
                       </Link>
                     ))}
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <Link
                   href="/compare"
-                  className="text-civiq-green hover:text-civiq-green/80 text-sm font-medium"
+                  className="hidden sm:inline text-civiq-green hover:text-civiq-green/80 text-sm font-medium"
                 >
                   Compare Representatives
                 </Link>
                 <Link
                   href="/"
-                  className="text-civiq-blue hover:text-civiq-blue/80 text-sm font-medium"
+                  className="text-civiq-blue hover:text-civiq-blue/80 text-xs sm:text-sm font-medium whitespace-nowrap"
                 >
                   ← New Search
                 </Link>
@@ -863,7 +863,11 @@ function ResultsContent() {
                       zipCode={
                         zipCode || (query ? query.match(/\b\d{5}\b/)?.[0] || query : '') || ''
                       }
-                      state={unifiedGeocodeResult?.districts?.federal?.state}
+                      state={
+                        unifiedGeocodeResult?.districts?.federal?.state ||
+                        districtInfo?.state ||
+                        selectedDistrict?.state
+                      }
                       stateSenator={unifiedGeocodeResult?.stateLegislators?.senator}
                       stateRepresentative={unifiedGeocodeResult?.stateLegislators?.representative}
                     />
