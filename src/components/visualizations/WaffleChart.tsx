@@ -68,31 +68,27 @@ export default function WaffleChart({
     small: {
       squareSize: 6, // 6px squares
       gap: 1, // 1px gap
+      mobileSquareSize: 4, // smaller on mobile
+      mobileGap: 1,
     },
     default: {
       squareSize: 8, // 8px squares (Aicher standard)
       gap: 2, // 2px gap
+      mobileSquareSize: 6, // smaller on mobile
+      mobileGap: 1,
     },
     large: {
       squareSize: 12, // 12px squares
       gap: 2, // 2px gap
+      mobileSquareSize: 8, // smaller on mobile
+      mobileGap: 2,
     },
   };
 
-  const { squareSize, gap } = sizeMap[size];
-
-  // Container styles
-  const containerStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(10, 1fr)',
-    gap: `${gap}px`,
-    width: 'fit-content',
-  };
+  const { squareSize, gap, mobileSquareSize, mobileGap } = sizeMap[size];
 
   // Base square styles (pure geometric form - no border-radius)
   const getSquareStyle = (isFilled: boolean): React.CSSProperties => ({
-    width: `${squareSize}px`,
-    height: `${squareSize}px`,
     backgroundColor: isFilled ? color : '#e0e0e0',
     border: `1px solid ${isFilled ? 'rgba(0, 0, 0, 0.1)' : '#d0d0d0'}`,
     transition: 'opacity 0.2s ease',
@@ -100,15 +96,37 @@ export default function WaffleChart({
 
   return (
     <div
-      style={containerStyle}
+      className="inline-block"
       role="img"
       aria-label={`${clampedPercentage.toFixed(1)}% ${label}`}
       title={`${clampedPercentage.toFixed(1)}% ${label}`}
     >
-      {/* Generate 100 squares (10×10 grid) */}
-      {Array.from({ length: 100 }, (_, index) => (
-        <div key={index} style={getSquareStyle(index < filledSquares)} />
-      ))}
+      {/* Mobile-optimized grid */}
+      <div className="grid grid-cols-10 sm:hidden" style={{ gap: `${mobileGap}px` }}>
+        {Array.from({ length: 100 }, (_, index) => (
+          <div
+            key={`mobile-${index}`}
+            style={{
+              ...getSquareStyle(index < filledSquares),
+              width: `${mobileSquareSize}px`,
+              height: `${mobileSquareSize}px`,
+            }}
+          />
+        ))}
+      </div>
+      {/* Desktop grid */}
+      <div className="hidden sm:grid grid-cols-10" style={{ gap: `${gap}px` }}>
+        {Array.from({ length: 100 }, (_, index) => (
+          <div
+            key={`desktop-${index}`}
+            style={{
+              ...getSquareStyle(index < filledSquares),
+              width: `${squareSize}px`,
+              height: `${squareSize}px`,
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

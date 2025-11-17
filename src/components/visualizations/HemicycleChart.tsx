@@ -127,20 +127,20 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
         : 'None';
 
   return (
-    <div className={`bg-white border border-gray-200 p-6 ${className}`}>
-      <div className="flex flex-col lg:flex-row gap-6">
+    <div className={`bg-white border border-gray-200 p-4 sm:p-6 ${className}`}>
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
         {/* Hemicycle Chart */}
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
             {data.chamber === 'house' ? 'House of Representatives' : 'Senate'} Composition
           </h3>
 
-          <div className="relative flex justify-center">
+          <div className="relative flex justify-center overflow-x-auto pb-2">
             <svg
               width={svgDimensions.width}
               height={svgDimensions.height}
               viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`}
-              className="mx-auto"
+              className="mx-auto min-w-[280px] sm:min-w-0"
             >
               {/* Individual seats */}
               {seatPositions.map((seat, index) => (
@@ -181,11 +181,11 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
         </div>
 
         {/* Legend and Statistics */}
-        <div className="lg:w-80">
-          <div className="space-y-4">
+        <div className="w-full lg:w-80">
+          <div className="space-y-3 sm:space-y-4">
             {/* Control Status */}
-            <div className="bg-white p-4">
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">Control</h4>
+            <div className="bg-white p-3 sm:p-4">
+              <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">Control</h4>
               <div className="flex items-center gap-2">
                 <div
                   className="w-4 h-4 rounded"
@@ -216,22 +216,30 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
 
             {/* Party Breakdown */}
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 mb-3">Party Breakdown</h4>
-              <div className="space-y-3">
+              <h4 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
+                Party Breakdown
+              </h4>
+              <div className="space-y-2 sm:space-y-3">
                 {partyCounts.map(party => {
                   const percentage = (party.count / data.totalSeats) * 100;
                   return (
                     <div key={party.party} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
                         <div
-                          className="w-4 h-4 rounded"
+                          className="w-3 h-3 sm:w-4 sm:h-4 rounded"
                           style={{ backgroundColor: party.color }}
                         ></div>
-                        <span className="text-sm font-medium text-gray-700">{party.party}</span>
+                        <span className="text-xs sm:text-sm font-medium text-gray-700">
+                          {party.party}
+                        </span>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-bold text-gray-900">{party.count}</div>
-                        <div className="text-xs text-gray-500">{percentage.toFixed(1)}%</div>
+                        <div className="text-xs sm:text-sm font-bold text-gray-900">
+                          {party.count}
+                        </div>
+                        <div className="text-[10px] sm:text-xs text-gray-500">
+                          {percentage.toFixed(1)}%
+                        </div>
                       </div>
                     </div>
                   );
@@ -240,9 +248,9 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
             </div>
 
             {/* Key Numbers */}
-            <div className="bg-blue-50 p-4">
-              <h4 className="text-sm font-semibold text-blue-900 mb-2">Key Numbers</h4>
-              <div className="space-y-1 text-sm">
+            <div className="bg-blue-50 p-3 sm:p-4">
+              <h4 className="text-xs sm:text-sm font-semibold text-blue-900 mb-2">Key Numbers</h4>
+              <div className="space-y-1 text-xs sm:text-sm">
                 <div className="flex justify-between">
                   <span className="text-blue-700">Majority Needed:</span>
                   <span className="font-medium text-blue-900">{majorityThreshold}</span>

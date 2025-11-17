@@ -107,7 +107,7 @@ export default function StackedBar({
     .join(', ');
 
   return (
-    <div>
+    <div className="w-full">
       {/* Stacked Bar */}
       <div style={containerStyle} role="img" aria-label={`${ariaLabel}: ${ariaDescription}`}>
         {normalizedSegments.map((segment, index) => {
@@ -130,39 +130,27 @@ export default function StackedBar({
         })}
       </div>
 
-      {/* Optional labels below the bar */}
+      {/* Optional labels below the bar - responsive grid */}
       {showLabels && (
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '12px',
-            marginTop: '12px',
-          }}
-        >
+        <div className="flex flex-wrap gap-2 sm:gap-3 mt-2 sm:mt-3">
           {segments.map((segment, index) => (
             <div
               key={`label-${segment.label}-${index}`}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '13px',
-              }}
+              className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm"
             >
               {/* Color indicator square (Aicher geometric form) */}
               <div
+                className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0"
                 style={{
-                  width: '12px',
-                  height: '12px',
                   backgroundColor: segment.color,
                   border: '1px solid rgba(0, 0, 0, 0.1)',
-                  flexShrink: 0,
                 }}
                 aria-hidden="true"
               />
-              <span style={{ color: '#333' }}>
-                <strong>{segment.percentage.toFixed(1)}%</strong> {segment.label}
+              <span className="text-gray-700">
+                <strong>{segment.percentage.toFixed(1)}%</strong>{' '}
+                <span className="hidden sm:inline">{segment.label}</span>
+                <span className="sm:hidden">{segment.label.substring(0, 3)}</span>
               </span>
             </div>
           ))}
