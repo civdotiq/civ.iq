@@ -1,10 +1,8 @@
 import Image from 'next/image';
 import SearchForm from '@/components/SearchForm';
-import {
-  RepresentativesIcon,
-  LegislationIcon,
-  StatisticsIcon,
-} from '@/components/icons/AicherIcons';
+import FeatureGrid from '@/components/landing/FeatureGrid';
+import QuickStartPaths from '@/components/landing/QuickStartPaths';
+import PlatformStats from '@/components/landing/PlatformStats';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,47 +40,6 @@ export default function HomePage() {
 
           {/* Search Bar */}
           <SearchForm />
-
-          {/* Feature Icons */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-grid-2 sm:gap-grid-4 max-w-4xl mx-auto mt-grid-3 sm:mt-grid-8">
-            <div className="aicher-card aicher-hover flex flex-col items-center p-grid-2 sm:p-grid-4">
-              <div className="w-grid-5 sm:w-grid-6 h-grid-5 sm:h-grid-6 bg-civiq-blue flex items-center justify-center mb-grid-1 sm:mb-grid-2 aicher-border">
-                <RepresentativesIcon className="h-5 sm:h-6 w-5 sm:w-6 text-white" />
-              </div>
-              <h3 className="text-sm sm:text-lg font-semibold text-gray-900 mb-grid-1 sm:mb-grid-2 aicher-heading text-center">
-                Find Representatives
-              </h3>
-              <p className="text-xs sm:text-base text-gray-600 text-center leading-snug sm:leading-normal">
-                Discover your House and Senate representatives with detailed contact information and
-                voting records
-              </p>
-            </div>
-
-            <div className="aicher-card aicher-hover flex flex-col items-center p-grid-2 sm:p-grid-4">
-              <div className="w-grid-5 sm:w-grid-6 h-grid-5 sm:h-grid-6 bg-civiq-green flex items-center justify-center mb-grid-1 sm:mb-grid-2 border-2 border-black">
-                <LegislationIcon className="h-5 sm:h-6 w-5 sm:w-6 text-white" />
-              </div>
-              <h3 className="text-sm sm:text-lg font-semibold text-gray-900 mb-grid-1 sm:mb-grid-2 aicher-heading text-center">
-                Track Legislation
-              </h3>
-              <p className="text-xs sm:text-base text-gray-600 text-center leading-snug sm:leading-normal">
-                Follow bills, votes, and legislative activity from the current 119th Congress
-              </p>
-            </div>
-
-            <div className="aicher-card aicher-hover flex flex-col items-center p-grid-2 sm:p-grid-4">
-              <div className="w-grid-5 sm:w-grid-6 h-grid-5 sm:h-grid-6 bg-civiq-red flex items-center justify-center mb-grid-1 sm:mb-grid-2 border-2 border-black">
-                <StatisticsIcon className="h-5 sm:h-6 w-5 sm:w-6 text-white" />
-              </div>
-              <h3 className="text-sm sm:text-lg font-semibold text-gray-900 mb-grid-1 sm:mb-grid-2 aicher-heading text-center">
-                View Statistics
-              </h3>
-              <p className="text-xs sm:text-base text-gray-600 text-center leading-snug sm:leading-normal">
-                Analyze campaign finance, voting patterns, and demographic data from official
-                sources
-              </p>
-            </div>
-          </div>
 
           {/* Data Sources */}
           <div className="mt-grid-3 sm:mt-grid-8 text-center">
@@ -128,6 +85,15 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Feature Grid Section */}
+      <FeatureGrid />
+
+      {/* Platform Stats Banner */}
+      <PlatformStats />
+
+      {/* Quick Start Paths Section */}
+      <QuickStartPaths />
     </div>
   );
 }
