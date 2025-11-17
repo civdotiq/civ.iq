@@ -24,7 +24,7 @@ const features: Feature[] = [
     iconColor: 'civiq-blue',
     title: 'Federal Representatives',
     description: 'All 540 House and Senate members with profiles and contact info',
-    href: '/representatives/all',
+    href: '/representatives',
     stat: '540 Members',
   },
   {
@@ -32,7 +32,7 @@ const features: Feature[] = [
     iconColor: 'civiq-green',
     title: 'State Legislatures',
     description: 'Track state legislators and bills across all 50 states',
-    href: '/state-districts',
+    href: '/states',
     stat: 'All 50 States',
   },
   {
@@ -48,7 +48,7 @@ const features: Feature[] = [
     iconColor: 'civiq-blue',
     title: 'Voting Records',
     description: 'See how your representatives voted on legislation',
-    href: '/representatives/all',
+    href: '/representatives',
     stat: '1,200+ Votes',
   },
   {
@@ -56,7 +56,7 @@ const features: Feature[] = [
     iconColor: 'civiq-green',
     title: 'Campaign Finance',
     description: 'Track contributions and spending from FEC data',
-    href: '/representatives/all',
+    href: '/representatives',
     stat: '$2B+ Tracked',
   },
   {
@@ -64,7 +64,7 @@ const features: Feature[] = [
     iconColor: 'civiq-red',
     title: 'Committees',
     description: 'Explore congressional committees and their activities',
-    href: '/committees',
+    href: '/representatives',
     stat: '34 Committees',
   },
   {
@@ -72,7 +72,7 @@ const features: Feature[] = [
     iconColor: 'civiq-blue',
     title: 'Bill Tracking',
     description: 'Follow legislation from the 119th Congress in real-time',
-    href: '/representatives/all',
+    href: '/representatives',
     stat: '8,000+ Bills',
   },
   {
@@ -80,7 +80,7 @@ const features: Feature[] = [
     iconColor: 'civiq-green',
     title: 'Local Government',
     description: 'Find local officials and government contacts by address',
-    href: '/representatives/all',
+    href: '/representatives',
     stat: 'All Localities',
   },
 ];

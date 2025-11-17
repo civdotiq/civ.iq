@@ -62,7 +62,7 @@ const US_STATES = [
 const EXAMPLE_REPS = [
   { id: 'J000288', name: 'Hakeem Jeffries', title: 'House Democratic Leader' },
   { id: 'M001184', name: 'Mitch McConnell', title: 'Senate Republican Leader' },
-  { id: 'S001168', name: 'Chuck Schumer', title: 'Senate Majority Leader' },
+  { id: 'S000148', name: 'Chuck Schumer', title: 'Senate Minority Leader' },
 ];
 
 export default function QuickStartPaths() {
@@ -149,11 +149,11 @@ export default function QuickStartPaths() {
               <div className="text-xs text-gray-600">435 congressional districts</div>
             </Link>
             <Link
-              href="/committees"
+              href="/states"
               className="block border-2 border-gray-200 px-grid-2 py-grid-2 aicher-hover"
             >
-              <div className="text-sm font-semibold text-gray-900 mb-grid-1">Committees</div>
-              <div className="text-xs text-gray-600">34 congressional committees</div>
+              <div className="text-sm font-semibold text-gray-900 mb-grid-1">All States</div>
+              <div className="text-xs text-gray-600">50 states + territories</div>
             </Link>
           </div>
         </div>
