@@ -60,9 +60,9 @@ const US_STATES = [
 
 // Example high-profile representatives (can be updated)
 const EXAMPLE_REPS = [
-  { id: 'J000288', name: 'Hakeem Jeffries', title: 'House Democratic Leader' },
-  { id: 'M001184', name: 'Mitch McConnell', title: 'Senate Republican Leader' },
-  { id: 'S000148', name: 'Chuck Schumer', title: 'Senate Minority Leader' },
+  { id: 'J000294', name: 'Hakeem Jeffries', title: 'House Democratic Leader' },
+  { id: 'M000355', name: 'Mitch McConnell', title: 'Senate Republican Leader' },
+  { id: 'S000148', name: 'Chuck Schumer', title: 'Senate Majority Leader' },
 ];
 
 export default function QuickStartPaths() {

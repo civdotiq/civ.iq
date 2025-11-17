@@ -72,7 +72,7 @@ const features: Feature[] = [
     iconColor: 'civiq-blue',
     title: 'Bill Tracking',
     description: 'Follow legislation from the 119th Congress in real-time',
-    href: '/representatives',
+    href: '/legislation',
     stat: '8,000+ Bills',
   },
   {
@@ -80,7 +80,7 @@ const features: Feature[] = [
     iconColor: 'civiq-green',
     title: 'Local Government',
     description: 'Find local officials and government contacts by address',
-    href: '/representatives',
+    href: '/local',
     stat: 'All Localities',
   },
 ];
