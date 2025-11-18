@@ -58,7 +58,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   // Check in-memory cache first
   const cached = photoCache.get(bioguideId);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return new NextResponse(cached.data, {
+    return new NextResponse(new Uint8Array(cached.data), {
       headers: {
         'Content-Type': cached.contentType,
         'Cache-Control': 'public, max-age=86400, s-maxage=86400',
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         timestamp: Date.now(),
       });
 
-      return new NextResponse(buffer, {
+      return new NextResponse(new Uint8Array(buffer), {
         headers: {
           'Content-Type': contentType,
           'Cache-Control': 'public, max-age=86400, s-maxage=86400',
@@ -119,7 +119,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           timestamp: Date.now(),
         });
 
-        return new NextResponse(buffer, {
+        return new NextResponse(new Uint8Array(buffer), {
           headers: {
             'Content-Type': contentType,
             'Cache-Control': 'public, max-age=86400, s-maxage=86400',
