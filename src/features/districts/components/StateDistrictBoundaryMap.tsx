@@ -23,6 +23,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Loader2, Maximize2, Minimize2 } from 'lucide-react';
 import logger from '@/lib/logging/simple-logger';
+import { useIsMobile } from '@/hooks/useMediaQuery';
+import { isSlowConnection } from '@/lib/utils/mobile-detection';
 
 interface StateDistrictBoundaryMapProps {
   stateCode: string; // e.g., "CA"
@@ -55,6 +57,18 @@ export default function StateDistrictBoundaryMap({
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [metadata, setMetadata] = useState<DistrictMetadata | null>(null);
+
+  // Detect device type and connection quality for optimal PMTiles selection
+  const isMobile = useIsMobile();
+  const slowConnection = isSlowConnection();
+
+  // Select appropriate PMTiles file based on device capabilities
+  // Mobile devices or slow connections get optimized tiles (max zoom 8, ~6MB)
+  // Desktop with good connection gets full-quality tiles (max zoom 12, ~24MB)
+  const pmtilesFile =
+    isMobile || slowConnection
+      ? '/data/state_legislative_districts_mobile.pmtiles'
+      : '/data/state_legislative_districts.pmtiles';
 
   // Callback ref to track when DOM element is actually mounted
   const setMapContainerRef = useCallback((node: HTMLDivElement | null) => {
@@ -146,10 +160,16 @@ export default function StateDistrictBoundaryMap({
 
           try {
             // Add PMTiles source after map is loaded
-            logger.info('[StateDistrictBoundaryMap] Adding PMTiles source...');
+            // Uses mobile-optimized tiles (~6MB) for mobile devices or slow connections
+            // Uses full-quality tiles (~24MB) for desktop with good connection
+            logger.info('[StateDistrictBoundaryMap] Adding PMTiles source...', {
+              file: pmtilesFile,
+              isMobile,
+              slowConnection,
+            });
             map.current.addSource('state-districts', {
               type: 'vector',
-              url: 'pmtiles:///data/state_legislative_districts.pmtiles',
+              url: `pmtiles://${pmtilesFile}`,
             });
             logger.info('[StateDistrictBoundaryMap] PMTiles source added successfully');
           } catch (error) {
@@ -276,7 +296,7 @@ export default function StateDistrictBoundaryMap({
         setLoading(false);
       }
     },
-    [chamber, stateCode, mapContainer]
+    [chamber, stateCode, mapContainer, isMobile, pmtilesFile, slowConnection]
   );
 
   useEffect(() => {

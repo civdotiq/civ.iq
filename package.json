@@ -36,6 +36,8 @@
     "test-phase3-integration": "tsx scripts/test-phase3-integration.ts",
     "process-district-boundaries": "node scripts/process-district-boundaries.mjs",
     "process-real-census-districts": "node scripts/process-real-census-districts.mjs",
+    "process:state-districts": "node scripts/process-state-legislative-districts.mjs",
+    "process:mobile-pmtiles": "node scripts/generate-mobile-pmtiles.mjs",
     "test-district-accuracy": "node scripts/test-district-accuracy.mjs",
     "migrate:119th": "npx tsx src/scripts/migrate-119th.ts",
     "validate:data": "npx tsx src/scripts/validate-data.ts",
