@@ -2,7 +2,6 @@ import Image from 'next/image';
 import SearchForm from '@/components/SearchForm';
 import FeatureGrid from '@/components/landing/FeatureGrid';
 import QuickStartPaths from '@/components/landing/QuickStartPaths';
-import PlatformStats from '@/components/landing/PlatformStats';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,9 +51,6 @@ export default function HomePage() {
 
       {/* Feature Grid Section */}
       <FeatureGrid />
-
-      {/* Platform Stats Banner */}
-      <PlatformStats />
 
       {/* Quick Start Paths Section */}
       <QuickStartPaths />
