@@ -35,9 +35,13 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
     <header className={`fixed top-0 w-full ${headerClasses} z-50 ${className}`}>
       <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
+        <Link
+          href="/"
+          className="flex items-center gap-2 sm:gap-3 group min-h-[44px] py-1"
+          aria-label="CIV.IQ Home"
+        >
           <div className="transform transition-all duration-300 group-hover:scale-105">
-            <div className="w-7 h-11 sm:w-8 sm:h-12">
+            <div className="w-8 h-12 sm:w-9 sm:h-14">
               <CiviqLogo />
             </div>
           </div>
@@ -51,7 +55,7 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] after:transition-all after:duration-200 hover:after:w-full ${
+                className={`aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 min-h-[44px] flex items-center after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] after:transition-all after:duration-200 hover:after:w-full ${
                   isActive ? 'text-[#3ea2d4] after:w-full' : 'text-gray-700 hover:text-[#3ea2d4]'
                 }`}
               >

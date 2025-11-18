@@ -177,6 +177,7 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
           <input
             type="text"
             id="name"
+            autoComplete="name"
             value={formData.name}
             onChange={e => handleInputChange('name', e.target.value)}
             className={`w-full px-3 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800`}
@@ -193,6 +194,7 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
           <input
             type="email"
             id="email"
+            autoComplete="email"
             value={formData.email}
             onChange={e => handleInputChange('email', e.target.value)}
             className={`w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800`}
@@ -208,7 +210,10 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
           </label>
           <input
             type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             id="zipCode"
+            autoComplete="postal-code"
             value={formData.zipCode}
             onChange={e => handleInputChange('zipCode', e.target.value)}
             className={`w-full px-3 py-2 border ${errors.zipCode ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800`}
@@ -249,12 +254,12 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
             placeholder="I am writing to express my views on..."
             maxLength={MESSAGE_CHAR_LIMIT}
           />
-          <div className="flex justify-between items-center mt-1">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mt-1">
             {errors.message && <p className="text-red-500 text-sm">{errors.message}</p>}
             <span
-              className={`text-sm ml-auto ${messageLength > MESSAGE_CHAR_LIMIT * 0.9 ? 'text-orange-500' : 'text-gray-500'}`}
+              className={`text-sm font-medium sm:ml-auto ${messageLength > MESSAGE_CHAR_LIMIT * 0.9 ? 'text-orange-600 font-semibold' : 'text-gray-600'}`}
             >
-              {messageLength} / {MESSAGE_CHAR_LIMIT}
+              {messageLength} / {MESSAGE_CHAR_LIMIT} characters
             </span>
           </div>
         </div>

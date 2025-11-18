@@ -39,6 +39,17 @@ const sizeDimensions = {
   xl: 96,
 };
 
+// Responsive sizes for Next.js Image optimization
+// Format: "(max-width: XXpx) YYpx, ZZpx"
+// This tells the browser what size the image will be at different viewport widths
+const responsiveSizes = {
+  xs: '(max-width: 640px) 24px, 32px', // Smaller on mobile
+  sm: '(max-width: 640px) 40px, 48px',
+  md: '(max-width: 640px) 56px, 64px',
+  lg: '(max-width: 640px) 64px, (max-width: 1024px) 72px, 80px',
+  xl: '(max-width: 640px) 80px, (max-width: 1024px) 88px, 96px',
+};
+
 export const RepresentativePhoto = memo(function RepresentativePhoto({
   bioguideId,
   name,
@@ -144,6 +155,7 @@ export const RepresentativePhoto = memo(function RepresentativePhoto({
           alt={`Photo of ${name}`}
           width={sizeDimensions[size]}
           height={sizeDimensions[size]}
+          sizes={responsiveSizes[size]}
           className="w-full h-full object-cover rounded-full"
           style={{ aspectRatio: '1/1' }}
           priority={size === 'xl'} // Prioritize larger images

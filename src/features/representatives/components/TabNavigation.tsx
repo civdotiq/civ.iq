@@ -89,14 +89,14 @@ export function TabNavigation({
   if (variant === 'pills') {
     return (
       <div className={`aicher-card aicher-no-radius ${className}`}>
-        <nav className="flex flex-wrap gap-1">
+        <nav className="flex flex-wrap md:flex-nowrap overflow-x-auto gap-1 scroll-smooth snap-x snap-proximity [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               onMouseEnter={onTabHover ? () => onTabHover(tab.id) : undefined}
               className={`
-        aicher-button inline-flex items-center gap-2 ${sizeClasses[size]} aicher-heading-wide transition-all duration-200 aicher-focus
+        aicher-button inline-flex items-center gap-2 ${sizeClasses[size]} aicher-heading-wide transition-all duration-200 aicher-focus min-h-[44px] snap-start whitespace-nowrap
         ${activeTab === tab.id ? 'aicher-button-primary' : 'aicher-button aicher-hover'}
        `}
               title={tab.description}
@@ -123,13 +123,13 @@ export function TabNavigation({
   // Aicher geometric bordered variant (default)
   return (
     <div className={`aicher-tabs ${className}`}>
-      <nav className="flex">
+      <nav className="flex overflow-x-auto scroll-smooth snap-x snap-proximity [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x">
         {tabs.map((tab, index) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
             onMouseEnter={onTabHover ? () => onTabHover(tab.id) : undefined}
-            className={`aicher-tab ${activeTab === tab.id ? 'active' : ''} ${
+            className={`aicher-tab min-h-[44px] snap-start whitespace-nowrap ${activeTab === tab.id ? 'active' : ''} ${
               index === tabs.length - 1 ? 'border-r-0' : ''
             }`}
             title={tab.description}
@@ -188,13 +188,13 @@ export function ExtendedTabNavigation({
         <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 md:hidden" />
         <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 md:hidden" />
 
-        <nav className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x">
           {tabs.map(tab => (
-            <div key={tab.id} className="relative">
+            <div key={tab.id} className="relative snap-center">
               <button
                 onClick={() => onTabChange(tab.id)}
                 className={`
-        aicher-button inline-flex items-center gap-2 ${sizeClasses[size]} aicher-heading-wide aicher-border-b transition-all duration-200 whitespace-nowrap relative aicher-focus
+        aicher-button inline-flex items-center gap-2 ${sizeClasses[size]} aicher-heading-wide aicher-border-b transition-all duration-200 whitespace-nowrap relative aicher-focus min-h-[44px]
         ${
           activeTab === tab.id
             ? 'aicher-border-blue text-blue-600'
