@@ -12,6 +12,7 @@ import { ServiceTermsCard } from './ServiceTermsCard';
 import { CommitteeMembershipsCard } from './CommitteeMembershipsCard';
 import { BiographyCard } from './BiographyCard';
 import { OverviewSidebar } from './OverviewSidebar';
+import { RepresentativeContactForm } from './RepresentativeContactForm';
 
 interface ContactInfoTabProps {
   representative: EnhancedRepresentative;
@@ -50,6 +51,11 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
           {/* Federal Service History */}
           <div>
             <ServiceTermsCard representative={representative} />
+          </div>
+
+          {/* Contact Form */}
+          <div>
+            <RepresentativeContactForm representative={representative} />
           </div>
         </div>
 
