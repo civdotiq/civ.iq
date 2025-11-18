@@ -1,3 +1,4 @@
+/* eslint-disable no-warning-comments */
 'use client';
 
 /**
@@ -158,6 +159,43 @@ export const LazyCampaignFinanceVisualizer = lazy(() =>
   import(
     /* webpackChunkName:"campaign-finance-viz" */ '@/features/campaign-finance/components/CampaignFinanceVisualizer'
   ).then(module => ({ default: module.CampaignFinanceVisualizer }))
+);
+
+// Individual Recharts-based campaign finance components (200KB library)
+export const LazyDonationSourcesChart = lazy(() =>
+  import(
+    /* webpackChunkName:"recharts-donation" */ '@/features/campaign-finance/components/DonationSourcesChart'
+  ).then(module => ({ default: module.DonationSourcesChart }))
+);
+
+export const LazyInterestGroupBaskets = lazy(() =>
+  import(
+    /* webpackChunkName:"recharts-interest" */ '@/features/campaign-finance/components/InterestGroupBaskets'
+  ).then(module => ({ default: module.InterestGroupBaskets }))
+);
+
+export const LazyFinanceComparison = lazy(() =>
+  import(
+    /* webpackChunkName:"recharts-comparison" */ '@/features/campaign-finance/components/FinanceComparison'
+  ).then(module => ({ default: module.FinanceComparison }))
+);
+
+export const LazyIndustryBreakdown = lazy(() =>
+  import(
+    /* webpackChunkName:"recharts-industry" */ '@/features/campaign-finance/components/IndustryBreakdown'
+  ).then(module => ({ default: module.IndustryBreakdown }))
+);
+
+export const LazyGeographicBreakdown = lazy(() =>
+  import(
+    /* webpackChunkName:"recharts-geographic" */ '@/features/campaign-finance/components/GeographicBreakdown'
+  ).then(module => ({ default: module.GeographicBreakdown }))
+);
+
+export const LazyDistrictCharts = lazy(() =>
+  import(
+    /* webpackChunkName:"recharts-district" */ '@/features/districts/components/DistrictCharts'
+  ).then(module => ({ default: module.DistrictCharts }))
 );
 
 // Interactive Visualizations - Heavy D3 component
