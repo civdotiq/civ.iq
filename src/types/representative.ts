@@ -265,6 +265,25 @@ export interface ContactAttempt {
   };
 }
 
+// Contact form data structure
+export interface ContactFormData {
+  name: string;
+  email: string;
+  zipCode: string;
+  subject: string;
+  message: string;
+}
+
+// Message template for constituent communication
+export interface MessageTemplate {
+  id: string;
+  category: string;
+  title: string;
+  description: string;
+  template: string;
+  variables?: string[]; // Template variables like {name}, {zipCode}, etc.
+}
+
 // ZIP code to representative mapping
 export interface ZipCodeRepresentatives {
   zipCode: string;

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
 import { EnhancedRepresentative } from '@/types/representative';
+import { RepresentativeContactForm } from '@/features/representatives/components/RepresentativeContactForm';
 
 interface TabsEnhancedProps {
   bioguideId: string;
@@ -29,7 +30,13 @@ interface TabsEnhancedProps {
 }
 
 // Enhanced component for Profile tab
-function ProfileContent({ data }: { data: Record<string, any> }) {
+function ProfileContent({
+  data,
+  representative,
+}: {
+  data: Record<string, any>;
+  representative: EnhancedRepresentative;
+}) {
   if (!data) return null;
 
   return (
@@ -98,6 +105,11 @@ function ProfileContent({ data }: { data: Record<string, any> }) {
             </dl>
           </div>
         )}
+      </div>
+
+      {/* Contact Form Section */}
+      <div className="mt-8">
+        <RepresentativeContactForm representative={representative} />
       </div>
     </div>
   );
@@ -656,7 +668,9 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
 
         {data !== null && !loading && !error && (
           <div>
-            {activeTab === 'profile' && <ProfileContent data={data as Record<string, any>} />}
+            {activeTab === 'profile' && (
+              <ProfileContent data={data as Record<string, any>} representative={representative} />
+            )}
             {activeTab === 'bills' && <BillsContent data={data as Record<string, any>} />}
             {activeTab === 'votes' && <VotesContent data={data as Record<string, any>} />}
             {activeTab === 'finance' && <FinanceContent data={data as Record<string, any>} />}
