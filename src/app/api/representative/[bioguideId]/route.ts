@@ -8,6 +8,7 @@ import { getEnhancedRepresentative } from '@/features/representatives/services/c
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
 import { withPerformanceTiming } from '@/lib/performance/api-timer';
+import { getServerBaseUrl } from '@/lib/server-url';
 import type { EnhancedRepresentative } from '@/types/representative';
 
 // ISR: Revalidate every 1 day
@@ -110,7 +111,7 @@ async function getHandler(
 
       if (includeCommittees || includeAll) {
         fetchPromises.push(
-          fetch(`${request.nextUrl.origin}/api/representative/${upperBioguideId}/committees`)
+          fetch(`${getServerBaseUrl()}/api/representative/${upperBioguideId}/committees`)
             .then(async response => {
               if (response.ok) {
                 const data = await response.json();
@@ -124,7 +125,7 @@ async function getHandler(
 
       if (includeLeadership || includeAll) {
         fetchPromises.push(
-          fetch(`${request.nextUrl.origin}/api/representative/${upperBioguideId}/leadership`)
+          fetch(`${getServerBaseUrl()}/api/representative/${upperBioguideId}/leadership`)
             .then(async response => {
               if (response.ok) {
                 const data = await response.json();

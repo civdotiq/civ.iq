@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logging/logger-edge';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry-edge';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 // ISR: Revalidate every 1 week
 export const revalidate = 604800;
@@ -402,7 +403,7 @@ export async function GET(request: NextRequest) {
     if (!zipInfo) {
       try {
         const repResponse = await fetch(
-          `${request.nextUrl.origin}/api/representatives?zip=${encodeURIComponent(zipCode)}`
+          `${getServerBaseUrl()}/api/representatives?zip=${encodeURIComponent(zipCode)}`
         );
 
         if (repResponse.ok) {
@@ -456,7 +457,7 @@ export async function GET(request: NextRequest) {
       // Lookup district from representatives API if not provided
       try {
         const repResponse = await fetch(
-          `${request.nextUrl.origin}/api/representatives?zip=${encodeURIComponent(zipCode)}`
+          `${getServerBaseUrl()}/api/representatives?zip=${encodeURIComponent(zipCode)}`
         );
 
         if (repResponse.ok) {

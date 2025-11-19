@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
+import { getServerBaseUrl } from '@/lib/server-url';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -436,7 +437,7 @@ export async function GET(
 
   try {
     // First, get representative info
-    const repResponse = await fetch(`${request.nextUrl.origin}/api/representative/${bioguideId}`);
+    const repResponse = await fetch(`${getServerBaseUrl()}/api/representative/${bioguideId}`);
 
     if (!repResponse.ok) {
       throw new Error('Failed to fetch representative info');

@@ -17,6 +17,7 @@ export default [
       '*.config.mjs',
       'coverage/**',
       '.vercel/**',
+      '.claude/**',
     ],
   },
   ...tseslint.configs.recommended,

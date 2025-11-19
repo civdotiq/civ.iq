@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AdvancedGDELTService } from '@/lib/services/gdelt/AdvancedGDELTService';
 import logger from '@/lib/logging/simple-logger';
+import { getServerBaseUrl } from '@/lib/server-url';
 import type { EnhancedRepresentative } from '@/types/representative';
 import type { GDELTTrendingTopic } from '@/types/gdelt';
 
@@ -53,7 +54,7 @@ export async function GET(
 
   try {
     // Get representative info
-    const repResponse = await fetch(`${request.nextUrl.origin}/api/representative/${bioguideId}`);
+    const repResponse = await fetch(`${getServerBaseUrl()}/api/representative/${bioguideId}`);
 
     if (!repResponse.ok) {
       return NextResponse.json({ error: 'Representative not found' }, { status: 404 });

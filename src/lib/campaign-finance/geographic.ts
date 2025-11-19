@@ -183,34 +183,31 @@ export function analyzeGeographicBreakdown(
 }
 
 /**
- * Create estimated geographic breakdown when actual data is not available
+ * Return geographic breakdown structure when actual data is not available
+ * NOTE: Returns empty structure rather than estimated/fake data per project policy
  */
 function createEstimatedGeographicBreakdown(
   totalRaised: number,
   homeStateCode: string,
   _homeStateName: string
 ): GeographicBreakdown {
-  // Typical patterns: House members get 60-80% from home state, Senators 40-70%
-  const estimatedHomeStatePercentage = Math.random() * 30 + 50; // 50-80%
-  const estimatedHomeStateAmount = totalRaised * (estimatedHomeStatePercentage / 100);
-  const estimatedOutOfStateAmount = totalRaised - estimatedHomeStateAmount;
-
+  // Return empty structure - no fake data generation
   return {
     homeState: {
       state: homeStateCode,
-      amount: estimatedHomeStateAmount,
-      percentage: estimatedHomeStatePercentage,
-      count: Math.floor(estimatedHomeStateAmount / 250), // Estimate ~$250 avg donation
+      amount: 0,
+      percentage: 0,
+      count: 0,
     },
     outOfState: {
-      amount: estimatedOutOfStateAmount,
-      percentage: 100 - estimatedHomeStatePercentage,
-      count: Math.floor(estimatedOutOfStateAmount / 350), // Slightly higher avg for out-of-state
-      topStates: [], // No detailed breakdown available
+      amount: 0,
+      percentage: 0,
+      count: 0,
+      topStates: [],
     },
     totalAnalyzed: totalRaised,
     dataQuality: 'low',
-    insights: ['Analysis based on typical funding patterns - actual data not available'],
+    insights: ['Geographic breakdown data not available - detailed contribution data required'],
   };
 }
 
