@@ -54,6 +54,22 @@ interface RepresentativeLobbyingData {
   };
 }
 
+/**
+ * Get lobbying disclosure data for a representative
+ *
+ * Fetches corporate lobbying data from the Senate LDA (Lobbying Disclosure Act) database,
+ * showing which companies are lobbying the representative's committees.
+ *
+ * @param _request - Next.js request object (unused)
+ * @param params - Route parameters containing bioguideId
+ * @returns JSON response with lobbying data including top companies, spending, and committee breakdowns
+ *
+ * @example
+ * GET /api/representative/K000367/lobbying
+ * Returns: { representative: {...}, lobbyingData: {...}, metadata: {...} }
+ *
+ * @see {@link https://lda.senate.gov} Senate LDA Database
+ */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ bioguideId: string }> }

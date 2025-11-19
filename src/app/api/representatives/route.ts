@@ -468,6 +468,21 @@ async function getRepresentativesByZip(zipCode: string): Promise<ApiResponse> {
   }
 }
 
+/**
+ * Get federal representatives by ZIP code
+ *
+ * Fetches all federal representatives (House + Senate) for a given ZIP code.
+ * Includes territorial delegates (PR, VI, GU, AS, MP) with votingMember distinction.
+ *
+ * @param request - Next.js request object with ZIP code query parameter
+ * @returns JSON response with representatives array or error
+ *
+ * @example
+ * GET /api/representatives?zip=48221
+ * Returns: { success: true, representatives: [...], metadata: {...} }
+ *
+ * @see {@link https://api.congress.gov} Congress.gov API
+ */
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
