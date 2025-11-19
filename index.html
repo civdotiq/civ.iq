@@ -12,31 +12,10 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
-            color: #1f2937;
+            color: #374151;
             overflow-x: hidden;
-        }
-        
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0) rotate(0deg);
-            }
-            50% {
-                transform: translateY(-20px) rotate(180deg);
-            }
         }
         
         /* Navigation */
@@ -44,33 +23,31 @@
             position: fixed;
             top: 0;
             width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            background: white;
             z-index: 1000;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
         
         .nav-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
         .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #1f2937;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            font-weight: 600;
+            color: #1f2937;
         }
         
         .logo-icon {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             position: relative;
         }
         
@@ -78,8 +55,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             background: #e11d07;
             border-radius: 50%;
         }
@@ -88,61 +65,38 @@
             position: absolute;
             bottom: 0;
             right: 0;
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             background: #0b983c;
         }
         
         .nav-status {
-            padding: 0.5rem 1.5rem;
-            background: #3ea2d4;
+            padding: 0.5rem 1.25rem;
+            background: #3b82f6;
             color: white;
-            border-radius: 2rem;
+            border-radius: 1.5rem;
             font-size: 0.875rem;
-            font-weight: 600;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
         }
         
         /* Hero Section */
         .hero {
-            min-height: 80vh;
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-            display: flex;
-            align-items: center;
-            padding: 6rem 2rem 4rem;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(62, 162, 212, 0.1) 0%, transparent 70%);
-            animation: float 20s ease-in-out infinite;
+            padding: 8rem 2rem 5rem;
+            background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+            text-align: center;
         }
         
         .hero-content {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
-            text-align: center;
-            position: relative;
-            z-index: 1;
         }
         
         .hero-logo {
             margin: 0 auto 2rem;
-            width: 80px;
-            height: 80px;
-            position: relative;
-            animation: fadeInUp 0.6s ease-out;
-        }
-        
-        .hero-logo-icon {
-            width: 100%;
-            height: 100%;
+            width: 64px;
+            height: 64px;
             position: relative;
         }
         
@@ -150,8 +104,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             background: #e11d07;
             border-radius: 50%;
         }
@@ -160,45 +114,47 @@
             position: absolute;
             bottom: 0;
             right: 0;
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             background: #0b983c;
         }
         
         h1 {
-            font-size: 4rem;
-            font-weight: 800;
+            font-size: 3rem;
+            font-weight: 700;
             margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: fadeInUp 0.8s ease-out;
-            letter-spacing: 0.05em;
-        }
-        
-        .hero-subtitle {
-            font-size: 2rem;
-            font-weight: 300;
-            color: #374151;
-            margin-bottom: 2rem;
-            animation: fadeInUp 0.8s ease-out 0.1s both;
+            color: #1f2937;
             letter-spacing: 0.02em;
         }
         
-        .tagline {
-            font-size: 1.5rem;
+        .hero-subtitle {
+            font-size: 1.25rem;
             color: #6b7280;
-            margin-bottom: 3rem;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            animation: fadeInUp 0.8s ease-out 0.3s both;
+            margin-bottom: 1.5rem;
+            font-weight: 400;
         }
         
-        /* Features Section */
-        .features {
+        .hero-description {
+            font-size: 1rem;
+            color: #6b7280;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+        
+        /* Section */
+        .section {
             padding: 5rem 2rem;
             background: white;
+        }
+        
+        .section-alt {
+            background: #f9fafb;
+        }
+        
+        .section-dark {
+            background: #1f2937;
+            color: white;
         }
         
         .container {
@@ -206,215 +162,178 @@
             margin: 0 auto;
         }
         
-        .section-title {
+        .section-header {
             text-align: center;
-            font-size: 2.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .section-title {
+            font-size: 2rem;
             font-weight: 700;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
             color: #1f2937;
         }
         
-        .section-subtitle {
-            text-align: center;
-            font-size: 1.25rem;
-            color: #6b7280;
-            margin-bottom: 4rem;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
+        .section-dark .section-title {
+            color: white;
         }
         
+        .section-subtitle {
+            font-size: 1rem;
+            color: #6b7280;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .section-dark .section-subtitle {
+            color: #d1d5db;
+        }
+        
+        /* Features Grid */
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 2rem;
         }
         
         .feature-card {
             background: #f9fafb;
             padding: 2rem;
-            border-radius: 1rem;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .feature-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #e11d07, #3ea2d4, #0b983c);
-            transform: translateX(-100%);
-            transition: transform 0.5s ease;
-        }
-        
-        .feature-card:hover::before {
-            transform: translateX(0);
-        }
-        
-        .feature-card:hover {
-            border-color: #e5e7eb;
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-radius: 0.75rem;
+            text-align: left;
         }
         
         .feature-icon {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #3ea2d4 0%, #2563eb 100%);
-            border-radius: 0.75rem;
+            width: 48px;
+            height: 48px;
+            background: #3b82f6;
+            border-radius: 0.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
             font-size: 1.5rem;
-            color: white;
         }
         
         .feature-title {
-            font-size: 1.25rem;
+            font-size: 1.125rem;
             font-weight: 600;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem;
             color: #1f2937;
         }
         
         .feature-description {
+            font-size: 0.9375rem;
             color: #6b7280;
             line-height: 1.6;
-            font-size: 0.95rem;
         }
         
-        /* Data Sources Section */
-        .data-sources {
-            padding: 5rem 2rem;
-            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-            position: relative;
-        }
-        
+        /* Sources Grid */
         .sources-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-top: 3rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2.5rem;
         }
         
         .source-badge {
+            padding: 0.75rem 1.5rem;
             background: white;
-            padding: 1.25rem;
-            border-radius: 0.75rem;
-            text-align: center;
-            font-weight: 600;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
             color: #4b5563;
-            border: 2px solid #e5e7eb;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
         }
         
-        .source-badge::after {
-            content: '✓';
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            color: #0b983c;
-            font-size: 1rem;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .source-badge:hover {
-            border-color: #0b983c;
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .source-badge:hover::after {
-            opacity: 1;
-        }
-        
-        /* Tech Specs Section */
-        .tech-specs {
-            padding: 5rem 2rem;
-            background: white;
-        }
-        
-        .specs-grid {
+        /* Benefits Grid */
+        .benefits-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
             margin-top: 3rem;
         }
         
-        .spec-card {
+        .benefit-card {
             text-align: center;
-            padding: 2rem;
         }
         
-        .spec-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 1.5rem;
-            background: linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 100%);
-            border-radius: 1rem;
+        .benefit-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1.25rem;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 0.75rem;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 2rem;
         }
         
-        .spec-title {
-            font-size: 1.25rem;
+        .section-dark .benefit-icon {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .benefit-title {
+            font-size: 1.125rem;
             font-weight: 600;
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
             color: #1f2937;
         }
         
-        .spec-description {
+        .section-dark .benefit-title {
+            color: white;
+        }
+        
+        .benefit-description {
+            font-size: 0.9375rem;
             color: #6b7280;
-            font-size: 0.95rem;
             line-height: 1.6;
+        }
+        
+        .section-dark .benefit-description {
+            color: #d1d5db;
         }
         
         /* Footer */
         footer {
-            padding: 4rem 2rem;
-            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            padding: 3rem 2rem;
+            background: #111827;
             color: white;
             text-align: center;
         }
         
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
+        .footer-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
         }
         
-        .footer-logo {
-            font-size: 2rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
-            opacity: 0.9;
+        .footer-tagline {
+            font-size: 0.9375rem;
+            color: #9ca3af;
+            margin-bottom: 1.5rem;
+        }
+        
+        .footer-meta {
+            font-size: 0.8125rem;
+            color: #6b7280;
         }
         
         /* Responsive */
         @media (max-width: 768px) {
             h1 {
-                font-size: 3rem;
-            }
-            
-            .hero-subtitle {
-                font-size: 1.5rem;
-            }
-            
-            .tagline {
-                font-size: 1.25rem;
+                font-size: 2.5rem;
             }
             
             .features-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .benefits-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
             }
             
             .nav-status {
@@ -432,9 +351,9 @@
                     <div class="logo-circle"></div>
                     <div class="logo-rect"></div>
                 </div>
-                CIV.IQ
+                <span>CIV.IQ</span>
             </div>
-            <div class="nav-status">Under Development</div>
+            <button class="nav-status">Under Development</button>
         </div>
     </nav>
 
@@ -442,34 +361,34 @@
     <section class="hero">
         <div class="hero-content">
             <div class="hero-logo">
-                <div class="hero-logo-icon">
-                    <div class="hero-logo-circle"></div>
-                    <div class="hero-logo-rect"></div>
-                </div>
+                <div class="hero-logo-circle"></div>
+                <div class="hero-logo-rect"></div>
             </div>
             <h1>CIV.IQ</h1>
             <p class="hero-subtitle">A Civic Information Hub</p>
-            <p class="tagline">
+            <p class="hero-description">
                 Transparent access to government data. Find representatives, track votes, 
                 monitor legislation, and follow campaign finance—all from official sources.
             </p>
         </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="features">
+    <!-- What CIV.IQ Does -->
+    <section class="section">
         <div class="container">
-            <h2 class="section-title">What CIV.IQ Does</h2>
-            <p class="section-subtitle">
-                Real-time government data aggregated from multiple official APIs into one accessible platform
-            </p>
+            <div class="section-header">
+                <h2 class="section-title">What CIV.IQ Does</h2>
+                <p class="section-subtitle">
+                    Real-time government data aggregated from multiple official APIs into one accessible platform
+                </p>
+            </div>
             
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">🏛️</div>
                     <h3 class="feature-title">Find Representatives</h3>
                     <p class="feature-description">
-                        Enter your ZIP code to find federal, state, and local officials with complete contact information and office locations.
+                        Enter your ZIP code or address to find federal, state, and local officials with complete contact information and office locations.
                     </p>
                 </div>
                 
@@ -477,7 +396,7 @@
                     <div class="feature-icon">📊</div>
                     <h3 class="feature-title">Track Voting Records</h3>
                     <p class="feature-description">
-                        See how representatives vote on bills, their party alignment statistics, and attendance records.
+                        See how representatives vote on bills, their party alignment, and attendance records across all federal and state legislation.
                     </p>
                 </div>
                 
@@ -485,7 +404,7 @@
                     <div class="feature-icon">📜</div>
                     <h3 class="feature-title">Monitor Legislation</h3>
                     <p class="feature-description">
-                        Follow bills through Congress with real-time status updates, sponsors, and committee actions.
+                        Follow bills through Congress with real-time status updates, sponsors, and committee actions from introduction to passage.
                     </p>
                 </div>
                 
@@ -493,7 +412,7 @@
                     <div class="feature-icon">💰</div>
                     <h3 class="feature-title">Campaign Finance</h3>
                     <p class="feature-description">
-                        Access FEC data showing campaign contributions, donors, and spending for transparency.
+                        Access FEC data showing campaign contributions, donors, and spending for transparency in political funding.
                     </p>
                 </div>
                 
@@ -501,7 +420,7 @@
                     <div class="feature-icon">🗺️</div>
                     <h3 class="feature-title">District Information</h3>
                     <p class="feature-description">
-                        Explore all 438 congressional districts with maps, demographics, and voting patterns.
+                        Explore all 435 congressional districts and 7,383 state legislative districts with maps, demographics, and voting patterns.
                     </p>
                 </div>
                 
@@ -509,66 +428,70 @@
                     <div class="feature-icon">📱</div>
                     <h3 class="feature-title">Works Offline</h3>
                     <p class="feature-description">
-                        Progressive Web App technology enables access to cached data without internet connection.
+                        Progressive Web App technology enables access to cached data without internet connection wherever you are.
                     </p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Data Sources Section -->
-    <section class="data-sources">
+    <!-- Official Data Sources -->
+    <section class="section section-alt">
         <div class="container">
-            <h2 class="section-title">Official Data Sources</h2>
-            <p class="section-subtitle">
-                All information comes directly from government APIs and verified sources
-            </p>
+            <div class="section-header">
+                <h2 class="section-title">Official Data Sources</h2>
+                <p class="section-subtitle">
+                    All information comes directly from government APIs and verified sources
+                </p>
+            </div>
             
             <div class="sources-grid">
                 <div class="source-badge">Congress.gov API</div>
                 <div class="source-badge">FEC.gov API</div>
                 <div class="source-badge">Census.gov API</div>
-                <div class="source-badge">GDELT Project</div>
                 <div class="source-badge">OpenStates.org</div>
+                <div class="source-badge">GDELT Project</div>
                 <div class="source-badge">Government RSS</div>
             </div>
         </div>
     </section>
 
-    <!-- Tech Specs Section -->
-    <section class="tech-specs">
+    <!-- Built for Everyone -->
+    <section class="section section-dark">
         <div class="container">
-            <h2 class="section-title">Built for Everyone</h2>
+            <div class="section-header">
+                <h2 class="section-title">Built for Everyone</h2>
+            </div>
             
-            <div class="specs-grid">
-                <div class="spec-card">
-                    <div class="spec-icon">⚡</div>
-                    <h3 class="spec-title">Fast & Reliable</h3>
-                    <p class="spec-description">
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-icon">⚡</div>
+                    <h3 class="benefit-title">Fast & Reliable</h3>
+                    <p class="benefit-description">
                         Server-side rendering, intelligent caching, and optimized API batching for instant load times
                     </p>
                 </div>
                 
-                <div class="spec-card">
-                    <div class="spec-icon">🔍</div>
-                    <h3 class="spec-title">Validated Data</h3>
-                    <p class="spec-description">
+                <div class="benefit-card">
+                    <div class="benefit-icon">🔍</div>
+                    <h3 class="benefit-title">Validated Data</h3>
+                    <p class="benefit-description">
                         Multi-source validation with transparent attribution and real-time accuracy checks
                     </p>
                 </div>
                 
-                <div class="spec-card">
-                    <div class="spec-icon">🌐</div>
-                    <h3 class="spec-title">Open Source</h3>
-                    <p class="spec-description">
-                        AGPL-3.0 licensed with full source code available for transparency and community contributions
+                <div class="benefit-card">
+                    <div class="benefit-icon">🌐</div>
+                    <h3 class="benefit-title">Open Source</h3>
+                    <p class="benefit-description">
+                        MIT licensed with full source code available for transparency and community contributions
                     </p>
                 </div>
                 
-                <div class="spec-card">
-                    <div class="spec-icon">🛡️</div>
-                    <h3 class="spec-title">Privacy First</h3>
-                    <p class="spec-description">
+                <div class="benefit-card">
+                    <div class="benefit-icon">🛡️</div>
+                    <h3 class="benefit-title">Privacy First</h3>
+                    <p class="benefit-description">
                         No tracking, no data collection, no accounts required—just public information freely accessible
                     </p>
                 </div>
@@ -578,14 +501,9 @@
 
     <!-- Footer -->
     <footer>
-        <div class="footer-content">
-            <div class="footer-logo">CIV.IQ</div>
-            <p style="opacity: 0.8; margin-bottom: 1rem;">Find Your Representatives</p>
-            
-            <p style="margin-top: 2rem; font-size: 0.875rem; opacity: 0.6;">
-                Open source project licensed under AGPL-3.0
-            </p>
-        </div>
+        <div class="footer-logo">CIV.IQ</div>
+        <p class="footer-tagline">Find Your Representatives</p>
+        <p class="footer-meta">Open source project licensed under MIT • v0.1.0</p>
     </footer>
 </body>
 </html>

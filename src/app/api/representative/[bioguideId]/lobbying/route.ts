@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { senateLobbyingAPI } from '@/lib/data-sources/senate-lobbying-api';
 import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
+import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -54,7 +55,7 @@ interface RepresentativeLobbyingData {
 }
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ bioguideId: string }> }
 ) {
   const startTime = Date.now();
@@ -68,18 +69,15 @@ export async function GET(
       return NextResponse.json({ error: 'Bioguide ID is required' }, { status: 400 });
     }
 
-    // Get representative data including committees
-    const repResponse = await fetch(`${request.nextUrl.origin}/api/representative/${bioguideId}`);
+    // Get representative data including committees directly
+    const repData = await getEnhancedRepresentative(bioguideId);
 
-    if (!repResponse.ok) {
+    if (!repData) {
       logger.warn('Failed to fetch representative data', {
         bioguideId,
-        status: repResponse.status,
       });
       return NextResponse.json({ error: 'Representative not found' }, { status: 404 });
     }
-
-    const repData = await repResponse.json();
 
     // Extract committee information
     const committees = repData.committees?.map((c: { name: string }) => c.name) || [];
