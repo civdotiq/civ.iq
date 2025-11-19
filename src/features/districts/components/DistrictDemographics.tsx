@@ -3,6 +3,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import { ComparisonIndicator, US_AVERAGES } from '@/components/demographics/ComparisonIndicator';
+
 interface Demographics {
   population: number;
   medianIncome: number;
@@ -66,6 +68,13 @@ export default function DistrictDemographics({ demographics }: DistrictDemograph
             {formatCurrency(demographics.medianIncome)}
           </div>
           <p className="aicher-heading-wide text-sm text-white mt-1">Median Income</p>
+          <div className="text-white opacity-90 mt-1">
+            <ComparisonIndicator
+              value={demographics.medianIncome}
+              average={US_AVERAGES.medianIncome}
+              higherIsBetter={true}
+            />
+          </div>
         </div>
 
         <div className="aicher-card aicher-border bg-purple-100 p-6">
@@ -73,6 +82,12 @@ export default function DistrictDemographics({ demographics }: DistrictDemograph
             {demographics.medianAge.toFixed(1)}
           </div>
           <p className="aicher-heading-wide text-sm text-purple-700 mt-1">Median Age</p>
+          <ComparisonIndicator
+            value={demographics.medianAge}
+            average={US_AVERAGES.medianAge}
+            higherIsBetter={false}
+            suffix=" yrs"
+          />
         </div>
 
         <div className="aicher-card aicher-status-error p-6">
@@ -80,6 +95,14 @@ export default function DistrictDemographics({ demographics }: DistrictDemograph
             {demographics.urbanPercentage.toFixed(0)}%
           </div>
           <p className="aicher-heading-wide text-sm text-white mt-1">Urban Population</p>
+          <div className="text-white opacity-90 mt-1">
+            <ComparisonIndicator
+              value={demographics.urbanPercentage}
+              average={US_AVERAGES.urbanPercentage}
+              higherIsBetter={false}
+              suffix="%"
+            />
+          </div>
         </div>
       </div>
 
@@ -120,19 +143,36 @@ export default function DistrictDemographics({ demographics }: DistrictDemograph
             <div className="text-lg font-bold text-green-600">
               {demographics.bachelor_degree_percent.toFixed(1)}%
             </div>
-            <p className="text-sm text-gray-600">Bachelor&apos;s Degree+</p>
+            <p className="text-sm text-gray-600 mb-1">Bachelor&apos;s Degree+</p>
+            <ComparisonIndicator
+              value={demographics.bachelor_degree_percent}
+              average={US_AVERAGES.bachelorDegreePercent}
+              higherIsBetter={true}
+              suffix="%"
+            />
           </div>
           <div>
             <div className="text-lg font-bold text-red-600">
               {demographics.poverty_rate.toFixed(1)}%
             </div>
-            <p className="text-sm text-gray-600">Poverty Rate</p>
+            <p className="text-sm text-gray-600 mb-1">Poverty Rate</p>
+            <ComparisonIndicator
+              value={demographics.poverty_rate}
+              average={US_AVERAGES.povertyRate}
+              higherIsBetter={false}
+              suffix="%"
+            />
           </div>
           <div>
             <div className="text-lg font-bold text-purple-600">
               {demographics.diversityIndex.toFixed(1)}
             </div>
-            <p className="text-sm text-gray-600">Diversity Index</p>
+            <p className="text-sm text-gray-600 mb-1">Diversity Index</p>
+            <ComparisonIndicator
+              value={demographics.diversityIndex}
+              average={US_AVERAGES.diversityIndex}
+              higherIsBetter={false}
+            />
           </div>
         </div>
       </div>

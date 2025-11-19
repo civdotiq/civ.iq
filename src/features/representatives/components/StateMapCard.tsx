@@ -7,6 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import useSWR from 'swr';
+import { ComparisonIndicator, US_AVERAGES } from '@/components/demographics/ComparisonIndicator';
 
 interface StateDemographics {
   state_code: string;
@@ -125,12 +126,24 @@ export function StateMapCard({ stateCode, stateName }: StateMapCardProps) {
                 <div className="aicher-heading type-base text-gray-900">
                   {demographics.median_age.toFixed(1)} years
                 </div>
+                <ComparisonIndicator
+                  value={demographics.median_age}
+                  average={US_AVERAGES.medianAge}
+                  higherIsBetter={false}
+                  suffix=" yrs"
+                />
               </div>
               <div>
                 <div className="type-sm text-gray-600 mb-1">Median Income</div>
                 <div className="aicher-heading type-base text-gray-900">
                   ${(demographics.median_household_income / 1000).toFixed(0)}k
                 </div>
+                <ComparisonIndicator
+                  value={demographics.median_household_income}
+                  average={US_AVERAGES.medianIncome}
+                  higherIsBetter={true}
+                  suffix=""
+                />
               </div>
             </div>
 
@@ -140,12 +153,24 @@ export function StateMapCard({ stateCode, stateName }: StateMapCardProps) {
                 <div className="aicher-heading type-base text-gray-900">
                   {demographics.poverty_rate.toFixed(1)}%
                 </div>
+                <ComparisonIndicator
+                  value={demographics.poverty_rate}
+                  average={US_AVERAGES.povertyRate}
+                  higherIsBetter={false}
+                  suffix="%"
+                />
               </div>
               <div>
                 <div className="type-sm text-gray-600 mb-1">Diversity Index</div>
                 <div className="aicher-heading type-base text-gray-900">
                   {demographics.diversity_index.toFixed(0)}
                 </div>
+                <ComparisonIndicator
+                  value={demographics.diversity_index}
+                  average={US_AVERAGES.diversityIndex}
+                  higherIsBetter={true}
+                  suffix=""
+                />
               </div>
             </div>
 

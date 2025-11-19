@@ -186,9 +186,16 @@ export function DemographicsDashboard({
             higherIsBetter={false}
             suffix="%"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Diversity Index: {stats.avgDiversityIndex.toFixed(1)}
-          </p>
+          <div className="mt-2 pt-2 border-t border-gray-300">
+            <p className="text-xs text-gray-600 mb-1">
+              Diversity Index: {stats.avgDiversityIndex.toFixed(1)}
+            </p>
+            <ComparisonIndicator
+              value={stats.avgDiversityIndex}
+              average={US_AVERAGES.diversityIndex}
+              higherIsBetter={false}
+            />
+          </div>
         </div>
       </div>
 
@@ -196,7 +203,14 @@ export function DemographicsDashboard({
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 p-4 bg-blue-50">
         <div className="text-center">
           <div className="text-xl font-semibold text-blue-900">{stats.avgMedianAge.toFixed(1)}</div>
-          <p className="text-xs text-blue-700">Median Age</p>
+          <p className="text-xs text-blue-700 mb-1">Median Age</p>
+          <ComparisonIndicator
+            value={stats.avgMedianAge}
+            average={US_AVERAGES.medianAge}
+            higherIsBetter={false}
+            suffix=" yrs"
+            className="text-blue-800"
+          />
         </div>
         <div className="text-center">
           <div className="text-xl font-semibold text-blue-900">{stats.competitiveDistricts}</div>
