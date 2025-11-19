@@ -310,6 +310,10 @@ export async function GET(
       processingTime,
     });
 
+    // Determine if this is an API error or other error
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const isApiError = errorMessage.includes('Senate LDA API') || errorMessage.includes('API');
+
     return NextResponse.json(
       {
         representative: {
@@ -328,10 +332,12 @@ export async function GET(
           },
         },
         metadata: {
-          dataSource: 'unavailable',
+          dataSource: isApiError ? 'senate-lda-api-error' : 'unavailable',
           lastUpdated: new Date().toISOString(),
           coveragePeriod: 'Error',
-          note: 'Lobbying data is temporarily unavailable due to a service error. Please try again later.',
+          note: isApiError
+            ? 'Lobbying data is temporarily unavailable due to Senate LDA API error. The service may be down or experiencing issues. Please try again later.'
+            : 'Lobbying data is temporarily unavailable due to a service error. Please try again later.',
         },
       },
       { status: 500 }

@@ -50,19 +50,37 @@ export class SenateLobbyingAPI {
 
   /**
    * Fetch lobbying filings for a specific quarter
+   *
+   * Bug fix (2025-11-19): Senate LDA API requires full quarter names
+   * (e.g., "first_quarter") not abbreviated format (e.g., "Q1")
    */
   async fetchFilingsByQuarter(year: number, quarter: number): Promise<LobbyingFiling[]> {
     const cacheKey = `lobbying-filings:${year}Q${quarter}`;
-    
+
+    // Map quarter numbers to Senate LDA API quarter names
+    const quarterNames: Record<number, string> = {
+      1: 'first_quarter',
+      2: 'second_quarter',
+      3: 'third_quarter',
+      4: 'fourth_quarter',
+    };
+
+    const filingPeriod = quarterNames[quarter];
+    if (!filingPeriod) {
+      logger.error('Invalid quarter number', { quarter });
+      return [];
+    }
+
     try {
       return await cachedFetch(
         cacheKey,
         async () => {
-          const url = `${this.baseUrl}/filings/?filing_year=${year}&filing_period=Q${quarter}&government_entity=SENATE`;
-          
+          const url = `${this.baseUrl}/filings/?filing_year=${year}&filing_period=${filingPeriod}&government_entity=SENATE`;
+
           logger.info('Fetching Senate lobbying data', {
             year,
             quarter,
+            filingPeriod,
             url: url.replace(this.baseUrl, '[REDACTED]'),
           });
 
@@ -98,8 +116,11 @@ export class SenateLobbyingAPI {
       logger.error('Failed to fetch Senate lobbying data', error as Error, {
         year,
         quarter,
+        filingPeriod,
       });
-      return [];
+      // Re-throw error instead of returning empty array
+      // This allows callers to distinguish between "no data" vs "API error"
+      throw error;
     }
   }
 
