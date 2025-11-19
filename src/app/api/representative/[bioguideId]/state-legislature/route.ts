@@ -253,7 +253,6 @@ async function fetchStateLegislators(
 
         if (response.ok) {
           const data = await response.json();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const districtLegislators =
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data.results?.map((person: any) => ({
@@ -313,7 +312,6 @@ async function fetchStateLegislators(
 
       if (response.ok) {
         const data = await response.json();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const allLegislators =
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           data.results?.slice(0, 15).map((person: any) => ({

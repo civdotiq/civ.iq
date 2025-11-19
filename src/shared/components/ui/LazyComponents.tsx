@@ -318,14 +318,12 @@ export const LazyStateDataVisualizations = lazy(
 
 // Wrapper components with appropriate loading states
 // TODO: Re-enable when components are created
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // export const DistrictMapWithSuspense = (props: any) => (
 //  <Suspense fallback={<MapSkeleton />}>
 //   <LazyDistrictMap {...props} />
 //  </Suspense>
 // );
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // export const InteractiveDistrictMapWithSuspense = (props: any) => (
 //  <Suspense fallback={<MapSkeleton />}>
 //   <LazyInteractiveDistrictMap {...props} />
@@ -354,7 +352,6 @@ export const BillsTrackerWithSuspense = (props: any) => (
 );
 
 // TODO: Re-enable when component is created
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // export const PartyAlignmentAnalysisWithSuspense = (props: any) => (
 //  <Suspense fallback={<ChartSkeleton />}>
 //   <LazyPartyAlignmentAnalysis {...props} />
@@ -362,7 +359,6 @@ export const BillsTrackerWithSuspense = (props: any) => (
 // );
 
 // TODO: Re-enable when VotingTrendsChart component is created
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // export const VotingTrendsChartWithSuspense = (props: any) => (
 //   <Suspense fallback={<ChartSkeleton />}>
 //     <LazyVotingTrendsChart {...props} />
@@ -370,7 +366,6 @@ export const BillsTrackerWithSuspense = (props: any) => (
 // );
 
 // TODO: Re-enable when CampaignFinanceChart component is created
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // export const CampaignFinanceChartWithSuspense = (props: any) => (
 //   <Suspense fallback={<ChartSkeleton />}>
 //     <LazyCampaignFinanceChart {...props} />
@@ -378,7 +373,6 @@ export const BillsTrackerWithSuspense = (props: any) => (
 // );
 
 // TODO: Re-enable when component is created
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // export const EffectivenessChartWithSuspense = (props: any) => (
 //  <Suspense fallback={<ChartSkeleton />}>
 //   <LazyEffectivenessChart {...props} />
@@ -407,7 +401,6 @@ export const StateDataVisualizationsWithSuspense = (props: any) => (
 );
 
 // TODO: Re-enable when component is created
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // export const AdvancedSearchWithSuspense = (props: any) => (
 //  <Suspense fallback={<div className="animate-pulse bg-gray-200 h-12 rounded" />}>
 //   <LazyAdvancedSearch {...props} />
@@ -423,21 +416,18 @@ export const CampaignFinanceVisualizerWithSuspense = (props: any) => (
 );
 
 // TODO: Re-enable when components are created
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // export const IndustryBreakdownWithSuspense = (props: any) => (
 //  <Suspense fallback={<ChartSkeleton />}>
 //   <LazyIndustryBreakdown {...props} />
 //  </Suspense>
 // );
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // export const DonorAnalysisWithSuspense = (props: any) => (
 //  <Suspense fallback={<ChartSkeleton />}>
 //   <LazyDonorAnalysis {...props} />
 //  </Suspense>
 // );
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // export const FundraisingTrendsWithSuspense = (props: any) => (
 //  <Suspense fallback={<ChartSkeleton />}>
 //   <LazyFundraisingTrends {...props} />
@@ -446,14 +436,12 @@ export const CampaignFinanceVisualizerWithSuspense = (props: any) => (
 
 // Committee Components with Suspense
 // TODO: Re-enable when components are created
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // export const CommitteeActivityTimelineWithSuspense = (props: any) => (
 //  <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded" />}>
 //   <LazyCommitteeActivityTimeline {...props} />
 //  </Suspense>
 // );
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // export const CommitteeBillsAndReportsWithSuspense = (props: any) => (
 //  <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded" />}>
 //   <LazyCommitteeBillsAndReports {...props} />
@@ -548,7 +536,6 @@ export function useLazyData<T>(
         .finally(() => setLoading(false));
     }
     // Dependencies handled manually to avoid spread issues
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVisible, loading, data, fetchFunction, dependencies.length]);
 
   return { data, loading, error, elementRef };

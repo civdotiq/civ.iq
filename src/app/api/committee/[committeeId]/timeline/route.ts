@@ -101,7 +101,6 @@ function createTimelineFromBills(bills: unknown[]): TimelineItem[] {
         let type: TimelineItem['type'] = 'bill';
         let importance: TimelineItem['importance'] = 'low';
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         switch (action.actionType) {
           case 'hearing':
             type = 'hearing';
@@ -124,17 +123,12 @@ function createTimelineFromBills(bills: unknown[]): TimelineItem[] {
         timelineItems.push({
           id: `bill-action-${bill.billId}-${idx}`,
           type,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           date: action.date,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           title: `${bill.billNumber}: ${action.actionType.charAt(0).toUpperCase() + action.actionType.slice(1)}`,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           description: action.text,
           metadata: {
             billNumber: bill.billNumber,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             voteResult: action.voteResult,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             committeeId: action.committeeId,
           },
           relatedItems: [`bill-intro-${bill.billId}`],
@@ -150,21 +144,14 @@ function createTimelineFromBills(bills: unknown[]): TimelineItem[] {
 function createTimelineFromReports(reports: unknown[]): TimelineItem[] {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return reports.map((report: any) => ({
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     id: `report-${report.reportId}`,
     type: 'report' as const,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     date: report.publishedDate,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     title: `${report.reportNumber} Published`,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     description: report.title,
     metadata: {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       reportNumber: report.reportNumber,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       status: report.reportType,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       url: report.url,
     },
     importance: 'high' as const,

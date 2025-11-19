@@ -148,7 +148,6 @@ export default function SimpleRepresentativePage({ bioguideId }: { bioguideId: s
           <div className="px-6 py-8">
             <div className="flex items-start space-x-6">
               {member.depiction?.imageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={member.depiction.imageUrl}
                   alt={displayName}

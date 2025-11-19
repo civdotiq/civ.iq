@@ -12,7 +12,7 @@ const logger = {
   http: (message: string, data?: any) => console.log(`[HTTP] ${message}`, data),
   // eslint-disable-next-line no-console, @typescript-eslint/no-explicit-any
   warn: (message: string, data?: any) => console.warn(`[WARN] ${message}`, data),
-  // eslint-disable-next-line no-console, @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   error: (message: string, error?: Error, data?: any) =>
     // eslint-disable-next-line no-console
     console.error(`[ERROR] ${message}`, error, data),

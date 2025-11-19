@@ -228,7 +228,6 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
         default:
           return <ContactInfoTab representative={representative} />;
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab, representative, batchData, batchLoading, batchError, summaryData]);
 
     return (

@@ -297,7 +297,6 @@ export async function GET(request: NextRequest) {
                       // Calculate member counts
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       const partyBreakdown = members.reduce((acc: any, member: any) => {
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                         acc[member.party] = (acc[member.party] || 0) + 1;
                         return acc;
                       }, {});
@@ -417,17 +416,12 @@ export async function GET(request: NextRequest) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 jointData.committees.forEach((committee: any) => {
                   committees.push({
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     code: committee.systemCode || committee.code || '',
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     name: committee.name,
                     chamber: 'Joint',
                     type: 'joint',
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     jurisdiction: getJurisdiction(committee.name),
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     establishedDate: committee.establishedDate,
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     website: committee.url,
                     isSubcommittee: false,
                     subcommittees: [],

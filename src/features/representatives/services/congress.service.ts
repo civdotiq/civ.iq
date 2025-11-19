@@ -103,20 +103,17 @@ async function persistentCachedFetch<T>(
   const fileCached = await fileCache.get<T>(key);
   if (fileCached) {
     const duration = Date.now() - startTime;
-    // eslint-disable-next-line no-console
     logger.debug('File cache hit', { key, duration });
     logger.info('File cache hit for congress data', { key, duration });
     return fileCached;
   }
 
-  // eslint-disable-next-line no-console
   logger.debug('File cache miss, checking memory cache', { key });
 
   // Fall back to regular cache and fetch
   return cachedFetch(
     key,
     async () => {
-      // eslint-disable-next-line no-console
       logger.info('Downloading from GitHub', { key });
       logger.info('Fetching congress data from remote source', { key });
 
@@ -124,7 +121,6 @@ async function persistentCachedFetch<T>(
       const data = await fetchFn();
       const fetchDuration = Date.now() - fetchStartTime;
 
-      // eslint-disable-next-line no-console
       logger.info('Download complete', { key, fetchDuration });
 
       // Save to file cache for persistence
@@ -132,7 +128,6 @@ async function persistentCachedFetch<T>(
       await fileCache.set(key, data, ttlSeconds);
       const cacheDuration = Date.now() - cacheStartTime;
 
-      // eslint-disable-next-line no-console
       logger.debug('Saved to file cache', { key, cacheDuration });
       logger.info('Congress data cached successfully', {
         key,

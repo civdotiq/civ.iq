@@ -234,7 +234,6 @@ async function fetchCosponsoredLegislation(
     const rawBills = data.cosponsoredLegislation || [];
     totalCount = data.pagination?.count || 0;
 
-    // eslint-disable-next-line no-console
     logger.debug('Cosponsored API raw response', { data });
 
     // Debug logging for cosponsored legislation

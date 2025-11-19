@@ -343,7 +343,6 @@ export function RealDistrictMapContainer({
         error: 'Failed to load district boundaries',
       }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapState.mapLoaded, enableInteraction, onDistrictClick]);
 
   // Fit map to selected state

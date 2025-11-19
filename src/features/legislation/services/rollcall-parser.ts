@@ -3,7 +3,6 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // Roll call XML parser for Senate and House voting data

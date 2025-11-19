@@ -446,7 +446,6 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
               className="text-gray-700 leading-relaxed text-lg"
               style={{ fontFamily: 'inherit' }}
               // SECURITY: This HTML is sanitized on the client using DOMPurify
-              // eslint-disable-next-line react/no-danger
               dangerouslySetInnerHTML={{
                 __html: sanitizedHtmlSummary,
               }}

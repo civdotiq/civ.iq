@@ -186,7 +186,6 @@ function EngagementChart({ timeRange }: { timeRange: 'week' | 'month' | 'year' }
       .domain([0, max(data, d => d.value) as number])
       .range([height, 0]);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const lineGenerator = line<any>()
       .x(d => x(d.date))
       .y(d => y(d.value))
@@ -223,7 +222,6 @@ function EngagementChart({ timeRange }: { timeRange: 'week' | 'month' | 'year' }
       .attr('offset', '100%')
       .attr('style', 'stop-color:#3b82f6;stop-opacity:0.1');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const areaGenerator = area<any>()
       .x(d => x(d.date))
       .y0(height)

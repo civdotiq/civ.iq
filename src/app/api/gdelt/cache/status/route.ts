@@ -95,7 +95,6 @@ export async function GET(_request: NextRequest) {
       },
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
     logger.error('Error getting cache status', error as Error);
 
     return NextResponse.json(
@@ -202,7 +201,6 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error) {
-    // eslint-disable-next-line no-console
     logger.error('Error performing cache operation', error as Error);
 
     return NextResponse.json(
