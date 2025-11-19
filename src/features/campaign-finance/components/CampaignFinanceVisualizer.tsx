@@ -211,8 +211,29 @@ export function CampaignFinanceVisualizer({
           return response.json();
         })
         .then(data => {
-          // Extract finance data from comprehensive response
-          setComprehensiveData(data?.finance || data);
+          // Map comprehensive endpoint structure to component expectations
+          if (data?.finance && data?.interestGroups) {
+            // Comprehensive endpoint structure - merge data
+            const mappedData = {
+              ...data.finance,
+              // Map interest groups data
+              interestGroupBaskets: data.interestGroups?.baskets || [],
+              interestGroupMetrics: data.interestGroups?.metrics || null,
+              pacContributionsByType: data.interestGroups?.pacContributions?.byType || {},
+              supportingExpenditures:
+                data.interestGroups?.pacContributions?.supportingExpenditures || [],
+              opposingExpenditures:
+                data.interestGroups?.pacContributions?.opposingExpenditures || [],
+              // Map other comprehensive data
+              industry_breakdown: data.industries?.topIndustries || [],
+              top_contributors: data.contributors?.topContributors || [],
+              recent_contributions: data.recentContributions || [],
+            };
+            setComprehensiveData(mappedData);
+          } else {
+            // Fallback for legacy structure
+            setComprehensiveData(data?.finance || data);
+          }
         })
         .catch(() => {
           // Fall back to initial data if comprehensive fetch fails
