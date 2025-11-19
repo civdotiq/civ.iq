@@ -24,9 +24,11 @@ import { HeroSummary } from './HeroSummary';
 import { FundraisingSources } from './FundraisingSources';
 import { TopIndustries } from './TopIndustries';
 import { TopContributors } from './TopContributors';
+import { useResponsiveChartHeight } from '../../../hooks/useResponsiveChartHeight';
+import { CHART_COLORS } from '../../../lib/constants/chart-colors';
 
-// Chart colors
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+// Chart colors - using centralized brand palette
+const COLORS = CHART_COLORS;
 
 interface CampaignFinanceData {
   // New direct fields from our API fix
@@ -195,6 +197,10 @@ export function CampaignFinanceVisualizer({
   const [isLoadingLobbying, setIsLoadingLobbying] = useState(false);
   const [announcement, setAnnouncement] = useState('');
   const [comprehensiveData, setComprehensiveData] = useState<CampaignFinanceData | null>(null);
+
+  // Responsive chart heights for mobile optimization
+  const chartHeight300 = useResponsiveChartHeight(300, 250);
+  const chartHeight400 = useResponsiveChartHeight(400, 280);
 
   // Fetch comprehensive finance data
   useEffect(() => {
@@ -645,7 +651,7 @@ export function CampaignFinanceVisualizer({
                   <h4 className="text-md font-semibold text-gray-900 mb-4">Contribution Sources</h4>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="min-h-[250px] sm:min-h-[300px]">
-                      <ResponsiveContainer width="100%" height={300}>
+                      <ResponsiveContainer width="100%" height={chartHeight300}>
                         <PieChart>
                           <Pie
                             data={donationBreakdown}
@@ -702,7 +708,7 @@ export function CampaignFinanceVisualizer({
               {topContributorsData.length > 0 && (
                 <div className="bg-white p-6">
                   <h4 className="text-md font-semibold text-gray-900 mb-4">Top Contributors</h4>
-                  <ResponsiveContainer width="100%" height={400}>
+                  <ResponsiveContainer width="100%" height={chartHeight400}>
                     <BarChart
                       data={topContributorsData}
                       margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
@@ -740,7 +746,7 @@ export function CampaignFinanceVisualizer({
                     </h4>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <div className="min-h-[250px] sm:min-h-[300px]">
-                        <ResponsiveContainer width="100%" height={300}>
+                        <ResponsiveContainer width="100%" height={chartHeight300}>
                           <PieChart>
                             <Pie
                               data={[
@@ -891,7 +897,7 @@ export function CampaignFinanceVisualizer({
                     <h4 className="text-md font-semibold text-gray-900 mb-4">
                       Contributions by PAC Type
                     </h4>
-                    <ResponsiveContainer width="100%" height={300}>
+                    <ResponsiveContainer width="100%" height={chartHeight300}>
                       <PieChart>
                         <Pie
                           data={[
@@ -1034,7 +1040,7 @@ export function CampaignFinanceVisualizer({
                     <div className="aicher-grid aicher-grid-2 gap-6">
                       {/* Pie Chart */}
                       <div>
-                        <ResponsiveContainer width="100%" height={300}>
+                        <ResponsiveContainer width="100%" height={chartHeight300}>
                           <PieChart>
                             <Pie
                               data={financeData.interestGroupBaskets}

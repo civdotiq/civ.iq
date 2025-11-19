@@ -12,6 +12,7 @@ import {
   formatCurrency,
 } from '@/lib/fec/interest-groups';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { useResponsiveChartHeight } from '@/hooks/useResponsiveChartHeight';
 
 interface InterestGroupBasketsProps {
   contributions: Array<{
@@ -39,6 +40,9 @@ export function InterestGroupBaskets({
   showChart = true,
   showTable = true,
 }: InterestGroupBasketsProps) {
+  // Responsive chart heights for mobile optimization
+  const chartHeight300 = useResponsiveChartHeight(300, 250);
+
   // Categorize contributions into interest group baskets
   const baskets = useMemo(
     () => categorizeIntoBaskets(contributions, candidateContributions),
@@ -128,7 +132,7 @@ export function InterestGroupBaskets({
           <div className="aicher-grid aicher-grid-2 gap-6">
             {/* Pie Chart */}
             <div>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={chartHeight300}>
                 <PieChart>
                   <Pie
                     data={chartData}

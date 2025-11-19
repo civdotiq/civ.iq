@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { useResponsiveChartHeight } from '@/hooks/useResponsiveChartHeight';
 
 interface DonationSource {
   name: string;
@@ -90,6 +91,9 @@ export const DonationSourcesChart: React.FC<DonationSourcesChartProps> = ({
   data,
   totalRaised,
 }) => {
+  // Responsive chart heights for mobile optimization
+  const chartHeight300 = useResponsiveChartHeight(300, 250);
+
   // Prepare data for the chart, filtering out zero values
   const chartData: DonationSource[] = [
     {
@@ -157,7 +161,7 @@ export const DonationSourcesChart: React.FC<DonationSourcesChartProps> = ({
     <div className="bg-white border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Donation Sources</h3>
 
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={chartHeight300}>
         <PieChart>
           <Pie
             data={chartData}

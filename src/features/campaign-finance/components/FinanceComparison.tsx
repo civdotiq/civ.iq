@@ -13,6 +13,7 @@
  */
 
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { useResponsiveChartHeight } from '@/hooks/useResponsiveChartHeight';
 
 interface FinanceData {
   totalRaised: number;
@@ -37,6 +38,9 @@ interface FinanceComparisonProps {
 }
 
 export function FinanceComparison({ representatives }: FinanceComparisonProps) {
+  // Responsive chart heights for mobile optimization
+  const chartHeight300 = useResponsiveChartHeight(300, 250);
+
   if (representatives.length < 2 || representatives.length > 4) {
     return (
       <div className="aicher-card p-6">
@@ -107,7 +111,7 @@ export function FinanceComparison({ representatives }: FinanceComparisonProps) {
       {/* Total Raised Comparison */}
       <div className="aicher-card p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Total Raised Comparison</h3>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={chartHeight300}>
           <BarChart data={totalRaisedData}>
             <XAxis dataKey="name" />
             <YAxis tickFormatter={value => formatCurrency(Number(value))} />
@@ -126,7 +130,7 @@ export function FinanceComparison({ representatives }: FinanceComparisonProps) {
       {/* Grassroots Funding Comparison */}
       <div className="aicher-card p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Grassroots Funding Percentage</h3>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={chartHeight300}>
           <BarChart data={grassrootsData}>
             <XAxis dataKey="name" />
             <YAxis tickFormatter={value => `${value}%`} />
@@ -148,7 +152,7 @@ export function FinanceComparison({ representatives }: FinanceComparisonProps) {
       {/* Source Breakdown Comparison */}
       <div className="aicher-card p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Contribution Sources</h3>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={chartHeight300}>
           <BarChart data={sourceComparisonData}>
             <XAxis dataKey="name" />
             <YAxis tickFormatter={value => formatCurrency(Number(value))} />
