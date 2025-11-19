@@ -10,7 +10,9 @@ import { getAllCongressionalDistrictsForZip } from '@/lib/data/zip-district-mapp
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 
+// Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // 1 hour - addresses rarely change districts mid-session
 
 interface GeocodeRequest {
   mode: 'address' | 'coordinates';

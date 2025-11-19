@@ -23,7 +23,8 @@ import { RepresentativesCoreService } from '@/services/core/representatives-core
 import logger from '@/lib/logging/simple-logger';
 import { CensusGeocoderException } from '@/services/geocoding/census-geocoder.types';
 
-export const dynamic = 'force-dynamic';
+// ISR: Revalidate every hour - addresses rarely change districts mid-session
+export const revalidate = 3600;
 
 interface UnifiedGeocodeRequest {
   /** Full street address */

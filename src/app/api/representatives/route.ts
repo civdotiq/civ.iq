@@ -8,9 +8,11 @@ import { RepresentativesCoreService } from '@/services/core/representatives-core
 import { getCongressionalDistrictFromZip } from '@/lib/census-api';
 import { getAllCongressionalDistrictsForZip } from '@/lib/data/zip-district-mapping';
 import logger from '@/lib/logging/simple-logger';
-
-export const dynamic = 'force-dynamic';
 import { govCache } from '@/services/cache';
+
+// Dynamic route with ISR caching - uses searchParams
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // 1 hour - ZIP to district mappings don't change mid-session
 
 // At-large states for 119th Congress (states with only 1 House district)
 const AT_LARGE_STATES_119TH = ['AK', 'DE', 'ND', 'SD', 'VT', 'WY'];

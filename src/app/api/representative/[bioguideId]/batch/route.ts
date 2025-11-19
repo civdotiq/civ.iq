@@ -11,7 +11,8 @@ import {
 } from '@/services/batch/representative-batch.service';
 import { container, initializeServices } from '@/core/services/container';
 
-export const dynamic = 'force-dynamic';
+// ISR: Revalidate every day - batch data is composite of multiple cached endpoints
+export const revalidate = 86400;
 export const maxDuration = 30; // Concurrent API calls for multiple endpoints
 
 // POST handler for optimized batch requests

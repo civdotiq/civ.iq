@@ -17,6 +17,12 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  // Remove console logs in production for better performance
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production'
+      ? { exclude: ['error', 'warn'] } // Keep error and warn for debugging
+      : false,
+  },
   images: {
     remotePatterns: [
       {

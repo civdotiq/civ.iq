@@ -653,10 +653,19 @@ export async function GET(
       Awaited<ReturnType<typeof fecApiService.getCommitteeInfo>>
     >();
 
-    for (const committeeId of uniqueCommitteeIds) {
-      const info = await fecApiService.getCommitteeInfo(committeeId);
-      committeeInfoCache.set(committeeId, info);
-    }
+    // Fetch all committee info in parallel for better performance
+    const committeeIds = Array.from(uniqueCommitteeIds);
+    const committeeInfoResults = await Promise.all(
+      committeeIds.map(id => fecApiService.getCommitteeInfo(id))
+    );
+
+    // Populate cache with results
+    committeeInfoResults.forEach((info, index) => {
+      const committeeId = committeeIds[index];
+      if (committeeId) {
+        committeeInfoCache.set(committeeId, info);
+      }
+    });
 
     // Process PAC contributions (Schedule A) - these are actual contributions TO the candidate
     logger.info(`[Finance API] Processing ${pacContributions.length} PAC contributions`);

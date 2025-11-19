@@ -465,10 +465,20 @@ export async function GET(
     independentExpenditures.forEach(e => uniqueCommitteeIds.add(e.committee_id));
 
     const committeeInfoCache = new Map();
-    for (const committeeId of uniqueCommitteeIds) {
-      const info = await fecApiService.getCommitteeInfo(committeeId);
-      committeeInfoCache.set(committeeId, info);
-    }
+
+    // Fetch all committee info in parallel for better performance
+    const committeeIds = Array.from(uniqueCommitteeIds);
+    const committeeInfoResults = await Promise.all(
+      committeeIds.map(id => fecApiService.getCommitteeInfo(id))
+    );
+
+    // Populate cache with results
+    committeeInfoResults.forEach((info, index) => {
+      const committeeId = committeeIds[index];
+      if (committeeId) {
+        committeeInfoCache.set(committeeId, info);
+      }
+    });
 
     // Classify PAC contributions
     for (const contribution of pacContributions) {

@@ -8,7 +8,9 @@ import { getAllEnhancedRepresentatives } from '@/features/representatives/servic
 import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
 
+// Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
+export const revalidate = 300; // 5 minutes - search results can update frequently
 import {
   geocodeAddress,
   extractDistrictFromResult,

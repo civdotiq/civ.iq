@@ -24,7 +24,8 @@ import {
 } from '@/services/state-legislators/address-to-legislators.service';
 import logger from '@/lib/logging/simple-logger';
 
-export const dynamic = 'force-dynamic';
+// ISR: Revalidate every hour - addresses rarely change districts mid-session
+export const revalidate = 3600;
 
 interface AddressRequestBody {
   street: string;
