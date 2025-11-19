@@ -5,7 +5,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 interface HemicycleData {
   chamber: 'house' | 'senate';
@@ -21,6 +21,19 @@ interface HemicycleChartProps {
 }
 
 export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
+  // Detect mobile viewport for responsive sizing
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(typeof window !== 'undefined' && window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const seats = useMemo(() => {
     // Create array of seats with party affiliation
     const allSeats = [];
@@ -41,9 +54,10 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
 
   const { seatPositions, svgDimensions } = useMemo(() => {
     const totalSeats = seats.length;
-    const radius = 180;
-    const centerX = 280;
-    const centerY = 220;
+    // Responsive dimensions based on viewport
+    const radius = isMobile ? 120 : 180;
+    const centerX = isMobile ? 160 : 280;
+    const centerY = isMobile ? 140 : 220;
 
     // Calculate positions for hemicycle layout
     const positions = [];
@@ -106,9 +120,12 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
 
     return {
       seatPositions: positions,
-      svgDimensions: { width: 560, height: 280 },
+      svgDimensions: {
+        width: isMobile ? 320 : 560,
+        height: isMobile ? 180 : 280,
+      },
     };
-  }, [seats, data.chamber]);
+  }, [seats, data.chamber, isMobile]);
 
   const partyCounts = useMemo(() => {
     return [

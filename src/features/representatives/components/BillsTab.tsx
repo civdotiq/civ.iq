@@ -102,7 +102,7 @@ export const BillsTab = React.memo(
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/3"></div>
           <div className="h-6 bg-white border-2 border-gray-300 rounded w-1/2"></div>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
             <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
             <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
@@ -260,7 +260,7 @@ export const BillsTab = React.memo(
                   setSelectedCongress(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value={119}>Current (119th)</option>
                 <option value={0}>All Congresses</option>
@@ -281,7 +281,7 @@ export const BillsTab = React.memo(
                   setSelectedType(e.target.value as 'all' | 'sponsored' | 'cosponsored');
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Bills</option>
                 <option value="sponsored">Sponsored Only</option>
@@ -298,7 +298,7 @@ export const BillsTab = React.memo(
                   setSelectedStatus(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Statuses</option>
                 {uniqueStatuses.map(status => (
@@ -318,7 +318,7 @@ export const BillsTab = React.memo(
                   setSelectedPolicyArea(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Policy Areas</option>
                 {uniquePolicyAreas.map(area => (
@@ -356,7 +356,7 @@ export const BillsTab = React.memo(
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="text-center">
             <div className="text-3xl font-bold text-blue-600">{data.totalSponsored}</div>
             <div className="text-sm text-gray-500">Sponsored</div>

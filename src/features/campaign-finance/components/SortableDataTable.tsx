@@ -73,14 +73,14 @@ export function SortableDataTable<T extends Record<string, unknown>>({
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto scroll-indicator">
         <table className="w-full">
           <thead className="border-b border-neutral-200 bg-neutral-50">
             <tr>
               {columns.map(column => (
                 <th
                   key={String(column.key)}
-                  className={`px-6 py-3 text-left text-xs font-medium uppercase ${
+                  className={`px-6 py-3 min-h-[44px] text-left text-xs font-medium uppercase ${
                     column.sortable !== false ? 'cursor-pointer hover:bg-neutral-100' : ''
                   }`}
                   onClick={() => column.sortable !== false && handleSort(column.key)}
@@ -105,6 +105,9 @@ export function SortableDataTable<T extends Record<string, unknown>>({
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="md:hidden px-6 py-2 text-xs text-gray-500 text-center border-t border-neutral-100">
+        ← Swipe to scroll →
       </div>
 
       {data.length > showInitially && (
