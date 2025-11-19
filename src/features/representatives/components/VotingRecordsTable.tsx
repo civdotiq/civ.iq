@@ -402,30 +402,12 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
     }
   );
 
-  // 1️⃣ CHECKPOINT: SWR returned data
-  // eslint-disable-next-line no-console
-  console.log('1️⃣ VOTING: useSWR returned:', {
-    hasData: !!votesData,
-    dataLength: Array.isArray(votesData) ? votesData.length : 'not array',
-    firstItem: Array.isArray(votesData) ? votesData[0] : votesData,
-    isLoading,
-    error: !!error,
-  });
-
   // Ensure votes is always an array
   const votes = useMemo(() => {
     if (!votesData) return [];
     if (Array.isArray(votesData)) return votesData;
     return [];
   }, [votesData]);
-
-  // 2️⃣ CHECKPOINT: After processing data
-  // eslint-disable-next-line no-console
-  console.log('2️⃣ VOTING: Processed votes:', {
-    votesLength: votes.length,
-    isLoading,
-    error: !!error,
-  });
 
   const filteredAndSortedVotes = useMemo(() => {
     let filtered = [...votes];
@@ -532,16 +514,6 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
     );
   }
 
-  // 3️⃣ CHECKPOINT: About to render LoadingStateWrapper
-  // eslint-disable-next-line no-console
-  console.log('3️⃣ VOTING: About to render LoadingStateWrapper:', {
-    isLoading,
-    hasError: !!error,
-    errorMessage: error?.message,
-    votesLength: votes.length,
-    willShowContent: !isLoading && !error,
-  });
-
   return (
     <LoadingStateWrapper
       loading={isLoading}
@@ -552,13 +524,6 @@ export const VotingRecordsTable = memo(function VotingRecordsTable({
       timeoutMessage="Voting records are taking longer than usual to load"
     >
       {(() => {
-        // 4️⃣ CHECKPOINT: Inside LoadingStateWrapper children
-        // eslint-disable-next-line no-console
-        console.log('4️⃣ VOTING: LoadingStateWrapper children rendering:', {
-          votesLength: votes.length,
-          willShowNoData: votes.length === 0,
-        });
-
         return votes.length === 0 ? (
           <div className="aicher-card text-center p-8">
             <p className="text-gray-600">No voting records available at this time.</p>

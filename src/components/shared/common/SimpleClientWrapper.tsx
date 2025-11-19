@@ -7,12 +7,32 @@
 
 import { useState, useEffect } from 'react';
 
+interface RepresentativeData {
+  name?: string;
+  party?: string;
+  state?: string;
+  chamber?: string;
+  district?: string;
+  committees?: unknown[];
+}
+
+interface BillData {
+  title?: string;
+  number?: string;
+  congress?: number;
+  introducedDate?: string;
+}
+
+interface InitialData {
+  bills?: BillData[];
+  votes?: unknown[];
+  finance?: Record<string, unknown>;
+}
+
 interface ClientWrapperProps {
   bioguideId: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  initialData: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  representative: any;
+  initialData: InitialData;
+  representative: RepresentativeData;
 }
 
 export function SimpleClientWrapper({
@@ -25,17 +45,7 @@ export function SimpleClientWrapper({
 
   useEffect(() => {
     setMounted(true);
-    // eslint-disable-next-line no-console
-    console.log('🟢 SIMPLE CLIENT MOUNTED at', new Date().toISOString());
-    // eslint-disable-next-line no-console
-    console.log('🟢 Data received:', {
-      bioguideId,
-      representative: representative?.name,
-      bills: Array.isArray(initialData?.bills) ? initialData.bills.length : 'not array',
-      votes: Array.isArray(initialData?.votes) ? initialData.votes.length : 'not array',
-      finance: !!initialData?.finance,
-    });
-  }, [bioguideId, initialData, representative]);
+  }, []);
 
   if (!mounted) {
     return <div>Loading...</div>;
@@ -197,14 +207,16 @@ export function SimpleClientWrapper({
                 <div className="mt-4">
                   <p className="font-semibold">Finance Data Keys:</p>
                   <ul className="list-disc list-inside mt-2">
-                    {Object.keys(initialData.finance).map(key => (
-                      <li key={key} className="text-sm">
-                        <strong>{key}:</strong>{' '}
-                        {Array.isArray(initialData.finance[key])
-                          ? `${initialData.finance[key].length} items`
-                          : typeof initialData.finance[key]}
-                      </li>
-                    ))}
+                    {Object.keys(initialData.finance).map(key => {
+                      const financeData = initialData.finance;
+                      const value = financeData?.[key];
+                      return (
+                        <li key={key} className="text-sm">
+                          <strong>{key}:</strong>{' '}
+                          {Array.isArray(value) ? `${value.length} items` : typeof value}
+                        </li>
+                      );
+                    })}
                   </ul>
                   <details className="mt-4">
                     <summary className="cursor-pointer text-sm text-gray-600">
