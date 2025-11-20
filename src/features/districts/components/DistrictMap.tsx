@@ -255,11 +255,13 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           source: 'district-boundary',
           paint: {
             'fill-color': fillColor,
-            'fill-opacity': 0.3,
+            'fill-opacity': 0.5, // Increased from 0.3 for better visibility
           },
         };
         logger.info(' Adding fill layer with config:', fillLayerConfig);
 
+        // CRITICAL FIX: Add district layers ABOVE base-map by not specifying beforeId
+        // MapLibre renders layers in order, so adding after base-map puts them on top
         map.addLayer(fillLayerConfig);
         logger.info(' ✅ Fill layer added successfully.');
 
@@ -270,14 +272,20 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           source: 'district-boundary',
           paint: {
             'line-color': strokeColor,
-            'line-width': 3,
-            'line-opacity': 0.9,
+            'line-width': 4, // Increased from 3 for better visibility
+            'line-opacity': 1.0, // Increased from 0.9 for better visibility
           },
         };
         logger.info(' Adding stroke layer with config:', strokeLayerConfig);
 
         map.addLayer(strokeLayerConfig);
         logger.info(' ✅ Stroke layer added successfully.');
+
+        // Log layer order for debugging
+        logger.info(
+          ' Layer order:',
+          map.getStyle().layers?.map(l => l.id)
+        );
 
         logger.info('✅ District layers added successfully');
 
