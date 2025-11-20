@@ -723,6 +723,7 @@ echo "GOAL: [What you're implementing]" >> .session.log
 
 **November 2025:**
 
+- ✅ **Otl Aicher Profile Page Refactor** - Complete redesign of representative profile pages for strict Ulm School compliance: 40px section gaps (de-densification), data list pattern for committees, geometric map placeholders, high-emphasis CTAs, line-clamp biographies with READ MORE toggle, strict color palette (red/green/blue only - eliminated purple)
 - ✅ **Aggressive ISR Caching** - Added Next.js ISR caching to 65 API routes with tiered revalidation (1 week/1 day/1 hour/5 min) - significant performance boost across all endpoints
 - ✅ **Committee Biography Caching** - Pre-generated Wikipedia/Wikidata data for all 34 congressional committees, eliminating API calls on committee page views
 - ✅ **Representative Photo Optimization** - Downloaded and optimized 432 official photos (83% coverage), converted to WebP format with 83% file size reduction (61.78 MB → 10.65 MB)
