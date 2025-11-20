@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { EnhancedRepresentative } from '@/types/representative';
 import { Users, FileText, DollarSign, Award } from 'lucide-react';
+import { ShareIconButton } from '@/components/shared/social/ShareButton';
 
 interface HeroStatsHeaderProps {
   representative: EnhancedRepresentative;
@@ -139,9 +140,29 @@ export function HeroStatsHeader({
 
           {/* Name and Title */}
           <div className="text-center md:text-left">
-            <h1 data-testid="representative-name" className="profile-hero-name mb-2">
-              {getDisplayName()}
-            </h1>
+            <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+              <h1 data-testid="representative-name" className="profile-hero-name">
+                {getDisplayName()}
+              </h1>
+              <ShareIconButton
+                data={{
+                  representative: {
+                    name: representative.name,
+                    party: representative.party,
+                    state: representative.state,
+                    bioguideId: representative.bioguideId,
+                    chamber: representative.chamber,
+                    district: representative.district,
+                  },
+                  section: 'overview',
+                  stats: {
+                    billsSponsored: stats.billsSponsored,
+                    totalRaised: stats.totalRaised,
+                    committeeCount: stats.committees,
+                  },
+                }}
+              />
+            </div>
 
             <p data-testid="representative-state" className="profile-hero-title mb-4">
               {getTitle()}
