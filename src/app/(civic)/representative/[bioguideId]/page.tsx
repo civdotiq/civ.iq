@@ -239,8 +239,46 @@ export default async function RepresentativeProfilePage({
 export async function generateMetadata({ params }: { params: Promise<{ bioguideId: string }> }) {
   const { bioguideId } = await params;
 
-  return {
-    title: `Representative ${bioguideId} | CIV.IQ`,
-    description: `View detailed information about federal representative ${bioguideId}`,
-  };
+  try {
+    // Fetch representative data for rich metadata
+    const representative = await getRepresentativeData(bioguideId);
+
+    const title = `${representative.name} (${representative.party}-${representative.state}) | CIV.IQ`;
+    const description = `Campaign finance, voting records, and legislative activity for ${representative.name}. Real government data from official sources.`;
+    const url = `https://civdotiq.org/representative/${bioguideId}`;
+    const ogImageUrl = `/api/og/representative/${bioguideId}?type=overview`;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title: `${representative.name} - Federal ${representative.role}`,
+        description,
+        url,
+        siteName: 'CIV.IQ',
+        type: 'profile',
+        images: [
+          {
+            url: ogImageUrl,
+            width: 1200,
+            height: 630,
+            alt: `${representative.name} profile data`,
+          },
+        ],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+        images: [ogImageUrl],
+        site: '@civdotiq',
+      },
+    };
+  } catch {
+    // Fallback metadata if representative data fetch fails
+    return {
+      title: `Representative ${bioguideId} | CIV.IQ`,
+      description: `View detailed information about federal representative ${bioguideId}`,
+    };
+  }
 }
