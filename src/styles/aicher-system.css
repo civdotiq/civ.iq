@@ -86,6 +86,17 @@
   padding: calc(var(--grid) * 6);
 }
 
+/* Extended padding for de-densification */
+.p-grid-4 {
+  padding: calc(var(--grid) * 4); /* 32px */
+}
+.p-grid-5 {
+  padding: calc(var(--grid) * 5); /* 40px */
+}
+.p-grid-6 {
+  padding: calc(var(--grid) * 6); /* 48px */
+}
+
 /* Typography utilities */
 .type-xs {
   font-size: var(--type-xs);
@@ -865,6 +876,134 @@ body {
   font-weight: 400;
   color: #6b7280;
   margin-top: calc(var(--grid) * 0.5);
+}
+
+/* Margin utilities for section spacing */
+.mb-grid-5 {
+  margin-bottom: calc(var(--grid) * 5); /* 40px */
+}
+
+.mt-grid-5 {
+  margin-top: calc(var(--grid) * 5); /* 40px */
+}
+
+.gap-grid-5 {
+  gap: calc(var(--grid) * 5); /* 40px */
+}
+
+/* Line clamp utilities for text truncation */
+.line-clamp-4 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-height: 1.6;
+}
+
+.line-clamp-expanded {
+  overflow: visible;
+  display: block;
+  -webkit-line-clamp: unset;
+  line-height: 1.6;
+}
+
+/* Read more toggle link */
+.aicher-read-more {
+  display: inline-block;
+  margin-top: calc(var(--grid) * 1);
+  font-size: var(--type-sm);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--aicher-blue);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.aicher-read-more:hover {
+  color: var(--aicher-blue-hover);
+  text-decoration: underline;
+}
+
+/* Geometric map placeholder */
+.aicher-map-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 2px solid #000000;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.aicher-map-placeholder svg {
+  width: 48px;
+  height: 48px;
+  color: #6b7280;
+}
+
+.aicher-map-placeholder-label {
+  position: absolute;
+  bottom: calc(var(--grid) * 1);
+  left: calc(var(--grid) * 1);
+  font-size: var(--type-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+/* High-emphasis button (replaces ghost buttons for primary CTAs) */
+.aicher-button-high-emphasis {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: calc(var(--grid) * 2) calc(var(--grid) * 3);
+  border: 2px solid var(--aicher-blue);
+  background: var(--aicher-blue);
+  color: white;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: var(--type-sm);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.aicher-button-high-emphasis:hover {
+  background: white;
+  color: var(--aicher-blue);
+  border-color: var(--aicher-blue);
+}
+
+.aicher-button-high-emphasis:active {
+  transform: translateY(1px);
+}
+
+/* Data list view (replaces nested card patterns) */
+.aicher-data-list {
+  border-top: 2px solid #000000;
+}
+
+.aicher-data-list-item {
+  padding: calc(var(--grid) * 2) 0;
+  border-bottom: 2px solid #000000;
+  transition: background-color 0.2s ease;
+}
+
+.aicher-data-list-item:hover {
+  background-color: #f9fafb;
+  margin-left: calc(var(--grid) * -2);
+  margin-right: calc(var(--grid) * -2);
+  padding-left: calc(var(--grid) * 2);
+  padding-right: calc(var(--grid) * 2);
+}
+
+.aicher-data-list-item:last-child {
+  border-bottom: none;
 }
 
 /* Mobile Responsive Typography */

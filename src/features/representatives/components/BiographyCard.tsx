@@ -5,7 +5,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import useSWR from 'swr';
 import { BookOpen, ExternalLink, GraduationCap, Briefcase, AlertCircle } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
@@ -247,6 +247,9 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
   const representativeName =
     representative.name || `${representative.firstName} ${representative.lastName}`;
 
+  // State for bio text expansion
+  const [isExpanded, setIsExpanded] = useState(false);
+
   // Use SWR for biography data with production-ready configuration
   const {
     data: biographyData,
@@ -443,13 +446,20 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
         {sanitizedHtmlSummary && (
           <div className="group">
             <div
-              className="text-gray-700 leading-relaxed text-lg"
-              style={{ fontFamily: 'inherit' }}
+              className={`text-gray-700 text-lg ${isExpanded ? 'line-clamp-expanded' : 'line-clamp-4'}`}
+              style={{ fontFamily: 'inherit', lineHeight: '1.6' }}
               // SECURITY: This HTML is sanitized on the client using DOMPurify
               dangerouslySetInnerHTML={{
                 __html: sanitizedHtmlSummary,
               }}
             />
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="aicher-read-more"
+              aria-expanded={isExpanded}
+            >
+              {isExpanded ? 'Read Less' : 'Read More'}
+            </button>
             <div className="mt-4 pt-3 border-t border-gray-100">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-400 font-medium">Source: Wikipedia</span>
@@ -472,9 +482,21 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
         {/* Wikipedia Plain Summary - Safe text rendering */}
         {biographyData?.wikipediaSummary && !sanitizedHtmlSummary && (
           <div className="group">
-            <div className="text-gray-700 leading-relaxed text-lg">
-              {biographyData.wikipediaSummary.split('.').slice(0, 2).join('.').trim()}.
+            <div
+              className={`text-gray-700 text-lg ${isExpanded ? 'line-clamp-expanded' : 'line-clamp-4'}`}
+              style={{ lineHeight: '1.6' }}
+            >
+              {isExpanded
+                ? biographyData.wikipediaSummary
+                : biographyData.wikipediaSummary.split('.').slice(0, 2).join('.').trim() + '.'}
             </div>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="aicher-read-more"
+              aria-expanded={isExpanded}
+            >
+              {isExpanded ? 'Read Less' : 'Read More'}
+            </button>
             <div className="mt-4 pt-3 border-t border-gray-100">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-400 font-medium">Source: Wikipedia</span>

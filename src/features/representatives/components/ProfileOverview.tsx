@@ -55,18 +55,20 @@ interface TimelineItemProps {
 function TimelineItem({ date, title, description, type = 'other' }: TimelineItemProps) {
   const typeColors = {
     term: 'bg-blue-100 text-blue-800',
-    leadership: 'bg-purple-100 text-purple-800',
+    leadership: 'bg-blue-100 text-blue-800',
     committee: 'bg-green-100 text-green-800',
     other: 'bg-white border-2 border-gray-300 text-gray-800',
   };
 
   return (
     <div className="flex gap-3 pb-4 last:pb-0">
-      <div className="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+      <div className="flex-shrink-0 w-2 h-2 bg-civiq-blue border-2 border-black mt-2"></div>
       <div className="flex-1">
         <div className="flex flex-wrap items-center gap-2 mb-1">
           <span className="text-sm font-medium text-gray-900">{title}</span>
-          <span className={`px-2 py-1 text-xs font-medium rounded ${typeColors[type]}`}>
+          <span
+            className={`px-2 py-1 text-xs font-medium border-2 border-black ${typeColors[type]}`}
+          >
             {type}
           </span>
         </div>

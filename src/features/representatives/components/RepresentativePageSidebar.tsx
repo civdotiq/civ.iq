@@ -56,12 +56,12 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
   return (
     <div className="space-y-6 lg:sticky lg:top-6">
       {/* Federal Level Card */}
-      <div className="bg-white border-2 border-black border border-gray-200 p-6">
+      <div className="bg-white border-2 border-black border border-gray-200 p-grid-4">
         <div className="flex items-center mb-3">
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-blue-100 border-2 border-black flex items-center justify-center">
               <svg
-                className="w-5 h-5 text-blue-600"
+                className="w-5 h-5 text-civiq-blue"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -91,12 +91,12 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
       </div>
 
       {/* District Information Card */}
-      <div className="bg-white border-2 border-black border border-gray-200 p-6">
+      <div className="bg-white border-2 border-black border border-gray-200 p-grid-4">
         <div className="flex items-center mb-3">
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-green-100 border-2 border-black flex items-center justify-center">
               <svg
-                className="w-5 h-5 text-green-600"
+                className="w-5 h-5 text-civiq-green"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -153,12 +153,12 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
       </div>
 
       {/* Compare Representatives Card */}
-      <div className="bg-white border-2 border-black border border-gray-200 p-6">
+      <div className="bg-white border-2 border-black border border-gray-200 p-grid-4">
         <div className="flex items-center mb-3">
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-blue-100 border-2 border-black flex items-center justify-center">
               <svg
-                className="w-5 h-5 text-purple-600"
+                className="w-5 h-5 text-civiq-blue"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -183,14 +183,14 @@ export function RepresentativePageSidebar({ representative }: RepresentativePage
         <div className="space-y-3">
           <Link
             href={`/compare?base=${representative.bioguideId}`}
-            className="block w-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 px-4 py-2 text-sm font-medium text-center transition-colors duration-200"
+            className="aicher-button-high-emphasis"
           >
             Compare representatives
           </Link>
 
           <Link
             href={`/representatives?state=${representative.state}`}
-            className="block w-full bg-white hover:bg-white border-2 border-gray-300 text-gray-700 hover:text-gray-800 px-4 py-2 text-sm font-medium text-center transition-colors duration-200"
+            className="block w-full text-center py-3 px-5 text-sm aicher-heading transition-all duration-200 bg-white text-black aicher-border border-black hover:bg-black hover:text-white"
           >
             View all from {representative.state}
           </Link>

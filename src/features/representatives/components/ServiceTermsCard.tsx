@@ -155,8 +155,8 @@ export function ServiceTermsCard({ representative, className = '' }: ServiceTerm
                       title={`Click to filter ${group.chamber} terms`}
                     >
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${
-                          group.chamber === 'Senate' ? 'bg-blue-600' : 'bg-purple-600'
+                        className={`w-10 h-10 border-2 border-black flex items-center justify-center text-white font-bold text-sm ${
+                          group.chamber === 'Senate' ? 'bg-civiq-blue' : 'bg-civiq-red'
                         }`}
                       >
                         {group.chamber === 'Senate' ? 'S' : 'H'}
@@ -232,10 +232,10 @@ export function ServiceTermsCard({ representative, className = '' }: ServiceTerm
                     </div>
                     <div className="flex items-center gap-2">
                       <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        className={`px-2 py-0.5 border-2 border-black text-xs font-medium ${
                           term.chamber === 'Senate'
                             ? 'bg-blue-100 text-blue-800'
-                            : 'bg-purple-100 text-purple-800'
+                            : 'bg-red-100 text-red-800'
                         }`}
                       >
                         {term.chamber}

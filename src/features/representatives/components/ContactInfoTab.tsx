@@ -20,7 +20,7 @@ interface ContactInfoTabProps {
 
 export function ContactInfoTab({ representative }: ContactInfoTabProps) {
   return (
-    <div style={{ gap: 'calc(var(--grid) * 4)' }} className="flex flex-col">
+    <div className="flex flex-col gap-grid-5">
       {/* Section Header */}
       <div>
         <h2
@@ -34,10 +34,7 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
       {/* Two-column grid layout: 2/3 main content, 1/3 sidebar */}
       <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 'calc(var(--grid) * 4)' }}>
         {/* LEFT COLUMN (2/3) - Main Content */}
-        <div
-          className="md:col-span-2"
-          style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--grid) * 4)' }}
-        >
+        <div className="md:col-span-2 flex flex-col gap-grid-5">
           {/* Biography Section */}
           <div>
             <BiographyCard representative={representative} />

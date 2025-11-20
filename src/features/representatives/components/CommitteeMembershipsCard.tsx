@@ -65,20 +65,17 @@ export function CommitteeMembershipsCard({
 
   return (
     <div className={`bg-white border-2 border-black accent-bar-blue ${className}`}>
-      <div className="p-6 border-b-2 border-black">
+      <div className="p-grid-4 border-b-2 border-black">
         <div className="flex items-center gap-3">
           <Users className="w-6 h-6 text-civiq-blue" />
           <h3 className="aicher-heading text-lg text-civiq-blue">Committee Memberships</h3>
         </div>
       </div>
-      <div className="p-6">
+      <div className="p-grid-4">
         {deduplicatedCommittees.length > 0 ? (
-          <div className="space-y-4">
+          <div className="aicher-data-list">
             {deduplicatedCommittees.map((committee, index) => (
-              <div
-                key={`${committee.name}-${index}`}
-                className="committee-card accent-bar-blue p-4 group"
-              >
+              <div key={`${committee.name}-${index}`} className="aicher-data-list-item">
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <h4 className="aicher-heading text-base flex-1">
                     <Link
@@ -91,7 +88,7 @@ export function CommitteeMembershipsCard({
                   {COMMITTEE_INFO[committee.thomas_id]?.description && (
                     <div className="relative group/tooltip">
                       <Info className="w-4 h-4 text-gray-400 hover:text-civiq-blue cursor-help transition-colors" />
-                      <div className="absolute right-0 top-6 w-64 bg-black text-white text-xs p-3 rounded opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-10 shadow-lg">
+                      <div className="absolute right-0 top-6 w-64 bg-black text-white text-xs p-3 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-10">
                         <p className="leading-relaxed">
                           {COMMITTEE_INFO[committee.thomas_id]?.description ?? ''}
                         </p>

@@ -147,33 +147,34 @@ export function OverviewSidebar({ representative }: OverviewSidebarProps) {
       {/* District Information */}
       <AicherSidebarCard title="District" icon={MapPin} variant="highlight">
         <div className="space-y-3">
+          {/* Geometric Map Placeholder */}
+          <Link
+            href={
+              representative.chamber === 'Senate'
+                ? `/districts/${representative.state}-STATE`
+                : `/districts/${representative.state}-${representative.district || 'AL'}`
+            }
+            className="block"
+          >
+            <div className="aicher-map-placeholder group cursor-pointer hover:border-civiq-blue transition-all">
+              <MapPin className="w-12 h-12 text-gray-400 group-hover:text-civiq-blue transition-colors" />
+              <div className="aicher-map-placeholder-label">
+                {representative.chamber === 'Senate' ? 'State View' : 'District Map'}
+              </div>
+            </div>
+          </Link>
+
           <div>
             {representative.chamber === 'Senate' ? (
-              <Link
-                href={`/districts/${representative.state}-STATE`}
-                className="block hover:bg-blue-50 -m-3 p-3 transition-colors group"
-              >
-                <div className="text-lg font-bold text-gray-900 group-hover:text-blue-600">
-                  {getDistrictDisplay()}
-                </div>
+              <div>
+                <div className="text-lg font-bold text-gray-900">{getDistrictDisplay()}</div>
                 <div className="text-sm text-gray-600">U.S. Senate</div>
-                <div className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
-                  View state overview →
-                </div>
-              </Link>
+              </div>
             ) : (
-              <Link
-                href={`/districts/${representative.state}-${representative.district || 'AL'}`}
-                className="block hover:bg-blue-50 -m-3 p-3 transition-colors group"
-              >
-                <div className="text-lg font-bold text-gray-900 group-hover:text-blue-600">
-                  {getDistrictDisplay()}
-                </div>
+              <div>
+                <div className="text-lg font-bold text-gray-900">{getDistrictDisplay()}</div>
                 <div className="text-sm text-gray-600">Congressional District</div>
-                <div className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
-                  View district profile →
-                </div>
-              </Link>
+              </div>
             )}
           </div>
 
@@ -358,25 +359,25 @@ export function OverviewSidebar({ representative }: OverviewSidebarProps) {
       {/* Quick Actions */}
       <AicherSidebarCard title="Quick Actions" icon={Clock}>
         <div className="space-y-3">
-          {representative.currentTerm?.contactForm && (
-            <a
-              href={representative.currentTerm.contactForm}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full text-center py-3 px-5 text-sm aicher-heading transition-all duration-200 bg-civiq-blue text-white aicher-border border-civiq-blue hover:bg-white hover:text-civiq-blue"
-            >
-              Send Message
-            </a>
-          )}
-
           {representative.currentTerm?.website && (
             <a
               href={representative.currentTerm.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full text-center py-3 px-5 text-sm aicher-heading transition-all duration-200 bg-white text-black aicher-border border-black hover:bg-black hover:text-white"
+              className="aicher-button-high-emphasis"
             >
               Visit Website
+            </a>
+          )}
+
+          {representative.currentTerm?.contactForm && (
+            <a
+              href={representative.currentTerm.contactForm}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full text-center py-3 px-5 text-sm aicher-heading transition-all duration-200 bg-white text-black aicher-border border-black hover:bg-black hover:text-white"
+            >
+              Send Message
             </a>
           )}
 
