@@ -72,12 +72,14 @@ export function ShareButton({
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
-          strokeLinecap="square"
-          strokeLinejoin="miter"
+          strokeLinecap="round"
+          strokeLinejoin="round"
           aria-hidden="true"
         >
-          {/* X.com logo (simplified geometric) */}
-          <path d="M4 4L20 20M20 4L4 20" />
+          {/* Share icon: arrow pointing out of box */}
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+          <polyline points="16 6 12 2 8 6" />
+          <line x1="12" y1="2" x2="12" y2="15" />
         </svg>
       </button>
     );
@@ -109,12 +111,15 @@ export function ShareButton({
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
-        strokeLinecap="square"
-        strokeLinejoin="miter"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         aria-hidden="true"
         className="flex-shrink-0"
       >
-        <path d="M4 4L20 20M20 4L4 20" />
+        {/* Share icon: arrow pointing out of box */}
+        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+        <polyline points="16 6 12 2 8 6" />
+        <line x1="12" y1="2" x2="12" y2="15" />
       </svg>
       <span>Share</span>
     </button>
