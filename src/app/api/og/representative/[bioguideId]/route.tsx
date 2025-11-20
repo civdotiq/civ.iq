@@ -116,7 +116,7 @@ function FinanceCard({ representative, stats }: RepresentativeData) {
     >
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '48px' }}>
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div
             style={{
               fontSize: 28,
@@ -141,6 +141,7 @@ function FinanceCard({ representative, stats }: RepresentativeData) {
                 fontWeight: 'bold',
                 color: '#000000',
                 letterSpacing: '0.05em',
+                display: 'flex',
               }}
             >
               CIV
@@ -251,7 +252,7 @@ function AlignmentCard({ representative, stats }: RepresentativeData) {
     >
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '48px' }}>
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div
             style={{
               fontSize: 28,
@@ -275,6 +276,7 @@ function AlignmentCard({ representative, stats }: RepresentativeData) {
                 fontWeight: 'bold',
                 color: '#000000',
                 letterSpacing: '0.05em',
+                display: 'flex',
               }}
             >
               CIV
@@ -353,7 +355,7 @@ function ImpactCard({ representative, stats }: RepresentativeData) {
     >
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '48px' }}>
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div
             style={{
               fontSize: 28,
@@ -377,6 +379,7 @@ function ImpactCard({ representative, stats }: RepresentativeData) {
                 fontWeight: 'bold',
                 color: '#000000',
                 letterSpacing: '0.05em',
+                display: 'flex',
               }}
             >
               CIV
@@ -448,7 +451,13 @@ function OverviewCard({ representative, stats }: RepresentativeData) {
       {/* Header with Logo */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '48px' }}>
         <div
-          style={{ fontSize: 32, fontWeight: 'bold', color: '#000000', letterSpacing: '0.05em' }}
+          style={{
+            fontSize: 32,
+            fontWeight: 'bold',
+            color: '#000000',
+            letterSpacing: '0.05em',
+            display: 'flex',
+          }}
         >
           CIV
           <span style={{ color: '#e11d07' }}>.</span>
