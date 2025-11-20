@@ -11,11 +11,6 @@ import { Mail, Users } from 'lucide-react';
 import type { EnhancedRepresentative } from '@/types/representative';
 import { FormattedMessageDisplay } from './FormattedMessageDisplay';
 import {
-  MESSAGE_TEMPLATES,
-  formatTemplate,
-  getTemplateById,
-} from '@/lib/templates/MessageTemplates';
-import {
   formatConstituentMessage,
   sanitizeMessage,
   validateEmail,
@@ -52,29 +47,11 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
     subject: '',
     message: '',
   });
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
   const [showPreview, setShowPreview] = useState(false);
 
   const contactMethods = getContactMethods(representative);
   const messageLength = getMessageCharacterCount(formData.message);
-
-  const handleTemplateChange = (templateId: string) => {
-    setSelectedTemplate(templateId);
-
-    if (templateId) {
-      const template = getTemplateById(templateId);
-      if (template) {
-        const formatted = formatTemplate(template, {
-          name: formData.name || '[Your Name]',
-          zipCode: formData.zipCode || '[Your ZIP Code]',
-          representativeName: representative.name,
-          representativeTitle: representative.title,
-        });
-        setFormData({ ...formData, subject: template.title, message: formatted });
-      }
-    }
-  };
 
   const handleInputChange = (field: keyof ContactFormData, value: string) => {
     const sanitized = field === 'message' ? sanitizeMessage(value) : value.trim();
@@ -149,26 +126,6 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
       </div>
 
       <form className="p-4 space-y-4" onSubmit={e => e.preventDefault()}>
-        {/* Template Selector */}
-        <div>
-          <label htmlFor="template" className="block text-sm font-medium mb-1">
-            Message Template (Optional)
-          </label>
-          <select
-            id="template"
-            value={selectedTemplate}
-            onChange={e => handleTemplateChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800"
-          >
-            <option value="">Select a template or write your own</option>
-            {MESSAGE_TEMPLATES.map(template => (
-              <option key={template.id} value={template.id}>
-                {template.category}: {template.title}
-              </option>
-            ))}
-          </select>
-        </div>
-
         {/* Name */}
         <div>
           <label htmlFor="name" className="block text-sm font-medium mb-1">
