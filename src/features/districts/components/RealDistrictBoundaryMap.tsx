@@ -191,33 +191,73 @@ export function RealDistrictBoundaryMap({
       const map = mapRef.current;
       const district = mapState.district;
 
-      // Create GeoJSON feature for the district
-      const districtFeature = {
-        type: 'Feature' as const,
-        properties: {
-          district_id: district.id,
-          state_fips: district.state_fips,
-          state_name: district.state_name,
-          state_abbr: district.state_abbr,
-          district_num: district.district_num,
-          name: district.name,
-          full_name: district.full_name,
-          area_sqm: district.area_sqm,
+      // CRITICAL FIX: Fetch actual district geometry from GeoJSON instead of using bbox rectangle
+      logger.info('📡 Fetching actual district geometry from GeoJSON file...', {
+        districtId: district.id,
+        geoid: district.geoid,
+      });
+
+      // Fetch the full GeoJSON file with real district boundaries
+      const geojsonResponse = await fetch(
+        '/data/districts/congressional_districts_119_real.geojson'
+      );
+      if (!geojsonResponse.ok) {
+        throw new Error(`Failed to fetch district GeoJSON: ${geojsonResponse.status}`);
+      }
+
+      const geojsonData = await geojsonResponse.json();
+      logger.info('✅ GeoJSON loaded, searching for district geometry...', {
+        totalFeatures: geojsonData.features?.length,
+      });
+
+      // Find the specific district feature by GEOID
+      let districtFeature = geojsonData.features.find(
+        (feature: { properties?: { GEOID?: string } }) =>
+          feature.properties?.GEOID === district.geoid
+      );
+
+      if (!districtFeature) {
+        logger.warn('⚠️ District geometry not found in GeoJSON, falling back to bbox', {
           geoid: district.geoid,
-        },
-        geometry: {
-          type: 'Polygon' as const,
-          coordinates: [
-            [
-              [district.bbox[0], district.bbox[1]], // SW
-              [district.bbox[2], district.bbox[1]], // SE
-              [district.bbox[2], district.bbox[3]], // NE
-              [district.bbox[0], district.bbox[3]], // NW
-              [district.bbox[0], district.bbox[1]], // Close polygon
+          districtId: district.id,
+        });
+
+        // Fallback to bounding box rectangle if geometry not found
+        districtFeature = {
+          type: 'Feature' as const,
+          properties: {
+            district_id: district.id,
+            state_fips: district.state_fips,
+            state_name: district.state_name,
+            state_abbr: district.state_abbr,
+            district_num: district.district_num,
+            name: district.name,
+            full_name: district.full_name,
+            area_sqm: district.area_sqm,
+            geoid: district.geoid,
+          },
+          geometry: {
+            type: 'Polygon' as const,
+            coordinates: [
+              [
+                [district.bbox[0], district.bbox[1]], // SW
+                [district.bbox[2], district.bbox[1]], // SE
+                [district.bbox[2], district.bbox[3]], // NE
+                [district.bbox[0], district.bbox[3]], // NW
+                [district.bbox[0], district.bbox[1]], // Close polygon
+              ],
             ],
-          ],
-        },
-      };
+          },
+        };
+      } else {
+        logger.info('✅ Found real district geometry!', {
+          geometryType: districtFeature.geometry?.type,
+          coordinateCount:
+            districtFeature.geometry?.type === 'Polygon'
+              ? districtFeature.geometry.coordinates[0]?.length
+              : districtFeature.geometry?.coordinates?.length,
+        });
+      }
 
       // Add district boundary source
       map.addSource('district-boundary', {
