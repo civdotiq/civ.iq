@@ -31,7 +31,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 const PRODUCTION_CSP =
   "default-src 'self'; " +
   "script-src 'self' 'unsafe-inline' blob:; " + // unsafe-inline required for Next.js App Router hydration
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " + // unsafe-inline for styled-components/CSS-in-JS
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; " + // unsafe-inline for styled-components/CSS-in-JS, unpkg.com for MapLibre GL
   "img-src 'self' data: https:; " +
   "font-src 'self' data: https://fonts.gstatic.com; " +
   "connect-src 'self' https:; " +
@@ -45,7 +45,7 @@ const PRODUCTION_CSP =
 const DEVELOPMENT_CSP =
   "default-src 'self'; " +
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; " +
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; " + // unpkg.com for MapLibre GL
   "img-src 'self' data: https: blob:; " +
   "font-src 'self' data: https://fonts.gstatic.com; " +
   "connect-src 'self' https: ws: wss:; " + // WebSocket for hot reload
