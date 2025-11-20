@@ -343,11 +343,26 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
     };
 
     // Check if map is already loaded, if not wait for load event
-    if (map.loaded()) {
+    // CRITICAL FIX: Use multiple checks and add retry mechanism
+    const isMapReady = map.loaded() || map.isStyleLoaded();
+
+    if (isMapReady) {
+      logger.info('✅ Map is ready, adding district layers immediately');
       addDistrictLayers();
     } else {
       logger.info('⏳ Map not yet loaded, waiting for load event...');
-      map.once('load', addDistrictLayers);
+      map.once('load', () => {
+        logger.info('✅ Map load event fired, adding district layers now');
+        addDistrictLayers();
+      });
+
+      // FALLBACK: Also try after a short delay in case load event already fired
+      setTimeout(() => {
+        if (map.loaded() && !map.getSource('district-boundary')) {
+          logger.info('🔄 Fallback: Adding district layers after timeout');
+          addDistrictLayers();
+        }
+      }, 1000);
     }
   }, [geoJsonData, dataSource, isClient, mapLoaded]);
 
