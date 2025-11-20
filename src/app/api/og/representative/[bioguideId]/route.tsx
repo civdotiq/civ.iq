@@ -66,7 +66,18 @@ async function fetchRepresentativeData(bioguideId: string): Promise<Representati
       return null;
     }
 
-    const representative = await repResponse.json();
+    const repData = await repResponse.json();
+    // Extract member data from nested response
+    const memberData = repData.member || repData;
+
+    // Map to our expected structure
+    const representative = {
+      name: `${memberData.firstName} ${memberData.lastName}`,
+      party: memberData.partyHistory?.[0]?.partyName || 'Independent',
+      state: memberData.state || memberData.terms?.[memberData.terms.length - 1]?.stateName || '',
+      chamber: memberData.terms?.[memberData.terms.length - 1]?.chamber || 'House',
+      district: memberData.terms?.[memberData.terms.length - 1]?.district,
+    };
 
     // Fetch batch stats
     const statsResponse = await fetch(
