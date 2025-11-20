@@ -191,21 +191,30 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
+        setMapLoaded(false); // CRITICAL FIX: Reset mapLoaded to sync with mapRef
       }
     };
   }, [isClient, state, district]);
 
   // Update map with district data
   useEffect(() => {
+    const hasMap = !!mapRef.current;
+    const hasGeoJson = !!geoJsonData;
+
     logger.info('🔄 District data useEffect triggered:', {
-      hasMap: !!mapRef.current,
-      hasGeoJson: !!geoJsonData,
+      hasMap,
+      hasGeoJson,
       isClient,
       mapLoaded,
     });
 
     if (!mapRef.current || !geoJsonData || !isClient || !mapLoaded) {
-      logger.warn('⚠️ Skipping district layer update - missing requirements');
+      logger.warn('⚠️ Skipping district layer update - missing requirements:', {
+        missingMap: !hasMap,
+        missingGeoJson: !hasGeoJson,
+        missingClient: !isClient,
+        missingMapLoaded: !mapLoaded,
+      });
       return;
     }
 
