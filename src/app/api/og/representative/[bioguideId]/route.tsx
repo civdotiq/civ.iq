@@ -106,6 +106,51 @@ function formatCurrency(amount: number): string {
   return `$${amount.toFixed(0)}`;
 }
 
+// CIV.IQ Geometric Logo Component
+function CiviqLogo({ size = 48 }: { size?: number }) {
+  const circleSize = size;
+  const barWidth = circleSize * 0.5;
+  const barHeight = circleSize * 1.2;
+  const dotSize = circleSize * 0.2;
+  const dotSpacing = size * 0.15;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+      {/* Red circle */}
+      <div
+        style={{
+          width: `${circleSize}px`,
+          height: `${circleSize}px`,
+          borderRadius: '50%',
+          backgroundColor: '#e11d07',
+        }}
+      />
+      {/* Green bar */}
+      <div
+        style={{
+          width: `${barWidth}px`,
+          height: `${barHeight}px`,
+          backgroundColor: '#0a9338',
+        }}
+      />
+      {/* Blue dots */}
+      <div style={{ display: 'flex', gap: `${dotSpacing}px`, marginTop: '4px' }}>
+        {[1, 2, 3, 4].map(i => (
+          <div
+            key={i}
+            style={{
+              width: `${dotSize}px`,
+              height: `${dotSize}px`,
+              borderRadius: '50%',
+              backgroundColor: '#3ea2d4',
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Finance Card Design
 function FinanceCard({ representative, stats }: RepresentativeData) {
   const totalRaised = stats.finance?.totalRaised || 0;
@@ -145,26 +190,12 @@ function FinanceCard({ representative, stats }: RepresentativeData) {
             </span>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {/* CIV.IQ Logo */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <div
-              style={{
-                fontSize: 32,
-                fontWeight: 'bold',
-                color: '#000000',
-                letterSpacing: '0.05em',
-                display: 'flex',
-              }}
-            >
-              <span>CIV</span>
-              <span style={{ color: '#e11d07' }}>.</span>
-              <span style={{ color: '#0a9338' }}>I</span>
-              <span style={{ color: '#3ea2d4' }}>Q</span>
-            </div>
-            <div style={{ fontSize: 12, color: '#666666', marginTop: '4px' }}>
-              Real Government Data
-            </div>
+        <div
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}
+        >
+          <CiviqLogo size={64} />
+          <div style={{ fontSize: 12, color: '#666666', marginTop: '4px' }}>
+            Real Government Data
           </div>
         </div>
       </div>
@@ -283,25 +314,12 @@ function AlignmentCard({ representative, stats }: RepresentativeData) {
             </span>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <div
-              style={{
-                fontSize: 32,
-                fontWeight: 'bold',
-                color: '#000000',
-                letterSpacing: '0.05em',
-                display: 'flex',
-              }}
-            >
-              <span>CIV</span>
-              <span style={{ color: '#e11d07' }}>.</span>
-              <span style={{ color: '#0a9338' }}>I</span>
-              <span style={{ color: '#3ea2d4' }}>Q</span>
-            </div>
-            <div style={{ fontSize: 12, color: '#666666', marginTop: '4px' }}>
-              Real Government Data
-            </div>
+        <div
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}
+        >
+          <CiviqLogo size={64} />
+          <div style={{ fontSize: 12, color: '#666666', marginTop: '4px' }}>
+            Real Government Data
           </div>
         </div>
       </div>
@@ -389,25 +407,12 @@ function ImpactCard({ representative, stats }: RepresentativeData) {
             </span>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <div
-              style={{
-                fontSize: 32,
-                fontWeight: 'bold',
-                color: '#000000',
-                letterSpacing: '0.05em',
-                display: 'flex',
-              }}
-            >
-              <span>CIV</span>
-              <span style={{ color: '#e11d07' }}>.</span>
-              <span style={{ color: '#0a9338' }}>I</span>
-              <span style={{ color: '#3ea2d4' }}>Q</span>
-            </div>
-            <div style={{ fontSize: 12, color: '#666666', marginTop: '4px' }}>
-              Real Government Data
-            </div>
+        <div
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}
+        >
+          <CiviqLogo size={64} />
+          <div style={{ fontSize: 12, color: '#666666', marginTop: '4px' }}>
+            Real Government Data
           </div>
         </div>
       </div>
@@ -467,21 +472,15 @@ function OverviewCard({ representative, stats }: RepresentativeData) {
       }}
     >
       {/* Header with Logo */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '48px' }}>
-        <div
-          style={{
-            fontSize: 32,
-            fontWeight: 'bold',
-            color: '#000000',
-            letterSpacing: '0.05em',
-            display: 'flex',
-          }}
-        >
-          <span>CIV</span>
-          <span style={{ color: '#e11d07' }}>.</span>
-          <span style={{ color: '#0a9338' }}>I</span>
-          <span style={{ color: '#3ea2d4' }}>Q</span>
-        </div>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '48px',
+        }}
+      >
+        <CiviqLogo size={80} />
         <div style={{ fontSize: 12, color: '#666666' }}>Real Government Data</div>
       </div>
 
