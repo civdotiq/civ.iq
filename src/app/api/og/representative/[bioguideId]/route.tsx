@@ -127,9 +127,11 @@ function FinanceCard({ representative, stats }: RepresentativeData) {
           >
             CAMPAIGN FINANCE
           </div>
-          <div style={{ fontSize: 24, color: '#666666' }}>
-            {representative.chamber === 'Senate' ? 'Sen.' : 'Rep.'} {representative.name} (
-            {representative.party?.[0] || 'I'}-{representative.state})
+          <div style={{ fontSize: 24, color: '#666666', display: 'flex' }}>
+            <span>
+              {representative.chamber === 'Senate' ? 'Sen.' : 'Rep.'} {representative.name} (
+              {representative.party?.[0] || 'I'}-{representative.state})
+            </span>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -144,7 +146,7 @@ function FinanceCard({ representative, stats }: RepresentativeData) {
                 display: 'flex',
               }}
             >
-              CIV
+              <span>CIV</span>
               <span style={{ color: '#e11d07' }}>.</span>
               <span style={{ color: '#0a9338' }}>I</span>
               <span style={{ color: '#3ea2d4' }}>Q</span>
@@ -263,9 +265,11 @@ function AlignmentCard({ representative, stats }: RepresentativeData) {
           >
             PARTY VOTING RECORD
           </div>
-          <div style={{ fontSize: 24, color: '#666666' }}>
-            {representative.chamber === 'Senate' ? 'Sen.' : 'Rep.'} {representative.name} (
-            {representative.party?.[0] || 'I'}-{representative.state})
+          <div style={{ fontSize: 24, color: '#666666', display: 'flex' }}>
+            <span>
+              {representative.chamber === 'Senate' ? 'Sen.' : 'Rep.'} {representative.name} (
+              {representative.party?.[0] || 'I'}-{representative.state})
+            </span>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -279,7 +283,7 @@ function AlignmentCard({ representative, stats }: RepresentativeData) {
                 display: 'flex',
               }}
             >
-              CIV
+              <span>CIV</span>
               <span style={{ color: '#e11d07' }}>.</span>
               <span style={{ color: '#0a9338' }}>I</span>
               <span style={{ color: '#3ea2d4' }}>Q</span>
@@ -295,8 +299,8 @@ function AlignmentCard({ representative, stats }: RepresentativeData) {
       <div
         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '40px 0' }}
       >
-        <div style={{ fontSize: 96, fontWeight: 'bold', color: '#000000' }}>
-          {partyAlignment.toFixed(0)}%
+        <div style={{ fontSize: 96, fontWeight: 'bold', color: '#000000', display: 'flex' }}>
+          <span>{partyAlignment.toFixed(0)}%</span>
         </div>
         <div style={{ fontSize: 20, color: '#666666', marginTop: '8px', letterSpacing: '0.1em' }}>
           PARTY ALIGNMENT
@@ -311,8 +315,9 @@ function AlignmentCard({ representative, stats }: RepresentativeData) {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: 18, color: '#666666' }}>Trend</div>
-          <div style={{ fontSize: 24, fontWeight: 'bold' }}>
-            {trendSymbol} {trend}
+          <div style={{ fontSize: 24, fontWeight: 'bold', display: 'flex', gap: '8px' }}>
+            <span>{trendSymbol}</span>
+            <span>{trend}</span>
           </div>
         </div>
       </div>
@@ -366,9 +371,11 @@ function ImpactCard({ representative, stats }: RepresentativeData) {
           >
             LEGISLATIVE IMPACT
           </div>
-          <div style={{ fontSize: 24, color: '#666666' }}>
-            {representative.chamber === 'Senate' ? 'Sen.' : 'Rep.'} {representative.name} (
-            {representative.party?.[0] || 'I'}-{representative.state})
+          <div style={{ fontSize: 24, color: '#666666', display: 'flex' }}>
+            <span>
+              {representative.chamber === 'Senate' ? 'Sen.' : 'Rep.'} {representative.name} (
+              {representative.party?.[0] || 'I'}-{representative.state})
+            </span>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -382,7 +389,7 @@ function ImpactCard({ representative, stats }: RepresentativeData) {
                 display: 'flex',
               }}
             >
-              CIV
+              <span>CIV</span>
               <span style={{ color: '#e11d07' }}>.</span>
               <span style={{ color: '#0a9338' }}>I</span>
               <span style={{ color: '#3ea2d4' }}>Q</span>
@@ -459,7 +466,7 @@ function OverviewCard({ representative, stats }: RepresentativeData) {
             display: 'flex',
           }}
         >
-          CIV
+          <span>CIV</span>
           <span style={{ color: '#e11d07' }}>.</span>
           <span style={{ color: '#0a9338' }}>I</span>
           <span style={{ color: '#3ea2d4' }}>Q</span>
@@ -472,10 +479,12 @@ function OverviewCard({ representative, stats }: RepresentativeData) {
         <div style={{ fontSize: 48, fontWeight: 'bold', color: '#000000', marginBottom: '8px' }}>
           {representative.name}
         </div>
-        <div style={{ fontSize: 24, color: '#666666' }}>
-          U.S. {representative.chamber === 'Senate' ? 'Senator' : 'Representative'},{' '}
-          {representative.state}
-          {representative.district ? `-${representative.district}` : ''}
+        <div style={{ fontSize: 24, color: '#666666', display: 'flex' }}>
+          <span>
+            U.S. {representative.chamber === 'Senate' ? 'Senator' : 'Representative'},{' '}
+            {representative.state}
+            {representative.district ? `-${representative.district}` : ''}
+          </span>
         </div>
         <div style={{ fontSize: 20, color: '#999999', marginTop: '8px' }}>
           {representative.party}
