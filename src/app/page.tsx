@@ -43,7 +43,8 @@ export default function HomePage() {
           {/* Data Sources */}
           <div className="mt-grid-3 sm:mt-grid-8 text-center">
             <p className="text-xs sm:text-sm text-gray-500 px-grid-2">
-              Real-time data from Congress.gov, Federal Election Commission, and U.S. Census Bureau
+              Federal data from Congress.gov, FEC, and Census Bureau. State legislature data from
+              Open States.
             </p>
           </div>
         </div>
