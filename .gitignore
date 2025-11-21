@@ -58,24 +58,10 @@ data/districts/congressional_districts_119_real.geojson
 public/maps/congressional_districts_119_real.pmtiles
 public/maps/congressional_districts_119_real.pmtiles-journal
 
-# BMad Method - Selective Integration
-.bmad-core/workflow/
-.bmad-core/stories/
-# Keep the useful parts:
-# .bmad-core/agents/
-# .bmad-core/data/
-# .bmad-core/prompts/
-.bmad-core/flattened-code.xml
-
-# Installation scripts (cleanup)
-install-bmad.js
-install-bmad-cleanup.sh
-
 # Debug and development scripts
 debug-rep-api.js
 emergency-diagnose.js
 flatten-codebase.js
-test-bmad-flatten.js
 verify-rendering.js
 
 # Test directories
