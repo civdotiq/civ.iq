@@ -62,11 +62,81 @@ export default function DisclaimerPage() {
                 All data on CIV.IQ comes directly from official government APIs and public sources:
               </p>
               <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2 mb-grid-3">
-                <li>Congressional data: Congress.gov API (Library of Congress)</li>
-                <li>Campaign finance: Federal Election Commission (FEC)</li>
-                <li>Demographics: U.S. Census Bureau</li>
-                <li>State legislatures: OpenStates API</li>
-                <li>News articles: NewsAPI and Google News RSS feeds</li>
+                <li>
+                  Congressional data:{' '}
+                  <a
+                    href="https://api.congress.gov/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    Congress.gov API
+                  </a>{' '}
+                  (Library of Congress)
+                </li>
+                <li>
+                  Campaign finance:{' '}
+                  <a
+                    href="https://www.fec.gov/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    Federal Election Commission (FEC)
+                  </a>
+                </li>
+                <li>
+                  Demographics:{' '}
+                  <a
+                    href="https://www.census.gov/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    U.S. Census Bureau
+                  </a>
+                </li>
+                <li>
+                  State legislatures:{' '}
+                  <a
+                    href="https://openstates.org/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    Open States API
+                  </a>{' '}
+                  (
+                  <a
+                    href="https://docs.openstates.org/api-v3/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    API Documentation
+                  </a>
+                  )
+                </li>
+                <li>
+                  News articles:{' '}
+                  <a
+                    href="https://newsapi.org/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    NewsAPI
+                  </a>{' '}
+                  and{' '}
+                  <a
+                    href="https://news.google.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    Google News RSS feeds
+                  </a>
+                </li>
               </ul>
               <p className="text-gray-700 leading-relaxed">
                 While we make every effort to provide accurate and up-to-date information, we cannot

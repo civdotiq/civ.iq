@@ -52,11 +52,80 @@ export default function AboutPage() {
                 directly from official government APIs:
               </p>
               <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2">
-                <li>Congressional data from Congress.gov API</li>
-                <li>Campaign finance from Federal Election Commission</li>
-                <li>Demographic data from U.S. Census Bureau</li>
-                <li>State legislature data from OpenStates</li>
-                <li>News from verified sources like NewsAPI and Google News</li>
+                <li>
+                  Congressional data from{' '}
+                  <a
+                    href="https://api.congress.gov/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    Congress.gov API
+                  </a>
+                </li>
+                <li>
+                  Campaign finance from{' '}
+                  <a
+                    href="https://www.fec.gov/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    Federal Election Commission
+                  </a>
+                </li>
+                <li>
+                  Demographic data from{' '}
+                  <a
+                    href="https://www.census.gov/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    U.S. Census Bureau
+                  </a>
+                </li>
+                <li>
+                  State legislature data from{' '}
+                  <a
+                    href="https://openstates.org/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    Open States
+                  </a>{' '}
+                  (
+                  <a
+                    href="https://docs.openstates.org/api-v3/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    API Documentation
+                  </a>
+                  )
+                </li>
+                <li>
+                  News from{' '}
+                  <a
+                    href="https://newsapi.org/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    NewsAPI
+                  </a>{' '}
+                  and{' '}
+                  <a
+                    href="https://news.google.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    Google News
+                  </a>
+                </li>
               </ul>
             </section>
 

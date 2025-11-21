@@ -682,7 +682,25 @@ export default function StateLegislaturePage() {
       <footer className="bg-gray-900 text-white py-8 mt-16">
         <div className="container mx-auto px-4 text-center">
           <p className="text-gray-400">
-            Data sourced from official state sources and OpenStates.org
+            Data sourced from official state sources and{' '}
+            <a
+              href="https://openstates.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-civiq-blue hover:underline"
+            >
+              Open States
+            </a>{' '}
+            (
+            <a
+              href="https://docs.openstates.org/api-v3/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-civiq-blue hover:underline"
+            >
+              API Documentation
+            </a>
+            )
           </p>
           <p className="text-gray-500 text-sm mt-2">
             © 2019-2025 Mark Sandford. CIV.IQ™ - The Original Civic Information Platform

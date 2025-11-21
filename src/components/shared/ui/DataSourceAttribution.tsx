@@ -49,14 +49,6 @@ export const DATA_SOURCES = {
     sourceUrl: 'https://www.fec.gov/',
     reliability: 'high' as const,
   },
-  GDELT: {
-    sourceName: 'GDELT Project',
-    sourceUrl: 'https://www.gdeltproject.org/',
-    sourceContext: 'Global Database of Events, Language, and Tone',
-    reliability: 'medium' as const,
-    disclaimer:
-      'GDELT data quality varies by source and region. Articles are automatically collected and may not represent editorial viewpoints.',
-  },
   WIKIDATA: {
     sourceName: 'Wikidata',
     sourceUrl: 'https://www.wikidata.org/',
@@ -68,6 +60,34 @@ export const DATA_SOURCES = {
     sourceName: 'U.S. Census Bureau',
     sourceUrl: 'https://www.census.gov/',
     reliability: 'high' as const,
+  },
+  OPENSTATES: {
+    sourceName: 'Open States',
+    sourceUrl: 'https://openstates.org/',
+    sourceContext: 'State Legislature Data',
+    reliability: 'high' as const,
+    apiDocsUrl: 'https://docs.openstates.org/api-v3/',
+  },
+  NEWSAPI: {
+    sourceName: 'NewsAPI',
+    sourceUrl: 'https://newsapi.org/',
+    sourceContext: 'News Aggregation',
+    reliability: 'medium' as const,
+    disclaimer:
+      'News articles are aggregated from various sources and may reflect editorial viewpoints.',
+  },
+  GOOGLE_NEWS: {
+    sourceName: 'Google News',
+    sourceUrl: 'https://news.google.com/',
+    sourceContext: 'RSS Feed',
+    reliability: 'medium' as const,
+  },
+  WIKIPEDIA: {
+    sourceName: 'Wikipedia',
+    sourceUrl: 'https://www.wikipedia.org/',
+    sourceContext: 'Wikimedia Foundation',
+    reliability: 'medium' as const,
+    disclaimer: 'Wikipedia is collaboratively maintained and may contain inaccuracies.',
   },
 } as const;
 
@@ -179,15 +199,6 @@ export function FECAttribution(
   return <DataSourceAttribution {...DATA_SOURCES.FEC} {...props} />;
 }
 
-export function GDELTAttribution(
-  props: Omit<
-    DataSourceAttributionProps,
-    'sourceName' | 'sourceUrl' | 'reliability' | 'sourceContext' | 'disclaimer'
-  >
-) {
-  return <DataSourceAttribution {...DATA_SOURCES.GDELT} {...props} />;
-}
-
 export function WikidataAttribution(
   props: Omit<
     DataSourceAttributionProps,
@@ -201,4 +212,40 @@ export function CensusAttribution(
   props: Omit<DataSourceAttributionProps, 'sourceName' | 'sourceUrl' | 'reliability'>
 ) {
   return <DataSourceAttribution {...DATA_SOURCES.CENSUS} {...props} />;
+}
+
+export function OpenStatesAttribution(
+  props: Omit<
+    DataSourceAttributionProps,
+    'sourceName' | 'sourceUrl' | 'reliability' | 'sourceContext'
+  >
+) {
+  return <DataSourceAttribution {...DATA_SOURCES.OPENSTATES} {...props} />;
+}
+
+export function NewsAPIAttribution(
+  props: Omit<
+    DataSourceAttributionProps,
+    'sourceName' | 'sourceUrl' | 'reliability' | 'sourceContext' | 'disclaimer'
+  >
+) {
+  return <DataSourceAttribution {...DATA_SOURCES.NEWSAPI} {...props} />;
+}
+
+export function GoogleNewsAttribution(
+  props: Omit<
+    DataSourceAttributionProps,
+    'sourceName' | 'sourceUrl' | 'reliability' | 'sourceContext'
+  >
+) {
+  return <DataSourceAttribution {...DATA_SOURCES.GOOGLE_NEWS} {...props} />;
+}
+
+export function WikipediaAttribution(
+  props: Omit<
+    DataSourceAttributionProps,
+    'sourceName' | 'sourceUrl' | 'reliability' | 'sourceContext' | 'disclaimer'
+  >
+) {
+  return <DataSourceAttribution {...DATA_SOURCES.WIKIPEDIA} {...props} />;
 }
