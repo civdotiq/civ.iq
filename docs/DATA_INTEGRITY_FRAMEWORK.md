@@ -280,7 +280,7 @@ Any changes to coordinate conversion logic must:
 Add this badge to your README.md to show data integrity status:
 
 ```markdown
-[![Data Integrity](https://github.com/YOUR_USERNAME/civic-intel-hub/workflows/Data%20Integrity%20Validation/badge.svg)](https://github.com/YOUR_USERNAME/civic-intel-hub/actions/workflows/data-integrity-checks.yml)
+[![Data Integrity](https://github.com/civdotiq/civic-intel-hub/workflows/Data%20Integrity%20Validation/badge.svg)](https://github.com/civdotiq/civic-intel-hub/actions/workflows/data-integrity-checks.yml)
 ```
 
 ---

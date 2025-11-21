@@ -47,22 +47,24 @@ We are committed to providing a welcoming and inclusive environment for all cont
 1. Fork the repository on GitHub
 2. Clone your fork locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/civic-intel-hub.git
+   git clone https://github.com/civdotiq/civic-intel-hub.git
    cd civic-intel-hub
    ```
 3. Add the upstream repository:
    ```bash
-   git remote add upstream https://github.com/ORIGINAL_OWNER/civic-intel-hub.git
+   git remote add upstream https://github.com/civdotiq/civic-intel-hub.git
    ```
 
 ### Development Setup
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Copy environment variables:
+
    ```bash
    cp .env.example .env.local
    ```
@@ -70,6 +72,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 3. Obtain API keys (see [README.md](README.md#required-api-keys))
 
 4. Start development server:
+
    ```bash
    npm run dev
    ```
@@ -90,14 +93,17 @@ We are committed to providing a welcoming and inclusive environment for all cont
 ### Workflow
 
 1. **Create a branch** from `main`:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
+
    Use prefixes: `feature/`, `fix/`, `docs/`, `refactor/`, `test/`
 
 2. **Make your changes** following coding standards
 
 3. **Test your changes** thoroughly:
+
    ```bash
    npm test
    npm run type-check
@@ -105,12 +111,15 @@ We are committed to providing a welcoming and inclusive environment for all cont
    ```
 
 4. **Commit with clear messages**:
+
    ```bash
    git commit -m "feat: add district boundary visualization"
    ```
+
    Follow [Conventional Commits](https://www.conventionalcommits.org/)
 
 5. **Keep your branch updated**:
+
    ```bash
    git fetch upstream
    git rebase upstream/main
@@ -132,6 +141,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 - **Descriptive variable names** - avoid single letters except in loops
 
 Example:
+
 ```typescript
 // Good
 interface RepresentativeProfile {
@@ -153,6 +163,7 @@ let x: any = getData();
 - **Use React.memo** for expensive renders
 
 Example:
+
 ```typescript
 interface RepresentativeCardProps {
   representative: Representative;
@@ -197,30 +208,25 @@ src/
 - **Type-safe responses** using TypeScript interfaces
 
 Example:
+
 ```typescript
 export async function GET(request: Request) {
   try {
     // Validate input
     const { searchParams } = new URL(request.url);
     const zip = searchParams.get('zip');
-    
+
     if (!zip || !/^\d{5}$/.test(zip)) {
-      return NextResponse.json(
-        { error: 'Invalid ZIP code format' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid ZIP code format' }, { status: 400 });
     }
 
     // Process request
     const data = await fetchData(zip);
-    
+
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 ```
@@ -292,25 +298,31 @@ Your PR description should include:
 6. **Related Issues** - Link to relevant issues
 
 Example:
+
 ```markdown
 ## Description
+
 Adds interactive district boundary visualization using Leaflet.js
 
 ## Why
+
 Users need to see visual representations of congressional districts to better understand geographic boundaries.
 
 ## Changes
+
 - Added Leaflet.js integration
 - Created DistrictMap component
 - Added district boundary API endpoint
 - Updated district pages with map display
 
 ## Testing
+
 - Tested with multiple districts (CA-12, NY-14, TX-10)
 - Verified map loads correctly with boundaries
 - Tested error handling when boundary data unavailable
 
 ## Screenshots
+
 [Before/After images]
 
 Fixes #123
@@ -347,8 +359,8 @@ Look for issues labeled `good-first-issue` or `help-wanted` in the GitHub issue 
 
 ## Questions?
 
-- **General questions**: Open a [GitHub Discussion](https://github.com/OWNER/civic-intel-hub/discussions)
-- **Bug reports**: Open an [Issue](https://github.com/OWNER/civic-intel-hub/issues)
+- **General questions**: Open a [GitHub Discussion](https://github.com/civdotiq/civic-intel-hub/discussions)
+- **Bug reports**: Open an [Issue](https://github.com/civdotiq/civic-intel-hub/issues)
 - **Email**: mark@marksandford.dev
 
 ## License

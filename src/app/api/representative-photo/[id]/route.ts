@@ -104,7 +104,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       const url = source.urlPattern(bioguideId);
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'CivicIntelHub/1.0 (https://github.com/yourusername/civic-intel-hub)',
+          'User-Agent': 'CivicIntelHub/1.0 (https://github.com/civdotiq/civic-intel-hub)',
         },
       });
 

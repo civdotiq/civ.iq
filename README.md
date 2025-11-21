@@ -1,10 +1,31 @@
-# CIV.IQ - Civic Information Hub
+<p align="center">
+  <img src="public/images/civiq-logo-hero.webp" alt="CIV.IQ Logo" width="200">
+</p>
 
-A Progressive Web Application connecting citizens with government representatives through live, validated data from official sources.
+<h1 align="center">CIV.IQ - Civic Information Hub</h1>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)](https://www.typescriptlang.org/)
-[![Next.js 15](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+<p align="center">
+  <strong>Government data about your elected officials, organized and easy to understand.</strong>
+</p>
+
+<p align="center">
+  <a href="https://civdotiq.org">Live Demo</a> &bull;
+  <a href="docs/API_DOCUMENTATION.md">API Docs</a> &bull;
+  <a href="https://github.com/civdotiq/civic-intel-hub/issues">Report Bug</a>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/TypeScript-100%25-blue" alt="TypeScript">
+  <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-15-black" alt="Next.js 15"></a>
+  <img src="https://img.shields.io/badge/APIs-89_endpoints-green" alt="89 API Endpoints">
+</p>
+
+---
+
+## Why CIV.IQ?
+
+Finding information about your elected officials shouldn't require a political science degree. CIV.IQ organizes scattered government data from Congress.gov, FEC.gov, Census Bureau, and state legislatures into one unified, searchable platform. Enter your ZIP code and instantly see who represents you at every level of government, how they vote, and who funds their campaigns.
 
 ## About
 
@@ -38,7 +59,7 @@ CIV.IQ makes government data accessible by connecting citizens with their repres
 ### Data Integrity
 
 - **Zero Mock Data**: All displayed information is real government data or clearly marked as unavailable
-- **Live API Integration**: Congress.gov, FEC.gov, Census Bureau, GDELT, OpenStates
+- **Live API Integration**: Congress.gov, FEC.gov, Census Bureau, OpenStates
 - **Transparent Sources**: Clear attribution and data quality indicators
 - **Validated Coordinates**: Comprehensive test suite prevents geospatial bugs
 
@@ -61,7 +82,7 @@ CIV.IQ makes government data accessible by connecting citizens with their repres
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/civic-intel-hub.git
+git clone https://github.com/civdotiq/civic-intel-hub.git
 cd civic-intel-hub
 
 # Install dependencies
@@ -108,7 +129,7 @@ Visit [http://localhost:3000/api/health](http://localhost:3000/api/health) to ch
 - **Styling**: Tailwind CSS
 - **Visualization**: Recharts, React Leaflet, D3.js
 - **Caching**: Redis with in-memory fallback
-- **APIs**: Congress.gov, FEC.gov, Census Bureau, GDELT, OpenStates
+- **APIs**: Congress.gov, FEC.gov, Census Bureau, OpenStates, NewsAPI
 
 ## Project Structure
 
@@ -131,7 +152,7 @@ civic-intel-hub/
 ## Documentation
 
 - **[API Documentation](docs/API.md)**: Complete API reference
-- **[Environment Setup](ENVIRONMENT.md)**: Detailed configuration guide
+- **[Environment Setup](docs/setup/ENVIRONMENT.md)**: Detailed configuration guide
 - **[Data Integrity Framework](docs/DATA_INTEGRITY_FRAMEWORK.md)**: Testing and validation
 - **[Security Policy](SECURITY.md)**: Security measures and vulnerability reporting
 - **[Performance Guide](docs/PERFORMANCE_OPTIMIZATION.md)**: Optimization strategies
@@ -194,7 +215,7 @@ Copyright (c) 2019-2025 Mark Sandford. See [LICENSE](LICENSE) for full terms.
 ## Acknowledgments
 
 - **U.S. Government**: Congress.gov, FEC.gov, Census Bureau for official data
-- **GDELT Project**: Real-time news monitoring
+- **NewsAPI & Google News**: Real-time news aggregation
 - **OpenStates**: State legislature data
 - **Open Source Community**: Dependencies and inspiration
 
@@ -202,7 +223,7 @@ Copyright (c) 2019-2025 Mark Sandford. See [LICENSE](LICENSE) for full terms.
 
 - **Maintainer**: Mark Sandford
 - **Email**: mark@marksandford.dev
-- **Issues**: [GitHub Issues](https://github.com/yourusername/civic-intel-hub/issues)
+- **Issues**: [GitHub Issues](https://github.com/civdotiq/civic-intel-hub/issues)
 
 ---
 

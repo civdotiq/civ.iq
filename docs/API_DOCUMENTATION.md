@@ -29,14 +29,17 @@ Get representative information for a ZIP code.
 **Endpoint**: `GET /api/representatives`
 
 **Parameters**:
+
 - `zip` (required): 5-digit ZIP code
 
 **Example Request**:
+
 ```bash
 curl "https://your-domain.com/api/representatives?zip=48221"
 ```
 
 **Example Response**:
+
 ```json
 {
   "success": true,
@@ -93,15 +96,18 @@ Enhanced endpoint for ZIP codes that span multiple congressional districts.
 **Endpoint**: `GET /api/representatives-multi-district`
 
 **Parameters**:
+
 - `zip` (required): 5-digit ZIP code
 - `district` (optional): Preferred district selection
 
 **Example Request**:
+
 ```bash
 curl "https://your-domain.com/api/representatives-multi-district?zip=01007"
 ```
 
 **Example Response**:
+
 ```json
 {
   "success": true,
@@ -145,9 +151,7 @@ curl "https://your-domain.com/api/representatives-multi-district?zip=01007"
       }
     }
   ],
-  "warnings": [
-    "This ZIP code spans 2 congressional districts. Results show the primary district."
-  ],
+  "warnings": ["This ZIP code spans 2 congressional districts. Results show the primary district."],
   "metadata": {
     "timestamp": "2025-01-15T12:00:00Z",
     "dataSource": "comprehensive-mapping",
@@ -170,15 +174,18 @@ Get detailed information about a specific congressional district.
 **Endpoint**: `GET /api/districts/{state}-{district}`
 
 **Parameters**:
+
 - `state` (required): 2-letter state code
 - `district` (required): 2-digit district number (use "00" for at-large)
 
 **Example Request**:
+
 ```bash
 curl "https://your-domain.com/api/districts/MI-12"
 ```
 
 **Example Response**:
+
 ```json
 {
   "success": true,
@@ -196,9 +203,7 @@ curl "https://your-domain.com/api/districts/MI-12"
       "medianIncome": 52000,
       "urbanRural": "Mixed"
     },
-    "zipCodes": [
-      "48221", "48222", "48223", "48224"
-    ]
+    "zipCodes": ["48221", "48222", "48223", "48224"]
   },
   "metadata": {
     "timestamp": "2025-01-15T12:00:00Z",
@@ -215,11 +220,13 @@ Check API health and performance metrics.
 **Endpoint**: `GET /api/health`
 
 **Example Request**:
+
 ```bash
 curl "https://your-domain.com/api/health"
 ```
 
 **Example Response**:
+
 ```json
 {
   "success": true,
@@ -326,13 +333,15 @@ async function lookupRepresentatives(zipCode) {
 // Multi-district lookup
 async function lookupMultiDistrict(zipCode) {
   try {
-    const response = await axios.get(`https://your-domain.com/api/representatives-multi-district?zip=${zipCode}`);
-    
+    const response = await axios.get(
+      `https://your-domain.com/api/representatives-multi-district?zip=${zipCode}`
+    );
+
     if (response.data.isMultiDistrict) {
       console.log(`ZIP ${zipCode} spans ${response.data.districts.length} districts`);
       console.log('Primary district:', response.data.primaryDistrict);
     }
-    
+
     return response.data;
   } catch (error) {
     console.error('Error:', error.response?.data?.error?.message || error.message);
@@ -359,12 +368,12 @@ class CiviqAPI:
     def __init__(self, base_url="https://your-domain.com/api"):
         self.base_url = base_url
         self.session = requests.Session()
-        
+
     def lookup_representatives(self, zip_code):
         """Look up representatives for a ZIP code."""
         url = f"{self.base_url}/representatives"
         params = {"zip": zip_code}
-        
+
         try:
             response = self.session.get(url, params=params)
             response.raise_for_status()
@@ -372,12 +381,12 @@ class CiviqAPI:
         except requests.exceptions.HTTPError as e:
             error_data = response.json() if response.content else {}
             raise Exception(f"API Error: {error_data.get('error', {}).get('message', str(e))}")
-    
+
     def lookup_multi_district(self, zip_code):
         """Look up multi-district information for a ZIP code."""
         url = f"{self.base_url}/representatives-multi-district"
         params = {"zip": zip_code}
-        
+
         try:
             response = self.session.get(url, params=params)
             response.raise_for_status()
@@ -440,12 +449,13 @@ Some ZIP codes span multiple congressional districts. The API handles these case
 3. **Warnings**: Clear indication of multi-district status
 
 **Example**:
+
 ```json
 {
   "isMultiDistrict": true,
   "districts": [
-    {"state": "MA", "district": "01", "primary": true},
-    {"state": "MA", "district": "02", "primary": false}
+    { "state": "MA", "district": "01", "primary": true },
+    { "state": "MA", "district": "02", "primary": false }
   ],
   "warnings": ["This ZIP code spans 2 congressional districts."]
 }
@@ -456,6 +466,7 @@ Some ZIP codes span multiple congressional districts. The API handles these case
 U.S. territories have non-voting delegates in Congress:
 
 **Supported Territories**:
+
 - **GU**: Guam
 - **PR**: Puerto Rico
 - **VI**: U.S. Virgin Islands
@@ -463,15 +474,18 @@ U.S. territories have non-voting delegates in Congress:
 - **MP**: Northern Mariana Islands
 
 **Example**:
+
 ```json
 {
-  "representatives": [{
-    "name": "Jenniffer González-Colón",
-    "state": "PR",
-    "district": "00",
-    "chamber": "House",
-    "title": "Delegate (Non-voting)"
-  }],
+  "representatives": [
+    {
+      "name": "Jenniffer González-Colón",
+      "state": "PR",
+      "district": "00",
+      "chamber": "House",
+      "title": "Delegate (Non-voting)"
+    }
+  ],
   "warnings": ["This territory has non-voting representation in Congress."]
 }
 ```
@@ -481,15 +495,18 @@ U.S. territories have non-voting delegates in Congress:
 Washington D.C. has a non-voting delegate:
 
 **Example**:
+
 ```json
 {
-  "representatives": [{
-    "name": "Eleanor Holmes Norton",
-    "state": "DC",
-    "district": "00",
-    "chamber": "House",
-    "title": "Delegate (Non-voting)"
-  }],
+  "representatives": [
+    {
+      "name": "Eleanor Holmes Norton",
+      "state": "DC",
+      "district": "00",
+      "chamber": "House",
+      "title": "Delegate (Non-voting)"
+    }
+  ],
   "warnings": ["District of Columbia has non-voting representation in Congress."]
 }
 ```
@@ -501,31 +518,37 @@ Some states have only one representative for the entire state:
 **At-Large States**: AK, DE, MT, ND, SD, VT, WY
 
 **Example**:
+
 ```json
 {
-  "representatives": [{
-    "name": "Ryan Zinke",
-    "state": "MT",
-    "district": "00",
-    "chamber": "House",
-    "title": "Representative (At-Large)"
-  }]
+  "representatives": [
+    {
+      "name": "Ryan Zinke",
+      "state": "MT",
+      "district": "00",
+      "chamber": "House",
+      "title": "Representative (At-Large)"
+    }
+  ]
 }
 ```
 
 ## Performance Considerations
 
 ### Response Times
+
 - **Standard API**: < 500ms typical response time
 - **Multi-District API**: < 500ms typical response time
 - **Cached responses**: < 100ms typical response time
 
 ### Caching
+
 - ZIP code lookups are cached for 24 hours
 - Representative information is cached for 6 hours
 - District information is cached for 1 week
 
 ### Rate Limiting
+
 - Implement exponential backoff for rate-limited requests
 - Use the `Retry-After` header for rate limit recovery
 - Consider caching responses locally to reduce API calls
@@ -538,13 +561,13 @@ Use these ZIP codes for testing different scenarios:
 
 ```javascript
 const testZipCodes = {
-  standard: '48221',           // Detroit, MI - Standard single district
-  multiDistrict: '01007',      // Massachusetts - Multi-district
-  territory: '00601',          // Puerto Rico - Territory
-  dc: '20001',                 // Washington D.C.
-  atLarge: '99501',           // Alaska - At-large district
-  invalid: '00000',           // Invalid ZIP code
-  nonExistent: '99999'        // Non-existent ZIP code
+  standard: '48221', // Detroit, MI - Standard single district
+  multiDistrict: '01007', // Massachusetts - Multi-district
+  territory: '00601', // Puerto Rico - Territory
+  dc: '20001', // Washington D.C.
+  atLarge: '99501', // Alaska - At-large district
+  invalid: '00000', // Invalid ZIP code
+  nonExistent: '99999', // Non-existent ZIP code
 };
 ```
 
@@ -559,6 +582,7 @@ const testZipCodes = {
 ## Changelog
 
 ### Version 1.0.0 (2025-01-15)
+
 - Initial release with 39,363 ZIP code coverage
 - Multi-district ZIP code support
 - Territory and DC representation
@@ -568,16 +592,19 @@ const testZipCodes = {
 ## Support
 
 ### Documentation
+
 - Full API documentation: `/docs/API_DOCUMENTATION.md`
 - System overview: `/docs/ZIP_CODE_MAPPING_SYSTEM.md`
 - Implementation guide: `/docs/IMPLEMENTATION_GUIDE.md`
 
 ### Issues and Support
-- GitHub Issues: https://github.com/anthropics/civic-intel-hub/issues
+
+- GitHub Issues: https://github.com/civdotiq/civic-intel-hub/issues
 - Feature Requests: Use "enhancement" label
 - Bug Reports: Use "bug" label
 
 ### Community
+
 - Discussions: GitHub Discussions
 - Updates: Follow project releases
 - Contributing: See CONTRIBUTING.md

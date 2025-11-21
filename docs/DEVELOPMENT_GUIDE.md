@@ -14,7 +14,7 @@ Complete guide for developing and maintaining the civic-intel-hub platform.
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/civic-intel-hub.git
+git clone https://github.com/civdotiq/civic-intel-hub.git
 cd civic-intel-hub
 ```
 
