@@ -107,24 +107,28 @@ NODE_ENV=development
 ### 2. Required API Keys
 
 #### Congress.gov API Key
+
 - **URL**: https://api.congress.gov/sign-up/
 - **Purpose**: Federal representative data, voting records, bills
 - **Rate Limits**: 5,000 requests per hour
 - **Required**: Yes
 
-#### FEC API Key  
+#### FEC API Key
+
 - **URL**: https://api.open.fec.gov/developers/
 - **Purpose**: Campaign finance data
 - **Rate Limits**: 1,000 requests per hour
 - **Required**: Yes
 
 #### Census API Key
+
 - **URL**: https://api.census.gov/data/key_signup.html
 - **Purpose**: Geocoding and district mapping
 - **Rate Limits**: 500 requests per day (unlimited with key)
 - **Required**: Yes
 
 #### OpenStates API Key
+
 - **URL**: https://openstates.org/accounts/profile/
 - **Purpose**: State legislature data
 - **Rate Limits**: 1,000 requests per hour
@@ -133,6 +137,7 @@ NODE_ENV=development
 ### 3. Redis Setup
 
 #### Local Development (Docker)
+
 ```bash
 # Run Redis using Docker
 docker run -d --name redis-civic -p 6379:6379 redis:alpine
@@ -151,6 +156,7 @@ volumes:
 ```
 
 #### Local Development (Homebrew - macOS)
+
 ```bash
 # Install Redis
 brew install redis
@@ -197,6 +203,7 @@ RATE_LIMIT_REQUESTS_PER_MINUTE=100
 ### 2. Deployment Platforms
 
 #### Vercel Deployment
+
 ```bash
 # Install Vercel CLI
 npm i -g vercel
@@ -213,6 +220,7 @@ vercel env add REDIS_URL
 ```
 
 #### Railway Deployment
+
 ```bash
 # Install Railway CLI
 npm install -g @railway/cli
@@ -228,6 +236,7 @@ railway variables set REDIS_URL=your_redis_url
 ```
 
 #### Docker Deployment
+
 ```dockerfile
 # Dockerfile
 FROM node:18-alpine
@@ -245,6 +254,7 @@ CMD ["npm", "start"]
 ### Redis Configuration
 
 #### Redis Cloud (Recommended for Production)
+
 ```bash
 # Redis Cloud connection string
 REDIS_URL=redis://username:password@host:port/database
@@ -254,6 +264,7 @@ REDIS_URL=rediss://username:password@host:port/database
 ```
 
 #### Redis Configuration Options
+
 ```bash
 # Redis connection settings
 REDIS_CONNECTION_TIMEOUT=5000         # Connection timeout (ms)
@@ -265,6 +276,7 @@ REDIS_MAX_RETRY_ATTEMPTS=3            # Max retry attempts
 ### External API Configuration
 
 #### Rate Limiting Configuration
+
 ```bash
 # API rate limits (requests per minute)
 CONGRESS_API_RATE_LIMIT=80            # Congress.gov API
@@ -275,6 +287,7 @@ GDELT_API_RATE_LIMIT=30               # GDELT API
 ```
 
 #### API Timeout Configuration
+
 ```bash
 # API timeouts (milliseconds)
 CONGRESS_API_TIMEOUT=15000            # Congress.gov API timeout
@@ -287,6 +300,7 @@ GDELT_API_TIMEOUT=15000               # GDELT API timeout
 ## Security Configuration
 
 ### Content Security Policy
+
 ```bash
 # CSP Configuration
 CSP_REPORT_URI=/api/csp-report
@@ -297,6 +311,7 @@ CSP_CONNECT_SRC="'self' https://api.congress.gov https://api.open.fec.gov"
 ```
 
 ### CORS Configuration
+
 ```bash
 # CORS settings
 CORS_ORIGIN=https://your-domain.com
@@ -305,6 +320,7 @@ CORS_ALLOWED_HEADERS=Content-Type,Authorization,X-API-Key
 ```
 
 ### Rate Limiting
+
 ```bash
 # Rate limiting configuration
 RATE_LIMIT_REQUESTS_PER_MINUTE=100    # General API rate limit
@@ -316,6 +332,7 @@ RATE_LIMIT_TRUST_PROXY=true           # Trust proxy headers
 ## Performance Configuration
 
 ### Caching Configuration
+
 ```bash
 # Cache settings
 CACHE_TTL_MINUTES=30                  # Default cache TTL
@@ -331,6 +348,7 @@ DISTRICT_MAP_CACHE_TTL=1440           # District boundaries (24 hours)
 ```
 
 ### Bundle Optimization
+
 ```bash
 # Bundle settings
 ENABLE_BUNDLE_ANALYZER=false          # Enable webpack bundle analyzer
@@ -340,6 +358,7 @@ CHUNK_SIZE_LIMIT_KB=250               # Chunk size limit
 ```
 
 ### Service Worker Configuration
+
 ```bash
 # PWA settings
 ENABLE_SERVICE_WORKER=true            # Enable service worker
@@ -351,6 +370,7 @@ SW_OFFLINE_FALLBACK=true              # Enable offline fallback
 ## Monitoring and Logging
 
 ### Logging Configuration
+
 ```bash
 # Logging settings
 LOG_LEVEL=info                        # error | warn | info | debug
@@ -367,6 +387,7 @@ LOG_INCLUDE_IP_ADDRESS=false          # Privacy consideration
 ```
 
 ### Error Tracking (Sentry)
+
 ```bash
 # Sentry configuration
 SENTRY_DSN=your_sentry_dsn
@@ -378,6 +399,7 @@ SENTRY_DEBUG=false                    # Enable Sentry debugging
 ```
 
 ### Performance Monitoring
+
 ```bash
 # Performance settings
 ENABLE_PERFORMANCE_MONITORING=true    # Enable performance tracking
@@ -389,6 +411,7 @@ MEMORY_USAGE_WARNING_THRESHOLD=80     # Memory usage warning (%)
 ## Feature Flags
 
 ### Application Features
+
 ```bash
 # Feature toggles
 ENABLE_NEWS_DEDUPLICATION=true        # Enable news deduplication
@@ -402,6 +425,7 @@ ENABLE_CAMPAIGN_FINANCE=true          # Enable campaign finance data
 ```
 
 ### Experimental Features
+
 ```bash
 # Experimental features (use with caution)
 ENABLE_REALTIME_UPDATES=false         # Enable real-time data updates
@@ -413,6 +437,7 @@ ENABLE_ADVANCED_ANALYTICS=false       # Enable advanced analytics tracking
 ## Health Check Configuration
 
 ### Health Check Endpoints
+
 ```bash
 # Health check settings
 HEALTH_CHECK_TIMEOUT_MS=5000          # Health check timeout
@@ -422,6 +447,7 @@ HEALTH_CHECK_MEMORY_THRESHOLD=90      # Memory usage threshold (%)
 ```
 
 ### Monitoring Endpoints
+
 ```
 GET /api/health                       # Full health check
 HEAD /api/health                      # Quick health check
@@ -433,6 +459,7 @@ GET /api/metrics                      # Performance metrics (if enabled)
 ### Common Issues
 
 #### 1. Redis Connection Issues
+
 ```bash
 # Check Redis connection
 redis-cli ping
@@ -446,6 +473,7 @@ DEBUG=redis:*
 ```
 
 #### 2. API Key Issues
+
 ```bash
 # Test Congress API
 curl "https://api.congress.gov/v3/member?api_key=YOUR_KEY&limit=1"
@@ -458,6 +486,7 @@ echo $CONGRESS_API_KEY
 ```
 
 #### 3. Performance Issues
+
 ```bash
 # Enable performance monitoring
 ENABLE_PERFORMANCE_MONITORING=true
@@ -472,6 +501,7 @@ npm run build
 ```
 
 #### 4. CORS Issues
+
 ```bash
 # Set proper CORS origin
 CORS_ORIGIN=https://your-domain.com
@@ -485,6 +515,7 @@ CORS_ORIGIN=http://localhost:3000
 ### Debug Mode
 
 #### Enable Debug Logging
+
 ```bash
 # Environment variables for debugging
 NODE_ENV=development
@@ -498,6 +529,7 @@ DEBUG=civic-intel:validation
 ```
 
 #### Development Tools
+
 ```bash
 # Enable development tools
 ENABLE_DEV_TOOLS=true
@@ -508,6 +540,7 @@ MOCK_EXTERNAL_APIS=true              # Use mocks instead of real APIs
 ### Performance Optimization
 
 #### Cache Optimization
+
 ```bash
 # Optimize cache settings
 CACHE_TTL_MINUTES=60                 # Increase for less frequent updates
@@ -516,6 +549,7 @@ ENABLE_CACHE_COMPRESSION=true        # Compress cached data
 ```
 
 #### Bundle Optimization
+
 ```bash
 # Optimize bundle size
 ENABLE_TREE_SHAKING=true

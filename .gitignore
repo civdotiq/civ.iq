@@ -92,3 +92,38 @@ temp/
 # Test scripts (development only)
 test-*.mjs
 test-*.js
+
+# ===========================================
+# CLEANUP: Files that should never be tracked
+# ===========================================
+
+# Screenshots and images in root (keep public/ images)
+/*.png
+/*.jpg
+/*.jpeg
+Screenshot*.png
+
+# HTML mockups and prototypes
+/*.html
+
+# Patch files
+*.patch
+
+# Backup and temp files
+*.backup
+*.deleted
+*.current
+*.bak
+
+# Temp JSON files
+bill_response.json
+temp_*.json
+validation-report.json
+validation-results.json
+
+# Session and debug files
+.session.log
+*.session
+
+# Development artifacts in root
+gemini-analyzer.md
