@@ -41,25 +41,25 @@ function transformEvent(event: OpenStatesEvent): StateLegislativeEvent {
           url: event.location.url ?? undefined,
         }
       : undefined,
-    participants: event.participants.map(p => ({
+    participants: (event.participants || []).map(p => ({
       entity_type: p.entity_type,
       entity_id: p.entity_id,
       entity_name: p.entity_name,
       note: p.note ?? undefined,
     })),
-    agenda: event.agenda.map(item => ({
+    agenda: (event.agenda || []).map(item => ({
       order: item.order ?? undefined,
       description: item.description,
       bill_id: item.related_entities?.find(e => e.entity_type === 'bill')?.bill?.id,
       bill_identifier: item.related_entities?.find(e => e.entity_type === 'bill')?.bill?.identifier,
     })),
-    media: event.media.map(m => ({
+    media: (event.media || []).map(m => ({
       name: m.name,
       url: m.url,
       media_type: m.media_type,
       date: m.date ?? undefined,
     })),
-    sources: event.sources.map(s => ({
+    sources: (event.sources || []).map(s => ({
       url: s.url,
       note: s.note ?? undefined,
     })),
