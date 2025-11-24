@@ -590,6 +590,7 @@ export interface StateBillsApiResponse {
 export interface StateBillApiResponse {
   success: boolean;
   bill?: StateBill;
+  progress?: BillProgress;
   error?: string;
   metadata?: {
     cacheHit?: boolean;
@@ -791,4 +792,292 @@ export function getLegislatorTitle(state: string, chamber: StateChamber): string
   if (chamber === 'upper') return 'Senator';
 
   return 'Representative';
+}
+
+// ============================================================================
+// Legislative Calendar & Events Types
+// ============================================================================
+
+/**
+ * State legislative event (hearing, session, markup)
+ */
+export interface StateLegislativeEvent {
+  id: string;
+  name: string;
+  description?: string;
+  classification: 'committee-meeting' | 'hearing' | 'floor-session' | 'markup' | 'other';
+  start_date: string;
+  end_date?: string;
+  timezone?: string;
+  all_day?: boolean;
+  status?: 'tentative' | 'confirmed' | 'cancelled';
+
+  // Location
+  location?: {
+    name?: string;
+    note?: string;
+    url?: string;
+  };
+
+  // Associated entities
+  participants?: Array<{
+    entity_type: 'organization' | 'person';
+    entity_id: string;
+    entity_name: string;
+    note?: string;
+  }>;
+
+  // Related bills
+  agenda?: Array<{
+    order?: number;
+    description?: string;
+    bill_id?: string;
+    bill_identifier?: string;
+  }>;
+
+  // Media and documents
+  media?: Array<{
+    name: string;
+    url: string;
+    media_type: string;
+    date?: string;
+  }>;
+
+  sources: Array<{
+    url: string;
+    note?: string;
+  }>;
+
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Legislative calendar response
+ */
+export interface LegislativeCalendarResponse {
+  success: boolean;
+  state: string;
+  events: StateLegislativeEvent[];
+  total: number;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+  error?: string;
+}
+
+// ============================================================================
+// Bill Progress Tracking Types
+// ============================================================================
+
+/**
+ * Bill progress stage
+ */
+export type BillProgressStage =
+  | 'introduced'
+  | 'committee'
+  | 'floor'
+  | 'passed-chamber'
+  | 'second-chamber'
+  | 'passed-legislature'
+  | 'executive'
+  | 'signed'
+  | 'vetoed'
+  | 'failed';
+
+/**
+ * Bill progress milestone
+ */
+export interface BillProgressMilestone {
+  stage: BillProgressStage;
+  label: string; // User-friendly label (e.g., "Passed House Floor")
+  date?: string;
+  completed: boolean;
+  isCurrent: boolean;
+  description?: string;
+}
+
+/**
+ * Bill progress tracking data
+ */
+export interface BillProgress {
+  billId: string;
+  identifier: string;
+  title: string;
+  state: string;
+  chamber: StateChamber;
+
+  // Current status
+  currentStage: BillProgressStage;
+  percentComplete: number; // 0-100
+
+  // Next action
+  nextAction?: {
+    description: string;
+    estimatedDate?: string;
+    location?: string; // Committee name or chamber
+  };
+
+  // Milestones timeline
+  milestones: BillProgressMilestone[];
+
+  // Legislative history
+  recentActions: Array<{
+    date: string;
+    description: string;
+    actor: string; // Chamber or committee
+  }>;
+
+  // Success indicators
+  probability?: {
+    passageScore: number; // 0-100 estimated probability
+    factors: string[]; // Reasons for score
+  };
+
+  lastUpdated: string;
+}
+
+// ============================================================================
+// Session Information Types
+// ============================================================================
+
+/**
+ * Legislative session status
+ */
+export type SessionStatus = 'upcoming' | 'active' | 'recess' | 'concluded';
+
+/**
+ * Session recess period
+ */
+export interface SessionRecess {
+  start: string;
+  end: string;
+  reason: string; // e.g., "Summer Recess", "Holiday Break"
+}
+
+/**
+ * Legislative session information (enhanced)
+ */
+export interface EnhancedSessionInfo {
+  identifier: string;
+  name: string;
+  classification: 'primary' | 'special' | 'extraordinary';
+  start_date: string;
+  end_date: string;
+
+  // Current status
+  status: SessionStatus;
+  isActive: boolean;
+  daysInSession: number;
+  daysRemaining: number;
+
+  // Important dates
+  deadlines?: Array<{
+    type: 'bill-introduction' | 'committee-report' | 'floor-vote' | 'crossover';
+    date: string;
+    description: string;
+  }>;
+
+  // Recess periods
+  recesses?: SessionRecess[];
+
+  // Next session (if current is concluded)
+  nextSession?: {
+    identifier: string;
+    name: string;
+    startDate: string;
+  };
+
+  // Statistics
+  stats?: {
+    billsIntroduced: number;
+    billsPassed: number;
+    daysInSession: number;
+  };
+}
+
+/**
+ * Session info API response
+ */
+export interface SessionInfoResponse {
+  success: boolean;
+  state: string;
+  currentSession: EnhancedSessionInfo;
+  upcomingSessions?: EnhancedSessionInfo[];
+  error?: string;
+}
+
+// ============================================================================
+// Co-Sponsorship Network Analysis Types
+// ============================================================================
+
+/**
+ * Legislator collaboration metrics
+ */
+export interface LegislatorCollaboration {
+  legislatorId: string;
+  legislatorName: string;
+  party: StateParty;
+  chamber: StateChamber;
+  collaborationCount: number; // Number of co-sponsored bills together
+  bipartisan: boolean; // Is this cross-party collaboration?
+}
+
+/**
+ * Co-sponsorship network analysis
+ */
+export interface CoSponsorshipNetwork {
+  legislatorId: string;
+  legislatorName: string;
+  party: StateParty;
+  chamber: StateChamber;
+
+  // Collaboration summary
+  summary: {
+    totalBillsSponsored: number;
+    totalBillsCosponsored: number;
+    uniqueCollaborators: number;
+    bipartisanCollaborations: number;
+    bipartisanScore: number; // 0-100 (percentage of bills with cross-party support)
+  };
+
+  // Top collaborators
+  frequentCollaborators: LegislatorCollaboration[];
+
+  // Party breakdown
+  collaborationByParty: Record<
+    string,
+    {
+      count: number;
+      legislators: string[];
+    }
+  >;
+
+  // Committee overlaps
+  committeeOverlaps?: Array<{
+    committeeId: string;
+    committeeName: string;
+    sharedMembers: string[];
+  }>;
+
+  // Recent collaborative bills
+  recentCollaborations: Array<{
+    billId: string;
+    billIdentifier: string;
+    billTitle: string;
+    cosponsors: string[];
+    introducedDate: string;
+  }>;
+
+  lastUpdated: string;
+}
+
+/**
+ * Network analysis API response
+ */
+export interface NetworkAnalysisResponse {
+  success: boolean;
+  network: CoSponsorshipNetwork;
+  error?: string;
 }

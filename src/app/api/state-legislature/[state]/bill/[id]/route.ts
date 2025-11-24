@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import { decodeBase64Url } from '@/lib/url-encoding';
 import logger from '@/lib/logging/simple-logger';
+import { analyzeBillProgress } from '@/lib/bill-progress';
 import type { StateBillApiResponse } from '@/types/state-legislature';
 
 // ISR: Revalidate every 1 hour
@@ -46,6 +47,9 @@ export async function GET(
       );
     }
 
+    // Analyze bill progress for tracking and visualization
+    const progress = analyzeBillProgress(bill);
+
     logger.info(`[StateBillAPI] Successfully fetched bill: ${bill.identifier}`, {
       state,
       billId: bill.id,
@@ -53,12 +57,15 @@ export async function GET(
       sponsorCount: bill.sponsorships.length,
       actionCount: bill.actions.length,
       voteCount: bill.votes.length,
+      currentStage: progress.currentStage,
+      percentComplete: progress.percentComplete,
       responseTime: Date.now() - startTime,
     });
 
     return NextResponse.json({
       success: true,
       bill,
+      progress,
       metadata: {
         cacheHit: false,
         responseTime: Date.now() - startTime,

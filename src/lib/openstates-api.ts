@@ -267,6 +267,61 @@ export interface OpenStatesCommittee {
   extras?: Record<string, unknown>;
 }
 
+/**
+ * OpenStates v3 Event (Legislative Calendar Event)
+ */
+export interface OpenStatesEvent {
+  id: string;
+  name: string;
+  description: string | null;
+  classification: string;
+  start_date: string;
+  end_date: string | null;
+  timezone: string;
+  all_day: boolean;
+  status: string | null;
+  location: {
+    name: string | null;
+    note: string | null;
+    url: string | null;
+  } | null;
+  participants: Array<{
+    entity_type: 'organization' | 'person';
+    entity_id: string;
+    entity_name: string;
+    note: string | null;
+  }>;
+  agenda: Array<{
+    order: number | null;
+    description: string;
+    subjects: string[];
+    notes: Array<{
+      description: string;
+    }>;
+    related_entities: Array<{
+      entity_type: 'bill' | 'vote_event';
+      entity_id: string;
+      bill?: {
+        id: string;
+        identifier: string;
+        title: string;
+      };
+    }>;
+  }>;
+  media: Array<{
+    name: string;
+    url: string;
+    media_type: string;
+    date: string | null;
+  }>;
+  sources: Array<{
+    url: string;
+    note: string | null;
+  }>;
+  created_at: string;
+  updated_at: string;
+}
+
 class OpenStatesAPI {
   private config: OpenStatesConfig;
   private cache: Map<string, { data: unknown; timestamp: number; ttl: number }>;
@@ -1034,6 +1089,108 @@ class OpenStatesAPI {
     }
 
     return null;
+  }
+
+  /**
+   * Get legislative events (hearings, floor sessions, committee meetings)
+   * @param state - State abbreviation (e.g., 'MI' or 'michigan')
+   * @param startDate - Optional start date filter (ISO 8601 format: YYYY-MM-DD)
+   * @param endDate - Optional end date filter (ISO 8601 format: YYYY-MM-DD)
+   * @param limit - Maximum number of events to return (default 50)
+   * @returns Array of legislative events
+   */
+  async getEvents(
+    state: string,
+    startDate?: string,
+    endDate?: string,
+    limit: number = 50
+  ): Promise<OpenStatesEvent[]> {
+    const jurisdiction = state.toLowerCase();
+
+    let allEvents: OpenStatesEvent[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore && allEvents.length < limit) {
+      const params: Record<string, string | number> = {
+        jurisdiction,
+        per_page: Math.min(20, limit - allEvents.length), // /events API max is 20 per page
+        page,
+      };
+
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+
+      interface EventListResponse {
+        results: OpenStatesEvent[];
+        pagination: {
+          per_page: number;
+          page: number;
+          max_page: number;
+          total_items: number;
+        };
+      }
+
+      const response = await this.makeRequest<EventListResponse>('/events', params);
+      allEvents = allEvents.concat(response.results);
+
+      // Check if there are more pages
+      hasMore = page < response.pagination.max_page && allEvents.length < limit;
+      page++;
+    }
+
+    return allEvents.slice(0, limit);
+  }
+
+  /**
+   * Get a specific event by ID
+   * @param eventId - OpenStates event ID (e.g., 'ocd-event/...')
+   * @returns Event details or null if not found
+   */
+  async getEventById(eventId: string): Promise<OpenStatesEvent | null> {
+    try {
+      const response = await this.makeRequest<OpenStatesEvent>(`/events/${eventId}`);
+      return response;
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('404')) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Get events associated with a specific bill
+   * @param billId - OpenStates bill ID (e.g., 'ocd-bill/...')
+   * @param limit - Maximum number of events to return (default 20)
+   * @returns Array of events where this bill appears on the agenda
+   */
+  async getEventsByBill(billId: string, limit: number = 20): Promise<OpenStatesEvent[]> {
+    // NOTE: OpenStates v3 API doesn't have a direct bill_id filter on /events
+    // We need to fetch events and filter client-side for bills in the agenda
+    // This is less efficient but necessary given API limitations
+    // Extract jurisdiction from bill ID (format: ocd-bill/{uuid}/{state}/{session}/{identifier})
+    const billIdParts = billId.split('/');
+    if (billIdParts.length < 3) {
+      throw new Error(`Invalid bill ID format: ${billId}`);
+    }
+    const state = billIdParts[2]; // Extract state from bill ID
+    if (!state) {
+      throw new Error(`Unable to extract state from bill ID: ${billId}`);
+    }
+
+    const allEvents = await this.getEvents(state, undefined, undefined, 100); // Fetch more to filter
+
+    // Filter events that have this bill in their agenda
+    const relevantEvents = allEvents.filter(event =>
+      event.agenda.some(item =>
+        item.related_entities?.some(
+          entity => entity.entity_type === 'bill' && entity.entity_id === billId
+        )
+      )
+    );
+
+    return relevantEvents.slice(0, limit);
   }
 }
 

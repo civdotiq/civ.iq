@@ -8,8 +8,9 @@ import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
-// ISR: Revalidate every 1 day
-export const revalidate = 86400;
+// ISR: Revalidate every 30 days (election-aware caching in StateLegislatureCoreService)
+// State jurisdiction data changes infrequently (only during redistricting or session changes)
+export const revalidate = 2592000; // 30 days
 
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +53,7 @@ interface StateLegislatureData {
     startDate: string;
     endDate: string;
     type: 'regular' | 'special';
+    status?: 'active' | 'in-recess' | 'adjourned' | 'upcoming';
   };
   chambers: {
     upper: {
@@ -362,6 +364,26 @@ function normalizeParty(party: string): StateLegislator['party'] {
   return 'Other';
 }
 
+// Determine session status based on dates
+function determineSessionStatus(
+  startDate: string,
+  endDate: string
+): 'active' | 'in-recess' | 'adjourned' | 'upcoming' {
+  const now = new Date();
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  if (now < start) {
+    return 'upcoming';
+  } else if (now > end) {
+    return 'adjourned';
+  } else {
+    // Between start and end - could be active or in recess
+    // Without detailed recess data, we'll assume active during session dates
+    return 'active';
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ state: string }> }
@@ -440,15 +462,21 @@ export async function GET(
           return acc;
         }, {});
 
+        const sessionStartDate = jurisdiction.latest_session?.start_date || '2024-01-01';
+        const sessionEndDate = jurisdiction.latest_session?.end_date || '2024-12-31';
+
         return {
           state: state.toUpperCase(),
           stateName: jurisdiction.name,
           lastUpdated: new Date().toISOString(),
           session: {
             name: jurisdiction.latest_session?.name || '2024 Session',
-            startDate: jurisdiction.latest_session?.start_date || '2024-01-01',
-            endDate: jurisdiction.latest_session?.end_date || '2024-12-31',
+            startDate: sessionStartDate,
+            endDate: sessionEndDate,
             type: 'regular',
+            status: determineSessionStatus(sessionStartDate, sessionEndDate),
+            // Note: recesses and deadlines require state-specific data not provided by OpenStates API
+            // These fields can be populated with manual data or state-specific scraping in the future
           },
           chambers: {
             upper: {
