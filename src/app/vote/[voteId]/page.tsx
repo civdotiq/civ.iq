@@ -33,6 +33,7 @@ interface VoteDetail {
   congress: string;
   session: string;
   rollNumber: number;
+  chamber: 'House' | 'Senate';
   date: string;
   time?: string;
   title: string;
@@ -195,11 +196,20 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
         <div className="aicher-card mb-6 p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h1 className="aicher-heading text-3xl text-gray-900 mb-2">{voteDetail.title}</h1>
-              <p className="text-lg text-gray-600">{voteDetail.question}</p>
-              {voteDetail.description && voteDetail.description !== voteDetail.question && (
-                <p className="text-gray-500 mt-2">{voteDetail.description}</p>
-              )}
+              <h1 className="aicher-heading text-3xl text-gray-900 mb-2">
+                {voteDetail.title}
+                {voteDetail.bill?.number &&
+                  `: ${voteDetail.bill.type || ''} ${voteDetail.bill.number}`}
+              </h1>
+              {/* Show bill title prominently if available */}
+              {voteDetail.bill?.title &&
+                voteDetail.bill.title !== `${voteDetail.bill.type} ${voteDetail.bill.number}` && (
+                  <p className="text-lg text-blue-700 font-medium mb-2">{voteDetail.bill.title}</p>
+                )}
+              <p className="text-gray-600">
+                {voteDetail.chamber} Roll Call #{voteDetail.rollNumber} • {voteDetail.congress}th
+                Congress
+              </p>
             </div>
             <div className="text-right">
               <div
@@ -223,24 +233,26 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
               {(() => {
                 const q = voteDetail.question.toLowerCase();
                 const r = voteDetail.result.toLowerCase();
+                const chamber = voteDetail.chamber || 'Senate';
+                const otherChamber = chamber === 'House' ? 'Senate' : 'House of Representatives';
 
                 if (q.includes('cloture')) {
                   if (r.includes('agreed') || r.includes('invoked')) {
-                    return 'The Senate voted to end debate and move forward with this bill. This breaks any filibuster and allows the Senate to proceed to a final vote.';
+                    return `The ${chamber} voted to end debate and move forward with this bill. This breaks any filibuster and allows the ${chamber} to proceed to a final vote.`;
                   }
-                  return 'The Senate voted NOT to end debate. The filibuster continues, and the bill cannot move forward to a final vote at this time. 60 votes were needed.';
+                  return `The ${chamber} voted NOT to end debate. The filibuster continues, and the bill cannot move forward to a final vote at this time. 60 votes were needed.`;
                 }
                 if (q.includes('passage') || q.includes('pass the bill')) {
                   if (r.includes('passed')) {
-                    return 'The bill PASSED the Senate and will now move to the House of Representatives (or to the President if already passed by the House).';
+                    return `The bill PASSED the ${chamber} and will now move to the ${otherChamber} (or to the President if already passed by the ${otherChamber}).`;
                   }
                   return 'The bill FAILED to pass. It will not become law unless reconsidered.';
                 }
                 if (q.includes('confirmation')) {
                   if (r.includes('confirmed')) {
-                    return 'The Senate CONFIRMED this nomination. The nominee will assume their position.';
+                    return `The ${chamber} CONFIRMED this nomination. The nominee will assume their position.`;
                   }
-                  return 'The Senate REJECTED this nomination. The nominee will not assume the position.';
+                  return `The ${chamber} REJECTED this nomination. The nominee will not assume the position.`;
                 }
                 if (q.includes('amendment')) {
                   if (r.includes('agreed')) {
@@ -248,16 +260,16 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
                   }
                   return 'This amendment was REJECTED and will not be included in the bill.';
                 }
-                if (q.includes('motion to')) {
-                  if (r.includes('agreed')) {
-                    return 'The Senate APPROVED this procedural motion.';
+                if (q.includes('motion to') || q.includes('agreeing to the resolution')) {
+                  if (r.includes('agreed') || r.includes('passed')) {
+                    return `The ${chamber} APPROVED this measure.`;
                   }
-                  return 'The Senate REJECTED this procedural motion.';
+                  return `The ${chamber} REJECTED this procedural motion.`;
                 }
                 if (r.includes('passed') || r.includes('agreed')) {
-                  return 'This measure PASSED the Senate.';
+                  return `This measure PASSED the ${chamber}.`;
                 }
-                return 'This measure did NOT pass the Senate.';
+                return `This measure did NOT pass the ${chamber}.`;
               })()}
             </p>
             {voteDetail.requiredMajority && (
@@ -277,7 +289,8 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
                   className="inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-900 hover:underline transition-colors"
                 >
                   <ExternalLink className="h-3 w-3" />
-                  View official vote record on Senate.gov
+                  View official vote record on{' '}
+                  {voteDetail.chamber === 'House' ? 'House.gov' : 'Senate.gov'}
                 </a>
               </div>
             )}
