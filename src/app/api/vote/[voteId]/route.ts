@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { XMLParser } from 'fast-xml-parser';
 import logger from '@/lib/logging/simple-logger';
+import { getLegislatorInfoMap } from '@/lib/data/legislator-mappings';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -563,9 +564,29 @@ async function parseHouseVote(
 
       try {
         members = await parseHouseVoteXML(vote.sourceDataURL);
-        logger.info('Successfully parsed House vote XML', {
+
+        // Enrich members with full data from legislators-current.yaml
+        const legislatorInfoMap = await getLegislatorInfoMap();
+        members = members.map(member => {
+          const info = member.bioguideId ? legislatorInfoMap.get(member.bioguideId) : null;
+          if (info) {
+            return {
+              ...member,
+              firstName: info.firstName,
+              lastName: info.lastName,
+              fullName: info.fullName,
+              state: info.state,
+              party: info.party,
+              district: info.district?.toString(),
+            };
+          }
+          return member;
+        });
+
+        logger.info('Successfully parsed and enriched House vote XML', {
           voteId,
           memberCount: members.length,
+          enrichedCount: members.filter(m => m.state !== 'Unknown').length,
         });
       } catch (error) {
         logger.warn('Failed to parse House vote XML', {
