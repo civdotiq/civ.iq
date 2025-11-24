@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SearchIcon } from '@/components/icons/AicherIcons';
 import { quickMultiDistrictCheck, checkMultiDistrict } from '@/lib/multi-district/detection';
+import AddressAutocomplete from '@/components/search/AddressAutocomplete';
 
 interface SearchError {
   type: 'network' | 'invalid_zip' | 'api_error' | 'unknown' | 'geolocation';
@@ -261,19 +262,21 @@ export default function SearchForm() {
     <div className="max-w-2xl mx-auto mb-grid-2 sm:mb-grid-6 px-grid-2 sm:px-0">
       <form onSubmit={handleSearch} className="relative">
         <div className="relative border-2 border-black">
-          <div className="absolute inset-y-0 left-0 pl-grid-2 flex items-center pointer-events-none">
+          <div className="absolute inset-y-0 left-0 pl-grid-2 flex items-center pointer-events-none z-10">
             <SearchIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
           </div>
-          <input
-            type="text"
+          <AddressAutocomplete
+            onSelect={address => {
+              setSearchInput(address);
+            }}
+            onChange={value => {
+              setSearchInput(value);
+            }}
             placeholder="Enter address or ZIP code"
-            value={searchInput}
-            onChange={e => setSearchInput(e.target.value)}
-            autoComplete="street-address"
-            enterKeyHint="search"
-            className="block w-full pl-grid-4 sm:pl-grid-5 pr-grid-8 sm:pr-grid-12 py-grid-2 text-sm sm:text-lg border-0 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-civiq-blue"
             disabled={isLoading}
-            aria-label="Search by address or ZIP code"
+            defaultValue={searchInput}
+            ariaLabel="Search by address or ZIP code"
+            className="pl-grid-4 sm:pl-grid-5 pr-grid-8 sm:pr-grid-12"
           />
           <button
             type="submit"
