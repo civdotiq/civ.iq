@@ -6,11 +6,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openStatesAPI } from '@/lib/openstates-api';
 import type { StateCommitteesApiResponse, StateParty } from '@/types/state-legislature';
-import { getElectionAwareRevalidation } from '@/lib/election-aware-isr';
 
 // ISR: Election-aware revalidation (3 days Oct-Dec, 30 days Jan-Sep)
 // Committee rosters change primarily at start of new legislative sessions
-export const revalidate = getElectionAwareRevalidation();
+export const revalidate = 259200; // 3 days
 
 /**
  * GET /api/state-legislature/[state]/committees
