@@ -210,7 +210,7 @@ export default function AddressAutocomplete({
   }, []);
 
   return (
-    <div ref={containerRef} className={cn('relative', className)}>
+    <div ref={containerRef} className="relative">
       {/* Input */}
       <input
         ref={inputRef}
@@ -230,7 +230,10 @@ export default function AddressAutocomplete({
         aria-controls="address-suggestions"
         aria-autocomplete="list"
         role="combobox"
-        className="block w-full px-4 py-3 text-sm sm:text-lg border-0 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-civiq-blue disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className={cn(
+          'block w-full px-4 py-3 text-sm sm:text-lg border-0 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-civiq-blue disabled:bg-gray-100 disabled:cursor-not-allowed',
+          className
+        )}
       />
 
       {/* Loading indicator */}
