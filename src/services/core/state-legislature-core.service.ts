@@ -250,6 +250,103 @@ export class StateLegislatureCoreService {
   }
 
   /**
+   * Get state legislators by geographic location (lat/lng)
+   * Uses OpenStates /people.geo endpoint - faster than district-based lookup
+   * @param lat - Latitude
+   * @param lng - Longitude
+   * @returns Object with senator and representative for that location
+   */
+  static async getStateLegislatorsByLocation(
+    lat: number,
+    lng: number
+  ): Promise<{
+    senator: EnhancedStateLegislator | null;
+    representative: EnhancedStateLegislator | null;
+  }> {
+    const cacheKey = `core:state-legislators:geo:${lat.toFixed(6)},${lng.toFixed(6)}`;
+    const startTime = Date.now();
+
+    try {
+      // Check cache first
+      const cached = await govCache.get<{
+        senator: EnhancedStateLegislator | null;
+        representative: EnhancedStateLegislator | null;
+      }>(cacheKey);
+      if (cached) {
+        logger.info('Core service cache hit for geographic state legislators', {
+          lat,
+          lng,
+          hasSenator: !!cached.senator,
+          hasRep: !!cached.representative,
+          responseTime: Date.now() - startTime,
+        });
+        return cached;
+      }
+
+      // Check if OpenStates is configured
+      if (!OpenStatesUtils.isConfigured()) {
+        logger.warn('OpenStates API not configured', { lat, lng });
+        return { senator: null, representative: null };
+      }
+
+      // Direct function call to OpenStates /people.geo API
+      logger.info('Fetching state legislators via geographic OpenStates API call', {
+        lat,
+        lng,
+      });
+      const legislators = await openStatesAPI.getLegislatorsByLocation(lat, lng);
+
+      if (!legislators || legislators.length === 0) {
+        logger.warn('No state legislators returned from OpenStates geographic lookup', {
+          lat,
+          lng,
+        });
+        return { senator: null, representative: null };
+      }
+
+      // Transform to our type system
+      const enhancedLegislators = legislators.map(leg => this.transformLegislator(leg));
+
+      // Separate by chamber
+      const senator = enhancedLegislators.find(leg => leg.chamber === 'upper') || null;
+      const representative = enhancedLegislators.find(leg => leg.chamber === 'lower') || null;
+
+      const result = { senator, representative };
+
+      // Cache the result with election-aware TTL
+      const now = new Date();
+      const month = now.getMonth();
+      const isElectionSeason = month >= 9 && month <= 11; // Oct-Dec
+      const geoTTL = isElectionSeason ? 259200000 : 2592000000; // 3 days or 30 days
+
+      await govCache.set(cacheKey, result, {
+        ttl: geoTTL, // Election-aware: 3 days (Oct-Dec) or 30 days (Jan-Sep)
+        source: 'openstates-geo',
+        dataType: 'representatives',
+      });
+
+      logger.info('Successfully cached state legislators via geographic lookup', {
+        lat,
+        lng,
+        hasSenator: !!senator,
+        hasRep: !!representative,
+        senatorName: senator?.name,
+        repName: representative?.name,
+        responseTime: Date.now() - startTime,
+      });
+
+      return result;
+    } catch (error) {
+      logger.error('Failed to get state legislators by location', error as Error, {
+        lat,
+        lng,
+        responseTime: Date.now() - startTime,
+      });
+      return { senator: null, representative: null };
+    }
+  }
+
+  /**
    * Get all state legislators for a state - DIRECT function call, no HTTP
    */
   static async getAllStateLegislators(

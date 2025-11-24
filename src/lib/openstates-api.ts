@@ -405,6 +405,56 @@ class OpenStatesAPI {
   }
 
   /**
+   * Get legislators by geographic location (lat/lng)
+   * Uses OpenStates /people.geo endpoint for direct geographic lookup
+   * @param lat - Latitude
+   * @param lng - Longitude
+   * @returns Array of state legislators representing that location (filters out federal officials)
+   */
+  async getLegislatorsByLocation(lat: number, lng: number): Promise<OpenStatesLegislator[]> {
+    try {
+      const params: Record<string, string | number> = {
+        lat,
+        lng,
+      };
+
+      const response = await this.makeRequest<V3PaginatedResponse<V3Person>>('/people.geo', params);
+
+      // Filter to ONLY state legislators (exclude federal officials)
+      // Federal officials have jurisdiction.classification === "country"
+      // State officials have jurisdiction.classification === "state"
+      const stateLegislators = response.results.filter(
+        person => person.jurisdiction?.classification === 'state'
+      );
+
+      // Extract state code from first legislator (all should be same state)
+      if (stateLegislators.length === 0) {
+        return [];
+      }
+
+      // Get state code from jurisdiction name (e.g., "Michigan" -> "MI")
+      const stateName = stateLegislators[0]?.jurisdiction?.name;
+      if (!stateName) {
+        return [];
+      }
+
+      const stateCode = getStateCode(stateName);
+      if (!stateCode) {
+        throw new Error(`Unable to map jurisdiction "${stateName}" to state code`);
+      }
+
+      // Transform to our format
+      return stateLegislators.map(person => this.transformPerson(person, stateCode));
+    } catch (error) {
+      // If geo lookup fails, return empty array (caller can fallback to district-based lookup)
+      if (error instanceof Error && error.message.includes('404')) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Get legislators for a specific state
    * @param state - State abbreviation (e.g., 'MI' or 'michigan')
    * @param chamber - Optional chamber filter ('upper' or 'lower')

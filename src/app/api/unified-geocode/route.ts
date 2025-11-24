@@ -20,11 +20,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { censusGeocoder } from '@/services/geocoding/census-geocoder.service';
 import { districtLookup } from '@/services/state-legislators/district-lookup.service';
 import { RepresentativesCoreService } from '@/services/core/representatives-core.service';
+import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import logger from '@/lib/logging/simple-logger';
 import { CensusGeocoderException } from '@/services/geocoding/census-geocoder.types';
 
-// ISR: Revalidate every hour - addresses rarely change districts mid-session
-export const revalidate = 3600;
+// ISR: Revalidate every 30 days - addresses/districts are very stable
+// Districts only change during redistricting (every 10 years)
+// State legislators change during biennial elections (handled by govCache)
+export const revalidate = 2592000; // 30 days
 
 interface UnifiedGeocodeRequest {
   /** Full street address */
@@ -167,12 +170,87 @@ export async function POST(request: NextRequest) {
       districtInfo.congressionalDistrict?.number || '00'
     );
 
-    // Step 3: Fetch state legislators for the specific state districts
-    const stateLegislators = await districtLookup.findLegislatorsByDistrict({
-      state: body.state.toUpperCase(),
-      upperDistrict: districtInfo.upperDistrict?.number,
-      lowerDistrict: districtInfo.lowerDistrict?.number,
-    });
+    // Step 3: Fetch state legislators using EITHER geographic or district-based lookup
+    // Try geographic lookup first (faster, single API call), fallback to district-based
+    let stateLegislators: Awaited<ReturnType<typeof districtLookup.findLegislatorsByDistrict>> = {
+      senator: null,
+      representative: null,
+    };
+
+    if (districtInfo.coordinates) {
+      try {
+        logger.info('Attempting geographic state legislator lookup', {
+          lat: districtInfo.coordinates.lat,
+          lon: districtInfo.coordinates.lon,
+        });
+
+        const geoLegislators = await StateLegislatureCoreService.getStateLegislatorsByLocation(
+          districtInfo.coordinates.lat,
+          districtInfo.coordinates.lon
+        );
+
+        if (geoLegislators.senator || geoLegislators.representative) {
+          // Success! Use geographic lookup results
+          // Transform EnhancedStateLegislator to match districtLookup return type
+          stateLegislators = {
+            senator: geoLegislators.senator
+              ? {
+                  id: geoLegislators.senator.id,
+                  name: geoLegislators.senator.name,
+                  party: geoLegislators.senator.party,
+                  state: geoLegislators.senator.state,
+                  chamber: geoLegislators.senator.chamber,
+                  district: geoLegislators.senator.district,
+                  photo_url: geoLegislators.senator.photo_url,
+                  email: geoLegislators.senator.email,
+                  phone: geoLegislators.senator.phone,
+                  website: undefined,
+                }
+              : null,
+            representative: geoLegislators.representative
+              ? {
+                  id: geoLegislators.representative.id,
+                  name: geoLegislators.representative.name,
+                  party: geoLegislators.representative.party,
+                  state: geoLegislators.representative.state,
+                  chamber: geoLegislators.representative.chamber,
+                  district: geoLegislators.representative.district,
+                  photo_url: geoLegislators.representative.photo_url,
+                  email: geoLegislators.representative.email,
+                  phone: geoLegislators.representative.phone,
+                  website: undefined,
+                }
+              : null,
+          };
+
+          logger.info('Geographic state legislator lookup successful', {
+            hasSenator: !!stateLegislators.senator,
+            hasRep: !!stateLegislators.representative,
+          });
+        } else {
+          // No results from geographic lookup, fallback
+          throw new Error('No legislators found via geographic lookup');
+        }
+      } catch (geoError) {
+        // Fallback to district-based lookup
+        logger.warn('Geographic lookup failed, falling back to district-based lookup', {
+          error: geoError instanceof Error ? geoError.message : 'Unknown error',
+        });
+
+        stateLegislators = await districtLookup.findLegislatorsByDistrict({
+          state: body.state.toUpperCase(),
+          upperDistrict: districtInfo.upperDistrict?.number,
+          lowerDistrict: districtInfo.lowerDistrict?.number,
+        });
+      }
+    } else {
+      // No coordinates available, use district-based lookup
+      stateLegislators = await districtLookup.findLegislatorsByDistrict({
+        state: body.state.toUpperCase(),
+        upperDistrict: districtInfo.upperDistrict?.number,
+        lowerDistrict: districtInfo.lowerDistrict?.number,
+      });
+    }
 
     // Build response
     const response: UnifiedGeocodeResponse = {
