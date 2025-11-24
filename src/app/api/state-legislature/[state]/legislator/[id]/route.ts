@@ -16,9 +16,11 @@ import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 import { getStateLegislatorBiography } from '@/lib/api/wikidata-state-legislators';
 import { fetchBiography } from '@/lib/api/wikipedia';
+import { getElectionAwareRevalidation } from '@/lib/election-aware-isr';
 
-// ISR: Revalidate every 1 day
-export const revalidate = 86400;
+// ISR: Election-aware revalidation (3 days Oct-Dec, 30 days Jan-Sep)
+// Legislator profiles change primarily during biennial election cycles
+export const revalidate = getElectionAwareRevalidation();
 
 export const dynamic = 'force-dynamic';
 

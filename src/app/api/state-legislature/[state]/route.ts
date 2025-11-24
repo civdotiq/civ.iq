@@ -7,10 +7,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
+import { getElectionAwareRevalidation } from '@/lib/election-aware-isr';
 
-// ISR: Revalidate every 30 days (election-aware caching in StateLegislatureCoreService)
+// ISR: Election-aware revalidation (3 days Oct-Dec, 30 days Jan-Sep)
 // State jurisdiction data changes infrequently (only during redistricting or session changes)
-export const revalidate = 2592000; // 30 days
+export const revalidate = getElectionAwareRevalidation();
 
 export const dynamic = 'force-dynamic';
 

@@ -40,6 +40,7 @@ import type {
   OpenStatesPersonVote,
 } from '@/lib/openstates-api';
 import { govCache } from '@/services/cache';
+import { dedupe } from '@/services/request-deduplicator';
 import logger from '@/lib/logging/simple-logger';
 import type {
   EnhancedStateLegislator,
@@ -289,12 +290,15 @@ export class StateLegislatureCoreService {
         return { senator: null, representative: null };
       }
 
-      // Direct function call to OpenStates /people.geo API
+      // Direct function call to OpenStates /people.geo API with deduplication
       logger.info('Fetching state legislators via geographic OpenStates API call', {
         lat,
         lng,
       });
-      const legislators = await openStatesAPI.getLegislatorsByLocation(lat, lng);
+      const dedupeKey = `openstates:geo:${lat.toFixed(6)},${lng.toFixed(6)}`;
+      const legislators = await dedupe(dedupeKey, () =>
+        openStatesAPI.getLegislatorsByLocation(lat, lng)
+      );
 
       if (!legislators || legislators.length === 0) {
         logger.warn('No state legislators returned from OpenStates geographic lookup', {
@@ -375,12 +379,15 @@ export class StateLegislatureCoreService {
         return [];
       }
 
-      // Direct function call to OpenStates API - NO HTTP fetch to localhost!
+      // Direct function call to OpenStates API with deduplication - NO HTTP fetch to localhost!
       logger.info('Fetching state legislators via direct OpenStates API call', {
         state,
         chamber,
       });
-      const legislators = await openStatesAPI.getLegislators(state, chamber);
+      const dedupeKey = `openstates:legislators:${state}:${chamber || 'all'}`;
+      const legislators = await dedupe(dedupeKey, () =>
+        openStatesAPI.getLegislators(state, chamber)
+      );
 
       if (!legislators || legislators.length === 0) {
         logger.warn('No state legislators returned from OpenStates', {

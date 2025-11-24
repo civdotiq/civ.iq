@@ -1192,6 +1192,27 @@ class OpenStatesAPI {
 
     return relevantEvents.slice(0, limit);
   }
+
+  /**
+   * Clear cache for a specific key or all cache entries
+   * Useful for cache invalidation when data needs to be refreshed
+   * @param key - Optional specific cache key to clear
+   */
+  clearCache(key?: string): void {
+    if (key) {
+      this.cache.delete(key);
+    } else {
+      this.cache.clear();
+    }
+  }
+
+  /**
+   * Get current cache size (number of entries)
+   * @returns Number of cached entries
+   */
+  getCacheSize(): number {
+    return this.cache.size;
+  }
 }
 
 // Export singleton instance
