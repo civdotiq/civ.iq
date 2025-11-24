@@ -245,6 +245,55 @@ interface VoteResponse {
   };
 }
 
+/**
+ * Fetch bill title from Congress.gov API
+ * Returns the official bill title or null if not available
+ */
+async function fetchBillTitle(
+  congress: string,
+  billType: string,
+  billNumber: string
+): Promise<string | null> {
+  try {
+    // Convert bill type to lowercase for API (e.g., HCONRES -> hconres)
+    const typeSlug = billType.toLowerCase();
+    const apiUrl = `https://api.congress.gov/v3/bill/${congress}/${typeSlug}/${billNumber}?api_key=${process.env.CONGRESS_API_KEY || ''}`;
+
+    const response = await fetch(apiUrl, {
+      headers: { 'User-Agent': 'CivIQ-Hub/2.0 (civic-engagement-tool)' },
+      signal: AbortSignal.timeout(5000), // 5 second timeout
+    });
+
+    if (!response.ok) {
+      logger.debug('Bill title fetch failed', {
+        congress,
+        billType,
+        billNumber,
+        status: response.status,
+      });
+      return null;
+    }
+
+    const data = await response.json();
+    const title = data.bill?.title;
+
+    if (title) {
+      logger.debug('Fetched bill title', { congress, billType, billNumber, title });
+      return title;
+    }
+
+    return null;
+  } catch (error) {
+    logger.debug('Error fetching bill title', {
+      congress,
+      billType,
+      billNumber,
+      error: (error as Error).message,
+    });
+    return null;
+  }
+}
+
 // Parse vote ID and determine chamber and details
 function parseVoteId(voteId: string): {
   chamber: 'House' | 'Senate';
@@ -544,58 +593,74 @@ async function parseHouseVote(
     }
 
     // Extract bill information if available
-    let bill = undefined;
-    if (vote.legislationType && vote.legislationNumber) {
+    let bill: { number: string; title: string; type: string; url?: string } | undefined = undefined;
+    const hasBillInfo = vote.legislationType && vote.legislationNumber;
+
+    // Run bill title fetch and member parsing in parallel for performance
+    const [billTitle, membersResult] = await Promise.all([
+      // Fetch bill title from Congress.gov (runs in parallel)
+      hasBillInfo
+        ? fetchBillTitle(congress, vote.legislationType, vote.legislationNumber)
+        : Promise.resolve(null),
+
+      // Process member votes from XML
+      (async () => {
+        let members: MemberVote[] = [];
+        if (vote.sourceDataURL) {
+          logger.info('Parsing House vote XML for individual member votes', {
+            voteId,
+            xmlUrl: vote.sourceDataURL,
+          });
+
+          try {
+            members = await parseHouseVoteXML(vote.sourceDataURL);
+
+            // Enrich members with full data from legislators-current.yaml
+            const legislatorInfoMap = await getLegislatorInfoMap();
+            members = members.map(member => {
+              const info = member.bioguideId ? legislatorInfoMap.get(member.bioguideId) : null;
+              if (info) {
+                return {
+                  ...member,
+                  firstName: info.firstName,
+                  lastName: info.lastName,
+                  fullName: info.fullName,
+                  state: info.state,
+                  party: info.party,
+                  district: info.district?.toString(),
+                };
+              }
+              return member;
+            });
+
+            logger.info('Successfully parsed and enriched House vote XML', {
+              voteId,
+              memberCount: members.length,
+              enrichedCount: members.filter(m => m.state !== 'Unknown').length,
+            });
+          } catch (error) {
+            logger.warn('Failed to parse House vote XML', {
+              voteId,
+              xmlUrl: vote.sourceDataURL,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            });
+          }
+        }
+        return members;
+      })(),
+    ]);
+
+    // Build bill object with fetched title
+    if (hasBillInfo) {
       bill = {
         number: vote.legislationNumber,
-        title: `${vote.legislationType} ${vote.legislationNumber}`,
+        title: billTitle || `${vote.legislationType} ${vote.legislationNumber}`,
         type: vote.legislationType,
         url: vote.legislationUrl || undefined,
       };
     }
 
-    // Process member votes - parse XML from sourceDataURL to get individual votes
-    let members: MemberVote[] = [];
-    if (vote.sourceDataURL) {
-      logger.info('Parsing House vote XML for individual member votes', {
-        voteId,
-        xmlUrl: vote.sourceDataURL,
-      });
-
-      try {
-        members = await parseHouseVoteXML(vote.sourceDataURL);
-
-        // Enrich members with full data from legislators-current.yaml
-        const legislatorInfoMap = await getLegislatorInfoMap();
-        members = members.map(member => {
-          const info = member.bioguideId ? legislatorInfoMap.get(member.bioguideId) : null;
-          if (info) {
-            return {
-              ...member,
-              firstName: info.firstName,
-              lastName: info.lastName,
-              fullName: info.fullName,
-              state: info.state,
-              party: info.party,
-              district: info.district?.toString(),
-            };
-          }
-          return member;
-        });
-
-        logger.info('Successfully parsed and enriched House vote XML', {
-          voteId,
-          memberCount: members.length,
-          enrichedCount: members.filter(m => m.state !== 'Unknown').length,
-        });
-      } catch (error) {
-        logger.warn('Failed to parse House vote XML', {
-          voteId,
-          xmlUrl: vote.sourceDataURL,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-      }
-    }
+    const members = membersResult;
 
     const voteDetail: UnifiedVoteDetail = {
       voteId,
