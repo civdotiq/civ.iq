@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { SearchIcon } from '@/components/icons/AicherIcons';
 import { quickMultiDistrictCheck, checkMultiDistrict } from '@/lib/multi-district/detection';
 import AddressAutocomplete from '@/components/search/AddressAutocomplete';
+import type { RadarIPGeolocationResponse } from '@/types/radar';
 
 interface SearchError {
   type: 'network' | 'invalid_zip' | 'api_error' | 'unknown' | 'geolocation';
@@ -117,12 +118,13 @@ export default function SearchForm() {
   };
 
   const handleGeolocation = async () => {
-    if (!navigator.geolocation) {
+    const apiKey = process.env.NEXT_PUBLIC_RADAR_API_KEY;
+
+    if (!apiKey) {
       setError({
         type: 'geolocation',
-        message: 'Geolocation not supported',
-        suggestion:
-          'Your browser does not support geolocation. Please enter your address manually.',
+        message: 'Location service unavailable',
+        suggestion: 'Please enter your address or ZIP code manually.',
       });
       return;
     }
@@ -131,114 +133,62 @@ export default function SearchForm() {
     setError(null);
 
     try {
-      // Get browser geolocation with specific error handling
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          timeout: 15000, // Increased timeout to 15 seconds
-          maximumAge: 300000,
-          enableHighAccuracy: false, // Faster response, lower accuracy is fine for congressional districts
-        });
+      // Use Radar.io IP geolocation - works without browser permissions
+      const response = await fetch('https://api.radar.io/v1/geocode/ip', {
+        headers: {
+          Authorization: apiKey,
+        },
       });
 
-      const { latitude, longitude } = position.coords;
-
-      // Use Census Geocoding API with geographies endpoint to get district data
-      const response = await fetch(
-        `https://geocoding.geo.census.gov/geocoder/geographies/coordinates?x=${longitude}&y=${latitude}&benchmark=Public_AR_Current&vintage=Current_Current&format=json&layers=all`
-      );
-
       if (!response.ok) {
-        throw new Error('CENSUS_API_ERROR');
+        throw new Error('RADAR_API_ERROR');
       }
 
-      const data = await response.json();
-      const geographies = data.result?.geographies;
+      const data: RadarIPGeolocationResponse = await response.json();
 
-      if (!geographies) {
-        throw new Error('NO_GEOGRAPHY_DATA');
+      if (!data.address || !data.address.postalCode) {
+        throw new Error('NO_LOCATION_DATA');
       }
 
-      // Extract congressional district and state from geography layers
-      const congressionalDistricts = geographies['119th Congressional Districts'] || [];
-      const states = geographies['States'] || [];
-      const zipAreas = geographies['2020 Census ZIP Code Tabulation Areas'] || [];
-
-      if (congressionalDistricts.length === 0 || states.length === 0) {
-        throw new Error('NO_DISTRICT_FOUND');
-      }
-
-      const districtName = congressionalDistricts[0]?.NAME || '';
-      const stateCode = states[0]?.STUSAB || '';
-      const zipCode = zipAreas[0]?.ZCTA5CE20 || '';
-
-      // Parse district number from name (e.g., "Congressional District 13" -> "13")
-      const districtMatch = districtName.match(/Congressional District (\d+)/);
-      const districtNumber = districtMatch ? districtMatch[1] : '';
+      const { city, stateCode, postalCode } = data.address;
 
       // Create a descriptive location string
-      const locationDescription = zipCode
-        ? `${stateCode}-${districtNumber} (ZIP ${zipCode})`
-        : `${stateCode}-${districtNumber}`;
-
+      const locationDescription = `${city}, ${stateCode} ${postalCode}`;
       setSearchInput(locationDescription);
-      setIsGeolocating(false);
 
-      // Navigate to representatives page with state and district info
-      if (zipCode) {
-        // If we have a ZIP, use it for more precise results
-        router.push(`/representatives?zip=${zipCode}`);
-      } else {
-        // Otherwise, navigate to district page directly
-        const districtId = `${stateCode.toLowerCase()}${districtNumber.padStart(2, '0')}`;
-        router.push(`/districts/${districtId}`);
+      // Check for multi-district ZIP (consistent with manual ZIP entry)
+      const isLikelyMultiDistrict = quickMultiDistrictCheck(postalCode);
+
+      if (isLikelyMultiDistrict) {
+        const multiDistrictCheck = await checkMultiDistrict(postalCode);
+
+        if (multiDistrictCheck.success && multiDistrictCheck.isMultiDistrict) {
+          // Multi-district ZIP - navigate to results page with district selector
+          setIsGeolocating(false);
+          router.push(`/results?zip=${postalCode}`);
+          return;
+        }
       }
+
+      // Single district - navigate to representatives page
+      setIsGeolocating(false);
+      router.push(`/representatives?zip=${postalCode}`);
     } catch (error) {
       setIsGeolocating(false);
 
-      // Handle specific geolocation errors
-      if (error && typeof error === 'object' && 'code' in error) {
-        const geoError = error as GeolocationPositionError;
-
-        if (geoError.code === 1) {
-          // PERMISSION_DENIED
-          setError({
-            type: 'geolocation',
-            message: 'Location permission denied',
-            suggestion:
-              'Please enable location permissions in your browser settings, or enter your address manually.',
-          });
-        } else if (geoError.code === 2) {
-          // POSITION_UNAVAILABLE
-          setError({
-            type: 'geolocation',
-            message: 'Location unavailable',
-            suggestion:
-              'Your device could not determine your location. Please enter your address manually.',
-          });
-        } else if (geoError.code === 3) {
-          // TIMEOUT
-          setError({
-            type: 'geolocation',
-            message: 'Location request timed out',
-            suggestion:
-              'The request took too long. Please try again or enter your address manually.',
-          });
-        }
-      } else if (error instanceof Error) {
-        // Handle Census API errors
-        if (error.message === 'CENSUS_API_ERROR') {
+      if (error instanceof Error) {
+        if (error.message === 'RADAR_API_ERROR') {
           setError({
             type: 'api_error',
-            message: 'Geocoding service unavailable',
-            suggestion:
-              'The address lookup service is currently unavailable. Please enter your address manually.',
+            message: 'Location service unavailable',
+            suggestion: 'Please enter your address or ZIP code manually.',
           });
-        } else if (error.message === 'NO_GEOGRAPHY_DATA' || error.message === 'NO_DISTRICT_FOUND') {
+        } else if (error.message === 'NO_LOCATION_DATA') {
           setError({
             type: 'geolocation',
-            message: 'No district found',
+            message: 'Could not determine location',
             suggestion:
-              'Could not determine your congressional district. Please enter your address or ZIP code manually.',
+              'Unable to find your location from your IP address. Please enter your address or ZIP code manually.',
           });
         } else {
           setError({
@@ -248,11 +198,10 @@ export default function SearchForm() {
           });
         }
       } else {
-        // Generic fallback
         setError({
           type: 'geolocation',
           message: 'Location detection failed',
-          suggestion: 'Please check location permissions or enter your address manually.',
+          suggestion: 'Please enter your address or ZIP code manually.',
         });
       }
     }

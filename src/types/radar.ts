@@ -71,6 +71,40 @@ export interface RadarAutocompleteResponse {
 }
 
 /**
+ * Radar.io IP Geolocation API Response
+ * @see https://radar.io/documentation/api#ip-geocoding
+ */
+export interface RadarIPGeolocationResponse {
+  /** Response metadata */
+  meta: {
+    code: number;
+  };
+  /** IP address used for geolocation */
+  ip: string;
+  /** Geolocation result */
+  address: {
+    /** Latitude coordinate */
+    latitude: number;
+    /** Longitude coordinate */
+    longitude: number;
+    /** City name */
+    city: string;
+    /** State/province name */
+    state: string;
+    /** State/province abbreviation (e.g., "MI", "CA") */
+    stateCode: string;
+    /** Postal/ZIP code */
+    postalCode: string;
+    /** Country name */
+    country: string;
+    /** ISO 3166-1 alpha-2 country code */
+    countryCode: string;
+    /** Country flag emoji */
+    countryFlag: string;
+  };
+}
+
+/**
  * Props for AddressAutocomplete component
  */
 export interface AddressAutocompleteProps {
