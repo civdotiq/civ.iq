@@ -63,12 +63,17 @@ export default function StateDistrictBoundaryMap({
   const slowConnection = isSlowConnection();
 
   // Select appropriate PMTiles file based on device capabilities
-  // Mobile devices or slow connections get optimized tiles (max zoom 8, ~6MB)
-  // Desktop with good connection gets full-quality tiles (max zoom 12, ~24MB)
-  const pmtilesFile =
-    isMobile || slowConnection
-      ? '/data/state_legislative_districts_mobile.pmtiles'
-      : '/data/state_legislative_districts.pmtiles';
+  // Currently using the same file for all devices (24MB, max zoom 10)
+  // Mobile-optimized version (~6MB, max zoom 8) can be generated for slower connections
+  const pmtilesFile = '/data/state_legislative_districts.pmtiles';
+
+  // Log device detection for debugging (can be removed later)
+  if (isMobile || slowConnection) {
+    logger.info('[StateDistrictBoundaryMap] Mobile/slow connection detected', {
+      isMobile,
+      slowConnection,
+    });
+  }
 
   // Callback ref to track when DOM element is actually mounted
   const setMapContainerRef = useCallback((node: HTMLDivElement | null) => {
@@ -172,116 +177,102 @@ export default function StateDistrictBoundaryMap({
               url: `pmtiles://${pmtilesFile}`,
             });
             logger.info('[StateDistrictBoundaryMap] PMTiles source added successfully');
+
+            // Add layers immediately after source registration
+            // MapLibre GL handles lazy loading of tiles automatically - no need to wait
+            // for sourcedata event which is unreliable with PMTiles sources
+
+            // Add neighboring districts layer (light gray outlines)
+            map.current.addLayer({
+              id: 'neighboring-districts',
+              type: 'line',
+              source: 'state-districts',
+              'source-layer': layerName,
+              filter: [
+                'all',
+                ['==', ['get', 'state_code'], stateCode],
+                ['!=', ['get', 'id'], districtId],
+              ],
+              paint: {
+                'line-color': '#9ca3af',
+                'line-width': 1,
+                'line-dasharray': [2, 2],
+              },
+            });
+
+            // Add current district layer (highlighted fill)
+            map.current.addLayer({
+              id: 'district-fill',
+              type: 'fill',
+              source: 'state-districts',
+              'source-layer': layerName,
+              filter: ['==', ['get', 'id'], districtId],
+              paint: {
+                'fill-color': '#3b82f6',
+                'fill-opacity': 0.3,
+              },
+            });
+
+            // Add current district outline (bold blue line)
+            map.current.addLayer({
+              id: 'district-outline',
+              type: 'line',
+              source: 'state-districts',
+              'source-layer': layerName,
+              filter: ['==', ['get', 'id'], districtId],
+              paint: {
+                'line-color': '#1e40af',
+                'line-width': 3,
+              },
+            });
+
+            // Fly to district if metadata is available
+            if (districtMetadata && districtMetadata.centroid) {
+              map.current.flyTo({
+                center: districtMetadata.centroid,
+                zoom: 9,
+                duration: 1000,
+              });
+            }
+
+            // Add click handler for neighboring districts
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            map.current.on('click', 'neighboring-districts', (e: any) => {
+              if (!e.features || e.features.length === 0) return;
+
+              const feature = e.features[0];
+              if (!feature) return;
+
+              const neighborId = feature.properties?.id;
+
+              if (neighborId) {
+                // Navigate to neighboring district
+                const [neighborState, neighborChamber, neighborDistrict] = neighborId.split('-');
+                window.location.href = `/state-districts/${neighborState}/${neighborDistrict}?chamber=${neighborChamber}`;
+              }
+            });
+
+            // Change cursor on hover
+            map.current.on('mouseenter', 'neighboring-districts', () => {
+              if (map.current) {
+                map.current.getCanvas().style.cursor = 'pointer';
+              }
+            });
+
+            map.current.on('mouseleave', 'neighboring-districts', () => {
+              if (map.current) {
+                map.current.getCanvas().style.cursor = '';
+              }
+            });
+
+            logger.info('[StateDistrictBoundaryMap] Layers added successfully!');
+            setLoading(false);
           } catch (error) {
-            logger.error('Failed to add PMTiles source', error as Error);
+            logger.error('Failed to add PMTiles source or layers', error as Error);
             setError('Failed to load district boundaries');
             setLoading(false);
             return;
           }
-
-          // Wait for source to be fully loaded before adding layers
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          map.current.on('sourcedata', (e: any) => {
-            if (e.sourceId !== 'state-districts' || !e.isSourceLoaded) return;
-            if (!map.current) return;
-
-            // Check if layers already exist to prevent duplicate additions
-            if (map.current.getLayer('neighboring-districts')) return;
-
-            logger.info('[StateDistrictBoundaryMap] Source data loaded, adding layers...');
-
-            try {
-              // Add neighboring districts layer (light gray outlines)
-              map.current.addLayer({
-                id: 'neighboring-districts',
-                type: 'line',
-                source: 'state-districts',
-                'source-layer': layerName,
-                filter: [
-                  'all',
-                  ['==', ['get', 'state_code'], stateCode],
-                  ['!=', ['get', 'id'], districtId],
-                ],
-                paint: {
-                  'line-color': '#9ca3af',
-                  'line-width': 1,
-                  'line-dasharray': [2, 2],
-                },
-              });
-
-              // Add current district layer (highlighted fill)
-              map.current.addLayer({
-                id: 'district-fill',
-                type: 'fill',
-                source: 'state-districts',
-                'source-layer': layerName,
-                filter: ['==', ['get', 'id'], districtId],
-                paint: {
-                  'fill-color': '#3b82f6',
-                  'fill-opacity': 0.3,
-                },
-              });
-
-              // Add current district outline (bold blue line)
-              map.current.addLayer({
-                id: 'district-outline',
-                type: 'line',
-                source: 'state-districts',
-                'source-layer': layerName,
-                filter: ['==', ['get', 'id'], districtId],
-                paint: {
-                  'line-color': '#1e40af',
-                  'line-width': 3,
-                },
-              });
-
-              // Fly to district if metadata is available
-              if (districtMetadata && districtMetadata.centroid) {
-                map.current.flyTo({
-                  center: districtMetadata.centroid,
-                  zoom: 9,
-                  duration: 1000,
-                });
-              }
-
-              // Add click handler for neighboring districts
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              map.current.on('click', 'neighboring-districts', (e: any) => {
-                if (!e.features || e.features.length === 0) return;
-
-                const feature = e.features[0];
-                if (!feature) return;
-
-                const neighborId = feature.properties?.id;
-
-                if (neighborId) {
-                  // Navigate to neighboring district
-                  const [neighborState, neighborChamber, neighborDistrict] = neighborId.split('-');
-                  window.location.href = `/state-districts/${neighborState}/${neighborDistrict}?chamber=${neighborChamber}`;
-                }
-              });
-
-              // Change cursor on hover
-              map.current.on('mouseenter', 'neighboring-districts', () => {
-                if (map.current) {
-                  map.current.getCanvas().style.cursor = 'pointer';
-                }
-              });
-
-              map.current.on('mouseleave', 'neighboring-districts', () => {
-                if (map.current) {
-                  map.current.getCanvas().style.cursor = '';
-                }
-              });
-
-              logger.info('[StateDistrictBoundaryMap] Layers added successfully!');
-              setLoading(false);
-            } catch (layerError) {
-              logger.error('Failed to add layers', layerError as Error);
-              setError('Failed to render district boundaries');
-              setLoading(false);
-            }
-          });
         });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

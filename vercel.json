@@ -70,6 +70,48 @@
   ],
   "headers": [
     {
+      "source": "/data/(.*).pmtiles",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, HEAD, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Range, Content-Type"
+        },
+        {
+          "key": "Access-Control-Expose-Headers",
+          "value": "Content-Length, Content-Range, Accept-Ranges"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/x-protobuf"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/data/state-districts/(.*).json",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, immutable"
+        }
+      ]
+    },
+    {
       "source": "/api/(.*)",
       "headers": [
         {
