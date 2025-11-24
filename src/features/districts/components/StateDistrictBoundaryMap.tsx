@@ -26,6 +26,9 @@ import logger from '@/lib/logging/simple-logger';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { isSlowConnection } from '@/lib/utils/mobile-detection';
 
+// Module-level flag to track if PMTiles protocol is registered (shared across all map instances)
+let pmtilesProtocolRegistered = false;
+
 interface StateDistrictBoundaryMapProps {
   stateCode: string; // e.g., "CA"
   chamber: 'upper' | 'lower';
@@ -112,9 +115,13 @@ export default function StateDistrictBoundaryMap({
           document.head.appendChild(link);
         }
 
-        // Register PMTiles protocol
-        const protocol = new pmtiles.Protocol();
-        maplibregl.default.addProtocol('pmtiles', protocol.tile);
+        // Register PMTiles protocol only once (shared across all map instances)
+        // This prevents conflicts when multiple maps are on the same page
+        if (!pmtilesProtocolRegistered) {
+          const protocol = new pmtiles.Protocol();
+          maplibregl.default.addProtocol('pmtiles', protocol.tile);
+          pmtilesProtocolRegistered = true;
+        }
 
         // Determine which layer to use (sldl or sldu)
         const layerName = chamber === 'lower' ? 'sldl' : 'sldu';
