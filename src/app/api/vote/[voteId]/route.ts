@@ -157,6 +157,7 @@ interface UnifiedVoteDetail {
     title: string;
     type: string;
     url?: string;
+    summary?: string; // Congressional Research Service summary
   };
   amendment?: {
     number: string;
@@ -246,14 +247,22 @@ interface VoteResponse {
 }
 
 /**
- * Fetch bill title from Congress.gov API
- * Returns the official bill title or null if not available
+ * Bill data returned from Congress.gov API
  */
-async function fetchBillTitle(
+interface BillData {
+  title: string | null;
+  summary: string | null;
+}
+
+/**
+ * Fetch bill data (title and summary) from Congress.gov API
+ * Returns the official bill title and CRS summary if available
+ */
+async function fetchBillData(
   congress: string,
   billType: string,
   billNumber: string
-): Promise<string | null> {
+): Promise<BillData> {
   try {
     // Convert bill type to lowercase for API (e.g., HCONRES -> hconres)
     const typeSlug = billType.toLowerCase();
@@ -265,32 +274,49 @@ async function fetchBillTitle(
     });
 
     if (!response.ok) {
-      logger.debug('Bill title fetch failed', {
+      logger.debug('Bill data fetch failed', {
         congress,
         billType,
         billNumber,
         status: response.status,
       });
-      return null;
+      return { title: null, summary: null };
     }
 
     const data = await response.json();
-    const title = data.bill?.title;
+    const title = data.bill?.title || null;
 
-    if (title) {
-      logger.debug('Fetched bill title', { congress, billType, billNumber, title });
-      return title;
+    // Extract summary text - Congress.gov returns summaries array
+    // The first summary is usually the most recent/relevant
+    let summary: string | null = null;
+    if (data.bill?.summaries && Array.isArray(data.bill.summaries)) {
+      const latestSummary = data.bill.summaries[0];
+      if (latestSummary?.text) {
+        // Strip HTML tags from summary text
+        summary = latestSummary.text.replace(/<[^>]*>/g, '').trim();
+      }
     }
 
-    return null;
+    if (title || summary) {
+      logger.debug('Fetched bill data', {
+        congress,
+        billType,
+        billNumber,
+        hasTitle: !!title,
+        hasSummary: !!summary,
+        summaryLength: summary?.length || 0,
+      });
+    }
+
+    return { title, summary };
   } catch (error) {
-    logger.debug('Error fetching bill title', {
+    logger.debug('Error fetching bill data', {
       congress,
       billType,
       billNumber,
       error: (error as Error).message,
     });
-    return null;
+    return { title: null, summary: null };
   }
 }
 
@@ -593,15 +619,17 @@ async function parseHouseVote(
     }
 
     // Extract bill information if available
-    let bill: { number: string; title: string; type: string; url?: string } | undefined = undefined;
+    let bill:
+      | { number: string; title: string; type: string; url?: string; summary?: string }
+      | undefined = undefined;
     const hasBillInfo = vote.legislationType && vote.legislationNumber;
 
-    // Run bill title fetch and member parsing in parallel for performance
-    const [billTitle, membersResult] = await Promise.all([
-      // Fetch bill title from Congress.gov (runs in parallel)
+    // Run bill data fetch and member parsing in parallel for performance
+    const [billData, membersResult] = await Promise.all([
+      // Fetch bill title and summary from Congress.gov (runs in parallel)
       hasBillInfo
-        ? fetchBillTitle(congress, vote.legislationType, vote.legislationNumber)
-        : Promise.resolve(null),
+        ? fetchBillData(congress, vote.legislationType, vote.legislationNumber)
+        : Promise.resolve({ title: null, summary: null }),
 
       // Process member votes from XML
       (async () => {
@@ -650,13 +678,14 @@ async function parseHouseVote(
       })(),
     ]);
 
-    // Build bill object with fetched title
+    // Build bill object with fetched title and summary
     if (hasBillInfo) {
       bill = {
         number: vote.legislationNumber,
-        title: billTitle || `${vote.legislationType} ${vote.legislationNumber}`,
+        title: billData.title || `${vote.legislationType} ${vote.legislationNumber}`,
         type: vote.legislationType,
         url: vote.legislationUrl || undefined,
+        summary: billData.summary || undefined,
       };
     }
 

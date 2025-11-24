@@ -51,6 +51,7 @@ interface VoteDetail {
     number: string;
     title: string;
     type: string;
+    summary?: string;
   };
   amendment?: {
     number: string;
@@ -305,6 +306,12 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
               </h3>
               {voteDetail.bill.title && (
                 <p className="text-sm text-gray-700 mb-3">{voteDetail.bill.title}</p>
+              )}
+              {voteDetail.bill.summary && (
+                <div className="bg-white border border-gray-200 rounded p-3 mb-3">
+                  <p className="text-xs font-medium text-gray-500 mb-1">Congressional Summary</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{voteDetail.bill.summary}</p>
+                </div>
               )}
               <Link
                 href={`/bill/${voteDetail.congress}-${voteDetail.bill.type?.toLowerCase() || 's'}-${voteDetail.bill.number.replace(/[^\d]/g, '')}`}
