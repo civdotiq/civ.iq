@@ -38,6 +38,56 @@
   --aicher-blue-hover: #3293c2;
   --aicher-blue-active: #2a7aa3;
   --aicher-blue-muted: #a8d4e8;
+
+  /* ═══════════════════════════════════════════════════════════ */
+  /* DESIGN SYSTEM REFINEMENTS - November 2025                   */
+  /* ═══════════════════════════════════════════════════════════ */
+
+  /* 1. Border Weight Hierarchy - Semantic border tokens */
+  --border-structural: 2px; /* Cards, containers, emphasis */
+  --border-divider: 1px; /* List separators, table rows */
+  --border-emphasis: 3px; /* Selected states, active tabs */
+
+  /* 2. Motion Timing - Mechanical Aicher-style transitions */
+  --timing-aicher: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --duration-default: 150ms;
+  --duration-mobile: 100ms;
+
+  /* 3. Size-Dependent Letter-Spacing - Optical adjustments */
+  --tracking-display: -0.02em; /* 48px+ headings - tighten */
+  --tracking-heading: 0.02em; /* 24-32px - slight */
+  --tracking-body: 0.05em; /* 14-18px - standard */
+  --tracking-label: 0.08em; /* 12px and under - open up */
+
+  /* 4. Cool Blue Variant - For data visualization */
+  --aicher-blue-cool: #2d8fc9;
+  --aicher-blue-cool-hover: #2680b8;
+
+  /* 5. Status Color Semantics - Separating action from information */
+  --color-action: var(--aicher-blue); /* Buttons, links */
+  --color-info: #4b5563; /* Neutral information */
+  --color-success: var(--aicher-green); /* Confirmations */
+  --color-error: var(--aicher-red); /* Errors only */
+  --color-warning: #d97706; /* Warnings (amber) */
+}
+
+/* High-DPI Border Adjustment - Hairline dividers on retina */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  :root {
+    --border-divider: 0.5px;
+  }
+}
+
+/* Mobile Motion Adjustment - Faster transitions for touch */
+@media (max-width: 768px) {
+  :root {
+    --duration-default: var(--duration-mobile);
+    /* Tighter tracking on mobile to fit more text */
+    --tracking-display: -0.03em;
+    --tracking-heading: 0.01em;
+    --tracking-body: 0.04em;
+    --tracking-label: 0.06em;
+  }
 }
 
 /* Grid utilities - 1 through 8 multipliers */
@@ -143,13 +193,13 @@ body {
   line-height: 1.5;
 }
 
-/* Typography Hierarchy - Ulm School System */
+/* Typography Hierarchy - Ulm School System (using size-dependent tracking) */
 .aicher-display {
   font-family: var(--font-display);
   font-size: var(--type-4xl);
   font-weight: 700;
   line-height: 1.1;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking-display);
   text-transform: uppercase;
 }
 
@@ -158,7 +208,7 @@ body {
   font-size: var(--type-2xl);
   font-weight: 700;
   line-height: 1.2;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--tracking-heading);
   text-transform: uppercase;
 }
 
@@ -167,7 +217,7 @@ body {
   font-size: var(--type-xl);
   font-weight: 700;
   line-height: 1.3;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--tracking-heading);
   text-transform: uppercase;
 }
 
@@ -175,7 +225,7 @@ body {
   font-family: var(--font-primary);
   font-size: var(--type-lg);
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--tracking-label);
   text-transform: uppercase;
 }
 
@@ -183,7 +233,7 @@ body {
   font-family: var(--font-primary);
   font-size: var(--type-xs);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--tracking-label);
   text-transform: uppercase;
 }
 
@@ -192,6 +242,7 @@ body {
   font-size: var(--type-base);
   font-weight: 400;
   line-height: 1.5;
+  letter-spacing: var(--tracking-body);
 }
 
 /* Borders replace shadows */
@@ -1027,4 +1078,175 @@ body {
   .aicher-title {
     font-size: 1.5rem;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* DESIGN SYSTEM REFINEMENTS - Utility Classes                  */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* 1. Border Weight Hierarchy Utilities */
+.border-structural {
+  border-width: var(--border-structural);
+  border-style: solid;
+}
+
+.border-divider {
+  border-width: var(--border-divider);
+  border-style: solid;
+}
+
+.border-emphasis {
+  border-width: var(--border-emphasis);
+  border-style: solid;
+}
+
+.border-b-divider {
+  border-bottom-width: var(--border-divider);
+  border-bottom-style: solid;
+}
+
+.border-t-divider {
+  border-top-width: var(--border-divider);
+  border-top-style: solid;
+}
+
+/* 2. Motion Timing Utilities */
+.aicher-transition {
+  transition-timing-function: var(--timing-aicher);
+  transition-duration: var(--duration-default);
+}
+
+.aicher-transition-fast {
+  transition-timing-function: var(--timing-aicher);
+  transition-duration: 100ms;
+}
+
+.aicher-transition-slow {
+  transition-timing-function: var(--timing-aicher);
+  transition-duration: 200ms;
+}
+
+/* 5. Status Color Semantic Classes */
+.status-info {
+  background-color: #f3f4f6;
+  border-left: var(--border-emphasis) solid var(--color-info);
+  color: var(--color-info);
+  padding: calc(var(--grid) * 2);
+}
+
+.status-success {
+  background-color: #ecfdf5;
+  border-left: var(--border-emphasis) solid var(--color-success);
+  color: #065f46;
+  padding: calc(var(--grid) * 2);
+}
+
+.status-error {
+  background-color: #fef2f2;
+  border-left: var(--border-emphasis) solid var(--color-error);
+  color: #991b1b;
+  padding: calc(var(--grid) * 2);
+}
+
+.status-warning {
+  background-color: #fffbeb;
+  border-left: var(--border-emphasis) solid var(--color-warning);
+  color: #92400e;
+  padding: calc(var(--grid) * 2);
+}
+
+/* 6. Grid Debug Overlay (Dev Tool) */
+.debug-grid {
+  position: relative;
+}
+
+.debug-grid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(62, 162, 212, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(62, 162, 212, 0.1) 1px, transparent 1px);
+  background-size: 8px 8px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Major grid lines every 40px (5 * grid) */
+.debug-grid-major {
+  position: relative;
+}
+
+.debug-grid-major::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(62, 162, 212, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(62, 162, 212, 0.05) 1px, transparent 1px),
+    linear-gradient(rgba(225, 29, 7, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(225, 29, 7, 0.15) 1px, transparent 1px);
+  background-size:
+    8px 8px,
+    8px 8px,
+    40px 40px,
+    40px 40px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* 7. Context-Aware Density System */
+.density-default {
+  --section-gap: 40px;
+  --card-padding: 32px;
+}
+
+.density-compact {
+  --section-gap: 24px;
+  --card-padding: 24px;
+}
+
+.density-detailed {
+  --section-gap: 56px;
+  --card-padding: 40px;
+}
+
+/* Density utilities */
+.gap-section {
+  gap: var(--section-gap, 40px);
+}
+
+.p-card {
+  padding: var(--card-padding, 32px);
+}
+
+/* Mobile: compress all densities */
+@media (max-width: 768px) {
+  .density-default {
+    --section-gap: 24px;
+    --card-padding: 24px;
+  }
+
+  .density-compact {
+    --section-gap: 16px;
+    --card-padding: 16px;
+  }
+
+  .density-detailed {
+    --section-gap: 32px;
+    --card-padding: 32px;
+  }
+}
+
+/* Cool Blue for Data Visualization */
+.bg-aicher-blue-cool {
+  background-color: var(--aicher-blue-cool);
+}
+
+.text-aicher-blue-cool {
+  color: var(--aicher-blue-cool);
+}
+
+.border-aicher-blue-cool {
+  border-color: var(--aicher-blue-cool);
 }

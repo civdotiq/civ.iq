@@ -19,11 +19,16 @@ export default {
           red: '#e11d09',
           green: '#0a9338',
           blue: '#3ea0d2',
+          'blue-cool': '#2d8fc9', // Cool blue for data visualization
         },
         // Add the specific blue for consistency
         'civiq-red': '#e11d09',
         'civiq-green': '#0a9338',
         'civiq-blue': '#3ea0d2',
+        'civiq-blue-cool': '#2d8fc9',
+        // Status semantic colors
+        'status-info': '#4b5563',
+        'status-warning': '#d97706',
       },
       // Otl Aicher 8px grid system - Complete scale
       spacing: {
@@ -42,10 +47,18 @@ export default {
       },
       borderWidth: {
         aicher: '2px',
+        structural: '2px', // Cards, containers
+        divider: '1px', // List separators
+        emphasis: '3px', // Selected states
       },
       letterSpacing: {
         aicher: '0.05em',
         'aicher-wide': '0.1em',
+        // Size-dependent tracking (references CSS variables)
+        'aicher-display': 'var(--tracking-display, -0.02em)',
+        'aicher-heading': 'var(--tracking-heading, 0.02em)',
+        'aicher-body': 'var(--tracking-body, 0.05em)',
+        'aicher-label': 'var(--tracking-label, 0.08em)',
       },
       animation: {
         shimmer: 'shimmer 2s infinite',
