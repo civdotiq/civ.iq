@@ -10,7 +10,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
 import { getChamberName } from '@/types/state-legislature';
-import { StateVotingTab } from './StateVotingTab';
 import { StateDistrictDemographics } from './StateDistrictDemographics';
 import { StateLegislatorBillsList } from './StateLegislatorBillsList';
 import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
@@ -188,7 +187,6 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
         <nav className="flex">
           {[
             { id: 'overview', label: 'OVERVIEW' },
-            { id: 'voting', label: 'VOTING RECORDS' },
             { id: 'bills', label: 'SPONSORED BILLS' },
             { id: 'committees', label: 'COMMITTEES' },
             { id: 'news', label: 'RECENT NEWS' },
@@ -198,7 +196,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`aicher-tab ${activeTab === tab.id ? 'active' : ''} ${
-                index === 5 ? 'border-r-0' : ''
+                index === 4 ? 'border-r-0' : ''
               }`}
             >
               {tab.label}
@@ -302,16 +300,6 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
             </div>
           )}
 
-          {activeTab === 'voting' && (
-            <div className="bg-white border-2 border-black p-6">
-              <StateVotingTab
-                state={legislator.state}
-                legislatorId={legislator.id}
-                legislatorName={legislator.name}
-              />
-            </div>
-          )}
-
           {activeTab === 'bills' && (
             <div className="bg-white border-2 border-black p-6">
               <StateLegislatorBillsList
@@ -407,6 +395,40 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                 CONTACT INFORMATION
               </h2>
 
+              {/* Direct email/phone from OpenStates (root level) */}
+              {(legislator.email || legislator.phone) && (
+                <div className="mb-6">
+                  <h3 className="aicher-section-label mb-3 flex items-center gap-2 text-civiq-blue">
+                    <Phone className="w-4 h-4" />
+                    Direct Contact
+                  </h3>
+                  <div className="bg-gray-50 border-2 border-gray-300 p-4 space-y-2">
+                    {legislator.email && (
+                      <p className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-civiq-blue" />
+                        <a
+                          href={`mailto:${legislator.email}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {legislator.email}
+                        </a>
+                      </p>
+                    )}
+                    {legislator.phone && (
+                      <p className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-civiq-green" />
+                        <a
+                          href={`tel:${legislator.phone}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {legislator.phone}
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {legislator.contact?.capitolOffice && (
                 <div className="mb-6">
                   <h3 className="aicher-section-label mb-3 flex items-center gap-2 text-civiq-blue">
@@ -487,7 +509,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
               {!legislator.email &&
                 !legislator.phone &&
                 !legislator.contact &&
-                !legislator.links && (
+                (!legislator.links || legislator.links.length === 0) && (
                   <p className="text-gray-600">No contact information available.</p>
                 )}
             </div>

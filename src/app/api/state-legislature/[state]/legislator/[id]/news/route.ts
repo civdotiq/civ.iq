@@ -206,25 +206,26 @@ export async function GET(
     );
   }
 
-  // Fetch legislator data from our API
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  // Fetch legislator data using direct service call (no HTTP self-call!)
+  const { StateLegislatureCoreService } = await import(
+    '@/services/core/state-legislature-core.service'
+  );
+  const { decodeBase64Url } = await import('@/lib/url-encoding');
+
   let legislatorData;
 
   try {
-    const response = await fetch(`${baseUrl}/api/state-legislature/${state}/legislator/${id}`, {
-      cache: 'no-store',
-    });
+    const legislatorId = decodeBase64Url(id);
+    const legislator = await StateLegislatureCoreService.getStateLegislatorById(
+      state.toUpperCase(),
+      legislatorId
+    );
 
-    if (!response.ok) {
+    if (!legislator) {
       return NextResponse.json({ error: 'State legislator not found' }, { status: 404 });
     }
 
-    const data = await response.json();
-    if (!data.success || !data.legislator) {
-      return NextResponse.json({ error: 'State legislator not found' }, { status: 404 });
-    }
-
-    legislatorData = data.legislator;
+    legislatorData = legislator;
   } catch (error) {
     logger.error('Failed to fetch legislator data', error as Error, { id, state });
     return NextResponse.json({ error: 'Failed to fetch legislator data' }, { status: 500 });

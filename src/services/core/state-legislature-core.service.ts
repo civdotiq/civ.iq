@@ -641,17 +641,35 @@ export class StateLegislatureCoreService {
 
             if (bills.length > 0) {
               // Count primary sponsorships vs cosponsorships
+              // The API returns bills where this person is a sponsor
+              // We need to check if they're primary or co-sponsor on each bill
               let sponsoredCount = 0;
               let cosponsoredCount = 0;
 
+              // Normalize legislator name for comparison (case-insensitive, handle middle names)
+              const legislatorNameLower = legislator.name.toLowerCase();
+              const legislatorLastName = legislator.lastName?.toLowerCase() || '';
+
               bills.forEach(bill => {
-                const sponsorship = bill.sponsorships?.find(
-                  s => s.name === legislator.name || s.entity_type === 'person'
-                );
+                // Find this legislator in the bill's sponsorships
+                const sponsorship = bill.sponsorships?.find(s => {
+                  const sponsorNameLower = s.name.toLowerCase();
+                  // Match by full name or last name
+                  return (
+                    sponsorNameLower === legislatorNameLower ||
+                    sponsorNameLower.includes(legislatorLastName) ||
+                    legislatorNameLower.includes(sponsorNameLower)
+                  );
+                });
+
                 if (sponsorship?.primary) {
                   sponsoredCount++;
                 } else if (sponsorship) {
                   cosponsoredCount++;
+                } else {
+                  // If we can't find a match but the API returned this bill for this sponsor,
+                  // count it as sponsored (the API filter is authoritative)
+                  sponsoredCount++;
                 }
               });
 
@@ -668,6 +686,7 @@ export class StateLegislatureCoreService {
                 legislatorId,
                 sponsored: sponsoredCount,
                 cosponsored: cosponsoredCount,
+                totalBillsFromAPI: bills.length,
               });
             }
 
@@ -689,7 +708,8 @@ export class StateLegislatureCoreService {
           try {
             const wikipediaData = await this.fetchWikipediaForStateLegislator(
               legislator.name,
-              normalizedState
+              normalizedState,
+              legislator.chamber
             );
 
             if (wikipediaData) {
@@ -1200,54 +1220,125 @@ export class StateLegislatureCoreService {
 
   /**
    * Fetch Wikipedia data for a state legislator
-   * Uses Wikipedia REST API with intelligent search
+   * Uses Wikipedia REST API with intelligent search and validation
    * @param legislatorName - Full name of the legislator
    * @param state - State code (e.g., 'MI')
+   * @param chamber - Chamber ('upper' for Senate, 'lower' for House)
    * @returns Wikipedia data or null if not found
    */
   private static async fetchWikipediaForStateLegislator(
     legislatorName: string,
-    state: string
+    state: string,
+    chamber?: 'upper' | 'lower'
   ): Promise<{
     summary: string;
     htmlSummary: string;
     pageUrl: string;
   } | null> {
     try {
-      // Search Wikipedia for the legislator
-      const searchQuery = `${legislatorName} ${state} state legislator`;
-      const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(searchQuery)}&format=json&origin=*`;
+      // Build chamber-specific search terms
+      const chamberTerm = chamber === 'upper' ? 'state senator' : 'state representative';
 
-      const searchResponse = await fetch(searchUrl, {
-        headers: {
-          'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq)',
-        },
+      // Try multiple search strategies, from most specific to least
+      const searchStrategies = [
+        `"${legislatorName}" ${state} ${chamberTerm}`,
+        `"${legislatorName}" ${state} legislature`,
+        `"${legislatorName}" ${state} politician`,
+      ];
+
+      for (const searchQuery of searchStrategies) {
+        const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(searchQuery)}&format=json&origin=*`;
+
+        const searchResponse = await fetch(searchUrl, {
+          headers: {
+            'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq)',
+          },
+        });
+
+        if (!searchResponse.ok) continue;
+
+        const searchData = await searchResponse.json();
+        if (!searchData.query?.search?.[0]) continue;
+
+        const pageTitle = searchData.query.search[0].title;
+
+        // Fetch page summary
+        const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle)}`;
+        const summaryResponse = await fetch(summaryUrl, {
+          headers: {
+            'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq)',
+          },
+        });
+
+        if (!summaryResponse.ok) continue;
+
+        const summary = await summaryResponse.json();
+
+        // VALIDATION: Ensure the Wikipedia article is about the correct person
+        // Check if the summary mentions the state or state legislature context
+        const summaryText = (summary.extract || '').toLowerCase();
+        const stateLower = state.toLowerCase();
+
+        // State name mappings for validation
+        const stateNames: Record<string, string> = {
+          mi: 'michigan',
+          ca: 'california',
+          tx: 'texas',
+          ny: 'new york',
+          fl: 'florida',
+          pa: 'pennsylvania',
+          oh: 'ohio',
+          il: 'illinois',
+          ga: 'georgia',
+          nc: 'north carolina',
+          // Add more as needed
+        };
+        const fullStateName = stateNames[stateLower] || stateLower;
+
+        // Validation criteria: summary must mention the state AND be about a legislator/politician
+        const mentionsState =
+          summaryText.includes(stateLower) || summaryText.includes(fullStateName);
+        const isPolitician =
+          summaryText.includes('politician') ||
+          summaryText.includes('senator') ||
+          summaryText.includes('representative') ||
+          summaryText.includes('legislature') ||
+          summaryText.includes('lawmaker') ||
+          summaryText.includes('assemblymember') ||
+          summaryText.includes('elected');
+
+        if (mentionsState && isPolitician) {
+          logger.info('Validated Wikipedia match for state legislator', {
+            legislatorName,
+            state,
+            pageTitle,
+            mentionsState,
+            isPolitician,
+          });
+
+          return {
+            summary: summary.extract,
+            htmlSummary: summary.extract_html,
+            pageUrl: summary.content_urls.desktop.page,
+          };
+        } else {
+          logger.info('Wikipedia result validation failed, trying next strategy', {
+            legislatorName,
+            state,
+            pageTitle,
+            mentionsState,
+            isPolitician,
+            searchQuery,
+          });
+        }
+      }
+
+      // No valid match found
+      logger.info('No validated Wikipedia match found for state legislator', {
+        legislatorName,
+        state,
       });
-
-      if (!searchResponse.ok) return null;
-
-      const searchData = await searchResponse.json();
-      if (!searchData.query?.search?.[0]) return null;
-
-      const pageTitle = searchData.query.search[0].title;
-
-      // Fetch page summary
-      const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle)}`;
-      const summaryResponse = await fetch(summaryUrl, {
-        headers: {
-          'User-Agent': 'CivicIntelHub/1.0 (https://civ.iq)',
-        },
-      });
-
-      if (!summaryResponse.ok) return null;
-
-      const summary = await summaryResponse.json();
-
-      return {
-        summary: summary.extract,
-        htmlSummary: summary.extract_html,
-        pageUrl: summary.content_urls.desktop.page,
-      };
+      return null;
     } catch (error) {
       logger.warn('Failed to fetch Wikipedia data for state legislator', {
         error: error instanceof Error ? error.message : 'Unknown error',

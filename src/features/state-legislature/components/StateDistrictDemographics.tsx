@@ -16,16 +16,9 @@ interface StateDistrictDemographicsProps {
 export function StateDistrictDemographics({ legislator }: StateDistrictDemographicsProps) {
   const { demographics } = legislator;
 
-  // If no demographics data, show message
+  // If no demographics data, don't show the section at all
   if (!demographics || demographics.population === 0) {
-    return (
-      <div className="bg-white border-2 border-black p-6">
-        <h3 className="aicher-heading text-lg mb-4">District Demographics</h3>
-        <p className="text-sm text-gray-600">
-          Demographic data unavailable. Census API key may not be configured.
-        </p>
-      </div>
-    );
+    return null;
   }
 
   const {
@@ -87,7 +80,7 @@ export function StateDistrictDemographics({ legislator }: StateDistrictDemograph
         </div>
 
         <div className="text-center">
-          <GraduationCap className="w-5 h-5 text-purple-600 mx-auto mb-1" />
+          <GraduationCap className="w-5 h-5 text-civiq-blue mx-auto mb-1" />
           <div className="text-2xl font-bold text-gray-900">
             {formatPercent(bachelor_degree_percent)}
           </div>
@@ -101,7 +94,7 @@ export function StateDistrictDemographics({ legislator }: StateDistrictDemograph
         </div>
 
         <div className="text-center">
-          <TrendingUp className="w-5 h-5 text-orange-600 mx-auto mb-1" />
+          <TrendingUp className="w-5 h-5 text-civiq-red mx-auto mb-1" />
           <div className="text-2xl font-bold text-gray-900">{medianAge.toFixed(1)}</div>
           <div className="text-xs text-gray-600 uppercase tracking-wide">Median Age</div>
           <ComparisonIndicator
