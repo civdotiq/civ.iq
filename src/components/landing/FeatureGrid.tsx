@@ -88,9 +88,14 @@ const features: Feature[] = [
 export default function FeatureGrid() {
   return (
     <section className="max-w-6xl mx-auto px-grid-2 sm:px-grid-3 py-grid-6 sm:py-grid-8">
+      {/* Accent Banner - Tier 1 high impact */}
+      <div className="accent-banner mb-grid-6 sm:mb-grid-8">
+        <span>Who Represents You?</span>
+      </div>
+
       <div className="mb-grid-4 sm:mb-grid-6 text-center">
-        <h2 className="text-2xl sm:text-4xl font-bold text-black aicher-heading mb-grid-2">
-          WHAT YOU CAN DO
+        <h2 className="accent-display text-2xl sm:text-4xl text-black mb-grid-2">
+          What You Can Do
         </h2>
         <p className="text-sm sm:text-lg text-gray-600 max-w-2xl mx-auto">
           Explore federal and state government data from official sources
@@ -120,7 +125,7 @@ export default function FeatureGrid() {
                 {feature.description}
               </p>
               {feature.stat && (
-                <div className="text-xs font-bold text-gray-900 border-t border-gray-200 pt-grid-1 mt-auto">
+                <div className="text-xs font-bold text-civiq-blue border-t border-gray-200 pt-grid-1 mt-auto accent-bold">
                   {feature.stat}
                 </div>
               )}

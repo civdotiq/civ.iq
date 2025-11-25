@@ -90,7 +90,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">
-              <h1 className="text-3xl font-bold text-gray-900">{bill.number}</h1>
+              <h1 className="text-3xl accent-title-underline text-gray-900">{bill.number}</h1>
               <span
                 className={`px-3 py-1 text-sm font-medium rounded-full ${getBillStatusColor(bill.status.current)}`}
               >

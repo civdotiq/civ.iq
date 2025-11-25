@@ -1250,3 +1250,268 @@ body {
 .border-aicher-blue-cool {
   border-color: var(--aicher-blue-cool);
 }
+
+/* ═══════════════════════════════════════════════════════════ */
+/* KRUGER-INSPIRED ACCENTS - Tiered Impact System              */
+/* Inspired by bold graphic design, adapted to CIV.IQ brand    */
+/* ═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* Kruger-inspired variables - using CIV.IQ colors */
+  --accent-stripe-angle: -2deg;
+  --accent-tracking-tight: -0.02em;
+  --accent-tracking-ultra: -0.04em;
+}
+
+/* ─────────────────────────────────────────────────────────── */
+/* TIER 1: HIGH IMPACT - Landing pages, hero sections          */
+/* ─────────────────────────────────────────────────────────── */
+
+/* Highlight box - bold text on brand color background */
+.accent-highlight {
+  display: inline-block;
+  padding: calc(var(--grid) * 1) calc(var(--grid) * 2);
+  background: var(--aicher-red);
+  color: white;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: var(--accent-tracking-tight);
+  text-transform: uppercase;
+}
+
+.accent-highlight-green {
+  background: var(--aicher-green);
+}
+
+.accent-highlight-blue {
+  background: var(--aicher-blue);
+}
+
+/* Diagonal banner stripe - section dividers */
+.accent-banner {
+  position: relative;
+  padding: calc(var(--grid) * 2) calc(var(--grid) * 4);
+  background: var(--aicher-red);
+  color: white;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: var(--accent-tracking-tight);
+  text-transform: uppercase;
+  text-align: center;
+  transform: skewY(var(--accent-stripe-angle));
+  margin: calc(var(--grid) * 4) calc(var(--grid) * -4);
+}
+
+.accent-banner > * {
+  transform: skewY(calc(var(--accent-stripe-angle) * -1));
+}
+
+.accent-banner-green {
+  background: var(--aicher-green);
+}
+
+.accent-banner-blue {
+  background: var(--aicher-blue);
+}
+
+/* Bold display heading - tight tracking, max impact */
+.accent-display {
+  font-weight: 900;
+  letter-spacing: var(--accent-tracking-ultra);
+  text-transform: uppercase;
+  line-height: 0.95;
+}
+
+/* Primary CTA - high contrast, demands action */
+.accent-cta {
+  display: inline-block;
+  padding: calc(var(--grid) * 2) calc(var(--grid) * 4);
+  background: var(--aicher-red);
+  color: white;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition:
+    transform var(--duration-default) var(--timing-aicher),
+    background-color var(--duration-default) var(--timing-aicher);
+}
+
+.accent-cta:hover {
+  background: var(--aicher-red-hover);
+  transform: translateY(-2px);
+}
+
+.accent-cta:active {
+  transform: translateY(0);
+}
+
+.accent-cta-green {
+  background: var(--aicher-green);
+}
+
+.accent-cta-green:hover {
+  background: var(--aicher-green-hover);
+}
+
+.accent-cta-blue {
+  background: var(--aicher-blue);
+}
+
+.accent-cta-blue:hover {
+  background: var(--aicher-blue-hover);
+}
+
+/* ─────────────────────────────────────────────────────────── */
+/* TIER 2: MEDIUM IMPACT - Section headers, index pages        */
+/* ─────────────────────────────────────────────────────────── */
+
+/* Section header with bold left accent */
+.accent-section-header {
+  position: relative;
+  padding-left: calc(var(--grid) * 2);
+  font-weight: 700;
+  letter-spacing: var(--accent-tracking-tight);
+  text-transform: uppercase;
+}
+
+.accent-section-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--aicher-red);
+}
+
+.accent-section-header-green::before {
+  background: var(--aicher-green);
+}
+
+.accent-section-header-blue::before {
+  background: var(--aicher-blue);
+}
+
+/* Condensed heading - tighter, bolder */
+.accent-heading {
+  font-weight: 700;
+  letter-spacing: var(--accent-tracking-tight);
+  text-transform: uppercase;
+}
+
+/* Card with top accent stripe */
+.accent-card-stripe {
+  position: relative;
+  border: 2px solid #000000;
+  background: white;
+}
+
+.accent-card-stripe::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--aicher-red);
+}
+
+.accent-card-stripe-green::before {
+  background: var(--aicher-green);
+}
+
+.accent-card-stripe-blue::before {
+  background: var(--aicher-blue);
+}
+
+/* ─────────────────────────────────────────────────────────── */
+/* TIER 3: LOW IMPACT - Detail pages, subtle accents           */
+/* ─────────────────────────────────────────────────────────── */
+
+/* Page title with underline accent */
+.accent-title-underline {
+  position: relative;
+  display: inline-block;
+  font-weight: 700;
+  letter-spacing: var(--accent-tracking-tight);
+}
+
+.accent-title-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 48px;
+  height: 3px;
+  background: var(--aicher-red);
+}
+
+.accent-title-underline-green::after {
+  background: var(--aicher-green);
+}
+
+.accent-title-underline-blue::after {
+  background: var(--aicher-blue);
+}
+
+/* Subtle link with bold hover */
+.accent-link {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--duration-default) var(--timing-aicher);
+}
+
+.accent-link:hover {
+  color: var(--aicher-red);
+}
+
+/* Inline emphasis - bold without color */
+.accent-bold {
+  font-weight: 700;
+  letter-spacing: var(--accent-tracking-tight);
+}
+
+/* ─────────────────────────────────────────────────────────── */
+/* MOBILE RESPONSIVE ADJUSTMENTS                               */
+/* ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  :root {
+    /* Reduce angle on mobile for better fit */
+    --accent-stripe-angle: -1deg;
+  }
+
+  /* Banner adjusts for mobile */
+  .accent-banner {
+    padding: calc(var(--grid) * 1.5) calc(var(--grid) * 2);
+    margin: calc(var(--grid) * 3) calc(var(--grid) * -2);
+    font-size: var(--type-sm);
+  }
+
+  /* Highlight box scales down */
+  .accent-highlight {
+    padding: calc(var(--grid) * 0.75) calc(var(--grid) * 1.5);
+    font-size: var(--type-sm);
+  }
+
+  /* CTA maintains touch target */
+  .accent-cta {
+    padding: calc(var(--grid) * 1.5) calc(var(--grid) * 3);
+    min-height: 44px;
+    font-size: var(--type-sm);
+  }
+
+  /* Section header - smaller accent bar */
+  .accent-section-header::before {
+    width: 3px;
+  }
+
+  /* Card stripe - thinner on mobile */
+  .accent-card-stripe::before {
+    height: 3px;
+  }
+}

@@ -28,8 +28,11 @@ export default function HomePage() {
                 CIV.IQ
               </div>
             </div>
-            <h1 className="text-xl font-bold text-black sm:text-5xl lg:text-6xl mb-grid-1 sm:mb-grid-4 lg:mb-grid-6 aicher-heading leading-tight">
-              Know Your Representatives
+            <h1 className="text-xl sm:text-5xl lg:text-6xl mb-grid-1 sm:mb-grid-4 lg:mb-grid-6 leading-tight">
+              <span className="accent-display text-black block">Know Your</span>
+              <span className="accent-highlight text-2xl sm:text-5xl lg:text-6xl">
+                Representatives
+              </span>
             </h1>
             <p className="text-xs sm:text-xl text-gray-600 max-w-2xl mx-auto px-grid-1 sm:px-0">
               Connect with your federal representatives through real government data from

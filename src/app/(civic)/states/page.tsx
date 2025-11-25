@@ -483,7 +483,10 @@ export default function StatesPage() {
       {/* Main Content */}
       <main className="min-h-screen pt-24 px-4 pb-16 bg-white">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-bold text-center mb-8">U.S. States & Territories</h1>
+          {/* Page header - Tier 2 medium impact */}
+          <h1 className="accent-section-header-blue text-4xl text-center mb-8">
+            U.S. States & Territories
+          </h1>
 
           <p className="text-xl text-gray-600 text-center max-w-3xl mx-auto mb-12">
             Explore representation across all 50 states. Each state has 2 senators and a varying
@@ -548,8 +551,8 @@ export default function StatesPage() {
           </div>
 
           {/* Summary Stats */}
-          <div className="mt-16 bg-white border-2 border-black p-8">
-            <h2 className="text-2xl font-semibold mb-6 text-center">U.S. Congress Composition</h2>
+          <div className="mt-16 accent-card-stripe-blue p-8">
+            <h2 className="accent-heading text-2xl mb-6 text-center">U.S. Congress Composition</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
               <div>
                 <p className="text-4xl font-bold text-civiq-red">100</p>

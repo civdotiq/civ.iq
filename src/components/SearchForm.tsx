@@ -230,7 +230,7 @@ export default function SearchForm() {
           <button
             type="submit"
             disabled={!searchInput.trim() || isLoading}
-            className="absolute inset-y-0 right-0 flex items-center px-grid-2 sm:px-grid-3 text-white bg-civiq-blue hover:bg-civiq-green disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors aicher-heading text-xs sm:text-base border-l-2 border-black"
+            className="absolute inset-y-0 right-0 flex items-center px-grid-2 sm:px-grid-4 text-white bg-civiq-red hover:bg-civiq-red-hover disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-bold text-xs sm:text-base border-l-2 border-black tracking-wide uppercase"
           >
             {isLoading ? (
               <div className="animate-spin h-4 sm:h-5 w-4 sm:w-5 border-2 border-white border-t-transparent"></div>

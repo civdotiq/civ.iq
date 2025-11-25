@@ -150,9 +150,9 @@ export default function DistrictsPage() {
       </header>
 
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
-        {/* Page header */}
+        {/* Page header - Tier 2 medium impact */}
         <div className="mb-4 sm:mb-8">
-          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2 sm:mb-3">
+          <h1 className="accent-section-header text-2xl sm:text-4xl text-gray-900 mb-2 sm:mb-3">
             Congressional Districts
           </h1>
           <p className="text-sm sm:text-xl text-gray-600">
@@ -342,7 +342,7 @@ export default function DistrictsPage() {
 
             {/* District grid */}
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <h2 className="accent-heading text-2xl text-gray-900 mb-4">
                 {filteredDistricts.length} Districts
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

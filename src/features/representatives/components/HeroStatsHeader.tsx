@@ -164,7 +164,10 @@ export function HeroStatsHeader({
               />
             </div>
 
-            <p data-testid="representative-state" className="profile-hero-title mb-4">
+            <p
+              data-testid="representative-state"
+              className="profile-hero-title accent-title-underline-blue mb-6"
+            >
               {getTitle()}
             </p>
 
