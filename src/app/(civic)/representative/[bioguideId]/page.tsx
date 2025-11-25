@@ -221,7 +221,7 @@ export default async function RepresentativeProfilePage({
     <>
       <SiteHeader />
 
-      <main id="main-content">
+      <main id="main-content" className="density-default">
         <div className="container mx-auto px-grid-2 md:px-grid-4 py-grid-3">
           <BreadcrumbsWithContext items={breadcrumbItems} className="mb-grid-3" />
         </div>

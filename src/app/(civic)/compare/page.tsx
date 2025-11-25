@@ -187,7 +187,7 @@ export default function ComparePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 density-compact">
       <SiteHeader />
       <ComparisonHeader
         selectedReps={selectedRepresentatives.map(rep => ({

@@ -50,7 +50,7 @@ function CiviqLogo() {
 
 export default function SearchPage() {
   return (
-    <div className="min-h-screen aicher-background">
+    <div className="min-h-screen aicher-background density-compact">
       {/* Header */}
       <header className="aicher-card aicher-no-radius sticky top-0 z-20">
         <div className="container mx-auto px-4 py-4">

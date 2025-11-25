@@ -176,7 +176,7 @@ export default function DistrictPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white density-default">
       {/* Header */}
       <header className="bg-white border-2 border-black border-b border-gray-100">
         <div className="container mx-auto px-4 py-4">

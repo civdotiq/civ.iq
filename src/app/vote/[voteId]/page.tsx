@@ -180,7 +180,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
   };
 
   return (
-    <div className="min-h-screen aicher-background py-8">
+    <div className="min-h-screen aicher-background density-detailed py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Breadcrumb navigation */}
         {fromBioguideId && fromRepName ? (
