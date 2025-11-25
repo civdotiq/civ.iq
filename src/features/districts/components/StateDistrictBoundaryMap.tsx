@@ -189,6 +189,13 @@ export default function StateDistrictBoundaryMap({
             // MapLibre GL handles lazy loading of tiles automatically - no need to wait
             // for sourcedata event which is unreliable with PMTiles sources
 
+            logger.info('[StateDistrictBoundaryMap] Adding layers with filters', {
+              layerName,
+              districtId,
+              stateCode,
+              chamber,
+            });
+
             // Add neighboring districts layer (light gray outlines)
             map.current.addLayer({
               id: 'neighboring-districts',
@@ -269,6 +276,70 @@ export default function StateDistrictBoundaryMap({
             map.current.on('mouseleave', 'neighboring-districts', () => {
               if (map.current) {
                 map.current.getCanvas().style.cursor = '';
+              }
+            });
+
+            // Debug: Log all features from the layer when map is idle
+            map.current.once('idle', () => {
+              if (!map.current) return;
+
+              // Query ALL features in the source layer (no filter) to see what's there
+              const allFeatures = map.current.querySourceFeatures('state-districts', {
+                sourceLayer: layerName,
+              });
+
+              // Query features for this state
+              const stateFeatures = map.current.querySourceFeatures('state-districts', {
+                sourceLayer: layerName,
+                filter: ['==', ['get', 'state_code'], stateCode],
+              });
+
+              // Get unique IDs from state features
+              const stateIdSet = new Set<string>();
+              stateFeatures.forEach((f: { properties?: { id?: string } }) => {
+                const id = f.properties?.id;
+                if (typeof id === 'string') {
+                  stateIdSet.add(id);
+                }
+              });
+              const stateDistrictIds: string[] = Array.from(stateIdSet);
+
+              // Check if our target district exists
+              const targetExists = stateDistrictIds.includes(districtId);
+
+              // Find matches containing the district number
+              const districtNumMatches = stateDistrictIds.filter((id: string) =>
+                id.includes(`-${districtId.split('-').pop()}`)
+              );
+
+              logger.info('[StateDistrictBoundaryMap] Debug - Features analysis', {
+                layerName,
+                stateCode,
+                districtId,
+                allFeaturesCount: allFeatures.length,
+                stateFeaturesCount: stateFeatures.length,
+                targetDistrictExists: targetExists,
+                sampleStateIds: stateDistrictIds.slice(0, 10),
+                districtNumMatches,
+              });
+
+              // If target doesn't exist, log what's in the viewport
+              if (!targetExists && allFeatures.length > 0) {
+                const allIdSet = new Set<string>();
+                allFeatures.forEach((f: { properties?: { id?: string } }) => {
+                  const id = f.properties?.id;
+                  if (typeof id === 'string') {
+                    allIdSet.add(id);
+                  }
+                });
+                const allIds: string[] = Array.from(allIdSet);
+                logger.warn(
+                  '[StateDistrictBoundaryMap] Target district NOT FOUND in loaded tiles',
+                  {
+                    districtId,
+                    availableInViewport: allIds.slice(0, 20),
+                  }
+                );
               }
             });
 
