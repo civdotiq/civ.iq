@@ -214,13 +214,23 @@ export default function StateDistrictBoundaryMap({
               },
             });
 
+            // Build filter for current district
+            // Use composite filter matching state_code, chamber, and district_num
+            // This is more robust than relying solely on the 'id' property
+            const currentDistrictFilter = [
+              'all',
+              ['==', ['get', 'state_code'], stateCode],
+              ['==', ['get', 'chamber'], chamber],
+              ['==', ['get', 'district_num'], district],
+            ];
+
             // Add current district layer (highlighted fill)
             map.current.addLayer({
               id: 'district-fill',
               type: 'fill',
               source: 'state-districts',
               'source-layer': layerName,
-              filter: ['==', ['get', 'id'], districtId],
+              filter: currentDistrictFilter,
               paint: {
                 'fill-color': '#3b82f6',
                 'fill-opacity': 0.3,
@@ -233,7 +243,7 @@ export default function StateDistrictBoundaryMap({
               type: 'line',
               source: 'state-districts',
               'source-layer': layerName,
-              filter: ['==', ['get', 'id'], districtId],
+              filter: currentDistrictFilter,
               paint: {
                 'line-color': '#1e40af',
                 'line-width': 3,
@@ -365,7 +375,7 @@ export default function StateDistrictBoundaryMap({
         setLoading(false);
       }
     },
-    [chamber, stateCode, mapContainer, isMobile, pmtilesFile, slowConnection]
+    [chamber, stateCode, district, mapContainer, isMobile, pmtilesFile, slowConnection]
   );
 
   useEffect(() => {
