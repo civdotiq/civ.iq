@@ -201,6 +201,7 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
           return (
             <BillsTab
               bioguideId={representative.bioguideId}
+              representativeName={representative.name}
               sharedData={batchData?.data?.bills}
               sharedLoading={batchLoading}
               sharedError={batchError}

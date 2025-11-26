@@ -14,11 +14,14 @@ import { getCommitteeName, COMMITTEE_INFO } from '@/lib/data/committee-names';
 interface CommitteeMembershipsCardProps {
   representative: EnhancedRepresentative;
   className?: string;
+  /** Include back-navigation params in committee links */
+  includeBackNavigation?: boolean;
 }
 
 export function CommitteeMembershipsCard({
   representative,
   className = '',
+  includeBackNavigation = true,
 }: CommitteeMembershipsCardProps) {
   // Memoize committees to prevent unnecessary re-renders
   const committees = React.useMemo(
@@ -79,7 +82,11 @@ export function CommitteeMembershipsCard({
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <h4 className="aicher-heading text-base flex-1">
                     <Link
-                      href={`/committee/${committee.thomas_id}`}
+                      href={
+                        includeBackNavigation
+                          ? `/committee/${committee.thomas_id}?from=${representative.bioguideId}&name=${encodeURIComponent(representative.name)}`
+                          : `/committee/${committee.thomas_id}`
+                      }
                       className="text-civiq-blue hover:text-black transition-colors"
                     >
                       {committee.name}

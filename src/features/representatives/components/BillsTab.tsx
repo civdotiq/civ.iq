@@ -39,13 +39,14 @@ interface BillsResponse {
 
 interface BillsTabProps {
   bioguideId: string;
+  representativeName?: string;
   sharedData?: BillsResponse;
   sharedLoading?: boolean;
   sharedError?: Error | null;
 }
 
 export const BillsTab = React.memo(
-  ({ bioguideId, sharedData, sharedLoading, sharedError }: BillsTabProps) => {
+  ({ bioguideId, representativeName, sharedData, sharedLoading, sharedError }: BillsTabProps) => {
     // Use shared data if available, otherwise fetch individually using direct bills endpoint
     // Only skip individual fetch if we have sharedData OR sharedLoading is true (batch is in progress)
     // If batch failed (sharedError), we should fetch individually
@@ -462,7 +463,11 @@ export const BillsTab = React.memo(
                   )}
                   {canLinkToBill(bill) ? (
                     <Link
-                      href={`/bill/${getBillId(bill)}`}
+                      href={
+                        representativeName
+                          ? `/bill/${getBillId(bill)}?from=${bioguideId}&name=${encodeURIComponent(representativeName)}`
+                          : `/bill/${getBillId(bill)}`
+                      }
                       className="text-blue-600 hover:text-blue-800 hover:underline"
                     >
                       {bill.number}: {bill.title}
