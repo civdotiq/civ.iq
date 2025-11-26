@@ -1,0 +1,33 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#ffffff"/>
+
+  <!-- Accent bar at top -->
+  <rect x="0" y="0" width="1200" height="8" fill="#e11d07"/>
+
+  <!-- Logo elements (scaled up) -->
+  <g transform="translate(100, 180)">
+    <!-- Red circle -->
+    <circle cx="80" cy="120" r="70" fill="#e11d07" opacity="0.95"/>
+    <!-- Green rectangle -->
+    <rect x="160" y="85" width="70" height="55" fill="#0b983c" opacity="0.95"/>
+    <!-- Blue line -->
+    <rect x="130" y="200" width="100" height="12" fill="#3ea2d4" opacity="0.95"/>
+  </g>
+
+  <!-- Main title -->
+  <text x="380" y="260" font-family="system-ui, -apple-system, sans-serif" font-size="120" font-weight="bold" fill="#1a1a1a">CIV.IQ</text>
+
+  <!-- Tagline -->
+  <text x="380" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="600" fill="#4a4a4a">Who Represents You?</text>
+
+  <!-- Description -->
+  <text x="380" y="420" font-family="system-ui, -apple-system, sans-serif" font-size="28" fill="#666666">Find your federal, state, and local representatives.</text>
+  <text x="380" y="460" font-family="system-ui, -apple-system, sans-serif" font-size="28" fill="#666666">Track bills, votes, and campaign finance.</text>
+
+  <!-- URL -->
+  <text x="380" y="540" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="600" fill="#3ea2d4">civdotiq.org</text>
+
+  <!-- Bottom accent -->
+  <rect x="0" y="622" width="1200" height="8" fill="#0b983c"/>
+</svg>
