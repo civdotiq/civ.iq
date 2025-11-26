@@ -75,6 +75,7 @@ interface V3Bill {
   id: string;
   identifier: string;
   title: string;
+  session: string;
   classification: string[];
   subject: string[];
   abstracts: Array<{
@@ -86,6 +87,11 @@ interface V3Bill {
     name: string;
     classification: string;
   } | null;
+  jurisdiction: {
+    id: string;
+    name: string;
+    classification: string;
+  };
   sponsorships: Array<{
     id: string;
     name: string;
@@ -113,6 +119,44 @@ interface V3Bill {
     url: string;
     note: string | null;
   }>;
+  // Bill text versions (introduced, amended, enrolled, etc.)
+  versions: Array<{
+    url: string;
+    note: string | null;
+    date: string | null;
+    media_type: string | null;
+  }>;
+  // Supporting documents (fiscal notes, amendments, analyses)
+  documents: Array<{
+    url: string;
+    note: string | null;
+    date: string | null;
+    media_type: string | null;
+  }>;
+  // Related legislation
+  related_bills: Array<{
+    identifier: string;
+    legislative_session: string;
+    relation_type: string;
+  }>;
+  // Alternative titles
+  other_titles: Array<{
+    title: string;
+    note: string | null;
+  }>;
+  // Cross-references (e.g., state-specific IDs)
+  other_identifiers: Array<{
+    identifier: string;
+    scheme: string;
+    note: string | null;
+  }>;
+  // Key dates
+  first_action_date: string | null;
+  latest_action_date: string | null;
+  latest_action_description: string | null;
+  latest_passage_date: string | null;
+  // State-specific extra data
+  extras: Record<string, unknown>;
   openstates_url: string;
   created_at: string;
   updated_at: string;
@@ -130,6 +174,11 @@ export interface OpenStatesLegislator {
   email?: string;
   phone?: string;
   links?: Array<{ url: string; note?: string }>;
+  // External profile links (BallotPedia, VoteSmart, etc.)
+  other_identifiers?: Array<{
+    scheme: string; // e.g., 'ballotpedia', 'votesmart', 'twitter', 'facebook'
+    identifier: string; // e.g., username or ID
+  }>;
   extras?: Record<string, unknown>;
 }
 
@@ -137,6 +186,7 @@ export interface OpenStatesBill {
   id: string;
   identifier: string;
   title: string;
+  session?: string;
   chamber?: 'upper' | 'lower';
   classification?: string[];
   subject?: string[];
@@ -163,6 +213,35 @@ export interface OpenStatesBill {
     counts: Array<{ option: string; value: number }>;
   }>;
   sources?: Array<{ url: string; note?: string }>;
+  // Bill text versions (introduced, amended, enrolled, etc.)
+  versions?: Array<{
+    url: string;
+    note?: string;
+    date?: string;
+    media_type?: string;
+  }>;
+  // Supporting documents (fiscal notes, amendments, analyses)
+  documents?: Array<{
+    url: string;
+    note?: string;
+    date?: string;
+    media_type?: string;
+  }>;
+  // Related legislation
+  related_bills?: Array<{
+    identifier: string;
+    legislative_session: string;
+    relation_type: string;
+  }>;
+  // Key dates
+  first_action_date?: string;
+  latest_action_date?: string;
+  latest_action_description?: string;
+  latest_passage_date?: string;
+  // Direct link to OpenStates page
+  openstates_url?: string;
+  // State-specific extra data
+  extras?: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
 }
@@ -602,6 +681,11 @@ class OpenStatesAPI {
         url: link.url,
         note: link.note ?? undefined,
       })),
+      // External profile identifiers (BallotPedia, VoteSmart, Twitter, etc.)
+      other_identifiers: person.other_identifiers?.map(oi => ({
+        scheme: oi.scheme,
+        identifier: oi.identifier,
+      })),
       extras: person.extras,
     };
   }
@@ -649,13 +733,15 @@ class OpenStatesAPI {
    * @param chamber - Optional chamber filter
    * @param subject - Optional subject filter
    * @param limit - Maximum number of bills to return
+   * @param query - Optional full-text search query (searches bill title and text)
    */
   async getBills(
     state: string,
     session?: string,
     chamber?: 'upper' | 'lower',
     subject?: string,
-    limit = 50
+    limit = 50,
+    query?: string
   ): Promise<OpenStatesBill[]> {
     const jurisdiction = state.toLowerCase();
 
@@ -666,6 +752,7 @@ class OpenStatesAPI {
 
     if (session) params.session = session;
     if (subject) params.subject = subject;
+    if (query) params.q = query; // OpenStates full-text search parameter
 
     const response = await this.makeRequest<V3PaginatedResponse<V3Bill>>('/bills', params);
 
@@ -736,6 +823,7 @@ class OpenStatesAPI {
       id: bill.id,
       identifier: bill.identifier,
       title: bill.title,
+      session: bill.session,
       chamber,
       classification: bill.classification,
       subject: bill.subject,
@@ -770,6 +858,38 @@ class OpenStatesAPI {
           url: source.url,
           note: source.note ?? undefined,
         })) ?? [],
+      // Bill text versions (links to full bill text)
+      versions:
+        bill.versions?.map(v => ({
+          url: v.url,
+          note: v.note ?? undefined,
+          date: v.date ?? undefined,
+          media_type: v.media_type ?? undefined,
+        })) ?? [],
+      // Supporting documents (fiscal notes, amendments, analyses)
+      documents:
+        bill.documents?.map(d => ({
+          url: d.url,
+          note: d.note ?? undefined,
+          date: d.date ?? undefined,
+          media_type: d.media_type ?? undefined,
+        })) ?? [],
+      // Related legislation
+      related_bills:
+        bill.related_bills?.map(rb => ({
+          identifier: rb.identifier,
+          legislative_session: rb.legislative_session,
+          relation_type: rb.relation_type,
+        })) ?? [],
+      // Key dates for tracking bill progress
+      first_action_date: bill.first_action_date ?? undefined,
+      latest_action_date: bill.latest_action_date ?? undefined,
+      latest_action_description: bill.latest_action_description ?? undefined,
+      latest_passage_date: bill.latest_passage_date ?? undefined,
+      // Direct link to OpenStates page
+      openstates_url: bill.openstates_url,
+      // State-specific extra data
+      extras: bill.extras,
       created_at: bill.created_at,
       updated_at: bill.updated_at,
     };

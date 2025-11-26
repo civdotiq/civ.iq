@@ -354,9 +354,20 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                       </div>
                     </div>
                   ))}
+                  {/* API coverage note */}
+                  <p className="text-xs text-gray-500 mt-4 pt-3 border-t border-gray-200">
+                    Committee data sourced from OpenStates. Coverage varies by state (~30-70%
+                    completeness).
+                  </p>
                 </div>
               ) : (
-                <p className="text-gray-600">No committee information available.</p>
+                <div>
+                  <p className="text-gray-600 mb-3">No committee information available.</p>
+                  <p className="text-xs text-gray-500 bg-gray-50 p-3 border border-gray-200">
+                    Note: State committee data coverage varies by state. The OpenStates API provides
+                    approximately 30-70% committee assignment coverage depending on the state.
+                  </p>
+                </div>
               )}
             </div>
           )}
@@ -483,7 +494,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                 )}
 
               {legislator.links && legislator.links.length > 0 && (
-                <div>
+                <div className="mb-6">
                   <h3 className="aicher-section-label mb-3 flex items-center gap-2 text-civiq-red">
                     <ExternalLink className="w-4 h-4" />
                     Online
@@ -502,6 +513,81 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                         </a>
                       </p>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* External Profile Links from OpenStates (BallotPedia, VoteSmart, etc.) */}
+              {legislator.other_identifiers && legislator.other_identifiers.length > 0 && (
+                <div>
+                  <h3 className="aicher-section-label mb-3 flex items-center gap-2 text-civiq-green">
+                    <ExternalLink className="w-4 h-4" />
+                    External Profiles
+                  </h3>
+                  <div className="bg-gray-50 border-2 border-gray-300 p-4">
+                    <div className="flex flex-wrap gap-2">
+                      {legislator.other_identifiers.map((profile, index) => {
+                        // Build URL based on scheme
+                        let url = '';
+                        let displayName = profile.scheme;
+
+                        switch (profile.scheme.toLowerCase()) {
+                          case 'ballotpedia':
+                            url = `https://ballotpedia.org/${profile.identifier.replace(/ /g, '_')}`;
+                            displayName = 'Ballotpedia';
+                            break;
+                          case 'votesmart':
+                            url = `https://justfacts.votesmart.org/candidate/${profile.identifier}`;
+                            displayName = 'VoteSmart';
+                            break;
+                          case 'twitter':
+                            url = `https://twitter.com/${profile.identifier}`;
+                            displayName = 'Twitter/X';
+                            break;
+                          case 'facebook':
+                            url = `https://facebook.com/${profile.identifier}`;
+                            displayName = 'Facebook';
+                            break;
+                          case 'instagram':
+                            url = `https://instagram.com/${profile.identifier}`;
+                            displayName = 'Instagram';
+                            break;
+                          case 'linkedin':
+                            url = `https://linkedin.com/in/${profile.identifier}`;
+                            displayName = 'LinkedIn';
+                            break;
+                          case 'youtube':
+                            url = `https://youtube.com/${profile.identifier}`;
+                            displayName = 'YouTube';
+                            break;
+                          default:
+                            // For unknown schemes, capitalize first letter
+                            displayName =
+                              profile.scheme.charAt(0).toUpperCase() + profile.scheme.slice(1);
+                            break;
+                        }
+
+                        return url ? (
+                          <a
+                            key={index}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-3 py-2 bg-white border-2 border-black text-sm font-bold hover:bg-gray-100 transition-colors"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            {displayName}
+                          </a>
+                        ) : (
+                          <span
+                            key={index}
+                            className="inline-flex items-center gap-1 px-3 py-2 bg-white border-2 border-gray-300 text-sm"
+                          >
+                            {displayName}: {profile.identifier}
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               )}

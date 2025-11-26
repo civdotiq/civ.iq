@@ -98,6 +98,8 @@ export class StateLegislatureCoreService {
         },
       ],
       links: osLegislator.links,
+      // External profile identifiers (BallotPedia, VoteSmart, Twitter, etc.)
+      other_identifiers: osLegislator.other_identifiers,
       extras: osLegislator.extras,
       metadata: {
         lastUpdated: new Date().toISOString(),
@@ -159,7 +161,7 @@ export class StateLegislatureCoreService {
       subject: osBill.subject ?? [],
       chamber: (osBill.chamber ?? 'lower') as StateChamber,
       from_organization: '', // v3 API doesn't provide from_organization in simplified format
-      session: '', // OpenStates doesn't always return session in bill object
+      session: osBill.session ?? '', // Session identifier from API
       state: state.toUpperCase(),
       sponsorships:
         osBill.sponsorships?.map(s => ({
@@ -189,7 +191,36 @@ export class StateLegislatureCoreService {
         })),
       })),
       sources: osBill.sources ?? [],
-      extras: undefined, // v3 API doesn't provide extras in simplified format
+      // Bill text versions (links to full bill text)
+      versions:
+        osBill.versions?.map(v => ({
+          url: v.url,
+          note: v.note,
+          date: v.date,
+          media_type: v.media_type,
+        })) ?? [],
+      // Supporting documents (fiscal notes, amendments, analyses)
+      documents:
+        osBill.documents?.map(d => ({
+          url: d.url,
+          note: d.note,
+          date: d.date,
+          media_type: d.media_type,
+        })) ?? [],
+      // Related legislation
+      related_bills: osBill.related_bills ?? [],
+      // Direct link to OpenStates page
+      openstates_url: osBill.openstates_url,
+      // Key dates
+      first_action_date: osBill.first_action_date,
+      latest_action_date: osBill.latest_action_date,
+      latest_action_description: osBill.latest_action_description,
+      latest_passage_date: osBill.latest_passage_date,
+      // State-specific extra data
+      extras: osBill.extras,
+      // Timestamps
+      created_at: osBill.created_at,
+      updated_at: osBill.updated_at,
     };
   }
 
@@ -587,13 +618,43 @@ export class StateLegislatureCoreService {
               true // include memberships
             );
 
+            // Helper to normalize names for comparison
+            // Handles variations like "Helena Scott" vs "Scott, Helena"
+            const normalizeName = (name: string): string => {
+              return name
+                .toLowerCase()
+                .replace(/[^a-z\s]/g, '') // Remove non-letters except spaces
+                .split(/\s+/) // Split on whitespace
+                .sort() // Sort alphabetically so "Helena Scott" = "Scott Helena"
+                .join(' ')
+                .trim();
+            };
+
+            const legislatorNameNormalized = normalizeName(legislator.name);
+
             // Filter to committees where this legislator is a member
+            // OpenStates v3 API often doesn't provide person_id in memberships,
+            // so we match by normalized name as a fallback
             const legislatorCommittees = allCommittees
               .filter(committee =>
-                committee.memberships?.some(member => member.person_id === legislatorId)
+                committee.memberships?.some(member => {
+                  // Try person_id first (if available)
+                  if (member.person_id && member.person_id === legislatorId) {
+                    return true;
+                  }
+                  // Fall back to name matching
+                  const memberNameNormalized = normalizeName(member.person_name);
+                  return memberNameNormalized === legislatorNameNormalized;
+                })
               )
               .map(committee => {
-                const membership = committee.memberships?.find(m => m.person_id === legislatorId);
+                // Find the membership for this legislator
+                const membership = committee.memberships?.find(m => {
+                  if (m.person_id && m.person_id === legislatorId) {
+                    return true;
+                  }
+                  return normalizeName(m.person_name) === legislatorNameNormalized;
+                });
                 return {
                   id: committee.id,
                   name: committee.name,

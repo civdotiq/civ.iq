@@ -173,6 +173,12 @@ export interface EnhancedStateLegislator extends BaseStateLegislator {
     legiscan?: string;
   };
 
+  // External profile identifiers from OpenStates (BallotPedia, VoteSmart, Twitter, etc.)
+  other_identifiers?: Array<{
+    scheme: string; // e.g., 'ballotpedia', 'votesmart', 'twitter', 'facebook'
+    identifier: string; // e.g., username or ID
+  }>;
+
   // District demographics from Census ACS API
   demographics?: {
     population: number;
@@ -394,12 +400,31 @@ export interface StateBill {
     note?: string;
   }>;
 
-  // Full text links
+  // Full text links (bill versions)
   versions?: Array<{
     url: string;
     note?: string; // e.g., "Introduced", "Amended", "Enrolled"
     date?: string;
+    media_type?: string;
   }>;
+
+  // Supporting documents (fiscal notes, amendments, analyses)
+  documents?: Array<{
+    url: string;
+    note?: string;
+    date?: string;
+    media_type?: string;
+  }>;
+
+  // Related legislation
+  related_bills?: Array<{
+    identifier: string;
+    legislative_session: string;
+    relation_type: string;
+  }>;
+
+  // Direct link to OpenStates page
+  openstates_url?: string;
 
   // Additional metadata
   extras?: Record<string, unknown>;
@@ -409,6 +434,8 @@ export interface StateBill {
   updated_at?: string;
   first_action_date?: string;
   latest_action_date?: string;
+  latest_action_description?: string;
+  latest_passage_date?: string;
 }
 
 /**
