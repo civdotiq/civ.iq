@@ -58,42 +58,6 @@ export default function HomePage() {
 
       {/* Quick Start Paths Section */}
       <QuickStartPaths />
-
-      {/* Legal Links */}
-      <div className="max-w-6xl mx-auto px-grid-2 sm:px-grid-3 py-grid-4 sm:py-grid-6 mt-grid-4 sm:mt-grid-6 border-t border-gray-200">
-        <div className="flex flex-wrap justify-center gap-x-grid-3 gap-y-grid-1 text-xs sm:text-sm">
-          <a
-            href="/about"
-            className="text-gray-600 hover:text-civiq-blue transition-colors underline"
-          >
-            About
-          </a>
-          <span className="text-gray-400">•</span>
-          <a
-            href="/privacy"
-            className="text-gray-600 hover:text-civiq-blue transition-colors underline"
-          >
-            Privacy Policy
-          </a>
-          <span className="text-gray-400">•</span>
-          <a
-            href="/terms"
-            className="text-gray-600 hover:text-civiq-blue transition-colors underline"
-          >
-            Terms of Service
-          </a>
-          <span className="text-gray-400">•</span>
-          <a
-            href="/disclaimer"
-            className="text-gray-600 hover:text-civiq-blue transition-colors underline"
-          >
-            Disclaimer
-          </a>
-        </div>
-        <p className="text-xs text-gray-400 text-center mt-grid-2">
-          © {new Date().getFullYear()} CIV.IQ. All rights reserved.
-        </p>
-      </div>
     </div>
   );
 }

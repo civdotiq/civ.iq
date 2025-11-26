@@ -32,14 +32,6 @@ export default function Loading() {
         {/* Enhanced grid skeleton */}
         <AdaptiveGridSkeleton type="representatives" count={9} />
       </main>
-
-      {/* Footer skeleton */}
-      <footer className="bg-gray-900 py-8 mt-16">
-        <div className="container mx-auto px-4 text-center space-y-2">
-          <div className="h-4 bg-gray-700 rounded w-80 mx-auto animate-pulse" />
-          <div className="h-3 bg-gray-800 rounded w-64 mx-auto animate-pulse" />
-        </div>
-      </footer>
     </div>
   );
 }
