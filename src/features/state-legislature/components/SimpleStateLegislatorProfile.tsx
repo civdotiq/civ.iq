@@ -14,6 +14,7 @@ import { StateDistrictDemographics } from './StateDistrictDemographics';
 import { StateLegislatorBillsList } from './StateLegislatorBillsList';
 import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
 import { FileText, Users, Award, MapPin, Phone, Mail, ExternalLink, Newspaper } from 'lucide-react';
+import { encodeBase64Url } from '@/lib/url-encoding';
 
 interface SimpleStateLegislatorProfileProps {
   legislator: EnhancedStateLegislator;
@@ -328,7 +329,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                           <div className="flex-1 min-w-0">
                             {committee.id ? (
                               <a
-                                href={`/state-legislature/${legislator.state}/committee/${committee.id}`}
+                                href={`/state-legislature/${legislator.state}/committee/${encodeBase64Url(committee.id)}`}
                                 className="font-bold text-gray-900 hover:text-civiq-blue transition-colors"
                               >
                                 {committee.name}
@@ -345,7 +346,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                         </div>
                         {committee.id && (
                           <a
-                            href={`/state-legislature/${legislator.state}/committee/${committee.id}`}
+                            href={`/state-legislature/${legislator.state}/committee/${encodeBase64Url(committee.id)}`}
                             className="flex-shrink-0 text-civiq-blue hover:underline text-sm font-semibold"
                           >
                             View →
