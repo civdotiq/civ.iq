@@ -563,7 +563,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
       case 'news':
         return (
           <SimpleNewsSection
-            apiEndpoint={`/api/state-legislature/${legislator.state}/legislator/${legislator.id}/news`}
+            apiEndpoint={`/api/state-legislature/${legislator.state}/legislator/${encodeBase64Url(legislator.id)}/news`}
             representative={
               {
                 bioguideId: legislator.id,
