@@ -29,7 +29,10 @@ export async function GET(
   try {
     const { state, id } = await params;
     const legislatorId = decodeBase64Url(id); // Decode Base64 ID
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const perPage = parseInt(searchParams.get('per_page') || '20', 10);
+    // Fetch more to calculate statistics (max 100)
+    const limit = Math.min(100, Math.max(perPage * 5, 50));
 
     // Normalize state identifier (handles both "MI" and "Michigan")
     const stateCode = normalizeStateIdentifier(state);
@@ -76,11 +79,27 @@ export async function GET(
       limit
     );
 
+    // Calculate statistics from all fetched votes
+    const statistics = {
+      total: votes.length,
+      yes: votes.filter(v => v.option === 'yes').length,
+      no: votes.filter(v => v.option === 'no').length,
+      abstain: votes.filter(v => v.option === 'abstain' || v.option === 'not voting').length,
+      absent: votes.filter(v => v.option === 'absent' || v.option === 'excused').length,
+    };
+
+    // Paginate the results
+    const startIdx = (page - 1) * perPage;
+    const endIdx = startIdx + perPage;
+    const paginatedVotes = votes.slice(startIdx, endIdx);
+
     logger.info('State legislator votes request successful', {
       state: stateCode,
       legislatorId,
       legislatorName: legislator.name,
       voteCount: votes.length,
+      page,
+      perPage,
       responseTime: Date.now() - startTime,
     });
 
@@ -94,8 +113,10 @@ export async function GET(
     return NextResponse.json(
       {
         success: true,
-        votes,
-        count: votes.length,
+        votes: paginatedVotes,
+        total: votes.length,
+        page,
+        per_page: perPage,
         legislator: {
           id: legislator.id,
           name: legislator.name,
@@ -103,6 +124,7 @@ export async function GET(
           district: legislator.district,
           party: legislator.party,
         },
+        statistics,
         state: stateCode,
       },
       { status: 200, headers }

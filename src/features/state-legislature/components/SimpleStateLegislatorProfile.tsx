@@ -13,7 +13,21 @@ import { getChamberName } from '@/types/state-legislature';
 import { StateDistrictDemographics } from './StateDistrictDemographics';
 import { StateLegislatorBillsList } from './StateLegislatorBillsList';
 import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
-import { FileText, Users, Award, MapPin, Phone, Mail, ExternalLink, Newspaper } from 'lucide-react';
+import {
+  FileText,
+  Users,
+  Award,
+  MapPin,
+  Phone,
+  Mail,
+  ExternalLink,
+  Newspaper,
+  Crown,
+  Vote,
+  BarChart3,
+} from 'lucide-react';
+import { StateLegislatorVotingRecord } from './StateLegislatorVotingRecord';
+import { StateLegislatorActivityFeed } from './StateLegislatorActivityFeed';
 import { encodeBase64Url } from '@/lib/url-encoding';
 
 interface SimpleStateLegislatorProfileProps {
@@ -136,6 +150,20 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                 <span className="aicher-heading text-xs sm:text-sm font-bold bg-white text-gray-800 border-2 border-black px-3 py-2">
                   DISTRICT {legislator.district}
                 </span>
+                {/* Leadership positions */}
+                {legislator.leadershipRoles && legislator.leadershipRoles.length > 0 && (
+                  <>
+                    {legislator.leadershipRoles.map((role, index) => (
+                      <span
+                        key={index}
+                        className="aicher-heading text-xs sm:text-sm font-bold bg-yellow-50 text-yellow-800 border-2 border-yellow-500 px-3 py-2 flex items-center gap-1"
+                      >
+                        <Crown className="w-3 h-3" />
+                        {role.title}
+                      </span>
+                    ))}
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -189,6 +217,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
           {[
             { id: 'overview', label: 'OVERVIEW' },
             { id: 'bills', label: 'SPONSORED BILLS' },
+            { id: 'votes', label: 'VOTING RECORD' },
             { id: 'committees', label: 'COMMITTEES' },
             { id: 'news', label: 'RECENT NEWS' },
             { id: 'contact', label: 'CONTACT' },
@@ -197,7 +226,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`aicher-tab ${activeTab === tab.id ? 'active' : ''} ${
-                index === 4 ? 'border-r-0' : ''
+                index === 5 ? 'border-r-0' : ''
               }`}
             >
               {tab.label}
@@ -311,6 +340,16 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
             </div>
           )}
 
+          {activeTab === 'votes' && (
+            <div className="bg-white border-2 border-black p-6">
+              <StateLegislatorVotingRecord
+                state={legislator.state}
+                legislatorId={legislator.id}
+                legislatorName={legislator.name}
+              />
+            </div>
+          )}
+
           {activeTab === 'committees' && (
             <div className="bg-white border-2 border-black p-6">
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -338,7 +377,18 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
                               <h3 className="font-bold text-gray-900">{committee.name}</h3>
                             )}
                             {committee.role && (
-                              <span className="inline-block mt-2 px-2 py-1 bg-white border-2 border-black text-xs font-bold">
+                              <span
+                                className={`inline-block mt-2 px-2 py-1 text-xs font-bold border-2 ${
+                                  committee.role.toLowerCase().includes('chair') &&
+                                  !committee.role.toLowerCase().includes('vice')
+                                    ? 'bg-yellow-50 text-yellow-800 border-yellow-500'
+                                    : committee.role.toLowerCase().includes('vice')
+                                      ? 'bg-blue-50 text-blue-800 border-blue-500'
+                                      : committee.role.toLowerCase().includes('ranking')
+                                        ? 'bg-purple-50 text-purple-800 border-purple-500'
+                                        : 'bg-white text-gray-800 border-black'
+                                }`}
+                              >
                                 {committee.role}
                               </span>
                             )}
@@ -634,6 +684,72 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
           {/* District Demographics */}
           <StateDistrictDemographics legislator={legislator} />
 
+          {/* Voting Stats Card */}
+          {legislator.votingRecord && legislator.votingRecord.totalVotes > 0 && (
+            <div className="bg-white border-2 border-black p-4">
+              <h3 className="aicher-section-label mb-3 flex items-center gap-2 text-civiq-blue">
+                <Vote className="w-4 h-4" />
+                VOTING STATISTICS
+              </h3>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-green-50 border border-green-200 p-2 text-center">
+                    <div className="text-lg font-bold text-green-700">
+                      {legislator.votingRecord.yesVotes}
+                    </div>
+                    <div className="text-xs text-gray-600">Yes</div>
+                  </div>
+                  <div className="bg-red-50 border border-red-200 p-2 text-center">
+                    <div className="text-lg font-bold text-red-700">
+                      {legislator.votingRecord.noVotes}
+                    </div>
+                    <div className="text-xs text-gray-600">No</div>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600 text-center">
+                  {legislator.votingRecord.totalVotes} total votes
+                </div>
+                {legislator.votingRecord.votingScore !== undefined && (
+                  <div className="bg-gray-50 border border-gray-300 p-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-600">Participation Score</span>
+                      <span className="font-bold text-civiq-blue">
+                        {legislator.votingRecord.votingScore}%
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Bill Status Breakdown */}
+          {legislator.legislation &&
+            (legislator.legislation.sponsored > 0 || legislator.legislation.cosponsored > 0) && (
+              <div className="bg-white border-2 border-black p-4">
+                <h3 className="aicher-section-label mb-3 flex items-center gap-2 text-civiq-green">
+                  <BarChart3 className="w-4 h-4" />
+                  LEGISLATION ACTIVITY
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center py-1 border-b border-gray-200">
+                    <span className="text-sm text-gray-600">Sponsored</span>
+                    <span className="font-bold">{legislator.legislation.sponsored}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-gray-200">
+                    <span className="text-sm text-gray-600">Co-sponsored</span>
+                    <span className="font-bold">{legislator.legislation.cosponsored}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-sm text-gray-600 font-medium">Total</span>
+                    <span className="font-bold text-civiq-blue">
+                      {legislator.legislation.sponsored + legislator.legislation.cosponsored}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
           {/* Contact Info Quick Access */}
           {(legislator.email || legislator.phone || getHomePhone()) && (
             <div className="bg-white border-2 border-black p-4">
@@ -678,6 +794,15 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
               </div>
             </div>
           )}
+
+          {/* Recent Activity Feed */}
+          <div className="bg-white border-2 border-black p-4">
+            <StateLegislatorActivityFeed
+              state={legislator.state}
+              legislatorId={legislator.id}
+              maxItems={5}
+            />
+          </div>
 
           {/* Quick Actions */}
           <div className="bg-white border-2 border-black p-4">

@@ -39,6 +39,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [selectedClassification, setSelectedClassification] = useState<string>('all');
+  const [selectedSession, setSelectedSession] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
 
@@ -105,13 +106,16 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
 
   const bills = data.bills;
 
-  // Extract unique subjects and classifications for filters
+  // Extract unique subjects, classifications, and sessions for filters
   const uniqueSubjects = [
     ...new Set(bills.flatMap(bill => bill.subject || []).filter(Boolean)),
   ].sort();
   const uniqueClassifications = [
     ...new Set(bills.flatMap(bill => bill.classification || []).filter(Boolean)),
   ].sort();
+  const uniqueSessions = [...new Set(bills.map(bill => bill.session).filter(Boolean))].sort(
+    (a, b) => b.localeCompare(a)
+  ); // Most recent first
 
   // Apply filters
   const filteredBills = bills.filter(bill => {
@@ -136,6 +140,11 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
       selectedClassification !== 'all' &&
       !bill.classification?.some(c => c === selectedClassification)
     ) {
+      return false;
+    }
+
+    // Session filter
+    if (selectedSession !== 'all' && bill.session !== selectedSession) {
       return false;
     }
 
@@ -181,12 +190,16 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
       <div className="mb-6 p-4 bg-gray-50 border-2 border-gray-300 space-y-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-medium text-gray-700">Filter Bills</h3>
-          {(searchTerm || selectedSubject !== 'all' || selectedClassification !== 'all') && (
+          {(searchTerm ||
+            selectedSubject !== 'all' ||
+            selectedClassification !== 'all' ||
+            selectedSession !== 'all') && (
             <button
               onClick={() => {
                 setSearchTerm('');
                 setSelectedSubject('all');
                 setSelectedClassification('all');
+                setSelectedSession('all');
                 setCurrentPage(1);
               }}
               className="text-sm text-blue-600 hover:text-blue-800"
@@ -212,7 +225,27 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
         </div>
 
         {/* Filter Controls Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Session Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Session</label>
+            <select
+              value={selectedSession}
+              onChange={e => {
+                setSelectedSession(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full px-3 py-2 border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Sessions</option>
+              {uniqueSessions.map(session => (
+                <option key={session} value={session}>
+                  {session}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Subject Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
@@ -336,6 +369,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
               setSearchTerm('');
               setSelectedSubject('all');
               setSelectedClassification('all');
+              setSelectedSession('all');
               setCurrentPage(1);
             }}
             className="text-blue-600 hover:text-blue-800 text-sm"
