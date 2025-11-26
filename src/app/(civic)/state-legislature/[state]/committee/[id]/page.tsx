@@ -27,8 +27,8 @@ async function getCommittee(state: string, base64Id: string): Promise<StateCommi
 
     logger.info('[StateCommitteePage] Fetching committee', { state, committeeId });
 
-    // Get committee from OpenStates API
-    const committee = await openStatesAPI.getCommitteeById(committeeId, true);
+    // Get committee from OpenStates API (pass state for faster lookup)
+    const committee = await openStatesAPI.getCommitteeById(committeeId, true, state);
 
     if (!committee) {
       logger.warn('[StateCommitteePage] Committee not found', { state, committeeId });

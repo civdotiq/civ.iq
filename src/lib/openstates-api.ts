@@ -1154,29 +1154,70 @@ class OpenStatesAPI {
 
   /**
    * Get a specific committee by ID
+   * Note: OpenStates v3 API individual committee endpoint often returns "No such Committee"
+   * even for valid IDs, so we use the list endpoint with jurisdiction filter to find the committee.
    * @param committeeId - OpenStates committee ID (e.g., 'ocd-organization/...')
    * @param includeMemberships - Whether to include member roster (default: true)
+   * @param jurisdiction - Optional state code to limit search (e.g., 'mi')
    * @returns Committee details or null if not found
    */
   async getCommitteeById(
     committeeId: string,
-    includeMemberships: boolean = true
+    includeMemberships: boolean = true,
+    jurisdiction?: string
   ): Promise<OpenStatesCommittee | null> {
     try {
-      const params: Record<string, string> = {};
+      const params: Record<string, string | number> = {
+        per_page: 100,
+        page: 1,
+      };
+
       if (includeMemberships) {
         params.include = 'memberships';
       }
 
-      const response = await this.makeRequest<OpenStatesCommittee>(
-        `/committees/${committeeId}`,
-        params
-      );
+      // If jurisdiction provided, filter to that state for faster lookup
+      if (jurisdiction) {
+        params.jurisdiction = jurisdiction.toLowerCase();
+      }
 
-      return {
-        ...response,
-        chamber: this.normalizeCommitteeChamber(response),
-      };
+      // Try to find the committee (paginated search)
+      let found: OpenStatesCommittee | null = null;
+      let hasMore = true;
+      let page = 1;
+      const maxPages = jurisdiction ? 5 : 20; // Fewer pages needed with jurisdiction filter
+
+      while (hasMore && page <= maxPages && !found) {
+        params.page = page;
+
+        interface CommitteeSearchResponse {
+          results: OpenStatesCommittee[];
+          pagination: {
+            per_page: number;
+            page: number;
+            max_page: number;
+            total_items: number;
+          };
+        }
+
+        const response = await this.makeRequest<CommitteeSearchResponse>('/committees', params);
+
+        // Search for our committee in the results
+        const match = response.results.find(c => c.id === committeeId);
+        if (match) {
+          found = {
+            ...match,
+            chamber: this.normalizeCommitteeChamber(match),
+          };
+          break;
+        }
+
+        // Check if there are more pages
+        hasMore = page < response.pagination.max_page;
+        page++;
+      }
+
+      return found;
     } catch (error) {
       if (error instanceof Error && error.message.includes('404')) {
         return null;
