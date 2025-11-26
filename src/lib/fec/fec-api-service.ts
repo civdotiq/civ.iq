@@ -1018,6 +1018,85 @@ export class FECApiService {
   }
 
   /**
+   * Get individual contributions (Schedule A) with employer/occupation data
+   * Filters for is_individual=true to get actual people, not committees
+   * This provides better industry categorization data
+   */
+  async getIndividualContributionsWithEmployer(
+    candidateId: string,
+    cycle: number,
+    count: number = 200
+  ): Promise<FECContribution[]> {
+    const committeeIds = await this.findCandidateCommitteeIds(candidateId, cycle);
+    if (committeeIds.length === 0) {
+      logger.warn(`[FEC API] No committees found for ${candidateId}`);
+      return [];
+    }
+
+    logger.info(
+      `[FEC API] Fetching individual contributions with employer data for ${candidateId}`
+    );
+
+    try {
+      // Use is_individual=true to get actual donors (not committees)
+      // Sort by amount to get largest individual donors first
+      for (const committeeId of committeeIds) {
+        const allContributions: FECContribution[] = [];
+        const maxPages = Math.ceil(count / 100);
+
+        for (let page = 1; page <= maxPages; page++) {
+          try {
+            const response = await this.makeRequest<FECApiResponse<FECContribution>>(
+              `/schedules/schedule_a/?committee_id=${committeeId}&two_year_transaction_period=${cycle}&is_individual=true&per_page=100&page=${page}&sort=-contribution_receipt_amount`
+            );
+
+            if (response.results && response.results.length > 0) {
+              // Filter for contributions that have employer or occupation data
+              const withEmployerData = response.results.filter(
+                c => c.contributor_employer || c.contributor_occupation
+              );
+              allContributions.push(...withEmployerData);
+
+              logger.info(
+                `[FEC API] Individual contributions page ${page}: ${response.results.length} total, ${withEmployerData.length} with employer data`
+              );
+
+              if (allContributions.length >= count) {
+                break;
+              }
+
+              // Stop if no more pages
+              if (response.results.length < 100) {
+                break;
+              }
+            } else {
+              break;
+            }
+          } catch (pageError) {
+            logger.warn(
+              `[FEC API] Error fetching individual contributions page ${page}:`,
+              pageError instanceof Error ? pageError.message : String(pageError)
+            );
+            break;
+          }
+        }
+
+        if (allContributions.length > 0) {
+          logger.info(
+            `[FEC API] Found ${allContributions.length} individual contributions with employer data`
+          );
+          return allContributions.slice(0, count);
+        }
+      }
+
+      return [];
+    } catch (error) {
+      logger.error(`[FEC API] Failed to get individual contributions for ${candidateId}:`, error);
+      return [];
+    }
+  }
+
+  /**
    * Get PAC contributions (Schedule A) to a candidate
    * Filters for non-individual contributions (PACs, parties, etc.)
    */

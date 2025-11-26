@@ -583,12 +583,464 @@ export function aggregateByIndustrySector(
 }
 
 /**
+ * PAC/Committee Name Keywords for Industry Classification
+ * Maps committee names to industry sectors (OpenSecrets-style)
+ */
+const PAC_NAME_KEYWORDS: Array<{
+  sector: IndustrySector;
+  category: string;
+  keywords: string[];
+}> = [
+  // HEALTH
+  {
+    sector: IndustrySector.HEALTH,
+    category: 'Health Professionals',
+    keywords: [
+      'medical',
+      'physician',
+      'doctor',
+      'nurse',
+      'dental',
+      'hospital',
+      'health',
+      'healthcare',
+      'ama ',
+      'american medical',
+    ],
+  },
+  {
+    sector: IndustrySector.HEALTH,
+    category: 'Pharmaceuticals',
+    keywords: ['pharma', 'pfizer', 'merck', 'johnson', 'lilly', 'abbvie', 'bristol', 'novartis'],
+  },
+  {
+    sector: IndustrySector.HEALTH,
+    category: 'Health Insurance',
+    keywords: ['blue cross', 'aetna', 'cigna', 'humana', 'anthem', 'kaiser', 'united health'],
+  },
+
+  // FINANCE
+  {
+    sector: IndustrySector.FINANCE_INSURANCE_REAL_ESTATE,
+    category: 'Commercial Banks',
+    keywords: [
+      'bank',
+      'banker',
+      'chase',
+      'wells fargo',
+      'citibank',
+      'jpmorgan',
+      'credit union',
+      'financial',
+    ],
+  },
+  {
+    sector: IndustrySector.FINANCE_INSURANCE_REAL_ESTATE,
+    category: 'Securities & Investment',
+    keywords: [
+      'goldman',
+      'morgan stanley',
+      'investment',
+      'securities',
+      'hedge',
+      'capital',
+      'blackrock',
+      'fidelity',
+    ],
+  },
+  {
+    sector: IndustrySector.FINANCE_INSURANCE_REAL_ESTATE,
+    category: 'Insurance',
+    keywords: ['insurance', 'allstate', 'state farm', 'progressive', 'geico', 'mutual', 'life ins'],
+  },
+  {
+    sector: IndustrySector.FINANCE_INSURANCE_REAL_ESTATE,
+    category: 'Real Estate',
+    keywords: ['realtor', 'real estate', 'realty', 'homebuilder', 'mortgage', 'property'],
+  },
+
+  // LABOR
+  {
+    sector: IndustrySector.LABOR,
+    category: 'Labor Unions',
+    keywords: [
+      'union',
+      'teamster',
+      'seiu',
+      'afscme',
+      'afl-cio',
+      'uaw',
+      'steelworker',
+      'laborer',
+      'ibew',
+      'ufcw',
+      'carpenters',
+      'plumbers',
+      'pipefitters',
+      'electrical workers',
+      'teachers',
+      'firefighter',
+      'police',
+      'working families',
+    ],
+  },
+
+  // LAWYERS
+  {
+    sector: IndustrySector.LAWYERS_LOBBYISTS,
+    category: 'Lawyers/Law Firms',
+    keywords: [
+      'law',
+      'lawyer',
+      'attorney',
+      'legal',
+      'trial',
+      'justice',
+      'tort',
+      'litigation',
+      'bar association',
+    ],
+  },
+
+  // ENERGY
+  {
+    sector: IndustrySector.ENERGY_NATURAL_RESOURCES,
+    category: 'Oil & Gas',
+    keywords: [
+      'oil',
+      'gas',
+      'petroleum',
+      'exxon',
+      'chevron',
+      'shell',
+      'bp ',
+      'conocophillips',
+      'energy',
+      'drilling',
+      'pipeline',
+    ],
+  },
+  {
+    sector: IndustrySector.ENERGY_NATURAL_RESOURCES,
+    category: 'Electric Utilities',
+    keywords: ['electric', 'utility', 'power', 'grid', 'edison', 'duke energy', 'exelon'],
+  },
+
+  // DEFENSE
+  {
+    sector: IndustrySector.DEFENSE,
+    category: 'Defense Aerospace',
+    keywords: [
+      'defense',
+      'lockheed',
+      'raytheon',
+      'boeing',
+      'northrop',
+      'general dynamics',
+      'bae ',
+      'l3harris',
+      'aerospace',
+      'military',
+    ],
+  },
+
+  // COMMUNICATIONS/TECH
+  {
+    sector: IndustrySector.COMMUNICATIONS_ELECTRONICS,
+    category: 'Internet/Tech',
+    keywords: [
+      'google',
+      'microsoft',
+      'apple',
+      'amazon',
+      'meta',
+      'facebook',
+      'tech',
+      'software',
+      'computer',
+      'internet',
+      'oracle',
+      'intel',
+      'cisco',
+      'ibm',
+    ],
+  },
+  {
+    sector: IndustrySector.COMMUNICATIONS_ELECTRONICS,
+    category: 'Telecommunications',
+    keywords: ['telecom', 'verizon', 'at&t', 'comcast', 'charter', 't-mobile', 'wireless'],
+  },
+  {
+    sector: IndustrySector.COMMUNICATIONS_ELECTRONICS,
+    category: 'TV/Movies/Music',
+    keywords: [
+      'entertainment',
+      'movie',
+      'film',
+      'television',
+      'broadcast',
+      'media',
+      'disney',
+      'warner',
+      'fox',
+      'screen actors',
+    ],
+  },
+
+  // TRANSPORTATION
+  {
+    sector: IndustrySector.TRANSPORTATION,
+    category: 'Air Transport',
+    keywords: ['airline', 'aviation', 'pilot', 'air transport', 'delta', 'united', 'american air'],
+  },
+  {
+    sector: IndustrySector.TRANSPORTATION,
+    category: 'Automotive',
+    keywords: [
+      'auto',
+      'automobile',
+      'car dealer',
+      'ford',
+      'gm ',
+      'general motors',
+      'toyota',
+      'honda',
+    ],
+  },
+  {
+    sector: IndustrySector.TRANSPORTATION,
+    category: 'Trucking',
+    keywords: ['trucking', 'freight', 'logistics', 'ups', 'fedex', 'shipping'],
+  },
+  {
+    sector: IndustrySector.TRANSPORTATION,
+    category: 'Railroads',
+    keywords: ['railroad', 'rail', 'amtrak', 'bnsf', 'union pacific', 'csx'],
+  },
+
+  // AGRIBUSINESS
+  {
+    sector: IndustrySector.AGRIBUSINESS,
+    category: 'Crop Production',
+    keywords: ['farm', 'farmer', 'agriculture', 'crop', 'grain', 'corn', 'soybean', 'cotton'],
+  },
+  {
+    sector: IndustrySector.AGRIBUSINESS,
+    category: 'Food Processing',
+    keywords: [
+      'food',
+      'restaurant',
+      'grocery',
+      'beverage',
+      'coca-cola',
+      'pepsi',
+      'tyson',
+      'cargill',
+    ],
+  },
+
+  // CONSTRUCTION
+  {
+    sector: IndustrySector.CONSTRUCTION,
+    category: 'General Contractors',
+    keywords: ['construction', 'contractor', 'builder', 'building trade', 'cement', 'steel'],
+  },
+  {
+    sector: IndustrySector.CONSTRUCTION,
+    category: 'Home Builders',
+    keywords: ['home builder', 'homebuilder', 'residential', 'housing'],
+  },
+
+  // MISC BUSINESS
+  {
+    sector: IndustrySector.MISC_BUSINESS,
+    category: 'Retail',
+    keywords: ['retail', 'walmart', 'target', 'store', 'merchant', 'shop'],
+  },
+  {
+    sector: IndustrySector.MISC_BUSINESS,
+    category: 'Manufacturing',
+    keywords: ['manufacturing', 'manufacturer', 'industrial', 'factory'],
+  },
+  {
+    sector: IndustrySector.MISC_BUSINESS,
+    category: 'Business Services',
+    keywords: ['business', 'chamber of commerce', 'nfib', 'small business'],
+  },
+
+  // IDEOLOGY
+  {
+    sector: IndustrySector.IDEOLOGY_SINGLE_ISSUE,
+    category: 'Pro-Israel',
+    keywords: ['israel', 'aipac', 'jewish', 'zionist'],
+  },
+  {
+    sector: IndustrySector.IDEOLOGY_SINGLE_ISSUE,
+    category: 'Gun Rights',
+    keywords: ['rifle', 'nra', 'gun', 'firearm', 'second amendment', '2nd amendment'],
+  },
+  {
+    sector: IndustrySector.IDEOLOGY_SINGLE_ISSUE,
+    category: 'Pro-Choice',
+    keywords: ['planned parenthood', 'naral', 'emily', 'pro-choice', 'reproductive'],
+  },
+  {
+    sector: IndustrySector.IDEOLOGY_SINGLE_ISSUE,
+    category: 'Environment',
+    keywords: ['environment', 'sierra', 'conservation', 'climate', 'green', 'lcv'],
+  },
+  {
+    sector: IndustrySector.IDEOLOGY_SINGLE_ISSUE,
+    category: 'Human Rights',
+    keywords: ['human rights', 'civil rights', 'aclu', 'naacp', 'equality'],
+  },
+  {
+    sector: IndustrySector.IDEOLOGY_SINGLE_ISSUE,
+    category: 'Education',
+    keywords: ['education', 'teacher', 'school', 'university', 'college', 'nea ', 'aft '],
+  },
+];
+
+/**
+ * Categorize a PAC/committee by its name
+ * Used for committee-to-committee transfers and PAC contributions
+ */
+export function categorizePACByName(committeeName?: string): CategorizedContribution {
+  if (!committeeName) {
+    return {
+      sector: IndustrySector.OTHER,
+      category: 'Unknown PAC',
+      confidence: 'low',
+      matchSource: 'inferred',
+    };
+  }
+
+  const nameLower = committeeName.toLowerCase();
+
+  // Check for political party committees first
+  if (
+    nameLower.includes('democratic') ||
+    nameLower.includes('dccc') ||
+    nameLower.includes('dscc') ||
+    nameLower.includes('dnc')
+  ) {
+    return {
+      sector: IndustrySector.OTHER,
+      category: 'Democratic Party',
+      confidence: 'high',
+      matchedKeyword: 'democratic',
+      matchSource: 'employer',
+    };
+  }
+  if (
+    nameLower.includes('republican') ||
+    nameLower.includes('nrcc') ||
+    nameLower.includes('nrsc') ||
+    nameLower.includes('rnc')
+  ) {
+    return {
+      sector: IndustrySector.OTHER,
+      category: 'Republican Party',
+      confidence: 'high',
+      matchedKeyword: 'republican',
+      matchSource: 'employer',
+    };
+  }
+
+  // Check for joint fundraising/victory funds (pass-through)
+  // These are pass-through entities that aggregate contributions
+  if (
+    nameLower.includes('victory') ||
+    nameLower.includes('joint') ||
+    nameLower.includes('senate 20') ||
+    nameLower.includes('house 20') ||
+    nameLower.includes('blue senate') ||
+    nameLower.includes('red senate') ||
+    nameLower.includes('making history') ||
+    nameLower.includes('north stars')
+  ) {
+    return {
+      sector: IndustrySector.OTHER,
+      category: 'Joint Fundraising',
+      confidence: 'medium',
+      matchedKeyword: 'joint-fund',
+      matchSource: 'employer',
+    };
+  }
+
+  // Check industry-specific PAC names
+  for (const pacCategory of PAC_NAME_KEYWORDS) {
+    for (const keyword of pacCategory.keywords) {
+      if (nameLower.includes(keyword.toLowerCase())) {
+        return {
+          sector: pacCategory.sector,
+          category: pacCategory.category,
+          confidence: 'high',
+          matchedKeyword: keyword,
+          matchSource: 'employer',
+        };
+      }
+    }
+  }
+
+  // Generic PAC fallback
+  if (nameLower.includes('pac') || nameLower.includes('committee')) {
+    return {
+      sector: IndustrySector.OTHER,
+      category: 'Unclassified PAC',
+      confidence: 'low',
+      matchSource: 'inferred',
+    };
+  }
+
+  return {
+    sector: IndustrySector.OTHER,
+    category: 'Unknown',
+    confidence: 'low',
+    matchSource: 'inferred',
+  };
+}
+
+/**
+ * Smart categorization: tries employer/occupation first, then falls back to contributor name (for PACs)
+ */
+export function categorizeContributionSmart(
+  employer?: string,
+  occupation?: string,
+  contributorName?: string
+): CategorizedContribution {
+  // First try standard employer/occupation categorization
+  const standardResult = categorizeContribution(employer, occupation);
+
+  // If we got a good match, return it
+  // Note: 'Unknown' is returned when no employer/occupation provided at all
+  // 'Other/Unknown' is returned when employer/occupation exists but doesn't match any keywords
+  if (
+    standardResult.confidence !== 'low' ||
+    (standardResult.category !== 'Other/Unknown' && standardResult.category !== 'Unknown')
+  ) {
+    return standardResult;
+  }
+
+  // If no employer/occupation, try to categorize by contributor name (for PACs)
+  if (contributorName) {
+    const pacResult = categorizePACByName(contributorName);
+    if (pacResult.confidence !== 'low' || pacResult.category !== 'Unknown') {
+      return pacResult;
+    }
+  }
+
+  return standardResult;
+}
+
+/**
  * Get top categories across all sectors
  */
 export function getTopCategories(
   contributions: Array<{
     contributor_employer?: string;
     contributor_occupation?: string;
+    contributor_name?: string;
     contribution_receipt_amount: number;
   }>,
   limit: number = 10
@@ -607,9 +1059,11 @@ export function getTopCategories(
   let totalContributions = 0;
 
   for (const contrib of contributions) {
-    const categorization = categorizeContribution(
+    // Use smart categorization that tries employer/occupation first, then contributor name
+    const categorization = categorizeContributionSmart(
       contrib.contributor_employer,
-      contrib.contributor_occupation
+      contrib.contributor_occupation,
+      contrib.contributor_name
     );
 
     const amount = contrib.contribution_receipt_amount;

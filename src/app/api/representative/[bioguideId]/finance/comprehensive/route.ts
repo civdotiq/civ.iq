@@ -309,6 +309,10 @@ export async function GET(
     // Fetch sample contributions for detailed analysis (optimized to 250 records)
     const contributions = await fecApiService.getSampleContributions(fecMapping.fecId, 2024, 250);
 
+    // Also fetch individual contributions with employer/occupation data for industry categorization
+    const individualContributionsForIndustry =
+      await fecApiService.getIndividualContributionsWithEmployer(fecMapping.fecId, 2024, 200);
+
     // Process contributors
     const contributorMap = new Map<
       string,
@@ -430,7 +434,9 @@ export async function GET(
       .slice(-12);
 
     // Format industries using OpenSecrets-inspired taxonomy system
-    const topCategorizedIndustries = getTopCategories(contributions, 10);
+    // Combine individual contributions (better employer data) with all contributions (PAC names)
+    const combinedForIndustry = [...individualContributionsForIndustry, ...contributions];
+    const topCategorizedIndustries = getTopCategories(combinedForIndustry, 10);
     const topIndustries = topCategorizedIndustries.map(cat => ({
       sector: cat.sector,
       category: cat.category,

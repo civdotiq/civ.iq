@@ -8,16 +8,31 @@
 import React from 'react';
 import { SortableDataTable } from './SortableDataTable';
 
-interface ContributorData extends Record<string, unknown> {
+/** Input contributor data - supports both API formats */
+interface ContributorInput {
   name: string;
-  total_amount: number;
-  count: number;
+  // camelCase (from comprehensive API)
+  totalAmount?: number;
+  contributionCount?: number;
+  // snake_case (legacy format)
+  total_amount?: number;
+  count?: number;
   employer?: string;
   occupation?: string;
+  city?: string;
+  state?: string;
+}
+
+/** Normalized contributor data for display */
+interface NormalizedContributor extends Record<string, unknown> {
+  name: string;
+  totalAmount: number;
+  contributionCount: number;
+  employer: string;
 }
 
 interface TopContributorsProps {
-  contributors: ContributorData[];
+  contributors: ContributorInput[];
 }
 
 /**
@@ -34,29 +49,51 @@ export function TopContributors({ contributors }: TopContributorsProps) {
     );
   }
 
-  const columns = [
+  // Helper to safely format currency
+  const formatCurrency = (value: unknown): string => {
+    const num = typeof value === 'number' ? value : Number(value);
+    if (isNaN(num) || num === 0) return '$0';
+    if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `$${(num / 1000).toFixed(1)}K`;
+    return `$${num.toLocaleString()}`;
+  };
+
+  // Normalize contributors to handle both API formats
+  const normalizedContributors: NormalizedContributor[] = contributors.map(c => ({
+    name: c.name,
+    totalAmount: c.totalAmount ?? c.total_amount ?? 0,
+    contributionCount: c.contributionCount ?? c.count ?? 1,
+    employer: c.employer ?? '',
+  }));
+
+  const columns: Array<{
+    key: keyof NormalizedContributor;
+    label: string;
+    sortable: boolean;
+    format?: (value: unknown) => string;
+  }> = [
     {
-      key: 'name' as keyof ContributorData,
+      key: 'name',
       label: 'Contributor',
       sortable: true,
     },
     {
-      key: 'total_amount' as keyof ContributorData,
+      key: 'totalAmount',
       label: 'Total Amount',
       sortable: true,
+      format: formatCurrency,
+    },
+    {
+      key: 'contributionCount',
+      label: 'Contributions',
+      sortable: true,
       format: (value: unknown) => {
-        const num = value as number;
-        return `$${(num / 1000).toFixed(1)}K`;
+        const num = typeof value === 'number' ? value : Number(value);
+        return isNaN(num) ? '1' : num.toLocaleString();
       },
     },
     {
-      key: 'count' as keyof ContributorData,
-      label: 'Contributions',
-      sortable: true,
-      format: (value: unknown) => String(value),
-    },
-    {
-      key: 'employer' as keyof ContributorData,
+      key: 'employer',
       label: 'Employer',
       sortable: true,
       format: (value: unknown) => (value ? String(value) : 'Not disclosed'),
@@ -73,9 +110,9 @@ export function TopContributors({ contributors }: TopContributorsProps) {
       </div>
 
       <SortableDataTable
-        data={contributors}
+        data={normalizedContributors}
         columns={columns}
-        defaultSortKey="total_amount"
+        defaultSortKey="totalAmount"
         showInitially={5}
       />
 

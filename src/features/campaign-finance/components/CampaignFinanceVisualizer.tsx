@@ -269,13 +269,13 @@ export function CampaignFinanceVisualizer({
     { name: 'Self-Funded', value: candidateContributions, color: COLORS[3] },
   ].filter(item => item.value > 0); // Only show non-zero categories
 
-  // Top contributors data for charts
+  // Top contributors data for charts - handle both API formats
   const topContributorsData = (financeData?.top_contributors || [])
     .slice(0, 10)
-    .map((contributor: { name: string; total_amount: number }) => ({
+    .map((contributor: { name: string; total_amount?: number; totalAmount?: number }) => ({
       name:
         contributor.name.length > 15 ? contributor.name.substring(0, 15) + '...' : contributor.name,
-      amount: contributor.total_amount,
+      amount: contributor.totalAmount ?? contributor.total_amount ?? 0,
       fullName: contributor.name,
     }));
 
