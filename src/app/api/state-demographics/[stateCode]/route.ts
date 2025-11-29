@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { STATE_FIPS } from '@/app/api/districts/census-helpers';
+import { US_STATES } from '@/lib/data/us-states';
 
 // ISR: Revalidate every 1 day
 export const revalidate = 86400;
@@ -66,65 +67,7 @@ interface StateDemographics {
   survey_year: number;
 }
 
-// State name mapping for full names
-const STATE_NAMES: Record<string, string> = {
-  AL: 'Alabama',
-  AK: 'Alaska',
-  AZ: 'Arizona',
-  AR: 'Arkansas',
-  CA: 'California',
-  CO: 'Colorado',
-  CT: 'Connecticut',
-  DE: 'Delaware',
-  DC: 'District of Columbia',
-  FL: 'Florida',
-  GA: 'Georgia',
-  HI: 'Hawaii',
-  ID: 'Idaho',
-  IL: 'Illinois',
-  IN: 'Indiana',
-  IA: 'Iowa',
-  KS: 'Kansas',
-  KY: 'Kentucky',
-  LA: 'Louisiana',
-  ME: 'Maine',
-  MD: 'Maryland',
-  MA: 'Massachusetts',
-  MI: 'Michigan',
-  MN: 'Minnesota',
-  MS: 'Mississippi',
-  MO: 'Missouri',
-  MT: 'Montana',
-  NE: 'Nebraska',
-  NV: 'Nevada',
-  NH: 'New Hampshire',
-  NJ: 'New Jersey',
-  NM: 'New Mexico',
-  NY: 'New York',
-  NC: 'North Carolina',
-  ND: 'North Dakota',
-  OH: 'Ohio',
-  OK: 'Oklahoma',
-  OR: 'Oregon',
-  PA: 'Pennsylvania',
-  RI: 'Rhode Island',
-  SC: 'South Carolina',
-  SD: 'South Dakota',
-  TN: 'Tennessee',
-  TX: 'Texas',
-  UT: 'Utah',
-  VT: 'Vermont',
-  VA: 'Virginia',
-  WA: 'Washington',
-  WV: 'West Virginia',
-  WI: 'Wisconsin',
-  WY: 'Wyoming',
-  PR: 'Puerto Rico',
-  VI: 'U.S. Virgin Islands',
-  GU: 'Guam',
-  AS: 'American Samoa',
-  MP: 'Northern Mariana Islands',
-};
+// State name mapping - using centralized US_STATES from @/lib/data/us-states
 
 // In-memory cache for state demographics (30 minutes TTL)
 const demographicsCache = new Map<string, { data: StateDemographics; timestamp: number }>();
@@ -266,7 +209,7 @@ async function fetchStateDemographics(
 
   const stateDemographics: StateDemographics = {
     state_code: stateCode,
-    state_name: STATE_NAMES[stateCode] || stateCode,
+    state_name: US_STATES[stateCode as keyof typeof US_STATES] || stateCode,
     population: totalPopulation,
     median_age: getFloat('B01002_001E'),
     median_household_income: getValue('B19013_001E'),

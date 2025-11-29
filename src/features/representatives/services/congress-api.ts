@@ -11,61 +11,7 @@ import type {
 } from '@/types/api-responses';
 import logger from '@/lib/logging/simple-logger';
 import { getAllEnhancedRepresentatives } from './congress.service';
-
-// State code to name mapping
-const STATE_NAMES: Record<string, string> = {
-  AL: 'Alabama',
-  AK: 'Alaska',
-  AZ: 'Arizona',
-  AR: 'Arkansas',
-  CA: 'California',
-  CO: 'Colorado',
-  CT: 'Connecticut',
-  DE: 'Delaware',
-  DC: 'District of Columbia',
-  FL: 'Florida',
-  GA: 'Georgia',
-  HI: 'Hawaii',
-  ID: 'Idaho',
-  IL: 'Illinois',
-  IN: 'Indiana',
-  IA: 'Iowa',
-  KS: 'Kansas',
-  KY: 'Kentucky',
-  LA: 'Louisiana',
-  ME: 'Maine',
-  MD: 'Maryland',
-  MA: 'Massachusetts',
-  MI: 'Michigan',
-  MN: 'Minnesota',
-  MS: 'Mississippi',
-  MO: 'Missouri',
-  MT: 'Montana',
-  NE: 'Nebraska',
-  NV: 'Nevada',
-  NH: 'New Hampshire',
-  NJ: 'New Jersey',
-  NM: 'New Mexico',
-  NY: 'New York',
-  NC: 'North Carolina',
-  ND: 'North Dakota',
-  OH: 'Ohio',
-  OK: 'Oklahoma',
-  OR: 'Oregon',
-  PA: 'Pennsylvania',
-  RI: 'Rhode Island',
-  SC: 'South Carolina',
-  SD: 'South Dakota',
-  TN: 'Tennessee',
-  TX: 'Texas',
-  UT: 'Utah',
-  VT: 'Vermont',
-  VA: 'Virginia',
-  WA: 'Washington',
-  WV: 'West Virginia',
-  WI: 'Wisconsin',
-  WY: 'Wyoming',
-};
+import { US_STATES } from '@/lib/data/us-states';
 
 export interface CongressMember {
   bioguideId: string;
@@ -259,7 +205,7 @@ export const getCurrentMembersByState = cache(
         data.members?.filter((member: CongressApiMember) => {
           // Congress API uses full state names like "Michigan"
           // Convert our state code to full name for comparison
-          const stateName = STATE_NAMES[state] || state;
+          const stateName = US_STATES[state as keyof typeof US_STATES] || state;
           const matchesState = member.state === stateName || member.state === state;
 
           // Also check if member has a current term in 119th Congress (2025-2027)

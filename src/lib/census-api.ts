@@ -5,6 +5,7 @@
 
 // Remove React cache import - not available in current Next.js version
 import { ZIP_TO_DISTRICT_MAP, getStateFromZip } from './data/zip-district-mapping';
+import { US_STATES } from '@/lib/data/us-states';
 import logger from '@/lib/logging/simple-logger';
 
 export interface CongressionalDistrict {
@@ -64,60 +65,7 @@ const ZIP_TO_DISTRICT: Record<string, { state: string; district: string }> = {
   // Add more as needed...
 };
 
-// State names mapping
-const STATE_NAMES: Record<string, string> = {
-  AL: 'Alabama',
-  AK: 'Alaska',
-  AZ: 'Arizona',
-  AR: 'Arkansas',
-  CA: 'California',
-  CO: 'Colorado',
-  CT: 'Connecticut',
-  DE: 'Delaware',
-  DC: 'District of Columbia',
-  FL: 'Florida',
-  GA: 'Georgia',
-  HI: 'Hawaii',
-  ID: 'Idaho',
-  IL: 'Illinois',
-  IN: 'Indiana',
-  IA: 'Iowa',
-  KS: 'Kansas',
-  KY: 'Kentucky',
-  LA: 'Louisiana',
-  ME: 'Maine',
-  MD: 'Maryland',
-  MA: 'Massachusetts',
-  MI: 'Michigan',
-  MN: 'Minnesota',
-  MS: 'Mississippi',
-  MO: 'Missouri',
-  MT: 'Montana',
-  NE: 'Nebraska',
-  NV: 'Nevada',
-  NH: 'New Hampshire',
-  NJ: 'New Jersey',
-  NM: 'New Mexico',
-  NY: 'New York',
-  NC: 'North Carolina',
-  ND: 'North Dakota',
-  OH: 'Ohio',
-  OK: 'Oklahoma',
-  OR: 'Oregon',
-  PA: 'Pennsylvania',
-  RI: 'Rhode Island',
-  SC: 'South Carolina',
-  SD: 'South Dakota',
-  TN: 'Tennessee',
-  TX: 'Texas',
-  UT: 'Utah',
-  VT: 'Vermont',
-  VA: 'Virginia',
-  WA: 'Washington',
-  WV: 'West Virginia',
-  WI: 'Wisconsin',
-  WY: 'Wyoming',
-};
+// State names mapping - using centralized US_STATES from @/lib/data/us-states
 
 // Rate limiter for Census API calls
 const createRateLimiter = (): RateLimiter => ({
@@ -192,7 +140,7 @@ async function fetchFromCensusAPI(zipCode: string): Promise<CensusAPIResponse> {
         const district = congressionalDistricts[0];
         const stateCode = district.STATE || '';
         const districtCode = district.CD || district.DISTRICT || '';
-        const stateName = STATE_NAMES[stateCode] || stateCode;
+        const stateName = US_STATES[stateCode as keyof typeof US_STATES] || stateCode;
 
         // Get additional demographic data from ACS API if API key is available
         const apiKey = process.env.CENSUS_API_KEY;
@@ -321,7 +269,7 @@ export const getCongressionalDistrictFromZip = async (
   // First try our comprehensive mapping
   const mapping = ZIP_TO_DISTRICT_MAP[zipCode];
   if (mapping) {
-    const stateName = STATE_NAMES[mapping.state] || mapping.state;
+    const stateName = US_STATES[mapping.state as keyof typeof US_STATES] || mapping.state;
     const districtNumber =
       mapping.district === '00' ? 'At-Large' : parseInt(mapping.district, 10).toString();
 
@@ -342,7 +290,8 @@ export const getCongressionalDistrictFromZip = async (
   // Fall back to legacy hardcoded mapping
   const legacyMapping = ZIP_TO_DISTRICT[zipCode];
   if (legacyMapping) {
-    const stateName = STATE_NAMES[legacyMapping.state] || legacyMapping.state;
+    const stateName =
+      US_STATES[legacyMapping.state as keyof typeof US_STATES] || legacyMapping.state;
     const districtNumber =
       legacyMapping.district === '00'
         ? 'At-Large'
@@ -359,7 +308,7 @@ export const getCongressionalDistrictFromZip = async (
   // For MVP, if ZIP not in our mapping, try to extract state from ZIP ranges
   const state = getStateFromZip(zipCode);
   if (state) {
-    const stateName = STATE_NAMES[state] || state;
+    const stateName = US_STATES[state as keyof typeof US_STATES] || state;
     // For unknown districts, default to district 1 - this is a fallback only
     const district = '01';
 
@@ -434,7 +383,7 @@ export const getCongressionalDistrictFromAddress = async (
         const stateCode = district.STATE || '';
         const districtCode =
           district.CD119 || district.CD118 || district.CD || district.DISTRICT || '';
-        const stateName = STATE_NAMES[stateCode] || stateCode;
+        const stateName = US_STATES[stateCode as keyof typeof US_STATES] || stateCode;
 
         // Get additional demographic data from ACS API if API key is available
         const apiKey = process.env.CENSUS_API_KEY;

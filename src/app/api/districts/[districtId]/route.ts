@@ -10,64 +10,12 @@ import { cachedFetch } from '@/lib/cache';
 import { districtBoundaryService } from '@/lib/helpers/district-boundary-utils';
 import { getStateFromWikidata } from '@/lib/api/wikidata';
 import districtGeography from '@/data/district-geography.json';
+import { US_STATES } from '@/lib/data/us-states';
 
 // ISR: Revalidate every 1 day
 export const revalidate = 86400;
 
-// State names mapping for Census API
-const STATE_NAMES: Record<string, string> = {
-  AL: 'Alabama',
-  AK: 'Alaska',
-  AZ: 'Arizona',
-  AR: 'Arkansas',
-  CA: 'California',
-  CO: 'Colorado',
-  CT: 'Connecticut',
-  DE: 'Delaware',
-  DC: 'District of Columbia',
-  FL: 'Florida',
-  GA: 'Georgia',
-  HI: 'Hawaii',
-  ID: 'Idaho',
-  IL: 'Illinois',
-  IN: 'Indiana',
-  IA: 'Iowa',
-  KS: 'Kansas',
-  KY: 'Kentucky',
-  LA: 'Louisiana',
-  ME: 'Maine',
-  MD: 'Maryland',
-  MA: 'Massachusetts',
-  MI: 'Michigan',
-  MN: 'Minnesota',
-  MS: 'Mississippi',
-  MO: 'Missouri',
-  MT: 'Montana',
-  NE: 'Nebraska',
-  NV: 'Nevada',
-  NH: 'New Hampshire',
-  NJ: 'New Jersey',
-  NM: 'New Mexico',
-  NY: 'New York',
-  NC: 'North Carolina',
-  ND: 'North Dakota',
-  OH: 'Ohio',
-  OK: 'Oklahoma',
-  OR: 'Oregon',
-  PA: 'Pennsylvania',
-  RI: 'Rhode Island',
-  SC: 'South Carolina',
-  SD: 'South Dakota',
-  TN: 'Tennessee',
-  TX: 'Texas',
-  UT: 'Utah',
-  VT: 'Vermont',
-  VA: 'Virginia',
-  WA: 'Washington',
-  WV: 'West Virginia',
-  WI: 'Wisconsin',
-  WY: 'Wyoming',
-};
+// State names mapping - using centralized US_STATES from @/lib/data/us-states
 
 interface DistrictDetails {
   id: string;
@@ -834,7 +782,7 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
       }
 
       // Verify it's a valid state code
-      if (!STATE_NAMES[stateCode]) {
+      if (!US_STATES[stateCode as keyof typeof US_STATES]) {
         throw new Error(`Invalid state abbreviation: ${stateCode}`);
       }
     } else {
@@ -990,7 +938,7 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
       state: representative.state,
       number: isStateLevelDistrict ? 'STATE' : representative.district || '1',
       name: isStateLevelDistrict
-        ? `${STATE_NAMES[representative.state]} (Statewide)`
+        ? `${US_STATES[representative.state as keyof typeof US_STATES]} (Statewide)`
         : `${representative.state} District ${representative.district}`,
       representative: {
         name: representative.name,
