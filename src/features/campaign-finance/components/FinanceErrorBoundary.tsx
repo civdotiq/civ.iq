@@ -5,56 +5,40 @@
 
 'use client';
 
-import { Component, ReactNode } from 'react';
+import { ReactNode } from 'react';
+import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 import logger from '@/lib/logging/simple-logger';
 
-interface Props {
+interface FinanceErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
-}
-
-interface State {
-  hasError: boolean;
-  error?: Error;
 }
 
 /**
  * Finance Error Boundary
  *
- * Catches errors in campaign finance components and shows graceful fallback UI
- * Prevents entire page crashes when finance data encounters issues
+ * Wraps the base ErrorBoundary with campaign finance-specific error handling.
+ * Shows FEC-specific messaging when finance data encounters issues.
  */
-export class FinanceErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.error('[Finance Error Boundary] Component error caught', { error, errorInfo });
-  }
-
-  render() {
-    if (this.state.hasError) {
-      if (this.props.fallback) {
-        return this.props.fallback;
+export function FinanceErrorBoundary({ children, fallback }: FinanceErrorBoundaryProps) {
+  return (
+    <ErrorBoundary
+      fallback={({ error, retry }) =>
+        fallback ? <>{fallback}</> : <FinanceErrorFallback error={error} onRetry={retry} />
       }
-
-      return <FinanceErrorFallback error={this.state.error} />;
-    }
-
-    return this.props.children;
-  }
+      onError={(error, errorInfo) => {
+        logger.error('[Finance Error Boundary] Component error caught', { error, errorInfo });
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  );
 }
 
 /**
  * Default Error Fallback UI
  */
-function FinanceErrorFallback({ error }: { error?: Error }) {
+function FinanceErrorFallback({ error, onRetry }: { error?: Error; onRetry?: () => void }) {
   return (
     <div className="aicher-card p-6" role="alert">
       <div className="flex items-start gap-4">
@@ -100,9 +84,17 @@ function FinanceErrorFallback({ error }: { error?: Error }) {
           )}
 
           <div className="mt-4 flex gap-3">
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Try Again
+              </button>
+            )}
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Reload Page
             </button>
