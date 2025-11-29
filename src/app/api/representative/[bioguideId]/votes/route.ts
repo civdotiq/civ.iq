@@ -16,9 +16,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { cachedFetch, govCache as _govCache } from '@/services/cache';
+import { ISR_TIMES } from '@/lib/api/isr-constants';
 
-// ISR: Revalidate every 1 hour
-export const revalidate = 3600;
+// ISR: Revalidate every 1 hour (voting records update frequently)
+export const revalidate = ISR_TIMES.HOURLY;
 
 // Vercel serverless function configuration
 export const maxDuration = 30; // 30 seconds for vote enrichment

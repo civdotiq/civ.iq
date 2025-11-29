@@ -6,9 +6,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
+import { ISR_TIMES } from '@/lib/api/isr-constants';
 
-// ISR: Revalidate every 1 day
-export const revalidate = 86400;
+// ISR: Revalidate every 24 hours (representative roster changes are infrequent)
+export const revalidate = ISR_TIMES.DAILY;
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30; // Heavy data load for all representatives

@@ -17,9 +17,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
+import { ISR_TIMES } from '@/lib/api/isr-constants';
 
-// ISR: Revalidate every 5 minutes
-export const revalidate = 300;
+// ISR: Revalidate every 5 minutes (real-time news data)
+export const revalidate = ISR_TIMES.REALTIME;
 
 // Vercel serverless function configuration
 export const maxDuration = 10; // Reduced from 20s (GDELT was slow)

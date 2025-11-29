@@ -9,6 +9,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import logger from '@/lib/logging/simple-logger';
 
 /**
  * API key configuration for different external services.
@@ -197,4 +198,150 @@ export function createCongressFetchOptions(
       ...additionalHeaders,
     },
   };
+}
+
+/**
+ * Result of a settled promise with error tracking.
+ */
+export interface SettledResult<T> {
+  status: 'fulfilled' | 'rejected';
+  value?: T;
+  error?: Error;
+  index: number;
+}
+
+/**
+ * Execute promises in parallel with individual error handling.
+ * Unlike Promise.all, this won't fail if one promise rejects.
+ * Unlike Promise.allSettled, this provides typed results and index tracking.
+ *
+ * @param promises - Array of promises to execute
+ * @param options - Optional configuration
+ * @returns Array of settled results with status, value/error, and original index
+ *
+ * @example
+ * ```typescript
+ * const results = await safePromiseAll([
+ *   fetch('/api/bills'),
+ *   fetch('/api/votes'),
+ *   fetch('/api/finance'),
+ * ]);
+ *
+ * const successful = results.filter(r => r.status === 'fulfilled');
+ * const failed = results.filter(r => r.status === 'rejected');
+ * ```
+ */
+export async function safePromiseAll<T>(
+  promises: Promise<T>[],
+  options?: {
+    /** Log errors to console (default: false) */
+    logErrors?: boolean;
+    /** Context string for error logging */
+    context?: string;
+  }
+): Promise<SettledResult<T>[]> {
+  const { logErrors = false, context = 'safePromiseAll' } = options || {};
+
+  const wrappedPromises = promises.map(async (promise, index) => {
+    try {
+      const value = await promise;
+      return { status: 'fulfilled' as const, value, index };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      if (logErrors) {
+        logger.error(`[${context}] Promise ${index} failed`, { error: error.message });
+      }
+      return { status: 'rejected' as const, error, index };
+    }
+  });
+
+  return Promise.all(wrappedPromises);
+}
+
+/**
+ * Execute promises in parallel and return only successful results.
+ * Failed promises are silently ignored (useful for optional enrichment).
+ *
+ * @param promises - Array of promises to execute
+ * @returns Array of successful values only
+ *
+ * @example
+ * ```typescript
+ * const enrichedData = await promiseAllSuccessful([
+ *   enrichBill(bill1),
+ *   enrichBill(bill2),
+ *   enrichBill(bill3), // If this fails, others still return
+ * ]);
+ * ```
+ */
+export async function promiseAllSuccessful<T>(promises: Promise<T>[]): Promise<T[]> {
+  const results = await safePromiseAll(promises);
+  return results
+    .filter((r): r is SettledResult<T> & { value: T } => r.status === 'fulfilled')
+    .map(r => r.value);
+}
+
+/**
+ * Execute promises in batches to avoid rate limits.
+ *
+ * @param items - Array of items to process
+ * @param processFn - Async function to process each item
+ * @param options - Batch configuration
+ * @returns Array of results (or errors for failed items)
+ *
+ * @example
+ * ```typescript
+ * const results = await batchPromises(
+ *   votes,
+ *   vote => enrichVote(vote),
+ *   { batchSize: 5, delayMs: 100 }
+ * );
+ * ```
+ */
+export async function batchPromises<T, R>(
+  items: T[],
+  processFn: (item: T, index: number) => Promise<R>,
+  options?: {
+    /** Number of items per batch (default: 5) */
+    batchSize?: number;
+    /** Delay between batches in ms (default: 100) */
+    delayMs?: number;
+    /** Continue on individual errors (default: true) */
+    continueOnError?: boolean;
+  }
+): Promise<SettledResult<R>[]> {
+  const { batchSize = 5, delayMs = 100, continueOnError = true } = options || {};
+  const results: SettledResult<R>[] = [];
+
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const batchPromises = batch.map((item, batchIndex) => processFn(item, i + batchIndex));
+
+    if (continueOnError) {
+      const batchResults = await safePromiseAll(batchPromises);
+      // Adjust indices to global position
+      results.push(
+        ...batchResults.map(r => ({
+          ...r,
+          index: i + r.index,
+        }))
+      );
+    } else {
+      const batchResults = await Promise.all(batchPromises);
+      results.push(
+        ...batchResults.map((value, idx) => ({
+          status: 'fulfilled' as const,
+          value,
+          index: i + idx,
+        }))
+      );
+    }
+
+    // Delay between batches (except for the last batch)
+    if (i + batchSize < items.length && delayMs > 0) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+
+  return results;
 }
