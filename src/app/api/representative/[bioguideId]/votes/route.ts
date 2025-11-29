@@ -981,6 +981,6 @@ export async function GET(
       },
     };
 
-    return NextResponse.json(errorResponse, { status: 200 }); // Return 200 to prevent crashes
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }

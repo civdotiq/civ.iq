@@ -7,6 +7,10 @@
 
 import { useState, useMemo } from 'react';
 
+type TimeframeFilter = 'all' | '6months' | '1year';
+type VoteTypeFilter = 'all' | 'key' | 'passed' | 'failed';
+type PositionFilter = 'all' | 'Yea' | 'Nay' | 'Present' | 'Not Voting';
+
 interface Vote {
   bill: string;
   title: string;
@@ -21,12 +25,10 @@ interface EnhancedVotingChartProps {
   party: string;
 }
 
-export function EnhancedVotingChart({ votes, party }: EnhancedVotingChartProps) {
-  const [selectedTimeframe, setSelectedTimeframe] = useState<'all' | '6months' | '1year'>('all');
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'key' | 'passed' | 'failed'>('all');
-  const [selectedPosition, setSelectedPosition] = useState<
-    'all' | 'Yea' | 'Nay' | 'Present' | 'Not Voting'
-  >('all');
+export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChartProps) {
+  const [selectedTimeframe, setSelectedTimeframe] = useState<TimeframeFilter>('all');
+  const [selectedFilter, setSelectedFilter] = useState<VoteTypeFilter>('all');
+  const [selectedPosition, setSelectedPosition] = useState<PositionFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredVote, setHoveredVote] = useState<number | null>(null);
   const [showDetailedView, setShowDetailedView] = useState(false);
@@ -130,7 +132,7 @@ export function EnhancedVotingChart({ votes, party }: EnhancedVotingChartProps) 
             <label className="block text-sm font-medium text-gray-700 mb-1">Time Period</label>
             <select
               value={selectedTimeframe}
-              onChange={e => setSelectedTimeframe(e.target.value as any)}
+              onChange={e => setSelectedTimeframe(e.target.value as TimeframeFilter)}
               className="w-full text-sm border border-gray-300 rounded px-3 py-2"
             >
               <option value="all">All Time</option>
@@ -142,7 +144,7 @@ export function EnhancedVotingChart({ votes, party }: EnhancedVotingChartProps) 
             <label className="block text-sm font-medium text-gray-700 mb-1">Vote Type</label>
             <select
               value={selectedFilter}
-              onChange={e => setSelectedFilter(e.target.value as any)}
+              onChange={e => setSelectedFilter(e.target.value as VoteTypeFilter)}
               className="w-full text-sm border border-gray-300 rounded px-3 py-2"
             >
               <option value="all">All Votes</option>
@@ -155,7 +157,7 @@ export function EnhancedVotingChart({ votes, party }: EnhancedVotingChartProps) 
             <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
             <select
               value={selectedPosition}
-              onChange={e => setSelectedPosition(e.target.value as any)}
+              onChange={e => setSelectedPosition(e.target.value as PositionFilter)}
               className="w-full text-sm border border-gray-300 rounded px-3 py-2"
             >
               <option value="all">All Positions</option>
@@ -201,7 +203,7 @@ export function EnhancedVotingChart({ votes, party }: EnhancedVotingChartProps) 
             )}
             {searchQuery && (
               <span className="px-2 py-1 bg-civiq-blue text-white text-xs rounded">
-                Search:"{searchQuery}"
+                Search: &quot;{searchQuery}&quot;
               </span>
             )}
             <button

@@ -75,12 +75,16 @@ export function useDistrictData(districtId: string | null): UseDistrictDataResul
       return;
     }
 
+    const abortController = new AbortController();
+
     const fetchDistrictData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/districts/${districtId}`);
+        const response = await fetch(`/api/districts/${districtId}`, {
+          signal: abortController.signal,
+        });
 
         if (!response.ok) {
           throw new Error(`Failed to fetch district data: ${response.status}`);
@@ -94,14 +98,25 @@ export function useDistrictData(districtId: string | null): UseDistrictDataResul
 
         setData(result.district);
       } catch (err) {
+        // Don't update state if the request was aborted (component unmounted)
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
         setError(err instanceof Error ? err.message : 'Failed to load district data');
         setData(null);
       } finally {
-        setLoading(false);
+        // Only update loading if not aborted
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchDistrictData();
+
+    return () => {
+      abortController.abort();
+    };
   }, [districtId]);
 
   return { data, loading, error };

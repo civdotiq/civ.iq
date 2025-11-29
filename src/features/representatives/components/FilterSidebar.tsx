@@ -7,13 +7,7 @@
 
 import { useState, memo } from 'react';
 import { Representative } from '@/features/representatives/services/congress-api';
-
-interface FilterState {
-  chamber: string;
-  party: string;
-  state: string;
-  committee: string;
-}
+import { FilterState } from '@/types/filters';
 
 interface FilterSidebarProps {
   onFilterChange: (filters: FilterState) => void;

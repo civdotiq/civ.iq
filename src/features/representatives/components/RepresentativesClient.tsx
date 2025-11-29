@@ -16,6 +16,7 @@ import CongressHeader from './CongressHeader';
 import { AddressPrompt } from './AddressPrompt';
 import { DistrictHeader } from '@/components/DistrictHeader';
 import { DistrictInfo } from '@/lib/multi-district/detection';
+import { FilterState } from '@/types/filters';
 import logger from '@/lib/logging/simple-logger';
 
 // Dynamic imports for heavy components
@@ -35,13 +36,6 @@ interface RepresentativesClientProps {
     party?: string;
     state?: string;
   };
-}
-
-interface FilterState {
-  chamber: string;
-  party: string;
-  state: string;
-  committee: string;
 }
 
 // New simplified search state interface
