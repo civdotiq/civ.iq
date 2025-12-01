@@ -10,10 +10,9 @@ import logger from '@/lib/logging/simple-logger';
 import { withPerformanceTiming } from '@/lib/performance/api-timer';
 import { getServerBaseUrl } from '@/lib/server-url';
 import type { EnhancedRepresentative } from '@/types/representative';
-import { ISR_TIMES } from '@/lib/api/isr-constants';
 
 // ISR: Revalidate every 24 hours (representative profile data)
-export const revalidate = ISR_TIMES.DAILY;
+export const revalidate = 86400; // 24 hours
 
 export const dynamic = 'force-dynamic';
 

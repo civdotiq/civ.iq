@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCookPVI as getRealCookPVI } from '../cook-pvi-data';
-import { ISR_TIMES } from '@/lib/api/isr-constants';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 15; // Can take ~9s for full district data load
-export const revalidate = ISR_TIMES.WEEKLY; // District data is very static
+export const revalidate = 604800; // 1 week - District data is very static
 import { fetchAllDistrictDemographics } from '../census-helpers';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
