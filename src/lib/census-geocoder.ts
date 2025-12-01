@@ -77,12 +77,18 @@ export function parseAddressComponents(input: string): {
   state?: string;
   zip?: string;
 } {
+  // First, strip country suffix (US, USA, United States) from the end
+  // This handles addresses like "123 Main St, City, MI 48221 US"
+  const inputWithoutCountry = input.replace(/,?\s*(United States|USA|US)\s*$/i, '').trim();
+
   // Try to extract ZIP code (look for it at the end or standalone)
-  const zipMatch = input.match(/,?\s*(\d{5})(-\d{4})?\s*$/);
+  const zipMatch = inputWithoutCountry.match(/,?\s*(\d{5})(-\d{4})?\s*$/);
   const zip = zipMatch ? zipMatch[1] : undefined;
 
   // Remove ZIP from input for further parsing
-  const addressWithoutZip = zip ? input.replace(zipMatch![0], '').trim() : input;
+  const addressWithoutZip = zip
+    ? inputWithoutCountry.replace(zipMatch![0], '').trim()
+    : inputWithoutCountry;
 
   // Try to extract state (2-letter abbreviation at the end)
   const stateMatch = addressWithoutZip.match(/,?\s*([A-Z]{2})\s*$/);

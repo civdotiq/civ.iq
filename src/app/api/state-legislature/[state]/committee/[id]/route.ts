@@ -6,9 +6,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openStatesAPI } from '@/lib/openstates-api';
 import type { StateCommittee, StateParty } from '@/types/state-legislature';
+import { decodeBase64Url } from '@/lib/url-encoding';
 
-// ISR: Revalidate every 1 day
-export const revalidate = 86400;
+// ISR: Revalidate every 30 days
+// Committee details change primarily at start of new legislative sessions
+export const revalidate = 2592000; // 30 days
 
 /**
  * GET /api/state-legislature/[state]/committee/[id]
@@ -52,11 +54,19 @@ export async function GET(
       );
     }
 
-    // Get committee details from OpenStates
-    const committee = await openStatesAPI.getCommitteeById(
-      id,
+    // Decode Base64 URL-safe ID to get OCD committee ID
+    const committeeId = decodeBase64Url(id);
+
+    // Get all committees for this state and find the one we need
+    // This is more reliable than getCommitteeById which has pagination issues
+    const allCommittees = await openStatesAPI.getCommittees(
+      state,
+      undefined, // All chambers
+      undefined, // All classifications
       true // Include memberships
     );
+
+    const committee = allCommittees.find(c => c.id === committeeId);
 
     if (!committee) {
       return NextResponse.json(

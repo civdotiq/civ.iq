@@ -16,7 +16,46 @@
  */
 
 import logger from '@/lib/logging/simple-logger';
-import { REPRESENTATIVE_NICKNAMES } from '@/features/news/services/gdelt-api';
+
+/**
+ * Common nicknames for representatives to improve search results
+ * Example: "William Timmons" is often referred to as "Will Timmons"
+ */
+const REPRESENTATIVE_NICKNAMES: Record<string, string[]> = {
+  'William Timmons': ['Will Timmons'],
+  'Robert Wittman': ['Rob Wittman'],
+  'Christopher Smith': ['Chris Smith'],
+  'Michael McCaul': ['Mike McCaul'],
+  'Michael Turner': ['Mike Turner'],
+  'Michael Rogers': ['Mike Rogers'],
+  'Michael Waltz': ['Mike Waltz'],
+  'Robert Aderholt': ['Rob Aderholt'],
+  'Richard Hudson': ['Rick Hudson'],
+  'Patrick McHenry': ['Pat McHenry'],
+  'Thomas Massie': ['Tom Massie'],
+  'Gregory Steube': ['Greg Steube'],
+  'Charles Fleischmann': ['Chuck Fleischmann'],
+  'Andrew Clyde': ['Drew Clyde'],
+  'Nicholas Langworthy': ['Nick Langworthy'],
+  'Timothy Burchett': ['Tim Burchett'],
+  'Donald Beyer': ['Don Beyer'],
+  'Gerald Connolly': ['Gerry Connolly'],
+  'Joseph Morelle': ['Joe Morelle'],
+  'Joseph Courtney': ['Joe Courtney'],
+  'David Scott': ['David Scott'],
+  'James Clyburn': ['Jim Clyburn'],
+  'James McGovern': ['Jim McGovern'],
+  'James Himes': ['Jim Himes'],
+  'James Costa': ['Jim Costa'],
+  'Bradley Schneider': ['Brad Schneider'],
+  'Edward Markey': ['Ed Markey'],
+  'Bernard Sanders': ['Bernie Sanders'],
+  'Catherine Cortez Masto': ['Catherine Masto'],
+  'Margaret Hassan': ['Maggie Hassan'],
+  'Angus King': ['Angus King Jr.'],
+  'Christopher Murphy': ['Chris Murphy'],
+  'Christopher Coons': ['Chris Coons'],
+};
 
 /**
  * NewsAPI Article Response Interface

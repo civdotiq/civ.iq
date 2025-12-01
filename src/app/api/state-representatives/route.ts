@@ -16,8 +16,10 @@ import logger from '@/lib/logging/simple-logger';
 import type { EnhancedStateLegislator, StateJurisdiction } from '@/types/state-legislature';
 import { getAllCongressionalDistrictsForZip } from '@/lib/data/zip-district-mapping';
 
-// ISR: Revalidate every 1 hour
-export const revalidate = 3600;
+// ISR: Revalidate every 30 days (election-aware caching in StateLegislatureCoreService)
+// State legislators change primarily during biennial election cycles
+// Election-aware govCache handles 3-day refresh during Oct-Dec election season
+export const revalidate = 2592000; // 30 days
 
 export const dynamic = 'force-dynamic';
 

@@ -5,7 +5,6 @@
 
 // API Services
 export { representativesService } from './api/representatives.service';
-export { newsService } from './api/news.service';
 
 // Cache Services
 export { redisService } from './cache/redis.service';
@@ -20,12 +19,6 @@ export type {
   BillSummarizationOptions,
   MultiFormatSummary,
 } from './ai/summarization.service';
-export type {
-  NewsArticle,
-  NewsSearchOptions,
-  BreakingNewsAlert,
-  NewsSearchResult,
-} from './api/news.service';
 export type {
   RepresentativeFilters,
   RepresentativesBatchRequest,

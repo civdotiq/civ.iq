@@ -66,7 +66,7 @@ export interface NewsAggregation {
   readonly articles: ReadonlyArray<NewsArticle>;
   readonly totalResults: number;
   readonly searchTerms: ReadonlyArray<string>;
-  readonly dataSource: 'gdelt' | 'cached' | 'fallback';
+  readonly dataSource: 'newsapi' | 'google-news' | 'cached' | 'fallback';
   readonly duplicatesRemoved?: number;
   readonly qualityFiltered?: number;
   readonly themes?: ReadonlyArray<{
@@ -85,7 +85,7 @@ export interface RepresentativeNews {
   readonly articles: ReadonlyArray<NewsArticle>;
   readonly totalResults: number;
   readonly searchTerms: ReadonlyArray<string>;
-  readonly dataSource: 'gdelt' | 'cached' | 'fallback';
+  readonly dataSource: 'newsapi' | 'google-news' | 'cached' | 'fallback';
   readonly error?: string;
   readonly lastUpdated?: string;
   readonly coverage?: {
@@ -129,29 +129,4 @@ export interface NewsDeduplicationOptions {
   readonly maxArticlesPerDomain?: number;
   readonly enableDomainClustering?: boolean;
   readonly enableContentSimilarity?: boolean;
-}
-
-/**
- * GDELT API specific types
- */
-export interface GDELTArticle {
-  readonly url: string;
-  readonly urltone: string;
-  readonly domain: string;
-  readonly urlpubtimedate: string;
-  readonly urlpubdate: string;
-  readonly urltitle: string;
-  readonly seendate: string;
-  readonly socialimage?: string;
-  readonly language: string;
-  readonly sourcecountry: string;
-}
-
-/**
- * GDELT search response
- */
-export interface GDELTResponse {
-  readonly articles: ReadonlyArray<GDELTArticle>;
-  readonly totalResults?: number;
-  readonly next?: string;
 }
