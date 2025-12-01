@@ -260,8 +260,35 @@ export async function GET(
       return NextResponse.json(noDataResponse);
     }
 
-    // Fetch financial summary from FEC
-    const financialSummary = await fecApiService.getFinancialSummary(fecMapping.fecId, 2024);
+    // PERFORMANCE OPTIMIZATION: Fetch all FEC data in parallel
+    // These 6 API calls are independent and can run concurrently
+    // This reduces total latency from ~6x single call to ~1x (parallel execution)
+    logger.info('[Comprehensive Finance API] Fetching FEC data in parallel');
+
+    const [
+      financialSummary,
+      contributions,
+      individualContributionsForIndustry,
+      principalCommitteeId,
+      pacContributions,
+      independentExpenditures,
+    ] = await Promise.all([
+      fecApiService.getFinancialSummary(fecMapping.fecId, 2024),
+      fecApiService.getSampleContributions(fecMapping.fecId, 2024, 250),
+      fecApiService.getIndividualContributionsWithEmployer(fecMapping.fecId, 2024, 200),
+      fecApiService.getPrincipalCommitteeId(fecMapping.fecId, 2024),
+      fecApiService.getPACContributions(fecMapping.fecId, 2024),
+      fecApiService.getIndependentExpenditures(fecMapping.fecId, 2024),
+    ]);
+
+    logger.info('[Comprehensive Finance API] Parallel fetch complete', {
+      hasFinancialSummary: !!financialSummary,
+      contributionsCount: contributions.length,
+      individualContributionsCount: individualContributionsForIndustry.length,
+      hasPrincipalCommittee: !!principalCommitteeId,
+      pacContributionsCount: pacContributions.length,
+      independentExpendituresCount: independentExpenditures.length,
+    });
 
     if (!financialSummary) {
       const noDataResponse: ComprehensiveFinanceResponse = {
@@ -305,13 +332,6 @@ export async function GET(
 
       return NextResponse.json(noDataResponse);
     }
-
-    // Fetch sample contributions for detailed analysis (optimized to 250 records)
-    const contributions = await fecApiService.getSampleContributions(fecMapping.fecId, 2024, 250);
-
-    // Also fetch individual contributions with employer/occupation data for industry categorization
-    const individualContributionsForIndustry =
-      await fecApiService.getIndividualContributionsWithEmployer(fecMapping.fecId, 2024, 200);
 
     // Process contributors
     const contributorMap = new Map<
@@ -408,13 +428,7 @@ export async function GET(
       }
     }
 
-    // Get principal committee ID for FEC links
-    const principalCommitteeId = await fecApiService.getPrincipalCommitteeId(
-      fecMapping.fecId,
-      2024
-    );
-
-    // Format contributors
+    // Format contributors (principalCommitteeId already fetched in parallel above)
     const allContributors = Array.from(contributorMap.values());
     const individualContributors = allContributors
       .filter(c => !c.isCommittee)
@@ -449,15 +463,7 @@ export async function GET(
         : `https://www.fec.gov/data/receipts/individual-contributions/?two_year_transaction_period=2024&candidate_id=${fecMapping.fecId}&min_amount=1`,
     }));
 
-    // Fetch PAC contributions and Independent Expenditures
-    logger.info('[Comprehensive Finance API] Fetching PAC/Interest Group data');
-    const pacContributions = await fecApiService.getPACContributions(fecMapping.fecId, 2024);
-    const independentExpenditures = await fecApiService.getIndependentExpenditures(
-      fecMapping.fecId,
-      2024
-    );
-
-    // Process PAC contributions by type
+    // Process PAC contributions by type (pacContributions & independentExpenditures already fetched in parallel above)
     const pacByType = {
       superPac: 0,
       traditional: 0,
