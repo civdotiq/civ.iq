@@ -72,6 +72,8 @@ export function DistrictMapContainer({
           container: mapContainer.current!,
           style: {
             version: 8,
+            // Glyphs required for text labels on map
+            glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
             sources: {
               'base-tiles': {
                 type: 'raster',
