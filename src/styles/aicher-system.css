@@ -1,14 +1,59 @@
 /* Otl Aicher Design System - Complete 1972 Munich Olympics Implementation */
+
+/* ═══════════════════════════════════════════════════════════ */
+/* BRAUN LINEAR FONT - Dieter Rams Typography                  */
+/* ═══════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('/fonts/BraunLinear-Thin.woff2') format('woff2');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('/fonts/BraunLinear-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('/fonts/BraunLinear-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('/fonts/BraunLinear-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Braun Linear';
+  src: url('/fonts/BraunLinear-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* 8px grid system - ALL spacing/sizing must be multiples */
   --grid: 8px;
   --border-width: 2px;
   --border-color: #000000;
 
-  /* Ulm School Typography - Neo-grotesque sans-serif stack */
-  /* Prioritizes Akzidenz-Grotesk (Aicher's typeface for 1972 Olympics) */
+  /* Ulm School Typography - Braun Linear (Dieter Rams) with fallbacks */
   --font-primary:
-    'Helvetica Neue', 'Helvetica', 'Arial', 'Nimbus Sans L', 'Liberation Sans', sans-serif;
+    'Braun Linear', 'Helvetica Neue', 'Helvetica', 'Arial', 'Nimbus Sans L', 'Liberation Sans',
+    sans-serif;
   --font-display: var(--font-primary);
 
   /* Typography scale - Ulm School systematic hierarchy */
