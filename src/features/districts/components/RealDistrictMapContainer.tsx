@@ -30,6 +30,7 @@ interface MapState {
   error: string | null;
   mapLoaded: boolean;
   districtCount: number;
+  useFallback: boolean; // True when PMTiles unavailable, using point markers instead
 }
 
 export function RealDistrictMapContainer({
@@ -50,6 +51,7 @@ export function RealDistrictMapContainer({
     error: null,
     mapLoaded: false,
     districtCount: 0,
+    useFallback: false,
   });
 
   // Initialize district boundary service
@@ -175,91 +177,263 @@ export function RealDistrictMapContainer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialCenter, initialZoom, enableInteraction, showControls]);
 
-  // Load district boundaries from PMTiles
+  // Load districts via API fallback (when PMTiles unavailable)
+  const loadDistrictsFallback = useCallback(
+    async (map: Map) => {
+      logger.info('Loading districts via API fallback', {
+        component: 'RealDistrictMapContainer',
+      });
+
+      try {
+        const response = await fetch('/api/districts/all');
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+        const data = await response.json();
+        const districts = data.districts || [];
+
+        if (districts.length === 0) {
+          throw new Error('No district data available');
+        }
+
+        // State center coordinates for positioning district markers
+        const stateCenters: Record<string, [number, number]> = {
+          AL: [-86.79, 32.81],
+          AK: [-152.4, 61.37],
+          AZ: [-111.43, 33.73],
+          AR: [-92.37, 34.97],
+          CA: [-119.68, 36.12],
+          CO: [-105.31, 39.06],
+          CT: [-72.76, 41.6],
+          DE: [-75.51, 39.32],
+          FL: [-81.69, 27.77],
+          GA: [-83.64, 33.04],
+          HI: [-157.5, 21.09],
+          ID: [-114.48, 44.24],
+          IL: [-88.99, 40.35],
+          IN: [-86.26, 39.85],
+          IA: [-93.21, 42.01],
+          KS: [-96.73, 38.53],
+          KY: [-84.67, 37.67],
+          LA: [-91.87, 31.17],
+          ME: [-69.77, 44.32],
+          MD: [-76.8, 39.06],
+          MA: [-71.53, 42.23],
+          MI: [-84.54, 43.33],
+          MN: [-93.9, 45.69],
+          MS: [-89.68, 32.74],
+          MO: [-92.29, 38.46],
+          MT: [-109.63, 47.05],
+          NE: [-98.27, 41.13],
+          NV: [-116.42, 37.84],
+          NH: [-71.56, 43.45],
+          NJ: [-74.52, 40.3],
+          NM: [-106.25, 34.84],
+          NY: [-74.95, 42.17],
+          NC: [-79.81, 35.63],
+          ND: [-99.78, 47.53],
+          OH: [-82.76, 40.39],
+          OK: [-96.93, 35.57],
+          OR: [-120.77, 44.93],
+          PA: [-77.21, 40.59],
+          RI: [-71.51, 41.68],
+          SC: [-80.95, 33.86],
+          SD: [-99.44, 44.3],
+          TN: [-86.69, 35.75],
+          TX: [-97.56, 31.05],
+          UT: [-111.86, 40.15],
+          VT: [-72.71, 44.05],
+          VA: [-78.17, 37.77],
+          WA: [-121.49, 47.4],
+          WV: [-80.95, 38.49],
+          WI: [-89.62, 44.27],
+          WY: [-107.3, 42.76],
+        };
+
+        // Convert to GeoJSON points
+        const features = districts
+          .slice(0, 100)
+          .map(
+            (d: {
+              id: string;
+              state: string;
+              number: string;
+              name: string;
+              representative: { party: string; name: string };
+            }) => {
+              const center = stateCenters[d.state] || [-95.71, 37.09];
+              const distNum = parseInt(d.number) || 0;
+              // Spread districts within a state
+              const offset = distNum * 0.3;
+              return {
+                type: 'Feature' as const,
+                properties: {
+                  id: d.id,
+                  name: d.name,
+                  state: d.state,
+                  number: d.number,
+                  party: d.representative?.party || 'I',
+                  representative: d.representative?.name || 'Unknown',
+                },
+                geometry: {
+                  type: 'Point' as const,
+                  coordinates: [
+                    center[0] + (Math.sin(offset) * distNum) / 10,
+                    center[1] + (Math.cos(offset) * distNum) / 10,
+                  ],
+                },
+              };
+            }
+          );
+
+        const geoJson = { type: 'FeatureCollection' as const, features };
+
+        map.addSource('districts-fallback', { type: 'geojson', data: geoJson });
+
+        // Circle layer colored by party
+        map.addLayer({
+          id: 'district-circles',
+          type: 'circle',
+          source: 'districts-fallback',
+          paint: {
+            'circle-color': [
+              'case',
+              ['==', ['get', 'party'], 'R'],
+              '#dc2626',
+              ['==', ['get', 'party'], 'D'],
+              '#2563eb',
+              '#6b7280',
+            ],
+            'circle-radius': 6,
+            'circle-stroke-color': '#ffffff',
+            'circle-stroke-width': 1,
+            'circle-opacity': 0.85,
+          },
+        });
+
+        // Add click handler for fallback
+        if (enableInteraction) {
+          map.on('click', 'district-circles', (e: MapLayerMouseEvent) => {
+            if (e.features?.[0]?.properties && onDistrictClick) {
+              const props = e.features[0].properties;
+              const district: DistrictBoundary = {
+                id: props.id,
+                state_fips: '',
+                state_name: props.state,
+                state_abbr: props.state,
+                district_num: props.number,
+                name: props.name,
+                full_name: `${props.state}-${props.number}`,
+                centroid: [0, 0],
+                bbox: [0, 0, 0, 0],
+                area_sqm: 0,
+                geoid: props.id,
+              };
+              onDistrictClick(district);
+            }
+          });
+
+          map.on('mouseenter', 'district-circles', () => {
+            map.getCanvas().style.cursor = 'pointer';
+          });
+          map.on('mouseleave', 'district-circles', () => {
+            map.getCanvas().style.cursor = '';
+          });
+        }
+
+        setMapState(prev => ({
+          ...prev,
+          loading: false,
+          useFallback: true,
+          districtCount: features.length,
+        }));
+      } catch (err) {
+        logger.error('Fallback district loading failed', {
+          component: 'RealDistrictMapContainer',
+          error: err as Error,
+        });
+        setMapState(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Failed to load district data',
+        }));
+      }
+    },
+    [enableInteraction, onDistrictClick]
+  );
+
+  // Load district boundaries from PMTiles (with API fallback)
   const loadDistrictBoundaries = useCallback(async () => {
     if (!mapRef.current || !mapState.mapLoaded) return;
 
+    const map = mapRef.current;
+    setMapState(prev => ({ ...prev, loading: true }));
+
+    // First, check if PMTiles file exists
+    const pmtilesUrl = '/maps/congressional_districts_119_real.pmtiles';
+
     try {
-      logger.info('Attempting to load district boundaries', {
+      const headCheck = await fetch(pmtilesUrl, { method: 'HEAD' });
+      if (!headCheck.ok) {
+        logger.warn('PMTiles file not available, using API fallback', {
+          component: 'RealDistrictMapContainer',
+          status: headCheck.status,
+        });
+        await loadDistrictsFallback(map);
+        return;
+      }
+    } catch {
+      logger.warn('PMTiles check failed, using API fallback', {
         component: 'RealDistrictMapContainer',
       });
-      setMapState(prev => ({ ...prev, loading: true }));
+      await loadDistrictsFallback(map);
+      return;
+    }
 
-      const map = mapRef.current;
-
-      // Load REAL Census PMTiles data
-      const pmtilesUrl = '/maps/congressional_districts_119_real.pmtiles';
-
-      logger.info('Loading REAL Congressional District boundaries from PMTiles', {
+    try {
+      logger.info('Loading Congressional District boundaries from PMTiles', {
         component: 'RealDistrictMapContainer',
         pmtilesUrl,
         source: 'Census TIGER/Line 2024 - 119th Congress',
       });
 
-      // Add district boundaries source using REAL PMTiles
-      const sourceConfig = {
-        type: 'vector' as const,
+      // Add district boundaries source using PMTiles
+      map.addSource('district-boundaries', {
+        type: 'vector',
         url: `pmtiles://${pmtilesUrl}`,
-      };
-      logger.debug('Adding PMTiles source', {
-        component: 'RealDistrictMapContainer',
-        config: sourceConfig,
       });
 
-      map.addSource('district-boundaries', sourceConfig);
-      logger.info('PMTiles source added successfully', {
-        component: 'RealDistrictMapContainer',
-      });
-
-      // Add district boundary layers using REAL Census data
-      const fillLayerConfig = {
+      // Add fill layer
+      map.addLayer({
         id: 'district-fill',
-        type: 'fill' as const,
+        type: 'fill',
         source: 'district-boundaries',
-        'source-layer': 'districts', // PMTiles layer name from Tippecanoe
+        'source-layer': 'districts',
         paint: {
-          'fill-color': '#e5e7eb', // Light gray default
+          'fill-color': '#e5e7eb',
           'fill-opacity': 0.6,
         },
-      };
-      logger.debug('Adding fill layer', {
-        component: 'RealDistrictMapContainer',
-        config: fillLayerConfig,
       });
 
-      map.addLayer(fillLayerConfig);
-      logger.info('Fill layer added successfully', {
-        component: 'RealDistrictMapContainer',
-      });
-
-      const strokeLayerConfig = {
+      // Add stroke layer
+      map.addLayer({
         id: 'district-stroke',
-        type: 'line' as const,
+        type: 'line',
         source: 'district-boundaries',
-        'source-layer': 'districts', // PMTiles layer name from Tippecanoe
+        'source-layer': 'districts',
         paint: {
           'line-color': '#374151',
           'line-width': 1,
         },
-      };
-      logger.debug('Adding stroke layer', {
-        component: 'RealDistrictMapContainer',
-        config: strokeLayerConfig,
       });
 
-      map.addLayer(strokeLayerConfig);
-      logger.info('Stroke layer added successfully', {
-        component: 'RealDistrictMapContainer',
-      });
-
-      // Add district labels showing real district names
-      const labelsLayerConfig = {
+      // Add labels layer
+      map.addLayer({
         id: 'district-labels',
-        type: 'symbol' as const,
+        type: 'symbol',
         source: 'district-boundaries',
-        'source-layer': 'districts', // PMTiles layer name from Tippecanoe
+        'source-layer': 'districts',
         layout: {
-          'text-field': '{name}', // Real district name from Census data
+          'text-field': '{name}',
           'text-font': ['Open Sans Regular'],
           'text-size': 12,
         },
@@ -268,66 +442,42 @@ export function RealDistrictMapContainer({
           'text-halo-color': '#ffffff',
           'text-halo-width': 1,
         },
-      };
-      logger.debug('Adding labels layer', {
-        component: 'RealDistrictMapContainer',
-        config: labelsLayerConfig,
       });
 
-      map.addLayer(labelsLayerConfig);
-      logger.info('Labels layer added successfully', {
-        component: 'RealDistrictMapContainer',
-      });
-
-      // Add PMTiles loading verification
+      // Verify PMTiles loaded
       map.on('sourcedata', e => {
         if (e.sourceId === 'district-boundaries' && e.isSourceLoaded) {
           logger.info('✅ PMTiles loaded successfully', {
             component: 'RealDistrictMapContainer',
-            sourceId: e.sourceId,
-            tile: e.tile,
           });
         }
       });
 
-      // Add click handlers
+      // Add click handlers for PMTiles
       if (enableInteraction) {
         map.on('click', 'district-fill', (e: MapLayerMouseEvent) => {
-          if (e.features && e.features[0]) {
-            const feature = e.features[0];
-            const properties = feature.properties;
-
-            if (properties && onDistrictClick) {
-              // Convert feature properties to DistrictBoundary
-              const district: DistrictBoundary = {
-                id: properties.district_id,
-                state_fips: properties.state_fips,
-                state_name: properties.state_name,
-                state_abbr: properties.state_abbr,
-                district_num: properties.district_num,
-                name: properties.name,
-                full_name: properties.full_name,
-                centroid: [properties.centroid_lng, properties.centroid_lat],
-                bbox: [
-                  properties.bbox_minlng,
-                  properties.bbox_minlat,
-                  properties.bbox_maxlng,
-                  properties.bbox_maxlat,
-                ],
-                area_sqm: properties.area_sqm || 0,
-                geoid: properties.geoid || '',
-              };
-
-              onDistrictClick(district);
-            }
+          if (e.features?.[0]?.properties && onDistrictClick) {
+            const props = e.features[0].properties;
+            const district: DistrictBoundary = {
+              id: props.district_id,
+              state_fips: props.state_fips,
+              state_name: props.state_name,
+              state_abbr: props.state_abbr,
+              district_num: props.district_num,
+              name: props.name,
+              full_name: props.full_name,
+              centroid: [props.centroid_lng, props.centroid_lat],
+              bbox: [props.bbox_minlng, props.bbox_minlat, props.bbox_maxlng, props.bbox_maxlat],
+              area_sqm: props.area_sqm || 0,
+              geoid: props.geoid || '',
+            };
+            onDistrictClick(district);
           }
         });
 
-        // Change cursor on hover
         map.on('mouseenter', 'district-fill', () => {
           map.getCanvas().style.cursor = 'pointer';
         });
-
         map.on('mouseleave', 'district-fill', () => {
           map.getCanvas().style.cursor = '';
         });
@@ -335,17 +485,13 @@ export function RealDistrictMapContainer({
 
       setMapState(prev => ({ ...prev, loading: false }));
     } catch (error) {
-      logger.error('Failed to load district boundaries', {
+      logger.error('PMTiles loading failed, trying fallback', {
         component: 'RealDistrictMapContainer',
         error: error as Error,
       });
-      setMapState(prev => ({
-        ...prev,
-        loading: false,
-        error: 'Failed to load district boundaries',
-      }));
+      await loadDistrictsFallback(map);
     }
-  }, [mapState.mapLoaded, enableInteraction, onDistrictClick]);
+  }, [mapState.mapLoaded, enableInteraction, onDistrictClick, loadDistrictsFallback]);
 
   // Fit map to selected state
   useEffect(() => {
@@ -430,19 +576,37 @@ export function RealDistrictMapContainer({
       {showControls && (
         <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 backdrop-blur-sm p-3 border-2 border-black z-10">
           <div className="text-xs font-medium text-gray-700 mb-2">Congressional Districts</div>
-          <div className="space-y-1 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gray-300 rounded"></div>
-              <span>District Boundary</span>
+          {mapState.useFallback ? (
+            <div className="space-y-1 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                <span>Republican</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                <span>Democratic</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                <span>Independent</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded"></div>
-              <span>Selected District</span>
+          ) : (
+            <div className="space-y-1 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-gray-300 rounded"></div>
+                <span>District Boundary</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                <span>Selected District</span>
+              </div>
             </div>
-          </div>
+          )}
           {mapState.districtCount > 0 && (
             <div className="text-xs text-gray-500 mt-2 pt-2 border-t">
               {mapState.districtCount} districts loaded
+              {mapState.useFallback && ' (simplified view)'}
             </div>
           )}
         </div>
