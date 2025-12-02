@@ -6,7 +6,15 @@
 'use client';
 
 import React from 'react';
-import { User, BarChart3, FileText, DollarSign, Newspaper, Users, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
+import {
+  RepresentativeIcon,
+  StatisticsIcon,
+  LegislationIcon,
+  FinanceIcon,
+  NewsIcon,
+  CommitteeIcon,
+} from '@/components/icons/AicherIcons';
 
 export interface TabItem {
   id: string;
@@ -30,37 +38,37 @@ const defaultTabs: TabItem[] = [
   {
     id: 'profile',
     label: 'Profile',
-    icon: <User className="w-4 h-4" />,
+    icon: <RepresentativeIcon className="w-4 h-4" />,
     description: 'Biography and background information',
   },
   {
     id: 'voting',
     label: 'Voting',
-    icon: <BarChart3 className="w-4 h-4" />,
+    icon: <StatisticsIcon className="w-4 h-4" />,
     description: 'Voting records and positions',
   },
   {
     id: 'bills',
     label: 'Bills',
-    icon: <FileText className="w-4 h-4" />,
+    icon: <LegislationIcon className="w-4 h-4" />,
     description: 'Sponsored and co-sponsored legislation',
   },
   {
     id: 'finance',
     label: 'Finance',
-    icon: <DollarSign className="w-4 h-4" />,
+    icon: <FinanceIcon className="w-4 h-4" />,
     description: 'Campaign finance and fundraising',
   },
   {
     id: 'news',
     label: 'News',
-    icon: <Newspaper className="w-4 h-4" />,
+    icon: <NewsIcon className="w-4 h-4" />,
     description: 'Recent news and press coverage',
   },
   {
     id: 'relationships',
     label: 'Relationships',
-    icon: <Users className="w-4 h-4" />,
+    icon: <CommitteeIcon className="w-4 h-4" />,
     description: 'Committees and professional connections',
   },
 ];
@@ -249,31 +257,31 @@ export const profileTabs: TabItem[] = [
   {
     id: 'overview',
     label: 'Overview',
-    icon: <User className="w-4 h-4" />,
+    icon: <RepresentativeIcon className="w-4 h-4" />,
     description: 'Personal details and committee memberships',
   },
   {
     id: 'voting',
     label: 'Voting Records',
-    icon: <BarChart3 className="w-4 h-4" />,
+    icon: <StatisticsIcon className="w-4 h-4" />,
     description: 'Voting history and positions',
   },
   {
     id: 'legislation',
     label: 'Sponsored Bills',
-    icon: <FileText className="w-4 h-4" />,
+    icon: <LegislationIcon className="w-4 h-4" />,
     description: 'Bills sponsored and co-sponsored',
   },
   {
     id: 'finance',
     label: 'Campaign Finance',
-    icon: <DollarSign className="w-4 h-4" />,
+    icon: <FinanceIcon className="w-4 h-4" />,
     description: 'Fundraising and expenditures',
   },
   {
     id: 'news',
     label: 'Recent News',
-    icon: <Newspaper className="w-4 h-4" />,
+    icon: <NewsIcon className="w-4 h-4" />,
     description: 'Recent media coverage',
   },
 ];

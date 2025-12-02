@@ -8,7 +8,12 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { EnhancedRepresentative } from '@/types/representative';
-import { Users, FileText, DollarSign, Award } from 'lucide-react';
+import {
+  LegislationIcon,
+  VoteIcon,
+  FinanceIcon,
+  CommitteeIcon,
+} from '@/components/icons/AicherIcons';
 import { ShareIconButton } from '@/components/shared/social/ShareButton';
 
 interface HeroStatsHeaderProps {
@@ -211,7 +216,7 @@ export function HeroStatsHeader({
               aria-label="View sponsored bills"
             >
               <div className="flex items-center gap-2 mb-2">
-                <FileText className="w-4 h-4 text-civiq-blue" />
+                <LegislationIcon className="w-4 h-4 text-civiq-blue" />
                 <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
                   Bills Sponsored
                 </span>
@@ -236,7 +241,7 @@ export function HeroStatsHeader({
               aria-label="View voting records"
             >
               <div className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4 text-civiq-green" />
+                <VoteIcon className="w-4 h-4 text-civiq-green" />
                 <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
                   Votes Cast
                 </span>
@@ -261,7 +266,7 @@ export function HeroStatsHeader({
               aria-label="View campaign finance data"
             >
               <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="w-4 h-4 text-civiq-red" />
+                <FinanceIcon className="w-4 h-4 text-civiq-red" />
                 <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
                   Total Raised
                 </span>
@@ -286,7 +291,7 @@ export function HeroStatsHeader({
               aria-label="View committee memberships"
             >
               <div className="flex items-center gap-2 mb-2">
-                <Award className="w-4 h-4 text-civiq-blue" />
+                <CommitteeIcon className="w-4 h-4 text-civiq-blue" />
                 <span className="aicher-heading-wide text-xs text-gray-600 uppercase">
                   Committees
                 </span>
