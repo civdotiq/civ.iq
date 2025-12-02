@@ -227,7 +227,24 @@ export function CampaignFinanceVisualizer({
               // Map other comprehensive data
               industry_breakdown: data.industries?.topIndustries || [],
               top_contributors: data.contributors?.topContributors || [],
-              recent_contributions: data.recentContributions || [],
+              // Transform recentContributions to match expected field names
+              recent_contributions: (data.recentContributions || []).map(
+                (c: {
+                  name: string;
+                  amount: number;
+                  date: string;
+                  employer?: string;
+                  city?: string;
+                  state?: string;
+                }) => ({
+                  contributor_name: c.name,
+                  contribution_receipt_amount: c.amount,
+                  contribution_receipt_date: c.date,
+                  contributor_employer: c.employer || '',
+                  contributor_city: c.city || '',
+                  contributor_state: c.state || '',
+                })
+              ),
             };
             setComprehensiveData(mappedData);
           } else {

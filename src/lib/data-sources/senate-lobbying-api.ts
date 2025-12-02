@@ -191,10 +191,10 @@ export class SenateLobbyingAPI {
         const keywords = committeeKeywords[committee] || [committee.toLowerCase()];
         const relevantFilings = allFilings.filter(filing => {
           // Check if any specific issues or general issues match committee keywords
-          const allIssues = [
-            ...filing.specific_issues,
-            ...filing.issues.map(issue => issue.description),
-          ].join(' ').toLowerCase();
+          // Handle null/undefined specific_issues and issues arrays
+          const specificIssues = Array.isArray(filing.specific_issues) ? filing.specific_issues : [];
+          const generalIssues = Array.isArray(filing.issues) ? filing.issues.map(issue => issue.description || '') : [];
+          const allIssues = [...specificIssues, ...generalIssues].join(' ').toLowerCase();
 
           return keywords.some(keyword => allIssues.includes(keyword));
         });
@@ -206,7 +206,7 @@ export class SenateLobbyingAPI {
           const filings = relevantFilings.map(filing => ({
             company: filing.client.name,
             amount: filing.income || 0,
-            issues: filing.specific_issues.slice(0, 3), // Top 3 issues
+            issues: Array.isArray(filing.specific_issues) ? filing.specific_issues.slice(0, 3) : [], // Top 3 issues
             quarter: filing.filingPeriod,
             year: filing.filingYear,
           }));
