@@ -136,12 +136,12 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
   const pathname = usePathname();
 
   const headerClasses = transparent
-    ? 'aicher-card/95 backdrop-blur-md'
-    : 'aicher-card aicher-no-radius';
+    ? 'bg-white/95 backdrop-blur-md'
+    : 'bg-white border-b-2 border-black';
 
   return (
     <header className={`fixed top-0 w-full ${headerClasses} z-50 ${className}`}>
-      <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
+      <div className="container mx-auto px-4 py-2 flex justify-between items-center">
         {/* Logo */}
         <Link
           href="/"

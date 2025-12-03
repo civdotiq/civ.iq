@@ -7,7 +7,7 @@ export function CiviqLogo() {
   return (
     <div className="flex items-center group">
       <svg
-        className="w-10 h-10 transition-transform group-hover:scale-110"
+        className="w-8 h-8 transition-transform group-hover:scale-110"
         viewBox="0 0 100 100"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -37,7 +37,7 @@ export function CiviqLogo() {
           className="animate-pulse animation-delay-300"
         />
       </svg>
-      <span className="ml-3 text-2xl font-black tracking-tight text-gray-900">CIV.IQ</span>
+      <span className="ml-2 text-xl font-black tracking-tight text-gray-900">CIV.IQ</span>
     </div>
   );
 }
