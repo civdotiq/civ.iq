@@ -14,13 +14,10 @@ if (typeof global !== 'undefined' && typeof global.self === 'undefined') {
 export async function register() {
   const timestamp = new Date().toISOString();
 
-  // Safe environment checks for production
+  // Safe environment checks for production (avoid process.version which isn't available in Edge Runtime)
   const nodeEnv = typeof process !== 'undefined' && process.env ? process.env.NODE_ENV : 'unknown';
-  const nodeVersion =
-    typeof process !== 'undefined' && process.version ? process.version : 'unknown';
 
   console.log(`[${timestamp}] 🚀 Civic Intel Hub starting up...`);
-  console.log(`[${timestamp}] Node version: ${nodeVersion}`);
   console.log(`[${timestamp}] Environment: ${nodeEnv}`);
 
   // Log when we're about to fetch congress data
