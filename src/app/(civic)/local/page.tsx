@@ -31,7 +31,7 @@ export default function LocalPage() {
               mayors, city council members, county commissioners, and school board officials.
             </p>
             <p className="text-blue-700">
-              In the meantime, use our ZIP code search to find your federal and state
+              In the meantime, use our address search to find your federal and state
               representatives.
             </p>
             <Link
