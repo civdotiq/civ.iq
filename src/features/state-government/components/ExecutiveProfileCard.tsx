@@ -83,6 +83,25 @@ export const ExecutiveProfileCard: React.FC<ExecutiveProfileCardProps> = ({
     return 'accent-bar-green';
   };
 
+  // Format term dates safely - handles missing or invalid dates
+  const formatTermDates = (): string | null => {
+    const startYear = official.termStart ? new Date(official.termStart).getFullYear() : null;
+    const endYear = official.termEnd ? new Date(official.termEnd).getFullYear() : null;
+
+    // Validate years are actual numbers
+    const validStart = startYear && !isNaN(startYear) ? startYear : null;
+    const validEnd = endYear && !isNaN(endYear) ? endYear : null;
+
+    if (validStart && validEnd) {
+      return `${validStart} - ${validEnd}`;
+    } else if (validStart) {
+      return `${validStart} - Present`;
+    } else if (official.isIncumbent) {
+      return 'Current Term';
+    }
+    return null;
+  };
+
   return (
     <div
       className={`bg-white border-2 border-black relative ${getAccentBarClass()} ${
@@ -132,16 +151,15 @@ export const ExecutiveProfileCard: React.FC<ExecutiveProfileCardProps> = ({
         </div>
 
         {/* Term Information */}
-        <div className="bg-gray-50 border-2 border-gray-300 p-3 mb-4">
-          <div className="flex items-center gap-2 text-sm text-gray-700">
-            <Calendar className="w-4 h-4 text-civiq-blue" />
-            <span className="font-medium">Term:</span>
-            <span>
-              {new Date(official.termStart).getFullYear()} -{' '}
-              {new Date(official.termEnd).getFullYear()}
-            </span>
+        {formatTermDates() && (
+          <div className="bg-gray-50 border-2 border-gray-300 p-3 mb-4">
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <Calendar className="w-4 h-4 text-civiq-blue" />
+              <span className="font-medium">Term:</span>
+              <span>{formatTermDates()}</span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Contact Information */}
         {(official.email || official.phone || official.office) && (

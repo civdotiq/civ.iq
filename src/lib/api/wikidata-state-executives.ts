@@ -126,13 +126,71 @@ const STATE_WIKIDATA_IDS: Record<string, string> = {
 };
 
 /**
- * Wikidata property IDs for executive positions
+ * State name mappings for SPARQL queries
  */
-const POSITION_PROPERTIES: Record<string, string> = {
-  governor: 'P6', // head of government
-  lieutenant_governor: 'P1313',
-  attorney_general: 'P3320',
-  secretary_of_state: 'P5769',
+const STATE_NAMES: Record<string, string> = {
+  AL: 'Alabama',
+  AK: 'Alaska',
+  AZ: 'Arizona',
+  AR: 'Arkansas',
+  CA: 'California',
+  CO: 'Colorado',
+  CT: 'Connecticut',
+  DE: 'Delaware',
+  FL: 'Florida',
+  GA: 'Georgia',
+  HI: 'Hawaii',
+  ID: 'Idaho',
+  IL: 'Illinois',
+  IN: 'Indiana',
+  IA: 'Iowa',
+  KS: 'Kansas',
+  KY: 'Kentucky',
+  LA: 'Louisiana',
+  ME: 'Maine',
+  MD: 'Maryland',
+  MA: 'Massachusetts',
+  MI: 'Michigan',
+  MN: 'Minnesota',
+  MS: 'Mississippi',
+  MO: 'Missouri',
+  MT: 'Montana',
+  NE: 'Nebraska',
+  NV: 'Nevada',
+  NH: 'New Hampshire',
+  NJ: 'New Jersey',
+  NM: 'New Mexico',
+  NY: 'New York',
+  NC: 'North Carolina',
+  ND: 'North Dakota',
+  OH: 'Ohio',
+  OK: 'Oklahoma',
+  OR: 'Oregon',
+  PA: 'Pennsylvania',
+  RI: 'Rhode Island',
+  SC: 'South Carolina',
+  SD: 'South Dakota',
+  TN: 'Tennessee',
+  TX: 'Texas',
+  UT: 'Utah',
+  VT: 'Vermont',
+  VA: 'Virginia',
+  WA: 'Washington',
+  WV: 'West Virginia',
+  WI: 'Wisconsin',
+  WY: 'Wyoming',
+  DC: 'Washington, D.C.',
+};
+
+/**
+ * Position type identifiers in Wikidata (P31 = instance of)
+ * These are the general types we look for when searching
+ */
+const POSITION_TYPE_IDS: Record<string, string> = {
+  governor: 'Q889821', // governor of a U.S. state
+  lieutenant_governor: 'Q2148916', // lieutenant governor of a state of the United States
+  attorney_general: 'Q26334195', // state attorney general of the United States
+  secretary_of_state: 'Q26294155', // secretary of state of a state of the United States
 };
 
 /**
@@ -200,39 +258,90 @@ async function executeSparqlQuery(query: string): Promise<WikidataSparqlBinding[
 }
 
 /**
- * Fetch current state official by position
+ * Fetch current state official by searching for people who hold a position
+ * associated with the state. Uses P39 (position held) with state association.
+ *
+ * Strategy:
+ * 1. For governors: Use P6 (head of government) on the state - this works well
+ * 2. For other positions: Search for people who hold positions with the state name
+ *    in the position label (e.g., "Lieutenant Governor of Alaska")
  */
 async function fetchStateOfficial(
   stateCode: string,
-  positionProperty: string,
   positionName: StateExecutive['position']
 ): Promise<StateExecutive | null> {
   const wikidataId = STATE_WIKIDATA_IDS[stateCode.toUpperCase()];
-  if (!wikidataId) {
+  const stateName = STATE_NAMES[stateCode.toUpperCase()];
+  if (!wikidataId || !stateName) {
     return null;
   }
 
-  const query = `
-    SELECT ?official ?officialLabel ?party ?partyLabel ?termStart ?termEnd
-           ?photo ?birthDate ?birthPlaceLabel ?educationLabel ?previousPositionLabel ?wikipediaUrl
-    WHERE {
-      wd:${wikidataId} wdt:${positionProperty} ?official .
-      OPTIONAL { ?official wdt:P102 ?party . }
-      OPTIONAL { ?official wdt:P580 ?termStart . }
-      OPTIONAL { ?official wdt:P582 ?termEnd . }
-      OPTIONAL { ?official wdt:P18 ?photo . }
-      OPTIONAL { ?official wdt:P569 ?birthDate . }
-      OPTIONAL { ?official wdt:P19 ?birthPlace . }
-      OPTIONAL { ?official wdt:P69 ?education . }
-      OPTIONAL { ?official wdt:P39 ?previousPosition . }
-      OPTIONAL {
-        ?wikipediaUrl schema:about ?official;
-                     schema:isPartOf <https://en.wikipedia.org/>.
+  let query: string;
+
+  if (positionName === 'governor') {
+    // Governor: Use P6 (head of government) directly on the state entity
+    query = `
+      SELECT ?person ?personLabel ?party ?partyLabel ?startTime ?photo ?wikipediaUrl
+      WHERE {
+        wd:${wikidataId} wdt:P6 ?person .
+        OPTIONAL { ?person wdt:P102 ?party . }
+        OPTIONAL { ?person wdt:P18 ?photo . }
+        OPTIONAL {
+          ?person p:P39 ?posStatement .
+          ?posStatement ps:P39 ?position .
+          ?posStatement pq:P580 ?startTime .
+          FILTER NOT EXISTS { ?posStatement pq:P582 ?endTime . }
+        }
+        OPTIONAL {
+          ?wikipediaUrl schema:about ?person;
+                       schema:isPartOf <https://en.wikipedia.org/>.
+        }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
       }
-      SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      LIMIT 1
+    `;
+  } else {
+    // Other positions: Find the position item for this state, then find current holder
+    const positionTypeId = POSITION_TYPE_IDS[positionName];
+    if (!positionTypeId) {
+      return null;
     }
-    LIMIT 1
-  `;
+
+    // Search for people who currently hold a position that:
+    // 1. Is an instance of the position type (e.g., lieutenant governor)
+    // 2. Is associated with the state (via P1001 jurisdiction or label match)
+    // 3. Has no end date (current holder)
+    query = `
+      SELECT ?person ?personLabel ?party ?partyLabel ?startTime ?photo ?wikipediaUrl ?positionLabel
+      WHERE {
+        ?person p:P39 ?statement .
+        ?statement ps:P39 ?position .
+
+        # Position must be instance of the position type (e.g., lieutenant governor)
+        ?position wdt:P31 wd:${positionTypeId} .
+
+        # Position must be associated with this state
+        { ?position wdt:P1001 wd:${wikidataId} . }
+        UNION
+        { ?position wdt:P131 wd:${wikidataId} . }
+        UNION
+        { ?position rdfs:label ?posLabel . FILTER(CONTAINS(LCASE(?posLabel), LCASE("${stateName}"))) }
+
+        # Must be current holder (no end date)
+        FILTER NOT EXISTS { ?statement pq:P582 ?endTime . }
+
+        OPTIONAL { ?statement pq:P580 ?startTime . }
+        OPTIONAL { ?person wdt:P102 ?party . }
+        OPTIONAL { ?person wdt:P18 ?photo . }
+        OPTIONAL {
+          ?wikipediaUrl schema:about ?person;
+                       schema:isPartOf <https://en.wikipedia.org/>.
+        }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+      }
+      LIMIT 1
+    `;
+  }
 
   const bindings = await executeSparqlQuery(query);
   if (!bindings.length) {
@@ -244,33 +353,25 @@ async function fetchStateOfficial(
     return null;
   }
 
-  const officialWikidataId = result.official?.value.split('/').pop() || '';
+  // Extract person ID from URI
+  const personUri =
+    result.official?.value || (result as Record<string, { value: string }>).person?.value;
+  const personWikidataId = personUri?.split('/').pop() || '';
 
-  // Collect all education and previous positions
-  const education = new Set<string>();
-  const previousPositions = new Set<string>();
-
-  bindings.forEach(binding => {
-    if (binding.educationLabel?.value) {
-      education.add(binding.educationLabel.value);
-    }
-    if (binding.previousPositionLabel?.value) {
-      previousPositions.add(binding.previousPositionLabel.value);
-    }
-  });
+  // Get name from the appropriate label field
+  const name =
+    result.officialLabel?.value ||
+    (result as Record<string, { value: string }>).personLabel?.value ||
+    'Unknown';
 
   return {
-    wikidataId: officialWikidataId,
-    name: result.officialLabel?.value || 'Unknown',
+    wikidataId: personWikidataId,
+    name,
     position: positionName,
     party: result.partyLabel?.value,
-    termStart: result.termStart?.value,
-    termEnd: result.termEnd?.value,
+    termStart: (result as Record<string, { value: string }>).startTime?.value,
+    termEnd: undefined, // Current holder has no end date
     photoUrl: result.photo?.value,
-    birthDate: result.birthDate?.value,
-    birthPlace: result.birthPlaceLabel?.value,
-    education: Array.from(education),
-    previousPositions: Array.from(previousPositions),
     wikipediaUrl: result.wikipediaUrl?.value,
   };
 }
@@ -281,9 +382,7 @@ async function fetchStateOfficial(
  * @returns Governor data or null if not found
  */
 export async function getStateGovernor(stateCode: string): Promise<StateExecutive | null> {
-  const property = POSITION_PROPERTIES.governor;
-  if (!property) return null;
-  return fetchStateOfficial(stateCode, property, 'governor');
+  return fetchStateOfficial(stateCode, 'governor');
 }
 
 /**
@@ -292,9 +391,7 @@ export async function getStateGovernor(stateCode: string): Promise<StateExecutiv
  * @returns Lieutenant governor data or null if not found
  */
 export async function getStateLtGovernor(stateCode: string): Promise<StateExecutive | null> {
-  const property = POSITION_PROPERTIES.lieutenant_governor;
-  if (!property) return null;
-  return fetchStateOfficial(stateCode, property, 'lieutenant_governor');
+  return fetchStateOfficial(stateCode, 'lieutenant_governor');
 }
 
 /**
@@ -303,9 +400,7 @@ export async function getStateLtGovernor(stateCode: string): Promise<StateExecut
  * @returns Attorney general data or null if not found
  */
 export async function getStateAttorneyGeneral(stateCode: string): Promise<StateExecutive | null> {
-  const property = POSITION_PROPERTIES.attorney_general;
-  if (!property) return null;
-  return fetchStateOfficial(stateCode, property, 'attorney_general');
+  return fetchStateOfficial(stateCode, 'attorney_general');
 }
 
 /**
@@ -314,9 +409,7 @@ export async function getStateAttorneyGeneral(stateCode: string): Promise<StateE
  * @returns Secretary of state data or null if not found
  */
 export async function getStateSecretaryOfState(stateCode: string): Promise<StateExecutive | null> {
-  const property = POSITION_PROPERTIES.secretary_of_state;
-  if (!property) return null;
-  return fetchStateOfficial(stateCode, property, 'secretary_of_state');
+  return fetchStateOfficial(stateCode, 'secretary_of_state');
 }
 
 /**
