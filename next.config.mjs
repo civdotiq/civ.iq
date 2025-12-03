@@ -11,12 +11,11 @@ const withBundleAnalyzer = process.env.ANALYZE === 'true'
   : (config) => config;
 
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: false, // Enable ESLint in production builds
-  },
   typescript: {
     ignoreBuildErrors: false,
   },
+  // Next.js 16 uses Turbopack by default - silence webpack migration warning
+  turbopack: {},
   // Remove console logs in production for better performance
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production'

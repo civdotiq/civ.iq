@@ -1,9 +1,9 @@
+/* Import Otl Aicher Design System - must be before @tailwind */
+@import '../styles/aicher-system.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Otl Aicher Design System */
-@import '../styles/aicher-system.css';
 
 /* Base layer customizations */
 @layer base {
