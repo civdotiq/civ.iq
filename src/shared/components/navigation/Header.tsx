@@ -145,14 +145,10 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2 sm:gap-3 group min-h-[44px] py-1"
+          className="flex items-center group min-h-[44px] py-1 transform transition-all duration-300 hover:scale-105"
           aria-label="CIV.IQ Home"
         >
-          <div className="transform transition-all duration-300 group-hover:scale-105">
-            <div className="w-8 h-12 sm:w-9 sm:h-14">
-              <CiviqLogo />
-            </div>
-          </div>
+          <CiviqLogo />
         </Link>
 
         {/* Desktop Navigation */}
