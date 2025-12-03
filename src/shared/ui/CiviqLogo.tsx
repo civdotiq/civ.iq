@@ -37,7 +37,7 @@ export function CiviqLogo() {
           className="animate-pulse animation-delay-300"
         />
       </svg>
-      <span className="ml-3 text-xl font-bold text-gray-900">CIV.IQ</span>
+      <span className="ml-3 text-2xl font-black tracking-tight text-gray-900">CIV.IQ</span>
     </div>
   );
 }
