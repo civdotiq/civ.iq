@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CiviqLogo } from '@/shared/ui/CiviqLogo';
@@ -16,12 +16,120 @@ interface HeaderProps {
   transparent?: boolean;
 }
 
-const navigation = [
-  { name: 'Representatives', href: '/representatives' },
-  { name: 'Districts', href: '/districts' },
-  { name: 'Committees', href: '/committees' },
-  { name: 'About', href: '/about' },
+interface NavDropdownItem {
+  name: string;
+  href: string;
+}
+
+interface NavSection {
+  name: string;
+  items: NavDropdownItem[];
+}
+
+// Navigation structure organized by government level
+const navigationSections: NavSection[] = [
+  {
+    name: 'Federal',
+    items: [
+      { name: 'Representatives', href: '/representatives' },
+      { name: 'Districts', href: '/districts' },
+      { name: 'Committees', href: '/committees' },
+      { name: 'Legislation', href: '/legislation' },
+    ],
+  },
+  {
+    name: 'State',
+    items: [
+      { name: 'Legislatures', href: '/states' },
+      { name: 'Districts', href: '/state-districts' },
+      { name: 'Bills', href: '/state-bills' },
+    ],
+  },
+  {
+    name: 'Local',
+    items: [{ name: 'Officials', href: '/local' }],
+  },
 ];
+
+// Flat navigation for mobile and simple links
+const flatNavigation = [{ name: 'About', href: '/about' }];
+
+// Dropdown component for desktop navigation
+function NavDropdown({ section, isActive }: { section: NavSection; isActive: boolean }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => setIsOpen(false), 150);
+  };
+
+  const handleClick = () => {
+    setIsOpen(!isOpen);
+  };
+
+  return (
+    <div
+      ref={dropdownRef}
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <button
+        onClick={handleClick}
+        className={`aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 min-h-[44px] flex items-center gap-1 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] after:transition-all after:duration-200 hover:after:w-full ${
+          isActive ? 'text-[#3ea2d4] after:w-full' : 'text-gray-700 hover:text-[#3ea2d4]'
+        }`}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+      >
+        {section.name}
+        <svg
+          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* Dropdown menu */}
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 min-w-[180px] bg-white border-2 border-black shadow-lg z-50">
+          <div className="py-2">
+            {section.items.map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#3ea2d4] transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Header({ className = '', transparent = false }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -49,7 +157,13 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-4 lg:gap-6">
-          {navigation.map(item => {
+          {/* Dropdown sections: Federal, State, Local */}
+          {navigationSections.map(section => {
+            const isActive = section.items.some(item => pathname.startsWith(item.href));
+            return <NavDropdown key={section.name} section={section} isActive={isActive} />;
+          })}
+          {/* Flat navigation items: About */}
+          {flatNavigation.map(item => {
             const isActive = pathname.startsWith(item.href);
             return (
               <Link
@@ -96,7 +210,8 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
       <MobileNav
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
-        navigation={navigation}
+        sections={navigationSections}
+        flatNavigation={flatNavigation}
         currentPath={pathname}
       />
     </header>

@@ -6,8 +6,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import { FileText, ArrowLeft, AlertCircle } from 'lucide-react';
+import { FileText, AlertCircle } from 'lucide-react';
+import { Header } from '@/shared/components/navigation/Header';
 import { StateSelector } from '@/features/state-bills/components/StateSelector';
 import {
   BillSearchFilters,
@@ -146,16 +146,12 @@ export default function StateBillsSearchPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b-4 border-black">
-        <div className="container mx-auto px-4 py-6">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-civiq-blue hover:text-blue-700 font-semibold mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </Link>
+      <Header />
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8 pt-24">
+        {/* Page Title */}
+        <div className="mb-6">
           <div className="flex items-center gap-3">
             <FileText className="w-8 h-8 text-civiq-blue" />
             <div>
@@ -164,10 +160,6 @@ export default function StateBillsSearchPage() {
             </div>
           </div>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
         {/* Instructions */}
         <div className="bg-blue-50 border-2 border-blue-300 p-6 mb-6">
           <div className="flex items-start gap-3">

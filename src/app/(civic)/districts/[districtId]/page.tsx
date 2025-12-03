@@ -15,6 +15,7 @@ import UnifiedDemographicsDisplay from '@/components/districts/shared/UnifiedDem
 import NeighboringDistricts from '@/features/districts/components/NeighboringDistricts';
 import logger from '@/lib/logging/simple-logger';
 import { SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
+import { Header } from '@/shared/components/navigation/Header';
 
 // Dynamic import of the map component to avoid SSR issues
 const DistrictMap = dynamic(() => import('@/features/districts/components/DistrictMap'), {
@@ -28,23 +29,6 @@ const DistrictMap = dynamic(() => import('@/features/districts/components/Distri
     </div>
   ),
 });
-
-function CiviqLogo() {
-  return (
-    <div className="flex items-center">
-      <svg className="w-8 h-8" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <rect x="36" y="51" width="28" height="30" fill="#0b983c" />
-        <circle cx="50" cy="31" r="22" fill="#ffffff" />
-        <circle cx="50" cy="31" r="20" fill="#e11d07" />
-        <circle cx="38" cy="89" r="2" fill="#3ea2d4" />
-        <circle cx="46" cy="89" r="2" fill="#3ea2d4" />
-        <circle cx="54" cy="89" r="2" fill="#3ea2d4" />
-        <circle cx="62" cy="89" r="2" fill="#3ea2d4" />
-      </svg>
-      <span className="ml-2 text-lg font-bold text-gray-900">CIV.IQ</span>
-    </div>
-  );
-}
 
 interface DistrictDetails {
   id: string;
@@ -177,27 +161,10 @@ export default function DistrictPage() {
 
   return (
     <div className="min-h-screen bg-white density-default">
-      {/* Header */}
-      <header className="bg-white border-2 border-black border-b border-gray-100">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
-              <CiviqLogo />
-            </Link>
-            <nav className="flex items-center space-x-6">
-              <Link href="/representatives" className="text-gray-600 font-medium">
-                Representatives
-              </Link>
-              <Link href="/districts" className="text-blue-600 font-medium">
-                Districts
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pt-24">
         {/* Breadcrumb Navigation */}
         <SimpleBreadcrumb />
 

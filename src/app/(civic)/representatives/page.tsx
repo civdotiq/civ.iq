@@ -4,10 +4,9 @@
  */
 
 import { Suspense } from 'react';
-import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { getRepresentativesByLocation } from '@/features/representatives/services/congress-api';
-import { CiviqLogo } from '@/shared/ui/CiviqLogo';
+import { Header } from '@/shared/components/navigation/Header';
 import { AdaptiveGridSkeleton } from '@/shared/components/ui/LoadingStates';
 
 // Dynamic imports for better code splitting
@@ -101,29 +100,9 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-2 border-black border-b sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/">
-              <CiviqLogo />
-            </Link>
-            <nav className="flex items-center gap-6">
-              <Link href="/representatives" className="text-blue-600 font-medium">
-                Representatives
-              </Link>
-              <Link
-                href="/districts"
-                className="text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                Districts
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pt-24">
         {/* Page header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Representatives</h1>

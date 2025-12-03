@@ -23,46 +23,7 @@ import {
 import { encodeBase64Url } from '@/lib/url-encoding';
 import { StateExecutivesTab } from '@/features/state-government/components/StateExecutivesTab';
 import { StateJudiciaryTab } from '@/features/state-government/components/StateJudiciaryTab';
-
-// Logo component
-function CiviqLogo() {
-  return (
-    <div className="flex items-center group">
-      <svg
-        className="w-10 h-10 transition-transform group-hover:scale-110"
-        viewBox="0 0 100 100"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <rect x="36" y="51" width="28" height="30" fill="#0b983c" />
-        <circle cx="50" cy="31" r="22" fill="#ffffff" />
-        <circle cx="50" cy="31" r="20" fill="#e11d07" />
-        <circle cx="38" cy="89" r="2" fill="#3ea2d4" className="animate-pulse" />
-        <circle
-          cx="46"
-          cy="89"
-          r="2"
-          fill="#3ea2d4"
-          className="animate-pulse animation-delay-100"
-        />
-        <circle
-          cx="54"
-          cy="89"
-          r="2"
-          fill="#3ea2d4"
-          className="animate-pulse animation-delay-200"
-        />
-        <circle
-          cx="62"
-          cy="89"
-          r="2"
-          fill="#3ea2d4"
-          className="animate-pulse animation-delay-300"
-        />
-      </svg>
-      <span className="ml-3 text-xl font-bold text-gray-900">CIV.IQ</span>
-    </div>
-  );
-}
+import { Header } from '@/shared/components/navigation/Header';
 
 interface StateLegislator {
   id: string;
@@ -499,35 +460,9 @@ export default function StateLegislaturePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-2 border-black border-b sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/">
-              <CiviqLogo />
-            </Link>
-            <nav className="flex items-center gap-6">
-              <Link
-                href="/representatives"
-                className="text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                Representatives
-              </Link>
-              <Link href="/states" className="text-gray-700 hover:text-blue-600 transition-colors">
-                States
-              </Link>
-              <Link
-                href="/districts"
-                className="text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                Districts
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pt-24">
         {/* Page header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 mb-8">
           <div className="flex items-center gap-6">

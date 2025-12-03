@@ -6,14 +6,13 @@
  */
 
 import { useState } from 'react';
-import Link from 'next/link';
 import dynamic from 'next/dynamic';
 // D3 imports removed - not used in current implementation
 import { Suspense } from 'react';
 import NationalStatsCards from '@/shared/components/ui/NationalStatsCards';
 import StateInfoPanel from '@/shared/components/ui/StateInfoPanel';
 import CongressSessionInfo from '@/features/districts/components/CongressSessionInfo';
-import { CiviqLogo } from '@/shared/components/branding/CiviqLogo';
+import { Header } from '@/shared/components/navigation/Header';
 import { DistrictCard } from '@/features/districts/components/DistrictCard';
 import { DemographicsDashboard } from '@/features/districts/components/DemographicsDashboard';
 import { ApiErrorBoundary } from '@/components/ErrorBoundary';
@@ -127,29 +126,9 @@ export default function DistrictsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-2 border-black border-b sticky top-0 z-20">
-        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/">
-              <CiviqLogo />
-            </Link>
-            <nav className="flex items-center gap-3 sm:gap-6">
-              <Link
-                href="/representatives"
-                className="text-xs sm:text-base text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                Reps
-              </Link>
-              <Link href="/districts" className="text-xs sm:text-base text-blue-600 font-medium">
-                Districts
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header />
 
-      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 pt-20">
         {/* Page header - Tier 2 medium impact */}
         <div className="mb-4 sm:mb-8">
           <h1 className="accent-section-header text-2xl sm:text-4xl text-gray-900 mb-2 sm:mb-3">

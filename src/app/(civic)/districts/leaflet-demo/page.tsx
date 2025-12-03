@@ -9,6 +9,7 @@ import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import logger from '@/lib/logging/simple-logger';
+import { Header } from '@/shared/components/navigation/Header';
 
 // Dynamic import of Leaflet component (SSR safe)
 const LeafletDistrictMap = dynamic(
@@ -31,21 +32,16 @@ export default function LeafletDemoPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-2 border-black border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Link href="/districts" className="text-blue-600 hover:text-blue-800">
-                ← Back to Districts
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-900 mt-2">Leaflet District Map Demo</h1>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pt-24">
+        {/* Page Title */}
+        <div className="mb-6">
+          <Link href="/districts" className="text-blue-600 hover:text-blue-800">
+            ← Back to Districts
+          </Link>
+          <h1 className="text-2xl font-bold text-gray-900 mt-2">Leaflet District Map Demo</h1>
+        </div>
         {/* Info Card */}
         <div className="bg-blue-50 border border-blue-200 p-4 mb-6">
           <h2 className="text-lg font-semibold text-blue-900 mb-2">🍃 Free Leaflet Alternative</h2>

@@ -9,7 +9,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useEffect, useState, Suspense, useCallback } from 'react';
-import { CiviqLogo } from '@/shared/components/branding/CiviqLogo';
+import { Header } from '@/shared/components/navigation/Header';
 import logger from '@/lib/logging/simple-logger';
 import { parseAddressComponents } from '@/lib/census-geocoder';
 // Dynamic imports for code splitting - reduces initial bundle size
@@ -593,48 +593,9 @@ function ResultsContent() {
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="bg-white border-2 border-black border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/">
-              <CiviqLogo />
-            </Link>
-            <div className="flex items-center gap-2 sm:gap-4">
-              {/* Quick search history in header */}
-              <div className="hidden md:flex items-center gap-2">
-                {typeof window !== 'undefined' &&
-                  SearchHistory.getHistory()
-                    .slice(0, 3)
-                    .map((item, index) => (
-                      <Link
-                        key={`header-${item.zipCode}-${index}`}
-                        href={`/results?zip=${encodeURIComponent(item.zipCode)}`}
-                        className="px-2 py-1 text-xs bg-white border-2 border-gray-300 hover:bg-gray-200 rounded text-gray-700 transition-colors"
-                      >
-                        {item.zipCode}
-                      </Link>
-                    ))}
-              </div>
-              <div className="flex items-center gap-2 sm:gap-4">
-                <Link
-                  href="/compare"
-                  className="hidden sm:inline text-civiq-green hover:text-civiq-green/80 text-sm font-medium"
-                >
-                  Compare Representatives
-                </Link>
-                <Link
-                  href="/"
-                  className="text-civiq-blue hover:text-civiq-blue/80 text-xs sm:text-sm font-medium whitespace-nowrap"
-                >
-                  ← New Search
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pt-20">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Representatives</h1>
           <p className="text-gray-600">

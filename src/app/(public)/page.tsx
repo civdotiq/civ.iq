@@ -18,6 +18,7 @@ import {
   DistrictInfo,
   MultiDistrictResponse,
 } from '@/lib/multi-district/detection';
+import { Header } from '@/shared/components/navigation/Header';
 
 function CiviqLogo({ className = 'w-10 h-15' }: { className?: string }) {
   return (
@@ -77,7 +78,6 @@ function CiviqLogo({ className = 'w-10 h-15' }: { className?: string }) {
 
 export default function Home() {
   const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [multiDistrictData, setMultiDistrictData] = useState<MultiDistrictResponse | null>(null);
   const [showGeolocation, setShowGeolocation] = useState(false);
   const [showAddressInput, setShowAddressInput] = useState(false);
@@ -141,96 +141,9 @@ export default function Home() {
 
   return (
     <>
-      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md z-50 border-b border-gray-200">
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="transform transition-all duration-300 group-hover:scale-105">
-              <CiviqLogo className="w-8 h-12" />
-            </div>
-            <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-              CIV.IQ
-            </span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              href="/representatives"
-              className="relative font-medium text-gray-700 hover:text-[#3ea2d4] transition-all duration-200 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] after:transition-all after:duration-200 hover:after:w-full"
-            >
-              Representatives
-            </Link>
-            <Link
-              href="/districts"
-              className="relative font-medium text-gray-700 hover:text-[#3ea2d4] transition-all duration-200 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] after:transition-all after:duration-200 hover:after:w-full"
-            >
-              Districts
-            </Link>
-            <Link
-              href="/about"
-              className="relative font-medium text-gray-700 hover:text-[#3ea2d4] transition-all duration-200 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] after:transition-all after:duration-200 hover:after:w-full"
-            >
-              About
-            </Link>
-          </nav>
+      <Header />
 
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden flex items-center justify-center w-10 h-10 text-gray-700 hover:bg-gray-50 rounded transition-colors"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle mobile menu"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {mobileMenuOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              )}
-            </svg>
-          </button>
-        </div>
-
-        {/* Mobile Menu Dropdown */}
-        {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 shadow-lg z-40">
-            <nav className="container mx-auto px-4 py-4">
-              <div className="space-y-4">
-                <Link
-                  href="/representatives"
-                  className="block py-3 px-4 text-gray-700 hover:text-[#3ea2d4] hover:bg-white transition-all duration-200 font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Representatives
-                </Link>
-                <Link
-                  href="/districts"
-                  className="block py-3 px-4 text-gray-700 hover:text-[#3ea2d4] hover:bg-white transition-all duration-200 font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Districts
-                </Link>
-                <Link
-                  href="/about"
-                  className="block py-3 px-4 text-gray-700 hover:text-[#3ea2d4] hover:bg-white transition-all duration-200 font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  About
-                </Link>
-              </div>
-            </nav>
-          </div>
-        )}
-      </header>
-
-      <section className="min-h-screen flex items-center justify-center px-4 pt-16 bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
+      <section className="min-h-screen flex items-center justify-center px-4 pt-20 bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
         <div className="max-w-4xl w-full text-center space-y-6 md:space-y-10">
           <div className="animate-fade-in-up">
             <CiviqLogo className="w-16 h-24 md:w-24 md:h-36 mx-auto mb-6 md:mb-8" />

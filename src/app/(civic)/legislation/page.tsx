@@ -8,6 +8,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { FileText, Calendar, ExternalLink, Search, Loader2 } from 'lucide-react';
+import { Header } from '@/shared/components/navigation/Header';
 
 // Congress.gov bill structure from the API
 interface CongressBill {
@@ -36,19 +37,6 @@ interface BillsApiResponse {
     source: string;
     generatedAt: string;
   };
-}
-
-function CiviqLogo({ className = 'w-10 h-15' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 300 450" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="150" cy="100" r="70" fill="#e11d09" />
-      <rect x="100" y="200" width="100" height="120" fill="#0a9338" />
-      <circle cx="90" cy="370" r="12" fill="#3ea0d2" />
-      <circle cx="130" cy="370" r="12" fill="#3ea0d2" />
-      <circle cx="170" cy="370" r="12" fill="#3ea0d2" />
-      <circle cx="210" cy="370" r="12" fill="#3ea0d2" />
-    </svg>
-  );
 }
 
 export default function LegislationPage() {
@@ -148,41 +136,10 @@ export default function LegislationPage() {
 
   return (
     <>
-      {/* Header */}
-      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-gray-100">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3">
-            <CiviqLogo className="w-8 h-12" />
-            <span className="text-2xl font-bold tracking-tight">CIV.IQ</span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-8">
-            <Link
-              href="/representatives"
-              className="font-medium hover:text-civiq-blue transition-colors"
-            >
-              Representatives
-            </Link>
-            <Link href="/districts" className="font-medium hover:text-civiq-blue transition-colors">
-              Districts
-            </Link>
-            <Link href="/states" className="font-medium hover:text-civiq-blue transition-colors">
-              States
-            </Link>
-            <Link href="/local" className="font-medium hover:text-civiq-blue transition-colors">
-              Local
-            </Link>
-            <Link href="/legislation" className="font-medium text-civiq-blue transition-colors">
-              Legislation
-            </Link>
-            <Link href="/about" className="font-medium hover:text-civiq-blue transition-colors">
-              About
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       {/* Main Content */}
-      <main className="min-h-screen pt-24 px-4 pb-16 bg-white">
+      <main className="min-h-screen pt-20 px-4 pb-16 bg-white">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl font-bold text-center mb-4">Recent Legislation</h1>
 
