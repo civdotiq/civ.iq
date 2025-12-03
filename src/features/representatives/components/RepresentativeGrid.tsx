@@ -180,7 +180,7 @@ const RepresentativeCard = memo(function RepresentativeCard({
               </svg>
               <a
                 href={`tel:${rep.phone}`}
-                className="aicher-button-primary text-xs sm:text-sm aicher-focus min-h-[44px] flex items-center"
+                className="text-gray-700 hover:text-civiq-blue transition-colors"
               >
                 {rep.phone}
               </a>
@@ -229,7 +229,7 @@ const RepresentativeCard = memo(function RepresentativeCard({
         <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={() => router.push(`/representative/${rep.bioguideId}`)}
-            className="flex-1 aicher-button-primary aicher-focus text-sm sm:text-base min-h-[44px]"
+            className="flex-1 bg-civiq-blue text-white px-4 py-2 border-2 border-civiq-blue hover:bg-civiq-blue/90 transition-colors text-sm sm:text-base min-h-[44px] font-medium"
           >
             View Profile
           </button>
@@ -247,7 +247,7 @@ const RepresentativeCard = memo(function RepresentativeCard({
                 alert('You can only compare 2 representatives at a time');
               }
             }}
-            className="sm:flex-initial aicher-button aicher-focus text-sm sm:text-base min-h-[44px]"
+            className="sm:flex-initial bg-white text-gray-700 px-4 py-2 border-2 border-gray-300 hover:border-civiq-blue hover:text-civiq-blue transition-colors text-sm sm:text-base min-h-[44px] font-medium"
           >
             Compare
           </button>
