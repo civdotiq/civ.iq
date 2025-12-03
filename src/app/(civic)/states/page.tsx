@@ -8,427 +8,78 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Header } from '@/shared/components/navigation/Header';
+import { getAllStateLegislatures, getTotalSeats } from '@/lib/data/static-state-legislatures';
 
-interface StateData {
-  name: string;
-  code: string;
-  senators: number;
-  representatives: number;
-  population: string;
-  capital: string;
-}
+// State names for display
+const stateNames: Record<string, string> = {
+  AL: 'Alabama',
+  AK: 'Alaska',
+  AZ: 'Arizona',
+  AR: 'Arkansas',
+  CA: 'California',
+  CO: 'Colorado',
+  CT: 'Connecticut',
+  DE: 'Delaware',
+  FL: 'Florida',
+  GA: 'Georgia',
+  HI: 'Hawaii',
+  ID: 'Idaho',
+  IL: 'Illinois',
+  IN: 'Indiana',
+  IA: 'Iowa',
+  KS: 'Kansas',
+  KY: 'Kentucky',
+  LA: 'Louisiana',
+  ME: 'Maine',
+  MD: 'Maryland',
+  MA: 'Massachusetts',
+  MI: 'Michigan',
+  MN: 'Minnesota',
+  MS: 'Mississippi',
+  MO: 'Missouri',
+  MT: 'Montana',
+  NE: 'Nebraska',
+  NV: 'Nevada',
+  NH: 'New Hampshire',
+  NJ: 'New Jersey',
+  NM: 'New Mexico',
+  NY: 'New York',
+  NC: 'North Carolina',
+  ND: 'North Dakota',
+  OH: 'Ohio',
+  OK: 'Oklahoma',
+  OR: 'Oregon',
+  PA: 'Pennsylvania',
+  RI: 'Rhode Island',
+  SC: 'South Carolina',
+  SD: 'South Dakota',
+  TN: 'Tennessee',
+  TX: 'Texas',
+  UT: 'Utah',
+  VT: 'Vermont',
+  VA: 'Virginia',
+  WA: 'Washington',
+  WV: 'West Virginia',
+  WI: 'Wisconsin',
+  WY: 'Wyoming',
+  DC: 'Washington, D.C.',
+};
 
 export default function StatesPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const statesData: StateData[] = [
-    {
-      name: 'Alabama',
-      code: 'AL',
-      senators: 2,
-      representatives: 7,
-      population: '5.0M',
-      capital: 'Montgomery',
-    },
-    {
-      name: 'Alaska',
-      code: 'AK',
-      senators: 2,
-      representatives: 1,
-      population: '0.7M',
-      capital: 'Juneau',
-    },
-    {
-      name: 'Arizona',
-      code: 'AZ',
-      senators: 2,
-      representatives: 9,
-      population: '7.3M',
-      capital: 'Phoenix',
-    },
-    {
-      name: 'Arkansas',
-      code: 'AR',
-      senators: 2,
-      representatives: 4,
-      population: '3.0M',
-      capital: 'Little Rock',
-    },
-    {
-      name: 'California',
-      code: 'CA',
-      senators: 2,
-      representatives: 52,
-      population: '39.5M',
-      capital: 'Sacramento',
-    },
-    {
-      name: 'Colorado',
-      code: 'CO',
-      senators: 2,
-      representatives: 8,
-      population: '5.8M',
-      capital: 'Denver',
-    },
-    {
-      name: 'Connecticut',
-      code: 'CT',
-      senators: 2,
-      representatives: 5,
-      population: '3.6M',
-      capital: 'Hartford',
-    },
-    {
-      name: 'Delaware',
-      code: 'DE',
-      senators: 2,
-      representatives: 1,
-      population: '1.0M',
-      capital: 'Dover',
-    },
-    {
-      name: 'Florida',
-      code: 'FL',
-      senators: 2,
-      representatives: 28,
-      population: '21.5M',
-      capital: 'Tallahassee',
-    },
-    {
-      name: 'Georgia',
-      code: 'GA',
-      senators: 2,
-      representatives: 14,
-      population: '10.7M',
-      capital: 'Atlanta',
-    },
-    {
-      name: 'Hawaii',
-      code: 'HI',
-      senators: 2,
-      representatives: 2,
-      population: '1.5M',
-      capital: 'Honolulu',
-    },
-    {
-      name: 'Idaho',
-      code: 'ID',
-      senators: 2,
-      representatives: 2,
-      population: '1.8M',
-      capital: 'Boise',
-    },
-    {
-      name: 'Illinois',
-      code: 'IL',
-      senators: 2,
-      representatives: 17,
-      population: '12.7M',
-      capital: 'Springfield',
-    },
-    {
-      name: 'Indiana',
-      code: 'IN',
-      senators: 2,
-      representatives: 9,
-      population: '6.8M',
-      capital: 'Indianapolis',
-    },
-    {
-      name: 'Iowa',
-      code: 'IA',
-      senators: 2,
-      representatives: 4,
-      population: '3.2M',
-      capital: 'Des Moines',
-    },
-    {
-      name: 'Kansas',
-      code: 'KS',
-      senators: 2,
-      representatives: 4,
-      population: '2.9M',
-      capital: 'Topeka',
-    },
-    {
-      name: 'Kentucky',
-      code: 'KY',
-      senators: 2,
-      representatives: 6,
-      population: '4.5M',
-      capital: 'Frankfort',
-    },
-    {
-      name: 'Louisiana',
-      code: 'LA',
-      senators: 2,
-      representatives: 6,
-      population: '4.7M',
-      capital: 'Baton Rouge',
-    },
-    {
-      name: 'Maine',
-      code: 'ME',
-      senators: 2,
-      representatives: 2,
-      population: '1.4M',
-      capital: 'Augusta',
-    },
-    {
-      name: 'Maryland',
-      code: 'MD',
-      senators: 2,
-      representatives: 8,
-      population: '6.2M',
-      capital: 'Annapolis',
-    },
-    {
-      name: 'Massachusetts',
-      code: 'MA',
-      senators: 2,
-      representatives: 9,
-      population: '7.0M',
-      capital: 'Boston',
-    },
-    {
-      name: 'Michigan',
-      code: 'MI',
-      senators: 2,
-      representatives: 13,
-      population: '10.1M',
-      capital: 'Lansing',
-    },
-    {
-      name: 'Minnesota',
-      code: 'MN',
-      senators: 2,
-      representatives: 8,
-      population: '5.7M',
-      capital: 'St. Paul',
-    },
-    {
-      name: 'Mississippi',
-      code: 'MS',
-      senators: 2,
-      representatives: 4,
-      population: '3.0M',
-      capital: 'Jackson',
-    },
-    {
-      name: 'Missouri',
-      code: 'MO',
-      senators: 2,
-      representatives: 8,
-      population: '6.2M',
-      capital: 'Jefferson City',
-    },
-    {
-      name: 'Montana',
-      code: 'MT',
-      senators: 2,
-      representatives: 2,
-      population: '1.1M',
-      capital: 'Helena',
-    },
-    {
-      name: 'Nebraska',
-      code: 'NE',
-      senators: 2,
-      representatives: 3,
-      population: '2.0M',
-      capital: 'Lincoln',
-    },
-    {
-      name: 'Nevada',
-      code: 'NV',
-      senators: 2,
-      representatives: 4,
-      population: '3.1M',
-      capital: 'Carson City',
-    },
-    {
-      name: 'New Hampshire',
-      code: 'NH',
-      senators: 2,
-      representatives: 2,
-      population: '1.4M',
-      capital: 'Concord',
-    },
-    {
-      name: 'New Jersey',
-      code: 'NJ',
-      senators: 2,
-      representatives: 12,
-      population: '9.3M',
-      capital: 'Trenton',
-    },
-    {
-      name: 'New Mexico',
-      code: 'NM',
-      senators: 2,
-      representatives: 3,
-      population: '2.1M',
-      capital: 'Santa Fe',
-    },
-    {
-      name: 'New York',
-      code: 'NY',
-      senators: 2,
-      representatives: 26,
-      population: '20.2M',
-      capital: 'Albany',
-    },
-    {
-      name: 'North Carolina',
-      code: 'NC',
-      senators: 2,
-      representatives: 14,
-      population: '10.4M',
-      capital: 'Raleigh',
-    },
-    {
-      name: 'North Dakota',
-      code: 'ND',
-      senators: 2,
-      representatives: 1,
-      population: '0.8M',
-      capital: 'Bismarck',
-    },
-    {
-      name: 'Ohio',
-      code: 'OH',
-      senators: 2,
-      representatives: 15,
-      population: '11.8M',
-      capital: 'Columbus',
-    },
-    {
-      name: 'Oklahoma',
-      code: 'OK',
-      senators: 2,
-      representatives: 5,
-      population: '4.0M',
-      capital: 'Oklahoma City',
-    },
-    {
-      name: 'Oregon',
-      code: 'OR',
-      senators: 2,
-      representatives: 6,
-      population: '4.2M',
-      capital: 'Salem',
-    },
-    {
-      name: 'Pennsylvania',
-      code: 'PA',
-      senators: 2,
-      representatives: 17,
-      population: '13.0M',
-      capital: 'Harrisburg',
-    },
-    {
-      name: 'Rhode Island',
-      code: 'RI',
-      senators: 2,
-      representatives: 2,
-      population: '1.1M',
-      capital: 'Providence',
-    },
-    {
-      name: 'South Carolina',
-      code: 'SC',
-      senators: 2,
-      representatives: 7,
-      population: '5.1M',
-      capital: 'Columbia',
-    },
-    {
-      name: 'South Dakota',
-      code: 'SD',
-      senators: 2,
-      representatives: 1,
-      population: '0.9M',
-      capital: 'Pierre',
-    },
-    {
-      name: 'Tennessee',
-      code: 'TN',
-      senators: 2,
-      representatives: 9,
-      population: '6.9M',
-      capital: 'Nashville',
-    },
-    {
-      name: 'Texas',
-      code: 'TX',
-      senators: 2,
-      representatives: 38,
-      population: '29.1M',
-      capital: 'Austin',
-    },
-    {
-      name: 'Utah',
-      code: 'UT',
-      senators: 2,
-      representatives: 4,
-      population: '3.3M',
-      capital: 'Salt Lake City',
-    },
-    {
-      name: 'Vermont',
-      code: 'VT',
-      senators: 2,
-      representatives: 1,
-      population: '0.6M',
-      capital: 'Montpelier',
-    },
-    {
-      name: 'Virginia',
-      code: 'VA',
-      senators: 2,
-      representatives: 11,
-      population: '8.6M',
-      capital: 'Richmond',
-    },
-    {
-      name: 'Washington',
-      code: 'WA',
-      senators: 2,
-      representatives: 10,
-      population: '7.7M',
-      capital: 'Olympia',
-    },
-    {
-      name: 'West Virginia',
-      code: 'WV',
-      senators: 2,
-      representatives: 2,
-      population: '1.8M',
-      capital: 'Charleston',
-    },
-    {
-      name: 'Wisconsin',
-      code: 'WI',
-      senators: 2,
-      representatives: 8,
-      population: '5.9M',
-      capital: 'Madison',
-    },
-    {
-      name: 'Wyoming',
-      code: 'WY',
-      senators: 2,
-      representatives: 1,
-      population: '0.6M',
-      capital: 'Cheyenne',
-    },
-  ];
+  // Get all state legislature data
+  const legislatures = getAllStateLegislatures();
+  const stateCodes = Object.keys(legislatures).filter(code => code !== 'DC'); // Exclude DC for now
 
-  const filteredStates = statesData.filter(
-    state =>
-      state.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      state.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter states based on search
+  const filteredStates = stateCodes.filter(code => {
+    const name = stateNames[code] || code;
+    return (
+      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      code.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   return (
     <>
@@ -437,14 +88,14 @@ export default function StatesPage() {
       {/* Main Content */}
       <main className="min-h-screen pt-20 px-4 pb-16 bg-white">
         <div className="max-w-7xl mx-auto">
-          {/* Page header - Tier 2 medium impact */}
-          <h1 className="accent-section-header-blue text-4xl text-center mb-8">
-            U.S. States & Territories
+          {/* Page header */}
+          <h1 className="accent-section-header-green text-4xl text-center mb-8">
+            State Legislatures
           </h1>
 
           <p className="text-xl text-gray-600 text-center max-w-3xl mx-auto mb-12">
-            Explore representation across all 50 states. Each state has 2 senators and a varying
-            number of representatives based on population.
+            Explore state legislators across all 50 states. Click on a state to view its
+            legislators, committees, and recent bills.
           </p>
 
           {/* Search Bar */}
@@ -454,76 +105,112 @@ export default function StatesPage() {
               placeholder="Search states..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 focus:ring-2 focus:ring-civiq-blue focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 focus:ring-2 focus:ring-civiq-green focus:border-transparent"
             />
           </div>
 
           {/* States Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredStates.map(state => (
-              <div
-                key={state.code}
-                className="bg-white border-2 border-black hover:border-2 border-black transition-border-2 border-black p-6"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold">{state.name}</h3>
-                    <p className="text-gray-500">{state.code}</p>
-                  </div>
-                  <span className="text-3xl font-bold text-civiq-blue">
-                    {state.senators + state.representatives}
-                  </span>
-                </div>
+            {filteredStates.map(code => {
+              const legislature = legislatures[code];
+              if (!legislature) return null;
 
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Senators:</span>
-                    <span className="font-medium">{state.senators}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Representatives:</span>
-                    <span className="font-medium">{state.representatives}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Population:</span>
-                    <span className="font-medium">{state.population}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Capital:</span>
-                    <span className="font-medium">{state.capital}</span>
-                  </div>
-                </div>
+              const totalSeats = getTotalSeats(code) ?? 0;
+              const stateName = stateNames[code] ?? code;
 
-                <Link
-                  href={`/representatives?state=${state.code}`}
-                  className="block w-full text-center bg-civiq-blue text-white py-2 rounded hover:bg-blue-700 transition-colors"
+              return (
+                <div
+                  key={code}
+                  className="bg-white border-2 border-black hover:border-civiq-green transition-colors p-6"
                 >
-                  View Representatives
-                </Link>
-              </div>
-            ))}
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-semibold">{stateName}</h3>
+                      <p className="text-gray-500">{code}</p>
+                    </div>
+                    <span className="text-3xl font-bold text-civiq-green">{totalSeats}</span>
+                  </div>
+
+                  <div className="space-y-2 mb-4">
+                    {legislature.unicameral ? (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">{legislature.chambers.lower.name}:</span>
+                        <span className="font-medium">
+                          {legislature.chambers.lower.seats} seats
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">{legislature.chambers.upper.name}:</span>
+                          <span className="font-medium">
+                            {legislature.chambers.upper.seats} seats
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">{legislature.chambers.lower.name}:</span>
+                          <span className="font-medium">
+                            {legislature.chambers.lower.seats} seats
+                          </span>
+                        </div>
+                      </>
+                    )}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Session:</span>
+                      <span className="font-medium">{legislature.sessionType}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Capital:</span>
+                      <span className="font-medium">{legislature.capitolCity}</span>
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`/state-legislature/${code.toLowerCase()}`}
+                    className="block w-full text-center bg-civiq-green text-white py-2 hover:bg-green-700 transition-colors font-medium"
+                  >
+                    View State Legislature
+                  </Link>
+                </div>
+              );
+            })}
           </div>
 
           {/* Summary Stats */}
-          <div className="mt-16 accent-card-stripe-blue p-8">
-            <h2 className="accent-heading text-2xl mb-6 text-center">U.S. Congress Composition</h2>
+          <div className="mt-16 accent-card-stripe-green p-8">
+            <h2 className="accent-heading text-2xl mb-6 text-center">
+              State Legislatures Overview
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
               <div>
-                <p className="text-4xl font-bold text-civiq-red">100</p>
-                <p className="text-gray-600">U.S. Senators</p>
-                <p className="text-sm text-gray-500 mt-2">2 per state</p>
+                <p className="text-4xl font-bold text-civiq-green">50</p>
+                <p className="text-gray-600">State Legislatures</p>
+                <p className="text-sm text-gray-500 mt-2">Plus D.C. Council</p>
               </div>
               <div>
-                <p className="text-4xl font-bold text-civiq-green">435</p>
-                <p className="text-gray-600">U.S. Representatives</p>
-                <p className="text-sm text-gray-500 mt-2">Based on population</p>
+                <p className="text-4xl font-bold text-civiq-green">7,383</p>
+                <p className="text-gray-600">State Legislators</p>
+                <p className="text-sm text-gray-500 mt-2">Across all states</p>
               </div>
               <div>
-                <p className="text-4xl font-bold text-civiq-blue">535</p>
-                <p className="text-gray-600">Total Members</p>
-                <p className="text-sm text-gray-500 mt-2">In Congress</p>
+                <p className="text-4xl font-bold text-civiq-green">99</p>
+                <p className="text-gray-600">Legislative Chambers</p>
+                <p className="text-sm text-gray-500 mt-2">Nebraska is unicameral</p>
               </div>
             </div>
+          </div>
+
+          {/* Info box about data source */}
+          <div className="mt-8 p-4 bg-gray-50 border border-gray-200 text-sm text-gray-600 text-center">
+            State legislature data provided by{' '}
+            <a
+              href="https://openstates.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-civiq-green hover:underline"
+            >
+              Open States
+            </a>
           </div>
         </div>
       </main>
