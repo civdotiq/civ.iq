@@ -61,9 +61,6 @@ export default function PrivacyPage() {
                   <strong>No email addresses</strong> - We have no newsletter or mailing list
                 </li>
                 <li>
-                  <strong>No cookies</strong> - We do not use tracking cookies or analytics (yet)
-                </li>
-                <li>
                   <strong>No selling of data</strong> - We will never sell any information
                 </li>
               </ul>
@@ -126,9 +123,54 @@ export default function PrivacyPage() {
                 Your domain registrar (e.g., Cloudflare) may collect analytics data. Please review
                 their privacy policies for details.
               </p>
+            </section>
+
+            <section className="mb-grid-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
+                Analytics (Google Analytics)
+              </h2>
+              <p className="text-gray-700 leading-relaxed mb-grid-2">
+                We use <strong>Google Analytics</strong> to understand how visitors use CIV.IQ. This
+                helps us improve the site and ensure it serves citizens effectively.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-grid-2">
+                Google Analytics may collect:
+              </p>
+              <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2 mb-grid-2">
+                <li>Pages you visit and how long you stay</li>
+                <li>Your approximate geographic location (city/region level)</li>
+                <li>Device type, browser, and operating system</li>
+                <li>How you arrived at the site (search engine, direct link, etc.)</li>
+              </ul>
+              <p className="text-gray-700 leading-relaxed mb-grid-2">
+                Google Analytics uses cookies to track this information. You can opt out by:
+              </p>
+              <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2 mb-grid-2">
+                <li>
+                  Installing the{' '}
+                  <a
+                    href="https://tools.google.com/dlpage/gaoptout"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-civiq-blue hover:underline"
+                  >
+                    Google Analytics Opt-out Browser Add-on
+                  </a>
+                </li>
+                <li>Using your browser&apos;s &ldquo;Do Not Track&rdquo; setting</li>
+                <li>Blocking cookies in your browser settings</li>
+              </ul>
               <p className="text-gray-700 leading-relaxed">
-                <strong>We do not currently use third-party analytics</strong>, but may add them in
-                the future. If we do, this policy will be updated.
+                For more information, see{' '}
+                <a
+                  href="https://policies.google.com/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-civiq-blue hover:underline"
+                >
+                  Google&apos;s Privacy Policy
+                </a>
+                .
               </p>
             </section>
 
