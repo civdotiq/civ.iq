@@ -808,14 +808,36 @@ function mapCongressStatus(actionText?: string): BillStatus | null {
 
   const lowerText = actionText.toLowerCase();
 
-  if (lowerText.includes('introduced')) return 'introduced';
-  if (lowerText.includes('referred')) return 'referred';
-  if (lowerText.includes('reported')) return 'reported';
-  if (lowerText.includes('passed house')) return 'passed_house';
-  if (lowerText.includes('passed senate')) return 'passed_senate';
+  // Check for enacted/law first (highest priority)
   if (lowerText.includes('became public law') || lowerText.includes('enacted')) return 'enacted';
   if (lowerText.includes('vetoed')) return 'vetoed';
-  if (lowerText.includes('failed') || lowerText.includes('rejected')) return 'failed';
+
+  // Check for passed/agreed to statuses
+  if (lowerText.includes('passed house') || lowerText.includes('agreed to in house'))
+    return 'passed_house';
+  if (
+    lowerText.includes('passed senate') ||
+    lowerText.includes('agreed to in senate') ||
+    lowerText.includes('agreed to without amendment')
+  )
+    return 'passed_senate';
+  if (lowerText.includes('passed both')) return 'passed_both';
+
+  // For simple resolutions that were "agreed to" (like SRES)
+  if (lowerText.includes('agreed to') && !lowerText.includes('not agreed')) return 'passed_senate';
+
+  // Check for failed/rejected
+  if (
+    lowerText.includes('failed') ||
+    lowerText.includes('rejected') ||
+    lowerText.includes('not agreed')
+  )
+    return 'failed';
+
+  // Check for committee/progress statuses
+  if (lowerText.includes('reported')) return 'reported';
+  if (lowerText.includes('referred')) return 'referred';
+  if (lowerText.includes('introduced')) return 'introduced';
 
   return 'introduced';
 }
