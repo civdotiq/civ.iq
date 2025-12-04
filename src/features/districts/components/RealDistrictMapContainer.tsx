@@ -5,13 +5,17 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import logger from '@/lib/logging/simple-logger';
 import {
   districtBoundaryService,
   type DistrictBoundary,
 } from '@/lib/helpers/district-boundary-utils';
 import type { Map, MapLayerMouseEvent } from 'maplibre-gl';
+
+// Default center of US - defined outside component to avoid re-creation
+const DEFAULT_CENTER: [number, number] = [-95.7129, 37.0902];
+const DEFAULT_ZOOM = 4;
 
 interface RealDistrictMapProps {
   selectedState?: string;
@@ -40,12 +44,24 @@ export function RealDistrictMapContainer({
   className = '',
   showControls = true,
   enableInteraction = true,
-  initialCenter = [-95.7129, 37.0902], // Center of US
-  initialZoom = 4,
+  initialCenter,
+  initialZoom,
   height = '600px',
 }: RealDistrictMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
+  // Track if map has been initialized to prevent re-initialization
+  const mapInitializedRef = useRef(false);
+
+  // Memoize center and zoom to prevent unnecessary re-renders
+  const center = useMemo(
+    () => initialCenter ?? DEFAULT_CENTER,
+    // Only update if actual values change, not reference
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [initialCenter?.[0], initialCenter?.[1]]
+  );
+  const zoom = initialZoom ?? DEFAULT_ZOOM;
+
   const [mapState, setMapState] = useState<MapState>({
     loading: true,
     error: null,
@@ -77,9 +93,11 @@ export function RealDistrictMapContainer({
       });
   }, []);
 
-  // Initialize map
+  // Initialize map - only runs once on mount
   useEffect(() => {
-    if (!mapContainer.current || mapRef.current) return;
+    // Prevent multiple initializations
+    if (!mapContainer.current || mapRef.current || mapInitializedRef.current) return;
+    mapInitializedRef.current = true;
 
     const initializeMap = async () => {
       try {
@@ -94,7 +112,7 @@ export function RealDistrictMapContainer({
           component: 'RealDistrictMapContainer',
         });
 
-        // Create map instance
+        // Create map instance with memoized center/zoom values
         const map = new maplibregl.Map({
           container: mapContainer.current!,
           style: {
@@ -117,8 +135,8 @@ export function RealDistrictMapContainer({
               },
             ],
           },
-          center: initialCenter,
-          zoom: initialZoom,
+          center: center,
+          zoom: zoom,
           interactive: enableInteraction,
         });
 
@@ -169,13 +187,15 @@ export function RealDistrictMapContainer({
         mapRef.current.remove();
         mapRef.current = null;
       }
+      mapInitializedRef.current = false;
       // Remove PMTiles protocol
       import('maplibre-gl').then(({ default: maplibregl }) => {
         maplibregl.removeProtocol('pmtiles');
       });
     };
+    // Empty dependency array - map should only initialize once
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialCenter, initialZoom, enableInteraction, showControls]);
+  }, []);
 
   // Load districts via API fallback (when PMTiles unavailable)
   const loadDistrictsFallback = useCallback(
