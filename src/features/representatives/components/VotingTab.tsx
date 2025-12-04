@@ -18,6 +18,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import { ExportButton } from '@/shared/components/ui/ExportButton';
+import { ExportColumn } from '@/lib/utils/data-export';
 
 interface Vote {
   voteId: string;
@@ -105,6 +107,27 @@ const calculateVoteStats = (votes: Vote[]) => {
     totalVotes: votes.length,
   };
 };
+
+// Export column definitions for voting data
+const voteExportColumns: ExportColumn<Vote>[] = [
+  { key: 'rollNumber', label: 'Roll Number' },
+  { key: 'date', label: 'Date' },
+  { key: 'chamber', label: 'Chamber' },
+  { key: 'question', label: 'Question' },
+  { key: 'result', label: 'Result' },
+  { key: 'position', label: 'Position' },
+  {
+    key: 'bill.number',
+    label: 'Bill Number',
+    format: (_, row) => row.bill?.number ?? '',
+  },
+  {
+    key: 'bill.title',
+    label: 'Bill Title',
+    format: (_, row) => row.bill?.title ?? '',
+  },
+  { key: 'description', label: 'Description' },
+];
 
 const VotingTabComponent = React.memo(
   ({ bioguideId, sharedData, sharedLoading, sharedError }: VotingTabProps) => {
@@ -366,29 +389,38 @@ const VotingTabComponent = React.memo(
       <div data-testid="voting-record">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Interactive Voting Analysis</h2>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            <Filter className="h-4 w-4" />
-            Filters
-            {(positionFilter !== 'all' ||
-              chamberFilter !== 'all' ||
-              categoryFilter !== 'all' ||
-              dateFilter.start ||
-              dateFilter.end) && (
-              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-500 rounded-full">
-                {
-                  [
-                    positionFilter !== 'all',
-                    chamberFilter !== 'all',
-                    categoryFilter !== 'all',
-                    dateFilter.start || dateFilter.end,
-                  ].filter(Boolean).length
-                }
-              </span>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <ExportButton
+              data={filteredVotes as unknown as Record<string, unknown>[]}
+              columns={voteExportColumns as unknown as ExportColumn<Record<string, unknown>>[]}
+              filename={`voting-record-${bioguideId}`}
+              description={`Voting record for ${data?.member?.name ?? bioguideId}`}
+              ariaLabel="Export voting records"
+            />
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+              {(positionFilter !== 'all' ||
+                chamberFilter !== 'all' ||
+                categoryFilter !== 'all' ||
+                dateFilter.start ||
+                dateFilter.end) && (
+                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-500 rounded-full">
+                  {
+                    [
+                      positionFilter !== 'all',
+                      chamberFilter !== 'all',
+                      categoryFilter !== 'all',
+                      dateFilter.start || dateFilter.end,
+                    ].filter(Boolean).length
+                  }
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Filter Panel */}
@@ -508,6 +540,61 @@ const VotingTabComponent = React.memo(
           </div>
         ) : null}
 
+        {/* Vote Attendance Summary */}
+        {notVotingVotes > 0 && (
+          <div className="mb-6 p-4 bg-gray-50 border-2 border-black">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-gray-900">Vote Attendance Record</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Voted in {totalVotes - notVotingVotes} of {totalVotes} recorded votes
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <div
+                    className={`text-2xl font-bold ${
+                      ((totalVotes - notVotingVotes) / totalVotes) * 100 >= 95
+                        ? 'text-green-600'
+                        : ((totalVotes - notVotingVotes) / totalVotes) * 100 >= 80
+                          ? 'text-yellow-600'
+                          : 'text-red-600'
+                    }`}
+                  >
+                    {totalVotes > 0
+                      ? Math.round(((totalVotes - notVotingVotes) / totalVotes) * 100)
+                      : 0}
+                    %
+                  </div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wide">Attendance</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-400">{notVotingVotes}</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wide">Missed</div>
+                </div>
+              </div>
+            </div>
+            {/* Attendance bar */}
+            <div className="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 ${
+                  ((totalVotes - notVotingVotes) / totalVotes) * 100 >= 95
+                    ? 'bg-green-500'
+                    : ((totalVotes - notVotingVotes) / totalVotes) * 100 >= 80
+                      ? 'bg-yellow-500'
+                      : 'bg-red-500'
+                }`}
+                style={{
+                  width:
+                    totalVotes > 0
+                      ? `${((totalVotes - notVotingVotes) / totalVotes) * 100}%`
+                      : '0%',
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Metrics */}
         <div className="grid grid-cols-5 gap-4 mb-8">
           <div className="text-center">
@@ -516,18 +603,18 @@ const VotingTabComponent = React.memo(
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-green-600">{yesVotes}</div>
-            <div className="text-sm text-gray-500">Yes</div>
+            <div className="text-sm text-gray-500">Yea</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-red-600">{nayVotes}</div>
             <div className="text-sm text-gray-500">Nay</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold">{presentVotes}</div>
+            <div className="text-3xl font-bold text-yellow-600">{presentVotes}</div>
             <div className="text-sm text-gray-500">Present</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold">{keyVotes}</div>
+            <div className="text-3xl font-bold text-civiq-blue">{keyVotes}</div>
             <div className="text-sm text-gray-500">Key Votes</div>
           </div>
         </div>
