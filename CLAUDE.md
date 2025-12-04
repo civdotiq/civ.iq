@@ -657,6 +657,7 @@ npx tsc --noEmit [fixed-file]
 
 **Infrastructure & Performance:**
 
+- **Google Analytics** (G-F98819F2NC) - Site analytics via gtag.js in root layout
 - **Congressional constants** (parties, chambers, sessions) - hardcoded for performance
 - **Cache management API** - Admin endpoints for cache invalidation
 - Redis health monitoring
