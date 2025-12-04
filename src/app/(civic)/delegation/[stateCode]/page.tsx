@@ -10,8 +10,7 @@ import Link from 'next/link';
 import { US_STATES, getStateName, isValidStateCode } from '@/lib/data/us-states';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
-import { ExportButton } from '@/shared/components/ui/ExportButton';
-import { ExportColumn } from '@/lib/utils/data-export';
+import { DelegationExportButton } from './DelegationExportButton';
 
 // ISR: Revalidate daily
 export const revalidate = 86400;
@@ -56,19 +55,6 @@ interface DelegationMember {
   yearsInOffice?: number;
   nextElection?: string;
 }
-
-// Export columns for delegation data
-const delegationExportColumns: ExportColumn<DelegationMember>[] = [
-  { key: 'name', label: 'Name' },
-  { key: 'chamber', label: 'Chamber' },
-  { key: 'party', label: 'Party' },
-  { key: 'district', label: 'District', format: v => (v ? String(v) : 'N/A (Senator)') },
-  { key: 'title', label: 'Title' },
-  { key: 'yearsInOffice', label: 'Years in Office', format: v => String(v ?? 'N/A') },
-  { key: 'nextElection', label: 'Next Election', format: v => String(v ?? 'N/A') },
-  { key: 'phone', label: 'Phone', format: v => String(v ?? '') },
-  { key: 'website', label: 'Website', format: v => String(v ?? '') },
-];
 
 function getPartyColor(party: string): string {
   const p = party.toLowerCase();
@@ -214,15 +200,10 @@ export default async function StateDelegationPage({ params }: PageProps) {
             </div>
 
             <div className="flex items-center gap-4">
-              <ExportButton
-                data={delegationData as unknown as Record<string, unknown>[]}
-                columns={
-                  delegationExportColumns as unknown as ExportColumn<Record<string, unknown>>[]
-                }
-                filename={`${normalizedCode.toLowerCase()}-delegation`}
-                description={`Federal congressional delegation for ${stateName}`}
-                size="md"
-                ariaLabel={`Export ${stateName} delegation data`}
+              <DelegationExportButton
+                data={delegationData}
+                stateCode={normalizedCode}
+                stateName={stateName ?? ''}
               />
             </div>
           </div>
