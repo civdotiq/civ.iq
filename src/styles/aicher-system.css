@@ -1359,6 +1359,16 @@ body {
   background: var(--aicher-blue);
 }
 
+.accent-banner-straight {
+  transform: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.accent-banner-straight > * {
+  transform: none;
+}
+
 /* Bold display heading - tight tracking, max impact */
 .accent-display {
   font-weight: 900;
