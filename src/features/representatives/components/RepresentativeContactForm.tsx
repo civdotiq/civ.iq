@@ -54,7 +54,8 @@ export function RepresentativeContactForm({ representative }: RepresentativeCont
   const messageLength = getMessageCharacterCount(formData.message);
 
   const handleInputChange = (field: keyof ContactFormData, value: string) => {
-    const sanitized = field === 'message' ? sanitizeMessage(value) : value.trim();
+    // Don't trim during input - only sanitize message for XSS, preserve whitespace
+    const sanitized = field === 'message' ? sanitizeMessage(value) : value;
     setFormData({ ...formData, [field]: sanitized });
 
     // Clear error for this field

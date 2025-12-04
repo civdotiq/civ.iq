@@ -5,6 +5,7 @@
 
 import DOMPurify from 'isomorphic-dompurify';
 import type { RepresentativeSummary } from '@/types/representative';
+import { getMemberContactInfo, getMemberContactFormUrl } from '@/data/member-contact-info';
 
 /**
  * Format a constituent message with professional formatting
@@ -92,20 +93,21 @@ export function normalizeZipCode(zip: string): string {
 /**
  * Sanitize user message to prevent XSS attacks
  * Removes all HTML tags and dangerous content
+ * Note: Does NOT trim - preserves spaces and newlines for textarea input
  */
 export function sanitizeMessage(message: string): string {
   if (!message || typeof message !== 'string') {
     return '';
   }
 
-  // Configure DOMPurify to strip all HTML tags
+  // Configure DOMPurify to strip all HTML tags but preserve whitespace
   const clean = DOMPurify.sanitize(message, {
     ALLOWED_TAGS: [], // No HTML tags allowed
     ALLOWED_ATTR: [], // No attributes allowed
     KEEP_CONTENT: true, // Keep text content
   });
 
-  return clean.trim();
+  return clean; // Don't trim - preserve spaces and newlines during typing
 }
 
 /**
@@ -159,28 +161,62 @@ export async function findUserRepresentatives(zipCode: string): Promise<Represen
 
 /**
  * Get contact method availability for a representative
+ * Uses static data from unitedstates/congress-legislators when bioguideId is available
+ * Falls back to representative object data for non-federal legislators
  */
 export function getContactMethods(representative: {
+  bioguideId?: string;
   email?: string;
   currentTerm?: {
     contactForm?: string;
+    website?: string;
   };
   contact?: {
     contactForm?: string;
   };
+  officialWebsiteUrl?: string;
 }): {
   hasEmail: boolean;
   hasContactForm: boolean;
   contactFormUrl?: string;
+  officialWebsite?: string;
+  phone?: string;
   email?: string;
 } {
-  const contactFormUrl =
+  // First, try to get data from static member contact info (most reliable)
+  if (representative.bioguideId) {
+    const staticInfo = getMemberContactInfo(representative.bioguideId);
+    if (staticInfo) {
+      const contactFormUrl = getMemberContactFormUrl(representative.bioguideId);
+      return {
+        hasEmail: !!representative.email,
+        hasContactForm: !!contactFormUrl,
+        contactFormUrl,
+        officialWebsite: staticInfo.url,
+        phone: staticInfo.phone || undefined,
+        email: representative.email,
+      };
+    }
+  }
+
+  // Fallback: Try explicit contact form from representative object
+  let contactFormUrl =
     representative.currentTerm?.contactForm || representative.contact?.contactForm;
+
+  // Get official website from various sources
+  const officialWebsite = representative.officialWebsiteUrl || representative.currentTerm?.website;
+
+  // If no explicit contact form but we have official website, derive contact URL
+  if (!contactFormUrl && officialWebsite) {
+    const baseUrl = officialWebsite.endsWith('/') ? officialWebsite.slice(0, -1) : officialWebsite;
+    contactFormUrl = `${baseUrl}/contact`;
+  }
 
   return {
     hasEmail: !!representative.email,
     hasContactForm: !!contactFormUrl,
     contactFormUrl,
+    officialWebsite,
     email: representative.email,
   };
 }
