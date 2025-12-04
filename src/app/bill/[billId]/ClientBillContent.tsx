@@ -6,6 +6,7 @@ import { ExternalLink, Calendar, FileText, Vote, CheckCircle, XCircle } from 'lu
 import type { Bill, BillVote } from '@/types/bill';
 import { getBillDisplayStatus, getBillStatusColor } from '@/types/bill';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
+import { BillJourneyTimeline } from '@/features/legislation/components/BillJourneyTimeline';
 
 interface ClientBillContentProps {
   billId: string;
@@ -448,89 +449,13 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Timeline */}
-          <div className="bg-white border-2 border-black p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Legislative Timeline</h3>
-            <div className="relative">
-              {/* Timeline line */}
-              <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-
-              <div className="space-y-4">
-                {/* Always show introduction */}
-                <div className="flex relative">
-                  <div className="flex-shrink-0 w-4 h-4 bg-blue-600 rounded-full border-2 border-white border-2 border-black mr-4 relative z-10"></div>
-                  <div className="flex-1 bg-blue-50 p-3 border-l-4 border-blue-500">
-                    <p className="text-sm font-medium text-gray-900">Bill Introduced</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      {new Date(bill.introducedDate).toLocaleDateString()} • {bill.chamber}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Show latest action */}
-                {bill.status.lastAction && bill.status.lastAction.description !== 'Introduced' && (
-                  <div className="flex relative">
-                    <div
-                      className={`flex-shrink-0 w-4 h-4 rounded-full border-2 border-white border-2 border-black mr-4 relative z-10 ${
-                        bill.status.current === 'enacted'
-                          ? 'bg-green-600'
-                          : bill.status.current === 'failed'
-                            ? 'bg-red-600'
-                            : bill.status.current === 'passed_house' ||
-                                bill.status.current === 'passed_senate'
-                              ? 'bg-orange-600'
-                              : 'bg-yellow-600'
-                      }`}
-                    ></div>
-                    <div
-                      className={`flex-1 p-3 border-l-4 ${
-                        bill.status.current === 'enacted'
-                          ? 'bg-green-50 border-green-500'
-                          : bill.status.current === 'failed'
-                            ? 'bg-red-50 border-red-500'
-                            : bill.status.current === 'passed_house' ||
-                                bill.status.current === 'passed_senate'
-                              ? 'bg-orange-50 border-orange-500'
-                              : 'bg-yellow-50 border-yellow-500'
-                      }`}
-                    >
-                      <p className="text-sm font-medium text-gray-900">
-                        {bill.status.lastAction.description}
-                      </p>
-                      <p className="text-xs text-gray-600 mt-1">
-                        {new Date(bill.status.lastAction.date).toLocaleDateString()}
-                        {bill.status.lastAction.chamber && ` • ${bill.status.lastAction.chamber}`}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Show additional timeline if available */}
-                {bill.status.timeline &&
-                  bill.status.timeline.length > 0 &&
-                  bill.status.timeline.slice(0, 2).map((action, index) => (
-                    <div key={index} className="flex relative">
-                      <div className="flex-shrink-0 w-4 h-4 bg-gray-400 rounded-full border-2 border-white border-2 border-black mr-4 relative z-10"></div>
-                      <div className="flex-1 bg-white p-3 border-l-4 border-gray-400">
-                        <p className="text-sm font-medium text-gray-900">{action.description}</p>
-                        <p className="text-xs text-gray-600 mt-1">
-                          {new Date(action.date).toLocaleDateString()}
-                          {action.chamber && ` • ${action.chamber}`}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-
-                {bill.status.timeline && bill.status.timeline.length > 2 && (
-                  <div className="text-center">
-                    <p className="text-xs text-gray-500 bg-white border-2 border-gray-300 py-2 px-3 rounded-full inline-block">
-                      + {bill.status.timeline.length - 2} more legislative actions
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          {/* Bill Journey Timeline */}
+          <BillJourneyTimeline
+            actions={bill.status.timeline || []}
+            currentStatus={bill.status.current}
+            chamber={bill.chamber}
+            introducedDate={bill.introducedDate}
+          />
 
           {/* Related Bills */}
           {bill.relatedBills && bill.relatedBills.length > 0 && (
