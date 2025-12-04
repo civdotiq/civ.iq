@@ -12,6 +12,10 @@ interface ResponsiveTableProps {
   children: ReactNode;
   className?: string;
   mobileBreakpoint?: 'sm' | 'md' | 'lg';
+  /** Accessible caption/label for the table */
+  caption?: string;
+  /** ARIA label for the table (alternative to caption) */
+  'aria-label'?: string;
 }
 
 interface ResponsiveTableRowProps {
@@ -19,6 +23,8 @@ interface ResponsiveTableRowProps {
   className?: string;
   onClick?: () => void;
   mobileCard?: ReactNode; // Custom mobile card layout
+  /** Accessible label for clickable rows */
+  'aria-label'?: string;
 }
 
 interface ResponsiveTableCellProps {
@@ -36,17 +42,32 @@ export function ResponsiveTable({
   children,
   className = '',
   mobileBreakpoint = 'md',
+  caption,
+  'aria-label': ariaLabel,
 }: ResponsiveTableProps) {
   return (
     <ComponentErrorBoundary componentName="ResponsiveTable">
-      <div className={`responsive-table-container ${className}`}>
+      <div
+        className={`responsive-table-container ${className}`}
+        role="region"
+        aria-label={ariaLabel || caption || 'Data table'}
+      >
         {/* Desktop table view */}
         <div className={`hidden ${mobileBreakpoint}:block overflow-x-auto`}>
-          <table className="w-full">{children}</table>
+          <table className="w-full" aria-label={ariaLabel}>
+            {caption && <caption className="sr-only">{caption}</caption>}
+            {children}
+          </table>
         </div>
 
         {/* Mobile card view - will be handled by ResponsiveTableBody */}
-        <div className={`block ${mobileBreakpoint}:hidden space-y-4`}>{children}</div>
+        <div
+          className={`block ${mobileBreakpoint}:hidden space-y-4`}
+          role="list"
+          aria-label={ariaLabel || caption || 'Data items'}
+        >
+          {children}
+        </div>
       </div>
     </ComponentErrorBoundary>
   );
@@ -101,22 +122,42 @@ export function ResponsiveTableRow({
   className = '',
   onClick,
   mobileCard,
+  'aria-label': ariaLabel,
 }: ResponsiveTableRowProps) {
   const baseClasses = 'transition-colors';
   const desktopClasses = `hidden md:table-row hover:bg-white ${onClick ? 'cursor-pointer' : ''}`;
   const mobileClasses = 'block md:hidden bg-white border border-gray-200 border-2 border-black';
 
+  // Handle keyboard activation for interactive rows
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (onClick && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault();
+      onClick();
+    }
+  };
+
   return (
     <>
       {/* Desktop row */}
-      <tr className={`${baseClasses} ${desktopClasses} ${className}`} onClick={onClick}>
+      <tr
+        className={`${baseClasses} ${desktopClasses} ${className}`}
+        onClick={onClick}
+        onKeyDown={onClick ? handleKeyDown : undefined}
+        tabIndex={onClick ? 0 : undefined}
+        role={onClick ? 'button' : undefined}
+        aria-label={ariaLabel}
+      >
         {children}
       </tr>
 
       {/* Mobile card */}
       <div
-        className={`${baseClasses} ${mobileClasses} ${onClick ? 'cursor-pointer hover:border-2 border-black' : ''} p-4`}
+        className={`${baseClasses} ${mobileClasses} ${onClick ? 'cursor-pointer hover:border-2 border-black focus:outline-none focus-visible:ring-2 focus-visible:ring-civiq-blue focus-visible:ring-offset-2' : ''} p-4`}
         onClick={onClick}
+        onKeyDown={onClick ? handleKeyDown : undefined}
+        tabIndex={onClick ? 0 : undefined}
+        role={onClick ? 'listitem' : 'listitem'}
+        aria-label={ariaLabel}
       >
         {mobileCard || (
           <div className="space-y-3">
@@ -208,10 +249,26 @@ export function VoteCard({
   getPositionColor: (position: string) => string;
   getResultColor: (result: string) => string;
 }) {
+  const detailsId = `vote-details-${vote.voteId}`;
+
+  // Handle keyboard activation
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onToggleExpansion(vote.voteId);
+    }
+  };
+
   return (
-    <div
-      className="bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-all duration-200 cursor-pointer"
+    <article
+      className="bg-white border border-gray-200 border-2 border-black hover:border-2 border-black transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-civiq-blue focus-visible:ring-offset-2"
       onClick={() => onToggleExpansion(vote.voteId)}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="button"
+      aria-expanded={isExpanded}
+      aria-controls={detailsId}
+      aria-label={`Vote on ${vote.bill.number}: ${vote.position}. ${isExpanded ? 'Click to collapse' : 'Click to expand details'}`}
     >
       <div className="p-4">
         {/* Header with date and vote result */}
@@ -254,7 +311,7 @@ export function VoteCard({
 
         {/* Expanded details */}
         {isExpanded && (
-          <div className="pt-3 border-t border-gray-100 space-y-2">
+          <div id={detailsId} className="pt-3 border-t border-gray-100 space-y-2">
             <div className="text-sm text-gray-600">
               <span className="font-medium">Question:</span> {vote.question}
             </div>
@@ -269,13 +326,13 @@ export function VoteCard({
 
         {/* Tap indicator */}
         <div className="flex items-center justify-center mt-3 pt-2 border-t border-gray-100">
-          <div className="text-xs text-gray-400 flex items-center gap-1">
+          <div className="text-xs text-gray-400 flex items-center gap-1" aria-hidden="true">
             <span>{isExpanded ? 'Tap to collapse' : 'Tap for details'}</span>
             <span className="text-gray-300">{isExpanded ? '▲' : '▼'}</span>
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -314,7 +371,7 @@ export function TouchPagination({
   totalPages,
   onPageChange,
   itemsShown,
-  totalItems,
+  totalItems: _totalItems,
   className = '',
 }: {
   currentPage: number;
@@ -330,15 +387,24 @@ export function TouchPagination({
   const disabledClasses = 'bg-white border-2 border-gray-300 text-gray-400 cursor-not-allowed';
 
   return (
-    <div className={`px-4 py-3 border-t border-gray-200 bg-white ${className}`}>
+    <nav
+      className={`px-4 py-3 border-t border-gray-200 bg-white ${className}`}
+      aria-label="Pagination"
+    >
       <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
-        <div className="text-sm text-gray-700 text-center md:text-left">{itemsShown}</div>
-        <div className="flex items-center justify-center gap-2">
+        <div className="text-sm text-gray-700 text-center md:text-left" aria-live="polite">
+          {itemsShown}
+        </div>
+        <div
+          className="flex items-center justify-center gap-2"
+          role="group"
+          aria-label="Page navigation"
+        >
           <button
             onClick={() => onPageChange(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
             className={`${buttonClasses} ${currentPage === 1 ? disabledClasses : inactiveClasses}`}
-            aria-label="Previous page"
+            aria-label="Go to previous page"
           >
             ← Prev
           </button>
@@ -353,6 +419,8 @@ export function TouchPagination({
                   key={page}
                   onClick={() => onPageChange(page)}
                   className={`${buttonClasses} ${isActive ? activeClasses : inactiveClasses}`}
+                  aria-label={`Page ${page}${isActive ? ', current page' : ''}`}
+                  aria-current={isActive ? 'page' : undefined}
                 >
                   {page}
                 </button>
@@ -371,12 +439,12 @@ export function TouchPagination({
             className={`${buttonClasses} ${
               currentPage === totalPages ? disabledClasses : inactiveClasses
             }`}
-            aria-label="Next page"
+            aria-label="Go to next page"
           >
             Next →
           </button>
         </div>
       </div>
-    </div>
+    </nav>
   );
 }

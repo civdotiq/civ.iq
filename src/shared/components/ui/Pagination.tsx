@@ -19,6 +19,8 @@ interface PaginationProps {
   maxVisiblePages?: number;
   loading?: boolean;
   className?: string;
+  /** Accessible label for the pagination navigation */
+  'aria-label'?: string;
 }
 
 export function Pagination({
@@ -33,6 +35,7 @@ export function Pagination({
   maxVisiblePages = 7,
   loading = false,
   className = '',
+  'aria-label': ariaLabel = 'Pagination',
 }: PaginationProps) {
   const [visiblePages, setVisiblePages] = useState<number[]>([]);
 
@@ -66,10 +69,13 @@ export function Pagination({
   const itemsPerPageOptions = [10, 20, 50, 100];
 
   return (
-    <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 ${className}`}>
+    <nav
+      aria-label={ariaLabel}
+      className={`flex flex-col sm:flex-row items-center justify-between gap-4 ${className}`}
+    >
       {/* Items info */}
       {showInfo && (
-        <div className="text-sm text-gray-700">
+        <div className="text-sm text-gray-700" aria-live="polite">
           Showing <span className="font-medium">{startItem}</span> to{' '}
           <span className="font-medium">{endItem}</span> of{' '}
           <span className="font-medium">{totalItems}</span> results
@@ -77,11 +83,12 @@ export function Pagination({
       )}
 
       {/* Pagination controls */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2" role="group" aria-label="Page navigation">
         {/* Previous button */}
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1 || loading}
+          aria-label="Go to previous page"
           className={`
       px-3 py-2 text-sm font-medium transition-colors
       ${
@@ -124,6 +131,8 @@ export function Pagination({
             key={page}
             onClick={() => onPageChange(page)}
             disabled={loading}
+            aria-label={`Page ${page}${currentPage === page ? ', current page' : ''}`}
+            aria-current={currentPage === page ? 'page' : undefined}
             className={`
        px-3 py-2 text-sm font-medium transition-colors
        ${
@@ -203,7 +212,7 @@ export function Pagination({
           </select>
         </div>
       )}
-    </div>
+    </nav>
   );
 }
 

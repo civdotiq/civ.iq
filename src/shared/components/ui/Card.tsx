@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { FC, ReactNode, memo } from 'react';
+import { FC, ReactNode, memo, KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
 
 interface CardProps {
@@ -12,10 +12,19 @@ interface CardProps {
   interactive?: boolean;
   padding?: 'none' | 'sm' | 'md' | 'lg';
   onClick?: () => void;
+  /** Accessible label for interactive cards */
+  'aria-label'?: string;
 }
 
 export const Card: FC<CardProps> = memo(
-  ({ children, className, interactive = false, padding = 'md', onClick }) => {
+  ({
+    children,
+    className,
+    interactive = false,
+    padding = 'md',
+    onClick,
+    'aria-label': ariaLabel,
+  }) => {
     const paddingClasses = {
       none: '',
       sm: 'p-4',
@@ -23,16 +32,30 @@ export const Card: FC<CardProps> = memo(
       lg: 'p-8',
     };
 
+    const isClickable = interactive || onClick;
+
+    // Handle keyboard activation for interactive cards
+    const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+      if (onClick && (event.key === 'Enter' || event.key === ' ')) {
+        event.preventDefault();
+        onClick();
+      }
+    };
+
     return (
       <div
         className={cn(
           'bg-white border border-gray-100 border-2 border-black',
-          (interactive || onClick) &&
-            'cursor-pointer hover:border-2 border-black hover:border-gray-200 hover:-translate-y-0.5 transform transition-all duration-200',
+          isClickable &&
+            'cursor-pointer hover:border-2 border-black hover:border-gray-200 hover:-translate-y-0.5 transform transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-civiq-blue focus-visible:ring-offset-2',
           paddingClasses[padding],
           className
         )}
         onClick={onClick}
+        onKeyDown={isClickable ? handleKeyDown : undefined}
+        role={isClickable ? 'button' : undefined}
+        tabIndex={isClickable ? 0 : undefined}
+        aria-label={ariaLabel}
       >
         {children}
       </div>

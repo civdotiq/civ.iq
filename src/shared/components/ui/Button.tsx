@@ -10,6 +10,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
+  /** Accessible label for icon-only buttons (required when no text children) */
+  'aria-label'?: string;
 }
 
 export const Button: FC<ButtonProps> = memo(
@@ -20,6 +22,7 @@ export const Button: FC<ButtonProps> = memo(
     size = 'md',
     loading = false,
     disabled,
+    'aria-label': ariaLabel,
     ...props
   }) => {
     const baseStyles =
@@ -41,25 +44,32 @@ export const Button: FC<ButtonProps> = memo(
       lg: 'px-8 py-4 text-lg',
     };
 
+    // Determine if button is in loading state for screen readers
+    const isLoading = loading;
+
     return (
       <button
         className={cn(
           baseStyles,
           variants[variant],
           sizes[size],
-          loading && 'opacity-75 cursor-wait',
+          isLoading && 'opacity-75 cursor-wait',
           disabled && 'opacity-50 cursor-not-allowed',
           className
         )}
-        disabled={disabled || loading}
+        disabled={disabled || isLoading}
+        aria-label={ariaLabel}
+        aria-busy={isLoading}
+        aria-disabled={disabled || isLoading}
         {...props}
       >
-        {loading ? (
+        {isLoading ? (
           <>
             <svg
               className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
               fill="none"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <circle
                 className="opacity-25"
@@ -75,7 +85,7 @@ export const Button: FC<ButtonProps> = memo(
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            Loading...
+            <span>Loading...</span>
           </>
         ) : (
           children
