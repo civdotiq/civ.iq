@@ -80,7 +80,30 @@ interface CongressTextFormat {
 }
 
 interface CongressTextVersion {
+  type: string;
+  date: string;
   formats: CongressTextFormat[];
+}
+
+interface CongressCBOEstimate {
+  title: string;
+  description: string;
+  url: string;
+  pubDate: string;
+}
+
+interface CongressCommitteeReport {
+  citation: string;
+  url: string;
+}
+
+interface CongressLaw {
+  type: string;
+  number: string;
+}
+
+interface CongressPolicyArea {
+  name: string;
 }
 
 interface CongressBillData {
@@ -104,8 +127,167 @@ interface CongressBillData {
   subjects?: {
     legislativeSubjects: CongressSubject[];
   };
+  policyArea?: CongressPolicyArea;
   relatedBills?: CongressRelatedBill[];
   textVersions?: CongressTextVersion[];
+  cboCostEstimates?: CongressCBOEstimate[];
+  committeeReports?: CongressCommitteeReport[];
+  laws?: CongressLaw[];
+  amendments?: {
+    count: number;
+    url: string;
+  };
+}
+
+// Helper function to fetch bill text content
+async function fetchBillText(
+  congress: string,
+  type: string,
+  number: string
+): Promise<{ content: string; format: 'html' | 'text'; version: string; date: string } | null> {
+  try {
+    // First get text versions to find the latest
+    const textVersionsResponse = await fetch(
+      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/text?api_key=${process.env.CONGRESS_API_KEY}&format=json`,
+      {
+        headers: {
+          'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+          Accept: 'application/json',
+        },
+      }
+    );
+
+    if (!textVersionsResponse.ok) {
+      logger.warn('Failed to fetch text versions', { congress, type, number });
+      return null;
+    }
+
+    const textVersionsData: { textVersions: CongressTextVersion[] } =
+      await textVersionsResponse.json();
+
+    if (!textVersionsData.textVersions || textVersionsData.textVersions.length === 0) {
+      return null;
+    }
+
+    // Get the most recent text version
+    const latestVersion = textVersionsData.textVersions[0];
+    if (!latestVersion) {
+      return null;
+    }
+
+    const htmlFormat = latestVersion.formats.find(f => f.type === 'Formatted Text');
+
+    if (!htmlFormat?.url) {
+      return null;
+    }
+
+    // Fetch the actual HTML content
+    const textResponse = await fetch(htmlFormat.url, {
+      headers: {
+        'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+      },
+    });
+
+    if (!textResponse.ok) {
+      logger.warn('Failed to fetch bill text HTML', { url: htmlFormat.url });
+      return null;
+    }
+
+    const htmlContent = await textResponse.text();
+
+    // Clean up the HTML - extract just the bill text body
+    // The Congress.gov HTML has a lot of wrapper elements
+    let cleanedContent = htmlContent;
+
+    // Try to extract just the body content
+    const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    if (bodyMatch?.[1]) {
+      cleanedContent = bodyMatch[1];
+    }
+
+    // Remove script tags
+    cleanedContent = cleanedContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+
+    // Remove style tags
+    cleanedContent = cleanedContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+
+    logger.info('Successfully fetched bill text', {
+      congress,
+      type,
+      number,
+      version: latestVersion.type,
+      contentLength: cleanedContent.length,
+    });
+
+    return {
+      content: cleanedContent,
+      format: 'html',
+      version: latestVersion.type,
+      date: latestVersion.date,
+    };
+  } catch (error) {
+    logger.error('Error fetching bill text', error as Error, { congress, type, number });
+    return null;
+  }
+}
+
+// Helper function to fetch additional bill details (subjects, amendments, etc.)
+async function fetchBillDetails(
+  congress: string,
+  type: string,
+  number: string
+): Promise<{
+  subjects?: { legislativeSubjects: CongressSubject[] };
+  policyArea?: CongressPolicyArea;
+  textVersions?: CongressTextVersion[];
+}> {
+  try {
+    // Fetch subjects endpoint for detailed subject info
+    const subjectsResponse = await fetch(
+      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/subjects?api_key=${process.env.CONGRESS_API_KEY}&format=json`,
+      {
+        headers: {
+          'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+          Accept: 'application/json',
+        },
+      }
+    );
+
+    let subjects: { legislativeSubjects: CongressSubject[] } | undefined;
+    let policyArea: CongressPolicyArea | undefined;
+
+    if (subjectsResponse.ok) {
+      const subjectsData = await subjectsResponse.json();
+      if (subjectsData.subjects) {
+        subjects = {
+          legislativeSubjects: subjectsData.subjects.legislativeSubjects || [],
+        };
+        policyArea = subjectsData.subjects.policyArea;
+      }
+    }
+
+    // Fetch text versions endpoint
+    const textResponse = await fetch(
+      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/text?api_key=${process.env.CONGRESS_API_KEY}&format=json`,
+      {
+        headers: {
+          'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+          Accept: 'application/json',
+        },
+      }
+    );
+
+    let textVersions: CongressTextVersion[] | undefined;
+    if (textResponse.ok) {
+      const textData = await textResponse.json();
+      textVersions = textData.textVersions;
+    }
+
+    return { subjects, policyArea, textVersions };
+  } catch (error) {
+    logger.error('Error fetching bill details', error as Error, { congress, type, number });
+    return {};
+  }
 }
 
 // Helper function to fetch bill cosponsors from Congress.gov
@@ -222,6 +404,12 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
           number.toString()
         );
 
+        // Fetch additional bill details (subjects, text versions)
+        const billDetails = await fetchBillDetails(congress.toString(), type, number.toString());
+
+        // Fetch full bill text content
+        const billText = await fetchBillText(congress.toString(), type, number.toString());
+
         // Transform Congress.gov data to our Bill interface
         const result: Bill = {
           id: `${bill.congress}-${bill.type}-${bill.number}`,
@@ -304,9 +492,73 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
               }
             : undefined,
 
-          subjects: Array.isArray(bill.subjects?.legislativeSubjects)
-            ? bill.subjects.legislativeSubjects.map((subject: CongressSubject) => subject.name)
-            : [],
+          subjects: Array.isArray(billDetails.subjects?.legislativeSubjects)
+            ? billDetails.subjects.legislativeSubjects.map(
+                (subject: CongressSubject) => subject.name
+              )
+            : Array.isArray(bill.subjects?.legislativeSubjects)
+              ? bill.subjects.legislativeSubjects.map((subject: CongressSubject) => subject.name)
+              : [],
+
+          policyArea: billDetails.policyArea?.name || bill.policyArea?.name,
+
+          // Full bill text content
+          fullText: billText || undefined,
+
+          // Text versions with formats
+          textVersions: Array.isArray(billDetails.textVersions)
+            ? billDetails.textVersions.map((tv: CongressTextVersion) => ({
+                type: tv.type,
+                date: tv.date,
+                formats: tv.formats.map((f: CongressTextFormat) => ({
+                  type: f.type,
+                  url: f.url,
+                })),
+              }))
+            : Array.isArray(bill.textVersions)
+              ? bill.textVersions.map((tv: CongressTextVersion) => ({
+                  type: tv.type,
+                  date: tv.date,
+                  formats: tv.formats.map((f: CongressTextFormat) => ({
+                    type: f.type,
+                    url: f.url,
+                  })),
+                }))
+              : undefined,
+
+          // CBO Cost Estimates
+          cboCostEstimates: Array.isArray(bill.cboCostEstimates)
+            ? bill.cboCostEstimates.map((cbo: CongressCBOEstimate) => ({
+                title: cbo.title,
+                description: cbo.description,
+                url: cbo.url,
+                pubDate: cbo.pubDate,
+              }))
+            : undefined,
+
+          // Amendments count
+          amendments: bill.amendments
+            ? {
+                count: bill.amendments.count,
+                items: [], // Individual amendments would require additional API call
+              }
+            : undefined,
+
+          // Committee Reports
+          committeeReports: Array.isArray(bill.committeeReports)
+            ? bill.committeeReports.map((report: CongressCommitteeReport) => ({
+                citation: report.citation,
+                url: report.url,
+              }))
+            : undefined,
+
+          // Public Laws (if enacted)
+          laws: Array.isArray(bill.laws)
+            ? bill.laws.map((law: CongressLaw) => ({
+                type: law.type,
+                number: law.number,
+              }))
+            : undefined,
 
           votes: [], // Will be populated below
 

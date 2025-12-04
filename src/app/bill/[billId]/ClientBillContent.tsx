@@ -2,7 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ExternalLink, Calendar, FileText, Vote, CheckCircle, XCircle } from 'lucide-react';
+import {
+  ExternalLink,
+  Calendar,
+  FileText,
+  Vote,
+  CheckCircle,
+  XCircle,
+  Tag,
+  DollarSign,
+  ScrollText,
+  ChevronDown,
+  ChevronUp,
+  Gavel,
+} from 'lucide-react';
 import type { Bill, BillVote } from '@/types/bill';
 import { getBillDisplayStatus, getBillStatusColor } from '@/types/bill';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
@@ -188,6 +201,105 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
               </div>
             )}
           </div>
+
+          {/* Policy Area & Subjects */}
+          {(bill.policyArea || (bill.subjects && bill.subjects.length > 0)) && (
+            <div className="bg-white border-2 border-black p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Tag className="w-5 h-5 text-civiq-blue" />
+                Topics & Subjects
+              </h3>
+
+              {bill.policyArea && (
+                <div className="mb-4">
+                  <span className="text-sm font-medium text-gray-600">Policy Area: </span>
+                  <span className="inline-flex items-center px-3 py-1 bg-civiq-blue/10 text-civiq-blue font-medium text-sm border border-civiq-blue/20">
+                    {bill.policyArea}
+                  </span>
+                </div>
+              )}
+
+              {bill.subjects && bill.subjects.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {bill.subjects.map((subject, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-gray-100 text-gray-700 text-sm border border-gray-200"
+                    >
+                      {subject}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Bill Text Section */}
+          {bill.fullText && <BillTextSection fullText={bill.fullText} />}
+
+          {/* CBO Cost Estimates */}
+          {bill.cboCostEstimates && bill.cboCostEstimates.length > 0 && (
+            <div className="bg-white border-2 border-black p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-green-600" />
+                CBO Cost Estimates ({bill.cboCostEstimates.length})
+              </h3>
+              <div className="space-y-3">
+                {bill.cboCostEstimates.map((estimate, index) => (
+                  <a
+                    key={index}
+                    href={estimate.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-4 border border-gray-200 hover:border-green-400 hover:bg-green-50 transition-all"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900 mb-1">{estimate.title}</p>
+                        <p className="text-sm text-gray-600 line-clamp-2">{estimate.description}</p>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Published:{' '}
+                          {new Date(estimate.pubDate).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </p>
+                      </div>
+                      <ExternalLink className="w-4 h-4 text-green-600 flex-shrink-0 ml-2" />
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Amendments */}
+          {bill.amendments && bill.amendments.count > 0 && (
+            <div className="bg-white border-2 border-black p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <ScrollText className="w-5 h-5 text-orange-600" />
+                Amendments ({bill.amendments.count})
+              </h3>
+              <div className="p-4 bg-orange-50 border border-orange-200">
+                <p className="text-gray-700">
+                  This bill has <span className="font-bold">{bill.amendments.count}</span> amendment
+                  {bill.amendments.count === 1 ? '' : 's'} proposed or adopted.
+                </p>
+                {bill.url && (
+                  <a
+                    href={`${bill.url}/amendments`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 mt-2 text-sm text-orange-700 hover:text-orange-900 font-medium"
+                  >
+                    View all amendments on Congress.gov
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Congressional Votes - The Critical Link */}
           <div className="bg-white border-2 border-black p-6">
@@ -449,6 +561,31 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Public Law Badge (if enacted) */}
+          {bill.laws && bill.laws.length > 0 && (
+            <div className="bg-emerald-50 border-2 border-emerald-500 p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <CheckCircle className="w-6 h-6 text-emerald-600" />
+                <h3 className="text-lg font-bold text-emerald-800">Enacted into Law</h3>
+              </div>
+              {bill.laws.map((law, index) => (
+                <div key={index} className="mt-2">
+                  <p className="text-emerald-700 font-semibold text-lg">
+                    {law.type} {law.number}
+                  </p>
+                  <a
+                    href={`https://www.congress.gov/public-laws/${bill.congress}th-congress`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm text-emerald-600 hover:text-emerald-800 mt-1"
+                  >
+                    View on Congress.gov <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Bill Journey Timeline */}
           <BillJourneyTimeline
             actions={bill.status.timeline || []}
@@ -456,6 +593,65 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
             chamber={bill.chamber}
             introducedDate={bill.introducedDate}
           />
+
+          {/* Text Versions */}
+          {bill.textVersions && bill.textVersions.length > 0 && (
+            <div className="bg-white border-2 border-black p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-purple-600" />
+                Text Versions ({bill.textVersions.length})
+              </h3>
+              <div className="space-y-3">
+                {bill.textVersions.map((version, index) => (
+                  <div key={index} className="p-3 bg-gray-50 border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-gray-900">{version.type}</span>
+                      <span className="text-xs text-gray-500">
+                        {new Date(version.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {version.formats.map((format, fIndex) => (
+                        <a
+                          key={fIndex}
+                          href={format.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-white border border-gray-300 hover:border-purple-400 hover:bg-purple-50 transition-colors"
+                        >
+                          {format.type}
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Committee Reports */}
+          {bill.committeeReports && bill.committeeReports.length > 0 && (
+            <div className="bg-white border-2 border-black p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Committee Reports ({bill.committeeReports.length})
+              </h3>
+              <div className="space-y-2">
+                {bill.committeeReports.map((report, index) => (
+                  <a
+                    key={index}
+                    href={report.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-3 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 transition-colors"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{report.citation}</span>
+                    <ExternalLink className="w-4 h-4 text-blue-600" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Related Bills */}
           {bill.relatedBills && bill.relatedBills.length > 0 && (
@@ -591,6 +787,91 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Bill Text Section Component - Collapsible display of full bill text
+interface BillTextSectionProps {
+  fullText: {
+    content: string;
+    format: 'html' | 'text';
+    version: string;
+    date: string;
+  };
+}
+
+function BillTextSection({ fullText }: BillTextSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showFullText, setShowFullText] = useState(false);
+
+  // Truncate content for preview
+  const previewLength = 2000;
+  const isLongContent = fullText.content.length > previewLength;
+  const displayContent =
+    showFullText || !isLongContent ? fullText.content : fullText.content.slice(0, previewLength);
+
+  return (
+    <div className="bg-white border-2 border-black p-6">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between text-left"
+      >
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Gavel className="w-5 h-5 text-purple-600" />
+          Full Bill Text
+        </h3>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">{fullText.version}</span>
+          {isExpanded ? (
+            <ChevronUp className="w-5 h-5 text-gray-400" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-gray-400" />
+          )}
+        </div>
+      </button>
+
+      {isExpanded && (
+        <div className="mt-4">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm text-gray-500">
+              Version: {fullText.version} •{' '}
+              {new Date(fullText.date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </p>
+          </div>
+
+          <div
+            className="prose prose-sm max-w-none bg-gray-50 p-4 border border-gray-200 overflow-auto max-h-[600px]"
+            dangerouslySetInnerHTML={{ __html: displayContent }}
+          />
+
+          {isLongContent && !showFullText && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setShowFullText(true)}
+                className="px-4 py-2 bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors font-medium text-sm"
+              >
+                Show Full Text ({Math.round(fullText.content.length / 1000)}KB)
+              </button>
+            </div>
+          )}
+
+          {showFullText && isLongContent && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setShowFullText(false)}
+                className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors font-medium text-sm"
+              >
+                Collapse Text
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

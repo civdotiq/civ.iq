@@ -55,6 +55,57 @@ export interface Bill {
     version: string;
   };
   subjects: string[];
+  policyArea?: string;
+
+  // Full bill text
+  fullText?: {
+    content: string;
+    format: 'html' | 'text';
+    version: string;
+    date: string;
+  };
+
+  // Text versions available
+  textVersions?: Array<{
+    type: string;
+    date: string;
+    formats: Array<{
+      type: string;
+      url: string;
+    }>;
+  }>;
+
+  // CBO Cost Estimates
+  cboCostEstimates?: Array<{
+    title: string;
+    description: string;
+    url: string;
+    pubDate: string;
+  }>;
+
+  // Amendments
+  amendments?: {
+    count: number;
+    items?: Array<{
+      number: string;
+      description?: string;
+      purpose?: string;
+      sponsor?: string;
+      status?: string;
+    }>;
+  };
+
+  // Committee Reports
+  committeeReports?: Array<{
+    citation: string;
+    url: string;
+  }>;
+
+  // Public Law (if enacted)
+  laws?: Array<{
+    type: string;
+    number: string;
+  }>;
 
   // Voting records
   votes: BillVote[];
