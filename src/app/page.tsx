@@ -9,7 +9,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen aicher-background density-detailed">
       {/* Hero Section */}
-      <div className="flex flex-col justify-center items-center min-h-screen px-grid-2 sm:px-grid-3 lg:px-grid-4 py-grid-4 sm:py-grid-4">
+      <div className="flex flex-col justify-center items-center px-grid-2 sm:px-grid-3 lg:px-grid-4 pt-grid-4 sm:pt-grid-6 pb-grid-2 sm:pb-grid-4">
         <div className="max-w-4xl mx-auto text-center w-full">
           {/* Logo */}
           <div className="mb-grid-2 sm:mb-grid-4">
@@ -44,7 +44,7 @@ export default function HomePage() {
           <SearchForm />
 
           {/* Data Sources */}
-          <div className="mt-grid-3 sm:mt-grid-8 text-center">
+          <div className="mt-grid-2 sm:mt-grid-4 text-center">
             <p className="text-xs sm:text-sm text-gray-500 px-grid-2">
               Federal data from Congress.gov, FEC, and Census Bureau. State legislature data from
               Open States.

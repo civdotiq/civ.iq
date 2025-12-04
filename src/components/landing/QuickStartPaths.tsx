@@ -69,28 +69,26 @@ export default function QuickStartPaths() {
   const [selectedState, setSelectedState] = useState('');
 
   return (
-    <section className="max-w-6xl mx-auto px-grid-2 sm:px-grid-3 py-grid-4 sm:py-grid-6">
-      <div className="mb-grid-3 sm:mb-grid-4 text-center">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 aicher-heading">QUICK START</h2>
-        <p className="text-xs sm:text-sm text-gray-600 mt-grid-1">
-          Alternative ways to explore the platform
-        </p>
+    <section className="max-w-6xl mx-auto px-grid-2 sm:px-grid-3 pt-grid-2 pb-grid-4 sm:pb-grid-6">
+      <div className="mb-grid-2 sm:mb-grid-3 text-center">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900 aicher-heading">QUICK START</h2>
+        <p className="text-xs text-gray-600 mt-1">Alternative ways to explore the platform</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-grid-3 sm:gap-grid-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-grid-2 sm:gap-grid-3">
         {/* Browse by State */}
-        <div className="aicher-card p-grid-3 sm:p-grid-4 flex flex-col">
-          <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-grid-2 aicher-heading">
+        <div className="aicher-card p-grid-2 sm:p-grid-3 flex flex-col">
+          <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1 aicher-heading">
             BROWSE BY STATE
           </h3>
-          <p className="text-xs text-gray-600 mb-grid-2">
+          <p className="text-[10px] sm:text-xs text-gray-600 mb-grid-1">
             View state legislature and federal representatives
           </p>
           <div className="flex-grow">
             <select
               value={selectedState}
               onChange={e => setSelectedState(e.target.value)}
-              className="w-full border-2 border-black px-grid-2 py-grid-1 text-sm focus:outline-none focus:ring-2 focus:ring-civiq-blue"
+              className="w-full border-2 border-black px-2 py-1 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-civiq-blue"
               aria-label="Select a state"
             >
               <option value="">Select a state...</option>
@@ -104,28 +102,28 @@ export default function QuickStartPaths() {
           {selectedState && (
             <Link
               href={`/state-legislature/${selectedState}`}
-              className="mt-grid-2 bg-civiq-blue text-white px-grid-3 py-grid-2 text-center text-sm font-bold aicher-border aicher-hover flex items-center justify-center gap-grid-1"
+              className="mt-grid-1 bg-civiq-blue text-white px-2 py-1 text-center text-xs font-bold aicher-border aicher-hover flex items-center justify-center gap-1"
             >
               VIEW {selectedState}
-              <ArrowRightIcon className="h-4 w-4" />
+              <ArrowRightIcon className="h-3 w-3" />
             </Link>
           )}
         </div>
 
         {/* Example Profile */}
-        <div className="aicher-card p-grid-3 sm:p-grid-4 flex flex-col">
-          <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-grid-2 aicher-heading">
+        <div className="aicher-card p-grid-2 sm:p-grid-3 flex flex-col">
+          <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1 aicher-heading">
             EXAMPLE PROFILE
           </h3>
-          <p className="text-xs text-gray-600 mb-grid-2">
+          <p className="text-[10px] sm:text-xs text-gray-600 mb-grid-1">
             See what representative profiles look like
           </p>
-          <div className="flex-grow space-y-grid-1">
+          <div className="flex-grow space-y-1">
             {EXAMPLE_REPS.map(rep => (
               <Link
                 key={rep.id}
                 href={`/representative/${rep.id}`}
-                className="block border-2 border-gray-200 px-grid-2 py-grid-1 aicher-hover text-xs"
+                className="block border-2 border-gray-200 px-2 py-1 aicher-hover text-[10px] sm:text-xs"
               >
                 <div className="font-semibold text-gray-900">{rep.name}</div>
                 <div className="text-gray-600">{rep.title}</div>
@@ -135,25 +133,24 @@ export default function QuickStartPaths() {
         </div>
 
         {/* Explore Data */}
-        <div className="aicher-card p-grid-3 sm:p-grid-4 flex flex-col">
-          <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-grid-2 aicher-heading">
+        <div className="aicher-card p-grid-2 sm:p-grid-3 flex flex-col">
+          <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1 aicher-heading">
             EXPLORE DATA
           </h3>
-          <p className="text-xs text-gray-600 mb-grid-2">Browse comprehensive datasets</p>
-          <div className="flex-grow space-y-grid-2">
+          <p className="text-[10px] sm:text-xs text-gray-600 mb-grid-1">
+            Browse comprehensive datasets
+          </p>
+          <div className="flex-grow space-y-1">
             <Link
               href="/districts"
-              className="block border-2 border-gray-200 px-grid-2 py-grid-2 aicher-hover"
+              className="block border-2 border-gray-200 px-2 py-1 aicher-hover"
             >
-              <div className="text-sm font-semibold text-gray-900 mb-grid-1">All Districts</div>
-              <div className="text-xs text-gray-600">435 congressional districts</div>
+              <div className="text-xs font-semibold text-gray-900">All Districts</div>
+              <div className="text-[10px] text-gray-600">435 congressional districts</div>
             </Link>
-            <Link
-              href="/states"
-              className="block border-2 border-gray-200 px-grid-2 py-grid-2 aicher-hover"
-            >
-              <div className="text-sm font-semibold text-gray-900 mb-grid-1">All States</div>
-              <div className="text-xs text-gray-600">50 states + territories</div>
+            <Link href="/states" className="block border-2 border-gray-200 px-2 py-1 aicher-hover">
+              <div className="text-xs font-semibold text-gray-900">All States</div>
+              <div className="text-[10px] text-gray-600">50 states + territories</div>
             </Link>
           </div>
         </div>

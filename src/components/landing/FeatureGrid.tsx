@@ -87,22 +87,22 @@ const features: Feature[] = [
 
 export default function FeatureGrid() {
   return (
-    <section className="max-w-6xl mx-auto px-grid-2 sm:px-grid-3 py-grid-6 sm:py-grid-8">
+    <section className="max-w-6xl mx-auto px-grid-2 sm:px-grid-3 pt-grid-2 sm:pt-grid-4 pb-grid-4 sm:pb-grid-6">
       {/* Accent Banner - Tier 1 high impact */}
-      <div className="accent-banner mb-grid-6 sm:mb-grid-8">
+      <div className="accent-banner mb-grid-4 sm:mb-grid-6">
         <span>Who Represents You?</span>
       </div>
 
-      <div className="mb-grid-4 sm:mb-grid-6 text-center">
-        <h2 className="accent-display text-2xl sm:text-4xl text-black mb-grid-2">
+      <div className="mb-grid-3 sm:mb-grid-4 text-center">
+        <h2 className="accent-display text-2xl sm:text-4xl text-black mb-grid-1 sm:mb-grid-2">
           What You Can Do
         </h2>
-        <p className="text-sm sm:text-lg text-gray-600 max-w-2xl mx-auto">
+        <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto">
           Explore federal and state government data from official sources
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-grid-3 sm:gap-grid-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-grid-2 sm:gap-grid-3">
         {features.map((feature, index) => {
           const Icon = feature.icon;
           const bgColorClass = `bg-${feature.iconColor}`;
@@ -111,21 +111,21 @@ export default function FeatureGrid() {
             <Link
               key={index}
               href={feature.href}
-              className="aicher-card aicher-hover flex flex-col p-grid-3 sm:p-grid-4"
+              className="aicher-card aicher-hover flex flex-col p-grid-2 sm:p-grid-3 min-h-[160px] sm:min-h-[180px]"
             >
               <div
-                className={`w-grid-6 h-grid-6 ${bgColorClass} flex items-center justify-center mb-grid-2 aicher-border`}
+                className={`w-8 h-8 sm:w-grid-6 sm:h-grid-6 ${bgColorClass} flex items-center justify-center mb-grid-1 sm:mb-grid-2 aicher-border`}
               >
-                <Icon className="h-6 w-6 text-white" />
+                <Icon className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
               </div>
-              <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-grid-1 aicher-heading">
+              <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1 aicher-heading leading-tight">
                 {feature.title}
               </h3>
-              <p className="text-xs sm:text-sm text-gray-600 mb-grid-2 flex-grow leading-snug">
+              <p className="text-[10px] sm:text-xs text-gray-600 mb-grid-1 sm:mb-grid-2 flex-grow leading-snug line-clamp-2">
                 {feature.description}
               </p>
               {feature.stat && (
-                <div className="text-xs font-bold text-civiq-blue border-t border-gray-200 pt-grid-1 mt-auto accent-bold">
+                <div className="text-[10px] sm:text-xs font-bold text-civiq-blue border-t border-gray-200 pt-1 mt-auto accent-bold">
                   {feature.stat}
                 </div>
               )}
