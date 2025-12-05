@@ -30,7 +30,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 // Future: Implement nonce-based CSP for stricter security
 const PRODUCTION_CSP =
   "default-src 'self'; " +
-  "script-src 'self' 'unsafe-inline' blob:; " + // unsafe-inline required for Next.js App Router hydration
+  "script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com; " + // unsafe-inline required for Next.js App Router hydration, Google Analytics
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; " + // unsafe-inline for styled-components/CSS-in-JS, unpkg.com for MapLibre GL
   "img-src 'self' data: https:; " +
   "font-src 'self' data: https://fonts.gstatic.com; " +
@@ -44,7 +44,7 @@ const PRODUCTION_CSP =
 // Development CSP: More permissive for hot reload and debugging
 const DEVELOPMENT_CSP =
   "default-src 'self'; " +
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; " +
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.googletagmanager.com https://www.google-analytics.com; " + // Google Analytics
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; " + // unpkg.com for MapLibre GL
   "img-src 'self' data: https: blob:; " +
   "font-src 'self' data: https://fonts.gstatic.com; " +
