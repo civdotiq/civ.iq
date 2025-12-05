@@ -341,8 +341,8 @@ async function enhanceDistrictData(baseData: EnhancedDistrictData): Promise<Enha
       ...baseData.geography,
       realCounties: geographicData.realCounties,
       realCities: geographicData.realCities,
-      populationDensity: geographicData.populationDensity,
-      ruralPercentage: geographicData.ruralPercentage,
+      populationDensity: geographicData.populationDensity ?? undefined,
+      ruralPercentage: geographicData.ruralPercentage ?? undefined,
       // Use real data if available, fall back to existing
       counties:
         geographicData.realCounties?.length > 0

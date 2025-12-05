@@ -69,9 +69,24 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
     return { icon: '→', color: 'text-gray-400' };
   };
 
+  // RUNWAY_UNLIMITED constant for when burn rate is 0 or negative (not spending/raising more than spending)
+  const RUNWAY_UNLIMITED = -1; // Use -1 to indicate unlimited, display as "∞"
+
   const calculateRunwayMonths = (cashOnHand: number, burnRate: number): number => {
-    if (burnRate <= 0) return 999; // Essentially unlimited
+    if (burnRate <= 0) return RUNWAY_UNLIMITED; // Campaign is not spending or raising more than spending
     return Math.floor(cashOnHand / burnRate);
+  };
+
+  // Helper to format runway display - shows "∞" for unlimited instead of a misleading number
+  const formatRunway = (months: number): string => {
+    if (months === RUNWAY_UNLIMITED) return '∞';
+    return String(months);
+  };
+
+  // Helper for scenario runway - if base is unlimited, all scenarios are unlimited
+  const formatScenarioRunway = (baseMonths: number, multiplier: number): string => {
+    if (baseMonths === RUNWAY_UNLIMITED) return '∞';
+    return String(Math.floor(baseMonths * multiplier));
   };
 
   const sortedTimeline = useMemo(() => {
@@ -280,7 +295,9 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {calculateRunwayMonths(data.summary.cashOnHand, data.summary.burnRate)}
+                {formatRunway(
+                  calculateRunwayMonths(data.summary.cashOnHand, data.summary.burnRate)
+                )}
               </div>
               <div className="text-sm text-gray-500">Months Runway</div>
             </div>
@@ -443,7 +460,9 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Current Runway:</span>
-                    <span className="font-medium text-orange-600">{runwayMonths} months</span>
+                    <span className="font-medium text-orange-600">
+                      {formatRunway(runwayMonths)} months
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Monthly Burn:</span>
@@ -455,14 +474,18 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                     <span className="text-sm text-gray-600">Status:</span>
                     <span
                       className={`font-medium ${
-                        runwayMonths > 6
+                        runwayMonths === RUNWAY_UNLIMITED || runwayMonths > 6
                           ? 'text-green-600'
                           : runwayMonths > 3
                             ? 'text-yellow-600'
                             : 'text-red-600'
                       }`}
                     >
-                      {runwayMonths > 6 ? 'Healthy' : runwayMonths > 3 ? 'Caution' : 'Critical'}
+                      {runwayMonths === RUNWAY_UNLIMITED || runwayMonths > 6
+                        ? 'Healthy'
+                        : runwayMonths > 3
+                          ? 'Caution'
+                          : 'Critical'}
                     </span>
                   </div>
                 </div>
@@ -528,7 +551,9 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                 </div>
                 <div className="flex justify-between">
                   <span className="text-green-700">Runway:</span>
-                  <span className="font-medium">{Math.floor(runwayMonths * 1.4)} months</span>
+                  <span className="font-medium">
+                    {formatScenarioRunway(runwayMonths, 1.4)} months
+                  </span>
                 </div>
               </div>
             </div>
@@ -542,7 +567,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                 </div>
                 <div className="flex justify-between">
                   <span className="text-yellow-700">Runway:</span>
-                  <span className="font-medium">{runwayMonths} months</span>
+                  <span className="font-medium">{formatRunway(runwayMonths)} months</span>
                 </div>
               </div>
             </div>
@@ -556,7 +581,9 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
                 </div>
                 <div className="flex justify-between">
                   <span className="text-red-700">Runway:</span>
-                  <span className="font-medium">{Math.floor(runwayMonths * 0.6)} months</span>
+                  <span className="font-medium">
+                    {formatScenarioRunway(runwayMonths, 0.6)} months
+                  </span>
                 </div>
               </div>
             </div>

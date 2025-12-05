@@ -13,7 +13,7 @@ export interface DistrictDemographics {
   educationBachelors: number;
   votingAgePopulation: number;
   diversityIndex: number;
-  urbanPercentage: number;
+  urbanPercentage: number | null; // Null when data unavailable (requires Census urban/rural classification)
 }
 
 // Census API variables for congressional districts
@@ -192,11 +192,10 @@ export async function fetchStateDistrictDemographics(
       total: demographics.population,
     });
 
-    // Estimate urban percentage (this is a rough estimate based on housing density)
-    // Real implementation would use urban/rural classification data
-    const area = 1000; // Placeholder - would need actual district area
-    const density = demographics.housingUnits / area;
-    demographics.urbanPercentage = Math.min(95, Math.max(5, density * 10));
+    // Urban percentage set to null - data unavailable from Census API
+    // CLAUDE.md Compliant: No fake data - requires Census urban/rural classification (P2 table)
+    // which is not available via the ACS 5-year API
+    demographics.urbanPercentage = null;
 
     districtMap.set(districtNum.padStart(2, '0'), demographics);
   }
@@ -395,11 +394,10 @@ export async function fetchAllDistrictDemographics(
         );
       }
 
-      // Calculate urban percentage (housing density as proxy)
-      if (demographics.housingUnits > 0 && totalPop > 0) {
-        const householdSize = totalPop / demographics.housingUnits;
-        demographics.urbanPercentage = Math.min(Math.max(householdSize * 25, 5), 95); // Bounded between 5-95%
-      }
+      // Urban percentage set to null - data unavailable from Census API
+      // CLAUDE.md Compliant: No fake data - requires Census urban/rural classification (P2 table)
+      // The previous household size proxy was not accurate
+      demographics.urbanPercentage = null;
 
       allDistricts.set(districtKey, { ...demographics, state: stateAbbr });
     }

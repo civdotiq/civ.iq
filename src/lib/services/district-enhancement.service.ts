@@ -34,9 +34,9 @@ interface EnhancedGeographicData {
   realCounties: string[];
   realCities: string[];
   majorUrbanAreas: string[];
-  ruralPercentage: number;
-  area: number;
-  populationDensity: number;
+  ruralPercentage: number | null; // Null when data unavailable
+  area: number | null; // Null when data unavailable (requires Census Gazetteer)
+  populationDensity: number | null; // Null when data unavailable
   dataSource: string;
 }
 
@@ -430,44 +430,20 @@ export function getEnhancedGeographicData(state: string, district: string): Enha
 }
 
 /**
- * Estimate geographic data when real data is not available
+ * Return empty geographic data when real data is not available
+ * CLAUDE.md Compliant: No fake/placeholder data - return empty arrays and null values
  */
-function estimateGeographicData(state: string, district: string): EnhancedGeographicData {
-  const districtNum = parseInt(district) || 1;
-
-  // State-based estimates
-  const stateData: Record<string, Partial<EnhancedGeographicData>> = {
-    CA: {
-      ruralPercentage: districtNum <= 15 ? 5 : 45,
-      populationDensity: districtNum <= 15 ? 3500 : 150,
-      area: districtNum <= 15 ? 200 : 8500,
-    },
-    TX: {
-      ruralPercentage: districtNum <= 10 ? 20 : 60,
-      populationDensity: districtNum <= 10 ? 800 : 85,
-      area: districtNum <= 10 ? 900 : 12000,
-    },
-    NY: {
-      ruralPercentage: districtNum <= 10 ? 8 : 35,
-      populationDensity: districtNum <= 10 ? 2800 : 180,
-      area: districtNum <= 10 ? 250 : 4200,
-    },
-  };
-
-  const estimates = stateData[state] || {
-    ruralPercentage: 40,
-    populationDensity: 200,
-    area: 3000,
-  };
-
+function estimateGeographicData(_state: string, _district: string): EnhancedGeographicData {
+  // Following CLAUDE.md Rule #2: Return "Data unavailable" messaging instead of fake data
+  // Previously this returned fake placeholders like "CA County" - now returns empty/null
   return {
-    realCounties: [`${state} County`], // Placeholder
-    realCities: [`${state} City`], // Placeholder
-    majorUrbanAreas: [`${state} Metropolitan Area`],
-    ruralPercentage: estimates.ruralPercentage || 40,
-    area: estimates.area || 3000,
-    populationDensity: estimates.populationDensity || 200,
-    dataSource: 'Estimated from state patterns',
+    realCounties: [], // Empty - no fake county names
+    realCities: [], // Empty - no fake city names
+    majorUrbanAreas: [], // Empty - no fake urban area names
+    ruralPercentage: null, // Null - data unavailable from Census API
+    area: null, // Null - requires Gazetteer file download
+    populationDensity: null, // Null - cannot calculate without area
+    dataSource: 'Data unavailable - Census Gazetteer required',
   };
 }
 
@@ -557,7 +533,7 @@ const censusClient = new CensusAPIClient();
 
 /**
  * Fetch comprehensive geographic data from Census.gov for all 435 districts
- * CLAUDE.md Compliant: Uses real government APIs only
+ * CLAUDE.md Compliant: Uses real government APIs only, returns empty for unavailable data
  */
 export async function fetchAllDistrictGeographicData(): Promise<
   Record<string, EnhancedGeographicData>
@@ -566,30 +542,37 @@ export async function fetchAllDistrictGeographicData(): Promise<
     const allDistricts = await censusClient.getAllCongressionalDistricts();
     const geographicData: Record<string, EnhancedGeographicData> = {};
 
-    // Process each district with real Census data
+    // Process each district - only return data we actually have
     for (const district of allDistricts) {
       const districtKey = `${district.state}-${district.district.padStart(2, '0')}`;
 
-      // For now, use Census district names and estimation
-      // Future: Expand to fetch county/city relationships via additional Census APIs
-      geographicData[districtKey] = {
-        realCounties: [
-          district.name.replace(/Congressional District \d+ \(119th Congress\), /, '') + ' Area',
-        ],
-        realCities: ['Census Data Available'],
-        majorUrbanAreas: [
-          district.name.replace(/Congressional District \d+ \(119th Congress\), /, '') + ' Region',
-        ],
-        ruralPercentage: 50, // Estimated - future: fetch from Census demographic APIs
-        area: 1000, // Estimated - future: fetch from Census geographic APIs
-        populationDensity: 500, // Estimated - future: fetch from Census population APIs
-        dataSource: 'Census.gov API 119th Congress',
-      };
+      // Check if we have real hardcoded data for this district
+      const realData = getEnhancedGeographicData(
+        district.state.padStart(2, '0'),
+        district.district.padStart(2, '0')
+      );
+
+      // Only use the data if it has a real data source (not "Data unavailable")
+      if (realData.dataSource === 'Census TIGER 2024') {
+        geographicData[districtKey] = realData;
+      } else {
+        // Return empty/null for districts without real data
+        // CLAUDE.md Compliant: No fake placeholders
+        geographicData[districtKey] = {
+          realCounties: [], // Empty - county-CD relationships not available via API
+          realCities: [], // Empty - city data requires manual curation
+          majorUrbanAreas: [], // Empty - urban area data not available
+          ruralPercentage: null, // Null - Census urban/rural API unavailable
+          area: null, // Null - requires Gazetteer file
+          populationDensity: null, // Null - cannot calculate without area
+          dataSource: 'Geographic data unavailable',
+        };
+      }
     }
 
     return geographicData;
   } catch {
-    // Fallback to manual data on API failure
+    // Fallback to empty on API failure
     return {};
   }
 }
