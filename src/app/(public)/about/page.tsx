@@ -4,164 +4,135 @@ import Image from 'next/image';
 export default function AboutPage() {
   return (
     <div className="min-h-screen aicher-background">
-      <div className="max-w-4xl mx-auto px-grid-2 sm:px-grid-4 py-grid-4 sm:py-grid-8">
+      <div className="max-w-3xl mx-auto px-grid-2 sm:px-grid-4 py-grid-4 sm:py-grid-8">
         {/* Logo */}
-        <div className="flex flex-col items-center mb-grid-4 sm:mb-grid-6">
+        <div className="flex flex-col items-center mb-grid-6 sm:mb-grid-8">
           <Link href="/" className="flex flex-col items-center hover:opacity-80 transition-opacity">
             <Image
               src="/images/civiq-logo.png"
-              alt="CIV.IQ Logo"
-              width={80}
-              height={80}
+              alt="CIV.IQ"
+              width={64}
+              height={64}
               className="border-2 border-black mb-grid-2"
             />
-            <div className="text-2xl font-bold text-civiq-red aicher-heading">CIV.IQ</div>
           </Link>
         </div>
 
-        {/* Content */}
-        <div className="aicher-card p-grid-3 sm:p-grid-6">
-          <h1 className="text-3xl sm:text-4xl font-bold text-black mb-grid-3 sm:mb-grid-4 aicher-heading">
-            About CIV.IQ
+        {/* Principle Statement */}
+        <div className="mb-grid-8 sm:mb-grid-10">
+          <h1 className="text-4xl sm:text-5xl font-bold text-black mb-grid-4 aicher-heading leading-tight">
+            Good design is
+            <br />
+            as little design
+            <br />
+            as possible.
           </h1>
+          <p className="text-lg text-gray-600 max-w-md">
+            We apply this principle to civic information.
+          </p>
+        </div>
 
-          <div className="prose prose-gray max-w-none">
-            <section className="mb-grid-4">
-              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                Our Mission
-              </h2>
-              <p className="text-gray-700 leading-relaxed mb-grid-2">
-                CIV.IQ is a civic engagement platform dedicated to making government more accessible
-                and transparent. We believe that informed citizens are essential to a healthy
-                democracy.
-              </p>
-              <p className="text-gray-700 leading-relaxed">
-                By aggregating real government data from official sources like Congress.gov, the
-                Federal Election Commission, and the U.S. Census Bureau, we provide citizens with
-                the tools they need to stay informed about their representatives and the legislative
-                process.
-              </p>
-            </section>
-
-            <section className="mb-grid-4">
-              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                Real Data, No Guesswork
-              </h2>
-              <p className="text-gray-700 leading-relaxed mb-grid-2">
-                We are committed to data integrity. Every piece of information on CIV.IQ comes
-                directly from official government APIs:
-              </p>
-              <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2">
-                <li>
-                  Congressional data from{' '}
-                  <a
-                    href="https://api.congress.gov/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-civiq-blue hover:underline"
-                  >
-                    Congress.gov API
-                  </a>
-                </li>
-                <li>
-                  Campaign finance from{' '}
-                  <a
-                    href="https://www.fec.gov/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-civiq-blue hover:underline"
-                  >
-                    Federal Election Commission
-                  </a>
-                </li>
-                <li>
-                  Demographic data from{' '}
-                  <a
-                    href="https://www.census.gov/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-civiq-blue hover:underline"
-                  >
-                    U.S. Census Bureau
-                  </a>
-                </li>
-                <li>
-                  State legislature data from{' '}
-                  <a
-                    href="https://openstates.org/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-civiq-blue hover:underline"
-                  >
-                    Open States
-                  </a>{' '}
-                  (
-                  <a
-                    href="https://docs.openstates.org/api-v3/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-civiq-blue hover:underline"
-                  >
-                    API Documentation
-                  </a>
-                  )
-                </li>
-                <li>
-                  News from{' '}
-                  <a
-                    href="https://newsapi.org/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-civiq-blue hover:underline"
-                  >
-                    NewsAPI
-                  </a>{' '}
-                  and{' '}
-                  <a
-                    href="https://news.google.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-civiq-blue hover:underline"
-                  >
-                    Google News
-                  </a>
-                </li>
-              </ul>
-            </section>
-
-            <section className="mb-grid-4">
-              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                Open Source & Transparent
-              </h2>
-              <p className="text-gray-700 leading-relaxed">
-                CIV.IQ is built with transparency in mind. Our platform is open source, and we
-                welcome contributions from developers and civic-minded individuals who want to help
-                improve government accessibility.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-xl sm:text-2xl font-semibold text-black mb-grid-2 aicher-heading">
-                Contact Us
-              </h2>
-              <p className="text-gray-700 leading-relaxed">
-                Have questions, feedback, or want to contribute? Reach out to us through our GitHub
-                repository or contact our team directly.
-              </p>
-            </section>
+        {/* Core Values - Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-grid-4 mb-grid-8">
+          <div className="aicher-card p-grid-4">
+            <div className="text-3xl font-bold text-black mb-grid-1">01</div>
+            <h2 className="text-lg font-semibold text-black mb-grid-2">Honest</h2>
+            <p className="text-gray-600 text-sm">
+              Real data from official sources. No fabrication. No spin.
+            </p>
           </div>
 
-          {/* Back to Home */}
-          <div className="mt-grid-6 pt-grid-4 border-t border-gray-200 text-center">
+          <div className="aicher-card p-grid-4">
+            <div className="text-3xl font-bold text-black mb-grid-1">02</div>
+            <h2 className="text-lg font-semibold text-black mb-grid-2">Useful</h2>
+            <p className="text-gray-600 text-sm">
+              Information that serves a purpose. Nothing decorative.
+            </p>
+          </div>
+
+          <div className="aicher-card p-grid-4">
+            <div className="text-3xl font-bold text-black mb-grid-1">03</div>
+            <h2 className="text-lg font-semibold text-black mb-grid-2">Clear</h2>
+            <p className="text-gray-600 text-sm">
+              Complex government data made understandable at a glance.
+            </p>
+          </div>
+
+          <div className="aicher-card p-grid-4">
+            <div className="text-3xl font-bold text-black mb-grid-1">04</div>
+            <h2 className="text-lg font-semibold text-black mb-grid-2">Open</h2>
+            <p className="text-gray-600 text-sm">
+              Transparent methods. Open source. Publicly verifiable.
+            </p>
+          </div>
+        </div>
+
+        {/* Data Sources - Minimal List */}
+        <div className="mb-grid-8">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-grid-3">
+            Sources
+          </h2>
+          <div className="space-y-grid-2">
+            <DataSourceRow
+              name="Congress.gov"
+              description="Legislative records"
+              href="https://api.congress.gov/"
+            />
+            <DataSourceRow
+              name="Federal Election Commission"
+              description="Campaign finance"
+              href="https://www.fec.gov/"
+            />
+            <DataSourceRow
+              name="U.S. Census Bureau"
+              description="Demographics"
+              href="https://www.census.gov/"
+            />
+            <DataSourceRow
+              name="Open States"
+              description="State legislatures"
+              href="https://openstates.org/"
+            />
+          </div>
+        </div>
+
+        {/* Simple Footer */}
+        <div className="pt-grid-4 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-grid-2">
+            <p className="text-sm text-gray-500">Built for citizens who want facts.</p>
             <Link
               href="/"
-              className="inline-block px-grid-3 py-grid-2 bg-civiq-blue text-white font-semibold aicher-border hover:opacity-90 transition-opacity"
+              className="text-sm font-medium text-black hover:text-civiq-blue transition-colors"
             >
-              Back to Home
+              Enter CIV.IQ
             </Link>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function DataSourceRow({
+  name,
+  description,
+  href,
+}: {
+  name: string;
+  description: string;
+  href: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-baseline justify-between py-grid-2 border-b border-gray-100 hover:border-gray-300 transition-colors group"
+    >
+      <span className="font-medium text-black group-hover:text-civiq-blue transition-colors">
+        {name}
+      </span>
+      <span className="text-sm text-gray-500">{description}</span>
+    </a>
   );
 }

@@ -28,7 +28,7 @@ export function VotingMetrics({ data }: VotingMetricsProps) {
   return (
     <section>
       <h2 className="text-xs uppercase tracking-[0.15em] text-gray-400 mb-6">Voting Analysis</h2>
-      <div className="grid grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
         {metrics.map(m => (
           <div key={m.label} className="group">
             <div className={`text-3xl font-light ${m.color || 'text-gray-900'}`}>{m.value}</div>

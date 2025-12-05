@@ -75,19 +75,19 @@ export default function DataSourcesPage() {
    icon: RefreshCw
   },
   {
-   name: 'GDELT Project',
-   provider: 'GDELT',
-   description: 'Global news monitoring and analysis',
+   name: 'NewsAPI + Google News',
+   provider: 'NewsAPI.org / Google',
+   description: 'News aggregation from multiple sources',
    features: [
     'Real-time news coverage',
-    'Sentiment analysis',
-    'Entity recognition',
-    'Global event database'
+    'Multiple news sources',
+    'Keyword search',
+    'RSS feed integration'
    ],
-   dataTypes: ['News Articles', 'Events', 'Mentions', 'Sentiment'],
-   updateFrequency: '15-minute updates',
-   authentication: 'None required',
-   documentation: 'https://www.gdeltproject.org/data.html',
+   dataTypes: ['News Articles', 'Headlines', 'Source Attribution'],
+   updateFrequency: 'Real-time',
+   authentication: 'API Key required (NewsAPI)',
+   documentation: 'https://newsapi.org/docs',
    icon: Code
   },
   {

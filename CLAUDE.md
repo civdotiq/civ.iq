@@ -681,9 +681,32 @@ npx tsc --noEmit [fixed-file]
 
 ### 🐛 Known Issues
 
+**HIGH (Functionality):**
+
+- **Rate Limiting Stub**: `src/lib/validation/middleware.ts:196` - rate limiting function always returns true (no enforcement). Redis packages installed but middleware not implemented.
+
+**MEDIUM (UX/Mobile):**
+
+- **Touch Targets**: Undersized buttons (`px-2 py-1`) in QuickStartPaths.tsx, DistrictHeader.tsx - should be min 44x44px
+- **Sidebar Breakpoint**: Representative page 320px sidebar missing `md:` breakpoint
+
+**LOW (Cleanup):**
+
 - **Limited FEC Coverage**: Not all representatives have FEC ID mappings yet
 - **District Boundaries**: Some boundary geometries need refinement for accuracy
-- **Mobile Layouts**: Ongoing optimization for complex data tables and charts
+
+**✅ FIXED (December 2025):**
+
+- **Donor Pages Dead Links**: Entity recognition now returns null for donors (prevents 404s)
+- **V2 Multi-District Filter**: Implemented multi-district ZIP lookup in V2 API
+- **Entity ID Generation**: Returns null for unidentified representatives (prevents fake bioguide IDs)
+- **House Wikidata Integration**: Congressional districts now have Wikidata integration (all 50 states)
+- **FEC State Bug**: State now extracted from FEC candidate ID (`src/lib/fec/dataProcessor.ts`)
+- **Mobile Grids**: Added responsive breakpoints to VotingMetrics, TabsEnhanced, FundraisingTrends, ClientBillContent
+- **GDELT References Removed**: Updated to NewsAPI + Google News in TabsEnhanced.tsx and data-sources/page.tsx
+
+**Known Limitations (Not Bugs):**
+
 - **Committee Data Sparse**: OpenStates v3 API has incomplete committee assignments (~30% coverage)
 - **OpenStates Pagination**: State endpoints limited to 50 legislators and 20 bills per page (API maximum)
 

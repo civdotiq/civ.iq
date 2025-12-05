@@ -418,8 +418,8 @@ async function processRawFECData(
   const industryMap = categorizeContributionsByIndustry(contributions);
   const industries = calculateIndustryStats(industryMap);
 
-  // Calculate geography
-  const geography = calculateGeography(contributions);
+  // Calculate geography (pass candidateId to extract state for in-state/out-of-state calculations)
+  const geography = calculateGeography(contributions, candidateId);
 
   // Calculate timeline
   const timeline = calculateTimeline(totals.results, contributions);
@@ -574,18 +574,95 @@ function calculateBreakdown(contributions: ContributionDetail[], totals: unknown
 }
 
 /**
+ * Extract state from FEC candidate ID
+ * FEC candidate IDs follow format: H4MI12345 (H=House/S=Senate, position 2-3=state)
+ * Returns null if state cannot be determined
+ */
+function extractStateFromCandidateId(candidateId: string): string | null {
+  if (!candidateId || candidateId.length < 4) return null;
+
+  // FEC IDs: [H|S|P][cycle digit][state 2 chars][district or sequence]
+  // Examples: H4MI12345 (House, 2024, Michigan), S6MN00123 (Senate, 2026, Minnesota)
+  const stateCode = candidateId.substring(2, 4).toUpperCase();
+
+  // Validate it's a real state code (US states + territories)
+  const validStates = [
+    'AL',
+    'AK',
+    'AZ',
+    'AR',
+    'CA',
+    'CO',
+    'CT',
+    'DE',
+    'FL',
+    'GA',
+    'HI',
+    'ID',
+    'IL',
+    'IN',
+    'IA',
+    'KS',
+    'KY',
+    'LA',
+    'ME',
+    'MD',
+    'MA',
+    'MI',
+    'MN',
+    'MS',
+    'MO',
+    'MT',
+    'NE',
+    'NV',
+    'NH',
+    'NJ',
+    'NM',
+    'NY',
+    'NC',
+    'ND',
+    'OH',
+    'OK',
+    'OR',
+    'PA',
+    'RI',
+    'SC',
+    'SD',
+    'TN',
+    'TX',
+    'UT',
+    'VT',
+    'VA',
+    'WA',
+    'WV',
+    'WI',
+    'WY',
+    'DC',
+    'PR',
+    'VI',
+    'GU',
+    'AS',
+    'MP',
+  ];
+
+  return validStates.includes(stateCode) ? stateCode : null;
+}
+
+/**
  * Calculate geography breakdown
  */
-function calculateGeography(contributions: ContributionDetail[]) {
+function calculateGeography(contributions: ContributionDetail[], candidateId?: string) {
   const totalAmount = contributions.reduce((sum, contrib) => sum + contrib.amount, 0);
   const _totalCount = contributions.length;
 
-  // Note: This requires knowing the candidate's state
-  // For now, we'll use a placeholder implementation
-  // In production, this would come from the representative's state data
-  const candidateState = 'MI'; // This should come from representative data
-  const inState = contributions.filter(c => c.state === candidateState);
-  const outOfState = contributions.filter(c => c.state !== candidateState);
+  // Extract state from candidate ID (format: H4MI12345 where MI is the state)
+  const candidateState = candidateId ? extractStateFromCandidateId(candidateId) : null;
+
+  // If we can't determine the state, use "Unknown" to indicate data limitation
+  const inState = candidateState ? contributions.filter(c => c.state === candidateState) : [];
+  const outOfState = candidateState
+    ? contributions.filter(c => c.state !== candidateState && c.state)
+    : contributions.filter(c => c.state); // All with known state if candidate state unknown
 
   const stateMap = new Map<string, { amount: number; count: number }>();
 

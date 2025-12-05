@@ -224,7 +224,7 @@ function VotesContent({ data }: { data: Record<string, any> }) {
     <div className="space-y-6">
       {/* Voting Summary */}
       {votingPattern && (
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <div className="bg-green-50 p-3 text-center">
             <div className="text-2xl font-bold text-green-600">
               {Number(votingPattern.yes || 0)}
@@ -412,7 +412,7 @@ function NewsContent({
         <Newspaper className="h-12 w-12 text-gray-300 mx-auto mb-3" />
         <div className="text-gray-500">No recent news available</div>
         <div className="text-sm text-gray-400 mt-1">
-          News data is sourced from GDELT and may not be available for all representatives
+          News data is sourced from NewsAPI and Google News
         </div>
       </div>
     );

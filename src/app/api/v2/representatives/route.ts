@@ -6,6 +6,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import { getCongressionalDistrictFromZip } from '@/lib/census-api';
+import {
+  getAllCongressionalDistrictsForZip,
+  isZipMultiDistrict,
+} from '@/lib/data/zip-district-mapping';
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative, RepresentativeSummary } from '@/types/representative';
 
@@ -213,21 +217,49 @@ export async function GET(request: NextRequest) {
     // Filter by ZIP code (requires district lookup)
     if (query.zip) {
       try {
-        const districtInfo = await getCongressionalDistrictFromZip(query.zip);
-        if (districtInfo) {
-          filteredReps = filteredReps.filter(rep => {
-            if (rep.chamber === 'Senate' && rep.state === districtInfo.state) {
-              return true;
-            }
-            if (rep.chamber === 'House' && rep.state === districtInfo.state) {
-              const repDistrict = parseInt(rep.district || '0', 10);
-              const targetDistrict = parseInt(districtInfo.district || '0', 10);
-              return repDistrict === targetDistrict;
-            }
-            return false;
-          });
+        // Check if multi-district support is requested
+        if (query.includeMultiDistrict && isZipMultiDistrict(query.zip)) {
+          // Get all districts for this ZIP
+          const allDistricts = getAllCongressionalDistrictsForZip(query.zip);
+          if (allDistricts && allDistricts.length > 0) {
+            const allStates = [...new Set(allDistricts.map(d => d.state))];
+            filteredReps = filteredReps.filter(rep => {
+              // Include all senators from states in the multi-district ZIP
+              if (rep.chamber === 'Senate' && allStates.includes(rep.state)) {
+                return true;
+              }
+              // Include all house representatives from the districts
+              if (rep.chamber === 'House') {
+                return allDistricts.some(district => {
+                  if (rep.state !== district.state) return false;
+                  const repDistrict = (rep.district || '0').padStart(2, '0');
+                  const targetDistrictNorm = district.district.padStart(2, '0');
+                  return repDistrict === targetDistrictNorm;
+                });
+              }
+              return false;
+            });
+          } else {
+            filteredReps = [];
+          }
         } else {
-          filteredReps = [];
+          // Single district lookup (default behavior)
+          const districtInfo = await getCongressionalDistrictFromZip(query.zip);
+          if (districtInfo) {
+            filteredReps = filteredReps.filter(rep => {
+              if (rep.chamber === 'Senate' && rep.state === districtInfo.state) {
+                return true;
+              }
+              if (rep.chamber === 'House' && rep.state === districtInfo.state) {
+                const repDistrict = parseInt(rep.district || '0', 10);
+                const targetDistrict = parseInt(districtInfo.district || '0', 10);
+                return repDistrict === targetDistrict;
+              }
+              return false;
+            });
+          } else {
+            filteredReps = [];
+          }
         }
       } catch (error) {
         logger.error('Failed to lookup ZIP code', error as Error, { zip: query.zip });
@@ -270,11 +302,9 @@ export async function GET(request: NextRequest) {
       filteredReps = filteredReps.filter(rep => rep.chamber === query.chamber);
     }
 
-    // Handle multi-district filtering
-    if (!query.includeMultiDistrict) {
-      // This would filter out representatives that serve multiple districts
-      // For now, this is a placeholder
-    }
+    // Multi-district filtering is now handled in the ZIP lookup section above
+    // When includeMultiDistrict=true, all representatives from all districts
+    // that the ZIP spans are returned
 
     // Apply pagination
     const total = filteredReps.length;

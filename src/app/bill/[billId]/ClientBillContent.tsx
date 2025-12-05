@@ -68,7 +68,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
       <div className="animate-pulse space-y-4">
         <div className="h-8 bg-gray-200 rounded w-1/3"></div>
         <div className="h-6 bg-white border-2 border-gray-300 rounded w-1/2"></div>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
           <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
           <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
@@ -348,7 +348,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                       </div>
 
                       {/* Vote Breakdown */}
-                      <div className="grid grid-cols-4 gap-3 mb-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-3">
                         <div className="text-center p-2 bg-green-50 rounded">
                           <div className="text-lg font-bold text-green-700">{vote.votes.yea}</div>
                           <div className="text-xs text-green-600">Yea</div>

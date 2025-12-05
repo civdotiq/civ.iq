@@ -102,7 +102,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
     return (
       <div className="space-y-6">
         {/* Summary Cards */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="bg-blue-50 p-4 border border-blue-200">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-blue-600 text-lg">💰</span>

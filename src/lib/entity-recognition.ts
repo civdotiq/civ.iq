@@ -50,7 +50,8 @@ const ENTITY_PATTERNS = {
 };
 
 // Cache for entity lookups (in production, this would be Redis or similar)
-const entityCache = new Map<string, string>();
+// Currently unused - entity ID generation returns null until proper async lookup is implemented
+const _entityCache = new Map<string, string>();
 
 /**
  * Recognize entities in text
@@ -111,7 +112,12 @@ function processMatch(
         const party = match[2];
         const state = match[3];
         if (name) {
-          id = generateRepresentativeId(name, party, state);
+          const repId = generateRepresentativeId(name, party, state);
+          // If we can't identify the representative, don't create a fake link
+          if (!repId) {
+            return null;
+          }
+          id = repId;
           confidence = 0.9;
         }
       } else {
@@ -119,7 +125,12 @@ function processMatch(
         const _title = match[1];
         const name = match[2] || '';
         if (name) {
-          id = generateRepresentativeId(name);
+          const repId = generateRepresentativeId(name);
+          // If we can't identify the representative, don't create a fake link
+          if (!repId) {
+            return null;
+          }
+          id = repId;
           confidence = 0.7; // Lower confidence without party/state
         }
       }
@@ -180,23 +191,19 @@ function isOverlapping(newMatch: EntityMatch, existingMatches: EntityMatch[]): b
 }
 
 /**
- * Generate a representative ID from name and optional party/state
+ * Try to find a representative's bioguide ID from name and optional party/state.
+ * Returns null if the representative cannot be identified - this is intentional
+ * to prevent linking to non-existent representatives.
+ *
+ * NOTE: This function currently returns null because we don't have a synchronous
+ * lookup mechanism. For proper entity linking, the caller should use the
+ * representatives API to look up members by name when needed.
  */
-function generateRepresentativeId(name: string, party?: string, state?: string): string {
-  // In production, this would look up the actual bioguide ID
-  // For now, we'll create a placeholder
-  const key = `${name}|${party || ''}|${state || ''}`;
-
-  // Check cache first
-  if (entityCache.has(key)) {
-    return entityCache.get(key)!;
-  }
-
-  // Placeholder: In real implementation, query the API
-  const placeholder = name.replace(/\s+/g, '').substring(0, 1) + '000001';
-  entityCache.set(key, placeholder);
-
-  return placeholder;
+function generateRepresentativeId(_name: string, _party?: string, _state?: string): string | null {
+  // Return null to indicate we cannot determine the bioguide ID
+  // This prevents creating fake links that lead to 404 errors
+  // A proper implementation would need async lookup against the representatives API
+  return null;
 }
 
 /**
@@ -241,9 +248,10 @@ export async function preloadEntityData(entityIds: string[]): Promise<void> {
 }
 
 /**
- * Get the link URL for an entity
+ * Get the link URL for an entity.
+ * Returns null for entity types without implemented pages (e.g., donors).
  */
-export function getEntityLink(entity: EntityMatch): string {
+export function getEntityLink(entity: EntityMatch): string | null {
   switch (entity.type) {
     case 'representative':
       return `/representative/${entity.id}`;
@@ -252,8 +260,9 @@ export function getEntityLink(entity: EntityMatch): string {
     case 'committee':
       return `/committee/${entity.id}`;
     case 'donor':
-      return `/finance/donor/${entity.id}`;
+      // Donor pages not yet implemented - return null to avoid dead links
+      return null;
     default:
-      return '#';
+      return null;
   }
 }

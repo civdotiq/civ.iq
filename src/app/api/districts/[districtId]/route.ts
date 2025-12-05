@@ -8,7 +8,7 @@ import { getAllEnhancedRepresentatives } from '@/features/representatives/servic
 import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
 import { districtBoundaryService } from '@/lib/helpers/district-boundary-utils';
-import { getStateFromWikidata } from '@/lib/api/wikidata';
+import { getStateFromWikidata, getDistrictFromWikidata } from '@/lib/api/wikidata';
 import districtGeography from '@/data/district-geography.json';
 import { US_STATES } from '@/lib/data/us-states';
 
@@ -923,14 +923,21 @@ async function getDistrictDetails(districtId: string): Promise<DistrictDetails |
           }
         : null;
     } else {
-      // Run geography and demographics calls in parallel for House districts
-      const [houseGeography, houseDemographics] = await Promise.all([
+      // Run geography, demographics, and wikidata calls in parallel for House districts
+      const [houseGeography, houseDemographics, districtWikidata] = await Promise.all([
         getDistrictGeography(representative.state, representative.district || '01'),
         getDistrictDemographics(representative.state, representative.district || '01'),
+        getDistrictFromWikidata(representative.state, representative.district || '01'),
       ]);
       geography = houseGeography;
       demographics = houseDemographics;
-      wikidata = null; // House district wikidata integration not implemented
+      wikidata = districtWikidata
+        ? {
+            established: districtWikidata.established,
+            area: districtWikidata.area,
+            wikipediaUrl: districtWikidata.wikipediaUrl,
+          }
+        : null;
     }
 
     const districtDetails: DistrictDetails = {
