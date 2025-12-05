@@ -552,3 +552,54 @@ export function getCookPVI(state: string, district: string): string {
 
   return pvi || 'EVEN';
 }
+
+/**
+ * Parse Cook PVI string to extract party and margin
+ * Example: "R+15" -> { party: 'R', margin: 15 }
+ * Example: "D+5" -> { party: 'D', margin: 5 }
+ * Example: "EVEN" -> { party: null, margin: 0 }
+ */
+export function parseCookPVI(pvi: string): { party: 'R' | 'D' | null; margin: number } {
+  if (pvi === 'EVEN') {
+    return { party: null, margin: 0 };
+  }
+
+  const match = pvi.match(/^([RD])\+(\d+)$/);
+  if (match) {
+    return {
+      party: match[1] as 'R' | 'D',
+      margin: parseInt(match[2] || '0', 10),
+    };
+  }
+
+  return { party: null, margin: 0 };
+}
+
+/**
+ * Estimate election margin from Cook PVI
+ * Cook PVI roughly correlates to expected margin:
+ * R+5 suggests ~5% Republican margin in a neutral election year
+ * This is an ESTIMATE, not actual election results
+ */
+export function estimateMarginFromPVI(pvi: string): number {
+  const parsed = parseCookPVI(pvi);
+  // Return the margin as a positive number (the party info is in cookPVI)
+  return parsed.margin;
+}
+
+/**
+ * Determine if a district is competitive based on Cook PVI
+ * Competitive is typically defined as ±5 points or EVEN
+ */
+export function isCompetitiveDistrict(pvi: string): boolean {
+  if (pvi === 'EVEN') return true;
+  const parsed = parseCookPVI(pvi);
+  return parsed.margin <= 5;
+}
+
+/**
+ * Get total count of competitive districts from Cook PVI data
+ */
+export function getCompetitiveDistrictCount(): number {
+  return Object.values(COOK_PVI_DATA).filter(pvi => isCompetitiveDistrict(pvi)).length;
+}

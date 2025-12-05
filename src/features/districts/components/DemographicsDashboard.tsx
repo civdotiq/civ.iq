@@ -26,12 +26,14 @@ interface District {
   };
   political: {
     cookPVI: string;
+    isCompetitive?: boolean;
     lastElection: {
       winner: string;
-      margin: number;
-      turnout: number;
+      margin: number; // Estimated from Cook PVI
+      turnout: number | null; // null = data unavailable
     };
-    registeredVoters: number;
+    votingAgePopulation?: number; // From Census
+    registeredVoters?: number; // Legacy field for backwards compatibility
   };
   geography: {
     area: number;
@@ -100,15 +102,22 @@ export function DemographicsDashboard({
     avgElectionMargin:
       filteredDistricts.reduce((sum, d) => sum + d.political.lastElection.margin, 0) /
       filteredDistricts.length,
-    avgTurnout:
-      filteredDistricts.reduce((sum, d) => sum + d.political.lastElection.turnout, 0) /
-      filteredDistricts.length,
+    // Use isCompetitive flag if available, otherwise calculate from cookPVI
     competitiveDistricts: filteredDistricts.filter(d => {
+      if (d.political.isCompetitive !== undefined) {
+        return d.political.isCompetitive;
+      }
+      // Fallback: calculate from cookPVI
       const pvi = d.political.cookPVI;
       if (pvi === 'EVEN') return true;
       const match = pvi.match(/[DR]\+(\d+)/);
       return match && parseInt(match[1] || '0') <= 5;
     }).length,
+    // Voting age population from Census (more accurate than "registered voters")
+    totalVotingAgePop: filteredDistricts.reduce(
+      (sum, d) => sum + (d.political.votingAgePopulation || d.political.registeredVoters || 0),
+      0
+    ),
   };
 
   // Get top districts by various metrics
@@ -215,25 +224,21 @@ export function DemographicsDashboard({
         <div className="text-center">
           <div className="text-xl font-semibold text-blue-900">{stats.competitiveDistricts}</div>
           <p className="text-xs text-blue-700">Competitive Districts</p>
-        </div>
-        <div className="text-center">
-          <div className="text-xl font-semibold text-blue-900">{stats.avgTurnout.toFixed(0)}%</div>
-          <p className="text-xs text-blue-700">Avg. Voter Turnout</p>
+          <p className="text-xs text-blue-600">(PVI ±5 or EVEN)</p>
         </div>
         <div className="text-center">
           <div className="text-xl font-semibold text-blue-900">
             {stats.avgElectionMargin.toFixed(1)}%
           </div>
-          <p className="text-xs text-blue-700">Avg. Victory Margin</p>
+          <p className="text-xs text-blue-700">Avg. PVI Margin</p>
+          <p className="text-xs text-blue-600">(Cook Political)</p>
         </div>
         <div className="text-center">
           <div className="text-xl font-semibold text-blue-900">
-            {Math.round(
-              filteredDistricts.reduce((sum, d) => sum + d.political.registeredVoters, 0) / 1000000
-            )}
-            M
+            {Math.round(stats.totalVotingAgePop / 1000000)}M
           </div>
-          <p className="text-xs text-blue-700">Registered Voters</p>
+          <p className="text-xs text-blue-700">Voting Age Pop.</p>
+          <p className="text-xs text-blue-600">(Census)</p>
         </div>
       </div>
 

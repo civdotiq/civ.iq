@@ -26,12 +26,14 @@ interface District {
   };
   political: {
     cookPVI: string;
+    isCompetitive?: boolean;
     lastElection: {
       winner: string;
-      margin: number;
-      turnout: number;
+      margin: number; // Estimated from Cook PVI
+      turnout: number | null; // null = data unavailable
     };
-    registeredVoters: number;
+    votingAgePopulation?: number; // From Census
+    registeredVoters?: number; // Legacy field for backwards compatibility
   };
   geography: {
     area: number;

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCookPVI as getRealCookPVI } from '../cook-pvi-data';
+import {
+  getCookPVI as getRealCookPVI,
+  estimateMarginFromPVI,
+  isCompetitiveDistrict,
+} from '../cook-pvi-data';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 15; // Can take ~9s for full district data load
@@ -29,12 +33,13 @@ interface District {
   };
   political: {
     cookPVI: string;
+    isCompetitive: boolean;
     lastElection: {
       winner: string;
-      margin: number;
-      turnout: number;
+      margin: number; // Estimated from Cook PVI
+      turnout: number | null; // null = data unavailable
     };
-    registeredVoters: number;
+    votingAgePopulation: number; // From Census (more accurate than "registered voters")
   };
   geography: {
     area: number;
@@ -110,8 +115,10 @@ export async function GET(request: NextRequest) {
     logger.info('Fetching House members from Congress.gov API using parallel batching');
 
     const limit = 250; // API max limit per request
-    const expectedMemberCount = 441; // 435 voting + 6 non-voting delegates
-    const expectedBatches = Math.ceil(expectedMemberCount / limit); // Should be 2 batches
+    // Congress.gov API returns ~540 members for chamber=house (includes members who previously served in House)
+    // We filter to current House members later, but need to fetch all batches
+    const expectedApiTotal = 550; // Buffer for API returning former House members now in Senate
+    const expectedBatches = Math.ceil(expectedApiTotal / limit); // Should be 3 batches
 
     // Create parallel fetch requests for known batches
     const batchPromises = Array.from({ length: expectedBatches }, (_, batchIndex) => {
@@ -164,7 +171,7 @@ export async function GET(request: NextRequest) {
       logger.info('All Congress.gov API batches completed', {
         batchCount: batchResults.length,
         totalMembers: allMembers.length,
-        expectedMembers: expectedMemberCount,
+        expectedApiTotal,
       });
     } catch (error) {
       logger.error(
@@ -177,7 +184,7 @@ export async function GET(request: NextRequest) {
       let hasMore = true;
       allMembers = [];
 
-      while (hasMore && allMembers.length < expectedMemberCount) {
+      while (hasMore && allMembers.length < expectedApiTotal) {
         const url = `https://api.congress.gov/v3/member?format=json&limit=${limit}&offset=${offset}&currentMember=true&chamber=house`;
         const response = await fetch(url, {
           headers: {
@@ -245,24 +252,38 @@ export async function GET(request: NextRequest) {
     let skippedCount = 0;
 
     for (const member of members) {
+      // Filter out Senators - only include House members
+      // Senators don't have a district property and their terms show "Senate" chamber
+      const terms = member.terms?.item || [];
+      const currentTerm = terms.length > 0 ? terms[terms.length - 1] : null;
+
+      // Skip if the member's current term is in the Senate
+      if (currentTerm?.chamber === 'Senate') {
+        skippedCount++;
+        continue;
+      }
+
       // Handle at-large districts (states with only one representative)
       let districtNumber = member.district;
 
-      if (!districtNumber) {
-        skippedCount++;
-        continue;
+      // At-large states and territories may have null/undefined/0 district
+      // We should NOT skip these - they are valid representatives
+      if (districtNumber === null || districtNumber === undefined || districtNumber === '') {
+        // Check if this is an at-large state (single representative)
+        // At-large districts should be normalized to "00" for Cook PVI lookup
+        districtNumber = '00';
       }
 
       // Convert to string to ensure string methods work
       districtNumber = String(districtNumber);
 
-      // Normalize at-large districts to "01"
+      // Normalize at-large districts
       if (
         districtNumber === 'At Large' ||
         districtNumber === '0' ||
         districtNumber.toLowerCase() === 'at-large'
       ) {
-        districtNumber = '01';
+        districtNumber = '00';
       }
 
       // Ensure district number is padded
@@ -351,13 +372,17 @@ export async function GET(request: NextRequest) {
           urbanPercentage: censusData.urbanPercentage || 0,
         },
         political: {
-          cookPVI: getRealCookPVI(member.state, districtNumber),
+          cookPVI: getRealCookPVI(stateAbbr, districtNumber),
+          isCompetitive: isCompetitiveDistrict(getRealCookPVI(stateAbbr, districtNumber)),
           lastElection: {
             winner: member.partyName || 'Unknown',
-            margin: 0, // Data unavailable - would need FEC data
-            turnout: 0, // Data unavailable - would need real turnout data
+            // Estimate margin from Cook PVI (PVI roughly correlates to expected margin)
+            margin: estimateMarginFromPVI(getRealCookPVI(stateAbbr, districtNumber)),
+            // Turnout data unavailable - no reliable free API source
+            turnout: null,
           },
-          registeredVoters: censusData.votingAgePopulation || 0,
+          // Use voting age population from Census (registered voters requires state SoS data)
+          votingAgePopulation: censusData.votingAgePopulation || 0,
         },
         geography: {
           area: 0, // Data unavailable - would need geographic data
