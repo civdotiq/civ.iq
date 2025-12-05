@@ -18,51 +18,53 @@ export default function AboutPage() {
           </Link>
         </div>
 
-        {/* Principle Statement */}
+        {/* Mission Statement */}
         <div className="mb-grid-8 sm:mb-grid-10">
           <h1 className="text-4xl sm:text-5xl font-bold text-black mb-grid-4 aicher-heading leading-tight">
-            Good design is
+            Know your
             <br />
-            as little design
-            <br />
-            as possible.
+            representatives.
           </h1>
           <p className="text-lg text-gray-600 max-w-md">
-            We apply this principle to civic information.
+            Federal, state, and local government data in one place.
           </p>
         </div>
 
-        {/* Core Values - Grid */}
+        {/* What CIV.IQ Provides - Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-grid-4 mb-grid-8">
           <div className="aicher-card p-grid-4">
-            <div className="text-3xl font-bold text-black mb-grid-1">01</div>
-            <h2 className="text-lg font-semibold text-black mb-grid-2">Honest</h2>
+            <div className="text-3xl font-bold text-black mb-grid-1">540</div>
+            <h2 className="text-lg font-semibold text-black mb-grid-2">Federal Representatives</h2>
             <p className="text-gray-600 text-sm">
-              Real data from official sources. No fabrication. No spin.
+              435 House members, 100 Senators, 5 territorial delegates. Voting records, committee
+              assignments, sponsored legislation.
             </p>
           </div>
 
           <div className="aicher-card p-grid-4">
-            <div className="text-3xl font-bold text-black mb-grid-1">02</div>
-            <h2 className="text-lg font-semibold text-black mb-grid-2">Useful</h2>
+            <div className="text-3xl font-bold text-black mb-grid-1">50</div>
+            <h2 className="text-lg font-semibold text-black mb-grid-2">State Legislatures</h2>
             <p className="text-gray-600 text-sm">
-              Information that serves a purpose. Nothing decorative.
+              State legislators, bills, and votes. Governors, attorneys general, and state supreme
+              court justices.
             </p>
           </div>
 
           <div className="aicher-card p-grid-4">
-            <div className="text-3xl font-bold text-black mb-grid-1">03</div>
-            <h2 className="text-lg font-semibold text-black mb-grid-2">Clear</h2>
+            <div className="text-3xl font-bold text-black mb-grid-1">39K</div>
+            <h2 className="text-lg font-semibold text-black mb-grid-2">ZIP Codes</h2>
             <p className="text-gray-600 text-sm">
-              Complex government data made understandable at a glance.
+              Enter your ZIP code to find your representatives. Includes multi-district areas and
+              all U.S. territories.
             </p>
           </div>
 
           <div className="aicher-card p-grid-4">
-            <div className="text-3xl font-bold text-black mb-grid-1">04</div>
-            <h2 className="text-lg font-semibold text-black mb-grid-2">Open</h2>
+            <div className="text-3xl font-bold text-black mb-grid-1">$</div>
+            <h2 className="text-lg font-semibold text-black mb-grid-2">Campaign Finance</h2>
             <p className="text-gray-600 text-sm">
-              Transparent methods. Open source. Publicly verifiable.
+              FEC data on contributions, expenditures, and funding sources. See who funds your
+              representatives.
             </p>
           </div>
         </div>
@@ -70,12 +72,12 @@ export default function AboutPage() {
         {/* Data Sources - Minimal List */}
         <div className="mb-grid-8">
           <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-grid-3">
-            Sources
+            Official Sources
           </h2>
           <div className="space-y-grid-2">
             <DataSourceRow
               name="Congress.gov"
-              description="Legislative records"
+              description="Bills, votes, members"
               href="https://api.congress.gov/"
             />
             <DataSourceRow
@@ -85,7 +87,7 @@ export default function AboutPage() {
             />
             <DataSourceRow
               name="U.S. Census Bureau"
-              description="Demographics"
+              description="Districts, demographics"
               href="https://www.census.gov/"
             />
             <DataSourceRow
@@ -99,7 +101,9 @@ export default function AboutPage() {
         {/* Simple Footer */}
         <div className="pt-grid-4 border-t border-gray-200">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-grid-2">
-            <p className="text-sm text-gray-500">Built for citizens who want facts.</p>
+            <p className="text-sm text-gray-500">
+              No mock data. No fabrication. Real government APIs only.
+            </p>
             <Link
               href="/"
               className="text-sm font-medium text-black hover:text-civiq-blue transition-colors"
