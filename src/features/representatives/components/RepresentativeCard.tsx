@@ -57,10 +57,10 @@ export const RepresentativeCard = memo(function RepresentativeCard({
       {/* Header Section - Always visible, clickable on mobile to expand */}
       <button
         type="button"
-        className="w-full text-left p-4 md:p-6 md:pb-4 md:cursor-default"
+        className="w-full text-left p-4 sm:p-6 sm:pb-4 sm:cursor-default"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-start gap-3 md:gap-4">
+        <div className="flex items-start gap-3 sm:gap-4">
           <RepresentativePhoto
             bioguideId={representative.bioguideId}
             name={representative.name}
@@ -69,13 +69,13 @@ export const RepresentativeCard = memo(function RepresentativeCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <h3 className="text-lg md:text-xl font-semibold text-gray-900">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
                   {representative.name}
                 </h3>
                 <p className="text-sm text-gray-600">{representative.chamber}</p>
               </div>
               {/* Expand/collapse chevron - mobile only */}
-              <div className="md:hidden flex-shrink-0 mt-1">
+              <div className="sm:hidden flex-shrink-0 mt-1">
                 <svg
                   className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                   fill="none"
@@ -114,9 +114,9 @@ export const RepresentativeCard = memo(function RepresentativeCard({
       </button>
 
       {/* Expandable Content - collapsed on mobile by default, always visible on desktop */}
-      <div className={`${isExpanded ? 'block' : 'hidden'} md:block`}>
+      <div className={`${isExpanded ? 'block' : 'hidden'} sm:block`}>
         {/* Additional badges */}
-        <div className="px-4 md:px-6 pb-3">
+        <div className="px-4 sm:px-6 pb-3">
           <div className="flex flex-wrap gap-1.5">
             {representative.chamber === 'Senate' && (
               <span className="px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-xs font-medium">
@@ -144,7 +144,7 @@ export const RepresentativeCard = memo(function RepresentativeCard({
         </div>
 
         {/* Contact Information */}
-        <div className="px-4 md:px-6 pb-3">
+        <div className="px-4 sm:px-6 pb-3">
           <div className="flex flex-wrap gap-3 text-sm">
             {representative.phone && (
               <a
@@ -171,7 +171,7 @@ export const RepresentativeCard = memo(function RepresentativeCard({
 
         {/* Committee Assignments */}
         {representative.committees && representative.committees.length > 0 && (
-          <div className="px-4 md:px-6 pb-3">
+          <div className="px-4 sm:px-6 pb-3">
             <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Committees</h4>
             <div className="space-y-0.5">
               {representative.committees.slice(0, 2).map((committee, index) => (
@@ -194,7 +194,7 @@ export const RepresentativeCard = memo(function RepresentativeCard({
         )}
 
         {/* Action Button */}
-        <div className="px-4 md:px-6 py-3 bg-gray-50 border-t border-gray-100">
+        <div className="px-4 sm:px-6 py-3 bg-gray-50 border-t border-gray-100">
           <Link
             href={`/representative/${representative.bioguideId}`}
             className="block w-full bg-civiq-blue text-white text-center px-4 py-2.5 hover:bg-civiq-blue/90 transition-colors text-sm font-medium"
@@ -206,7 +206,7 @@ export const RepresentativeCard = memo(function RepresentativeCard({
 
       {/* Collapsed state hint - mobile only */}
       {!isExpanded && (
-        <div className="md:hidden px-4 pb-3 text-center">
+        <div className="sm:hidden px-4 pb-3 text-center">
           <span className="text-xs text-gray-400">Tap to expand</span>
         </div>
       )}
