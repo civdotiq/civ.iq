@@ -4,7 +4,9 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { memo } from 'react';
+'use client';
+
+import { memo, useState } from 'react';
 import Link from 'next/link';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { encodeBase64Url } from '@/lib/url-encoding';
@@ -38,9 +40,13 @@ interface StateLegislator {
 
 export const StateLegislatorCard = memo(function StateLegislatorCard({
   legislator,
+  defaultExpanded = false,
 }: {
   legislator: StateLegislator;
+  defaultExpanded?: boolean;
 }) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
   const getPartyColor = (party: string) => {
     if (party.toLowerCase().includes('democrat')) return 'text-blue-600 bg-blue-50';
     if (party.toLowerCase().includes('republican')) return 'text-red-600 bg-red-50';
@@ -62,73 +68,124 @@ export const StateLegislatorCard = memo(function StateLegislatorCard({
 
   return (
     <div className="bg-white border-2 border-black border border-gray-200 overflow-hidden">
-      {/* Header Section */}
-      <div className="p-6 pb-4">
-        <div className="flex items-start gap-4">
-          <RepresentativePhoto bioguideId={legislator.id} name={legislator.name} size="lg" />
+      {/* Header Section - Always visible, clickable on mobile to expand */}
+      <button
+        type="button"
+        className="w-full text-left p-4 md:p-6 md:pb-4 md:cursor-default"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-start gap-3 md:gap-4">
+          <RepresentativePhoto bioguideId={legislator.id} name={legislator.name} size="md" />
           <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-semibold text-gray-900 mb-1">{legislator.name}</h3>
-            <p className="text-gray-600 mb-2">
-              {legislator.currentRole?.title || `${chamberInfo.name} Member`}
-            </p>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900">
+                  {legislator.name}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {legislator.currentRole?.title || `${chamberInfo.name} Member`}
+                </p>
+              </div>
+              {/* Expand/collapse chevron - mobile only */}
+              <div className="md:hidden flex-shrink-0 mt-1">
+                <svg
+                  className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+            </div>
 
-            <div className="flex flex-wrap gap-2 mb-3">
+            <div className="flex flex-wrap gap-1.5 mt-2">
               <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${getPartyColor(legislator.party)}`}
+                className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPartyColor(legislator.party)}`}
               >
                 {legislator.party}
               </span>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${chamberInfo.color}`}>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${chamberInfo.color}`}>
                 {chamberInfo.name}
               </span>
-              <span className="px-2 py-1 bg-white border-2 border-gray-300 text-gray-700 rounded-full text-xs font-medium">
+              <span className="px-2 py-0.5 bg-white border border-gray-300 text-gray-700 rounded-full text-xs font-medium">
                 District {legislator.district}
               </span>
-              {legislator.currentRole?.start_date && (
-                <span className="px-2 py-1 bg-civiq-green/10 text-civiq-green rounded-full text-xs font-medium">
-                  Since {new Date(legislator.currentRole.start_date).getFullYear()}
-                </span>
-              )}
             </div>
           </div>
         </div>
-      </div>
+      </button>
 
-      {/* Contact Information */}
-      <div className="px-6 pb-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-          {legislator.phone && (
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-700">📞</span>
-              <span className="text-gray-600">{legislator.phone}</span>
-            </div>
-          )}
-          {legislator.email && (
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-700">✉️</span>
-              <span className="text-civiq-blue truncate">{legislator.email}</span>
-            </div>
-          )}
-          {legislator.website && (
-            <div className="flex items-center gap-2 md:col-span-2">
-              <span className="font-medium text-gray-700">🌐</span>
-              <span className="text-civiq-blue">Official Website</span>
-            </div>
-          )}
+      {/* Expandable Content - collapsed on mobile by default, always visible on desktop */}
+      <div className={`${isExpanded ? 'block' : 'hidden'} md:block`}>
+        {/* Additional badges */}
+        <div className="px-4 md:px-6 pb-3">
+          <div className="flex flex-wrap gap-1.5">
+            {legislator.currentRole?.start_date && (
+              <span className="px-2 py-0.5 bg-civiq-green/10 text-civiq-green rounded-full text-xs font-medium">
+                Since {new Date(legislator.currentRole.start_date).getFullYear()}
+              </span>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Action Button */}
-      <div className="px-6 py-4 bg-white border-t border-gray-100">
-        <div className="flex justify-end">
+        {/* Contact Information */}
+        <div className="px-4 md:px-6 pb-3">
+          <div className="flex flex-wrap gap-3 text-sm">
+            {legislator.phone && (
+              <a
+                href={`tel:${legislator.phone}`}
+                className="flex items-center gap-1 text-gray-600 hover:text-civiq-blue"
+              >
+                <span>📞</span>
+                <span>{legislator.phone}</span>
+              </a>
+            )}
+            {legislator.email && (
+              <a
+                href={`mailto:${legislator.email}`}
+                className="flex items-center gap-1 text-civiq-blue hover:underline truncate"
+              >
+                <span>✉️</span>
+                <span className="truncate max-w-[180px]">{legislator.email}</span>
+              </a>
+            )}
+            {legislator.website && (
+              <a
+                href={legislator.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-civiq-blue hover:underline"
+              >
+                <span>🌐</span>
+                <span>Website</span>
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <div className="px-4 md:px-6 py-3 bg-gray-50 border-t border-gray-100">
           <Link
             href={profileUrl}
-            className="bg-civiq-blue text-white px-4 py-2 rounded hover:bg-civiq-blue/90 transition-colors text-sm font-medium"
+            className="block w-full bg-civiq-blue text-white text-center px-4 py-2.5 hover:bg-civiq-blue/90 transition-colors text-sm font-medium"
           >
-            View Profile
+            View Full Profile
           </Link>
         </div>
       </div>
+
+      {/* Collapsed state hint - mobile only */}
+      {!isExpanded && (
+        <div className="md:hidden px-4 pb-3 text-center">
+          <span className="text-xs text-gray-400">Tap to expand</span>
+        </div>
+      )}
     </div>
   );
 });
