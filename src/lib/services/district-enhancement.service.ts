@@ -11,6 +11,28 @@
  */
 
 import { CensusAPIClient } from './census-api.service';
+import districtGeographyData from '@/data/district-gazetteer.json';
+
+// Type for Census Gazetteer data (static JSON from src/data/district-gazetteer.json)
+interface GazetteerDistrict {
+  landAreaSqMi: number;
+  waterAreaSqMi: number;
+  centroid: {
+    lat: number;
+    lng: number;
+  };
+}
+
+interface GazetteerData {
+  source: string;
+  sourceUrl: string;
+  generatedAt: string;
+  totalDistricts: number;
+  districts: Record<string, GazetteerDistrict>;
+}
+
+// Cast imported JSON to typed interface
+const gazetteerData = districtGeographyData as GazetteerData;
 
 interface ElectionResult {
   year: number;
@@ -430,20 +452,39 @@ export function getEnhancedGeographicData(state: string, district: string): Enha
 }
 
 /**
- * Return empty geographic data when real data is not available
- * CLAUDE.md Compliant: No fake/placeholder data - return empty arrays and null values
+ * Get geographic data from Census Gazetteer static data
+ * CLAUDE.md Compliant: Uses real Census Bureau Gazetteer data (119th Congress)
+ * Source: https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2024_Gazetteer/2024_Gaz_119CDs_national.zip
  */
-function estimateGeographicData(_state: string, _district: string): EnhancedGeographicData {
-  // Following CLAUDE.md Rule #2: Return "Data unavailable" messaging instead of fake data
-  // Previously this returned fake placeholders like "CA County" - now returns empty/null
+function estimateGeographicData(state: string, district: string): EnhancedGeographicData {
+  // Build district key - handle at-large districts (00 -> 01)
+  const normalizedDistrict = district === '00' || district === 'AL' ? '01' : district;
+  const districtKey = `${state}-${normalizedDistrict}`;
+
+  // Look up in Census Gazetteer data
+  const gazetteer = gazetteerData.districts[districtKey];
+
+  if (gazetteer) {
+    return {
+      realCounties: [], // Counties not available in Gazetteer
+      realCities: [], // Cities not available in Gazetteer
+      majorUrbanAreas: [], // Urban areas not available in Gazetteer
+      ruralPercentage: null, // Rural % not available via Gazetteer (requires P2 table)
+      area: gazetteer.landAreaSqMi, // Real land area from Census Gazetteer
+      populationDensity: null, // Will be calculated at API level with population data
+      dataSource: 'Census Bureau Gazetteer 2024 (119th Congress)',
+    };
+  }
+
+  // Fallback if district not found in Gazetteer
   return {
-    realCounties: [], // Empty - no fake county names
-    realCities: [], // Empty - no fake city names
-    majorUrbanAreas: [], // Empty - no fake urban area names
-    ruralPercentage: null, // Null - data unavailable from Census API
-    area: null, // Null - requires Gazetteer file download
-    populationDensity: null, // Null - cannot calculate without area
-    dataSource: 'Data unavailable - Census Gazetteer required',
+    realCounties: [],
+    realCities: [],
+    majorUrbanAreas: [],
+    ruralPercentage: null,
+    area: null,
+    populationDensity: null,
+    dataSource: 'Data unavailable - district not found in Gazetteer',
   };
 }
 

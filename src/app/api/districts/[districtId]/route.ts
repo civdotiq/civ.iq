@@ -10,7 +10,25 @@ import { cachedFetch } from '@/lib/cache';
 import { districtBoundaryService } from '@/lib/helpers/district-boundary-utils';
 import { getStateFromWikidata, getDistrictFromWikidata } from '@/lib/api/wikidata';
 import districtGeography from '@/data/district-geography.json';
+import gazetteerData from '@/data/district-gazetteer.json';
 import { US_STATES } from '@/lib/data/us-states';
+
+// Type for Census Gazetteer data
+interface GazetteerDistrict {
+  landAreaSqMi: number;
+  waterAreaSqMi: number;
+  centroid: { lat: number; lng: number };
+}
+
+interface GazetteerDataType {
+  source: string;
+  sourceUrl: string;
+  generatedAt: string;
+  totalDistricts: number;
+  districts: Record<string, GazetteerDistrict>;
+}
+
+const typedGazetteerData = gazetteerData as GazetteerDataType;
 
 // ISR: Revalidate every 1 day
 export const revalidate = 86400;
@@ -642,10 +660,18 @@ async function getDistrictGeography(
     });
   }
 
-  // Fallback to basic geographic data if boundary service fails
+  // Fallback to Gazetteer data if boundary service fails
   const { counties, cities } = getPost2023DistrictData(state, district);
+
+  // Get area from Census Gazetteer (real data)
+  const normalizedDistrict =
+    district === '00' || district === 'AL' ? '01' : district.padStart(2, '0');
+  const gazetteerKey = `${state}-${normalizedDistrict}`;
+  const gazetteerDistrict = typedGazetteerData.districts[gazetteerKey];
+  const area = gazetteerDistrict ? Math.round(gazetteerDistrict.landAreaSqMi) : 0;
+
   return {
-    area: 1500, // Default area
+    area,
     counties,
     majorCities: cities,
   };

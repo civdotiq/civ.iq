@@ -1,0 +1,3528 @@
+{
+  "source": "U.S. Census Bureau 2024 Gazetteer - 119th Congress Congressional Districts",
+  "sourceUrl": "https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2024_Gazetteer/2024_Gaz_119CDs_national.zip",
+  "generatedAt": "2025-12-05T21:51:49.796Z",
+  "totalDistricts": 440,
+  "districts": {
+    "AL-01": {
+      "landAreaSqMi": 7240.754,
+      "waterAreaSqMi": 878.102,
+      "centroid": {
+        "lat": 31.032889,
+        "lng": -86.798975
+      }
+    },
+    "AL-02": {
+      "landAreaSqMi": 9465.031,
+      "waterAreaSqMi": 90.631,
+      "centroid": {
+        "lat": 31.761915,
+        "lng": -86.628188
+      }
+    },
+    "AL-03": {
+      "landAreaSqMi": 6690.217,
+      "waterAreaSqMi": 180.066,
+      "centroid": {
+        "lat": 33.41401,
+        "lng": -85.757772
+      }
+    },
+    "AL-04": {
+      "landAreaSqMi": 8630.114,
+      "waterAreaSqMi": 223.458,
+      "centroid": {
+        "lat": 34.130258,
+        "lng": -87.28169
+      }
+    },
+    "AL-05": {
+      "landAreaSqMi": 3901.773,
+      "waterAreaSqMi": 164.885,
+      "centroid": {
+        "lat": 34.691685,
+        "lng": -86.680841
+      }
+    },
+    "AL-06": {
+      "landAreaSqMi": 4448.503,
+      "waterAreaSqMi": 106.208,
+      "centroid": {
+        "lat": 32.956943,
+        "lng": -86.59323
+      }
+    },
+    "AL-07": {
+      "landAreaSqMi": 10274.638,
+      "waterAreaSqMi": 125.698,
+      "centroid": {
+        "lat": 32.507117,
+        "lng": -87.614104
+      }
+    },
+    "AK-01": {
+      "landAreaSqMi": 571241.632,
+      "waterAreaSqMi": 94483.267,
+      "centroid": {
+        "lat": 63.347356,
+        "lng": -152.839733
+      }
+    },
+    "AZ-01": {
+      "landAreaSqMi": 1597.507,
+      "waterAreaSqMi": 16.677,
+      "centroid": {
+        "lat": 33.698866,
+        "lng": -111.661478
+      }
+    },
+    "AZ-02": {
+      "landAreaSqMi": 58353.747,
+      "waterAreaSqMi": 137.031,
+      "centroid": {
+        "lat": 35.117216,
+        "lng": -111.054772
+      }
+    },
+    "AZ-03": {
+      "landAreaSqMi": 205.868,
+      "waterAreaSqMi": 0.599,
+      "centroid": {
+        "lat": 33.424088,
+        "lng": -112.121724
+      }
+    },
+    "AZ-04": {
+      "landAreaSqMi": 178.846,
+      "waterAreaSqMi": 0.916,
+      "centroid": {
+        "lat": 33.384729,
+        "lng": -111.859735
+      }
+    },
+    "AZ-05": {
+      "landAreaSqMi": 405.28,
+      "waterAreaSqMi": 0.475,
+      "centroid": {
+        "lat": 33.305743,
+        "lng": -111.655086
+      }
+    },
+    "AZ-06": {
+      "landAreaSqMi": 13691.876,
+      "waterAreaSqMi": 19.418,
+      "centroid": {
+        "lat": 32.373827,
+        "lng": -109.977644
+      }
+    },
+    "AZ-07": {
+      "landAreaSqMi": 15417.655,
+      "waterAreaSqMi": 5.198,
+      "centroid": {
+        "lat": 32.261361,
+        "lng": -112.321364
+      }
+    },
+    "AZ-08": {
+      "landAreaSqMi": 575.287,
+      "waterAreaSqMi": 3.502,
+      "centroid": {
+        "lat": 33.788464,
+        "lng": -112.201324
+      }
+    },
+    "AZ-09": {
+      "landAreaSqMi": 23229.331,
+      "waterAreaSqMi": 145.912,
+      "centroid": {
+        "lat": 34.602342,
+        "lng": -113.66332
+      }
+    },
+    "AR-01": {
+      "landAreaSqMi": 19849.09,
+      "waterAreaSqMi": 551.199,
+      "centroid": {
+        "lat": 35.351172,
+        "lng": -91.33508
+      }
+    },
+    "AR-02": {
+      "landAreaSqMi": 5301.541,
+      "waterAreaSqMi": 139.769,
+      "centroid": {
+        "lat": 35.167888,
+        "lng": -92.375838
+      }
+    },
+    "AR-03": {
+      "landAreaSqMi": 4164.711,
+      "waterAreaSqMi": 80.258,
+      "centroid": {
+        "lat": 36.000717,
+        "lng": -94.029813
+      }
+    },
+    "AR-04": {
+      "landAreaSqMi": 22676.605,
+      "waterAreaSqMi": 434.461,
+      "centroid": {
+        "lat": 34.208983,
+        "lng": -93.142469
+      }
+    },
+    "CA-01": {
+      "landAreaSqMi": 26393.412,
+      "waterAreaSqMi": 654.904,
+      "centroid": {
+        "lat": 40.759058,
+        "lng": -121.708586
+      }
+    },
+    "CA-02": {
+      "landAreaSqMi": 13038.536,
+      "waterAreaSqMi": 1591.088,
+      "centroid": {
+        "lat": 40.071536,
+        "lng": -123.464436
+      }
+    },
+    "CA-03": {
+      "landAreaSqMi": 21666.742,
+      "waterAreaSqMi": 381.829,
+      "centroid": {
+        "lat": 37.82646,
+        "lng": -118.859763
+      }
+    },
+    "CA-04": {
+      "landAreaSqMi": 3780.045,
+      "waterAreaSqMi": 146.989,
+      "centroid": {
+        "lat": 38.735643,
+        "lng": -122.331229
+      }
+    },
+    "CA-05": {
+      "landAreaSqMi": 9807.724,
+      "waterAreaSqMi": 160.071,
+      "centroid": {
+        "lat": 37.7133,
+        "lng": -119.850428
+      }
+    },
+    "CA-06": {
+      "landAreaSqMi": 251.518,
+      "waterAreaSqMi": 2.741,
+      "centroid": {
+        "lat": 38.631719,
+        "lng": -121.370921
+      }
+    },
+    "CA-07": {
+      "landAreaSqMi": 680.454,
+      "waterAreaSqMi": 26.552,
+      "centroid": {
+        "lat": 38.3616,
+        "lng": -121.382107
+      }
+    },
+    "CA-08": {
+      "landAreaSqMi": 481.178,
+      "waterAreaSqMi": 133.92,
+      "centroid": {
+        "lat": 38.113205,
+        "lng": -122.119708
+      }
+    },
+    "CA-09": {
+      "landAreaSqMi": 1346.855,
+      "waterAreaSqMi": 36.494,
+      "centroid": {
+        "lat": 37.977874,
+        "lng": -121.206741
+      }
+    },
+    "CA-10": {
+      "landAreaSqMi": 537.41,
+      "waterAreaSqMi": 23.57,
+      "centroid": {
+        "lat": 37.891077,
+        "lng": -121.893056
+      }
+    },
+    "CA-11": {
+      "landAreaSqMi": 41.372,
+      "waterAreaSqMi": 185.179,
+      "centroid": {
+        "lat": 37.727239,
+        "lng": -123.032229
+      }
+    },
+    "CA-12": {
+      "landAreaSqMi": 92.656,
+      "waterAreaSqMi": 48.673,
+      "centroid": {
+        "lat": 37.780127,
+        "lng": -122.240801
+      }
+    },
+    "CA-13": {
+      "landAreaSqMi": 6292.595,
+      "waterAreaSqMi": 56.639,
+      "centroid": {
+        "lat": 36.917654,
+        "lng": -120.576823
+      }
+    },
+    "CA-14": {
+      "landAreaSqMi": 580.462,
+      "waterAreaSqMi": 28.924,
+      "centroid": {
+        "lat": 37.632533,
+        "lng": -121.839457
+      }
+    },
+    "CA-15": {
+      "landAreaSqMi": 116.245,
+      "waterAreaSqMi": 112.337,
+      "centroid": {
+        "lat": 37.589067,
+        "lng": -122.316684
+      }
+    },
+    "CA-16": {
+      "landAreaSqMi": 529.069,
+      "waterAreaSqMi": 184.477,
+      "centroid": {
+        "lat": 37.335174,
+        "lng": -122.287674
+      }
+    },
+    "CA-17": {
+      "landAreaSqMi": 179.325,
+      "waterAreaSqMi": 8.383,
+      "centroid": {
+        "lat": 37.426051,
+        "lng": -121.964951
+      }
+    },
+    "CA-18": {
+      "landAreaSqMi": 4572.914,
+      "waterAreaSqMi": 34.957,
+      "centroid": {
+        "lat": 36.478692,
+        "lng": -121.192912
+      }
+    },
+    "CA-19": {
+      "landAreaSqMi": 2816.561,
+      "waterAreaSqMi": 767.68,
+      "centroid": {
+        "lat": 36.867713,
+        "lng": -121.752502
+      }
+    },
+    "CA-20": {
+      "landAreaSqMi": 9672.809,
+      "waterAreaSqMi": 49.749,
+      "centroid": {
+        "lat": 35.756458,
+        "lng": -118.67173
+      }
+    },
+    "CA-21": {
+      "landAreaSqMi": 891.307,
+      "waterAreaSqMi": 2.222,
+      "centroid": {
+        "lat": 36.553876,
+        "lng": -119.473299
+      }
+    },
+    "CA-22": {
+      "landAreaSqMi": 4313.07,
+      "waterAreaSqMi": 7.619,
+      "centroid": {
+        "lat": 35.773573,
+        "lng": -119.529737
+      }
+    },
+    "CA-23": {
+      "landAreaSqMi": 17966.658,
+      "waterAreaSqMi": 18.75,
+      "centroid": {
+        "lat": 34.942504,
+        "lng": -116.43631
+      }
+    },
+    "CA-24": {
+      "landAreaSqMi": 4886.136,
+      "waterAreaSqMi": 1471.676,
+      "centroid": {
+        "lat": 34.724843,
+        "lng": -120.057905
+      }
+    },
+    "CA-25": {
+      "landAreaSqMi": 11955.873,
+      "waterAreaSqMi": 396.091,
+      "centroid": {
+        "lat": 33.613311,
+        "lng": -115.34455
+      }
+    },
+    "CA-26": {
+      "landAreaSqMi": 1714.886,
+      "waterAreaSqMi": 120.201,
+      "centroid": {
+        "lat": 34.45496,
+        "lng": -119.06995
+      }
+    },
+    "CA-27": {
+      "landAreaSqMi": 1516.112,
+      "waterAreaSqMi": 12.368,
+      "centroid": {
+        "lat": 34.606629,
+        "lng": -118.358284
+      }
+    },
+    "CA-28": {
+      "landAreaSqMi": 787.849,
+      "waterAreaSqMi": 1.832,
+      "centroid": {
+        "lat": 34.280333,
+        "lng": -117.866141
+      }
+    },
+    "CA-29": {
+      "landAreaSqMi": 128.971,
+      "waterAreaSqMi": 0.355,
+      "centroid": {
+        "lat": 34.287754,
+        "lng": -118.389695
+      }
+    },
+    "CA-30": {
+      "landAreaSqMi": 179.3,
+      "waterAreaSqMi": 0.779,
+      "centroid": {
+        "lat": 34.22809,
+        "lng": -118.273626
+      }
+    },
+    "CA-31": {
+      "landAreaSqMi": 207.674,
+      "waterAreaSqMi": 3.292,
+      "centroid": {
+        "lat": 34.145768,
+        "lng": -117.891631
+      }
+    },
+    "CA-32": {
+      "landAreaSqMi": 296.238,
+      "waterAreaSqMi": 92.381,
+      "centroid": {
+        "lat": 34.0935,
+        "lng": -118.657518
+      }
+    },
+    "CA-33": {
+      "landAreaSqMi": 189.19,
+      "waterAreaSqMi": 1.066,
+      "centroid": {
+        "lat": 34.115584,
+        "lng": -117.339115
+      }
+    },
+    "CA-34": {
+      "landAreaSqMi": 49.678,
+      "waterAreaSqMi": 0.372,
+      "centroid": {
+        "lat": 34.071305,
+        "lng": -118.216637
+      }
+    },
+    "CA-35": {
+      "landAreaSqMi": 177.224,
+      "waterAreaSqMi": 0.199,
+      "centroid": {
+        "lat": 34.037647,
+        "lng": -117.619723
+      }
+    },
+    "CA-36": {
+      "landAreaSqMi": 97.111,
+      "waterAreaSqMi": 97.506,
+      "centroid": {
+        "lat": 33.869819,
+        "lng": -118.405296
+      }
+    },
+    "CA-37": {
+      "landAreaSqMi": 52.766,
+      "waterAreaSqMi": 0.067,
+      "centroid": {
+        "lat": 34.009687,
+        "lng": -118.325203
+      }
+    },
+    "CA-38": {
+      "landAreaSqMi": 149.332,
+      "waterAreaSqMi": 1.364,
+      "centroid": {
+        "lat": 33.968825,
+        "lng": -117.971097
+      }
+    },
+    "CA-39": {
+      "landAreaSqMi": 284.119,
+      "waterAreaSqMi": 1.626,
+      "centroid": {
+        "lat": 33.906185,
+        "lng": -117.316456
+      }
+    },
+    "CA-40": {
+      "landAreaSqMi": 391.179,
+      "waterAreaSqMi": 2.072,
+      "centroid": {
+        "lat": 33.75137,
+        "lng": -117.666104
+      }
+    },
+    "CA-41": {
+      "landAreaSqMi": 1327.169,
+      "waterAreaSqMi": 18.524,
+      "centroid": {
+        "lat": 33.630418,
+        "lng": -116.58229
+      }
+    },
+    "CA-42": {
+      "landAreaSqMi": 212.295,
+      "waterAreaSqMi": 452.51,
+      "centroid": {
+        "lat": 33.367336,
+        "lng": -118.480709
+      }
+    },
+    "CA-43": {
+      "landAreaSqMi": 72.177,
+      "waterAreaSqMi": 0.238,
+      "centroid": {
+        "lat": 33.910609,
+        "lng": -118.310473
+      }
+    },
+    "CA-44": {
+      "landAreaSqMi": 91.137,
+      "waterAreaSqMi": 25.559,
+      "centroid": {
+        "lat": 33.806936,
+        "lng": -118.241001
+      }
+    },
+    "CA-45": {
+      "landAreaSqMi": 103.62,
+      "waterAreaSqMi": 0.346,
+      "centroid": {
+        "lat": 33.881665,
+        "lng": -118.035199
+      }
+    },
+    "CA-46": {
+      "landAreaSqMi": 74.779,
+      "waterAreaSqMi": 0.204,
+      "centroid": {
+        "lat": 33.794785,
+        "lng": -117.908297
+      }
+    },
+    "CA-47": {
+      "landAreaSqMi": 173.088,
+      "waterAreaSqMi": 110.783,
+      "centroid": {
+        "lat": 33.634239,
+        "lng": -117.89192
+      }
+    },
+    "CA-48": {
+      "landAreaSqMi": 3614.691,
+      "waterAreaSqMi": 19.705,
+      "centroid": {
+        "lat": 33.08375,
+        "lng": -116.63769
+      }
+    },
+    "CA-49": {
+      "landAreaSqMi": 495.939,
+      "waterAreaSqMi": 175.3,
+      "centroid": {
+        "lat": 33.316415,
+        "lng": -117.425868
+      }
+    },
+    "CA-50": {
+      "landAreaSqMi": 256.531,
+      "waterAreaSqMi": 155.347,
+      "centroid": {
+        "lat": 32.716149,
+        "lng": -117.224302
+      }
+    },
+    "CA-51": {
+      "landAreaSqMi": 189.927,
+      "waterAreaSqMi": 1.126,
+      "centroid": {
+        "lat": 32.834756,
+        "lng": -117.083194
+      }
+    },
+    "CA-52": {
+      "landAreaSqMi": 135.285,
+      "waterAreaSqMi": 8.008,
+      "centroid": {
+        "lat": 32.628679,
+        "lng": -117.035322
+      }
+    },
+    "CO-01": {
+      "landAreaSqMi": 153.901,
+      "waterAreaSqMi": 1.653,
+      "centroid": {
+        "lat": 39.76185,
+        "lng": -104.881105
+      }
+    },
+    "CO-02": {
+      "landAreaSqMi": 11445.072,
+      "waterAreaSqMi": 94.703,
+      "centroid": {
+        "lat": 40.29582,
+        "lng": -106.206861
+      }
+    },
+    "CO-03": {
+      "landAreaSqMi": 49950.413,
+      "waterAreaSqMi": 136.366,
+      "centroid": {
+        "lat": 38.45821,
+        "lng": -106.883566
+      }
+    },
+    "CO-04": {
+      "landAreaSqMi": 32138.009,
+      "waterAreaSqMi": 157.791,
+      "centroid": {
+        "lat": 39.318349,
+        "lng": -103.248726
+      }
+    },
+    "CO-05": {
+      "landAreaSqMi": 1471.798,
+      "waterAreaSqMi": 2.554,
+      "centroid": {
+        "lat": 38.807274,
+        "lng": -104.661743
+      }
+    },
+    "CO-06": {
+      "landAreaSqMi": 306.673,
+      "waterAreaSqMi": 4.327,
+      "centroid": {
+        "lat": 39.680581,
+        "lng": -104.784114
+      }
+    },
+    "CO-07": {
+      "landAreaSqMi": 7161.211,
+      "waterAreaSqMi": 38.94,
+      "centroid": {
+        "lat": 38.886809,
+        "lng": -105.635833
+      }
+    },
+    "CO-08": {
+      "landAreaSqMi": 1010.073,
+      "waterAreaSqMi": 21.406,
+      "centroid": {
+        "lat": 40.177746,
+        "lng": -104.809462
+      }
+    },
+    "CT-01": {
+      "landAreaSqMi": 656.437,
+      "waterAreaSqMi": 19.729,
+      "centroid": {
+        "lat": 41.928611,
+        "lng": -73.017629
+      }
+    },
+    "CT-02": {
+      "landAreaSqMi": 2021.149,
+      "waterAreaSqMi": 115.29,
+      "centroid": {
+        "lat": 41.653687,
+        "lng": -72.206509
+      }
+    },
+    "CT-03": {
+      "landAreaSqMi": 473.933,
+      "waterAreaSqMi": 27.146,
+      "centroid": {
+        "lat": 41.372075,
+        "lng": -72.892659
+      }
+    },
+    "CT-04": {
+      "landAreaSqMi": 444.85,
+      "waterAreaSqMi": 81.8,
+      "centroid": {
+        "lat": 41.190282,
+        "lng": -73.393356
+      }
+    },
+    "CT-05": {
+      "landAreaSqMi": 1246.126,
+      "waterAreaSqMi": 34.204,
+      "centroid": {
+        "lat": 41.694323,
+        "lng": -73.209998
+      }
+    },
+    "CT-ZZ": {
+      "landAreaSqMi": 0,
+      "waterAreaSqMi": 423.037,
+      "centroid": {
+        "lat": 41.166607,
+        "lng": -72.842465
+      }
+    },
+    "DE-01": {
+      "landAreaSqMi": 1948.539,
+      "waterAreaSqMi": 540.242,
+      "centroid": {
+        "lat": 38.998566,
+        "lng": -75.441644
+      }
+    },
+    "DC-98": {
+      "landAreaSqMi": 61.126,
+      "waterAreaSqMi": 7.224,
+      "centroid": {
+        "lat": 38.904247,
+        "lng": -77.016517
+      }
+    },
+    "FL-01": {
+      "landAreaSqMi": 3197.642,
+      "waterAreaSqMi": 1218.431,
+      "centroid": {
+        "lat": 30.615404,
+        "lng": -86.817013
+      }
+    },
+    "FL-02": {
+      "landAreaSqMi": 9853.832,
+      "waterAreaSqMi": 2984.717,
+      "centroid": {
+        "lat": 30.245747,
+        "lng": -84.777635
+      }
+    },
+    "FL-03": {
+      "landAreaSqMi": 7321.912,
+      "waterAreaSqMi": 948.908,
+      "centroid": {
+        "lat": 29.778479,
+        "lng": -82.728298
+      }
+    },
+    "FL-04": {
+      "landAreaSqMi": 1782.002,
+      "waterAreaSqMi": 198.534,
+      "centroid": {
+        "lat": 30.330709,
+        "lng": -81.777257
+      }
+    },
+    "FL-05": {
+      "landAreaSqMi": 592.021,
+      "waterAreaSqMi": 237.007,
+      "centroid": {
+        "lat": 30.101613,
+        "lng": -81.459671
+      }
+    },
+    "FL-06": {
+      "landAreaSqMi": 3410.113,
+      "waterAreaSqMi": 518.106,
+      "centroid": {
+        "lat": 29.272623,
+        "lng": -81.640698
+      }
+    },
+    "FL-07": {
+      "landAreaSqMi": 834.476,
+      "waterAreaSqMi": 218.94,
+      "centroid": {
+        "lat": 28.873696,
+        "lng": -81.094956
+      }
+    },
+    "FL-08": {
+      "landAreaSqMi": 1640.02,
+      "waterAreaSqMi": 658.847,
+      "centroid": {
+        "lat": 28.149056,
+        "lng": -80.681788
+      }
+    },
+    "FL-09": {
+      "landAreaSqMi": 1650.416,
+      "waterAreaSqMi": 195.699,
+      "centroid": {
+        "lat": 28.119037,
+        "lng": -81.173363
+      }
+    },
+    "FL-10": {
+      "landAreaSqMi": 256.786,
+      "waterAreaSqMi": 15.757,
+      "centroid": {
+        "lat": 28.541394,
+        "lng": -81.293515
+      }
+    },
+    "FL-11": {
+      "landAreaSqMi": 1600.088,
+      "waterAreaSqMi": 236.067,
+      "centroid": {
+        "lat": 28.583489,
+        "lng": -81.854863
+      }
+    },
+    "FL-12": {
+      "landAreaSqMi": 1650.668,
+      "waterAreaSqMi": 887.456,
+      "centroid": {
+        "lat": 28.579392,
+        "lng": -82.568436
+      }
+    },
+    "FL-13": {
+      "landAreaSqMi": 227.703,
+      "waterAreaSqMi": 502.893,
+      "centroid": {
+        "lat": 27.931244,
+        "lng": -82.836575
+      }
+    },
+    "FL-14": {
+      "landAreaSqMi": 269.109,
+      "waterAreaSqMi": 254.746,
+      "centroid": {
+        "lat": 27.863224,
+        "lng": -82.541731
+      }
+    },
+    "FL-15": {
+      "landAreaSqMi": 654.295,
+      "waterAreaSqMi": 20.573,
+      "centroid": {
+        "lat": 28.102183,
+        "lng": -82.216787
+      }
+    },
+    "FL-16": {
+      "landAreaSqMi": 1154.479,
+      "waterAreaSqMi": 345.417,
+      "centroid": {
+        "lat": 27.578313,
+        "lng": -82.383219
+      }
+    },
+    "FL-17": {
+      "landAreaSqMi": 1453.656,
+      "waterAreaSqMi": 695.054,
+      "centroid": {
+        "lat": 26.997614,
+        "lng": -82.164644
+      }
+    },
+    "FL-18": {
+      "landAreaSqMi": 6449.597,
+      "waterAreaSqMi": 635.734,
+      "centroid": {
+        "lat": 27.268836,
+        "lng": -81.379767
+      }
+    },
+    "FL-19": {
+      "landAreaSqMi": 679.399,
+      "waterAreaSqMi": 1217.374,
+      "centroid": {
+        "lat": 26.448218,
+        "lng": -82.021732
+      }
+    },
+    "FL-20": {
+      "landAreaSqMi": 2151.663,
+      "waterAreaSqMi": 245.588,
+      "centroid": {
+        "lat": 26.446199,
+        "lng": -80.587196
+      }
+    },
+    "FL-21": {
+      "landAreaSqMi": 1506.288,
+      "waterAreaSqMi": 382.086,
+      "centroid": {
+        "lat": 27.138361,
+        "lng": -80.3795
+      }
+    },
+    "FL-22": {
+      "landAreaSqMi": 250.748,
+      "waterAreaSqMi": 94.592,
+      "centroid": {
+        "lat": 26.574021,
+        "lng": -80.123587
+      }
+    },
+    "FL-23": {
+      "landAreaSqMi": 165.043,
+      "waterAreaSqMi": 89.231,
+      "centroid": {
+        "lat": 26.281242,
+        "lng": -80.133437
+      }
+    },
+    "FL-24": {
+      "landAreaSqMi": 99.607,
+      "waterAreaSqMi": 83.219,
+      "centroid": {
+        "lat": 25.881371,
+        "lng": -80.16107
+      }
+    },
+    "FL-25": {
+      "landAreaSqMi": 198.759,
+      "waterAreaSqMi": 37.89,
+      "centroid": {
+        "lat": 26.048277,
+        "lng": -80.275645
+      }
+    },
+    "FL-26": {
+      "landAreaSqMi": 2300.653,
+      "waterAreaSqMi": 139.365,
+      "centroid": {
+        "lat": 26.022815,
+        "lng": -81.081248
+      }
+    },
+    "FL-27": {
+      "landAreaSqMi": 119.234,
+      "waterAreaSqMi": 161.459,
+      "centroid": {
+        "lat": 25.691263,
+        "lng": -80.250152
+      }
+    },
+    "FL-28": {
+      "landAreaSqMi": 2184.624,
+      "waterAreaSqMi": 4525.009,
+      "centroid": {
+        "lat": 25.215749,
+        "lng": -81.158374
+      }
+    },
+    "GA-01": {
+      "landAreaSqMi": 7360.101,
+      "waterAreaSqMi": 795.61,
+      "centroid": {
+        "lat": 31.425845,
+        "lng": -81.805827
+      }
+    },
+    "GA-02": {
+      "landAreaSqMi": 9953.185,
+      "waterAreaSqMi": 166.596,
+      "centroid": {
+        "lat": 31.764248,
+        "lng": -84.398008
+      }
+    },
+    "GA-03": {
+      "landAreaSqMi": 4166.219,
+      "waterAreaSqMi": 82.945,
+      "centroid": {
+        "lat": 33.205633,
+        "lng": -84.775927
+      }
+    },
+    "GA-04": {
+      "landAreaSqMi": 269.424,
+      "waterAreaSqMi": 4.018,
+      "centroid": {
+        "lat": 33.832121,
+        "lng": -84.194444
+      }
+    },
+    "GA-05": {
+      "landAreaSqMi": 225.103,
+      "waterAreaSqMi": 1.041,
+      "centroid": {
+        "lat": 33.693614,
+        "lng": -84.381768
+      }
+    },
+    "GA-06": {
+      "landAreaSqMi": 517.338,
+      "waterAreaSqMi": 6.105,
+      "centroid": {
+        "lat": 33.699133,
+        "lng": -84.600469
+      }
+    },
+    "GA-07": {
+      "landAreaSqMi": 1101.444,
+      "waterAreaSqMi": 57.235,
+      "centroid": {
+        "lat": 34.335975,
+        "lng": -84.137442
+      }
+    },
+    "GA-08": {
+      "landAreaSqMi": 10928.221,
+      "waterAreaSqMi": 152.252,
+      "centroid": {
+        "lat": 31.732182,
+        "lng": -83.296165
+      }
+    },
+    "GA-09": {
+      "landAreaSqMi": 3405.516,
+      "waterAreaSqMi": 57.455,
+      "centroid": {
+        "lat": 34.595424,
+        "lng": -83.821995
+      }
+    },
+    "GA-10": {
+      "landAreaSqMi": 5204.808,
+      "waterAreaSqMi": 136.581,
+      "centroid": {
+        "lat": 33.71816,
+        "lng": -83.317132
+      }
+    },
+    "GA-11": {
+      "landAreaSqMi": 1475.927,
+      "waterAreaSqMi": 26.933,
+      "centroid": {
+        "lat": 34.319731,
+        "lng": -84.69777
+      }
+    },
+    "GA-12": {
+      "landAreaSqMi": 9632.947,
+      "waterAreaSqMi": 191.694,
+      "centroid": {
+        "lat": 32.782641,
+        "lng": -82.287107
+      }
+    },
+    "GA-13": {
+      "landAreaSqMi": 534.204,
+      "waterAreaSqMi": 9.158,
+      "centroid": {
+        "lat": 33.505727,
+        "lng": -84.256259
+      }
+    },
+    "GA-14": {
+      "landAreaSqMi": 2942.34,
+      "waterAreaSqMi": 18.649,
+      "centroid": {
+        "lat": 34.478838,
+        "lng": -85.126109
+      }
+    },
+    "HI-01": {
+      "landAreaSqMi": 203.1,
+      "waterAreaSqMi": 145.129,
+      "centroid": {
+        "lat": 21.326768,
+        "lng": -157.878265
+      }
+    },
+    "HI-02": {
+      "landAreaSqMi": 6219.487,
+      "waterAreaSqMi": 4402.142,
+      "centroid": {
+        "lat": 19.828167,
+        "lng": -155.495042
+      }
+    },
+    "ID-01": {
+      "landAreaSqMi": 39399.8,
+      "waterAreaSqMi": 505.328,
+      "centroid": {
+        "lat": 45.310578,
+        "lng": -116.034974
+      }
+    },
+    "ID-02": {
+      "landAreaSqMi": 43245.566,
+      "waterAreaSqMi": 417.841,
+      "centroid": {
+        "lat": 43.443926,
+        "lng": -113.364262
+      }
+    },
+    "IL-01": {
+      "landAreaSqMi": 611.554,
+      "waterAreaSqMi": 9.601,
+      "centroid": {
+        "lat": 41.417597,
+        "lng": -87.952046
+      }
+    },
+    "IL-02": {
+      "landAreaSqMi": 3916.794,
+      "waterAreaSqMi": 15.045,
+      "centroid": {
+        "lat": 40.771483,
+        "lng": -87.942652
+      }
+    },
+    "IL-03": {
+      "landAreaSqMi": 153.847,
+      "waterAreaSqMi": 2.978,
+      "centroid": {
+        "lat": 41.93579,
+        "lng": -87.974433
+      }
+    },
+    "IL-04": {
+      "landAreaSqMi": 95.757,
+      "waterAreaSqMi": 1.198,
+      "centroid": {
+        "lat": 41.829374,
+        "lng": -87.809897
+      }
+    },
+    "IL-05": {
+      "landAreaSqMi": 155.103,
+      "waterAreaSqMi": 3.046,
+      "centroid": {
+        "lat": 42.081954,
+        "lng": -87.984755
+      }
+    },
+    "IL-06": {
+      "landAreaSqMi": 225.217,
+      "waterAreaSqMi": 4.56,
+      "centroid": {
+        "lat": 41.736949,
+        "lng": -87.892885
+      }
+    },
+    "IL-07": {
+      "landAreaSqMi": 68.426,
+      "waterAreaSqMi": 0.845,
+      "centroid": {
+        "lat": 41.878463,
+        "lng": -87.840651
+      }
+    },
+    "IL-08": {
+      "landAreaSqMi": 285.453,
+      "waterAreaSqMi": 5.872,
+      "centroid": {
+        "lat": 42.02767,
+        "lng": -88.197178
+      }
+    },
+    "IL-09": {
+      "landAreaSqMi": 167.733,
+      "waterAreaSqMi": 4.468,
+      "centroid": {
+        "lat": 42.243399,
+        "lng": -88.089979
+      }
+    },
+    "IL-10": {
+      "landAreaSqMi": 510.137,
+      "waterAreaSqMi": 26.006,
+      "centroid": {
+        "lat": 42.352236,
+        "lng": -88.051859
+      }
+    },
+    "IL-11": {
+      "landAreaSqMi": 918.711,
+      "waterAreaSqMi": 9.408,
+      "centroid": {
+        "lat": 42.000716,
+        "lng": -88.395646
+      }
+    },
+    "IL-12": {
+      "landAreaSqMi": 14015.959,
+      "waterAreaSqMi": 257.673,
+      "centroid": {
+        "lat": 38.295241,
+        "lng": -88.769254
+      }
+    },
+    "IL-13": {
+      "landAreaSqMi": 2264.307,
+      "waterAreaSqMi": 35.943,
+      "centroid": {
+        "lat": 39.12803,
+        "lng": -90.009854
+      }
+    },
+    "IL-14": {
+      "landAreaSqMi": 1974.932,
+      "waterAreaSqMi": 23.115,
+      "centroid": {
+        "lat": 41.569043,
+        "lng": -88.739903
+      }
+    },
+    "IL-15": {
+      "landAreaSqMi": 16752.8,
+      "waterAreaSqMi": 235.203,
+      "centroid": {
+        "lat": 39.826543,
+        "lng": -89.77216
+      }
+    },
+    "IL-16": {
+      "landAreaSqMi": 8914.43,
+      "waterAreaSqMi": 108.12,
+      "centroid": {
+        "lat": 41.394222,
+        "lng": -89.449488
+      }
+    },
+    "IL-17": {
+      "landAreaSqMi": 4481.919,
+      "waterAreaSqMi": 85.598,
+      "centroid": {
+        "lat": 41.071208,
+        "lng": -90.258684
+      }
+    },
+    "IL-ZZ": {
+      "landAreaSqMi": 0,
+      "waterAreaSqMi": 1571.659,
+      "centroid": {
+        "lat": 42.175301,
+        "lng": -87.422424
+      }
+    },
+    "IN-01": {
+      "landAreaSqMi": 1102.367,
+      "waterAreaSqMi": 243.551,
+      "centroid": {
+        "lat": 41.51347,
+        "lng": -87.162864
+      }
+    },
+    "IN-02": {
+      "landAreaSqMi": 4349.538,
+      "waterAreaSqMi": 48.209,
+      "centroid": {
+        "lat": 41.208112,
+        "lng": -86.241834
+      }
+    },
+    "IN-03": {
+      "landAreaSqMi": 4390.439,
+      "waterAreaSqMi": 55.146,
+      "centroid": {
+        "lat": 41.042727,
+        "lng": -85.21144
+      }
+    },
+    "IN-04": {
+      "landAreaSqMi": 6096.605,
+      "waterAreaSqMi": 29.555,
+      "centroid": {
+        "lat": 40.315806,
+        "lng": -86.853192
+      }
+    },
+    "IN-05": {
+      "landAreaSqMi": 2194.775,
+      "waterAreaSqMi": 14.547,
+      "centroid": {
+        "lat": 40.281399,
+        "lng": -85.792618
+      }
+    },
+    "IN-06": {
+      "landAreaSqMi": 3282.322,
+      "waterAreaSqMi": 15.923,
+      "centroid": {
+        "lat": 39.68995,
+        "lng": -85.514755
+      }
+    },
+    "IN-07": {
+      "landAreaSqMi": 276.01,
+      "waterAreaSqMi": 6.834,
+      "centroid": {
+        "lat": 39.824255,
+        "lng": -86.138144
+      }
+    },
+    "IN-08": {
+      "landAreaSqMi": 8096.079,
+      "waterAreaSqMi": 120.864,
+      "centroid": {
+        "lat": 38.744748,
+        "lng": -87.140493
+      }
+    },
+    "IN-09": {
+      "landAreaSqMi": 6037.009,
+      "waterAreaSqMi": 61.482,
+      "centroid": {
+        "lat": 38.890657,
+        "lng": -85.766394
+      }
+    },
+    "IA-01": {
+      "landAreaSqMi": 10844.57,
+      "waterAreaSqMi": 152.904,
+      "centroid": {
+        "lat": 41.464298,
+        "lng": -91.732583
+      }
+    },
+    "IA-02": {
+      "landAreaSqMi": 12902.696,
+      "waterAreaSqMi": 82.946,
+      "centroid": {
+        "lat": 42.684121,
+        "lng": -92.178881
+      }
+    },
+    "IA-03": {
+      "landAreaSqMi": 10673.353,
+      "waterAreaSqMi": 75.368,
+      "centroid": {
+        "lat": 41.139401,
+        "lng": -93.971401
+      }
+    },
+    "IA-04": {
+      "landAreaSqMi": 21433.055,
+      "waterAreaSqMi": 107.836,
+      "centroid": {
+        "lat": 42.465182,
+        "lng": -94.944248
+      }
+    },
+    "KS-01": {
+      "landAreaSqMi": 49634.61,
+      "waterAreaSqMi": 206.712,
+      "centroid": {
+        "lat": 38.775898,
+        "lng": -99.543236
+      }
+    },
+    "KS-02": {
+      "landAreaSqMi": 15298.459,
+      "waterAreaSqMi": 207.105,
+      "centroid": {
+        "lat": 38.406699,
+        "lng": -95.729429
+      }
+    },
+    "KS-03": {
+      "landAreaSqMi": 2261.578,
+      "waterAreaSqMi": 32.202,
+      "centroid": {
+        "lat": 38.553473,
+        "lng": -95.063949
+      }
+    },
+    "KS-04": {
+      "landAreaSqMi": 14563.964,
+      "waterAreaSqMi": 73.545,
+      "centroid": {
+        "lat": 37.558626,
+        "lng": -97.76509
+      }
+    },
+    "KY-01": {
+      "landAreaSqMi": 11499.401,
+      "waterAreaSqMi": 457.656,
+      "centroid": {
+        "lat": 36.965403,
+        "lng": -88.342594
+      }
+    },
+    "KY-02": {
+      "landAreaSqMi": 7291.986,
+      "waterAreaSqMi": 153.929,
+      "centroid": {
+        "lat": 37.468306,
+        "lng": -86.34923
+      }
+    },
+    "KY-03": {
+      "landAreaSqMi": 307.749,
+      "waterAreaSqMi": 15.341,
+      "centroid": {
+        "lat": 38.190392,
+        "lng": -85.700581
+      }
+    },
+    "KY-04": {
+      "landAreaSqMi": 4844.507,
+      "waterAreaSqMi": 123.302,
+      "centroid": {
+        "lat": 38.525319,
+        "lng": -84.454187
+      }
+    },
+    "KY-05": {
+      "landAreaSqMi": 11748.969,
+      "waterAreaSqMi": 131.547,
+      "centroid": {
+        "lat": 37.381357,
+        "lng": -83.528368
+      }
+    },
+    "KY-06": {
+      "landAreaSqMi": 3792.805,
+      "waterAreaSqMi": 38.745,
+      "centroid": {
+        "lat": 38.00571,
+        "lng": -84.24821
+      }
+    },
+    "LA-01": {
+      "landAreaSqMi": 3652.621,
+      "waterAreaSqMi": 4841.079,
+      "centroid": {
+        "lat": 29.765757,
+        "lng": -89.750662
+      }
+    },
+    "LA-02": {
+      "landAreaSqMi": 2005.256,
+      "waterAreaSqMi": 380.13,
+      "centroid": {
+        "lat": 30.068681,
+        "lng": -90.827406
+      }
+    },
+    "LA-03": {
+      "landAreaSqMi": 7625.365,
+      "waterAreaSqMi": 3000.132,
+      "centroid": {
+        "lat": 29.804535,
+        "lng": -92.007615
+      }
+    },
+    "LA-04": {
+      "landAreaSqMi": 14603.319,
+      "waterAreaSqMi": 449.587,
+      "centroid": {
+        "lat": 32.277477,
+        "lng": -93.518623
+      }
+    },
+    "LA-05": {
+      "landAreaSqMi": 10456.538,
+      "waterAreaSqMi": 329.282,
+      "centroid": {
+        "lat": 31.721212,
+        "lng": -91.404518
+      }
+    },
+    "LA-06": {
+      "landAreaSqMi": 4869.791,
+      "waterAreaSqMi": 162.293,
+      "centroid": {
+        "lat": 31.394416,
+        "lng": -92.481299
+      }
+    },
+    "ME-01": {
+      "landAreaSqMi": 3297.046,
+      "waterAreaSqMi": 1808.827,
+      "centroid": {
+        "lat": 43.845924,
+        "lng": -69.92217
+      }
+    },
+    "ME-02": {
+      "landAreaSqMi": 27548.038,
+      "waterAreaSqMi": 2725.969,
+      "centroid": {
+        "lat": 45.510001,
+        "lng": -69.08531
+      }
+    },
+    "MD-01": {
+      "landAreaSqMi": 3866.408,
+      "waterAreaSqMi": 1643.357,
+      "centroid": {
+        "lat": 38.74822,
+        "lng": -75.933339
+      }
+    },
+    "MD-02": {
+      "landAreaSqMi": 811.186,
+      "waterAreaSqMi": 41.21,
+      "centroid": {
+        "lat": 39.512348,
+        "lng": -76.848319
+      }
+    },
+    "MD-03": {
+      "landAreaSqMi": 500.605,
+      "waterAreaSqMi": 111.484,
+      "centroid": {
+        "lat": 39.17789,
+        "lng": -76.730199
+      }
+    },
+    "MD-04": {
+      "landAreaSqMi": 217.166,
+      "waterAreaSqMi": 7.17,
+      "centroid": {
+        "lat": 38.924102,
+        "lng": -76.912292
+      }
+    },
+    "MD-05": {
+      "landAreaSqMi": 1516.813,
+      "waterAreaSqMi": 796.61,
+      "centroid": {
+        "lat": 38.48656,
+        "lng": -76.720862
+      }
+    },
+    "MD-06": {
+      "landAreaSqMi": 2395.105,
+      "waterAreaSqMi": 37.228,
+      "centroid": {
+        "lat": 39.564116,
+        "lng": -78.895085
+      }
+    },
+    "MD-07": {
+      "landAreaSqMi": 130.223,
+      "waterAreaSqMi": 51.019,
+      "centroid": {
+        "lat": 39.270579,
+        "lng": -76.563524
+      }
+    },
+    "MD-08": {
+      "landAreaSqMi": 273.437,
+      "waterAreaSqMi": 6.854,
+      "centroid": {
+        "lat": 39.097739,
+        "lng": -77.124072
+      }
+    },
+    "MA-01": {
+      "landAreaSqMi": 2233.363,
+      "waterAreaSqMi": 59.538,
+      "centroid": {
+        "lat": 42.18587,
+        "lng": -73.073273
+      }
+    },
+    "MA-02": {
+      "landAreaSqMi": 1783.816,
+      "waterAreaSqMi": 79.86,
+      "centroid": {
+        "lat": 42.428959,
+        "lng": -72.202712
+      }
+    },
+    "MA-03": {
+      "landAreaSqMi": 750.362,
+      "waterAreaSqMi": 28.711,
+      "centroid": {
+        "lat": 42.584301,
+        "lng": -71.589524
+      }
+    },
+    "MA-04": {
+      "landAreaSqMi": 672.2,
+      "waterAreaSqMi": 37.585,
+      "centroid": {
+        "lat": 41.973829,
+        "lng": -71.234044
+      }
+    },
+    "MA-05": {
+      "landAreaSqMi": 219.31,
+      "waterAreaSqMi": 20.365,
+      "centroid": {
+        "lat": 42.386784,
+        "lng": -71.258578
+      }
+    },
+    "MA-06": {
+      "landAreaSqMi": 532.674,
+      "waterAreaSqMi": 333.956,
+      "centroid": {
+        "lat": 42.619241,
+        "lng": -70.885134
+      }
+    },
+    "MA-07": {
+      "landAreaSqMi": 60.69,
+      "waterAreaSqMi": 6.261,
+      "centroid": {
+        "lat": 42.305487,
+        "lng": -71.079416
+      }
+    },
+    "MA-08": {
+      "landAreaSqMi": 293.392,
+      "waterAreaSqMi": 167.482,
+      "centroid": {
+        "lat": 42.20401,
+        "lng": -70.973762
+      }
+    },
+    "MA-09": {
+      "landAreaSqMi": 1255.156,
+      "waterAreaSqMi": 2019.401,
+      "centroid": {
+        "lat": 41.703758,
+        "lng": -70.49029
+      }
+    },
+    "MI-01": {
+      "landAreaSqMi": 26920.072,
+      "waterAreaSqMi": 30250.289,
+      "centroid": {
+        "lat": 46.065206,
+        "lng": -86.230683
+      }
+    },
+    "MI-02": {
+      "landAreaSqMi": 9704.769,
+      "waterAreaSqMi": 3362.822,
+      "centroid": {
+        "lat": 43.65128,
+        "lng": -85.720137
+      }
+    },
+    "MI-03": {
+      "landAreaSqMi": 804.843,
+      "waterAreaSqMi": 1080.763,
+      "centroid": {
+        "lat": 43.189042,
+        "lng": -86.311504
+      }
+    },
+    "MI-04": {
+      "landAreaSqMi": 2386.192,
+      "waterAreaSqMi": 1518.145,
+      "centroid": {
+        "lat": 42.467662,
+        "lng": -86.151104
+      }
+    },
+    "MI-05": {
+      "landAreaSqMi": 5233.178,
+      "waterAreaSqMi": 1245.152,
+      "centroid": {
+        "lat": 41.992603,
+        "lng": -85.147735
+      }
+    },
+    "MI-06": {
+      "landAreaSqMi": 978.113,
+      "waterAreaSqMi": 39.059,
+      "centroid": {
+        "lat": 42.248308,
+        "lng": -83.71103
+      }
+    },
+    "MI-07": {
+      "landAreaSqMi": 2766.002,
+      "waterAreaSqMi": 48.386,
+      "centroid": {
+        "lat": 42.735922,
+        "lng": -84.344345
+      }
+    },
+    "MI-08": {
+      "landAreaSqMi": 2230.814,
+      "waterAreaSqMi": 223.054,
+      "centroid": {
+        "lat": 43.392959,
+        "lng": -83.978273
+      }
+    },
+    "MI-09": {
+      "landAreaSqMi": 4638.209,
+      "waterAreaSqMi": 2261.148,
+      "centroid": {
+        "lat": 43.425794,
+        "lng": -82.938939
+      }
+    },
+    "MI-10": {
+      "landAreaSqMi": 227.267,
+      "waterAreaSqMi": 14.362,
+      "centroid": {
+        "lat": 42.584254,
+        "lng": -82.995144
+      }
+    },
+    "MI-11": {
+      "landAreaSqMi": 315.151,
+      "waterAreaSqMi": 20.947,
+      "centroid": {
+        "lat": 42.582119,
+        "lng": -83.334909
+      }
+    },
+    "MI-12": {
+      "landAreaSqMi": 191.05,
+      "waterAreaSqMi": 0.511,
+      "centroid": {
+        "lat": 42.387868,
+        "lng": -83.286381
+      }
+    },
+    "MI-13": {
+      "landAreaSqMi": 215.301,
+      "waterAreaSqMi": 37.643,
+      "centroid": {
+        "lat": 42.324202,
+        "lng": -83.114573
+      }
+    },
+    "MN-01": {
+      "landAreaSqMi": 12238.154,
+      "waterAreaSqMi": 216.587,
+      "centroid": {
+        "lat": 43.904858,
+        "lng": -93.531125
+      }
+    },
+    "MN-02": {
+      "landAreaSqMi": 1727.795,
+      "waterAreaSqMi": 82.208,
+      "centroid": {
+        "lat": 44.550994,
+        "lng": -93.373984
+      }
+    },
+    "MN-03": {
+      "landAreaSqMi": 468.108,
+      "waterAreaSqMi": 48.881,
+      "centroid": {
+        "lat": 45.022882,
+        "lng": -93.510204
+      }
+    },
+    "MN-04": {
+      "landAreaSqMi": 303.191,
+      "waterAreaSqMi": 30.804,
+      "centroid": {
+        "lat": 45.001604,
+        "lng": -92.990023
+      }
+    },
+    "MN-05": {
+      "landAreaSqMi": 130.814,
+      "waterAreaSqMi": 6.378,
+      "centroid": {
+        "lat": 44.983655,
+        "lng": -93.292272
+      }
+    },
+    "MN-06": {
+      "landAreaSqMi": 2484.442,
+      "waterAreaSqMi": 130.749,
+      "centroid": {
+        "lat": 45.292069,
+        "lng": -93.838807
+      }
+    },
+    "MN-07": {
+      "landAreaSqMi": 31039.408,
+      "waterAreaSqMi": 985.635,
+      "centroid": {
+        "lat": 46.207557,
+        "lng": -95.666974
+      }
+    },
+    "MN-08": {
+      "landAreaSqMi": 31239.649,
+      "waterAreaSqMi": 5810.466,
+      "centroid": {
+        "lat": 47.400782,
+        "lng": -93.233248
+      }
+    },
+    "MS-01": {
+      "landAreaSqMi": 9942.043,
+      "waterAreaSqMi": 152.664,
+      "centroid": {
+        "lat": 34.263251,
+        "lng": -89.005753
+      }
+    },
+    "MS-02": {
+      "landAreaSqMi": 17996.036,
+      "waterAreaSqMi": 408.056,
+      "centroid": {
+        "lat": 32.938781,
+        "lng": -90.434402
+      }
+    },
+    "MS-03": {
+      "landAreaSqMi": 11722.424,
+      "waterAreaSqMi": 100.603,
+      "centroid": {
+        "lat": 32.188161,
+        "lng": -89.41652
+      }
+    },
+    "MS-04": {
+      "landAreaSqMi": 7264.084,
+      "waterAreaSqMi": 849.999,
+      "centroid": {
+        "lat": 30.930199,
+        "lng": -89.039543
+      }
+    },
+    "MO-01": {
+      "landAreaSqMi": 247.952,
+      "waterAreaSqMi": 10.577,
+      "centroid": {
+        "lat": 38.726931,
+        "lng": -90.305898
+      }
+    },
+    "MO-02": {
+      "landAreaSqMi": 1790.834,
+      "waterAreaSqMi": 30.595,
+      "centroid": {
+        "lat": 38.533651,
+        "lng": -90.956554
+      }
+    },
+    "MO-03": {
+      "landAreaSqMi": 7584.793,
+      "waterAreaSqMi": 113.156,
+      "centroid": {
+        "lat": 38.4751,
+        "lng": -91.724755
+      }
+    },
+    "MO-04": {
+      "landAreaSqMi": 14355.136,
+      "waterAreaSqMi": 309.388,
+      "centroid": {
+        "lat": 38.227739,
+        "lng": -93.484824
+      }
+    },
+    "MO-05": {
+      "landAreaSqMi": 422.312,
+      "waterAreaSqMi": 9.097,
+      "centroid": {
+        "lat": 39.02813,
+        "lng": -94.460224
+      }
+    },
+    "MO-06": {
+      "landAreaSqMi": 20254.593,
+      "waterAreaSqMi": 228.917,
+      "centroid": {
+        "lat": 39.872958,
+        "lng": -93.183524
+      }
+    },
+    "MO-07": {
+      "landAreaSqMi": 5775.518,
+      "waterAreaSqMi": 89.4,
+      "centroid": {
+        "lat": 36.918092,
+        "lng": -93.710547
+      }
+    },
+    "MO-08": {
+      "landAreaSqMi": 18315.282,
+      "waterAreaSqMi": 169.253,
+      "centroid": {
+        "lat": 37.128772,
+        "lng": -90.920067
+      }
+    },
+    "MT-01": {
+      "landAreaSqMi": 40167.692,
+      "waterAreaSqMi": 610.154,
+      "centroid": {
+        "lat": 46.922266,
+        "lng": -113.485858
+      }
+    },
+    "MT-02": {
+      "landAreaSqMi": 105382.559,
+      "waterAreaSqMi": 882.887,
+      "centroid": {
+        "lat": 47.071054,
+        "lng": -108.146485
+      }
+    },
+    "NE-01": {
+      "landAreaSqMi": 5982.302,
+      "waterAreaSqMi": 71.058,
+      "centroid": {
+        "lat": 41.377609,
+        "lng": -96.979849
+      }
+    },
+    "NE-02": {
+      "landAreaSqMi": 1218.965,
+      "waterAreaSqMi": 30.032,
+      "centroid": {
+        "lat": 41.228589,
+        "lng": -96.45069
+      }
+    },
+    "NE-03": {
+      "landAreaSqMi": 69613.743,
+      "waterAreaSqMi": 431.329,
+      "centroid": {
+        "lat": 41.540937,
+        "lng": -100.152123
+      }
+    },
+    "NV-01": {
+      "landAreaSqMi": 999.628,
+      "waterAreaSqMi": 19.263,
+      "centroid": {
+        "lat": 35.864397,
+        "lng": -114.949495
+      }
+    },
+    "NV-02": {
+      "landAreaSqMi": 65065.495,
+      "waterAreaSqMi": 452.75,
+      "centroid": {
+        "lat": 40.528166,
+        "lng": -116.989422
+      }
+    },
+    "NV-03": {
+      "landAreaSqMi": 2004.834,
+      "waterAreaSqMi": 19.925,
+      "centroid": {
+        "lat": 35.987303,
+        "lng": -115.565877
+      }
+    },
+    "NV-04": {
+      "landAreaSqMi": 41790.415,
+      "waterAreaSqMi": 218.444,
+      "centroid": {
+        "lat": 37.802141,
+        "lng": -116.212169
+      }
+    },
+    "NH-01": {
+      "landAreaSqMi": 2143.637,
+      "waterAreaSqMi": 184.401,
+      "centroid": {
+        "lat": 43.407214,
+        "lng": -71.186953
+      }
+    },
+    "NH-02": {
+      "landAreaSqMi": 6810.154,
+      "waterAreaSqMi": 160.91,
+      "centroid": {
+        "lat": 43.767549,
+        "lng": -71.697081
+      }
+    },
+    "NH-ZZ": {
+      "landAreaSqMi": 0,
+      "waterAreaSqMi": 50.781,
+      "centroid": {
+        "lat": 42.904329,
+        "lng": -70.75435
+      }
+    },
+    "NJ-01": {
+      "landAreaSqMi": 368.045,
+      "waterAreaSqMi": 12.422,
+      "centroid": {
+        "lat": 39.7851,
+        "lng": -75.0027
+      }
+    },
+    "NJ-02": {
+      "landAreaSqMi": 1994.302,
+      "waterAreaSqMi": 972.421,
+      "centroid": {
+        "lat": 39.422695,
+        "lng": -74.855363
+      }
+    },
+    "NJ-03": {
+      "landAreaSqMi": 1080.775,
+      "waterAreaSqMi": 23.869,
+      "centroid": {
+        "lat": 39.97511,
+        "lng": -74.611441
+      }
+    },
+    "NJ-04": {
+      "landAreaSqMi": 651.251,
+      "waterAreaSqMi": 51.187,
+      "centroid": {
+        "lat": 40.068792,
+        "lng": -74.244556
+      }
+    },
+    "NJ-05": {
+      "landAreaSqMi": 649.445,
+      "waterAreaSqMi": 28.405,
+      "centroid": {
+        "lat": 41.114123,
+        "lng": -74.447382
+      }
+    },
+    "NJ-06": {
+      "landAreaSqMi": 191.777,
+      "waterAreaSqMi": 194.289,
+      "centroid": {
+        "lat": 40.484591,
+        "lng": -74.362435
+      }
+    },
+    "NJ-07": {
+      "landAreaSqMi": 1347.618,
+      "waterAreaSqMi": 30.463,
+      "centroid": {
+        "lat": 40.735666,
+        "lng": -74.833121
+      }
+    },
+    "NJ-08": {
+      "landAreaSqMi": 50.627,
+      "waterAreaSqMi": 16.174,
+      "centroid": {
+        "lat": 40.727686,
+        "lng": -74.121396
+      }
+    },
+    "NJ-09": {
+      "landAreaSqMi": 110.74,
+      "waterAreaSqMi": 7.006,
+      "centroid": {
+        "lat": 40.895582,
+        "lng": -74.141771
+      }
+    },
+    "NJ-10": {
+      "landAreaSqMi": 77.54,
+      "waterAreaSqMi": 2.481,
+      "centroid": {
+        "lat": 40.726369,
+        "lng": -74.22465
+      }
+    },
+    "NJ-11": {
+      "landAreaSqMi": 394.487,
+      "waterAreaSqMi": 18.072,
+      "centroid": {
+        "lat": 40.876625,
+        "lng": -74.419
+      }
+    },
+    "NJ-12": {
+      "landAreaSqMi": 438.341,
+      "waterAreaSqMi": 7.455,
+      "centroid": {
+        "lat": 40.390802,
+        "lng": -74.585178
+      }
+    },
+    "NM-01": {
+      "landAreaSqMi": 17570.092,
+      "waterAreaSqMi": 19.834,
+      "centroid": {
+        "lat": 34.286789,
+        "lng": -105.238316
+      }
+    },
+    "NM-02": {
+      "landAreaSqMi": 51426.158,
+      "waterAreaSqMi": 127.409,
+      "centroid": {
+        "lat": 33.212951,
+        "lng": -107.003303
+      }
+    },
+    "NM-03": {
+      "landAreaSqMi": 52316.482,
+      "waterAreaSqMi": 133.273,
+      "centroid": {
+        "lat": 35.639243,
+        "lng": -105.523639
+      }
+    },
+    "NY-01": {
+      "landAreaSqMi": 663.471,
+      "waterAreaSqMi": 1219.057,
+      "centroid": {
+        "lat": 40.999721,
+        "lng": -72.562891
+      }
+    },
+    "NY-02": {
+      "landAreaSqMi": 238.587,
+      "waterAreaSqMi": 263.197,
+      "centroid": {
+        "lat": 40.701506,
+        "lng": -73.173802
+      }
+    },
+    "NY-03": {
+      "landAreaSqMi": 192.835,
+      "waterAreaSqMi": 77.195,
+      "centroid": {
+        "lat": 40.835336,
+        "lng": -73.577143
+      }
+    },
+    "NY-04": {
+      "landAreaSqMi": 114.053,
+      "waterAreaSqMi": 74.909,
+      "centroid": {
+        "lat": 40.627348,
+        "lng": -73.607807
+      }
+    },
+    "NY-05": {
+      "landAreaSqMi": 47.102,
+      "waterAreaSqMi": 65.438,
+      "centroid": {
+        "lat": 40.669704,
+        "lng": -73.804108
+      }
+    },
+    "NY-06": {
+      "landAreaSqMi": 25.802,
+      "waterAreaSqMi": 0.308,
+      "centroid": {
+        "lat": 40.736388,
+        "lng": -73.831481
+      }
+    },
+    "NY-07": {
+      "landAreaSqMi": 21.947,
+      "waterAreaSqMi": 0.464,
+      "centroid": {
+        "lat": 40.712392,
+        "lng": -73.91991
+      }
+    },
+    "NY-08": {
+      "landAreaSqMi": 26.679,
+      "waterAreaSqMi": 18.254,
+      "centroid": {
+        "lat": 40.613635,
+        "lng": -73.918833
+      }
+    },
+    "NY-09": {
+      "landAreaSqMi": 15.206,
+      "waterAreaSqMi": 0,
+      "centroid": {
+        "lat": 40.638923,
+        "lng": -73.951016
+      }
+    },
+    "NY-10": {
+      "landAreaSqMi": 15.331,
+      "waterAreaSqMi": 7.848,
+      "centroid": {
+        "lat": 40.681186,
+        "lng": -74.003787
+      }
+    },
+    "NY-11": {
+      "landAreaSqMi": 64.229,
+      "waterAreaSqMi": 50.219,
+      "centroid": {
+        "lat": 40.566974,
+        "lng": -74.126314
+      }
+    },
+    "NY-12": {
+      "landAreaSqMi": 9.569,
+      "waterAreaSqMi": 4.009,
+      "centroid": {
+        "lat": 40.764805,
+        "lng": -73.975182
+      }
+    },
+    "NY-13": {
+      "landAreaSqMi": 11.009,
+      "waterAreaSqMi": 3.557,
+      "centroid": {
+        "lat": 40.80306,
+        "lng": -73.947119
+      }
+    },
+    "NY-14": {
+      "landAreaSqMi": 29.331,
+      "waterAreaSqMi": 17.398,
+      "centroid": {
+        "lat": 40.818745,
+        "lng": -73.843734
+      }
+    },
+    "NY-15": {
+      "landAreaSqMi": 18.598,
+      "waterAreaSqMi": 1.226,
+      "centroid": {
+        "lat": 40.862755,
+        "lng": -73.878794
+      }
+    },
+    "NY-16": {
+      "landAreaSqMi": 124.044,
+      "waterAreaSqMi": 33.372,
+      "centroid": {
+        "lat": 40.978485,
+        "lng": -73.7774
+      }
+    },
+    "NY-17": {
+      "landAreaSqMi": 824.682,
+      "waterAreaSqMi": 79.869,
+      "centroid": {
+        "lat": 41.308698,
+        "lng": -73.803466
+      }
+    },
+    "NY-18": {
+      "landAreaSqMi": 1862.867,
+      "waterAreaSqMi": 71.284,
+      "centroid": {
+        "lat": 41.640016,
+        "lng": -74.054593
+      }
+    },
+    "NY-19": {
+      "landAreaSqMi": 8225.383,
+      "waterAreaSqMi": 149.687,
+      "centroid": {
+        "lat": 42.255308,
+        "lng": -74.909449
+      }
+    },
+    "NY-20": {
+      "landAreaSqMi": 1366.034,
+      "waterAreaSqMi": 37.129,
+      "centroid": {
+        "lat": 42.789227,
+        "lng": -73.898001
+      }
+    },
+    "NY-21": {
+      "landAreaSqMi": 16288.854,
+      "waterAreaSqMi": 758.62,
+      "centroid": {
+        "lat": 43.877994,
+        "lng": -74.552329
+      }
+    },
+    "NY-22": {
+      "landAreaSqMi": 2421.898,
+      "waterAreaSqMi": 71.266,
+      "centroid": {
+        "lat": 42.920118,
+        "lng": -75.987654
+      }
+    },
+    "NY-23": {
+      "landAreaSqMi": 6458.246,
+      "waterAreaSqMi": 642.442,
+      "centroid": {
+        "lat": 42.322972,
+        "lng": -78.221759
+      }
+    },
+    "NY-24": {
+      "landAreaSqMi": 7088.571,
+      "waterAreaSqMi": 3054.721,
+      "centroid": {
+        "lat": 43.246655,
+        "lng": -77.234451
+      }
+    },
+    "NY-25": {
+      "landAreaSqMi": 707.681,
+      "waterAreaSqMi": 709.873,
+      "centroid": {
+        "lat": 43.323395,
+        "lng": -77.715489
+      }
+    },
+    "NY-26": {
+      "landAreaSqMi": 261.434,
+      "waterAreaSqMi": 23.735,
+      "centroid": {
+        "lat": 42.977663,
+        "lng": -78.850499
+      }
+    },
+    "NC-01": {
+      "landAreaSqMi": 8342.084,
+      "waterAreaSqMi": 943.813,
+      "centroid": {
+        "lat": 36.0379,
+        "lng": -77.178265
+      }
+    },
+    "NC-02": {
+      "landAreaSqMi": 408.99,
+      "waterAreaSqMi": 4.195,
+      "centroid": {
+        "lat": 35.821844,
+        "lng": -78.604332
+      }
+    },
+    "NC-03": {
+      "landAreaSqMi": 6850.067,
+      "waterAreaSqMi": 3405.608,
+      "centroid": {
+        "lat": 35.218034,
+        "lng": -76.85841
+      }
+    },
+    "NC-04": {
+      "landAreaSqMi": 1052.896,
+      "waterAreaSqMi": 29.328,
+      "centroid": {
+        "lat": 35.944364,
+        "lng": -79.021418
+      }
+    },
+    "NC-05": {
+      "landAreaSqMi": 4201.036,
+      "waterAreaSqMi": 36.854,
+      "centroid": {
+        "lat": 36.273079,
+        "lng": -80.866746
+      }
+    },
+    "NC-06": {
+      "landAreaSqMi": 1652.017,
+      "waterAreaSqMi": 35.346,
+      "centroid": {
+        "lat": 35.788503,
+        "lng": -80.365224
+      }
+    },
+    "NC-07": {
+      "landAreaSqMi": 4841.788,
+      "waterAreaSqMi": 434.266,
+      "centroid": {
+        "lat": 34.4593,
+        "lng": -78.405742
+      }
+    },
+    "NC-08": {
+      "landAreaSqMi": 3725.015,
+      "waterAreaSqMi": 42.094,
+      "centroid": {
+        "lat": 35.051094,
+        "lng": -79.984193
+      }
+    },
+    "NC-09": {
+      "landAreaSqMi": 3254.05,
+      "waterAreaSqMi": 52.196,
+      "centroid": {
+        "lat": 35.591256,
+        "lng": -79.479963
+      }
+    },
+    "NC-10": {
+      "landAreaSqMi": 1871.939,
+      "waterAreaSqMi": 52.011,
+      "centroid": {
+        "lat": 35.833325,
+        "lng": -80.882581
+      }
+    },
+    "NC-11": {
+      "landAreaSqMi": 6242.653,
+      "waterAreaSqMi": 64.763,
+      "centroid": {
+        "lat": 35.486665,
+        "lng": -82.946532
+      }
+    },
+    "NC-12": {
+      "landAreaSqMi": 273.347,
+      "waterAreaSqMi": 1.545,
+      "centroid": {
+        "lat": 35.239359,
+        "lng": -80.814373
+      }
+    },
+    "NC-13": {
+      "landAreaSqMi": 3715.912,
+      "waterAreaSqMi": 50.27,
+      "centroid": {
+        "lat": 35.530734,
+        "lng": -78.393482
+      }
+    },
+    "NC-14": {
+      "landAreaSqMi": 2192.357,
+      "waterAreaSqMi": 42.12,
+      "centroid": {
+        "lat": 35.433427,
+        "lng": -81.600328
+      }
+    },
+    "ND-01": {
+      "landAreaSqMi": 68994.266,
+      "waterAreaSqMi": 1704.553,
+      "centroid": {
+        "lat": 47.442174,
+        "lng": -100.460826
+      }
+    },
+    "OH-01": {
+      "landAreaSqMi": 601.39,
+      "waterAreaSqMi": 9.685,
+      "centroid": {
+        "lat": 39.339835,
+        "lng": -84.254842
+      }
+    },
+    "OH-02": {
+      "landAreaSqMi": 7383.457,
+      "waterAreaSqMi": 58.456,
+      "centroid": {
+        "lat": 39.103822,
+        "lng": -83.059745
+      }
+    },
+    "OH-03": {
+      "landAreaSqMi": 217.8,
+      "waterAreaSqMi": 3.302,
+      "centroid": {
+        "lat": 40.03519,
+        "lng": -82.92248
+      }
+    },
+    "OH-04": {
+      "landAreaSqMi": 4879.903,
+      "waterAreaSqMi": 41.349,
+      "centroid": {
+        "lat": 40.540755,
+        "lng": -83.372266
+      }
+    },
+    "OH-05": {
+      "landAreaSqMi": 5528.22,
+      "waterAreaSqMi": 462.96,
+      "centroid": {
+        "lat": 41.086487,
+        "lng": -83.497285
+      }
+    },
+    "OH-06": {
+      "landAreaSqMi": 4779.152,
+      "waterAreaSqMi": 63.253,
+      "centroid": {
+        "lat": 40.250668,
+        "lng": -81.104037
+      }
+    },
+    "OH-07": {
+      "landAreaSqMi": 1320.783,
+      "waterAreaSqMi": 8.359,
+      "centroid": {
+        "lat": 40.998541,
+        "lng": -81.873254
+      }
+    },
+    "OH-08": {
+      "landAreaSqMi": 1792.666,
+      "waterAreaSqMi": 11.943,
+      "centroid": {
+        "lat": 39.752032,
+        "lng": -84.604495
+      }
+    },
+    "OH-09": {
+      "landAreaSqMi": 2588.546,
+      "waterAreaSqMi": 979.186,
+      "centroid": {
+        "lat": 41.527263,
+        "lng": -83.532038
+      }
+    },
+    "OH-10": {
+      "landAreaSqMi": 990.479,
+      "waterAreaSqMi": 6.128,
+      "centroid": {
+        "lat": 39.736614,
+        "lng": -84.066956
+      }
+    },
+    "OH-11": {
+      "landAreaSqMi": 215.593,
+      "waterAreaSqMi": 784.041,
+      "centroid": {
+        "lat": 41.545337,
+        "lng": -81.630557
+      }
+    },
+    "OH-12": {
+      "landAreaSqMi": 5580.806,
+      "waterAreaSqMi": 52.488,
+      "centroid": {
+        "lat": 40.010896,
+        "lng": -82.102836
+      }
+    },
+    "OH-13": {
+      "landAreaSqMi": 621.805,
+      "waterAreaSqMi": 9.18,
+      "centroid": {
+        "lat": 41.036438,
+        "lng": -81.510967
+      }
+    },
+    "OH-14": {
+      "landAreaSqMi": 2432.655,
+      "waterAreaSqMi": 1458.733,
+      "centroid": {
+        "lat": 41.667643,
+        "lng": -80.985186
+      }
+    },
+    "OH-15": {
+      "landAreaSqMi": 1925.673,
+      "waterAreaSqMi": 17.838,
+      "centroid": {
+        "lat": 39.917032,
+        "lng": -83.618594
+      }
+    },
+    "OK-01": {
+      "landAreaSqMi": 1078.634,
+      "waterAreaSqMi": 24.806,
+      "centroid": {
+        "lat": 36.056374,
+        "lng": -95.853266
+      }
+    },
+    "OK-02": {
+      "landAreaSqMi": 21630.584,
+      "waterAreaSqMi": 783.846,
+      "centroid": {
+        "lat": 35.184143,
+        "lng": -95.46217
+      }
+    },
+    "OK-03": {
+      "landAreaSqMi": 32613.098,
+      "waterAreaSqMi": 293.867,
+      "centroid": {
+        "lat": 36.141183,
+        "lng": -98.914682
+      }
+    },
+    "OK-04": {
+      "landAreaSqMi": 9733.705,
+      "waterAreaSqMi": 156.383,
+      "centroid": {
+        "lat": 34.569374,
+        "lng": -97.751182
+      }
+    },
+    "OK-05": {
+      "landAreaSqMi": 3540.679,
+      "waterAreaSqMi": 43.518,
+      "centroid": {
+        "lat": 35.483688,
+        "lng": -97.030852
+      }
+    },
+    "OR-01": {
+      "landAreaSqMi": 3351.979,
+      "waterAreaSqMi": 524.374,
+      "centroid": {
+        "lat": 45.763606,
+        "lng": -123.456076
+      }
+    },
+    "OR-02": {
+      "landAreaSqMi": 72158.835,
+      "waterAreaSqMi": 717.98,
+      "centroid": {
+        "lat": 43.769931,
+        "lng": -119.742648
+      }
+    },
+    "OR-03": {
+      "landAreaSqMi": 1386.208,
+      "waterAreaSqMi": 40.86,
+      "centroid": {
+        "lat": 45.456269,
+        "lng": -121.956128
+      }
+    },
+    "OR-04": {
+      "landAreaSqMi": 11613.072,
+      "waterAreaSqMi": 1047.757,
+      "centroid": {
+        "lat": 43.629644,
+        "lng": -123.516305
+      }
+    },
+    "OR-05": {
+      "landAreaSqMi": 5591.622,
+      "waterAreaSqMi": 38.996,
+      "centroid": {
+        "lat": 44.618303,
+        "lng": -122.248383
+      }
+    },
+    "OR-06": {
+      "landAreaSqMi": 1895.031,
+      "waterAreaSqMi": 11.805,
+      "centroid": {
+        "lat": 45.064704,
+        "lng": -123.262822
+      }
+    },
+    "PA-01": {
+      "landAreaSqMi": 699.557,
+      "waterAreaSqMi": 18.634,
+      "centroid": {
+        "lat": 40.331089,
+        "lng": -75.140112
+      }
+    },
+    "PA-02": {
+      "landAreaSqMi": 64.018,
+      "waterAreaSqMi": 3.124,
+      "centroid": {
+        "lat": 40.044915,
+        "lng": -75.061647
+      }
+    },
+    "PA-03": {
+      "landAreaSqMi": 53.064,
+      "waterAreaSqMi": 1.756,
+      "centroid": {
+        "lat": 40.000332,
+        "lng": -75.197003
+      }
+    },
+    "PA-04": {
+      "landAreaSqMi": 725.883,
+      "waterAreaSqMi": 7.66,
+      "centroid": {
+        "lat": 40.313412,
+        "lng": -75.579931
+      }
+    },
+    "PA-05": {
+      "landAreaSqMi": 229.202,
+      "waterAreaSqMi": 10.397,
+      "centroid": {
+        "lat": 39.930533,
+        "lng": -75.374592
+      }
+    },
+    "PA-06": {
+      "landAreaSqMi": 925.006,
+      "waterAreaSqMi": 10.74,
+      "centroid": {
+        "lat": 40.026923,
+        "lng": -75.776637
+      }
+    },
+    "PA-07": {
+      "landAreaSqMi": 1167.728,
+      "waterAreaSqMi": 16.807,
+      "centroid": {
+        "lat": 40.772727,
+        "lng": -75.531437
+      }
+    },
+    "PA-08": {
+      "landAreaSqMi": 2769.362,
+      "waterAreaSqMi": 70.811,
+      "centroid": {
+        "lat": 41.354339,
+        "lng": -75.401446
+      }
+    },
+    "PA-09": {
+      "landAreaSqMi": 6073.267,
+      "waterAreaSqMi": 80.237,
+      "centroid": {
+        "lat": 41.252913,
+        "lng": -76.321324
+      }
+    },
+    "PA-10": {
+      "landAreaSqMi": 1254.749,
+      "waterAreaSqMi": 39.49,
+      "centroid": {
+        "lat": 40.244133,
+        "lng": -76.921993
+      }
+    },
+    "PA-11": {
+      "landAreaSqMi": 1501.234,
+      "waterAreaSqMi": 43.839,
+      "centroid": {
+        "lat": 39.966893,
+        "lng": -76.389575
+      }
+    },
+    "PA-12": {
+      "landAreaSqMi": 425.681,
+      "waterAreaSqMi": 8.068,
+      "centroid": {
+        "lat": 40.358754,
+        "lng": -79.818097
+      }
+    },
+    "PA-13": {
+      "landAreaSqMi": 6362.382,
+      "waterAreaSqMi": 41.168,
+      "centroid": {
+        "lat": 40.238783,
+        "lng": -77.964975
+      }
+    },
+    "PA-14": {
+      "landAreaSqMi": 4774.731,
+      "waterAreaSqMi": 34.137,
+      "centroid": {
+        "lat": 40.131475,
+        "lng": -79.578919
+      }
+    },
+    "PA-15": {
+      "landAreaSqMi": 12982.177,
+      "waterAreaSqMi": 100.973,
+      "centroid": {
+        "lat": 41.351935,
+        "lng": -78.31176
+      }
+    },
+    "PA-16": {
+      "landAreaSqMi": 3840.905,
+      "waterAreaSqMi": 808.054,
+      "centroid": {
+        "lat": 41.571184,
+        "lng": -80.103227
+      }
+    },
+    "PA-17": {
+      "landAreaSqMi": 893.145,
+      "waterAreaSqMi": 15.931,
+      "centroid": {
+        "lat": 40.602892,
+        "lng": -80.186243
+      }
+    },
+    "RI-01": {
+      "landAreaSqMi": 267.881,
+      "waterAreaSqMi": 242.748,
+      "centroid": {
+        "lat": 41.630677,
+        "lng": -71.328672
+      }
+    },
+    "RI-02": {
+      "landAreaSqMi": 766.011,
+      "waterAreaSqMi": 268.329,
+      "centroid": {
+        "lat": 41.569601,
+        "lng": -71.615514
+      }
+    },
+    "SC-01": {
+      "landAreaSqMi": 2589.147,
+      "waterAreaSqMi": 977.751,
+      "centroid": {
+        "lat": 33.152321,
+        "lng": -79.695326
+      }
+    },
+    "SC-02": {
+      "landAreaSqMi": 3113.05,
+      "waterAreaSqMi": 87.742,
+      "centroid": {
+        "lat": 33.627488,
+        "lng": -81.348938
+      }
+    },
+    "SC-03": {
+      "landAreaSqMi": 5633.911,
+      "waterAreaSqMi": 212.402,
+      "centroid": {
+        "lat": 34.356147,
+        "lng": -82.287307
+      }
+    },
+    "SC-04": {
+      "landAreaSqMi": 1233.75,
+      "waterAreaSqMi": 15.331,
+      "centroid": {
+        "lat": 34.92936,
+        "lng": -82.185611
+      }
+    },
+    "SC-05": {
+      "landAreaSqMi": 5160.493,
+      "waterAreaSqMi": 91.659,
+      "centroid": {
+        "lat": 34.56432,
+        "lng": -80.993355
+      }
+    },
+    "SC-06": {
+      "landAreaSqMi": 6926.076,
+      "waterAreaSqMi": 212.269,
+      "centroid": {
+        "lat": 33.246568,
+        "lng": -80.594258
+      }
+    },
+    "SC-07": {
+      "landAreaSqMi": 5407.674,
+      "waterAreaSqMi": 362.231,
+      "centroid": {
+        "lat": 34.045862,
+        "lng": -79.497108
+      }
+    },
+    "SD-01": {
+      "landAreaSqMi": 75807.946,
+      "waterAreaSqMi": 1307.946,
+      "centroid": {
+        "lat": 44.446796,
+        "lng": -100.238176
+      }
+    },
+    "TN-01": {
+      "landAreaSqMi": 4354.28,
+      "waterAreaSqMi": 111.687,
+      "centroid": {
+        "lat": 36.20448,
+        "lng": -82.827445
+      }
+    },
+    "TN-02": {
+      "landAreaSqMi": 2576.124,
+      "waterAreaSqMi": 108.745,
+      "centroid": {
+        "lat": 36.101749,
+        "lng": -83.887156
+      }
+    },
+    "TN-03": {
+      "landAreaSqMi": 3956.315,
+      "waterAreaSqMi": 110.294,
+      "centroid": {
+        "lat": 35.604824,
+        "lng": -84.583663
+      }
+    },
+    "TN-04": {
+      "landAreaSqMi": 6473.247,
+      "waterAreaSqMi": 94.385,
+      "centroid": {
+        "lat": 35.406041,
+        "lng": -86.146635
+      }
+    },
+    "TN-05": {
+      "landAreaSqMi": 2059.045,
+      "waterAreaSqMi": 18.283,
+      "centroid": {
+        "lat": 35.734273,
+        "lng": -86.900125
+      }
+    },
+    "TN-06": {
+      "landAreaSqMi": 5919.069,
+      "waterAreaSqMi": 125.43,
+      "centroid": {
+        "lat": 36.221377,
+        "lng": -85.573242
+      }
+    },
+    "TN-07": {
+      "landAreaSqMi": 5891.322,
+      "waterAreaSqMi": 143.108,
+      "centroid": {
+        "lat": 36.008294,
+        "lng": -87.554786
+      }
+    },
+    "TN-08": {
+      "landAreaSqMi": 9226.409,
+      "waterAreaSqMi": 152.987,
+      "centroid": {
+        "lat": 35.728236,
+        "lng": -88.916352
+      }
+    },
+    "TN-09": {
+      "landAreaSqMi": 768.528,
+      "waterAreaSqMi": 40.63,
+      "centroid": {
+        "lat": 35.281989,
+        "lng": -89.937517
+      }
+    },
+    "TX-01": {
+      "landAreaSqMi": 9464.635,
+      "waterAreaSqMi": 404.229,
+      "centroid": {
+        "lat": 32.489696,
+        "lng": -94.564725
+      }
+    },
+    "TX-02": {
+      "landAreaSqMi": 628.509,
+      "waterAreaSqMi": 31.161,
+      "centroid": {
+        "lat": 30.09513,
+        "lng": -95.255565
+      }
+    },
+    "TX-03": {
+      "landAreaSqMi": 1435.723,
+      "waterAreaSqMi": 60.265,
+      "centroid": {
+        "lat": 33.171788,
+        "lng": -96.292085
+      }
+    },
+    "TX-04": {
+      "landAreaSqMi": 5201.824,
+      "waterAreaSqMi": 230.251,
+      "centroid": {
+        "lat": 33.469423,
+        "lng": -95.824657
+      }
+    },
+    "TX-05": {
+      "landAreaSqMi": 3597.127,
+      "waterAreaSqMi": 187.698,
+      "centroid": {
+        "lat": 32.554632,
+        "lng": -95.814922
+      }
+    },
+    "TX-06": {
+      "landAreaSqMi": 5858.516,
+      "waterAreaSqMi": 161.207,
+      "centroid": {
+        "lat": 32.009681,
+        "lng": -96.265954
+      }
+    },
+    "TX-07": {
+      "landAreaSqMi": 130.714,
+      "waterAreaSqMi": 2.092,
+      "centroid": {
+        "lat": 29.606141,
+        "lng": -95.679511
+      }
+    },
+    "TX-08": {
+      "landAreaSqMi": 2848.23,
+      "waterAreaSqMi": 152.447,
+      "centroid": {
+        "lat": 30.55993,
+        "lng": -95.233738
+      }
+    },
+    "TX-09": {
+      "landAreaSqMi": 217.548,
+      "waterAreaSqMi": 2.461,
+      "centroid": {
+        "lat": 29.600663,
+        "lng": -95.439594
+      }
+    },
+    "TX-10": {
+      "landAreaSqMi": 7667.75,
+      "waterAreaSqMi": 131.869,
+      "centroid": {
+        "lat": 30.209212,
+        "lng": -96.56405
+      }
+    },
+    "TX-11": {
+      "landAreaSqMi": 19205.73,
+      "waterAreaSqMi": 138.884,
+      "centroid": {
+        "lat": 31.393839,
+        "lng": -99.980585
+      }
+    },
+    "TX-12": {
+      "landAreaSqMi": 964.724,
+      "waterAreaSqMi": 30.135,
+      "centroid": {
+        "lat": 32.821328,
+        "lng": -97.664515
+      }
+    },
+    "TX-13": {
+      "landAreaSqMi": 35104.571,
+      "waterAreaSqMi": 256.377,
+      "centroid": {
+        "lat": 34.928169,
+        "lng": -100.708968
+      }
+    },
+    "TX-14": {
+      "landAreaSqMi": 2450.808,
+      "waterAreaSqMi": 1019.926,
+      "centroid": {
+        "lat": 29.406653,
+        "lng": -94.745843
+      }
+    },
+    "TX-15": {
+      "landAreaSqMi": 6230.456,
+      "waterAreaSqMi": 64.846,
+      "centroid": {
+        "lat": 27.964287,
+        "lng": -98.103699
+      }
+    },
+    "TX-16": {
+      "landAreaSqMi": 315.483,
+      "waterAreaSqMi": 0.875,
+      "centroid": {
+        "lat": 31.812149,
+        "lng": -106.405684
+      }
+    },
+    "TX-17": {
+      "landAreaSqMi": 10437.15,
+      "waterAreaSqMi": 224.432,
+      "centroid": {
+        "lat": 31.256938,
+        "lng": -96.031462
+      }
+    },
+    "TX-18": {
+      "landAreaSqMi": 230.756,
+      "waterAreaSqMi": 1.356,
+      "centroid": {
+        "lat": 29.985874,
+        "lng": -95.345795
+      }
+    },
+    "TX-19": {
+      "landAreaSqMi": 30169.593,
+      "waterAreaSqMi": 90.929,
+      "centroid": {
+        "lat": 33.188458,
+        "lng": -101.443695
+      }
+    },
+    "TX-20": {
+      "landAreaSqMi": 179.498,
+      "waterAreaSqMi": 0.478,
+      "centroid": {
+        "lat": 29.455375,
+        "lng": -98.618294
+      }
+    },
+    "TX-21": {
+      "landAreaSqMi": 6297.306,
+      "waterAreaSqMi": 35.598,
+      "centroid": {
+        "lat": 30.015481,
+        "lng": -98.914657
+      }
+    },
+    "TX-22": {
+      "landAreaSqMi": 3156.503,
+      "waterAreaSqMi": 550.118,
+      "centroid": {
+        "lat": 29.123836,
+        "lng": -95.987666
+      }
+    },
+    "TX-23": {
+      "landAreaSqMi": 58788.472,
+      "waterAreaSqMi": 172.818,
+      "centroid": {
+        "lat": 30.378409,
+        "lng": -102.357026
+      }
+    },
+    "TX-24": {
+      "landAreaSqMi": 270.749,
+      "waterAreaSqMi": 6.296,
+      "centroid": {
+        "lat": 32.901352,
+        "lng": -97.074791
+      }
+    },
+    "TX-25": {
+      "landAreaSqMi": 8994.961,
+      "waterAreaSqMi": 140.596,
+      "centroid": {
+        "lat": 32.566706,
+        "lng": -98.440815
+      }
+    },
+    "TX-26": {
+      "landAreaSqMi": 1965.739,
+      "waterAreaSqMi": 91.606,
+      "centroid": {
+        "lat": 33.465202,
+        "lng": -97.38246
+      }
+    },
+    "TX-27": {
+      "landAreaSqMi": 10428.062,
+      "waterAreaSqMi": 1241.674,
+      "centroid": {
+        "lat": 28.748411,
+        "lng": -97.227146
+      }
+    },
+    "TX-28": {
+      "landAreaSqMi": 11357.291,
+      "waterAreaSqMi": 112.573,
+      "centroid": {
+        "lat": 27.706979,
+        "lng": -98.86163
+      }
+    },
+    "TX-29": {
+      "landAreaSqMi": 205.63,
+      "waterAreaSqMi": 3.678,
+      "centroid": {
+        "lat": 29.775598,
+        "lng": -95.305027
+      }
+    },
+    "TX-30": {
+      "landAreaSqMi": 355.203,
+      "waterAreaSqMi": 14.572,
+      "centroid": {
+        "lat": 32.654752,
+        "lng": -96.817165
+      }
+    },
+    "TX-31": {
+      "landAreaSqMi": 5612.905,
+      "waterAreaSqMi": 100.054,
+      "centroid": {
+        "lat": 31.241296,
+        "lng": -97.809824
+      }
+    },
+    "TX-32": {
+      "landAreaSqMi": 149.121,
+      "waterAreaSqMi": 2.075,
+      "centroid": {
+        "lat": 32.866191,
+        "lng": -96.749702
+      }
+    },
+    "TX-33": {
+      "landAreaSqMi": 218.788,
+      "waterAreaSqMi": 6.837,
+      "centroid": {
+        "lat": 32.692908,
+        "lng": -97.254607
+      }
+    },
+    "TX-34": {
+      "landAreaSqMi": 4121.857,
+      "waterAreaSqMi": 1281.183,
+      "centroid": {
+        "lat": 26.72814,
+        "lng": -97.605924
+      }
+    },
+    "TX-35": {
+      "landAreaSqMi": 520.737,
+      "waterAreaSqMi": 6.737,
+      "centroid": {
+        "lat": 30.007872,
+        "lng": -97.8393
+      }
+    },
+    "TX-36": {
+      "landAreaSqMi": 5944.781,
+      "waterAreaSqMi": 375.83,
+      "centroid": {
+        "lat": 30.36855,
+        "lng": -94.377065
+      }
+    },
+    "TX-37": {
+      "landAreaSqMi": 223.496,
+      "waterAreaSqMi": 3.527,
+      "centroid": {
+        "lat": 30.300529,
+        "lng": -97.774361
+      }
+    },
+    "TX-38": {
+      "landAreaSqMi": 307.68,
+      "waterAreaSqMi": 2.74,
+      "centroid": {
+        "lat": 29.944847,
+        "lng": -95.615885
+      }
+    },
+    "UT-01": {
+      "landAreaSqMi": 10271.324,
+      "waterAreaSqMi": 1084.949,
+      "centroid": {
+        "lat": 41.480119,
+        "lng": -112.537206
+      }
+    },
+    "UT-02": {
+      "landAreaSqMi": 39218.272,
+      "waterAreaSqMi": 822.132,
+      "centroid": {
+        "lat": 38.730499,
+        "lng": -112.562716
+      }
+    },
+    "UT-03": {
+      "landAreaSqMi": 28715.22,
+      "waterAreaSqMi": 245.118,
+      "centroid": {
+        "lat": 39.134877,
+        "lng": -109.933399
+      }
+    },
+    "UT-04": {
+      "landAreaSqMi": 4390.887,
+      "waterAreaSqMi": 150.19,
+      "centroid": {
+        "lat": 39.762905,
+        "lng": -111.7718
+      }
+    },
+    "VT-01": {
+      "landAreaSqMi": 9217.261,
+      "waterAreaSqMi": 397.933,
+      "centroid": {
+        "lat": 44.058954,
+        "lng": -72.671017
+      }
+    },
+    "VA-01": {
+      "landAreaSqMi": 3039.12,
+      "waterAreaSqMi": 843.499,
+      "centroid": {
+        "lat": 37.656264,
+        "lng": -76.802492
+      }
+    },
+    "VA-02": {
+      "landAreaSqMi": 2150.828,
+      "waterAreaSqMi": 1785.182,
+      "centroid": {
+        "lat": 37.221318,
+        "lng": -76.010686
+      }
+    },
+    "VA-03": {
+      "landAreaSqMi": 252.373,
+      "waterAreaSqMi": 195.247,
+      "centroid": {
+        "lat": 36.955347,
+        "lng": -76.327215
+      }
+    },
+    "VA-04": {
+      "landAreaSqMi": 3427.393,
+      "waterAreaSqMi": 101.835,
+      "centroid": {
+        "lat": 37.008084,
+        "lng": -77.422785
+      }
+    },
+    "VA-05": {
+      "landAreaSqMi": 9464.108,
+      "waterAreaSqMi": 145.847,
+      "centroid": {
+        "lat": 37.318398,
+        "lng": -78.606257
+      }
+    },
+    "VA-06": {
+      "landAreaSqMi": 6264.598,
+      "waterAreaSqMi": 41.369,
+      "centroid": {
+        "lat": 38.274886,
+        "lng": -79.158835
+      }
+    },
+    "VA-07": {
+      "landAreaSqMi": 2723.774,
+      "waterAreaSqMi": 58.371,
+      "centroid": {
+        "lat": 38.288097,
+        "lng": -77.732213
+      }
+    },
+    "VA-08": {
+      "landAreaSqMi": 147.212,
+      "waterAreaSqMi": 11.295,
+      "centroid": {
+        "lat": 38.798299,
+        "lng": -77.137196
+      }
+    },
+    "VA-09": {
+      "landAreaSqMi": 10070.548,
+      "waterAreaSqMi": 92.12,
+      "centroid": {
+        "lat": 36.975373,
+        "lng": -81.158627
+      }
+    },
+    "VA-10": {
+      "landAreaSqMi": 1690.494,
+      "waterAreaSqMi": 15.294,
+      "centroid": {
+        "lat": 38.806443,
+        "lng": -77.792284
+      }
+    },
+    "VA-11": {
+      "landAreaSqMi": 250.949,
+      "waterAreaSqMi": 3.357,
+      "centroid": {
+        "lat": 38.867784,
+        "lng": -77.309695
+      }
+    },
+    "WA-01": {
+      "landAreaSqMi": 332.095,
+      "waterAreaSqMi": 17.285,
+      "centroid": {
+        "lat": 47.872859,
+        "lng": -122.126886
+      }
+    },
+    "WA-02": {
+      "landAreaSqMi": 4404.092,
+      "waterAreaSqMi": 1432.61,
+      "centroid": {
+        "lat": 48.580139,
+        "lng": -122.044331
+      }
+    },
+    "WA-03": {
+      "landAreaSqMi": 7309.492,
+      "waterAreaSqMi": 437.626,
+      "centroid": {
+        "lat": 46.326534,
+        "lng": -122.607727
+      }
+    },
+    "WA-04": {
+      "landAreaSqMi": 17885.486,
+      "waterAreaSqMi": 304.5,
+      "centroid": {
+        "lat": 47.249934,
+        "lng": -120.032462
+      }
+    },
+    "WA-05": {
+      "landAreaSqMi": 18711.897,
+      "waterAreaSqMi": 271.974,
+      "centroid": {
+        "lat": 47.43317,
+        "lng": -118.014611
+      }
+    },
+    "WA-06": {
+      "landAreaSqMi": 6956.61,
+      "waterAreaSqMi": 1983.406,
+      "centroid": {
+        "lat": 47.638858,
+        "lng": -123.55094
+      }
+    },
+    "WA-07": {
+      "landAreaSqMi": 137.407,
+      "waterAreaSqMi": 115.621,
+      "centroid": {
+        "lat": 47.553056,
+        "lng": -122.391729
+      }
+    },
+    "WA-08": {
+      "landAreaSqMi": 9827.751,
+      "waterAreaSqMi": 168.201,
+      "centroid": {
+        "lat": 47.541345,
+        "lng": -121.143392
+      }
+    },
+    "WA-09": {
+      "landAreaSqMi": 182.637,
+      "waterAreaSqMi": 30.956,
+      "centroid": {
+        "lat": 47.435325,
+        "lng": -122.253621
+      }
+    },
+    "WA-10": {
+      "landAreaSqMi": 707.975,
+      "waterAreaSqMi": 83.056,
+      "centroid": {
+        "lat": 47.04939,
+        "lng": -122.748488
+      }
+    },
+    "WV-01": {
+      "landAreaSqMi": 14340.138,
+      "waterAreaSqMi": 109.913,
+      "centroid": {
+        "lat": 38.199694,
+        "lng": -81.147445
+      }
+    },
+    "WV-02": {
+      "landAreaSqMi": 9701.098,
+      "waterAreaSqMi": 78.86,
+      "centroid": {
+        "lat": 39.284706,
+        "lng": -79.850219
+      }
+    },
+    "WI-01": {
+      "landAreaSqMi": 1533.901,
+      "waterAreaSqMi": 1505.241,
+      "centroid": {
+        "lat": 42.72927,
+        "lng": -87.942548
+      }
+    },
+    "WI-02": {
+      "landAreaSqMi": 4300.905,
+      "waterAreaSqMi": 67.366,
+      "centroid": {
+        "lat": 42.961408,
+        "lng": -89.733956
+      }
+    },
+    "WI-03": {
+      "landAreaSqMi": 11227.743,
+      "waterAreaSqMi": 316.451,
+      "centroid": {
+        "lat": 44.056297,
+        "lng": -90.891748
+      }
+    },
+    "WI-04": {
+      "landAreaSqMi": 139.973,
+      "waterAreaSqMi": 408.048,
+      "centroid": {
+        "lat": 43.072582,
+        "lng": -87.865368
+      }
+    },
+    "WI-05": {
+      "landAreaSqMi": 2143.499,
+      "waterAreaSqMi": 75.724,
+      "centroid": {
+        "lat": 43.171561,
+        "lng": -88.512248
+      }
+    },
+    "WI-06": {
+      "landAreaSqMi": 5030.603,
+      "waterAreaSqMi": 2856.106,
+      "centroid": {
+        "lat": 43.786274,
+        "lng": -88.290403
+      }
+    },
+    "WI-07": {
+      "landAreaSqMi": 23110.539,
+      "waterAreaSqMi": 2972.973,
+      "centroid": {
+        "lat": 45.698997,
+        "lng": -90.655335
+      }
+    },
+    "WI-08": {
+      "landAreaSqMi": 6680.87,
+      "waterAreaSqMi": 3126.774,
+      "centroid": {
+        "lat": 44.842455,
+        "lng": -87.932142
+      }
+    },
+    "WY-01": {
+      "landAreaSqMi": 97088.554,
+      "waterAreaSqMi": 721.249,
+      "centroid": {
+        "lat": 42.989659,
+        "lng": -107.544392
+      }
+    },
+    "PR-98": {
+      "landAreaSqMi": 3424.541,
+      "waterAreaSqMi": 1900.302,
+      "centroid": {
+        "lat": 18.217648,
+        "lng": -66.410799
+      }
+    }
+  }
+}
