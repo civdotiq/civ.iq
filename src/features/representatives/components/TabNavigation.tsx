@@ -5,7 +5,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import { Clock } from 'lucide-react';
 import {
   RepresentativeIcon,
@@ -82,6 +82,46 @@ export function TabNavigation({
   size = 'md',
   className = '',
 }: TabNavigationProps) {
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Handle keyboard navigation (WCAG 2.1 compliant)
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent, currentIndex: number) => {
+      let newIndex = currentIndex;
+
+      switch (e.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+          e.preventDefault();
+          newIndex = currentIndex === tabs.length - 1 ? 0 : currentIndex + 1;
+          break;
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          e.preventDefault();
+          newIndex = currentIndex === 0 ? tabs.length - 1 : currentIndex - 1;
+          break;
+        case 'Home':
+          e.preventDefault();
+          newIndex = 0;
+          break;
+        case 'End':
+          e.preventDefault();
+          newIndex = tabs.length - 1;
+          break;
+        default:
+          return;
+      }
+
+      // Focus the new tab and activate it
+      const newTab = tabs[newIndex];
+      if (newTab) {
+        tabRefs.current[newIndex]?.focus();
+        onTabChange(newTab.id);
+      }
+    },
+    [tabs, onTabChange]
+  );
+
   const sizeClasses = {
     sm: 'px-3 py-2 text-sm',
     md: 'px-4 py-3 text-sm',
@@ -97,11 +137,23 @@ export function TabNavigation({
   if (variant === 'pills') {
     return (
       <div className={`aicher-card aicher-no-radius ${className}`}>
-        <nav className="flex flex-wrap md:flex-nowrap overflow-x-auto gap-1 scroll-smooth snap-x snap-proximity [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x">
-          {tabs.map(tab => (
+        <nav
+          role="tablist"
+          aria-label="Content sections"
+          className="flex flex-wrap md:flex-nowrap overflow-x-auto gap-1 scroll-smooth snap-x snap-proximity [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x"
+        >
+          {tabs.map((tab, index) => (
             <button
               key={tab.id}
+              ref={el => {
+                tabRefs.current[index] = el;
+              }}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              aria-controls={`tabpanel-${tab.id}`}
+              tabIndex={activeTab === tab.id ? 0 : -1}
               onClick={() => onTabChange(tab.id)}
+              onKeyDown={e => handleKeyDown(e, index)}
               onMouseEnter={onTabHover ? () => onTabHover(tab.id) : undefined}
               className={`
         aicher-button inline-flex items-center gap-2 ${sizeClasses[size]} aicher-heading-wide transition-all duration-200 aicher-focus min-h-[44px] snap-start whitespace-nowrap
@@ -131,11 +183,23 @@ export function TabNavigation({
   // Aicher geometric bordered variant (default)
   return (
     <div className={`aicher-tabs ${className}`}>
-      <nav className="flex overflow-x-auto scroll-smooth snap-x snap-proximity [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x">
+      <nav
+        role="tablist"
+        aria-label="Content sections"
+        className="flex overflow-x-auto scroll-smooth snap-x snap-proximity [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x"
+      >
         {tabs.map((tab, index) => (
           <button
             key={tab.id}
+            ref={el => {
+              tabRefs.current[index] = el;
+            }}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            aria-controls={`tabpanel-${tab.id}`}
+            tabIndex={activeTab === tab.id ? 0 : -1}
             onClick={() => onTabChange(tab.id)}
+            onKeyDown={e => handleKeyDown(e, index)}
             onMouseEnter={onTabHover ? () => onTabHover(tab.id) : undefined}
             className={`aicher-tab min-h-[44px] snap-start whitespace-nowrap ${activeTab === tab.id ? 'active' : ''} ${
               index === tabs.length - 1 ? 'border-r-0' : ''

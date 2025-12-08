@@ -33,13 +33,35 @@ interface NormalizedContributor extends Record<string, unknown> {
 
 interface TopContributorsProps {
   contributors: ContributorInput[];
+  loading?: boolean;
 }
 
 /**
  * Top contributors list with sortable table
  * Shows individual donors and organizations contributing to the campaign
  */
-export function TopContributors({ contributors }: TopContributorsProps) {
+export function TopContributors({ contributors, loading = false }: TopContributorsProps) {
+  if (loading) {
+    return (
+      <div className="rounded-lg border border-neutral-200 bg-white p-6">
+        <div className="mb-6">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-2 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+        </div>
+        <SortableDataTable
+          data={[]}
+          columns={[
+            { key: 'name', label: 'Contributor', sortable: true },
+            { key: 'totalAmount', label: 'Total Amount', sortable: true },
+            { key: 'contributionCount', label: 'Contributions', sortable: true },
+            { key: 'employer', label: 'Employer', sortable: true },
+          ]}
+          loading={true}
+        />
+      </div>
+    );
+  }
+
   if (!contributors || contributors.length === 0) {
     return (
       <div className="rounded-lg border border-neutral-200 bg-white p-6">

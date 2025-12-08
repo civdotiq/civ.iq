@@ -20,6 +20,7 @@ interface SortableDataTableProps<T> {
   defaultSortKey?: keyof T;
   showInitially?: number;
   title?: string;
+  loading?: boolean;
 }
 
 /**
@@ -32,6 +33,7 @@ export function SortableDataTable<T extends Record<string, unknown>>({
   defaultSortKey,
   showInitially = 5,
   title,
+  loading = false,
 }: SortableDataTableProps<T>) {
   const [sortKey, setSortKey] = useState<keyof T | undefined>(defaultSortKey);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -64,6 +66,39 @@ export function SortableDataTable<T extends Record<string, unknown>>({
       setSortDirection('desc');
     }
   };
+
+  // Loading skeleton
+  if (loading) {
+    return (
+      <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+        {title && (
+          <div className="border-b border-neutral-200 px-6 py-4">
+            <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+          </div>
+        )}
+        <div className="animate-pulse">
+          {/* Header skeleton */}
+          <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-3">
+            <div className="flex gap-8">
+              {columns.map((_, i) => (
+                <div key={i} className="h-4 bg-gray-200 rounded w-20"></div>
+              ))}
+            </div>
+          </div>
+          {/* Row skeletons */}
+          {Array.from({ length: showInitially }).map((_, i) => (
+            <div key={i} className="border-b border-neutral-200 px-6 py-4">
+              <div className="flex gap-8">
+                {columns.map((_, j) => (
+                  <div key={j} className="h-4 bg-gray-100 rounded w-24"></div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
