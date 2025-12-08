@@ -17,11 +17,19 @@ interface FinanceData {
   partyContributions: number;
   candidateContributions: number;
   candidateId?: string;
+  cycle?: number;
   fecTransparencyLinks?: {
     candidatePage: string;
     contributions: string;
     disbursements: string;
     financialSummary: string;
+  };
+  metadata?: {
+    isHistoricalData?: boolean;
+    dataFromCycle?: number;
+    requestedCycle?: number;
+    cycleExplanation?: string;
+    nextElectionYear?: number;
   };
 }
 
@@ -225,9 +233,55 @@ export function FinanceTab({
     }).format(amount || 0);
   };
 
+  // Determine cycle information for display
+  const displayCycle = data.cycle || data.metadata?.dataFromCycle || 2024;
+  const isHistoricalData = data.metadata?.isHistoricalData;
+  const cycleExplanation = data.metadata?.cycleExplanation;
+  const nextElectionYear = data.metadata?.nextElectionYear;
+
   return (
     <div>
-      <h2 className="text-xl font-bold mb-6">Campaign Finance</h2>
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <h2 className="text-xl font-bold">Campaign Finance</h2>
+        <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium border border-gray-300">
+          {displayCycle} Election Cycle
+        </span>
+      </div>
+
+      {/* Historical Data Banner - Educational transparency */}
+      {isHistoricalData && (
+        <div className="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 mt-0.5">
+              <svg
+                className="w-5 h-5 text-amber-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-amber-800">
+                Showing {displayCycle} Election Cycle Data
+              </h3>
+              <p className="mt-1 text-sm text-amber-700">
+                {cycleExplanation ||
+                  'This data is from a previous election cycle. Campaign finance data is only generated during active campaign periods.'}
+              </p>
+              {nextElectionYear && (
+                <p className="mt-2 text-xs text-amber-600">Next election: {nextElectionYear}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Financial Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

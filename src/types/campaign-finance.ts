@@ -204,6 +204,12 @@ export interface FinanceResponse {
     suggestedAction?: string;
     fecCandidateId?: string;
     suggestedCycles?: number[];
+    // Multi-cycle fallback fields
+    isHistoricalData?: boolean; // True if data is from a past election cycle
+    dataFromCycle?: number; // The actual cycle the data came from
+    requestedCycle?: number; // The cycle originally requested (usually current)
+    cycleExplanation?: string; // Human-readable explanation (e.g., Senate 6-year terms)
+    nextElectionYear?: number; // When this representative is next up for election
   };
 
   // NEW PHASE 1 FIELDS:
