@@ -1,22 +1,19 @@
 /**
  * StateMapCard Component
- * Displays state boundary map and demographics for Senator profiles
+ * Displays state boundary map and essential demographics for Senator profiles
+ * Ulm School principles: Only show reliable, meaningful data
  */
 
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import useSWR from 'swr';
-import { ComparisonIndicator, US_AVERAGES } from '@/components/demographics/ComparisonIndicator';
 
 interface StateDemographics {
   state_code: string;
   state_name: string;
   population: number;
-  median_age: number;
   median_household_income: number;
-  poverty_rate: number;
-  diversity_index: number;
 }
 
 interface StateMapCardProps {
@@ -60,7 +57,6 @@ export function StateMapCard({ stateCode, stateName }: StateMapCardProps) {
         if (!mounted) return;
 
         // Convert GeoJSON to SVG path
-        // This is a simple conversion - for production, consider using a library like d3-geo
         const svg = convertGeoJSONToSVG(geoJSON);
         setSvgContent(svg);
         setIsMapLoading(false);
@@ -104,12 +100,11 @@ export function StateMapCard({ stateCode, stateName }: StateMapCardProps) {
           )}
         </div>
 
-        {/* Demographics */}
+        {/* Demographics - Only population and income (reliable Census data) */}
         {isDemographicsLoading ? (
           <div className="space-y-3">
             <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
             <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
           </div>
         ) : demographics ? (
           <div className="space-y-4">
@@ -120,62 +115,15 @@ export function StateMapCard({ stateCode, stateName }: StateMapCardProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="type-sm text-gray-600 mb-1">Median Age</div>
-                <div className="aicher-heading type-base text-gray-900">
-                  {demographics.median_age.toFixed(1)} years
-                </div>
-                <ComparisonIndicator
-                  value={demographics.median_age}
-                  average={US_AVERAGES.medianAge}
-                  higherIsBetter={false}
-                  suffix=" yrs"
-                />
-              </div>
-              <div>
-                <div className="type-sm text-gray-600 mb-1">Median Income</div>
-                <div className="aicher-heading type-base text-gray-900">
-                  ${(demographics.median_household_income / 1000).toFixed(0)}k
-                </div>
-                <ComparisonIndicator
-                  value={demographics.median_household_income}
-                  average={US_AVERAGES.medianIncome}
-                  higherIsBetter={true}
-                  suffix=""
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="type-sm text-gray-600 mb-1">Poverty Rate</div>
-                <div className="aicher-heading type-base text-gray-900">
-                  {demographics.poverty_rate.toFixed(1)}%
-                </div>
-                <ComparisonIndicator
-                  value={demographics.poverty_rate}
-                  average={US_AVERAGES.povertyRate}
-                  higherIsBetter={false}
-                  suffix="%"
-                />
-              </div>
-              <div>
-                <div className="type-sm text-gray-600 mb-1">Diversity Index</div>
-                <div className="aicher-heading type-base text-gray-900">
-                  {demographics.diversity_index.toFixed(0)}
-                </div>
-                <ComparisonIndicator
-                  value={demographics.diversity_index}
-                  average={US_AVERAGES.diversityIndex}
-                  higherIsBetter={true}
-                  suffix=""
-                />
+            <div>
+              <div className="type-sm text-gray-600 mb-1">Median Household Income</div>
+              <div className="aicher-heading type-base text-gray-900">
+                ${(demographics.median_household_income / 1000).toFixed(0)}k
               </div>
             </div>
 
             <div className="type-xs text-gray-500 pt-2 border-t border-gray-200">
-              Data from Census Bureau ACS 2021
+              Data: U.S. Census Bureau
             </div>
           </div>
         ) : (

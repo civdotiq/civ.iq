@@ -262,15 +262,15 @@ export function RacialCompositionChart({ demographics }: { demographics: Demogra
 }
 
 export function ElectionHistoryChart({
-  currentPVI,
+  currentPVI: _currentPVI,
   currentMargin,
 }: {
   currentPVI: string;
   currentMargin: number;
 }) {
   const data = useMemo(
-    () => generateElectionHistory(currentPVI, currentMargin),
-    [currentPVI, currentMargin]
+    () => generateElectionHistory(_currentPVI, currentMargin),
+    [_currentPVI, currentMargin]
   );
 
   return (
@@ -317,8 +317,7 @@ export function ElectionHistoryChart({
         </LineChart>
       </ResponsiveContainer>
       <p className="text-sm text-gray-600 mt-2">
-        Current PVI: <strong>{currentPVI}</strong> | Last margin:{' '}
-        <strong>{currentMargin.toFixed(1)}%</strong>
+        Last election margin: <strong>{currentMargin.toFixed(1)}%</strong>
       </p>
     </div>
   );

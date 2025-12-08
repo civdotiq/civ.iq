@@ -1,5 +1,6 @@
 /**
  * District Card Component - Displays individual district information
+ * Ulm School principles: Plain language political lean, no jargon like "Cook PVI"
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
@@ -29,11 +30,11 @@ interface District {
     isCompetitive?: boolean;
     lastElection: {
       winner: string;
-      margin: number; // Estimated from Cook PVI
-      turnout: number | null; // null = data unavailable
+      margin: number;
+      turnout: number | null;
     };
-    votingAgePopulation?: number; // From Census
-    registeredVoters?: number; // Legacy field for backwards compatibility
+    votingAgePopulation?: number;
+    registeredVoters?: number;
   };
   geography: {
     area: number;
@@ -42,18 +43,39 @@ interface District {
   };
 }
 
-export function DistrictCard({ district }: { district: District }) {
-  const getPVIColor = (pvi: string) => {
-    if (pvi.startsWith('D+')) return 'text-blue-600';
-    if (pvi.startsWith('R+')) return 'text-red-600';
-    return 'text-gray-600';
-  };
+/**
+ * Convert Cook PVI to plain language that citizens understand
+ * e.g. "D+15" → "Typically votes Democratic"
+ * e.g. "R+3" → "Leans Republican"
+ * e.g. "EVEN" → "Competitive district"
+ */
+function getDistrictLean(pvi: string): { text: string; color: string; bgColor: string } {
+  if (!pvi || pvi === 'EVEN') {
+    return { text: 'Competitive', color: 'text-purple-700', bgColor: 'bg-purple-100' };
+  }
 
-  const getPVIBackground = (pvi: string) => {
-    if (pvi.startsWith('D+')) return 'bg-blue-100';
-    if (pvi.startsWith('R+')) return 'bg-red-100';
-    return 'bg-white border-2 border-gray-300';
-  };
+  const match = pvi.match(/^([DR])\+(\d+)/);
+  if (!match || !match[1] || !match[2]) {
+    return { text: 'Competitive', color: 'text-purple-700', bgColor: 'bg-purple-100' };
+  }
+
+  const party = match[1];
+  const margin = parseInt(match[2], 10);
+  const partyName = party === 'D' ? 'Democratic' : 'Republican';
+  const color = party === 'D' ? 'text-blue-700' : 'text-red-700';
+  const bgColor = party === 'D' ? 'bg-blue-100' : 'bg-red-100';
+
+  if (margin >= 15) {
+    return { text: `Strongly ${partyName}`, color, bgColor };
+  } else if (margin >= 5) {
+    return { text: `Typically ${partyName}`, color, bgColor };
+  } else {
+    return { text: `Leans ${partyName}`, color, bgColor };
+  }
+}
+
+export function DistrictCard({ district }: { district: District }) {
+  const lean = getDistrictLean(district.political.cookPVI);
 
   return (
     <div className="bg-white border-2 border-black hover:border-civiq-blue transition-colors p-4 sm:p-6">
@@ -65,9 +87,9 @@ export function DistrictCard({ district }: { district: District }) {
           <p className="text-xs sm:text-sm text-gray-600 truncate">{district.name}</p>
         </div>
         <span
-          className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex-shrink-0 ${getPVIBackground(district.political.cookPVI)} ${getPVIColor(district.political.cookPVI)}`}
+          className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex-shrink-0 ${lean.bgColor} ${lean.color}`}
         >
-          {district.political.cookPVI}
+          {lean.text}
         </span>
       </div>
 

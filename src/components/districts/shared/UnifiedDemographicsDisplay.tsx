@@ -1,25 +1,14 @@
 /**
+ * Unified Demographics Display Component
+ * Ulm School principles: Only show reliable, meaningful data
+ * Removed: Comparison indicators, Diversity Index, Urban Population (unreliable)
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 'use client';
 
-import WaffleChart from '@/components/visualizations/WaffleChart';
 import StackedBar from '@/components/visualizations/StackedBar';
-import { ComparisonIndicator, US_AVERAGES } from '@/components/demographics/ComparisonIndicator';
-
-/**
- * Unified Demographics Display Component
- *
- * Displays demographic information for both federal and state districts.
- * Uses Aicher design system for consistent styling across the application.
- * Includes Aicher/Rams-inspired visualizations for percentage data.
- *
- * Compatible with:
- * - Federal district demographics (Census API)
- * - State district demographics (StateDistrictDemographics)
- */
 
 interface UnifiedDemographics {
   population: number;
@@ -63,8 +52,8 @@ export default function UnifiedDemographicsDisplay({
     <div className="aicher-card p-8">
       <h3 className="aicher-heading text-lg text-gray-900 mb-4">Demographics</h3>
 
-      {/* Key Metrics Cards */}
-      <div className="aicher-grid aicher-grid-4 gap-6">
+      {/* Primary Stats - Population and Income only */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
         <div className="aicher-card aicher-status-info p-6">
           <div className="aicher-heading text-2xl text-white">
             {demographics.population.toLocaleString()}
@@ -76,52 +65,32 @@ export default function UnifiedDemographicsDisplay({
           <div className="aicher-heading text-2xl text-white">
             {formatCurrency(demographics.medianIncome)}
           </div>
-          <p className="aicher-heading-wide text-sm text-white mt-1">Median Income</p>
-          <div className="text-white opacity-80">
-            <ComparisonIndicator
-              value={demographics.medianIncome}
-              average={US_AVERAGES.medianIncome}
-              higherIsBetter={true}
-            />
-          </div>
-        </div>
-
-        <div className="aicher-card aicher-border bg-purple-100 p-6">
-          <div className="aicher-heading text-2xl text-purple-900">
-            {demographics.medianAge.toFixed(1)}
-          </div>
-          <p className="aicher-heading-wide text-sm text-purple-700 mt-1">Median Age</p>
-          <ComparisonIndicator
-            value={demographics.medianAge}
-            average={US_AVERAGES.medianAge}
-            higherIsBetter={false}
-          />
-        </div>
-
-        <div className="aicher-card aicher-border bg-gray-50 p-6">
-          <div className="aicher-heading text-2xl text-gray-900 mb-1">
-            {demographics.urbanPercentage.toFixed(1)}%
-          </div>
-          <p className="aicher-heading-wide text-sm text-gray-700 mb-1">Urban Population</p>
-          <ComparisonIndicator
-            value={demographics.urbanPercentage}
-            average={US_AVERAGES.urbanPercentage}
-            higherIsBetter={false}
-            suffix="%"
-          />
-          <div className="flex justify-center mt-2">
-            <WaffleChart
-              percentage={demographics.urbanPercentage}
-              color="#3ea2d4"
-              label="Urban Population"
-              size="default"
-            />
-          </div>
+          <p className="aicher-heading-wide text-sm text-white mt-1">Median Household Income</p>
         </div>
       </div>
 
-      {/* Racial & Ethnic Composition */}
-      <div className="mt-6 aicher-card p-6">
+      {/* Secondary Stats - Verifiable Census data */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+        <div className="bg-gray-50 p-4">
+          <div className="text-xl font-bold text-gray-900">{demographics.medianAge.toFixed(1)}</div>
+          <p className="text-sm text-gray-600">Median Age</p>
+        </div>
+        <div className="bg-gray-50 p-4">
+          <div className="text-xl font-bold text-gray-900">
+            {demographics.bachelor_degree_percent.toFixed(1)}%
+          </div>
+          <p className="text-sm text-gray-600">College Educated</p>
+        </div>
+        <div className="bg-gray-50 p-4">
+          <div className="text-xl font-bold text-gray-900">
+            {demographics.poverty_rate.toFixed(1)}%
+          </div>
+          <p className="text-sm text-gray-600">Poverty Rate</p>
+        </div>
+      </div>
+
+      {/* Racial & Ethnic Composition - factual breakdown */}
+      <div className="aicher-card p-6">
         <h4 className="aicher-heading text-md text-gray-900 mb-4">Racial & Ethnic Composition</h4>
         <StackedBar
           segments={[
@@ -151,50 +120,8 @@ export default function UnifiedDemographicsDisplay({
         />
       </div>
 
-      {/* Education & Economy */}
-      <div className="mt-6 aicher-card p-6">
-        <h4 className="text-md font-semibold text-gray-900 mb-4">Education & Economy</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <div className="text-lg font-bold text-green-600">
-              {demographics.bachelor_degree_percent.toFixed(1)}%
-            </div>
-            <p className="text-sm text-gray-600 mb-1">Bachelor&apos;s Degree+</p>
-            <ComparisonIndicator
-              value={demographics.bachelor_degree_percent}
-              average={US_AVERAGES.bachelorDegreePercent}
-              higherIsBetter={true}
-              suffix="%"
-            />
-          </div>
-          <div>
-            <div className="text-lg font-bold text-red-600">
-              {demographics.poverty_rate.toFixed(1)}%
-            </div>
-            <p className="text-sm text-gray-600 mb-1">Poverty Rate</p>
-            <ComparisonIndicator
-              value={demographics.poverty_rate}
-              average={US_AVERAGES.povertyRate}
-              higherIsBetter={false}
-              suffix="%"
-            />
-          </div>
-          <div>
-            <div className="text-lg font-bold text-purple-600">
-              {demographics.diversityIndex.toFixed(1)}
-            </div>
-            <p className="text-sm text-gray-600 mb-1">Diversity Index</p>
-            <ComparisonIndicator
-              value={demographics.diversityIndex}
-              average={US_AVERAGES.diversityIndex}
-              higherIsBetter={false}
-            />
-            <p className="text-xs text-gray-500 mt-2 italic">
-              0 = no diversity, 100 = maximum diversity
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Data source */}
+      <div className="mt-4 text-xs text-gray-500">Data: U.S. Census Bureau</div>
     </div>
   );
 }

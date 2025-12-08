@@ -42,6 +42,35 @@ function formatPopulation(population: number): string {
   return population.toString();
 }
 
+/**
+ * Convert Cook PVI to plain language that citizens understand
+ * e.g. "D+15" → "Strongly Democratic"
+ * e.g. "R+3" → "Leans Republican"
+ * e.g. "EVEN" → "Competitive"
+ */
+function getDistrictLean(pvi: string): string {
+  if (!pvi || pvi === 'EVEN') {
+    return 'Competitive';
+  }
+
+  const match = pvi.match(/^([DR])\+(\d+)/);
+  if (!match || !match[1] || !match[2]) {
+    return 'Competitive';
+  }
+
+  const party = match[1];
+  const margin = parseInt(match[2], 10);
+  const partyName = party === 'D' ? 'Democratic' : 'Republican';
+
+  if (margin >= 15) {
+    return `Strongly ${partyName}`;
+  } else if (margin >= 5) {
+    return `Typically ${partyName}`;
+  } else {
+    return `Leans ${partyName}`;
+  }
+}
+
 function formatDistrictName(state: string, district: string): string {
   const stateNames: Record<string, string> = {
     AL: 'Alabama',
@@ -354,29 +383,16 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
               <p className="text-xs text-green-600">Household income</p>
             </div>
 
-            {/* Political Lean */}
+            {/* Political Lean - Plain language instead of Cook PVI jargon */}
             <div className="bg-white p-4 border border-green-100">
               <div className="flex items-center gap-2 mb-2">
                 <BarChart3 className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-green-900">Cook PVI</span>
+                <span className="text-sm font-medium text-green-900">Political Lean</span>
               </div>
-              <p className="text-2xl font-bold text-green-800">{districtData.political.cookPVI}</p>
-              <div className="flex items-center gap-1">
-                <p className="text-xs text-green-600">Political lean</p>
-                {districtData.political.cookPVIConfidence && (
-                  <span
-                    className={`px-1 py-0.5 text-xs rounded ${
-                      districtData.political.cookPVIConfidence === 'HIGH'
-                        ? 'bg-green-100 text-green-700'
-                        : districtData.political.cookPVIConfidence === 'MEDIUM'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    {districtData.political.cookPVIConfidence.toLowerCase()}
-                  </span>
-                )}
-              </div>
+              <p className="text-2xl font-bold text-green-800">
+                {getDistrictLean(districtData.political.cookPVI)}
+              </p>
+              <p className="text-xs text-green-600">Based on recent elections</p>
             </div>
 
             {/* Representative */}
@@ -431,9 +447,6 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
                   <CheckCircle className="w-3 h-3" />
                   Cached data available
                 </span>
-              )}
-              {districtData.political.cookPVISource && (
-                <span>PVI: {districtData.political.cookPVISource}</span>
               )}
             </div>
 

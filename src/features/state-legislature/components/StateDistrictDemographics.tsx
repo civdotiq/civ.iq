@@ -1,13 +1,13 @@
 /**
  * State District Demographics Component
- * Displays Census demographic data for state legislative districts
+ * Ulm School principles: Only show reliable, meaningful Census data
+ * Removed: Comparison indicators, Diversity Index, Urban Population (unreliable)
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
 import { Users, DollarSign, GraduationCap, TrendingUp } from 'lucide-react';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
-import { ComparisonIndicator, US_AVERAGES } from '@/components/demographics/ComparisonIndicator';
 
 interface StateDistrictDemographicsProps {
   legislator: EnhancedStateLegislator;
@@ -25,8 +25,6 @@ export function StateDistrictDemographics({ legislator }: StateDistrictDemograph
     population,
     medianIncome,
     medianAge,
-    diversityIndex,
-    urbanPercentage,
     white_percent,
     black_percent,
     hispanic_percent,
@@ -60,7 +58,7 @@ export function StateDistrictDemographics({ legislator }: StateDistrictDemograph
         </p>
       </div>
 
-      {/* Key Stats Grid */}
+      {/* Key Stats Grid - Only reliable Census data */}
       <div className="grid grid-cols-2 gap-4 p-4 border-b-2 border-gray-200">
         <div className="text-center">
           <Users className="w-5 h-5 text-civiq-blue mx-auto mb-1" />
@@ -72,11 +70,6 @@ export function StateDistrictDemographics({ legislator }: StateDistrictDemograph
           <DollarSign className="w-5 h-5 text-civiq-green mx-auto mb-1" />
           <div className="text-2xl font-bold text-gray-900">{formatCurrency(medianIncome)}</div>
           <div className="text-xs text-gray-600 uppercase tracking-wide">Median Income</div>
-          <ComparisonIndicator
-            value={medianIncome}
-            average={US_AVERAGES.medianIncome}
-            higherIsBetter={true}
-          />
         </div>
 
         <div className="text-center">
@@ -84,24 +77,13 @@ export function StateDistrictDemographics({ legislator }: StateDistrictDemograph
           <div className="text-2xl font-bold text-gray-900">
             {formatPercent(bachelor_degree_percent)}
           </div>
-          <div className="text-xs text-gray-600 uppercase tracking-wide">Bachelor&apos;s+</div>
-          <ComparisonIndicator
-            value={bachelor_degree_percent}
-            average={US_AVERAGES.bachelorDegreePercent}
-            higherIsBetter={true}
-            suffix="%"
-          />
+          <div className="text-xs text-gray-600 uppercase tracking-wide">College Educated</div>
         </div>
 
         <div className="text-center">
           <TrendingUp className="w-5 h-5 text-civiq-red mx-auto mb-1" />
           <div className="text-2xl font-bold text-gray-900">{medianAge.toFixed(1)}</div>
           <div className="text-xs text-gray-600 uppercase tracking-wide">Median Age</div>
-          <ComparisonIndicator
-            value={medianAge}
-            average={US_AVERAGES.medianAge}
-            higherIsBetter={false}
-          />
         </div>
       </div>
 
@@ -159,52 +141,19 @@ export function StateDistrictDemographics({ legislator }: StateDistrictDemograph
         </div>
       </div>
 
-      {/* Additional Metrics */}
-      <div className="p-4 space-y-3">
-        <div className="text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">Diversity Index</span>
-            <span className="text-gray-900 font-medium">{formatPercent(diversityIndex)}</span>
-          </div>
-          <ComparisonIndicator
-            value={diversityIndex}
-            average={US_AVERAGES.diversityIndex}
-            higherIsBetter={false}
-          />
-        </div>
-
-        <div className="text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">Urban Population</span>
-            <span className="text-gray-900 font-medium">{formatPercent(urbanPercentage)}</span>
-          </div>
-          <ComparisonIndicator
-            value={urbanPercentage}
-            average={US_AVERAGES.urbanPercentage}
-            higherIsBetter={false}
-            suffix="%"
-          />
-        </div>
-
+      {/* Poverty Rate - verifiable Census data */}
+      <div className="p-4">
         <div className="text-sm">
           <div className="flex items-center justify-between">
             <span className="text-gray-600">Poverty Rate</span>
             <span className="text-gray-900 font-medium">{formatPercent(poverty_rate)}</span>
           </div>
-          <ComparisonIndicator
-            value={poverty_rate}
-            average={US_AVERAGES.povertyRate}
-            higherIsBetter={false}
-            suffix="%"
-          />
         </div>
       </div>
 
       {/* Data Source Footer */}
       <div className="bg-gray-50 border-t-2 border-gray-200 px-4 py-3">
-        <p className="text-xs text-gray-500">
-          Source: U.S. Census Bureau ACS 5-Year Estimates (2022)
-        </p>
+        <p className="text-xs text-gray-500">Data: U.S. Census Bureau ACS 5-Year Estimates</p>
       </div>
     </div>
   );
