@@ -18,6 +18,7 @@ interface HeroSummaryProps {
   pacContributions: number;
   candidateContributions: number;
   cycle: number;
+  loading?: boolean;
 }
 
 /**
@@ -34,7 +35,9 @@ export function HeroSummary({
   pacContributions,
   candidateContributions,
   cycle,
+  loading = false,
 }: HeroSummaryProps) {
+  // Hooks must be called unconditionally before any early returns
   const totalRaisedComparison = useMemo(
     () => calculateComparison(totalRaised, party, 'totalRaised'),
     [totalRaised, party]
@@ -54,6 +57,37 @@ export function HeroSummary({
       ),
     [totalRaised, individualContributions, pacContributions, candidateContributions, party]
   );
+
+  // Loading state (after hooks)
+  if (loading) {
+    return (
+      <div className="rounded-lg border border-neutral-200 bg-gradient-to-br from-white to-neutral-50 p-8">
+        <div className="animate-pulse">
+          <div className="mb-6">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+          </div>
+          <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="rounded-lg bg-white p-6 shadow-sm">
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+              <div className="h-10 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            </div>
+            <div className="rounded-lg bg-white p-6 shadow-sm">
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+              <div className="h-10 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            </div>
+            <div className="rounded-lg bg-white p-6 shadow-sm">
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+              <div className="h-10 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const getOutlierBadge = () => {
     const status = totalRaisedComparison.outlierStatus;

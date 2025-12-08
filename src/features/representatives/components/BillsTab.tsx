@@ -396,7 +396,7 @@ export const BillsTab = React.memo(
                   setItemsPerPage(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="px-3 py-1 border text-sm"
+                className="px-3 py-2 min-h-[44px] border text-sm"
               >
                 <option value={10}>10 per page</option>
                 <option value={25}>25 per page</option>
@@ -407,7 +407,7 @@ export const BillsTab = React.memo(
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 border text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white border-2 border-gray-300"
+                  className="px-4 py-2 min-h-[44px] border text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white border-2 border-gray-300"
                 >
                   Previous
                 </button>
@@ -417,7 +417,7 @@ export const BillsTab = React.memo(
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 border text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white border-2 border-gray-300"
+                  className="px-4 py-2 min-h-[44px] border text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white border-2 border-gray-300"
                 >
                   Next
                 </button>
@@ -452,12 +452,12 @@ export const BillsTab = React.memo(
               >
                 <h3 className="font-medium">
                   {bill.relationship === 'cosponsored' && (
-                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded mr-2">
+                    <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded mr-2">
                       Cosponsored
                     </span>
                   )}
                   {bill.relationship === 'sponsored' && (
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded mr-2">
+                    <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded mr-2">
                       Sponsored
                     </span>
                   )}
@@ -498,16 +498,16 @@ export const BillsTab = React.memo(
                     : 'Date unknown'}
                 </p>
                 <p className="text-sm text-gray-600 mt-1">{bill.lastAction}</p>
-                <div className="flex gap-2 mt-2">
-                  <span className="text-xs bg-blue-100 px-2 py-1 rounded">
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className="text-xs bg-blue-100 px-3 py-1.5 rounded">
                     {bill.type || 'Type: Unknown'}
                   </span>
                   {bill.policyArea && (
-                    <span className="text-xs bg-green-100 px-2 py-1 rounded">
+                    <span className="text-xs bg-green-100 px-3 py-1.5 rounded">
                       {bill.policyArea}
                     </span>
                   )}
-                  <span className="text-xs bg-yellow-100 px-2 py-1 rounded">
+                  <span className="text-xs bg-yellow-100 px-3 py-1.5 rounded">
                     {bill.status || 'Status: Unknown'}
                   </span>
                 </div>

@@ -25,6 +25,7 @@ interface DonationSourcesChartProps {
     candidate: number;
   };
   totalRaised: number;
+  loading?: boolean;
 }
 
 const COLORS = {
@@ -90,9 +91,27 @@ const CustomLegend: React.FC<LegendProps> = ({ payload }) => {
 export const DonationSourcesChart: React.FC<DonationSourcesChartProps> = ({
   data,
   totalRaised,
+  loading = false,
 }) => {
   // Responsive chart heights for mobile optimization
   const chartHeight300 = useResponsiveChartHeight(300, 250);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="bg-white border border-gray-200 p-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mx-auto mb-4"></div>
+          <div className="h-64 bg-gray-100 rounded-full w-48 mx-auto mb-4"></div>
+          <div className="flex justify-center gap-4">
+            <div className="h-4 bg-gray-200 rounded w-20"></div>
+            <div className="h-4 bg-gray-200 rounded w-20"></div>
+            <div className="h-4 bg-gray-200 rounded w-20"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Prepare data for the chart, filtering out zero values
   const chartData: DonationSource[] = [

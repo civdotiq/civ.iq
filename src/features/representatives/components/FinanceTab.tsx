@@ -246,7 +246,7 @@ export function FinanceTab({
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full hover:bg-green-300 transition-colors"
+            className="inline-flex items-center text-xs bg-green-200 text-green-800 px-3 py-2 min-h-[36px] rounded-full hover:bg-green-300 transition-colors"
           >
             View on FEC.gov →
           </a>
@@ -267,7 +267,7 @@ export function FinanceTab({
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-xs bg-red-200 text-red-800 px-2 py-1 rounded-full hover:bg-red-300 transition-colors"
+            className="inline-flex items-center text-xs bg-red-200 text-red-800 px-3 py-2 min-h-[36px] rounded-full hover:bg-red-300 transition-colors"
           >
             View on FEC.gov →
           </a>
@@ -290,7 +290,7 @@ export function FinanceTab({
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full hover:bg-blue-300 transition-colors"
+            className="inline-flex items-center text-xs bg-blue-200 text-blue-800 px-3 py-2 min-h-[36px] rounded-full hover:bg-blue-300 transition-colors"
           >
             View on FEC.gov →
           </a>
