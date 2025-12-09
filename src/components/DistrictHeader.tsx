@@ -203,7 +203,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
             <button
               key={option.value}
               onClick={() => setSelectedDistrict(option.value)}
-              className={`w-full p-2 text-left rounded border transition-colors ${
+              className={`w-full p-3 text-left rounded border transition-colors min-h-[44px] ${
                 selectedDistrict === option.value || (selectedDistrict === null && option.isPrimary)
                   ? 'bg-blue-100 border-blue-300'
                   : 'bg-white border-gray-200 hover:bg-gray-50'
@@ -239,7 +239,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
             <div className="w-80 h-6 bg-green-200 rounded"></div>
           </div>
           <div className="w-full h-4 bg-green-200 rounded mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="w-full h-16 bg-green-200 rounded"></div>
             ))}
@@ -272,7 +272,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
             <button
               onClick={handleRetry}
               disabled={isRetrying}
-              className="flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50 transition-colors min-h-[44px]"
             >
               <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
               {isRetrying ? 'Retrying...' : 'Retry'}
@@ -354,7 +354,7 @@ export function DistrictHeader({ zipCode, className = '' }: DistrictHeaderProps)
           </p>
 
           {/* Statistics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {/* Population */}
             <div className="bg-white p-4 border border-green-100">
               <div className="flex items-center gap-2 mb-2">
