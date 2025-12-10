@@ -354,7 +354,7 @@ npm run diagnose:apis          # Test API connectivity
 
 ## 🌐 API Endpoints
 
-**Total: 89 API Endpoints** - All return real data or appropriate error messages.
+**Total: 91 API Endpoints** - All return real data or appropriate error messages.
 
 ### Federal Representatives (15 endpoints)
 
@@ -437,7 +437,7 @@ GET /api/state-demographics/[stateCode]                     # Census demographic
 GET /api/representative/[bioguideId]/district               # Rep's district
 ```
 
-### Committees & Bills (9 endpoints)
+### Committees & Bills (11 endpoints)
 
 ```typescript
 GET /api/committees                                         # All committees
@@ -446,6 +446,8 @@ GET /api/committee/[committeeId]/bills                      # Committee bills
 GET /api/committee/[committeeId]/reports                    # Committee reports
 GET /api/committee/[committeeId]/timeline                   # Activity timeline
 GET /api/committee/[committeeId]/wikipedia                  # Wikipedia data
+GET /api/committee/[committeeId]/meetings                   # Committee meetings with videos
+GET /api/committee-meetings                                 # All committee meetings (with live floor links)
 GET /api/bills/latest                                       # Latest bills
 GET /api/bill/[billId]                                      # Bill details
 GET /api/bill/[billId]/summary                              # Bill summary
