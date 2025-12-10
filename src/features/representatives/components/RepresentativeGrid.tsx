@@ -72,7 +72,7 @@ const VirtualizedGrid = memo(function VirtualizedGrid({
   return (
     <div
       ref={containerRef}
-      className="relative overflow-auto"
+      className="relative overflow-y-auto overflow-x-hidden"
       style={{ height: containerHeight }}
       onScroll={handleScroll}
     >

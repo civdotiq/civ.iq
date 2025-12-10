@@ -102,7 +102,7 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
     <div className="min-h-screen bg-white">
       <Header />
 
-      <main className="container mx-auto px-4 py-8 pt-24">
+      <main className="container mx-auto px-4 py-8 pt-24 overflow-hidden">
         {/* Page header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Representatives</h1>
