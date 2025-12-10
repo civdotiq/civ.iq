@@ -42,6 +42,10 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: 'react-dom'
         update-types: ['version-update:semver-major']
+      # Ignore @types/react-window - v2.0.0 is a deprecated stub package
+      # react-window@1.8.x still requires @types/react-window@1.8.x
+      - dependency-name: '@types/react-window'
+        update-types: ['version-update:semver-major']
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: 'github-actions'
