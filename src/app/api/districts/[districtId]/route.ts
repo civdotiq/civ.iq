@@ -273,8 +273,8 @@ async function getDistrictDemographics(
       in: `state:${getStateFipsCode(state)}`,
     });
 
-    // Only add key if it exists and is not the invalid one
-    if (apiKey && apiKey !== 'e7e0aed5d4a2bfd121a8f00dcc4cb7104df903e1') {
+    // Only add key if it exists and is not a placeholder
+    if (apiKey && !apiKey.startsWith('your_')) {
       params.append('key', apiKey);
     }
 

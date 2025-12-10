@@ -121,7 +121,7 @@ export async function getStateDistrictDemographics(
     await rateLimiter.waitIfNeeded();
 
     const apiKey = process.env.CENSUS_API_KEY;
-    if (!apiKey || apiKey === 'e7e0aed5d4a2bfd121a8f00dcc4cb7104df903e1') {
+    if (!apiKey || apiKey.startsWith('your_')) {
       logger.warn('Census API key not configured, returning null demographics', {
         stateCode,
         district,

@@ -263,11 +263,7 @@ export default function DisclaimerPage() {
                 information, please contact us:
               </p>
               <ul className="list-disc list-inside text-gray-700 space-y-grid-1 ml-grid-2">
-                <li>Through our GitHub repository (report an issue)</li>
-                <li>
-                  By mail: CIV.IQ c/o Mark Sandford, Detroit, Michigan, USA (see LICENSE file for
-                  copyright holder)
-                </li>
+                <li>By email: contact@civdotiq.org</li>
               </ul>
             </section>
           </div>

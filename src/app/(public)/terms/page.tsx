@@ -158,8 +158,8 @@ export default function TermsPage() {
                 Contact Information
               </h2>
               <p className="text-gray-700 leading-relaxed">
-                If you have any questions about these Terms of Service, please contact us through
-                our GitHub repository or support channels.
+                If you have any questions about these Terms of Service, please contact us at
+                contact@civdotiq.org.
               </p>
             </section>
           </div>

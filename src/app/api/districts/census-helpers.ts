@@ -257,8 +257,8 @@ export async function fetchAllDistrictDemographics(
     // Build API URL without key first (some endpoints work without it)
     let url = `https://api.census.gov/data/2021/acs/acs5?get=${variables}&for=congressional%20district:*`;
 
-    // Only add key if it exists and is not the known invalid one
-    if (censusApiKey && censusApiKey !== 'e7e0aed5d4a2bfd121a8f00dcc4cb7104df903e1') {
+    // Only add key if it exists and is not a placeholder
+    if (censusApiKey && !censusApiKey.startsWith('your_')) {
       url += `&key=${censusApiKey}`;
     }
 
