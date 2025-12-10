@@ -411,7 +411,7 @@ export function RepresentativesClient({
         </div>
       </div>
 
-      <div className="flex gap-8">
+      <div className="flex gap-8 overflow-hidden">
         {/* Sidebar */}
         <div className="w-64 flex-shrink-0 hidden lg:block">
           <FilterSidebar
@@ -425,7 +425,7 @@ export function RepresentativesClient({
         </div>
 
         {/* Main content */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="mb-4 flex items-center justify-between">
             <p className="text-gray-600">
               Showing {filteredReps.length} of {searchState.representatives.length} representatives
