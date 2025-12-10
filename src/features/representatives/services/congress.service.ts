@@ -22,6 +22,73 @@ import yaml from 'js-yaml';
 import type { EnhancedRepresentative, RepresentativeRole } from '@/types/representative';
 import { filterCurrent119thCongress, is119thCongressTerm } from '@/lib/helpers/congress-validation';
 import { getFileCache } from '@/lib/cache/file-cache';
+import fs from 'fs';
+import path from 'path';
+
+// Caucus membership data type
+interface CaucusMembershipData {
+  metadata: {
+    source: string;
+    sourceUrl: string;
+    congress: number;
+    generatedAt: string;
+    description: string;
+    note: string;
+  };
+  caucuses: Array<{
+    name: string;
+    memberCount: number;
+    partyBreakdown: Record<string, number>;
+  }>;
+  members: Record<
+    string,
+    {
+      name: string;
+      party: string;
+      state: string | null;
+      district: string | null;
+      caucuses: string[];
+    }
+  >;
+}
+
+// Cached caucus data
+let cachedCaucusData: CaucusMembershipData | null = null;
+
+/**
+ * Load caucus membership data from static file
+ * Source: Congressional Data Coalition
+ */
+function loadCaucusData(): CaucusMembershipData | null {
+  if (cachedCaucusData) {
+    return cachedCaucusData;
+  }
+
+  try {
+    const filePath = path.join(process.cwd(), 'public/data/caucus-membership.json');
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+    cachedCaucusData = JSON.parse(fileContent);
+    logger.info('Loaded caucus membership data', {
+      memberCount: Object.keys(cachedCaucusData?.members || {}).length,
+      caucusCount: cachedCaucusData?.caucuses?.length || 0,
+    });
+    return cachedCaucusData;
+  } catch (error) {
+    logger.warn('Failed to load caucus membership data', { error });
+    return null;
+  }
+}
+
+/**
+ * Get caucus memberships for a representative by bioguide ID
+ */
+function getCaucusesForMember(bioguideId: string): string[] {
+  const caucusData = loadCaucusData();
+  if (!caucusData) {
+    return [];
+  }
+  return caucusData.members[bioguideId]?.caucuses || [];
+}
 
 // Base URLs for congress-legislators data
 const CONGRESS_LEGISLATORS_BASE_URL =
@@ -823,6 +890,9 @@ export async function getEnhancedRepresentative(
       },
 
       leadershipRoles: legislator.leadership_roles,
+
+      // Caucus memberships (House only, from Congressional Data Coalition)
+      caucuses: getCaucusesForMember(bioguideId),
     };
 
     logger.info('Successfully enhanced representative data', {

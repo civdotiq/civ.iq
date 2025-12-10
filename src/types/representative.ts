@@ -143,6 +143,10 @@ export interface EnhancedRepresentative extends BaseRepresentative {
     end?: string;
   }>;
 
+  // Caucus memberships (House only)
+  // Source: Congressional Data Coalition
+  caucuses?: string[];
+
   // Enhanced contact information
   contact?: {
     dcOffice?: {

@@ -1,0 +1,2644 @@
+{
+  "metadata": {
+    "source": "Congressional Data Coalition",
+    "sourceUrl": "https://congressionaldata.org/presenting-caucus-membership-as-data/",
+    "congress": 119,
+    "generatedAt": "2025-12-10T15:44:20.557Z",
+    "description": "House caucus membership data for the 119th Congress",
+    "note": "Caucus membership is self-reported and may not be complete. Some caucuses (e.g., Freedom Caucus) do not publish official rosters."
+  },
+  "caucuses": [
+    {
+      "name": "Republican Study Committee",
+      "memberCount": 176,
+      "partyBreakdown": {
+        "R": 176
+      }
+    },
+    {
+      "name": "Congressional Progressive Caucus",
+      "memberCount": 95,
+      "partyBreakdown": {
+        "D": 95
+      }
+    },
+    {
+      "name": "Republican Main Street Caucus",
+      "memberCount": 84,
+      "partyBreakdown": {
+        "R": 84
+      }
+    },
+    {
+      "name": "Problem Solvers Caucus",
+      "memberCount": 49,
+      "partyBreakdown": {
+        "R": 23,
+        "D": 26
+      }
+    },
+    {
+      "name": "Republican Governance Group",
+      "memberCount": 47,
+      "partyBreakdown": {
+        "R": 47
+      }
+    },
+    {
+      "name": "House Freedom Caucus",
+      "memberCount": 34,
+      "partyBreakdown": {
+        "R": 34
+      }
+    },
+    {
+      "name": "Blue Dog Coalition",
+      "memberCount": 10,
+      "partyBreakdown": {
+        "D": 10
+      }
+    }
+  ],
+  "members": {
+    "A000370": {
+      "name": "Alma Adams",
+      "party": "D",
+      "state": "NC",
+      "district": "NC12",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "A000055": {
+      "name": "Robert Aderholt",
+      "party": "R",
+      "state": "AL",
+      "district": "AL04",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "A000379": {
+      "name": "Mark Alford",
+      "party": "R",
+      "state": "MO",
+      "district": "MO04",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "A000372": {
+      "name": "Rick Allen",
+      "party": "R",
+      "state": "GA",
+      "district": "GA12",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "A000369": {
+      "name": "Mark Amodei",
+      "party": "R",
+      "state": "NV",
+      "district": "NV02",
+      "caucuses": ["Republican Governance Group"]
+    },
+    "A000381": {
+      "name": "Yassamin Ansari",
+      "party": "D",
+      "state": "AZ",
+      "district": "AZ03",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "A000375": {
+      "name": "Jodey Arrington",
+      "party": "R",
+      "state": "TX",
+      "district": "TX19",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "B001291": {
+      "name": "Brian Babin",
+      "party": "R",
+      "state": "TX",
+      "district": "TX36",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "B001298": {
+      "name": "Don Bacon",
+      "party": "R",
+      "state": "NE",
+      "district": "NE02",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "B001307": {
+      "name": "James Baird",
+      "party": "R",
+      "state": "IN",
+      "district": "IN04",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "B001306": {
+      "name": "Troy Balderson",
+      "party": "R",
+      "state": "OH",
+      "district": "OH12",
+      "caucuses": ["Republican Governance Group", "Republican Study Committee"]
+    },
+    "B001318": {
+      "name": "Becca Balint",
+      "party": "D",
+      "state": "VT",
+      "district": "VT00",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "B001282": {
+      "name": "Andy Barr",
+      "party": "R",
+      "state": "KY",
+      "district": "KY06",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "B001300": {
+      "name": "Nanette Barragán",
+      "party": "D",
+      "state": "CA",
+      "district": "CA44",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "B001321": {
+      "name": "Tom Barrett",
+      "party": "R",
+      "state": "MI",
+      "district": "MI07",
+      "caucuses": ["Republican Main Street Caucus"]
+    },
+    "B001322": {
+      "name": "Michael Baumgartner",
+      "party": "R",
+      "state": "WA",
+      "district": "WA05",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "B001314": {
+      "name": "Aaron Bean",
+      "party": "R",
+      "state": "FL",
+      "district": "FL04",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "B001323": {
+      "name": "Nicholas Begich",
+      "party": "R",
+      "state": "AK",
+      "district": "AK00",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "B000668": {
+      "name": "Cliff Bentz",
+      "party": "R",
+      "state": "OR",
+      "district": "OR02",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "B001301": {
+      "name": "Jack Bergman",
+      "party": "R",
+      "state": "MI",
+      "district": "MI01",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "B001292": {
+      "name": "Donald Beyer",
+      "party": "D",
+      "state": "VA",
+      "district": "VA08",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "B000740": {
+      "name": "Stephanie Bice",
+      "party": "R",
+      "state": "OK",
+      "district": "OK05",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "B001302": {
+      "name": "Andy Biggs",
+      "party": "R",
+      "state": "AZ",
+      "district": "AZ05",
+      "caucuses": ["House Freedom Caucus"]
+    },
+    "B001325": {
+      "name": "Sheri Biggs",
+      "party": "R",
+      "state": "SC",
+      "district": "SC03",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "B001257": {
+      "name": "Gus Bilirakis",
+      "party": "R",
+      "state": "FL",
+      "district": "FL12",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "B000490": {
+      "name": "Sanford Bishop",
+      "party": "D",
+      "state": "GA",
+      "district": "GA02",
+      "caucuses": ["Blue Dog Coalition"]
+    },
+    "B000825": {
+      "name": "Lauren Boebert",
+      "party": "R",
+      "state": "CO",
+      "district": "CO04",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "B001278": {
+      "name": "Suzanne Bonamici",
+      "party": "D",
+      "state": "OR",
+      "district": "OR01",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "B001295": {
+      "name": "Mike Bost",
+      "party": "R",
+      "state": "IL",
+      "district": "IL12",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "B001296": {
+      "name": "Brendan Boyle",
+      "party": "D",
+      "state": "PA",
+      "district": "PA02",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "B001317": {
+      "name": "Josh Brecheen",
+      "party": "R",
+      "state": "OK",
+      "district": "OK02",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "B001327": {
+      "name": "Robert Bresnahan",
+      "party": "R",
+      "state": "PA",
+      "district": "PA08",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus"
+      ]
+    },
+    "B001313": {
+      "name": "Shontel Brown",
+      "party": "D",
+      "state": "OH",
+      "district": "OH11",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "B001260": {
+      "name": "Vern Buchanan",
+      "party": "R",
+      "state": "FL",
+      "district": "FL16",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "B001316": {
+      "name": "Eric Burlison",
+      "party": "R",
+      "state": "MO",
+      "district": "MO07",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "C000059": {
+      "name": "Ken Calvert",
+      "party": "R",
+      "state": "CA",
+      "district": "CA41",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus"
+      ]
+    },
+    "C001039": {
+      "name": "Kat Cammack",
+      "party": "R",
+      "state": "FL",
+      "district": "FL03",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "C001112": {
+      "name": "Salud Carbajal",
+      "party": "D",
+      "state": "CA",
+      "district": "CA24",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "C001126": {
+      "name": "Mike Carey",
+      "party": "R",
+      "state": "OH",
+      "district": "OH15",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "C001072": {
+      "name": "André Carson",
+      "party": "D",
+      "state": "IN",
+      "district": "IN07",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "C001051": {
+      "name": "John Carter",
+      "party": "R",
+      "state": "TX",
+      "district": "TX31",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "C001103": {
+      "name": "Earl Carter",
+      "party": "R",
+      "state": "GA",
+      "district": "GA01",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "C001125": {
+      "name": "Troy Carter",
+      "party": "D",
+      "state": "LA",
+      "district": "LA02",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "C001131": {
+      "name": "Greg Casar",
+      "party": "D",
+      "state": "TX",
+      "district": "TX35",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "C001055": {
+      "name": "Ed Case",
+      "party": "D",
+      "state": "HI",
+      "district": "HI01",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "C001091": {
+      "name": "Joaquin Castro",
+      "party": "D",
+      "state": "TX",
+      "district": "TX20",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "C001127": {
+      "name": "Sheila Cherfilus-McCormick",
+      "party": "D",
+      "state": "FL",
+      "district": "FL20",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "C001080": {
+      "name": "Judy Chu",
+      "party": "D",
+      "state": "CA",
+      "district": "CA28",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "C001133": {
+      "name": "Juan Ciscomani",
+      "party": "R",
+      "state": "AZ",
+      "district": "AZ06",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "C001067": {
+      "name": "Yvette Clarke",
+      "party": "D",
+      "state": "NY",
+      "district": "NY09",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "C001118": {
+      "name": "Ben Cline",
+      "party": "R",
+      "state": "VA",
+      "district": "VA06",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "House Freedom Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "C001115": {
+      "name": "Michael Cloud",
+      "party": "R",
+      "state": "TX",
+      "district": "TX27",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "C001116": {
+      "name": "Andrew Clyde",
+      "party": "R",
+      "state": "GA",
+      "district": "GA09",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "C001053": {
+      "name": "Tom Cole",
+      "party": "R",
+      "state": "OK",
+      "district": "OK04",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "C001129": {
+      "name": "Mike Collins",
+      "party": "R",
+      "state": "GA",
+      "district": "GA10",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "C001108": {
+      "name": "James Comer",
+      "party": "R",
+      "state": "KY",
+      "district": "KY01",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "C001110": {
+      "name": "J. Correa",
+      "party": "D",
+      "state": "CA",
+      "district": "CA46",
+      "caucuses": ["Blue Dog Coalition"]
+    },
+    "C001059": {
+      "name": "Jim Costa",
+      "party": "D",
+      "state": "CA",
+      "district": "CA21",
+      "caucuses": ["Blue Dog Coalition", "Problem Solvers Caucus"]
+    },
+    "C001119": {
+      "name": "Angie Craig",
+      "party": "D",
+      "state": "MN",
+      "district": "MN02",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "C001132": {
+      "name": "Elijah Crane",
+      "party": "R",
+      "state": "AZ",
+      "district": "AZ02",
+      "caucuses": ["House Freedom Caucus"]
+    },
+    "C001137": {
+      "name": "Jeff Crank",
+      "party": "R",
+      "state": "CO",
+      "district": "CO05",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "C001120": {
+      "name": "Dan Crenshaw",
+      "party": "R",
+      "state": "TX",
+      "district": "TX02",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "C001130": {
+      "name": "Jasmine Crockett",
+      "party": "D",
+      "state": "TX",
+      "district": "TX30",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "C001063": {
+      "name": "Henry Cuellar",
+      "party": "D",
+      "state": "TX",
+      "district": "TX28",
+      "caucuses": ["Blue Dog Coalition", "Problem Solvers Caucus"]
+    },
+    "D000626": {
+      "name": "Warren Davidson",
+      "party": "R",
+      "state": "OH",
+      "district": "OH08",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "D000096": {
+      "name": "Danny Davis",
+      "party": "D",
+      "state": "IL",
+      "district": "IL07",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "D000230": {
+      "name": "Donald Davis",
+      "party": "D",
+      "state": "NC",
+      "district": "NC01",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "D000594": {
+      "name": "Monica De La Cruz",
+      "party": "R",
+      "state": "TX",
+      "district": "TX15",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "D000631": {
+      "name": "Madeleine Dean",
+      "party": "D",
+      "state": "PA",
+      "district": "PA04",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "D000197": {
+      "name": "Diana DeGette",
+      "party": "D",
+      "state": "CO",
+      "district": "CO01",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "D000216": {
+      "name": "Rosa DeLauro",
+      "party": "D",
+      "state": "CT",
+      "district": "CT03",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "D000530": {
+      "name": "Christopher Deluzio",
+      "party": "D",
+      "state": "PA",
+      "district": "PA17",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "D000623": {
+      "name": "Mark DeSaulnier",
+      "party": "D",
+      "state": "CA",
+      "district": "CA10",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "D000616": {
+      "name": "Scott DesJarlais",
+      "party": "R",
+      "state": "TN",
+      "district": "TN04",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "D000635": {
+      "name": "Maxine Dexter",
+      "party": "D",
+      "state": "OR",
+      "district": "OR03",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "D000600": {
+      "name": "Mario Diaz-Balart",
+      "party": "R",
+      "state": "FL",
+      "district": "FL26",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus"
+      ]
+    },
+    "D000624": {
+      "name": "Debbie Dingell",
+      "party": "D",
+      "state": "MI",
+      "district": "MI06",
+      "caucuses": ["Problem Solvers Caucus", "Congressional Progressive Caucus"]
+    },
+    "D000399": {
+      "name": "Lloyd Doggett",
+      "party": "D",
+      "state": "TX",
+      "district": "TX37",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "D000032": {
+      "name": "Byron Donalds",
+      "party": "R",
+      "state": "FL",
+      "district": "FL19",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "D000634": {
+      "name": "Troy Downing",
+      "party": "R",
+      "state": "MT",
+      "district": "MT02",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "D000628": {
+      "name": "Neal Dunn",
+      "party": "R",
+      "state": "FL",
+      "district": "FL02",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "E000246": {
+      "name": "Chuck Edwards",
+      "party": "R",
+      "state": "NC",
+      "district": "NC11",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "E000071": {
+      "name": "Jake Ellzey",
+      "party": "R",
+      "state": "TX",
+      "district": "TX06",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "E000294": {
+      "name": "Tom Emmer",
+      "party": "R",
+      "state": "MN",
+      "district": "MN06",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "E000299": {
+      "name": "Veronica Escobar",
+      "party": "D",
+      "state": "TX",
+      "district": "TX16",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "E000297": {
+      "name": "Adriano Espaillat",
+      "party": "D",
+      "state": "NY",
+      "district": "NY13",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "E000298": {
+      "name": "Ron Estes",
+      "party": "R",
+      "state": "KS",
+      "district": "KS04",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "E000296": {
+      "name": "Dwight Evans",
+      "party": "D",
+      "state": "PA",
+      "district": "PA03",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "E000300": {
+      "name": "Gabe Evans",
+      "party": "R",
+      "state": "CO",
+      "district": "CO08",
+      "caucuses": ["Problem Solvers Caucus", "Republican Governance Group"]
+    },
+    "E000235": {
+      "name": "Mike Ezell",
+      "party": "R",
+      "state": "MS",
+      "district": "MS04",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "F000246": {
+      "name": "Pat Fallon",
+      "party": "R",
+      "state": "TX",
+      "district": "TX04",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "F000482": {
+      "name": "Julie Fedorchak",
+      "party": "R",
+      "state": "ND",
+      "district": "ND00",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "F000446": {
+      "name": "Randy Feenstra",
+      "party": "R",
+      "state": "IA",
+      "district": "IA04",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "F000484": {
+      "name": "Randy Fine",
+      "party": "R",
+      "state": "FL",
+      "district": "FL06",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "F000475": {
+      "name": "Brad Finstad",
+      "party": "R",
+      "state": "MN",
+      "district": "MN01",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "F000470": {
+      "name": "Michelle Fischbach",
+      "party": "R",
+      "state": "MN",
+      "district": "MN07",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "F000471": {
+      "name": "Scott Fitzgerald",
+      "party": "R",
+      "state": "WI",
+      "district": "WI05",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "F000466": {
+      "name": "Brian Fitzpatrick",
+      "party": "R",
+      "state": "PA",
+      "district": "PA01",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus"
+      ]
+    },
+    "F000459": {
+      "name": "Charles Fleischmann",
+      "party": "R",
+      "state": "TN",
+      "district": "TN03",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "F000474": {
+      "name": "Mike Flood",
+      "party": "R",
+      "state": "NE",
+      "district": "NE01",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "F000480": {
+      "name": "Vince Fong",
+      "party": "R",
+      "state": "CA",
+      "district": "CA20",
+      "caucuses": ["Republican Main Street Caucus"]
+    },
+    "F000477": {
+      "name": "Valerie Foushee",
+      "party": "D",
+      "state": "NC",
+      "district": "NC04",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "F000450": {
+      "name": "Virginia Foxx",
+      "party": "R",
+      "state": "NC",
+      "district": "NC05",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "F000472": {
+      "name": "Scott Franklin",
+      "party": "R",
+      "state": "FL",
+      "district": "FL18",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "F000483": {
+      "name": "Laura Friedman",
+      "party": "D",
+      "state": "CA",
+      "district": "CA30",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "F000476": {
+      "name": "Maxwell Frost",
+      "party": "D",
+      "state": "FL",
+      "district": "FL10",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "F000478": {
+      "name": "Russell Fry",
+      "party": "R",
+      "state": "SC",
+      "district": "SC07",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "F000469": {
+      "name": "Russ Fulcher",
+      "party": "R",
+      "state": "ID",
+      "district": "ID01",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "G000559": {
+      "name": "John Garamendi",
+      "party": "D",
+      "state": "CA",
+      "district": "CA08",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "G000597": {
+      "name": "Andrew Garbarino",
+      "party": "R",
+      "state": "NY",
+      "district": "NY02",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus"
+      ]
+    },
+    "G000598": {
+      "name": "Robert Garcia",
+      "party": "D",
+      "state": "CA",
+      "district": "CA42",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "G000586": {
+      "name": "Jesús García",
+      "party": "D",
+      "state": "IL",
+      "district": "IL04",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "G000603": {
+      "name": "Brandon Gill",
+      "party": "R",
+      "state": "TX",
+      "district": "TX26",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "G000593": {
+      "name": "Carlos Gimenez",
+      "party": "R",
+      "state": "FL",
+      "district": "FL28",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "G000592": {
+      "name": "Jared Golden",
+      "party": "D",
+      "state": "ME",
+      "district": "ME02",
+      "caucuses": ["Blue Dog Coalition", "Problem Solvers Caucus"]
+    },
+    "G000599": {
+      "name": "Daniel Goldman",
+      "party": "D",
+      "state": "NY",
+      "district": "NY10",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "G000601": {
+      "name": "Craig Goldman",
+      "party": "R",
+      "state": "TX",
+      "district": "TX12",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "G000585": {
+      "name": "Jimmy Gomez",
+      "party": "D",
+      "state": "CA",
+      "district": "CA34",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "G000594": {
+      "name": "Tony Gonzales",
+      "party": "R",
+      "state": "TX",
+      "district": "TX23",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "G000581": {
+      "name": "Vicente Gonzalez",
+      "party": "D",
+      "state": "TX",
+      "district": "TX34",
+      "caucuses": ["Blue Dog Coalition"]
+    },
+    "G000589": {
+      "name": "Lance Gooden",
+      "party": "R",
+      "state": "TX",
+      "district": "TX05",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "G000565": {
+      "name": "Paul Gosar",
+      "party": "R",
+      "state": "AZ",
+      "district": "AZ09",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "G000583": {
+      "name": "Josh Gottheimer",
+      "party": "D",
+      "state": "NJ",
+      "district": "NJ05",
+      "caucuses": ["Blue Dog Coalition", "Problem Solvers Caucus"]
+    },
+    "G000605": {
+      "name": "Adam Gray",
+      "party": "D",
+      "state": "CA",
+      "district": "CA13",
+      "caucuses": ["Blue Dog Coalition"]
+    },
+    "G000596": {
+      "name": "Marjorie Greene",
+      "party": "R",
+      "state": "GA",
+      "district": "GA14",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "G000568": {
+      "name": "H. Griffith",
+      "party": "R",
+      "state": "VA",
+      "district": "VA09",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "G000576": {
+      "name": "Glenn Grothman",
+      "party": "R",
+      "state": "WI",
+      "district": "WI06",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "G000591": {
+      "name": "Michael Guest",
+      "party": "R",
+      "state": "MS",
+      "district": "MS03",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "G000558": {
+      "name": "Brett Guthrie",
+      "party": "R",
+      "state": "KY",
+      "district": "KY02",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "H001096": {
+      "name": "Harriet Hageman",
+      "party": "R",
+      "state": "WY",
+      "district": "WY00",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "H001098": {
+      "name": "Abraham Hamadeh",
+      "party": "R",
+      "state": "AZ",
+      "district": "AZ08",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "H001090": {
+      "name": "Josh Harder",
+      "party": "D",
+      "state": "CA",
+      "district": "CA09",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "H001099": {
+      "name": "Mike Haridopolos",
+      "party": "R",
+      "state": "FL",
+      "district": "FL08",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "H001101": {
+      "name": "Pat Harrigan",
+      "party": "R",
+      "state": "NC",
+      "district": "NC10",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "H001052": {
+      "name": "Andy Harris",
+      "party": "R",
+      "state": "MD",
+      "district": "MD01",
+      "caucuses": ["House Freedom Caucus"]
+    },
+    "H001102": {
+      "name": "Mark Harris",
+      "party": "R",
+      "state": "NC",
+      "district": "NC08",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "H001086": {
+      "name": "Diana Harshbarger",
+      "party": "R",
+      "state": "TN",
+      "district": "TN01",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "H001082": {
+      "name": "Kevin Hern",
+      "party": "R",
+      "state": "OK",
+      "district": "OK01",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "H001077": {
+      "name": "Clay Higgins",
+      "party": "R",
+      "state": "LA",
+      "district": "LA03",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "H001072": {
+      "name": "J. Hill",
+      "party": "R",
+      "state": "AR",
+      "district": "AR02",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "H001091": {
+      "name": "Ashley Hinson",
+      "party": "R",
+      "state": "IA",
+      "district": "IA02",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "H001066": {
+      "name": "Steven Horsford",
+      "party": "D",
+      "state": "NV",
+      "district": "NV04",
+      "caucuses": ["Problem Solvers Caucus", "Congressional Progressive Caucus"]
+    },
+    "H001093": {
+      "name": "Erin Houchin",
+      "party": "R",
+      "state": "IN",
+      "district": "IN09",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "H001085": {
+      "name": "Chrissy Houlahan",
+      "party": "D",
+      "state": "PA",
+      "district": "PA06",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "H001094": {
+      "name": "Val Hoyle",
+      "party": "D",
+      "state": "OR",
+      "district": "OR04",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "H001067": {
+      "name": "Richard Hudson",
+      "party": "R",
+      "state": "NC",
+      "district": "NC09",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "H001068": {
+      "name": "Jared Huffman",
+      "party": "D",
+      "state": "CA",
+      "district": "CA02",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "H001058": {
+      "name": "Bill Huizenga",
+      "party": "R",
+      "state": "MI",
+      "district": "MI04",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "H001100": {
+      "name": "Jeff Hurd",
+      "party": "R",
+      "state": "CO",
+      "district": "CO03",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "I000056": {
+      "name": "Darrell Issa",
+      "party": "R",
+      "state": "CA",
+      "district": "CA48",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "J000304": {
+      "name": "Ronny Jackson",
+      "party": "R",
+      "state": "TX",
+      "district": "TX13",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "J000309": {
+      "name": "Jonathan Jackson",
+      "party": "D",
+      "state": "IL",
+      "district": "IL01",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "J000305": {
+      "name": "Sara Jacobs",
+      "party": "D",
+      "state": "CA",
+      "district": "CA51",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "J000307": {
+      "name": "John James",
+      "party": "R",
+      "state": "MI",
+      "district": "MI10",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "J000298": {
+      "name": "Pramila Jayapal",
+      "party": "D",
+      "state": "WA",
+      "district": "WA07",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "J000288": {
+      "name": "Henry Johnson",
+      "party": "D",
+      "state": "GA",
+      "district": "GA04",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "J000299": {
+      "name": "Mike Johnson",
+      "party": "R",
+      "state": "LA",
+      "district": "LA04",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "J000301": {
+      "name": "Dusty Johnson",
+      "party": "R",
+      "state": "SD",
+      "district": "SD00",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "J000289": {
+      "name": "Jim Jordan",
+      "party": "R",
+      "state": "OH",
+      "district": "OH04",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "J000295": {
+      "name": "David Joyce",
+      "party": "R",
+      "state": "OH",
+      "district": "OH14",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus"
+      ]
+    },
+    "K000400": {
+      "name": "Sydney Kamlager-Dove",
+      "party": "D",
+      "state": "CA",
+      "district": "CA37",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "K000398": {
+      "name": "Thomas Kean",
+      "party": "R",
+      "state": "NJ",
+      "district": "NJ07",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus"
+      ]
+    },
+    "K000376": {
+      "name": "Mike Kelly",
+      "party": "R",
+      "state": "PA",
+      "district": "PA16",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "K000388": {
+      "name": "Trent Kelly",
+      "party": "R",
+      "state": "MS",
+      "district": "MS01",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "K000403": {
+      "name": "Mike Kennedy",
+      "party": "R",
+      "state": "UT",
+      "district": "UT03",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "K000389": {
+      "name": "Ro Khanna",
+      "party": "D",
+      "state": "CA",
+      "district": "CA17",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "K000399": {
+      "name": "Jennifer Kiggans",
+      "party": "R",
+      "state": "VA",
+      "district": "VA02",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus"
+      ]
+    },
+    "K000401": {
+      "name": "Kevin Kiley",
+      "party": "R",
+      "state": "CA",
+      "district": "CA03",
+      "caucuses": ["Republican Governance Group", "Republican Study Committee"]
+    },
+    "K000397": {
+      "name": "Young Kim",
+      "party": "R",
+      "state": "CA",
+      "district": "CA40",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus"
+      ]
+    },
+    "K000405": {
+      "name": "Brad Knott",
+      "party": "R",
+      "state": "NC",
+      "district": "NC13",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "K000392": {
+      "name": "David Kustoff",
+      "party": "R",
+      "state": "TN",
+      "district": "TN08",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "L000585": {
+      "name": "Darin LaHood",
+      "party": "R",
+      "state": "IL",
+      "district": "IL16",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "L000598": {
+      "name": "Nick LaLota",
+      "party": "R",
+      "state": "NY",
+      "district": "NY01",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "L000578": {
+      "name": "Doug LaMalfa",
+      "party": "R",
+      "state": "CA",
+      "district": "CA01",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "L000601": {
+      "name": "Greg Landsman",
+      "party": "D",
+      "state": "OH",
+      "district": "OH01",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "L000600": {
+      "name": "Nicholas Langworthy",
+      "party": "R",
+      "state": "NY",
+      "district": "NY23",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "L000566": {
+      "name": "Robert Latta",
+      "party": "R",
+      "state": "OH",
+      "district": "OH05",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "L000599": {
+      "name": "Michael Lawler",
+      "party": "R",
+      "state": "NY",
+      "district": "NY17",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus"
+      ]
+    },
+    "L000590": {
+      "name": "Susie Lee",
+      "party": "D",
+      "state": "NV",
+      "district": "NV03",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "L000597": {
+      "name": "Laurel Lee",
+      "party": "R",
+      "state": "FL",
+      "district": "FL15",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "L000602": {
+      "name": "Summer Lee",
+      "party": "D",
+      "state": "PA",
+      "district": "PA12",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "L000273": {
+      "name": "Teresa Leger Fernandez",
+      "party": "D",
+      "state": "NM",
+      "district": "NM03",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "L000595": {
+      "name": "Julia Letlow",
+      "party": "R",
+      "state": "LA",
+      "district": "LA05",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "L000593": {
+      "name": "Mike Levin",
+      "party": "D",
+      "state": "CA",
+      "district": "CA49",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "L000582": {
+      "name": "Ted Lieu",
+      "party": "D",
+      "state": "CA",
+      "district": "CA36",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "L000583": {
+      "name": "Barry Loudermilk",
+      "party": "R",
+      "state": "GA",
+      "district": "GA11",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "L000596": {
+      "name": "Anna Paulina Luna",
+      "party": "R",
+      "state": "FL",
+      "district": "FL13",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "L000603": {
+      "name": "Morgan Luttrell",
+      "party": "R",
+      "state": "TX",
+      "district": "TX08",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "M001230": {
+      "name": "Ryan Mackenzie",
+      "party": "R",
+      "state": "PA",
+      "district": "PA07",
+      "caucuses": ["Republican Main Street Caucus"]
+    },
+    "M000317": {
+      "name": "Nicole Malliotakis",
+      "party": "R",
+      "state": "NY",
+      "district": "NY11",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "M001228": {
+      "name": "Celeste Maloy",
+      "party": "R",
+      "state": "UT",
+      "district": "UT02",
+      "caucuses": ["Republican Main Street Caucus"]
+    },
+    "M000871": {
+      "name": "Tracey Mann",
+      "party": "R",
+      "state": "KS",
+      "district": "KS01",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "M001199": {
+      "name": "Brian Mast",
+      "party": "R",
+      "state": "FL",
+      "district": "FL21",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "M001238": {
+      "name": "Sarah McBride",
+      "party": "D",
+      "state": "DE",
+      "district": "DE00",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "M001157": {
+      "name": "Michael McCaul",
+      "party": "R",
+      "state": "TX",
+      "district": "TX10",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "M001136": {
+      "name": "Lisa McClain",
+      "party": "R",
+      "state": "MI",
+      "district": "MI09",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "M001227": {
+      "name": "Jennifer McClellan",
+      "party": "D",
+      "state": "VA",
+      "district": "VA04",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "M001177": {
+      "name": "Tom McClintock",
+      "party": "R",
+      "state": "CA",
+      "district": "CA05",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "M001218": {
+      "name": "Richard McCormick",
+      "party": "R",
+      "state": "GA",
+      "district": "GA07",
+      "caucuses": ["Republican Governance Group", "Republican Study Committee"]
+    },
+    "M001240": {
+      "name": "Addison McDowell",
+      "party": "R",
+      "state": "NC",
+      "district": "NC06",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "M001220": {
+      "name": "Morgan McGarvey",
+      "party": "D",
+      "state": "KY",
+      "district": "KY03",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "M000312": {
+      "name": "James McGovern",
+      "party": "D",
+      "state": "MA",
+      "district": "MA02",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "M001239": {
+      "name": "John McGuire",
+      "party": "R",
+      "state": "VA",
+      "district": "VA05",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "M001229": {
+      "name": "LaMonica McIver",
+      "party": "D",
+      "state": "NJ",
+      "district": "NJ10",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "M001188": {
+      "name": "Grace Meng",
+      "party": "D",
+      "state": "NY",
+      "district": "NY06",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "M001233": {
+      "name": "Mark Messmer",
+      "party": "R",
+      "state": "IN",
+      "district": "IN08",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus"
+      ]
+    },
+    "M001204": {
+      "name": "Daniel Meuser",
+      "party": "R",
+      "state": "PA",
+      "district": "PA09",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "M000687": {
+      "name": "Kweisi Mfume",
+      "party": "D",
+      "state": "MD",
+      "district": "MD07",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "M001205": {
+      "name": "Carol Miller",
+      "party": "R",
+      "state": "WV",
+      "district": "WV01",
+      "caucuses": ["Republican Main Street Caucus"]
+    },
+    "M001211": {
+      "name": "Mary Miller",
+      "party": "R",
+      "state": "IL",
+      "district": "IL15",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "M001222": {
+      "name": "Max Miller",
+      "party": "R",
+      "state": "OH",
+      "district": "OH07",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "M001215": {
+      "name": "Mariannette Miller-Meeks",
+      "party": "R",
+      "state": "IA",
+      "district": "IA01",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus"
+      ]
+    },
+    "M001216": {
+      "name": "Cory Mills",
+      "party": "R",
+      "state": "FL",
+      "district": "FL07",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "M001241": {
+      "name": "Dave Min",
+      "party": "D",
+      "state": "CA",
+      "district": "CA47",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "M001194": {
+      "name": "John Moolenaar",
+      "party": "R",
+      "state": "MI",
+      "district": "MI02",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "M001160": {
+      "name": "Gwen Moore",
+      "party": "D",
+      "state": "WI",
+      "district": "WI04",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "M001212": {
+      "name": "Barry Moore",
+      "party": "R",
+      "state": "AL",
+      "district": "AL01",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "M001213": {
+      "name": "Blake Moore",
+      "party": "R",
+      "state": "UT",
+      "district": "UT01",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "M001235": {
+      "name": "Riley Moore",
+      "party": "R",
+      "state": "WV",
+      "district": "WV02",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "M001236": {
+      "name": "Tim Moore",
+      "party": "R",
+      "state": "NC",
+      "district": "NC14",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "M001224": {
+      "name": "Nathaniel Moran",
+      "party": "R",
+      "state": "TX",
+      "district": "TX01",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "M001219": {
+      "name": "James Moylan",
+      "party": "R",
+      "state": "GU",
+      "district": "GU00",
+      "caucuses": ["Problem Solvers Caucus", "Republican Study Committee"]
+    },
+    "M001225": {
+      "name": "Kevin Mullin",
+      "party": "D",
+      "state": "CA",
+      "district": "CA15",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "M001210": {
+      "name": "Gregory Murphy",
+      "party": "R",
+      "state": "NC",
+      "district": "NC03",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "N000002": {
+      "name": "Jerrold Nadler",
+      "party": "D",
+      "state": "NY",
+      "district": "NY12",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "N000191": {
+      "name": "Joe Neguse",
+      "party": "D",
+      "state": "CO",
+      "district": "CO02",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "N000026": {
+      "name": "Troy Nehls",
+      "party": "R",
+      "state": "TX",
+      "district": "TX22",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "N000189": {
+      "name": "Dan Newhouse",
+      "party": "R",
+      "state": "WA",
+      "district": "WA04",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "N000188": {
+      "name": "Donald Norcross",
+      "party": "D",
+      "state": "NJ",
+      "district": "NJ01",
+      "caucuses": ["Problem Solvers Caucus", "Congressional Progressive Caucus"]
+    },
+    "N000190": {
+      "name": "Ralph Norman",
+      "party": "R",
+      "state": "SC",
+      "district": "SC05",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "N000193": {
+      "name": "Zachary Nunn",
+      "party": "R",
+      "state": "IA",
+      "district": "IA03",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "O000019": {
+      "name": "Jay Obernolte",
+      "party": "R",
+      "state": "CA",
+      "district": "CA23",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "O000172": {
+      "name": "Alexandria Ocasio-Cortez",
+      "party": "D",
+      "state": "NY",
+      "district": "NY14",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "O000175": {
+      "name": "Andrew Ogles",
+      "party": "R",
+      "state": "TN",
+      "district": "TN05",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "O000173": {
+      "name": "Ilhan Omar",
+      "party": "D",
+      "state": "MN",
+      "district": "MN05",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "O000177": {
+      "name": "Robert Onder",
+      "party": "R",
+      "state": "MO",
+      "district": "MO03",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "O000086": {
+      "name": "Burgess Owens",
+      "party": "R",
+      "state": "UT",
+      "district": "UT04",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "P000034": {
+      "name": "Frank Pallone",
+      "party": "D",
+      "state": "NJ",
+      "district": "NJ06",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "P000609": {
+      "name": "Gary Palmer",
+      "party": "R",
+      "state": "AL",
+      "district": "AL06",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "P000613": {
+      "name": "Jimmy Panetta",
+      "party": "D",
+      "state": "CA",
+      "district": "CA19",
+      "caucuses": ["Problem Solvers Caucus", "Congressional Progressive Caucus"]
+    },
+    "P000614": {
+      "name": "Chris Pappas",
+      "party": "D",
+      "state": "NH",
+      "district": "NH01",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "P000622": {
+      "name": "Jimmy Patronis",
+      "party": "R",
+      "state": "FL",
+      "district": "FL01",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "G000600": {
+      "name": "Marie Perez",
+      "party": "D",
+      "state": "WA",
+      "district": "WA03",
+      "caucuses": ["Blue Dog Coalition", "Problem Solvers Caucus"]
+    },
+    "P000605": {
+      "name": "Scott Perry",
+      "party": "R",
+      "state": "PA",
+      "district": "PA10",
+      "caucuses": ["House Freedom Caucus"]
+    },
+    "P000608": {
+      "name": "Scott Peters",
+      "party": "D",
+      "state": "CA",
+      "district": "CA50",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "P000620": {
+      "name": "Brittany Pettersen",
+      "party": "D",
+      "state": "CO",
+      "district": "CO07",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "P000048": {
+      "name": "August Pfluger",
+      "party": "R",
+      "state": "TX",
+      "district": "TX11",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "P000597": {
+      "name": "Chellie Pingree",
+      "party": "D",
+      "state": "ME",
+      "district": "ME01",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "P000607": {
+      "name": "Mark Pocan",
+      "party": "D",
+      "state": "WI",
+      "district": "WI02",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "P000621": {
+      "name": "Nellie Pou",
+      "party": "D",
+      "state": "NJ",
+      "district": "NJ09",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "P000617": {
+      "name": "Ayanna Pressley",
+      "party": "D",
+      "state": "MA",
+      "district": "MA07",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "R000600": {
+      "name": "Aumua Amata Radewagen",
+      "party": "R",
+      "state": "AS",
+      "district": "AS00",
+      "caucuses": ["Republican Governance Group"]
+    },
+    "R000617": {
+      "name": "Delia Ramirez",
+      "party": "D",
+      "state": "IL",
+      "district": "IL03",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "R000621": {
+      "name": "Emily Randall",
+      "party": "D",
+      "state": "WA",
+      "district": "WA06",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "R000606": {
+      "name": "Jamie Raskin",
+      "party": "D",
+      "state": "MD",
+      "district": "MD08",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "R000610": {
+      "name": "Guy Reschenthaler",
+      "party": "R",
+      "state": "PA",
+      "district": "PA14",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "R000620": {
+      "name": "Luz Rivas",
+      "party": "D",
+      "state": "CA",
+      "district": "CA29",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "R000575": {
+      "name": "Mike Rogers",
+      "party": "R",
+      "state": "AL",
+      "district": "AL03",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "R000612": {
+      "name": "John Rose",
+      "party": "R",
+      "state": "TN",
+      "district": "TN06",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "R000603": {
+      "name": "David Rouzer",
+      "party": "R",
+      "state": "NC",
+      "district": "NC07",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "R000614": {
+      "name": "Chip Roy",
+      "party": "R",
+      "state": "TX",
+      "district": "TX21",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "R000619": {
+      "name": "Michael Rulli",
+      "party": "R",
+      "state": "OH",
+      "district": "OH06",
+      "caucuses": ["Republican Governance Group"]
+    },
+    "R000609": {
+      "name": "John Rutherford",
+      "party": "R",
+      "state": "FL",
+      "district": "FL05",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus"
+      ]
+    },
+    "S000168": {
+      "name": "Maria Salazar",
+      "party": "R",
+      "state": "FL",
+      "district": "FL27",
+      "caucuses": ["Problem Solvers Caucus", "Republican Governance Group"]
+    },
+    "S001226": {
+      "name": "Andrea Salinas",
+      "party": "D",
+      "state": "OR",
+      "district": "OR06",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "S001156": {
+      "name": "Linda Sánchez",
+      "party": "D",
+      "state": "CA",
+      "district": "CA38",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "S001176": {
+      "name": "Steve Scalise",
+      "party": "R",
+      "state": "LA",
+      "district": "LA01",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "S001205": {
+      "name": "Mary Gay Scanlon",
+      "party": "D",
+      "state": "PA",
+      "district": "PA05",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "S001145": {
+      "name": "Janice Schakowsky",
+      "party": "D",
+      "state": "IL",
+      "district": "IL09",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "S001228": {
+      "name": "Derek Schmidt",
+      "party": "R",
+      "state": "KS",
+      "district": "KS02",
+      "caucuses": ["Republican Main Street Caucus"]
+    },
+    "S001190": {
+      "name": "Bradley Schneider",
+      "party": "D",
+      "state": "IL",
+      "district": "IL10",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "S001221": {
+      "name": "Hillary Scholten",
+      "party": "D",
+      "state": "MI",
+      "district": "MI03",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "S001183": {
+      "name": "David Schweikert",
+      "party": "R",
+      "state": "AZ",
+      "district": "AZ01",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "S001189": {
+      "name": "Austin Scott",
+      "party": "R",
+      "state": "GA",
+      "district": "GA08",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "S001224": {
+      "name": "Keith Self",
+      "party": "R",
+      "state": "TX",
+      "district": "TX03",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "S000250": {
+      "name": "Pete Sessions",
+      "party": "R",
+      "state": "TX",
+      "district": "TX17",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "S000344": {
+      "name": "Brad Sherman",
+      "party": "D",
+      "state": "CA",
+      "district": "CA32",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "S001229": {
+      "name": "Jefferson Shreve",
+      "party": "R",
+      "state": "IN",
+      "district": "IN06",
+      "caucuses": ["Republican Main Street Caucus"]
+    },
+    "S001231": {
+      "name": "Lateefah Simon",
+      "party": "D",
+      "state": "CA",
+      "district": "CA12",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "S001148": {
+      "name": "Michael Simpson",
+      "party": "R",
+      "state": "ID",
+      "district": "ID02",
+      "caucuses": ["Republican Main Street Caucus"]
+    },
+    "S000510": {
+      "name": "Adam Smith",
+      "party": "D",
+      "state": "WA",
+      "district": "WA09",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "S001172": {
+      "name": "Adrian Smith",
+      "party": "R",
+      "state": "NE",
+      "district": "NE03",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "S001195": {
+      "name": "Jason Smith",
+      "party": "R",
+      "state": "MO",
+      "district": "MO08",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "S001199": {
+      "name": "Lloyd Smucker",
+      "party": "R",
+      "state": "PA",
+      "district": "PA11",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "S001200": {
+      "name": "Darren Soto",
+      "party": "D",
+      "state": "FL",
+      "district": "FL09",
+      "caucuses": ["Problem Solvers Caucus", "Congressional Progressive Caucus"]
+    },
+    "S001218": {
+      "name": "Melanie Stansbury",
+      "party": "D",
+      "state": "NM",
+      "district": "NM01",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "S001212": {
+      "name": "Pete Stauber",
+      "party": "R",
+      "state": "MN",
+      "district": "MN08",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "S001196": {
+      "name": "Elise Stefanik",
+      "party": "R",
+      "state": "NY",
+      "district": "NY21",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "S001213": {
+      "name": "Bryan Steil",
+      "party": "R",
+      "state": "WI",
+      "district": "WI01",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "S001214": {
+      "name": "W. Steube",
+      "party": "R",
+      "state": "FL",
+      "district": "FL17",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "S001215": {
+      "name": "Haley Stevens",
+      "party": "D",
+      "state": "MI",
+      "district": "MI11",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "S001220": {
+      "name": "Dale Strong",
+      "party": "R",
+      "state": "AL",
+      "district": "AL05",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "S001188": {
+      "name": "Marlin Stutzman",
+      "party": "R",
+      "state": "IN",
+      "district": "IN03",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "S001201": {
+      "name": "Thomas Suozzi",
+      "party": "D",
+      "state": "NY",
+      "district": "NY03",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "S001223": {
+      "name": "Emilia Sykes",
+      "party": "D",
+      "state": "OH",
+      "district": "OH13",
+      "caucuses": ["Problem Solvers Caucus"]
+    },
+    "T000472": {
+      "name": "Mark Takano",
+      "party": "D",
+      "state": "CA",
+      "district": "CA39",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "T000490": {
+      "name": "David Taylor",
+      "party": "R",
+      "state": "OH",
+      "district": "OH02",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "T000478": {
+      "name": "Claudia Tenney",
+      "party": "R",
+      "state": "NY",
+      "district": "NY24",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "T000488": {
+      "name": "Shri Thanedar",
+      "party": "D",
+      "state": "MI",
+      "district": "MI13",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "T000460": {
+      "name": "Mike Thompson",
+      "party": "D",
+      "state": "CA",
+      "district": "CA04",
+      "caucuses": ["Blue Dog Coalition"]
+    },
+    "T000467": {
+      "name": "Glenn Thompson",
+      "party": "R",
+      "state": "PA",
+      "district": "PA15",
+      "caucuses": ["Republican Governance Group"]
+    },
+    "T000165": {
+      "name": "Thomas Tiffany",
+      "party": "R",
+      "state": "WI",
+      "district": "WI07",
+      "caucuses": ["House Freedom Caucus", "Republican Study Committee"]
+    },
+    "T000480": {
+      "name": "William Timmons",
+      "party": "R",
+      "state": "SC",
+      "district": "SC04",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "T000481": {
+      "name": "Rashida Tlaib",
+      "party": "D",
+      "state": "MI",
+      "district": "MI12",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "T000487": {
+      "name": "Jill Tokuda",
+      "party": "D",
+      "state": "HI",
+      "district": "HI02",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "T000469": {
+      "name": "Paul Tonko",
+      "party": "D",
+      "state": "NY",
+      "district": "NY20",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "T000482": {
+      "name": "Lori Trahan",
+      "party": "D",
+      "state": "MA",
+      "district": "MA03",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "T000463": {
+      "name": "Michael Turner",
+      "party": "R",
+      "state": "OH",
+      "district": "OH10",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "V000129": {
+      "name": "David Valadao",
+      "party": "R",
+      "state": "CA",
+      "district": "CA22",
+      "caucuses": [
+        "Problem Solvers Caucus",
+        "Republican Governance Group",
+        "Republican Main Street Caucus"
+      ]
+    },
+    "V000133": {
+      "name": "Jefferson Van Drew",
+      "party": "R",
+      "state": "NJ",
+      "district": "NJ02",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "V000134": {
+      "name": "Beth Van Duyne",
+      "party": "R",
+      "state": "TX",
+      "district": "TX24",
+      "caucuses": ["Republican Governance Group", "Republican Study Committee"]
+    },
+    "V000135": {
+      "name": "Derrick Van Orden",
+      "party": "R",
+      "state": "WI",
+      "district": "WI03",
+      "caucuses": ["Republican Main Street Caucus"]
+    },
+    "V000130": {
+      "name": "Juan Vargas",
+      "party": "D",
+      "state": "CA",
+      "district": "CA52",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "V000081": {
+      "name": "Nydia Velázquez",
+      "party": "D",
+      "state": "NY",
+      "district": "NY07",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "W000812": {
+      "name": "Ann Wagner",
+      "party": "R",
+      "state": "MO",
+      "district": "MO02",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "W000798": {
+      "name": "Tim Walberg",
+      "party": "R",
+      "state": "MI",
+      "district": "MI05",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "W000187": {
+      "name": "Maxine Waters",
+      "party": "D",
+      "state": "CA",
+      "district": "CA43",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "W000822": {
+      "name": "Bonnie Watson Coleman",
+      "party": "D",
+      "state": "NJ",
+      "district": "NJ12",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "W000814": {
+      "name": "Randy Weber",
+      "party": "R",
+      "state": "TX",
+      "district": "TX14",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "W000806": {
+      "name": "Daniel Webster",
+      "party": "R",
+      "state": "FL",
+      "district": "FL11",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "W000821": {
+      "name": "Bruce Westerman",
+      "party": "R",
+      "state": "AR",
+      "district": "AR04",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "W000829": {
+      "name": "Tony Wied",
+      "party": "R",
+      "state": "WI",
+      "district": "WI08",
+      "caucuses": [
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "W000788": {
+      "name": "Nikema Williams",
+      "party": "D",
+      "state": "GA",
+      "district": "GA05",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "W000816": {
+      "name": "Roger Williams",
+      "party": "R",
+      "state": "TX",
+      "district": "TX25",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "W000795": {
+      "name": "Joe Wilson",
+      "party": "R",
+      "state": "SC",
+      "district": "SC02",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "W000808": {
+      "name": "Frederica Wilson",
+      "party": "D",
+      "state": "FL",
+      "district": "FL24",
+      "caucuses": ["Congressional Progressive Caucus"]
+    },
+    "W000804": {
+      "name": "Robert Wittman",
+      "party": "R",
+      "state": "VA",
+      "district": "VA01",
+      "caucuses": [
+        "Republican Governance Group",
+        "Republican Main Street Caucus",
+        "Republican Study Committee"
+      ]
+    },
+    "W000809": {
+      "name": "Steve Womack",
+      "party": "R",
+      "state": "AR",
+      "district": "AR03",
+      "caucuses": ["Republican Governance Group", "Republican Study Committee"]
+    },
+    "Y000067": {
+      "name": "Rudy Yakym",
+      "party": "R",
+      "state": "IN",
+      "district": "IN02",
+      "caucuses": ["Republican Study Committee"]
+    },
+    "Z000018": {
+      "name": "Ryan Zinke",
+      "party": "R",
+      "state": "MT",
+      "district": "MT01",
+      "caucuses": ["Republican Study Committee"]
+    }
+  }
+}
