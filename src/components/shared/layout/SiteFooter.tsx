@@ -41,6 +41,13 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
           </Link>
           <span className={isDark ? 'text-gray-600' : 'text-gray-400'}>•</span>
           <Link
+            href="/education"
+            className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-civiq-blue'} transition-colors underline`}
+          >
+            Education
+          </Link>
+          <span className={isDark ? 'text-gray-600' : 'text-gray-400'}>•</span>
+          <Link
             href="/privacy"
             className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-civiq-blue'} transition-colors underline`}
           >
