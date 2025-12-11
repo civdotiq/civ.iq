@@ -27,6 +27,7 @@ import {
   HelpCircle,
   Bookmark,
   CheckSquare,
+  X,
 } from 'lucide-react';
 import {
   EDUCATION_CURRICULUM,
@@ -71,6 +72,8 @@ export function EducationClient() {
   const [activeTab, setActiveTab] = useState<'lessons' | 'worksheets' | 'rubrics' | 'standards'>(
     'lessons'
   );
+  const [printLesson, setPrintLesson] = useState<Lesson | null>(null);
+  const [pendingWorksheetScroll, setPendingWorksheetScroll] = useState<string | null>(null);
 
   const filteredLessons = useMemo(() => {
     let lessons = EDUCATION_CURRICULUM.filter(lesson => lesson.gradeLevel === selectedGradeLevel);
@@ -269,6 +272,13 @@ export function EducationClient() {
                   lesson={lesson}
                   isExpanded={expandedLesson === lesson.id}
                   onToggle={() => handleLessonToggle(lesson.id)}
+                  onViewWorksheet={(worksheetId: string) => {
+                    setActiveTab('worksheets');
+                    setPendingWorksheetScroll(worksheetId);
+                  }}
+                  onPrintLesson={(lessonToPrint: Lesson) => {
+                    setPrintLesson(lessonToPrint);
+                  }}
                 />
               ))
             )}
@@ -291,6 +301,19 @@ export function EducationClient() {
 
       {/* Teacher Resources Section */}
       <TeacherResourcesSection gradeLevel={selectedGradeLevel} />
+
+      {/* Print Lesson Modal */}
+      {printLesson && (
+        <PrintLessonModal lesson={printLesson} onClose={() => setPrintLesson(null)} />
+      )}
+
+      {/* Effect to scroll to worksheet after tab switch */}
+      {activeTab === 'worksheets' && pendingWorksheetScroll && (
+        <WorksheetScrollEffect
+          worksheetId={pendingWorksheetScroll}
+          onScrollComplete={() => setPendingWorksheetScroll(null)}
+        />
+      )}
     </div>
   );
 }
@@ -299,9 +322,17 @@ interface LessonCardProps {
   lesson: Lesson;
   isExpanded: boolean;
   onToggle: () => void;
+  onViewWorksheet: (worksheetId: string) => void;
+  onPrintLesson: (lesson: Lesson) => void;
 }
 
-function LessonCard({ lesson, isExpanded, onToggle }: LessonCardProps) {
+function LessonCard({
+  lesson,
+  isExpanded,
+  onToggle,
+  onViewWorksheet,
+  onPrintLesson,
+}: LessonCardProps) {
   const colors = GRADE_LEVEL_COLORS[lesson.gradeLevel];
   const worksheet = getWorksheetByLessonId(lesson.id);
   const c3Standards = getC3StandardsByLesson(lesson.id);
@@ -585,9 +616,7 @@ function LessonCard({ lesson, isExpanded, onToggle }: LessonCardProps) {
           <div className="pt-4 border-t border-gray-200 flex flex-wrap gap-3">
             <button
               className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white font-medium hover:bg-gray-800 transition-colors"
-              onClick={() => {
-                window.print();
-              }}
+              onClick={() => onPrintLesson(lesson)}
             >
               <Download className="w-4 h-4" />
               Print Lesson Plan
@@ -595,13 +624,7 @@ function LessonCard({ lesson, isExpanded, onToggle }: LessonCardProps) {
             {worksheet && (
               <button
                 className="inline-flex items-center gap-2 px-4 py-2 border-2 border-black text-gray-900 font-medium hover:bg-gray-50 transition-colors"
-                onClick={() => {
-                  // Navigate to worksheet tab or scroll to worksheet
-                  const element = document.getElementById(`worksheet-${worksheet.id}`);
-                  if (element) {
-                    element.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
+                onClick={() => onViewWorksheet(worksheet.id)}
               >
                 <FileText className="w-4 h-4" />
                 View Worksheet
@@ -863,6 +886,269 @@ function TeacherResourcesSection({ gradeLevel }: TeacherResourcesSectionProps) {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// Helper component to scroll to worksheet after tab switch
+function WorksheetScrollEffect({
+  worksheetId,
+  onScrollComplete,
+}: {
+  worksheetId: string;
+  onScrollComplete: () => void;
+}) {
+  // Use setTimeout to ensure the DOM has updated after tab switch
+  setTimeout(() => {
+    const element = document.getElementById(`worksheet-${worksheetId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Highlight the worksheet briefly
+      element.classList.add('ring-2', 'ring-civiq-blue', 'ring-offset-2');
+      setTimeout(() => {
+        element.classList.remove('ring-2', 'ring-civiq-blue', 'ring-offset-2');
+      }, 2000);
+    }
+    onScrollComplete();
+  }, 100);
+
+  return null;
+}
+
+// Print lesson modal with printable layout
+interface PrintLessonModalProps {
+  lesson: Lesson;
+  onClose: () => void;
+}
+
+function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
+  const colors = GRADE_LEVEL_COLORS[lesson.gradeLevel];
+  const c3Standards = getC3StandardsByLesson(lesson.id);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-auto bg-black/50 flex items-start justify-center p-4">
+      <div className="bg-white max-w-4xl w-full my-8 print:m-0 print:max-w-none print:shadow-none shadow-xl">
+        {/* Modal Header - Hidden when printing */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 print:hidden">
+          <h2 className="text-lg font-semibold">Print Lesson Plan</h2>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrint}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white font-medium hover:bg-gray-800 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Print
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Printable Content */}
+        <div className="p-8 print:p-4">
+          {/* Header */}
+          <div className="border-b-2 border-black pb-4 mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <span className={`text-sm font-mono ${colors.text}`}>{lesson.id}</span>
+              <span className="text-sm text-gray-500">
+                {GRADE_LEVEL_INFO[lesson.gradeLevel].label} (
+                {GRADE_LEVEL_INFO[lesson.gradeLevel].grades})
+              </span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">{lesson.title}</h1>
+            <p className="text-gray-600">{lesson.overview}</p>
+            <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+              <span>Duration: {lesson.duration}</span>
+              <span>Topic: {LESSON_TOPICS[lesson.topic]}</span>
+            </div>
+          </div>
+
+          {/* Essential Question */}
+          <div className={`p-4 mb-6 ${colors.bg} border-l-4 ${colors.border.replace('/30', '')}`}>
+            <h2 className={`font-semibold ${colors.text} mb-1`}>Essential Question</h2>
+            <p className="text-gray-800 text-lg italic">{lesson.essentialQuestion}</p>
+          </div>
+
+          {/* Two Column Layout for Print */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-2">
+            {/* Learning Objectives */}
+            <div>
+              <h2 className="font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">
+                Learning Objectives
+              </h2>
+              <ul className="space-y-1 text-sm">
+                {lesson.objectives.map(obj => (
+                  <li key={obj.id} className="flex items-start gap-2">
+                    <span className="text-civiq-green font-bold">+</span>
+                    <span>{obj.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Materials */}
+            <div>
+              <h2 className="font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">
+                Materials Needed
+              </h2>
+              <ul className="space-y-1 text-sm">
+                {lesson.materials.map((material, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-gray-400">•</span>
+                    {material}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Vocabulary */}
+          <div className="mt-6">
+            <h2 className="font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">
+              Key Vocabulary
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {lesson.vocabulary.map(word => (
+                <span key={word} className="px-2 py-1 bg-gray-100 text-gray-700 text-sm">
+                  {word}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Procedure */}
+          {lesson.procedure && lesson.procedure.length > 0 && (
+            <div className="mt-6">
+              <h2 className="font-semibold text-gray-900 mb-3 border-b border-gray-200 pb-1">
+                Procedure
+              </h2>
+              <div className="space-y-4">
+                {lesson.procedure.map((step, index) => (
+                  <div key={index} className="border-l-2 border-gray-300 pl-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="bg-black text-white text-xs font-bold px-2 py-0.5">
+                        {index + 1}
+                      </span>
+                      <span className="font-semibold text-gray-900">{step.phase}</span>
+                      <span className="text-sm text-gray-500">({step.duration})</span>
+                    </div>
+                    <ul className="space-y-0.5 text-sm">
+                      {step.instructions.map((instruction, i) => (
+                        <li key={i} className="text-gray-600">
+                          → {instruction}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Activities */}
+          <div className="mt-6">
+            <h2 className="font-semibold text-gray-900 mb-3 border-b border-gray-200 pb-1">
+              Activities
+            </h2>
+            <div className="space-y-3">
+              {lesson.activities.map((activity, index) => (
+                <div key={index} className="p-3 bg-gray-50 border border-gray-200">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-medium text-gray-900">{activity.title}</h3>
+                    <span className="text-xs text-gray-500">{activity.duration}</span>
+                  </div>
+                  <p className="text-sm text-gray-600">{activity.description}</p>
+                  {activity.civiqPath && (
+                    <p className="text-sm text-civiq-blue mt-1">
+                      CIV.IQ: {activity.civiqFeature} → {activity.civiqPath}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Discussion Questions */}
+          <div className="mt-6">
+            <h2 className="font-semibold text-gray-900 mb-3 border-b border-gray-200 pb-1">
+              Discussion Questions
+            </h2>
+            <ol className="space-y-2 list-decimal list-inside">
+              {lesson.discussionQuestions.map((dq, index) => (
+                <li key={index} className="text-gray-700">
+                  {dq.question}
+                  {dq.followUp && (
+                    <span className="block text-sm text-gray-500 ml-5 italic">
+                      Follow-up: {dq.followUp}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* Assessment */}
+          <div className="mt-6">
+            <h2 className="font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">
+              Assessment
+            </h2>
+            <p className="text-gray-700 p-3 bg-civiq-blue/5 border-l-4 border-civiq-blue">
+              {lesson.assessment}
+            </p>
+          </div>
+
+          {/* C3 Standards */}
+          {c3Standards.length > 0 && (
+            <div className="mt-6">
+              <h2 className="font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">
+                C3 Framework Standards
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {c3Standards.map(std => (
+                  <span
+                    key={std.code}
+                    className="text-xs px-2 py-1 bg-gray-100 border border-gray-300"
+                    title={std.description}
+                  >
+                    {std.code}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Extensions */}
+          {lesson.extensions && lesson.extensions.length > 0 && (
+            <div className="mt-6">
+              <h2 className="font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">
+                Extensions
+              </h2>
+              <ul className="space-y-1 text-sm">
+                {lesson.extensions.map((ext, index) => (
+                  <li key={index} className="flex items-start gap-2 text-gray-600">
+                    <span className="text-civiq-blue">+</span>
+                    {ext}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="mt-8 pt-4 border-t border-gray-200 text-xs text-gray-400 text-center">
+            Generated from CIV.IQ Education • civiq.org/education
+          </div>
+        </div>
       </div>
     </div>
   );
