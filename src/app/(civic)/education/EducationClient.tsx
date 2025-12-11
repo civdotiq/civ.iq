@@ -46,6 +46,7 @@ import {
   type AssessmentRubric,
   type C3Standard,
 } from '@/lib/data/education-curriculum';
+import { PrintableWorksheet } from './PrintableWorksheet';
 
 const GRADE_LEVEL_COLORS: Record<GradeLevel, { bg: string; text: string; border: string }> = {
   elementary: {
@@ -73,6 +74,7 @@ export function EducationClient() {
     'lessons'
   );
   const [printLesson, setPrintLesson] = useState<Lesson | null>(null);
+  const [printWorksheet, setPrintWorksheet] = useState<Worksheet | null>(null);
   const [pendingWorksheetScroll, setPendingWorksheetScroll] = useState<string | null>(null);
 
   const filteredLessons = useMemo(() => {
@@ -288,7 +290,11 @@ export function EducationClient() {
 
       {/* Worksheets Tab Content */}
       {activeTab === 'worksheets' && (
-        <WorksheetsSection worksheets={worksheetsForGradeLevel} gradeLevel={selectedGradeLevel} />
+        <WorksheetsSection
+          worksheets={worksheetsForGradeLevel}
+          gradeLevel={selectedGradeLevel}
+          onPrintWorksheet={(worksheet: Worksheet) => setPrintWorksheet(worksheet)}
+        />
       )}
 
       {/* Rubrics Tab Content */}
@@ -305,6 +311,11 @@ export function EducationClient() {
       {/* Print Lesson Modal */}
       {printLesson && (
         <PrintLessonModal lesson={printLesson} onClose={() => setPrintLesson(null)} />
+      )}
+
+      {/* Print Worksheet Modal */}
+      {printWorksheet && (
+        <PrintableWorksheet worksheet={printWorksheet} onClose={() => setPrintWorksheet(null)} />
       )}
 
       {/* Effect to scroll to worksheet after tab switch */}
@@ -640,9 +651,10 @@ function LessonCard({
 interface WorksheetsSectionProps {
   worksheets: Worksheet[];
   gradeLevel: GradeLevel;
+  onPrintWorksheet: (worksheet: Worksheet) => void;
 }
 
-function WorksheetsSection({ worksheets, gradeLevel }: WorksheetsSectionProps) {
+function WorksheetsSection({ worksheets, gradeLevel, onPrintWorksheet }: WorksheetsSectionProps) {
   const colors = GRADE_LEVEL_COLORS[gradeLevel];
 
   if (worksheets.length === 0) {
@@ -689,7 +701,7 @@ function WorksheetsSection({ worksheets, gradeLevel }: WorksheetsSectionProps) {
             </div>
             <button
               className="inline-flex items-center gap-2 px-3 py-1.5 bg-black text-white text-sm font-medium hover:bg-gray-800 transition-colors"
-              onClick={() => window.print()}
+              onClick={() => onPrintWorksheet(worksheet)}
             >
               <Download className="w-3 h-3" />
               Print Worksheet
@@ -923,7 +935,6 @@ interface PrintLessonModalProps {
 }
 
 function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
-  const colors = GRADE_LEVEL_COLORS[lesson.gradeLevel];
   const c3Standards = getC3StandardsByLesson(lesson.id);
 
   const handlePrint = () => {
@@ -931,10 +942,10 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-auto bg-black/50 flex items-start justify-center p-4">
-      <div className="bg-white max-w-4xl w-full my-8 print:m-0 print:max-w-none print:shadow-none shadow-xl">
+    <div className="fixed inset-0 z-50 overflow-auto bg-black/50 flex items-start justify-center p-4 print:p-0 print:bg-white">
+      <div className="bg-white w-full max-w-[8.5in] my-8 print:m-0 print:max-w-none print:shadow-none shadow-xl">
         {/* Modal Header - Hidden when printing */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 print:hidden">
+        <div className="flex items-center justify-between p-4 border-b-2 border-black print:hidden">
           <h2 className="text-lg font-semibold">Print Lesson Plan</h2>
           <div className="flex items-center gap-2">
             <button
@@ -955,41 +966,78 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
         </div>
 
         {/* Printable Content */}
-        <div className="p-8 print:p-4">
-          {/* Header */}
-          <div className="border-b-2 border-black pb-4 mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`text-sm font-mono ${colors.text}`}>{lesson.id}</span>
-              <span className="text-sm text-gray-500">
-                {GRADE_LEVEL_INFO[lesson.gradeLevel].label} (
-                {GRADE_LEVEL_INFO[lesson.gradeLevel].grades})
+        <div className="p-8 print:p-6 font-['Inter',system-ui,sans-serif] text-[11pt] leading-[1.4] text-[#1a1a1a]">
+          {/* Header with CIV.IQ branding */}
+          <header className="grid grid-cols-[1fr_auto] items-start gap-4 pb-4 border-b-2 border-black mb-6">
+            <div>
+              <div className="text-[9pt] font-semibold text-[#4a4a4a] tracking-[0.05em] uppercase mb-0.5">
+                Lesson Plan {lesson.id} · {GRADE_LEVEL_INFO[lesson.gradeLevel].label} ·{' '}
+                {GRADE_LEVEL_INFO[lesson.gradeLevel].grades}
+              </div>
+              <h1 className="text-[20pt] font-semibold tracking-tight leading-tight">
+                {lesson.title}
+              </h1>
+              {c3Standards.length > 0 && (
+                <div className="text-[7pt] text-[#888] mt-0.5">
+                  C3 Framework: {c3Standards.map(s => s.code).join(', ')}
+                </div>
+              )}
+            </div>
+            <div className="text-right text-[9pt] text-[#4a4a4a]">
+              <div className="font-semibold text-[14pt] tracking-tight">
+                CIV<span className="text-[#1976d2]">.</span>IQ
+              </div>
+              <div>civiq.org</div>
+            </div>
+          </header>
+
+          {/* Lesson Info Row */}
+          <div className="grid grid-cols-3 gap-6 mb-6 text-[9pt]">
+            <div className="flex items-baseline gap-2">
+              <span className="font-medium uppercase tracking-[0.05em] text-[#4a4a4a]">
+                Duration
               </span>
+              <span className="text-black">{lesson.duration}</span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{lesson.title}</h1>
-            <p className="text-gray-600">{lesson.overview}</p>
-            <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
-              <span>Duration: {lesson.duration}</span>
-              <span>Topic: {LESSON_TOPICS[lesson.topic]}</span>
+            <div className="flex items-baseline gap-2">
+              <span className="font-medium uppercase tracking-[0.05em] text-[#4a4a4a]">Topic</span>
+              <span className="text-black">{LESSON_TOPICS[lesson.topic]}</span>
             </div>
+            <div className="flex items-baseline gap-2">
+              <span className="font-medium uppercase tracking-[0.05em] text-[#4a4a4a]">
+                Activities
+              </span>
+              <span className="text-black">{lesson.activities.length}</span>
+            </div>
+          </div>
+
+          {/* Overview */}
+          <div className="border-2 border-black p-4 mb-6">
+            <div className="text-[9pt] font-medium uppercase tracking-[0.05em] text-[#4a4a4a] mb-2">
+              Overview
+            </div>
+            <p className="text-[10pt] text-[#1a1a1a]">{lesson.overview}</p>
           </div>
 
           {/* Essential Question */}
-          <div className={`p-4 mb-6 ${colors.bg} border-l-4 ${colors.border.replace('/30', '')}`}>
-            <h2 className={`font-semibold ${colors.text} mb-1`}>Essential Question</h2>
-            <p className="text-gray-800 text-lg italic">{lesson.essentialQuestion}</p>
+          <div className="border-2 border-black p-4 mb-6 bg-[#f5f5f5]">
+            <div className="text-[9pt] font-medium uppercase tracking-[0.05em] text-[#4a4a4a] mb-2">
+              Essential Question
+            </div>
+            <p className="text-[12pt] text-[#1a1a1a] italic">{lesson.essentialQuestion}</p>
           </div>
 
           {/* Two Column Layout for Print */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-2 mb-6">
             {/* Learning Objectives */}
-            <div>
-              <h2 className="font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">
+            <div className="border-2 border-black p-4">
+              <div className="text-[9pt] font-medium uppercase tracking-[0.05em] text-[#4a4a4a] mb-3 pb-2 border-b border-[#e0e0e0]">
                 Learning Objectives
-              </h2>
-              <ul className="space-y-1 text-sm">
+              </div>
+              <ul className="space-y-2 text-[10pt]">
                 {lesson.objectives.map(obj => (
                   <li key={obj.id} className="flex items-start gap-2">
-                    <span className="text-civiq-green font-bold">+</span>
+                    <span className="text-[#0a9338] font-bold">+</span>
                     <span>{obj.text}</span>
                   </li>
                 ))}
@@ -997,14 +1045,14 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
             </div>
 
             {/* Materials */}
-            <div>
-              <h2 className="font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">
+            <div className="border-2 border-black p-4">
+              <div className="text-[9pt] font-medium uppercase tracking-[0.05em] text-[#4a4a4a] mb-3 pb-2 border-b border-[#e0e0e0]">
                 Materials Needed
-              </h2>
-              <ul className="space-y-1 text-sm">
+              </div>
+              <ul className="space-y-2 text-[10pt]">
                 {lesson.materials.map((material, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="text-gray-400">•</span>
+                    <span className="text-[#888]">•</span>
                     {material}
                   </li>
                 ))}
@@ -1013,13 +1061,16 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
           </div>
 
           {/* Vocabulary */}
-          <div className="mt-6">
-            <h2 className="font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">
+          <div className="border-2 border-black p-4 mb-6">
+            <div className="text-[9pt] font-medium uppercase tracking-[0.05em] text-[#4a4a4a] mb-3 pb-2 border-b border-[#e0e0e0]">
               Key Vocabulary
-            </h2>
+            </div>
             <div className="flex flex-wrap gap-2">
               {lesson.vocabulary.map(word => (
-                <span key={word} className="px-2 py-1 bg-gray-100 text-gray-700 text-sm">
+                <span
+                  key={word}
+                  className="px-2 py-1 bg-[#f5f5f5] text-[#1a1a1a] text-[9pt] border border-[#e0e0e0]"
+                >
                   {word}
                 </span>
               ))}
@@ -1028,27 +1079,29 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
 
           {/* Procedure */}
           {lesson.procedure && lesson.procedure.length > 0 && (
-            <div className="mt-6">
-              <h2 className="font-semibold text-gray-900 mb-3 border-b border-gray-200 pb-1">
+            <div className="border-2 border-black p-4 mb-6">
+              <div className="text-[9pt] font-medium uppercase tracking-[0.05em] text-[#4a4a4a] mb-3 pb-2 border-b border-[#e0e0e0]">
                 Procedure
-              </h2>
+              </div>
               <div className="space-y-4">
                 {lesson.procedure.map((step, index) => (
-                  <div key={index} className="border-l-2 border-gray-300 pl-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="bg-black text-white text-xs font-bold px-2 py-0.5">
-                        {index + 1}
-                      </span>
-                      <span className="font-semibold text-gray-900">{step.phase}</span>
-                      <span className="text-sm text-gray-500">({step.duration})</span>
+                  <div key={index} className="flex gap-3">
+                    <div className="w-6 h-6 bg-black text-white text-[10pt] font-semibold flex items-center justify-center flex-shrink-0">
+                      {index + 1}
                     </div>
-                    <ul className="space-y-0.5 text-sm">
-                      {step.instructions.map((instruction, i) => (
-                        <li key={i} className="text-gray-600">
-                          → {instruction}
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-[10pt]">{step.phase}</span>
+                        <span className="text-[8pt] text-[#888]">({step.duration})</span>
+                      </div>
+                      <ul className="space-y-1 text-[9pt]">
+                        {step.instructions.map((instruction, i) => (
+                          <li key={i} className="text-[#4a4a4a]">
+                            → {instruction}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1056,20 +1109,20 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
           )}
 
           {/* Activities */}
-          <div className="mt-6">
-            <h2 className="font-semibold text-gray-900 mb-3 border-b border-gray-200 pb-1">
+          <div className="border-2 border-black p-4 mb-6">
+            <div className="text-[9pt] font-medium uppercase tracking-[0.05em] text-[#4a4a4a] mb-3 pb-2 border-b border-[#e0e0e0]">
               Activities
-            </h2>
+            </div>
             <div className="space-y-3">
               {lesson.activities.map((activity, index) => (
-                <div key={index} className="p-3 bg-gray-50 border border-gray-200">
+                <div key={index} className="p-3 bg-[#f5f5f5] border border-[#e0e0e0]">
                   <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-medium text-gray-900">{activity.title}</h3>
-                    <span className="text-xs text-gray-500">{activity.duration}</span>
+                    <h3 className="font-medium text-[10pt]">{activity.title}</h3>
+                    <span className="text-[8pt] text-[#888]">{activity.duration}</span>
                   </div>
-                  <p className="text-sm text-gray-600">{activity.description}</p>
+                  <p className="text-[9pt] text-[#4a4a4a]">{activity.description}</p>
                   {activity.civiqPath && (
-                    <p className="text-sm text-civiq-blue mt-1">
+                    <p className="text-[8pt] text-[#1976d2] mt-1">
                       CIV.IQ: {activity.civiqFeature} → {activity.civiqPath}
                     </p>
                   )}
@@ -1079,64 +1132,45 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
           </div>
 
           {/* Discussion Questions */}
-          <div className="mt-6">
-            <h2 className="font-semibold text-gray-900 mb-3 border-b border-gray-200 pb-1">
+          <div className="border-2 border-black p-4 mb-6">
+            <div className="text-[9pt] font-medium uppercase tracking-[0.05em] text-[#4a4a4a] mb-3 pb-2 border-b border-[#e0e0e0]">
               Discussion Questions
-            </h2>
-            <ol className="space-y-2 list-decimal list-inside">
+            </div>
+            <ol className="space-y-2 text-[10pt]">
               {lesson.discussionQuestions.map((dq, index) => (
-                <li key={index} className="text-gray-700">
-                  {dq.question}
-                  {dq.followUp && (
-                    <span className="block text-sm text-gray-500 ml-5 italic">
-                      Follow-up: {dq.followUp}
-                    </span>
-                  )}
+                <li key={index} className="flex gap-2">
+                  <span className="font-semibold text-[#888]">{index + 1}.</span>
+                  <div>
+                    <span>{dq.question}</span>
+                    {dq.followUp && (
+                      <span className="block text-[8pt] text-[#888] mt-0.5 italic">
+                        Follow-up: {dq.followUp}
+                      </span>
+                    )}
+                  </div>
                 </li>
               ))}
             </ol>
           </div>
 
           {/* Assessment */}
-          <div className="mt-6">
-            <h2 className="font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">
+          <div className="border-2 border-black p-4 mb-6">
+            <div className="text-[9pt] font-medium uppercase tracking-[0.05em] text-[#4a4a4a] mb-2">
               Assessment
-            </h2>
-            <p className="text-gray-700 p-3 bg-civiq-blue/5 border-l-4 border-civiq-blue">
-              {lesson.assessment}
-            </p>
-          </div>
-
-          {/* C3 Standards */}
-          {c3Standards.length > 0 && (
-            <div className="mt-6">
-              <h2 className="font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">
-                C3 Framework Standards
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {c3Standards.map(std => (
-                  <span
-                    key={std.code}
-                    className="text-xs px-2 py-1 bg-gray-100 border border-gray-300"
-                    title={std.description}
-                  >
-                    {std.code}
-                  </span>
-                ))}
-              </div>
             </div>
-          )}
+            <p className="text-[10pt] text-[#1a1a1a]">{lesson.assessment}</p>
+          </div>
 
           {/* Extensions */}
           {lesson.extensions && lesson.extensions.length > 0 && (
-            <div className="mt-6">
-              <h2 className="font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">
+            <div className="border-2 border-black p-4 mb-6">
+              <div className="text-[9pt] font-medium uppercase tracking-[0.05em] text-[#4a4a4a] mb-3 pb-2 border-b border-[#e0e0e0]">
                 Extensions
-              </h2>
-              <ul className="space-y-1 text-sm">
+              </div>
+              <ul className="space-y-1 text-[10pt]">
                 {lesson.extensions.map((ext, index) => (
-                  <li key={index} className="flex items-start gap-2 text-gray-600">
-                    <span className="text-civiq-blue">+</span>
+                  <li key={index} className="flex items-start gap-2 text-[#4a4a4a]">
+                    <span className="text-[#1976d2]">+</span>
                     {ext}
                   </li>
                 ))}
@@ -1145,10 +1179,34 @@ function PrintLessonModal({ lesson, onClose }: PrintLessonModalProps) {
           )}
 
           {/* Footer */}
-          <div className="mt-8 pt-4 border-t border-gray-200 text-xs text-gray-400 text-center">
-            Generated from CIV.IQ Education • civiq.org/education
-          </div>
+          <footer className="mt-10 pt-4 border-t border-[#e0e0e0] flex justify-between text-[8pt] text-[#888]">
+            <div className="flex items-center gap-1">
+              <span className="w-[10px] h-[10px] border border-[#888] rounded-full flex items-center justify-center text-[6pt] font-semibold">
+                i
+              </span>
+              <span>Data source: Congress.gov API via CIV.IQ</span>
+            </div>
+            <div>CIV.IQ Education Resources · civiq.org/education · CC BY 4.0</div>
+          </footer>
         </div>
+
+        {/* Print-specific styles */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              @media print {
+                @page {
+                  size: letter;
+                  margin: 0.5in;
+                }
+                body {
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                }
+              }
+            `,
+          }}
+        />
       </div>
     </div>
   );
