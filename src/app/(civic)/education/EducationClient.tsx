@@ -902,13 +902,9 @@ function TeacherResourcesSection({ gradeLevel }: TeacherResourcesSectionProps) {
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-gray-900">{resource.title}</h3>
                 <p className="text-sm text-gray-600 mt-1">{resource.description}</p>
-                <button
-                  className="mt-2 inline-flex items-center gap-1 text-sm text-civiq-blue hover:underline"
-                  onClick={() => window.print()}
-                >
-                  <Download className="w-3 h-3" />
-                  Download
-                </button>
+                <span className="mt-2 inline-flex items-center gap-1 text-sm text-gray-400">
+                  Coming Soon
+                </span>
               </div>
             </div>
           </div>
