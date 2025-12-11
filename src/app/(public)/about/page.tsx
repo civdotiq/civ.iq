@@ -97,21 +97,6 @@ export default function AboutPage() {
             />
           </div>
         </div>
-
-        {/* Simple Footer */}
-        <div className="pt-grid-4 border-t border-gray-200">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-grid-2">
-            <p className="text-sm text-gray-500">
-              No mock data. No fabrication. Real government APIs only.
-            </p>
-            <Link
-              href="/"
-              className="text-sm font-medium text-black hover:text-civiq-blue transition-colors"
-            >
-              Enter CIV.IQ
-            </Link>
-          </div>
-        </div>
       </div>
     </div>
   );
