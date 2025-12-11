@@ -528,32 +528,37 @@ select:disabled {
     page-break-after: always;
   }
 
-  /* Hide site header/nav/footer when printing worksheets or lesson plans */
+  /* Hide site header/nav/footer when printing worksheets, lesson plans, or rubrics */
   body:has(.print-worksheet-root),
-  body:has(.print-lesson-root) {
+  body:has(.print-lesson-root),
+  body:has(.print-rubric-root) {
     overflow: visible !important;
   }
 
   body:has(.print-worksheet-root) > *:not(.print-worksheet-root):not(script):not(style),
-  body:has(.print-lesson-root) > *:not(.print-lesson-root):not(script):not(style) {
+  body:has(.print-lesson-root) > *:not(.print-lesson-root):not(script):not(style),
+  body:has(.print-rubric-root) > *:not(.print-rubric-root):not(script):not(style) {
     display: none !important;
   }
 
   /* Also hide Next.js root div siblings */
   #__next:has(.print-worksheet-root) > *:not(:has(.print-worksheet-root)),
-  #__next:has(.print-lesson-root) > *:not(:has(.print-lesson-root)) {
+  #__next:has(.print-lesson-root) > *:not(:has(.print-lesson-root)),
+  #__next:has(.print-rubric-root) > *:not(:has(.print-rubric-root)) {
     display: none !important;
   }
 
-  /* Hide all headers and navs globally when worksheet modal is open */
+  /* Hide all headers and navs globally when worksheet/lesson/rubric modal is open */
   .print-worksheet-root ~ *,
-  .print-lesson-root ~ * {
+  .print-lesson-root ~ *,
+  .print-rubric-root ~ * {
     display: none !important;
   }
 
-  /* Ensure the worksheet/lesson modal content shows properly */
+  /* Ensure the worksheet/lesson/rubric modal content shows properly */
   .print-worksheet-root,
-  .print-lesson-root {
+  .print-lesson-root,
+  .print-rubric-root {
     position: static !important;
     overflow: visible !important;
     background: white !important;
@@ -563,7 +568,8 @@ select:disabled {
   }
 
   .print-worksheet-root > div,
-  .print-lesson-root > div {
+  .print-lesson-root > div,
+  .print-rubric-root > div {
     box-shadow: none !important;
     margin: 0 !important;
     padding: 0 !important;

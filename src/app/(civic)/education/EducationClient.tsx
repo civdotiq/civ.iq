@@ -47,6 +47,7 @@ import {
   type C3Standard,
 } from '@/lib/data/education-curriculum';
 import { PrintableWorksheet } from './PrintableWorksheet';
+import { PrintableRubric } from './PrintableRubric';
 
 const GRADE_LEVEL_COLORS: Record<GradeLevel, { bg: string; text: string; border: string }> = {
   elementary: {
@@ -75,6 +76,7 @@ export function EducationClient() {
   );
   const [printLesson, setPrintLesson] = useState<Lesson | null>(null);
   const [printWorksheet, setPrintWorksheet] = useState<Worksheet | null>(null);
+  const [printRubric, setPrintRubric] = useState<AssessmentRubric | null>(null);
   const [pendingWorksheetScroll, setPendingWorksheetScroll] = useState<string | null>(null);
 
   const filteredLessons = useMemo(() => {
@@ -299,7 +301,10 @@ export function EducationClient() {
 
       {/* Rubrics Tab Content */}
       {activeTab === 'rubrics' && rubricForGradeLevel && (
-        <RubricSection rubric={rubricForGradeLevel} />
+        <RubricSection
+          rubric={rubricForGradeLevel}
+          onPrintRubric={(rubric: AssessmentRubric) => setPrintRubric(rubric)}
+        />
       )}
 
       {/* Standards Tab Content */}
@@ -316,6 +321,15 @@ export function EducationClient() {
       {/* Print Worksheet Modal */}
       {printWorksheet && (
         <PrintableWorksheet worksheet={printWorksheet} onClose={() => setPrintWorksheet(null)} />
+      )}
+
+      {/* Print Rubric Modal */}
+      {printRubric && (
+        <PrintableRubric
+          rubric={printRubric}
+          gradeLevel={selectedGradeLevel}
+          onClose={() => setPrintRubric(null)}
+        />
       )}
 
       {/* Effect to scroll to worksheet after tab switch */}
@@ -715,9 +729,10 @@ function WorksheetsSection({ worksheets, gradeLevel, onPrintWorksheet }: Workshe
 
 interface RubricSectionProps {
   rubric: AssessmentRubric;
+  onPrintRubric: (rubric: AssessmentRubric) => void;
 }
 
-function RubricSection({ rubric }: RubricSectionProps) {
+function RubricSection({ rubric, onPrintRubric }: RubricSectionProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -729,7 +744,7 @@ function RubricSection({ rubric }: RubricSectionProps) {
         </div>
         <button
           className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white font-medium hover:bg-gray-800 transition-colors"
-          onClick={() => window.print()}
+          onClick={() => onPrintRubric(rubric)}
         >
           <Download className="w-4 h-4" />
           Print Rubric
