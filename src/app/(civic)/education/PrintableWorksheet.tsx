@@ -43,8 +43,8 @@ export function PrintableWorksheet({ worksheet, onClose }: PrintableWorksheetPro
   const groupedFields = groupFieldsIntoSections(worksheet.fields);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-auto bg-black/50 flex items-start justify-center p-4 print:p-0 print:bg-white">
-      <div className="bg-white w-full max-w-[8.5in] my-8 print:m-0 print:max-w-none print:shadow-none shadow-xl">
+    <div className="print-worksheet-root fixed inset-0 z-50 overflow-auto bg-black/50 flex items-start justify-center p-4 print:p-0 print:bg-white print:block print:static print:overflow-visible">
+      <div className="bg-white w-full max-w-[8.5in] my-8 print:m-0 print:max-w-none print:shadow-none shadow-xl print:w-full">
         {/* Modal Header - Hidden when printing */}
         <div className="flex items-center justify-between p-4 border-b-2 border-black print:hidden">
           <h2 className="text-lg font-semibold">Print Worksheet</h2>
@@ -131,9 +131,42 @@ export function PrintableWorksheet({ worksheet, onClose }: PrintableWorksheetPro
                 size: letter;
                 margin: 0.5in;
               }
+
+              /* Hide everything except the printable worksheet */
+              body > *:not(.print-worksheet-root),
+              header,
+              nav,
+              footer:not(.worksheet-footer),
+              aside,
+              .no-print,
+              [data-radix-portal],
+              [role="navigation"] {
+                display: none !important;
+              }
+
+              /* Reset body styles for print */
               body {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+              }
+
+              /* Make the modal fill the page */
+              .print-worksheet-root {
+                position: static !important;
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: block !important;
+              }
+
+              .print-worksheet-root > div {
+                box-shadow: none !important;
+                margin: 0 !important;
+                max-width: none !important;
+                width: 100% !important;
               }
             }
           `,
