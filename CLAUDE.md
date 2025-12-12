@@ -354,7 +354,7 @@ npm run diagnose:apis          # Test API connectivity
 
 ## 🌐 API Endpoints
 
-**Total: 91 API Endpoints** - All return real data or appropriate error messages.
+**Total: 93 API Endpoints** - All return real data or appropriate error messages.
 
 ### Federal Representatives (15 endpoints)
 
@@ -460,6 +460,13 @@ GET /api/vote/[voteId]                                      # Vote details
 GET /api/senate-votes/[voteNumber]                          # Senate vote
 GET /api/compare                                            # Compare members
 GET /api/congress/119th/stats                               # Session statistics
+```
+
+### Floor & Hearings (2 endpoints)
+
+```typescript
+GET /api/floor-schedule                                     # House/Senate floor schedule (bills this week)
+GET /api/witnesses                                          # Congressional hearing witnesses (searchable)
 ```
 
 ### Geocoding & Location (4 endpoints)

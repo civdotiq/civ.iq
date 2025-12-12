@@ -1,6 +1,6 @@
 # CIV.IQ Design System
 
-**Version 1.0** | November 2025 | Otl Aicher Design Language
+**Version 1.0** | December 2025 | Otl Aicher Design Language
 
 ---
 
@@ -1170,5 +1170,5 @@ theme: {
 
 ---
 
-_Last updated: November 2025_
+_Last updated: December 2025_
 _Version: 1.0_
