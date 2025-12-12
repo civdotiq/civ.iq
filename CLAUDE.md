@@ -697,7 +697,6 @@ npx tsc --noEmit [fixed-file]
 
 **MEDIUM (UX/Mobile):**
 
-- **Touch Targets**: Undersized buttons (`px-2 py-1`) in QuickStartPaths.tsx, DistrictHeader.tsx - should be min 44x44px
 - **Sidebar Breakpoint**: Representative page 320px sidebar missing `md:` breakpoint
 
 **LOW (Cleanup):**

@@ -72,7 +72,7 @@ interface EntityLinkProps {
   enablePreview: boolean;
 }
 
-function EntityLink({ entity, enablePreview }: EntityLinkProps) {
+function EntityLink({ entity, enablePreview: _enablePreview }: EntityLinkProps) {
   const href = getEntityHref(entity);
   const linkClassName = getEntityLinkClassName(entity.type);
 
@@ -102,7 +102,7 @@ function getEntityHref(entity: EntityMatch): string | null {
     case 'committee':
       return `/committee/${entity.id}`;
     case 'donor':
-      // TODO: Implement donor pages
+      // Donor pages not implemented - return null to render as plain text
       return null;
     default:
       return null;

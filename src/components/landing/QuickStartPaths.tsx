@@ -88,7 +88,7 @@ export default function QuickStartPaths() {
             <select
               value={selectedState}
               onChange={e => setSelectedState(e.target.value)}
-              className="w-full border-2 border-black px-2 py-1 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-civiq-blue"
+              className="w-full border-2 border-black px-3 py-2.5 min-h-[44px] text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-civiq-blue"
               aria-label="Select a state"
             >
               <option value="">Select a state...</option>
@@ -102,7 +102,7 @@ export default function QuickStartPaths() {
           {selectedState && (
             <Link
               href={`/state-legislature/${selectedState}`}
-              className="mt-grid-1 bg-civiq-blue text-white px-2 py-1 text-center text-xs font-bold aicher-border aicher-hover flex items-center justify-center gap-1"
+              className="mt-grid-1 bg-civiq-blue text-white px-3 py-2.5 min-h-[44px] text-center text-xs font-bold aicher-border aicher-hover flex items-center justify-center gap-1"
             >
               VIEW {selectedState}
               <ArrowRightIcon className="h-3 w-3" />
@@ -123,7 +123,7 @@ export default function QuickStartPaths() {
               <Link
                 key={rep.id}
                 href={`/representative/${rep.id}`}
-                className="block border-2 border-gray-200 px-2 py-1 aicher-hover text-[10px] sm:text-xs"
+                className="block border-2 border-gray-200 px-3 py-2.5 min-h-[44px] aicher-hover text-[10px] sm:text-xs"
               >
                 <div className="font-semibold text-gray-900">{rep.name}</div>
                 <div className="text-gray-600">{rep.title}</div>
@@ -143,12 +143,15 @@ export default function QuickStartPaths() {
           <div className="flex-grow space-y-1">
             <Link
               href="/districts"
-              className="block border-2 border-gray-200 px-2 py-1 aicher-hover"
+              className="block border-2 border-gray-200 px-3 py-2.5 min-h-[44px] aicher-hover"
             >
               <div className="text-xs font-semibold text-gray-900">All Districts</div>
               <div className="text-[10px] text-gray-600">435 congressional districts</div>
             </Link>
-            <Link href="/states" className="block border-2 border-gray-200 px-2 py-1 aicher-hover">
+            <Link
+              href="/states"
+              className="block border-2 border-gray-200 px-3 py-2.5 min-h-[44px] aicher-hover"
+            >
               <div className="text-xs font-semibold text-gray-900">All States</div>
               <div className="text-[10px] text-gray-600">50 states + territories</div>
             </Link>
