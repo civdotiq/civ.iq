@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import { FileText, Calendar, ExternalLink, Search, Loader2 } from 'lucide-react';
 import { Header } from '@/shared/components/navigation/Header';
 import { FloorActivity } from '@/features/legislation/components/FloorActivity';
+import { WitnessSearch } from '@/features/legislation/components/WitnessSearch';
 
 // Congress.gov bill structure from the API
 interface CongressBill {
@@ -149,9 +150,10 @@ export default function LegislationPage() {
             sponsors, cosponsors, and voting records.
           </p>
 
-          {/* Floor Activity */}
-          <div className="mb-8">
+          {/* Floor Activity and Witnesses */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <FloorActivity />
+            <WitnessSearch />
           </div>
 
           {/* Search and Filters */}
