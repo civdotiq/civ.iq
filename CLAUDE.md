@@ -695,10 +695,6 @@ npx tsc --noEmit [fixed-file]
 
 - **Rate Limiting Stub**: `src/lib/validation/middleware.ts:196` - rate limiting function always returns true (no enforcement). Redis packages installed but middleware not implemented.
 
-**MEDIUM (UX/Mobile):**
-
-- **Sidebar Breakpoint**: Representative page 320px sidebar missing `md:` breakpoint
-
 **LOW (Cleanup):**
 
 - **Limited FEC Coverage**: Not all representatives have FEC ID mappings yet

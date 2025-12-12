@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { FileText, Calendar, ExternalLink, Search, Loader2 } from 'lucide-react';
 import { Header } from '@/shared/components/navigation/Header';
+import { FloorActivity } from '@/features/legislation/components/FloorActivity';
 
 // Congress.gov bill structure from the API
 interface CongressBill {
@@ -147,6 +148,11 @@ export default function LegislationPage() {
             Browse the latest bills introduced in the 119th Congress. Click any bill to see
             sponsors, cosponsors, and voting records.
           </p>
+
+          {/* Floor Activity */}
+          <div className="mb-8">
+            <FloorActivity />
+          </div>
 
           {/* Search and Filters */}
           <div className="bg-white border-2 border-black p-6 mb-8">
