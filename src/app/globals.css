@@ -93,6 +93,11 @@
 
 /* Utilities layer for custom utilities */
 @layer utilities {
+  /* Details/summary chevron rotation */
+  details[open] .details-chevron {
+    transform: rotate(180deg);
+  }
+
   /* Text truncation utilities */
   .line-clamp-2 {
     overflow: hidden;

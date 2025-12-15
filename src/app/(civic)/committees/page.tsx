@@ -5,8 +5,8 @@
 
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { Users, Building2, Scale } from 'lucide-react';
-import committeeBiographies from '@/data/committee-biographies.json';
+import { Users, Building2, Scale, ChevronDown } from 'lucide-react';
+import committeesData from '@/data/committees-with-subcommittees.json';
 
 // Fully static page - no revalidation needed
 export const dynamic = 'force-static';
@@ -23,12 +23,18 @@ export const metadata: Metadata = {
   },
 };
 
+interface Subcommittee {
+  code: string;
+  name: string;
+}
+
 interface Committee {
   code: string;
   name: string;
   chamber: 'House' | 'Senate' | 'Joint';
   type: 'standing';
   jurisdiction: string;
+  subcommittees: Subcommittee[];
 }
 
 // Transform static data to committee format
@@ -36,23 +42,25 @@ function getCommitteesFromStaticData(): {
   houseCommittees: Committee[];
   senateCommittees: Committee[];
   jointCommittees: Committee[];
+  totalSubcommittees: number;
 } {
   const houseCommittees: Committee[] = [];
   const senateCommittees: Committee[] = [];
   const jointCommittees: Committee[] = [];
+  let totalSubcommittees = 0;
 
-  for (const [code, data] of Object.entries(committeeBiographies.biographies)) {
+  for (const [code, data] of Object.entries(committeesData.committees)) {
     const bio = data as {
       committeeName: string;
       chamber: string;
       jurisdiction?: string;
       wikipedia?: { extract?: string };
+      subcommittees?: Subcommittee[];
     };
 
     // Extract jurisdiction from Wikipedia extract or use stored jurisdiction
     let jurisdiction = bio.jurisdiction || '';
     if (!jurisdiction && bio.wikipedia?.extract) {
-      // Use first sentence of Wikipedia extract as jurisdiction
       const firstSentence = bio.wikipedia.extract.split('.')[0];
       if (firstSentence && firstSentence.length < 300) {
         jurisdiction = firstSentence + '.';
@@ -61,12 +69,16 @@ function getCommitteesFromStaticData(): {
       }
     }
 
+    const subcommittees = bio.subcommittees || [];
+    totalSubcommittees += subcommittees.length;
+
     const committee: Committee = {
       code,
       name: bio.committeeName,
       chamber: bio.chamber as 'House' | 'Senate' | 'Joint',
       type: 'standing',
       jurisdiction,
+      subcommittees,
     };
 
     if (bio.chamber === 'House') {
@@ -83,27 +95,46 @@ function getCommitteesFromStaticData(): {
   senateCommittees.sort((a, b) => a.name.localeCompare(b.name));
   jointCommittees.sort((a, b) => a.name.localeCompare(b.name));
 
-  return { houseCommittees, senateCommittees, jointCommittees };
+  return { houseCommittees, senateCommittees, jointCommittees, totalSubcommittees };
 }
 
-// Committee card component
+// Committee card component with collapsible subcommittees
 function CommitteeCard({ committee }: { committee: Committee }) {
-  return (
-    <Link
-      href={`/committee/${committee.code}`}
-      className="block bg-white border-2 border-black p-6 hover:bg-gray-50 transition-colors group"
-    >
-      <div className="flex items-start justify-between mb-3">
-        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-          {committee.name}
-        </h3>
-        <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-700 uppercase tracking-wide">
-          {committee.type}
-        </span>
-      </div>
+  const hasSubcommittees = committee.subcommittees.length > 0;
 
-      <p className="text-sm text-gray-600 line-clamp-2">{committee.jurisdiction}</p>
-    </Link>
+  return (
+    <div className="bg-white border-2 border-black">
+      <Link
+        href={`/committee/${committee.code}`}
+        className="block p-6 hover:bg-gray-50 transition-colors group"
+      >
+        <div className="flex items-start justify-between mb-3">
+          <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+            {committee.name}
+          </h3>
+          <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-700 uppercase tracking-wide">
+            {committee.type}
+          </span>
+        </div>
+        <p className="text-sm text-gray-600 line-clamp-2">{committee.jurisdiction}</p>
+      </Link>
+
+      {hasSubcommittees && (
+        <details className="border-t-2 border-gray-200">
+          <summary className="flex items-center justify-between px-6 py-3 cursor-pointer hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700 select-none">
+            <span>{committee.subcommittees.length} Subcommittees</span>
+            <ChevronDown className="w-4 h-4 transition-transform details-chevron" />
+          </summary>
+          <ul className="px-6 pb-4 space-y-1">
+            {committee.subcommittees.map(sub => (
+              <li key={sub.code} className="text-sm text-gray-600 pl-4 border-l-2 border-gray-200">
+                {sub.name}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
   );
 }
 
@@ -121,6 +152,8 @@ function ChamberSection({
   icon: React.ComponentType<{ className?: string }>;
   color: string;
 }) {
+  const totalSubs = committees.reduce((sum, c) => sum + c.subcommittees.length, 0);
+
   return (
     <section id={id} className="mb-12 scroll-mt-8">
       <div className="flex items-center mb-6">
@@ -129,7 +162,9 @@ function ChamberSection({
         </div>
         <div>
           <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-          <p className="text-sm text-gray-600">{committees.length} committees</p>
+          <p className="text-sm text-gray-600">
+            {committees.length} committees &middot; {totalSubs} subcommittees
+          </p>
         </div>
       </div>
 
@@ -144,7 +179,8 @@ function ChamberSection({
 
 // Main page component - fully static
 export default function CommitteesPage() {
-  const { houseCommittees, senateCommittees, jointCommittees } = getCommitteesFromStaticData();
+  const { houseCommittees, senateCommittees, jointCommittees, totalSubcommittees } =
+    getCommitteesFromStaticData();
   const totalCommittees = houseCommittees.length + senateCommittees.length + jointCommittees.length;
 
   return (
@@ -154,7 +190,8 @@ export default function CommitteesPage() {
         <div className="mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Congressional Committees</h1>
           <p className="text-xl text-gray-600 mb-2">
-            Explore all {totalCommittees} committees in the 119th Congress
+            Explore all {totalCommittees} committees and {totalSubcommittees} subcommittees in the
+            119th Congress
           </p>
           <p className="text-sm text-gray-500">Data from Congress.gov and Wikipedia</p>
         </div>
@@ -237,7 +274,7 @@ export default function CommitteesPage() {
           </p>
           <p className="text-sm text-gray-600">
             Click on any committee to view detailed information including members, subcommittees,
-            and recent activity.
+            and recent activity. Expand each committee to see its subcommittees.
           </p>
         </div>
       </div>

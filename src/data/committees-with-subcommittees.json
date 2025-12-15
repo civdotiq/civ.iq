@@ -1,0 +1,3097 @@
+{
+  "committees": {
+    "SSJU": {
+      "committeeId": "SSJU",
+      "committeeName": "Committee on the Judiciary",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on the Judiciary",
+        "extract": "The United States Senate Committee on the Judiciary, informally known as the Senate Judiciary Committee, is a standing committee of 22 U.S. senators whose role is to oversee the Department of Justice (DOJ), consider executive and judicial nominations, and review pending legislation.\nIn addition, the Standing Rules of the Senate confer jurisdiction to the Senate Judiciary Committee in certain areas, such as considering proposed constitutional amendments and legislation related to federal criminal law, human rights law, immigration, intellectual property, antitrust law, and internet privacy.",
+        "extract_html": "The United States Senate Committee on the Judiciary, informally known as the Senate Judiciary Committee, is a standing committee of 22 U.S. senators whose role is to oversee the Department of Justice (DOJ), consider executive and judicial nominations, and review pending legislation.\nIn addition, the Standing Rules of the Senate confer jurisdiction to the Senate Judiciary Committee in certain areas, such as considering proposed constitutional amendments and legislation related to federal criminal law, human rights law, immigration, intellectual property, antitrust law, and internet privacy.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_the_Judiciary"
+      },
+      "lastUpdated": "2025-11-13T21:52:13.318Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "SSJU05",
+          "name": "Terrorism, Technology, and Government Information"
+        },
+        {
+          "code": "SSJU06",
+          "name": "Patents, Copyrights and Trademarks"
+        },
+        {
+          "code": "SSJU11",
+          "name": "Criminal Justice Oversight"
+        },
+        {
+          "code": "SSJU12",
+          "name": "Crime, Corrections and Victims' Rights"
+        },
+        {
+          "code": "SSJU15",
+          "name": "Crime and Drugs"
+        },
+        {
+          "code": "SSJU17",
+          "name": "Intellectual Property"
+        },
+        {
+          "code": "SSJU19",
+          "name": "Human Rights and the Law"
+        },
+        {
+          "code": "SSJU01",
+          "name": "Competition Policy, Antitrust, and Consumer Rights"
+        },
+        {
+          "code": "SSJU04",
+          "name": "Immigration, Citizenship, and Border Safety"
+        },
+        {
+          "code": "SSJU02",
+          "name": "Administrative Oversight and the Courts"
+        },
+        {
+          "code": "SSJU09",
+          "name": "Terrorism and Homeland Security"
+        },
+        {
+          "code": "SSJU18",
+          "name": "Constitution"
+        },
+        {
+          "code": "SSJU24",
+          "name": "Bankruptcy and the Courts"
+        },
+        {
+          "code": "SSJU03",
+          "name": "Constitution, Civil Rights and Property Rights"
+        },
+        {
+          "code": "SSJU07",
+          "name": "Youth Violence"
+        },
+        {
+          "code": "SSJU14",
+          "name": "Corrections and Rehabilitation"
+        },
+        {
+          "code": "SSJU20",
+          "name": "Human Rights and the Law"
+        },
+        {
+          "code": "SSJU23",
+          "name": "Privacy, Technology and the Law"
+        },
+        {
+          "code": "SSJU28",
+          "name": "Privacy, Technology, and the Law"
+        },
+        {
+          "code": "SSJU25",
+          "name": "Federal Courts, Oversight, Agency Action, and Federal Rights"
+        },
+        {
+          "code": "SSJU26",
+          "name": "Intellectual Property"
+        },
+        {
+          "code": "SSJU27",
+          "name": "Human Rights and the Law"
+        },
+        {
+          "code": "SSJU21",
+          "name": "Constitution"
+        },
+        {
+          "code": "SSJU22",
+          "name": "Criminal Justice and Counterterrorism"
+        }
+      ]
+    },
+    "SSAP": {
+      "committeeId": "SSAP",
+      "committeeName": "Committee on Appropriations",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Appropriations",
+        "extract": "The United States Senate Committee on Appropriations, informally known as the Senate Appropriations Committee, is a standing committee of the United States Senate. It has jurisdiction over all discretionary spending legislation in the Senate.\n\nThe Senate Appropriations Committee is the largest committee in the U.S. Senate, with 30 members in the 117th Congress. Its role is defined by the U.S. Constitution, which requires \"appropriations made by law\" prior to the expenditure of any money from the Treasury, and the committee is therefore one of the most powerful committees in the Senate.[1] The committee was first organized on March 6, 1867, when power over appropriations was taken out of the hands of the Finance Committee.[2]\nThe chair of the Appropriations Committee has enormous power to bring home special projects (sometimes referred to as \"pork barrel spending\") for their state as well as having the final say on other senators' appropriation requests.[3] For example, in fiscal year 2005, per capita federal spending in Alaska, the home state of Chair Ted Stevens, was $12,000, double the national average. Alaska has 11,772 special earmarked projects for a combined cost of $15,780,623,000. This represents about four percent of the overall spending in the $388 billion Consolidated Appropriations Act of 2005 passed by Congress.[4]\nFrom 2001 to 2021, every Senate Majority Leader was a previous or concurrently serving member of the Appropriations Committee: Tom Daschle (committee member, 1991–1999; majority leader, 2001–2003), Bill Frist (committee member, 1995–2002; majority leader, 2003–2007), Harry Reid (committee member, 1989–2006; majority leader, 2007–2015), and Mitch McConnell (current committee member; majority leader, 2015–2021).\n\n",
+        "extract_html": "The United States Senate Committee on Appropriations, informally known as the Senate Appropriations Committee, is a standing committee of the United States Senate. It has jurisdiction over all discretionary spending legislation in the Senate.\n\nThe Senate Appropriations Committee is the largest committee in the U.S. Senate, with 30 members in the 117th Congress. Its role is defined by the U.S. Constitution, which requires \"appropriations made by law\" prior to the expenditure of any money from the Treasury, and the committee is therefore one of the most powerful committees in the Senate.[1] The committee was first organized on March 6, 1867, when power over appropriations was taken out of the hands of the Finance Committee.[2]\nThe chair of the Appropriations Committee has enormous power to bring home special projects (sometimes referred to as \"pork barrel spending\") for their state as well as having the final say on other senators' appropriation requests.[3] For example, in fiscal year 2005, per capita federal spending in Alaska, the home state of Chair Ted Stevens, was $12,000, double the national average. Alaska has 11,772 special earmarked projects for a combined cost of $15,780,623,000. This represents about four percent of the overall spending in the $388 billion Consolidated Appropriations Act of 2005 passed by Congress.[4]\nFrom 2001 to 2021, every Senate Majority Leader was a previous or concurrently serving member of the Appropriations Committee: Tom Daschle (committee member, 1991–1999; majority leader, 2001–2003), Bill Frist (committee member, 1995–2002; majority leader, 2003–2007), Harry Reid (committee member, 1989–2006; majority leader, 2007–2015), and Mitch McConnell (current committee member; majority leader, 2015–2021).\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Appropriations"
+      },
+      "jurisdiction": "all discretionary spending legislation in the Senate",
+      "lastUpdated": "2025-11-13T21:52:16.188Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "SSAP04",
+          "name": "Foreign Operations"
+        },
+        {
+          "code": "SSAP05",
+          "name": "VA, HUD, and Independent Agencies"
+        },
+        {
+          "code": "SSAP09",
+          "name": "Military Construction"
+        },
+        {
+          "code": "SSAP11",
+          "name": "Commerce, Justice, State, and the Judiciary"
+        },
+        {
+          "code": "SSAP12",
+          "name": "Transportation"
+        },
+        {
+          "code": "SSAP15",
+          "name": "Transportation, Treasury and General Government"
+        },
+        {
+          "code": "SSAP21",
+          "name": "Transportation, Treasury, the Judiciary, and Housing and Urban Development, and Related Agencies"
+        },
+        {
+          "code": "SSAP01",
+          "name": "Agriculture, Rural Development, Food and Drug Administration, and Related Agencies"
+        },
+        {
+          "code": "SSAP02",
+          "name": "Department of Defense"
+        },
+        {
+          "code": "SSAP07",
+          "name": "Labor, Health and Human Services, and Education"
+        },
+        {
+          "code": "SSAP19",
+          "name": "Military Construction and Veterans Affairs, and Related Agencies"
+        },
+        {
+          "code": "SSAP20",
+          "name": "State, Foreign Operations, and Related Programs"
+        },
+        {
+          "code": "SSAP22",
+          "name": "Energy and Water Development"
+        },
+        {
+          "code": "SSAP24",
+          "name": "Transportation, Housing and Urban Development, and Related Agencies"
+        },
+        {
+          "code": "SSAP03",
+          "name": "District of Columbia"
+        },
+        {
+          "code": "SSAP06",
+          "name": "Interior"
+        },
+        {
+          "code": "SSAP10",
+          "name": "Energy and Water Development"
+        },
+        {
+          "code": "SSAP13",
+          "name": "Treasury and General Government"
+        },
+        {
+          "code": "SSAP17",
+          "name": "Department of the Interior, Environment, and Related Agencies"
+        },
+        {
+          "code": "SSAP08",
+          "name": "Legislative Branch"
+        },
+        {
+          "code": "SSAP18",
+          "name": "Departments of Labor, Health and Human Services, and Education, and Related Agencies"
+        },
+        {
+          "code": "SSAP14",
+          "name": "Department of Homeland Security"
+        },
+        {
+          "code": "SSAP16",
+          "name": "Commerce, Justice, Science, and Related Agencies"
+        },
+        {
+          "code": "SSAP23",
+          "name": "Financial Services and General Government"
+        }
+      ]
+    },
+    "SSAS": {
+      "committeeId": "SSAS",
+      "committeeName": "Committee on Armed Services",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Armed Services Subcommittee on Airland",
+        "extract": "The Senate Armed Services Subcommittee on Airland is one of seven subcommittees within the Senate Armed Services Committee.\n\n",
+        "extract_html": "The Senate Armed Services Subcommittee on Airland is one of seven subcommittees within the Senate Armed Services Committee.\n\n",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Armed_Services_Subcommittee_on_Airland"
+      },
+      "lastUpdated": "2025-11-13T21:52:18.825Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "SSAS01",
+          "name": "Strategic Forces and Nuclear Deterrence"
+        },
+        {
+          "code": "SSAS02",
+          "name": "Conventional Forces and Alliance Defense"
+        },
+        {
+          "code": "SSAS04",
+          "name": "Readiness, Sustainability and Support"
+        },
+        {
+          "code": "SSAS05",
+          "name": "Manpower and Personnel"
+        },
+        {
+          "code": "SSAS06",
+          "name": "Defense Industry and Technology"
+        },
+        {
+          "code": "SSAS08",
+          "name": "Military Readiness and Defense Infrastructure"
+        },
+        {
+          "code": "SSAS09",
+          "name": "Force Requirements and Personnel"
+        },
+        {
+          "code": "SSAS11",
+          "name": "Coalition Defense and Reinforcing Forces"
+        },
+        {
+          "code": "SSAS12",
+          "name": "Regional Defense and Contingency Forces"
+        },
+        {
+          "code": "SSAS18",
+          "name": "Acquisition and Technology"
+        },
+        {
+          "code": "SSAS19",
+          "name": "Sea Power and Force Projection"
+        },
+        {
+          "code": "SSAS03",
+          "name": "Projection Forces and Regional Defense"
+        },
+        {
+          "code": "SSAS07",
+          "name": "Defense Technology, Acquisition, and Industrial Base"
+        },
+        {
+          "code": "SSAS10",
+          "name": "Nuclear Deterrence, Arms Control, and Defense Intelligence"
+        },
+        {
+          "code": "SSAS13",
+          "name": "SeaPower"
+        },
+        {
+          "code": "SSAS14",
+          "name": "Airland"
+        },
+        {
+          "code": "SSAS15",
+          "name": "Readiness and Management Support"
+        },
+        {
+          "code": "SSAS16",
+          "name": "Strategic Forces"
+        },
+        {
+          "code": "SSAS17",
+          "name": "Personnel"
+        },
+        {
+          "code": "SSAS20",
+          "name": "Emerging Threats and Capabilities"
+        },
+        {
+          "code": "SSAS21",
+          "name": "Cybersecurity"
+        }
+      ]
+    },
+    "SSBK": {
+      "committeeId": "SSBK",
+      "committeeName": "Committee on Banking, Housing, and Urban Affairs",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Banking, Housing, and Urban Affairs",
+        "extract": "The United States Senate Committee on Banking, Housing, and Urban Affairs (formerly the Committee on Banking and Currency), also known as the Senate Banking Committee, has jurisdiction over matters related to banks and banking, price controls, deposit insurance, export promotion and controls, federal monetary policy, financial aid to commerce and industry, issuance of redemption of notes, currency and coinage, public and private housing, urban development, mass transit, and government contracts.\nThe current chair of the committee is Republican Tim Scott of South Carolina, and the ranking member is Democrat Elizabeth Warren of Massachusetts.",
+        "extract_html": "The United States Senate Committee on Banking, Housing, and Urban Affairs (formerly the Committee on Banking and Currency), also known as the Senate Banking Committee, has jurisdiction over matters related to banks and banking, price controls, deposit insurance, export promotion and controls, federal monetary policy, financial aid to commerce and industry, issuance of redemption of notes, currency and coinage, public and private housing, urban development, mass transit, and government contracts.\nThe current chair of the committee is Republican Tim Scott of South Carolina, and the ranking member is Democrat Elizabeth Warren of Massachusetts.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Banking,_Housing,_and_Urban_Affairs"
+      },
+      "jurisdiction": "matters related to banks and banking, price controls, deposit insurance, export promotion and controls, federal monetary policy, financial aid to commerce and industry, issuance of redemption of notes, currency and coinage, public and private housing, urban development, mass transit, and government contracts",
+      "lastUpdated": "2025-11-13T21:52:21.515Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "SSBK13",
+          "name": "Digital Assets"
+        },
+        {
+          "code": "SSBK03",
+          "name": "Consumer and Regulatory Affairs"
+        },
+        {
+          "code": "SSBK06",
+          "name": "HUD/Moderate Rehabilitation"
+        },
+        {
+          "code": "SSBK07",
+          "name": "Economic Stabilization and Rural Development"
+        },
+        {
+          "code": "SSBK10",
+          "name": "HUD Oversight and Structure"
+        },
+        {
+          "code": "SSBK11",
+          "name": "Financial Services and Technology"
+        },
+        {
+          "code": "SSBK02",
+          "name": "Housing and Urban Affairs"
+        },
+        {
+          "code": "SSBK04",
+          "name": "Securities, Insurance, and Investment"
+        },
+        {
+          "code": "SSBK05",
+          "name": "National Security and International Trade and Finance"
+        },
+        {
+          "code": "SSBK08",
+          "name": "Financial Institutions and Consumer Protection"
+        },
+        {
+          "code": "SSBK09",
+          "name": "Housing, Transportation, and Community Development"
+        },
+        {
+          "code": "SSBK12",
+          "name": "Economic Policy"
+        }
+      ]
+    },
+    "SSBU": {
+      "committeeId": "SSBU",
+      "committeeName": "Committee on the Budget",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on the Budget",
+        "extract": "The United States Senate Committee on the Budget was established by the Congressional Budget and Impoundment Control Act of 1974. It is responsible for drafting Congress's annual budget plan and monitoring action on the budget for the Federal Government. The committee has jurisdiction over the Congressional Budget Office. The committee briefly operated as a special committee from 1919 to 1920 during the 66th Congress, before being made a standing committee in 1974.\nThe current Chair is South Carolina Senator Lindsey Graham, and the Ranking Member is Oregon Senator Jeff Merkley.",
+        "extract_html": "The United States Senate Committee on the Budget was established by the Congressional Budget and Impoundment Control Act of 1974. It is responsible for drafting Congress's annual budget plan and monitoring action on the budget for the Federal Government. The committee has jurisdiction over the Congressional Budget Office. The committee briefly operated as a special committee from 1919 to 1920 during the 66th Congress, before being made a standing committee in 1974.\nThe current Chair is South Carolina Senator Lindsey Graham, and the Ranking Member is Oregon Senator Jeff Merkley.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_the_Budget"
+      },
+      "jurisdiction": "the Congressional Budget Office",
+      "lastUpdated": "2025-11-13T21:52:24.125Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": []
+    },
+    "SSCM": {
+      "committeeId": "SSCM",
+      "committeeName": "Committee on Commerce, Science, and Transportation",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Commerce, Science, and Transportation",
+        "extract": "The United States Senate Committee on Commerce, Science, and Transportation is a standing committee of the United States Senate. Besides having broad jurisdiction over all matters concerning interstate commerce, science and technology policy, and transportation, the Senate Commerce Committee is one of the largest of the Senate's standing committees, with 28 members in the 117th Congress. The Commerce Committee has six subcommittees. It is chaired by Sen. Ted Cruz (R-TX) with Sen. Maria Cantwell (D-WA) as ranking member. The majority office is housed in the Dirksen Senate Office Building, and the minority office is located in the Hart Senate Office Building.\n\n",
+        "extract_html": "The United States Senate Committee on Commerce, Science, and Transportation is a standing committee of the United States Senate. Besides having broad jurisdiction over all matters concerning interstate commerce, science and technology policy, and transportation, the Senate Commerce Committee is one of the largest of the Senate's standing committees, with 28 members in the 117th Congress. The Commerce Committee has six subcommittees. It is chaired by Sen. Ted Cruz (R-TX) with Sen. Maria Cantwell (D-WA) as ranking member. The majority office is housed in the Dirksen Senate Office Building, and the minority office is located in the Hart Senate Office Building.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Commerce,_Science,_and_Transportation"
+      },
+      "lastUpdated": "2025-11-13T21:52:27.033Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "SSCM01",
+          "name": "Aviation Operations, Safety, and Security"
+        },
+        {
+          "code": "SSCM02",
+          "name": "Communications"
+        },
+        {
+          "code": "SSCM03",
+          "name": "Consumer Affairs and Product Safety"
+        },
+        {
+          "code": "SSCM05",
+          "name": "Science, Technology, and Space"
+        },
+        {
+          "code": "SSCM06",
+          "name": "Merchant Marine"
+        },
+        {
+          "code": "SSCM08",
+          "name": "Surface Transportation and Merchant Marine"
+        },
+        {
+          "code": "SSCM09",
+          "name": "Oceans, Fisheries and Coast Guard"
+        },
+        {
+          "code": "SSCM10",
+          "name": "Manufacturing and Competitiveness"
+        },
+        {
+          "code": "SSCM12",
+          "name": "Consumer Affairs, Product Safety, and Insurance"
+        },
+        {
+          "code": "SSCM13",
+          "name": "Disaster Prevention and Prediction"
+        },
+        {
+          "code": "SSCM15",
+          "name": "Fisheries and Coast Guard"
+        },
+        {
+          "code": "SSCM16",
+          "name": "National Ocean Policy Study"
+        },
+        {
+          "code": "SSCM17",
+          "name": "Science and Space"
+        },
+        {
+          "code": "SSCM19",
+          "name": "Trade, Tourism, and Economic Development"
+        },
+        {
+          "code": "SSCM20",
+          "name": "Consumer Protection, Product Safety, Insurance, and Data Security"
+        },
+        {
+          "code": "SSCM22",
+          "name": "Oceans, Atmosphere, Fisheries, and Coast Guard"
+        },
+        {
+          "code": "SSCM23",
+          "name": "Science, Technology, and Innovation"
+        },
+        {
+          "code": "SSCM24",
+          "name": "Space, Science, and Competitiveness"
+        },
+        {
+          "code": "SSCM26",
+          "name": "Communications, Technology, Innovation, and the Internet"
+        },
+        {
+          "code": "SSCM27",
+          "name": "Tourism, Competitiveness, and Innovation"
+        },
+        {
+          "code": "SSCM04",
+          "name": "Foreign Commerce and Tourism"
+        },
+        {
+          "code": "SSCM07",
+          "name": "National Ocean Policy Study"
+        },
+        {
+          "code": "SSCM11",
+          "name": "Competition, Foreign Commerce, and Infrastructure"
+        },
+        {
+          "code": "SSCM14",
+          "name": "Global Climate Change and Impacts"
+        },
+        {
+          "code": "SSCM18",
+          "name": "Technology, Innovation, and Competitiveness"
+        },
+        {
+          "code": "SSCM21",
+          "name": "Interstate Commerce, Trade, and Tourism"
+        },
+        {
+          "code": "SSCM25",
+          "name": "Surface Transportation and Merchant Marine Infrastructure, Safety and Security"
+        },
+        {
+          "code": "SSCM30",
+          "name": "Science, Oceans, Fisheries, and Weather"
+        },
+        {
+          "code": "SSCM31",
+          "name": "Security"
+        },
+        {
+          "code": "SSCM29",
+          "name": "Manufacturing, Trade, and Consumer Protection"
+        },
+        {
+          "code": "SSCM32",
+          "name": "Transportation and Safety"
+        },
+        {
+          "code": "SSCM28",
+          "name": "Aviation and Space"
+        },
+        {
+          "code": "SSCM36",
+          "name": "Oceans, Fisheries, Climate Change, and Manufacturing"
+        },
+        {
+          "code": "SSCM37",
+          "name": "Space and Science"
+        },
+        {
+          "code": "SSCM33",
+          "name": "Aviation Safety, Operations, and Innovation"
+        },
+        {
+          "code": "SSCM34",
+          "name": "Communication, Media, and Broadband"
+        },
+        {
+          "code": "SSCM35",
+          "name": "Consumer Protection, Product Safety, and Data Security"
+        },
+        {
+          "code": "SSCM38",
+          "name": "Surface Transportation, Maritime, Freight, and Ports"
+        },
+        {
+          "code": "SSCM39",
+          "name": "Tourism, Trade, and Export"
+        }
+      ]
+    },
+    "SSEG": {
+      "committeeId": "SSEG",
+      "committeeName": "Committee on Energy and Natural Resources",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Energy and Natural Resources",
+        "extract": "The United States Senate Committee on Energy and Natural Resources is a standing committee of the United States Senate. It has jurisdiction over matters related to energy and mineral resources, including nuclear development; irrigation and reclamation, territorial possessions of the United States, trust lands appertaining to America's indigenous peoples, and the conservation, use, and disposition of federal lands. Its roots go back to the Committee on Interior and Insulars Affairs. In 1977, it became the Committee on Energy and Natural Resources, and most matters regarding Native Americans, Alaska Natives, and Native Hawaiians were removed from its jurisdiction and transferred to the Committee on Indian Affairs.",
+        "extract_html": "The United States Senate Committee on Energy and Natural Resources is a standing committee of the United States Senate. It has jurisdiction over matters related to energy and mineral resources, including nuclear development; irrigation and reclamation, territorial possessions of the United States, trust lands appertaining to America's indigenous peoples, and the conservation, use, and disposition of federal lands. Its roots go back to the Committee on Interior and Insulars Affairs. In 1977, it became the Committee on Energy and Natural Resources, and most matters regarding Native Americans, Alaska Natives, and Native Hawaiians were removed from its jurisdiction and transferred to the Committee on Indian Affairs.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Energy_and_Natural_Resources"
+      },
+      "jurisdiction": "matters related to energy and mineral resources, including nuclear development; irrigation and reclamation, territorial possessions of the United States, trust lands appertaining to America's indigenous peoples, and the conservation, use, and disposition of federal lands",
+      "lastUpdated": "2025-11-13T21:52:29.641Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "SSEG02",
+          "name": "Renewable Energy, Energy Efficiency, and Competitiveness"
+        },
+        {
+          "code": "SSEG05",
+          "name": "Energy Production and Regulation"
+        },
+        {
+          "code": "SSEG06",
+          "name": "Oversight and Investigations"
+        },
+        {
+          "code": "SSEG09",
+          "name": "Public Lands, Reserved Water and Resource Conservation"
+        },
+        {
+          "code": "SSEG10",
+          "name": "Natural Resources Development and Production"
+        },
+        {
+          "code": "SSEG08",
+          "name": "Water and Power"
+        },
+        {
+          "code": "SSEG03",
+          "name": "Public Lands, Forests, and Mining"
+        },
+        {
+          "code": "SSEG04",
+          "name": "National Parks"
+        },
+        {
+          "code": "SSEG01",
+          "name": "Energy"
+        },
+        {
+          "code": "SSEG07",
+          "name": "Water and Power"
+        }
+      ]
+    },
+    "SSEV": {
+      "committeeId": "SSEV",
+      "committeeName": "Committee on Environment and Public Works",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Environment and Public Works",
+        "extract": "The United States Senate Committee on Environment and Public Works is responsible for legislation and oversight of the natural and built environment and for studying matters concerning environmental protection and resource conservation and utilitization.",
+        "extract_html": "The United States Senate Committee on Environment and Public Works is responsible for legislation and oversight of the natural and built environment and for studying matters concerning environmental protection and resource conservation and utilitization.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Environment_and_Public_Works"
+      },
+      "jurisdiction": "legislation and oversight of the natural and built environment and for studying matters concerning environmental protection and resource conservation and utilitization",
+      "lastUpdated": "2025-11-13T21:52:32.978Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "SSEV01",
+          "name": "Water Resources, Transportation, Public Buildings, and Economic Development"
+        },
+        {
+          "code": "SSEV03",
+          "name": "Toxic Substances, Research and Development"
+        },
+        {
+          "code": "SSEV05",
+          "name": "Nuclear Regulation"
+        },
+        {
+          "code": "SSEV07",
+          "name": "Clean Air and Nuclear Regulation"
+        },
+        {
+          "code": "SSEV12",
+          "name": "Public Sector Solutions to Global Warming, Oversight, and Children's Health Protection"
+        },
+        {
+          "code": "SSEV13",
+          "name": "Private Sector and Consumer Solutions to Global Warming and Wildlife Protection"
+        },
+        {
+          "code": "SSEV17",
+          "name": "Children's Health and Environmental Responsibility"
+        },
+        {
+          "code": "SSEV18",
+          "name": "Oversight"
+        },
+        {
+          "code": "SSEV08",
+          "name": "Transportation and Infrastructure"
+        },
+        {
+          "code": "SSEV09",
+          "name": "Superfund, Waste Management, and Regulatory Oversight"
+        },
+        {
+          "code": "SSEV15",
+          "name": "Fisheries, Water, and Wildlife"
+        },
+        {
+          "code": "SSEV04",
+          "name": "Superfund, Recycling, and Solid Waste Management"
+        },
+        {
+          "code": "SSEV16",
+          "name": "Green Jobs and the New Economy"
+        },
+        {
+          "code": "SSEV10",
+          "name": "Clean Air and Nuclear Safety"
+        },
+        {
+          "code": "SSEV02",
+          "name": "Environmental Protection"
+        },
+        {
+          "code": "SSEV06",
+          "name": "Clean Water, Fisheries and Wildlife"
+        },
+        {
+          "code": "SSEV11",
+          "name": "Fisheries, Wildlife, and Water"
+        },
+        {
+          "code": "SSEV14",
+          "name": "Transportation Safety, Infrastructure Security, and Water Quality"
+        }
+      ]
+    },
+    "SSFI": {
+      "committeeId": "SSFI",
+      "committeeName": "Committee on Finance",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Finance",
+        "extract": "The United States Senate Committee on Finance (or, less formally, Senate Finance Committee) is a standing committee of the United States Senate. The committee concerns itself with matters relating to taxation and other revenue measures generally, and those relating to the insular possessions; bonded debt of the United States; customs, collection districts, and ports of entry and delivery; deposit of public moneys; general revenue sharing; health programs under the Social Security Act (notably Medicare and Medicaid) and health programs financed by a specific tax or trust fund; national social security; reciprocal trade agreements; tariff and import quotas, and related matters thereto; and the transportation of dutiable goods. It is considered to be one of the most powerful committees in Congress.\n\n",
+        "extract_html": "The United States Senate Committee on Finance (or, less formally, Senate Finance Committee) is a standing committee of the United States Senate. The committee concerns itself with matters relating to taxation and other revenue measures generally, and those relating to the insular possessions; bonded debt of the United States; customs, collection districts, and ports of entry and delivery; deposit of public moneys; general revenue sharing; health programs under the Social Security Act (notably Medicare and Medicaid) and health programs financed by a specific tax or trust fund; national social security; reciprocal trade agreements; tariff and import quotas, and related matters thereto; and the transportation of dutiable goods. It is considered to be one of the most powerful committees in Congress.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Finance"
+      },
+      "lastUpdated": "2025-11-13T21:52:35.743Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "SSFI03",
+          "name": "International Trade"
+        },
+        {
+          "code": "SSFI06",
+          "name": "Taxation and IRS Oversight"
+        },
+        {
+          "code": "SSFI07",
+          "name": "Energy and Agricultural Taxation"
+        },
+        {
+          "code": "SSFI08",
+          "name": "Medicare, Long-Term Care and Health Insurance"
+        },
+        {
+          "code": "SSFI16",
+          "name": "Oversight of the Internal Revenue Service"
+        },
+        {
+          "code": "SSFI20",
+          "name": "Economic Growth, Employment and Revenue Sharing"
+        },
+        {
+          "code": "SSFI21",
+          "name": "Estate and Gift Taxation"
+        },
+        {
+          "code": "SSFI02",
+          "name": "Social Security, Pensions, and Family Policy"
+        },
+        {
+          "code": "SSFI11",
+          "name": "Taxation and IRS Oversight"
+        },
+        {
+          "code": "SSFI12",
+          "name": "Energy, Natural Resources, and Infrastructure"
+        },
+        {
+          "code": "SSFI04",
+          "name": "Long-Term Growth, Debt and Deficit Reduction"
+        },
+        {
+          "code": "SSFI01",
+          "name": "Medicaid and Health Care for Low-Income Families"
+        },
+        {
+          "code": "SSFI05",
+          "name": "Private Retirement Plans and Oversight of the Internal Revenue Service"
+        },
+        {
+          "code": "SSFI09",
+          "name": "Long-Term Growth and Debt Reduction"
+        },
+        {
+          "code": "SSFI19",
+          "name": "Savings, Pensions and Investment Policy"
+        },
+        {
+          "code": "SSFI13",
+          "name": "International Trade, Customs, and Global Competitiveness"
+        },
+        {
+          "code": "SSFI14",
+          "name": "Fiscal Responsibility and Economic Growth"
+        },
+        {
+          "code": "SSFI10",
+          "name": "Health Care"
+        }
+      ]
+    },
+    "SSFO": {
+      "committeeId": "SSFO",
+      "committeeName": "Committee on Foreign Relations",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Foreign Relations",
+        "extract": "The United States Senate Committee on Foreign Relations is a standing committee of the U.S. Senate charged with leading foreign-policy legislation and debate in the Senate. It is generally responsible for authorizing and overseeing foreign aid programs; arms sales and training for national allies; and holding confirmation hearings for high-level positions in the Department of State. Its sister committee in the House of Representatives is the Committee on Foreign Affairs.\nAlong with the Finance and Judiciary committees, the Foreign Relations Committee is among the oldest in the Senate, dating to the initial creation of committees in 1816. It has played a leading role in several important treaties and foreign policy initiatives throughout U.S. history, including the Alaska Purchase, the establishment of the United Nations, and the passage of the Marshall Plan. The committee has also produced eight U.S. presidents—Andrew Jackson, James Buchanan, Andrew Johnson, Benjamin Harrison, Warren Harding, John F. Kennedy, Barack Obama, and Joe Biden (Buchanan and Biden serving as chair)—and 19 secretaries of state. Notable members have included Arthur Vandenberg, Henry Cabot Lodge, and William Fulbright.\nThe Foreign Relations Committee is considered one of the most powerful and prestigious in the Senate, due to its long history, broad influence on U.S. foreign policy, jurisdiction over all diplomatic nominations, and its being the only Senate committee to deliberate and report treaties.\nFrom 2021 to 2023, the Foreign Relations Committee was chaired by Democratic senator Bob Menendez of New Jersey, until he stepped down as chair after facing federal corruption charges.",
+        "extract_html": "The United States Senate Committee on Foreign Relations is a standing committee of the U.S. Senate charged with leading foreign-policy legislation and debate in the Senate. It is generally responsible for authorizing and overseeing foreign aid programs; arms sales and training for national allies; and holding confirmation hearings for high-level positions in the Department of State. Its sister committee in the House of Representatives is the Committee on Foreign Affairs.\nAlong with the Finance and Judiciary committees, the Foreign Relations Committee is among the oldest in the Senate, dating to the initial creation of committees in 1816. It has played a leading role in several important treaties and foreign policy initiatives throughout U.S. history, including the Alaska Purchase, the establishment of the United Nations, and the passage of the Marshall Plan. The committee has also produced eight U.S. presidents—Andrew Jackson, James Buchanan, Andrew Johnson, Benjamin Harrison, Warren Harding, John F. Kennedy, Barack Obama, and Joe Biden (Buchanan and Biden serving as chair)—and 19 secretaries of state. Notable members have included Arthur Vandenberg, Henry Cabot Lodge, and William Fulbright.\nThe Foreign Relations Committee is considered one of the most powerful and prestigious in the Senate, due to its long history, broad influence on U.S. foreign policy, jurisdiction over all diplomatic nominations, and its being the only Senate committee to deliberate and report treaties.\nFrom 2021 to 2023, the Foreign Relations Committee was chaired by Democratic senator Bob Menendez of New Jersey, until he stepped down as chair after facing federal corruption charges.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Foreign_Relations"
+      },
+      "jurisdiction": "authorizing and overseeing foreign aid programs; arms sales and training for national allies; and holding confirmation hearings for high-level positions in the Department of State",
+      "lastUpdated": "2025-11-13T21:52:38.349Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": []
+    },
+    "SSGA": {
+      "committeeId": "SSGA",
+      "committeeName": "Committee on Homeland Security and Governmental Affairs",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Homeland Security and Governmental Affairs",
+        "extract": "The United States Senate Committee on Homeland Security and Governmental Affairs is the chief oversight committee of the United States Senate. It has jurisdiction over matters related to the Department of Homeland Security and other homeland security concerns, as well as the functioning of the government itself, including the National Archives, budget and accounting measures other than appropriations, the census, the federal civil service, the affairs of the District of Columbia and the United States Postal Service.  It was called the United States Senate Committee on Governmental Affairs before homeland security was added to its responsibilities in 2004. It serves as the Senate's chief investigative and oversight committee. Its chair is the only Senate committee chair who can issue subpoenas without a committee vote.\n\n",
+        "extract_html": "The United States Senate Committee on Homeland Security and Governmental Affairs is the chief oversight committee of the United States Senate. It has jurisdiction over matters related to the Department of Homeland Security and other homeland security concerns, as well as the functioning of the government itself, including the National Archives, budget and accounting measures other than appropriations, the census, the federal civil service, the affairs of the District of Columbia and the United States Postal Service.  It was called the United States Senate Committee on Governmental Affairs before homeland security was added to its responsibilities in 2004. It serves as the Senate's chief investigative and oversight committee. Its chair is the only Senate committee chair who can issue subpoenas without a committee vote.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Homeland_Security_and_Governmental_Affairs"
+      },
+      "jurisdiction": "matters related to the Department of Homeland Security and other homeland security concerns, as well as the functioning of the government itself, including the National Archives, budget and accounting measures other than appropriations, the census, the federal civil service, the affairs of the District of Columbia and the United States Postal Service",
+      "lastUpdated": "2025-11-13T21:52:41.063Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "SSGA02",
+          "name": "Regulation and Government Information"
+        },
+        {
+          "code": "SSGA05",
+          "name": "Post Office and Civil Service"
+        },
+        {
+          "code": "SSGA06",
+          "name": "Financial Management and Accountability"
+        },
+        {
+          "code": "SSGA07",
+          "name": "International Security, Proliferation and Federal Services"
+        },
+        {
+          "code": "SSGA09",
+          "name": "Federal Financial Management, Government Information, Federal Services, and International Security"
+        },
+        {
+          "code": "SSGA11",
+          "name": "Disaster Recovery (Ad Hoc)"
+        },
+        {
+          "code": "SSGA14",
+          "name": "Disaster Recovery and Intergovernmental Affairs (Ad Hoc)"
+        },
+        {
+          "code": "SSGA17",
+          "name": "Emergency Management, Intergovernmental Relations, and the District of Columbia"
+        },
+        {
+          "code": "SSGA04",
+          "name": "General Services, Federalism, and the District of Columbia"
+        },
+        {
+          "code": "SSGA10",
+          "name": "State, Local, and Private Sector Preparedness and Integration (Ad Hoc)"
+        },
+        {
+          "code": "SSGA15",
+          "name": "Financial and Contracting Oversight"
+        },
+        {
+          "code": "SSGA16",
+          "name": "Efficiency and Effectiveness of Federal Programs and the Federal Workforce"
+        },
+        {
+          "code": "SSGA03",
+          "name": "Oversight of Government Management, the Federal Workforce, and the District of Columbia"
+        },
+        {
+          "code": "SSGA08",
+          "name": "Oversight of Government Management"
+        },
+        {
+          "code": "SSGA13",
+          "name": "Contracting Oversight (Ad Hoc)"
+        },
+        {
+          "code": "SSGA18",
+          "name": "Federal Spending Oversight and Emergency Management"
+        },
+        {
+          "code": "SSGA19",
+          "name": "Regulatory Affairs and Federal Management"
+        },
+        {
+          "code": "SSGA01",
+          "name": "Permanent on Investigations"
+        },
+        {
+          "code": "SSGA20",
+          "name": "Emerging Threats and Spending Oversight"
+        },
+        {
+          "code": "SSGA22",
+          "name": "Governmental Operations and Border Management"
+        }
+      ]
+    },
+    "SSHR": {
+      "committeeId": "SSHR",
+      "committeeName": "Committee on Health, Education, Labor and Pensions",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Health, Education, Labor and Pensions",
+        "extract": "The United States Senate Committee on Health, Education, Labor and Pensions (HELP) generally considers matters relating to these issues. Its jurisdiction also extends beyond these issues to include several more specific areas, as defined by Senate rules.\n\n",
+        "extract_html": "The United States Senate Committee on Health, Education, Labor and Pensions (HELP) generally considers matters relating to these issues. Its jurisdiction also extends beyond these issues to include several more specific areas, as defined by Senate rules.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Health,_Education,_Labor_and_Pensions"
+      },
+      "lastUpdated": "2025-11-13T21:52:43.677Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "SSHR01",
+          "name": "Education, Arts and Humanities"
+        },
+        {
+          "code": "SSHR04",
+          "name": "Employment and Productivity"
+        },
+        {
+          "code": "SSHR05",
+          "name": "Aging"
+        },
+        {
+          "code": "SSHR07",
+          "name": "Substance Abuse and Mental Health Services"
+        },
+        {
+          "code": "SSHR10",
+          "name": "Bioterrorism and Public Health Preparedness"
+        },
+        {
+          "code": "SSHR09",
+          "name": "Children and Families"
+        },
+        {
+          "code": "SSHR12",
+          "name": "Primary Health and Retirement Security"
+        },
+        {
+          "code": "SSHR02",
+          "name": "Disability Policy"
+        },
+        {
+          "code": "SSHR08",
+          "name": "Employment, Safety, and Training"
+        },
+        {
+          "code": "SSHR03",
+          "name": "Labor"
+        },
+        {
+          "code": "SSHR06",
+          "name": "Children and Families"
+        },
+        {
+          "code": "SSHR11",
+          "name": "Employment and Workplace Safety"
+        }
+      ]
+    },
+    "SLIA": {
+      "committeeId": "SLIA",
+      "committeeName": "Committee on Indian Affairs",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Indian Affairs",
+        "extract": "The Senate Committee on Indian Affairs is a committee of the United States Senate charged with oversight in matters related to the American Indian, Native Hawaiian, and Alaska Native peoples. A Committee on Indian Affairs existed from 1820 to 1947, after which it was folded into the Committee on Interior and Insular Affairs. A new Native Affairs Committee was created in 1977, initially as a select committee, as a result of the detachment of indigenous affairs from the new Committee on Energy and National Resources, which had succeeded the old Committee on Interior and Insular Affairs.  The committee was initially intended to be temporary, but was made permanent in 1984. The committee tends to include senators from Western and Plains states, who have more Native American constituents.\n\n",
+        "extract_html": "The Senate Committee on Indian Affairs is a committee of the United States Senate charged with oversight in matters related to the American Indian, Native Hawaiian, and Alaska Native peoples. A Committee on Indian Affairs existed from 1820 to 1947, after which it was folded into the Committee on Interior and Insular Affairs. A new Native Affairs Committee was created in 1977, initially as a select committee, as a result of the detachment of indigenous affairs from the new Committee on Energy and National Resources, which had succeeded the old Committee on Interior and Insular Affairs.  The committee was initially intended to be temporary, but was made permanent in 1984. The committee tends to include senators from Western and Plains states, who have more Native American constituents.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Indian_Affairs"
+      },
+      "lastUpdated": "2025-11-13T21:52:46.534Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "SLIA01",
+          "name": "Investigations"
+        }
+      ]
+    },
+    "SSRA": {
+      "committeeId": "SSRA",
+      "committeeName": "Committee on Rules and Administration",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Rules and Administration",
+        "extract": "The Senate Committee on Rules and Administration, also called the Senate Rules and Administration Committee, is responsible for the rules of the United States Senate, administration of congressional buildings, and with credentials and qualifications of members of the Senate, including responsibility for contested elections. The committee is not as powerful as its House counterpart, the House Committee on Rules, as it does not set the terms of debate for individual legislative proposals, since the Senate has a tradition of open debate. Some members of the committee are also ex officio members of the Joint Committee on the Library and the Joint Committee on Printing.",
+        "extract_html": "The Senate Committee on Rules and Administration, also called the Senate Rules and Administration Committee, is responsible for the rules of the United States Senate, administration of congressional buildings, and with credentials and qualifications of members of the Senate, including responsibility for contested elections. The committee is not as powerful as its House counterpart, the House Committee on Rules, as it does not set the terms of debate for individual legislative proposals, since the Senate has a tradition of open debate. Some members of the committee are also ex officio members of the Joint Committee on the Library and the Joint Committee on Printing.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Rules_and_Administration"
+      },
+      "jurisdiction": "the rules of the United States Senate, administration of congressional buildings, and with credentials and qualifications of members of the Senate, including responsibility for contested elections",
+      "lastUpdated": "2025-11-13T21:52:50.288Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": []
+    },
+    "SSSB": {
+      "committeeId": "SSSB",
+      "committeeName": "Committee on Small Business and Entrepreneurship",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Small Business and Entrepreneurship",
+        "extract": "The U.S. Senate Committee on Small Business and Entrepreneurship is a standing committee of the United States Senate. It has jurisdiction over the Small Business Administration and is also charged with researching and investigating all problems of American small business enterprises.\n\n",
+        "extract_html": "The U.S. Senate Committee on Small Business and Entrepreneurship is a standing committee of the United States Senate. It has jurisdiction over the Small Business Administration and is also charged with researching and investigating all problems of American small business enterprises.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Small_Business_and_Entrepreneurship"
+      },
+      "jurisdiction": "the Small Business Administration and is also charged with researching and investigating all problems of American small business enterprises",
+      "lastUpdated": "2025-11-13T21:52:52.918Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "SSSB02",
+          "name": "Government Contracting and Paperwork Reduction"
+        },
+        {
+          "code": "SSSB04",
+          "name": "Innovation, Manufacturing, and Technology"
+        },
+        {
+          "code": "SSSB06",
+          "name": "Urban and Minority-Owned Business Development"
+        },
+        {
+          "code": "SSSB07",
+          "name": "Competitiveness, Capital Formation and Economic Opportunity"
+        },
+        {
+          "code": "SSSB08",
+          "name": "Advocacy and The Future of Small Business"
+        },
+        {
+          "code": "SSSB03",
+          "name": "Rural Economy and Family Farming"
+        },
+        {
+          "code": "SSSB11",
+          "name": "Small Business: Family Farm"
+        },
+        {
+          "code": "SSSB01",
+          "name": "Export Expansion and Agricultural Development"
+        },
+        {
+          "code": "SSSB05",
+          "name": "Competition and Antitrust Enforcement"
+        },
+        {
+          "code": "SSSB12",
+          "name": "Entrepreneurship and Special Problems Facing Small Business"
+        }
+      ]
+    },
+    "SSVA": {
+      "committeeId": "SSVA",
+      "committeeName": "Committee on Veterans' Affairs",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Veterans' Affairs",
+        "extract": "The United States Senate Committee on Veterans' Affairs deals with oversight of United States veterans' problems and issues.\n\n",
+        "extract_html": "The United States Senate Committee on Veterans' Affairs deals with oversight of United States veterans' problems and issues.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Seal_of_the_United_States_Senate.svg/330px-Seal_of_the_United_States_Senate.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Veterans%27_Affairs"
+      },
+      "lastUpdated": "2025-11-13T21:52:55.771Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": []
+    },
+    "HSAG": {
+      "committeeId": "HSAG",
+      "committeeName": "Committee on Agriculture",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Agriculture",
+        "extract": "The United States House of Representatives Committee on Agriculture, or Agriculture Committee is a standing committee of the United States House of Representatives. The House Committee on Agriculture has general jurisdiction over federal agriculture policy and oversight of some federal agencies, and it can recommend funding appropriations for various governmental agencies, programs, and activities, as defined by House rules.",
+        "extract_html": "The United States House of Representatives Committee on Agriculture, or Agriculture Committee is a standing committee of the United States House of Representatives. The House Committee on Agriculture has general jurisdiction over federal agriculture policy and oversight of some federal agencies, and it can recommend funding appropriations for various governmental agencies, programs, and activities, as defined by House rules.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Agriculture"
+      },
+      "lastUpdated": "2025-11-13T21:52:58.406Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSAG08",
+          "name": "Wheat, Soybeans, and Feed Grains"
+        },
+        {
+          "code": "HSAG20",
+          "name": "Department Operations and Nutrition"
+        },
+        {
+          "code": "HSAG24",
+          "name": "Risk Management and Specialty Crops"
+        },
+        {
+          "code": "HSAG27",
+          "name": "Forestry, Resource Conservation and Research"
+        },
+        {
+          "code": "HSAG01",
+          "name": "Environment, Credit and Rural Development"
+        },
+        {
+          "code": "HSAG02",
+          "name": "Cotton, Rice, and Sugar"
+        },
+        {
+          "code": "HSAG04",
+          "name": "Department Operations, Research, and Foreign Agriculture"
+        },
+        {
+          "code": "HSAG05",
+          "name": "Domestic Marketing, Consumer Relations, and Nutrition"
+        },
+        {
+          "code": "HSAG06",
+          "name": "Forests, Family Farms, and Energy"
+        },
+        {
+          "code": "HSAG07",
+          "name": "Peanuts and Tobacco"
+        },
+        {
+          "code": "HSAG21",
+          "name": "Foreign Agriculture and Hunger"
+        },
+        {
+          "code": "HSAG23",
+          "name": "General Farm Commodities, Resource Conservation and Credit"
+        },
+        {
+          "code": "HSAG25",
+          "name": "General Farm Commodities"
+        },
+        {
+          "code": "HSAG26",
+          "name": "Department Operations, Nutrition and Foreign Agriculture"
+        },
+        {
+          "code": "HSAG28",
+          "name": "Risk Management, Research and Specialty Crops"
+        },
+        {
+          "code": "HSAG22",
+          "name": "Commodity Markets, Digital Assets, and Rural Development"
+        },
+        {
+          "code": "HSAG16",
+          "name": "General Farm Commodities, Risk Management, and Credit"
+        },
+        {
+          "code": "HSAG15",
+          "name": "Forestry and Horticulture"
+        },
+        {
+          "code": "HSAG03",
+          "name": "Nutrition and Foreign Agriculture"
+        },
+        {
+          "code": "HSAG14",
+          "name": "Conservation, Research, and Biotechnology"
+        },
+        {
+          "code": "HSAG29",
+          "name": "Livestock, Dairy, and Poultry"
+        }
+      ]
+    },
+    "HSAP": {
+      "committeeId": "HSAP",
+      "committeeName": "Committee on Appropriations",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Appropriations",
+        "extract": "The United States House Committee on Appropriations is a committee of the United States House of Representatives that is responsible for passing appropriation bills along with its Senate counterpart. The bills passed by the Appropriations Committee regulate expenditures of money by the government of the United States. As such, it is one of the most powerful committees, and its members are seen as influential.",
+        "extract_html": "The United States House Committee on Appropriations is a committee of the United States House of Representatives that is responsible for passing appropriation bills along with its Senate counterpart. The bills passed by the Appropriations Committee regulate expenditures of money by the government of the United States. As such, it is one of the most powerful committees, and its members are seen as influential.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Appropriations"
+      },
+      "jurisdiction": "passing appropriation bills along with its Senate counterpart",
+      "lastUpdated": "2025-11-13T21:53:01.016Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSAP06",
+          "name": "Interior, Environment, and Related Agencies"
+        },
+        {
+          "code": "HSAP02",
+          "name": "Defense"
+        },
+        {
+          "code": "HSAP23",
+          "name": "Financial Services and General Government"
+        },
+        {
+          "code": "HSAP03",
+          "name": "District of Columbia"
+        },
+        {
+          "code": "HSAP05",
+          "name": "VA, HUD, and Independent Agencies"
+        },
+        {
+          "code": "HSAP08",
+          "name": "Legislative"
+        },
+        {
+          "code": "HSAP09",
+          "name": "Military Construction"
+        },
+        {
+          "code": "HSAP11",
+          "name": "Commerce, Justice, State, and the Judiciary"
+        },
+        {
+          "code": "HSAP12",
+          "name": "Transportation"
+        },
+        {
+          "code": "HSAP13",
+          "name": "Treasury, Postal Service, and General Government"
+        },
+        {
+          "code": "HSAP01",
+          "name": "Agriculture, Rural Development, Food and Drug Administration, and Related Agencies"
+        },
+        {
+          "code": "HSAP24",
+          "name": "Legislative Branch"
+        },
+        {
+          "code": "HSAP04",
+          "name": "National Security, Department of State, and Related Programs"
+        },
+        {
+          "code": "HSAP07",
+          "name": "Departments of Labor, Health and Human Services, Education, and Related Agencies"
+        },
+        {
+          "code": "HSAP20",
+          "name": "Departments of Transportation, and Housing and Urban Development, and Related Agencies"
+        },
+        {
+          "code": "HSAP15",
+          "name": "Department of Homeland Security"
+        },
+        {
+          "code": "HSAP18",
+          "name": "Military Construction, Veterans Affairs, and Related Agencies"
+        },
+        {
+          "code": "HSAP10",
+          "name": "Energy and Water Development, and Related Agencies"
+        },
+        {
+          "code": "HSAP19",
+          "name": "Commerce, Justice, Science, and Related Agencies"
+        },
+        {
+          "code": "HSAP14",
+          "name": "Transportation, Treasury and Independent Agencies"
+        }
+      ]
+    },
+    "HSAS": {
+      "committeeId": "HSAS",
+      "committeeName": "Committee on Armed Services",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Armed Services",
+        "extract": "The U.S. House Committee on Armed Services, commonly known as the House Armed Services Committee or HASC, is a standing committee of the United States House of Representatives. It is responsible for funding and oversight of the Department of Defense (DoD) and the United States Armed Forces, as well as substantial portions of the Department of Energy. Its regular legislative product is the National Defense Authorization Act, which has been passed by Congress and signed into law each year since 1962.\n\n",
+        "extract_html": "The U.S. House Committee on Armed Services, commonly known as the House Armed Services Committee or HASC, is a standing committee of the United States House of Representatives. It is responsible for funding and oversight of the Department of Defense (DoD) and the United States Armed Forces, as well as substantial portions of the Department of Energy. Its regular legislative product is the National Defense Authorization Act, which has been passed by Congress and signed into law each year since 1962.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Armed_Services"
+      },
+      "jurisdiction": "funding and oversight of the Department of Defense (DoD) and the United States Armed Forces, as well as substantial portions of the Department of Energy",
+      "lastUpdated": "2025-11-13T21:53:04.124Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSAS04",
+          "name": "Military Installations and Facilities"
+        },
+        {
+          "code": "HSAS06",
+          "name": "Oversight and Investigations"
+        },
+        {
+          "code": "HSAS07",
+          "name": "Procurement and Military Nuclear Systems"
+        },
+        {
+          "code": "HSAS08",
+          "name": "Defense Policy Panel"
+        },
+        {
+          "code": "HSAS12",
+          "name": "Special Oversight Panel on  Morale, Welfare, and Recreation"
+        },
+        {
+          "code": "HSAS20",
+          "name": "Military Procurement"
+        },
+        {
+          "code": "HSAS22",
+          "name": "Special Oversight Panel on Merchant Marine"
+        },
+        {
+          "code": "HSAS24",
+          "name": "Special Oversight Panel on Terrorism"
+        },
+        {
+          "code": "HSAS27",
+          "name": "Total Force"
+        },
+        {
+          "code": "HSAS33",
+          "name": "Defense Financial Management and Auditability Reform Panel"
+        },
+        {
+          "code": "HSAS34",
+          "name": "Panel on Business Challenges Within the Defense Industry"
+        },
+        {
+          "code": "HSAS03",
+          "name": "Readiness"
+        },
+        {
+          "code": "HSAS28",
+          "name": "Seapower and Projection Forces"
+        },
+        {
+          "code": "HSAS29",
+          "name": "Strategic Forces"
+        },
+        {
+          "code": "HSAS25",
+          "name": "Tactical Air and Land Forces"
+        },
+        {
+          "code": "HSAS01",
+          "name": "Military Research and Development"
+        },
+        {
+          "code": "HSAS05",
+          "name": "Seapower and Strategic and Critical Materials"
+        },
+        {
+          "code": "HSAS11",
+          "name": "Defense Acquisition Reform Panel"
+        },
+        {
+          "code": "HSAS23",
+          "name": "Special Oversight Panel on Department of Energy Reorganization"
+        },
+        {
+          "code": "HSAS30",
+          "name": "Projection Forces"
+        },
+        {
+          "code": "HSAS26",
+          "name": "Intelligence and Special Operations"
+        },
+        {
+          "code": "HSAS35",
+          "name": "Cyber, Information Technologies, and Innovation"
+        },
+        {
+          "code": "HSAS02",
+          "name": "Military Personnel"
+        }
+      ]
+    },
+    "HSBA": {
+      "committeeId": "HSBA",
+      "committeeName": "Committee on Financial Services",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Financial Services",
+        "extract": "The United States House Committee on Financial Services, also referred to as the House Banking Committee and previously known as the Committee on Banking and Currency, is the committee of the United States House of Representatives that oversees the entire financial services industry, including the securities, insurance, banking and housing industries. The Financial Services Committee also oversees the work of the Federal Reserve, the United States Department of the Treasury, the U.S. Securities and Exchange Commission and other financial services regulators.\nThe House Committee on Financial Services is considered to be one of the House's most powerful committees.\nIt is currently chaired by Republican French Hill from Arkansas, having assumed office in 2025. The ranking member is Democrat Maxine Waters from California, who previously chaired the committee under a Democratic majority in the House.",
+        "extract_html": "The United States House Committee on Financial Services, also referred to as the House Banking Committee and previously known as the Committee on Banking and Currency, is the committee of the United States House of Representatives that oversees the entire financial services industry, including the securities, insurance, banking and housing industries. The Financial Services Committee also oversees the work of the Federal Reserve, the United States Department of the Treasury, the U.S. Securities and Exchange Commission and other financial services regulators.\nThe House Committee on Financial Services is considered to be one of the House's most powerful committees.\nIt is currently chaired by Republican French Hill from Arkansas, having assumed office in 2025. The ranking member is Democrat Maxine Waters from California, who previously chaired the committee under a Democratic majority in the House.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Financial_Services"
+      },
+      "history": {
+        "previousNames": [
+          {
+            "name": "Committee on Banking and Currency, is the committee of the United States House of Representatives that oversees the entire financial services industry, including the securities, insurance, banking and housing industries",
+            "period": "Historical"
+          }
+        ]
+      },
+      "oversight": [
+        {
+          "agency": "Securities and Exchange Commission",
+          "acronym": "SEC",
+          "wikipediaUrl": "https://en.wikipedia.org/wiki/Securities_and_Exchange_Commission"
+        }
+      ],
+      "lastUpdated": "2025-11-13T21:53:06.797Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSBA02",
+          "name": "Consumer Affairs and Coinage"
+        },
+        {
+          "code": "HSBA05",
+          "name": "Economic Stabilization"
+        },
+        {
+          "code": "HSBA06",
+          "name": "International Development Institutions and Finance"
+        },
+        {
+          "code": "HSBA08",
+          "name": "Domestic and International Monetary Policy"
+        },
+        {
+          "code": "HSBA13",
+          "name": "Diversity and Inclusion"
+        },
+        {
+          "code": "HSBA14",
+          "name": "Economic Growth and Credit Formation"
+        },
+        {
+          "code": "HSBA15",
+          "name": "Consumer Protection and Financial Institutions"
+        },
+        {
+          "code": "HSBA17",
+          "name": "International Monetary Policy and Trade"
+        },
+        {
+          "code": "HSBA18",
+          "name": "Domestic Monetary Policy, Technology, and Economic Growth"
+        },
+        {
+          "code": "HSBA19",
+          "name": "Domestic Monetary Policy and Technology"
+        },
+        {
+          "code": "HSBA09",
+          "name": "Oversight and Investigations"
+        },
+        {
+          "code": "HSBA04",
+          "name": "Housing and Insurance"
+        },
+        {
+          "code": "HSBA03",
+          "name": "Domestic Monetary Policy"
+        },
+        {
+          "code": "HSBA07",
+          "name": "Financial Institutions Supervision, Regulation and Deposit Insurance"
+        },
+        {
+          "code": "HSBA11",
+          "name": "Policy Research and Insurance"
+        },
+        {
+          "code": "HSBA16",
+          "name": "Capital Markets"
+        },
+        {
+          "code": "HSBA20",
+          "name": "Financial Institutions and Monetary Policy"
+        },
+        {
+          "code": "HSBA01",
+          "name": "Terrorism and Illicit Finance"
+        },
+        {
+          "code": "HSBA10",
+          "name": "National Security, Illicit Finance, and International Financial Institutions"
+        },
+        {
+          "code": "HSBA21",
+          "name": "Digital Assets, Financial Technology, and Artificial Intelligence"
+        }
+      ]
+    },
+    "HSBU": {
+      "committeeId": "HSBU",
+      "committeeName": "Committee on the Budget",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on the Budget",
+        "extract": "The United States House Committee on the Budget, commonly known as the House Budget Committee, is a standing committee of the United States House of Representatives. Its responsibilities include legislative oversight of the federal budget process, reviewing all bills and resolutions on the budget, and monitoring agencies and programs funded outside of the budgetary process. The committee briefly operated as a select committee in 1919 and 1921, during the 66th and 67th United States Congresses, before being made a standing committee in 1974.",
+        "extract_html": "The United States House Committee on the Budget, commonly known as the House Budget Committee, is a standing committee of the United States House of Representatives. Its responsibilities include legislative oversight of the federal budget process, reviewing all bills and resolutions on the budget, and monitoring agencies and programs funded outside of the budgetary process. The committee briefly operated as a select committee in 1919 and 1921, during the 66th and 67th United States Congresses, before being made a standing committee in 1974.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_the_Budget"
+      },
+      "lastUpdated": "2025-11-13T21:53:09.558Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": []
+    },
+    "HSED": {
+      "committeeId": "HSED",
+      "committeeName": "Committee on Education and the Workforce",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Education and Workforce",
+        "extract": "The Committee on Education and Workforce (also known as Committee on Education and the Workforce) is a standing committee of the United States House of Representatives. There are 45 members of this committee. Since 2025, the chair of the Education and Workforce committee is Republican Tim Walberg of Michigan.\n\n",
+        "extract_html": "The Committee on Education and Workforce (also known as Committee on Education and the Workforce) is a standing committee of the United States House of Representatives. There are 45 members of this committee. Since 2025, the chair of the Education and Workforce committee is Republican Tim Walberg of Michigan.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Education_and_Workforce"
+      },
+      "lastUpdated": "2025-11-13T21:53:12.248Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSED03",
+          "name": "Labor Standards"
+        },
+        {
+          "code": "HSED04",
+          "name": "Healthy Families and Communities"
+        },
+        {
+          "code": "HSED06",
+          "name": "Employment Opportunities"
+        },
+        {
+          "code": "HSED07",
+          "name": "Civil Rights and Human Services"
+        },
+        {
+          "code": "HSED11",
+          "name": "Early Childhood, Youth and Families"
+        },
+        {
+          "code": "HSED12",
+          "name": "Oversight and Investigations"
+        },
+        {
+          "code": "HSED01",
+          "name": "Elementary, Secondary, and Vocational Education"
+        },
+        {
+          "code": "HSED05",
+          "name": "Health and Safety"
+        },
+        {
+          "code": "HSED08",
+          "name": "Postsecondary Education, Training and Life-Long Learning"
+        },
+        {
+          "code": "HSED02",
+          "name": "Health, Employment, Labor, and Pensions"
+        },
+        {
+          "code": "HSED13",
+          "name": "Higher Education and Workforce Development"
+        },
+        {
+          "code": "HSED10",
+          "name": "Workforce Protections"
+        },
+        {
+          "code": "HSED14",
+          "name": "Early Childhood, Elementary, and Secondary Education"
+        }
+      ]
+    },
+    "HSIF": {
+      "committeeId": "HSIF",
+      "committeeName": "Committee on Energy and Commerce",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Energy and Commerce",
+        "extract": "The Committee on Energy and Commerce is one of the oldest standing committees of the United States House of Representatives. Established in 1795, it has operated continuously—with various name changes and jurisdictional changes—for more than 200 years. The two other House standing committees with such continuous operation are the House Ways and Means Committee and the House Rules Committee. The committee has served as the principal guide for the House in matters relating to the promotion of commerce and to the public's health and marketplace interests, with the relatively recent addition of energy considerations among them. Due to its broad jurisdiction, it is considered one of the most powerful committees in the House.\n\n",
+        "extract_html": "The Committee on Energy and Commerce is one of the oldest standing committees of the United States House of Representatives. Established in 1795, it has operated continuously—with various name changes and jurisdictional changes—for more than 200 years. The two other House standing committees with such continuous operation are the House Ways and Means Committee and the House Rules Committee. The committee has served as the principal guide for the House in matters relating to the promotion of commerce and to the public's health and marketplace interests, with the relatively recent addition of energy considerations among them. Due to its broad jurisdiction, it is considered one of the most powerful committees in the House.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Energy_and_Commerce"
+      },
+      "history": {
+        "establishedDate": "1795"
+      },
+      "lastUpdated": "2025-11-13T21:53:14.861Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSIF17",
+          "name": "Commerce, Manufacturing, and Trade"
+        },
+        {
+          "code": "HSIF01",
+          "name": "Telecommunications and Finance"
+        },
+        {
+          "code": "HSIF04",
+          "name": "Health and Environment"
+        },
+        {
+          "code": "HSIF06",
+          "name": "Commerce, Consumer Protection, and Competitiveness"
+        },
+        {
+          "code": "HSIF07",
+          "name": "Transportation, Tourism, and Hazardous Materials"
+        },
+        {
+          "code": "HSIF11",
+          "name": "Commerce, Trade, and Hazardous Materials"
+        },
+        {
+          "code": "HSIF12",
+          "name": "Telecommunications, Trade, and Consumer Protection"
+        },
+        {
+          "code": "HSIF13",
+          "name": "Finance and Hazardous Materials"
+        },
+        {
+          "code": "HSIF15",
+          "name": "Environment and Hazardous Materials"
+        },
+        {
+          "code": "HSIF02",
+          "name": "Oversight and Investigations"
+        },
+        {
+          "code": "HSIF10",
+          "name": "Transportation and Hazardous Materials"
+        },
+        {
+          "code": "HSIF03",
+          "name": "Energy"
+        },
+        {
+          "code": "HSIF18",
+          "name": "Environment"
+        },
+        {
+          "code": "HSIF14",
+          "name": "Health"
+        },
+        {
+          "code": "HSIF16",
+          "name": "Communications and Technology"
+        }
+      ]
+    },
+    "HSFA": {
+      "committeeId": "HSFA",
+      "committeeName": "Committee on Foreign Affairs",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Foreign Affairs",
+        "extract": "The United States House Committee on Foreign Affairs, also known as the House Foreign Affairs Committee, is a standing committee of the U.S. House of Representatives with jurisdiction over bills and investigations concerning the foreign affairs of the United States. Since 2025, the chair of the Foreign Affairs Committee has been Brian Mast of Florida.\nThe committee has a broad mandate to oversee legislation regarding the impact of national security developments on foreign policy; war powers, treaties, executive agreements, and military deployments abroad; foreign assistance; arms control; international economic policy; and other matters. Many of its responsibilities are delegated to one of six standing subcommittees, which have jurisdiction over issues related to their respective region in the world. The committee also oversees the U.S. Department of State, American embassies and diplomats, and the U.S. Agency for International Development.\nDuring two separate periods, 1975 to 1978 and 1995 to 2007, the Foreign Affairs Committee was renamed the Committee on International Relations; its duties and jurisdiction remained unchanged.\nIts counterpart in the Senate is the Committee on Foreign Relations.\n\n",
+        "extract_html": "The United States House Committee on Foreign Affairs, also known as the House Foreign Affairs Committee, is a standing committee of the U.S. House of Representatives with jurisdiction over bills and investigations concerning the foreign affairs of the United States. Since 2025, the chair of the Foreign Affairs Committee has been Brian Mast of Florida.\nThe committee has a broad mandate to oversee legislation regarding the impact of national security developments on foreign policy; war powers, treaties, executive agreements, and military deployments abroad; foreign assistance; arms control; international economic policy; and other matters. Many of its responsibilities are delegated to one of six standing subcommittees, which have jurisdiction over issues related to their respective region in the world. The committee also oversees the U.S. Department of State, American embassies and diplomats, and the U.S. Agency for International Development.\nDuring two separate periods, 1975 to 1978 and 1995 to 2007, the Foreign Affairs Committee was renamed the Committee on International Relations; its duties and jurisdiction remained unchanged.\nIts counterpart in the Senate is the Committee on Foreign Relations.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Foreign_Affairs"
+      },
+      "lastUpdated": "2025-11-13T21:53:17.530Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSFA04",
+          "name": "International Economic Policy and Trade"
+        },
+        {
+          "code": "HSFA12",
+          "name": "International Operations and Human Rights"
+        },
+        {
+          "code": "HSFA18",
+          "name": "Terrorism,  Nonproliferation, and Trade"
+        },
+        {
+          "code": "HSFA01",
+          "name": "Arms Control, International Security and Science"
+        },
+        {
+          "code": "HSFA02",
+          "name": "International Operations"
+        },
+        {
+          "code": "HSFA11",
+          "name": "International Security, International Organizations, and Human Rights"
+        },
+        {
+          "code": "HSFA16",
+          "name": "Africa"
+        },
+        {
+          "code": "HSFA14",
+          "name": "Europe"
+        },
+        {
+          "code": "HSFA06",
+          "name": "Global Health, Global Human Rights, and International Organizations"
+        },
+        {
+          "code": "HSFA05",
+          "name": "East Asia and Pacific"
+        },
+        {
+          "code": "HSFA13",
+          "name": "Middle East and North Africa"
+        },
+        {
+          "code": "HSFA17",
+          "name": "Oversight and Intelligence"
+        },
+        {
+          "code": "HSFA07",
+          "name": "Western Hemisphere"
+        },
+        {
+          "code": "HSFA03",
+          "name": "Europe and the Middle East"
+        },
+        {
+          "code": "HSFA08",
+          "name": "Africa"
+        },
+        {
+          "code": "HSFA15",
+          "name": "International Terrorism, Nonproliferation and Human Rights"
+        },
+        {
+          "code": "HSFA19",
+          "name": "South and Central Asia"
+        }
+      ]
+    },
+    "HSGO": {
+      "committeeId": "HSGO",
+      "committeeName": "Committee on Oversight and Accountability",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "Kimberly Cheatle",
+        "extract": "Kimberly A. Cheatle (born 1970 or 1971) is an American former law enforcement officer who served as the 27th director of the United States Secret Service from 2022 until 2024. After serving in the Secret Service from 1995 to 2019, she worked as senior director of global security at PepsiCo from 2019 to 2022. Appointed director of the Secret Service by President Joe Biden, she assumed the office on 17 September 2022, becoming the second woman to hold the position.\nFollowing the attempted assassination of Donald Trump at a campaign rally on July 13, 2024, the Secret Service was widely criticized over security lapses. On July 22, Cheatle testified before the United States House Committee on Oversight and Accountability, where she faced bipartisan calls for her resignation. She resigned on July 23 and was succeeded by acting director Ronald L. Rowe Jr.",
+        "extract_html": "Kimberly A. Cheatle (born 1970 or 1971) is an American former law enforcement officer who served as the 27th director of the United States Secret Service from 2022 until 2024. After serving in the Secret Service from 1995 to 2019, she worked as senior director of global security at PepsiCo from 2019 to 2022. Appointed director of the Secret Service by President Joe Biden, she assumed the office on 17 September 2022, becoming the second woman to hold the position.\nFollowing the attempted assassination of Donald Trump at a campaign rally on July 13, 2024, the Secret Service was widely criticized over security lapses. On July 22, Cheatle testified before the United States House Committee on Oversight and Accountability, where she faced bipartisan calls for her resignation. She resigned on July 23 and was succeeded by acting director Ronald L. Rowe Jr.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Kimberly_Cheatle%2C_Secret_Service_Assistant_Director_%283x4_cropped%29.jpg/330px-Kimberly_Cheatle%2C_Secret_Service_Assistant_Director_%283x4_cropped%29.jpg",
+          "width": 300,
+          "height": 400
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/Kimberly_Cheatle"
+      },
+      "lastUpdated": "2025-11-13T21:53:20.151Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSGO19",
+          "name": "Government Efficiency and Financial Management"
+        },
+        {
+          "code": "HSGO25",
+          "name": "Information Technology"
+        },
+        {
+          "code": "HSGO12",
+          "name": "Cybersecurity, Information Technology, and Government Innovation"
+        },
+        {
+          "code": "HSGO06",
+          "name": "Military and Foreign Affairs"
+        },
+        {
+          "code": "HSGO28",
+          "name": "Environment"
+        },
+        {
+          "code": "HSGO01",
+          "name": "Energy Policy, Natural Resources and Regulatory Affairs"
+        },
+        {
+          "code": "HSGO03",
+          "name": "Government Activities and Transportation"
+        },
+        {
+          "code": "HSGO04",
+          "name": "Intergovernmental Affairs"
+        },
+        {
+          "code": "HSGO08",
+          "name": "Regulatory Affairs"
+        },
+        {
+          "code": "HSGO09",
+          "name": "Civil Service and Agency Organization"
+        },
+        {
+          "code": "HSGO11",
+          "name": "Postal Service"
+        },
+        {
+          "code": "HSGO13",
+          "name": "Census"
+        },
+        {
+          "code": "HSGO14",
+          "name": "Criminal Justice, Drug Policy and Human Resources"
+        },
+        {
+          "code": "HSGO18",
+          "name": "Civil Service and Agency Organization"
+        },
+        {
+          "code": "HSGO20",
+          "name": "Technology, Information Policy, Intergovernmental Relations and the Census"
+        },
+        {
+          "code": "HSGO22",
+          "name": "Energy and Resources"
+        },
+        {
+          "code": "HSGO23",
+          "name": "Information Policy, Census, and National Archives"
+        },
+        {
+          "code": "HSGO29",
+          "name": "Transportation and Public Assets"
+        },
+        {
+          "code": "HSGO05",
+          "name": "Economic Growth, Energy Policy, and Regulatory Affairs"
+        },
+        {
+          "code": "HSGO24",
+          "name": "Government Operations"
+        },
+        {
+          "code": "HSGO27",
+          "name": "Health Care and Financial Services"
+        },
+        {
+          "code": "HSGO02",
+          "name": "Civil Rights and Civil Liberties"
+        },
+        {
+          "code": "HSGO07",
+          "name": "Employment, Housing, and Aviation"
+        },
+        {
+          "code": "HSGO10",
+          "name": "District of Columbia"
+        },
+        {
+          "code": "HSGO15",
+          "name": "Technology and Procurement Policy"
+        },
+        {
+          "code": "HSGO21",
+          "name": "Human Rights and Wellness"
+        },
+        {
+          "code": "HSGO26",
+          "name": "Domestic Policy"
+        },
+        {
+          "code": "HSGO30",
+          "name": "Technology, Information Policy, Intergovernmental Relations and Procurement Reform"
+        },
+        {
+          "code": "HLVC00",
+          "name": "Select on the Coronavirus Pandemic"
+        },
+        {
+          "code": "HSGO16",
+          "name": "Delivering on Government Efficiency"
+        },
+        {
+          "code": "HSGO33",
+          "name": "Federal Law Enforcement"
+        }
+      ]
+    },
+    "HSHA": {
+      "committeeId": "HSHA",
+      "committeeName": "Committee on House Administration",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on House Administration",
+        "extract": "The United States House Committee on House Administration deals with the general administration matters of the United States House of Representatives, the security of the United States Capitol, and federal elections.\n\n",
+        "extract_html": "The United States House Committee on House Administration deals with the general administration matters of the United States House of Representatives, the security of the United States Capitol, and federal elections.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_House_Administration"
+      },
+      "lastUpdated": "2025-11-13T21:53:22.779Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSHA01",
+          "name": "Accounts"
+        },
+        {
+          "code": "HSHA02",
+          "name": "Procurement and Printing"
+        },
+        {
+          "code": "HSHA03",
+          "name": "Services"
+        },
+        {
+          "code": "HSHA04",
+          "name": "Capitol Security"
+        },
+        {
+          "code": "HSHA05",
+          "name": "Personnel and Police"
+        },
+        {
+          "code": "HSHA07",
+          "name": "Office Systems"
+        },
+        {
+          "code": "HSHA09",
+          "name": "Libraries and Memorials"
+        },
+        {
+          "code": "HSHA22",
+          "name": "Administrative Oversight"
+        },
+        {
+          "code": "HSHA08",
+          "name": "Elections"
+        },
+        {
+          "code": "HSHA06",
+          "name": "Oversight"
+        },
+        {
+          "code": "HSHA27",
+          "name": "Modernization and Innovation"
+        }
+      ]
+    },
+    "HSII": {
+      "committeeId": "HSII",
+      "committeeName": "Committee on Natural Resources",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Natural Resources",
+        "extract": "The U.S. House Committee on Natural Resources or Natural Resources Committee (often referred to as simply Resources) is a Congressional committee of the United States House of Representatives.  Originally called the Committee on Interior and Insular Affairs (1951), the name was changed to the Committee on Natural Resources in 1991.  The name was shortened to the Committee on Resources in 1995 by the new chair, Don Young (at the same time, the committee took over the duties of the now-defunct Merchant Marine and Fisheries Committee). Following the Democratic takeover of the House of Representatives in 2006, the name of the committee was changed back to its title used between 1991 and 1995.",
+        "extract_html": "The U.S. House Committee on Natural Resources or Natural Resources Committee (often referred to as simply Resources) is a Congressional committee of the United States House of Representatives.  Originally called the Committee on Interior and Insular Affairs (1951), the name was changed to the Committee on Natural Resources in 1991.  The name was shortened to the Committee on Resources in 1995 by the new chair, Don Young (at the same time, the committee took over the duties of the now-defunct Merchant Marine and Fisheries Committee). Following the Democratic takeover of the House of Representatives in 2006, the name of the committee was changed back to its title used between 1991 and 1995.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Natural_Resources"
+      },
+      "lastUpdated": "2025-11-13T21:53:25.450Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSII06",
+          "name": "Energy and Mineral Resources"
+        },
+        {
+          "code": "HSII01",
+          "name": "National Parks and Public Lands"
+        },
+        {
+          "code": "HSII02",
+          "name": "Mining and Natural Resources"
+        },
+        {
+          "code": "HSII03",
+          "name": "General Oversight and Investigations"
+        },
+        {
+          "code": "HSII05",
+          "name": "Water, Power and Offshore Energy Resources"
+        },
+        {
+          "code": "HSII07",
+          "name": "Insular and International Affairs"
+        },
+        {
+          "code": "HSII09",
+          "name": "Insular and International Affairs"
+        },
+        {
+          "code": "HSII14",
+          "name": "Native American and Insular Affairs"
+        },
+        {
+          "code": "HSII22",
+          "name": "Fisheries, Wildlife, Oceans, and Insular Affairs"
+        },
+        {
+          "code": "HSII10",
+          "name": "Federal Lands"
+        },
+        {
+          "code": "HSII15",
+          "name": "Oversight and Investigations"
+        },
+        {
+          "code": "HSII04",
+          "name": "Native American Affairs"
+        },
+        {
+          "code": "HSII08",
+          "name": "National Parks and Recreation"
+        },
+        {
+          "code": "HSII11",
+          "name": "Oversight and Investigations"
+        },
+        {
+          "code": "HSII20",
+          "name": "Forests and Forest Health"
+        },
+        {
+          "code": "HSII24",
+          "name": "Indian and Insular Affairs"
+        },
+        {
+          "code": "HSII13",
+          "name": "Water, Wildlife and Fisheries"
+        }
+      ]
+    },
+    "HSJU": {
+      "committeeId": "HSJU",
+      "committeeName": "Committee on the Judiciary",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on the Judiciary",
+        "extract": "The U.S. House Committee on the Judiciary, also called the House Judiciary Committee, is a standing committee of the United States House of Representatives. It is charged with overseeing the administration of justice within the federal courts, federal administrative agencies, and federal law enforcement entities. The Judiciary Committee is often involved in the impeachment process against federal officials. Because of the legal nature of its oversight, committee members usually have a legal background, but this is not required.\nIn the 119th Congress, the chair of the committee is Republican Jim Jordan of Ohio, and the ranking minority member is Democrat Jamie Raskin of Maryland.",
+        "extract_html": "The U.S. House Committee on the Judiciary, also called the House Judiciary Committee, is a standing committee of the United States House of Representatives. It is charged with overseeing the administration of justice within the federal courts, federal administrative agencies, and federal law enforcement entities. The Judiciary Committee is often involved in the impeachment process against federal officials. Because of the legal nature of its oversight, committee members usually have a legal background, but this is not required.\nIn the 119th Congress, the chair of the committee is Republican Jim Jordan of Ohio, and the ranking minority member is Democrat Jamie Raskin of Maryland.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_the_Judiciary"
+      },
+      "lastUpdated": "2025-11-13T21:53:28.153Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HLQJ00",
+          "name": "Select to Investigate the Remaining Questions Surrounding January 6, 2021"
+        },
+        {
+          "code": "HSJU11",
+          "name": "Antitrust (Full Committee Task Force)"
+        },
+        {
+          "code": "HSJU04",
+          "name": "Civil and Constitutional Rights"
+        },
+        {
+          "code": "HSJU07",
+          "name": "Criminal Justice"
+        },
+        {
+          "code": "HSJU09",
+          "name": "Commercial and Administrative Law"
+        },
+        {
+          "code": "HSJU12",
+          "name": "Over-Criminalization Task Force"
+        },
+        {
+          "code": "HSJU03",
+          "name": "Courts, Intellectual Property, Artificial Intelligence, and the Internet"
+        },
+        {
+          "code": "HSJU08",
+          "name": "Crime and Federal Government Surveillance"
+        },
+        {
+          "code": "HSJU01",
+          "name": "Immigration Integrity, Security, and Enforcement"
+        },
+        {
+          "code": "HSJU02",
+          "name": "Administrative Law and Governmental Relations"
+        },
+        {
+          "code": "HSJU06",
+          "name": "Crime"
+        },
+        {
+          "code": "HSJU10",
+          "name": "Constitution and Limited Government"
+        },
+        {
+          "code": "HLFD00",
+          "name": "Select on the Weaponization of the Federal Government"
+        },
+        {
+          "code": "HSJU05",
+          "name": "Administrative State, Regulatory Reform, and Antitrust"
+        },
+        {
+          "code": "HSJU13",
+          "name": "Oversight"
+        }
+      ]
+    },
+    "HSPW": {
+      "committeeId": "HSPW",
+      "committeeName": "Committee on Transportation and Infrastructure",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Transportation and Infrastructure",
+        "extract": "The U.S. House Committee on Transportation and Infrastructure is a standing committee of the United States House of Representatives.\n\n",
+        "extract_html": "The U.S. House Committee on Transportation and Infrastructure is a standing committee of the United States House of Representatives.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Transportation_and_Infrastructure"
+      },
+      "lastUpdated": "2025-11-13T21:53:30.803Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSPW13",
+          "name": "Economic Development, Public Buildings, and Emergency Management"
+        },
+        {
+          "code": "HSPW01",
+          "name": "Investigations and Oversight"
+        },
+        {
+          "code": "HSPW04",
+          "name": "Public Buildings and Grounds"
+        },
+        {
+          "code": "HSPW06",
+          "name": "Economic Development"
+        },
+        {
+          "code": "HSPW08",
+          "name": "Economic Development, Public Buildings, Hazardous Materials and Pipeline Transportation"
+        },
+        {
+          "code": "HSPW09",
+          "name": "Railroads"
+        },
+        {
+          "code": "HSPW10",
+          "name": "Ground Transportation"
+        },
+        {
+          "code": "HSPW12",
+          "name": "Highways and Transit"
+        },
+        {
+          "code": "HSPW14",
+          "name": "Railroads, Pipelines, and Hazardous Materials"
+        },
+        {
+          "code": "HSPW02",
+          "name": "Water Resources and Environment"
+        },
+        {
+          "code": "HSPW05",
+          "name": "Aviation"
+        },
+        {
+          "code": "HSPW33",
+          "name": "Public-Private Partnerships"
+        },
+        {
+          "code": "HSPW03",
+          "name": "Surface Transportation"
+        },
+        {
+          "code": "HSPW11",
+          "name": "Oversight, Investigations and Emergency Management"
+        },
+        {
+          "code": "HSPW07",
+          "name": "Coast Guard and Maritime Transportation"
+        }
+      ]
+    },
+    "HSRU": {
+      "committeeId": "HSRU",
+      "committeeName": "Committee on Rules",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Rules",
+        "extract": "The Committee on Rules (or more commonly the Rules Committee) is a committee of the United States House of Representatives. It is responsible for the rules under which bills will be presented to the House of Representatives, unlike other committees, which often deal with a specific area of policy. The committee is often considered one of the most powerful committees as it influences the introduction and process of legislation through the House. Thus it has garnered the nickname the \"traffic cop of Congress\". A \"special rule\" resolution (also referred to simply as a \"rule\") is a simple resolution of the House of Representatives, usually reported by the Committee on Rules, to permit the immediate consideration of a legislative measure, notwithstanding the usual order of business, and to prescribe conditions for its debate and amendment.\n\n",
+        "extract_html": "The Committee on Rules (or more commonly the Rules Committee) is a committee of the United States House of Representatives. It is responsible for the rules under which bills will be presented to the House of Representatives, unlike other committees, which often deal with a specific area of policy. The committee is often considered one of the most powerful committees as it influences the introduction and process of legislation through the House. Thus it has garnered the nickname the \"traffic cop of Congress\". A \"special rule\" resolution (also referred to simply as a \"rule\") is a simple resolution of the House of Representatives, usually reported by the Committee on Rules, to permit the immediate consideration of a legislative measure, notwithstanding the usual order of business, and to prescribe conditions for its debate and amendment.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Rules"
+      },
+      "jurisdiction": "the rules under which bills will be presented to the House of Representatives, unlike other committees, which often deal with a specific area of policy",
+      "lastUpdated": "2025-11-13T21:53:33.630Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSRU02",
+          "name": "Legislative and Budget Process"
+        },
+        {
+          "code": "HSRU04",
+          "name": "Rules and Organization of the House"
+        },
+        {
+          "code": "HSRU01",
+          "name": "Technology and the House"
+        },
+        {
+          "code": "HSRU05",
+          "name": "Expedited Procedures"
+        }
+      ]
+    },
+    "HSSM": {
+      "committeeId": "HSSM",
+      "committeeName": "Committee on Small Business",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Small Business",
+        "extract": "The United States House Committee on Small Business is a standing committee of the United States House of Representatives. It was established in 1941 as the House Select Committee on Small Business.\n\n",
+        "extract_html": "The United States House Committee on Small Business is a standing committee of the United States House of Representatives. It was established in 1941 as the House Select Committee on Small Business.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Small_Business"
+      },
+      "history": {
+        "establishedDate": "1941"
+      },
+      "lastUpdated": "2025-11-13T21:53:36.309Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSSM24",
+          "name": "Oversight, Investigations, and Regulations"
+        },
+        {
+          "code": "HSSM02",
+          "name": "SBA, and the General Economy"
+        },
+        {
+          "code": "HSSM03",
+          "name": "Regulation and Business Opportunities"
+        },
+        {
+          "code": "HSSM04",
+          "name": "Energy and Agriculture"
+        },
+        {
+          "code": "HSSM06",
+          "name": "Exports, Tourism and Special Problems"
+        },
+        {
+          "code": "HSSM07",
+          "name": "SBA Legislation and the General Economy"
+        },
+        {
+          "code": "HSSM08",
+          "name": "Exports, Tax Policy, and Special Problems"
+        },
+        {
+          "code": "HSSM10",
+          "name": "Environment and Employment"
+        },
+        {
+          "code": "HSSM11",
+          "name": "Regulation, Business Opportunities, and Technology"
+        },
+        {
+          "code": "HSSM12",
+          "name": "Antitrust, Impact of Deregulation and Ecology"
+        },
+        {
+          "code": "HSSM14",
+          "name": "Rural Enterprises, Exports and Environment"
+        },
+        {
+          "code": "HSSM15",
+          "name": "Government Programs and Oversight"
+        },
+        {
+          "code": "HSSM16",
+          "name": "Procurement, Exports and Business Opportunities"
+        },
+        {
+          "code": "HSSM18",
+          "name": "Tax and Finance"
+        },
+        {
+          "code": "HSSM19",
+          "name": "Finance and Tax"
+        },
+        {
+          "code": "HSSM20",
+          "name": "Empowerment"
+        },
+        {
+          "code": "HSSM25",
+          "name": "Underserved, Agricultural, and Rural Business Development"
+        },
+        {
+          "code": "HSSM23",
+          "name": "Contracting and Infrastructure"
+        },
+        {
+          "code": "HSSM27",
+          "name": "Economic Growth, Tax, and Capital Access"
+        },
+        {
+          "code": "HSSM22",
+          "name": "Innovation, Entrepreneurship, and Workforce Development"
+        },
+        {
+          "code": "HSSM01",
+          "name": "Procurement, Innovation and Minority Enterprise Development"
+        },
+        {
+          "code": "HSSM05",
+          "name": "Tax, Access to Equity Capital and Business Opportunities"
+        },
+        {
+          "code": "HSSM09",
+          "name": "Procurement, Taxation and Tourism"
+        },
+        {
+          "code": "HSSM13",
+          "name": "Minority Enterprise, Finance and Urban Development"
+        },
+        {
+          "code": "HSSM17",
+          "name": "Regulations and Healthcare"
+        },
+        {
+          "code": "HSSM26",
+          "name": "Innovation, Entrepreneurship, and Workforce Development"
+        },
+        {
+          "code": "HSSM21",
+          "name": "Rural Development, Energy, and Supply Chains"
+        }
+      ]
+    },
+    "HSSY": {
+      "committeeId": "HSSY",
+      "committeeName": "Committee on Science, Space, and Technology",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Science, Space, and Technology",
+        "extract": "The Committee on Science, Space, and Technology is a committee of the United States House of Representatives. It has jurisdiction over non-defense federal scientific research and development. More specifically, the committee has complete jurisdiction over the following federal agencies: NASA, NSF, NIST, and the OSTP. The committee also has authority over R&D activities at the Department of Energy, the EPA, FAA, NOAA, the DOT, the NWS, the DHS and the U.S. Fire Administration.\n\n",
+        "extract_html": "The Committee on Science, Space, and Technology is a committee of the United States House of Representatives. It has jurisdiction over non-defense federal scientific research and development. More specifically, the committee has complete jurisdiction over the following federal agencies: NASA, NSF, NIST, and the OSTP. The committee also has authority over R&D activities at the Department of Energy, the EPA, FAA, NOAA, the DOT, the NWS, the DHS and the U.S. Fire Administration.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Science,_Space,_and_Technology"
+      },
+      "jurisdiction": "non-defense federal scientific research and development",
+      "oversight": [
+        {
+          "agency": "Environmental Protection Agency",
+          "acronym": "EPA",
+          "wikipediaUrl": "https://en.wikipedia.org/wiki/Environmental_Protection_Agency"
+        }
+      ],
+      "lastUpdated": "2025-11-13T21:53:38.964Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSSY03",
+          "name": "Science, Research and Technology"
+        },
+        {
+          "code": "HSSY10",
+          "name": "Energy"
+        },
+        {
+          "code": "HSSY17",
+          "name": "Technology"
+        },
+        {
+          "code": "HSSY01",
+          "name": "International Scientific Cooperation"
+        },
+        {
+          "code": "HSSY04",
+          "name": "Environment"
+        },
+        {
+          "code": "HSSY05",
+          "name": "Investigations and Oversight"
+        },
+        {
+          "code": "HSSY06",
+          "name": "Energy Research and Development"
+        },
+        {
+          "code": "HSSY08",
+          "name": "Task Force on Science Policy"
+        },
+        {
+          "code": "HSSY11",
+          "name": "International Scientific Cooperation"
+        },
+        {
+          "code": "HSSY13",
+          "name": "Technology and Competitiveness"
+        },
+        {
+          "code": "HSSY20",
+          "name": "Energy"
+        },
+        {
+          "code": "HSSY18",
+          "name": "Environment"
+        },
+        {
+          "code": "HSSY21",
+          "name": "Investigations and Oversight"
+        },
+        {
+          "code": "HSSY15",
+          "name": "Research and Technology"
+        },
+        {
+          "code": "HSSY16",
+          "name": "Space and Aeronautics"
+        },
+        {
+          "code": "HSSY02",
+          "name": "Space"
+        },
+        {
+          "code": "HSSY07",
+          "name": "Transportation, Aviation and Materials"
+        },
+        {
+          "code": "HSSY14",
+          "name": "Research"
+        },
+        {
+          "code": "HSSY19",
+          "name": "Technology"
+        }
+      ]
+    },
+    "HSVR": {
+      "committeeId": "HSVR",
+      "committeeName": "Committee on Veterans' Affairs",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Veterans' Affairs",
+        "extract": "The standing Committee on Veterans' Affairs in the United States House of Representatives oversees agencies, reviews current legislation, and recommends new bills or amendments concerning U.S. military veterans. Jurisdiction includes retiring and disability pensions, life insurance, education (including the G.I. Bill), vocational training, medical care, and home loan guarantees. The committee oversees the Department of Veterans Affairs (VA), veterans' hospitals, and veterans' cemeteries, except cemeteries under the Secretary of the Interior.\nThe Veterans' Affairs Committee does not have legislative jurisdiction over the following issues:\n\nTax status of veterans benefits and contributions to Veterans Service Organizations (Committee on Ways and Means);\nMilitary retiree issues, including COLA's and disability pay (Committee on Armed Services);\nCHAMPUS and Tri-Care (Committee on Armed Services);\nSurvivor Benefit Program (Committee on Armed Services);\nVeterans Preference in Federal civil service hiring practice (Committee on Government Reform and Oversight);\nCongressional charters for veterans service organizations (Committee on Judiciary);\nImmigration issues relating to veterans (Committee on Judiciary); and\nIssues dealing with Prisoners of War (POWs) and service members missing in action (MIAs) (Committee on Armed Services)\nThe committee was created by Section 121(a) of the Legislative Reorganization Act of 1946 (Public Law 79-601), which authorized a standing committee of 27 members.",
+        "extract_html": "The standing Committee on Veterans' Affairs in the United States House of Representatives oversees agencies, reviews current legislation, and recommends new bills or amendments concerning U.S. military veterans. Jurisdiction includes retiring and disability pensions, life insurance, education (including the G.I. Bill), vocational training, medical care, and home loan guarantees. The committee oversees the Department of Veterans Affairs (VA), veterans' hospitals, and veterans' cemeteries, except cemeteries under the Secretary of the Interior.\nThe Veterans' Affairs Committee does not have legislative jurisdiction over the following issues:\n\nTax status of veterans benefits and contributions to Veterans Service Organizations (Committee on Ways and Means);\nMilitary retiree issues, including COLA's and disability pay (Committee on Armed Services);\nCHAMPUS and Tri-Care (Committee on Armed Services);\nSurvivor Benefit Program (Committee on Armed Services);\nVeterans Preference in Federal civil service hiring practice (Committee on Government Reform and Oversight);\nCongressional charters for veterans service organizations (Committee on Judiciary);\nImmigration issues relating to veterans (Committee on Judiciary); and\nIssues dealing with Prisoners of War (POWs) and service members missing in action (MIAs) (Committee on Armed Services)\nThe committee was created by Section 121(a) of the Legislative Reorganization Act of 1946 (Public Law 79-601), which authorized a standing committee of 27 members.",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Veterans%27_Affairs"
+      },
+      "lastUpdated": "2025-11-13T21:53:41.695Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSVR02",
+          "name": "Education, Training and Employment"
+        },
+        {
+          "code": "HSVR08",
+          "name": "Oversight and Investigations"
+        },
+        {
+          "code": "HSVR03",
+          "name": "Health"
+        },
+        {
+          "code": "HSVR01",
+          "name": "Compensation, Pension and Insurance"
+        },
+        {
+          "code": "HSVR04",
+          "name": "Housing and Memorial Affairs"
+        },
+        {
+          "code": "HSVR05",
+          "name": "Oversight and Investigations"
+        },
+        {
+          "code": "HSVR06",
+          "name": "Benefits"
+        },
+        {
+          "code": "HSVR09",
+          "name": "Disability Assistance and Memorial Affairs"
+        },
+        {
+          "code": "HSVR10",
+          "name": "Economic Opportunity"
+        },
+        {
+          "code": "HSVR07",
+          "name": "Education, Training, Employment and Housing"
+        },
+        {
+          "code": "HSVR11",
+          "name": "Technology Modernization"
+        }
+      ]
+    },
+    "HSWM": {
+      "committeeId": "HSWM",
+      "committeeName": "Committee on Ways and Means",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Ways and Means",
+        "extract": "The Committee on Ways and Means is the chief tax-writing committee of the United States House of Representatives. The committee has jurisdiction over all taxation, tariffs, and other revenue-raising measures, as well as a number of other programs including Social Security, unemployment benefits, Medicare, the enforcement of child support laws, Temporary Assistance for Needy Families, foster care, and adoption programs. Members of the Ways and Means Committee are not allowed to serve on any other House Committee unless they are granted a waiver from their party's congressional leadership. It has long been regarded as the most prestigious committee of the House of Representatives.\nThe United States Constitution requires that all bills regarding taxation must originate in the U.S. House of Representatives, and House rules dictate that all bills regarding taxation must pass through Ways and Means. This system imparts upon the committee and its members a significant degree of influence over other representatives, committees, and public policy. Its Senate counterpart is the U.S. Senate Committee on Finance.\nIn the 119th Congress, the committee's chair is Jason T. Smith. Recent chairs have included Bill Thomas, Charlie Rangel, Sander Levin, Dave Camp, Paul Ryan, Kevin Brady, and Richard Neal.\n\n",
+        "extract_html": "The Committee on Ways and Means is the chief tax-writing committee of the United States House of Representatives. The committee has jurisdiction over all taxation, tariffs, and other revenue-raising measures, as well as a number of other programs including Social Security, unemployment benefits, Medicare, the enforcement of child support laws, Temporary Assistance for Needy Families, foster care, and adoption programs. Members of the Ways and Means Committee are not allowed to serve on any other House Committee unless they are granted a waiver from their party's congressional leadership. It has long been regarded as the most prestigious committee of the House of Representatives.\nThe United States Constitution requires that all bills regarding taxation must originate in the U.S. House of Representatives, and House rules dictate that all bills regarding taxation must pass through Ways and Means. This system imparts upon the committee and its members a significant degree of influence over other representatives, committees, and public policy. Its Senate counterpart is the U.S. Senate Committee on Finance.\nIn the 119th Congress, the committee's chair is Jason T. Smith. Recent chairs have included Bill Thomas, Charlie Rangel, Sander Levin, Dave Camp, Paul Ryan, Kevin Brady, and Richard Neal.\n\n",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_House_of_Representatives.svg/330px-Seal_of_the_United_States_House_of_Representatives.svg.png",
+          "width": 300,
+          "height": 300
+        },
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Ways_and_Means"
+      },
+      "jurisdiction": "all taxation, tariffs, and other revenue-raising measures, as well as a number of other programs including Social Security, unemployment benefits, Medicare, the enforcement of child support laws, Temporary Assistance for Needy Families, foster care, and adoption programs",
+      "lastUpdated": "2025-11-13T21:53:44.357Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSWM04",
+          "name": "Trade"
+        },
+        {
+          "code": "HSWM06",
+          "name": "Oversight"
+        },
+        {
+          "code": "HSWM05",
+          "name": "Tax"
+        },
+        {
+          "code": "HSWM01",
+          "name": "Social Security"
+        },
+        {
+          "code": "HSWM03",
+          "name": "Work and Welfare"
+        },
+        {
+          "code": "HSWM02",
+          "name": "Health"
+        }
+      ]
+    },
+    "HSHM": {
+      "committeeId": "HSHM",
+      "committeeName": "Committee on Homeland Security",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Homeland Security",
+        "extract": "The U.S. House Committee on Homeland Security is a standing committee of the United States House of Representatives. Its responsibilities include U.S. security legislation and oversight of the Department of Homeland Security.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Homeland_Security"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.168Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HSHM01",
+          "name": "Infrastructure and Border Security"
+        },
+        {
+          "code": "HSHM02",
+          "name": "Rules"
+        },
+        {
+          "code": "HSHM03",
+          "name": "Emergency Preparedness and Response"
+        },
+        {
+          "code": "HSHM04",
+          "name": "Cybersecurity, Science, and Research and Development"
+        },
+        {
+          "code": "HSHM06",
+          "name": "Prevention of Nuclear and Biological Attack"
+        },
+        {
+          "code": "HSHM10",
+          "name": "Investigations"
+        },
+        {
+          "code": "HSHM11",
+          "name": "Border Security and Enforcement"
+        },
+        {
+          "code": "HSHM05",
+          "name": "Counterterrorism, Law Enforcement, and Intelligence"
+        },
+        {
+          "code": "HSHM12",
+          "name": "Emergency Management and Technology"
+        },
+        {
+          "code": "HSHM09",
+          "name": "Oversight, Investigations, and Accountability"
+        },
+        {
+          "code": "HSHM08",
+          "name": "Cybersecurity and Infrastructure Protection"
+        },
+        {
+          "code": "HSHM07",
+          "name": "Transportation and Maritime Security"
+        }
+      ]
+    },
+    "HLET": {
+      "committeeId": "HLET",
+      "committeeName": "Committee on Ethics",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Ethics",
+        "extract": "The U.S. House Committee on Ethics, often known simply as the Ethics Committee, is one of the committees of the United States House of Representatives. Before the 112th Congress, it was known as the Committee on Standards of Official Conduct.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Ethics"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": []
+    },
+    "HLIG": {
+      "committeeId": "HLIG",
+      "committeeName": "Permanent Select Committee on Intelligence",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Permanent Select Committee on Intelligence",
+        "extract": "The United States House Permanent Select Committee on Intelligence (HPSCI), also known as the House Intelligence Committee, is a committee of the United States House of Representatives. It is the primary committee charged with the oversight of the United States Intelligence Community.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Permanent_Select_Committee_on_Intelligence"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "HLIG11",
+          "name": "Open Source"
+        },
+        {
+          "code": "HLIG03",
+          "name": "Emerging Threats"
+        },
+        {
+          "code": "HLIG05",
+          "name": "Counterterrorism, Counterintelligence, and Counterproliferation"
+        },
+        {
+          "code": "HLIG07",
+          "name": "Terrorism and Homeland Security"
+        },
+        {
+          "code": "HLIG08",
+          "name": "Intelligence Modernization and Readiness"
+        },
+        {
+          "code": "HLIG06",
+          "name": "National Intelligence Enterprise"
+        },
+        {
+          "code": "HLIG09",
+          "name": "Oversight and Investigations"
+        },
+        {
+          "code": "HLIG10",
+          "name": "Strategic Technologies and Advanced Research"
+        },
+        {
+          "code": "HLIG02",
+          "name": "National Security Agency and Cyber"
+        },
+        {
+          "code": "HLIG01",
+          "name": "Central Intelligence Agency"
+        },
+        {
+          "code": "HLIG04",
+          "name": "Defense Intelligence and Overhead Architecture"
+        }
+      ]
+    },
+    "SSAF": {
+      "committeeId": "SSAF",
+      "committeeName": "Committee on Agriculture, Nutrition, and Forestry",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Agriculture, Nutrition, and Forestry",
+        "extract": "The Committee on Agriculture, Nutrition, and Forestry is a committee of the United States Senate empowered with legislative oversight of all matters relating to the nation's agriculture industry, farming programs, forestry and logging, and legislation relating to nutrition, home economics, and rural development.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Agriculture,_Nutrition,_and_Forestry"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "SSAF01",
+          "name": "Production and Price Competitiveness"
+        },
+        {
+          "code": "SSAF02",
+          "name": "Marketing, Inspection, and Product Promotion"
+        },
+        {
+          "code": "SSAF03",
+          "name": "Agricultural Credit"
+        },
+        {
+          "code": "SSAF05",
+          "name": "Forestry, Conservation, and Rural Revitalization"
+        },
+        {
+          "code": "SSAF06",
+          "name": "Research, Nutrition, and General Legislation"
+        },
+        {
+          "code": "SSAF08",
+          "name": "Domestic and Foreign Marketing, Inspection, and Plant and Animal Health"
+        },
+        {
+          "code": "SSAF09",
+          "name": "Energy, Science and Technology"
+        },
+        {
+          "code": "SSAF10",
+          "name": "Nutrition and Food Assistance, Sustainable and Organic Agriculture, and General Legislation"
+        },
+        {
+          "code": "SSAF12",
+          "name": "Rural Revitalization, Conservation, Forestry, and Credit"
+        },
+        {
+          "code": "SSAF15",
+          "name": "Rural Development and Energy"
+        },
+        {
+          "code": "SSAF17",
+          "name": "Livestock, Dairy, Poultry, Local Food Systems, and Food Safety and Security"
+        },
+        {
+          "code": "SSAF14",
+          "name": "Conservation, Climate, Forestry, and Natural Resources"
+        },
+        {
+          "code": "SSAF13",
+          "name": "Commodities, Risk Management, and Trade"
+        },
+        {
+          "code": "SSAF04",
+          "name": "Agricultural Research, Conservation, Forestry and General Legislation"
+        },
+        {
+          "code": "SSAF07",
+          "name": "Conservation and Forestry"
+        },
+        {
+          "code": "SSAF11",
+          "name": "Production, Income Protection and Price Support"
+        },
+        {
+          "code": "SSAF16",
+          "name": "Food and Nutrition, Specialty Crops, Organics, and Research"
+        }
+      ]
+    },
+    "SPAG": {
+      "committeeId": "SPAG",
+      "committeeName": "Special Committee on Aging",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Special Committee on Aging",
+        "extract": "The United States Senate Special Committee on Aging is a special committee in the United States Senate established in 1961. As a special committee, it has no legislative authority, but it studies issues related to older Americans, particularly Medicare and Social Security.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Special_Committee_on_Aging"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": []
+    },
+    "SLIN": {
+      "committeeId": "SLIN",
+      "committeeName": "Select Committee on Intelligence",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Select Committee on Intelligence",
+        "extract": "The United States Senate Select Committee on Intelligence is dedicated to overseeing the United States Intelligence Community—the agencies and bureaus of the federal government that provide information and analysis for leaders of the executive and legislative branches. The Committee was established in 1976.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Select_Committee_on_Intelligence"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "SLIN01",
+          "name": "Oversight of the Terrorist Surveillance Program"
+        },
+        {
+          "code": "SLIN02",
+          "name": "Budget"
+        },
+        {
+          "code": "SLIN03",
+          "name": "Analysis and Production"
+        },
+        {
+          "code": "SLIN06",
+          "name": "Collection and Foreign Operations"
+        }
+      ]
+    },
+    "SLET": {
+      "committeeId": "SLET",
+      "committeeName": "Select Committee on Ethics",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Select Committee on Ethics",
+        "extract": "The U.S. Senate Select Committee on Ethics is a select committee of the United States Senate charged with dealing with matters related to senatorial ethics. Senate rules require the Ethics Committee to be evenly divided between the Democrats and the Republicans.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Select_Committee_on_Ethics"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": []
+    },
+    "JSEC": {
+      "committeeId": "JSEC",
+      "committeeName": "Joint Economic Committee",
+      "chamber": "Joint",
+      "wikipedia": {
+        "title": "United States Congressional Joint Economic Committee",
+        "extract": "The Joint Economic Committee (JEC) is one of four standing joint committees of the U.S. Congress. The committee was established as a part of the Employment Act of 1946, responsible for reporting the current economic condition of the United States and making suggestions for improvement.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Congressional_Joint_Economic_Committee"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": [
+        {
+          "code": "JSEC01",
+          "name": "International Economic Policy"
+        },
+        {
+          "code": "JSEC02",
+          "name": "Investment, Jobs, and Prices"
+        },
+        {
+          "code": "JSEC04",
+          "name": "Technology and National Security"
+        },
+        {
+          "code": "JSEC05",
+          "name": "Economic Growth, Trade, and Taxes"
+        },
+        {
+          "code": "JSEC06",
+          "name": "Fiscal and Monetary Policy"
+        },
+        {
+          "code": "JSEC07",
+          "name": "Economic Resources and Competitiveness"
+        },
+        {
+          "code": "JSEC08",
+          "name": "Education and Health"
+        },
+        {
+          "code": "JSEC03",
+          "name": "Economic Goals and Intergovernmental Policy"
+        }
+      ]
+    },
+    "JSTX": {
+      "committeeId": "JSTX",
+      "committeeName": "Joint Committee on Taxation",
+      "chamber": "Joint",
+      "wikipedia": {
+        "title": "United States Congressional Joint Committee on Taxation",
+        "extract": "The Joint Committee on Taxation (JCT) is a Committee of the U.S. Congress established under the Internal Revenue Code at 26 U.S.C. § 8001.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Congressional_Joint_Committee_on_Taxation"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": []
+    },
+    "JSLC": {
+      "committeeId": "JSLC",
+      "committeeName": "Joint Committee on the Library",
+      "chamber": "Joint",
+      "wikipedia": {
+        "title": "United States Congressional Joint Committee on the Library",
+        "extract": "The Joint Committee on the Library is a Joint Committee of the United States Congress devoted to the affairs and administration of the Library of Congress, which is the library of the federal legislature.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Congressional_Joint_Committee_on_the_Library"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": []
+    },
+    "JSPR": {
+      "committeeId": "JSPR",
+      "committeeName": "Joint Committee on Printing",
+      "chamber": "Joint",
+      "wikipedia": {
+        "title": "United States Congressional Joint Committee on Printing",
+        "extract": "The Joint Committee on Printing is a joint committee of the United States Congress devoted to overseeing the functions of the Government Publishing Office and general printing procedures of the federal government.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Congressional_Joint_Committee_on_Printing"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false,
+      "subcommittees": []
+    }
+  },
+  "metadata": {
+    "generatedAt": "2025-12-15T21:32:32.213Z",
+    "totalSubcommittees": 546
+  }
+}
