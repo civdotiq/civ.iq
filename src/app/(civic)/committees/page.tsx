@@ -9,6 +9,9 @@ import { Metadata } from 'next';
 import { Users, Building2, Scale } from 'lucide-react';
 import { getServerBaseUrl } from '@/lib/server-url';
 
+// Force static generation with ISR
+export const revalidate = 86400; // Revalidate every 24 hours
+
 export const metadata: Metadata = {
   title: 'Congressional Committees | CIV.IQ',
   description:
@@ -69,6 +72,8 @@ async function getCommitteesData(): Promise<CommitteeData | null> {
     const baseUrl = getServerBaseUrl();
     const response = await fetch(`${baseUrl}/api/committees`, {
       next: { revalidate: 86400 }, // Revalidate every 24 hours
+      // Use a longer timeout for build-time generation
+      signal: AbortSignal.timeout(120000), // 2 minute timeout
     });
 
     if (!response.ok) {
