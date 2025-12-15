@@ -1,6 +1,6 @@
 {
   "hashes": {
-    "/mnt/d/civic-intel-hub/tsconfig.json": "fc834726cab29f174351e4fc5555036d200d43990f49114097282877aac301d6"
+    "/mnt/d/civic-intel-hub/tsconfig.json": "4225dd3316ea7ee251e4ee9e3a81c0bf858037a248ad56176f5e5cb4635c926d"
   },
   "mappings": {
     "next-env.d.ts": {
@@ -74,6 +74,20 @@
       ]
     },
     "src/types/css-modules.d.ts": {
+      "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
+      "excludes": [
+        "node_modules",
+        "scripts",
+        "archived-features",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/__tests__/**",
+        "src/tests/**",
+        "src/app/(civic)/representative/[bioguideId]/page-backup.tsx",
+        "src/app/(civic)/representative/[bioguideId]/tabs/VotingTab.tsx"
+      ]
+    },
+    ".next/dev/types/**/*.ts": {
       "configPath": "/mnt/d/civic-intel-hub/tsconfig.json",
       "excludes": [
         "node_modules",
