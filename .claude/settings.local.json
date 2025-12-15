@@ -228,7 +228,11 @@
       "Bash([ ! -f \"$dir/index.ts\" ])",
       "Bash(then echo \"Missing index.ts: $dir\")",
       "WebFetch(domain:vercel.com)",
-      "WebFetch(domain:www.marksandford.dev)"
+      "WebFetch(domain:www.marksandford.dev)",
+      "Bash(claude-code --version)",
+      "Bash(claude:*)",
+      "Bash(source:*)",
+      "Bash(/mnt/d/civic-intel-hub/src/app/\\(civic\\)/committees/page.tsx)"
     ],
     "deny": [],
     "ask": []
