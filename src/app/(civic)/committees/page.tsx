@@ -109,18 +109,20 @@ function CommitteeCard({ committee }: { committee: Committee }) {
 
 // Chamber section component
 function ChamberSection({
+  id,
   title,
   committees,
   icon: Icon,
   color,
 }: {
+  id: string;
   title: string;
   committees: Committee[];
   icon: React.ComponentType<{ className?: string }>;
   color: string;
 }) {
   return (
-    <section className="mb-12">
+    <section id={id} className="mb-12 scroll-mt-8">
       <div className="flex items-center mb-6">
         <div className={`${color} p-3 mr-4`}>
           <Icon className="w-6 h-6 text-white" />
@@ -159,28 +161,40 @@ export default function CommitteesPage() {
 
         {/* Statistics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white border-2 border-black p-6">
+          <Link
+            href="#house"
+            className="bg-white border-2 border-black p-6 hover:bg-gray-50 hover:border-blue-600 transition-colors group"
+          >
             <Building2 className="w-12 h-12 text-blue-600 mb-4" />
             <div className="text-3xl font-bold text-gray-900 mb-1">{houseCommittees.length}</div>
-            <div className="text-sm text-gray-600">House Committees</div>
-          </div>
+            <div className="text-sm text-gray-600 group-hover:text-blue-600">House Committees</div>
+          </Link>
 
-          <div className="bg-white border-2 border-black p-6">
+          <Link
+            href="#senate"
+            className="bg-white border-2 border-black p-6 hover:bg-gray-50 hover:border-green-600 transition-colors group"
+          >
             <Scale className="w-12 h-12 text-green-600 mb-4" />
             <div className="text-3xl font-bold text-gray-900 mb-1">{senateCommittees.length}</div>
-            <div className="text-sm text-gray-600">Senate Committees</div>
-          </div>
+            <div className="text-sm text-gray-600 group-hover:text-green-600">
+              Senate Committees
+            </div>
+          </Link>
 
-          <div className="bg-white border-2 border-black p-6">
+          <Link
+            href="#joint"
+            className="bg-white border-2 border-black p-6 hover:bg-gray-50 hover:border-[#3ea2d4] transition-colors group"
+          >
             <Users className="w-12 h-12 text-[#3ea2d4] mb-4" />
             <div className="text-3xl font-bold text-gray-900 mb-1">{jointCommittees.length}</div>
-            <div className="text-sm text-gray-600">Joint Committees</div>
-          </div>
+            <div className="text-sm text-gray-600 group-hover:text-[#3ea2d4]">Joint Committees</div>
+          </Link>
         </div>
 
         {/* House Committees */}
         {houseCommittees.length > 0 && (
           <ChamberSection
+            id="house"
             title="House Committees"
             committees={houseCommittees}
             icon={Building2}
@@ -191,6 +205,7 @@ export default function CommitteesPage() {
         {/* Senate Committees */}
         {senateCommittees.length > 0 && (
           <ChamberSection
+            id="senate"
             title="Senate Committees"
             committees={senateCommittees}
             icon={Scale}
@@ -201,6 +216,7 @@ export default function CommitteesPage() {
         {/* Joint Committees */}
         {jointCommittees.length > 0 && (
           <ChamberSection
+            id="joint"
             title="Joint Committees"
             committees={jointCommittees}
             icon={Users}
@@ -228,4 +244,3 @@ export default function CommitteesPage() {
     </div>
   );
 }
-// Build: 1765830236
