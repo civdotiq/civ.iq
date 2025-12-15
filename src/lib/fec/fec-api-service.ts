@@ -1143,5 +1143,24 @@ export class FECApiService {
   }
 }
 
-// Export singleton instance
-export const fecApiService = new FECApiService();
+// Lazy singleton instance - only created when first accessed (avoids build-time errors)
+let _fecApiService: FECApiService | null = null;
+
+function getFecApiServiceInstance(): FECApiService {
+  if (!_fecApiService) {
+    _fecApiService = new FECApiService();
+  }
+  return _fecApiService;
+}
+
+// Proxy for backward compatibility - lazily instantiates the service on first method call
+export const fecApiService = new Proxy({} as FECApiService, {
+  get(_target, prop) {
+    const instance = getFecApiServiceInstance();
+    const value = instance[prop as keyof FECApiService];
+    if (typeof value === 'function') {
+      return value.bind(instance);
+    }
+    return value;
+  },
+});
