@@ -116,6 +116,22 @@ export const COMMITTEE_ID_MAP: Record<string, { name: string; chamber: string }>
   SSVA: { name: "Senate Committee on Veterans' Affairs", chamber: 'Senate' },
   SSFR: { name: 'Senate Committee on Foreign Relations', chamber: 'Senate' },
   SLIN: { name: 'Senate Select Committee on Intelligence', chamber: 'Senate' },
+
+  // Additional House committees
+  HLET: { name: 'House Committee on Ethics', chamber: 'House' },
+
+  // Additional Senate committees (alternate codes)
+  SSAF: { name: 'Senate Committee on Agriculture, Nutrition, and Forestry', chamber: 'Senate' },
+  SSBK: { name: 'Senate Committee on Banking, Housing, and Urban Affairs', chamber: 'Senate' },
+  SPAG: { name: 'Senate Special Committee on Aging', chamber: 'Senate' },
+  SLET: { name: 'Senate Select Committee on Ethics', chamber: 'Senate' },
+  SLIA: { name: 'Senate Committee on Indian Affairs', chamber: 'Senate' },
+
+  // Joint committees
+  JSEC: { name: 'Joint Economic Committee', chamber: 'Joint' },
+  JSTX: { name: 'Joint Committee on Taxation', chamber: 'Joint' },
+  JSLC: { name: 'Joint Committee on the Library', chamber: 'Joint' },
+  JSPR: { name: 'Joint Committee on Printing', chamber: 'Joint' },
 };
 
 export function getCommitteeDisplayName(committeeId: string): string {

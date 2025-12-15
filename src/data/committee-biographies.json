@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "generatedAt": "2025-11-13T21:53:44.357Z",
-    "totalCommittees": 34,
+    "generatedAt": "2025-12-15T20:12:57.169Z",
+    "totalCommittees": 45,
     "successfulFetches": 34,
     "failedFetches": 0,
     "wikipediaSuccessRate": "100%",
@@ -688,6 +688,149 @@
       },
       "jurisdiction": "all taxation, tariffs, and other revenue-raising measures, as well as a number of other programs including Social Security, unemployment benefits, Medicare, the enforcement of child support laws, Temporary Assistance for Needy Families, foster care, and adoption programs",
       "lastUpdated": "2025-11-13T21:53:44.357Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HSHM": {
+      "committeeId": "HSHM",
+      "committeeName": "Committee on Homeland Security",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Homeland Security",
+        "extract": "The U.S. House Committee on Homeland Security is a standing committee of the United States House of Representatives. Its responsibilities include U.S. security legislation and oversight of the Department of Homeland Security.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Homeland_Security"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.168Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HLET": {
+      "committeeId": "HLET",
+      "committeeName": "Committee on Ethics",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Committee on Ethics",
+        "extract": "The U.S. House Committee on Ethics, often known simply as the Ethics Committee, is one of the committees of the United States House of Representatives. Before the 112th Congress, it was known as the Committee on Standards of Official Conduct.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Committee_on_Ethics"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "HLIG": {
+      "committeeId": "HLIG",
+      "committeeName": "Permanent Select Committee on Intelligence",
+      "chamber": "House",
+      "wikipedia": {
+        "title": "United States House Permanent Select Committee on Intelligence",
+        "extract": "The United States House Permanent Select Committee on Intelligence (HPSCI), also known as the House Intelligence Committee, is a committee of the United States House of Representatives. It is the primary committee charged with the oversight of the United States Intelligence Community.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_House_Permanent_Select_Committee_on_Intelligence"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SSAF": {
+      "committeeId": "SSAF",
+      "committeeName": "Committee on Agriculture, Nutrition, and Forestry",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Committee on Agriculture, Nutrition, and Forestry",
+        "extract": "The Committee on Agriculture, Nutrition, and Forestry is a committee of the United States Senate empowered with legislative oversight of all matters relating to the nation's agriculture industry, farming programs, forestry and logging, and legislation relating to nutrition, home economics, and rural development.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Committee_on_Agriculture,_Nutrition,_and_Forestry"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SPAG": {
+      "committeeId": "SPAG",
+      "committeeName": "Special Committee on Aging",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Special Committee on Aging",
+        "extract": "The United States Senate Special Committee on Aging is a special committee in the United States Senate established in 1961. As a special committee, it has no legislative authority, but it studies issues related to older Americans, particularly Medicare and Social Security.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Special_Committee_on_Aging"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SLIN": {
+      "committeeId": "SLIN",
+      "committeeName": "Select Committee on Intelligence",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Select Committee on Intelligence",
+        "extract": "The United States Senate Select Committee on Intelligence is dedicated to overseeing the United States Intelligence Community—the agencies and bureaus of the federal government that provide information and analysis for leaders of the executive and legislative branches. The Committee was established in 1976.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Select_Committee_on_Intelligence"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "SLET": {
+      "committeeId": "SLET",
+      "committeeName": "Select Committee on Ethics",
+      "chamber": "Senate",
+      "wikipedia": {
+        "title": "United States Senate Select Committee on Ethics",
+        "extract": "The U.S. Senate Select Committee on Ethics is a select committee of the United States Senate charged with dealing with matters related to senatorial ethics. Senate rules require the Ethics Committee to be evenly divided between the Democrats and the Republicans.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Senate_Select_Committee_on_Ethics"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "JSEC": {
+      "committeeId": "JSEC",
+      "committeeName": "Joint Economic Committee",
+      "chamber": "Joint",
+      "wikipedia": {
+        "title": "United States Congressional Joint Economic Committee",
+        "extract": "The Joint Economic Committee (JEC) is one of four standing joint committees of the U.S. Congress. The committee was established as a part of the Employment Act of 1946, responsible for reporting the current economic condition of the United States and making suggestions for improvement.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Congressional_Joint_Economic_Committee"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "JSTX": {
+      "committeeId": "JSTX",
+      "committeeName": "Joint Committee on Taxation",
+      "chamber": "Joint",
+      "wikipedia": {
+        "title": "United States Congressional Joint Committee on Taxation",
+        "extract": "The Joint Committee on Taxation (JCT) is a Committee of the U.S. Congress established under the Internal Revenue Code at 26 U.S.C. § 8001.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Congressional_Joint_Committee_on_Taxation"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "JSLC": {
+      "committeeId": "JSLC",
+      "committeeName": "Joint Committee on the Library",
+      "chamber": "Joint",
+      "wikipedia": {
+        "title": "United States Congressional Joint Committee on the Library",
+        "extract": "The Joint Committee on the Library is a Joint Committee of the United States Congress devoted to the affairs and administration of the Library of Congress, which is the library of the federal legislature.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Congressional_Joint_Committee_on_the_Library"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
+      "wikipediaSuccess": true,
+      "wikidataSuccess": false
+    },
+    "JSPR": {
+      "committeeId": "JSPR",
+      "committeeName": "Joint Committee on Printing",
+      "chamber": "Joint",
+      "wikipedia": {
+        "title": "United States Congressional Joint Committee on Printing",
+        "extract": "The Joint Committee on Printing is a joint committee of the United States Congress devoted to overseeing the functions of the Government Publishing Office and general printing procedures of the federal government.",
+        "pageurl": "https://en.wikipedia.org/wiki/United_States_Congressional_Joint_Committee_on_Printing"
+      },
+      "lastUpdated": "2025-12-15T20:12:57.169Z",
       "wikipediaSuccess": true,
       "wikidataSuccess": false
     }
