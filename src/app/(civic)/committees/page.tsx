@@ -3,14 +3,13 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { Suspense } from 'react';
 import Link from 'next/link';
 import { Metadata } from 'next';
 import { Users, Building2, Scale } from 'lucide-react';
-import { getServerBaseUrl } from '@/lib/server-url';
+import committeeBiographies from '@/data/committee-biographies.json';
 
-// Force static generation with ISR
-export const revalidate = 86400; // Revalidate every 24 hours
+// Fully static page - no revalidation needed
+export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
   title: 'Congressional Committees | CIV.IQ',
@@ -28,106 +27,63 @@ interface Committee {
   code: string;
   name: string;
   chamber: 'House' | 'Senate' | 'Joint';
-  type: 'standing' | 'select' | 'special' | 'joint';
+  type: 'standing';
   jurisdiction: string;
-  chair?: {
-    name: string;
-    bioguideId?: string;
-    party: string;
-    state: string;
-  };
-  rankingMember?: {
-    name: string;
-    bioguideId?: string;
-    party: string;
-    state: string;
-  };
-  subcommittees?: Array<{
-    code: string;
-    name: string;
-  }>;
 }
 
-interface CommitteeData {
+// Transform static data to committee format
+function getCommitteesFromStaticData(): {
   houseCommittees: Committee[];
   senateCommittees: Committee[];
   jointCommittees: Committee[];
-  statistics: {
-    totalCommittees: number;
-    totalSubcommittees: number;
-    houseCount: number;
-    senateCount: number;
-    jointCount: number;
-  };
-  metadata: {
-    lastUpdated: string;
-    dataSource: string;
-    congress: string;
-  };
-}
+} {
+  const houseCommittees: Committee[] = [];
+  const senateCommittees: Committee[] = [];
+  const jointCommittees: Committee[] = [];
 
-// Fetch committees data
-async function getCommitteesData(): Promise<CommitteeData | null> {
-  try {
-    const baseUrl = getServerBaseUrl();
-    const response = await fetch(`${baseUrl}/api/committees`, {
-      next: { revalidate: 86400 }, // Revalidate every 24 hours
-      // Use a longer timeout for build-time generation
-      signal: AbortSignal.timeout(120000), // 2 minute timeout
-    });
+  for (const [code, data] of Object.entries(committeeBiographies.biographies)) {
+    const bio = data as {
+      committeeName: string;
+      chamber: string;
+      jurisdiction?: string;
+      wikipedia?: { extract?: string };
+    };
 
-    if (!response.ok) {
-      return null;
+    // Extract jurisdiction from Wikipedia extract or use stored jurisdiction
+    let jurisdiction = bio.jurisdiction || '';
+    if (!jurisdiction && bio.wikipedia?.extract) {
+      // Use first sentence of Wikipedia extract as jurisdiction
+      const firstSentence = bio.wikipedia.extract.split('.')[0];
+      if (firstSentence && firstSentence.length < 300) {
+        jurisdiction = firstSentence + '.';
+      } else {
+        jurisdiction = 'Congressional committee with legislative oversight responsibilities.';
+      }
     }
 
-    const data: CommitteeData = await response.json();
-    return data;
-  } catch {
-    return null;
+    const committee: Committee = {
+      code,
+      name: bio.committeeName,
+      chamber: bio.chamber as 'House' | 'Senate' | 'Joint',
+      type: 'standing',
+      jurisdiction,
+    };
+
+    if (bio.chamber === 'House') {
+      houseCommittees.push(committee);
+    } else if (bio.chamber === 'Senate') {
+      senateCommittees.push(committee);
+    } else {
+      jointCommittees.push(committee);
+    }
   }
-}
 
-// Loading skeleton
-function CommitteesLoading() {
-  return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header skeleton */}
-        <div className="mb-12">
-          <div className="h-10 w-64 bg-gray-200 rounded animate-pulse mb-4"></div>
-          <div className="h-6 w-96 bg-gray-200 rounded animate-pulse"></div>
-        </div>
+  // Sort alphabetically by name
+  houseCommittees.sort((a, b) => a.name.localeCompare(b.name));
+  senateCommittees.sort((a, b) => a.name.localeCompare(b.name));
+  jointCommittees.sort((a, b) => a.name.localeCompare(b.name));
 
-        {/* Stats skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white border-2 border-black p-6">
-              <div className="h-12 w-12 bg-gray-200 rounded animate-pulse mb-4"></div>
-              <div className="h-8 w-16 bg-gray-200 rounded animate-pulse mb-2"></div>
-              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-          ))}
-        </div>
-
-        {/* Committees skeleton */}
-        <div className="space-y-8">
-          {[1, 2, 3].map(i => (
-            <div key={i}>
-              <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-4"></div>
-              <div className="grid gap-4">
-                {[1, 2, 3].map(j => (
-                  <div key={j} className="border-2 border-gray-200 p-6">
-                    <div className="h-6 w-3/4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                    <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+  return { houseCommittees, senateCommittees, jointCommittees };
 }
 
 // Committee card component
@@ -146,24 +102,7 @@ function CommitteeCard({ committee }: { committee: Committee }) {
         </span>
       </div>
 
-      <p className="text-sm text-gray-600 mb-4 line-clamp-2">{committee.jurisdiction}</p>
-
-      <div className="flex flex-wrap gap-4 text-sm">
-        {committee.chair && (
-          <div>
-            <span className="text-gray-500">Chair:</span>{' '}
-            <span className="font-medium text-gray-900">
-              {committee.chair.name} ({committee.chair.party}-{committee.chair.state})
-            </span>
-          </div>
-        )}
-        {committee.subcommittees && committee.subcommittees.length > 0 && (
-          <div className="text-gray-500">
-            {committee.subcommittees.length} subcommittee
-            {committee.subcommittees.length !== 1 ? 's' : ''}
-          </div>
-        )}
-      </div>
+      <p className="text-sm text-gray-600 line-clamp-2">{committee.jurisdiction}</p>
     </Link>
   );
 }
@@ -201,24 +140,10 @@ function ChamberSection({
   );
 }
 
-// Main content component
-async function CommitteesContent() {
-  const data = await getCommitteesData();
-
-  if (!data) {
-    return (
-      <div className="min-h-screen bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white border-2 border-black p-8 text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Unable to Load Committees</h1>
-            <p className="text-gray-600">
-              Sorry, we could not load committee data at this time. Please try again later.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+// Main page component - fully static
+export default function CommitteesPage() {
+  const { houseCommittees, senateCommittees, jointCommittees } = getCommitteesFromStaticData();
+  const totalCommittees = houseCommittees.length + senateCommittees.length + jointCommittees.length;
 
   return (
     <div className="min-h-screen bg-white">
@@ -227,68 +152,59 @@ async function CommitteesContent() {
         <div className="mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Congressional Committees</h1>
           <p className="text-xl text-gray-600 mb-2">
-            Explore all committees in the {data.metadata.congress}
+            Explore all {totalCommittees} committees in the 119th Congress
           </p>
-          <p className="text-sm text-gray-500">
-            Data from {data.metadata.dataSource} • Last updated:{' '}
-            {new Date(data.metadata.lastUpdated).toLocaleDateString()}
-          </p>
+          <p className="text-sm text-gray-500">Data from Congress.gov and Wikipedia</p>
         </div>
 
         {/* Statistics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <div className="bg-white border-2 border-black p-6">
             <Building2 className="w-12 h-12 text-blue-600 mb-4" />
-            <div className="text-3xl font-bold text-gray-900 mb-1">
-              {data.statistics.houseCount}
-            </div>
+            <div className="text-3xl font-bold text-gray-900 mb-1">{houseCommittees.length}</div>
             <div className="text-sm text-gray-600">House Committees</div>
           </div>
 
           <div className="bg-white border-2 border-black p-6">
             <Scale className="w-12 h-12 text-green-600 mb-4" />
-            <div className="text-3xl font-bold text-gray-900 mb-1">
-              {data.statistics.senateCount}
-            </div>
+            <div className="text-3xl font-bold text-gray-900 mb-1">{senateCommittees.length}</div>
             <div className="text-sm text-gray-600">Senate Committees</div>
           </div>
 
           <div className="bg-white border-2 border-black p-6">
-            <Users className="w-12 h-12 text-purple-600 mb-4" />
-            <div className="text-3xl font-bold text-gray-900 mb-1">
-              {data.statistics.jointCount}
-            </div>
+            <Users className="w-12 h-12 text-[#3ea2d4] mb-4" />
+            <div className="text-3xl font-bold text-gray-900 mb-1">{jointCommittees.length}</div>
             <div className="text-sm text-gray-600">Joint Committees</div>
           </div>
         </div>
 
         {/* House Committees */}
-        {data.houseCommittees.length > 0 && (
+        {houseCommittees.length > 0 && (
           <ChamberSection
             title="House Committees"
-            committees={data.houseCommittees}
+            committees={houseCommittees}
             icon={Building2}
             color="bg-blue-600"
           />
         )}
 
         {/* Senate Committees */}
-        {data.senateCommittees.length > 0 && (
+        {senateCommittees.length > 0 && (
           <ChamberSection
             title="Senate Committees"
-            committees={data.senateCommittees}
+            committees={senateCommittees}
             icon={Scale}
             color="bg-green-600"
           />
         )}
 
         {/* Joint Committees */}
-        {data.jointCommittees.length > 0 && (
+        {jointCommittees.length > 0 && (
           <ChamberSection
             title="Joint Committees"
-            committees={data.jointCommittees}
+            committees={jointCommittees}
             icon={Users}
-            color="bg-purple-600"
+            color="bg-[#3ea2d4]"
           />
         )}
 
@@ -310,14 +226,5 @@ async function CommitteesContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-// Main page component
-export default async function CommitteesPage() {
-  return (
-    <Suspense fallback={<CommitteesLoading />}>
-      <CommitteesContent />
-    </Suspense>
   );
 }
