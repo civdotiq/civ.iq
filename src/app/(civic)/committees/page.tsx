@@ -127,8 +127,13 @@ function CommitteeCard({ committee }: { committee: Committee }) {
           </summary>
           <ul className="px-6 pb-4 space-y-1">
             {committee.subcommittees.map(sub => (
-              <li key={sub.code} className="text-sm text-gray-600 pl-4 border-l-2 border-gray-200">
-                {sub.name}
+              <li key={sub.code} className="text-sm pl-4 border-l-2 border-gray-200">
+                <Link
+                  href={`/committee/${sub.code}`}
+                  className="text-gray-600 hover:text-blue-600 hover:underline transition-colors"
+                >
+                  {sub.name}
+                </Link>
               </li>
             ))}
           </ul>
