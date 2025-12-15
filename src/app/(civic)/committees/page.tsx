@@ -207,7 +207,7 @@ async function CommitteesContent() {
           <div className="bg-white border-2 border-black p-8 text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Unable to Load Committees</h1>
             <p className="text-gray-600">
-              Sorry, we couldn&apos;t load committee data at this time. Please try again later.
+              Sorry, we could not load committee data at this time. Please try again later.
             </p>
           </div>
         </div>
