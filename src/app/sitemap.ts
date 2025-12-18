@@ -206,6 +206,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Main navigation pages
   const mainPages = [
+    { path: '/congress', priority: 0.9, freq: 'weekly' as const }, // Hub page - high priority
     { path: '/committees', priority: 0.85, freq: 'weekly' as const },
     { path: '/legislation', priority: 0.8, freq: 'daily' as const },
     { path: '/data-sources', priority: 0.5, freq: 'monthly' as const },
