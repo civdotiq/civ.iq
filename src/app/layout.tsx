@@ -7,9 +7,29 @@ import { SiteFooter } from '@/components/shared/layout/SiteFooter';
 const GA_MEASUREMENT_ID = 'G-F98819F2NC';
 
 export const metadata: Metadata = {
-  title: 'CIV.IQ: Who Represents You?',
+  title: {
+    default: 'CIV.IQ: Who Represents You?',
+    template: '%s | CIV.IQ',
+  },
   description:
     'Find your federal, state, and local representatives. Track bills, votes, campaign finance, and more with real government data.',
+  keywords: [
+    'congress',
+    'representatives',
+    'senators',
+    'voting records',
+    'bills',
+    'legislation',
+    'campaign finance',
+    'FEC',
+    'civic engagement',
+    'government transparency',
+    'congressional districts',
+    'state legislature',
+  ],
+  authors: [{ name: 'CIV.IQ' }],
+  creator: 'CIV.IQ',
+  publisher: 'CIV.IQ',
   icons: {
     icon: '/favicon.svg',
     apple: '/images/civiq-logo.png',
@@ -38,8 +58,24 @@ export const metadata: Metadata = {
       'Find your federal, state, and local representatives. Track bills, votes, campaign finance, and more.',
     images: ['/images/og-image.png'],
     site: '@civdotiq',
+    creator: '@civdotiq',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  alternates: {
+    canonical: 'https://civdotiq.org',
   },
   metadataBase: new URL('https://civdotiq.org'),
+  category: 'government',
 };
 
 export const viewport: Viewport = {

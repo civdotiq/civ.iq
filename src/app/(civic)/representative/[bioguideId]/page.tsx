@@ -10,6 +10,7 @@ import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErro
 import { SiteHeader } from '@/components/shared/layout/SiteHeader';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
+import { PersonSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -217,8 +218,53 @@ export default async function RepresentativeProfilePage({
     { label: representative.name, href: '#' },
   ];
 
+  // Build social media links for schema
+  const sameAs: string[] = [];
+  if (representative.socialMedia?.twitter) {
+    sameAs.push(`https://twitter.com/${representative.socialMedia.twitter}`);
+  }
+  if (representative.socialMedia?.facebook) {
+    sameAs.push(`https://facebook.com/${representative.socialMedia.facebook}`);
+  }
+  if (representative.website) {
+    sameAs.push(representative.website);
+  }
+
+  // Build committee memberships for schema
+  const memberOf = representative.committees?.map(c => ({
+    name: c.name,
+    url: c.id ? `https://civdotiq.org/committee/${c.id}` : undefined,
+  }));
+
   return (
     <>
+      {/* Structured Data for SEO */}
+      <PersonSchema
+        name={representative.name}
+        jobTitle={`${representative.role} - ${representative.state}${representative.district ? ` District ${representative.district}` : ''}`}
+        description={`${representative.party} ${representative.role} representing ${representative.state} in the U.S. Congress`}
+        image={representative.imageUrl}
+        url={`https://civdotiq.org/representative/${bioguideId}`}
+        worksFor={{
+          name:
+            representative.chamber === 'Senate'
+              ? 'United States Senate'
+              : 'United States House of Representatives',
+          url: representative.chamber === 'Senate' ? 'https://senate.gov' : 'https://house.gov',
+        }}
+        memberOf={memberOf}
+        sameAs={sameAs.length > 0 ? sameAs : undefined}
+        affiliation={representative.party}
+        birthDate={representative.bio?.birthday}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Representatives', url: 'https://civdotiq.org/results' },
+          { name: representative.name, url: `https://civdotiq.org/representative/${bioguideId}` },
+        ]}
+      />
+
       <SiteHeader />
 
       <main id="main-content" className="density-default">

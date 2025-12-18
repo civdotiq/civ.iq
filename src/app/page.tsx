@@ -2,12 +2,16 @@ import Image from 'next/image';
 import SearchForm from '@/components/SearchForm';
 import FeatureGrid from '@/components/landing/FeatureGrid';
 import QuickStartPaths from '@/components/landing/QuickStartPaths';
+import { OrganizationSchema, WebSiteSchema } from '@/components/seo/JsonLd';
 
 export const dynamic = 'force-dynamic';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen aicher-background density-detailed">
+      {/* Structured Data for SEO */}
+      <OrganizationSchema />
+      <WebSiteSchema />
       {/* Hero Section */}
       <div className="flex flex-col justify-center items-center px-grid-2 sm:px-grid-3 lg:px-grid-4 pt-grid-4 sm:pt-grid-6 pb-grid-2 sm:pb-grid-4">
         <div className="max-w-4xl mx-auto text-center w-full">
