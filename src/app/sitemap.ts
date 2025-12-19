@@ -10,6 +10,7 @@
 
 import { MetadataRoute } from 'next';
 import committeesData from '@/data/committees-with-subcommittees.json';
+import { CIVIC_GLOSSARY } from '@/lib/data/civic-glossary';
 
 const BASE_URL = 'https://civdotiq.org';
 
@@ -201,7 +202,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   // ===========================================
-  // TIER 3: MEDIUM-HIGH PRIORITY (0.8) - Navigation
+  // TIER 3: MEDIUM-HIGH PRIORITY (0.8) - Navigation & Hub Pages
   // ===========================================
 
   // Main navigation pages
@@ -209,8 +210,56 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/congress', priority: 0.9, freq: 'weekly' as const }, // Hub page - high priority
     { path: '/committees', priority: 0.85, freq: 'weekly' as const },
     { path: '/legislation', priority: 0.8, freq: 'daily' as const },
+    { path: '/states', priority: 0.85, freq: 'weekly' as const }, // States hub page
+    { path: '/topics', priority: 0.85, freq: 'weekly' as const }, // Topics hub page
+    { path: '/glossary', priority: 0.8, freq: 'monthly' as const }, // Glossary index
+    { path: '/representatives', priority: 0.8, freq: 'weekly' as const },
+    { path: '/districts', priority: 0.75, freq: 'weekly' as const },
+    { path: '/education', priority: 0.7, freq: 'monthly' as const },
+    { path: '/compare', priority: 0.6, freq: 'weekly' as const },
+    { path: '/local', priority: 0.5, freq: 'monthly' as const },
     { path: '/data-sources', priority: 0.5, freq: 'monthly' as const },
   ];
+
+  // ===========================================
+  // TOPIC HUB PAGES - High SEO value
+  // ===========================================
+  const topicPages = [
+    'healthcare',
+    'economy',
+    'education',
+    'environment',
+    'defense',
+    'immigration',
+    'infrastructure',
+    'justice',
+    'technology',
+    'agriculture',
+    'finance',
+    'foreign-policy',
+  ];
+
+  for (const topic of topicPages) {
+    entries.push({
+      url: `${BASE_URL}/topics/${topic}`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.75,
+    });
+  }
+
+  // ===========================================
+  // GLOSSARY TERM PAGES - Long-tail SEO
+  // ===========================================
+  for (const term of CIVIC_GLOSSARY) {
+    const slug = term.term.toLowerCase().replace(/\s+/g, '-');
+    entries.push({
+      url: `${BASE_URL}/glossary/${slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    });
+  }
 
   for (const page of mainPages) {
     entries.push({
@@ -337,9 +386,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Long-tail SEO opportunity
   // ===========================================
 
+  // State districts index page
+  entries.push({
+    url: `${BASE_URL}/state-districts`,
+    lastModified: now,
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  });
+
+  // State bills search page
+  entries.push({
+    url: `${BASE_URL}/state-bills`,
+    lastModified: now,
+    changeFrequency: 'daily',
+    priority: 0.6,
+  });
+
   const chambers = ['upper', 'lower'] as const;
   for (const state of STATES_ONLY) {
     const stateLower = state.toLowerCase();
+
+    // State bills by state
+    entries.push({
+      url: `${BASE_URL}/state-bills/${stateLower}`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.5,
+    });
+
     for (const chamber of chambers) {
       entries.push({
         url: `${BASE_URL}/state-districts/${stateLower}/${chamber}`,
