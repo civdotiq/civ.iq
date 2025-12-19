@@ -18,6 +18,17 @@ export default [
       'coverage/**',
       '.vercel/**',
       '.claude/**',
+      // Test directories with build artifacts
+      'test-minimal/**',
+      'test-*/**',
+      // Development scripts (CommonJS, shebangs)
+      'scripts/**',
+      // Root test files
+      'test-*.mjs',
+      'test-*.js',
+      // Temp directories
+      'temp/**',
+      '.archive/**',
     ],
   },
   ...tseslint.configs.recommended,
