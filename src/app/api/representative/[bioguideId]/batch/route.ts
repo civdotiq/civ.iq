@@ -11,7 +11,6 @@ import {
 } from '@/services/batch/representative-batch.service';
 import { container, initializeServices } from '@/core/services/container';
 
-export const runtime = 'edge';
 // ISR: Revalidate every day - batch data is composite of multiple cached endpoints
 export const revalidate = 86400;
 export const maxDuration = 30; // Concurrent API calls for multiple endpoints

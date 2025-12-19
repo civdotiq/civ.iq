@@ -11,7 +11,6 @@ import logger from '@/lib/logging/simple-logger';
 export const revalidate = 86400;
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 interface LocationInfo {
   city: string;

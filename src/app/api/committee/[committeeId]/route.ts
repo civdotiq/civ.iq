@@ -18,7 +18,6 @@ import {
 // ISR: Revalidate every 1 day
 export const revalidate = 86400;
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 // Helper function to get committee metadata
 function getCommitteeMetadata(committeeId: string) {

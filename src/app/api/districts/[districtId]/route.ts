@@ -13,8 +13,6 @@ import districtGeography from '@/data/district-geography.json';
 import gazetteerData from '@/data/district-gazetteer.json';
 import { US_STATES } from '@/lib/data/us-states';
 
-export const runtime = 'edge';
-
 // Type for Census Gazetteer data
 interface GazetteerDistrict {
   landAreaSqMi: number;

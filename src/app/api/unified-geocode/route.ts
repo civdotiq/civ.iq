@@ -24,8 +24,6 @@ import { StateLegislatureCoreService } from '@/services/core/state-legislature-c
 import logger from '@/lib/logging/simple-logger';
 import { CensusGeocoderException } from '@/services/geocoding/census-geocoder.types';
 
-export const runtime = 'edge';
-
 // ISR: Revalidate every 30 days - addresses/districts are very stable
 // Districts only change during redistricting (every 10 years)
 // State legislators change during biennial elections (handled by govCache)

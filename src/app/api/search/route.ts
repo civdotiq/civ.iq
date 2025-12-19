@@ -10,7 +10,6 @@ import { cachedFetch } from '@/lib/cache';
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 export const revalidate = 300; // 5 minutes - search results can update frequently
 import {
   geocodeAddress,

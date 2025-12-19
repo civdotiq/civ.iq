@@ -22,7 +22,6 @@ export const revalidate = 300;
 // Vercel serverless function configuration
 export const maxDuration = 10;
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 interface NewsArticle {
   title: string;

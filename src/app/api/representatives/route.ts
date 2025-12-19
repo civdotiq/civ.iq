@@ -12,7 +12,6 @@ import { govCache } from '@/services/cache';
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 export const revalidate = 3600; // 1 hour - ZIP to district mappings don't change mid-session
 
 // At-large states for 119th Congress (states with only 1 House district)

@@ -8,8 +8,6 @@ import { openStatesAPI } from '@/lib/openstates-api';
 import type { StateCommittee, StateParty } from '@/types/state-legislature';
 import { decodeBase64Url } from '@/lib/url-encoding';
 
-export const runtime = 'edge';
-
 // ISR: Revalidate every 30 days
 // Committee details change primarily at start of new legislative sessions
 export const revalidate = 2592000; // 30 days

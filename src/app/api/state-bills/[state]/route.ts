@@ -8,8 +8,6 @@ import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
-export const runtime = 'edge';
-
 // Bills can be cached - 24 hours for current session data
 export const revalidate = 86400; // 24 hours
 

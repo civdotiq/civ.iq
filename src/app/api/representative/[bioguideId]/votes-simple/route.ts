@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
-
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
 

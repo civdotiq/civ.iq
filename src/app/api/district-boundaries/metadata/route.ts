@@ -12,7 +12,6 @@ import type { DistrictBoundary, StateMetadata } from '@/lib/helpers/district-bou
 export const revalidate = 604800;
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 interface DistrictMetadataResponse {
   districts: Record<string, DistrictBoundary>;

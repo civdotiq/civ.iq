@@ -23,7 +23,6 @@ export const revalidate = 3600; // 1 hour
 // Vercel serverless function configuration
 export const maxDuration = 30; // 30 seconds for vote enrichment
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 interface VoteResponse {
   votes: Vote[];

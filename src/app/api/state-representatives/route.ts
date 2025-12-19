@@ -22,7 +22,6 @@ import { getAllCongressionalDistrictsForZip } from '@/lib/data/zip-district-mapp
 export const revalidate = 2592000; // 30 days
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 // API Response shape (for backwards compatibility with existing frontend)
 interface StateApiResponse {

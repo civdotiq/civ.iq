@@ -8,7 +8,6 @@ import { getEnhancedRepresentative } from '@/features/representatives/services/c
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 interface DebugResults {
   apiCall?: {

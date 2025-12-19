@@ -16,7 +16,6 @@ import { NextRequest, NextResponse } from 'next/server';
 export const revalidate = 3600;
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 import { BillSummarizer } from '@/features/legislation/services/ai/bill-summarizer';
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
 import { BillTextProcessor } from '@/features/legislation/services/ai/bill-text-processor';

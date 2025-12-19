@@ -27,7 +27,6 @@ import {
 } from '@/lib/fec/industry-taxonomy';
 import { categorizeIntoBaskets, getInterestGroupMetrics } from '@/lib/fec/interest-groups';
 
-export const runtime = 'edge';
 // Current year for cycle calculations
 const CURRENT_YEAR = new Date().getFullYear();
 // Calculate current election cycle (even years only)

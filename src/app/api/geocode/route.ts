@@ -12,7 +12,6 @@ import { StateLegislatureCoreService } from '@/services/core/state-legislature-c
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 export const revalidate = 3600; // 1 hour - addresses rarely change districts mid-session
 
 interface GeocodeRequest {

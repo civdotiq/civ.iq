@@ -5,8 +5,6 @@ import { NextResponse } from 'next/server';
 import { batchVotingService } from '@/features/representatives/services/batch-voting-service';
 import { logger } from '@/lib/logging/logger-edge';
 
-export const runtime = 'edge';
-
 export async function POST() {
   try {
     batchVotingService.clearCache();

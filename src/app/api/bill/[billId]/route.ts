@@ -12,8 +12,6 @@ import { parseBillNumber } from '@/types/bill';
 import type { EnhancedRepresentative } from '@/types/representative';
 import { parseRollCallXML } from '@/features/legislation/services/rollcall-parser';
 
-export const runtime = 'edge';
-
 // Congress-aware revalidation: 24 hours for current congress bills
 export const revalidate = 86400; // 24 hours
 

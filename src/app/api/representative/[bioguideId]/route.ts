@@ -15,7 +15,6 @@ import type { EnhancedRepresentative } from '@/types/representative';
 export const revalidate = 86400; // 24 hours
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 async function getHandler(
   request: NextRequest,

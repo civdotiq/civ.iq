@@ -7,8 +7,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 
-export const runtime = 'edge';
-
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
 

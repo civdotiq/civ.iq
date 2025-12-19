@@ -20,7 +20,6 @@ import { getLegislatorInfoMap } from '@/lib/data/legislator-mappings';
 export const revalidate = 3600;
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 /**
  * Map LIS Member ID to Bioguide ID for current senators

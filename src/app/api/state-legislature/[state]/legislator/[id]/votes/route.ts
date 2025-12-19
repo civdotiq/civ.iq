@@ -16,8 +16,6 @@ import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 import { normalizeStateIdentifier } from '@/lib/data/us-states';
 
-export const runtime = 'edge';
-
 // Votes are immutable historical records - use long-term caching
 export const revalidate = 15552000; // 6 months in seconds
 

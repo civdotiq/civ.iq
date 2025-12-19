@@ -9,8 +9,6 @@ import logger from '@/lib/logging/simple-logger';
 import { cachedFetch } from '@/lib/cache';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 
-export const runtime = 'edge';
-
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
 

@@ -19,7 +19,6 @@ import type { StateLegislativeEvent, LegislativeCalendarResponse } from '@/types
 export const revalidate = 86400; // 24 hours
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 /**
  * Transform OpenStates event to our StateLegislativeEvent format

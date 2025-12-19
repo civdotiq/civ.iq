@@ -6,7 +6,6 @@ import {
 } from '../cook-pvi-data';
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 export const maxDuration = 15; // Can take ~9s for full district data load
 export const revalidate = 604800; // 1 week - District data is very static
 import { fetchAllDistrictDemographics } from '../census-helpers';

@@ -6,8 +6,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
-export const runtime = 'edge';
-
 // ISR: Revalidate every 1 week
 export const revalidate = 604800;
 

@@ -13,7 +13,6 @@ import rssFeedMap from '@/config/rss-feed-map.json';
 export const revalidate = 300;
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 interface SimpleNewsArticle {
   url: string;

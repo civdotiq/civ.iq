@@ -20,7 +20,6 @@ import type { CoSponsorshipNetwork } from '@/types/state-legislature';
 export const revalidate = 86400; // 24 hours
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 /**
  * Analyze co-sponsorship patterns from bills

@@ -3,8 +3,6 @@
  * Allows manual triggering of background cache refresh
  */
 
-export const runtime = 'edge';
-
 import { NextRequest, NextResponse } from 'next/server';
 import {
   quickRefresh,

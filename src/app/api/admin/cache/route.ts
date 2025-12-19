@@ -6,8 +6,6 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-export const runtime = 'edge';
-
 import { NextRequest, NextResponse } from 'next/server';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';

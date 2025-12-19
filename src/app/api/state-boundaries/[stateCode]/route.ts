@@ -16,7 +16,6 @@ import { NextRequest, NextResponse } from 'next/server';
 export const revalidate = 604800;
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 interface StateManifest {
   generated: string;

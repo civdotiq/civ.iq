@@ -21,7 +21,6 @@ import { getStateLegislatorBiography } from '@/lib/api/wikidata-state-legislator
 export const revalidate = 259200; // 3 days
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 export async function GET(
   request: NextRequest,
