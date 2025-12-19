@@ -5,6 +5,7 @@
 
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { getRepresentativesByLocation } from '@/features/representatives/services/congress-api';
 import { Header } from '@/shared/components/navigation/Header';
 import { AdaptiveGridSkeleton } from '@/shared/components/ui/LoadingStates';
@@ -103,6 +104,15 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
       <Header />
 
       <main className="container mx-auto px-4 py-8 pt-24 overflow-hidden">
+        {/* Breadcrumb Navigation */}
+        <nav className="text-sm text-gray-500 mb-6">
+          <Link href="/" className="hover:text-blue-600">
+            Home
+          </Link>
+          <span className="mx-2">›</span>
+          <span className="font-medium text-gray-900">Representatives</span>
+        </nav>
+
         {/* Page header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Representatives</h1>

@@ -8,7 +8,25 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { SiteHeader } from '@/components/shared/layout/SiteHeader';
+
+// Breadcrumb Navigation Component
+function BreadcrumbNav() {
+  return (
+    <nav className="text-sm text-gray-500 mb-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+      <Link href="/" className="hover:text-blue-600">
+        Home
+      </Link>
+      <span className="mx-2">›</span>
+      <Link href="/representatives" className="hover:text-blue-600">
+        Representatives
+      </Link>
+      <span className="mx-2">›</span>
+      <span className="font-medium text-gray-900">Compare</span>
+    </nav>
+  );
+}
 
 // Lazy load comparison components for better performance
 const ComparisonHeader = dynamic(
@@ -189,6 +207,7 @@ export default function ComparePage() {
   return (
     <div className="min-h-screen bg-gray-50 density-compact">
       <SiteHeader />
+      <BreadcrumbNav />
       <ComparisonHeader
         selectedReps={selectedRepresentatives.map(rep => ({
           bioguideId: rep.bioguideId,

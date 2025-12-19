@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 // D3 imports removed - not used in current implementation
 import { Suspense } from 'react';
 import NationalStatsCards from '@/shared/components/ui/NationalStatsCards';
@@ -129,6 +130,15 @@ export default function DistrictsPage() {
       <Header />
 
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 pt-20">
+        {/* Breadcrumb Navigation */}
+        <nav className="text-sm text-gray-500 mb-4 sm:mb-6">
+          <Link href="/" className="hover:text-blue-600">
+            Home
+          </Link>
+          <span className="mx-2">›</span>
+          <span className="font-medium text-gray-900">Districts</span>
+        </nav>
+
         {/* Page header - Tier 2 medium impact */}
         <div className="mb-4 sm:mb-8">
           <h1 className="accent-section-header text-2xl sm:text-4xl text-gray-900 mb-2 sm:mb-3">

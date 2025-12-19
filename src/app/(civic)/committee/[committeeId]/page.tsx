@@ -13,6 +13,14 @@ import type { Committee, CommitteeAPIResponse } from '@/types/committee';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { getServerBaseUrl } from '@/lib/server-url';
+import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import {
+  FAQSection,
+  RelatedLinks,
+  FreshnessTimestamp,
+  CategoryTags,
+} from '@/components/seo/WikipediaStyleSEO';
+import type { RelatedLink } from '@/components/seo/WikipediaStyleSEO';
 
 // Dynamically import client components
 const SubcommitteeCard = dynamic(
@@ -350,6 +358,113 @@ async function CommitteeContent({
             </div>
           </div>
         )}
+
+        {/* Structured Data for SEO */}
+        <GovernmentOrganizationSchema
+          name={committee.name}
+          description={committee.jurisdiction}
+          url={`https://civdotiq.org/committee/${committeeId}`}
+          parentOrganization={
+            committee.chamber === 'Senate'
+              ? 'United States Senate'
+              : 'United States House of Representatives'
+          }
+        />
+        <BreadcrumbSchema
+          items={[
+            { name: 'Home', url: 'https://civdotiq.org' },
+            { name: 'Committees', url: 'https://civdotiq.org/committees' },
+            { name: committee.name, url: `https://civdotiq.org/committee/${committeeId}` },
+          ]}
+        />
+
+        {/* Wikipedia-style SEO Section */}
+        <div className="mt-8 space-y-6">
+          {/* FAQ Section */}
+          <FAQSection
+            faqs={[
+              {
+                question: `What does the ${committee.name} do?`,
+                answer:
+                  committee.jurisdiction ||
+                  `The ${committee.name} is a ${committee.type.toLowerCase()} committee in the ${committee.chamber} that oversees legislation and policy within its jurisdiction.`,
+              },
+              {
+                question: `Who chairs the ${committee.name}?`,
+                answer: committee.leadership.chair
+                  ? `${committee.leadership.chair.representative.name} (${committee.leadership.chair.representative.party}-${committee.leadership.chair.representative.state}) serves as the chairperson.`
+                  : 'The committee chair information is currently unavailable.',
+              },
+              {
+                question: `How many members are on the ${committee.name}?`,
+                answer: committee.members
+                  ? `The ${committee.name} has ${committee.members.length} members from both parties.`
+                  : 'Member information is available on the committee detail page.',
+              },
+              {
+                question: `How many subcommittees does the ${committee.name} have?`,
+                answer:
+                  committee.subcommittees.length > 0
+                    ? `The ${committee.name} has ${committee.subcommittees.length} subcommittees that focus on specific areas within its jurisdiction.`
+                    : `The ${committee.name} does not have subcommittees.`,
+              },
+            ]}
+            title="Frequently Asked Questions"
+          />
+
+          {/* Related Links */}
+          <RelatedLinks
+            links={
+              [
+                ...(committee.leadership.chair
+                  ? [
+                      {
+                        href: `/representative/${committee.leadership.chair.representative.bioguideId}`,
+                        title: committee.leadership.chair.representative.name,
+                        description: 'Committee Chairperson',
+                        type: 'representative' as const,
+                      },
+                    ]
+                  : []),
+                ...(committee.leadership.rankingMember
+                  ? [
+                      {
+                        href: `/representative/${committee.leadership.rankingMember.representative.bioguideId}`,
+                        title: committee.leadership.rankingMember.representative.name,
+                        description: 'Ranking Member',
+                        type: 'representative' as const,
+                      },
+                    ]
+                  : []),
+                {
+                  href: '/committees',
+                  title: 'All Congressional Committees',
+                  description: 'Browse all House and Senate committees',
+                  type: 'committee',
+                },
+                {
+                  href: '/congress',
+                  title: 'U.S. Congress',
+                  description: 'Overview of the 119th Congress',
+                  type: 'representative',
+                },
+              ] as RelatedLink[]
+            }
+            title="Related Pages"
+          />
+
+          {/* Freshness Timestamp */}
+          <FreshnessTimestamp lastUpdated={new Date()} dataSource="Congress.gov" />
+
+          {/* Category Tags */}
+          <CategoryTags
+            categories={[
+              { name: committee.chamber, href: `/committees?chamber=${committee.chamber}` },
+              { name: `${committee.type} Committee`, href: '/committees' },
+              { name: '119th Congress', href: '/congress' },
+            ]}
+          />
+        </div>
       </div>
     </div>
   );

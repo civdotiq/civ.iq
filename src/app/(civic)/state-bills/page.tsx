@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { FileText, AlertCircle } from 'lucide-react';
 import { Header } from '@/shared/components/navigation/Header';
 import { StateSelector } from '@/features/state-bills/components/StateSelector';
@@ -150,6 +151,19 @@ export default function StateBillsSearchPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 pt-24">
+        {/* Breadcrumb Navigation */}
+        <nav className="text-sm text-gray-500 mb-6">
+          <Link href="/" className="hover:text-blue-600">
+            Home
+          </Link>
+          <span className="mx-2">›</span>
+          <Link href="/states" className="hover:text-blue-600">
+            States
+          </Link>
+          <span className="mx-2">›</span>
+          <span className="font-medium text-gray-900">State Bills</span>
+        </nav>
+
         {/* Page Title */}
         <div className="mb-6">
           <div className="flex items-center gap-3">

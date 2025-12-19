@@ -91,6 +91,19 @@ export default function StateDistrictsPage() {
 
       <main className="min-h-screen pt-20 px-4 pb-16 bg-white">
         <div className="max-w-7xl mx-auto">
+          {/* Breadcrumb Navigation */}
+          <nav className="text-sm text-gray-500 mb-6">
+            <Link href="/" className="hover:text-blue-600">
+              Home
+            </Link>
+            <span className="mx-2">›</span>
+            <Link href="/states" className="hover:text-blue-600">
+              States
+            </Link>
+            <span className="mx-2">›</span>
+            <span className="font-medium text-gray-900">State Districts</span>
+          </nav>
+
           {/* Page header */}
           <h1 className="accent-section-header-green text-4xl text-center mb-8">
             State Legislative Districts

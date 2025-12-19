@@ -16,6 +16,13 @@ import NeighboringDistricts from '@/features/districts/components/NeighboringDis
 import logger from '@/lib/logging/simple-logger';
 import { SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { Header } from '@/shared/components/navigation/Header';
+import {
+  FAQSection,
+  RelatedLinks,
+  FreshnessTimestamp,
+  CategoryTags,
+} from '@/components/seo/WikipediaStyleSEO';
+import type { FAQItem, RelatedLink } from '@/components/seo/WikipediaStyleSEO';
 
 // Dynamic import of the map component to avoid SSR issues
 const DistrictMap = dynamic(() => import('@/features/districts/components/DistrictMap'), {
@@ -249,6 +256,82 @@ export default function DistrictPage() {
         {/* Neighboring Districts */}
         <div className="mt-12">
           <NeighboringDistricts currentDistrict={district.id} />
+        </div>
+
+        {/* Wikipedia-style SEO Section */}
+        <div className="mt-12 space-y-8">
+          {/* FAQ Section - Common questions about the district */}
+          <FAQSection
+            faqs={[
+              {
+                question: `Who represents ${district.name}?`,
+                answer: `${district.representative.name} (${district.representative.party}) currently represents ${district.name} in the U.S. House of Representatives.`,
+              },
+              {
+                question: `What counties are in ${district.name}?`,
+                answer: `${district.name} includes ${district.geography.counties.length} counties: ${district.geography.counties.slice(0, 5).join(', ')}${district.geography.counties.length > 5 ? ` and ${district.geography.counties.length - 5} more` : ''}.`,
+              },
+              {
+                question: `What are the major cities in ${district.name}?`,
+                answer:
+                  district.geography.majorCities.length > 0
+                    ? `The major cities in this district include ${district.geography.majorCities.join(', ')}.`
+                    : `This district encompasses various communities across ${district.state}.`,
+              },
+              district.demographics?.population
+                ? {
+                    question: `What is the population of ${district.name}?`,
+                    answer: `${district.name} has a population of approximately ${district.demographics.population.toLocaleString()} residents.`,
+                  }
+                : null,
+            ].filter((faq): faq is FAQItem => faq !== null)}
+            title="Frequently Asked Questions"
+          />
+
+          {/* Related Links - Internal link network */}
+          <RelatedLinks
+            links={
+              [
+                {
+                  href: `/representative/${district.representative.bioguideId}`,
+                  title: district.representative.name,
+                  description: `${district.representative.party} Representative for this district`,
+                  type: 'representative',
+                },
+                {
+                  href: `/delegation/${district.state}`,
+                  title: `${district.state} Congressional Delegation`,
+                  description: `All representatives and senators from ${district.state}`,
+                  type: 'state',
+                },
+                {
+                  href: '/districts',
+                  title: 'All Congressional Districts',
+                  description: 'Browse all 435 congressional districts',
+                  type: 'district',
+                },
+                {
+                  href: '/congress',
+                  title: 'U.S. Congress',
+                  description: 'Overview of the 119th Congress',
+                  type: 'representative',
+                },
+              ] as RelatedLink[]
+            }
+            title="Related Pages"
+          />
+
+          {/* Freshness Timestamp */}
+          <FreshnessTimestamp lastUpdated={new Date()} dataSource="U.S. Census Bureau" />
+
+          {/* Category Tags */}
+          <CategoryTags
+            categories={[
+              { name: district.state, href: `/delegation/${district.state}` },
+              { name: 'Congressional Districts', href: '/districts' },
+              { name: '119th Congress', href: '/congress' },
+            ]}
+          />
         </div>
       </main>
     </div>

@@ -12,6 +12,19 @@ import { Header } from '@/shared/components/navigation/Header';
 import { FloorActivity } from '@/features/legislation/components/FloorActivity';
 import { WitnessSearch } from '@/features/legislation/components/WitnessSearch';
 
+// Breadcrumb Navigation Component
+function BreadcrumbNav() {
+  return (
+    <nav className="text-sm text-gray-500 mb-6">
+      <Link href="/" className="hover:text-blue-600">
+        Home
+      </Link>
+      <span className="mx-2">›</span>
+      <span className="font-medium text-gray-900">Legislation</span>
+    </nav>
+  );
+}
+
 // Congress.gov bill structure from the API
 interface CongressBill {
   congress: number;
@@ -143,6 +156,7 @@ export default function LegislationPage() {
       {/* Main Content */}
       <main className="min-h-screen pt-20 px-4 pb-16 bg-white">
         <div className="max-w-7xl mx-auto">
+          <BreadcrumbNav />
           <h1 className="text-4xl font-bold text-center mb-4">Recent Legislation</h1>
 
           <p className="text-xl text-gray-600 text-center max-w-3xl mx-auto mb-8">

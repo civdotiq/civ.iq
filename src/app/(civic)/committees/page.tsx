@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 import { Users, Building2, Scale, ChevronDown } from 'lucide-react';
 import committeesData from '@/data/committees-with-subcommittees.json';
+import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 // Fully static page - no revalidation needed
 export const dynamic = 'force-static';
@@ -190,7 +191,22 @@ export default function CommitteesPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Committees', url: 'https://civdotiq.org/committees' },
+        ]}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb Navigation */}
+        <nav className="text-sm text-gray-500 mb-6">
+          <Link href="/" className="hover:text-blue-600">
+            Home
+          </Link>
+          <span className="mx-2">›</span>
+          <span className="font-medium text-gray-900">Committees</span>
+        </nav>
+
         {/* Page Header */}
         <div className="mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Congressional Committees</h1>
