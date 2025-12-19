@@ -24,6 +24,7 @@ export const revalidate = 300; // 5 minutes
 // Vercel serverless function configuration
 export const maxDuration = 10; // Reduced from 20s (GDELT was slow)
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 interface NewsArticle {
   title: string;

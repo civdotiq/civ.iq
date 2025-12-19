@@ -14,6 +14,8 @@ import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { aggregateFinanceData } from '@/lib/fec/finance-aggregator';
 import { govCache } from '@/services/cache';
 
+export const runtime = 'edge';
+
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
 

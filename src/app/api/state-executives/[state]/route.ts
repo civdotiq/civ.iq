@@ -9,6 +9,8 @@ import logger from '@/lib/logging/simple-logger';
 import { getAllStateExecutives } from '@/lib/api/wikidata-state-executives';
 import type { StateExecutive as WikidataStateExecutive } from '@/lib/api/wikidata-state-executives';
 
+export const runtime = 'edge';
+
 // ISR: Revalidate every 1 day
 export const revalidate = 86400;
 

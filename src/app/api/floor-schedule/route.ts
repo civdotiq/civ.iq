@@ -10,6 +10,7 @@ import logger from '@/lib/logging/simple-logger';
 // ISR: Revalidate every 15 minutes (floor schedules change frequently)
 export const revalidate = 900;
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 // Types for House floor schedule (from docs.house.gov XML)
 interface HouseFloorItem {

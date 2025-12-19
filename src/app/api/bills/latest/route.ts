@@ -10,6 +10,7 @@ import logger from '@/lib/logging/simple-logger';
 export const revalidate = 3600;
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {

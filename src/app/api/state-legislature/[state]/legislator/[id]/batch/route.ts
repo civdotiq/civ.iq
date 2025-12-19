@@ -27,6 +27,8 @@ import type { EnhancedStateLegislator, StateBill } from '@/types/state-legislatu
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 
+export const runtime = 'edge';
+
 // ISR: Election-aware revalidation (3 days Oct-Dec, 30 days Jan-Sep)
 export const revalidate = 259200; // 3 days
 

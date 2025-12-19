@@ -15,6 +15,8 @@ import { StateLegislatureCoreService } from '@/services/core/state-legislature-c
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 
+export const runtime = 'edge';
+
 // Bills can be cached based on session activity
 // Default: 24h for current session, 7d for historical sessions
 export const revalidate = 86400; // 24 hours default

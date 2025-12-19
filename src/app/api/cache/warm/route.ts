@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 export const maxDuration = 30; // Cache warming can take time
 
 export async function POST(request: NextRequest) {

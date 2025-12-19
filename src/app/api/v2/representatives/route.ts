@@ -17,6 +17,7 @@ import type { EnhancedRepresentative, RepresentativeSummary } from '@/types/repr
 export const revalidate = 86400;
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 // Response format types
 type ResponseFormat = 'simple' | 'detailed' | 'full';

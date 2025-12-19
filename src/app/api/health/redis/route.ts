@@ -3,6 +3,8 @@
  * Tests Redis connection and cache performance
  */
 
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import { govCache } from '@/services/cache';
 import { getRedisCache } from '@/lib/cache/redis-client';

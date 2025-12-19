@@ -11,6 +11,7 @@ import logger from '@/lib/logging/simple-logger';
 export const revalidate = 86400; // 24 hours
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 export const maxDuration = 30; // Heavy data load for all representatives
 
 // Response interface for all representatives

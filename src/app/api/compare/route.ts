@@ -12,6 +12,7 @@ import { votingDataService } from '@/features/representatives/services/voting-da
 export const revalidate = 3600;
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 interface ComparisonData {
   votingRecord: {

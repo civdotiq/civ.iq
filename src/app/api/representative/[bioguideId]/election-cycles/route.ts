@@ -8,6 +8,8 @@ import { fecApiService } from '@/lib/fec/fec-api-service';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 
+export const runtime = 'edge';
+
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
 

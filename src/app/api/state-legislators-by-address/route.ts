@@ -24,6 +24,7 @@ import {
 } from '@/services/state-legislators/address-to-legislators.service';
 import logger from '@/lib/logging/simple-logger';
 
+export const runtime = 'edge';
 // ISR: Revalidate every hour - addresses rarely change districts mid-session
 export const revalidate = 3600;
 

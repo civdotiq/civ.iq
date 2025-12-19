@@ -3,6 +3,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+export const runtime = 'edge';
+
 /**
  * FEC System Health API Endpoint
  *

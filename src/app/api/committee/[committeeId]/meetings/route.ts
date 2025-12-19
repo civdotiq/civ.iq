@@ -10,6 +10,7 @@ import logger from '@/lib/logging/simple-logger';
 // ISR: Revalidate every 1 hour (meetings change frequently)
 export const revalidate = 3600;
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 // Types for Congress.gov committee meeting API response
 interface CongressMeetingListItem {

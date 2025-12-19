@@ -24,6 +24,8 @@ import { govCache } from '@/services/cache';
 import { getTopCategories } from '@/lib/fec/industry-taxonomy';
 import { categorizeIntoBaskets, getInterestGroupMetrics } from '@/lib/fec/interest-groups';
 
+export const runtime = 'edge';
+
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
 

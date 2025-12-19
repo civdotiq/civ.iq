@@ -75,6 +75,7 @@
     "@types/d3": "^7.4.3",
     "@types/js-yaml": "4.0.9",
     "@types/qrcode": "1.5.5",
+    "@upstash/redis": "1.35.8",
     "autoprefixer": "^10.4.21",
     "cli-progress": "3.12.0",
     "clsx": "^2.1.1",

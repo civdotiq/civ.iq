@@ -18,6 +18,8 @@ import logger from '@/lib/logging/simple-logger';
 import { getStateCourtSystem } from '@/lib/api/wikidata-state-judiciary';
 import type { StateJudiciaryApiResponse } from '@/types/state-judiciary';
 
+export const runtime = 'edge';
+
 // ISR: Revalidate every 1 day
 export const revalidate = 86400;
 

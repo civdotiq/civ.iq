@@ -8,6 +8,8 @@ import logger from '@/lib/logging/simple-logger';
 import fs from 'fs/promises';
 import path from 'path';
 
+export const runtime = 'edge';
+
 // ISR: Revalidate every 1 week
 export const revalidate = 604800;
 

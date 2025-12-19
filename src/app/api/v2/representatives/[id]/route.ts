@@ -8,6 +8,8 @@ import { getEnhancedRepresentative } from '@/features/representatives/services/c
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
+export const runtime = 'edge';
+
 // ISR: Revalidate every 1 day
 export const revalidate = 86400;
 

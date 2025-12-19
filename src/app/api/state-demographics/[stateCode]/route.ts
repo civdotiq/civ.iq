@@ -21,6 +21,7 @@ import { US_STATES } from '@/lib/data/us-states';
 export const revalidate = 86400;
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 interface StateDemographics {
   state_code: string;

@@ -3,6 +3,8 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';

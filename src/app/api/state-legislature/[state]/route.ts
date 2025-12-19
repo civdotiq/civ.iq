@@ -13,6 +13,7 @@ import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 export const revalidate = 259200; // 3 days
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 interface StateLegislator {
   id: string;
