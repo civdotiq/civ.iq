@@ -111,6 +111,7 @@ interface ProcessedBill {
 
 /**
  * Fetch ALL sponsored legislation from Congress.gov API with proper pagination
+ * NOTE: Congress.gov API ignores the 'congress' filter parameter, so we must filter client-side
  */
 async function fetchSponsoredLegislation(
   bioguideId: string,
@@ -131,7 +132,8 @@ async function fetchSponsoredLegislation(
     url.searchParams.set('api_key', apiKey);
     url.searchParams.set('limit', pageSize.toString());
     url.searchParams.set('offset', currentOffset.toString());
-    url.searchParams.set('congress', congress.toString());
+    // NOTE: Congress.gov API ignores the 'congress' parameter - it always returns ALL bills
+    // We filter client-side below instead
     url.searchParams.set('format', 'json');
 
     const response = await fetch(url.toString(), {
@@ -165,7 +167,7 @@ async function fetchSponsoredLegislation(
       introducedDate: bill.introducedDate || '',
       status: bill.latestAction?.text || 'Status unknown',
       lastAction: bill.latestAction?.text || 'No recent action',
-      congress: bill.congress || congress,
+      congress: bill.congress || 0,
       type: bill.type || 'Unknown',
       policyArea: bill.policyArea?.name || undefined,
       url: bill.url || undefined,
@@ -181,18 +183,24 @@ async function fetchSponsoredLegislation(
     }
   } while (currentOffset < totalCount);
 
+  // Filter bills by requested congress (Congress.gov API ignores congress param)
+  const filteredBills =
+    congress > 0 ? allBills.filter(bill => bill.congress === congress) : allBills;
+
   logger.info('Sponsored legislation complete fetch', {
     bioguideId,
     congress,
-    totalCount,
-    actualFetched: allBills.length,
+    totalFromApi: totalCount,
+    totalFetched: allBills.length,
+    filteredCount: filteredBills.length,
   });
 
-  return { bills: allBills, total: totalCount };
+  return { bills: filteredBills, total: filteredBills.length };
 }
 
 /**
  * Fetch ALL cosponsored legislation from Congress.gov API with proper pagination
+ * NOTE: Congress.gov API ignores the 'congress' filter parameter, so we must filter client-side
  */
 async function fetchCosponsoredLegislation(
   bioguideId: string,
@@ -215,7 +223,8 @@ async function fetchCosponsoredLegislation(
     url.searchParams.set('api_key', apiKey);
     url.searchParams.set('limit', pageSize.toString());
     url.searchParams.set('offset', currentOffset.toString());
-    url.searchParams.set('congress', congress.toString());
+    // NOTE: Congress.gov API ignores the 'congress' parameter - it always returns ALL bills
+    // We filter client-side below instead
     url.searchParams.set('format', 'json');
 
     const response = await fetch(url.toString(), {
@@ -255,7 +264,7 @@ async function fetchCosponsoredLegislation(
       introducedDate: bill.introducedDate || '',
       status: bill.latestAction?.text || 'Status unknown',
       lastAction: bill.latestAction?.text || 'No recent action',
-      congress: bill.congress || congress,
+      congress: bill.congress || 0,
       type: bill.type || 'Unknown',
       policyArea: bill.policyArea?.name || undefined,
       url: bill.url || undefined,
@@ -280,13 +289,18 @@ async function fetchCosponsoredLegislation(
     }
   } while (currentOffset < totalCount);
 
-  // Log warning if we hit the page limit
+  // Filter bills by requested congress (Congress.gov API ignores congress param)
+  const filteredBills =
+    congress > 0 ? allBills.filter(bill => bill.congress === congress) : allBills;
+
+  // Log warning if we hit the page limit before getting all bills for this congress
   if (pagesFeched >= maxPages && allBills.length < totalCount) {
     logger.warn('Cosponsored bills fetch limited by max pages', {
       bioguideId,
       congress,
-      totalAvailable: totalCount,
-      actualFetched: allBills.length,
+      totalFromApi: totalCount,
+      totalFetched: allBills.length,
+      filteredCount: filteredBills.length,
       maxPagesReached: maxPages,
     });
   }
@@ -294,12 +308,13 @@ async function fetchCosponsoredLegislation(
   logger.info('Cosponsored legislation complete fetch', {
     bioguideId,
     congress,
-    totalCount,
-    actualFetched: allBills.length,
+    totalFromApi: totalCount,
+    totalFetched: allBills.length,
+    filteredCount: filteredBills.length,
     pagesFeched,
   });
 
-  return { bills: allBills, total: totalCount };
+  return { bills: filteredBills, total: filteredBills.length };
 }
 
 /**
@@ -351,18 +366,14 @@ export async function getComprehensiveBillsByMember(
       (a, b) => new Date(b.introducedDate).getTime() - new Date(a.introducedDate).getTime()
     );
 
-    // Apply pagination to combined results
-    const offset = (page - 1) * limit;
-    const paginatedBills = allBills.slice(offset, offset + limit);
-
-    // Use the ACTUAL totals from the API, not just what we fetched
-    // Important: We report the ACTUAL fetched count for pagination, not the total available
-    // This ensures pagination works correctly with the data we actually have
+    // NOTE: Don't apply server-side pagination here - the frontend (BillsTab.tsx) expects
+    // ALL bills and handles its own filtering and pagination. Server-side pagination
+    // breaks the sponsored/cosponsored separation since we slice before separating.
     const actualFetchedCount = allBills.length;
     const totalAvailableCount = sponsoredData.total + cosponsoredData.total;
 
     const result: OptimizedBillsResponse = {
-      bills: paginatedBills, // Keep relationship information for route handler
+      bills: allBills, // Return ALL bills - frontend handles pagination
       pagination: {
         total: actualFetchedCount, // Use fetched count for accurate pagination
         page,
