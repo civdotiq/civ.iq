@@ -11,15 +11,9 @@ interface BarChartProps {
   }>;
   title: string;
   formatValue?: (value: number) => string;
-  maxHeight?: number;
 }
 
-export function BarChart({
-  data,
-  title,
-  formatValue = v => v.toString(),
-  maxHeight = 200,
-}: BarChartProps) {
+export function BarChart({ data, title, formatValue = v => v.toString() }: BarChartProps) {
   const maxValue = Math.max(...data.map(d => d.value));
 
   return (
@@ -89,7 +83,14 @@ export function PieChart({
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
       <div className="flex items-center gap-6">
         <div className="relative">
-          <svg width={size} height={size} className="transform -rotate-90">
+          <svg
+            width={size}
+            height={size}
+            className="transform -rotate-90"
+            role="img"
+            aria-label={`${title}: ${segments.map(s => `${s.label} ${s.percentage.toFixed(1)}%`).join(', ')}`}
+          >
+            <title>{title}</title>
             {segments.map((segment, index) => {
               const startAngleRad = (segment.startAngle * Math.PI) / 180;
               const endAngleRad = (segment.endAngle * Math.PI) / 180;
@@ -168,7 +169,14 @@ export function DonutChart({
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
       <div className="flex items-center gap-6">
         <div className="relative">
-          <svg width={size} height={size} className="transform -rotate-90">
+          <svg
+            width={size}
+            height={size}
+            className="transform -rotate-90"
+            role="img"
+            aria-label={`${title}: ${data.map(d => `${d.label} ${((d.value / total) * 100).toFixed(1)}%`).join(', ')}`}
+          >
+            <title>{title}</title>
             {data.map((item, index) => {
               const percentage = (item.value / total) * 100;
               const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
@@ -232,11 +240,9 @@ export function PartyAlignmentChart({
   withPartyVotes,
 }: PartyAlignmentProps) {
   const againstPartyVotes = totalVotes - withPartyVotes;
-  const againstPartyPercentage = 100 - partyAlignment;
 
   const partyColor =
     party === 'Republican' ? '#dc2626' : party === 'Democratic' ? '#2563eb' : '#6b7280';
-  const neutralColor = '#94a3b8';
 
   return (
     <div className="bg-white border border-gray-200 p-6">
@@ -293,10 +299,9 @@ interface VoteHistoryProps {
     result: string;
     isKeyVote?: boolean;
   }>;
-  party: string;
 }
 
-export function VoteHistoryChart({ votes, party }: VoteHistoryProps) {
+export function VoteHistoryChart({ votes }: VoteHistoryProps) {
   const getPositionColor = (position: string) => {
     switch (position) {
       case 'Yea':

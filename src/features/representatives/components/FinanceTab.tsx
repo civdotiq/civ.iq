@@ -100,9 +100,13 @@ function FinanceDetailCard({
   endpoint,
   renderContent,
 }: FinanceDetailCardProps) {
-  const { data, error, isLoading } = useSWR(endpoint, (url: string) =>
-    fetch(url).then(res => res.json())
-  );
+  const { data, error, isLoading } = useSWR(endpoint, async (url: string) => {
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch: ${res.status}`);
+    }
+    return res.json();
+  });
 
   return (
     <div className="bg-white p-6 border border-gray-200">

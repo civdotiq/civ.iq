@@ -288,9 +288,9 @@ export default function DistrictBoundaryMap({
         <button
           onClick={toggleFullscreen}
           className="bg-white hover:bg-white border border-gray-300 rounded p-2 border-2 border-black transition-colors"
-          title="Toggle fullscreen"
+          aria-label="Toggle fullscreen map view"
         >
-          <Maximize2 className="h-4 w-4 text-gray-600" />
+          <Maximize2 className="h-4 w-4 text-gray-600" aria-hidden="true" />
         </button>
       </div>
 

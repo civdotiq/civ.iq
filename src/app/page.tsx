@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen aicher-background density-detailed">
+    <main id="main-content" className="min-h-screen aicher-background density-detailed">
       {/* Structured Data for SEO */}
       <OrganizationSchema />
       <WebSiteSchema />
@@ -62,6 +62,6 @@ export default function HomePage() {
 
       {/* Quick Start Paths Section */}
       <QuickStartPaths />
-    </div>
+    </main>
   );
 }

@@ -8,7 +8,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import Image from 'next/image';
 import { EnhancedArticle } from '../types/news';
 
@@ -25,8 +25,9 @@ export interface ArticleCardProps {
 
 /**
  * ArticleCard component for displaying individual articles
+ * Memoized to prevent unnecessary re-renders in list views
  */
-export function ArticleCard({
+export const ArticleCard = memo(function ArticleCard({
   article,
   isPrimary = false,
   showImage = false,
@@ -216,6 +217,6 @@ export function ArticleCard({
       </div>
     </a>
   );
-}
+});
 
 export default ArticleCard;

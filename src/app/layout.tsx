@@ -105,6 +105,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Script>
       </head>
       <body suppressHydrationWarning>
+        {/* Skip to main content link for accessibility */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-gray-900 focus:border-2 focus:border-black focus:font-semibold"
+        >
+          Skip to main content
+        </a>
         <div className="min-h-screen flex flex-col">
           <div className="flex-grow">{children}</div>
           <SiteFooter />

@@ -158,7 +158,12 @@ export function HemicycleChart({ data, className = '' }: HemicycleChartProps) {
               height={svgDimensions.height}
               viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`}
               className="mx-auto min-w-[280px] sm:min-w-0"
+              role="img"
+              aria-label={`${data.chamber === 'house' ? 'House of Representatives' : 'Senate'} composition: ${data.republicans} Republicans, ${data.democrats} Democrats${data.independents > 0 ? `, ${data.independents} Independents` : ''}`}
             >
+              <title>
+                {data.chamber === 'house' ? 'House of Representatives' : 'Senate'} Composition
+              </title>
               {/* Individual seats */}
               {seatPositions.map((seat, index) => (
                 <circle

@@ -88,7 +88,7 @@ export default async function RepresentativesPage({ searchParams }: SearchParams
     <div className="min-h-screen bg-white">
       <Header />
 
-      <main className="container mx-auto px-4 py-8 pt-24 overflow-hidden">
+      <main id="main-content" className="container mx-auto px-4 py-8 pt-24 overflow-hidden">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-6">
           <Link href="/" className="hover:text-blue-600">

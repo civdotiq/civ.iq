@@ -268,8 +268,9 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
             <button
               onClick={clearFilters}
               className="inline-flex items-center px-2 py-2 text-sm text-gray-500 hover:text-gray-700"
+              aria-label="Clear all filters"
             >
-              <XMarkIcon className="w-4 h-4" />
+              <XMarkIcon className="w-4 h-4" aria-hidden="true" />
             </button>
           )}
         </div>

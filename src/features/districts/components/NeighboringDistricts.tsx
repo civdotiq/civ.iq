@@ -9,7 +9,13 @@ interface NeighboringDistrictsProps {
   currentDistrict: string;
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch: ${res.status}`);
+  }
+  return res.json();
+};
 
 export default function NeighboringDistricts({ currentDistrict }: NeighboringDistrictsProps) {
   const { data, error, isLoading } = useSWR(
@@ -59,7 +65,10 @@ export default function NeighboringDistricts({ currentDistrict }: NeighboringDis
               <div className="font-semibold text-gray-900">{neighbor.id}</div>
               <div className="text-sm text-gray-600">{neighbor.name}</div>
             </div>
-            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+            <ExternalLink
+              className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors"
+              aria-hidden="true"
+            />
           </Link>
         ))}
       </div>
