@@ -60,16 +60,6 @@ export function InteractiveDistrictMap({
   className = '',
   mode = 'federal', // Default to federal (congressional) mode
 }: InteractiveDistrictMapProps) {
-  // eslint-disable-next-line no-console
-  console.log(
-    '[MapLibre Debug] Component rendering with zipCode:',
-    zipCode,
-    'district:',
-    district,
-    'mode:',
-    mode
-  );
-
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const [mapData, setMapData] = useState<MapData | null>(null);
@@ -99,8 +89,6 @@ export function InteractiveDistrictMap({
       // @ts-expect-error - Assigning to ref object
       mapContainer.current = node;
       setContainerMounted(true);
-      // eslint-disable-next-line no-console
-      console.log('[MapLibre Debug] Container mounted via callback ref');
     }
   }, []);
 
@@ -111,13 +99,6 @@ export function InteractiveDistrictMap({
 
   // Initialize MapLibre map
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('[MapLibre Debug] Map init useEffect running', {
-      hasContainer: !!mapContainer.current,
-      hasMapRef: !!mapRef.current,
-      isClient,
-    });
-
     // Wait for: client-side, no existing map, container exists
     if (!isClient || mapRef.current) {
       return;
@@ -125,19 +106,13 @@ export function InteractiveDistrictMap({
 
     // If container isn't ready yet, try again on next render
     if (!mapContainer.current) {
-      // eslint-disable-next-line no-console
-      console.log('[MapLibre Debug] Container not ready yet, will retry on next render');
       return;
     }
 
     const initializeMap = async () => {
       try {
-        // eslint-disable-next-line no-console
-        console.log('[MapLibre Debug] Starting MapLibre initialization...');
         // Dynamic import MapLibre GL
         const maplibregl = (await import('maplibre-gl')).default;
-        // eslint-disable-next-line no-console
-        console.log('[MapLibre Debug] MapLibre GL imported successfully');
 
         // Create map instance
         const map = new maplibregl.Map({
@@ -174,17 +149,11 @@ export function InteractiveDistrictMap({
 
         // Wait for map to load, then update with data if available
         map.on('load', () => {
-          // eslint-disable-next-line no-console
-          console.log('[MapLibre Debug] Map loaded, checking for mapData...');
           if (mapData) {
-            // eslint-disable-next-line no-console
-            console.log('[MapLibre Debug] MapData available, updating map');
             updateMapWithData(mapData);
           }
         });
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to initialize MapLibre GL:', error);
+      } catch {
         setError('Failed to initialize map');
       }
     };
@@ -201,9 +170,7 @@ export function InteractiveDistrictMap({
           if (containerElement) {
             containerElement.innerHTML = '';
           }
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.warn('Map cleanup error (non-critical):', error);
+        } catch {
           mapRef.current = null;
         }
       }
@@ -216,8 +183,6 @@ export function InteractiveDistrictMap({
     const fetchMapData = async () => {
       try {
         setLoading(true);
-        // eslint-disable-next-line no-console
-        console.log('[MapLibre Debug] Fetching map data for ZIP:', zipCode, 'district:', district);
 
         // Build URL with optional district parameter
         const url = new URL('/api/district-map', window.location.origin);
@@ -234,27 +199,17 @@ export function InteractiveDistrictMap({
         }
 
         const data: MapData = await response.json();
-        // eslint-disable-next-line no-console
-        console.log('[MapLibre Debug] Map data received:', {
-          hasBbox: !!data.bbox,
-          hasBoundary: !!data.boundaries.congressional,
-          bbox: data.bbox,
-        });
 
         setMapData(data);
         setError(null);
 
         // Update map with new data if map is already loaded
         if (mapRef.current && data) {
-          // eslint-disable-next-line no-console
-          console.log('[MapLibre Debug] Map exists, updating with data');
           // Check if map is loaded
           if (mapRef.current.loaded()) {
             updateMapWithData(data);
           } else {
             // Wait for map to load
-            // eslint-disable-next-line no-console
-            console.log('[MapLibre Debug] Map not loaded yet, waiting for load event');
             mapRef.current.once('load', () => {
               updateMapWithData(data);
             });
@@ -276,18 +231,11 @@ export function InteractiveDistrictMap({
 
   // Update map with boundary data
   const updateMapWithData = async (data: MapData) => {
-    // eslint-disable-next-line no-console
-    console.log('[MapLibre Debug] updateMapWithData called');
-
     if (!mapRef.current) {
-      // eslint-disable-next-line no-console
-      console.log('[MapLibre Debug] No map reference, aborting update');
       return;
     }
 
     const map = mapRef.current;
-    // eslint-disable-next-line no-console
-    console.log('[MapLibre Debug] Map reference exists, map loaded:', map.loaded());
 
     try {
       // Remove existing sources and layers
@@ -303,8 +251,6 @@ export function InteractiveDistrictMap({
       });
 
       // Add ZIP code marker
-      // eslint-disable-next-line no-console
-      console.log('[MapLibre Debug] Adding ZIP marker at:', data.coordinates);
       map.addSource('zip-marker', {
         type: 'geojson',
         data: {
@@ -333,8 +279,6 @@ export function InteractiveDistrictMap({
 
       // Add district boundary if available
       const boundary = data.boundaries[selectedLayer as keyof typeof data.boundaries];
-      // eslint-disable-next-line no-console
-      console.log('[MapLibre Debug] Boundary for layer', selectedLayer, ':', !!boundary);
 
       if (boundary) {
         const geoJsonData = {
@@ -346,8 +290,6 @@ export function InteractiveDistrictMap({
           properties: boundary.properties,
         };
 
-        // eslint-disable-next-line no-console
-        console.log('[MapLibre Debug] Adding district boundary source');
         map.addSource('district-boundaries', {
           type: 'geojson',
           data: geoJsonData,
@@ -356,8 +298,6 @@ export function InteractiveDistrictMap({
         const layerInfo = getCurrentLayerInfo();
 
         // Add fill layer
-        // eslint-disable-next-line no-console
-        console.log('[MapLibre Debug] Adding fill layer with color:', layerInfo?.color);
         map.addLayer({
           id: 'district-fill',
           type: 'fill',
@@ -369,8 +309,6 @@ export function InteractiveDistrictMap({
         });
 
         // Add stroke layer
-        // eslint-disable-next-line no-console
-        console.log('[MapLibre Debug] Adding stroke layer');
         map.addLayer({
           id: 'district-stroke',
           type: 'line',
@@ -384,8 +322,6 @@ export function InteractiveDistrictMap({
 
         // Fit map to bounds
         if (data.bbox) {
-          // eslint-disable-next-line no-console
-          console.log('[MapLibre Debug] Fitting map to bounds:', data.bbox);
           map.fitBounds(
             [
               [data.bbox.minLng, data.bbox.minLat],
@@ -393,16 +329,10 @@ export function InteractiveDistrictMap({
             ],
             { padding: 50 }
           );
-          // eslint-disable-next-line no-console
-          console.log('[MapLibre Debug] fitBounds called successfully');
-        } else {
-          // eslint-disable-next-line no-console
-          console.log('[MapLibre Debug] No bbox data available');
         }
       }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('[MapLibre Debug] Error updating map with data:', error);
+    } catch {
+      // Map update failed - non-critical, UI still functional
     }
   };
 

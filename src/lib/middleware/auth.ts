@@ -3,238 +3,227 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { createHash } from 'crypto'
+import { NextRequest, NextResponse } from 'next/server';
+import { createHash } from 'crypto';
 
 export interface ApiKeyConfig {
-  requiredForRoutes: string[]
-  optionalForRoutes: string[]
-  adminRoutes: string[]
+  requiredForRoutes: string[];
+  optionalForRoutes: string[];
+  adminRoutes: string[];
 }
 
 interface ApiKey {
-  key: string
-  name: string
-  permissions: string[]
+  key: string;
+  name: string;
+  permissions: string[];
   rateLimit?: {
-    maxRequests: number
-    windowMs: number
-  }
-  isActive: boolean
-  createdAt: string
-  lastUsed?: string
+    maxRequests: number;
+    windowMs: number;
+  };
+  isActive: boolean;
+  createdAt: string;
+  lastUsed?: string;
 }
 
 class ApiKeyManager {
-  private keys = new Map<string, ApiKey>()
-  
+  private keys = new Map<string, ApiKey>();
+
   constructor() {
-    this.loadDefaultKeys()
+    this.loadDefaultKeys();
   }
 
   private loadDefaultKeys() {
     // Create a default internal API key for server-to-server communication
-    const internalKey = this.generateApiKey()
+    const internalKey = this.generateApiKey();
     this.keys.set(this.hashKey(internalKey), {
       key: internalKey,
       name: 'Internal Server Key',
       permissions: ['read', 'write', 'admin'],
       isActive: true,
-      createdAt: new Date().toISOString()
-    })
+      createdAt: new Date().toISOString(),
+    });
 
-    // Store the internal key in environment for development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Internal API Key for development:', internalKey)
-    }
+    // Internal key is generated but not logged for security reasons
   }
 
   private generateApiKey(): string {
-    const timestamp = Date.now().toString(36)
-    const randomBytes = Math.random().toString(36).substring(2)
-    return `civiq_${timestamp}_${randomBytes}`
+    const timestamp = Date.now().toString(36);
+    const randomBytes = Math.random().toString(36).substring(2);
+    return `civiq_${timestamp}_${randomBytes}`;
   }
 
   private hashKey(key: string): string {
-    return createHash('sha256').update(key).digest('hex')
+    return createHash('sha256').update(key).digest('hex');
   }
 
   validateKey(key: string): ApiKey | null {
-    const hashedKey = this.hashKey(key)
-    const apiKey = this.keys.get(hashedKey)
-    
+    const hashedKey = this.hashKey(key);
+    const apiKey = this.keys.get(hashedKey);
+
     if (!apiKey || !apiKey.isActive) {
-      return null
+      return null;
     }
 
     // Update last used timestamp
-    apiKey.lastUsed = new Date().toISOString()
-    return apiKey
+    apiKey.lastUsed = new Date().toISOString();
+    return apiKey;
   }
 
   createKey(name: string, permissions: string[]): string {
-    const key = this.generateApiKey()
-    const hashedKey = this.hashKey(key)
-    
+    const key = this.generateApiKey();
+    const hashedKey = this.hashKey(key);
+
     this.keys.set(hashedKey, {
       key,
       name,
       permissions,
       isActive: true,
-      createdAt: new Date().toISOString()
-    })
+      createdAt: new Date().toISOString(),
+    });
 
-    return key
+    return key;
   }
 
   revokeKey(key: string): boolean {
-    const hashedKey = this.hashKey(key)
-    const apiKey = this.keys.get(hashedKey)
-    
+    const hashedKey = this.hashKey(key);
+    const apiKey = this.keys.get(hashedKey);
+
     if (apiKey) {
-      apiKey.isActive = false
-      return true
+      apiKey.isActive = false;
+      return true;
     }
-    
-    return false
+
+    return false;
   }
 
   listKeys(): Omit<ApiKey, 'key'>[] {
-    return Array.from(this.keys.values()).map(({ key, ...rest }) => rest)
+    return Array.from(this.keys.values()).map(({ key, ...rest }) => rest);
   }
 }
 
-const apiKeyManager = new ApiKeyManager()
+const apiKeyManager = new ApiKeyManager();
 
 // Default configuration
 const defaultConfig: ApiKeyConfig = {
-  requiredForRoutes: [
-    '/api/admin',
-    '/api/internal'
-  ],
-  optionalForRoutes: [
-    '/api/representatives',
-    '/api/district-map',
-    '/api/representative'
-  ],
-  adminRoutes: [
-    '/api/admin'
-  ]
-}
+  requiredForRoutes: ['/api/admin', '/api/internal'],
+  optionalForRoutes: ['/api/representatives', '/api/district-map', '/api/representative'],
+  adminRoutes: ['/api/admin'],
+};
 
 export function extractApiKey(request: NextRequest): string | null {
   // Check Authorization header (Bearer token)
-  const authHeader = request.headers.get('authorization')
+  const authHeader = request.headers.get('authorization');
   if (authHeader?.startsWith('Bearer ')) {
-    return authHeader.substring(7)
+    return authHeader.substring(7);
   }
 
   // Check X-API-Key header
-  const apiKeyHeader = request.headers.get('x-api-key')
+  const apiKeyHeader = request.headers.get('x-api-key');
   if (apiKeyHeader) {
-    return apiKeyHeader
+    return apiKeyHeader;
   }
 
   // Check query parameter (less secure, only for development)
   if (process.env.NODE_ENV === 'development') {
-    const url = new URL(request.url)
-    const apiKey = url.searchParams.get('api_key')
+    const url = new URL(request.url);
+    const apiKey = url.searchParams.get('api_key');
     if (apiKey) {
-      return apiKey
+      return apiKey;
     }
   }
 
-  return null
+  return null;
 }
 
 export function requireAuth(permissions: string[] = ['read']) {
-  return function(target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
-    const originalMethod = descriptor.value
+  return function (target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
+    const originalMethod = descriptor.value;
 
-    descriptor.value = async function(request: NextRequest, ...args: unknown[]) {
-      const apiKey = extractApiKey(request)
-      
+    descriptor.value = async function (request: NextRequest, ...args: unknown[]) {
+      const apiKey = extractApiKey(request);
+
       if (!apiKey) {
         return NextResponse.json(
           { error: 'API key required', message: 'Please provide a valid API key' },
           { status: 401 }
-        )
+        );
       }
 
-      const keyData = apiKeyManager.validateKey(apiKey)
+      const keyData = apiKeyManager.validateKey(apiKey);
       if (!keyData) {
         return NextResponse.json(
           { error: 'Invalid API key', message: 'The provided API key is invalid or inactive' },
           { status: 401 }
-        )
+        );
       }
 
       // Check permissions
-      const hasPermission = permissions.every(permission => 
-        keyData.permissions.includes(permission) || keyData.permissions.includes('admin')
-      )
+      const hasPermission = permissions.every(
+        permission =>
+          keyData.permissions.includes(permission) || keyData.permissions.includes('admin')
+      );
 
       if (!hasPermission) {
         return NextResponse.json(
-          { 
-            error: 'Insufficient permissions', 
+          {
+            error: 'Insufficient permissions',
             message: `This API key does not have the required permissions: ${permissions.join(', ')}`,
             required: permissions,
-            granted: keyData.permissions
+            granted: keyData.permissions,
           },
           { status: 403 }
-        )
+        );
       }
 
       // Add API key info to request for logging
-      ;(request as any).apiKey = keyData
+      (request as any).apiKey = keyData;
 
-      return originalMethod.call(this, request, ...args)
-    }
+      return originalMethod.call(this, request, ...args);
+    };
 
-    return descriptor
-  }
+    return descriptor;
+  };
 }
 
 export async function checkAuth(
   request: NextRequest,
   config: ApiKeyConfig = defaultConfig
 ): Promise<{
-  isAuthenticated: boolean
-  apiKey?: ApiKey
-  response?: NextResponse
+  isAuthenticated: boolean;
+  apiKey?: ApiKey;
+  response?: NextResponse;
 }> {
-  const pathname = new URL(request.url).pathname
+  const pathname = new URL(request.url).pathname;
 
   // Check if route requires authentication
-  const requiresAuth = config.requiredForRoutes.some(route => pathname.startsWith(route))
-  const isAdminRoute = config.adminRoutes.some(route => pathname.startsWith(route))
+  const requiresAuth = config.requiredForRoutes.some(route => pathname.startsWith(route));
+  const isAdminRoute = config.adminRoutes.some(route => pathname.startsWith(route));
 
   if (!requiresAuth && !isAdminRoute) {
-    return { isAuthenticated: true }
+    return { isAuthenticated: true };
   }
 
-  const apiKeyString = extractApiKey(request)
-  
+  const apiKeyString = extractApiKey(request);
+
   if (!apiKeyString) {
     return {
       isAuthenticated: false,
       response: NextResponse.json(
         { error: 'API key required', message: 'Please provide a valid API key' },
         { status: 401 }
-      )
-    }
+      ),
+    };
   }
 
-  const apiKey = apiKeyManager.validateKey(apiKeyString)
+  const apiKey = apiKeyManager.validateKey(apiKeyString);
   if (!apiKey) {
     return {
       isAuthenticated: false,
       response: NextResponse.json(
         { error: 'Invalid API key', message: 'The provided API key is invalid or inactive' },
         { status: 401 }
-      )
-    }
+      ),
+    };
   }
 
   // Check admin permissions for admin routes
@@ -242,19 +231,19 @@ export async function checkAuth(
     return {
       isAuthenticated: false,
       response: NextResponse.json(
-        { 
-          error: 'Insufficient permissions', 
-          message: 'Admin access required for this endpoint'
+        {
+          error: 'Insufficient permissions',
+          message: 'Admin access required for this endpoint',
         },
         { status: 403 }
-      )
-    }
+      ),
+    };
   }
 
   return {
     isAuthenticated: true,
-    apiKey
-  }
+    apiKey,
+  };
 }
 
 // Helper function to apply authentication to API routes
@@ -263,22 +252,19 @@ export async function withAuth(
   handler: (request: NextRequest, apiKey?: ApiKey) => Promise<NextResponse>,
   config: ApiKeyConfig = defaultConfig
 ): Promise<NextResponse> {
-  const authResult = await checkAuth(request, config)
+  const authResult = await checkAuth(request, config);
 
   if (!authResult.isAuthenticated && authResult.response) {
-    return authResult.response
+    return authResult.response;
   }
 
   try {
-    return await handler(request, authResult.apiKey)
+    return await handler(request, authResult.apiKey);
   } catch (error) {
-    console.error('Handler error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    console.error('Handler error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 // Export the API key manager for administration
-export { apiKeyManager }
+export { apiKeyManager };

@@ -117,11 +117,6 @@ function ProfileContent({
 
 // Enhanced component for Bills tab
 function BillsContent({ data }: { data: Record<string, any> }) {
-  if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
-    console.log('🔍 BillsContent received data:', data);
-  }
-
   // Handle different data structures from API
   let bills: unknown[] = [];
   if (data?.sponsoredLegislation && Array.isArray(data.sponsoredLegislation)) {
@@ -130,11 +125,6 @@ function BillsContent({ data }: { data: Record<string, any> }) {
     bills = data.bills;
   } else if (Array.isArray(data)) {
     bills = data;
-  }
-
-  if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
-    console.log('🔍 BillsContent processed bills:', bills);
   }
 
   if (!bills || bills.length === 0) {
@@ -201,20 +191,8 @@ function BillsContent({ data }: { data: Record<string, any> }) {
 
 // Enhanced component for Votes tab
 function VotesContent({ data }: { data: Record<string, any> }) {
-  if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
-    console.log('🔍 VotesContent received data:', data);
-  }
-
   const votes = data?.votes as unknown[];
   const votingPattern = data?.votingPattern as Record<string, unknown>;
-
-  if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
-    console.log('🔍 VotesContent votes:', votes);
-    // eslint-disable-next-line no-console
-    console.log('🔍 VotesContent votingPattern:', votingPattern);
-  }
 
   if (!votes || votes.length === 0) {
     return <div className="text-gray-500">No voting records available</div>;
@@ -303,22 +281,10 @@ function VotesContent({ data }: { data: Record<string, any> }) {
 
 // Enhanced component for Finance tab
 function FinanceContent({ data }: { data: Record<string, any> }) {
-  if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
-    console.log('🔍 FinanceContent received data:', data);
-  }
-
   // Handle FEC API structure
   const summary = data?.financial_summary?.[0] || (data?.summary as Record<string, unknown>);
   const topContributors = data?.top_contributors || (data?.topContributors as unknown[]);
   const candidateInfo = data?.candidate_info as Record<string, unknown>;
-
-  if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
-    console.log('🔍 FinanceContent summary:', summary);
-    // eslint-disable-next-line no-console
-    console.log('🔍 FinanceContent topContributors:', topContributors);
-  }
 
   if (!summary && !candidateInfo) {
     return <div className="text-gray-500">No campaign finance data available</div>;
@@ -393,17 +359,7 @@ function NewsContent({
   representative: EnhancedRepresentative;
   data: Record<string, any>;
 }) {
-  if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
-    console.log('🔍 NewsContent received data:', data);
-  }
-
   const articles = data?.articles as unknown[];
-
-  if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
-    console.log('🔍 NewsContent articles:', articles);
-  }
 
   // If no data available, show loading state or empty message
   if (!articles || articles.length === 0) {
@@ -456,28 +412,10 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
       const baseUrl = getBaseUrl();
       let url = '';
 
-      // STEP 3 DEBUG: Individual tab component data structure
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.log('\n=== STEP 3: TABS ENHANCED COMPONENT DATA ===');
-        // eslint-disable-next-line no-console
-        console.log(`🔍 Current tab: ${activeTab}`);
-        // eslint-disable-next-line no-console
-        console.log('🔍 Server data available:', !!serverData);
-        // eslint-disable-next-line no-console
-        console.log('🔍 Server data structure:', serverData);
-        // eslint-disable-next-line no-console
-        console.log('🔍 Base URL:', baseUrl);
-      }
-
       try {
         switch (activeTab) {
           case 'profile':
             // Just show the representative data we already have
-            if (process.env.NODE_ENV === 'development') {
-              // eslint-disable-next-line no-console
-              console.log('🔍 Profile data:', representative);
-            }
             setData(representative as unknown as Record<string, unknown>);
             setLoading(false);
             return;
@@ -489,10 +427,6 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
               Array.isArray(serverData.bills) &&
               serverData.bills.length > 0
             ) {
-              if (process.env.NODE_ENV === 'development') {
-                // eslint-disable-next-line no-console
-                console.log('🚀 Using SERVER bills data:', serverData.bills);
-              }
               setData({ bills: serverData.bills, sponsoredLegislation: serverData.bills });
               setLoading(false);
               return;
@@ -507,10 +441,6 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
               Array.isArray(serverData.votes) &&
               serverData.votes.length > 0
             ) {
-              if (process.env.NODE_ENV === 'development') {
-                // eslint-disable-next-line no-console
-                console.log('🚀 Using SERVER votes data:', serverData.votes);
-              }
               setData({ votes: serverData.votes });
               setLoading(false);
               return;
@@ -521,10 +451,6 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
           case 'finance':
             // Check for server-provided finance data first
             if (serverData?.finance && Object.keys(serverData.finance).length > 0) {
-              if (process.env.NODE_ENV === 'development') {
-                // eslint-disable-next-line no-console
-                console.log('🚀 Using SERVER finance data:', serverData.finance);
-              }
               setData(serverData.finance);
               setLoading(false);
               return;
@@ -535,10 +461,6 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
           case 'news':
             // Check for server-provided news data first
             if (serverData?.news && Array.isArray(serverData.news) && serverData.news.length > 0) {
-              if (process.env.NODE_ENV === 'development') {
-                // eslint-disable-next-line no-console
-                console.log('🚀 Using SERVER news data:', serverData.news);
-              }
               setData({ articles: serverData.news });
               setLoading(false);
               return;
@@ -552,12 +474,6 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
             return;
         }
 
-        // Fallback to API fetch if no server data available
-        if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
-          console.log(`🔍 No server data for ${activeTab}, fetching from API:`, url);
-        }
-
         const response = await fetch(url, {
           headers: {
             'Content-Type': 'application/json',
@@ -567,38 +483,12 @@ export function TabsEnhanced({ bioguideId, representative, serverData }: TabsEnh
         });
 
         if (!response.ok) {
-          const errorText = await response.text().catch(() => 'Unknown error');
-          // Enhanced error logging for Vercel debugging
-          // eslint-disable-next-line no-console
-          console.error(`❌ API ${activeTab} failed:`, {
-            url,
-            status: response.status,
-            statusText: response.statusText,
-            errorBody: errorText,
-            baseUrl,
-            bioguideId,
-          });
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
         const jsonData = await response.json();
-        if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
-          console.log(`✅ ${activeTab} API data received:`, jsonData);
-        }
         setData(jsonData);
       } catch (err) {
-        // Enhanced error logging
-        // eslint-disable-next-line no-console
-        console.error(`❌ Error fetching ${activeTab} data:`, {
-          error: err,
-          bioguideId,
-          activeTab,
-          apiUrl: url,
-          baseUrl,
-          errorMessage: err instanceof Error ? err.message : 'Unknown error',
-          errorStack: err instanceof Error ? err.stack : undefined,
-        });
         setError(err instanceof Error ? err.message : 'Failed to fetch');
         setData(null);
       } finally {

@@ -56,19 +56,7 @@ async function getStateLegislatorData(
 ): Promise<EnhancedStateLegislator> {
   try {
     if (!state || typeof state !== 'string' || !legislatorId || typeof legislatorId !== 'string') {
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.log('DEBUG: Invalid state or legislatorId:', { state, legislatorId });
-      }
       notFound();
-    }
-
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.log('DEBUG: Fetching state legislator:', {
-        state: state.toUpperCase(),
-        legislatorId,
-      });
     }
 
     // Direct service call - no HTTP networking during SSR
@@ -77,32 +65,12 @@ async function getStateLegislatorData(
       legislatorId
     );
 
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.log('DEBUG: StateLegislatureCoreService returned:', {
-        isNull: legislator === null,
-        isUndefined: legislator === undefined,
-        type: typeof legislator,
-        hasName: legislator?.name,
-        hasState: legislator?.state,
-        hasChamber: legislator?.chamber,
-      });
-    }
-
     if (!legislator) {
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.log('DEBUG: Legislator not found - calling notFound()');
-      }
       notFound();
     }
 
     return legislator;
-  } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.log('DEBUG: Exception in getStateLegislatorData:', error);
-    }
+  } catch {
     notFound();
   }
 }
@@ -138,13 +106,6 @@ export default async function StateLegislatorProfilePage({
 
   // Validate essential legislator data
   if (!legislator.name) {
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.log('DEBUG: Missing name field:', {
-        name: legislator.name,
-        id: legislator.id,
-      });
-    }
     notFound();
   }
 

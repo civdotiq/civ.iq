@@ -112,52 +112,18 @@ interface RepresentativeDetails {
 async function getRepresentativeData(bioguideId: string): Promise<RepresentativeDetails> {
   try {
     if (!bioguideId || typeof bioguideId !== 'string') {
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.log('DEBUG: Invalid bioguideId:', bioguideId);
-      }
       notFound();
-    }
-
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.log('DEBUG: Calling getEnhancedRepresentative with:', bioguideId.toUpperCase());
     }
 
     // Direct service call - no HTTP networking during SSR
     const enhancedData = await getEnhancedRepresentative(bioguideId.toUpperCase());
 
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.log('DEBUG: getEnhancedRepresentative returned:', {
-        isNull: enhancedData === null,
-        isUndefined: enhancedData === undefined,
-        type: typeof enhancedData,
-        hasName: enhancedData?.name,
-        hasFirstName: enhancedData?.firstName,
-        hasLastName: enhancedData?.lastName,
-        keys: enhancedData ? Object.keys(enhancedData).slice(0, 10) : [],
-      });
-    }
-
     if (!enhancedData) {
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.log('DEBUG: enhancedData is null/undefined - calling notFound()');
-      }
       notFound();
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.log('DEBUG: Returning enhanced data successfully');
-    }
     return enhancedData;
-  } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.log('DEBUG: Exception in getRepresentativeData:', error);
-    }
+  } catch {
     notFound();
   }
 }
@@ -191,23 +157,10 @@ export default async function RepresentativeProfilePage({
 
   // Validate essential representative data - be more lenient
   if (!representative) {
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.log('DEBUG: representative is null/undefined');
-    }
     notFound();
   }
 
   if (!representative.name && !representative.firstName && !representative.lastName) {
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.log('DEBUG: missing name fields:', {
-        name: representative.name,
-        firstName: representative.firstName,
-        lastName: representative.lastName,
-        keys: Object.keys(representative).slice(0, 10),
-      });
-    }
     notFound();
   }
 

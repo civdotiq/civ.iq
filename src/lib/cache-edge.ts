@@ -23,9 +23,12 @@ class EdgeCache {
   constructor() {
     // Clean up expired entries every 5 minutes
     if (typeof setInterval !== 'undefined') {
-      this.cleanupInterval = setInterval(() => {
-        this.cleanup();
-      }, 5 * 60 * 1000);
+      this.cleanupInterval = setInterval(
+        () => {
+          this.cleanup();
+        },
+        5 * 60 * 1000
+      );
     }
   }
 
@@ -40,7 +43,7 @@ class EdgeCache {
 
   async get<T>(key: string): Promise<T | null> {
     const monitor = monitorCache('get', key);
-    
+
     try {
       const entry = this.cache.get(key);
       if (!entry) {
@@ -65,12 +68,12 @@ class EdgeCache {
 
   async set<T>(key: string, data: T, ttlSeconds: number = 3600): Promise<boolean> {
     const monitor = monitorCache('set', key);
-    
+
     try {
       this.cache.set(key, {
         data,
         timestamp: Date.now(),
-        ttl: ttlSeconds
+        ttl: ttlSeconds,
       });
       monitor.end(true);
       return true;
@@ -92,7 +95,7 @@ class EdgeCache {
   getStats() {
     return {
       size: this.cache.size,
-      keys: Array.from(this.cache.keys())
+      keys: Array.from(this.cache.keys()),
     };
   }
 
@@ -118,17 +121,15 @@ export async function cachedFetch<T>(
     // Try to get from cache first
     const cached = await edgeCache.get<T>(key);
     if (cached !== null) {
-      console.log('Cache hit:', key);
       return cached;
     }
 
     // Cache miss - fetch new data
-    console.log('Cache miss, fetching:', key);
     const data = await fetchFn();
-    
+
     // Store in cache
     await edgeCache.set(key, data, ttlSeconds);
-    
+
     return data;
   } catch (error) {
     console.error('Cache operation failed:', error);
@@ -144,5 +145,5 @@ export { edgeCache };
 export const cacheUtils = {
   clear: () => edgeCache.clear(),
   getStats: () => edgeCache.getStats(),
-  delete: (key: string) => edgeCache.delete(key)
+  delete: (key: string) => edgeCache.delete(key),
 };

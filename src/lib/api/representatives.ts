@@ -3,7 +3,6 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
-import { cache } from '@/lib/cache';
 import { RepresentativeProfile, BatchApiResponse } from '@/types/representative';
 
 // Base API configuration - FIXED to work with Next.js API routes
@@ -49,9 +48,6 @@ async function apiRequest<T>(
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}${normalizedEndpoint}`;
 
-  console.log(`[CIV.IQ-DEBUG] API Request: ${fetchOptions.method || 'GET'} ${url}`);
-  console.log(`[CIV.IQ-DEBUG] Base URL: "${baseUrl}", Endpoint: "${normalizedEndpoint}"`);
-
   try {
     // Create AbortController for timeout
     const controller = new AbortController();
@@ -77,11 +73,8 @@ async function apiRequest<T>(
 
     clearTimeout(timeoutId);
 
-    console.log(`[CIV.IQ-DEBUG] API Response: ${response.status} ${response.statusText}`);
-
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'No error details');
-      console.error(`[CIV.IQ-DEBUG] API Error Response:`, errorText);
 
       throw new RepresentativeApiError(
         `API request failed: ${response.status} ${response.statusText}`,
@@ -92,20 +85,9 @@ async function apiRequest<T>(
     }
 
     const data = await response.json();
-    console.log(`[CIV.IQ-DEBUG] API Success Response:`, {
-      endpoint,
-      hasData: !!data,
-      dataKeys: data ? Object.keys(data).slice(0, 5) : [],
-    });
 
     return data;
   } catch (error) {
-    console.error(`[CIV.IQ-DEBUG] API Request Error:`, {
-      endpoint,
-      error: error instanceof Error ? error.message : String(error),
-      errorType: error instanceof Error ? error.constructor.name : typeof error,
-    });
-
     if (error instanceof RepresentativeApiError) {
       throw error;
     }
@@ -154,8 +136,6 @@ export const representativeApi = {
     if (options.includeLeadership) endpoints.push('leadership');
     if (options.includeDistrict) endpoints.push('district');
 
-    console.log(`[CIV.IQ-DEBUG] Batch request for ${bioguideId} with endpoints:`, endpoints);
-
     try {
       const response = await apiRequest<BatchApiResponse>(
         `/api/representative/${bioguideId}/batch`,
@@ -165,23 +145,14 @@ export const representativeApi = {
         }
       );
 
-      console.log(`[CIV.IQ-DEBUG] Batch response processed successfully:`, {
-        bioguideId,
-        endpointsRequested: endpoints.length,
-        successfulEndpoints: Object.keys(response.data || {}).length,
-        hasErrors: response.errors && Object.keys(response.errors).length > 0,
-        executionTime: response.executionTime,
-      });
-
       return response;
-    } catch (error) {
-      console.error(`[CIV.IQ-DEBUG] Batch API failed, falling back to individual calls`, error);
+    } catch (_error) {
       // Return empty batch response on error
       return {
         success: false,
         data: {},
         errors: {
-          batch: error instanceof Error ? error.message : 'Batch API failed',
+          batch: _error instanceof Error ? _error.message : 'Batch API failed',
         },
         metadata: {
           timestamp: new Date().toISOString(),
@@ -208,7 +179,7 @@ export const representativeApi = {
   /**
    * Get representative votes - client-side with shorter cache for real-time updates
    */
-  async getVotes(bioguideId: string): Promise<any> {
+  async getVotes(bioguideId: string): Promise<unknown> {
     return apiRequest(`/api/representative/${bioguideId}/votes`, {
       cacheTime: 300, // 5 minutes - voting data updates frequently
       tags: [`representative-${bioguideId}`, 'representative-votes'],
@@ -218,7 +189,7 @@ export const representativeApi = {
   /**
    * Get representative bills
    */
-  async getBills(bioguideId: string): Promise<any> {
+  async getBills(bioguideId: string): Promise<unknown> {
     return apiRequest(`/api/representative/${bioguideId}/bills`, {
       cacheTime: 600, // 10 minutes - bill data changes moderately
       tags: [`representative-${bioguideId}`, 'representative-bills'],
@@ -228,7 +199,7 @@ export const representativeApi = {
   /**
    * Get representative finance data
    */
-  async getFinance(bioguideId: string): Promise<any> {
+  async getFinance(bioguideId: string): Promise<unknown> {
     return apiRequest(`/api/representative/${bioguideId}/finance`, {
       cacheTime: 1800, // 30 minutes - finance data changes less frequently
       tags: [`representative-${bioguideId}`, 'representative-finance'],
@@ -238,7 +209,7 @@ export const representativeApi = {
   /**
    * Get representative news - short cache for real-time updates
    */
-  async getNews(bioguideId: string): Promise<any> {
+  async getNews(bioguideId: string): Promise<unknown> {
     return apiRequest(`/api/representative/${bioguideId}/news`, {
       cacheTime: 180, // 3 minutes - news updates frequently
       tags: [`representative-${bioguideId}`, 'representative-news'],
@@ -248,7 +219,7 @@ export const representativeApi = {
   /**
    * Get party alignment analysis
    */
-  async getPartyAlignment(bioguideId: string): Promise<any> {
+  async getPartyAlignment(bioguideId: string): Promise<unknown> {
     return apiRequest(`/api/representative/${bioguideId}/party-alignment`, {
       cacheTime: 1800, // 30 minutes - alignment data changes slowly
       tags: [`representative-${bioguideId}`, 'representative-party-alignment'],
@@ -258,7 +229,7 @@ export const representativeApi = {
   /**
    * Get committee assignments
    */
-  async getCommittees(bioguideId: string): Promise<any> {
+  async getCommittees(bioguideId: string): Promise<unknown> {
     return apiRequest(`/api/representative/${bioguideId}/committees`, {
       cacheTime: 3600, // 1 hour - committee assignments change infrequently
       tags: [`representative-${bioguideId}`, 'representative-committees'],
@@ -268,7 +239,7 @@ export const representativeApi = {
   /**
    * Get leadership positions
    */
-  async getLeadership(bioguideId: string): Promise<any> {
+  async getLeadership(bioguideId: string): Promise<unknown> {
     return apiRequest(`/api/representative/${bioguideId}/leadership`, {
       cacheTime: 3600, // 1 hour - leadership positions change infrequently
       tags: [`representative-${bioguideId}`, 'representative-leadership'],
@@ -278,7 +249,7 @@ export const representativeApi = {
   /**
    * Get district information
    */
-  async getDistrict(bioguideId: string): Promise<any> {
+  async getDistrict(bioguideId: string): Promise<unknown> {
     return apiRequest(`/api/representative/${bioguideId}/district`, {
       cacheTime: 3600, // 1 hour - district info changes rarely
       tags: [`representative-${bioguideId}`, 'representative-district'],
