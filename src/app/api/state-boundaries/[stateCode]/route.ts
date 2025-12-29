@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getSecureCorsOrigin } from '@/config/api.config';
 
 // ISR: Revalidate every 1 week
 export const revalidate = 604800;
@@ -264,8 +265,8 @@ export async function GET(
         'Cache-Control': 'public, max-age=604800, s-maxage=2592000, immutable',
         // ETag for client-side caching
         ETag: `"${normalizedCode}-standard-v1"`,
-        // CORS for frontend access
-        'Access-Control-Allow-Origin': '*',
+        // CORS for frontend access (secure origins only)
+        'Access-Control-Allow-Origin': getSecureCorsOrigin(),
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         // Performance metadata
@@ -306,7 +307,7 @@ export async function OPTIONS(): Promise<NextResponse> {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': getSecureCorsOrigin(),
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Max-Age': '86400',

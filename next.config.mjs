@@ -58,11 +58,76 @@ const nextConfig = {
         port: '',
         pathname: '/unitedstates/images/**',
       },
+      // News article images - explicitly allowlisted domains
+      // SECURITY: Avoid wildcard '**' to prevent image-based attacks
       {
-        // Allow all news article images from any source
-        // This is necessary because news articles come from various domains
         protocol: 'https',
-        hostname: '**',
+        hostname: '*.reuters.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.apnews.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.nytimes.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.washingtonpost.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.politico.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.cnn.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.foxnews.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.nbcnews.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.cbsnews.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.abcnews.go.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.npr.org',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.bbc.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.thehill.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.axios.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        // Wikipedia/Wikimedia for biographical images
+        protocol: 'https',
+        hostname: '*.wikimedia.org',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.wikipedia.org',
       },
     ],
   },

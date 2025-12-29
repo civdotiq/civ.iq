@@ -14,10 +14,20 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Verify authorization (optional - add secret token check)
+    // Verify authorization - REQUIRED in production (fail-closed security)
     const authHeader = request.headers.get('authorization');
     const expectedToken = process.env.CACHE_WARM_SECRET;
 
+    // In production, require CACHE_WARM_SECRET to be set
+    if (process.env.NODE_ENV === 'production' && !expectedToken) {
+      logger.error('CACHE_WARM_SECRET not configured - endpoint disabled for security');
+      return NextResponse.json(
+        { error: 'Endpoint not configured - contact administrator' },
+        { status: 503 }
+      );
+    }
+
+    // If secret is configured, always require it
     if (expectedToken && authHeader !== `Bearer ${expectedToken}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

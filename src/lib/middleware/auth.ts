@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 
 export interface ApiKeyConfig {
   requiredForRoutes: string[];
@@ -48,8 +48,8 @@ class ApiKeyManager {
 
   private generateApiKey(): string {
     const timestamp = Date.now().toString(36);
-    const randomBytes = Math.random().toString(36).substring(2);
-    return `civiq_${timestamp}_${randomBytes}`;
+    const secureRandom = randomBytes(16).toString('hex');
+    return `civiq_${timestamp}_${secureRandom}`;
   }
 
   private hashKey(key: string): string {

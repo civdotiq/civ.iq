@@ -115,12 +115,56 @@ export const apiConfig = {
       'User-Agent': 'CivicIntelHub/1.0 (https://civic-intel-hub.vercel.app)',
     },
     cors: {
-      'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     },
   },
 } as const;
+
+/**
+ * Get secure CORS origin based on environment
+ * Returns specific origins instead of wildcard '*' for security
+ */
+export function getSecureCorsOrigin(): string {
+  const allowedOrigins =
+    process.env.NODE_ENV === 'production'
+      ? [
+          'https://civic-intel-hub.vercel.app',
+          'https://civiq.app',
+          'https://www.civiq.app',
+          'https://civ.iq',
+          'https://www.civ.iq',
+        ]
+      : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'];
+
+  const customOrigins = process.env.CORS_ALLOWED_ORIGINS?.split(',').filter(Boolean) || [];
+  const allOrigins = [...allowedOrigins, ...customOrigins];
+
+  return allOrigins.join(', ');
+}
+
+/**
+ * Check if an origin is allowed for CORS
+ */
+export function isOriginAllowed(origin: string | null): boolean {
+  if (!origin) return false;
+
+  const allowedOrigins =
+    process.env.NODE_ENV === 'production'
+      ? [
+          'https://civic-intel-hub.vercel.app',
+          'https://civiq.app',
+          'https://www.civiq.app',
+          'https://civ.iq',
+          'https://www.civ.iq',
+        ]
+      : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'];
+
+  const customOrigins = process.env.CORS_ALLOWED_ORIGINS?.split(',').filter(Boolean) || [];
+  const allOrigins = [...allowedOrigins, ...customOrigins];
+
+  return allOrigins.includes(origin);
+}
 
 /**
  * Get the full URL for an internal API endpoint

@@ -333,7 +333,8 @@ function createErrorResponse(
 }
 
 function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  // Use crypto.randomUUID() for secure, unpredictable request IDs (available in Edge Runtime)
+  return `req_${Date.now()}_${crypto.randomUUID().split('-')[0]}`;
 }
 
 // Configure which paths the middleware runs on

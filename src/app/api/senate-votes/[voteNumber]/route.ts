@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logging/logger-edge';
+import { getSecureCorsOrigin } from '@/config/api.config';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -188,7 +189,7 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': 'application/xml; charset=utf-8',
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': getSecureCorsOrigin(),
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Accept',
         'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
@@ -219,7 +220,7 @@ export async function GET(
       {
         status: 500,
         headers: {
-          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Origin': getSecureCorsOrigin(),
         },
       }
     );
@@ -233,7 +234,7 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': getSecureCorsOrigin(),
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Accept',
       'Access-Control-Max-Age': '86400',
@@ -247,8 +248,11 @@ export async function OPTIONS() {
 function processXmlUrls(xmlText: string): string {
   const baseUrl = 'https://www.senate.gov';
 
+  // Type for URL replacement patterns
+  type ReplacementFn = (match: string, url: string) => string;
+
   // Replace common relative URL patterns in Senate XML
-  const patterns = [
+  const stringPatterns: Array<{ pattern: RegExp; replacement: string }> = [
     // Convert relative paths like "/legislative/..." to absolute
     {
       pattern: /href="(\/[^"]+)"/g,
@@ -259,6 +263,9 @@ function processXmlUrls(xmlText: string): string {
       pattern: /href="(\/\/[^"]+)"/g,
       replacement: 'href="https:$1"',
     },
+  ];
+
+  const functionPatterns: Array<{ pattern: RegExp; replacement: ReplacementFn }> = [
     // Fix issue_link and similar URL fields
     {
       pattern: /<issue_link>([^<]+)<\/issue_link>/g,
@@ -291,8 +298,14 @@ function processXmlUrls(xmlText: string): string {
 
   let processedXml = xmlText;
 
-  for (const { pattern, replacement } of patterns) {
-    processedXml = processedXml.replace(pattern, replacement as any);
+  // Apply string replacements
+  for (const { pattern, replacement } of stringPatterns) {
+    processedXml = processedXml.replace(pattern, replacement);
+  }
+
+  // Apply function replacements
+  for (const { pattern, replacement } of functionPatterns) {
+    processedXml = processedXml.replace(pattern, replacement);
   }
 
   // Add a processing comment to the XML
