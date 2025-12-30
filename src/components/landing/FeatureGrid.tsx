@@ -64,7 +64,7 @@ const features: Feature[] = [
     iconColor: 'civiq-red',
     title: 'Committees',
     description: 'Explore congressional committees and their activities',
-    href: '/representatives',
+    href: '/committees',
     stat: '34 Committees',
   },
   {

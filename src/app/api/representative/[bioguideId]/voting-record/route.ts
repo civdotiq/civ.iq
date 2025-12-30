@@ -23,35 +23,38 @@ export async function GET(
   const limit = parseInt(searchParams.get('limit') || '20');
   const congress = parseInt(searchParams.get('congress') || '119');
 
-  logger.info('[Voting API] Emergency endpoint called', { bioguideId, limit, congress });
+  logger.info('[Voting API] Request received', { bioguideId, limit, congress });
 
   try {
-    // TEMPORARY: Return empty voting records structure to prevent frontend crashes
+    // Voting records feature is under development
+    // Full implementation will parse roll call XML from Congress.gov
     const response = {
       member: {
         bioguideId,
-        name: 'Loading...',
-        chamber: 'House',
-        party: '',
+        name: null, // Will be populated when feature is complete
+        chamber: null,
+        party: null,
         congress,
       },
       votingRecords: [],
       statistics: {
-        totalVotes: 0,
-        attendanceRate: 0,
+        totalVotes: null,
+        attendanceRate: null,
         positions: { yea: 0, nay: 0, present: 0, notVoting: 0 },
       },
       metadata: {
         totalRecords: 0,
         congress,
         session: 1,
-        dataSource: 'emergency-hotfix',
+        dataSource: 'coming-soon',
         lastUpdated: new Date().toISOString(),
-        cacheStatus: 'EMERGENCY HOTFIX: Voting records temporarily unavailable',
+        message:
+          'Voting records feature coming soon. We are integrating Congress.gov roll call data.',
+        featureStatus: 'in-development',
       },
     };
 
-    logger.warn('[Voting API] Returning emergency empty response', { bioguideId });
+    logger.info('[Voting API] Returning coming-soon response', { bioguideId });
 
     return NextResponse.json(response);
   } catch (error) {
