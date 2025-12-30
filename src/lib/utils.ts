@@ -64,7 +64,7 @@ export function getPartyColor(party: string): string {
       return 'text-blue-600';
     case 'independent':
     case 'i':
-      return 'text-purple-600';
+      return 'text-gray-600';
     default:
       return 'text-gray-600';
   }
@@ -84,7 +84,7 @@ export function getPartyBgColor(party: string): string {
       return 'bg-blue-100';
     case 'independent':
     case 'i':
-      return 'bg-purple-100';
+      return 'bg-gray-100';
     default:
       return 'bg-gray-100';
   }
@@ -141,7 +141,7 @@ export function formatPercentage(value: number, decimals: number = 1): string {
 /**
  * Debounce function
  */
-export function debounce<T extends (...args: unknown[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {

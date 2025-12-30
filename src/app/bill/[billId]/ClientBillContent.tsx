@@ -387,9 +387,9 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                             Nay
                           </div>
                         </div>
-                        <div className="bg-purple-50 p-2 rounded">
-                          <div className="font-medium text-purple-800 mb-1">Independents</div>
-                          <div className="text-purple-700">
+                        <div className="bg-gray-50 p-2 rounded">
+                          <div className="font-medium text-gray-800 mb-1">Independents</div>
+                          <div className="text-gray-700">
                             {vote.breakdown.independent.yea} Yea / {vote.breakdown.independent.nay}{' '}
                             Nay
                           </div>
@@ -447,8 +447,8 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                     </div>
                     <div className="text-xs text-red-600">Republicans</div>
                   </div>
-                  <div className="bg-purple-100 p-3">
-                    <div className="text-lg font-bold text-purple-800">
+                  <div className="bg-gray-100 p-3">
+                    <div className="text-lg font-bold text-gray-800">
                       {
                         [
                           bill.sponsor.representative,
@@ -456,7 +456,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                         ].filter(rep => rep.party === 'I').length
                       }
                     </div>
-                    <div className="text-xs text-purple-600">Independents</div>
+                    <div className="text-xs text-gray-600">Independents</div>
                   </div>
                 </div>
               </div>
@@ -598,7 +598,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           {bill.textVersions && bill.textVersions.length > 0 && (
             <div className="bg-white border-2 border-black p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-purple-600" />
+                <FileText className="w-5 h-5 text-civiq-blue" />
                 Text Versions ({bill.textVersions.length})
               </h3>
               <div className="space-y-3">
@@ -617,7 +617,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                           href={format.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-white border border-gray-300 hover:border-purple-400 hover:bg-purple-50 transition-colors"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-white border border-gray-300 hover:border-civiq-blue hover:bg-blue-50 transition-colors"
                         >
                           {format.type}
                           <ExternalLink className="w-3 h-3" />
@@ -818,7 +818,7 @@ function BillTextSection({ fullText }: BillTextSectionProps) {
         className="w-full flex items-center justify-between text-left"
       >
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <Gavel className="w-5 h-5 text-purple-600" />
+          <Gavel className="w-5 h-5 text-civiq-blue" />
           Full Bill Text
         </h3>
         <div className="flex items-center gap-2">
@@ -853,7 +853,7 @@ function BillTextSection({ fullText }: BillTextSectionProps) {
             <div className="mt-4 text-center">
               <button
                 onClick={() => setShowFullText(true)}
-                className="px-4 py-2 bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors font-medium text-sm"
+                className="px-4 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors font-medium text-sm"
               >
                 Show Full Text ({Math.round(fullText.content.length / 1000)}KB)
               </button>

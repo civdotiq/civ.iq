@@ -25,10 +25,10 @@ const PARTY_COLORS = {
     hexLight: '#FEE2E2',
   },
   independent: {
-    text: 'text-purple-600',
-    bg: 'bg-purple-100',
-    hex: '#8B5CF6',
-    hexLight: '#EDE9FE',
+    text: 'text-gray-600',
+    bg: 'bg-gray-100',
+    hex: '#6B7280',
+    hexLight: '#F3F4F6',
   },
   unknown: {
     text: 'text-gray-600',

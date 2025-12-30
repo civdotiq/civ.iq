@@ -273,7 +273,7 @@ export default function DistrictsPage() {
                     placeholder="Search by district, representative name, state, or city..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
                   />
                 </div>
                 <div>
@@ -281,7 +281,7 @@ export default function DistrictsPage() {
                   <select
                     value={stateFilter}
                     onChange={e => setStateFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
+                    className="px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
                   >
                     <option value="all">All States</option>
                     {states.map(state => (
@@ -300,7 +300,7 @@ export default function DistrictsPage() {
                     onChange={e =>
                       setFilter(e.target.value as 'all' | 'competitive' | 'safe-d' | 'safe-r')
                     }
-                    className="px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
+                    className="px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-civiq-blue focus:border-civiq-blue"
                   >
                     <option value="all">All Districts</option>
                     <option value="competitive">Competitive (±5)</option>

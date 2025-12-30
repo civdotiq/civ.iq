@@ -26,7 +26,7 @@ const CATEGORY_COLORS: Record<GlossaryCategory, { bg: string; text: string; bord
   elections: { bg: 'bg-civiq-red/10', text: 'text-civiq-red', border: 'border-civiq-red/30' },
   committees: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
   voting: { bg: 'bg-civiq-green/10', text: 'text-civiq-green', border: 'border-civiq-green/30' },
-  executive: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+  executive: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
   judiciary: { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-300' },
   'state-government': { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
   'campaign-finance': {

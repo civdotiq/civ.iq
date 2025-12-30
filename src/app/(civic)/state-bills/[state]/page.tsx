@@ -98,7 +98,7 @@ function BillCard({ bill }: { bill: StateBill }) {
       case 'floor':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'committee':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
         return 'bg-orange-100 text-orange-800 border-orange-200';
     }
@@ -128,7 +128,7 @@ function BillCard({ bill }: { bill: StateBill }) {
       case 'Republican':
         return 'text-red-600';
       default:
-        return 'text-purple-600';
+        return 'text-gray-600';
     }
   };
 

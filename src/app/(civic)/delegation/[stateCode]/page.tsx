@@ -92,7 +92,7 @@ function DelegationCard({ member }: { member: DelegationMember }) {
                 {member.party}
               </span>
               {member.chamber === 'Senate' && (
-                <span className="px-2 py-0.5 text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                <span className="px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
                   Senator
                 </span>
               )}
@@ -266,7 +266,7 @@ export default async function StateDelegationPage({ params }: PageProps) {
             {senators.length > 0 && (
               <section>
                 <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-1 h-6 bg-purple-500"></span>
+                  <span className="w-1 h-6 bg-civiq-blue"></span>
                   U.S. Senators
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

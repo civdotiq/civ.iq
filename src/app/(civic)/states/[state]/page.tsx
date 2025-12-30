@@ -240,7 +240,7 @@ function PartyControl({ legislature }: { legislature: StateData['legislature'] }
                 {upperControl.control} Trifecta
               </span>
             ) : (
-              <span className="font-medium text-purple-600">Divided Government</span>
+              <span className="font-medium text-gray-600">Divided Government</span>
             )}
           </p>
         </div>

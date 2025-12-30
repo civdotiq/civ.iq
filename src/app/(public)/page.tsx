@@ -468,9 +468,9 @@ export default function Home() {
               className="group relative bg-white rounded-2xl p-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
               style={{ animationDelay: '1000ms' }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 to-pink-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-gray-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative">
-                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-purple-100/50 to-pink-100/50 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
+                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-blue-100/50 to-gray-100/50 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
                   <svg
                     viewBox="0 0 100 100"
                     fill="none"
@@ -501,7 +501,7 @@ export default function Home() {
                     <line x1="15" y1="75" x2="55" y2="75" stroke="#666" strokeWidth="3" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold mb-6 text-gray-900 group-hover:text-purple-600 transition-colors tracking-tight">
+                <h3 className="text-2xl font-bold mb-6 text-gray-900 group-hover:text-civiq-blue transition-colors tracking-tight">
                   Comparison Tools
                 </h3>
                 <p className="text-gray-700 leading-relaxed font-medium">

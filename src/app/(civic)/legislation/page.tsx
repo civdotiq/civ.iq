@@ -400,7 +400,7 @@ export default function LegislationPage() {
               </div>
               <div className="hidden md:block text-gray-400">→</div>
               <div className="text-center">
-                <div className="w-16 h-16 bg-purple-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                <div className="w-16 h-16 bg-blue-200 rounded-full flex items-center justify-center mx-auto mb-2">
                   <span className="text-2xl font-bold">4</span>
                 </div>
                 <p className="font-medium">Other Chamber</p>

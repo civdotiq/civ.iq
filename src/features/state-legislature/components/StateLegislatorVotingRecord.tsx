@@ -192,7 +192,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
     return (
       <div className="animate-pulse space-y-4">
         <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
           <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
           <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
           <div className="h-16 bg-white border-2 border-gray-300 rounded"></div>
@@ -331,7 +331,7 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
       )}
 
       {/* 5-Column Metrics Grid (matching federal pattern) */}
-      <div className="grid grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8">
         <div className="text-center">
           <div className="text-3xl font-bold">{totalVotes}</div>
           <div className="text-sm text-gray-500">Total Votes</div>

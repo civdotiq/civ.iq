@@ -292,11 +292,11 @@ export default function StatesHubPage() {
               <Link
                 key={territory.code}
                 href={`/delegation/${territory.code}`}
-                className="block p-3 bg-white border-2 border-gray-200 hover:border-purple-500 hover:bg-purple-50 text-center transition-colors"
+                className="block p-3 bg-white border-2 border-gray-200 hover:border-civiq-blue hover:bg-blue-50 text-center transition-colors"
               >
                 <span className="text-lg font-bold text-gray-800">{territory.code}</span>
                 <span className="block text-xs text-gray-500 truncate">{territory.name}</span>
-                <span className="block text-xs text-purple-600">{territory.delegate}</span>
+                <span className="block text-xs text-civiq-blue">{territory.delegate}</span>
               </Link>
             ))}
           </div>

@@ -122,7 +122,7 @@ function LegislatorCard({
       case 'Republican':
         return 'bg-red-100 text-red-800';
       case 'Independent':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-white border-2 border-gray-300 text-gray-800';
     }
@@ -494,7 +494,7 @@ export default function StateLegislaturePage() {
             <p className="text-sm text-gray-600">Active Bills</p>
           </div>
           <div className="bg-white border border-gray-200 p-6 text-center">
-            <Calendar className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+            <Calendar className="w-8 h-8 text-civiq-blue mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">2024</p>
             <p className="text-sm text-gray-600">Current Session</p>
           </div>
