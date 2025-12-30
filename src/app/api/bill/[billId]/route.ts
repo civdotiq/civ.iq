@@ -649,12 +649,13 @@ async function fetchBillVotes(
             }
 
             // Try to fetch detailed vote data if we have the URL
+            let hasRealVoteData = false;
             let yea = 0,
               nay = 0,
               present = 0,
               notVoting = 0;
-            let democraticBreakdown = { yea: 0, nay: 0, present: 0, notVoting: 0 };
-            let republicanBreakdown = { yea: 0, nay: 0, present: 0, notVoting: 0 };
+            const democraticBreakdown = { yea: 0, nay: 0, present: 0, notVoting: 0 };
+            const republicanBreakdown = { yea: 0, nay: 0, present: 0, notVoting: 0 };
             const independentBreakdown = { yea: 0, nay: 0, present: 0, notVoting: 0 };
 
             if (recordedVote.url) {
@@ -670,17 +671,18 @@ async function fetchBillVotes(
                   nay = rollCallData.totals.nay;
                   present = rollCallData.totals.present;
                   notVoting = rollCallData.totals.notVoting;
+                  hasRealVoteData = true;
 
                   // Calculate party breakdowns from actual votes
-                  for (const vote of rollCallData.votes) {
+                  for (const v of rollCallData.votes) {
                     const partyBreakdown =
-                      vote.party === 'D'
+                      v.party === 'D'
                         ? democraticBreakdown
-                        : vote.party === 'R'
+                        : v.party === 'R'
                           ? republicanBreakdown
                           : independentBreakdown;
 
-                    switch (vote.vote) {
+                    switch (v.vote) {
                       case 'Yea':
                         partyBreakdown.yea++;
                         break;
@@ -701,65 +703,17 @@ async function fetchBillVotes(
                     totalVotes: rollCallData.votes.length,
                   });
                 } else {
-                  // Fallback to placeholder data if parsing fails
-                  if (chamber === 'House') {
-                    yea = result === 'Passed' ? 250 : 180;
-                    nay = result === 'Passed' ? 180 : 250;
-                    present = 2;
-                    notVoting = 3;
-                  } else {
-                    yea = result === 'Passed' ? 60 : 40;
-                    nay = result === 'Passed' ? 40 : 60;
-                    present = 0;
-                    notVoting = 0;
-                  }
-
-                  // Estimate party breakdowns for fallback data
-                  democraticBreakdown = {
-                    yea: chamber === 'House' ? Math.floor(yea * 0.55) : Math.floor(yea * 0.48),
-                    nay: chamber === 'House' ? Math.floor(nay * 0.1) : Math.floor(nay * 0.05),
-                    present: Math.floor(present * 0.5),
-                    notVoting: Math.floor(notVoting * 0.5),
-                  };
-                  republicanBreakdown = {
-                    yea: chamber === 'House' ? Math.floor(yea * 0.45) : Math.floor(yea * 0.52),
-                    nay: chamber === 'House' ? Math.floor(nay * 0.9) : Math.floor(nay * 0.95),
-                    present: Math.floor(present * 0.5),
-                    notVoting: Math.floor(notVoting * 0.5),
-                  };
+                  // Vote counts unavailable - don't use placeholder data
+                  logger.warn('Roll call data parsing returned no results', {
+                    url: recordedVote.url,
+                  });
                 }
               } catch (error) {
                 logger.warn('Failed to fetch roll call details', {
                   url: recordedVote.url,
                   error: (error as Error).message,
                 });
-
-                // Use placeholder data on error
-                if (chamber === 'House') {
-                  yea = result === 'Passed' ? 250 : 180;
-                  nay = result === 'Passed' ? 180 : 250;
-                  present = 2;
-                  notVoting = 3;
-                } else {
-                  yea = result === 'Passed' ? 60 : 40;
-                  nay = result === 'Passed' ? 40 : 60;
-                  present = 0;
-                  notVoting = 0;
-                }
-
-                // Estimate party breakdowns for fallback data
-                democraticBreakdown = {
-                  yea: chamber === 'House' ? Math.floor(yea * 0.55) : Math.floor(yea * 0.48),
-                  nay: chamber === 'House' ? Math.floor(nay * 0.1) : Math.floor(nay * 0.05),
-                  present: Math.floor(present * 0.5),
-                  notVoting: Math.floor(notVoting * 0.5),
-                };
-                republicanBreakdown = {
-                  yea: chamber === 'House' ? Math.floor(yea * 0.45) : Math.floor(yea * 0.52),
-                  nay: chamber === 'House' ? Math.floor(nay * 0.9) : Math.floor(nay * 0.95),
-                  present: Math.floor(present * 0.5),
-                  notVoting: Math.floor(notVoting * 0.5),
-                };
+                // Vote counts unavailable - don't use placeholder data
               }
             }
 
@@ -770,17 +724,17 @@ async function fetchBillVotes(
               rollNumber: recordedVote.rollNumber,
               question,
               result: result as 'Passed' | 'Failed' | 'Agreed to' | 'Disagreed to',
-              votes: {
-                yea,
-                nay,
-                present,
-                notVoting,
-              },
-              breakdown: {
-                democratic: democraticBreakdown,
-                republican: republicanBreakdown,
-                independent: independentBreakdown,
-              },
+              // Only include vote counts if we have real data from Congress.gov
+              ...(hasRealVoteData
+                ? {
+                    votes: { yea, nay, present, notVoting },
+                    breakdown: {
+                      democratic: democraticBreakdown,
+                      republican: republicanBreakdown,
+                      independent: independentBreakdown,
+                    },
+                  }
+                : { votesUnavailable: true }),
             };
 
             votes.push(vote);
@@ -872,7 +826,7 @@ export async function GET(
         {
           bill: {} as Bill,
           metadata: {
-            dataSource: 'mock',
+            dataSource: 'unavailable',
             lastUpdated: new Date().toISOString(),
             votesCount: 0,
             cosponsorsCount: 0,
@@ -913,7 +867,7 @@ export async function GET(
     const response: BillAPIResponse = {
       bill,
       metadata: {
-        dataSource: process.env.CONGRESS_API_KEY && bill.url ? 'congress.gov' : 'mock',
+        dataSource: 'congress.gov',
         lastUpdated: bill.lastUpdated,
         votesCount: bill.votes.length,
         cosponsorsCount: bill.cosponsors.length,
@@ -948,7 +902,7 @@ export async function GET(
       {
         bill: {} as Bill,
         metadata: {
-          dataSource: 'mock',
+          dataSource: 'unavailable',
           lastUpdated: new Date().toISOString(),
           votesCount: 0,
           cosponsorsCount: 0,

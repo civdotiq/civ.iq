@@ -348,53 +348,63 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
                       </div>
 
                       {/* Vote Breakdown */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-3">
-                        <div className="text-center p-2 bg-green-50 rounded">
-                          <div className="text-lg font-bold text-green-700">{vote.votes.yea}</div>
-                          <div className="text-xs text-green-600">Yea</div>
-                        </div>
-                        <div className="text-center p-2 bg-red-50 rounded">
-                          <div className="text-lg font-bold text-red-700">{vote.votes.nay}</div>
-                          <div className="text-xs text-red-600">Nay</div>
-                        </div>
-                        <div className="text-center p-2 bg-yellow-50 rounded">
-                          <div className="text-lg font-bold text-yellow-700">
-                            {vote.votes.present}
+                      {vote.votes ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-3">
+                          <div className="text-center p-2 bg-green-50 rounded">
+                            <div className="text-lg font-bold text-green-700">{vote.votes.yea}</div>
+                            <div className="text-xs text-green-600">Yea</div>
                           </div>
-                          <div className="text-xs text-yellow-600">Present</div>
-                        </div>
-                        <div className="text-center p-2 bg-gray-50 rounded">
-                          <div className="text-lg font-bold text-gray-700">
-                            {vote.votes.notVoting}
+                          <div className="text-center p-2 bg-red-50 rounded">
+                            <div className="text-lg font-bold text-red-700">{vote.votes.nay}</div>
+                            <div className="text-xs text-red-600">Nay</div>
                           </div>
-                          <div className="text-xs text-gray-600">Not Voting</div>
+                          <div className="text-center p-2 bg-yellow-50 rounded">
+                            <div className="text-lg font-bold text-yellow-700">
+                              {vote.votes.present}
+                            </div>
+                            <div className="text-xs text-yellow-600">Present</div>
+                          </div>
+                          <div className="text-center p-2 bg-gray-50 rounded">
+                            <div className="text-lg font-bold text-gray-700">
+                              {vote.votes.notVoting}
+                            </div>
+                            <div className="text-xs text-gray-600">Not Voting</div>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="text-center p-3 bg-gray-50 rounded mb-3">
+                          <p className="text-sm text-gray-600">
+                            Vote counts unavailable from Congress.gov
+                          </p>
+                        </div>
+                      )}
 
                       {/* Party Breakdown */}
-                      <div className="grid grid-cols-3 gap-2 text-xs">
-                        <div className="bg-blue-50 p-2 rounded">
-                          <div className="font-medium text-blue-800 mb-1">Democrats</div>
-                          <div className="text-blue-700">
-                            {vote.breakdown.democratic.yea} Yea / {vote.breakdown.democratic.nay}{' '}
-                            Nay
+                      {vote.breakdown ? (
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div className="bg-blue-50 p-2 rounded">
+                            <div className="font-medium text-blue-800 mb-1">Democrats</div>
+                            <div className="text-blue-700">
+                              {vote.breakdown.democratic.yea} Yea / {vote.breakdown.democratic.nay}{' '}
+                              Nay
+                            </div>
+                          </div>
+                          <div className="bg-red-50 p-2 rounded">
+                            <div className="font-medium text-red-800 mb-1">Republicans</div>
+                            <div className="text-red-700">
+                              {vote.breakdown.republican.yea} Yea / {vote.breakdown.republican.nay}{' '}
+                              Nay
+                            </div>
+                          </div>
+                          <div className="bg-gray-50 p-2 rounded">
+                            <div className="font-medium text-gray-800 mb-1">Independents</div>
+                            <div className="text-gray-700">
+                              {vote.breakdown.independent.yea} Yea /{' '}
+                              {vote.breakdown.independent.nay} Nay
+                            </div>
                           </div>
                         </div>
-                        <div className="bg-red-50 p-2 rounded">
-                          <div className="font-medium text-red-800 mb-1">Republicans</div>
-                          <div className="text-red-700">
-                            {vote.breakdown.republican.yea} Yea / {vote.breakdown.republican.nay}{' '}
-                            Nay
-                          </div>
-                        </div>
-                        <div className="bg-gray-50 p-2 rounded">
-                          <div className="font-medium text-gray-800 mb-1">Independents</div>
-                          <div className="text-gray-700">
-                            {vote.breakdown.independent.yea} Yea / {vote.breakdown.independent.nay}{' '}
-                            Nay
-                          </div>
-                        </div>
-                      </div>
+                      ) : null}
 
                       <div className="mt-3 text-sm text-blue-600 font-medium flex items-center gap-1">
                         View all {vote.chamber === 'Senate' ? '100' : '435'} member votes →

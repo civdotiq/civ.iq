@@ -419,7 +419,7 @@ export async function GET(
         {
           committee: {} as Committee,
           metadata: {
-            dataSource: 'mock',
+            dataSource: 'unavailable',
             lastUpdated: new Date().toISOString(),
             memberCount: 0,
             subcommitteeCount: 0,
@@ -469,7 +469,7 @@ export async function GET(
     const response: CommitteeAPIResponse = {
       committee,
       metadata: {
-        dataSource: committee.members.length > 0 ? 'congress-legislators' : 'mock',
+        dataSource: committee.members.length > 0 ? 'congress-legislators' : 'unavailable',
         lastUpdated: committee.lastUpdated,
         memberCount: committee.members.length,
         subcommitteeCount: committee.subcommittees.length,
@@ -493,7 +493,7 @@ export async function GET(
       {
         committee: {} as Committee,
         metadata: {
-          dataSource: 'mock',
+          dataSource: 'unavailable',
           lastUpdated: new Date().toISOString(),
           memberCount: 0,
           subcommitteeCount: 0,

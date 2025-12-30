@@ -55,7 +55,7 @@ export interface Subcommittee {
 export interface CommitteeAPIResponse {
   committee: Committee;
   metadata: {
-    dataSource: 'congress.gov' | 'congress-legislators' | 'mock';
+    dataSource: 'congress.gov' | 'congress-legislators' | 'unavailable';
     lastUpdated: string;
     memberCount: number;
     subcommitteeCount: number;

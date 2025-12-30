@@ -151,13 +151,15 @@ export interface BillVote {
   question: string;
   result: 'Passed' | 'Failed' | 'Agreed to' | 'Disagreed to';
   rollNumber?: number;
-  votes: {
+  /** When true, vote counts couldn't be retrieved from Congress.gov */
+  votesUnavailable?: boolean;
+  votes?: {
     yea: number;
     nay: number;
     present: number;
     notVoting: number;
   };
-  breakdown: {
+  breakdown?: {
     democratic: { yea: number; nay: number; present: number; notVoting: number };
     republican: { yea: number; nay: number; present: number; notVoting: number };
     independent: { yea: number; nay: number; present: number; notVoting: number };
@@ -171,7 +173,7 @@ export interface BillVote {
 export interface BillAPIResponse {
   bill: Bill;
   metadata: {
-    dataSource: 'congress.gov' | 'mock';
+    dataSource: 'congress.gov' | 'unavailable';
     lastUpdated: string;
     cacheHit?: boolean;
     votesCount: number;
