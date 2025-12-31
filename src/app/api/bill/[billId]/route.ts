@@ -348,6 +348,65 @@ async function fetchBillCosponsors(
   }
 }
 
+// Helper function to fetch bill actions from Congress.gov
+async function fetchBillActions(
+  congress: string,
+  type: string,
+  number: string
+): Promise<CongressAction[]> {
+  try {
+    logger.info('Fetching bill actions from Congress.gov', {
+      congress,
+      type,
+      number,
+    });
+
+    const actionsResponse = await fetch(
+      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/actions?api_key=${process.env.CONGRESS_API_KEY}&format=json&limit=250`,
+      {
+        headers: {
+          'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+          Accept: 'application/json',
+        },
+      }
+    );
+
+    const monitor = monitorExternalApi('congress', 'bill-actions', actionsResponse.url);
+
+    if (!actionsResponse.ok) {
+      monitor.end(false, actionsResponse.status);
+      logger.warn('Failed to fetch actions', {
+        status: actionsResponse.status,
+        congress,
+        type,
+        number,
+      });
+      return [];
+    }
+
+    const actionsData: { actions: CongressAction[] } = await actionsResponse.json();
+    monitor.end(true, 200);
+
+    const actions = actionsData.actions || [];
+    logger.info('Successfully fetched actions', {
+      congress,
+      type,
+      number,
+      count: actions.length,
+      withVotes: actions.filter(a => a.recordedVotes && a.recordedVotes.length > 0).length,
+    });
+
+    return actions;
+  } catch (error) {
+    logger.error('Error fetching bill actions', error as Error, {
+      congress,
+      type,
+      number,
+    });
+    return [];
+  }
+}
+
 // Helper function to fetch bill data from Congress.gov
 async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
   const { type, number, congress } = parseBillNumber(billId);
@@ -410,6 +469,9 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
         // Fetch full bill text content
         const billText = await fetchBillText(congress.toString(), type, number.toString());
 
+        // Fetch bill actions (needed for recorded votes)
+        const billActions = await fetchBillActions(congress.toString(), type, number.toString());
+
         // Transform Congress.gov data to our Bill interface
         const result: Bill = {
           id: `${bill.congress}-${bill.type}-${bill.number}`,
@@ -428,15 +490,13 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
               description: bill.latestAction?.text || 'Introduced',
               chamber: bill.latestAction?.actionCode?.startsWith('H') ? 'House' : 'Senate',
             },
-            timeline: Array.isArray(bill.actions)
-              ? bill.actions.map((action: CongressAction) => ({
-                  date: action.actionDate,
-                  description: action.text,
-                  chamber: action.actionCode?.startsWith('H') ? 'House' : 'Senate',
-                  actionCode: action.actionCode,
-                  type: 'action' as const,
-                }))
-              : [],
+            timeline: billActions.map((action: CongressAction) => ({
+              date: action.actionDate,
+              description: action.text,
+              chamber: action.actionCode?.startsWith('H') ? 'House' : 'Senate',
+              actionCode: action.actionCode,
+              type: 'action' as const,
+            })),
           },
 
           sponsor: {
@@ -584,7 +644,12 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
         };
 
         // Fetch actual votes for this bill
-        const votes = await fetchBillVotes(bill, congress.toString(), type, number.toString());
+        const votes = await fetchBillVotes(
+          billActions,
+          congress.toString(),
+          type,
+          number.toString()
+        );
         result.votes = votes;
 
         logger.info('Successfully fetched bill data', {
@@ -609,7 +674,7 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
 
 // Helper function to fetch votes for a specific bill
 async function fetchBillVotes(
-  billData: CongressBillData,
+  actions: CongressAction[],
   congress: string,
   type: string,
   number: string
@@ -618,8 +683,8 @@ async function fetchBillVotes(
 
   try {
     // Look for recorded votes in bill actions
-    if (Array.isArray(billData.actions) && billData.actions.length > 0) {
-      for (const action of billData.actions) {
+    if (actions.length > 0) {
+      for (const action of actions) {
         if (action.recordedVotes && action.recordedVotes.length > 0) {
           for (const recordedVote of action.recordedVotes) {
             // Parse the vote information
