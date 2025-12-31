@@ -354,9 +354,9 @@ npm run diagnose:apis          # Test API connectivity
 
 ## 🌐 API Endpoints
 
-**Total: 100 API Endpoints** - All return real data or appropriate error messages.
+**Total: 101 API Endpoints** - All return real data or appropriate error messages.
 
-### Federal Representatives (15 endpoints)
+### Federal Representatives (16 endpoints)
 
 **Includes territorial delegates:** All 5 U.S. territories are represented with non-voting delegates (PR, VI, GU, AS, MP)
 
@@ -376,6 +376,7 @@ GET /api/representative/[bioguideId]/committees             # Committee assignme
 GET /api/representative/[bioguideId]/leadership             # Leadership positions
 GET /api/representative/[bioguideId]/party-alignment        # Party voting alignment
 GET /api/representative/[bioguideId]/trending               # Trending topics
+GET /api/representative/[bioguideId]/connections            # Hypertext connections (agencies, spending, hearings, comments)
 ```
 
 ### Campaign Finance (8 endpoints)
@@ -649,6 +650,12 @@ npx tsc --noEmit [fixed-file]
 - Committee profiles with Wikipedia integration
 - Bill tracking and legislative timelines
 - 119th Congress statistics and metadata
+- **Hypertext connections endpoint** - Links representatives to related civic data:
+  - Committee-to-agency mapping (what agencies each rep oversees)
+  - District spending from USAspending.gov (contracts and grants)
+  - Relevant congressional hearings from GovInfo
+  - Open comment periods from Federal Register
+  - State legislators and city council members
 
 **State & Local Government:**
 
