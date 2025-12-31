@@ -354,7 +354,7 @@ npm run diagnose:apis          # Test API connectivity
 
 ## 🌐 API Endpoints
 
-**Total: 99 API Endpoints** - All return real data or appropriate error messages.
+**Total: 100 API Endpoints** - All return real data or appropriate error messages.
 
 ### Federal Representatives (15 endpoints)
 
@@ -488,6 +488,12 @@ GET /api/spending/geography                                 # Geographic spendin
 
 ```typescript
 GET /api/govinfo/hearings                                   # Congressional hearings (filterable by congress, chamber)
+```
+
+### Local Government (1 endpoint)
+
+```typescript
+GET /api/city/[cityId]/council                              # City council members (10 cities: Chicago, Seattle, Boston, etc.)
 ```
 
 ### Geocoding & Location (4 endpoints)
