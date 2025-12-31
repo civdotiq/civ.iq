@@ -354,7 +354,7 @@ npm run diagnose:apis          # Test API connectivity
 
 ## 🌐 API Endpoints
 
-**Total: 96 API Endpoints** - All return real data or appropriate error messages.
+**Total: 98 API Endpoints** - All return real data or appropriate error messages.
 
 ### Federal Representatives (15 endpoints)
 
@@ -475,6 +475,13 @@ GET /api/witnesses                                          # Congressional hear
 GET /api/federal-register                                   # All Federal Register documents (filterable)
 GET /api/federal-register/executive-orders                  # Presidential executive orders
 GET /api/federal-register/comment-periods                   # Open public comment periods (civic participation!)
+```
+
+### Federal Spending (2 endpoints)
+
+```typescript
+GET /api/spending/district/[districtId]                     # Federal contracts & grants by congressional district
+GET /api/spending/geography                                 # Geographic spending data (for maps)
 ```
 
 ### Geocoding & Location (4 endpoints)
