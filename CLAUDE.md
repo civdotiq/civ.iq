@@ -354,7 +354,7 @@ npm run diagnose:apis          # Test API connectivity
 
 ## 🌐 API Endpoints
 
-**Total: 93 API Endpoints** - All return real data or appropriate error messages.
+**Total: 96 API Endpoints** - All return real data or appropriate error messages.
 
 ### Federal Representatives (15 endpoints)
 
@@ -467,6 +467,14 @@ GET /api/congress/119th/stats                               # Session statistics
 ```typescript
 GET /api/floor-schedule                                     # House/Senate floor schedule (bills this week)
 GET /api/witnesses                                          # Congressional hearing witnesses (searchable)
+```
+
+### Federal Register (3 endpoints)
+
+```typescript
+GET /api/federal-register                                   # All Federal Register documents (filterable)
+GET /api/federal-register/executive-orders                  # Presidential executive orders
+GET /api/federal-register/comment-periods                   # Open public comment periods (civic participation!)
 ```
 
 ### Geocoding & Location (4 endpoints)
@@ -752,6 +760,8 @@ echo "GOAL: [What you're implementing]" >> .session.log
 
 **December 2025:**
 
+- ✅ **Committees Directory Page** - Rebuilt `/committees` page with static data (45 committees, 546 subcommittees), collapsible subcommittee lists using native `<details>`/`<summary>`, clickable stat boxes linking to chamber sections, and linked subcommittee names to their detail pages
+- ✅ **FEC Lazy Singleton** - Fixed build-time error by changing FEC API service from eager to lazy Proxy-based initialization (prevents `FEC_API_KEY required` error during static generation)
 - ✅ **Census Gazetteer Integration** - Added static `district-gazetteer.json` with real land area data for all 440 congressional districts (119th Congress) from Census Bureau 2024 Gazetteer, eliminating hardcoded fallback values
 
 **November 2025:**
