@@ -19,6 +19,33 @@ import {
 export const revalidate = 86400;
 export const dynamic = 'force-dynamic';
 
+// Helper function to parse subcommittee IDs (e.g., "SSGA20" -> { parentId: "SSGA", subcommitteeNum: "20" })
+function parseSubcommitteeId(committeeId: string): {
+  isSubcommittee: boolean;
+  parentId: string;
+  subcommitteeNum: string;
+} {
+  const upperCommitteeId = committeeId.toUpperCase();
+
+  // Pattern: 4 letters (parent) + 2 digits (subcommittee number)
+  // Examples: SSGA20, HSAG14, SSEV10
+  const match = upperCommitteeId.match(/^([A-Z]{4})(\d{2})$/);
+
+  if (match && match[1] && match[2]) {
+    return {
+      isSubcommittee: true,
+      parentId: match[1],
+      subcommitteeNum: match[2],
+    };
+  }
+
+  return {
+    isSubcommittee: false,
+    parentId: upperCommitteeId,
+    subcommitteeNum: '',
+  };
+}
+
 // Helper function to get committee metadata
 function getCommitteeMetadata(committeeId: string) {
   const upperCommitteeId = committeeId.toUpperCase();
@@ -65,6 +92,9 @@ async function fetchCommitteeFromCongressLegislators(
       try {
         logger.info('Fetching committee data from congress-legislators', { committeeId });
 
+        // Check if this is a subcommittee ID (e.g., "SSGA20")
+        const subcommitteeInfo = parseSubcommitteeId(committeeId);
+
         // Get committees and memberships data from congress-legislators
         const [committees, memberships, allRepresentatives] = await Promise.all([
           fetchCommittees(),
@@ -76,15 +106,21 @@ async function fetchCommitteeFromCongressLegislators(
           committeesCount: committees.length,
           membershipsCount: memberships.length,
           representativesCount: allRepresentatives.length,
+          isSubcommittee: subcommitteeInfo.isSubcommittee,
+          parentId: subcommitteeInfo.parentId,
+          subcommitteeNum: subcommitteeInfo.subcommitteeNum,
         });
 
         // Find the committee by ID (try both exact match and variations)
+        // For subcommittees, look up the parent committee first
+        const searchId = subcommitteeInfo.isSubcommittee ? subcommitteeInfo.parentId : committeeId;
+
         const committee = committees.find(
           c =>
-            c.thomas_id === committeeId ||
-            c.thomas_id === committeeId.toUpperCase() ||
-            c.house_committee_id === committeeId ||
-            c.senate_committee_id === committeeId
+            c.thomas_id === searchId ||
+            c.thomas_id === searchId.toUpperCase() ||
+            c.house_committee_id === searchId ||
+            c.senate_committee_id === searchId
         );
 
         if (!committee) {
@@ -318,6 +354,54 @@ async function fetchCommitteeFromCongressLegislators(
           hasRankingMember: !!result.leadership.rankingMember,
           subcommitteeCount: result.subcommittees.length,
         });
+
+        // If this was a subcommittee request, return subcommittee-focused response
+        if (subcommitteeInfo.isSubcommittee && committee.subcommittees) {
+          const targetSubcommittee = committee.subcommittees.find(
+            sub => sub.thomas_id === subcommitteeInfo.subcommitteeNum
+          );
+
+          if (targetSubcommittee) {
+            const subcommitteeFullId = `${committee.thomas_id}${targetSubcommittee.thomas_id}`;
+            const subMembers = subcommitteeMembersMap.get(subcommitteeFullId) || [];
+            const subChair = subMembers.find(m => m.role === 'Chair');
+            const subRankingMember = subMembers.find(m => m.role === 'Ranking Member');
+
+            logger.info('Returning subcommittee-focused response', {
+              requestedId: committeeId,
+              parentCommittee: committee.thomas_id,
+              subcommitteeName: targetSubcommittee.name,
+              subcommitteeMemberCount: subMembers.length,
+            });
+
+            // Return a Committee object focused on the subcommittee
+            const subcommitteeResult: Committee = {
+              id: subcommitteeFullId,
+              thomas_id: subcommitteeFullId,
+              name: targetSubcommittee.name,
+              chamber: result.chamber,
+              jurisdiction: `Subcommittee of ${committee.name}. Parent committee: ${committee.thomas_id}`,
+              type: 'Select', // Use 'Select' for subcommittees (closest match in allowed types)
+              leadership: {
+                chair: subChair,
+                rankingMember: subRankingMember,
+              },
+              members: subMembers,
+              subcommittees: [], // Subcommittees don't have their own subcommittees
+              url: `https://www.congress.gov/committee/${committee.thomas_id.toLowerCase()}`,
+              lastUpdated: new Date().toISOString(),
+            };
+
+            return subcommitteeResult;
+          } else {
+            logger.warn('Subcommittee not found within parent committee', {
+              requestedId: committeeId,
+              parentCommittee: committee.thomas_id,
+              subcommitteeNum: subcommitteeInfo.subcommitteeNum,
+              availableSubcommittees: committee.subcommittees.map(s => s.thomas_id),
+            });
+          }
+        }
 
         return result;
       } catch (error) {
