@@ -25,7 +25,7 @@ import {
 import logger from '@/lib/logging/simple-logger';
 import { findBioguideId } from '@/lib/data/senate-member-mappings';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
-import { getServerBaseUrl } from '@/lib/server-url';
+import { getVoteDetailsService } from '@/lib/services/vote.service';
 
 // Types for the vote detail data
 interface VoteDetail {
@@ -81,24 +81,11 @@ interface VoteDetailPageProps {
   searchParams: Promise<{ from?: string; name?: string }>;
 }
 
-// Fetch vote details from our API
+// Fetch vote details directly from service (no HTTP roundtrip)
 async function fetchVoteDetails(voteId: string): Promise<VoteDetail | null> {
   try {
-    // Pass full voteId to API - it handles parsing chamber-prefixed IDs like "house-119-305"
-    const baseUrl = getServerBaseUrl();
-    const response = await fetch(`${baseUrl}/api/vote/${voteId}`, {
-      cache: 'force-cache',
-    });
-
-    if (!response.ok) {
-      logger.error('Failed to fetch vote details', new Error(`HTTP ${response.status}`), {
-        voteId,
-      });
-      return null;
-    }
-
-    const data = await response.json();
-    return data.success ? data.vote : null;
+    const vote = await getVoteDetailsService(voteId);
+    return vote as VoteDetail | null;
   } catch (error) {
     logger.error('Error fetching vote details', error as Error, { voteId });
     return null;
