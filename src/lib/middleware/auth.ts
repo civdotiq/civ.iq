@@ -97,7 +97,7 @@ class ApiKeyManager {
   }
 
   listKeys(): Omit<ApiKey, 'key'>[] {
-    return Array.from(this.keys.values()).map(({ key, ...rest }) => rest);
+    return Array.from(this.keys.values()).map(({ key: _key, ...rest }) => rest);
   }
 }
 
@@ -176,7 +176,7 @@ export function requireAuth(permissions: string[] = ['read']) {
       }
 
       // Add API key info to request for logging
-      (request as any).apiKey = keyData;
+      (request as unknown as { apiKey: ApiKey }).apiKey = keyData;
 
       return originalMethod.call(this, request, ...args);
     };
@@ -261,6 +261,7 @@ export async function withAuth(
   try {
     return await handler(request, authResult.apiKey);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Handler error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

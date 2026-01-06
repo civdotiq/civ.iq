@@ -12,7 +12,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ValidationResult, validateApiInput, XSSProtection } from './schemas';
 import logger from '@/lib/logging/simple-logger';
 
-export interface ValidationConfig<T = any> {
+/** Route params type for Next.js dynamic routes */
+type RouteParams = Record<string, string | string[]>;
+
+export interface ValidationConfig<T = unknown> {
   query?: Record<keyof T, (value: unknown) => ValidationResult>;
   body?: Record<keyof T, (value: unknown) => ValidationResult>;
   params?: Record<keyof T, (value: unknown) => ValidationResult>;
@@ -20,24 +23,24 @@ export interface ValidationConfig<T = any> {
   logValidationErrors?: boolean;
 }
 
-export interface ValidatedRequest<T = any> extends NextRequest {
+export interface ValidatedRequest<T = unknown> extends NextRequest {
   validatedQuery?: T;
   validatedBody?: T;
   validatedParams?: T;
 }
 
-export type ApiHandler<T = any> = (
+export type ApiHandler<T = unknown> = (
   request: ValidatedRequest<T>,
-  params?: { params: Promise<any> }
+  params?: { params: Promise<RouteParams> }
 ) => Promise<NextResponse>;
 
 /**
  * Middleware wrapper that validates and sanitizes API inputs
  */
-export function withValidation<T = any>(config: ValidationConfig<T>, handler: ApiHandler<T>) {
+export function withValidation<T = unknown>(config: ValidationConfig<T>, handler: ApiHandler<T>) {
   return async (
     request: NextRequest,
-    context?: { params: Promise<any> }
+    context?: { params: Promise<RouteParams> }
   ): Promise<NextResponse> => {
     const startTime = Date.now();
     const { pathname } = new URL(request.url);
@@ -45,13 +48,13 @@ export function withValidation<T = any>(config: ValidationConfig<T>, handler: Ap
     try {
       // Extract input data
       const searchParams = new URL(request.url).searchParams;
-      const queryObject: Record<string, any> = {};
+      const queryObject: Record<string, string> = {};
 
       searchParams.forEach((value, key) => {
         queryObject[key] = value;
       });
 
-      let bodyObject: Record<string, any> = {};
+      let bodyObject: Record<string, unknown> = {};
       if (request.method !== 'GET' && request.method !== 'HEAD') {
         try {
           const contentType = request.headers.get('content-type') || '';
@@ -73,7 +76,7 @@ export function withValidation<T = any>(config: ValidationConfig<T>, handler: Ap
         }
       }
 
-      let paramsObject: Record<string, any> = {};
+      let paramsObject: RouteParams = {};
       if (context?.params) {
         paramsObject = await context.params;
       }
@@ -212,7 +215,7 @@ export function validateRateLimit(request: NextRequest, limit: number, windowMs:
  * Security headers middleware
  */
 export function withSecurityHeaders(handler: ApiHandler) {
-  return async (request: NextRequest, context?: { params: Promise<any> }) => {
+  return async (request: NextRequest, context?: { params: Promise<RouteParams> }) => {
     const response = await handler(request, context);
 
     // Add security headers
@@ -263,7 +266,7 @@ export function withSecurityHeaders(handler: ApiHandler) {
 /**
  * Combined middleware for validation and security
  */
-export function withValidationAndSecurity<T = any>(
+export function withValidationAndSecurity<T = unknown>(
   validationConfig: ValidationConfig<T>,
   handler: ApiHandler<T>
 ) {
@@ -277,14 +280,14 @@ export class InputSanitizer {
   /**
    * Sanitize all string values in an object recursively
    */
-  static sanitizeObject<T extends Record<string, any>>(obj: T): T {
+  static sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
     return XSSProtection.sanitizeObject(obj);
   }
 
   /**
    * Sanitize array of objects
    */
-  static sanitizeArray<T extends Record<string, any>>(arr: T[]): T[] {
+  static sanitizeArray<T extends Record<string, unknown>>(arr: T[]): T[] {
     return arr.map(item => this.sanitizeObject(item));
   }
 

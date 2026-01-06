@@ -12,6 +12,11 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 }
 
+// iOS Safari standalone mode extension
+interface IOSNavigator extends Navigator {
+  standalone?: boolean;
+}
+
 interface InstallPromptState {
   deferredPrompt: BeforeInstallPromptEvent | null;
   showInstallButton: boolean;
@@ -33,7 +38,7 @@ export function InstallPrompt() {
     // Check if app is already running in standalone mode
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone ||
+      (window.navigator as IOSNavigator).standalone ||
       document.referrer.includes('android-app://');
 
     setState(prev => ({ ...prev, isStandalone }));
@@ -47,6 +52,7 @@ export function InstallPrompt() {
     // Listen for the beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       const event = e as BeforeInstallPromptEvent;
+      // eslint-disable-next-line no-console -- Intentional PWA debug logging
       console.log('[PWA] Install prompt event received');
 
       // Prevent the mini-infobar from appearing on mobile
@@ -62,6 +68,7 @@ export function InstallPrompt() {
 
     // Listen for app installed event
     const handleAppInstalled = () => {
+      // eslint-disable-next-line no-console -- Intentional PWA debug logging
       console.log('[PWA] App was installed');
       localStorage.setItem('pwa-installed', 'true');
       setState(prev => ({
@@ -77,7 +84,7 @@ export function InstallPrompt() {
 
     // iOS specific detection
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isInIOSStandalone = (window.navigator as any).standalone;
+    const isInIOSStandalone = (window.navigator as IOSNavigator).standalone;
 
     if (isIOS && !isInIOSStandalone) {
       // Show iOS install instructions after a delay
@@ -99,6 +106,7 @@ export function InstallPrompt() {
       return;
     }
 
+    // eslint-disable-next-line no-console -- Intentional PWA debug logging
     console.log('[PWA] Showing install prompt');
 
     // Show the install prompt
@@ -107,6 +115,7 @@ export function InstallPrompt() {
     // Wait for the user to respond
     const { outcome } = await state.deferredPrompt.userChoice;
 
+    // eslint-disable-next-line no-console -- Intentional PWA debug logging
     console.log('[PWA] User choice:', outcome);
 
     setState(prev => ({
@@ -316,7 +325,8 @@ export function usePWADetection() {
   useEffect(() => {
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone;
+      (window.navigator as IOSNavigator).standalone ||
+      false;
     setIsPWA(isStandalone);
 
     const handleBeforeInstallPrompt = () => {

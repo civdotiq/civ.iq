@@ -142,6 +142,7 @@ export function ErrorSystemDemo() {
               error={sampleErrors[selectedError as keyof typeof sampleErrors]}
               onRetry={() => setSelectedError('')}
               onFeedback={(helpful, comment) => {
+                // eslint-disable-next-line no-console -- Demo logging
                 console.log('Feedback:', { helpful, comment });
                 alert(
                   `Feedback recorded: ${helpful ? 'Helpful' : 'Not helpful'}${comment ? ` -"${comment}"` : ''}`
@@ -162,7 +163,9 @@ export function ErrorSystemDemo() {
               key={key}
               error={error}
               compact={true}
+              // eslint-disable-next-line no-console -- Demo logging
               onRetry={() => console.log(`Retry ${key}`)}
+              // eslint-disable-next-line no-console -- Demo logging
               onDismiss={() => console.log(`Dismiss ${key}`)}
             />
           ))}
@@ -192,7 +195,8 @@ export function ErrorSystemDemo() {
 
         <div className="border border-gray-300 p-4">
           <EnhancedErrorBoundary
-            onError={(error, errorInfo) => {
+            onError={(error, _errorInfo) => {
+              // eslint-disable-next-line no-console -- Demo logging
               console.log('Error boundary caught:', error.toJSON());
             }}
             context={{ demo: 'error-boundary' }}
@@ -207,7 +211,7 @@ export function ErrorSystemDemo() {
       <div className="space-y-6">
         <h3 className="text-lg font-semibold">Error Toast Notifications</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Object.entries(sampleErrors).map(([key, error]) => (
+          {Object.keys(sampleErrors).map(key => (
             <button
               key={key}
               onClick={() => {
@@ -270,7 +274,7 @@ export function ErrorSystemDemo() {
           <div>
             <h3 className="font-medium mb-2 text-green-700">✅ Specific Messages</h3>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>• No more"Something went wrong"</li>
+              <li>• No more &quot;Something went wrong&quot;</li>
               <li>• Context-aware error descriptions</li>
               <li>• User-friendly language</li>
               <li>• Clear problem identification</li>
@@ -290,7 +294,7 @@ export function ErrorSystemDemo() {
           <div>
             <h3 className="font-medium mb-2 text-purple-700">📊 User Feedback</h3>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>•"Was this helpful?" collection</li>
+              <li>• &quot;Was this helpful?&quot; collection</li>
               <li>• Optional improvement comments</li>
               <li>• Error message effectiveness tracking</li>
               <li>• Continuous improvement data</li>

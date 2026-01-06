@@ -17,7 +17,7 @@ interface PerformanceMetric {
   success?: boolean;
   statusCode?: number;
   error?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 class EdgeTelemetry {
@@ -34,7 +34,7 @@ class EdgeTelemetry {
         userAgent: request?.headers.get('user-agent'),
         url: request?.url,
         method: request?.method,
-      }
+      },
     };
 
     return {
@@ -48,15 +48,18 @@ class EdgeTelemetry {
         this.recordMetric(metric);
 
         // Log performance info
-        console.log(JSON.stringify({
-          type: 'api_performance',
-          name,
-          duration: metric.duration,
-          success: metric.success,
-          statusCode,
-          timestamp: new Date().toISOString()
-        }));
-      }
+        // eslint-disable-next-line no-console -- Intentional telemetry logging
+        console.log(
+          JSON.stringify({
+            type: 'api_performance',
+            name,
+            duration: metric.duration,
+            success: metric.success,
+            statusCode,
+            timestamp: new Date().toISOString(),
+          })
+        );
+      },
     };
   }
 
@@ -68,7 +71,7 @@ class EdgeTelemetry {
     return {
       end: (success: boolean = true, statusCode?: number, error?: Error) => {
         const duration = Date.now() - startTime;
-        
+
         const metric: PerformanceMetric = {
           name,
           startTime,
@@ -76,22 +79,25 @@ class EdgeTelemetry {
           success,
           statusCode,
           error: error?.message,
-          metadata: { service, endpoint, url }
+          metadata: { service, endpoint, url },
         };
 
         this.recordMetric(metric);
 
         // Log external API performance
-        console.log(JSON.stringify({
-          type: 'external_api',
-          service,
-          endpoint,
-          duration,
-          success,
-          statusCode,
-          timestamp: new Date().toISOString()
-        }));
-      }
+        // eslint-disable-next-line no-console -- Intentional telemetry logging
+        console.log(
+          JSON.stringify({
+            type: 'external_api',
+            service,
+            endpoint,
+            duration,
+            success,
+            statusCode,
+            timestamp: new Date().toISOString(),
+          })
+        );
+      },
     };
   }
 
@@ -103,35 +109,38 @@ class EdgeTelemetry {
     return {
       end: (hit: boolean = true, error?: Error) => {
         const duration = Date.now() - startTime;
-        
+
         const metric: PerformanceMetric = {
           name,
           startTime,
           duration,
           success: !error,
           error: error?.message,
-          metadata: { operation, key, hit }
+          metadata: { operation, key, hit },
         };
 
         this.recordMetric(metric);
 
         // Log cache performance
-        console.log(JSON.stringify({
-          type: 'cache_operation',
-          operation,
-          key: key.substring(0, 50), // Truncate long keys
-          duration,
-          hit,
-          success: !error,
-          timestamp: new Date().toISOString()
-        }));
-      }
+        // eslint-disable-next-line no-console -- Intentional telemetry logging
+        console.log(
+          JSON.stringify({
+            type: 'cache_operation',
+            operation,
+            key: key.substring(0, 50), // Truncate long keys
+            duration,
+            hit,
+            success: !error,
+            timestamp: new Date().toISOString(),
+          })
+        );
+      },
     };
   }
 
   private recordMetric(metric: PerformanceMetric) {
     this.metrics.push(metric);
-    
+
     // Keep only the last maxMetrics entries
     if (this.metrics.length > this.maxMetrics) {
       this.metrics = this.metrics.slice(-this.maxMetrics);
@@ -142,11 +151,12 @@ class EdgeTelemetry {
   getStats() {
     const now = Date.now();
     const lastHour = this.metrics.filter(m => now - m.startTime < 60 * 60 * 1000);
-    
+
     return {
       totalMetrics: this.metrics.length,
       lastHourMetrics: lastHour.length,
-      averageResponseTime: lastHour.reduce((sum, m) => sum + (m.duration || 0), 0) / lastHour.length || 0,
+      averageResponseTime:
+        lastHour.reduce((sum, m) => sum + (m.duration || 0), 0) / lastHour.length || 0,
       successRate: lastHour.filter(m => m.success).length / lastHour.length || 0,
       services: [...new Set(lastHour.map(m => m.metadata?.service).filter(Boolean))],
     };

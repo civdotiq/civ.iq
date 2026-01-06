@@ -107,7 +107,7 @@ export function SearchValidation({
       if (!hasNumbers && trimmed.length > 2) {
         return (
           <div className="text-xs text-gray-500 mt-1">
-            Include street number (e.g., "123 Main St, Detroit MI")
+            Include street number (e.g., &quot;123 Main St, Detroit MI&quot;)
           </div>
         );
       }
@@ -209,6 +209,7 @@ export function EnhancedSmartSearchInput({
         const recent = JSON.parse(localStorage.getItem('recentSearches') || '[]');
         setRecentSearches(recent.slice(0, 5));
       } catch (e) {
+        // eslint-disable-next-line no-console -- Intentional warning for localStorage failure
         console.warn('Failed to load recent searches:', e);
       }
     }
@@ -224,6 +225,7 @@ export function EnhancedSmartSearchInput({
           localStorage.setItem('recentSearches', JSON.stringify(updated));
           setRecentSearches(updated.slice(0, 5));
         } catch (e) {
+          // eslint-disable-next-line no-console -- Intentional warning for localStorage failure
           console.warn('Failed to save recent search:', e);
         }
       }

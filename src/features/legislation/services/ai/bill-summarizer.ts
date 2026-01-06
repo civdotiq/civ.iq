@@ -43,7 +43,7 @@ export class BillSummarizer {
     useCache: true,
   };
 
-  private static readonly READING_LEVEL_PROMPTS = {
+  private static readonly READING_LEVEL_PROMPTS: Record<number, string> = {
     8: `Explain this like you're talking to an 8th grader. Use simple words, short sentences, and everyday examples. Avoid jargon, complex terms, and long explanations. Focus on what this bill actually does and why it matters to regular people.`,
   };
 
@@ -219,8 +219,7 @@ export class BillSummarizer {
     options: Required<BillSummarizationOptions>
   ): string {
     const readingLevelInstructions =
-      (this.READING_LEVEL_PROMPTS as any)[options.targetReadingLevel] ||
-      (this.READING_LEVEL_PROMPTS as any)[8];
+      this.READING_LEVEL_PROMPTS[options.targetReadingLevel] || this.READING_LEVEL_PROMPTS[8];
 
     return `
 You are an expert at explaining complex government legislation in simple terms.
@@ -362,7 +361,7 @@ Format as JSON:
         summary: parsed.summary || '',
         keyPoints: parsed.keyPoints || [],
       };
-    } catch (error) {
+    } catch {
       // Ultimate fallback - super simple rule-based summary
       return {
         summary: `This bill, ${billMetadata.title}, makes changes to current laws. It affects how things work in our government or society.`,
@@ -428,7 +427,7 @@ Format as JSON:
   private static generateRuleBasedSummary(
     billText: string,
     billMetadata: { number: string; title: string; congress: number; chamber: string },
-    options: Required<BillSummarizationOptions>
+    _options: Required<BillSummarizationOptions>
   ): BillSummary {
     // Extract key phrases and create simple summary
     const keyPhrases = this.extractKeyPhrases(billText);

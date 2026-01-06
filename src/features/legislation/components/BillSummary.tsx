@@ -135,7 +135,7 @@ export function BillSummary({
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'summary' | 'keypoints' | 'impact')}
                 className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
                   activeTab === tab.id
                     ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'

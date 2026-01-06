@@ -47,7 +47,7 @@ export async function GET(
     };
 
     return NextResponse.json(response, { status: 200 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
         votes: [],

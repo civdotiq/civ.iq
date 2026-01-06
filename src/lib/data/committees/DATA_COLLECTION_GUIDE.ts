@@ -5,13 +5,13 @@
 
 /**
  * Instructions for populating committee data for the 119th Congress
- * 
+ *
  * STEP 1: Data Sources
  * - Wikipedia: https://en.wikipedia.org/wiki/119th_United_States_Congress#Committees
  * - House Committees: https://www.house.gov/committees
  * - Senate Committees: https://www.senate.gov/committees/
  * - Individual committee websites (most accurate for current membership)
- * 
+ *
  * STEP 2: Required Information for Each Committee
  * 1. Committee ID (e.g., HSJU for House Judiciary)
  * 2. Full committee name
@@ -23,19 +23,19 @@
  *    - State and district (for House)
  * 5. Subcommittees with chairs and ranking members
  * 6. Committee contact information
- * 
+ *
  * STEP 3: Bioguide ID Lookup
  * - Search on congress.gov: https://www.congress.gov/members
  * - Or use: https://bioguide.congress.gov/search
- * 
+ *
  * STEP 4: Creating Committee Files
  * 1. Copy committee-template.ts
  * 2. Rename to [chamber]/[committee-name].ts
  * 3. Fill in all member data
  * 4. Update the index.ts file to include the new committee
- * 
+ *
  * PRIORITY COMMITTEES TO IMPLEMENT:
- * 
+ *
  * HOUSE:
  * - [ ] Appropriations (HSAP)
  * - [ ] Armed Services (HSAS)
@@ -56,7 +56,7 @@
  * - [ ] Ways and Means (HSWM)
  * - [ ] Intelligence (HSPW)
  * - [ ] Ethics (HSSO)
- * 
+ *
  * SENATE:
  * - [ ] Agriculture, Nutrition, and Forestry (SSAF)
  * - [ ] Appropriations (SSAP)
@@ -78,7 +78,7 @@
  * - [ ] Intelligence (SSIS)
  * - [ ] Ethics (SSSO)
  * - [ ] Aging (SSAG)
- * 
+ *
  * JOINT:
  * - [ ] Economic (JSEC)
  * - [ ] Library (JSLC)
@@ -98,16 +98,15 @@ export const COMMITTEE_MEMBER_EXAMPLE = {
     {
       name: 'House Committee on the Judiciary',
       role: 'Chair',
-      subcommittees: [
-        'Subcommittee on the Administrative State, Regulatory Reform, and Antitrust',
-      ],
+      subcommittees: ['Subcommittee on the Administrative State, Regulatory Reform, and Antitrust'],
     },
   ],
 };
 
 // Common committee jurisdictions for reference
 export const COMMITTEE_JURISDICTIONS = {
-  HSJU: 'The House Committee on the Judiciary has jurisdiction over matters relating to the administration of justice in federal courts, administrative bodies, and law enforcement agencies. Its jurisdiction includes: ' +
+  HSJU:
+    'The House Committee on the Judiciary has jurisdiction over matters relating to the administration of justice in federal courts, administrative bodies, and law enforcement agencies. Its jurisdiction includes: ' +
     'The judiciary and judicial proceedings, civil and criminal; ' +
     'Administrative practice and procedure; ' +
     'Apportionment of Representatives; ' +
@@ -127,8 +126,9 @@ export const COMMITTEE_JURISDICTIONS = {
     'Revision and codification of the Statutes of the United States; ' +
     'State and territorial boundary lines; ' +
     'Subversive activities affecting the internal security of the United States.',
-  
-  HSWM: 'The House Committee on Ways and Means has jurisdiction over: ' +
+
+  HSWM:
+    'The House Committee on Ways and Means has jurisdiction over: ' +
     'Revenue measures generally; ' +
     'Reciprocal trade agreements; ' +
     'Revenue measures relating to insular possessions; ' +
@@ -139,19 +139,40 @@ export const COMMITTEE_JURISDICTIONS = {
     'National social security (except health care and facilities programs that are supported from general revenues as opposed to payroll deductions and except work incentive programs).',
 };
 
+// Types for committee validation
+interface CommitteeMemberRepresentative {
+  bioguideId?: string;
+  name?: string;
+}
+
+interface CommitteeMember {
+  representative?: CommitteeMemberRepresentative;
+}
+
+interface CommitteeData {
+  id?: string;
+  name?: string;
+  chamber?: string;
+  leadership?: {
+    chair?: unknown;
+    rankingMember?: unknown;
+  };
+  members?: CommitteeMember[];
+}
+
 // Helper function to validate committee data
-export function validateCommitteeData(committee: any): string[] {
+export function validateCommitteeData(committee: CommitteeData): string[] {
   const errors: string[] = [];
-  
+
   if (!committee.id) errors.push('Missing committee ID');
   if (!committee.name) errors.push('Missing committee name');
   if (!committee.chamber) errors.push('Missing chamber');
   if (!committee.leadership?.chair) errors.push('Missing committee chair');
   if (!committee.leadership?.rankingMember) errors.push('Missing ranking member');
   if (!committee.members || committee.members.length === 0) errors.push('No members listed');
-  
+
   // Validate each member has required fields
-  committee.members?.forEach((member: any, index: number) => {
+  committee.members?.forEach((member: CommitteeMember, index: number) => {
     if (!member.representative?.bioguideId) {
       errors.push(`Member ${index + 1} missing bioguide ID`);
     }
@@ -159,6 +180,6 @@ export function validateCommitteeData(committee: any): string[] {
       errors.push(`Member ${index + 1} missing name`);
     }
   });
-  
+
   return errors;
 }

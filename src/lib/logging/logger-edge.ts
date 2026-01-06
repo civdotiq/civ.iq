@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- This is a logging utility that intentionally uses console */
 /**
  * Copyright (c) 2019-2025 Mark Sandford
  * Licensed under the MIT License. See LICENSE and NOTICE files.
@@ -15,7 +16,7 @@ export enum LogLevel {
   ERROR = 0,
   WARN = 1,
   INFO = 2,
-  DEBUG = 3
+  DEBUG = 3,
 }
 
 // Interface for structured log metadata
@@ -40,14 +41,14 @@ class EdgeLogger {
     const timestamp = new Date().toISOString();
     const service = 'civic-intel-hub';
     const environment = process.env.NODE_ENV || 'development';
-    
+
     const logEntry = {
       timestamp,
       level,
       service,
       environment,
       message,
-      ...metadata
+      ...metadata,
     };
 
     return JSON.stringify(logEntry);
@@ -55,12 +56,14 @@ class EdgeLogger {
 
   error(message: string, error?: Error, metadata?: LogMetadata): void {
     if (this.logLevel >= LogLevel.ERROR) {
-      const errorMeta = error ? {
-        error: error.message,
-        stack: error.stack,
-        ...metadata
-      } : metadata;
-      
+      const errorMeta = error
+        ? {
+            error: error.message,
+            stack: error.stack,
+            ...metadata,
+          }
+        : metadata;
+
       console.error(this.formatMessage('error', message, errorMeta));
     }
   }
@@ -101,20 +104,20 @@ export const structuredLogger = edgeLogger;
 
 // Request logger factory function
 export function createRequestLogger(request: NextRequest, endpoint: string) {
-  const requestId = request.headers.get('x-request-id') || 
-                   Math.random().toString(36).substring(2, 15);
-  
+  const requestId =
+    request.headers.get('x-request-id') || Math.random().toString(36).substring(2, 15);
+
   return {
-    info: (message: string, metadata?: LogMetadata) => 
+    info: (message: string, metadata?: LogMetadata) =>
       edgeLogger.info(message, { requestId, endpoint, ...metadata }),
-    
-    warn: (message: string, metadata?: LogMetadata) => 
+
+    warn: (message: string, metadata?: LogMetadata) =>
       edgeLogger.warn(message, { requestId, endpoint, ...metadata }),
-    
-    error: (message: string, error?: Error, metadata?: LogMetadata) => 
+
+    error: (message: string, error?: Error, metadata?: LogMetadata) =>
       edgeLogger.error(message, error, { requestId, endpoint, ...metadata }),
-    
-    debug: (message: string, metadata?: LogMetadata) => 
+
+    debug: (message: string, metadata?: LogMetadata) =>
       edgeLogger.debug(message, { requestId, endpoint, ...metadata }),
   };
 }
@@ -122,9 +125,9 @@ export function createRequestLogger(request: NextRequest, endpoint: string) {
 // Performance timing utility
 export function createTimer() {
   const start = Date.now();
-  
+
   return {
-    end: () => Date.now() - start
+    end: () => Date.now() - start,
   };
 }
 

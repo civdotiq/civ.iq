@@ -17,7 +17,7 @@ interface CacheEntry<T> {
 }
 
 class EdgeCache {
-  private cache = new Map<string, CacheEntry<any>>();
+  private cache = new Map<string, CacheEntry<unknown>>();
   private cleanupInterval: NodeJS.Timeout | null = null;
 
   constructor() {
@@ -79,6 +79,7 @@ class EdgeCache {
       return true;
     } catch (error) {
       monitor.end(false, error as Error);
+      // eslint-disable-next-line no-console -- Intentional error logging for cache debugging
       console.error('Cache set error:', error);
       return false;
     }
@@ -132,6 +133,7 @@ export async function cachedFetch<T>(
 
     return data;
   } catch (error) {
+    // eslint-disable-next-line no-console -- Intentional error logging for cache debugging
     console.error('Cache operation failed:', error);
     // Fall back to direct fetch on cache error
     return await fetchFn();

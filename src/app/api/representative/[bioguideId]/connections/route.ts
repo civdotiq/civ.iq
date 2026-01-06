@@ -242,7 +242,7 @@ async function fetchRelevantCommentPeriods(
     if (!data.success) return [];
 
     const relevant: OpenCommentPeriod[] = [];
-    const agencySlugs = agencies.map(a => a.slug);
+    const _agencySlugs = agencies.map(a => a.slug);
     const agencyNames = agencies.map(a => a.name.toLowerCase());
     const topicsLower = topics.map(t => t.toLowerCase());
 

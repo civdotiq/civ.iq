@@ -377,17 +377,18 @@ export function getNextSenateElection(stateCode: string, seatClass?: 1 | 2 | 3):
   const upperState = stateCode.toUpperCase();
   const elections: number[] = [];
 
-  if (SENATE_CLASSES.CLASS_I.states.includes(upperState as any)) {
+  // Cast to readonly string[] for runtime includes check
+  if ((SENATE_CLASSES.CLASS_I.states as readonly string[]).includes(upperState)) {
     const cyclesSince2024 = Math.ceil((currentYear - 2024) / 6);
     elections.push(2024 + cyclesSince2024 * 6);
   }
 
-  if (SENATE_CLASSES.CLASS_II.states.includes(upperState as any)) {
+  if ((SENATE_CLASSES.CLASS_II.states as readonly string[]).includes(upperState)) {
     const cyclesSince2026 = Math.ceil((currentYear - 2026) / 6);
     elections.push(2026 + cyclesSince2026 * 6);
   }
 
-  if (SENATE_CLASSES.CLASS_III.states.includes(upperState as any)) {
+  if ((SENATE_CLASSES.CLASS_III.states as readonly string[]).includes(upperState)) {
     const cyclesSince2028 = Math.ceil((currentYear - 2028) / 6);
     elections.push(2028 + cyclesSince2028 * 6);
   }
