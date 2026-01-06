@@ -14,14 +14,6 @@ export {
 /**
  * Wikipedia-style SEO components for maximum discoverability
  */
-export {
-  TableOfContents,
-  RelatedLinks,
-  FAQSection,
-  FreshnessTimestamp,
-  Infobox,
-  InternalLink,
-  CategoryTags,
-} from './WikipediaStyleSEO';
+export { TableOfContents, FAQSection } from './WikipediaStyleSEO';
 
-export type { TOCItem, RelatedLink, FAQItem, InfoboxField } from './WikipediaStyleSEO';
+export type { TOCItem, FAQItem } from './WikipediaStyleSEO';

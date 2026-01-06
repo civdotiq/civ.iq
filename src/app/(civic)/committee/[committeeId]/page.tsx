@@ -14,13 +14,8 @@ import RepresentativePhoto from '@/features/representatives/components/Represent
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { getCommitteeDataService } from '@/lib/services/committee.service';
 import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
-import {
-  FAQSection,
-  RelatedLinks,
-  FreshnessTimestamp,
-  CategoryTags,
-} from '@/components/seo/WikipediaStyleSEO';
-import type { RelatedLink } from '@/components/seo/WikipediaStyleSEO';
+import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
+import { CommitteeFooter } from '@/components/seo/CommitteeFooter';
 
 // Dynamically import client components
 const SubcommitteeCard = dynamic(
@@ -370,9 +365,8 @@ async function CommitteeContent({
           ]}
         />
 
-        {/* Wikipedia-style SEO Section */}
-        <div className="mt-8 space-y-6">
-          {/* FAQ Section */}
+        {/* FAQ Section - kept for SEO */}
+        <div className="mt-8">
           <FAQSection
             faqs={[
               {
@@ -403,60 +397,21 @@ async function CommitteeContent({
             ]}
             title="Frequently Asked Questions"
           />
-
-          {/* Related Links */}
-          <RelatedLinks
-            links={
-              [
-                ...(committee.leadership.chair
-                  ? [
-                      {
-                        href: `/representative/${committee.leadership.chair.representative.bioguideId}`,
-                        title: committee.leadership.chair.representative.name,
-                        description: 'Committee Chairperson',
-                        type: 'representative' as const,
-                      },
-                    ]
-                  : []),
-                ...(committee.leadership.rankingMember
-                  ? [
-                      {
-                        href: `/representative/${committee.leadership.rankingMember.representative.bioguideId}`,
-                        title: committee.leadership.rankingMember.representative.name,
-                        description: 'Ranking Member',
-                        type: 'representative' as const,
-                      },
-                    ]
-                  : []),
-                {
-                  href: '/committees',
-                  title: 'All Congressional Committees',
-                  description: 'Browse all House and Senate committees',
-                  type: 'committee',
-                },
-                {
-                  href: '/congress',
-                  title: 'U.S. Congress',
-                  description: 'Overview of the 119th Congress',
-                  type: 'representative',
-                },
-              ] as RelatedLink[]
-            }
-            title="Related Pages"
-          />
-
-          {/* Freshness Timestamp */}
-          <FreshnessTimestamp lastUpdated={new Date()} dataSource="Congress.gov" />
-
-          {/* Category Tags */}
-          <CategoryTags
-            categories={[
-              { name: committee.chamber, href: `/committees?chamber=${committee.chamber}` },
-              { name: `${committee.type} Committee`, href: '/committees' },
-              { name: '119th Congress', href: '/congress' },
-            ]}
-          />
         </div>
+
+        {/* Contextual Footer - Ulm Style */}
+        <CommitteeFooter
+          committeeName={committee.name}
+          chamber={committee.chamber}
+          committeeType={committee.type}
+          memberCount={committee.members?.length || 0}
+          subcommitteeCount={committee.subcommittees.length}
+          chairName={committee.leadership.chair?.representative.name}
+          chairBioguideId={committee.leadership.chair?.representative.bioguideId}
+          rankingMemberName={committee.leadership.rankingMember?.representative.name}
+          rankingMemberBioguideId={committee.leadership.rankingMember?.representative.bioguideId}
+          lastUpdated={new Date()}
+        />
       </div>
     </div>
   );

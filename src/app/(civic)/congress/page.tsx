@@ -7,7 +7,8 @@
 
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { TableOfContents, RelatedLinks, FAQSection, FreshnessTimestamp } from '@/components/seo';
+import { TableOfContents, FAQSection } from '@/components/seo';
+import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { OrganizationSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
@@ -144,8 +145,6 @@ export default function CongressHubPage() {
         <p className="text-gray-600 mb-6">
           The legislative branch of the United States federal government
         </p>
-
-        <FreshnessTimestamp lastUpdated={new Date()} dataSource="Congress.gov" />
 
         {/* Table of Contents */}
         <TableOfContents items={tocItems} />
@@ -290,30 +289,17 @@ export default function CongressHubPage() {
           <FAQSection faqs={faqItems} />
         </section>
 
-        {/* Related Links */}
-        <RelatedLinks
-          links={[
-            { href: '/legislation', title: 'Current Legislation', type: 'bill' },
-            { href: '/committees', title: 'All Committees', type: 'committee' },
-            { href: '/', title: 'Find Your Representatives', type: 'representative' },
+        {/* Contextual Footer - Ulm Style */}
+        <ExploreFooter
+          currentSection="U.S. Congress"
+          relatedLinks={[
+            { href: '/legislation', label: 'Legislation' },
+            { href: '/committees', label: 'Committees' },
+            { href: '/topics', label: 'Policy Topics' },
           ]}
+          lastUpdated={new Date()}
+          dataSource="Congress.gov"
         />
-
-        {/* Category Tags */}
-        <div className="mt-8 pt-4 border-t border-gray-200 text-xs text-gray-500">
-          <span>Categories: </span>
-          <Link href="/congress" className="text-blue-600 hover:underline">
-            U.S. Congress
-          </Link>
-          {' | '}
-          <Link href="/committees" className="text-blue-600 hover:underline">
-            Committees
-          </Link>
-          {' | '}
-          <Link href="/legislation" className="text-blue-600 hover:underline">
-            Legislation
-          </Link>
-        </div>
       </main>
     </div>
   );

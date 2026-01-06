@@ -10,13 +10,8 @@
 
 import { Metadata } from 'next';
 import Link from 'next/link';
-import {
-  TableOfContents,
-  FAQSection,
-  RelatedLinks,
-  FreshnessTimestamp,
-  CategoryTags,
-} from '@/components/seo/WikipediaStyleSEO';
+import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
+import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
@@ -179,8 +174,6 @@ export default function StatesHubPage() {
           state
         </p>
 
-        <FreshnessTimestamp lastUpdated={new Date()} dataSource="Congress.gov & OpenStates" />
-
         {/* Table of Contents */}
         <TableOfContents items={tocItems} />
 
@@ -335,43 +328,17 @@ export default function StatesHubPage() {
           <FAQSection faqs={faqItems} />
         </section>
 
-        {/* Related Links */}
-        <RelatedLinks
-          links={[
-            {
-              href: '/congress',
-              title: 'U.S. Congress',
-              description: '119th Congress overview',
-              type: 'representative',
-            },
-            {
-              href: '/committees',
-              title: 'Congressional Committees',
-              description: 'All House and Senate committees',
-              type: 'committee',
-            },
-            {
-              href: '/districts',
-              title: 'Congressional Districts',
-              description: 'All 435 House districts',
-              type: 'district',
-            },
-            {
-              href: '/glossary',
-              title: 'Civic Glossary',
-              description: 'Definitions of civic terms',
-              type: 'bill',
-            },
+        {/* Contextual Footer - Ulm Style */}
+        <ExploreFooter
+          currentSection="U.S. States"
+          relatedLinks={[
+            { href: '/congress', label: 'U.S. Congress' },
+            { href: '/committees', label: 'Committees' },
+            { href: '/districts', label: 'Districts' },
+            { href: '/glossary', label: 'Glossary' },
           ]}
-        />
-
-        {/* Category Tags */}
-        <CategoryTags
-          categories={[
-            { name: 'U.S. States', href: '/states' },
-            { name: 'Congress', href: '/congress' },
-            { name: 'State Legislatures', href: '/states#state-legislatures' },
-          ]}
+          lastUpdated={new Date()}
+          dataSource="Congress.gov & OpenStates"
         />
       </main>
     </div>

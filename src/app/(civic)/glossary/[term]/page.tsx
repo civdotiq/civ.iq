@@ -11,12 +11,8 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import {
-  FAQSection,
-  RelatedLinks,
-  FreshnessTimestamp,
-  CategoryTags,
-} from '@/components/seo/WikipediaStyleSEO';
+import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
+import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema, FAQSchema } from '@/components/seo/JsonLd';
 import { CIVIC_GLOSSARY, GLOSSARY_CATEGORIES, type GlossaryTerm } from '@/lib/data/civic-glossary';
 
@@ -151,7 +147,6 @@ export default async function GlossaryTermPage({ params }: PageProps) {
               </span>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-4">{glossaryTerm.term}</h1>
-            <FreshnessTimestamp lastUpdated={new Date()} dataSource="CIV.IQ Civic Glossary" />
           </header>
 
           {/* Definition */}
@@ -219,40 +214,17 @@ export default async function GlossaryTermPage({ params }: PageProps) {
           <FAQSection faqs={faqItems} title="Common Questions" />
         </article>
 
-        {/* Related Links */}
-        <RelatedLinks
-          links={[
-            {
-              href: '/glossary',
-              title: 'Full Glossary',
-              description: 'Browse all civic terms',
-              type: 'bill',
-            },
-            {
-              href: '/congress',
-              title: 'U.S. Congress',
-              description: 'Learn about Congress',
-              type: 'representative',
-            },
-            {
-              href: '/topics',
-              title: 'Policy Topics',
-              description: 'Explore legislative topics',
-              type: 'bill',
-            },
+        {/* Contextual Footer - Ulm Style */}
+        <ExploreFooter
+          currentSection="Glossary"
+          relatedLinks={[
+            { href: '/glossary', label: 'Full Glossary' },
+            { href: '/congress', label: 'U.S. Congress' },
+            { href: '/topics', label: 'Policy Topics' },
+            { href: '/education', label: 'Civic Education' },
           ]}
-        />
-
-        {/* Category Tags */}
-        <CategoryTags
-          categories={[
-            {
-              name: GLOSSARY_CATEGORIES[glossaryTerm.category],
-              href: `/glossary?category=${glossaryTerm.category}`,
-            },
-            { name: 'Glossary', href: '/glossary' },
-            { name: 'Civic Education', href: '/education' },
-          ]}
+          lastUpdated={new Date()}
+          dataSource="CIV.IQ Civic Glossary"
         />
       </main>
     </div>

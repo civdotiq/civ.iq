@@ -10,13 +10,8 @@
 
 import { Metadata } from 'next';
 import Link from 'next/link';
-import {
-  TableOfContents,
-  FAQSection,
-  RelatedLinks,
-  FreshnessTimestamp,
-  CategoryTags,
-} from '@/components/seo/WikipediaStyleSEO';
+import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
+import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
@@ -176,8 +171,6 @@ export default function EconomyTopicPage() {
           Tax policy, employment, trade, small business, and financial regulation in Congress
         </p>
 
-        <FreshnessTimestamp lastUpdated={new Date()} dataSource="Congress.gov" />
-
         <TableOfContents items={tocItems} />
 
         {/* Overview Section */}
@@ -303,42 +296,16 @@ export default function EconomyTopicPage() {
           <FAQSection faqs={faqItems} />
         </section>
 
-        {/* Related Links */}
-        <RelatedLinks
-          links={[
-            {
-              href: '/topics/healthcare',
-              title: 'Healthcare',
-              description: 'Healthcare policy and legislation',
-              type: 'bill',
-            },
-            {
-              href: '/committees',
-              title: 'All Committees',
-              description: 'Browse congressional committees',
-              type: 'committee',
-            },
-            {
-              href: '/glossary',
-              title: 'Civic Glossary',
-              description: 'Definitions of legislative terms',
-              type: 'bill',
-            },
-            {
-              href: '/topics',
-              title: 'All Topics',
-              description: 'Browse all policy topics',
-              type: 'bill',
-            },
+        {/* Contextual Footer - Ulm Style */}
+        <ExploreFooter
+          currentSection="Economy & Jobs"
+          relatedLinks={[
+            { href: '/topics/healthcare', label: 'Healthcare' },
+            { href: '/committees', label: 'Committees' },
+            { href: '/topics', label: 'All Topics' },
           ]}
-        />
-
-        <CategoryTags
-          categories={[
-            { name: 'Economy', href: '/topics/economy' },
-            { name: 'Policy Topics', href: '/topics' },
-            { name: 'Legislation', href: '/legislation' },
-          ]}
+          lastUpdated={new Date()}
+          dataSource="Congress.gov"
         />
       </main>
     </div>

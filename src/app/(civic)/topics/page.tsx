@@ -10,13 +10,8 @@
 
 import { Metadata } from 'next';
 import Link from 'next/link';
-import {
-  TableOfContents,
-  FAQSection,
-  RelatedLinks,
-  FreshnessTimestamp,
-  CategoryTags,
-} from '@/components/seo/WikipediaStyleSEO';
+import { TableOfContents, FAQSection } from '@/components/seo/WikipediaStyleSEO';
+import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
@@ -180,8 +175,6 @@ export default function TopicsHubPage() {
           Explore policy areas and find related legislation, committees, and representatives
         </p>
 
-        <FreshnessTimestamp lastUpdated={new Date()} dataSource="Congress.gov" />
-
         <TableOfContents items={tocItems} />
 
         {/* Overview Section */}
@@ -234,36 +227,16 @@ export default function TopicsHubPage() {
           <FAQSection faqs={faqItems} />
         </section>
 
-        {/* Related Links */}
-        <RelatedLinks
-          links={[
-            {
-              href: '/committees',
-              title: 'Congressional Committees',
-              description: 'View all House and Senate committees',
-              type: 'committee',
-            },
-            {
-              href: '/legislation',
-              title: 'Current Legislation',
-              description: 'Browse active bills in Congress',
-              type: 'bill',
-            },
-            {
-              href: '/congress',
-              title: 'U.S. Congress',
-              description: '119th Congress overview',
-              type: 'representative',
-            },
+        {/* Contextual Footer - Ulm Style */}
+        <ExploreFooter
+          currentSection="Policy Topics"
+          relatedLinks={[
+            { href: '/committees', label: 'Committees' },
+            { href: '/bills/latest', label: 'Recent Bills' },
+            { href: '/congress', label: 'U.S. Congress' },
           ]}
-        />
-
-        <CategoryTags
-          categories={[
-            { name: 'Policy Topics', href: '/topics' },
-            { name: 'Legislation', href: '/legislation' },
-            { name: 'Committees', href: '/committees' },
-          ]}
+          lastUpdated={new Date()}
+          dataSource="Congress.gov"
         />
       </main>
     </div>

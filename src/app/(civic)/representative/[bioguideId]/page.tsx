@@ -11,13 +11,7 @@ import { SiteHeader } from '@/components/shared/layout/SiteHeader';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
 import { PersonSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
-import {
-  RelatedLinks,
-  Infobox,
-  FreshnessTimestamp,
-  CategoryTags,
-} from '@/components/seo/WikipediaStyleSEO';
-import type { RelatedLink, InfoboxField } from '@/components/seo/WikipediaStyleSEO';
+import { ContextualFooter, type CommitteeLink } from '@/components/seo/ContextualFooter';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -196,103 +190,14 @@ export default async function RepresentativeProfilePage({
     url: c.id ? `https://civdotiq.org/committee/${c.id}` : undefined,
   }));
 
-  // Build RelatedLinks for internal link network (Wikipedia "See Also" pattern)
-  const relatedLinks: RelatedLink[] = [];
-
-  // Link to congressional district (if House member)
-  if (representative.chamber === 'House' && representative.district) {
-    relatedLinks.push({
-      href: `/districts/${representative.state}${representative.district.padStart(2, '0')}`,
-      title: `${representative.state} Congressional District ${representative.district}`,
-      description: 'View district demographics and boundaries',
-      type: 'district',
-    });
-  }
-
-  // Links to committees they serve on
-  if (representative.committees && representative.committees.length > 0) {
-    representative.committees.slice(0, 4).forEach(committee => {
-      if (committee.id || committee.thomas_id) {
-        relatedLinks.push({
-          href: `/committee/${committee.id || committee.thomas_id}`,
-          title: committee.name,
-          description: committee.role || 'Committee Member',
-          type: 'committee',
-        });
-      }
-    });
-  }
-
-  // Link to state delegation
-  relatedLinks.push({
-    href: `/delegation/${representative.state}`,
-    title: `${representative.state} Congressional Delegation`,
-    description: `All representatives and senators from ${representative.state}`,
-    type: 'state',
-  });
-
-  // Link to Congress overview
-  relatedLinks.push({
-    href: '/congress',
-    title: representative.chamber === 'Senate' ? 'U.S. Senate' : 'U.S. House of Representatives',
-    description: `Browse all ${representative.chamber} members`,
-    type: 'representative',
-  });
-
-  // Build Infobox fields for quick facts sidebar
-  const infoboxFields: InfoboxField[] = [
-    { label: 'Party', value: representative.party },
-    {
-      label: 'State',
-      value: representative.state,
-      link: `/delegation/${representative.state}`,
-    },
-  ];
-
-  if (representative.district) {
-    infoboxFields.push({
-      label: 'District',
-      value: representative.district,
-      link: `/districts/${representative.state}${representative.district.padStart(2, '0')}`,
-    });
-  }
-
-  if (representative.terms && representative.terms.length > 0) {
-    const firstTerm = representative.terms[0];
-    if (firstTerm?.startYear) {
-      infoboxFields.push({
-        label: 'In Office Since',
-        value: firstTerm.startYear,
-      });
-    }
-  }
-
-  if (representative.committees && representative.committees.length > 0) {
-    infoboxFields.push({
-      label: 'Committees',
-      value: `${representative.committees.length}`,
-      link: '#committees',
-    });
-  }
-
-  if (representative.bio?.birthday) {
-    infoboxFields.push({
-      label: 'Born',
-      value: new Date(representative.bio.birthday).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }),
-    });
-  }
-
-  // Category tags for SEO clustering
-  const categoryTags = [
-    { name: representative.party, href: `/congress?party=${representative.party}` },
-    { name: representative.state, href: `/delegation/${representative.state}` },
-    { name: representative.chamber, href: `/congress?chamber=${representative.chamber}` },
-    { name: '119th Congress', href: '/congress' },
-  ];
+  // Build committee links for contextual footer
+  const committeeLinks: CommitteeLink[] = (representative.committees || [])
+    .filter(c => c.id || c.thomas_id)
+    .map(committee => ({
+      name: committee.name,
+      href: `/committee/${committee.id || committee.thomas_id}`,
+      role: committee.role,
+    }));
 
   return (
     <>
@@ -336,29 +241,18 @@ export default async function RepresentativeProfilePage({
           </ErrorBoundary>
         </ChunkLoadErrorBoundary>
 
-        {/* Wikipedia-style SEO Section */}
+        {/* Contextual Footer - SEO navigation without redundancy */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-          {/* Infobox - Quick Facts Sidebar */}
-          <div className="mb-8">
-            <Infobox
-              title={representative.name}
-              subtitle={`${representative.party} ${representative.role}`}
-              image={representative.imageUrl}
-              imageAlt={`Official photo of ${representative.name}`}
-              fields={infoboxFields}
-            />
-          </div>
-
-          {/* Related Links - "See Also" Section */}
-          <RelatedLinks links={relatedLinks} title="Related Pages" />
-
-          {/* Freshness Timestamp */}
-          <div className="mt-6">
-            <FreshnessTimestamp lastUpdated={new Date()} dataSource="Congress.gov API" />
-          </div>
-
-          {/* Category Tags */}
-          <CategoryTags categories={categoryTags} />
+          <ContextualFooter
+            representativeName={representative.name}
+            party={representative.party}
+            state={representative.state}
+            chamber={representative.chamber}
+            committees={committeeLinks}
+            totalCommittees={representative.committees?.length}
+            lastUpdated={new Date()}
+            dataSource="Congress.gov API"
+          />
         </div>
       </main>
     </>
