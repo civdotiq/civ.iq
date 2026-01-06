@@ -7,6 +7,10 @@ import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { getRepresentativesByLocation } from '@/features/representatives/services/congress-api';
+import {
+  getAllRepresentativesService,
+  getRepresentativesByZipService,
+} from '@/lib/services/representatives.service';
 import { Header } from '@/shared/components/navigation/Header';
 import { AdaptiveGridSkeleton } from '@/shared/components/ui/LoadingStates';
 
@@ -50,28 +54,13 @@ async function getInitialRepresentatives(zip?: string, state?: string, district?
       return representatives;
     }
 
-    // If we have a ZIP, fetch from API
+    // If we have a ZIP, use service directly (no HTTP roundtrip)
     if (zip) {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://civdotiq.org';
-      const response = await fetch(`${baseUrl}/api/representatives?zip=${zip}`);
-      const data = await response.json();
-      return data.representatives || [];
+      return await getRepresentativesByZipService(zip);
     }
 
-    // Otherwise fetch ALL representatives from the API
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://civdotiq.org';
-
-    const response = await fetch(`${baseUrl}/api/representatives/all`, {
-      next: { revalidate: 300 }, // Cache for 5 minutes
-    } as RequestInit & { next: { revalidate: number } });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    return data.representatives || [];
+    // Otherwise get ALL representatives directly (no HTTP roundtrip)
+    return await getAllRepresentativesService();
   } catch {
     return [];
   }
