@@ -463,12 +463,21 @@ function resolveCommitteeId(inputId: string): string {
     return redirectMappings[upperInputId];
   }
 
+  // IMPORTANT: Check if this is a subcommittee ID pattern (4 letters + 2 digits)
+  // Examples: SSGA20, HSAG14, SSEV10
+  // If so, preserve the full ID - don't strip numbers
+  const subcommitteePattern = /^[A-Z]{4}\d{2}$/;
+  if (subcommitteePattern.test(upperInputId)) {
+    // This is a subcommittee ID - return as-is to be parsed later
+    return upperInputId;
+  }
+
   // Try exact match first (thomas_id format like 'HSAG', 'SSJU')
   if (COMMITTEE_ID_MAP[upperInputId]) {
     return upperInputId;
   }
 
-  // Try base ID without numbers
+  // Try base ID without numbers (only for non-subcommittee patterns)
   const baseId = upperInputId.replace(/\d+$/, '');
   if (COMMITTEE_ID_MAP[baseId]) {
     return baseId;
