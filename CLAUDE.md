@@ -796,12 +796,16 @@ grid-6: 48px  /* Major sections */
 
 **HIGH (Functionality):**
 
-- **Rate Limiting Stub**: `src/lib/validation/middleware.ts:196` - rate limiting function always returns true (no enforcement). Redis packages installed but middleware not implemented.
+- None currently
 
 **LOW (Cleanup):**
 
 - **Limited FEC Coverage**: Not all representatives have FEC ID mappings yet
 - **District Boundaries**: Some boundary geometries need refinement for accuracy
+
+**✅ FIXED (January 2026):**
+
+- **Rate Limiting Implemented**: Full rate limiting with in-memory store in `src/middleware.ts` - path-based limits (100/min API, 60/min representatives, 30/min maps), request validation (XSS/SQLi/path traversal detection), security headers, 46 unit tests added
 
 **✅ FIXED (December 2025):**
 
