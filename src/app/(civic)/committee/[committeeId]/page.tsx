@@ -74,8 +74,8 @@ async function getCommitteeData(committeeId: string, refresh?: boolean): Promise
       : `${baseUrl}/api/committee/${committeeId}`;
 
     const response = await fetch(url, {
-      // Bypass ISR cache when refresh=true, otherwise revalidate every hour
-      next: refresh ? { revalidate: 0 } : { revalidate: 3600 },
+      // Bypass cache completely when refresh=true, otherwise revalidate every hour
+      ...(refresh ? { cache: 'no-store' as const } : { next: { revalidate: 3600 } }),
     });
 
     if (!response.ok) {
