@@ -9,10 +9,10 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { Users, MapPin, Calendar, ExternalLink, Phone } from 'lucide-react';
 import { getCommitteeDisplayName } from '@/types/committee';
-import type { Committee, CommitteeAPIResponse } from '@/types/committee';
+import type { Committee } from '@/types/committee';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
-import { getServerBaseUrl } from '@/lib/server-url';
+import { getCommitteeDataService } from '@/lib/services/committee.service';
 import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import {
   FAQSection,
@@ -65,25 +65,10 @@ interface CommitteePageProps {
   searchParams: Promise<{ from?: string; name?: string; refresh?: string }>;
 }
 
-// Fetch committee data
+// Fetch committee data directly from service (no HTTP roundtrip)
 async function getCommitteeData(committeeId: string, refresh?: boolean): Promise<Committee | null> {
   try {
-    const baseUrl = getServerBaseUrl();
-    const url = refresh
-      ? `${baseUrl}/api/committee/${committeeId}?refresh=true`
-      : `${baseUrl}/api/committee/${committeeId}`;
-
-    const response = await fetch(url, {
-      // Bypass cache completely when refresh=true, otherwise revalidate every hour
-      ...(refresh ? { cache: 'no-store' as const } : { next: { revalidate: 3600 } }),
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data: CommitteeAPIResponse = await response.json();
-    return data.committee;
+    return await getCommitteeDataService(committeeId, refresh);
   } catch {
     return null;
   }
