@@ -525,38 +525,59 @@ async function parseHouseVote(
   rollNumber: string
 ): Promise<UnifiedVoteDetail | null> {
   try {
-    // Calculate session number: 119th Congress started in 2025
-    // Congressional sessions: odd years = Session 1, even years = Session 2
-    const currentYear = new Date().getFullYear();
-    const sessionNumber = currentYear % 2 === 1 ? 1 : 2;
+    // Try both sessions since we don't know which session the vote is from
+    // Session 1 = odd years (e.g., 2025 for 119th Congress)
+    // Session 2 = even years (e.g., 2026 for 119th Congress)
+    // Try session 1 first as most historical votes will be from session 1
+    const sessionsToTry = [1, 2];
 
-    // Fetch House vote data from Congress.gov API
-    // Format: /v3/house-vote/{congress}/{session}/{rollNumber} (available from May 2025)
-    const apiUrl = `https://api.congress.gov/v3/house-vote/${congress}/${sessionNumber}/${rollNumber}?api_key=${process.env.CONGRESS_API_KEY || ''}`;
+    let apiUrl = '';
+    let response: Response | null = null;
+    let sessionNumber = 1;
 
-    logger.info('Fetching detailed House vote from Congress API', {
+    for (const session of sessionsToTry) {
+      apiUrl = `https://api.congress.gov/v3/house-vote/${congress}/${session}/${rollNumber}?api_key=${process.env.CONGRESS_API_KEY || ''}`;
+
+      logger.info('Trying House vote fetch', {
+        voteId,
+        congress,
+        session,
+        rollNumber,
+      });
+
+      response = await fetch(apiUrl, {
+        headers: {
+          'User-Agent': 'CivIQ-Hub/2.0 (civic-engagement-tool)',
+        },
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (response.ok) {
+        sessionNumber = session;
+        break;
+      }
+
+      logger.debug('Session attempt failed, trying next', {
+        voteId,
+        session,
+        status: response.status,
+      });
+    }
+
+    if (!response || !response.ok) {
+      logger.warn('Failed to fetch House vote from Congress API after trying both sessions', {
+        voteId,
+        lastStatus: response?.status,
+      });
+      return null;
+    }
+
+    logger.info('Successfully fetched House vote from Congress API', {
       voteId,
       congress,
       session: sessionNumber,
       rollNumber,
-      apiUrl: apiUrl.replace(process.env.CONGRESS_API_KEY || '', '[REDACTED]'),
     });
-
-    const response = await fetch(apiUrl, {
-      headers: {
-        'User-Agent': 'CivIQ-Hub/2.0 (civic-engagement-tool)',
-      },
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!response.ok) {
-      logger.warn('Failed to fetch House vote from Congress API', {
-        voteId,
-        status: response.status,
-        statusText: response.statusText,
-      });
-      return null;
-    }
 
     const apiData = await response.json();
 
