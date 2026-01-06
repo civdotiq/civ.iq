@@ -601,18 +601,87 @@ npx tsc --noEmit [fixed-file]
 
 ## 🎨 UI Guidelines
 
-```css
-/* Brand Colors */
---civiq-red: #e11d07; /* Errors, logo */
---civiq-green: #0a9338; /* Success, logo */
---civiq-blue: #3ea2d4; /* Links, accents */
-```
+**Design System**: `src/styles/aicher-system.css` (1,500+ lines)
+**Philosophy**: Otl Aicher / Dieter Rams / Ulm School of Design
 
-- Clean, minimalist design
+### Core Principles
+
+- Clean, minimalist, geometric design
 - Mobile-first responsive
 - Accessibility (WCAG 2.1 AA)
 - Loading states for all async operations
 - Error boundaries for fault tolerance
+
+### DO NOT CHANGE (Established System)
+
+| Element     | Value          | Notes                              |
+| ----------- | -------------- | ---------------------------------- |
+| **Font**    | Braun Linear   | Weights 100-700, DO NOT substitute |
+| **Red**     | #e11d07        | Errors, Republican, logo           |
+| **Green**   | #0a9338        | Success, Democrat, logo            |
+| **Blue**    | #3ea2d4        | Links, interactive, accents        |
+| **Grid**    | 8px base       | All spacing must be multiples      |
+| **Borders** | 2px structural | 1px dividers, 3px emphasis         |
+
+### Anti-Patterns to REJECT
+
+These patterns are explicitly BANNED from the codebase:
+
+1. **Purple gradients** - Clichéd AI aesthetic, violates 3-color system
+2. **Rounded corners** (`border-radius`) - Use sharp rectangles only
+3. **Box shadows** - Use 2px borders instead
+4. **Inter/Roboto/Arial fonts** - We use Braun Linear exclusively
+5. **Decorative icons/emojis** in UI chrome - Functional only
+6. **Animated gradients** or background effects
+7. **Skeleton loaders** - Use `.aicher-loading` spinner
+8. **Toast notifications** - Use inline status feedback
+9. **Soft/pastel colors** - Use full-saturation brand colors
+10. **Medium font weights** (500/600 for body) - Use 400 or 700 only
+11. **Hover shadows** - Use border-color change instead
+12. **Gradient buttons** - Solid colors only
+
+### CSS Class Quick Reference
+
+```css
+/* Containers */
+.aicher-card              /* Standard container with 2px border */
+.aicher-sidebar-card      /* Sidebar container */
+.accent-bar-red/green/blue /* Left accent stripe (6px) */
+
+/* Buttons */
+.aicher-button            /* Secondary: white bg, black border */
+.aicher-button-primary    /* Primary: blue bg, white text */
+.aicher-button-high-emphasis /* High-impact CTA */
+.accent-cta               /* Landing page CTA */
+
+/* Typography */
+.aicher-display           /* 64px uppercase display */
+.aicher-title             /* 32px section headers */
+.aicher-heading           /* 24px subsections */
+.aicher-label             /* 12px uppercase labels */
+.stat-number              /* Large statistics (48px) */
+
+/* Layout */
+.aicher-grid-2/3/4        /* Responsive grid layouts */
+.aicher-data-list         /* Vertical list with dividers */
+.aicher-tabs              /* Tab navigation */
+
+/* Status */
+.aicher-status-success/error/info /* Status indicators */
+.legislation-status-passed/active/failed /* Bill status badges */
+```
+
+### Spacing Scale (8px Grid)
+
+```css
+--grid: 8px;
+grid-1: 8px   /* Tight */
+grid-2: 16px  /* Compact */
+grid-3: 24px  /* Default */
+grid-4: 32px  /* Comfortable */
+grid-5: 40px  /* Section gaps (Aicher standard) */
+grid-6: 48px  /* Major sections */
+```
 
 ## 🚨 Troubleshooting Quick Reference
 
