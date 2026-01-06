@@ -62,15 +62,20 @@ const CommitteeMembers = dynamic(
 
 interface CommitteePageProps {
   params: Promise<{ committeeId: string }>;
-  searchParams: Promise<{ from?: string; name?: string }>;
+  searchParams: Promise<{ from?: string; name?: string; refresh?: string }>;
 }
 
 // Fetch committee data
-async function getCommitteeData(committeeId: string): Promise<Committee | null> {
+async function getCommitteeData(committeeId: string, refresh?: boolean): Promise<Committee | null> {
   try {
     const baseUrl = getServerBaseUrl();
-    const response = await fetch(`${baseUrl}/api/committee/${committeeId}`, {
-      next: { revalidate: 3600 }, // Revalidate every hour
+    const url = refresh
+      ? `${baseUrl}/api/committee/${committeeId}?refresh=true`
+      : `${baseUrl}/api/committee/${committeeId}`;
+
+    const response = await fetch(url, {
+      // Bypass ISR cache when refresh=true, otherwise revalidate every hour
+      next: refresh ? { revalidate: 0 } : { revalidate: 3600 },
     });
 
     if (!response.ok) {
@@ -172,12 +177,14 @@ async function CommitteeContent({
   committeeId,
   fromBioguideId,
   fromRepName,
+  refresh,
 }: {
   committeeId: string;
   fromBioguideId?: string;
   fromRepName?: string;
+  refresh?: boolean;
 }) {
-  const committee = await getCommitteeData(committeeId);
+  const committee = await getCommitteeData(committeeId, refresh);
 
   if (!committee) {
     return (
@@ -473,7 +480,7 @@ async function CommitteeContent({
 // Main committee page component
 export default async function CommitteePage({ params, searchParams }: CommitteePageProps) {
   const { committeeId } = await params;
-  const { from: fromBioguideId, name: fromRepName } = await searchParams;
+  const { from: fromBioguideId, name: fromRepName, refresh } = await searchParams;
 
   return (
     <Suspense fallback={<CommitteeLoading />}>
@@ -481,6 +488,7 @@ export default async function CommitteePage({ params, searchParams }: CommitteeP
         committeeId={committeeId}
         fromBioguideId={fromBioguideId}
         fromRepName={fromRepName}
+        refresh={refresh === 'true'}
       />
     </Suspense>
   );
