@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cachedFetch } from '@/lib/cache';
+import { cachedFetch, cache } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import type { Committee, CommitteeAPIResponse, CommitteeMember } from '@/types/committee';
 import { COMMITTEE_ID_MAP } from '@/types/committee';
@@ -527,11 +527,23 @@ export async function GET(
     // Resolve the committee ID to thomas_id format
     const committeeId = resolveCommitteeId(rawCommitteeId);
 
+    // Check for cache bypass (use ?refresh=true to force fresh data)
+    const searchParams = request.nextUrl.searchParams;
+    const bypassCache = searchParams.get('refresh') === 'true';
+
     logger.info('Committee API request', {
       rawCommitteeId,
       resolvedCommitteeId: committeeId,
       wasResolved: rawCommitteeId !== committeeId,
+      bypassCache,
     });
+
+    // If cache bypass requested, delete cached entry first
+    if (bypassCache) {
+      const cacheKey = `committee-real-${committeeId}`;
+      await cache.delete(cacheKey);
+      logger.info('Cache bypassed - deleted cached entry', { cacheKey });
+    }
 
     let committee: Committee | null = null;
 
