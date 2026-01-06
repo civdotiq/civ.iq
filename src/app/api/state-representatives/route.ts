@@ -212,6 +212,30 @@ export async function GET(request: NextRequest) {
         state: stateAbbrevUpper,
         reason: 'OpenStates returned empty results or API unavailable',
       });
+
+      // Return a specific error response when no legislators are found
+      // This is typically due to OpenStates API rate limiting or service unavailability
+      return NextResponse.json(
+        {
+          zipCode,
+          state: stateAbbrevUpper,
+          stateName,
+          legislators: [],
+          error: 'State legislature data temporarily unavailable. Please try again later.',
+          errorCode: 'OPENSTATES_UNAVAILABLE',
+          jurisdiction: jurisdiction
+            ? transformJurisdictionForResponse(jurisdiction)
+            : {
+                name: stateName,
+                classification: 'state',
+                chambers: [
+                  { name: 'House of Representatives', classification: 'lower' },
+                  { name: 'Senate', classification: 'upper' },
+                ],
+              },
+        },
+        { status: 200 } // Return 200 with error field so frontend can show appropriate message
+      );
     }
 
     // ZIP codes don't map precisely to state legislative districts

@@ -35,6 +35,10 @@ interface StateApiResponse {
   state: string;
   stateName: string;
   legislators: StateLegislator[];
+  /** Error message when data is unavailable (e.g., rate limiting) */
+  error?: string;
+  /** Error code for programmatic handling */
+  errorCode?: string;
   jurisdiction?: {
     name: string;
     classification: string;
@@ -197,9 +201,39 @@ export const StateRepresentativesTab = memo(function StateRepresentativesTab({
   }
 
   if (!stateData || stateData.legislators.length === 0) {
+    // Check if this is due to a service error (e.g., rate limiting)
+    if (stateData?.error || stateData?.errorCode === 'OPENSTATES_UNAVAILABLE') {
+      return (
+        <div className="bg-yellow-50 border border-yellow-200 p-6 text-center">
+          <p className="text-yellow-800 font-medium">
+            State Legislature Data Temporarily Unavailable
+          </p>
+          <p className="text-yellow-700 mt-2">
+            {stateData.error ||
+              'We are currently unable to load state legislator information. This is usually temporary.'}
+          </p>
+          <p className="text-yellow-600 mt-4 text-sm">
+            Please try again in a few minutes, or visit{' '}
+            <a
+              href="https://openstates.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              OpenStates.org
+            </a>{' '}
+            directly to find your state legislators.
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="text-center py-8 text-gray-600">
         <p>No state representatives found for this ZIP code.</p>
+        <p className="text-sm mt-2">
+          Try entering your full street address for more accurate results.
+        </p>
       </div>
     );
   }
