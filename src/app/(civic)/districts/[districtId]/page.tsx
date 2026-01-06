@@ -265,23 +265,43 @@ export default function DistrictPage() {
             faqs={[
               {
                 question: `Who represents ${district.name}?`,
-                answer: `${district.representative.name} (${district.representative.party}) currently represents ${district.name} in the U.S. House of Representatives.`,
+                answer:
+                  district.number === 'STATE'
+                    ? `${district.representative.name} (${district.representative.party}) currently represents ${district.state} in the U.S. Senate.`
+                    : `${district.representative.name} (${district.representative.party}) currently represents ${district.name} in the U.S. House of Representatives.`,
               },
               {
-                question: `What counties are in ${district.name}?`,
-                answer: `${district.name} includes ${district.geography.counties.length} counties: ${district.geography.counties.slice(0, 5).join(', ')}${district.geography.counties.length > 5 ? ` and ${district.geography.counties.length - 5} more` : ''}.`,
+                question:
+                  district.number === 'STATE'
+                    ? `What are the major counties in ${district.state}?`
+                    : `What counties are in ${district.name}?`,
+                answer:
+                  district.number === 'STATE'
+                    ? `${district.state} has ${district.geography.counties.length} major counties including: ${district.geography.counties.slice(0, 5).join(', ')}${district.geography.counties.length > 5 ? ` and ${district.geography.counties.length - 5} more` : ''}.`
+                    : `${district.name} includes ${district.geography.counties.length} counties: ${district.geography.counties.slice(0, 5).join(', ')}${district.geography.counties.length > 5 ? ` and ${district.geography.counties.length - 5} more` : ''}.`,
               },
               {
-                question: `What are the major cities in ${district.name}?`,
+                question:
+                  district.number === 'STATE'
+                    ? `What are the major cities in ${district.state}?`
+                    : `What are the major cities in ${district.name}?`,
                 answer:
                   district.geography.majorCities.length > 0
-                    ? `The major cities in this district include ${district.geography.majorCities.join(', ')}.`
+                    ? district.number === 'STATE'
+                      ? `The major cities in ${district.state} include ${district.geography.majorCities.join(', ')}.`
+                      : `The major cities in this district include ${district.geography.majorCities.join(', ')}.`
                     : `This district encompasses various communities across ${district.state}.`,
               },
               district.demographics?.population
                 ? {
-                    question: `What is the population of ${district.name}?`,
-                    answer: `${district.name} has a population of approximately ${district.demographics.population.toLocaleString()} residents.`,
+                    question:
+                      district.number === 'STATE'
+                        ? `What is the population of ${district.state}?`
+                        : `What is the population of ${district.name}?`,
+                    answer:
+                      district.number === 'STATE'
+                        ? `${district.state} has a population of approximately ${district.demographics.population.toLocaleString()} residents.`
+                        : `${district.name} has a population of approximately ${district.demographics.population.toLocaleString()} residents.`,
                   }
                 : null,
             ].filter((faq): faq is FAQItem => faq !== null)}
@@ -295,7 +315,10 @@ export default function DistrictPage() {
                 {
                   href: `/representative/${district.representative.bioguideId}`,
                   title: district.representative.name,
-                  description: `${district.representative.party} Representative for this district`,
+                  description:
+                    district.number === 'STATE'
+                      ? `${district.representative.party} Senator for ${district.state}`
+                      : `${district.representative.party} Representative for this district`,
                   type: 'representative',
                 },
                 {

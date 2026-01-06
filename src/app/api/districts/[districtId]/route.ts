@@ -266,12 +266,26 @@ async function getDistrictDemographics(
       'B16001_003E', // Speak language other than English
     ].join(',');
 
-    // Build params without key if it's not provided or invalid
+    // Determine if this is a statewide query (for Senators)
+    const isStatewideQuery = district === '00' || district === 'STATE' || district === 'Statewide';
+
+    // Build params - use state-level for statewide, congressional district for House
     const params = new URLSearchParams({
       get: variables,
-      for: `congressional district:${district.padStart(2, '0')}`,
-      in: `state:${getStateFipsCode(state)}`,
     });
+
+    if (isStatewideQuery) {
+      // For statewide (Senator) queries, get state-level data
+      params.append('for', `state:${getStateFipsCode(state)}`);
+      logger.info('Using state-level Census query for statewide district', {
+        state,
+        stateFips: getStateFipsCode(state),
+      });
+    } else {
+      // For House district queries, get congressional district data
+      params.append('for', `congressional district:${district.padStart(2, '0')}`);
+      params.append('in', `state:${getStateFipsCode(state)}`);
+    }
 
     // Only add key if it exists and is not a placeholder
     if (apiKey && !apiKey.startsWith('your_')) {
@@ -685,9 +699,14 @@ function getPost2023DistrictData(
   state: string,
   district: string
 ): { counties: string[]; cities: string[] } {
-  const districtNum = parseInt(district) || 1;
+  logger.info('getPost2023DistrictData called', { state, district });
 
-  logger.info('getPost2023DistrictData called', { state, district, districtNum });
+  // Handle statewide districts (for Senators)
+  if (district === '00' || district === 'STATE' || district === 'Statewide') {
+    return getStatewideGeographicData(state);
+  }
+
+  const districtNum = parseInt(district) || 1;
 
   // Load geographic data from JSON file
   type DistrictGeographyData = Record<
@@ -716,6 +735,717 @@ function getPost2023DistrictData(
   }
 
   return districtData;
+}
+
+/**
+ * Get statewide geographic data for Senator districts
+ * Returns all counties and major cities for a state
+ */
+function getStatewideGeographicData(state: string): { counties: string[]; cities: string[] } {
+  // Major cities and county counts by state (real data)
+  const stateGeography: Record<string, { counties: string[]; cities: string[] }> = {
+    AL: {
+      counties: ['Jefferson', 'Mobile', 'Madison', 'Montgomery', 'Baldwin', 'Tuscaloosa', 'Shelby'],
+      cities: ['Birmingham', 'Montgomery', 'Huntsville', 'Mobile', 'Tuscaloosa'],
+    },
+    AK: {
+      counties: [
+        'Anchorage',
+        'Fairbanks North Star',
+        'Matanuska-Susitna',
+        'Kenai Peninsula',
+        'Juneau',
+      ],
+      cities: ['Anchorage', 'Fairbanks', 'Juneau', 'Sitka', 'Ketchikan'],
+    },
+    AZ: {
+      counties: ['Maricopa', 'Pima', 'Pinal', 'Yavapai', 'Yuma', 'Mohave', 'Coconino'],
+      cities: ['Phoenix', 'Tucson', 'Mesa', 'Chandler', 'Scottsdale', 'Glendale', 'Tempe'],
+    },
+    AR: {
+      counties: ['Pulaski', 'Washington', 'Benton', 'Sebastian', 'Faulkner', 'Saline', 'Craighead'],
+      cities: ['Little Rock', 'Fort Smith', 'Fayetteville', 'Springdale', 'Jonesboro'],
+    },
+    CA: {
+      counties: [
+        'Los Angeles',
+        'San Diego',
+        'Orange',
+        'Riverside',
+        'San Bernardino',
+        'Santa Clara',
+        'Alameda',
+        'Sacramento',
+        'San Francisco',
+      ],
+      cities: [
+        'Los Angeles',
+        'San Diego',
+        'San Jose',
+        'San Francisco',
+        'Fresno',
+        'Sacramento',
+        'Oakland',
+        'Long Beach',
+      ],
+    },
+    CO: {
+      counties: [
+        'Denver',
+        'El Paso',
+        'Arapahoe',
+        'Jefferson',
+        'Adams',
+        'Douglas',
+        'Larimer',
+        'Boulder',
+      ],
+      cities: ['Denver', 'Colorado Springs', 'Aurora', 'Fort Collins', 'Lakewood', 'Boulder'],
+    },
+    CT: {
+      counties: [
+        'Fairfield',
+        'Hartford',
+        'New Haven',
+        'New London',
+        'Litchfield',
+        'Middlesex',
+        'Tolland',
+        'Windham',
+      ],
+      cities: ['Bridgeport', 'New Haven', 'Hartford', 'Stamford', 'Waterbury', 'Norwalk'],
+    },
+    DE: {
+      counties: ['New Castle', 'Sussex', 'Kent'],
+      cities: ['Wilmington', 'Dover', 'Newark', 'Middletown', 'Smyrna'],
+    },
+    FL: {
+      counties: [
+        'Miami-Dade',
+        'Broward',
+        'Palm Beach',
+        'Hillsborough',
+        'Orange',
+        'Pinellas',
+        'Duval',
+        'Lee',
+      ],
+      cities: [
+        'Jacksonville',
+        'Miami',
+        'Tampa',
+        'Orlando',
+        'St. Petersburg',
+        'Fort Lauderdale',
+        'Tallahassee',
+      ],
+    },
+    GA: {
+      counties: ['Fulton', 'Gwinnett', 'Cobb', 'DeKalb', 'Chatham', 'Clayton', 'Cherokee', 'Henry'],
+      cities: ['Atlanta', 'Augusta', 'Columbus', 'Savannah', 'Athens', 'Macon', 'Sandy Springs'],
+    },
+    HI: {
+      counties: ['Honolulu', 'Hawaii', 'Maui', 'Kauai'],
+      cities: ['Honolulu', 'Hilo', 'Kailua', 'Pearl City', 'Kapolei'],
+    },
+    ID: {
+      counties: ['Ada', 'Canyon', 'Kootenai', 'Bonneville', 'Bannock', 'Twin Falls', 'Bingham'],
+      cities: ['Boise', 'Meridian', 'Nampa', 'Idaho Falls', 'Pocatello', 'Caldwell'],
+    },
+    IL: {
+      counties: [
+        'Cook',
+        'DuPage',
+        'Lake',
+        'Will',
+        'Kane',
+        'McHenry',
+        'Winnebago',
+        'Madison',
+        'St. Clair',
+      ],
+      cities: ['Chicago', 'Aurora', 'Rockford', 'Joliet', 'Naperville', 'Springfield', 'Peoria'],
+    },
+    IN: {
+      counties: [
+        'Marion',
+        'Lake',
+        'Allen',
+        'Hamilton',
+        'St. Joseph',
+        'Elkhart',
+        'Tippecanoe',
+        'Vanderburgh',
+      ],
+      cities: [
+        'Indianapolis',
+        'Fort Wayne',
+        'Evansville',
+        'South Bend',
+        'Carmel',
+        'Fishers',
+        'Bloomington',
+      ],
+    },
+    IA: {
+      counties: ['Polk', 'Linn', 'Scott', 'Johnson', 'Black Hawk', 'Woodbury', 'Dubuque', 'Story'],
+      cities: ['Des Moines', 'Cedar Rapids', 'Davenport', 'Sioux City', 'Iowa City', 'Waterloo'],
+    },
+    KS: {
+      counties: ['Johnson', 'Sedgwick', 'Shawnee', 'Wyandotte', 'Douglas', 'Leavenworth', 'Riley'],
+      cities: ['Wichita', 'Overland Park', 'Kansas City', 'Olathe', 'Topeka', 'Lawrence'],
+    },
+    KY: {
+      counties: [
+        'Jefferson',
+        'Fayette',
+        'Kenton',
+        'Boone',
+        'Warren',
+        'Hardin',
+        'Daviess',
+        'Campbell',
+      ],
+      cities: ['Louisville', 'Lexington', 'Bowling Green', 'Owensboro', 'Covington', 'Richmond'],
+    },
+    LA: {
+      counties: [
+        'Orleans',
+        'Jefferson',
+        'East Baton Rouge',
+        'Caddo',
+        'St. Tammany',
+        'Lafayette',
+        'Calcasieu',
+      ],
+      cities: ['New Orleans', 'Baton Rouge', 'Shreveport', 'Lafayette', 'Lake Charles', 'Metairie'],
+    },
+    ME: {
+      counties: [
+        'Cumberland',
+        'York',
+        'Penobscot',
+        'Kennebec',
+        'Androscoggin',
+        'Aroostook',
+        'Oxford',
+      ],
+      cities: ['Portland', 'Lewiston', 'Bangor', 'South Portland', 'Auburn', 'Augusta'],
+    },
+    MD: {
+      counties: [
+        'Montgomery',
+        "Prince George's",
+        'Baltimore',
+        'Anne Arundel',
+        'Howard',
+        'Baltimore City',
+        'Frederick',
+      ],
+      cities: [
+        'Baltimore',
+        'Columbia',
+        'Germantown',
+        'Silver Spring',
+        'Waldorf',
+        'Frederick',
+        'Annapolis',
+      ],
+    },
+    MA: {
+      counties: [
+        'Middlesex',
+        'Worcester',
+        'Suffolk',
+        'Essex',
+        'Norfolk',
+        'Bristol',
+        'Plymouth',
+        'Hampden',
+      ],
+      cities: [
+        'Boston',
+        'Worcester',
+        'Springfield',
+        'Cambridge',
+        'Lowell',
+        'New Bedford',
+        'Brockton',
+      ],
+    },
+    MI: {
+      counties: [
+        'Wayne',
+        'Oakland',
+        'Macomb',
+        'Kent',
+        'Genesee',
+        'Washtenaw',
+        'Ingham',
+        'Ottawa',
+        'Kalamazoo',
+      ],
+      cities: [
+        'Detroit',
+        'Grand Rapids',
+        'Warren',
+        'Sterling Heights',
+        'Ann Arbor',
+        'Lansing',
+        'Flint',
+        'Dearborn',
+      ],
+    },
+    MN: {
+      counties: [
+        'Hennepin',
+        'Ramsey',
+        'Dakota',
+        'Anoka',
+        'Washington',
+        'St. Louis',
+        'Olmsted',
+        'Stearns',
+      ],
+      cities: [
+        'Minneapolis',
+        'St. Paul',
+        'Rochester',
+        'Duluth',
+        'Bloomington',
+        'Brooklyn Park',
+        'Plymouth',
+      ],
+    },
+    MS: {
+      counties: ['Hinds', 'Harrison', 'DeSoto', 'Rankin', 'Jackson', 'Madison', 'Lee', 'Forrest'],
+      cities: ['Jackson', 'Gulfport', 'Southaven', 'Hattiesburg', 'Biloxi', 'Meridian', 'Tupelo'],
+    },
+    MO: {
+      counties: [
+        'St. Louis',
+        'Jackson',
+        'St. Charles',
+        'St. Louis City',
+        'Greene',
+        'Clay',
+        'Jefferson',
+        'Boone',
+      ],
+      cities: [
+        'Kansas City',
+        'St. Louis',
+        'Springfield',
+        'Columbia',
+        'Independence',
+        "Lee's Summit",
+      ],
+    },
+    MT: {
+      counties: [
+        'Yellowstone',
+        'Missoula',
+        'Gallatin',
+        'Flathead',
+        'Cascade',
+        'Lewis and Clark',
+        'Ravalli',
+      ],
+      cities: ['Billings', 'Missoula', 'Great Falls', 'Bozeman', 'Butte', 'Helena'],
+    },
+    NE: {
+      counties: ['Douglas', 'Lancaster', 'Sarpy', 'Hall', 'Buffalo', 'Lincoln', 'Scotts Bluff'],
+      cities: ['Omaha', 'Lincoln', 'Bellevue', 'Grand Island', 'Kearney', 'Fremont'],
+    },
+    NV: {
+      counties: ['Clark', 'Washoe', 'Carson City', 'Lyon', 'Elko', 'Douglas', 'Nye'],
+      cities: ['Las Vegas', 'Henderson', 'Reno', 'North Las Vegas', 'Sparks', 'Carson City'],
+    },
+    NH: {
+      counties: [
+        'Hillsborough',
+        'Rockingham',
+        'Merrimack',
+        'Strafford',
+        'Grafton',
+        'Cheshire',
+        'Belknap',
+        'Sullivan',
+        'Carroll',
+        'Coos',
+      ],
+      cities: ['Manchester', 'Nashua', 'Concord', 'Derry', 'Rochester', 'Salem', 'Dover'],
+    },
+    NJ: {
+      counties: [
+        'Bergen',
+        'Middlesex',
+        'Essex',
+        'Hudson',
+        'Monmouth',
+        'Ocean',
+        'Union',
+        'Passaic',
+        'Camden',
+      ],
+      cities: ['Newark', 'Jersey City', 'Paterson', 'Elizabeth', 'Trenton', 'Clifton', 'Camden'],
+    },
+    NM: {
+      counties: ['Bernalillo', 'Doña Ana', 'Santa Fe', 'Sandoval', 'San Juan', 'McKinley', 'Lea'],
+      cities: ['Albuquerque', 'Las Cruces', 'Rio Rancho', 'Santa Fe', 'Roswell', 'Farmington'],
+    },
+    NY: {
+      counties: [
+        'Kings',
+        'Queens',
+        'New York',
+        'Suffolk',
+        'Bronx',
+        'Nassau',
+        'Westchester',
+        'Erie',
+        'Monroe',
+      ],
+      cities: [
+        'New York City',
+        'Buffalo',
+        'Rochester',
+        'Yonkers',
+        'Syracuse',
+        'Albany',
+        'New Rochelle',
+      ],
+    },
+    NC: {
+      counties: [
+        'Mecklenburg',
+        'Wake',
+        'Guilford',
+        'Forsyth',
+        'Cumberland',
+        'Durham',
+        'Buncombe',
+        'Gaston',
+      ],
+      cities: [
+        'Charlotte',
+        'Raleigh',
+        'Greensboro',
+        'Durham',
+        'Winston-Salem',
+        'Fayetteville',
+        'Cary',
+        'Wilmington',
+      ],
+    },
+    ND: {
+      counties: ['Cass', 'Burleigh', 'Grand Forks', 'Ward', 'Williams', 'Stark', 'Morton'],
+      cities: ['Fargo', 'Bismarck', 'Grand Forks', 'Minot', 'West Fargo', 'Williston'],
+    },
+    OH: {
+      counties: [
+        'Franklin',
+        'Cuyahoga',
+        'Hamilton',
+        'Summit',
+        'Montgomery',
+        'Lucas',
+        'Butler',
+        'Stark',
+      ],
+      cities: ['Columbus', 'Cleveland', 'Cincinnati', 'Toledo', 'Akron', 'Dayton', 'Parma'],
+    },
+    OK: {
+      counties: ['Oklahoma', 'Tulsa', 'Cleveland', 'Canadian', 'Comanche', 'Rogers', 'Wagoner'],
+      cities: ['Oklahoma City', 'Tulsa', 'Norman', 'Broken Arrow', 'Edmond', 'Lawton', 'Moore'],
+    },
+    OR: {
+      counties: ['Multnomah', 'Washington', 'Clackamas', 'Lane', 'Marion', 'Jackson', 'Deschutes'],
+      cities: ['Portland', 'Salem', 'Eugene', 'Gresham', 'Hillsboro', 'Beaverton', 'Bend'],
+    },
+    PA: {
+      counties: [
+        'Philadelphia',
+        'Allegheny',
+        'Montgomery',
+        'Bucks',
+        'Delaware',
+        'Lancaster',
+        'Chester',
+        'York',
+      ],
+      cities: [
+        'Philadelphia',
+        'Pittsburgh',
+        'Allentown',
+        'Reading',
+        'Scranton',
+        'Bethlehem',
+        'Lancaster',
+        'Harrisburg',
+      ],
+    },
+    RI: {
+      counties: ['Providence', 'Kent', 'Washington', 'Newport', 'Bristol'],
+      cities: ['Providence', 'Warwick', 'Cranston', 'Pawtucket', 'East Providence', 'Newport'],
+    },
+    SC: {
+      counties: [
+        'Greenville',
+        'Richland',
+        'Charleston',
+        'Horry',
+        'Spartanburg',
+        'Lexington',
+        'York',
+      ],
+      cities: [
+        'Charleston',
+        'Columbia',
+        'North Charleston',
+        'Mount Pleasant',
+        'Rock Hill',
+        'Greenville',
+        'Summerville',
+      ],
+    },
+    SD: {
+      counties: ['Minnehaha', 'Pennington', 'Lincoln', 'Brown', 'Brookings', 'Codington', 'Meade'],
+      cities: ['Sioux Falls', 'Rapid City', 'Aberdeen', 'Brookings', 'Watertown', 'Mitchell'],
+    },
+    TN: {
+      counties: [
+        'Shelby',
+        'Davidson',
+        'Knox',
+        'Hamilton',
+        'Rutherford',
+        'Williamson',
+        'Sumner',
+        'Montgomery',
+      ],
+      cities: [
+        'Nashville',
+        'Memphis',
+        'Knoxville',
+        'Chattanooga',
+        'Clarksville',
+        'Murfreesboro',
+        'Franklin',
+      ],
+    },
+    TX: {
+      counties: [
+        'Harris',
+        'Dallas',
+        'Tarrant',
+        'Bexar',
+        'Travis',
+        'Collin',
+        'Hidalgo',
+        'El Paso',
+        'Denton',
+        'Fort Bend',
+      ],
+      cities: [
+        'Houston',
+        'San Antonio',
+        'Dallas',
+        'Austin',
+        'Fort Worth',
+        'El Paso',
+        'Arlington',
+        'Corpus Christi',
+        'Plano',
+      ],
+    },
+    UT: {
+      counties: ['Salt Lake', 'Utah', 'Davis', 'Weber', 'Washington', 'Cache', 'Tooele'],
+      cities: [
+        'Salt Lake City',
+        'West Valley City',
+        'Provo',
+        'West Jordan',
+        'Orem',
+        'Sandy',
+        'Ogden',
+        'St. George',
+      ],
+    },
+    VT: {
+      counties: [
+        'Chittenden',
+        'Rutland',
+        'Washington',
+        'Windsor',
+        'Franklin',
+        'Bennington',
+        'Windham',
+        'Caledonia',
+        'Addison',
+        'Orleans',
+        'Orange',
+        'Lamoille',
+        'Grand Isle',
+        'Essex',
+      ],
+      cities: [
+        'Burlington',
+        'South Burlington',
+        'Rutland',
+        'Barre',
+        'Montpelier',
+        'St. Albans',
+        'Winooski',
+      ],
+    },
+    VA: {
+      counties: [
+        'Fairfax',
+        'Prince William',
+        'Loudoun',
+        'Virginia Beach',
+        'Chesterfield',
+        'Henrico',
+        'Norfolk',
+        'Arlington',
+      ],
+      cities: [
+        'Virginia Beach',
+        'Norfolk',
+        'Chesapeake',
+        'Richmond',
+        'Newport News',
+        'Alexandria',
+        'Hampton',
+        'Roanoke',
+      ],
+    },
+    WA: {
+      counties: ['King', 'Pierce', 'Snohomish', 'Spokane', 'Clark', 'Thurston', 'Kitsap', 'Yakima'],
+      cities: [
+        'Seattle',
+        'Spokane',
+        'Tacoma',
+        'Vancouver',
+        'Bellevue',
+        'Kent',
+        'Everett',
+        'Renton',
+      ],
+    },
+    WV: {
+      counties: [
+        'Kanawha',
+        'Berkeley',
+        'Cabell',
+        'Wood',
+        'Monongalia',
+        'Raleigh',
+        'Putnam',
+        'Harrison',
+      ],
+      cities: [
+        'Charleston',
+        'Huntington',
+        'Morgantown',
+        'Parkersburg',
+        'Wheeling',
+        'Martinsburg',
+        'Fairmont',
+      ],
+    },
+    WI: {
+      counties: [
+        'Milwaukee',
+        'Dane',
+        'Waukesha',
+        'Brown',
+        'Racine',
+        'Outagamie',
+        'Winnebago',
+        'Kenosha',
+      ],
+      cities: [
+        'Milwaukee',
+        'Madison',
+        'Green Bay',
+        'Kenosha',
+        'Racine',
+        'Appleton',
+        'Waukesha',
+        'Oshkosh',
+      ],
+    },
+    WY: {
+      counties: [
+        'Laramie',
+        'Natrona',
+        'Campbell',
+        'Sweetwater',
+        'Fremont',
+        'Albany',
+        'Sheridan',
+        'Park',
+        'Teton',
+        'Uinta',
+      ],
+      cities: [
+        'Cheyenne',
+        'Casper',
+        'Laramie',
+        'Gillette',
+        'Rock Springs',
+        'Sheridan',
+        'Green River',
+      ],
+    },
+    DC: { counties: ['District of Columbia'], cities: ['Washington'] },
+    // Territories
+    PR: {
+      counties: [
+        'San Juan',
+        'Bayamón',
+        'Carolina',
+        'Ponce',
+        'Caguas',
+        'Guaynabo',
+        'Mayagüez',
+        'Arecibo',
+      ],
+      cities: ['San Juan', 'Bayamón', 'Carolina', 'Ponce', 'Caguas', 'Guaynabo', 'Mayagüez'],
+    },
+    VI: {
+      counties: ['St. Croix', 'St. Thomas', 'St. John'],
+      cities: ['Charlotte Amalie', 'Christiansted', 'Frederiksted', 'Cruz Bay'],
+    },
+    GU: {
+      counties: ['Dededo', 'Yigo', 'Tamuning', 'Mangilao', 'Barrigada'],
+      cities: ['Hagåtña', 'Dededo', 'Tamuning', 'Yigo', 'Mangilao'],
+    },
+    AS: {
+      counties: ['Eastern District', 'Western District', "Manu'a District"],
+      cities: ['Pago Pago', 'Tafuna', "Nu'uuli", "Ili'ili", "Pava'ia'i"],
+    },
+    MP: {
+      counties: ['Saipan', 'Tinian', 'Rota', 'Northern Islands'],
+      cities: ['Saipan', 'Garapan', 'San Jose', 'Chalan Kanoa'],
+    },
+  };
+
+  const stateData = stateGeography[state];
+  if (!stateData) {
+    logger.warn('No statewide geographic data available', { state });
+    return { counties: [], cities: [] };
+  }
+
+  logger.info('Returning statewide geographic data', {
+    state,
+    countyCount: stateData.counties.length,
+    cityCount: stateData.cities.length,
+  });
+
+  return stateData;
 }
 
 // State name to code mapping - placed at module level for reuse
