@@ -1,6 +1,9 @@
 /* Import Otl Aicher Design System - must be before @tailwind */
 @import '../styles/aicher-system.css';
 
+/* Print stylesheet for clean printed pages */
+@import '../styles/print.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

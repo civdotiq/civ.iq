@@ -99,11 +99,20 @@ export async function generateMetadata({
       description,
       type: 'website',
       url: `https://civdotiq.org/districts/${districtId}`,
+      images: [
+        {
+          url: `/api/og/district/${districtId}`,
+          width: 1200,
+          height: 630,
+          alt: `${stateName} ${districtLabel} - CIV.IQ`,
+        },
+      ],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title,
       description,
+      images: [`/api/og/district/${districtId}`],
     },
   };
 }

@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CiviqLogo } from '@/shared/ui/CiviqLogo';
 import { MobileNav } from './MobileNav';
+import { GlobalSearch } from '@/components/search/GlobalSearch';
 
 interface HeaderProps {
   className?: string;
@@ -229,6 +230,11 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
                 </Link>
               );
             })}
+
+            {/* Global Search */}
+            <div className="ml-2 lg:ml-4">
+              <GlobalSearch />
+            </div>
           </nav>
 
           {/* Mobile Menu Button */}

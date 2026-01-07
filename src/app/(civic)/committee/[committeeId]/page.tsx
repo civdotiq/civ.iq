@@ -86,6 +86,20 @@ export async function generateMetadata({ params }: CommitteePageProps): Promise<
       title,
       description,
       type: 'website',
+      images: [
+        {
+          url: `/api/og/committee/${committeeId}`,
+          width: 1200,
+          height: 630,
+          alt: `${title} - CIV.IQ`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`/api/og/committee/${committeeId}`],
     },
   };
 }
