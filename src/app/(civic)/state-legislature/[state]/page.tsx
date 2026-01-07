@@ -23,7 +23,6 @@ import {
 import { encodeBase64Url } from '@/lib/url-encoding';
 import { StateExecutivesTab } from '@/features/state-government/components/StateExecutivesTab';
 import { StateJudiciaryTab } from '@/features/state-government/components/StateJudiciaryTab';
-import { Header } from '@/shared/components/navigation/Header';
 
 interface StateLegislator {
   id: string;
@@ -460,9 +459,7 @@ export default function StateLegislaturePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
-
-      <main className="container mx-auto px-4 py-8 pt-24">
+      <main className="container mx-auto px-4 py-8">
         {/* Page header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 mb-8">
           <div className="flex items-center gap-6">

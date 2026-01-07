@@ -15,7 +15,6 @@ import UnifiedDemographicsDisplay from '@/components/districts/shared/UnifiedDem
 import NeighboringDistricts from '@/features/districts/components/NeighboringDistricts';
 import logger from '@/lib/logging/simple-logger';
 import { SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
-import { Header } from '@/shared/components/navigation/Header';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import type { FAQItem } from '@/components/seo/WikipediaStyleSEO';
 import { DistrictFooter } from '@/components/seo/DistrictFooter';
@@ -164,10 +163,8 @@ export default function DistrictPage() {
 
   return (
     <div className="min-h-screen bg-white density-default">
-      <Header />
-
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 pt-24">
+      <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <SimpleBreadcrumb />
 

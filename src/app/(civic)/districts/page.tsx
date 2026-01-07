@@ -13,7 +13,6 @@ import { Suspense } from 'react';
 import NationalStatsCards from '@/shared/components/ui/NationalStatsCards';
 import StateInfoPanel from '@/shared/components/ui/StateInfoPanel';
 import CongressSessionInfo from '@/features/districts/components/CongressSessionInfo';
-import { Header } from '@/shared/components/navigation/Header';
 import { DistrictCard } from '@/features/districts/components/DistrictCard';
 import { DemographicsDashboard } from '@/features/districts/components/DemographicsDashboard';
 import { ApiErrorBoundary } from '@/components/ErrorBoundary';
@@ -127,9 +126,7 @@ export default function DistrictsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
-
-      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 pt-20">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-4 sm:mb-6">
           <Link href="/" className="hover:text-blue-600">

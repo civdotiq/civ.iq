@@ -8,7 +8,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { FileText, AlertCircle } from 'lucide-react';
-import { Header } from '@/shared/components/navigation/Header';
 import { StateSelector } from '@/features/state-bills/components/StateSelector';
 import {
   BillSearchFilters,
@@ -147,10 +146,8 @@ export default function StateBillsSearchPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 pt-24">
+      <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
         <nav className="text-sm text-gray-500 mb-6">
           <Link href="/" className="hover:text-blue-600">

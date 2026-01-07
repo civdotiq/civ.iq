@@ -9,7 +9,6 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useEffect, useState, Suspense, useCallback } from 'react';
-import { Header } from '@/shared/components/navigation/Header';
 import logger from '@/lib/logging/simple-logger';
 import { parseAddressComponents } from '@/lib/census-geocoder';
 // Dynamic imports for code splitting - reduces initial bundle size
@@ -593,9 +592,7 @@ function ResultsContent() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
-
-      <main className="container mx-auto px-4 py-8 pt-20">
+      <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Representatives</h1>
           <p className="text-gray-600">

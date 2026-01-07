@@ -18,8 +18,6 @@ import {
   DistrictInfo,
   MultiDistrictResponse,
 } from '@/lib/multi-district/detection';
-import { Header } from '@/shared/components/navigation/Header';
-
 function CiviqLogo({ className = 'w-10 h-15' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 300 450" xmlns="http://www.w3.org/2000/svg">
@@ -141,9 +139,7 @@ export default function Home() {
 
   return (
     <>
-      <Header />
-
-      <section className="min-h-screen flex items-center justify-center px-4 pt-20 bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
+      <section className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
         <div className="max-w-4xl w-full text-center space-y-6 md:space-y-10">
           <div className="animate-fade-in-up">
             <CiviqLogo className="w-16 h-24 md:w-24 md:h-36 mx-auto mb-6 md:mb-8" />

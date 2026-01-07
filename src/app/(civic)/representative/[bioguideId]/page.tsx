@@ -7,7 +7,6 @@ import { notFound } from 'next/navigation';
 import dynamicImport from 'next/dynamic';
 import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErrorBoundary';
-import { SiteHeader } from '@/components/shared/layout/SiteHeader';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
 import { PersonSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
@@ -227,8 +226,6 @@ export default async function RepresentativeProfilePage({
           { name: representative.name, url: `https://civdotiq.org/representative/${bioguideId}` },
         ]}
       />
-
-      <SiteHeader />
 
       <main id="main-content" className="density-default">
         <div className="container mx-auto px-grid-2 md:px-grid-4 py-grid-3">

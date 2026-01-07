@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
+import { Header } from '@/shared/components/navigation/Header';
 import { SiteFooter } from '@/components/shared/layout/SiteFooter';
 
 // Google Analytics Measurement ID
@@ -113,7 +114,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to main content
         </a>
         <div className="min-h-screen flex flex-col">
-          <div className="flex-grow">{children}</div>
+          <Header />
+          <main id="main-content" className="flex-grow pt-14">
+            {children}
+          </main>
           <SiteFooter />
         </div>
       </body>

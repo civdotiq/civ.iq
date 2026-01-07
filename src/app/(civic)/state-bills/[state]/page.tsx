@@ -21,7 +21,6 @@ import {
   Filter,
 } from 'lucide-react';
 import { encodeBase64Url } from '@/lib/url-encoding';
-import { Header } from '@/shared/components/navigation/Header';
 
 interface StateBill {
   id: string;
@@ -393,9 +392,7 @@ export default function StateBillsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
-
-      <main className="container mx-auto px-4 py-8 pt-24">
+      <main className="container mx-auto px-4 py-8">
         {/* Page header */}
         <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-8 mb-8">
           <div className="flex items-center gap-6">

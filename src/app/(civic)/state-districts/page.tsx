@@ -11,7 +11,6 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Header } from '@/shared/components/navigation/Header';
 import { getAllStateLegislatures, getTotalSeats } from '@/lib/data/static-state-legislatures';
 
 // State names for display
@@ -87,9 +86,7 @@ export default function StateDistrictsPage() {
 
   return (
     <>
-      <Header />
-
-      <main className="min-h-screen pt-20 px-4 pb-16 bg-white">
+      <main className="min-h-screen px-4 pb-16 bg-white">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb Navigation */}
           <nav className="text-sm text-gray-500 mb-6">

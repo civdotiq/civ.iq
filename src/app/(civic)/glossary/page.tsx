@@ -7,16 +7,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Header } from '@/shared/components/navigation/Header';
 import { GlossaryClient } from './GlossaryClient';
 
 export default function GlossaryPage() {
   return (
     <>
-      <Header />
-
       {/* Main Content */}
-      <main className="min-h-screen pt-20 px-4 pb-16 bg-white">
+      <main className="min-h-screen px-4 pb-16 bg-white">
         <div className="max-w-4xl mx-auto">
           {/* Breadcrumb Navigation */}
           <nav className="text-sm text-gray-500 mb-6">

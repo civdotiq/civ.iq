@@ -13,7 +13,6 @@ import { select } from 'd3-selection';
 import { scaleBand, scaleLinear } from 'd3-scale';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { lineRadial, curveLinearClosed } from 'd3-shape';
-import { Header } from '@/shared/components/navigation/Header';
 
 // Types
 interface StateData {
@@ -617,9 +616,7 @@ export default function StateOverviewPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
-
-      <main className="container mx-auto px-4 py-8 pt-24">
+      <main className="container mx-auto px-4 py-8">
         {/* State header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 mb-8">
           <div className="flex items-center gap-6">

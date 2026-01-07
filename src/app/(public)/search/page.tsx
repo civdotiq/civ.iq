@@ -6,14 +6,11 @@
  */
 
 import { AdvancedSearch } from '@/features/search/components/AdvancedSearch';
-import { Header } from '@/shared/components/navigation/Header';
 
 export default function SearchPage() {
   return (
     <div className="min-h-screen aicher-background density-compact">
-      <Header />
-
-      <main className="container mx-auto px-4 py-8 pt-20">
+      <main className="container mx-auto px-4 py-8">
         {/* Page header */}
         <div className="mb-8">
           <h1 className="aicher-heading text-4xl text-gray-900 mb-3">

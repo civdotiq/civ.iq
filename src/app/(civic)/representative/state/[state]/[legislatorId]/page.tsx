@@ -16,7 +16,6 @@ import { notFound } from 'next/navigation';
 import dynamicImport from 'next/dynamic';
 import { ErrorBoundary } from '@/components/shared/common/ErrorBoundary';
 import { ChunkLoadErrorBoundary } from '@/components/shared/common/ChunkLoadErrorBoundary';
-import { SiteHeader } from '@/components/shared/layout/SiteHeader';
 import Link from 'next/link';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
@@ -111,8 +110,6 @@ export default async function StateLegislatorProfilePage({
 
   return (
     <>
-      <SiteHeader />
-
       <main id="main-content">
         <div className="container mx-auto px-grid-2 md:px-grid-4 py-grid-3">
           <div className="flex justify-between items-center mb-grid-3">

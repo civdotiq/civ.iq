@@ -8,7 +8,6 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { FileText, Calendar, ExternalLink, Search, Loader2 } from 'lucide-react';
-import { Header } from '@/shared/components/navigation/Header';
 import { FloorActivity } from '@/features/legislation/components/FloorActivity';
 import { WitnessSearch } from '@/features/legislation/components/WitnessSearch';
 
@@ -151,10 +150,8 @@ export default function LegislationPage() {
 
   return (
     <>
-      <Header />
-
       {/* Main Content */}
-      <main className="min-h-screen pt-20 px-4 pb-16 bg-white">
+      <main className="min-h-screen px-4 pb-16 bg-white">
         <div className="max-w-7xl mx-auto">
           <BreadcrumbNav />
           <h1 className="text-4xl font-bold text-center mb-4">Recent Legislation</h1>

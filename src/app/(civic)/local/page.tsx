@@ -6,15 +6,12 @@
  */
 
 import Link from 'next/link';
-import { Header } from '@/shared/components/navigation/Header';
 
 export default function LocalPage() {
   return (
     <>
-      <Header />
-
       {/* Main Content */}
-      <main className="min-h-screen pt-20 px-4 pb-16">
+      <main className="min-h-screen px-4 pb-16">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb Navigation */}
           <nav className="text-sm text-gray-500 mb-6">

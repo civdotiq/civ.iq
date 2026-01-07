@@ -9,7 +9,6 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { SiteHeader } from '@/components/shared/layout/SiteHeader';
 
 // Breadcrumb Navigation Component
 function BreadcrumbNav() {
@@ -206,7 +205,6 @@ export default function ComparePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 density-compact">
-      <SiteHeader />
       <BreadcrumbNav />
       <ComparisonHeader
         selectedReps={selectedRepresentatives.map(rep => ({
