@@ -20,7 +20,7 @@ export interface FECMapping {
   lastUpdated: string;
 }
 
-// Complete mappings for 119th Congress (534 representatives)
+// Complete mappings for 119th Congress (537 representatives)
 export const bioguideToFECMapping: Record<string, FECMapping> = {
   A000055: {
     fecId: 'H6AL04098',
@@ -1128,6 +1128,14 @@ export const bioguideToFECMapping: Record<string, FECMapping> = {
     office: 'H',
     lastUpdated: '2025-09-18',
   },
+  F000110: {
+    fecId: 'H4LA06211',
+    name: 'FIELDS, CLEO',
+    state: 'LA',
+    district: '06',
+    office: 'H',
+    lastUpdated: '2026-01-06',
+  },
   F000246: {
     fecId: 'H0TX04219',
     name: 'FALLON, PATRICK',
@@ -1814,6 +1822,13 @@ export const bioguideToFECMapping: Record<string, FECMapping> = {
     state: 'PR',
     office: 'H',
     lastUpdated: '2025-09-18',
+  },
+  H001104: {
+    fecId: 'S6OH00304',
+    name: 'HUSTED, JON',
+    state: 'OH',
+    office: 'S',
+    lastUpdated: '2026-01-06',
   },
   I000056: {
     fecId: 'H0CA48024',
@@ -2843,6 +2858,13 @@ export const bioguideToFECMapping: Record<string, FECMapping> = {
     state: 'PA',
     office: 'S',
     lastUpdated: '2025-09-18',
+  },
+  M001244: {
+    fecId: 'S6FL00640',
+    name: 'MOODY, ASHLEY',
+    state: 'FL',
+    office: 'S',
+    lastUpdated: '2026-01-06',
   },
   N000002: {
     fecId: 'H2NY17071',

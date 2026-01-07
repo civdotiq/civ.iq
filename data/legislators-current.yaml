@@ -39285,6 +39285,8 @@
     thomas: '00379'
     govtrack: 404067
     opensecrets: N00005398
+    fec:
+      - H4LA06211
     wikipedia: Cleo Fields
     house_history: 13112
     icpsr: 29354
@@ -41238,6 +41240,8 @@
     bioguide: H001104
     lis: S438
     govtrack: 457032
+    fec:
+      - S6OH00304
     wikipedia: Jon Husted
     wikidata: Q6270269
   name:
@@ -41266,6 +41270,8 @@
     bioguide: M001244
     lis: S439
     govtrack: 457033
+    fec:
+      - S6FL00640
     wikipedia: Ashley Moody
     wikidata: Q58333626
   name:
