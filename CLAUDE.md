@@ -354,7 +354,7 @@ npm run diagnose:apis          # Test API connectivity
 
 ## 🌐 API Endpoints
 
-**Total: 101 API Endpoints** - All return real data or appropriate error messages.
+**Total: 107 API Endpoints** - All return real data or appropriate error messages.
 
 ### Federal Representatives (16 endpoints)
 
@@ -530,10 +530,27 @@ GET /api/v2/representatives                                 # V2 API - list
 GET /api/v2/representatives/[id]                            # V2 API - details
 ```
 
-### Search & Discovery (1 endpoint)
+### Search & Discovery (2 endpoints)
 
 ```typescript
 GET /api/search                                             # Advanced search
+GET /api/search/unified?q=<query>&limit=5                   # Unified search (reps, bills, committees)
+```
+
+### RSS Feeds (3 endpoints)
+
+```typescript
+GET /feeds/representative/[bioguideId]                      # Per-rep activity feed (Atom 1.0)
+GET /feeds/bills                                            # Latest bills feed
+GET /feeds/floor                                            # Floor schedule feed
+```
+
+### OG Images (3 endpoints)
+
+```typescript
+GET /api/og/bill/[billId]                                   # Bill sharing card (1200x630)
+GET /api/og/committee/[committeeId]                         # Committee sharing card
+GET /api/og/district/[districtId]                           # District sharing card
 ```
 
 **Note**: Legacy GDELT endpoints (`/api/gdelt/*`) exist but are deprecated and not actively used.
@@ -856,6 +873,14 @@ echo "GOAL: [What you're implementing]" >> .session.log
 ```
 
 **Recent Development Highlights** (Last 3 Months):
+
+**January 2026:**
+
+- ✅ **Global Search with Autocomplete** - Header bar search component with debounced typeahead, keyboard navigation (arrows/enter/escape), grouped results for representatives, bills, and committees, integrated into Header.tsx
+- ✅ **Social Sharing Cards (OG Images)** - Dynamic Open Graph images for bills, committees, and districts using Edge Runtime and `next/og` ImageResponse (1200x630px), Aicher-compliant design
+- ✅ **RSS Feeds** - Atom 1.0 feeds for per-representative activity, latest bills, and floor schedule; atom-generator utility in `src/lib/feeds/`
+- ✅ **Print Stylesheets** - Comprehensive print.css for clean printed civic pages, hides navigation chrome, shows link URLs, proper page breaks
+- ✅ **FEC ID Expansion** - Added FEC IDs for 3 newly appointed legislators (Cleo Fields, Jon Husted, Ashley Moody)
 
 **December 2025:**
 
