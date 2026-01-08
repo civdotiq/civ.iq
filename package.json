@@ -73,6 +73,7 @@
     "@mapbox/vector-tile": "2.0.4",
     "@types/d3": "^7.4.3",
     "@types/js-yaml": "4.0.9",
+    "@upstash/ratelimit": "2.0.7",
     "@upstash/redis": "1.35.8",
     "autoprefixer": "^10.4.21",
     "cli-progress": "3.12.0",

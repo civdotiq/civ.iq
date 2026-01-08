@@ -7,12 +7,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
 
 /**
- * Verify admin access (basic security check)
- * In production, replace with proper authentication middleware
+ * Verify admin access using timing-safe comparison
+ * Prevents timing attacks that could leak token information
  */
 function verifyAdminAccess(request: NextRequest): boolean {
   const authHeader = request.headers.get('authorization');
@@ -28,7 +29,19 @@ function verifyAdminAccess(request: NextRequest): boolean {
   }
 
   const token = authHeader.substring(7);
-  return token === adminKey;
+
+  // Use timing-safe comparison to prevent timing attacks
+  // Both strings must be the same length for timingSafeEqual
+  if (token.length !== adminKey.length) {
+    return false;
+  }
+
+  try {
+    return timingSafeEqual(Buffer.from(token, 'utf8'), Buffer.from(adminKey, 'utf8'));
+  } catch {
+    // If comparison fails for any reason, deny access
+    return false;
+  }
 }
 
 interface CacheInvalidationRequest {

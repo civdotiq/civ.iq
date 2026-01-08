@@ -5,6 +5,8 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
 // Simple logging for edge runtime (console is allowed in edge runtime)
 const logger = {
@@ -18,8 +20,97 @@ const logger = {
     console.error(`[ERROR] ${message}`, error, data),
 };
 
-// Rate limiting store (in-memory for Edge Runtime)
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+// Fallback in-memory rate limiting store (used when Redis is unavailable)
+const fallbackRateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+// Lazy-initialize Upstash Redis and Ratelimit instances
+// This prevents build-time errors when env vars aren't available
+let redis: Redis | null = null;
+let ratelimiters: Map<string, Ratelimit> | null = null;
+
+function getRedis(): Redis | null {
+  if (redis) return redis;
+
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) {
+    logger.warn('Upstash Redis not configured, using fallback rate limiting', {
+      hasUrl: !!url,
+      hasToken: !!token,
+    });
+    return null;
+  }
+
+  try {
+    redis = new Redis({ url, token });
+    return redis;
+  } catch (error) {
+    logger.error('Failed to initialize Upstash Redis', error as Error);
+    return null;
+  }
+}
+
+function getRatelimiters(): Map<string, Ratelimit> | null {
+  if (ratelimiters) return ratelimiters;
+
+  const redisInstance = getRedis();
+  if (!redisInstance) return null;
+
+  try {
+    ratelimiters = new Map([
+      // API routes: 100 requests per minute (sliding window)
+      [
+        '/api/',
+        new Ratelimit({
+          redis: redisInstance,
+          limiter: Ratelimit.slidingWindow(100, '1 m'),
+          prefix: 'ratelimit:api',
+          analytics: true,
+        }),
+      ],
+      // Representatives endpoint: 60 requests per minute
+      [
+        '/api/representatives',
+        new Ratelimit({
+          redis: redisInstance,
+          limiter: Ratelimit.slidingWindow(60, '1 m'),
+          prefix: 'ratelimit:representatives',
+          analytics: true,
+        }),
+      ],
+      // District map: 30 requests per minute
+      [
+        '/api/district-map',
+        new Ratelimit({
+          redis: redisInstance,
+          limiter: Ratelimit.slidingWindow(30, '1 m'),
+          prefix: 'ratelimit:district-map',
+          analytics: true,
+        }),
+      ],
+      // Default: 200 requests per minute
+      [
+        'default',
+        new Ratelimit({
+          redis: redisInstance,
+          limiter: Ratelimit.slidingWindow(200, '1 m'),
+          prefix: 'ratelimit:default',
+          analytics: true,
+        }),
+      ],
+    ]);
+
+    logger.http('Upstash Ratelimit initialized successfully', {
+      limiters: Array.from(ratelimiters.keys()),
+    });
+
+    return ratelimiters;
+  } catch (error) {
+    logger.error('Failed to initialize Upstash Ratelimit', error as Error);
+    return null;
+  }
+}
 
 // Security headers configuration
 // Environment-aware CSP: Strict in production, permissive in development
@@ -62,20 +153,20 @@ const SECURITY_HEADERS = {
   'Content-Security-Policy': isDevelopment ? DEVELOPMENT_CSP : PRODUCTION_CSP,
 } as const;
 
-// Rate limiting configuration
+// Rate limiting configuration (used for fallback and response headers)
 interface RateLimitConfig {
   requests: number;
   windowMs: number;
 }
 
-const RATE_LIMITS: Record<string, RateLimitConfig> = {
-  '/api/': { requests: 100, windowMs: 60000 }, // 100 requests per minute for API
-  '/api/representatives': { requests: 60, windowMs: 60000 }, // 60 requests per minute for representatives
-  '/api/district-map': { requests: 30, windowMs: 60000 }, // 30 requests per minute for maps
-  default: { requests: 200, windowMs: 60000 }, // 200 requests per minute for other routes
+const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
+  '/api/': { requests: 100, windowMs: 60000 },
+  '/api/representatives': { requests: 60, windowMs: 60000 },
+  '/api/district-map': { requests: 30, windowMs: 60000 },
+  default: { requests: 200, windowMs: 60000 },
 };
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const startTime = Date.now();
 
   try {
@@ -83,8 +174,8 @@ export function middleware(request: NextRequest) {
     const clientInfo = extractClientInfo(request);
 
     // Log request start (only for API routes in production to avoid spam)
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    if (!isDevelopment && request.nextUrl.pathname.startsWith('/api/')) {
+    const isDevMode = process.env.NODE_ENV === 'development';
+    if (!isDevMode && request.nextUrl.pathname.startsWith('/api/')) {
       logger.http('Request started', {
         method: request.method,
         url: request.url,
@@ -109,14 +200,15 @@ export function middleware(request: NextRequest) {
       );
     }
 
-    // Apply rate limiting
-    const rateLimitResult = checkRateLimit(request, clientInfo.ip);
+    // Apply rate limiting (now async with Upstash)
+    const rateLimitResult = await checkRateLimit(request, clientInfo.ip);
     if (!rateLimitResult.allowed) {
       logger.warn('Rate limit exceeded', {
         url: request.url,
         ip: clientInfo.ip,
         limit: rateLimitResult.limit,
         current: rateLimitResult.current,
+        source: rateLimitResult.source,
       });
 
       return createErrorResponse(429, 'Too Many Requests', {
@@ -152,7 +244,7 @@ export function middleware(request: NextRequest) {
     response.headers.set('X-Request-ID', generateRequestId());
 
     // Log successful request (only for API routes in production)
-    if (!isDevelopment && request.nextUrl.pathname.startsWith('/api/')) {
+    if (!isDevMode && request.nextUrl.pathname.startsWith('/api/')) {
       logger.http('Request completed', {
         method: request.method,
         url: request.url,
@@ -234,54 +326,100 @@ function validateRequest(request: NextRequest): {
   return { isValid: true };
 }
 
-function checkRateLimit(
+/**
+ * Check rate limit using Upstash Ratelimit with fallback to in-memory
+ */
+async function checkRateLimit(
   request: NextRequest,
   clientIp: string
-): {
+): Promise<{
   allowed: boolean;
   limit: number;
   current: number;
   resetTime: number;
-} {
+  source: 'upstash' | 'fallback';
+}> {
   const url = new URL(request.url);
   const now = Date.now();
 
   // Skip rate limiting for static data files (PMTiles, GeoJSON, etc.)
   if (url.pathname.startsWith('/data/') || url.pathname.startsWith('/_next/static/')) {
-    return { allowed: true, limit: 999999, current: 0, resetTime: now + 60000 };
+    return { allowed: true, limit: 999999, current: 0, resetTime: now + 60000, source: 'upstash' };
   }
 
-  // Determine rate limit configuration
-  const defaultConfig: RateLimitConfig = { requests: 200, windowMs: 60000 };
-  let config: RateLimitConfig = RATE_LIMITS.default || defaultConfig;
+  // Determine which rate limiter to use based on path
+  let ratelimiterKey = 'default';
+  let configKey = 'default';
 
-  for (const [path, limit] of Object.entries(RATE_LIMITS)) {
-    if (path !== 'default' && url.pathname.startsWith(path)) {
-      config = limit;
+  for (const path of ['/api/district-map', '/api/representatives', '/api/']) {
+    if (url.pathname.startsWith(path)) {
+      ratelimiterKey = path;
+      configKey = path;
       break;
     }
   }
 
-  // Ensure config is not undefined (defensive programming)
-  if (!config) {
-    config = defaultConfig;
+  const config: RateLimitConfig = RATE_LIMIT_CONFIGS[configKey] ??
+    RATE_LIMIT_CONFIGS.default ?? { requests: 200, windowMs: 60000 };
+
+  // Try Upstash Ratelimit first
+  const limiters = getRatelimiters();
+  if (limiters) {
+    try {
+      const limiter = limiters.get(ratelimiterKey) || limiters.get('default')!;
+      const identifier = `${clientIp}:${url.pathname}`;
+      const result = await limiter.limit(identifier);
+
+      return {
+        allowed: result.success,
+        limit: result.limit,
+        current: result.limit - result.remaining,
+        resetTime: result.reset,
+        source: 'upstash',
+      };
+    } catch (error) {
+      // Upstash failed, fall through to in-memory fallback
+      logger.warn('Upstash Ratelimit failed, using fallback', {
+        error: (error as Error).message,
+        path: url.pathname,
+      });
+    }
   }
 
-  const key = `${clientIp}:${url.pathname}`;
+  // Fallback: In-memory rate limiting (for local dev or Redis failures)
+  return checkFallbackRateLimit(clientIp, url.pathname, config);
+}
+
+/**
+ * Fallback in-memory rate limiting (same as original implementation)
+ * Used when Upstash Redis is unavailable
+ */
+function checkFallbackRateLimit(
+  clientIp: string,
+  pathname: string,
+  config: RateLimitConfig
+): {
+  allowed: boolean;
+  limit: number;
+  current: number;
+  resetTime: number;
+  source: 'fallback';
+} {
+  const now = Date.now();
+  const key = `${clientIp}:${pathname}`;
   const windowStart = Math.floor(now / config.windowMs) * config.windowMs;
   const resetTime = windowStart + config.windowMs;
 
-  let entry = rateLimitStore.get(key);
+  let entry = fallbackRateLimitStore.get(key);
 
-  // Clean up expired entries periodically
+  // Clean up expired entries periodically (1% chance)
   if (Math.random() < 0.01) {
-    // 1% chance to cleanup
-    cleanupRateLimitStore();
+    cleanupFallbackRateLimitStore();
   }
 
   if (!entry || entry.resetTime <= now) {
     entry = { count: 0, resetTime };
-    rateLimitStore.set(key, entry);
+    fallbackRateLimitStore.set(key, entry);
   }
 
   entry.count++;
@@ -291,14 +429,15 @@ function checkRateLimit(
     limit: config.requests,
     current: entry.count,
     resetTime: entry.resetTime,
+    source: 'fallback',
   };
 }
 
-function cleanupRateLimitStore() {
+function cleanupFallbackRateLimitStore() {
   const now = Date.now();
-  for (const [key, entry] of rateLimitStore.entries()) {
+  for (const [key, entry] of fallbackRateLimitStore.entries()) {
     if (entry.resetTime <= now) {
-      rateLimitStore.delete(key);
+      fallbackRateLimitStore.delete(key);
     }
   }
 }
