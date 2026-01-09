@@ -7,7 +7,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, User, FileText, Users, X } from 'lucide-react';
+import { Search, User, FileText, Users, X, Building2 } from 'lucide-react';
 
 interface Representative {
   bioguideId: string;
@@ -18,6 +18,16 @@ interface Representative {
   state: string;
   chamber: 'House' | 'Senate';
   district?: string;
+}
+
+interface StateLegislator {
+  id: string;
+  name: string;
+  party: string;
+  state: string;
+  chamber: string;
+  district: string;
+  photo_url?: string;
 }
 
 interface Bill {
@@ -35,11 +45,15 @@ interface Committee {
 
 interface SearchResults {
   representatives: Representative[];
+  stateLegislators: StateLegislator[];
   bills: Bill[];
   committees: Committee[];
   query: string;
+  stateFilter?: string;
   totalResults: number;
 }
+
+type SearchItem = Representative | StateLegislator | Bill | Committee;
 
 function debounce<T extends (...args: Parameters<T>) => void>(
   func: T,
@@ -69,9 +83,10 @@ export function GlobalSearch() {
   const router = useRouter();
 
   // Build flat list of all results for keyboard navigation
-  const allResults: Array<{ type: string; item: Representative | Bill | Committee }> = [];
+  const allResults: Array<{ type: string; item: SearchItem }> = [];
   if (results) {
     results.representatives.forEach(r => allResults.push({ type: 'rep', item: r }));
+    (results.stateLegislators || []).forEach(s => allResults.push({ type: 'state-leg', item: s }));
     results.bills.forEach(b => allResults.push({ type: 'bill', item: b }));
     results.committees.forEach(c => allResults.push({ type: 'committee', item: c }));
   }
@@ -116,7 +131,7 @@ export function GlobalSearch() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const navigateToResult = (result: { type: string; item: Representative | Bill | Committee }) => {
+  const navigateToResult = (result: { type: string; item: SearchItem }) => {
     setIsOpen(false);
     setQuery('');
     setResults(null);
@@ -124,6 +139,9 @@ export function GlobalSearch() {
     if (result.type === 'rep') {
       const rep = result.item as Representative;
       router.push(`/representative/${rep.bioguideId}`);
+    } else if (result.type === 'state-leg') {
+      const leg = result.item as StateLegislator;
+      router.push(`/state-legislature/${leg.state.toLowerCase()}/legislator/${leg.id}`);
     } else if (result.type === 'bill') {
       const bill = result.item as Bill;
       router.push(`/bill/${bill.number}`);
@@ -168,6 +186,11 @@ export function GlobalSearch() {
     inputRef.current?.focus();
   };
 
+  // Calculate offsets for keyboard navigation
+  const stateLegOffset = results?.representatives.length || 0;
+  const billsOffset = stateLegOffset + (results?.stateLegislators?.length || 0);
+  const committeesOffset = billsOffset + (results?.bills.length || 0);
+
   return (
     <div ref={containerRef} className="relative">
       {/* Search Input */}
@@ -184,9 +207,9 @@ export function GlobalSearch() {
           }}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Search reps, bills, committees..."
+          placeholder="Search (CA: for state)"
           className="w-48 lg:w-64 pl-9 pr-8 py-2 text-sm border-2 border-black bg-white focus:outline-none focus:border-civiq-blue transition-colors"
-          aria-label="Global search"
+          aria-label="Global search - prefix with state code for state legislators (e.g. CA: smith)"
           aria-expanded={isOpen}
           aria-haspopup="listbox"
         />
@@ -207,16 +230,28 @@ export function GlobalSearch() {
           {isLoading && <div className="p-4 text-center text-gray-500 text-sm">Searching...</div>}
 
           {!isLoading && results && results.totalResults === 0 && (
-            <div className="p-4 text-center text-gray-500 text-sm">No results found</div>
+            <div className="p-4 text-center text-gray-500 text-sm">
+              No results found
+              {!results.stateFilter && (
+                <div className="mt-1 text-xs">Tip: Use &quot;CA: name&quot; for state search</div>
+              )}
+            </div>
           )}
 
           {!isLoading && results && results.totalResults > 0 && (
             <div role="listbox">
-              {/* Representatives */}
+              {/* State Filter Indicator */}
+              {results.stateFilter && (
+                <div className="px-3 py-1 bg-civiq-blue/10 text-xs text-civiq-blue border-b border-gray-200">
+                  Searching in {results.stateFilter} state legislature
+                </div>
+              )}
+
+              {/* Federal Representatives */}
               {results.representatives.length > 0 && (
                 <div>
                   <div className="px-3 py-2 bg-gray-50 text-xs font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200">
-                    Representatives
+                    Federal Representatives
                   </div>
                   {results.representatives.map((rep, index) => (
                     <button
@@ -241,6 +276,38 @@ export function GlobalSearch() {
                 </div>
               )}
 
+              {/* State Legislators */}
+              {results.stateLegislators && results.stateLegislators.length > 0 && (
+                <div>
+                  <div className="px-3 py-2 bg-gray-50 text-xs font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                    State Legislators ({results.stateFilter})
+                  </div>
+                  {results.stateLegislators.map((leg, index) => {
+                    const resultIndex = stateLegOffset + index;
+                    return (
+                      <button
+                        key={leg.id}
+                        onClick={() => navigateToResult({ type: 'state-leg', item: leg })}
+                        className={`w-full px-3 py-2 flex items-center gap-3 text-left hover:bg-gray-50 border-b border-gray-100 ${
+                          selectedIndex === resultIndex ? 'bg-civiq-blue/10' : ''
+                        }`}
+                        role="option"
+                        aria-selected={selectedIndex === resultIndex}
+                      >
+                        <Building2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">{leg.name}</div>
+                          <div className="text-xs text-gray-500">
+                            {getPartyAbbrev(leg.party)}-{leg.state} · {leg.chamber} District{' '}
+                            {leg.district}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* Bills */}
               {results.bills.length > 0 && (
                 <div>
@@ -248,7 +315,7 @@ export function GlobalSearch() {
                     Bills
                   </div>
                   {results.bills.map((bill, index) => {
-                    const resultIndex = results.representatives.length + index;
+                    const resultIndex = billsOffset + index;
                     return (
                       <button
                         key={bill.number}
@@ -277,8 +344,7 @@ export function GlobalSearch() {
                     Committees
                   </div>
                   {results.committees.map((committee, index) => {
-                    const resultIndex =
-                      results.representatives.length + results.bills.length + index;
+                    const resultIndex = committeesOffset + index;
                     return (
                       <button
                         key={committee.id}
