@@ -10,6 +10,8 @@
 // AUTO-GENERATED FROM congress-legislators data on 2025-09-18
 // Source: https://github.com/unitedstates/congress-legislators
 // To regenerate: npm run generate-fec-mappings
+// MANUALLY UPDATED: 2026-01-08 - Removed departed members (Greene, LaMalfa, Sherrill)
+//                               Added new members (Grijalva, Van Epps, Walkinshaw)
 
 export interface FECMapping {
   fecId: string;
@@ -1489,14 +1491,6 @@ export const bioguideToFECMapping: Record<string, FECMapping> = {
     office: 'H',
     lastUpdated: '2025-09-18',
   },
-  G000596: {
-    fecId: 'H0GA06192',
-    name: 'GREENE, MARJORIE',
-    state: 'GA',
-    district: '14',
-    office: 'H',
-    lastUpdated: '2025-09-18',
-  },
   G000597: {
     fecId: 'H0NY02234',
     name: 'GARBARINO, ANDREW',
@@ -1568,6 +1562,14 @@ export const bioguideToFECMapping: Record<string, FECMapping> = {
     district: '13',
     office: 'H',
     lastUpdated: '2025-09-18',
+  },
+  G000606: {
+    fecId: 'H6AZ07121',
+    name: 'GRIJALVA, ADELITA',
+    state: 'AZ',
+    district: '07',
+    office: 'H',
+    lastUpdated: '2026-01-08',
   },
   H000273: {
     fecId: 'S0CO00575',
@@ -2230,14 +2232,6 @@ export const bioguideToFECMapping: Record<string, FECMapping> = {
     name: 'LEE, MIKE',
     state: 'UT',
     office: 'S',
-    lastUpdated: '2025-09-18',
-  },
-  L000578: {
-    fecId: 'H2CA02142',
-    name: 'LAMALFA, DOUG',
-    state: 'CA',
-    district: '01',
-    office: 'H',
     lastUpdated: '2025-09-18',
   },
   L000582: {
@@ -3582,14 +3576,6 @@ export const bioguideToFECMapping: Record<string, FECMapping> = {
     office: 'H',
     lastUpdated: '2025-09-18',
   },
-  S001207: {
-    fecId: 'H8NJ11142',
-    name: 'SHERRILL, MIKIE',
-    state: 'NJ',
-    district: '11',
-    office: 'H',
-    lastUpdated: '2025-09-18',
-  },
   S001208: {
     fecId: 'H8MI08102',
     name: 'SLOTKIN, ELISSA',
@@ -4006,6 +3992,14 @@ export const bioguideToFECMapping: Record<string, FECMapping> = {
     office: 'H',
     lastUpdated: '2025-09-18',
   },
+  V000139: {
+    fecId: 'H6TN07161',
+    name: 'VAN EPPS, MATT',
+    state: 'TN',
+    district: '07',
+    office: 'H',
+    lastUpdated: '2026-01-08',
+  },
   W000187: {
     fecId: 'H4CA23011',
     name: 'WATERS, MAXINE',
@@ -4182,6 +4176,14 @@ export const bioguideToFECMapping: Record<string, FECMapping> = {
     district: '27',
     office: 'H',
     lastUpdated: '2025-09-18',
+  },
+  W000831: {
+    fecId: 'H6VA11066',
+    name: 'WALKINSHAW, JAMES',
+    state: 'VA',
+    district: '11',
+    office: 'H',
+    lastUpdated: '2026-01-08',
   },
   Y000064: {
     fecId: 'H0IN09070',
