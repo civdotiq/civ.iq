@@ -286,10 +286,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   // Congressional district pages
+  // Format: STATE-DISTRICT (e.g., MI-12, CA-04, AK-AL for at-large)
   for (const [state, count] of Object.entries(DISTRICTS_PER_STATE)) {
     const isHighPop = HIGH_POP_STATES.includes(state);
     for (let i = 1; i <= count; i++) {
-      const districtId = count === 1 ? `${state}AL` : `${state}${String(i).padStart(2, '0')}`;
+      const districtId = count === 1 ? `${state}-AL` : `${state}-${String(i).padStart(2, '0')}`;
       entries.push({
         url: `${BASE_URL}/districts/${districtId}`,
         lastModified: now,

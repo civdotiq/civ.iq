@@ -61,14 +61,29 @@ const stateNames: Record<string, string> = {
   MP: 'Northern Mariana Islands',
 };
 
-// Parse district ID (e.g., "MI13" -> { state: "MI", district: "13" })
+// Parse district ID - supports multiple formats:
+// - Hyphenated: "MI-12", "CA-04", "AK-AL" (canonical format)
+// - Non-hyphenated: "MI12", "CA04", "AKAL" (legacy/backwards compatibility)
 function parseDistrictId(districtId: string): { state: string; district: string } | null {
-  const match = districtId.match(/^([A-Z]{2})(\d{1,2}|AL)$/i);
-  if (!match || !match[1] || !match[2]) return null;
-  return {
-    state: match[1].toUpperCase(),
-    district: match[2].toUpperCase(),
-  };
+  // Try hyphenated format first (canonical): MI-12, CA-04, AK-AL, MI-STATE
+  const hyphenatedMatch = districtId.match(/^([A-Z]{2})-(\d{1,2}|AL|STATE)$/i);
+  if (hyphenatedMatch?.[1] && hyphenatedMatch[2]) {
+    return {
+      state: hyphenatedMatch[1].toUpperCase(),
+      district: hyphenatedMatch[2].toUpperCase(),
+    };
+  }
+
+  // Try non-hyphenated format (legacy): MI12, CA04, AKAL
+  const nonHyphenatedMatch = districtId.match(/^([A-Z]{2})(\d{1,2}|AL)$/i);
+  if (nonHyphenatedMatch?.[1] && nonHyphenatedMatch[2]) {
+    return {
+      state: nonHyphenatedMatch[1].toUpperCase(),
+      district: nonHyphenatedMatch[2].toUpperCase(),
+    };
+  }
+
+  return null;
 }
 
 export async function generateMetadata({

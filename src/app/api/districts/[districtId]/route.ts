@@ -1512,9 +1512,21 @@ const STATE_NAME_TO_CODE: Record<string, string> = {
 async function getDistrictDetails(districtId: string): Promise<DistrictDetails | null> {
   try {
     // Parse district ID - support multiple formats:
-    // 1. State abbreviation: "MI-12", "CA-04"
-    // 2. Full state name: "Michigan-12", "North-Carolina-04"
-    // 3. State-level for senators: "VT-STATE", "CA-STATE"
+    // 1. State abbreviation with hyphen: "MI-12", "CA-04" (canonical)
+    // 2. State abbreviation without hyphen: "MI12", "CA04" (legacy/backwards compatibility)
+    // 3. Full state name: "Michigan-12", "North-Carolina-04"
+    // 4. State-level for senators: "VT-STATE", "CA-STATE"
+    // 5. At-large districts: "AK-AL", "AKAL"
+
+    // First, check for non-hyphenated format (e.g., MI12, CA04, AKAL)
+    const nonHyphenatedMatch = districtId.match(/^([A-Z]{2})(\d{1,2}|AL)$/i);
+    if (nonHyphenatedMatch?.[1] && nonHyphenatedMatch[2]) {
+      // Convert to hyphenated format for consistent processing
+      const state = nonHyphenatedMatch[1].toUpperCase();
+      const district = nonHyphenatedMatch[2].toUpperCase();
+      districtId = `${state}-${district}`;
+    }
+
     const parts = districtId.split('-');
 
     if (parts.length < 2) {
