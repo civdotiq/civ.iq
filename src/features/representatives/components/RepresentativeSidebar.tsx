@@ -9,6 +9,8 @@ import React from 'react';
 import Link from 'next/link';
 import { MapPin, Users, ExternalLink, Newspaper, CheckCircle } from 'lucide-react';
 import { DataSourceBadge } from '@/components/shared/ui/DataTransparency';
+import { getStateName } from '@/lib/data/us-states';
+import { buildDistrictUrlForRep } from '@/lib/helpers/url-builders';
 
 interface RepresentativeSidebarProps {
   representative: {
@@ -33,61 +35,9 @@ export function RepresentativeSidebar({
   dataCompleteness = 93,
   newsArticles = [],
 }: RepresentativeSidebarProps) {
+  // Use centralized state name lookup from @/lib/data/us-states
   const getStateFullName = (stateCode: string): string => {
-    const stateNames: Record<string, string> = {
-      AL: 'Alabama',
-      AK: 'Alaska',
-      AZ: 'Arizona',
-      AR: 'Arkansas',
-      CA: 'California',
-      CO: 'Colorado',
-      CT: 'Connecticut',
-      DE: 'Delaware',
-      FL: 'Florida',
-      GA: 'Georgia',
-      HI: 'Hawaii',
-      ID: 'Idaho',
-      IL: 'Illinois',
-      IN: 'Indiana',
-      IA: 'Iowa',
-      KS: 'Kansas',
-      KY: 'Kentucky',
-      LA: 'Louisiana',
-      ME: 'Maine',
-      MD: 'Maryland',
-      MA: 'Massachusetts',
-      MI: 'Michigan',
-      MN: 'Minnesota',
-      MS: 'Mississippi',
-      MO: 'Missouri',
-      MT: 'Montana',
-      NE: 'Nebraska',
-      NV: 'Nevada',
-      NH: 'New Hampshire',
-      NJ: 'New Jersey',
-      NM: 'New Mexico',
-      NY: 'New York',
-      NC: 'North Carolina',
-      ND: 'North Dakota',
-      OH: 'Ohio',
-      OK: 'Oklahoma',
-      OR: 'Oregon',
-      PA: 'Pennsylvania',
-      RI: 'Rhode Island',
-      SC: 'South Carolina',
-      SD: 'South Dakota',
-      TN: 'Tennessee',
-      TX: 'Texas',
-      UT: 'Utah',
-      VT: 'Vermont',
-      VA: 'Virginia',
-      WA: 'Washington',
-      WV: 'West Virginia',
-      WI: 'Wisconsin',
-      WY: 'Wyoming',
-      DC: 'District of Columbia',
-    };
-    return stateNames[stateCode] || stateCode;
+    return getStateName(stateCode) || stateCode;
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -148,7 +98,11 @@ export function RepresentativeSidebar({
 
           <div className="pt-3 border-t border-gray-100">
             <Link
-              href={`/districts/${representative.state}-${representative.chamber === 'Senate' ? 'STATE' : representative.district?.padStart(2, '0') || 'AL'}`}
+              href={buildDistrictUrlForRep(
+                representative.chamber,
+                representative.state,
+                representative.district
+              )}
               className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
             >
               View District Details
