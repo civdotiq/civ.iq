@@ -148,7 +148,7 @@ export function RepresentativeSidebar({
 
           <div className="pt-3 border-t border-gray-100">
             <Link
-              href={`/districts/${representative.state}${representative.district ? `-${representative.district}` : ''}`}
+              href={`/districts/${representative.state}-${representative.chamber === 'Senate' ? 'STATE' : representative.district?.padStart(2, '0') || 'AL'}`}
               className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
             >
               View District Details

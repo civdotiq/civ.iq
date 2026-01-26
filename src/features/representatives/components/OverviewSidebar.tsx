@@ -152,7 +152,7 @@ export function OverviewSidebar({ representative }: OverviewSidebarProps) {
             href={
               representative.chamber === 'Senate'
                 ? `/districts/${representative.state}-STATE`
-                : `/districts/${representative.state}-${representative.district || 'AL'}`
+                : `/districts/${representative.state}-${representative.district?.padStart(2, '0') || 'AL'}`
             }
             className="block"
           >

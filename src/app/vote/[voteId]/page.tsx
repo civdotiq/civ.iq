@@ -301,7 +301,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
                 </div>
               )}
               <Link
-                href={`/bill/${voteDetail.congress}-${voteDetail.bill.type?.toLowerCase() || 's'}-${voteDetail.bill.number.replace(/[^\d]/g, '')}`}
+                href={`/bill/${voteDetail.congress}-${voteDetail.bill.type?.toLowerCase().replace(/\./g, '') || (voteDetail.chamber === 'House' ? 'hr' : 's')}-${voteDetail.bill.number.replace(/[^\d]/g, '')}`}
                 className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors text-sm font-medium"
               >
                 <FileText className="h-4 w-4" />
