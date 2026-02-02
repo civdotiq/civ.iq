@@ -26,7 +26,21 @@ import {
   categorizeContributionSmart,
 } from '@/lib/fec/industry-taxonomy';
 import { ZIP_TO_DISTRICT_MAP_119TH } from '@/lib/data/zip-district-mapping-119th';
+import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { categorizeIntoBaskets, getInterestGroupMetrics } from '@/lib/fec/interest-groups';
+
+// Build reverse mapping: FEC candidate ID -> representative info
+const fecIdToRepresentative: Record<
+  string,
+  { bioguideId: string; name: string; state: string; party?: string }
+> = {};
+for (const [bioguideId, mapping] of Object.entries(bioguideToFECMapping)) {
+  fecIdToRepresentative[mapping.fecId] = {
+    bioguideId,
+    name: mapping.name,
+    state: mapping.state,
+  };
+}
 import {
   getFECMapping,
   getFECCandidateLink,
@@ -237,6 +251,17 @@ interface ComprehensiveFinanceResponse {
       leadership: number;
       hybrid: number;
     };
+    // Leadership PACs from other politicians
+    leadershipPACSponsors?: Array<{
+      sponsorName: string;
+      sponsorBioguideId: string;
+      sponsorState: string;
+      pacName: string;
+      pacId: string;
+      amount: number;
+      date: string;
+      fecLink: string;
+    }>;
   };
 
   // Sector Summary Cards (Business vs Labor vs Ideological)
@@ -804,6 +829,56 @@ export async function GET(
         .reduce((sum, p) => sum + p.amount, 0),
     };
 
+    // ========================================
+    // FEATURE: Leadership PAC Sponsors
+    // ========================================
+    // Extract Leadership PACs and identify their sponsoring politicians
+    const leadershipPACSponsors: Array<{
+      sponsorName: string;
+      sponsorBioguideId: string;
+      sponsorState: string;
+      pacName: string;
+      pacId: string;
+      amount: number;
+      date: string;
+      fecLink: string;
+    }> = [];
+
+    for (const pac of pacContributions) {
+      const committeeInfo = committeeInfoCache.get(pac.committee_id);
+      if (!committeeInfo) continue;
+
+      const pacType = classifyPACType(committeeInfo.committee_type, committeeInfo.designation);
+      if (pacType !== 'leadership') continue;
+
+      // Check for sponsor candidate IDs
+      const sponsorIds = committeeInfo.sponsor_candidate_ids || committeeInfo.candidate_ids || [];
+
+      for (const sponsorFecId of sponsorIds) {
+        const sponsor = fecIdToRepresentative[sponsorFecId];
+        if (sponsor) {
+          leadershipPACSponsors.push({
+            sponsorName: sponsor.name,
+            sponsorBioguideId: sponsor.bioguideId,
+            sponsorState: sponsor.state,
+            pacName: pac.committee_name || committeeInfo.name || 'Unknown PAC',
+            pacId: pac.committee_id,
+            amount: pac.contribution_receipt_amount || 0,
+            date: pac.contribution_receipt_date || '',
+            fecLink: `https://www.fec.gov/data/committee/${pac.committee_id}/`,
+          });
+        }
+      }
+    }
+
+    // Sort by amount and deduplicate (same sponsor might have multiple entries)
+    const leadershipPACSponsorsSorted = leadershipPACSponsors.sort((a, b) => b.amount - a.amount);
+
+    logger.info('[Comprehensive Finance API] Leadership PAC sponsors identified', {
+      totalLeadershipPACs: pacDirectContributions.filter(p => p.pacType === 'leadership').length,
+      sponsorsIdentified: leadershipPACSponsorsSorted.length,
+    });
+
     logger.info('[Comprehensive Finance API] PAC direct contributions processed', {
       totalPACs: pacDirectContributions.length,
       totalAmount: pacDirectTotal,
@@ -1139,6 +1214,8 @@ export async function GET(
         totalAmount: pacDirectTotal,
         totalCount: pacDirectContributions.length,
         byType: pacDirectByType,
+        leadershipPACSponsors:
+          leadershipPACSponsorsSorted.length > 0 ? leadershipPACSponsorsSorted : undefined,
       },
       // NEW: Sector Summary (Business vs Labor vs Ideological)
       sectorSummary,

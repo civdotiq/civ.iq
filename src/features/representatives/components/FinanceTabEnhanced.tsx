@@ -176,6 +176,16 @@ interface PacDirectData {
     leadership: number;
     hybrid: number;
   };
+  leadershipPACSponsors?: Array<{
+    sponsorName: string;
+    sponsorBioguideId: string;
+    sponsorState: string;
+    pacName: string;
+    pacId: string;
+    amount: number;
+    date: string;
+    fecLink: string;
+  }>;
 }
 
 interface SectorSummaryData {
@@ -1142,6 +1152,72 @@ export const FinanceTabEnhanced = React.memo(
                 </span>
               </div>
             )}
+          </div>
+        )}
+
+        {/* NEW: Leadership PAC Sponsors - Contributions from Other Politicians */}
+        {pacDirectData?.leadershipPACSponsors && pacDirectData.leadershipPACSponsors.length > 0 && (
+          <div className="bg-indigo-50 p-6 border border-indigo-200 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold text-indigo-800">
+                  Contributions from Other Politicians
+                </h3>
+                <InfoTooltip text="Leadership PACs are political action committees controlled by members of Congress. When another politician's Leadership PAC contributes to this candidate, it indicates political support and alliance." />
+              </div>
+              <span className="text-sm text-indigo-600 font-medium">
+                {pacDirectData.leadershipPACSponsors.length} politician
+                {pacDirectData.leadershipPACSponsors.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <div className="space-y-3">
+              {pacDirectData.leadershipPACSponsors.slice(0, 10).map((sponsor, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-3 bg-white rounded border border-indigo-100"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={`/representative/${sponsor.sponsorBioguideId}`}
+                        className="font-medium text-sm text-indigo-700 hover:text-indigo-900 hover:underline"
+                      >
+                        {sponsor.sponsorName}
+                      </a>
+                      <span className="text-xs text-gray-500">({sponsor.sponsorState})</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                      <span>via {sponsor.pacName}</span>
+                      <a
+                        href={sponsor.fecLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        FEC
+                      </a>
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold text-indigo-700 ml-4">
+                    {formatCurrency(sponsor.amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {pacDirectData.leadershipPACSponsors.length > 10 && (
+              <div className="mt-4 text-center text-sm text-gray-500">
+                Showing top 10 of {pacDirectData.leadershipPACSponsors.length} politician
+                contributions
+              </div>
+            )}
+            <div className="mt-4 pt-4 border-t border-indigo-200">
+              <div className="text-xs text-indigo-600">
+                <strong>Total from Leadership PACs:</strong>{' '}
+                {formatCurrency(
+                  pacDirectData.leadershipPACSponsors.reduce((sum, s) => sum + s.amount, 0)
+                )}
+              </div>
+            </div>
           </div>
         )}
 

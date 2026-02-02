@@ -396,6 +396,7 @@ GET /api/representative/[bioguideId]/election-cycles        # Election cycle dat
 
 - **Organizational Aggregation**: Aggregates contributions by employer to show "Top Contributing Organizations" (e.g., "Goldman Sachs employees - $45,000 from 15 employees"). Normalizes employer names, excludes self-employed/retired/unemployed, includes FEC verification links.
 - **PAC Direct Contributions**: Shows PACs that contributed directly to the campaign (not independent expenditures). Includes PAC type classification (traditional, leadership, super PAC, hybrid) and FEC links.
+- **Leadership PAC Sponsors**: Identifies contributions from other politicians' Leadership PACs. Shows which members of Congress are financially supporting this candidate through their personal PACs. Links to sponsor profiles.
 - **Sector Summary Cards**: High-level funding breakdown by sector (Business vs Labor vs Ideological vs Other) with top items in each category.
 - **In-District vs Out-of-District**: Constituent funding analysis using ZIP code matching. Shows percentage from within vs outside the representative's district/state.
 
@@ -887,6 +888,7 @@ echo "GOAL: [What you're implementing]" >> .session.log
 - ✅ **PAC Direct Contributions** - New section showing PACs that contributed directly to the campaign (not independent expenditures). Displays top 25 PACs with amount, date, PAC type classification (traditional, leadership, super PAC, hybrid), and FEC links.
 - ✅ **Sector Summary Cards** - High-level "Funding by Sector" breakdown showing Business vs Labor vs Ideological vs Other percentages. Includes top industries/unions/causes for each sector. Inspired by OpenSecrets methodology.
 - ✅ **In-District vs Out-of-District Analysis** - Shows constituent funding percentage by matching contributor ZIP codes to the representative's district. Visual bar chart with green (in-district) vs red (out-of-district) breakdown. Works for both House (district-level) and Senate (state-level).
+- ✅ **Leadership PAC Sponsor Tracking** - Identifies which other politicians fund this candidate through their Leadership PACs. Shows sponsor name (linked to their profile), state, PAC name, amount, and FEC link. Uses reverse FEC ID mapping to identify sponsoring politicians.
 
 **January 2026:**
 
