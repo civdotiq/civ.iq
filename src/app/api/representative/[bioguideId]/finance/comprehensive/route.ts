@@ -20,7 +20,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 import { fecApiService, classifyPACType } from '@/lib/fec/fec-api-service';
 import { govCache } from '@/services/cache';
-import { getTopCategories } from '@/lib/fec/industry-taxonomy';
+import {
+  getTopCategories,
+  IndustrySector,
+  categorizeContributionSmart,
+} from '@/lib/fec/industry-taxonomy';
+import { ZIP_TO_DISTRICT_MAP_119TH } from '@/lib/data/zip-district-mapping-119th';
 import { categorizeIntoBaskets, getInterestGroupMetrics } from '@/lib/fec/interest-groups';
 import {
   getFECMapping,
@@ -212,6 +217,72 @@ interface ComprehensiveFinanceResponse {
     medianDonation: number;
     averageDonation: number;
     largestDonation: number;
+  };
+
+  // PAC Direct Contributions (not independent expenditures)
+  pacDirect?: {
+    contributions: Array<{
+      pacName: string;
+      pacId: string;
+      amount: number;
+      date: string;
+      pacType: 'superPac' | 'traditional' | 'leadership' | 'hybrid' | 'unknown';
+      fecLink: string;
+    }>;
+    totalAmount: number;
+    totalCount: number;
+    byType: {
+      superPac: number;
+      traditional: number;
+      leadership: number;
+      hybrid: number;
+    };
+  };
+
+  // Sector Summary Cards (Business vs Labor vs Ideological)
+  sectorSummary?: {
+    business: {
+      amount: number;
+      percentage: number;
+      contributionCount: number;
+      topIndustries: Array<{ name: string; amount: number }>;
+    };
+    labor: {
+      amount: number;
+      percentage: number;
+      contributionCount: number;
+      topUnions: Array<{ name: string; amount: number }>;
+    };
+    ideological: {
+      amount: number;
+      percentage: number;
+      contributionCount: number;
+      topCauses: Array<{ name: string; amount: number }>;
+    };
+    other: {
+      amount: number;
+      percentage: number;
+      contributionCount: number;
+    };
+  };
+
+  // In-District vs Out-of-District Analysis
+  districtAnalysis?: {
+    inDistrict: {
+      amount: number;
+      percentage: number;
+      contributionCount: number;
+    };
+    outOfDistrict: {
+      amount: number;
+      percentage: number;
+      contributionCount: number;
+    };
+    representativeDistrict?: string; // e.g., "MI-12"
+    unknownLocation: {
+      amount: number;
+      contributionCount: number;
+    };
   };
 
   // Metadata
@@ -691,6 +762,287 @@ export async function GET(
       totalFromOrganizations: totalOrgAmount,
     });
 
+    // ========================================
+    // FEATURE 1: PAC Direct Contributions
+    // ========================================
+    // Process PAC contributions (direct, not independent expenditures)
+    const pacDirectContributions = pacContributions
+      .map(pac => {
+        const committeeInfo = committeeInfoCache.get(pac.committee_id);
+        const pacType = committeeInfo
+          ? classifyPACType(committeeInfo.committee_type, committeeInfo.designation)
+          : null;
+        return {
+          pacName: pac.committee_name || 'Unknown PAC',
+          pacId: pac.committee_id,
+          amount: pac.contribution_receipt_amount || 0,
+          date: pac.contribution_receipt_date || '',
+          pacType: (pacType || 'unknown') as
+            | 'superPac'
+            | 'traditional'
+            | 'leadership'
+            | 'hybrid'
+            | 'unknown',
+          fecLink: `https://www.fec.gov/data/committee/${pac.committee_id}/`,
+        };
+      })
+      .sort((a, b) => b.amount - a.amount);
+
+    const pacDirectTotal = pacDirectContributions.reduce((sum, p) => sum + p.amount, 0);
+    const pacDirectByType = {
+      superPac: pacDirectContributions
+        .filter(p => p.pacType === 'superPac')
+        .reduce((sum, p) => sum + p.amount, 0),
+      traditional: pacDirectContributions
+        .filter(p => p.pacType === 'traditional')
+        .reduce((sum, p) => sum + p.amount, 0),
+      leadership: pacDirectContributions
+        .filter(p => p.pacType === 'leadership')
+        .reduce((sum, p) => sum + p.amount, 0),
+      hybrid: pacDirectContributions
+        .filter(p => p.pacType === 'hybrid')
+        .reduce((sum, p) => sum + p.amount, 0),
+    };
+
+    logger.info('[Comprehensive Finance API] PAC direct contributions processed', {
+      totalPACs: pacDirectContributions.length,
+      totalAmount: pacDirectTotal,
+    });
+
+    // ========================================
+    // FEATURE 2: Sector Summary Cards
+    // ========================================
+    // Map 13 sectors into 4 super-sectors: Business, Labor, Ideological, Other
+    const BUSINESS_SECTORS = new Set([
+      IndustrySector.AGRIBUSINESS,
+      IndustrySector.COMMUNICATIONS_ELECTRONICS,
+      IndustrySector.CONSTRUCTION,
+      IndustrySector.DEFENSE,
+      IndustrySector.ENERGY_NATURAL_RESOURCES,
+      IndustrySector.FINANCE_INSURANCE_REAL_ESTATE,
+      IndustrySector.HEALTH,
+      IndustrySector.LAWYERS_LOBBYISTS,
+      IndustrySector.TRANSPORTATION,
+      IndustrySector.MISC_BUSINESS,
+    ]);
+
+    const sectorAggregation = {
+      business: { amount: 0, count: 0, industries: new Map<string, number>() },
+      labor: { amount: 0, count: 0, unions: new Map<string, number>() },
+      ideological: { amount: 0, count: 0, causes: new Map<string, number>() },
+      other: { amount: 0, count: 0 },
+    };
+
+    let totalSectorAmount = 0;
+
+    for (const contrib of contributions) {
+      const categorization = categorizeContributionSmart(
+        contrib.contributor_employer,
+        contrib.contributor_occupation,
+        contrib.contributor_name
+      );
+      const amount = contrib.contribution_receipt_amount || 0;
+      totalSectorAmount += amount;
+
+      if (BUSINESS_SECTORS.has(categorization.sector)) {
+        sectorAggregation.business.amount += amount;
+        sectorAggregation.business.count += 1;
+        const industry = `${categorization.sector}: ${categorization.category}`;
+        sectorAggregation.business.industries.set(
+          industry,
+          (sectorAggregation.business.industries.get(industry) || 0) + amount
+        );
+      } else if (categorization.sector === IndustrySector.LABOR) {
+        sectorAggregation.labor.amount += amount;
+        sectorAggregation.labor.count += 1;
+        sectorAggregation.labor.unions.set(
+          categorization.category,
+          (sectorAggregation.labor.unions.get(categorization.category) || 0) + amount
+        );
+      } else if (categorization.sector === IndustrySector.IDEOLOGY_SINGLE_ISSUE) {
+        sectorAggregation.ideological.amount += amount;
+        sectorAggregation.ideological.count += 1;
+        sectorAggregation.ideological.causes.set(
+          categorization.category,
+          (sectorAggregation.ideological.causes.get(categorization.category) || 0) + amount
+        );
+      } else {
+        sectorAggregation.other.amount += amount;
+        sectorAggregation.other.count += 1;
+      }
+    }
+
+    // Convert to sorted arrays for top items
+    const topBusinessIndustries = Array.from(sectorAggregation.business.industries.entries())
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+
+    const topLaborUnions = Array.from(sectorAggregation.labor.unions.entries())
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+
+    const topIdeologicalCauses = Array.from(sectorAggregation.ideological.causes.entries())
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+
+    const sectorSummary = {
+      business: {
+        amount: sectorAggregation.business.amount,
+        percentage:
+          totalSectorAmount > 0 ? (sectorAggregation.business.amount / totalSectorAmount) * 100 : 0,
+        contributionCount: sectorAggregation.business.count,
+        topIndustries: topBusinessIndustries,
+      },
+      labor: {
+        amount: sectorAggregation.labor.amount,
+        percentage:
+          totalSectorAmount > 0 ? (sectorAggregation.labor.amount / totalSectorAmount) * 100 : 0,
+        contributionCount: sectorAggregation.labor.count,
+        topUnions: topLaborUnions,
+      },
+      ideological: {
+        amount: sectorAggregation.ideological.amount,
+        percentage:
+          totalSectorAmount > 0
+            ? (sectorAggregation.ideological.amount / totalSectorAmount) * 100
+            : 0,
+        contributionCount: sectorAggregation.ideological.count,
+        topCauses: topIdeologicalCauses,
+      },
+      other: {
+        amount: sectorAggregation.other.amount,
+        percentage:
+          totalSectorAmount > 0 ? (sectorAggregation.other.amount / totalSectorAmount) * 100 : 0,
+        contributionCount: sectorAggregation.other.count,
+      },
+    };
+
+    logger.info('[Comprehensive Finance API] Sector summary calculated', {
+      business: sectorSummary.business.percentage.toFixed(1) + '%',
+      labor: sectorSummary.labor.percentage.toFixed(1) + '%',
+      ideological: sectorSummary.ideological.percentage.toFixed(1) + '%',
+    });
+
+    // ========================================
+    // FEATURE 3: In-District vs Out-of-District
+    // ========================================
+    // Build set of ZIPs in the representative's district
+    const repState = fecMapping.state;
+    const repDistrict = fecMapping.district;
+    const representativeDistrict = repDistrict
+      ? `${repState}-${repDistrict}`
+      : `${repState} (Senate)`;
+
+    // For House members, build set of district ZIPs
+    const districtZips = new Set<string>();
+    if (repDistrict && fecMapping.office === 'H') {
+      // Iterate through ZIP mapping to find all ZIPs in this district
+      for (const [zip, mapping] of Object.entries(ZIP_TO_DISTRICT_MAP_119TH)) {
+        if (Array.isArray(mapping)) {
+          // Multi-district ZIP - check if any match
+          if (mapping.some(m => m.state === repState && m.district === repDistrict)) {
+            districtZips.add(zip);
+          }
+        } else if (mapping && mapping.state === repState && mapping.district === repDistrict) {
+          districtZips.add(zip);
+        }
+      }
+    }
+
+    // For Senators, use state-level analysis (all ZIPs in the state)
+    const stateZips = new Set<string>();
+    if (fecMapping.office === 'S') {
+      for (const [zip, mapping] of Object.entries(ZIP_TO_DISTRICT_MAP_119TH)) {
+        if (Array.isArray(mapping)) {
+          if (mapping.some(m => m.state === repState)) {
+            stateZips.add(zip);
+          }
+        } else if (mapping && mapping.state === repState) {
+          stateZips.add(zip);
+        }
+      }
+    }
+
+    // Analyze contributions by location
+    const districtAnalysisData = {
+      inDistrict: { amount: 0, count: 0 },
+      outOfDistrict: { amount: 0, count: 0 },
+      unknown: { amount: 0, count: 0 },
+    };
+
+    for (const contrib of contributions) {
+      const amount = contrib.contribution_receipt_amount || 0;
+      const contributorZip = contrib.contributor_zip?.substring(0, 5); // First 5 digits only
+
+      if (!contributorZip) {
+        districtAnalysisData.unknown.amount += amount;
+        districtAnalysisData.unknown.count += 1;
+        continue;
+      }
+
+      // For House members, check district ZIPs
+      if (fecMapping.office === 'H' && districtZips.size > 0) {
+        if (districtZips.has(contributorZip)) {
+          districtAnalysisData.inDistrict.amount += amount;
+          districtAnalysisData.inDistrict.count += 1;
+        } else {
+          districtAnalysisData.outOfDistrict.amount += amount;
+          districtAnalysisData.outOfDistrict.count += 1;
+        }
+      }
+      // For Senators, check state ZIPs
+      else if (fecMapping.office === 'S' && stateZips.size > 0) {
+        if (stateZips.has(contributorZip)) {
+          districtAnalysisData.inDistrict.amount += amount;
+          districtAnalysisData.inDistrict.count += 1;
+        } else {
+          districtAnalysisData.outOfDistrict.amount += amount;
+          districtAnalysisData.outOfDistrict.count += 1;
+        }
+      } else {
+        // Fallback: can't determine
+        districtAnalysisData.unknown.amount += amount;
+        districtAnalysisData.unknown.count += 1;
+      }
+    }
+
+    const totalDistrictAmount =
+      districtAnalysisData.inDistrict.amount + districtAnalysisData.outOfDistrict.amount;
+
+    const districtAnalysis = {
+      inDistrict: {
+        amount: districtAnalysisData.inDistrict.amount,
+        percentage:
+          totalDistrictAmount > 0
+            ? (districtAnalysisData.inDistrict.amount / totalDistrictAmount) * 100
+            : 0,
+        contributionCount: districtAnalysisData.inDistrict.count,
+      },
+      outOfDistrict: {
+        amount: districtAnalysisData.outOfDistrict.amount,
+        percentage:
+          totalDistrictAmount > 0
+            ? (districtAnalysisData.outOfDistrict.amount / totalDistrictAmount) * 100
+            : 0,
+        contributionCount: districtAnalysisData.outOfDistrict.count,
+      },
+      representativeDistrict,
+      unknownLocation: {
+        amount: districtAnalysisData.unknown.amount,
+        contributionCount: districtAnalysisData.unknown.count,
+      },
+    };
+
+    logger.info('[Comprehensive Finance API] District analysis complete', {
+      inDistrict: districtAnalysis.inDistrict.percentage.toFixed(1) + '%',
+      outOfDistrict: districtAnalysis.outOfDistrict.percentage.toFixed(1) + '%',
+      districtZipsCount: districtZips.size,
+      stateZipsCount: stateZips.size,
+    });
+
     // Build comprehensive response
     const response: ComprehensiveFinanceResponse = {
       finance: {
@@ -781,6 +1133,17 @@ export async function GET(
       },
       recentContributions: recentContribs,
       donorMetrics,
+      // NEW: PAC Direct Contributions
+      pacDirect: {
+        contributions: pacDirectContributions.slice(0, 25), // Top 25 PACs
+        totalAmount: pacDirectTotal,
+        totalCount: pacDirectContributions.length,
+        byType: pacDirectByType,
+      },
+      // NEW: Sector Summary (Business vs Labor vs Ideological)
+      sectorSummary,
+      // NEW: In-District vs Out-of-District Analysis
+      districtAnalysis,
       metadata: {
         bioguideId,
         cycle: 2024,

@@ -159,6 +159,69 @@ interface OrganizationData {
   };
 }
 
+interface PacDirectData {
+  contributions: Array<{
+    pacName: string;
+    pacId: string;
+    amount: number;
+    date: string;
+    pacType: 'superPac' | 'traditional' | 'leadership' | 'hybrid' | 'unknown';
+    fecLink: string;
+  }>;
+  totalAmount: number;
+  totalCount: number;
+  byType: {
+    superPac: number;
+    traditional: number;
+    leadership: number;
+    hybrid: number;
+  };
+}
+
+interface SectorSummaryData {
+  business: {
+    amount: number;
+    percentage: number;
+    contributionCount: number;
+    topIndustries: Array<{ name: string; amount: number }>;
+  };
+  labor: {
+    amount: number;
+    percentage: number;
+    contributionCount: number;
+    topUnions: Array<{ name: string; amount: number }>;
+  };
+  ideological: {
+    amount: number;
+    percentage: number;
+    contributionCount: number;
+    topCauses: Array<{ name: string; amount: number }>;
+  };
+  other: {
+    amount: number;
+    percentage: number;
+    contributionCount: number;
+  };
+}
+
+interface DistrictAnalysisData {
+  inDistrict: {
+    amount: number;
+    percentage: number;
+    contributionCount: number;
+  };
+  outOfDistrict: {
+    amount: number;
+    percentage: number;
+    contributionCount: number;
+  };
+  representativeDistrict?: string;
+  unknownLocation: {
+    amount: number;
+    contributionCount: number;
+  };
+}
+
 interface RecentContribution {
   name: string;
   amount: number;
@@ -343,6 +406,12 @@ export const FinanceTabEnhanced = React.memo(
 
     const donorMetrics: DonorMetrics | undefined = comprehensiveData?.donorMetrics;
 
+    // NEW: Three new data sources
+    const pacDirectData: PacDirectData | undefined = comprehensiveData?.pacDirect;
+    const sectorSummaryData: SectorSummaryData | undefined = comprehensiveData?.sectorSummary;
+    const districtAnalysisData: DistrictAnalysisData | undefined =
+      comprehensiveData?.districtAnalysis;
+
     const formatCurrency = (amount: number) => {
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -444,6 +513,202 @@ export const FinanceTabEnhanced = React.memo(
             </a>
           </div>
         </div>
+
+        {/* NEW: Sector Summary Cards (Business vs Labor vs Ideological) */}
+        {sectorSummaryData && (
+          <div className="bg-white p-6 border border-gray-200 mb-8">
+            <div className="flex items-center mb-4">
+              <h3 className="text-lg font-semibold">Funding by Sector</h3>
+              <InfoTooltip text="High-level breakdown: Business (corporations, professionals), Labor (unions), Ideological (advocacy groups, single-issue), Other (retired, self-employed, etc.)" />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              {/* Business */}
+              <div className="text-center p-4 bg-blue-50 border-2 border-blue-200">
+                <div className="text-2xl font-bold text-blue-700">
+                  {sectorSummaryData.business.percentage.toFixed(0)}%
+                </div>
+                <div className="text-xs font-semibold text-blue-600 uppercase mt-1">Business</div>
+                <div className="text-lg font-semibold text-gray-900 mt-2">
+                  {formatCurrency(sectorSummaryData.business.amount)}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {sectorSummaryData.business.contributionCount.toLocaleString()} contributions
+                </div>
+              </div>
+              {/* Labor */}
+              <div className="text-center p-4 bg-red-50 border-2 border-red-200">
+                <div className="text-2xl font-bold text-red-700">
+                  {sectorSummaryData.labor.percentage.toFixed(0)}%
+                </div>
+                <div className="text-xs font-semibold text-red-600 uppercase mt-1">Labor</div>
+                <div className="text-lg font-semibold text-gray-900 mt-2">
+                  {formatCurrency(sectorSummaryData.labor.amount)}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {sectorSummaryData.labor.contributionCount.toLocaleString()} contributions
+                </div>
+              </div>
+              {/* Ideological */}
+              <div className="text-center p-4 bg-purple-50 border-2 border-purple-200">
+                <div className="text-2xl font-bold text-purple-700">
+                  {sectorSummaryData.ideological.percentage.toFixed(0)}%
+                </div>
+                <div className="text-xs font-semibold text-purple-600 uppercase mt-1">
+                  Ideological
+                </div>
+                <div className="text-lg font-semibold text-gray-900 mt-2">
+                  {formatCurrency(sectorSummaryData.ideological.amount)}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {sectorSummaryData.ideological.contributionCount.toLocaleString()} contributions
+                </div>
+              </div>
+              {/* Other */}
+              <div className="text-center p-4 bg-gray-50 border-2 border-gray-200">
+                <div className="text-2xl font-bold text-gray-600">
+                  {sectorSummaryData.other.percentage.toFixed(0)}%
+                </div>
+                <div className="text-xs font-semibold text-gray-500 uppercase mt-1">Other</div>
+                <div className="text-lg font-semibold text-gray-900 mt-2">
+                  {formatCurrency(sectorSummaryData.other.amount)}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {sectorSummaryData.other.contributionCount.toLocaleString()} contributions
+                </div>
+              </div>
+            </div>
+            {/* Top items in each sector */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              {sectorSummaryData.business.topIndustries.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-blue-700 mb-2">Top Business Industries</h4>
+                  <ul className="space-y-1">
+                    {sectorSummaryData.business.topIndustries.slice(0, 3).map((item, i) => (
+                      <li key={i} className="flex justify-between text-xs">
+                        <span className="text-gray-600 truncate mr-2">{item.name}</span>
+                        <span className="font-medium">{formatCurrency(item.amount)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {sectorSummaryData.labor.topUnions.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-red-700 mb-2">Top Labor Sources</h4>
+                  <ul className="space-y-1">
+                    {sectorSummaryData.labor.topUnions.slice(0, 3).map((item, i) => (
+                      <li key={i} className="flex justify-between text-xs">
+                        <span className="text-gray-600 truncate mr-2">{item.name}</span>
+                        <span className="font-medium">{formatCurrency(item.amount)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {sectorSummaryData.ideological.topCauses.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-purple-700 mb-2">Top Ideological Causes</h4>
+                  <ul className="space-y-1">
+                    {sectorSummaryData.ideological.topCauses.slice(0, 3).map((item, i) => (
+                      <li key={i} className="flex justify-between text-xs">
+                        <span className="text-gray-600 truncate mr-2">{item.name}</span>
+                        <span className="font-medium">{formatCurrency(item.amount)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* NEW: In-District vs Out-of-District Analysis */}
+        {districtAnalysisData && (
+          <div className="bg-white p-6 border border-gray-200 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold">Constituent vs Outside Funding</h3>
+                <InfoTooltip text="Shows what percentage of contributions come from within the representative's district/state versus outside. Based on contributor ZIP codes." />
+              </div>
+              {districtAnalysisData.representativeDistrict && (
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  {districtAnalysisData.representativeDistrict}
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-6">
+              {/* In-District */}
+              <div className="text-center">
+                <div
+                  className={`text-4xl font-bold ${
+                    districtAnalysisData.inDistrict.percentage >= 50
+                      ? 'text-green-600'
+                      : 'text-amber-600'
+                  }`}
+                >
+                  {districtAnalysisData.inDistrict.percentage.toFixed(0)}%
+                </div>
+                <div className="text-sm font-semibold text-gray-700 mt-1">
+                  In-District / In-State
+                </div>
+                <div className="text-lg font-semibold text-gray-900 mt-2">
+                  {formatCurrency(districtAnalysisData.inDistrict.amount)}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {districtAnalysisData.inDistrict.contributionCount.toLocaleString()} contributions
+                </div>
+              </div>
+              {/* Out-of-District */}
+              <div className="text-center">
+                <div
+                  className={`text-4xl font-bold ${
+                    districtAnalysisData.outOfDistrict.percentage > 50
+                      ? 'text-red-600'
+                      : 'text-gray-600'
+                  }`}
+                >
+                  {districtAnalysisData.outOfDistrict.percentage.toFixed(0)}%
+                </div>
+                <div className="text-sm font-semibold text-gray-700 mt-1">
+                  Out-of-District / Out-of-State
+                </div>
+                <div className="text-lg font-semibold text-gray-900 mt-2">
+                  {formatCurrency(districtAnalysisData.outOfDistrict.amount)}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {districtAnalysisData.outOfDistrict.contributionCount.toLocaleString()}{' '}
+                  contributions
+                </div>
+              </div>
+            </div>
+            {/* Visual bar */}
+            <div className="mt-4">
+              <div className="flex h-4 rounded-full overflow-hidden bg-gray-200">
+                <div
+                  className="bg-green-500 transition-all"
+                  style={{ width: `${districtAnalysisData.inDistrict.percentage}%` }}
+                  title={`In-District: ${districtAnalysisData.inDistrict.percentage.toFixed(1)}%`}
+                />
+                <div
+                  className="bg-red-400 transition-all"
+                  style={{ width: `${districtAnalysisData.outOfDistrict.percentage}%` }}
+                  title={`Out-of-District: ${districtAnalysisData.outOfDistrict.percentage.toFixed(1)}%`}
+                />
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>Constituent funding</span>
+                <span>Outside funding</span>
+              </div>
+            </div>
+            {districtAnalysisData.unknownLocation.contributionCount > 0 && (
+              <div className="mt-3 text-xs text-gray-400">
+                Note: {districtAnalysisData.unknownLocation.contributionCount.toLocaleString()}{' '}
+                contributions ({formatCurrency(districtAnalysisData.unknownLocation.amount)}) had
+                unknown locations
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Conduit Aggregates (ActBlue/WinRed) */}
         {contributorData?.conduitAggregates && (
@@ -788,6 +1053,97 @@ export const FinanceTabEnhanced = React.memo(
             ))}
           </div>
         </div>
+
+        {/* NEW: PAC Direct Contributions */}
+        {pacDirectData && pacDirectData.contributions.length > 0 && (
+          <div className="bg-white p-6 border border-gray-200 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold">PAC Direct Contributions</h3>
+                <InfoTooltip text="Political Action Committees that contributed directly to this candidate's campaign (not independent expenditures). These are coordinated contributions subject to FEC limits." />
+              </div>
+              <div className="text-sm text-gray-600">
+                <span className="font-semibold">{formatCurrency(pacDirectData.totalAmount)}</span>
+                <span className="text-gray-400"> from </span>
+                <span className="font-semibold">{pacDirectData.totalCount} PACs</span>
+              </div>
+            </div>
+            {/* PAC Type Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+              <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded">
+                <div className="text-lg font-bold text-purple-700">
+                  {formatCurrency(pacDirectData.byType.traditional)}
+                </div>
+                <div className="text-xs text-gray-600">Traditional PAC</div>
+              </div>
+              <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded">
+                <div className="text-lg font-bold text-blue-700">
+                  {formatCurrency(pacDirectData.byType.leadership)}
+                </div>
+                <div className="text-xs text-gray-600">Leadership PAC</div>
+              </div>
+              <div className="text-center p-3 bg-orange-50 border border-orange-200 rounded">
+                <div className="text-lg font-bold text-orange-700">
+                  {formatCurrency(pacDirectData.byType.superPac)}
+                </div>
+                <div className="text-xs text-gray-600">Super PAC</div>
+              </div>
+              <div className="text-center p-3 bg-teal-50 border border-teal-200 rounded">
+                <div className="text-lg font-bold text-teal-700">
+                  {formatCurrency(pacDirectData.byType.hybrid)}
+                </div>
+                <div className="text-xs text-gray-600">Hybrid PAC</div>
+              </div>
+            </div>
+            {/* PAC List */}
+            <div className="space-y-2">
+              {pacDirectData.contributions.slice(0, 15).map((pac, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm">{pac.pacName}</span>
+                      <a
+                        href={pac.fecLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:text-blue-800"
+                        title="View PAC on FEC.gov"
+                      >
+                        FEC
+                      </a>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {pac.pacType !== 'unknown' && (
+                        <span className="capitalize">
+                          {pac.pacType.replace(/([A-Z])/g, ' $1').trim()}
+                        </span>
+                      )}
+                      {pac.date && (
+                        <>
+                          {pac.pacType !== 'unknown' && ' • '}
+                          {new Date(pac.date).toLocaleDateString()}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold text-green-600 ml-4">
+                    {formatCurrency(pac.amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {pacDirectData.contributions.length > 15 && (
+              <div className="mt-4 text-center">
+                <span className="text-sm text-gray-500">
+                  Showing top 15 of {pacDirectData.totalCount} PAC contributions
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Independent Expenditures (PACs Supporting/Opposing) */}
         {interestGroupData?.pacContributions &&
