@@ -143,6 +143,22 @@ interface GeographicData {
   };
 }
 
+interface OrganizationData {
+  topOrganizations: Array<{
+    name: string;
+    totalAmount: number;
+    contributionCount: number;
+    percentage: number;
+    employees: number;
+    fecVerifyLink: string;
+  }>;
+  metadata: {
+    totalOrganizations: number;
+    totalFromOrganizations: number;
+    excludedCategories: string[];
+  };
+}
+
 interface RecentContribution {
   name: string;
   amount: number;
@@ -319,6 +335,8 @@ export const FinanceTabEnhanced = React.memo(
     const interestGroupData: InterestGroupData | undefined = comprehensiveData?.interestGroups;
 
     const geographicData: GeographicData | undefined = comprehensiveData?.geographic;
+
+    const organizationData: OrganizationData | undefined = comprehensiveData?.organizations;
 
     const recentContributions: RecentContribution[] | undefined =
       comprehensiveData?.recentContributions;
@@ -559,6 +577,73 @@ export const FinanceTabEnhanced = React.memo(
                     </div>
                     <div className="text-xs text-gray-400 mt-1">
                       {industry.contributionCount.toLocaleString()} contributions
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Top Contributing Organizations (OpenSecrets-style) */}
+        {organizationData?.topOrganizations && organizationData.topOrganizations.length > 0 && (
+          <div className="bg-white p-6 border border-gray-200 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold">Top Contributing Organizations</h3>
+                <InfoTooltip text="Contributions aggregated by employer. Shows total from all employees of each organization. Excludes self-employed, retired, and unemployed. Inspired by OpenSecrets.org methodology." />
+              </div>
+              {organizationData.metadata && (
+                <span className="text-xs text-gray-500">
+                  {organizationData.metadata.totalOrganizations.toLocaleString()} organizations
+                </span>
+              )}
+            </div>
+            {comprehensiveData?.metadata?.sampleSize && (
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded text-sm text-gray-700">
+                <strong>Employer aggregation:</strong> Shows total contributions from employees of
+                each organization. Based on {comprehensiveData.metadata.sampleSize.toLocaleString()}{' '}
+                recent contributions.
+              </div>
+            )}
+            <div className="space-y-3">
+              {organizationData.topOrganizations.slice(0, 15).map((org, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900">{org.name}</span>
+                        {org.fecVerifyLink && (
+                          <a
+                            href={org.fecVerifyLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:text-blue-800 underline"
+                            title="Verify on FEC.gov"
+                          >
+                            FEC
+                          </a>
+                        )}
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900 ml-4">
+                        {formatCurrency(org.totalAmount)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-amber-500 h-2 rounded-full transition-all"
+                          style={{ width: `${Math.min(org.percentage, 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-500 w-12 text-right">
+                        {org.percentage.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {org.employees.toLocaleString()} employee{org.employees !== 1 ? 's' : ''} •{' '}
+                      {org.contributionCount.toLocaleString()} contribution
+                      {org.contributionCount !== 1 ? 's' : ''}
                     </div>
                   </div>
                 </div>

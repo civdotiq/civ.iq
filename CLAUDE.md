@@ -383,7 +383,7 @@ GET /api/representative/[bioguideId]/connections            # Hypertext connecti
 
 ```typescript
 GET /api/representative/[bioguideId]/finance                # FEC overview
-GET /api/representative/[bioguideId]/finance/comprehensive  # Complete finance data
+GET /api/representative/[bioguideId]/finance/comprehensive  # Complete finance data (includes OpenSecrets-style org aggregation)
 GET /api/representative/[bioguideId]/finance/contributors   # Top contributors
 GET /api/representative/[bioguideId]/finance/expenditures   # Campaign spending
 GET /api/representative/[bioguideId]/finance/funding-sources # Funding breakdown
@@ -391,6 +391,10 @@ GET /api/representative/[bioguideId]/finance/geography      # Geographic donors
 GET /api/representative/[bioguideId]/finance/industries     # Industry contributions
 GET /api/representative/[bioguideId]/election-cycles        # Election cycle data
 ```
+
+**OpenSecrets-style Features:**
+
+- **Organizational Aggregation**: `/finance/comprehensive` aggregates contributions by employer to show "Top Contributing Organizations" (e.g., "Goldman Sachs employees - $45,000 from 15 employees"). Normalizes employer names, excludes self-employed/retired/unemployed, includes FEC verification links.
 
 ### News & Media (3 endpoints)
 
@@ -873,6 +877,10 @@ echo "GOAL: [What you're implementing]" >> .session.log
 ```
 
 **Recent Development Highlights** (Last 3 Months):
+
+**February 2026:**
+
+- ✅ **Organizational Aggregation (OpenSecrets-style)** - Campaign finance now shows "Top Contributing Organizations" by aggregating contributions by employer, just like OpenSecrets.org. Shows top 20 organizations with employee count, contribution count, percentages, and FEC verification links. Excludes self-employed, retired, and unemployed.
 
 **January 2026:**
 

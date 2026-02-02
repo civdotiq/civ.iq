@@ -176,6 +176,23 @@ interface ComprehensiveFinanceResponse {
     };
   };
 
+  // Top Contributing Organizations (OpenSecrets-style employer aggregation)
+  organizations?: {
+    topOrganizations: Array<{
+      name: string; // Normalized employer name
+      totalAmount: number;
+      contributionCount: number;
+      percentage: number;
+      employees: number; // Unique employee contributors
+      fecVerifyLink: string;
+    }>;
+    metadata: {
+      totalOrganizations: number;
+      totalFromOrganizations: number;
+      excludedCategories: string[]; // e.g., "Self-Employed", "Retired", "Not Employed"
+    };
+  };
+
   // Recent Contributions
   recentContributions?: Array<{
     name: string;
@@ -568,6 +585,112 @@ export async function GET(
       totalDonors: donorMetrics.totalDonors,
     });
 
+    // Calculate Top Contributing Organizations (OpenSecrets-style employer aggregation)
+    // Excludes self-employed, retired, not employed, homemakers, and students
+    const EXCLUDED_EMPLOYERS = new Set([
+      'SELF-EMPLOYED',
+      'SELF EMPLOYED',
+      'SELF',
+      'RETIRED',
+      'NOT EMPLOYED',
+      'NONE',
+      'N/A',
+      'NA',
+      'HOMEMAKER',
+      'STUDENT',
+      'UNEMPLOYED',
+      'INFORMATION REQUESTED',
+      'INFORMATION REQUESTED PER BEST EFFORTS',
+      'REQUESTED',
+      '',
+    ]);
+
+    // Normalize employer names to handle variations
+    const normalizeEmployer = (employer: string): string => {
+      let normalized = employer.toUpperCase().trim();
+      // Remove common suffixes
+      normalized = normalized
+        .replace(
+          /,?\s*(INC\.?|LLC|LLP|CORP\.?|CORPORATION|CO\.?|COMPANY|LTD\.?|LIMITED|PC|PLLC|PA|PLC)\.?$/i,
+          ''
+        )
+        .replace(/\s+/g, ' ')
+        .trim();
+      return normalized;
+    };
+
+    const orgMap = new Map<
+      string,
+      {
+        originalName: string; // Keep first seen capitalization
+        totalAmount: number;
+        contributionCount: number;
+        employees: Set<string>; // Unique contributor names
+      }
+    >();
+
+    let totalOrgAmount = 0;
+
+    for (const contrib of contributions) {
+      const employer = contrib.contributor_employer;
+      if (!employer) continue;
+
+      const employerUpper = employer.toUpperCase().trim();
+
+      // Skip excluded categories
+      if (EXCLUDED_EMPLOYERS.has(employerUpper)) continue;
+
+      // Skip if employer looks like a person's name (has comma suggesting "LAST, FIRST" format)
+      if (
+        employerUpper.includes(',') &&
+        !employerUpper.includes('INC') &&
+        !employerUpper.includes('LLC')
+      )
+        continue;
+
+      const normalizedName = normalizeEmployer(employer);
+      if (!normalizedName || normalizedName.length < 2) continue;
+
+      const amount = contrib.contribution_receipt_amount || 0;
+      const contributorName = contrib.contributor_name || 'Unknown';
+
+      const existing = orgMap.get(normalizedName);
+      if (existing) {
+        existing.totalAmount += amount;
+        existing.contributionCount += 1;
+        existing.employees.add(contributorName);
+      } else {
+        orgMap.set(normalizedName, {
+          originalName: employer.trim(), // Keep original casing
+          totalAmount: amount,
+          contributionCount: 1,
+          employees: new Set([contributorName]),
+        });
+      }
+      totalOrgAmount += amount;
+    }
+
+    // Convert to array and sort by total amount
+    const topOrganizations = Array.from(orgMap.entries())
+      .map(([normalizedName, data]) => ({
+        name: data.originalName,
+        totalAmount: data.totalAmount,
+        contributionCount: data.contributionCount,
+        percentage: totalOrgAmount > 0 ? (data.totalAmount / totalOrgAmount) * 100 : 0,
+        employees: data.employees.size,
+        fecVerifyLink: principalCommitteeId
+          ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=2024&committee_id=${principalCommitteeId}&contributor_employer=${encodeURIComponent(normalizedName)}`
+          : `https://www.fec.gov/data/receipts/individual-contributions/?two_year_transaction_period=2024&candidate_id=${fecMapping.fecId}&contributor_employer=${encodeURIComponent(normalizedName)}`,
+      }))
+      .sort((a, b) => b.totalAmount - a.totalAmount)
+      .slice(0, 20); // Top 20 organizations
+
+    logger.info('[Comprehensive Finance API] Organization aggregation complete', {
+      totalOrganizations: orgMap.size,
+      topOrganizationsCount: topOrganizations.length,
+      totalFromOrganizations: totalOrgAmount,
+    });
+
     // Build comprehensive response
     const response: ComprehensiveFinanceResponse = {
       finance: {
@@ -647,6 +770,14 @@ export async function GET(
       },
       geographic: {
         topStates,
+      },
+      organizations: {
+        topOrganizations,
+        metadata: {
+          totalOrganizations: orgMap.size,
+          totalFromOrganizations: totalOrgAmount,
+          excludedCategories: ['Self-Employed', 'Retired', 'Not Employed', 'Homemaker', 'Student'],
+        },
       },
       recentContributions: recentContribs,
       donorMetrics,
