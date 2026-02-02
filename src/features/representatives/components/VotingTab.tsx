@@ -20,26 +20,7 @@ import {
 } from 'lucide-react';
 import { ExportButton } from '@/shared/components/ui/ExportButton';
 import { ExportColumn } from '@/lib/utils/data-export';
-
-interface Vote {
-  voteId: string;
-  bill: {
-    number: string;
-    title: string;
-    congress: string;
-    type: string;
-    url?: string;
-  };
-  question: string;
-  result: string;
-  date: string;
-  position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
-  chamber: 'House' | 'Senate';
-  rollNumber: number;
-  description: string;
-  category?: string;
-  isKeyVote?: boolean;
-}
+import { VoteRow, extractVoteId, type Vote } from './VoteRow';
 
 interface VoteResponse {
   votes: Vote[];
@@ -67,28 +48,6 @@ interface VotingTabProps {
   sharedLoading?: boolean;
   sharedError?: Error | null;
 }
-
-// Extract utility functions outside component for better performance
-const extractVoteId = (vote: Vote): string | null => {
-  if (!vote.voteId) return null;
-
-  // House votes: use the full voteId (e.g.,"house-119-116")
-  if (vote.chamber === 'House') {
-    return vote.voteId;
-  }
-
-  // Senate votes: extract numeric part from voteId or use rollNumber
-  if (vote.chamber === 'Senate') {
-    if (vote.voteId) {
-      // Extract from format like"119-senate-00123" or use as-is if numeric
-      const match = vote.voteId.match(/(\d+)$/);
-      return match?.[1] || null;
-    }
-    if (vote.rollNumber) return vote.rollNumber.toString();
-  }
-
-  return null;
-};
 
 // Memoized vote calculation utilities
 const calculateVoteStats = (votes: Vote[]) => {
@@ -751,153 +710,15 @@ const VotingTabComponent = React.memo(
                   </tr>
                 </thead>
                 <tbody>
-                  {paginationData.paginatedVotes.map((vote: Vote) => {
-                    const voteId = extractVoteId(vote);
-                    const isClickable = !!voteId;
-
-                    return (
-                      <tr
-                        key={vote.voteId}
-                        className={`border-b border-gray-200 ${
-                          isClickable ? 'cursor-pointer hover:bg-blue-50 transition-colors' : ''
-                        } ${vote.isKeyVote ? 'bg-yellow-50' : ''} ${
-                          paginationData.paginatedVotes.indexOf(vote) % 2 === 0
-                            ? 'bg-white'
-                            : 'bg-white/50'
-                        }`}
-                        onClick={() => isClickable && handleVoteClick(vote)}
-                        title={isClickable ? 'Click to view detailed vote breakdown' : ''}
-                      >
-                        {/* Roll Number */}
-                        <td
-                          className="py-3 px-3 align-top"
-                          style={{ width: '80px', minWidth: '80px' }}
-                        >
-                          <div className="flex items-center gap-1">
-                            <span className="font-medium text-blue-600 text-sm">
-                              {vote.rollNumber || 'N/A'}
-                            </span>
-                            {isClickable && <span className="text-xs text-gray-400">📊</span>}
-                          </div>
-                        </td>
-
-                        {/* Date */}
-                        <td
-                          className="py-3 px-3 text-sm text-gray-600 align-top whitespace-nowrap"
-                          style={{ width: '100px', minWidth: '100px' }}
-                        >
-                          {vote.date
-                            ? new Date(vote.date).toLocaleDateString('en-US', {
-                                month: '2-digit',
-                                day: '2-digit',
-                                year: 'numeric',
-                              })
-                            : 'N/A'}
-                        </td>
-
-                        {/* Question */}
-                        <td
-                          className="py-3 px-3 align-top"
-                          style={{ width: '25%', minWidth: '200px' }}
-                        >
-                          <div className="overflow-hidden">
-                            <span
-                              className="text-sm text-gray-900 line-clamp-2"
-                              title={
-                                vote.question && vote.question !== 'Unknown Question'
-                                  ? vote.question
-                                  : vote.description || 'Vote'
-                              }
-                            >
-                              {vote.question && vote.question !== 'Unknown Question'
-                                ? vote.question
-                                : vote.description || 'Vote'}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Result */}
-                        <td
-                          className="py-3 px-3 align-top"
-                          style={{ width: '120px', minWidth: '120px' }}
-                        >
-                          <span
-                            className={`text-sm font-medium whitespace-nowrap ${
-                              vote.result?.toLowerCase().includes('passed') ||
-                              vote.result?.toLowerCase().includes('agreed')
-                                ? 'text-green-700'
-                                : vote.result?.toLowerCase().includes('failed') ||
-                                    vote.result?.toLowerCase().includes('rejected')
-                                  ? 'text-red-700'
-                                  : 'text-gray-700'
-                            }`}
-                          >
-                            {vote.result || 'N/A'}
-                          </span>
-                        </td>
-
-                        {/* Title/Description */}
-                        <td
-                          className="py-3 px-3 align-top"
-                          style={{ width: '35%', minWidth: '250px' }}
-                        >
-                          <div className="overflow-hidden">
-                            {vote.bill?.number && (
-                              <div className="text-xs text-blue-600 font-medium mb-1">
-                                {vote.bill.url ? (
-                                  <a
-                                    href={vote.bill.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="hover:underline"
-                                    onClick={e => e.stopPropagation()}
-                                  >
-                                    {vote.bill.number}
-                                  </a>
-                                ) : (
-                                  vote.bill.number
-                                )}
-                              </div>
-                            )}
-                            <span
-                              className="text-sm text-gray-900 line-clamp-2"
-                              title={
-                                vote.bill?.title ||
-                                vote.question ||
-                                vote.description ||
-                                'No description available'
-                              }
-                            >
-                              {vote.bill?.title ||
-                                vote.question ||
-                                vote.description ||
-                                'No description available'}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Vote Position */}
-                        <td
-                          className="text-center py-3 px-3 align-top"
-                          style={{ width: '100px', minWidth: '100px' }}
-                        >
-                          <span
-                            className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                              vote.position === 'Yea'
-                                ? 'bg-green-100 text-green-800 border border-green-200'
-                                : vote.position === 'Nay'
-                                  ? 'bg-red-100 text-red-800 border border-red-200'
-                                  : vote.position === 'Present'
-                                    ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
-                                    : 'bg-white border-2 border-gray-300 text-gray-700 border border-gray-200'
-                            }`}
-                          >
-                            {vote.position}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {paginationData.paginatedVotes.map((vote: Vote, index: number) => (
+                    <VoteRow
+                      key={vote.voteId}
+                      vote={vote}
+                      index={index}
+                      isClickable={!!extractVoteId(vote)}
+                      onVoteClick={handleVoteClick}
+                    />
+                  ))}
                 </tbody>
               </table>
             </div>

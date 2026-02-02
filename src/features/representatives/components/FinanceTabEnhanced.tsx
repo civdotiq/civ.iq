@@ -7,6 +7,7 @@
 
 import React, { useState } from 'react';
 import useSWR from 'swr';
+import { ContributorsModal } from '@/features/campaign-finance/components/ContributorsModal';
 
 interface FinanceData {
   totalRaised: number;
@@ -194,120 +195,6 @@ function InfoTooltip({ text }: { text: string }) {
           <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 -left-1 top-3"></div>
         </div>
       )}
-    </div>
-  );
-}
-
-// Modal component for viewing all contributors
-function ContributorsModal({
-  isOpen,
-  onClose,
-  contributors,
-  metadata,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  contributors: ContributorData['topContributors'];
-  metadata?: ContributorData['metadata'];
-}) {
-  if (!isOpen) return null;
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount || 0);
-  };
-
-  return (
-    <div
-      className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-start justify-center p-4 sm:pt-12"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white max-w-4xl w-full max-h-[90vh] flex flex-col border-2 border-black my-4"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="p-4 sm:p-6 border-b-2 border-black flex justify-between items-center bg-white sticky top-0 z-10">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold">All Individual Contributors</h2>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">
-              Showing {contributors?.length || 0} of {metadata?.totalIndividualContributors || 0}{' '}
-              individual contributors
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="ml-4 flex-shrink-0 text-gray-700 hover:text-black hover:bg-gray-100 p-2 rounded-full transition-colors border-2 border-black"
-            aria-label="Close modal"
-            title="Close (or click outside)"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-auto p-6">
-          <div className="space-y-3">
-            {contributors?.map((contributor, index) => (
-              <div key={index} className="border p-4 hover:bg-white">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900">
-                        {index + 1}. {contributor.name}
-                      </span>
-                      {contributor.fecTransparencyLink && (
-                        <a
-                          href={contributor.fecTransparencyLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                          View on FEC.gov →
-                        </a>
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      {contributor.city}, {contributor.state}
-                      {contributor.employer && ` • ${contributor.employer}`}
-                      {contributor.occupation && ` • ${contributor.occupation}`}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {contributor.contributionCount} contribution
-                      {contributor.contributionCount !== 1 ? 's' : ''}
-                    </div>
-                  </div>
-                  <div className="text-lg font-semibold text-green-600">
-                    {formatCurrency(contributor.totalAmount)}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="p-4 border-t bg-white">
-          {metadata?.fecReceiptsLink && (
-            <a
-              href={metadata.fecReceiptsLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
-            >
-              View all contributions on FEC.gov →
-            </a>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

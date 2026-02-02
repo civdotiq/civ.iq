@@ -18,11 +18,21 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService, classifyPACType } from '@/lib/fec/fec-api-service';
 import { govCache } from '@/services/cache';
 import { getTopCategories } from '@/lib/fec/industry-taxonomy';
 import { categorizeIntoBaskets, getInterestGroupMetrics } from '@/lib/fec/interest-groups';
+import {
+  getFECMapping,
+  getFECCandidateLink,
+  getFECReceiptsLink,
+  getFECDisbursementsLink,
+  FinanceCacheKeys,
+  EmptyFinanceResponses,
+  FEC_CACHE_OPTIONS,
+  withFECCacheHeaders,
+} from '@/lib/api/finance-helpers';
+import { ApiErrors } from '@/lib/api/error-responses';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -208,7 +218,7 @@ export async function GET(
     logger.info('[Comprehensive Finance API] Called', { bioguideId });
 
     // Check unified cache first
-    const cacheKey = `finance-comprehensive:${bioguideId}:2024`;
+    const cacheKey = FinanceCacheKeys.comprehensive(bioguideId);
     const cached = await govCache.get<ComprehensiveFinanceResponse>(cacheKey);
 
     if (cached) {
@@ -223,41 +233,9 @@ export async function GET(
     }
 
     // Check FEC mapping
-    const fecMapping = bioguideToFECMapping[bioguideId];
+    const fecMapping = getFECMapping(bioguideId);
     if (!fecMapping) {
-      const noDataResponse: ComprehensiveFinanceResponse = {
-        finance: {
-          totalRaised: 0,
-          totalSpent: 0,
-          cashOnHand: 0,
-          individualContributions: 0,
-          pacContributions: 0,
-          partyContributions: 0,
-          candidateContributions: 0,
-        },
-        contributors: {
-          topContributors: [],
-          metadata: {
-            totalIndividualContributors: 0,
-            totalCommitteeContributors: 0,
-          },
-        },
-        industries: {
-          topIndustries: [],
-          metadata: {
-            totalAnalyzed: 0,
-          },
-        },
-        metadata: {
-          bioguideId,
-          cycle: 2024,
-          lastUpdated: new Date().toISOString(),
-          cacheHit: false,
-          sampleSize: 0,
-        },
-      };
-
-      return NextResponse.json(noDataResponse);
+      return NextResponse.json(EmptyFinanceResponses.comprehensive(bioguideId));
     }
 
     // PERFORMANCE OPTIMIZATION: Fetch all FEC data in parallel
@@ -291,46 +269,7 @@ export async function GET(
     });
 
     if (!financialSummary) {
-      const noDataResponse: ComprehensiveFinanceResponse = {
-        finance: {
-          totalRaised: 0,
-          totalSpent: 0,
-          cashOnHand: 0,
-          individualContributions: 0,
-          pacContributions: 0,
-          partyContributions: 0,
-          candidateContributions: 0,
-          candidateId: fecMapping.fecId,
-          fecTransparencyLinks: {
-            candidatePage: `https://www.fec.gov/data/candidate/${fecMapping.fecId}`,
-            contributions: `https://www.fec.gov/data/receipts/individual-contributions/?candidate_id=${fecMapping.fecId}`,
-            disbursements: `https://www.fec.gov/data/disbursements/?candidate_id=${fecMapping.fecId}`,
-            financialSummary: `https://www.fec.gov/data/candidate/${fecMapping.fecId}/totals`,
-          },
-        },
-        contributors: {
-          topContributors: [],
-          metadata: {
-            totalIndividualContributors: 0,
-            totalCommitteeContributors: 0,
-          },
-        },
-        industries: {
-          topIndustries: [],
-          metadata: {
-            totalAnalyzed: 0,
-          },
-        },
-        metadata: {
-          bioguideId,
-          cycle: 2024,
-          lastUpdated: new Date().toISOString(),
-          cacheHit: false,
-          sampleSize: 0,
-        },
-      };
-
-      return NextResponse.json(noDataResponse);
+      return NextResponse.json(EmptyFinanceResponses.comprehensive(bioguideId, fecMapping.fecId));
     }
 
     // Process contributors
@@ -644,14 +583,13 @@ export async function GET(
         candidateContributions: financialSummary.candidate_contribution || 0,
         candidateId: fecMapping.fecId,
         fecTransparencyLinks: {
-          candidatePage: `https://www.fec.gov/data/candidate/${fecMapping.fecId}`,
-          contributions: principalCommitteeId
-            ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=2024&committee_id=${principalCommitteeId}`
-            : `https://www.fec.gov/data/receipts/individual-contributions/?candidate_id=${fecMapping.fecId}`,
-          disbursements: principalCommitteeId
-            ? `https://www.fec.gov/data/disbursements/?two_year_transaction_period=2024&committee_id=${principalCommitteeId}`
-            : `https://www.fec.gov/data/disbursements/?candidate_id=${fecMapping.fecId}`,
-          financialSummary: `https://www.fec.gov/data/candidate/${fecMapping.fecId}/totals`,
+          candidatePage: getFECCandidateLink(fecMapping.fecId),
+          contributions: getFECReceiptsLink(fecMapping.fecId, principalCommitteeId || undefined),
+          disbursements: getFECDisbursementsLink(
+            fecMapping.fecId,
+            principalCommitteeId || undefined
+          ),
+          financialSummary: `${getFECCandidateLink(fecMapping.fecId)}/totals`,
         },
       },
       contributors: {
@@ -676,10 +614,10 @@ export async function GET(
         metadata: {
           totalIndividualContributors: individualContributors.length,
           totalCommitteeContributors: allContributors.filter(c => c.isCommittee).length,
-          fecCandidateLink: `https://www.fec.gov/data/candidate/${fecMapping.fecId}/`,
+          fecCandidateLink: getFECCandidateLink(fecMapping.fecId),
           fecCommitteeId: principalCommitteeId || undefined,
           fecReceiptsLink: principalCommitteeId
-            ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=2024&committee_id=${principalCommitteeId}`
+            ? getFECReceiptsLink(fecMapping.fecId, principalCommitteeId)
             : undefined,
         },
       },
@@ -722,11 +660,7 @@ export async function GET(
     };
 
     // Cache the comprehensive response - FEC data updates quarterly (30 day cache)
-    await govCache.set(cacheKey, response, {
-      ttl: 2592000000, // 30 days (FEC quarterly reporting cycle)
-      source: 'fec-api',
-      dataType: 'finance',
-    });
+    await govCache.set(cacheKey, response, FEC_CACHE_OPTIONS);
 
     logger.info('[Comprehensive Finance API] Success', {
       bioguideId,
@@ -734,19 +668,9 @@ export async function GET(
       sampleSize: contributions.length,
     });
 
-    // Add HTTP cache headers - FEC data updates quarterly (30 day cache)
-    const headers = new Headers({
-      'Cache-Control': 'public, max-age=2592000, stale-while-revalidate=86400',
-      'CDN-Cache-Control': 'public, max-age=2592000',
-      Vary: 'Accept-Encoding',
-    });
-
-    return NextResponse.json(response, { headers });
+    return withFECCacheHeaders(response);
   } catch (error) {
     logger.error('[Comprehensive Finance API] Error', error as Error, { bioguideId });
-    return NextResponse.json(
-      { error: 'Failed to fetch comprehensive finance data' },
-      { status: 500 }
-    );
+    return ApiErrors.serverError(error as Error);
   }
 }

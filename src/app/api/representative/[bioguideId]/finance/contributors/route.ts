@@ -10,9 +10,17 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { govCache } from '@/services/cache';
+import {
+  getFECMapping,
+  getFECCandidateLink,
+  FinanceCacheKeys,
+  EmptyFinanceResponses,
+  FEC_CACHE_OPTIONS,
+  withFECCacheHeaders,
+} from '@/lib/api/finance-helpers';
+import { ApiErrors } from '@/lib/api/error-responses';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -74,25 +82,16 @@ export async function GET(
   try {
     logger.info('[Contributors API] Called', { bioguideId });
 
-    const cacheKey = `finance-contributors-v2:${bioguideId}:2024`;
+    const cacheKey = FinanceCacheKeys.contributors(bioguideId);
     const cached = await govCache.get<ContributorAnalysisResponse>(cacheKey);
 
     if (cached) {
       return NextResponse.json(cached);
     }
 
-    const fecMapping = bioguideToFECMapping[bioguideId];
+    const fecMapping = getFECMapping(bioguideId);
     if (!fecMapping) {
-      return NextResponse.json({
-        topContributors: [],
-        metadata: {
-          bioguideId,
-          cycle: 2024,
-          totalContributors: 0,
-          lastUpdated: new Date().toISOString(),
-          fecCandidateLink: '',
-        },
-      });
+      return NextResponse.json(EmptyFinanceResponses.contributors(bioguideId));
     }
 
     // Fetch optimized sample of contributions for detailed analysis
@@ -259,7 +258,7 @@ export async function GET(
         totalIndividualContributors: individualContributors.length,
         totalCommitteeContributors: committeeContributors.length,
         lastUpdated: new Date().toISOString(),
-        fecCandidateLink: `https://www.fec.gov/data/candidate/${fecMapping.fecId}/`,
+        fecCandidateLink: getFECCandidateLink(fecMapping.fecId),
         fecCommitteeId: principalCommitteeId || undefined,
         fecReceiptsLink: principalCommitteeId
           ? `https://www.fec.gov/data/receipts/?two_year_transaction_period=2024&committee_id=${principalCommitteeId}`
@@ -267,28 +266,16 @@ export async function GET(
       },
     };
 
-    // FEC data updates quarterly - 30 day cache (2592000000ms = 30 days)
-    await govCache.set(cacheKey, response, {
-      ttl: 2592000000,
-      source: 'fec-api',
-      dataType: 'finance',
-    });
+    await govCache.set(cacheKey, response, FEC_CACHE_OPTIONS);
 
     logger.info('[Contributors API] Success', {
       bioguideId,
       responseTime: Date.now() - startTime,
     });
 
-    // Add HTTP cache headers - FEC data updates quarterly (30 day cache)
-    const headers = new Headers({
-      'Cache-Control': 'public, max-age=2592000, stale-while-revalidate=86400',
-      'CDN-Cache-Control': 'public, max-age=2592000',
-      Vary: 'Accept-Encoding',
-    });
-
-    return NextResponse.json(response, { headers });
+    return withFECCacheHeaders(response);
   } catch (error) {
     logger.error('[Contributors API] Error', error as Error, { bioguideId });
-    return NextResponse.json({ error: 'Failed to fetch contributor analysis' }, { status: 500 });
+    return ApiErrors.serverError(error as Error);
   }
 }

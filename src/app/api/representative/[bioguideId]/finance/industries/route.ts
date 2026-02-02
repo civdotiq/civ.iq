@@ -10,9 +10,17 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { aggregateFinanceData } from '@/lib/fec/finance-aggregator';
 import { govCache } from '@/services/cache';
+import {
+  getFECMapping,
+  getFECCandidateLink,
+  FinanceCacheKeys,
+  EmptyFinanceResponses,
+  FEC_CACHE_OPTIONS,
+  withFECCacheHeaders,
+} from '@/lib/api/finance-helpers';
+import { ApiErrors } from '@/lib/api/error-responses';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -52,45 +60,21 @@ export async function GET(
   try {
     logger.info('[Industries API] Called', { bioguideId });
 
-    const cacheKey = `finance-industries:${bioguideId}:2024`;
+    const cacheKey = FinanceCacheKeys.industries(bioguideId);
     const cached = await govCache.get<IndustryAnalysisResponse>(cacheKey);
 
     if (cached) {
       return NextResponse.json(cached);
     }
 
-    const fecMapping = bioguideToFECMapping[bioguideId];
+    const fecMapping = getFECMapping(bioguideId);
     if (!fecMapping) {
-      return NextResponse.json({
-        topIndustries: [],
-        dataQuality: {
-          totalContributionsAnalyzed: 0,
-          contributionsWithEmployer: 0,
-          completenessPercentage: 0,
-        },
-        metadata: {
-          bioguideId,
-          cycle: 2024,
-          lastUpdated: new Date().toISOString(),
-        },
-      });
+      return NextResponse.json(EmptyFinanceResponses.industries(bioguideId));
     }
 
     const financeData = await aggregateFinanceData(fecMapping.fecId, 2024, 'XX');
     if (!financeData) {
-      return NextResponse.json({
-        topIndustries: [],
-        dataQuality: {
-          totalContributionsAnalyzed: 0,
-          contributionsWithEmployer: 0,
-          completenessPercentage: 0,
-        },
-        metadata: {
-          bioguideId,
-          cycle: 2024,
-          lastUpdated: new Date().toISOString(),
-        },
-      });
+      return NextResponse.json(EmptyFinanceResponses.industries(bioguideId));
     }
 
     const response: IndustryAnalysisResponse = {
@@ -106,32 +90,20 @@ export async function GET(
         bioguideId,
         cycle: 2024,
         lastUpdated: new Date().toISOString(),
-        fecTransparencyLink: `https://www.fec.gov/data/candidate/${fecMapping.fecId}`,
+        fecTransparencyLink: getFECCandidateLink(fecMapping.fecId),
       },
     };
 
-    // FEC data updates quarterly - 30 day cache (2592000000ms = 30 days)
-    await govCache.set(cacheKey, response, {
-      ttl: 2592000000,
-      source: 'fec-api',
-      dataType: 'finance',
-    });
+    await govCache.set(cacheKey, response, FEC_CACHE_OPTIONS);
 
     logger.info('[Industries API] Success', {
       bioguideId,
       responseTime: Date.now() - startTime,
     });
 
-    // Add HTTP cache headers - FEC data updates quarterly (30 day cache)
-    const headers = new Headers({
-      'Cache-Control': 'public, max-age=2592000, stale-while-revalidate=86400',
-      'CDN-Cache-Control': 'public, max-age=2592000',
-      Vary: 'Accept-Encoding',
-    });
-
-    return NextResponse.json(response, { headers });
+    return withFECCacheHeaders(response);
   } catch (error) {
     logger.error('[Industries API] Error', error as Error, { bioguideId });
-    return NextResponse.json({ error: 'Failed to fetch industry analysis' }, { status: 500 });
+    return ApiErrors.serverError(error as Error);
   }
 }

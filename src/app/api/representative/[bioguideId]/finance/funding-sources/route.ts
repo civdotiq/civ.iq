@@ -10,9 +10,16 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { govCache } from '@/services/cache';
+import {
+  getFECMapping,
+  getFECCandidateLink,
+  FinanceCacheKeys,
+  EmptyFinanceResponses,
+  FEC_SHORT_CACHE_OPTIONS,
+} from '@/lib/api/finance-helpers';
+import { ApiErrors } from '@/lib/api/error-responses';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -63,50 +70,22 @@ export async function GET(
   try {
     logger.info('[Funding Sources API] Called', { bioguideId });
 
-    const cacheKey = `finance-funding-sources:${bioguideId}:2024`;
+    const cacheKey = FinanceCacheKeys.fundingSources(bioguideId);
     const cached = await govCache.get<FundingSourcesAnalysisResponse>(cacheKey);
 
     if (cached) {
       return NextResponse.json(cached);
     }
 
-    const fecMapping = bioguideToFECMapping[bioguideId];
+    const fecMapping = getFECMapping(bioguideId);
     if (!fecMapping) {
-      return NextResponse.json({
-        totalRaised: 0,
-        individualContributions: { amount: 0, percentage: 0 },
-        pacContributions: { amount: 0, percentage: 0, breakdown: [] },
-        partyContributions: { amount: 0, percentage: 0 },
-        candidateContributions: { amount: 0, percentage: 0 },
-        otherContributions: { amount: 0, percentage: 0 },
-        metadata: {
-          bioguideId,
-          cycle: 2024,
-          lastUpdated: new Date().toISOString(),
-          fecTransparencyLink: '',
-          dataSource: 'No FEC mapping available',
-        },
-      });
+      return NextResponse.json(EmptyFinanceResponses.fundingSources(bioguideId));
     }
 
     const financialSummary = await fecApiService.getFinancialSummary(fecMapping.fecId, 2024);
 
     if (!financialSummary) {
-      return NextResponse.json({
-        totalRaised: 0,
-        individualContributions: { amount: 0, percentage: 0 },
-        pacContributions: { amount: 0, percentage: 0, breakdown: [] },
-        partyContributions: { amount: 0, percentage: 0 },
-        candidateContributions: { amount: 0, percentage: 0 },
-        otherContributions: { amount: 0, percentage: 0 },
-        metadata: {
-          bioguideId,
-          cycle: 2024,
-          lastUpdated: new Date().toISOString(),
-          fecTransparencyLink: `https://www.fec.gov/data/candidate/${fecMapping.fecId}`,
-          dataSource: 'FEC.gov Financial Summary - No data available',
-        },
-      });
+      return NextResponse.json(EmptyFinanceResponses.fundingSources(bioguideId, fecMapping.fecId));
     }
 
     const totalRaised = financialSummary.receipts || financialSummary.total_receipts || 0;
@@ -152,16 +131,12 @@ export async function GET(
         bioguideId,
         cycle: 2024,
         lastUpdated: new Date().toISOString(),
-        fecTransparencyLink: `https://www.fec.gov/data/candidate/${fecMapping.fecId}`,
+        fecTransparencyLink: getFECCandidateLink(fecMapping.fecId),
         dataSource: 'FEC.gov Financial Summary',
       },
     };
 
-    await govCache.set(cacheKey, response, {
-      ttl: 21600000,
-      source: 'fec-api',
-      dataType: 'finance',
-    });
+    await govCache.set(cacheKey, response, FEC_SHORT_CACHE_OPTIONS);
 
     logger.info('[Funding Sources API] Success', {
       bioguideId,
@@ -171,9 +146,6 @@ export async function GET(
     return NextResponse.json(response);
   } catch (error) {
     logger.error('[Funding Sources API] Error', error as Error, { bioguideId });
-    return NextResponse.json(
-      { error: 'Failed to fetch funding sources analysis' },
-      { status: 500 }
-    );
+    return ApiErrors.serverError(error as Error);
   }
 }

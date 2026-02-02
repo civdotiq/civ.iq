@@ -10,9 +10,16 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { aggregateFinanceData } from '@/lib/fec/finance-aggregator';
 import { govCache } from '@/services/cache';
+import {
+  getFECMapping,
+  getFECCandidateLink,
+  FinanceCacheKeys,
+  EmptyFinanceResponses,
+  FEC_SHORT_CACHE_OPTIONS,
+} from '@/lib/api/finance-helpers';
+import { ApiErrors } from '@/lib/api/error-responses';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -54,59 +61,23 @@ export async function GET(
   try {
     logger.info('[Geography API] Called', { bioguideId });
 
-    const cacheKey = `finance-geography:${bioguideId}:2024`;
+    const cacheKey = FinanceCacheKeys.geography(bioguideId);
     const cached = await govCache.get<GeographicAnalysisResponse>(cacheKey);
 
     if (cached) {
       return NextResponse.json(cached);
     }
 
-    const fecMapping = bioguideToFECMapping[bioguideId];
+    const fecMapping = getFECMapping(bioguideId);
     if (!fecMapping) {
-      return NextResponse.json({
-        inStateTotal: 0,
-        outOfStateTotal: 0,
-        inStatePercentage: 0,
-        outOfStatePercentage: 0,
-        topStates: [],
-        dataQuality: {
-          totalContributionsAnalyzed: 0,
-          contributionsWithState: 0,
-          completenessPercentage: 0,
-        },
-        metadata: {
-          bioguideId,
-          representativeState: '',
-          cycle: 2024,
-          lastUpdated: new Date().toISOString(),
-          fecTransparencyLink: '',
-        },
-      });
+      return NextResponse.json(EmptyFinanceResponses.geography(bioguideId));
     }
 
     const representativeState = 'XX';
     const financeData = await aggregateFinanceData(fecMapping.fecId, 2024, representativeState);
 
     if (!financeData) {
-      return NextResponse.json({
-        inStateTotal: 0,
-        outOfStateTotal: 0,
-        inStatePercentage: 0,
-        outOfStatePercentage: 0,
-        topStates: [],
-        dataQuality: {
-          totalContributionsAnalyzed: 0,
-          contributionsWithState: 0,
-          completenessPercentage: 0,
-        },
-        metadata: {
-          bioguideId,
-          representativeState,
-          cycle: 2024,
-          lastUpdated: new Date().toISOString(),
-          fecTransparencyLink: `https://www.fec.gov/data/candidate/${fecMapping.fecId}`,
-        },
-      });
+      return NextResponse.json(EmptyFinanceResponses.geography(bioguideId, fecMapping.fecId));
     }
 
     const inStateContributions = financeData.geographicBreakdown.filter(state => state.isHomeState);
@@ -138,15 +109,11 @@ export async function GET(
         representativeState,
         cycle: 2024,
         lastUpdated: new Date().toISOString(),
-        fecTransparencyLink: `https://www.fec.gov/data/candidate/${fecMapping.fecId}`,
+        fecTransparencyLink: getFECCandidateLink(fecMapping.fecId),
       },
     };
 
-    await govCache.set(cacheKey, response, {
-      ttl: 21600000,
-      source: 'fec-api',
-      dataType: 'finance',
-    });
+    await govCache.set(cacheKey, response, FEC_SHORT_CACHE_OPTIONS);
 
     logger.info('[Geography API] Success', {
       bioguideId,
@@ -156,6 +123,6 @@ export async function GET(
     return NextResponse.json(response);
   } catch (error) {
     logger.error('[Geography API] Error', error as Error, { bioguideId });
-    return NextResponse.json({ error: 'Failed to fetch geographic analysis' }, { status: 500 });
+    return ApiErrors.serverError(error as Error);
   }
 }

@@ -10,9 +10,16 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
-import { bioguideToFECMapping } from '@/lib/data/bioguide-fec-mapping';
 import { fecApiService } from '@/lib/fec/fec-api-service';
 import { govCache } from '@/services/cache';
+import {
+  getFECMapping,
+  getFECCandidateLink,
+  FinanceCacheKeys,
+  EmptyFinanceResponses,
+  FEC_SHORT_CACHE_OPTIONS,
+} from '@/lib/api/finance-helpers';
+import { ApiErrors } from '@/lib/api/error-responses';
 
 // ISR: Revalidate every 1 hour
 export const revalidate = 3600;
@@ -56,58 +63,22 @@ export async function GET(
   try {
     logger.info('[Expenditures API] Called', { bioguideId });
 
-    const cacheKey = `finance-expenditures:${bioguideId}:2024`;
+    const cacheKey = FinanceCacheKeys.expenditures(bioguideId);
     const cached = await govCache.get<ExpenditureAnalysisResponse>(cacheKey);
 
     if (cached) {
       return NextResponse.json(cached);
     }
 
-    const fecMapping = bioguideToFECMapping[bioguideId];
+    const fecMapping = getFECMapping(bioguideId);
     if (!fecMapping) {
-      return NextResponse.json({
-        totalDisbursements: 0,
-        expenditureCategories: [],
-        operatingExpenses: {
-          total: 0,
-          breakdown: [],
-        },
-        dataAvailability: {
-          hasDetailedData: false,
-          dataSource: 'None',
-          limitation: 'No FEC mapping available',
-        },
-        metadata: {
-          bioguideId,
-          cycle: 2024,
-          lastUpdated: new Date().toISOString(),
-          fecTransparencyLink: '',
-        },
-      });
+      return NextResponse.json(EmptyFinanceResponses.expenditures(bioguideId));
     }
 
     const financialSummary = await fecApiService.getFinancialSummary(fecMapping.fecId, 2024);
 
     if (!financialSummary) {
-      return NextResponse.json({
-        totalDisbursements: 0,
-        expenditureCategories: [],
-        operatingExpenses: {
-          total: 0,
-          breakdown: [],
-        },
-        dataAvailability: {
-          hasDetailedData: false,
-          dataSource: 'FEC.gov',
-          limitation: 'No financial data available for 2024 cycle',
-        },
-        metadata: {
-          bioguideId,
-          cycle: 2024,
-          lastUpdated: new Date().toISOString(),
-          fecTransparencyLink: `https://www.fec.gov/data/candidate/${fecMapping.fecId}`,
-        },
-      });
+      return NextResponse.json(EmptyFinanceResponses.expenditures(bioguideId, fecMapping.fecId));
     }
 
     const totalDisbursements =
@@ -142,15 +113,11 @@ export async function GET(
         bioguideId,
         cycle: 2024,
         lastUpdated: new Date().toISOString(),
-        fecTransparencyLink: `https://www.fec.gov/data/candidate/${fecMapping.fecId}`,
+        fecTransparencyLink: getFECCandidateLink(fecMapping.fecId),
       },
     };
 
-    await govCache.set(cacheKey, response, {
-      ttl: 21600000,
-      source: 'fec-api',
-      dataType: 'finance',
-    });
+    await govCache.set(cacheKey, response, FEC_SHORT_CACHE_OPTIONS);
 
     logger.info('[Expenditures API] Success', {
       bioguideId,
@@ -160,6 +127,6 @@ export async function GET(
     return NextResponse.json(response);
   } catch (error) {
     logger.error('[Expenditures API] Error', error as Error, { bioguideId });
-    return NextResponse.json({ error: 'Failed to fetch expenditure analysis' }, { status: 500 });
+    return ApiErrors.serverError(error as Error);
   }
 }
