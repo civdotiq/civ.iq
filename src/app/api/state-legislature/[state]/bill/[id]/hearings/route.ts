@@ -16,9 +16,6 @@ import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 import type { StateLegislativeEvent, LegislativeCalendarResponse } from '@/types/state-legislature';
 
-// ISR: Revalidate every 24 hours (hearings change daily)
-export const revalidate = 86400; // 24 hours
-
 export const dynamic = 'force-dynamic';
 
 /**
@@ -132,7 +129,11 @@ export async function GET(
       responseTime,
     });
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+      },
+    });
   } catch (error) {
     logger.error('Bill hearings API error', error as Error, {
       state: (await params).state.toUpperCase(),

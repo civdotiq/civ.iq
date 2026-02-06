@@ -14,8 +14,6 @@ import {
   type AgencyInfo,
 } from '@/lib/connections/committee-agency-map';
 
-// ISR: Revalidate every 6 hours
-export const revalidate = 21600;
 export const dynamic = 'force-dynamic';
 
 /**

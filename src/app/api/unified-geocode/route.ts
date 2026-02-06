@@ -400,7 +400,12 @@ export async function POST(request: NextRequest) {
       processingTime: Date.now() - startTime,
     });
 
-    return NextResponse.json(response, { status: 200 });
+    return NextResponse.json(response, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, s-maxage=2592000, stale-while-revalidate=5184000',
+      },
+    });
   } catch (error) {
     logger.error('Unified geocode error', error as Error, {
       processingTime: Date.now() - startTime,

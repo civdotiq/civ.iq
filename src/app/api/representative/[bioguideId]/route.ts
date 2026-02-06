@@ -11,9 +11,6 @@ import { withPerformanceTiming } from '@/lib/performance/api-timer';
 import { getServerBaseUrl } from '@/lib/server-url';
 import type { EnhancedRepresentative } from '@/types/representative';
 
-// ISR: Revalidate every 24 hours (representative profile data)
-export const revalidate = 86400; // 24 hours
-
 export const dynamic = 'force-dynamic';
 
 async function getHandler(
@@ -259,7 +256,11 @@ async function getHandler(
         },
       };
 
-      return NextResponse.json(enhancedResponse);
+      return NextResponse.json(enhancedResponse, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+        },
+      });
     }
 
     // Fallback: Check if we have Congress.gov API key
@@ -425,7 +426,11 @@ async function getHandler(
           },
         };
 
-        return NextResponse.json(enhancedResponse);
+        return NextResponse.json(enhancedResponse, {
+          headers: {
+            'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+          },
+        });
       } else {
         logger.warn('Congress.gov API request failed', {
           bioguideId,

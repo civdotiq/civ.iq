@@ -340,26 +340,33 @@ export async function GET(
 
     const servicesProfile = await getGovernmentServicesProfile(districtId);
 
-    return NextResponse.json({
-      districtId,
-      government: servicesProfile,
-      metadata: {
-        timestamp: new Date().toISOString(),
-        dataSources: {
-          usaspending: 'USASpending.gov - https://api.usaspending.gov/',
-          congress: 'Congress.gov enhanced API access',
-          socialServices: 'Data unavailable - no real API source',
-          federalFacilities: 'Data unavailable - no real API source',
+    return NextResponse.json(
+      {
+        districtId,
+        government: servicesProfile,
+        metadata: {
+          timestamp: new Date().toISOString(),
+          dataSources: {
+            usaspending: 'USASpending.gov - https://api.usaspending.gov/',
+            congress: 'Congress.gov enhanced API access',
+            socialServices: 'Data unavailable - no real API source',
+            federalFacilities: 'Data unavailable - no real API source',
+          },
+          notes: [
+            'Federal spending data from USASpending.gov API',
+            'Congressional bills from enhanced Congress.gov access',
+            'Social services data unavailable - real government APIs needed',
+            'Federal facilities data unavailable - real government APIs needed',
+            'Data cached for 30 minutes for performance',
+          ],
         },
-        notes: [
-          'Federal spending data from USASpending.gov API',
-          'Congressional bills from enhanced Congress.gov access',
-          'Social services data unavailable - real government APIs needed',
-          'Federal facilities data unavailable - real government APIs needed',
-          'Data cached for 30 minutes for performance',
-        ],
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+        },
+      }
+    );
   } catch (error) {
     const resolvedParams = await params;
     logger.error('Government services profile API error', error as Error, {

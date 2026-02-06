@@ -7,7 +7,6 @@ import {
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 15; // Can take ~9s for full district data load
-export const revalidate = 604800; // 1 week - District data is very static
 import { fetchAllDistrictDemographics } from '../census-helpers';
 import { govCache } from '@/services/cache';
 import logger from '@/lib/logging/simple-logger';
@@ -69,6 +68,10 @@ export async function GET(request: NextRequest) {
           districtCount: cachedDistricts.length,
         });
 
+        const cachedCacheHeaders = {
+          'Cache-Control': 'public, s-maxage=604800, stale-while-revalidate=1209600',
+        };
+
         // Apply pagination if requested
         if (pageLimit > 0) {
           const paginatedDistricts = cachedDistricts.slice(pageOffset, pageOffset + pageLimit);
@@ -77,15 +80,20 @@ export async function GET(request: NextRequest) {
             ? paginatedDistricts.map(d => filterDistrictFields(d, fieldsParam))
             : paginatedDistricts;
 
-          return NextResponse.json({
-            districts: filteredDistricts,
-            pagination: {
-              total: cachedDistricts.length,
-              limit: pageLimit,
-              offset: pageOffset,
-              hasMore: pageOffset + pageLimit < cachedDistricts.length,
+          return NextResponse.json(
+            {
+              districts: filteredDistricts,
+              pagination: {
+                total: cachedDistricts.length,
+                limit: pageLimit,
+                offset: pageOffset,
+                hasMore: pageOffset + pageLimit < cachedDistricts.length,
+              },
             },
-          });
+            {
+              headers: cachedCacheHeaders,
+            }
+          );
         }
 
         // Apply field filtering to full response if requested
@@ -93,7 +101,12 @@ export async function GET(request: NextRequest) {
           ? cachedDistricts.map(d => filterDistrictFields(d, fieldsParam))
           : cachedDistricts;
 
-        return NextResponse.json({ districts: filteredDistricts });
+        return NextResponse.json(
+          { districts: filteredDistricts },
+          {
+            headers: cachedCacheHeaders,
+          }
+        );
       }
     }
 
@@ -421,6 +434,10 @@ export async function GET(request: NextRequest) {
       cacheKey,
     });
 
+    const cacheHeaders = {
+      'Cache-Control': 'public, s-maxage=604800, stale-while-revalidate=1209600',
+    };
+
     // Apply pagination if requested
     if (pageLimit > 0) {
       const paginatedDistricts = districtsArray.slice(pageOffset, pageOffset + pageLimit);
@@ -429,15 +446,20 @@ export async function GET(request: NextRequest) {
         ? paginatedDistricts.map(d => filterDistrictFields(d, fieldsParam))
         : paginatedDistricts;
 
-      return NextResponse.json({
-        districts: filteredDistricts,
-        pagination: {
-          total: districtsArray.length,
-          limit: pageLimit,
-          offset: pageOffset,
-          hasMore: pageOffset + pageLimit < districtsArray.length,
+      return NextResponse.json(
+        {
+          districts: filteredDistricts,
+          pagination: {
+            total: districtsArray.length,
+            limit: pageLimit,
+            offset: pageOffset,
+            hasMore: pageOffset + pageLimit < districtsArray.length,
+          },
         },
-      });
+        {
+          headers: cacheHeaders,
+        }
+      );
     }
 
     // Apply field filtering to full response if requested
@@ -445,7 +467,12 @@ export async function GET(request: NextRequest) {
       ? districtsArray.map(d => filterDistrictFields(d, fieldsParam))
       : districtsArray;
 
-    return NextResponse.json({ districts: filteredDistricts });
+    return NextResponse.json(
+      { districts: filteredDistricts },
+      {
+        headers: cacheHeaders,
+      }
+    );
   } catch (error) {
     const errorDuration = Date.now() - startTime;
     logger.error(

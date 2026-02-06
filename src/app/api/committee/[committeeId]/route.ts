@@ -8,8 +8,6 @@ import logger from '@/lib/logging/simple-logger';
 import type { Committee, CommitteeAPIResponse } from '@/types/committee';
 import { getCommitteeDataService } from '@/lib/services/committee.service';
 
-// ISR: Revalidate every 1 day
-export const revalidate = 86400;
 export const dynamic = 'force-dynamic';
 
 export async function GET(

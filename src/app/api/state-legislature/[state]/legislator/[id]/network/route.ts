@@ -16,9 +16,6 @@ import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 import type { CoSponsorshipNetwork } from '@/types/state-legislature';
 
-// ISR: Revalidate every 24 hours (sponsorship networks change daily)
-export const revalidate = 86400; // 24 hours
-
 export const dynamic = 'force-dynamic';
 
 /**
@@ -254,34 +251,41 @@ export async function GET(
         state: state.toUpperCase(),
         legislatorId,
       });
-      return NextResponse.json({
-        success: true,
-        state: state.toUpperCase(),
-        network: {
-          legislatorId,
-          legislatorName: legislator.name,
-          party: (legislator.party || 'Other') as
-            | 'Democratic'
-            | 'Republican'
-            | 'Independent'
-            | 'Other',
-          chamber,
-          summary: {
-            totalBillsSponsored: 0,
-            totalBillsCosponsored: 0,
-            uniqueCollaborators: 0,
-            bipartisanCollaborations: 0,
-            bipartisanScore: 0,
+      return NextResponse.json(
+        {
+          success: true,
+          state: state.toUpperCase(),
+          network: {
+            legislatorId,
+            legislatorName: legislator.name,
+            party: (legislator.party || 'Other') as
+              | 'Democratic'
+              | 'Republican'
+              | 'Independent'
+              | 'Other',
+            chamber,
+            summary: {
+              totalBillsSponsored: 0,
+              totalBillsCosponsored: 0,
+              uniqueCollaborators: 0,
+              bipartisanCollaborations: 0,
+              bipartisanScore: 0,
+            },
+            frequentCollaborators: [],
+            collaborationByParty: {},
+            recentCollaborations: [],
+            lastUpdated: new Date().toISOString(),
           },
-          frequentCollaborators: [],
-          collaborationByParty: {},
-          recentCollaborations: [],
-          lastUpdated: new Date().toISOString(),
+          metadata: {
+            responseTime: Date.now() - startTime,
+          },
         },
-        metadata: {
-          responseTime: Date.now() - startTime,
-        },
-      });
+        {
+          headers: {
+            'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+          },
+        }
+      );
     }
 
     // Analyze co-sponsorship network
@@ -304,14 +308,21 @@ export async function GET(
       responseTime,
     });
 
-    return NextResponse.json({
-      success: true,
-      state: state.toUpperCase(),
-      network,
-      metadata: {
-        responseTime,
+    return NextResponse.json(
+      {
+        success: true,
+        state: state.toUpperCase(),
+        network,
+        metadata: {
+          responseTime,
+        },
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+        },
+      }
+    );
   } catch (error) {
     logger.error('Co-sponsorship network API error', error as Error, {
       state: (await params).state.toUpperCase(),

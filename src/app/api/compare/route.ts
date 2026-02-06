@@ -8,9 +8,6 @@ import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { votingDataService } from '@/features/representatives/services/voting-data-service';
 
-// ISR: Revalidate every 1 hour
-export const revalidate = 3600;
-
 export const dynamic = 'force-dynamic';
 
 interface ComparisonData {
@@ -196,7 +193,11 @@ export async function GET(request: NextRequest) {
       hasRealVotingData: votingRecord.totalVotes > 0,
     });
 
-    return NextResponse.json(comparisonData);
+    return NextResponse.json(comparisonData, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     logger.error('Comparison API Error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

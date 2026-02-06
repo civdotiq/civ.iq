@@ -13,9 +13,6 @@ import {
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative, RepresentativeSummary } from '@/types/representative';
 
-// ISR: Revalidate every 1 day
-export const revalidate = 86400;
-
 export const dynamic = 'force-dynamic';
 
 // Response format types
@@ -371,7 +368,11 @@ export async function GET(request: NextRequest) {
       responseTime: Date.now() - startTime,
     });
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+      },
+    });
   } catch (error) {
     logger.error('V2 Representatives API error', error as Error);
 

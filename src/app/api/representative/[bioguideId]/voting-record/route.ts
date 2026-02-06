@@ -10,9 +10,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
-// ISR: Revalidate every 1 hour
-export const revalidate = 3600;
-
 export const dynamic = 'force-dynamic';
 export async function GET(
   request: NextRequest,
@@ -56,7 +53,11 @@ export async function GET(
 
     logger.info('[Voting API] Returning coming-soon response', { bioguideId });
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     logger.error('[Voting API] Emergency endpoint error', error as Error, { bioguideId });
 

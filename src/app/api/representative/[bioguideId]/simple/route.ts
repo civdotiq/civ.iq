@@ -52,7 +52,11 @@ export async function GET(
     logger.info('Simple API: Success, returning data');
 
     // Return the raw Congress.gov data
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=604800, stale-while-revalidate=1209600',
+      },
+    });
   } catch (error) {
     logger.error('Simple API: Fetch failed', error as Error);
     return NextResponse.json(

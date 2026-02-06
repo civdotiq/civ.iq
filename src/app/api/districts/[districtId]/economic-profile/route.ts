@@ -295,24 +295,31 @@ export async function GET(
 
     const economicProfile = await getEconomicProfile(districtId);
 
-    return NextResponse.json({
-      districtId,
-      economic: economicProfile,
-      metadata: {
-        timestamp: new Date().toISOString(),
-        dataSources: {
-          bls: 'Bureau of Labor Statistics - https://api.bls.gov/',
-          fcc: 'Federal Communications Commission - https://opendata.fcc.gov/',
-          infrastructure: 'Data unavailable - no real API source',
+    return NextResponse.json(
+      {
+        districtId,
+        economic: economicProfile,
+        metadata: {
+          timestamp: new Date().toISOString(),
+          dataSources: {
+            bls: 'Bureau of Labor Statistics - https://api.bls.gov/',
+            fcc: 'Federal Communications Commission - https://opendata.fcc.gov/',
+            infrastructure: 'Data unavailable - no real API source',
+          },
+          notes: [
+            'Employment data from BLS public API',
+            'Broadband data from FCC Fixed Broadband Deployment',
+            'Infrastructure data unavailable - real government APIs needed',
+            'Data cached for 30 minutes for performance',
+          ],
         },
-        notes: [
-          'Employment data from BLS public API',
-          'Broadband data from FCC Fixed Broadband Deployment',
-          'Infrastructure data unavailable - real government APIs needed',
-          'Data cached for 30 minutes for performance',
-        ],
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+        },
+      }
+    );
   } catch (error) {
     const resolvedParams = await params;
     logger.error('Economic profile API error', error as Error, {

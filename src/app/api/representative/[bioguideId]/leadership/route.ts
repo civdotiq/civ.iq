@@ -52,7 +52,14 @@ export async function GET(
       leadershipCount: leadership.length,
     });
 
-    return NextResponse.json({ leadership });
+    return NextResponse.json(
+      { leadership },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+        },
+      }
+    );
   } catch (error) {
     logger.error('Representative leadership API error', error as Error, {
       bioguideId: (await params).bioguideId,

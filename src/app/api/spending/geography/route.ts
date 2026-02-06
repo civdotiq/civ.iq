@@ -12,8 +12,6 @@ import type {
   USASpendingGeographyResponse,
 } from '@/types/spending';
 
-// ISR: Revalidate every 24 hours (aggregate data changes less frequently)
-export const revalidate = 86400;
 export const dynamic = 'force-dynamic';
 
 const USASPENDING_API = 'https://api.usaspending.gov/api/v2';

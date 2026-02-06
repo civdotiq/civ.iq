@@ -489,7 +489,11 @@ export async function GET(request: NextRequest) {
       includeMembers,
     });
 
-    return NextResponse.json(committeeData);
+    return NextResponse.json(committeeData, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+      },
+    });
   } catch (error) {
     logger.error('Committee directory API error', error as Error, {
       chamber,

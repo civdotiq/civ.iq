@@ -7,9 +7,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 
-// ISR: Revalidate every 1 day
-export const revalidate = 86400;
-
 export const dynamic = 'force-dynamic';
 
 interface LocationInfo {
@@ -149,7 +146,11 @@ export async function GET(
       },
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+      },
+    });
   } catch (error) {
     logger.error(
       'Local Government API Error',

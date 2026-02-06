@@ -16,9 +16,6 @@ import { XMLParser } from 'fast-xml-parser';
 import logger from '@/lib/logging/simple-logger';
 import { getLegislatorInfoMap } from '@/lib/data/legislator-mappings';
 
-// ISR: Revalidate every 1 hour
-export const revalidate = 3600;
-
 export const dynamic = 'force-dynamic';
 
 /**

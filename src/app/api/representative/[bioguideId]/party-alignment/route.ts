@@ -131,7 +131,11 @@ export async function GET(
       cached: totalDuration < 100, // If it's under 100ms, it was likely cached
     });
 
-    return NextResponse.json(alignmentData);
+    return NextResponse.json(alignmentData, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     logger.error('Error calculating party alignment', error as Error, { bioguideId });
 

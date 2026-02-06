@@ -390,12 +390,19 @@ export async function GET(
       count: bills.length,
     });
 
-    return NextResponse.json({
-      success: true,
-      committeeId,
-      bills,
-      count: bills.length,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        committeeId,
+        bills,
+        count: bills.length,
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      }
+    );
   } catch (error) {
     logger.error('Committee bills API error', error as Error);
 

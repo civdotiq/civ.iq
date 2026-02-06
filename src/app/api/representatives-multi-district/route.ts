@@ -14,7 +14,6 @@ import logger from '@/lib/logging/simple-logger';
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
-export const revalidate = 3600; // 1 hour - district mappings are stable
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
@@ -232,7 +231,12 @@ export async function GET(request: NextRequest) {
       processingTime: Date.now() - startTime,
     });
 
-    return NextResponse.json(response, { status: 200 });
+    return NextResponse.json(response, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     logger.error('Unexpected error in multi-district API', error as Error, { zipCode });
 

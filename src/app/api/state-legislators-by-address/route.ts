@@ -78,7 +78,11 @@ export async function POST(request: NextRequest) {
       responseTime: Date.now() - startTime,
     });
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     logger.error('Address-to-legislators API failed', error as Error, {
       responseTime: Date.now() - startTime,

@@ -435,7 +435,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       responseTime: Date.now() - startTime,
     });
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+      },
+    });
   } catch (error) {
     logger.error('V2 Representative Detail API error', error as Error);
 

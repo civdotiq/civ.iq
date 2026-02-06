@@ -62,18 +62,25 @@ export async function GET(
       neighborCount: neighbors.length,
     });
 
-    return NextResponse.json({
-      district: normalizedId,
-      neighbors: neighbors.map(neighborId => ({
-        id: neighborId,
-        name: `${neighborId} Congressional District`,
-        // Could add more details here like representative name
-      })),
-      metadata: {
-        timestamp: new Date().toISOString(),
-        note: 'Simplified geographic adjacency mapping',
+    return NextResponse.json(
+      {
+        district: normalizedId,
+        neighbors: neighbors.map(neighborId => ({
+          id: neighborId,
+          name: `${neighborId} Congressional District`,
+          // Could add more details here like representative name
+        })),
+        metadata: {
+          timestamp: new Date().toISOString(),
+          note: 'Simplified geographic adjacency mapping',
+        },
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+        },
+      }
+    );
   } catch (error) {
     const resolvedParams = await params;
     logger.error('District neighbors API error', error as Error, {

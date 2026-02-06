@@ -12,9 +12,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-// ISR: Revalidate every 1 hour
-export const revalidate = 3600;
-
 export const dynamic = 'force-dynamic';
 import { BillSummarizer } from '@/features/legislation/services/ai/bill-summarizer';
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
@@ -79,15 +76,22 @@ export async function GET(
       if (cachedSummary) {
         const responseTime = Date.now() - startTime;
 
-        return NextResponse.json({
-          summary: cachedSummary,
-          metadata: {
-            cached: true,
-            responseTime,
-            readingLevel: cachedSummary.readingLevel,
-            confidence: cachedSummary.confidence,
+        return NextResponse.json(
+          {
+            summary: cachedSummary,
+            metadata: {
+              cached: true,
+              responseTime,
+              readingLevel: cachedSummary.readingLevel,
+              confidence: cachedSummary.confidence,
+            },
           },
-        });
+          {
+            headers: {
+              'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+            },
+          }
+        );
       }
     }
 
@@ -114,16 +118,23 @@ export async function GET(
         if (cachedSummary) {
           const responseTime = Date.now() - startTime;
 
-          return NextResponse.json({
-            summary: cachedSummary,
-            metadata: {
-              cached: true,
-              validated: true,
-              responseTime,
-              readingLevel: cachedSummary.readingLevel,
-              confidence: cachedSummary.confidence,
+          return NextResponse.json(
+            {
+              summary: cachedSummary,
+              metadata: {
+                cached: true,
+                validated: true,
+                responseTime,
+                readingLevel: cachedSummary.readingLevel,
+                confidence: cachedSummary.confidence,
+              },
             },
-          });
+            {
+              headers: {
+                'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+              },
+            }
+          );
         }
       }
     }
@@ -221,7 +232,11 @@ export async function GET(
       operation: 'bill_summary_api',
     });
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     const responseTime = Date.now() - startTime;
     const { billId: errorBillId } = await params;

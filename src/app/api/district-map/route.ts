@@ -8,9 +8,6 @@ import { logger } from '@/lib/logging/logger-edge';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry-edge';
 import { getServerBaseUrl } from '@/lib/server-url';
 
-// ISR: Revalidate every 1 week
-export const revalidate = 604800;
-
 export const dynamic = 'force-dynamic';
 
 interface DistrictBoundary {
@@ -599,7 +596,11 @@ export async function GET(request: NextRequest) {
       bbox,
     };
 
-    return NextResponse.json(mapData);
+    return NextResponse.json(mapData, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=604800, stale-while-revalidate=1209600',
+      },
+    });
   } catch (error) {
     logger.error('District map API error', error as Error, { zipCode });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

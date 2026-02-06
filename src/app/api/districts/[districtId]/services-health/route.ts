@@ -337,24 +337,31 @@ export async function GET(
 
     const servicesProfile = await getServicesHealthProfile(districtId);
 
-    return NextResponse.json({
-      districtId,
-      services: servicesProfile,
-      metadata: {
-        timestamp: new Date().toISOString(),
-        dataSources: {
-          education: 'Department of Education - https://api.ed.gov/',
-          cdc: 'Centers for Disease Control - https://data.cdc.gov/',
-          healthcare: 'Data unavailable - no real API source',
+    return NextResponse.json(
+      {
+        districtId,
+        services: servicesProfile,
+        metadata: {
+          timestamp: new Date().toISOString(),
+          dataSources: {
+            education: 'Department of Education - https://api.ed.gov/',
+            cdc: 'Centers for Disease Control - https://data.cdc.gov/',
+            healthcare: 'Data unavailable - no real API source',
+          },
+          notes: [
+            'Education data from Department of Education API when available',
+            'Health outcomes from CDC PLACES dataset',
+            'Healthcare data unavailable - real government APIs needed',
+            'Data cached for 30 minutes for performance',
+          ],
         },
-        notes: [
-          'Education data from Department of Education API when available',
-          'Health outcomes from CDC PLACES dataset',
-          'Healthcare data unavailable - real government APIs needed',
-          'Data cached for 30 minutes for performance',
-        ],
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+        },
+      }
+    );
   } catch (error) {
     const resolvedParams = await params;
     logger.error('Services health profile API error', error as Error, {

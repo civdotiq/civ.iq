@@ -12,7 +12,6 @@ import { govCache } from '@/services/cache';
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
-export const revalidate = 3600; // 1 hour - ZIP to district mappings don't change mid-session
 
 // At-large states for 119th Congress (states with only 1 House district)
 const AT_LARGE_STATES_119TH = ['AK', 'DE', 'ND', 'SD', 'VT', 'WY'];
@@ -616,7 +615,12 @@ export async function GET(request: NextRequest) {
       processingTime: Date.now() - startTime,
     });
 
-    return NextResponse.json(result, { status: 200 });
+    return NextResponse.json(result, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     logger.error('Unexpected error in Representatives API', error as Error);
 

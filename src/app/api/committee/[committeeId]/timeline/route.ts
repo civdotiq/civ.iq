@@ -6,9 +6,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
-// ISR: Revalidate every 1 day
-export const revalidate = 86400;
-
 export const dynamic = 'force-dynamic';
 
 interface TimelineItem {
@@ -283,14 +280,21 @@ export async function GET(
       totalItems: allItems.length,
     });
 
-    return NextResponse.json({
-      success: true,
-      committeeId,
-      timeline: timelineItems,
-      stats,
-      filter,
-      hasMore: allItems.length > timelineItems.length,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        committeeId,
+        timeline: timelineItems,
+        stats,
+        filter,
+        hasMore: allItems.length > timelineItems.length,
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+        },
+      }
+    );
   } catch (error) {
     logger.error('Committee timeline API error', error as Error);
 

@@ -13,8 +13,6 @@ import type {
   FederalRegisterAPIDocument,
 } from '@/types/federal-register';
 
-// ISR: Revalidate every 6 hours (EOs don't change often)
-export const revalidate = 21600;
 export const dynamic = 'force-dynamic';
 
 const FEDERAL_REGISTER_API = 'https://www.federalregister.gov/api/v1';

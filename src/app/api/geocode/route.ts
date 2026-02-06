@@ -12,7 +12,6 @@ import { StateLegislatureCoreService } from '@/services/core/state-legislature-c
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
-export const revalidate = 3600; // 1 hour - addresses rarely change districts mid-session
 
 interface GeocodeRequest {
   mode: 'address' | 'coordinates';
@@ -155,7 +154,12 @@ export async function GET(request: NextRequest) {
           longitude,
         },
       },
-      { status: 200 }
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      }
     );
   } catch (error) {
     logger.error('Geocode GET error', error as Error, {
@@ -366,7 +370,12 @@ export async function POST(request: NextRequest) {
       processingTime: Date.now() - startTime,
     });
 
-    return NextResponse.json(response, { status: 200 });
+    return NextResponse.json(response, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     logger.error('Geocode API error', error as Error, {
       processingTime: Date.now() - startTime,

@@ -18,9 +18,6 @@ import { getEnhancedRepresentative } from '@/features/representatives/services/c
 import logger from '@/lib/logging/simple-logger';
 import type { EnhancedRepresentative } from '@/types/representative';
 
-// ISR: Revalidate every 5 minutes (real-time news data)
-export const revalidate = 300; // 5 minutes
-
 // Vercel serverless function configuration
 export const maxDuration = 10; // Reduced from 20s (GDELT was slow)
 export const dynamic = 'force-dynamic';
@@ -249,7 +246,11 @@ export async function GET(
       articlesCount: newsAPIResult.value.articles.length,
       duration,
     });
-    return NextResponse.json(newsAPIResult.value);
+    return NextResponse.json(newsAPIResult.value, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+      },
+    });
   }
 
   if (googleNewsResult.status === 'fulfilled' && googleNewsResult.value !== null) {
@@ -259,7 +260,11 @@ export async function GET(
       articlesCount: googleNewsResult.value.articles.length,
       duration,
     });
-    return NextResponse.json(googleNewsResult.value);
+    return NextResponse.json(googleNewsResult.value, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+      },
+    });
   }
 
   // Both sources failed - return empty result
@@ -284,5 +289,9 @@ export async function GET(
     },
   };
 
-  return NextResponse.json(emptyResponse);
+  return NextResponse.json(emptyResponse, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+    },
+  });
 }

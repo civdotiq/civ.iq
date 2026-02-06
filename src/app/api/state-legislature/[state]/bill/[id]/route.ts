@@ -62,15 +62,22 @@ export async function GET(
       responseTime: Date.now() - startTime,
     });
 
-    return NextResponse.json({
-      success: true,
-      bill,
-      progress,
-      metadata: {
-        cacheHit: false,
-        responseTime: Date.now() - startTime,
-      },
-    } as StateBillApiResponse);
+    return NextResponse.json(
+      {
+        success: true,
+        bill,
+        progress,
+        metadata: {
+          cacheHit: false,
+          responseTime: Date.now() - startTime,
+        },
+      } as StateBillApiResponse,
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      }
+    );
   } catch (error) {
     logger.error(`[StateBillAPI] Error fetching bill:`, error as Error, {
       state,

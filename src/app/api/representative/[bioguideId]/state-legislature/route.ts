@@ -477,7 +477,11 @@ export async function GET(
           .slice(0, 5),
       };
 
-      return NextResponse.json(stateData);
+      return NextResponse.json(stateData, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      });
     }
 
     // Fallback mock data
@@ -512,7 +516,11 @@ export async function GET(
       representative_district_bills: [],
     };
 
-    return NextResponse.json(emptyData);
+    return NextResponse.json(emptyData, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     logger.error('State Legislature API Error', error as Error, {
       bioguideId,

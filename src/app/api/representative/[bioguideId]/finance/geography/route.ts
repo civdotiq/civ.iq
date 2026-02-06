@@ -65,19 +65,31 @@ export async function GET(
     const cached = await govCache.get<GeographicAnalysisResponse>(cacheKey);
 
     if (cached) {
-      return NextResponse.json(cached);
+      return NextResponse.json(cached, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      });
     }
 
     const fecMapping = getFECMapping(bioguideId);
     if (!fecMapping) {
-      return NextResponse.json(EmptyFinanceResponses.geography(bioguideId));
+      return NextResponse.json(EmptyFinanceResponses.geography(bioguideId), {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      });
     }
 
     const representativeState = 'XX';
     const financeData = await aggregateFinanceData(fecMapping.fecId, 2024, representativeState);
 
     if (!financeData) {
-      return NextResponse.json(EmptyFinanceResponses.geography(bioguideId, fecMapping.fecId));
+      return NextResponse.json(EmptyFinanceResponses.geography(bioguideId, fecMapping.fecId), {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      });
     }
 
     const inStateContributions = financeData.geographicBreakdown.filter(state => state.isHomeState);
@@ -120,7 +132,11 @@ export async function GET(
       responseTime: Date.now() - startTime,
     });
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     logger.error('[Geography API] Error', error as Error, { bioguideId });
     return ApiErrors.serverError(error as Error);

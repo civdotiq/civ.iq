@@ -189,12 +189,19 @@ export async function GET(
       count: reports.length,
     });
 
-    return NextResponse.json({
-      success: true,
-      committeeId,
-      reports,
-      count: reports.length,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        committeeId,
+        reports,
+        count: reports.length,
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      }
+    );
   } catch (error) {
     logger.error('Committee reports API error', error as Error);
 

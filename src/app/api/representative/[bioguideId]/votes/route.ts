@@ -17,9 +17,6 @@ import logger from '@/lib/logging/simple-logger';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
 import { cachedFetch, govCache as _govCache } from '@/services/cache';
 
-// ISR: Revalidate every 1 hour (voting records update frequently)
-export const revalidate = 3600; // 1 hour
-
 // Vercel serverless function configuration
 export const maxDuration = 30; // 30 seconds for vote enrichment
 export const dynamic = 'force-dynamic';
@@ -958,7 +955,12 @@ export async function GET(
       phase: 1,
     });
 
-    return NextResponse.json(response, { status: 200 });
+    return NextResponse.json(response, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     // Ultimate crash prevention - this should never throw
     logger.error('Unexpected error in votes API (Phase 1)', error as Error, { bioguideId });

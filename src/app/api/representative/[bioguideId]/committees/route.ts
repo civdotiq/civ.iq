@@ -50,7 +50,14 @@ export async function GET(
       committeeCount: committees.length,
     });
 
-    return NextResponse.json({ committees });
+    return NextResponse.json(
+      { committees },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+        },
+      }
+    );
   } catch (error) {
     logger.error('Representative committees API error', error as Error, {
       bioguideId: (await params).bioguideId,

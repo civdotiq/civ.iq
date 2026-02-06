@@ -6,9 +6,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
-// ISR: Revalidate every 1 hour
-export const revalidate = 3600;
-
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
@@ -51,19 +48,26 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       limit,
     });
 
-    return NextResponse.json({
-      ...data,
-      metadata: {
-        congress: parseInt(congress),
-        totalBills: data.bills?.length || 0,
-        source: 'Congress.gov API',
-        generatedAt: new Date().toISOString(),
-        queryParams: {
-          limit: parseInt(limit),
-          sort,
+    return NextResponse.json(
+      {
+        ...data,
+        metadata: {
+          congress: parseInt(congress),
+          totalBills: data.bills?.length || 0,
+          source: 'Congress.gov API',
+          generatedAt: new Date().toISOString(),
+          queryParams: {
+            limit: parseInt(limit),
+            sort,
+          },
         },
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      }
+    );
   } catch (error) {
     logger.error('Latest bills API error', error as Error);
     return new NextResponse('Failed to fetch latest bills', { status: 500 });

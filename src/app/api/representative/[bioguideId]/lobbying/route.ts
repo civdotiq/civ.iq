@@ -104,29 +104,36 @@ export async function GET(
         representativeName: repData.name,
       });
 
-      return NextResponse.json({
-        representative: {
-          bioguideId,
-          name: repData.name,
-          committees: [],
-        },
-        lobbyingData: {
-          totalRelevantSpending: 0,
-          affectedCommittees: 0,
-          topCompanies: [],
-          committeeBreakdown: [],
-          summary: {
-            quarterlyTrend: [],
-            industryBreakdown: [],
+      return NextResponse.json(
+        {
+          representative: {
+            bioguideId,
+            name: repData.name,
+            committees: [],
+          },
+          lobbyingData: {
+            totalRelevantSpending: 0,
+            affectedCommittees: 0,
+            topCompanies: [],
+            committeeBreakdown: [],
+            summary: {
+              quarterlyTrend: [],
+              industryBreakdown: [],
+            },
+          },
+          metadata: {
+            dataSource: 'senate-lda-api',
+            lastUpdated: new Date().toISOString(),
+            coveragePeriod: 'No committee assignments',
+            note: 'Representative has no committee assignments. Lobbying data requires committee membership to identify relevant corporate influence.',
           },
         },
-        metadata: {
-          dataSource: 'senate-lda-api',
-          lastUpdated: new Date().toISOString(),
-          coveragePeriod: 'No committee assignments',
-          note: 'Representative has no committee assignments. Lobbying data requires committee membership to identify relevant corporate influence.',
-        },
-      });
+        {
+          headers: {
+            'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+          },
+        }
+      );
     }
 
     // Fetch lobbying data with caching
@@ -268,29 +275,36 @@ export async function GET(
     );
 
     if (!lobbyingData) {
-      return NextResponse.json({
-        representative: {
-          bioguideId,
-          name: repData.name,
-          committees,
-        },
-        lobbyingData: {
-          totalRelevantSpending: 0,
-          affectedCommittees: 0,
-          topCompanies: [],
-          committeeBreakdown: [],
-          summary: {
-            quarterlyTrend: [],
-            industryBreakdown: [],
+      return NextResponse.json(
+        {
+          representative: {
+            bioguideId,
+            name: repData.name,
+            committees,
+          },
+          lobbyingData: {
+            totalRelevantSpending: 0,
+            affectedCommittees: 0,
+            topCompanies: [],
+            committeeBreakdown: [],
+            summary: {
+              quarterlyTrend: [],
+              industryBreakdown: [],
+            },
+          },
+          metadata: {
+            dataSource: 'senate-lda-api',
+            lastUpdated: new Date().toISOString(),
+            coveragePeriod: 'Last 2 years',
+            note: "No lobbying activity found related to this representative's committee assignments.",
           },
         },
-        metadata: {
-          dataSource: 'senate-lda-api',
-          lastUpdated: new Date().toISOString(),
-          coveragePeriod: 'Last 2 years',
-          note: "No lobbying activity found related to this representative's committee assignments.",
-        },
-      });
+        {
+          headers: {
+            'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+          },
+        }
+      );
     }
 
     const response: RepresentativeLobbyingData = {
@@ -316,7 +330,11 @@ export async function GET(
       affectedCommittees: lobbyingData.affectedCommittees,
     });
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     const processingTime = Date.now() - startTime;
     logger.error('Error processing lobbying data request', error as Error, {

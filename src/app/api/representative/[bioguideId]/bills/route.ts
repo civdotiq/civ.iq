@@ -12,8 +12,6 @@ import {
 } from '@/services/congress/optimized-congress.service';
 import { cachedHeavyEndpoint } from '@/services/cache';
 
-// ISR: Revalidate every 1 hour
-export const revalidate = 3600;
 export const dynamic = 'force-dynamic';
 
 // Helper function to create legacy response format
@@ -91,7 +89,11 @@ export async function GET(
       const summary = await cachedHeavyEndpoint(cacheKey, () => getBillsSummary(bioguideId), {
         source: 'bills-summary-cached',
       });
-      return NextResponse.json(summary);
+      return NextResponse.json(summary, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      });
     }
 
     // Progressive loading: Return cached data immediately if available, then fetch fresh
@@ -118,7 +120,11 @@ export async function GET(
           },
         };
 
-        return NextResponse.json(progressiveResponse);
+        return NextResponse.json(progressiveResponse, {
+          headers: {
+            'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+          },
+        });
       } catch (error) {
         logger.warn('Progressive bills loading cache miss, falling back to direct fetch', {
           bioguideId,
@@ -139,7 +145,11 @@ export async function GET(
         response.cached = false;
         response.loadingComplete = true;
 
-        return NextResponse.json(response);
+        return NextResponse.json(response, {
+          headers: {
+            'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+          },
+        });
       }
     }
 
@@ -164,7 +174,11 @@ export async function GET(
     // Transform to legacy format for backward compatibility using cached data
     const legacyResponse = createLegacyResponse(result, congress);
 
-    return NextResponse.json(legacyResponse);
+    return NextResponse.json(legacyResponse, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     logger.error('Optimized bills API error', error as Error, {
       bioguideId: 'unavailable',

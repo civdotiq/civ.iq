@@ -7,8 +7,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 
-// ISR: Revalidate every 15 minutes (floor schedules change frequently)
-export const revalidate = 900;
 export const dynamic = 'force-dynamic';
 
 // Types for House floor schedule (from docs.house.gov XML)

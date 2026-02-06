@@ -13,8 +13,6 @@ import type {
   USASpendingAwardResult,
 } from '@/types/spending';
 
-// ISR: Revalidate every 6 hours (spending data updates daily)
-export const revalidate = 21600;
 export const dynamic = 'force-dynamic';
 
 const USASPENDING_API = 'https://api.usaspending.gov/api/v2';

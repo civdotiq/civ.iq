@@ -132,7 +132,11 @@ export async function GET(
       TTL_24_HOURS
     );
 
-    return NextResponse.json(executivesData);
+    return NextResponse.json(executivesData, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+      },
+    });
   } catch (error) {
     logger.error(
       'State Executives API Error',

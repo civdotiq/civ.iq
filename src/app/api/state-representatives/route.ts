@@ -16,11 +16,6 @@ import logger from '@/lib/logging/simple-logger';
 import type { EnhancedStateLegislator, StateJurisdiction } from '@/types/state-legislature';
 import { getAllCongressionalDistrictsForZip } from '@/lib/data/zip-district-mapping';
 
-// ISR: Revalidate every 30 days (election-aware caching in StateLegislatureCoreService)
-// State legislators change primarily during biennial election cycles
-// Election-aware govCache handles 3-day refresh during Oct-Dec election season
-export const revalidate = 2592000; // 30 days
-
 export const dynamic = 'force-dynamic';
 
 // API Response shape (for backwards compatibility with existing frontend)
@@ -285,7 +280,11 @@ export async function GET(request: NextRequest) {
       responseTime: Date.now() - startTime,
     });
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=2592000, stale-while-revalidate=5184000',
+      },
+    });
   } catch (error) {
     logger.error('State representatives request failed', error as Error, {
       zipCode,

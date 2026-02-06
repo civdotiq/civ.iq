@@ -67,18 +67,30 @@ export async function GET(
     const cached = await govCache.get<ExpenditureAnalysisResponse>(cacheKey);
 
     if (cached) {
-      return NextResponse.json(cached);
+      return NextResponse.json(cached, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      });
     }
 
     const fecMapping = getFECMapping(bioguideId);
     if (!fecMapping) {
-      return NextResponse.json(EmptyFinanceResponses.expenditures(bioguideId));
+      return NextResponse.json(EmptyFinanceResponses.expenditures(bioguideId), {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      });
     }
 
     const financialSummary = await fecApiService.getFinancialSummary(fecMapping.fecId, 2024);
 
     if (!financialSummary) {
-      return NextResponse.json(EmptyFinanceResponses.expenditures(bioguideId, fecMapping.fecId));
+      return NextResponse.json(EmptyFinanceResponses.expenditures(bioguideId, fecMapping.fecId), {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      });
     }
 
     const totalDisbursements =
@@ -124,7 +136,11 @@ export async function GET(
       responseTime: Date.now() - startTime,
     });
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     logger.error('[Expenditures API] Error', error as Error, { bioguideId });
     return ApiErrors.serverError(error as Error);

@@ -16,10 +16,6 @@ import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 import { getStateLegislatorBiography } from '@/lib/api/wikidata-state-legislators';
 
-// ISR: Election-aware revalidation (3 days Oct-Dec, 30 days Jan-Sep)
-// Legislator profiles change primarily during biennial election cycles
-export const revalidate = 259200; // 3 days
-
 export const dynamic = 'force-dynamic';
 
 export async function GET(
@@ -122,7 +118,12 @@ export async function GET(
         success: true,
         legislator,
       },
-      { status: 200 }
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, s-maxage=259200, stale-while-revalidate=518400',
+        },
+      }
     );
   } catch (error) {
     logger.error('State legislator request failed', error as Error, {

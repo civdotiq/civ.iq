@@ -74,18 +74,30 @@ export async function GET(
     const cached = await govCache.get<FundingSourcesAnalysisResponse>(cacheKey);
 
     if (cached) {
-      return NextResponse.json(cached);
+      return NextResponse.json(cached, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      });
     }
 
     const fecMapping = getFECMapping(bioguideId);
     if (!fecMapping) {
-      return NextResponse.json(EmptyFinanceResponses.fundingSources(bioguideId));
+      return NextResponse.json(EmptyFinanceResponses.fundingSources(bioguideId), {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      });
     }
 
     const financialSummary = await fecApiService.getFinancialSummary(fecMapping.fecId, 2024);
 
     if (!financialSummary) {
-      return NextResponse.json(EmptyFinanceResponses.fundingSources(bioguideId, fecMapping.fecId));
+      return NextResponse.json(EmptyFinanceResponses.fundingSources(bioguideId, fecMapping.fecId), {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      });
     }
 
     const totalRaised = financialSummary.receipts || financialSummary.total_receipts || 0;
@@ -143,7 +155,11 @@ export async function GET(
       responseTime: Date.now() - startTime,
     });
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
   } catch (error) {
     logger.error('[Funding Sources API] Error', error as Error, { bioguideId });
     return ApiErrors.serverError(error as Error);

@@ -12,8 +12,6 @@ import {
   convertToCommitteeBiographicalData,
 } from '@/lib/data/static-committee-biographies';
 
-// ISR: Revalidate every 1 week
-export const revalidate = 604800;
 export const dynamic = 'force-dynamic';
 
 interface WikipediaAPIResponse {

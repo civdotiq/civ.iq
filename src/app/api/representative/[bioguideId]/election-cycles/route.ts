@@ -77,12 +77,19 @@ export async function GET(
     // Fetch election cycles from FEC API
     const cycles = await fecApiService.getCandidateElectionCycles(fecCandidateId);
 
-    return NextResponse.json({
-      bioguideId,
-      fecCandidateId,
-      cycles,
-      defaultCycle: cycles.length > 0 ? cycles[0] : null, // Most recent cycle
-    });
+    return NextResponse.json(
+      {
+        bioguideId,
+        fecCandidateId,
+        cycles,
+        defaultCycle: cycles.length > 0 ? cycles[0] : null, // Most recent cycle
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      }
+    );
   } catch (error) {
     logger.error('[Election Cycles API] Error:', error);
     return NextResponse.json(

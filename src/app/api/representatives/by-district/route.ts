@@ -7,9 +7,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
 import logger from '@/lib/logging/simple-logger';
 
-// ISR: Revalidate every 1 hour
-export const revalidate = 3600;
-
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
@@ -39,10 +36,17 @@ export async function GET(request: NextRequest) {
 
     if (representatives.length === 0) {
       logger.warn('No representatives found for district', { state, district });
-      return NextResponse.json({
-        representatives: [],
-        message: `No representatives found for ${state}-${district}`,
-      });
+      return NextResponse.json(
+        {
+          representatives: [],
+          message: `No representatives found for ${state}-${district}`,
+        },
+        {
+          headers: {
+            'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+          },
+        }
+      );
     }
 
     logger.info('Successfully found representatives for district', {
@@ -51,7 +55,14 @@ export async function GET(request: NextRequest) {
       count: representatives.length,
     });
 
-    return NextResponse.json({ representatives });
+    return NextResponse.json(
+      { representatives },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+        },
+      }
+    );
   } catch (error) {
     logger.error('Error fetching district representative', error as Error, {
       state,

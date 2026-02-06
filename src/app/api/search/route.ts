@@ -10,7 +10,7 @@ import { cachedFetch } from '@/lib/cache';
 
 // Dynamic route with ISR caching - uses searchParams
 export const dynamic = 'force-dynamic';
-export const revalidate = 300; // 5 minutes - search results can update frequently
+
 import {
   geocodeAddress,
   extractDistrictFromResult,
@@ -480,16 +480,23 @@ export async function GET(request: NextRequest) {
       5 * 60 * 1000 // 5 minutes cache
     );
 
-    return NextResponse.json({
-      ...searchResults,
-      searchTerm: filters.query || '',
-      filters,
-      metadata: {
-        cacheHit: false, // Would need to track this in cachedFetch
-        dataSource: 'congress-legislators',
-        note: 'Voting scores, campaign finance, and bills sponsored are placeholder values pending integration',
+    return NextResponse.json(
+      {
+        ...searchResults,
+        searchTerm: filters.query || '',
+        filters,
+        metadata: {
+          cacheHit: false, // Would need to track this in cachedFetch
+          dataSource: 'congress-legislators',
+          note: 'Voting scores, campaign finance, and bills sponsored are placeholder values pending integration',
+        },
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        },
+      }
+    );
   } catch (error) {
     logger.error('Search API error', error as Error);
 

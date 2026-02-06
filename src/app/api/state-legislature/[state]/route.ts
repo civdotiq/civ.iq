@@ -8,10 +8,6 @@ import { cachedFetch } from '@/lib/cache';
 import logger from '@/lib/logging/simple-logger';
 import { monitorExternalApi } from '@/lib/monitoring/telemetry';
 
-// ISR: Election-aware revalidation (3 days Oct-Dec, 30 days Jan-Sep)
-// State jurisdiction data changes infrequently (only during redistricting or session changes)
-export const revalidate = 259200; // 3 days
-
 export const dynamic = 'force-dynamic';
 
 interface StateLegislator {
@@ -537,7 +533,11 @@ export async function GET(
       },
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=259200, stale-while-revalidate=518400',
+      },
+    });
   } catch (error) {
     logger.error(
       'State Legislature API Error',

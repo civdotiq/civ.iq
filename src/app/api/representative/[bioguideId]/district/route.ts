@@ -345,7 +345,11 @@ export async function GET(
       last_updated: new Date().toISOString(),
     };
 
-    return NextResponse.json(districtInfo);
+    return NextResponse.json(districtInfo, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=172800',
+      },
+    });
   } catch (error) {
     logger.error('API Error', error as Error, { bioguideId });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

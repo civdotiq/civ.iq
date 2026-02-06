@@ -13,8 +13,6 @@ import type {
   LegistarOfficeRecord,
 } from '@/types/legistar';
 
-// ISR: Revalidate every 24 hours (council membership changes infrequently)
-export const revalidate = 86400;
 export const dynamic = 'force-dynamic';
 
 // Cities with open Legistar APIs (verified working without auth)
