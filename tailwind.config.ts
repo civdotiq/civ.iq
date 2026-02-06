@@ -16,9 +16,6 @@ export default {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        body: ['var(--font-body)', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
-      },
       colors: {
         civiq: {
           red: '#e11d09',

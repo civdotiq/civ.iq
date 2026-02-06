@@ -55,7 +55,6 @@
     'Braun Linear', 'Helvetica Neue', 'Helvetica', 'Arial', 'Nimbus Sans L', 'Liberation Sans',
     sans-serif;
   --font-display: var(--font-primary);
-  --font-body-stack: var(--font-body), 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
 
   /* Typography scale - Ulm School systematic hierarchy */
   --type-xs: 0.75rem; /* 12px - Labels, meta */
@@ -184,12 +183,12 @@
 }
 
 .dark .aicher-tab.active {
-  background: #e5e5e5;
-  color: #1a1a1e;
+  background: var(--aicher-red);
+  color: white;
 }
 
 .dark .aicher-tab.active::after {
-  background: #e5e5e5;
+  background: var(--aicher-red);
 }
 
 .dark .aicher-metric-card {
@@ -263,40 +262,9 @@
   border-color: #333333;
 }
 
-/* Dark mode: accent becomes white-on-dark */
-.dark .accent-highlight {
-  background: #e5e5e5;
-  color: #1a1a1e;
-}
-
-.dark .accent-banner {
-  background: #e5e5e5;
-  color: #1a1a1e;
-}
-
-.dark .accent-cta {
-  background: #e5e5e5;
-  color: #1a1a1e;
-}
-
-.dark .accent-cta:hover {
-  background: #cccccc;
-}
-
-.dark .accent-section-header::before {
-  background: #e5e5e5;
-}
-
-.dark .accent-card-stripe::before {
-  background: #e5e5e5;
-}
-
-.dark .accent-title-underline::after {
-  background: #e5e5e5;
-}
-
+/* Dark mode: red accents read well on dark - keep them */
 .dark .accent-link:hover {
-  color: #e5e5e5;
+  color: var(--aicher-red);
 }
 
 /* Dark mode input fields */
@@ -463,22 +431,11 @@
 
 /* Base Typography - Ulm School Principles */
 body {
-  font-family: var(--font-body-stack);
+  font-family: var(--font-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-weight: 400;
   line-height: 1.5;
-}
-
-/* Body text elements use Hanken Grotesk */
-p,
-li,
-dd,
-blockquote,
-figcaption,
-td,
-th {
-  font-family: var(--font-body-stack);
 }
 
 /* Typography Hierarchy - Ulm School System (using size-dependent tracking) */
@@ -506,6 +463,7 @@ th {
   font-weight: 700;
   line-height: 1.3;
   letter-spacing: var(--tracking-heading);
+  text-transform: uppercase;
 }
 
 .aicher-heading-wide {
@@ -513,6 +471,7 @@ th {
   font-size: var(--type-lg);
   font-weight: 600;
   letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
 }
 
 .aicher-label {
@@ -524,7 +483,7 @@ th {
 }
 
 .aicher-body {
-  font-family: var(--font-body-stack);
+  font-family: var(--font-primary);
   font-size: var(--type-base);
   font-weight: 400;
   line-height: 1.5;
@@ -906,7 +865,7 @@ th {
 }
 
 .aicher-tab.active {
-  background: #000000;
+  background: var(--aicher-red);
   color: white;
 }
 
@@ -917,7 +876,7 @@ th {
   left: 0;
   right: 0;
   height: calc(var(--grid) * 0.75);
-  background: #000000;
+  background: var(--aicher-red);
 }
 
 .aicher-tab:hover:not(.active) {
@@ -1049,6 +1008,7 @@ th {
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.02em;
+  text-transform: uppercase;
   margin: 0;
   font-family: var(--font-display);
 }
@@ -1058,6 +1018,7 @@ th {
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.05em;
+  text-transform: uppercase;
   margin: 0;
   color: #000000;
 }
@@ -1162,6 +1123,7 @@ th {
   font-size: var(--type-xs);
   font-weight: 700;
   letter-spacing: 0.1em;
+  text-transform: uppercase;
   border: 2px solid #000000;
   background: white;
 }
@@ -1201,6 +1163,7 @@ th {
   font-size: var(--type-sm);
   font-weight: 700;
   letter-spacing: 0.05em;
+  text-transform: uppercase;
   margin: 0;
 }
 
@@ -1562,15 +1525,16 @@ th {
 /* TIER 1: HIGH IMPACT - Landing pages, hero sections          */
 /* ─────────────────────────────────────────────────────────── */
 
-/* Highlight box - bold text on accent color background */
+/* Highlight box - bold text on brand color background */
 .accent-highlight {
   display: inline-block;
   padding: calc(var(--grid) * 1) calc(var(--grid) * 2);
-  background: #000000;
+  background: var(--aicher-red);
   color: white;
   font-weight: 700;
   font-style: italic;
   letter-spacing: var(--accent-tracking-tight);
+  text-transform: uppercase;
 }
 
 .accent-highlight-green {
@@ -1585,11 +1549,12 @@ th {
 .accent-banner {
   position: relative;
   padding: calc(var(--grid) * 2) calc(var(--grid) * 4);
-  background: #000000;
+  background: var(--aicher-red);
   color: white;
   font-weight: 700;
   font-style: italic;
   letter-spacing: var(--accent-tracking-tight);
+  text-transform: uppercase;
   text-align: center;
   transform: skewY(var(--accent-stripe-angle));
   margin: calc(var(--grid) * 4) calc(var(--grid) * -4);
@@ -1621,6 +1586,7 @@ th {
 .accent-display {
   font-weight: 900;
   letter-spacing: var(--accent-tracking-ultra);
+  text-transform: uppercase;
   line-height: 0.95;
 }
 
@@ -1628,10 +1594,11 @@ th {
 .accent-cta {
   display: inline-block;
   padding: calc(var(--grid) * 2) calc(var(--grid) * 4);
-  background: #000000;
+  background: var(--aicher-red);
   color: white;
   font-weight: 700;
   letter-spacing: 0.02em;
+  text-transform: uppercase;
   text-decoration: none;
   border: none;
   cursor: pointer;
@@ -1641,7 +1608,7 @@ th {
 }
 
 .accent-cta:hover {
-  background: #1a1a1a;
+  background: var(--aicher-red-hover);
   transform: translateY(-2px);
 }
 
@@ -1675,6 +1642,7 @@ th {
   padding-left: calc(var(--grid) * 2);
   font-weight: 700;
   letter-spacing: var(--accent-tracking-tight);
+  text-transform: uppercase;
 }
 
 .accent-section-header::before {
@@ -1684,7 +1652,7 @@ th {
   top: 0;
   bottom: 0;
   width: 4px;
-  background: #000000;
+  background: var(--aicher-red);
 }
 
 .accent-section-header-green::before {
@@ -1699,6 +1667,7 @@ th {
 .accent-heading {
   font-weight: 700;
   letter-spacing: var(--accent-tracking-tight);
+  text-transform: uppercase;
 }
 
 /* Card with top accent stripe */
@@ -1715,7 +1684,7 @@ th {
   left: 0;
   right: 0;
   height: 4px;
-  background: #000000;
+  background: var(--aicher-red);
 }
 
 .accent-card-stripe-green::before {
@@ -1745,7 +1714,7 @@ th {
   left: 0;
   width: 48px;
   height: 3px;
-  background: #000000;
+  background: var(--aicher-red);
 }
 
 .accent-title-underline-green::after {
@@ -1765,7 +1734,7 @@ th {
 }
 
 .accent-link:hover {
-  color: #000000;
+  color: var(--aicher-red);
 }
 
 /* Inline emphasis - bold without color */
