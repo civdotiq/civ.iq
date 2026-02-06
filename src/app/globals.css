@@ -390,6 +390,30 @@
   background: #b1b1b1;
 }
 
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #1a1a1e;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #444444;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #666666;
+}
+
+/* Dark mode selection */
+.dark ::selection {
+  background: rgba(91, 184, 230, 0.3);
+  color: #e5e5e5;
+}
+
+/* Dark mode focus states */
+.dark :focus-visible {
+  outline-color: #5bb8e6;
+}
+
 /* Form element improvements */
 input[type='text'],
 input[type='email'],
@@ -585,6 +609,53 @@ select:disabled {
     width: 100% !important;
     position: static !important;
   }
+}
+
+/* Dark mode common overrides */
+.dark .bg-white {
+  background-color: #222226;
+}
+
+.dark .bg-gray-50 {
+  background-color: #1a1a1e;
+}
+
+.dark .bg-gray-100 {
+  background-color: #222226;
+}
+
+.dark .border-black {
+  border-color: #333333;
+}
+
+.dark .border-gray-300 {
+  border-color: #444444;
+}
+
+.dark .text-gray-900 {
+  color: #e5e5e5;
+}
+
+.dark .text-gray-800 {
+  color: #d4d4d4;
+}
+
+.dark .text-gray-700 {
+  color: #b0b0b0;
+}
+
+.dark .text-gray-600 {
+  color: #a0a0a0;
+}
+
+.dark .text-gray-500 {
+  color: #888888;
+}
+
+/* Dark mode shimmer */
+.dark .shimmer {
+  background: linear-gradient(90deg, #2a2a2e 25%, #333336 50%, #2a2a2e 75%);
+  background-size: 200% 100%;
 }
 
 /* High contrast mode support */

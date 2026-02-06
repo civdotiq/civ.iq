@@ -11,18 +11,19 @@
 ======================================== */
 
 .newsFeed {
-  /* Color Design Tokens */
-  --color-primary: #1a73e8;
-  --color-primary-hover: #1557b0;
+  font-family: var(--font-primary);
+  /* Color Design Tokens - Aicher Palette */
+  --color-primary: #3ea2d4;
+  --color-primary-hover: #3293c2;
   --color-secondary: #5f6368;
-  --color-success: #34a853;
-  --color-warning: #fbbc04;
-  --color-error: #ea4335;
+  --color-success: #0a9338;
+  --color-warning: #d97706;
+  --color-error: #e11d07;
 
   /* Breaking News Colors */
-  --color-breaking: #d93025;
+  --color-breaking: #e11d07;
   --color-breaking-bg: #fce8e6;
-  --color-breaking-border: #f28b82;
+  --color-breaking-border: #f5948a;
 
   /* Developing Story Colors */
   --color-developing: #f9ab00;
@@ -30,9 +31,9 @@
   --color-developing-border: #fdd663;
 
   /* Ongoing Story Colors */
-  --color-ongoing: #1a73e8;
-  --color-ongoing-bg: #e8f0fe;
-  --color-ongoing-border: #aecbfa;
+  --color-ongoing: #3ea2d4;
+  --color-ongoing-bg: #e8f4fa;
+  --color-ongoing-border: #a8d4e8;
 
   /* Background Colors */
   --color-bg-primary: #ffffff;
@@ -51,11 +52,11 @@
   --color-border-medium: #dadce0;
   --color-border-dark: #5f6368;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(60, 64, 67, 0.1);
-  --shadow-md: 0 1px 3px 0 rgba(60, 64, 67, 0.15);
-  --shadow-lg: 0 4px 6px -1px rgba(60, 64, 67, 0.1);
-  --shadow-xl: 0 8px 16px -4px rgba(60, 64, 67, 0.15);
+  /* Shadows - Aicher: borders replace shadows */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
 
   /* Typography Scale */
   --font-size-xs: 0.75rem;
@@ -77,11 +78,11 @@
   --space-10: 2.5rem;
   --space-12: 3rem;
 
-  /* Border Radius */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
+  /* Border Radius - Aicher: none */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
 
   /* Breakpoints */
   --breakpoint-sm: 640px;
@@ -227,7 +228,7 @@
 .clusterHeader {
   padding: var(--space-5);
   border-bottom: 1px solid var(--color-border-light);
-  background: linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
+  background: var(--color-bg-primary);
 }
 
 .clusterBadgeRow {

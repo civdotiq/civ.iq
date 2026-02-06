@@ -53,14 +53,10 @@
   --space-8: 2rem; /* 32px */
   --space-10: 2.5rem; /* 40px */
 
-  /* Border Radius - Minimal Geometric */
-  --radius-sm: 0.125rem; /* 2px */
-  --radius-md: 0.25rem; /* 4px */
-  --radius-lg: 0.5rem; /* 8px */
-
-  /* Shadows - Subtle Depth */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  /* Border Radius - Aicher: none */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
 
   /* Animation - Smooth Transitions */
   --transition-fast: 0.15s ease-out;
@@ -95,10 +91,7 @@
   letter-spacing: 0.15em;
   color: var(--color-text-tertiary);
   margin: 0;
-  font-family:
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: var(--font-primary);
 }
 
 /* Auto-load Toggle */
@@ -149,7 +142,6 @@
 
 .card:hover {
   border-color: var(--color-accent);
-  box-shadow: 0 8px 16px -4px rgba(62, 162, 212, 0.15);
   transform: translateY(-2px);
 }
 
@@ -269,7 +261,6 @@
 .loadMoreButton:hover:not(:disabled) {
   background-color: var(--color-surface-elevated);
   border-color: var(--color-border-medium);
-  box-shadow: var(--shadow-sm);
 }
 
 .loadMoreButton:disabled {

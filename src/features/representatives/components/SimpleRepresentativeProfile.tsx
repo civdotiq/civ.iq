@@ -235,7 +235,7 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           {/* Unified Hero Section with Stats */}
-          <div className="mb-4 sm:mb-6">
+          <div className="mb-rhythm-section">
             <HeroStatsHeader
               representative={representative}
               stats={{
@@ -260,7 +260,7 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
           </div>
 
           {/* Main Content Area - Full width with tabs */}
-          <div className="bg-white aicher-border mb-4 sm:mb-6">
+          <div className="bg-white aicher-border mb-rhythm-section">
             {/* Tab Navigation with hover prefetch */}
             <TabNavigation
               tabs={profileTabs}

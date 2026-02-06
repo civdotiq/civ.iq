@@ -55,6 +55,7 @@
     'Braun Linear', 'Helvetica Neue', 'Helvetica', 'Arial', 'Nimbus Sans L', 'Liberation Sans',
     sans-serif;
   --font-display: var(--font-primary);
+  --font-body-stack: var(--font-body), 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
 
   /* Typography scale - Ulm School systematic hierarchy */
   --type-xs: 0.75rem; /* 12px - Labels, meta */
@@ -114,6 +115,237 @@
   --color-success: var(--aicher-green); /* Confirmations */
   --color-error: var(--aicher-red); /* Errors only */
   --color-warning: #d97706; /* Warnings (amber) */
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* DARK MODE - Class-based (.dark on <html>)                   */
+/* ═══════════════════════════════════════════════════════════ */
+
+.dark {
+  --border-color: #333333;
+  --border-structural: 1px;
+  --border-divider: 1px;
+  --border-emphasis: 2px;
+  --aicher-blue: #5bb8e6;
+  --aicher-blue-hover: #4da8d6;
+  --aicher-blue-muted: #2a5a73;
+  --aicher-blue-cool: #4da8d6;
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #1a1a1e;
+  color: #e5e5e5;
+}
+
+.dark .aicher-card,
+.dark .aicher-chart-container,
+.dark .aicher-sidebar-card,
+.dark .stat-card,
+.dark .legislation-card,
+.dark .committee-card,
+.dark .accent-card-stripe {
+  background: #222226;
+  border-color: #333333;
+  color: #e5e5e5;
+}
+
+.dark .aicher-card:hover,
+.dark .stat-card:hover,
+.dark .legislation-card:hover,
+.dark .committee-card:hover {
+  border-color: var(--aicher-blue);
+}
+
+.dark .aicher-button {
+  background: #222226;
+  border-color: #555555;
+  color: #e5e5e5;
+}
+
+.dark .aicher-button:hover {
+  background: #e5e5e5;
+  color: #1a1a1e;
+}
+
+.dark .aicher-tabs {
+  background: #222226;
+  border-color: #333333;
+}
+
+.dark .aicher-tab {
+  color: #a0a0a0;
+  border-color: #333333;
+}
+
+.dark .aicher-tab:hover:not(.active) {
+  background: #2a2a2e;
+  color: #e5e5e5;
+}
+
+.dark .aicher-tab.active {
+  background: #e5e5e5;
+  color: #1a1a1e;
+}
+
+.dark .aicher-tab.active::after {
+  background: #e5e5e5;
+}
+
+.dark .aicher-metric-card {
+  background: #222226;
+  border-color: #333333;
+}
+
+.dark .aicher-sidebar-card.highlight {
+  background: #1a2a35;
+  border-color: var(--aicher-blue);
+}
+
+.dark .aicher-sidebar-card.warning {
+  background: #2a1a1a;
+  border-color: var(--aicher-red);
+}
+
+.dark .aicher-sidebar-header {
+  background: #2a2a2e;
+  border-color: #333333;
+}
+
+.dark .aicher-sidebar-card.highlight .aicher-sidebar-header {
+  background: var(--aicher-blue);
+}
+
+.dark .aicher-sidebar-card.warning .aicher-sidebar-header {
+  background: var(--aicher-red);
+}
+
+.dark .aicher-border {
+  border-color: #333333;
+}
+
+.dark .profile-hero-title {
+  color: #e5e5e5;
+}
+
+.dark .stat-label,
+.dark .committee-role,
+.dark .profile-hero-meta {
+  color: #a0a0a0;
+}
+
+.dark .aicher-data-list {
+  border-color: #333333;
+}
+
+.dark .aicher-data-list-item {
+  border-color: #333333;
+}
+
+.dark .aicher-data-list-item:hover {
+  background-color: #2a2a2e;
+}
+
+.dark .aicher-section-title {
+  color: #e5e5e5;
+}
+
+.dark .aicher-contact-method {
+  border-color: #333333;
+}
+
+.dark .aicher-contact-method:hover {
+  background: #2a2a2e;
+}
+
+.dark .aicher-map-placeholder {
+  background: #222226;
+  border-color: #333333;
+}
+
+/* Dark mode: accent becomes white-on-dark */
+.dark .accent-highlight {
+  background: #e5e5e5;
+  color: #1a1a1e;
+}
+
+.dark .accent-banner {
+  background: #e5e5e5;
+  color: #1a1a1e;
+}
+
+.dark .accent-cta {
+  background: #e5e5e5;
+  color: #1a1a1e;
+}
+
+.dark .accent-cta:hover {
+  background: #cccccc;
+}
+
+.dark .accent-section-header::before {
+  background: #e5e5e5;
+}
+
+.dark .accent-card-stripe::before {
+  background: #e5e5e5;
+}
+
+.dark .accent-title-underline::after {
+  background: #e5e5e5;
+}
+
+.dark .accent-link:hover {
+  color: #e5e5e5;
+}
+
+/* Dark mode input fields */
+.dark input[type='text'],
+.dark input[type='email'],
+.dark input[type='tel'],
+.dark input[type='search'],
+.dark select,
+.dark textarea {
+  background-color: #2a2a2e;
+  border-color: #555555;
+  color: #e5e5e5;
+}
+
+/* Dark mode loading states */
+.dark .aicher-loading {
+  border-color: #333333;
+  border-top-color: var(--aicher-blue);
+}
+
+.dark .aicher-progress-bar {
+  background: #333333;
+  border-color: #555555;
+}
+
+.dark .data-bar-container {
+  background: #333333;
+  border-color: #555555;
+}
+
+/* Dark mode legislation status */
+.dark .legislation-status {
+  background: #2a2a2e;
+  border-color: #555555;
+}
+
+.dark .legislation-status-passed {
+  background: #0a2a15;
+  border-color: var(--aicher-green);
+}
+
+.dark .legislation-status-active {
+  background: #1a2a35;
+  border-color: var(--aicher-blue);
+}
+
+.dark .legislation-status-failed {
+  background: #2a1a1a;
+  border-color: var(--aicher-red);
 }
 
 /* High-DPI Border Adjustment - Hairline dividers on retina */
@@ -231,11 +463,22 @@
 
 /* Base Typography - Ulm School Principles */
 body {
-  font-family: var(--font-primary);
+  font-family: var(--font-body-stack);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-weight: 400;
   line-height: 1.5;
+}
+
+/* Body text elements use Hanken Grotesk */
+p,
+li,
+dd,
+blockquote,
+figcaption,
+td,
+th {
+  font-family: var(--font-body-stack);
 }
 
 /* Typography Hierarchy - Ulm School System (using size-dependent tracking) */
@@ -263,7 +506,6 @@ body {
   font-weight: 700;
   line-height: 1.3;
   letter-spacing: var(--tracking-heading);
-  text-transform: uppercase;
 }
 
 .aicher-heading-wide {
@@ -271,7 +513,6 @@ body {
   font-size: var(--type-lg);
   font-weight: 600;
   letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
 }
 
 .aicher-label {
@@ -283,7 +524,7 @@ body {
 }
 
 .aicher-body {
-  font-family: var(--font-primary);
+  font-family: var(--font-body-stack);
   font-size: var(--type-base);
   font-weight: 400;
   line-height: 1.5;
@@ -665,7 +906,7 @@ body {
 }
 
 .aicher-tab.active {
-  background: var(--aicher-red);
+  background: #000000;
   color: white;
 }
 
@@ -676,7 +917,7 @@ body {
   left: 0;
   right: 0;
   height: calc(var(--grid) * 0.75);
-  background: var(--aicher-red);
+  background: #000000;
 }
 
 .aicher-tab:hover:not(.active) {
@@ -808,7 +1049,6 @@ body {
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.02em;
-  text-transform: uppercase;
   margin: 0;
   font-family: var(--font-display);
 }
@@ -818,7 +1058,6 @@ body {
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
   margin: 0;
   color: #000000;
 }
@@ -923,7 +1162,6 @@ body {
   font-size: var(--type-xs);
   font-weight: 700;
   letter-spacing: 0.1em;
-  text-transform: uppercase;
   border: 2px solid #000000;
   background: white;
 }
@@ -963,7 +1201,6 @@ body {
   font-size: var(--type-sm);
   font-weight: 700;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
   margin: 0;
 }
 
@@ -972,6 +1209,19 @@ body {
   font-weight: 400;
   color: #6b7280;
   margin-top: calc(var(--grid) * 0.5);
+}
+
+/* Vertical Rhythm Breaks - breathing room after dense data sections */
+.rhythm-break {
+  margin-bottom: calc(var(--grid) * 8); /* 64px - major section breaks */
+}
+
+.rhythm-section {
+  margin-bottom: calc(var(--grid) * 5); /* 40px - standard section spacing */
+}
+
+.rhythm-compact {
+  margin-bottom: calc(var(--grid) * 3); /* 24px - tight spacing */
 }
 
 /* Margin utilities for section spacing */
@@ -1312,16 +1562,15 @@ body {
 /* TIER 1: HIGH IMPACT - Landing pages, hero sections          */
 /* ─────────────────────────────────────────────────────────── */
 
-/* Highlight box - bold text on brand color background */
+/* Highlight box - bold text on accent color background */
 .accent-highlight {
   display: inline-block;
   padding: calc(var(--grid) * 1) calc(var(--grid) * 2);
-  background: var(--aicher-red);
+  background: #000000;
   color: white;
   font-weight: 700;
   font-style: italic;
   letter-spacing: var(--accent-tracking-tight);
-  text-transform: uppercase;
 }
 
 .accent-highlight-green {
@@ -1336,12 +1585,11 @@ body {
 .accent-banner {
   position: relative;
   padding: calc(var(--grid) * 2) calc(var(--grid) * 4);
-  background: var(--aicher-red);
+  background: #000000;
   color: white;
   font-weight: 700;
   font-style: italic;
   letter-spacing: var(--accent-tracking-tight);
-  text-transform: uppercase;
   text-align: center;
   transform: skewY(var(--accent-stripe-angle));
   margin: calc(var(--grid) * 4) calc(var(--grid) * -4);
@@ -1373,7 +1621,6 @@ body {
 .accent-display {
   font-weight: 900;
   letter-spacing: var(--accent-tracking-ultra);
-  text-transform: uppercase;
   line-height: 0.95;
 }
 
@@ -1381,11 +1628,10 @@ body {
 .accent-cta {
   display: inline-block;
   padding: calc(var(--grid) * 2) calc(var(--grid) * 4);
-  background: var(--aicher-red);
+  background: #000000;
   color: white;
   font-weight: 700;
   letter-spacing: 0.02em;
-  text-transform: uppercase;
   text-decoration: none;
   border: none;
   cursor: pointer;
@@ -1395,7 +1641,7 @@ body {
 }
 
 .accent-cta:hover {
-  background: var(--aicher-red-hover);
+  background: #1a1a1a;
   transform: translateY(-2px);
 }
 
@@ -1429,7 +1675,6 @@ body {
   padding-left: calc(var(--grid) * 2);
   font-weight: 700;
   letter-spacing: var(--accent-tracking-tight);
-  text-transform: uppercase;
 }
 
 .accent-section-header::before {
@@ -1439,7 +1684,7 @@ body {
   top: 0;
   bottom: 0;
   width: 4px;
-  background: var(--aicher-red);
+  background: #000000;
 }
 
 .accent-section-header-green::before {
@@ -1454,7 +1699,6 @@ body {
 .accent-heading {
   font-weight: 700;
   letter-spacing: var(--accent-tracking-tight);
-  text-transform: uppercase;
 }
 
 /* Card with top accent stripe */
@@ -1471,7 +1715,7 @@ body {
   left: 0;
   right: 0;
   height: 4px;
-  background: var(--aicher-red);
+  background: #000000;
 }
 
 .accent-card-stripe-green::before {
@@ -1501,7 +1745,7 @@ body {
   left: 0;
   width: 48px;
   height: 3px;
-  background: var(--aicher-red);
+  background: #000000;
 }
 
 .accent-title-underline-green::after {
@@ -1521,7 +1765,7 @@ body {
 }
 
 .accent-link:hover {
-  color: var(--aicher-red);
+  color: #000000;
 }
 
 /* Inline emphasis - bold without color */

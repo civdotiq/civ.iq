@@ -6,6 +6,7 @@
 import type { Config } from 'tailwindcss';
 
 export default {
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -15,6 +16,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        body: ['var(--font-body)', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+      },
       colors: {
         civiq: {
           red: '#e11d09',
@@ -45,6 +49,9 @@ export default {
         'grid-10': '80px',
         'grid-12': '96px',
         'grid-16': '128px',
+        'rhythm-compact': '24px',
+        'rhythm-section': '40px',
+        'rhythm-break': '64px',
       },
       borderWidth: {
         aicher: '2px',

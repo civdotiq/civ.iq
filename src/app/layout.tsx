@@ -1,8 +1,16 @@
 import type { Metadata, Viewport } from 'next';
+import { Hanken_Grotesk } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
 import { Header } from '@/shared/components/navigation/Header';
 import { SiteFooter } from '@/components/shared/layout/SiteFooter';
+
+const hankenGrotesk = Hanken_Grotesk({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-body',
+  display: 'swap',
+});
 
 // Google Analytics Measurement ID
 const GA_MEASUREMENT_ID = 'G-F98819F2NC';
@@ -89,8 +97,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={hankenGrotesk.variable} suppressHydrationWarning>
       <head>
+        {/* Prevent dark mode flash - runs before paint */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(t==null&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+          }}
+        />
         {/* Preload critical font weights to prevent FOUT */}
         <link
           rel="preload"

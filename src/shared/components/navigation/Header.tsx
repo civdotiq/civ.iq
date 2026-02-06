@@ -11,6 +11,7 @@ import { usePathname } from 'next/navigation';
 import { CiviqLogo } from '@/shared/ui/CiviqLogo';
 import { MobileNav } from './MobileNav';
 import { GlobalSearch } from '@/components/search/GlobalSearch';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface HeaderProps {
   className?: string;
@@ -123,8 +124,10 @@ function NavDropdown({
     >
       <button
         onClick={handleClick}
-        className={`aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 min-h-[44px] flex items-center gap-1 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] after:transition-all after:duration-200 hover:after:w-full ${
-          isActive ? 'text-[#3ea2d4] after:w-full' : 'text-gray-700 hover:text-[#3ea2d4]'
+        className={`aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 min-h-[44px] flex items-center gap-1 after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] dark:after:bg-[#5bb8e6] after:transition-all after:duration-200 hover:after:w-full ${
+          isActive
+            ? 'text-[#3ea2d4] dark:text-[#5bb8e6] after:w-full'
+            : 'text-gray-700 dark:text-gray-300 hover:text-[#3ea2d4] dark:hover:text-[#5bb8e6]'
         }`}
         aria-expanded={isOpen}
         aria-haspopup="menu"
@@ -148,7 +151,7 @@ function NavDropdown({
           id={menuId}
           role="menu"
           aria-label={`${section.name} navigation`}
-          className="absolute top-full left-0 mt-1 min-w-[180px] bg-white border-2 border-black shadow-lg z-50"
+          className="absolute top-full left-0 mt-1 min-w-[180px] bg-white dark:bg-[#222226] border-2 border-black dark:border-[#333333] shadow-lg z-50"
         >
           <div className="py-2">
             {section.items.map(item => {
@@ -161,8 +164,8 @@ function NavDropdown({
                   aria-current={isCurrentPage ? 'page' : undefined}
                   className={`block px-4 py-2 text-sm transition-colors ${
                     isCurrentPage
-                      ? 'bg-gray-100 text-[#3ea2d4] font-medium'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-[#3ea2d4]'
+                      ? 'bg-gray-100 dark:bg-[#2a2a2e] text-[#3ea2d4] dark:text-[#5bb8e6] font-medium'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2e] hover:text-[#3ea2d4] dark:hover:text-[#5bb8e6]'
                   }`}
                   onClick={() => setIsOpen(false)}
                 >
@@ -182,8 +185,8 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
   const pathname = usePathname();
 
   const headerClasses = transparent
-    ? 'bg-white/95 backdrop-blur-md'
-    : 'bg-white border-b-2 border-black';
+    ? 'bg-white/95 dark:bg-[#1a1a1e]/95 backdrop-blur-md'
+    : 'bg-white dark:bg-[#1a1a1e] border-b-2 border-black dark:border-[#333333]';
 
   return (
     <>
@@ -222,8 +225,10 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 min-h-[44px] flex items-center after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] after:transition-all after:duration-200 hover:after:w-full ${
-                    isActive ? 'text-[#3ea2d4] after:w-full' : 'text-gray-700 hover:text-[#3ea2d4]'
+                  className={`aicher-heading-wide text-sm lg:text-base relative transition-all duration-200 min-h-[44px] flex items-center after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#3ea2d4] dark:after:bg-[#5bb8e6] after:transition-all after:duration-200 hover:after:w-full ${
+                    isActive
+                      ? 'text-[#3ea2d4] dark:text-[#5bb8e6] after:w-full'
+                      : 'text-gray-700 dark:text-gray-300 hover:text-[#3ea2d4] dark:hover:text-[#5bb8e6]'
                   }`}
                 >
                   {item.name}
@@ -235,11 +240,14 @@ export function Header({ className = '', transparent = false }: HeaderProps) {
             <div className="ml-2 lg:ml-4">
               <GlobalSearch />
             </div>
+
+            {/* Theme Toggle */}
+            <ThemeToggle />
           </nav>
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden flex items-center justify-center min-w-[44px] min-h-[44px] text-gray-700 border-2 border-gray-300 hover:border-civiq-blue transition-colors"
+            className="md:hidden flex items-center justify-center min-w-[44px] min-h-[44px] text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 hover:border-civiq-blue transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle mobile menu"
             aria-expanded={mobileMenuOpen}
