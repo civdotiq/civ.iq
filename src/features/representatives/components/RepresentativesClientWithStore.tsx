@@ -206,7 +206,7 @@ export function RepresentativesClientWithStore({
           </div>
 
           {/* Stats Summary */}
-          <div className="mb-6 grid grid-cols-4 gap-4">
+          <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="bg-blue-50 p-4">
               <p className="text-sm text-gray-600">Democrats</p>
               <p className="text-2xl font-bold text-blue-600">{stats.dems}</p>

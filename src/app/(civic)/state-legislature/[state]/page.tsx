@@ -140,7 +140,7 @@ function LegislatorCard({
   return (
     <Link
       href={`/state-legislature/${state}/legislator/${base64Id}`}
-      className="block bg-white border border-gray-200 p-6 hover:border-2 hover:border-black transition-all cursor-pointer"
+      className="block bg-white border border-gray-200 p-4 sm:p-6 hover:border-2 hover:border-black transition-all cursor-pointer"
     >
       <div className="flex items-start gap-4">
         <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center relative overflow-hidden">
@@ -163,7 +163,7 @@ function LegislatorCard({
         </div>
 
         <div className="flex-1">
-          <div className="flex items-start justify-between mb-2">
+          <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">{legislator.name}</h3>
               <p className="text-sm text-gray-600">
@@ -177,7 +177,7 @@ function LegislatorCard({
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-3 text-sm">
             <div>
               <span className="text-gray-600">Bills Sponsored:</span>
               <span className="ml-1 font-medium">{legislator.bills.sponsored}</span>
@@ -287,7 +287,7 @@ function ChamberOverview({ chamber, data }: { chamber: 'upper' | 'lower'; data: 
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 text-center">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
         <div>
           <p className="text-2xl font-bold text-blue-600">{chamberData.democraticSeats}</p>
           <p className="text-xs text-gray-600">Democrats</p>
@@ -352,7 +352,7 @@ function RecentBills({ bills, state }: { bills: StateBill[]; state: string }) {
               </span>
             </div>
 
-            <div className="flex items-center gap-4 text-xs text-gray-500">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
               <span>Sponsor: {bill.sponsor.name}</span>
               <span>•</span>
               <span>{new Date(bill.lastActionDate).toLocaleDateString()}</span>
@@ -461,13 +461,13 @@ export default function StateLegislaturePage() {
     <div className="min-h-screen bg-white">
       <main className="container mx-auto px-4 py-8">
         {/* Page header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 mb-8">
-          <div className="flex items-center gap-6">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 sm:p-8 mb-8">
+          <div className="flex items-center gap-3 sm:gap-6">
             <div className="w-16 h-16 bg-white/20 flex items-center justify-center">
               <span className="text-2xl font-bold">{legislatureData.state}</span>
             </div>
             <div>
-              <h1 className="text-3xl font-bold mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold mb-2">
                 {legislatureData.stateName} State Legislature
               </h1>
               <p className="text-blue-100">

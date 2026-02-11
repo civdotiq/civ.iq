@@ -140,9 +140,11 @@ export default function StateBillDetailPage() {
 
         {/* Bill Header */}
         <div className="bg-white border-2 border-black p-6 md:p-8 mb-6">
-          <div className="flex items-start justify-between mb-4">
+          <div className="mb-4">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{bill.identifier}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                {bill.identifier}
+              </h1>
               <p className="text-xl text-gray-700 mb-4">{bill.title}</p>
               {bill.abstract && <p className="text-gray-600 leading-relaxed">{bill.abstract}</p>}
             </div>
@@ -194,7 +196,7 @@ export default function StateBillDetailPage() {
 
         {/* Tab Navigation */}
         <div className="bg-white border-2 border-black mb-6">
-          <nav className="flex">
+          <nav className="flex overflow-x-auto">
             {[
               { id: 'overview' as const, label: 'Overview' },
               { id: 'sponsors' as const, label: `Sponsors (${bill.sponsorships.length})` },
@@ -204,7 +206,7 @@ export default function StateBillDetailPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors border-r-2 last:border-r-0 border-black ${
+                className={`flex-shrink-0 flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-r-2 last:border-r-0 border-black ${
                   activeTab === tab.id ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
@@ -360,7 +362,7 @@ export default function StateBillDetailPage() {
                   <div className="space-y-6">
                     {bill.votes.map((vote: StateBillVote, index: number) => (
                       <div key={index} className="bg-gray-50 border-2 border-gray-300 p-4">
-                        <div className="flex items-start justify-between mb-3">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
                           <div className="flex-1">
                             <div className="font-medium text-gray-900 mb-1">{vote.motion_text}</div>
                             <div className="text-sm text-gray-600">

@@ -115,7 +115,7 @@ export function EnhancedVotingChart({ votes, party: _party }: EnhancedVotingChar
 
   return (
     <div className="bg-white border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h3 className="text-lg font-semibold text-gray-900">Interactive Voting Analysis</h3>
         <button
           onClick={() => setShowDetailedView(!showDetailedView)}

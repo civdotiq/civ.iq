@@ -13,6 +13,7 @@ import UnifiedRepresentativeCard from '@/components/districts/shared/UnifiedRepr
 import UnifiedDistrictSidebar from '@/components/districts/shared/UnifiedDistrictSidebar';
 import UnifiedDemographicsDisplay from '@/components/districts/shared/UnifiedDemographicsDisplay';
 import NeighboringDistricts from '@/features/districts/components/NeighboringDistricts';
+import FederalSpendingProfile from '@/features/spending/components/FederalSpendingProfile';
 import logger from '@/lib/logging/simple-logger';
 import { SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
@@ -188,13 +189,16 @@ export default function DistrictPage() {
             />
 
             {/* Interactive Map */}
-            <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8">
+            <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-4 sm:p-8">
               <h2 className="text-xl font-bold text-gray-900 mb-4">District Boundaries</h2>
               <DistrictMap state={district.state} district={district.number} />
             </div>
 
             {/* Demographics */}
             <UnifiedDemographicsDisplay demographics={district.demographics} />
+
+            {/* Federal Spending */}
+            <FederalSpendingProfile districtId={districtId} />
           </div>
 
           {/* Sidebar */}
@@ -217,7 +221,7 @@ export default function DistrictPage() {
 
             {/* Wikidata Facts */}
             {district.wikidata && (
-              <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8">
+              <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-4 sm:p-8">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Historical Facts</h3>
                 <div className="space-y-3">
                   {district.wikidata.established && (

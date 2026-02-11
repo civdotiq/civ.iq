@@ -311,7 +311,7 @@ export const StateLegislatorBillsList: React.FC<StateLegislatorBillsListProps> =
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-gray-50 border-2 border-gray-300 p-4 text-center">
           <div className="text-3xl font-bold text-blue-600">{bills.length}</div>
           <div className="text-sm text-gray-600">Total Bills</div>

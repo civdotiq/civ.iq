@@ -113,7 +113,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
             <SimpleBreadcrumb />
           )}
 
-          <div className="aicher-card p-8 text-center">
+          <div className="aicher-card p-4 sm:p-8 text-center">
             <h1 className="aicher-heading text-2xl text-gray-900 mb-4">Vote Not Found</h1>
             <p className="text-gray-600 mb-6">
               The requested vote (ID: {voteId}) could not be found or is not available.
@@ -181,10 +181,10 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
         )}
 
         {/* Vote Header */}
-        <div className="aicher-card mb-6 p-6">
-          <div className="flex items-start justify-between mb-4">
+        <div className="aicher-card mb-6 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
             <div>
-              <h1 className="aicher-heading text-3xl text-gray-900 mb-2">
+              <h1 className="aicher-heading text-2xl sm:text-3xl text-gray-900 mb-2">
                 {voteDetail.title}
                 {voteDetail.bill?.number &&
                   `: ${voteDetail.bill.type || ''} ${voteDetail.bill.number}`}
@@ -199,7 +199,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
                 Congress
               </p>
             </div>
-            <div className="text-right">
+            <div className="sm:text-right">
               <div
                 className={`text-2xl font-bold ${
                   voteDetail.result.toLowerCase().includes('passed') ||
@@ -345,28 +345,28 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
 
         {/* Vote Results Summary */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="aicher-card p-6 text-center">
+          <div className="aicher-card p-4 sm:p-6 text-center">
             <div className="text-3xl font-bold text-green-600">{voteDetail.yeas}</div>
             <div className="text-sm text-gray-500">Yea</div>
             <div className="text-xs text-gray-400 mt-1">
               {((voteDetail.yeas / voteDetail.totalVotes) * 100).toFixed(1)}%
             </div>
           </div>
-          <div className="aicher-card p-6 text-center">
+          <div className="aicher-card p-4 sm:p-6 text-center">
             <div className="text-3xl font-bold text-red-600">{voteDetail.nays}</div>
             <div className="text-sm text-gray-500">Nay</div>
             <div className="text-xs text-gray-400 mt-1">
               {((voteDetail.nays / voteDetail.totalVotes) * 100).toFixed(1)}%
             </div>
           </div>
-          <div className="aicher-card p-6 text-center">
+          <div className="aicher-card p-4 sm:p-6 text-center">
             <div className="text-3xl font-bold text-yellow-600">{voteDetail.present}</div>
             <div className="text-sm text-gray-500">Present</div>
             <div className="text-xs text-gray-400 mt-1">
               {((voteDetail.present / voteDetail.totalVotes) * 100).toFixed(1)}%
             </div>
           </div>
-          <div className="aicher-card p-6 text-center">
+          <div className="aicher-card p-4 sm:p-6 text-center">
             <div className="text-3xl font-bold text-gray-600">{voteDetail.absent}</div>
             <div className="text-sm text-gray-500">Not Voting</div>
             <div className="text-xs text-gray-400 mt-1">
@@ -376,7 +376,7 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
         </div>
 
         {/* Party Breakdown */}
-        <div className="aicher-card mb-6 p-6">
+        <div className="aicher-card mb-6 p-4 sm:p-6">
           <h2 className="aicher-heading text-xl text-gray-900 mb-4">Vote by Party</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
@@ -575,10 +575,14 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
 
         {/* Metadata Footer */}
         <div className="mt-8 text-center text-sm text-gray-500">
-          <p>
-            Data source: {voteDetail.metadata.source} • Processed:{' '}
-            {new Date(voteDetail.metadata.processingDate).toLocaleDateString()} • Confidence:{' '}
-            {voteDetail.metadata.confidence}
+          <p className="flex flex-col sm:flex-row sm:justify-center sm:gap-1">
+            <span>Data source: {voteDetail.metadata.source}</span>
+            <span className="hidden sm:inline">•</span>
+            <span>
+              Processed: {new Date(voteDetail.metadata.processingDate).toLocaleDateString()}
+            </span>
+            <span className="hidden sm:inline">•</span>
+            <span>Confidence: {voteDetail.metadata.confidence}</span>
           </p>
         </div>
       </div>

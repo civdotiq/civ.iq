@@ -68,7 +68,7 @@ function BillLoading() {
         </div>
 
         {/* Header skeleton */}
-        <div className="aicher-card p-8 mb-8">
+        <div className="aicher-card p-4 sm:p-8 mb-8">
           <div className="h-8 w-2/3 bg-gray-200 rounded animate-pulse mb-4"></div>
           <div className="h-6 w-1/3 bg-gray-200 rounded animate-pulse mb-2"></div>
           <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>

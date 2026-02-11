@@ -280,7 +280,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
         {/* Quarterly Performance Summary */}
         <div className="bg-white p-6">
           <h4 className="font-semibold text-gray-900 mb-4">Quarterly Performance Summary</h4>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
                 {formatCurrency(data.summary.quarterlyAverage)}
@@ -541,7 +541,7 @@ export function FundraisingTrends({ data, className = '' }: FundraisingTrendsPro
         {/* Scenario Analysis */}
         <div className="bg-white p-6">
           <h4 className="font-semibold text-gray-900 mb-4">Scenario Analysis</h4>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-green-50 p-4 border border-green-200">
               <h5 className="font-medium text-green-900 mb-2">Best Case</h5>
               <div className="space-y-2 text-sm">

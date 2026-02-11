@@ -154,7 +154,7 @@ export default function LegislationPage() {
       <main className="min-h-screen px-4 pb-16 bg-white">
         <div className="max-w-7xl mx-auto">
           <BreadcrumbNav />
-          <h1 className="text-4xl font-bold text-center mb-4">Recent Legislation</h1>
+          <h1 className="text-2xl sm:text-4xl font-bold text-center mb-4">Recent Legislation</h1>
 
           <p className="text-xl text-gray-600 text-center max-w-3xl mx-auto mb-8">
             Browse the latest bills introduced in the 119th Congress. Click any bill to see
@@ -168,7 +168,7 @@ export default function LegislationPage() {
           </div>
 
           {/* Search and Filters */}
-          <div className="bg-white border-2 border-black p-6 mb-8">
+          <div className="bg-white border-2 border-black p-4 sm:p-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="md:col-span-2 lg:col-span-2">
                 <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
@@ -297,7 +297,7 @@ export default function LegislationPage() {
                 <Link
                   key={`${bill.type}-${bill.number}`}
                   href={`/bill/${formatBillId(bill)}`}
-                  className="block bg-white border-2 border-black p-6 hover:border-civiq-blue hover:bg-blue-50 transition-all"
+                  className="block bg-white border-2 border-black p-4 sm:p-6 hover:border-civiq-blue hover:bg-blue-50 transition-all"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -333,7 +333,7 @@ export default function LegislationPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
                         <span>119th Congress</span>
                         <span>•</span>
                         <span>Updated {new Date(bill.updateDate).toLocaleDateString()}</span>
@@ -369,7 +369,7 @@ export default function LegislationPage() {
           )}
 
           {/* How Bills Become Laws */}
-          <div className="mt-16 bg-white border-2 border-black p-8">
+          <div className="mt-16 bg-white border-2 border-black p-4 sm:p-8">
             <h2 className="text-2xl font-semibold mb-6 text-center">How a Bill Becomes a Law</h2>
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 max-w-5xl mx-auto">
               <div className="text-center">

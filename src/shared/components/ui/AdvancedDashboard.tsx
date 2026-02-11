@@ -542,7 +542,7 @@ export function CampaignFinanceOverview() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-3 gap-4">
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="text-center p-4 bg-white">
           <p className="text-2xl font-bold text-gray-900">78%</p>
           <p className="text-sm text-gray-600">Small Donors</p>

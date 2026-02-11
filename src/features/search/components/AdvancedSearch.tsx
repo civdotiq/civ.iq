@@ -491,7 +491,7 @@ export function AdvancedSearch() {
       )}
 
       {/* Results Header */}
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">
           {loading
             ? 'Searching...'

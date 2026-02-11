@@ -115,7 +115,7 @@ function CommitteeLoading() {
         </div>
 
         {/* Header skeleton */}
-        <div className="bg-white border-2 border-black p-8 mb-8">
+        <div className="bg-white border-2 border-black p-4 sm:p-8 mb-8">
           <div className="h-8 w-2/3 bg-gray-200 rounded animate-pulse mb-4"></div>
           <div className="h-6 w-1/3 bg-gray-200 rounded animate-pulse mb-2"></div>
           <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
@@ -194,7 +194,7 @@ async function CommitteeContent({
             <SimpleBreadcrumb />
           )}
 
-          <div className="bg-white border-2 border-black p-8 text-center">
+          <div className="bg-white border-2 border-black p-4 sm:p-8 text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Committee Not Found</h1>
             <p className="text-gray-600 mb-6">
               Sorry, we couldn&apos;t find information for committee &quot;{committeeId}&quot;.
@@ -223,11 +223,13 @@ async function CommitteeContent({
         )}
 
         {/* Committee Header */}
-        <div className="bg-white border-2 border-black p-8 mb-8">
-          <div className="flex items-start justify-between">
+        <div className="bg-white border-2 border-black p-4 sm:p-8 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{committee.name}</h1>
-              <div className="flex items-center text-gray-600 mb-4">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                {committee.name}
+              </h1>
+              <div className="flex flex-wrap items-center text-gray-600 mb-4">
                 <MapPin className="w-5 h-5 mr-2" />
                 <span className="font-medium">{committee.chamber}</span>
                 <span className="mx-2">•</span>

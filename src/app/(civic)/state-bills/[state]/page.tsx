@@ -140,11 +140,11 @@ function BillCard({ bill }: { bill: StateBill }) {
   return (
     <Link
       href={billDetailUrl}
-      className="block bg-white border border-gray-200 p-6 hover:border-2 hover:border-black transition-all cursor-pointer"
+      className="block bg-white border border-gray-200 p-4 sm:p-6 hover:border-2 hover:border-black transition-all cursor-pointer"
     >
-      <div className="flex items-start justify-between mb-4">
+      <div className="mb-4">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
             <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600">
               {bill.billNumber}
             </h3>

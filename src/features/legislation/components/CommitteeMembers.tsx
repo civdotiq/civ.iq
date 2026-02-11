@@ -241,7 +241,7 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
   return (
     <div className="bg-white border-2 border-black p-6">
       {/* Header with filters */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <h2 className="text-xl font-semibold text-gray-900">
           Committee Members ({filteredAndSortedMembers.length})
         </h2>

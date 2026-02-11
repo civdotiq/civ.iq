@@ -483,11 +483,13 @@ export function SimpleGoogleNewsFeed({
     <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
           <h2 className="text-2xl font-bold text-gray-900">
             News Coverage: {representative.firstName} {representative.lastName}
           </h2>
-          <div className="text-sm text-gray-500">Demo: Google News-style interface</div>
+          <div className="text-sm text-gray-500 hidden sm:block">
+            Demo: Google News-style interface
+          </div>
         </div>
 
         {/* Topic Navigation */}
@@ -501,9 +503,9 @@ export function SimpleGoogleNewsFeed({
       {/* Filters - Temporarily commented out due to type mismatch */}
       <div className="mb-6">
         <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center gap-2 sm:space-x-4">
             <span className="text-sm font-medium text-gray-700">View:</span>
-            <div className="flex rounded-lg border border-gray-300 bg-gray-50">
+            <div className="flex flex-wrap rounded-lg border border-gray-300 bg-gray-50">
               {(['headlines', 'topics', 'timeline', 'coverage'] as NewsViewMode[]).map(mode => (
                 <button
                   key={mode}

@@ -216,7 +216,7 @@ export default function APIHealthPage() {
             </div>
 
             {/* Summary Stats */}
-            <div className="mt-6 grid grid-cols-3 gap-4">
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-green-50 p-4 text-center">
                 <p className="text-3xl font-bold text-green-600">
                   {health.apis.filter(a => a.status === 'operational').length}

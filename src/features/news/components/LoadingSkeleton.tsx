@@ -107,7 +107,7 @@ export function LoadingSkeleton({ count = 3, viewMode = 'headlines' }: LoadingSk
         <div className="h-7 w-4/5 bg-gray-200 rounded mb-3"></div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {Array.from({ length: 4 }, (_, i) => (
             <div key={i} className="space-y-1">
               <div className="h-3 w-12 bg-gray-200 rounded"></div>
