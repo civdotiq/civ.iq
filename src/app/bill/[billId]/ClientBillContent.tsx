@@ -100,29 +100,26 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
   return (
     <div className="space-y-8">
       {/* Bill Header */}
-      <div className="bg-white border-2 border-black p-8">
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <h1 className="text-3xl accent-title-underline text-gray-900">{bill.number}</h1>
-              <span
-                className={`px-3 py-1 text-sm font-medium rounded-full ${getBillStatusColor(bill.status.current)}`}
-              >
-                {getBillDisplayStatus(bill.status.current)}
-              </span>
-            </div>
-            <h2 className="text-xl text-gray-700 mb-4 leading-relaxed">{bill.title}</h2>
-            <div className="flex items-center text-gray-600 mb-4">
-              <Calendar className="w-5 h-5 mr-2" />
-              <span>Introduced {new Date(bill.introducedDate).toLocaleDateString()}</span>
-              <span className="mx-2">•</span>
-              <span>{bill.congress}th Congress</span>
-              <span className="mx-2">•</span>
-              <span>{bill.chamber}</span>
-            </div>
+      <div className="bg-white border-2 border-black p-4 sm:p-8">
+        <div className="mb-6">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
+            <h1 className="text-3xl accent-title-underline text-gray-900">{bill.number}</h1>
+            <span
+              className={`px-3 py-1 text-sm font-medium rounded-full ${getBillStatusColor(bill.status.current)}`}
+            >
+              {getBillDisplayStatus(bill.status.current)}
+            </span>
           </div>
-
-          <div className="flex gap-3">
+          <h2 className="text-xl text-gray-700 mb-4 leading-relaxed">{bill.title}</h2>
+          <div className="flex flex-wrap items-center gap-y-1 text-gray-600 mb-4">
+            <Calendar className="w-5 h-5 mr-2" />
+            <span>Introduced {new Date(bill.introducedDate).toLocaleDateString()}</span>
+            <span className="mx-2">•</span>
+            <span>{bill.congress}th Congress</span>
+            <span className="mx-2">•</span>
+            <span>{bill.chamber}</span>
+          </div>
+          <div className="flex flex-wrap gap-3">
             {bill.url && (
               <Link
                 href={bill.url}
