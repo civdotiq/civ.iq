@@ -6,13 +6,12 @@
 'use client';
 
 import React from 'react';
-import { AlertCircle } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 import { EnhancedRepresentative } from '@/types/representative';
 import { ServiceTermsCard } from './ServiceTermsCard';
 import { CommitteeMembershipsCard } from './CommitteeMembershipsCard';
 import { BiographyCard } from './BiographyCard';
 import { OverviewSidebar } from './OverviewSidebar';
-import { RepresentativeContactForm } from './RepresentativeContactForm';
 
 interface ContactInfoTabProps {
   representative: EnhancedRepresentative;
@@ -21,20 +20,16 @@ interface ContactInfoTabProps {
 export function ContactInfoTab({ representative }: ContactInfoTabProps) {
   return (
     <div className="flex flex-col gap-grid-5">
-      {/* Section Header */}
-      <div>
-        <h2
-          className="aicher-heading type-2xl text-gray-900"
-          style={{ marginBottom: 'calc(var(--grid) * 3)' }}
-        >
-          Detailed Information
-        </h2>
-      </div>
-
       {/* Two-column grid layout: 2/3 main content, 1/3 sidebar */}
+      {/* On mobile, sidebar (contact info) comes first via order classes */}
       <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 'calc(var(--grid) * 4)' }}>
-        {/* LEFT COLUMN (2/3) - Main Content */}
-        <div className="md:col-span-2 flex flex-col gap-grid-5">
+        {/* SIDEBAR - Appears first on mobile, right column on desktop */}
+        <div className="order-first md:order-last md:col-span-1 md:sticky md:top-4 md:self-start">
+          <OverviewSidebar representative={representative} />
+        </div>
+
+        {/* MAIN CONTENT - Appears second on mobile, left column on desktop */}
+        <div className="order-last md:order-first md:col-span-2 flex flex-col gap-grid-5">
           {/* Biography Section */}
           <div>
             <BiographyCard representative={representative} />
@@ -49,29 +44,19 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
           <div>
             <ServiceTermsCard representative={representative} />
           </div>
-
-          {/* Contact Form */}
-          <div>
-            <RepresentativeContactForm representative={representative} />
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN (1/3) - Sidebar */}
-        <div className="md:col-span-1 md:sticky md:top-4 md:self-start">
-          <OverviewSidebar representative={representative} />
         </div>
       </div>
 
       {/* Full-width Need Help Section */}
       <div
-        className="bg-red-50 aicher-border border-civiq-red"
+        className="bg-blue-50 aicher-border border-civiq-blue"
         style={{ padding: 'calc(var(--grid) * 3)', marginTop: 'calc(var(--grid) * 2)' }}
       >
         <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-civiq-red flex-shrink-0 mt-1" />
+          <HelpCircle className="w-5 h-5 text-civiq-blue flex-shrink-0 mt-1" />
           <div>
             <h3
-              className="aicher-heading type-lg text-civiq-red"
+              className="aicher-heading type-lg text-gray-900"
               style={{ marginBottom: 'calc(var(--grid) * 2)' }}
             >
               Need Help?
@@ -84,7 +69,7 @@ export function ContactInfoTab({ representative }: ContactInfoTabProps) {
               href="https://www.house.gov/representatives/find-your-representative"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center text-civiq-red hover:underline type-sm font-semibold aicher-heading-wide"
+              className="inline-flex items-center text-civiq-blue hover:underline type-sm font-semibold aicher-heading-wide"
             >
               Find alternative contact methods →
             </a>

@@ -358,24 +358,18 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
   // Show loading state
   if (isLoading) {
     return (
-      <div
-        className={`bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200 ${className}`}
-      >
-        <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+      <div className={`bg-white aicher-border ${className}`}>
+        <div className="p-5 border-b-2 border-black">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-red-50">
-              <BookOpen className="w-5 h-5" style={{ color: '#e21f0a' }} />
-            </div>
-            <h3 className="text-lg font-bold" style={{ color: '#e21f0a' }}>
-              Biography
-            </h3>
+            <BookOpen className="w-5 h-5 text-gray-900" />
+            <h3 className="aicher-heading type-lg text-gray-900">Biography</h3>
           </div>
         </div>
         <div className="p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-20 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 w-3/4"></div>
+            <div className="h-4 bg-gray-200 w-1/2"></div>
+            <div className="h-20 bg-gray-200"></div>
           </div>
         </div>
       </div>
@@ -385,17 +379,11 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
   // Show error state only if we have no data at all (complete failure)
   if (biographyError && !hasPartialData && !hasBiographicalData) {
     return (
-      <div
-        className={`bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200 ${className}`}
-      >
-        <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+      <div className={`bg-white aicher-border ${className}`}>
+        <div className="p-5 border-b-2 border-black">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-red-50">
-              <BookOpen className="w-5 h-5" style={{ color: '#e21f0a' }} />
-            </div>
-            <h3 className="text-lg font-bold" style={{ color: '#e21f0a' }}>
-              Biography
-            </h3>
+            <BookOpen className="w-5 h-5 text-gray-900" />
+            <h3 className="aicher-heading type-lg text-gray-900">Biography</h3>
           </div>
         </div>
         <div className="p-6">
@@ -421,19 +409,14 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
     : null;
 
   return (
-    <div
-      className={`bg-white rounded-xl border border-gray-200 border-2 border-black hover:border-2 border-black transition-border-2 border-black duration-200 ${className}`}
-    >
-      <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+    <div className={`bg-white aicher-border ${className}`}>
+      <div className="p-5 border-b-2 border-black">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-red-50">
-            <BookOpen className="w-5 h-5" style={{ color: '#e21f0a' }} />
-          </div>
-          <h3 className="text-lg font-bold" style={{ color: '#e21f0a' }}>
+          <BookOpen className="w-5 h-5 text-gray-900" />
+          <h3 className="aicher-heading type-lg text-gray-900">
             Biography
-            {/* Show partial data indicator if there were errors */}
             {hasErrors && (
-              <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+              <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 border-2 border-yellow-300 px-2 py-1">
                 Partial
               </span>
             )}
@@ -575,7 +558,7 @@ export function BiographyCard({ representative, className = '' }: BiographyCardP
 
         {/* Error reporting for partial failures (dev/debug info) */}
         {hasErrors && process.env.NODE_ENV === 'development' && (
-          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+          <div className="mt-4 p-3 bg-yellow-50 border-2 border-yellow-300">
             <div className="text-xs text-yellow-800">
               <strong>Debug Info (dev only):</strong>
               {biographyData?.wikipediaError && (

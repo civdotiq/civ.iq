@@ -26,6 +26,8 @@ interface HeroStatsHeaderProps {
   };
   loading?: boolean;
   onStatClick?: (tabId: string) => void;
+  nextElection?: number | null;
+  focusAreas?: string[];
 }
 
 export function HeroStatsHeader({
@@ -33,6 +35,8 @@ export function HeroStatsHeader({
   stats,
   loading = false,
   onStatClick,
+  nextElection,
+  focusAreas,
 }: HeroStatsHeaderProps) {
   const [imageError, setImageError] = useState(false);
 
@@ -201,7 +205,27 @@ export function HeroStatsHeader({
                   {getStateRank()}
                 </span>
               )}
+              {nextElection && (
+                <span className="aicher-heading text-xs sm:text-sm font-bold bg-white text-gray-800 border-2 border-black px-3 py-2">
+                  UP IN {nextElection}
+                </span>
+              )}
             </div>
+
+            {/* Focus Areas */}
+            {focusAreas && focusAreas.length > 0 && (
+              <div className="mt-3 flex flex-wrap items-center justify-center md:justify-start gap-2">
+                <span className="aicher-heading-wide text-xs text-gray-500">FOCUS AREAS</span>
+                {focusAreas.map(area => (
+                  <span
+                    key={area}
+                    className="type-xs text-gray-700 bg-gray-100 border border-gray-300 px-2 py-1"
+                  >
+                    {area}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

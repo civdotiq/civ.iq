@@ -10,10 +10,17 @@ import dynamic from 'next/dynamic';
 import useSWR, { preload } from 'swr';
 import { EnhancedRepresentative } from '@/types/representative';
 import { HeroStatsHeader } from './HeroStatsHeader';
-import { TabNavigation, profileTabs } from './TabNavigation';
+import { TabNavigation, TabItem } from './TabNavigation';
 import { ContactInfoTab } from './ContactInfoTab';
 import { TabLoadingSpinner } from '@/lib/utils/code-splitting';
 import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
+import {
+  RepresentativeIcon,
+  StatisticsIcon,
+  LegislationIcon,
+  FinanceIcon,
+  NewsIcon,
+} from '@/components/icons/AicherIcons';
 
 // Dynamically import heavy tabs to reduce initial bundle size
 const FinanceTab = dynamic(
@@ -42,6 +49,101 @@ const BillsTab = dynamic(() => import('./BillsTab').then(mod => ({ default: mod.
 
 interface SimpleRepresentativeProfileProps {
   representative: EnhancedRepresentative;
+}
+
+/** Derive focus areas from committee names */
+function deriveFocusAreas(committees?: Array<{ name: string }>): string[] {
+  if (!committees || committees.length === 0) return [];
+
+  // Map common committee name keywords to short labels
+  const keywordMap: Record<string, string> = {
+    'armed services': 'Defense',
+    defense: 'Defense',
+    veterans: 'Veterans',
+    judiciary: 'Judiciary',
+    finance: 'Finance',
+    banking: 'Banking',
+    budget: 'Budget',
+    appropriations: 'Appropriations',
+    energy: 'Energy',
+    commerce: 'Commerce',
+    agriculture: 'Agriculture',
+    education: 'Education',
+    'foreign relations': 'Foreign Relations',
+    'foreign affairs': 'Foreign Affairs',
+    intelligence: 'Intelligence',
+    homeland: 'Homeland Security',
+    health: 'Health',
+    environment: 'Environment',
+    transportation: 'Transportation',
+    'small business': 'Small Business',
+    science: 'Science',
+    'natural resources': 'Natural Resources',
+    oversight: 'Oversight',
+    rules: 'Rules',
+    ethics: 'Ethics',
+    'ways and means': 'Ways & Means',
+  };
+
+  const areas = new Set<string>();
+  for (const committee of committees) {
+    const lower = committee.name.toLowerCase();
+    for (const [keyword, label] of Object.entries(keywordMap)) {
+      if (lower.includes(keyword) && areas.size < 4) {
+        areas.add(label);
+        break;
+      }
+    }
+  }
+
+  return Array.from(areas);
+}
+
+/** Get the data sources relevant to a specific tab */
+function getDataSourcesForTab(tabId: string): Array<{
+  color: string;
+  bgColor: string;
+  name: string;
+  description: string;
+}> {
+  const congress = {
+    color: 'border-civiq-blue',
+    bgColor: 'bg-civiq-blue',
+    name: 'Congress.gov',
+    description: 'Bills, votes, committees',
+  };
+  const fec = {
+    color: 'border-civiq-green',
+    bgColor: 'bg-civiq-green',
+    name: 'FEC.gov',
+    description: 'Campaign finance data',
+  };
+  const legislators = {
+    color: 'border-civiq-red',
+    bgColor: 'bg-civiq-red',
+    name: 'Congress-Legislators',
+    description: 'Biographical information',
+  };
+  const googleNews = {
+    color: 'border-gray-600',
+    bgColor: 'bg-gray-600',
+    name: 'Google News',
+    description: 'Recent media coverage',
+  };
+
+  switch (tabId) {
+    case 'overview':
+      return [congress, legislators];
+    case 'voting':
+    case 'legislation':
+      return [congress];
+    case 'finance':
+      return [fec];
+    case 'news':
+      return [googleNews];
+    default:
+      return [congress, fec, legislators];
+  }
 }
 
 // Memoized component to prevent unnecessary re-renders
@@ -183,6 +285,72 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
       setActiveTab(tabId);
     }, []);
 
+    // Compute next election year
+    const nextElection = useMemo(() => {
+      const currentYear = new Date().getFullYear();
+      if (representative.chamber === 'House') {
+        return currentYear % 2 === 0 ? currentYear : currentYear + 1;
+      }
+      if (representative.currentTerm?.end) {
+        return new Date(representative.currentTerm.end).getFullYear();
+      }
+      return null;
+    }, [representative.chamber, representative.currentTerm?.end]);
+
+    // Compute focus areas from committees
+    const focusAreas = useMemo(
+      () => deriveFocusAreas(representative.committees),
+      [representative.committees]
+    );
+
+    // Build tabs with dynamic badges from summary data
+    const tabsWithBadges: TabItem[] = useMemo(() => {
+      const billsCount = summaryData?.success
+        ? (summaryData.data?.billsSponsored ??
+          batchData?.data?.bills?.totalSponsored ??
+          batchData?.data?.bills?.currentCongress?.count)
+        : undefined;
+      const votesCount = summaryData?.success ? summaryData.data?.votesParticipated : undefined;
+
+      return [
+        {
+          id: 'overview',
+          label: 'Overview',
+          icon: <RepresentativeIcon className="w-4 h-4" />,
+          description: 'Personal details and committee memberships',
+        },
+        {
+          id: 'voting',
+          label: 'Voting Records',
+          icon: <StatisticsIcon className="w-4 h-4" />,
+          description: 'Voting history and positions',
+          badge: votesCount !== undefined && votesCount > 0 ? votesCount : undefined,
+        },
+        {
+          id: 'legislation',
+          label: 'Sponsored Bills',
+          icon: <LegislationIcon className="w-4 h-4" />,
+          description: 'Bills sponsored and co-sponsored',
+          badge: billsCount !== undefined && billsCount > 0 ? billsCount : undefined,
+        },
+        {
+          id: 'finance',
+          label: 'Campaign Finance',
+          icon: <FinanceIcon className="w-4 h-4" />,
+          description: 'Fundraising and expenditures',
+        },
+        {
+          id: 'news',
+          label: 'Recent News',
+          icon: <NewsIcon className="w-4 h-4" />,
+          description: 'Recent media coverage',
+        },
+      ];
+    }, [summaryData, batchData]);
+
+    // Get data sources for current tab
+    const dataSources = useMemo(() => getDataSourcesForTab(activeTab), [activeTab]);
+
     // Memoized tab rendering to prevent unnecessary re-renders
     const renderActiveTab = useMemo(() => {
       switch (activeTab) {
@@ -256,14 +424,16 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
               }}
               loading={summaryLoading}
               onStatClick={handleTabChange}
+              nextElection={nextElection}
+              focusAreas={focusAreas}
             />
           </div>
 
           {/* Main Content Area - Full width with tabs */}
           <div className="bg-white aicher-border mb-rhythm-section">
-            {/* Tab Navigation with hover prefetch */}
+            {/* Tab Navigation with hover prefetch and dynamic badges */}
             <TabNavigation
-              tabs={profileTabs}
+              tabs={tabsWithBadges}
               activeTab={activeTab}
               onTabChange={handleTabChange}
               onTabHover={handleTabHover}
@@ -275,33 +445,21 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
             </div>
           </div>
 
-          {/* Data Sources Attribution - responsive spacing */}
+          {/* Data Sources Attribution - context-aware */}
           <div className="bg-white aicher-border p-4 sm:p-6">
             <h3 className="aicher-heading type-lg text-gray-900 mb-4 sm:mb-6">Data Sources</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-              <div className="flex items-center gap-3">
-                <div className="aicher-border border-civiq-blue bg-civiq-blue w-4 h-4"></div>
-                <div>
-                  <div className="aicher-heading-wide type-sm text-gray-900">Congress.gov</div>
-                  <div className="type-xs text-gray-600">Bills, votes, committees</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="aicher-border border-civiq-green bg-civiq-green w-4 h-4"></div>
-                <div>
-                  <div className="aicher-heading-wide type-sm text-gray-900">FEC.gov</div>
-                  <div className="type-xs text-gray-600">Campaign finance data</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="aicher-border border-civiq-red bg-civiq-red w-4 h-4"></div>
-                <div>
-                  <div className="aicher-heading-wide type-sm text-gray-900">
-                    Congress-Legislators
+            <div
+              className={`grid grid-cols-1 gap-4 sm:gap-6 ${dataSources.length === 1 ? '' : dataSources.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}
+            >
+              {dataSources.map(source => (
+                <div key={source.name} className="flex items-center gap-3">
+                  <div className={`aicher-border ${source.color} ${source.bgColor} w-4 h-4`}></div>
+                  <div>
+                    <div className="aicher-heading-wide type-sm text-gray-900">{source.name}</div>
+                    <div className="type-xs text-gray-600">{source.description}</div>
                   </div>
-                  <div className="type-xs text-gray-600">Biographical information</div>
                 </div>
-              </div>
+              ))}
             </div>
             <p className="type-sm text-gray-500 mt-4 sm:mt-6">
               All data is sourced from official government APIs and repositories. Data is refreshed
