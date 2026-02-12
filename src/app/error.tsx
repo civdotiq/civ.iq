@@ -24,7 +24,6 @@ async function clearAllCaches() {
     if ('caches' in window) {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map(name => caches.delete(name)));
-      console.log('[CIV.IQ-CACHE] Cleared all caches');
     }
 
     // Clear localStorage and sessionStorage
@@ -35,10 +34,9 @@ async function clearAllCaches() {
     if ('serviceWorker' in navigator) {
       const registrations = await navigator.serviceWorker.getRegistrations();
       await Promise.all(registrations.map(reg => reg.unregister()));
-      console.log('[CIV.IQ-SW] Unregistered service workers');
     }
   } catch (error) {
-    console.error('[CIV.IQ-ERROR] Failed to clear caches:', error);
+    void error;
   }
 }
 
@@ -53,19 +51,8 @@ export default function Error({
   const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
-    // Log error details for debugging
-    console.error('Route Error:', {
-      message: error.message,
-      stack: error.stack,
-      digest: error.digest,
-      component: 'app/error.tsx',
-      isChunkError: isChunkLoadError(error),
-    });
-
     // Auto-handle ChunkLoadErrors
     if (isChunkLoadError(error)) {
-      console.log('[CIV.IQ-ERROR] ChunkLoadError detected, initiating auto-recovery');
-
       // Start countdown for automatic reload
       const timer = setInterval(() => {
         setCountdown(prev => {
@@ -87,8 +74,6 @@ export default function Error({
 
   const handleChunkError = async () => {
     setReloading(true);
-    console.log('[CIV.IQ-ERROR] Clearing caches and reloading...');
-
     await clearAllCaches();
 
     // Force hard reload
@@ -138,7 +123,7 @@ export default function Error({
           <button
             onClick={handleChunkError}
             disabled={reloading}
-            className="px-6 py-2 bg-civiq-blue text-white rounded hover:bg-civiq-blue/90 disabled:opacity-50"
+            className="px-6 py-2 bg-civiq-blue text-white hover:bg-civiq-blue/90 disabled:opacity-50"
           >
             {reloading ? 'Reloading...' : 'Reload Now'}
           </button>
@@ -155,13 +140,13 @@ export default function Error({
         <p className="text-gray-600 mb-4">{error.message || 'An unexpected error occurred'}</p>
         <details className="text-left mb-4">
           <summary className="cursor-pointer text-sm text-gray-500">Error details</summary>
-          <pre className="mt-2 text-xs bg-white border-2 border-gray-300 p-2 rounded overflow-auto">
+          <pre className="mt-2 text-xs bg-white border-2 border-gray-300 p-2 overflow-auto">
             {error.stack}
           </pre>
         </details>
         <button
           onClick={handleManualRetry}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="px-4 py-2 bg-civiq-blue text-white hover:bg-civiq-blue/90"
         >
           Try again
         </button>

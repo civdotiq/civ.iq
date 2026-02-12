@@ -180,8 +180,7 @@ export default function Home() {
             style={{ animationDelay: '600ms' }}
           >
             <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-[#3ea2d4]/20 to-[#0a9338]/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
-              <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
+              <div className="relative overflow-hidden border-2 border-black bg-white">
                 <SmartSearchInput
                   placeholder="Enter ZIP code or address (e.g., 10001 or 123 Main St, City, State)"
                   className="w-full"
@@ -244,10 +243,10 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-7xl mx-auto">
-            <div className="group relative bg-white rounded-2xl p-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-green-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="group relative bg-whitep-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-green-50/50opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative">
-                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#e11d07]/10 to-[#0a9338]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#e11d07]/10 to-[#0a9338]/10transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
                   <svg
                     viewBox="0 0 100 100"
                     fill="none"
@@ -286,12 +285,12 @@ export default function Home() {
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
+              className="group relative bg-whitep-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
               style={{ animationDelay: '200ms' }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-blue-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-blue-50/50opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative">
-                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#0a9338]/10 to-[#3ea2d4]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
+                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#0a9338]/10 to-[#3ea2d4]/10transform transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
                   <svg
                     viewBox="0 0 100 100"
                     fill="none"
@@ -322,12 +321,12 @@ export default function Home() {
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
+              className="group relative bg-whitep-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
               style={{ animationDelay: '400ms' }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-red-50/50 to-blue-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-red-50/50 to-blue-50/50opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative">
-                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#e11d07]/10 to-[#3ea2d4]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#e11d07]/10 to-[#3ea2d4]/10transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
                   <svg
                     viewBox="0 0 100 100"
                     fill="none"
@@ -371,12 +370,12 @@ export default function Home() {
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
+              className="group relative bg-whitep-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
               style={{ animationDelay: '600ms' }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-red-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-red-50/50opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative">
-                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#3ea2d4]/10 to-[#e11d07]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
+                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#3ea2d4]/10 to-[#e11d07]/10transform transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
                   <svg
                     viewBox="0 0 100 100"
                     fill="none"
@@ -404,12 +403,12 @@ export default function Home() {
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
+              className="group relative bg-whitep-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
               style={{ animationDelay: '800ms' }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-blue-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-blue-50/50opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative">
-                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#0a9338]/10 to-[#3ea2d4]/10 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-[#0a9338]/10 to-[#3ea2d4]/10transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
                   <svg
                     viewBox="0 0 100 100"
                     fill="none"
@@ -461,12 +460,12 @@ export default function Home() {
             </div>
 
             <div
-              className="group relative bg-white rounded-2xl p-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
+              className="group relative bg-whitep-10 text-center border-2 border-black hover:border-2 border-black transition-all duration-500 animate-fade-in-up"
               style={{ animationDelay: '1000ms' }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-gray-50/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-gray-50/50opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative">
-                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-blue-100/50 to-gray-100/50 rounded-2xl transform transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
+                <div className="w-24 h-24 mx-auto mb-8 p-5 bg-gradient-to-br from-blue-100/50 to-gray-100/50transform transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
                   <svg
                     viewBox="0 0 100 100"
                     fill="none"
