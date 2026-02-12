@@ -37,6 +37,7 @@ const navigationSections: NavSection[] = [
       { name: 'Districts', href: '/districts' },
       { name: 'Committees', href: '/committees' },
       { name: 'Legislation', href: '/legislation' },
+      { name: 'Spending', href: '/spending' },
     ],
   },
   {
