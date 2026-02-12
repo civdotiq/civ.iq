@@ -344,12 +344,12 @@ export class UnifiedEnhancedCongressDataService
         url.searchParams.append('sort', 'date:desc');
 
         const apiKey = process.env.CONGRESS_API_KEY;
-        if (apiKey) {
-          url.searchParams.append('api_key', apiKey);
-        }
 
         const response = await fetch(url.toString(), {
-          headers: { Accept: 'application/json' },
+          headers: {
+            Accept: 'application/json',
+            ...(apiKey ? { 'X-API-Key': apiKey } : {}),
+          },
           signal: AbortSignal.timeout(this.config.timeout),
         });
 
@@ -402,12 +402,12 @@ export class UnifiedEnhancedCongressDataService
       url.searchParams.append('sort', 'date:desc');
 
       const apiKey = process.env.CONGRESS_API_KEY;
-      if (apiKey) {
-        url.searchParams.append('api_key', apiKey);
-      }
 
       const response = await fetch(url.toString(), {
-        headers: { Accept: 'application/json' },
+        headers: {
+          Accept: 'application/json',
+          ...(apiKey ? { 'X-API-Key': apiKey } : {}),
+        },
         signal: AbortSignal.timeout(this.config.timeout),
       });
 

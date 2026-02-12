@@ -573,11 +573,10 @@ export class BatchVotingService {
           sort: 'date:desc',
         });
 
-        if (this.apiKey) {
-          params.append('api_key', this.apiKey);
-        }
-
         const response = await httpClient.fetch(`${baseUrl}?${params}`, {
+          headers: {
+            ...(this.apiKey ? { 'X-API-Key': this.apiKey } : {}),
+          },
           signal: AbortSignal.timeout(10000), // Increased timeout for larger requests
         });
 
@@ -1328,9 +1327,12 @@ export class BatchVotingService {
       };
 
       const normalizedType = billTypeMap[billType.toUpperCase()] || billType.toLowerCase();
-      const apiUrl = `https://api.congress.gov/v3/bill/119/${normalizedType}/${billNumber}?format=json&api_key=${this.apiKey}`;
+      const apiUrl = `https://api.congress.gov/v3/bill/119/${normalizedType}/${billNumber}?format=json`;
 
       const response = await httpClient.fetch(apiUrl, {
+        headers: {
+          'X-API-Key': this.apiKey,
+        },
         signal: AbortSignal.timeout(2000), // Quick timeout for bill details
       });
 

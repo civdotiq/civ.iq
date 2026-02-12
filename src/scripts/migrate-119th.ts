@@ -100,9 +100,9 @@ class Congress119Migrator {
     const apis = [
       {
         name: 'Congress.gov',
-        url:
-          'https://api.congress.gov/v3/member?api_key=' + process.env.CONGRESS_API_KEY + '&limit=1',
+        url: 'https://api.congress.gov/v3/member?limit=1',
         required: true,
+        apiKeyHeader: process.env.CONGRESS_API_KEY,
       },
       {
         name: 'Census Bureau',
@@ -111,20 +111,22 @@ class Congress119Migrator {
       },
       {
         name: 'FEC',
-        url:
-          'https://api.open.fec.gov/v1/candidates/?api_key=' +
-          process.env.FEC_API_KEY +
-          '&per_page=1',
+        url: 'https://api.open.fec.gov/v1/candidates/?per_page=1',
         required: true,
+        apiKeyHeader: process.env.FEC_API_KEY,
       },
     ];
 
     for (const api of apis) {
       try {
+        const headers: Record<string, string> = {
+          'User-Agent': 'CIV.IQ/1.0 (Migration Script)',
+        };
+        if (api.apiKeyHeader) {
+          headers['X-API-Key'] = api.apiKeyHeader;
+        }
         const response = await fetch(api.url, {
-          headers: {
-            'User-Agent': 'CIV.IQ/1.0 (Migration Script)',
-          },
+          headers,
           signal: AbortSignal.timeout(10000), // 10 second timeout
         });
 

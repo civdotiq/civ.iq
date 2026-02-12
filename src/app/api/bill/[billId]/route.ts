@@ -11,6 +11,7 @@ import type { Bill, BillAPIResponse, BillStatus, BillVote } from '@/types/bill';
 import { parseBillNumber } from '@/types/bill';
 import type { EnhancedRepresentative } from '@/types/representative';
 import { parseRollCallXML } from '@/features/legislation/services/rollcall-parser';
+import DOMPurify from 'isomorphic-dompurify';
 
 // Congress-aware revalidation: 24 hours for current congress bills
 export const revalidate = 86400; // 24 hours
@@ -148,11 +149,12 @@ async function fetchBillText(
   try {
     // First get text versions to find the latest
     const textVersionsResponse = await fetch(
-      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/text?api_key=${process.env.CONGRESS_API_KEY}&format=json`,
+      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/text?format=json`,
       {
         headers: {
           'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
           Accept: 'application/json',
+          'X-API-Key': process.env.CONGRESS_API_KEY || '',
         },
       }
     );
@@ -205,11 +207,54 @@ async function fetchBillText(
       cleanedContent = bodyMatch[1];
     }
 
-    // Remove script tags
-    cleanedContent = cleanedContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-
-    // Remove style tags
-    cleanedContent = cleanedContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    // Sanitize HTML to prevent XSS
+    cleanedContent = DOMPurify.sanitize(cleanedContent, {
+      ALLOWED_TAGS: [
+        'p',
+        'br',
+        'b',
+        'i',
+        'em',
+        'strong',
+        'u',
+        'sub',
+        'sup',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'ul',
+        'ol',
+        'li',
+        'dl',
+        'dt',
+        'dd',
+        'table',
+        'thead',
+        'tbody',
+        'tr',
+        'th',
+        'td',
+        'caption',
+        'colgroup',
+        'col',
+        'blockquote',
+        'pre',
+        'code',
+        'hr',
+        'div',
+        'span',
+        'a',
+        'section',
+        'article',
+        'header',
+        'footer',
+      ],
+      ALLOWED_ATTR: ['href', 'title', 'class', 'id', 'colspan', 'rowspan'],
+      ALLOW_DATA_ATTR: false,
+    });
 
     logger.info('Successfully fetched bill text', {
       congress,
@@ -244,11 +289,12 @@ async function fetchBillDetails(
   try {
     // Fetch subjects endpoint for detailed subject info
     const subjectsResponse = await fetch(
-      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/subjects?api_key=${process.env.CONGRESS_API_KEY}&format=json`,
+      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/subjects?format=json`,
       {
         headers: {
           'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
           Accept: 'application/json',
+          'X-API-Key': process.env.CONGRESS_API_KEY || '',
         },
       }
     );
@@ -268,11 +314,12 @@ async function fetchBillDetails(
 
     // Fetch text versions endpoint
     const textResponse = await fetch(
-      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/text?api_key=${process.env.CONGRESS_API_KEY}&format=json`,
+      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/text?format=json`,
       {
         headers: {
           'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
           Accept: 'application/json',
+          'X-API-Key': process.env.CONGRESS_API_KEY || '',
         },
       }
     );
@@ -304,11 +351,12 @@ async function fetchBillCosponsors(
     });
 
     const cosponsorsResponse = await fetch(
-      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/cosponsors?api_key=${process.env.CONGRESS_API_KEY}&format=json&limit=250`,
+      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/cosponsors?format=json&limit=250`,
       {
         headers: {
           'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
           Accept: 'application/json',
+          'X-API-Key': process.env.CONGRESS_API_KEY || '',
         },
       }
     );
@@ -362,11 +410,12 @@ async function fetchBillActions(
     });
 
     const actionsResponse = await fetch(
-      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/actions?api_key=${process.env.CONGRESS_API_KEY}&format=json&limit=250`,
+      `https://api.congress.gov/v3/bill/${congress}/${type}/${number}/actions?format=json&limit=250`,
       {
         headers: {
           'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
           Accept: 'application/json',
+          'X-API-Key': process.env.CONGRESS_API_KEY || '',
         },
       }
     );
@@ -424,11 +473,12 @@ async function fetchBillFromCongress(billId: string): Promise<Bill | null> {
         });
 
         const billResponse = await fetch(
-          `https://api.congress.gov/v3/bill/${congress}/${type}/${number}?api_key=${process.env.CONGRESS_API_KEY}&format=json`,
+          `https://api.congress.gov/v3/bill/${congress}/${type}/${number}?format=json`,
           {
             headers: {
               'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
               Accept: 'application/json',
+              'X-API-Key': process.env.CONGRESS_API_KEY || '',
             },
           }
         );

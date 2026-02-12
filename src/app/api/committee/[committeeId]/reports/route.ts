@@ -76,10 +76,11 @@ async function _fetchCommitteeReports(committeeId: string): Promise<CommitteeRep
         const chamber = getCommitteeChamber(committeeId);
 
         const response = await fetch(
-          `${baseUrl}/committee-report/119/${chamber}?committee=${congressCommitteeId}&limit=20&api_key=${apiKey}`,
+          `${baseUrl}/committee-report/119/${chamber}?committee=${congressCommitteeId}&limit=20`,
           {
             headers: {
               Accept: 'application/json',
+              'X-API-Key': apiKey,
             },
           }
         );

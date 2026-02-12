@@ -166,10 +166,11 @@ export async function GET(request: NextRequest) {
             // Fetch all committees with pagination
             while (hasMore) {
               const response = await fetch(
-                `https://api.congress.gov/v3/committee/${chamberName}?api_key=${process.env.CONGRESS_API_KEY}&limit=${limit}&offset=${offset}&format=json`,
+                `https://api.congress.gov/v3/committee/${chamberName}?limit=${limit}&offset=${offset}&format=json`,
                 {
                   headers: {
                     'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+                    'X-API-Key': process.env.CONGRESS_API_KEY || '',
                   },
                 }
               );
@@ -257,10 +258,11 @@ export async function GET(request: NextRequest) {
                 if (includeMembers && committee.systemCode) {
                   try {
                     const membersResponse = await fetch(
-                      `https://api.congress.gov/v3/committee/${chamberName}/${committee.systemCode}/members?api_key=${process.env.CONGRESS_API_KEY}&format=json`,
+                      `https://api.congress.gov/v3/committee/${chamberName}/${committee.systemCode}/members?format=json`,
                       {
                         headers: {
                           'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+                          'X-API-Key': process.env.CONGRESS_API_KEY || '',
                         },
                       }
                     );
@@ -320,10 +322,11 @@ export async function GET(request: NextRequest) {
                 if (includeSubcommittees && committee.systemCode) {
                   try {
                     const subcommitteeResponse = await fetch(
-                      `https://api.congress.gov/v3/committee/${chamberName}/${committee.systemCode}/subcommittees?api_key=${process.env.CONGRESS_API_KEY}&format=json`,
+                      `https://api.congress.gov/v3/committee/${chamberName}/${committee.systemCode}/subcommittees?format=json`,
                       {
                         headers: {
                           'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+                          'X-API-Key': process.env.CONGRESS_API_KEY || '',
                         },
                       }
                     );
@@ -350,10 +353,11 @@ export async function GET(request: NextRequest) {
                           if (includeMembers && subcommittee.systemCode) {
                             try {
                               const subMembersResponse = await fetch(
-                                `https://api.congress.gov/v3/committee/${chamberName}/${committee.systemCode}/subcommittees/${subcommittee.systemCode}/members?api_key=${process.env.CONGRESS_API_KEY}&format=json`,
+                                `https://api.congress.gov/v3/committee/${chamberName}/${committee.systemCode}/subcommittees/${subcommittee.systemCode}/members?format=json`,
                                 {
                                   headers: {
                                     'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+                                    'X-API-Key': process.env.CONGRESS_API_KEY || '',
                                   },
                                 }
                               );
@@ -401,10 +405,11 @@ export async function GET(request: NextRequest) {
         if (!chamber || chamber === 'joint') {
           try {
             const jointResponse = await fetch(
-              `https://api.congress.gov/v3/committee/joint?api_key=${process.env.CONGRESS_API_KEY}&limit=50&format=json`,
+              `https://api.congress.gov/v3/committee/joint?limit=50&format=json`,
               {
                 headers: {
                   'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+                  'X-API-Key': process.env.CONGRESS_API_KEY || '',
                 },
               }
             );

@@ -263,10 +263,13 @@ async function fetchBillData(
   try {
     // Convert bill type to lowercase for API (e.g., HCONRES -> hconres)
     const typeSlug = billType.toLowerCase();
-    const apiUrl = `https://api.congress.gov/v3/bill/${congress}/${typeSlug}/${billNumber}?api_key=${process.env.CONGRESS_API_KEY || ''}`;
+    const apiUrl = `https://api.congress.gov/v3/bill/${congress}/${typeSlug}/${billNumber}`;
 
     const response = await fetch(apiUrl, {
-      headers: { 'User-Agent': 'CivIQ-Hub/2.0 (civic-engagement-tool)' },
+      headers: {
+        'User-Agent': 'CivIQ-Hub/2.0 (civic-engagement-tool)',
+        'X-API-Key': process.env.CONGRESS_API_KEY || '',
+      },
       signal: AbortSignal.timeout(5000), // 5 second timeout
     });
 
@@ -533,7 +536,7 @@ async function parseHouseVote(
     let sessionNumber = 1;
 
     for (const session of sessionsToTry) {
-      apiUrl = `https://api.congress.gov/v3/house-vote/${congress}/${session}/${rollNumber}?api_key=${process.env.CONGRESS_API_KEY || ''}`;
+      apiUrl = `https://api.congress.gov/v3/house-vote/${congress}/${session}/${rollNumber}`;
 
       logger.info('Trying House vote fetch', {
         voteId,
@@ -545,6 +548,7 @@ async function parseHouseVote(
       response = await fetch(apiUrl, {
         headers: {
           'User-Agent': 'CivIQ-Hub/2.0 (civic-engagement-tool)',
+          'X-API-Key': process.env.CONGRESS_API_KEY || '',
         },
         signal: AbortSignal.timeout(10000),
       });

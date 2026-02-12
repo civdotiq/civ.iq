@@ -13,7 +13,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
+function isAuthorized(request: NextRequest): boolean {
+  if (process.env.NODE_ENV !== 'production') return true;
+  const authHeader = request.headers.get('authorization');
+  const adminKey = process.env.ADMIN_API_KEY;
+  if (!adminKey || !authHeader?.startsWith('Bearer ')) return false;
+  return authHeader.substring(7) === adminKey;
+}
+
 export async function GET(_request: NextRequest) {
+  if (!isAuthorized(_request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const startTime = Date.now();
 
   try {
@@ -86,6 +98,10 @@ export async function GET(_request: NextRequest) {
  * POST endpoint for validating specific representatives
  */
 export async function POST(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const startTime = Date.now();
 
   try {

@@ -167,15 +167,15 @@ export class FECApiService {
    */
   private async makeRequest<T>(endpoint: string): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    const urlWithKey = `${url}${url.includes('?') ? '&' : '?'}api_key=${this.apiKey}`;
 
     logger.info(`[FEC API] Requesting: ${endpoint}`);
 
     try {
-      const response = await fetch(urlWithKey, {
+      const response = await fetch(url, {
         headers: {
           Accept: 'application/json',
           'User-Agent': 'CivicIntelHub/1.0',
+          'X-API-Key': this.apiKey,
         },
         // Add timeout
         signal: AbortSignal.timeout(30000), // 30 second timeout

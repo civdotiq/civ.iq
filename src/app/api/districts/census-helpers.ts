@@ -134,9 +134,13 @@ export async function fetchStateDistrictDemographics(
   }
 
   const variables = Object.values(CENSUS_VARIABLES).join(',');
-  const url = `https://api.census.gov/data/2021/acs/acs5?get=${variables}&for=congressional%20district:*&in=state:${stateFips}&key=${censusApiKey}`;
+  const url = `https://api.census.gov/data/2021/acs/acs5?get=${variables}&for=congressional%20district:*&in=state:${stateFips}`;
 
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    headers: {
+      'X-API-Key': censusApiKey,
+    },
+  });
   if (!response.ok) {
     throw new Error(`Census API error: ${response.status}`);
   }
@@ -254,17 +258,19 @@ export async function fetchAllDistrictDemographics(
       'B29001_001E', // Voting age population
     ].join(',');
 
-    // Build API URL without key first (some endpoints work without it)
-    let url = `https://api.census.gov/data/2021/acs/acs5?get=${variables}&for=congressional%20district:*`;
-
-    // Only add key if it exists and is not a placeholder
-    if (censusApiKey && !censusApiKey.startsWith('your_')) {
-      url += `&key=${censusApiKey}`;
-    }
+    // Build API URL without key (key is sent via header)
+    const url = `https://api.census.gov/data/2021/acs/acs5?get=${variables}&for=congressional%20district:*`;
 
     logger.debug('Making Census API request', { urlPreview: url.substring(0, 100) + '...' });
 
+    const fetchHeaders: Record<string, string> = {};
+    // Only add key if it exists and is not a placeholder
+    if (censusApiKey && !censusApiKey.startsWith('your_')) {
+      fetchHeaders['X-API-Key'] = censusApiKey;
+    }
+
     const response = await fetch(url, {
+      headers: fetchHeaders,
       signal: AbortSignal.timeout(45000), // 45 second timeout for bulk request
     });
 

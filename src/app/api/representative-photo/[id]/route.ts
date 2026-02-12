@@ -55,6 +55,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   const bioguideId = id.toUpperCase();
 
+  // Validate bioguide ID format to prevent path traversal
+  if (!/^[A-Z]\d{6}$/.test(bioguideId)) {
+    return new NextResponse('Invalid representative ID', { status: 400 });
+  }
+
   // Check in-memory cache first
   const cached = photoCache.get(bioguideId);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {

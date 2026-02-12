@@ -271,9 +271,16 @@ export async function middleware(request: NextRequest) {
 
 // Helper functions
 function extractClientInfo(request: NextRequest) {
+  // Use the last IP in x-forwarded-for chain (closest trusted proxy entry)
+  // to mitigate header spoofing. On Vercel, the rightmost IP before Vercel's
+  // own entry is the actual client IP.
   const forwarded = request.headers.get('x-forwarded-for');
   const realIp = request.headers.get('x-real-ip');
-  const ip = forwarded?.split(',')[0] || realIp || 'unknown';
+  const forwardedParts = forwarded?.split(',').map(s => s.trim()) || [];
+  const ip =
+    (forwardedParts.length > 1 ? forwardedParts[forwardedParts.length - 1] : forwardedParts[0]) ||
+    realIp ||
+    'unknown';
 
   return {
     ip: ip.trim(),
@@ -289,17 +296,23 @@ function validateRequest(request: NextRequest): {
 } {
   const url = new URL(request.url);
 
+  const fullPath = url.pathname + url.search;
+
+  // Reject excessively long URLs before any regex evaluation (ReDoS protection)
+  if (fullPath.length > 2048) {
+    return { isValid: false, reason: 'Request URI too long', statusCode: 414 };
+  }
+
   // Check for malicious patterns
   const maliciousPatterns = [
     /\.\./, // Path traversal
     /<script/i, // XSS attempts
     /eval\(/i, // Code injection
-    /union.*select/i, // SQL injection
+    /\bunion\b.*\bselect\b/i, // SQL injection (word boundaries prevent ReDoS)
     /%00/, // Null byte injection
     /\${/, // Template injection
   ];
 
-  const fullPath = url.pathname + url.search;
   for (const pattern of maliciousPatterns) {
     if (pattern.test(fullPath)) {
       return { isValid: false, reason: 'Malicious request pattern detected', statusCode: 400 };

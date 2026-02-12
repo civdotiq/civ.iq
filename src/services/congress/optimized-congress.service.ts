@@ -129,7 +129,6 @@ async function fetchSponsoredLegislation(
   // But we'll still handle pagination properly
   do {
     const url = new URL(`https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation`);
-    url.searchParams.set('api_key', apiKey);
     url.searchParams.set('limit', pageSize.toString());
     url.searchParams.set('offset', currentOffset.toString());
     // NOTE: Congress.gov API ignores the 'congress' parameter - it always returns ALL bills
@@ -137,7 +136,11 @@ async function fetchSponsoredLegislation(
     url.searchParams.set('format', 'json');
 
     const response = await fetch(url.toString(), {
-      headers: { Accept: 'application/json', 'User-Agent': 'CIV.IQ/2.0 (Comprehensive)' },
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'CIV.IQ/2.0 (Comprehensive)',
+        'X-API-Key': apiKey,
+      },
       signal: AbortSignal.timeout(10000),
     });
 
@@ -220,7 +223,6 @@ async function fetchCosponsoredLegislation(
   // For cosponsored bills, there can be MANY (1000+), so we need pagination
   do {
     const url = new URL(`https://api.congress.gov/v3/member/${bioguideId}/cosponsored-legislation`);
-    url.searchParams.set('api_key', apiKey);
     url.searchParams.set('limit', pageSize.toString());
     url.searchParams.set('offset', currentOffset.toString());
     // NOTE: Congress.gov API ignores the 'congress' parameter - it always returns ALL bills
@@ -228,7 +230,11 @@ async function fetchCosponsoredLegislation(
     url.searchParams.set('format', 'json');
 
     const response = await fetch(url.toString(), {
-      headers: { Accept: 'application/json', 'User-Agent': 'CIV.IQ/2.0 (Comprehensive)' },
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'CIV.IQ/2.0 (Comprehensive)',
+        'X-API-Key': apiKey,
+      },
       signal: AbortSignal.timeout(10000),
     });
 
@@ -479,7 +485,6 @@ export async function getOptimizedBillsByMember(
 
     // Fetch only the requested page, not everything
     const url = new URL(`https://api.congress.gov/v3/member/${bioguideId}/sponsored-legislation`);
-    url.searchParams.set('api_key', apiKey);
     url.searchParams.set('limit', Math.min(limit, 250).toString()); // Cap at API max
     url.searchParams.set('offset', offset.toString());
     url.searchParams.set('congress', congress.toString());
@@ -491,13 +496,14 @@ export async function getOptimizedBillsByMember(
       limit,
       page,
       offset,
-      url: url.toString().replace(/api_key=[^&]+/, 'api_key=***'),
+      url: url.toString(),
     });
 
     const response = await fetch(url.toString(), {
       headers: {
         Accept: 'application/json',
         'User-Agent': 'CIV.IQ/2.0 (Optimized)',
+        'X-API-Key': apiKey,
       },
       signal: AbortSignal.timeout(10000), // 10s timeout
     });

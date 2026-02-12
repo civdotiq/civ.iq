@@ -150,10 +150,6 @@ export const getCurrentMembersByState = cache(
         },
       ];
 
-      if (congressApiKey) {
-        endpoints.forEach(endpoint => endpoint.params.append('api_key', congressApiKey));
-      }
-
       let allMembers: CongressApiMember[] = [];
       let apiSuccess = false;
 
@@ -165,6 +161,7 @@ export const getCurrentMembersByState = cache(
             headers: {
               Accept: 'application/json',
               'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+              ...(congressApiKey ? { 'X-API-Key': congressApiKey } : {}),
             },
           });
 
@@ -758,12 +755,12 @@ export async function getVoteDetails(
 
     const url = new URL(membersUrl);
     url.searchParams.append('format', 'json');
-    url.searchParams.append('api_key', congressApiKey);
 
     const response = await fetch(url.toString(), {
       headers: {
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+        'X-API-Key': congressApiKey,
       },
     });
 
@@ -889,14 +886,11 @@ export async function getCommitteesByMember(
     url.searchParams.append('format', 'json');
     url.searchParams.append('congress', '119'); // Current congress
 
-    if (congressApiKey) {
-      url.searchParams.append('api_key', congressApiKey);
-    }
-
     const response = await fetch(url.toString(), {
       headers: {
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+        ...(congressApiKey ? { 'X-API-Key': congressApiKey } : {}),
       },
     });
 
@@ -937,14 +931,11 @@ export async function getRecentBills(limit = 20, apiKey?: string): Promise<unkno
     url.searchParams.append('limit', limit.toString());
     url.searchParams.append('sort', 'latestAction.actionDate+desc');
 
-    if (congressApiKey) {
-      url.searchParams.append('api_key', congressApiKey);
-    }
-
     const response = await fetch(url.toString(), {
       headers: {
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+        ...(congressApiKey ? { 'X-API-Key': congressApiKey } : {}),
       },
     });
 
@@ -987,14 +978,11 @@ export async function searchBills(query: string, limit = 20, apiKey?: string): P
     // Note: Congress API doesn't support direct text search in the current version
     // This would need to be implemented with a different approach or enhanced API access
 
-    if (congressApiKey) {
-      url.searchParams.append('api_key', congressApiKey);
-    }
-
     const response = await fetch(url.toString(), {
       headers: {
         Accept: 'application/json',
         'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+        ...(congressApiKey ? { 'X-API-Key': congressApiKey } : {}),
       },
     });
 
@@ -1051,12 +1039,13 @@ export async function getBillDetails(
       throw new Error('Congress API key is required');
     }
 
-    const url = `https://api.congress.gov/v3/bill/${congress}/${billType}/${billNumber}?format=json&api_key=${key}`;
+    const url = `https://api.congress.gov/v3/bill/${congress}/${billType}/${billNumber}?format=json`;
 
     const response = await fetch(url, {
       headers: {
         Accept: 'application/json',
         'User-Agent': 'CivicIntelHub/1.0',
+        'X-API-Key': key,
       },
     });
 

@@ -233,9 +233,6 @@ class FECAPI {
 
     const url = new URL(`${this.config.baseUrl}${endpoint}`);
 
-    // Add API key
-    params.api_key = this.config.apiKey;
-
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.append(key, value);
     });
@@ -252,6 +249,7 @@ class FECAPI {
           headers: {
             'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
             Accept: 'application/json',
+            'X-API-Key': this.config.apiKey,
           },
         });
 

@@ -17,15 +17,18 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     // Use current Congress (119th - 2025-2027)
     const congress = process.env.CURRENT_CONGRESS || '119';
     const { searchParams } = req.nextUrl;
-    const limit = searchParams.get('limit') || '50';
-    const sort = searchParams.get('sort') || 'updateDate+desc';
+    const validSorts = ['updateDate+desc', 'updateDate+asc', 'number+desc', 'number+asc'];
+    const sortParam = searchParams.get('sort') || 'updateDate+desc';
+    const sort = validSorts.includes(sortParam) ? sortParam : 'updateDate+desc';
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50', 10) || 50, 1), 250);
 
     const response = await fetch(
-      `https://api.congress.gov/v3/bill/${congress}?api_key=${process.env.CONGRESS_API_KEY}&limit=${limit}&sort=${sort}`,
+      `https://api.congress.gov/v3/bill/${congress}?limit=${limit}&sort=${sort}`,
       {
         headers: {
           Accept: 'application/json',
           'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
+          'X-API-Key': process.env.CONGRESS_API_KEY || '',
         },
       }
     );
@@ -57,7 +60,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
           source: 'Congress.gov API',
           generatedAt: new Date().toISOString(),
           queryParams: {
-            limit: parseInt(limit),
+            limit,
             sort,
           },
         },

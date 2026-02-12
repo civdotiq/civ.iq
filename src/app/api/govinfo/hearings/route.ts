@@ -42,7 +42,7 @@ function transformHearing(pkg: GovInfoPackage): GovInfoDocument {
     lastModified: pkg.lastModified,
     pages: null, // Would need detail fetch
     detailsUrl: `https://www.govinfo.gov/app/details/${pkg.packageId}`,
-    pdfUrl: `https://api.govinfo.gov/packages/${pkg.packageId}/pdf?api_key=${API_KEY}`,
+    pdfUrl: `https://api.govinfo.gov/packages/${pkg.packageId}/pdf`,
   };
 }
 
@@ -68,19 +68,19 @@ async function fetchHearings(
         const params = new URLSearchParams();
         params.set('pageSize', pageSize.toString());
         params.set('offsetMark', offsetMark);
-        params.set('api_key', API_KEY);
         if (congress) {
           params.set('congress', congress.toString());
         }
 
         const url = `${GOVINFO_API}/collections/CHRG/${startDateStr}?${params.toString()}`;
 
-        logger.info('Fetching congressional hearings', { url: url.replace(API_KEY, '***') });
+        logger.info('Fetching congressional hearings', { url });
 
         const response = await fetch(url, {
           headers: {
             Accept: 'application/json',
             'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
+            'X-API-Key': API_KEY,
           },
         });
 

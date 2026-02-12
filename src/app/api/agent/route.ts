@@ -9,6 +9,14 @@ import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
 
+function isAuthorized(request: NextRequest): boolean {
+  if (process.env.NODE_ENV !== 'production') return true;
+  const authHeader = request.headers.get('authorization');
+  const adminKey = process.env.ADMIN_API_KEY;
+  if (!adminKey || !authHeader?.startsWith('Bearer ')) return false;
+  return authHeader.substring(7) === adminKey;
+}
+
 interface DebugResults {
   apiCall?: {
     url?: string;
@@ -70,6 +78,10 @@ interface DebugInfo {
 }
 
 export async function GET(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { searchParams } = request.nextUrl;
   const bioguideId = searchParams.get('bioguideId') || 'P000595'; // Default to Gary Peters
   const test = searchParams.get('test') || 'all';

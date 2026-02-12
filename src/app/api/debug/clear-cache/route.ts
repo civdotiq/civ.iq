@@ -6,6 +6,11 @@ import { batchVotingService } from '@/features/representatives/services/batch-vo
 import { logger } from '@/lib/logging/logger-edge';
 
 export async function POST() {
+  // Block debug endpoint in production
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   try {
     batchVotingService.clearCache();
 

@@ -116,8 +116,9 @@ class DataValidationRunner {
     const apis = [
       {
         name: 'Congress.gov',
-        url: `https://api.congress.gov/v3/member?api_key=${process.env.CONGRESS_API_KEY}&limit=1`,
+        url: `https://api.congress.gov/v3/member?limit=1`,
         source: 'congress-api',
+        apiKeyHeader: process.env.CONGRESS_API_KEY,
       },
       {
         name: 'Census Bureau',
@@ -126,8 +127,9 @@ class DataValidationRunner {
       },
       {
         name: 'FEC',
-        url: `https://api.open.fec.gov/v1/candidates/?api_key=${process.env.FEC_API_KEY}&per_page=1`,
+        url: `https://api.open.fec.gov/v1/candidates/?per_page=1`,
         source: 'fec-api',
+        apiKeyHeader: process.env.FEC_API_KEY,
       },
     ];
 
@@ -135,10 +137,14 @@ class DataValidationRunner {
 
     for (const api of apis) {
       try {
+        const headers: Record<string, string> = {
+          'User-Agent': 'CIV.IQ/1.0 (Data Validation)',
+        };
+        if (api.apiKeyHeader) {
+          headers['X-API-Key'] = api.apiKeyHeader;
+        }
         const response = await fetch(api.url, {
-          headers: {
-            'User-Agent': 'CIV.IQ/1.0 (Data Validation)',
-          },
+          headers,
           signal: AbortSignal.timeout(10000),
         });
 

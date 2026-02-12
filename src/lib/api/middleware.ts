@@ -167,7 +167,6 @@ export function buildCongressApiUrl(
 
   const baseUrl = 'https://api.congress.gov';
   const url = new URL(path, baseUrl);
-  url.searchParams.set('api_key', keyResult.key!);
 
   if (params) {
     for (const [key, value] of Object.entries(params)) {
@@ -180,10 +179,12 @@ export function buildCongressApiUrl(
 
 /**
  * Standard headers for Congress.gov API requests.
+ * Includes X-API-Key for authentication.
  */
 export const CONGRESS_API_HEADERS = {
   Accept: 'application/json',
   'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
+  'X-API-Key': process.env.CONGRESS_API_KEY || '',
 } as const;
 
 /**

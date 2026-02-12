@@ -70,6 +70,11 @@ interface DiagnosticResult {
 }
 
 export async function GET(request: NextRequest) {
+  // Block debug endpoint in production
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   const startTime = Date.now();
 
   try {

@@ -14,6 +14,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  // Prevent source code exposure in production
+  productionBrowserSourceMaps: false,
   // Next.js 16 uses Turbopack by default - silence webpack migration warning
   turbopack: {},
   // Remove console logs in production for better performance

@@ -154,11 +154,15 @@ async function fetchStateDemographics(
     'B23025_005E', // Unemployed
   ].join(',');
 
-  const url = `https://api.census.gov/data/2021/acs/acs5?get=${variables}&for=state:${stateFips}${
-    censusApiKey ? `&key=${censusApiKey}` : ''
-  }`;
+  const url = `https://api.census.gov/data/2021/acs/acs5?get=${variables}&for=state:${stateFips}`;
+
+  const fetchHeaders: Record<string, string> = {};
+  if (censusApiKey) {
+    fetchHeaders['X-API-Key'] = censusApiKey;
+  }
 
   const response = await fetch(url, {
+    headers: fetchHeaders,
     signal: AbortSignal.timeout(15000),
   });
 

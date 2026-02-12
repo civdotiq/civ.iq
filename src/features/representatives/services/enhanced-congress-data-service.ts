@@ -196,14 +196,11 @@ export class EnhancedCongressDataService {
         url.searchParams.append('limit', limit.toString());
         url.searchParams.append('sort', 'date:desc');
 
-        if (this.apiKey) {
-          url.searchParams.append('api_key', this.apiKey);
-        }
-
         const response = await fetch(url.toString(), {
           headers: {
             Accept: 'application/json',
             'User-Agent': 'CivicIntelHub/1.0',
+            ...(this.apiKey ? { 'X-API-Key': this.apiKey } : {}),
           },
         });
 

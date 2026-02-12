@@ -268,10 +268,11 @@ async function getHandler(
       logger.info('Fetching from Congress.gov API', { bioguideId });
 
       const response = await fetch(
-        `https://api.congress.gov/v3/member/${upperBioguideId}?format=json&api_key=${process.env.CONGRESS_API_KEY}`,
+        `https://api.congress.gov/v3/member/${upperBioguideId}?format=json`,
         {
           headers: {
             'User-Agent': 'CivIQ-Hub/1.0 (civic-engagement-tool)',
+            'X-API-Key': process.env.CONGRESS_API_KEY || '',
           },
         }
       );

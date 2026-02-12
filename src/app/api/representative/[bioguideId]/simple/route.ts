@@ -26,11 +26,15 @@ export async function GET(
   }
 
   // Congress.gov API endpoint
-  const url = `https://api.congress.gov/v3/member/${upperBioguideId}?api_key=${API_KEY}`;
+  const url = `https://api.congress.gov/v3/member/${upperBioguideId}`;
 
   try {
     logger.debug('Simple API: Calling Congress.gov API');
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'X-API-Key': API_KEY,
+      },
+    });
 
     logger.debug('Simple API: Response received', { status: response.status });
 

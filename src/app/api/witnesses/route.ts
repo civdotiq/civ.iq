@@ -79,9 +79,9 @@ async function fetchMeetingDetails(
   if (!CONGRESS_API_KEY) return null;
 
   try {
-    const url = `https://api.congress.gov/v3/committee-meeting/${CURRENT_CONGRESS}/${chamber.toLowerCase()}/${eventId}?api_key=${CONGRESS_API_KEY}`;
+    const url = `https://api.congress.gov/v3/committee-meeting/${CURRENT_CONGRESS}/${chamber.toLowerCase()}/${eventId}`;
     const response = await fetch(url, {
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json', 'X-API-Key': CONGRESS_API_KEY || '' },
     });
 
     if (!response.ok) return null;
@@ -117,9 +117,9 @@ async function aggregateWitnesses(
       for (const ch of chambers) {
         try {
           // Fetch recent meetings (last 100 to get good witness coverage)
-          const listUrl = `https://api.congress.gov/v3/committee-meeting/${CURRENT_CONGRESS}/${ch}?limit=100&api_key=${CONGRESS_API_KEY}`;
+          const listUrl = `https://api.congress.gov/v3/committee-meeting/${CURRENT_CONGRESS}/${ch}?limit=100`;
           const listResponse = await fetch(listUrl, {
-            headers: { Accept: 'application/json' },
+            headers: { Accept: 'application/json', 'X-API-Key': CONGRESS_API_KEY || '' },
           });
 
           if (!listResponse.ok) continue;

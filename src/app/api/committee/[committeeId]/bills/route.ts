@@ -139,10 +139,11 @@ async function _fetchCommitteeBills(committeeId: string): Promise<CongressBill[]
         const congressCommitteeId = transformCommitteeId(committeeId);
 
         const response = await fetch(
-          `${baseUrl}/bill/119/house?committee=${congressCommitteeId}&limit=20&api_key=${apiKey}`,
+          `${baseUrl}/bill/119/house?committee=${congressCommitteeId}&limit=20`,
           {
             headers: {
               Accept: 'application/json',
+              'X-API-Key': apiKey,
             },
           }
         );
@@ -150,10 +151,11 @@ async function _fetchCommitteeBills(committeeId: string): Promise<CongressBill[]
         if (!response.ok) {
           // Try Senate if House fails
           const senateResponse = await fetch(
-            `${baseUrl}/bill/119/senate?committee=${congressCommitteeId}&limit=20&api_key=${apiKey}`,
+            `${baseUrl}/bill/119/senate?committee=${congressCommitteeId}&limit=20`,
             {
               headers: {
                 Accept: 'application/json',
+                'X-API-Key': apiKey,
               },
             }
           );

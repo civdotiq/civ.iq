@@ -54,8 +54,11 @@ export async function GET(request: NextRequest) {
     // Check for cache-busting parameter, pagination, and field selection
     const { searchParams } = request.nextUrl;
     const bustCache = searchParams.get('bust') === 'true';
-    const pageLimit = parseInt(searchParams.get('limit') || '0', 10);
-    const pageOffset = parseInt(searchParams.get('offset') || '0', 10);
+    const pageLimit = Math.min(parseInt(searchParams.get('limit') || '0', 10) || 0, 500);
+    const pageOffset = Math.min(
+      Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0),
+      10000
+    );
     const fieldsParam = searchParams.get('fields'); // Comma-separated list of fields to include
 
     const cacheKey = 'districts:all';

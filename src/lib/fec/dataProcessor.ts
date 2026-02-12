@@ -73,9 +73,13 @@ async function fetchCandidateTotals(candidateId: string): Promise<FECCandidateTo
     async () => {
       const response = await fetch(
         `https://api.open.fec.gov/v1/candidate/${candidateId}/totals/` +
-          `?api_key=${process.env.FEC_API_KEY}` +
-          `&cycle=${currentCycle}&cycle=${currentCycle - 2}&cycle=${currentCycle - 4}` +
-          `&sort=-cycle`
+          `?cycle=${currentCycle}&cycle=${currentCycle - 2}&cycle=${currentCycle - 4}` +
+          `&sort=-cycle`,
+        {
+          headers: {
+            'X-API-Key': process.env.FEC_API_KEY || '',
+          },
+        }
       );
 
       if (!response.ok) {
@@ -104,11 +108,15 @@ async function fetchAllContributions(candidateId: string): Promise<ContributionD
       while (hasMore) {
         const response = await fetch(
           `https://api.open.fec.gov/v1/schedules/schedule_a/` +
-            `?api_key=${process.env.FEC_API_KEY}` +
-            `&candidate_id=${candidateId}` +
+            `?candidate_id=${candidateId}` +
             `&two_year_transaction_period=${currentCycle}` +
             `&per_page=${MAX_RECORDS_PER_REQUEST}` +
-            `&page=${page}`
+            `&page=${page}`,
+          {
+            headers: {
+              'X-API-Key': process.env.FEC_API_KEY || '',
+            },
+          }
         );
 
         if (!response.ok) {
@@ -158,12 +166,16 @@ async function fetchAllExpenditures(candidateId: string): Promise<ExpenditureDet
       while (hasMore) {
         const response = await fetch(
           `https://api.open.fec.gov/v1/schedules/schedule_b/` +
-            `?api_key=${process.env.FEC_API_KEY}` +
-            `&candidate_id=${candidateId}` +
+            `?candidate_id=${candidateId}` +
             `&two_year_transaction_period=${currentCycle}` +
             `&per_page=${MAX_RECORDS_PER_REQUEST}` +
             `&page=${page}` +
-            `&sort=-disbursement_date`
+            `&sort=-disbursement_date`,
+          {
+            headers: {
+              'X-API-Key': process.env.FEC_API_KEY || '',
+            },
+          }
         );
 
         if (!response.ok) {

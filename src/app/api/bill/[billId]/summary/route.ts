@@ -374,8 +374,12 @@ async function fetchBillText(billId: string): Promise<{
     }
 
     // Fetch bill details first
-    const billDetailsUrl = `https://api.congress.gov/v3/bill/${congress}/${billNumber.toLowerCase()}?api_key=${congressApiKey}&format=json`;
-    const billDetailsResponse = await fetch(billDetailsUrl);
+    const billDetailsUrl = `https://api.congress.gov/v3/bill/${congress}/${billNumber.toLowerCase()}?format=json`;
+    const billDetailsResponse = await fetch(billDetailsUrl, {
+      headers: {
+        'X-API-Key': congressApiKey,
+      },
+    });
 
     if (!billDetailsResponse.ok) {
       throw new Error(`Failed to fetch bill details: ${billDetailsResponse.status}`);
@@ -385,8 +389,12 @@ async function fetchBillText(billId: string): Promise<{
     const bill = billDetails.bill;
 
     // Fetch bill text
-    const textUrl = `https://api.congress.gov/v3/bill/${congress}/${billNumber.toLowerCase()}/text?api_key=${congressApiKey}&format=json`;
-    const textResponse = await fetch(textUrl);
+    const textUrl = `https://api.congress.gov/v3/bill/${congress}/${billNumber.toLowerCase()}/text?format=json`;
+    const textResponse = await fetch(textUrl, {
+      headers: {
+        'X-API-Key': congressApiKey,
+      },
+    });
 
     if (!textResponse.ok) {
       throw new Error(`Failed to fetch bill text: ${textResponse.status}`);

@@ -75,7 +75,7 @@ describe('/api/witnesses', () => {
     process.env = { ...originalEnv, CONGRESS_API_KEY: 'test-api-key' };
 
     global.fetch = jest.fn().mockImplementation((url: string) => {
-      if (url.includes('/committee-meeting/119/') && url.includes('?api_key=')) {
+      if (url.includes('/committee-meeting/119/') && !url.includes('?limit=')) {
         // Meeting detail request
         return Promise.resolve({
           ok: true,

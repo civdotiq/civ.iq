@@ -25,11 +25,12 @@ export async function GET(
     }
 
     const response = await fetch(
-      `https://api.congress.gov/v3/member?currentMember=true&limit=250&api_key=${process.env.CONGRESS_API_KEY}`,
+      `https://api.congress.gov/v3/member?currentMember=true&limit=250`,
       {
         headers: {
           Accept: 'application/json',
           'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
+          'X-API-Key': process.env.CONGRESS_API_KEY || '',
         },
       }
     );

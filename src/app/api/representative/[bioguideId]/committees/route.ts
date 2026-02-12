@@ -24,15 +24,13 @@ export async function GET(
       return new NextResponse('Congress.gov API key required', { status: 500 });
     }
 
-    const response = await fetch(
-      `https://api.congress.gov/v3/member/${bioguideId}?api_key=${process.env.CONGRESS_API_KEY}`,
-      {
-        headers: {
-          Accept: 'application/json',
-          'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
-        },
-      }
-    );
+    const response = await fetch(`https://api.congress.gov/v3/member/${bioguideId}`, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
+        'X-API-Key': process.env.CONGRESS_API_KEY || '',
+      },
+    });
 
     if (!response.ok) {
       logger.error('Congress.gov member API failed', new Error(`HTTP ${response.status}`), {

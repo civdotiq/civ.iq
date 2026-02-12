@@ -317,11 +317,12 @@ async function searchBills(query: string, limit: number): Promise<Bill[]> {
 
         const congress = process.env.CURRENT_CONGRESS || '119';
         const response = await fetch(
-          `https://api.congress.gov/v3/bill/${congress}?api_key=${process.env.CONGRESS_API_KEY}&limit=100&sort=updateDate+desc`,
+          `https://api.congress.gov/v3/bill/${congress}?limit=100&sort=updateDate+desc`,
           {
             headers: {
               Accept: 'application/json',
               'User-Agent': 'CIV.IQ/1.0 (Democratic Platform)',
+              'X-API-Key': process.env.CONGRESS_API_KEY || '',
             },
           }
         );
