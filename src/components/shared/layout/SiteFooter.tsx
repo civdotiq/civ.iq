@@ -67,15 +67,6 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
           >
             Disclaimer
           </Link>
-          <span className={isDark ? 'text-gray-600' : 'text-gray-400'}>•</span>
-          <a
-            href="https://github.com/civdotiq/civ.iq"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-civiq-blue'} transition-colors underline`}
-          >
-            GitHub
-          </a>
         </div>
 
         {/* Copyright */}
