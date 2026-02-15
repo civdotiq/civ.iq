@@ -5,6 +5,7 @@
  * Licensed under the MIT License. See LICENSE and NOTICE files.
  */
 
+import Link from 'next/link';
 import { Users, Building2, DollarSign } from 'lucide-react';
 
 interface District {
@@ -167,7 +168,11 @@ export function DemographicsDashboard({
               </h3>
               <div className="space-y-2">
                 {topByPopulation.map((district, index) => (
-                  <div key={district.id} className="flex items-center justify-between text-sm">
+                  <Link
+                    key={district.id}
+                    href={`/districts/${district.state}-${district.number}`}
+                    className="flex items-center justify-between text-sm hover:text-civiq-blue transition-colors"
+                  >
                     <span className="text-gray-700">
                       <span className="text-gray-400 mr-2">{index + 1}.</span>
                       {district.state}-{district.number}
@@ -175,7 +180,7 @@ export function DemographicsDashboard({
                     <span className="font-medium text-gray-900 tabular-nums">
                       {district.demographics.population.toLocaleString()}
                     </span>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -190,7 +195,11 @@ export function DemographicsDashboard({
               </h3>
               <div className="space-y-2">
                 {smallestByPopulation.map((district, index) => (
-                  <div key={district.id} className="flex items-center justify-between text-sm">
+                  <Link
+                    key={district.id}
+                    href={`/districts/${district.state}-${district.number}`}
+                    className="flex items-center justify-between text-sm hover:text-civiq-blue transition-colors"
+                  >
                     <span className="text-gray-700">
                       <span className="text-gray-400 mr-2">{index + 1}.</span>
                       {district.state}-{district.number}
@@ -198,7 +207,7 @@ export function DemographicsDashboard({
                     <span className="font-medium text-gray-900 tabular-nums">
                       {district.demographics.population.toLocaleString()}
                     </span>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -213,7 +222,11 @@ export function DemographicsDashboard({
               </h3>
               <div className="space-y-2">
                 {topByIncome.map((district, index) => (
-                  <div key={district.id} className="flex items-center justify-between text-sm">
+                  <Link
+                    key={district.id}
+                    href={`/districts/${district.state}-${district.number}`}
+                    className="flex items-center justify-between text-sm hover:text-civiq-blue transition-colors"
+                  >
                     <span className="text-gray-700">
                       <span className="text-gray-400 mr-2">{index + 1}.</span>
                       {district.state}-{district.number}
@@ -221,7 +234,7 @@ export function DemographicsDashboard({
                     <span className="font-medium text-gray-900 tabular-nums">
                       ${(district.demographics.medianIncome / 1000).toFixed(0)}k
                     </span>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>

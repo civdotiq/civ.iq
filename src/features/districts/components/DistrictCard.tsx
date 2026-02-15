@@ -78,7 +78,10 @@ export function DistrictCard({ district }: { district: District }) {
   const lean = getDistrictLean(district.political.cookPVI);
 
   return (
-    <div className="bg-white border-2 border-black hover:border-civiq-blue transition-colors p-4 sm:p-6">
+    <Link
+      href={`/districts/${district.state}-${district.number}`}
+      className="block bg-white border-2 border-black hover:border-civiq-blue transition-colors p-4 sm:p-6"
+    >
       <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
         <div className="flex-1">
           <h3 className="text-lg sm:text-xl font-bold text-gray-900">
@@ -117,7 +120,7 @@ export function DistrictCard({ district }: { district: District }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <div>
           <p className="text-xs sm:text-sm text-gray-600">Population</p>
           <p className="font-semibold text-sm sm:text-base">
@@ -143,13 +146,6 @@ export function DistrictCard({ district }: { district: District }) {
           </p>
         </div>
       </div>
-
-      <Link
-        href={`/districts/${district.state}-${district.number}`}
-        className="block w-full text-center py-3 text-sm sm:text-base bg-civiq-blue text-white hover:bg-blue-700 transition-colors min-h-[44px] flex items-center justify-center"
-      >
-        View Details
-      </Link>
-    </div>
+    </Link>
   );
 }
