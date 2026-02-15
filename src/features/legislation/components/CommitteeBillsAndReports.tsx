@@ -191,7 +191,12 @@ export default function CommitteeBillsAndReports({ committeeId }: CommitteeBills
                 <div key={bill.billId} className="border p-4 hover:bg-white">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{bill.billNumber}</h3>
+                      <Link
+                        href={`/bill/${bill.billId}`}
+                        className="font-medium text-gray-900 hover:text-civiq-blue transition-colors"
+                      >
+                        {bill.billNumber}
+                      </Link>
                       <p className="text-sm text-gray-600 mt-1">{bill.title}</p>
                     </div>
                     <div className="flex space-x-2">

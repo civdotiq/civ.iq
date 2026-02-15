@@ -262,16 +262,21 @@ export function RacialCompositionChart({ demographics }: { demographics: Demogra
 }
 
 export function ElectionHistoryChart({
-  currentPVI: _currentPVI,
+  currentPVI,
   currentMargin,
 }: {
   currentPVI: string;
   currentMargin: number;
 }) {
   const data = useMemo(
-    () => generateElectionHistory(_currentPVI, currentMargin),
-    [_currentPVI, currentMargin]
+    () => generateElectionHistory(currentPVI, currentMargin),
+    [currentPVI, currentMargin]
   );
+
+  // Derive likely winner from PVI
+  const pviMatch = currentPVI?.match(/^([DR])\+/);
+  const likelyWinner =
+    pviMatch?.[1] === 'D' ? 'Democratic' : pviMatch?.[1] === 'R' ? 'Republican' : null;
 
   return (
     <div className="bg-white border-2 border-black p-6">
@@ -317,7 +322,14 @@ export function ElectionHistoryChart({
         </LineChart>
       </ResponsiveContainer>
       <p className="text-sm text-gray-600 mt-2">
-        Last election margin: <strong>{currentMargin.toFixed(1)}%</strong>
+        Last election:{' '}
+        {likelyWinner ? (
+          <strong>
+            {likelyWinner} won by {currentMargin.toFixed(1)}%
+          </strong>
+        ) : (
+          <strong>{currentMargin.toFixed(1)}% margin</strong>
+        )}
       </p>
     </div>
   );

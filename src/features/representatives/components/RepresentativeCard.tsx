@@ -99,14 +99,22 @@ export const RepresentativeCard = memo(function RepresentativeCard({
                 {representative.party}
               </span>
               {representative.chamber === 'House' && representative.district && (
-                <span className="px-2 py-0.5 bg-white border border-gray-300 text-gray-700 rounded-full text-xs font-medium">
+                <Link
+                  href={`/districts/${representative.state}-${representative.district}`}
+                  className="px-2 py-0.5 bg-white border border-gray-300 text-gray-700 hover:text-civiq-blue hover:border-civiq-blue rounded-full text-xs font-medium transition-colors"
+                  onClick={e => e.stopPropagation()}
+                >
                   {representative.state}-{representative.district}
-                </span>
+                </Link>
               )}
               {representative.chamber === 'Senate' && (
-                <span className="px-2 py-0.5 bg-white border border-gray-300 text-gray-700 rounded-full text-xs font-medium">
+                <Link
+                  href={`/states/${representative.state}`}
+                  className="px-2 py-0.5 bg-white border border-gray-300 text-gray-700 hover:text-civiq-blue hover:border-civiq-blue rounded-full text-xs font-medium transition-colors"
+                  onClick={e => e.stopPropagation()}
+                >
                   {representative.state}
-                </span>
+                </Link>
               )}
             </div>
           </div>

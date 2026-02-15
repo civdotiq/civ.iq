@@ -7,6 +7,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { EnhancedRepresentative } from '@/types/representative';
 import {
   LegislationIcon,
@@ -56,15 +57,45 @@ export function HeroStatsHeader({
     return representative.name;
   };
 
-  // Get title with proper formatting
-  const getTitle = () => {
+  // Get title with proper formatting and links
+  const getTitleElement = () => {
     if (representative.chamber === 'Senate') {
-      return `U.S. Senator from ${representative.state}`;
+      return (
+        <>
+          U.S. Senator from{' '}
+          <Link
+            href={`/states/${representative.state}`}
+            className="hover:text-civiq-blue transition-colors underline decoration-1 underline-offset-2"
+          >
+            {representative.state}
+          </Link>
+        </>
+      );
     }
     if (representative.district && representative.district !== 'AL') {
-      return `U.S. Representative, ${representative.state}-${representative.district}`;
+      return (
+        <>
+          U.S. Representative,{' '}
+          <Link
+            href={`/districts/${representative.state}-${representative.district}`}
+            className="hover:text-civiq-blue transition-colors underline decoration-1 underline-offset-2"
+          >
+            {representative.state}-{representative.district}
+          </Link>
+        </>
+      );
     }
-    return `U.S. Representative from ${representative.state}`;
+    return (
+      <>
+        U.S. Representative from{' '}
+        <Link
+          href={`/states/${representative.state}`}
+          className="hover:text-civiq-blue transition-colors underline decoration-1 underline-offset-2"
+        >
+          {representative.state}
+        </Link>
+      </>
+    );
   };
 
   // Get state rank for senators
@@ -177,7 +208,7 @@ export function HeroStatsHeader({
               data-testid="representative-state"
               className="profile-hero-title accent-title-underline-blue mb-6"
             >
-              {getTitle()}
+              {getTitleElement()}
             </p>
 
             {/* Geometric badges */}

@@ -85,7 +85,7 @@ export default function UnifiedRepresentativeCard({
     <div className="bg-white rounded-2xl border-2 border-black border border-gray-100 p-8">
       <div className="flex items-start gap-6">
         {/* Photo - 100px for both federal and state (state's superior size) */}
-        <div className="flex-shrink-0">
+        <Link href={profileLink} className="flex-shrink-0">
           {isFederal ? (
             <RepresentativePhoto
               bioguideId={representative.bioguideId}
@@ -103,12 +103,16 @@ export default function UnifiedRepresentativeCard({
               />
             )
           )}
-        </div>
+        </Link>
 
         {/* Info Section */}
         <div className="flex-1">
-          {/* Name - larger text like state design */}
-          <h3 className="font-bold text-2xl mb-2">{name}</h3>
+          {/* Name - links to full profile */}
+          <Link href={profileLink} className="group">
+            <h3 className="font-bold text-2xl mb-2 group-hover:text-civiq-blue transition-colors">
+              {name}
+            </h3>
+          </Link>
 
           {/* District Title */}
           <div className="text-sm text-gray-600 space-y-2">
@@ -140,10 +144,10 @@ export default function UnifiedRepresentativeCard({
             )}
           </div>
 
-          {/* View Full Profile Button */}
+          {/* View Full Profile Link */}
           <Link
             href={profileLink}
-            className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+            className="inline-block mt-4 px-4 py-2 bg-civiq-blue text-white font-medium hover:bg-blue-700 transition-colors"
           >
             View Full Profile
           </Link>

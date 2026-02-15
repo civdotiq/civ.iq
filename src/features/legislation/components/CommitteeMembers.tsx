@@ -230,11 +230,9 @@ export default function CommitteeMembers({ committee }: CommitteeMembersProps) {
 
   const getDistrictUrl = (state: string, district?: number | string) => {
     if (district) {
-      // House district
-      return `/district/${state}-${String(district).padStart(2, '0')}`;
+      return `/districts/${state}-${String(district).padStart(2, '0')}`;
     } else {
-      // Senate - link to state overview
-      return `/state/${state.toLowerCase()}`;
+      return `/states/${state}`;
     }
   };
 

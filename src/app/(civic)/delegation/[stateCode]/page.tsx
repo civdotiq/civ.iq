@@ -73,48 +73,53 @@ function getPartyBorderColor(party: string): string {
 // Delegation member card component
 function DelegationCard({ member }: { member: DelegationMember }) {
   return (
-    <Link href={`/representative/${member.bioguideId}`} className="block group">
-      <div
-        className={`bg-white border-2 border-black hover:border-civiq-blue transition-all duration-200 p-4 border-l-4 ${getPartyBorderColor(member.party)}`}
-      >
-        <div className="flex items-start gap-4">
+    <div
+      className={`bg-white border-2 border-black hover:border-civiq-blue transition-all duration-200 p-4 border-l-4 ${getPartyBorderColor(member.party)}`}
+    >
+      <div className="flex items-start gap-4">
+        <Link href={`/representative/${member.bioguideId}`}>
           <RepresentativePhoto bioguideId={member.bioguideId} name={member.name} size="md" />
-          <div className="flex-1 min-w-0">
+        </Link>
+        <div className="flex-1 min-w-0">
+          <Link href={`/representative/${member.bioguideId}`} className="group">
             <h3 className="text-lg font-semibold text-gray-900 group-hover:text-civiq-blue transition-colors">
               {member.name}
             </h3>
-            <p className="text-sm text-gray-600">{member.title}</p>
+          </Link>
+          <p className="text-sm text-gray-600">{member.title}</p>
 
-            <div className="flex flex-wrap gap-2 mt-2">
-              <span
-                className={`px-2 py-0.5 text-xs font-medium border ${getPartyColor(member.party)}`}
-              >
-                {member.party}
+          <div className="flex flex-wrap gap-2 mt-2">
+            <span
+              className={`px-2 py-0.5 text-xs font-medium border ${getPartyColor(member.party)}`}
+            >
+              {member.party}
+            </span>
+            {member.chamber === 'Senate' && (
+              <span className="px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                Senator
               </span>
-              {member.chamber === 'Senate' && (
-                <span className="px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                  Senator
-                </span>
-              )}
-              {member.chamber === 'House' && member.district && (
-                <span className="px-2 py-0.5 text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                  District {member.district}
-                </span>
-              )}
-            </div>
+            )}
+            {member.chamber === 'House' && member.district && (
+              <Link
+                href={`/districts/${member.state}-${member.district}`}
+                className="px-2 py-0.5 text-xs font-medium bg-amber-50 text-amber-700 hover:text-civiq-blue border border-amber-200 hover:border-civiq-blue transition-colors"
+              >
+                {member.state}-{member.district}
+              </Link>
+            )}
+          </div>
 
-            <div className="mt-2 text-xs text-gray-500 space-y-0.5">
-              {member.yearsInOffice !== undefined && member.yearsInOffice > 0 && (
-                <p>{member.yearsInOffice} years in office</p>
-              )}
-              {member.nextElection && member.nextElection !== '0' && (
-                <p>Next election: {member.nextElection}</p>
-              )}
-            </div>
+          <div className="mt-2 text-xs text-gray-500 space-y-0.5">
+            {member.yearsInOffice !== undefined && member.yearsInOffice > 0 && (
+              <p>{member.yearsInOffice} years in office</p>
+            )}
+            {member.nextElection && member.nextElection !== '0' && (
+              <p>Next election: {member.nextElection}</p>
+            )}
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
