@@ -16,6 +16,7 @@ interface District {
   representative: {
     name: string;
     party: string;
+    bioguideId: string;
     imageUrl?: string;
   };
   demographics: {
@@ -76,17 +77,22 @@ function getDistrictLean(pvi: string): { text: string; color: string; bgColor: s
 
 export function DistrictCard({ district }: { district: District }) {
   const lean = getDistrictLean(district.political.cookPVI);
+  const districtHref = `/districts/${district.state}-${district.number}`;
+  const repHref = `/representative/${district.representative.bioguideId}`;
+  const partyLabel = district.representative.party === 'D' ? 'Democrat' : 'Republican';
+  const partyColor = district.representative.party === 'D' ? 'text-[#0a9338]' : 'text-[#e11d07]';
+  const marginWinner = district.political.lastElection.winner;
+  const margin = district.political.lastElection.margin;
 
   return (
-    <Link
-      href={`/districts/${district.state}-${district.number}`}
-      className="block bg-white border-2 border-black hover:border-civiq-blue transition-colors p-4 sm:p-6"
-    >
+    <div className="bg-white border-2 border-black hover:border-civiq-blue transition-colors p-4 sm:p-6">
       <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
         <div className="flex-1">
-          <h3 className="text-lg sm:text-xl font-bold text-gray-900">
-            {district.state}-{district.number}
-          </h3>
+          <Link href={districtHref}>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 hover:text-civiq-blue transition-colors">
+              {district.state}-{district.number}
+            </h3>
+          </Link>
           <p className="text-xs sm:text-sm text-gray-600 truncate">{district.name}</p>
         </div>
         <span
@@ -96,7 +102,7 @@ export function DistrictCard({ district }: { district: District }) {
         </span>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+      <Link href={repHref} className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 group">
         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
           {district.representative.imageUrl ? (
             <Image
@@ -111,41 +117,39 @@ export function DistrictCard({ district }: { district: District }) {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm sm:text-base text-gray-900 truncate">
+          <p className="font-medium text-sm sm:text-base text-gray-900 group-hover:text-civiq-blue transition-colors truncate">
             {district.representative.name}
           </p>
-          <p className="text-xs sm:text-sm text-gray-600">
-            {district.representative.party === 'D' ? 'Democrat' : 'Republican'}
-          </p>
+          <p className={`text-xs sm:text-sm ${partyColor}`}>{partyLabel}</p>
         </div>
-      </div>
+      </Link>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <div>
-          <p className="text-xs sm:text-sm text-gray-600">Population</p>
-          <p className="font-semibold text-sm sm:text-base">
-            {district.demographics.population.toLocaleString()}
-          </p>
+      <Link href={districtHref} className="block">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <div>
+            <p className="text-xs sm:text-sm text-gray-600">Population</p>
+            <p className="font-semibold text-sm sm:text-base">
+              {district.demographics.population > 0
+                ? district.demographics.population.toLocaleString()
+                : 'Data unavailable'}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs sm:text-sm text-gray-600">Median Income</p>
+            <p className="font-semibold text-sm sm:text-base">
+              {district.demographics.medianIncome > 0
+                ? `$${district.demographics.medianIncome.toLocaleString()}`
+                : 'Data unavailable'}
+            </p>
+          </div>
+          <div className="col-span-2">
+            <p className="text-xs sm:text-sm text-gray-600">Last Election</p>
+            <p className="font-semibold text-sm sm:text-base">
+              {marginWinner} won by {margin.toFixed(1)}%
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-xs sm:text-sm text-gray-600">Median Income</p>
-          <p className="font-semibold text-sm sm:text-base">
-            ${district.demographics.medianIncome.toLocaleString()}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs sm:text-sm text-gray-600">Last Election</p>
-          <p className="font-semibold text-sm sm:text-base">
-            {district.political.lastElection.margin.toFixed(1)}% margin
-          </p>
-        </div>
-        <div>
-          <p className="text-xs sm:text-sm text-gray-600">Turnout</p>
-          <p className="font-semibold text-sm sm:text-base">
-            {district.political.lastElection.turnout}%
-          </p>
-        </div>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 }

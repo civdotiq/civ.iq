@@ -16,6 +16,7 @@ interface District {
   representative: {
     name: string;
     party: string;
+    bioguideId: string;
     imageUrl?: string;
   };
   demographics: {

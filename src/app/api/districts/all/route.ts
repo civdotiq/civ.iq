@@ -21,6 +21,7 @@ interface District {
   representative: {
     name: string;
     party: string;
+    bioguideId: string;
     imageUrl?: string;
   };
   demographics: {
@@ -378,6 +379,7 @@ export async function GET(request: NextRequest) {
           name: member.name,
           party:
             member.partyName === 'Democratic' ? 'D' : member.partyName === 'Republican' ? 'R' : 'I',
+          bioguideId: member.bioguideId,
           imageUrl: member.depiction?.imageUrl,
         },
         demographics: {
