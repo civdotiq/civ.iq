@@ -20,6 +20,12 @@ import type { Bill, BillVote } from '@/types/bill';
 import { getBillDisplayStatus, getBillStatusColor } from '@/types/bill';
 import RepresentativePhoto from '@/features/representatives/components/RepresentativePhoto';
 import { BillJourneyTimeline } from '@/features/legislation/components/BillJourneyTimeline';
+import {
+  BillSummary as BillSummaryDisplay,
+  BillSummarySkeleton,
+  BillSummaryError,
+} from '@/features/legislation/components/BillSummary';
+import type { BillSummary as BillSummaryType } from '@/features/legislation/services/ai/bill-summarizer';
 
 interface ClientBillContentProps {
   billId: string;
@@ -29,6 +35,9 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
   const [bill, setBill] = useState<Bill | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [aiSummary, setAiSummary] = useState<BillSummaryType | null>(null);
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+  const [aiSummaryError, setAiSummaryError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchBill() {
@@ -62,6 +71,33 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
 
     fetchBill();
   }, [billId]);
+
+  useEffect(() => {
+    if (!bill) return;
+    let cancelled = false;
+
+    async function fetchAISummary() {
+      try {
+        setAiSummaryLoading(true);
+        setAiSummaryError(null);
+        const response = await fetch(`/api/bill/${billId}/summary`);
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!cancelled && data.summary) {
+          setAiSummary(data.summary);
+        }
+      } catch {
+        if (!cancelled) setAiSummaryError('AI summary unavailable');
+      } finally {
+        if (!cancelled) setAiSummaryLoading(false);
+      }
+    }
+
+    fetchAISummary();
+    return () => {
+      cancelled = true;
+    };
+  }, [bill, billId]);
 
   if (loading) {
     return (
@@ -199,6 +235,11 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
             )}
           </div>
 
+          {/* AI-Generated Plain English Summary */}
+          {aiSummaryLoading && <BillSummarySkeleton />}
+          {aiSummaryError && !aiSummaryLoading && <BillSummaryError error={aiSummaryError} />}
+          {aiSummary && !aiSummaryLoading && <BillSummaryDisplay summary={aiSummary} />}
+
           {/* Policy Area & Subjects */}
           {(bill.policyArea || (bill.subjects && bill.subjects.length > 0)) && (
             <div className="bg-white border-2 border-black p-6">
@@ -312,7 +353,7 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
 
                   return (
                     <Link
-                      key={vote.voteId || index}
+                      key={`${vote.voteId || 'vote'}-${index}`}
                       href={`/vote/${vote.rollNumber || vote.voteId}`}
                       className="block p-4 border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all"
                     >

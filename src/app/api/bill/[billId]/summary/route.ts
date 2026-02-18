@@ -161,6 +161,7 @@ export async function GET(
       {
         targetReadingLevel,
         maxLength: format === 'brief' ? 150 : format === 'detailed' ? 300 : 500,
+        useCache: !forceRefresh,
       }
     );
 
@@ -360,11 +361,16 @@ async function fetchBillText(billId: string): Promise<{
   fullText: string;
 } | null> {
   try {
-    // Extract congress and bill number from billId
-    const [billNumber, congressStr] = billId.split('-');
-    const congress = parseInt(congressStr || '119') || 119;
+    // Extract congress, type, and number from billId (format: "119-hr-1")
+    const parts = billId.split('-');
+    if (parts.length < 3) {
+      throw new Error('Invalid bill ID format: expected congress-type-number');
+    }
+    const congress = parseInt(parts[0]!) || 119;
+    const billType = parts[1]!;
+    const billNumber = parts.slice(2).join('-');
 
-    if (!billNumber) {
+    if (!billType || !billNumber) {
       throw new Error('Invalid bill ID format');
     }
 
@@ -374,7 +380,7 @@ async function fetchBillText(billId: string): Promise<{
     }
 
     // Fetch bill details first
-    const billDetailsUrl = `https://api.congress.gov/v3/bill/${congress}/${billNumber.toLowerCase()}?format=json`;
+    const billDetailsUrl = `https://api.congress.gov/v3/bill/${congress}/${billType.toLowerCase()}/${billNumber}?format=json`;
     const billDetailsResponse = await fetch(billDetailsUrl, {
       headers: {
         'X-API-Key': congressApiKey,
@@ -389,7 +395,7 @@ async function fetchBillText(billId: string): Promise<{
     const bill = billDetails.bill;
 
     // Fetch bill text
-    const textUrl = `https://api.congress.gov/v3/bill/${congress}/${billNumber.toLowerCase()}/text?format=json`;
+    const textUrl = `https://api.congress.gov/v3/bill/${congress}/${billType.toLowerCase()}/${billNumber}/text?format=json`;
     const textResponse = await fetch(textUrl, {
       headers: {
         'X-API-Key': congressApiKey,

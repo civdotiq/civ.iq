@@ -12,6 +12,7 @@
 
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
+import { generateAIText } from '@/lib/ai/provider';
 import { BillSummaryFallbacks } from './bill-summary-fallbacks';
 
 export interface BillSummary {
@@ -44,7 +45,18 @@ export class BillSummarizer {
   };
 
   private static readonly READING_LEVEL_PROMPTS: Record<number, string> = {
-    8: `Explain this like you're talking to an 8th grader. Use simple words, short sentences, and everyday examples. Avoid jargon, complex terms, and long explanations. Focus on what this bill actually does and why it matters to regular people.`,
+    8: `Follow the federal Plain Language Guidelines (plainlanguage.gov):
+- Write for the reader, not yourself. Use "you" and "your" to address the reader directly.
+- State the major point first, then provide details.
+- Stick to one idea per paragraph. Keep paragraphs short.
+- Write in active voice. Make it clear who does what.
+- Keep sentences under 20 words. One idea per sentence.
+- Use everyday words. If you must use a legal or technical term, explain it immediately.
+- Omit unneeded words. Be direct and concise.
+- Keep subject and verb close together.
+- Be strictly nonpartisan. State facts, not opinions. Do not characterize legislation as good or bad.
+- Do not use analogies, metaphors, or hypothetical scenarios. State what the bill does directly.
+- Use specific numbers, dates, and dollar amounts from the bill text when available.`,
   };
 
   /**
@@ -196,11 +208,10 @@ export class BillSummarizer {
     const prompt = this.buildSummarizationPrompt(billText, billMetadata, options);
 
     try {
-      // Try OpenAI first (you'll need to add your API key)
-      const response = await this.callOpenAI(prompt);
+      const response = await this.callAIProvider(prompt);
       return this.parseSummaryResponse(response, billMetadata);
     } catch (error) {
-      logger.warn('OpenAI summarization failed, trying fallback', {
+      logger.warn('AI summarization failed, trying fallback', {
         billNumber: billMetadata.number,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
@@ -242,54 +253,27 @@ Please provide a summary in the following JSON format:
   "confidence": 0.95
 }
 
-Remember:
-- Use words an 8th grader would understand
-- Keep sentences short and clear
-- Use specific examples when possible
-- Avoid political language or bias
-- Focus on practical effects on people's lives
+Rules (federal Plain Language Guidelines):
+- Use everyday words. Explain any legal or technical term on first use.
+- Keep sentences under 20 words. One idea per sentence.
+- Write in active voice. Make clear who does what.
+- Address the reader as "you" where appropriate.
+- Be strictly nonpartisan. State facts only. No opinions on whether the bill is good or bad.
+- Do not use analogies, metaphors, or hypothetical scenarios.
+- Include specific numbers, dollar amounts, and dates from the bill text.
+- Omit unneeded words. Be direct.
 `;
   }
 
   /**
-   * Call OpenAI API for summarization
+   * Call AI provider for summarization (Google Gemini via Vercel AI SDK)
    */
-  private static async callOpenAI(prompt: string): Promise<string> {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content:
-              'You are an expert at explaining government legislation in simple, accessible language.',
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.3,
-        max_tokens: 1000,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+  private static async callAIProvider(prompt: string): Promise<string> {
+    return generateAIText(
+      'You summarize U.S. legislation using the federal Plain Language Guidelines (plainlanguage.gov). You are nonpartisan, factual, and concise. You never editorialize or use analogies.',
+      prompt,
+      { temperature: 0.3, maxTokens: 1000 }
+    );
   }
 
   /**
@@ -355,7 +339,7 @@ Format as JSON:
 `;
 
     try {
-      const response = await this.callOpenAI(simplificationPrompt);
+      const response = await this.callAIProvider(simplificationPrompt);
       const parsed = JSON.parse(response.match(/\{[\s\S]*\}/)?.[0] || '{}');
       return {
         summary: parsed.summary || '',
