@@ -332,7 +332,7 @@ export class NewsClusteringEngine {
         const freshness = this.calculateFreshness(article);
 
         clusters.push({
-          id: `cluster-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: `cluster-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`,
           primaryArticle: article,
           relatedArticles: relatedArticles.slice(0, this.config.maxClusterSize - 1),
           topic: this.extractTopic(article.title),

@@ -204,8 +204,10 @@ export function DistrictMapContainer({
               geometry: {
                 type: 'Point' as const,
                 coordinates: [
-                  stateCoords.lng + (Math.random() - 0.5) * 2, // Add some spread for visibility
-                  stateCoords.lat + (Math.random() - 0.5) * 2,
+                  stateCoords.lng +
+                    (crypto.getRandomValues(new Uint32Array(1))[0]! / 0xffffffff - 0.5) * 2, // Add some spread for visibility
+                  stateCoords.lat +
+                    (crypto.getRandomValues(new Uint32Array(1))[0]! / 0xffffffff - 0.5) * 2,
                 ],
               },
             };

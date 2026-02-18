@@ -332,7 +332,7 @@ describe('Middleware Tests', () => {
     it('should generate unique request IDs', () => {
       const ids = new Set<string>();
       for (let i = 0; i < 100; i++) {
-        const id = `req_${Date.now()}_${Math.random().toString(16).slice(2, 10)}`;
+        const id = `req_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
         ids.add(id);
       }
       expect(ids.size).toBe(100);

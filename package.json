@@ -110,7 +110,7 @@
     "@eslint/eslintrc": "3.3.1",
     "@playwright/test": "1.57.0",
     "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "16.0.1",
+    "@testing-library/react": "15.0.7",
     "@testing-library/user-event": "^14.6.1",
     "@types/cli-progress": "3.11.6",
     "@types/jest": "^30.0.0",

@@ -530,7 +530,10 @@ export function CampaignFinanceFlow({
           })
           .on('end', () => {
             particle.attr('opacity', 0);
-            setTimeout(animate, Math.random() * 2000);
+            setTimeout(
+              animate,
+              (crypto.getRandomValues(new Uint32Array(1))[0]! / 0xffffffff) * 2000
+            );
           });
       }
 

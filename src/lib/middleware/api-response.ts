@@ -309,7 +309,7 @@ export function handleApiError(
 }
 
 export function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `req_${Date.now()}_${crypto.randomUUID().slice(0, 9)}`;
 }
 
 export function extractRequestId(headers: Headers): string | undefined {

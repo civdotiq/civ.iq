@@ -319,7 +319,7 @@ export class RetryHandler {
         const delay = Math.min(baseDelay * Math.pow(2, attempt - 1), maxDelay);
 
         // Add jitter to prevent thundering herd
-        const jitter = Math.random() * 0.1 * delay;
+        const jitter = (crypto.getRandomValues(new Uint32Array(1))[0]! / 0xffffffff) * 0.1 * delay;
         await new Promise(resolve => setTimeout(resolve, delay + jitter));
       }
     }

@@ -41,6 +41,7 @@ export class ServiceContainer {
   private static instance: ServiceContainer;
   private services = new Map<ServiceName, ServiceRegistration>();
   private initializing = new Set<ServiceName>();
+  private pending = new Map<ServiceName, Promise<unknown>>();
 
   private constructor() {}
 
@@ -79,6 +80,11 @@ export class ServiceContainer {
       return registration.instance as T;
     }
 
+    // For singletons, return pending promise if already initializing
+    if (registration.singleton && this.pending.has(name)) {
+      return this.pending.get(name) as Promise<T>;
+    }
+
     // Prevent circular dependency issues
     if (this.initializing.has(name)) {
       throw new Error(`Circular dependency detected for service ${name}`);
@@ -88,7 +94,13 @@ export class ServiceContainer {
       this.initializing.add(name);
 
       // Create new instance
-      const instance = await registration.factory();
+      const promise = Promise.resolve(registration.factory());
+
+      if (registration.singleton) {
+        this.pending.set(name, promise);
+      }
+
+      const instance = await promise;
 
       // Store singleton instance
       if (registration.singleton) {
@@ -98,6 +110,7 @@ export class ServiceContainer {
       return instance as T;
     } finally {
       this.initializing.delete(name);
+      this.pending.delete(name);
     }
   }
 
@@ -114,6 +127,7 @@ export class ServiceContainer {
   clear(): void {
     this.services.clear();
     this.initializing.clear();
+    this.pending.clear();
   }
 
   /**
@@ -192,7 +206,7 @@ export function initializeServices(config?: {
     return {
       async getById(bioguideId: string) {
         const startTime = Date.now();
-        const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const requestId = `req-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
 
         try {
           const data = await repository.findById(bioguideId);
@@ -229,7 +243,7 @@ export function initializeServices(config?: {
 
       async getByIds(bioguideIds: string[]) {
         const startTime = Date.now();
-        const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const requestId = `req-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
 
         try {
           const data = await repository.findByIds(bioguideIds);
@@ -266,7 +280,7 @@ export function initializeServices(config?: {
 
       async getByZip(zipCode: string) {
         const startTime = Date.now();
-        const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const requestId = `req-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
 
         try {
           const data = await repository.findByZipCode(zipCode);
@@ -303,7 +317,7 @@ export function initializeServices(config?: {
 
       async search(query: string, filters) {
         const startTime = Date.now();
-        const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const requestId = `req-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
 
         try {
           const data = await repository.search(query, filters || {});
@@ -340,7 +354,7 @@ export function initializeServices(config?: {
 
       async getAll(filters) {
         const startTime = Date.now();
-        const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const requestId = `req-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
 
         try {
           const data = await repository.findAll(filters || {});
@@ -377,7 +391,7 @@ export function initializeServices(config?: {
 
       async getByState(state: string) {
         const startTime = Date.now();
-        const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const requestId = `req-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
 
         try {
           const data = await repository.findByState(state);

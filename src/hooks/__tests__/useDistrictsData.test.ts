@@ -6,10 +6,12 @@ import { useDistrictsData } from '../useDistrictsData';
 
 // Mock the logger first
 jest.mock('@/lib/logging/simple-logger', () => ({
+  __esModule: true,
   default: {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
+    debug: jest.fn(),
   },
 }));
 
@@ -198,15 +200,17 @@ describe('useDistrictsData', () => {
   });
 
   it('should use cached data from localStorage as fallback', () => {
-    // Set cached data
+    // Set cached data in localStorage
     const cachedData = {
       districts: mockDistrictData.districts,
       timestamp: Date.now(),
     };
     localStorage.setItem('districts-data-v1', JSON.stringify(cachedData));
 
+    // SWR returns fallbackData as `data` when still loading (simulating real SWR behavior
+    // where fallbackData is used as initial data before fetch completes)
     useSWRMock.mockReturnValue({
-      data: undefined,
+      data: { districts: mockDistrictData.districts },
       error: undefined,
       isLoading: true,
       mutate: jest.fn(),
@@ -214,7 +218,7 @@ describe('useDistrictsData', () => {
 
     const { result } = renderHook(() => useDistrictsData());
 
-    // Should have fallback data
+    // Should have fallback data from cache
     expect(result.current.districts).toHaveLength(1);
     expect(result.current.cacheStatus).toBe('hit');
   });

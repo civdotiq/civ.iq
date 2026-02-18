@@ -83,7 +83,7 @@ export const useUIStore = create<UIState>()(
 
       // Notification actions
       addNotification: notification => {
-        const id = `notification-${Date.now()}-${Math.random()}`;
+        const id = `notification-${Date.now()}-${crypto.randomUUID()}`;
         const newNotification: Notification = { ...notification, id };
 
         set(

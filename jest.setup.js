@@ -77,33 +77,8 @@ if (typeof window !== 'undefined') {
   }
 }
 
-// Additional React DOM environment setup
-if (typeof document !== 'undefined') {
-  // Ensure document is fully set up for React DOM
-  Object.defineProperty(document, 'createRange', {
-    value: () => ({
-      selectNodeContents: jest.fn(),
-      setStart: jest.fn(),
-      setEnd: jest.fn(),
-      commonAncestorContainer: document.createElement('div'),
-      startContainer: document.createElement('div'),
-      endContainer: document.createElement('div'),
-      startOffset: 0,
-      endOffset: 0,
-      collapsed: true,
-      cloneContents: jest.fn(() => document.createElement('div')),
-      deleteContents: jest.fn(),
-      extractContents: jest.fn(() => document.createElement('div')),
-      insertNode: jest.fn(),
-      surroundContents: jest.fn(),
-      compareBoundaryPoints: jest.fn(() => 0),
-      cloneRange: jest.fn(),
-      detach: jest.fn(),
-      toString: jest.fn(() => ''),
-    }),
-    writable: true,
-  });
-}
+// Note: document.createRange is provided by jsdom natively.
+// Do NOT override it with a mock - user-event's Selection.addRange requires real Range objects.
 
 // Ensure document.body exists
 if (!global.document.body) {
@@ -391,17 +366,19 @@ Object.defineProperty(global.HTMLAnchorElement.prototype, 'download', {
   writable: true,
 });
 
-// Mock navigator APIs for sharing tests
-Object.defineProperty(global, 'navigator', {
-  value: {
-    ...global.navigator,
-    clipboard: {
-      writeText: jest.fn(() => Promise.resolve()),
-    },
-    share: jest.fn(() => Promise.resolve()),
-  },
-  writable: true,
-});
+// Mock navigator APIs for sharing tests (preserve existing properties like userAgent)
+if (global.navigator) {
+  Object.defineProperty(global.navigator, 'clipboard', {
+    value: { writeText: jest.fn(() => Promise.resolve()) },
+    writable: true,
+    configurable: true,
+  });
+  Object.defineProperty(global.navigator, 'share', {
+    value: jest.fn(() => Promise.resolve()),
+    writable: true,
+    configurable: true,
+  });
+}
 
 // Mock html2canvas
 jest.mock('html2canvas', () => {

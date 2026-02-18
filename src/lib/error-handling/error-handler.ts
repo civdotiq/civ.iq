@@ -285,7 +285,8 @@ export async function withRetry<T>(
       const delay = Math.min(baseDelay * Math.pow(backoffFactor, attempt), maxDelay);
 
       // Add jitter to prevent thundering herd
-      const jitteredDelay = delay + Math.random() * 1000;
+      const jitteredDelay =
+        delay + (crypto.getRandomValues(new Uint32Array(1))[0]! / 0xffffffff) * 1000;
 
       await new Promise(resolve => setTimeout(resolve, jitteredDelay));
     }

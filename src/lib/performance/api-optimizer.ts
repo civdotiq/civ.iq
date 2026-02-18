@@ -65,7 +65,7 @@ export function withOptimization<T>(
 
   return withPerformanceTiming(routeName, async (req: NextRequest) => {
     const startTime = Date.now();
-    const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const requestId = `req-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
 
     try {
       // Generate cache key if not provided

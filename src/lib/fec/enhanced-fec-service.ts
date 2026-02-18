@@ -259,7 +259,7 @@ class EnhancedFECService {
 
     // Sample mappings for validation
     const sampleMappings = mappingEntries
-      .sort(() => Math.random() - 0.5)
+      .sort(() => crypto.getRandomValues(new Uint32Array(1))[0]! / 0xffffffff - 0.5)
       .slice(0, Math.min(sampleSize, totalMappings));
 
     let availableDataCount = 0;

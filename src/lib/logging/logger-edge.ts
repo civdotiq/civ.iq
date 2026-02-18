@@ -104,8 +104,7 @@ export const structuredLogger = edgeLogger;
 
 // Request logger factory function
 export function createRequestLogger(request: NextRequest, endpoint: string) {
-  const requestId =
-    request.headers.get('x-request-id') || Math.random().toString(36).substring(2, 15);
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
   return {
     info: (message: string, metadata?: LogMetadata) =>

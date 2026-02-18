@@ -426,7 +426,7 @@ function checkFallbackRateLimit(
   let entry = fallbackRateLimitStore.get(key);
 
   // Clean up expired entries periodically (1% chance)
-  if (Math.random() < 0.01) {
+  if (crypto.getRandomValues(new Uint32Array(1))[0]! / 0xffffffff < 0.01) {
     cleanupFallbackRateLimitStore();
   }
 

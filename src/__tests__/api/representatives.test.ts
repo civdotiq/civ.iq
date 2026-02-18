@@ -40,31 +40,50 @@ jest.mock('@/lib/census-api', () => ({
   },
 }));
 
-// Mock congress-legislators service
-jest.mock('@/features/representatives/services/congress.service', () => ({
-  getAllEnhancedRepresentatives: jest.fn(() =>
-    Promise.resolve([
-      {
-        bioguideId: 'S000148',
-        name: 'Charles E. Schumer',
-        firstName: 'Charles',
-        lastName: 'Schumer',
-        state: 'NY',
-        district: null,
-        party: 'Democratic',
-        chamber: 'Senate',
-        imageUrl: 'https://www.congress.gov/img/member/s000148.jpg',
-        contactInfo: {
+// Mock RepresentativesCoreService
+jest.mock('@/services/core/representatives-core.service', () => ({
+  RepresentativesCoreService: jest.fn().mockImplementation(() => ({
+    getRepresentativesByZip: jest.fn(() =>
+      Promise.resolve([
+        {
+          bioguideId: 'S000148',
+          name: 'Charles E. Schumer',
+          firstName: 'Charles',
+          lastName: 'Schumer',
+          state: 'NY',
+          district: null,
+          party: 'Democratic',
+          chamber: 'Senate',
+          imageUrl: 'https://www.congress.gov/img/member/s000148.jpg',
+          contactInfo: {
+            phone: '(202) 224-6542',
+            website: 'https://www.schumer.senate.gov',
+            office: '322 Hart Senate Office Building',
+          },
+          title: 'Senator',
           phone: '(202) 224-6542',
           website: 'https://www.schumer.senate.gov',
-          office: '322 Hart Senate Office Building',
         },
-        title: 'Senator',
-        phone: '(202) 224-6542',
-        website: 'https://www.schumer.senate.gov',
-      },
-    ])
-  ),
+      ])
+    ),
+    getRepresentativesByState: jest.fn(() => Promise.resolve([])),
+    getRepresentativesByDistrict: jest.fn(() => Promise.resolve([])),
+  })),
+}));
+
+// Mock zip-district-mapping
+jest.mock('@/lib/data/zip-district-mapping', () => ({
+  getAllCongressionalDistrictsForZip: jest.fn(() => [
+    { state: 'NY', district: '10', proportion: 1.0 },
+  ]),
+}));
+
+// Mock govCache
+jest.mock('@/services/cache', () => ({
+  govCache: {
+    get: jest.fn(() => null),
+    set: jest.fn(),
+  },
 }));
 
 describe('/api/representatives', () => {
@@ -124,17 +143,21 @@ describe('/api/representatives', () => {
     });
 
     it('should handle Congress API errors gracefully', async () => {
-      // Mock the congress service to throw an error consistently (for all retries)
-      const { getAllEnhancedRepresentatives } = await import(
-        '@/features/representatives/services/congress.service'
+      // Mock the core service to throw an error
+      const { RepresentativesCoreService } = await import(
+        '@/services/core/representatives-core.service'
       );
-      (getAllEnhancedRepresentatives as jest.Mock).mockRejectedValue(new Error('API Error'));
+      (RepresentativesCoreService as jest.Mock).mockImplementation(() => ({
+        getRepresentativesByZip: jest.fn().mockRejectedValue(new Error('API Error')),
+        getRepresentativesByState: jest.fn().mockRejectedValue(new Error('API Error')),
+        getRepresentativesByDistrict: jest.fn().mockRejectedValue(new Error('API Error')),
+      }));
 
       const request = createMockRequest('http://localhost:3000/api/representatives?zip=10001');
       const response = await GET(request);
       const data = await response.json();
 
-      // API now returns 503 when service is unavailable
+      // API returns 503 when service is unavailable
       expect(response.status).toBe(503);
       expect(data.success).toBe(false);
       expect(data.error).toHaveProperty('code');
@@ -215,11 +238,15 @@ describe('/api/representatives', () => {
 
   describe('Error handling', () => {
     it('should handle malformed API responses', async () => {
-      // Mock the congress service to return invalid data (not an array)
-      const { getAllEnhancedRepresentatives } = await import(
-        '@/features/representatives/services/congress.service'
+      // Mock the core service to return invalid data
+      const { RepresentativesCoreService } = await import(
+        '@/services/core/representatives-core.service'
       );
-      (getAllEnhancedRepresentatives as jest.Mock).mockResolvedValueOnce({ invalid: 'response' });
+      (RepresentativesCoreService as jest.Mock).mockImplementation(() => ({
+        getRepresentativesByZip: jest.fn().mockResolvedValue({ invalid: 'response' }),
+        getRepresentativesByState: jest.fn().mockResolvedValue({ invalid: 'response' }),
+        getRepresentativesByDistrict: jest.fn().mockResolvedValue({ invalid: 'response' }),
+      }));
 
       const request = createMockRequest('http://localhost:3000/api/representatives?zip=10001');
       const response = await GET(request);
@@ -232,13 +259,19 @@ describe('/api/representatives', () => {
     }, 10000);
 
     it('should handle network timeouts', async () => {
-      // Mock the congress service to timeout
-      const { getAllEnhancedRepresentatives } = await import(
-        '@/features/representatives/services/congress.service'
+      // Mock the core service to timeout
+      const { RepresentativesCoreService } = await import(
+        '@/services/core/representatives-core.service'
       );
-      (getAllEnhancedRepresentatives as jest.Mock).mockImplementation(
-        () => new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 100))
-      );
+      (RepresentativesCoreService as jest.Mock).mockImplementation(() => ({
+        getRepresentativesByZip: jest
+          .fn()
+          .mockImplementation(
+            () => new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 100))
+          ),
+        getRepresentativesByState: jest.fn().mockRejectedValue(new Error('Timeout')),
+        getRepresentativesByDistrict: jest.fn().mockRejectedValue(new Error('Timeout')),
+      }));
 
       const request = createMockRequest('http://localhost:3000/api/representatives?zip=10001');
       const response = await GET(request);

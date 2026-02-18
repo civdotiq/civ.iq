@@ -99,13 +99,14 @@ describe('/api/bills/latest', () => {
     });
 
     it('should support sort parameter', async () => {
-      const request = createMockRequest('http://localhost:3000/api/bills/latest?sort=title+asc');
+      const request = createMockRequest(
+        'http://localhost:3000/api/bills/latest?sort=number%2Bdesc'
+      );
       const response = await GET(request);
 
       expect(response.status).toBe(200);
-      // URL decodes + to space
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('sort=title'),
+        expect.stringContaining('sort=number+desc'),
         expect.any(Object)
       );
     });

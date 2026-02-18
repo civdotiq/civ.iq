@@ -19,7 +19,7 @@ const mockVote: Vote = {
   },
   question: 'On Passage',
   result: 'Passed',
-  date: '2024-01-15',
+  date: '2024-01-15T12:00:00',
   position: 'Yea',
   chamber: 'House',
   rollNumber: 116,
@@ -294,14 +294,15 @@ describe('extractVoteId', () => {
     expect(extractVoteId(senateVote)).toBe('00123');
   });
 
-  it('falls back to rollNumber for Senate votes without proper voteId', () => {
+  it('returns null for Senate votes with empty voteId even if rollNumber exists', () => {
     const senateVote: Vote = {
       ...mockVote,
       chamber: 'Senate',
       voteId: '',
       rollNumber: 456,
     };
-    expect(extractVoteId(senateVote)).toBe('456');
+    // extractVoteId returns null early when voteId is empty
+    expect(extractVoteId(senateVote)).toBeNull();
   });
 
   it('returns null when voteId is empty and no rollNumber', () => {

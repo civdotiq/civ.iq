@@ -46,6 +46,9 @@ export abstract class BaseUnifiedService implements IUnifiedRepresentativeServic
     if (!this.config.baseUrl) {
       throw new Error('BaseUrl is required in service configuration');
     }
+    if (!this.config.apiKey) {
+      throw new Error('ApiKey is required in service configuration');
+    }
   }
 
   // Abstract methods that must be implemented by subclasses
