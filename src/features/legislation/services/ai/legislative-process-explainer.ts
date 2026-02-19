@@ -14,6 +14,7 @@
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
+import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import type { BillStatus, ProcessExplanation } from '@/types/ai';
 
 export class LegislativeProcessExplainer {
@@ -72,13 +73,7 @@ export class LegislativeProcessExplainer {
     billTitle: string,
     status: BillStatus
   ): Promise<ProcessExplanation> {
-    const systemPrompt = `You are analyzing verified US government data for CIV.IQ.
-- Use ONLY the data provided
-- Strictly nonpartisan and factual
-- 8th grade reading level (Flesch-Kincaid 60-70)
-- No political commentary or editorializing
-- No analogies or metaphors
-- Output valid JSON only`;
+    const systemPrompt = `You explain the US legislative process for CIV.IQ. You never speculate on political outcomes. ${PLAIN_LANGUAGE_SYSTEM_PROMPT}`;
 
     const userPrompt = this.buildUserPrompt(billId, billTitle, status);
 
@@ -113,12 +108,10 @@ Explain where this bill is in the legislative process. Respond in JSON:
   "confidence": 0.0-1.0
 }
 
-Rules:
-- Use plain language. Keep sentences under 20 words.
-- Describe only procedural facts. No opinions on likelihood of passage.
+${PLAIN_LANGUAGE_RULES}
 - Base next steps on standard congressional procedure for the current stage.
 - For estimated timeline, use historical averages (e.g., "Most bills at this stage take 2-6 months").
-- Do not speculate on political outcomes.
+- Do not speculate on political outcomes or likelihood of passage.
 `;
   }
 

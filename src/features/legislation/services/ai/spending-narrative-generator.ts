@@ -13,6 +13,7 @@
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
+import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import type { DistrictSpending, SpendingNarrative } from '@/types/ai';
 
 export class SpendingNarrativeGenerator {
@@ -69,13 +70,7 @@ export class SpendingNarrativeGenerator {
     districtId: string,
     spending: DistrictSpending
   ): Promise<SpendingNarrative> {
-    const systemPrompt = `You are analyzing verified US government data for CIV.IQ.
-- Use ONLY the data provided
-- Strictly nonpartisan and factual
-- 8th grade reading level (Flesch-Kincaid 60-70)
-- No political commentary or editorializing
-- No analogies or metaphors
-- Output valid JSON only`;
+    const systemPrompt = `You translate federal spending data into plain language for CIV.IQ. You never editorialize on spending priorities. ${PLAIN_LANGUAGE_SYSTEM_PROMPT}`;
 
     const userPrompt = this.buildUserPrompt(districtId, spending);
 
@@ -120,12 +115,10 @@ Translate this spending data into a plain-language narrative. Respond in JSON:
   "confidence": 0.0-1.0
 }
 
-Rules:
-- State factual dollar amounts only. Do not editorialize on spending priorities.
-- Use plain language. Keep sentences under 20 words.
+${PLAIN_LANGUAGE_RULES}
 - Round large numbers for readability (e.g., "$2.3 billion" not "$2,314,567,890").
 - For notable contracts, describe the recipient and purpose in plain language.
-- Do not judge whether spending amounts are too high or too low.
+- Do not editorialize on spending priorities or judge whether amounts are too high or too low.
 `;
   }
 

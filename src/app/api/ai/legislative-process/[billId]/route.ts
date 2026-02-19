@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { LegislativeProcessExplainer } from '@/features/legislation/services/ai/legislative-process-explainer';
+import { PLAIN_LANGUAGE_ATTRIBUTION } from '@/lib/ai/plain-language';
 import logger from '@/lib/logging/simple-logger';
 import { InputValidator } from '@/lib/validation/input-validator';
 import type { BillStatus } from '@/types/ai';
@@ -86,6 +87,7 @@ export async function GET(
           dataSources: {
             billStatus: 'Congress.gov API',
           },
+          plainLanguage: PLAIN_LANGUAGE_ATTRIBUTION,
         },
       },
       {

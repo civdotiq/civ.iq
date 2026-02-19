@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DistrictImpactAnalyzer } from '@/features/legislation/services/ai/district-impact-analyzer';
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
+import { PLAIN_LANGUAGE_ATTRIBUTION } from '@/lib/ai/plain-language';
 import logger from '@/lib/logging/simple-logger';
 import { InputValidator } from '@/lib/validation/input-validator';
 import type { EconomicProfile, GovernmentServicesProfile } from '@/types/district-enhancements';
@@ -122,6 +123,7 @@ export async function GET(
             economic: 'Bureau of Labor Statistics, FCC',
             spending: 'USASpending.gov',
           },
+          plainLanguage: PLAIN_LANGUAGE_ATTRIBUTION,
         },
       },
       {

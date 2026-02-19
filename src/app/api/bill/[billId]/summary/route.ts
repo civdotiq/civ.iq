@@ -17,6 +17,7 @@ import { BillSummarizer } from '@/features/legislation/services/ai/bill-summariz
 import { BillSummaryCache } from '@/features/legislation/services/ai/bill-summary-cache';
 import { BillTextProcessor } from '@/features/legislation/services/ai/bill-text-processor';
 import { ReadingLevelValidator } from '@/features/legislation/services/ai/reading-level-validator';
+import { PLAIN_LANGUAGE_ATTRIBUTION } from '@/lib/ai/plain-language';
 import logger from '@/lib/logging/simple-logger';
 import { InputValidator } from '@/lib/validation/input-validator';
 
@@ -84,6 +85,7 @@ export async function GET(
               responseTime,
               readingLevel: cachedSummary.readingLevel,
               confidence: cachedSummary.confidence,
+              plainLanguage: PLAIN_LANGUAGE_ATTRIBUTION,
             },
           },
           {
@@ -127,6 +129,7 @@ export async function GET(
                 responseTime,
                 readingLevel: cachedSummary.readingLevel,
                 confidence: cachedSummary.confidence,
+                plainLanguage: PLAIN_LANGUAGE_ATTRIBUTION,
               },
             },
             {
@@ -200,6 +203,7 @@ export async function GET(
           complexWords: readingAnalysis.complexWordCount,
           suggestions: readingAnalysis.suggestions.slice(0, 3),
         },
+        plainLanguage: PLAIN_LANGUAGE_ATTRIBUTION,
       },
     };
 

@@ -13,6 +13,7 @@
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
+import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import type { DistrictImpact } from '@/types/district-impact';
 import type { EconomicProfile, GovernmentServicesProfile } from '@/types/district-enhancements';
 
@@ -87,7 +88,7 @@ export class DistrictImpactAnalyzer {
     districtData: DistrictData,
     billMetadata: BillMetadata
   ): Promise<DistrictImpact> {
-    const systemPrompt = `You explain how federal legislation impacts specific congressional districts. You are nonpartisan, factual, and use plain language at an 8th grade reading level. You never editorialize. You ground your analysis in the district data provided.`;
+    const systemPrompt = `You explain how federal legislation impacts specific congressional districts for CIV.IQ. You ground your analysis in the district data provided. ${PLAIN_LANGUAGE_SYSTEM_PROMPT}`;
 
     const userPrompt = this.buildUserPrompt(billSummary, districtData, billMetadata);
 
@@ -146,9 +147,7 @@ Analyze how this bill would impact district ${districtData.districtId}. Respond 
   "confidence": 0.0-1.0
 }
 
-Rules:
-- Use plain language. Keep sentences under 20 words.
-- Be nonpartisan. State facts only.
+${PLAIN_LANGUAGE_RULES}
 - Use the district data provided. Do not invent statistics.
 - If the bill has little connection to the district data, set overallImpact to "Uncertain" and explain why.
 - Include 2-4 affected groups and 2-4 relevant district data points.

@@ -13,6 +13,7 @@
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
+import { PLAIN_LANGUAGE_SYSTEM_PROMPT, PLAIN_LANGUAGE_RULES } from '@/lib/ai/plain-language';
 import type { VoteRecord, VotePatternSummary } from '@/types/ai';
 
 export class VotePatternAnalyzer {
@@ -63,13 +64,7 @@ export class VotePatternAnalyzer {
    * Generate AI-powered vote pattern analysis
    */
   private static async generateAIAnalysis(voteRecord: VoteRecord): Promise<VotePatternSummary> {
-    const systemPrompt = `You are analyzing verified US government data for CIV.IQ.
-- Use ONLY the data provided
-- Strictly nonpartisan and factual
-- 8th grade reading level (Flesch-Kincaid 60-70)
-- No political commentary or editorializing
-- No analogies or metaphors
-- Output valid JSON only`;
+    const systemPrompt = `You summarize legislative voting records for CIV.IQ. You count and categorize votes without interpreting ideology. ${PLAIN_LANGUAGE_SYSTEM_PROMPT}`;
 
     const userPrompt = this.buildUserPrompt(voteRecord);
 
@@ -111,8 +106,7 @@ Categorize and summarize this voting record. Respond in JSON:
   "confidence": 0.0-1.0
 }
 
-Rules:
-- Count and categorize only. Do not interpret ideology or political leaning.
+${PLAIN_LANGUAGE_RULES}
 - Group votes by subject area (Healthcare, Defense, Infrastructure, Education, etc.).
 - Use the bill subjects provided. If subjects are missing, categorize by bill title keywords.
 - The summary should state vote counts factually (e.g., "Voted on 156 bills. 23 healthcare, 18 defense").

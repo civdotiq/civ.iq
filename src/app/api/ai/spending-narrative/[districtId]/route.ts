@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { SpendingNarrativeGenerator } from '@/features/legislation/services/ai/spending-narrative-generator';
+import { PLAIN_LANGUAGE_ATTRIBUTION } from '@/lib/ai/plain-language';
 import logger from '@/lib/logging/simple-logger';
 import { InputValidator } from '@/lib/validation/input-validator';
 import type { DistrictSpending } from '@/types/ai';
@@ -87,6 +88,7 @@ export async function GET(
           dataSources: {
             spending: 'USASpending.gov',
           },
+          plainLanguage: PLAIN_LANGUAGE_ATTRIBUTION,
         },
       },
       {

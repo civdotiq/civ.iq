@@ -13,6 +13,7 @@
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
+import { PLAIN_LANGUAGE_RULES, PLAIN_LANGUAGE_SYSTEM_PROMPT } from '@/lib/ai/plain-language';
 import { BillSummaryFallbacks } from './bill-summary-fallbacks';
 
 export interface BillSummary {
@@ -45,18 +46,7 @@ export class BillSummarizer {
   };
 
   private static readonly READING_LEVEL_PROMPTS: Record<number, string> = {
-    8: `Follow the federal Plain Language Guidelines (plainlanguage.gov):
-- Write for the reader, not yourself. Use "you" and "your" to address the reader directly.
-- State the major point first, then provide details.
-- Stick to one idea per paragraph. Keep paragraphs short.
-- Write in active voice. Make it clear who does what.
-- Keep sentences under 20 words. One idea per sentence.
-- Use everyday words. If you must use a legal or technical term, explain it immediately.
-- Omit unneeded words. Be direct and concise.
-- Keep subject and verb close together.
-- Be strictly nonpartisan. State facts, not opinions. Do not characterize legislation as good or bad.
-- Do not use analogies, metaphors, or hypothetical scenarios. State what the bill does directly.
-- Use specific numbers, dates, and dollar amounts from the bill text when available.`,
+    8: PLAIN_LANGUAGE_RULES,
   };
 
   /**
@@ -253,15 +243,7 @@ Please provide a summary in the following JSON format:
   "confidence": 0.95
 }
 
-Rules (federal Plain Language Guidelines):
-- Use everyday words. Explain any legal or technical term on first use.
-- Keep sentences under 20 words. One idea per sentence.
-- Write in active voice. Make clear who does what.
-- Address the reader as "you" where appropriate.
-- Be strictly nonpartisan. State facts only. No opinions on whether the bill is good or bad.
-- Do not use analogies, metaphors, or hypothetical scenarios.
-- Include specific numbers, dollar amounts, and dates from the bill text.
-- Omit unneeded words. Be direct.
+${PLAIN_LANGUAGE_RULES}
 `;
   }
 
@@ -270,7 +252,7 @@ Rules (federal Plain Language Guidelines):
    */
   private static async callAIProvider(prompt: string): Promise<string> {
     return generateAIText(
-      'You summarize U.S. legislation using the federal Plain Language Guidelines (plainlanguage.gov). You are nonpartisan, factual, and concise. You never editorialize or use analogies.',
+      `You summarize U.S. legislation for CIV.IQ. ${PLAIN_LANGUAGE_SYSTEM_PROMPT}`,
       prompt,
       { temperature: 0.3, maxTokens: 1000 }
     );

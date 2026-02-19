@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { VotePatternAnalyzer } from '@/features/legislation/services/ai/vote-pattern-analyzer';
+import { PLAIN_LANGUAGE_ATTRIBUTION } from '@/lib/ai/plain-language';
 import logger from '@/lib/logging/simple-logger';
 import { InputValidator } from '@/lib/validation/input-validator';
 import type { VoteRecord } from '@/types/ai';
@@ -85,6 +86,7 @@ export async function GET(
           dataSources: {
             votes: 'Congress.gov API',
           },
+          plainLanguage: PLAIN_LANGUAGE_ATTRIBUTION,
         },
       },
       {
