@@ -71,25 +71,62 @@ async function fetchBillText(
   billNumber: string,
   apiKey: string
 ): Promise<string | null> {
+  const apiHeaders = {
+    'X-API-Key': apiKey,
+    'User-Agent': 'CIV.IQ/1.0 (civic data platform; civdotiq.org)',
+  };
+
   try {
+    // Try full bill text first
     const textUrl = `https://api.congress.gov/v3/bill/${congress}/${billType}/${billNumber}/text?format=json`;
-    const textResponse = await fetch(textUrl, {
-      headers: { 'X-API-Key': apiKey },
-    });
+    const textResponse = await fetch(textUrl, { headers: apiHeaders });
 
-    if (!textResponse.ok) return null;
+    if (textResponse.ok) {
+      const textData = await textResponse.json();
+      const textVersions = textData.textVersions || [];
 
-    const textData = await textResponse.json();
-    const textVersions = textData.textVersions || [];
-    if (textVersions.length === 0) return null;
+      if (textVersions.length > 0) {
+        const latestVersion = textVersions[0];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const fullTextUrl = latestVersion.formats?.find(
+          (f: any) => f.type === 'Formatted Text'
+        )?.url;
 
-    const latestVersion = textVersions[0];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fullTextUrl = latestVersion.formats?.find((f: any) => f.type === 'Formatted Text')?.url;
-    if (!fullTextUrl) return null;
+        if (fullTextUrl) {
+          const fullTextResponse = await fetch(fullTextUrl, {
+            headers: {
+              'User-Agent': 'CIV.IQ/1.0 (civic data platform; civdotiq.org)',
+              Accept: 'text/html,application/xhtml+xml,text/plain',
+            },
+          });
 
-    const fullTextResponse = await fetch(fullTextUrl);
-    return fullTextResponse.text();
+          if (fullTextResponse.ok) {
+            return fullTextResponse.text();
+          }
+        }
+      }
+    }
+
+    // Fallback: use Congress API summaries endpoint
+    const summaryUrl = `https://api.congress.gov/v3/bill/${congress}/${billType}/${billNumber}/summaries?format=json`;
+    const summaryResponse = await fetch(summaryUrl, { headers: apiHeaders });
+
+    if (summaryResponse.ok) {
+      const data = await summaryResponse.json();
+      const summaries = data.summaries || [];
+      if (summaries.length > 0) {
+        const bestSummary = summaries[summaries.length - 1];
+        const text = (bestSummary.text || '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        if (text.length >= 50) {
+          return text;
+        }
+      }
+    }
+
+    return null;
   } catch (error) {
     logger.error('Failed to fetch bill text for cron', error as Error, {
       congress,
