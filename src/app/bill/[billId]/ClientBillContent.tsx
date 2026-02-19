@@ -26,6 +26,14 @@ import {
   BillSummaryError,
 } from '@/features/legislation/components/BillSummary';
 import type { BillSummary as BillSummaryType } from '@/features/legislation/services/ai/bill-summarizer';
+import {
+  DistrictImpactDisplay,
+  DistrictImpactSkeleton,
+  DistrictImpactError,
+} from '@/features/legislation/components/DistrictImpact';
+import { DistrictSelector } from '@/features/legislation/components/DistrictSelector';
+import type { DistrictImpact as DistrictImpactType } from '@/types/district-impact';
+import { useSearchParams } from 'next/navigation';
 
 interface ClientBillContentProps {
   billId: string;
@@ -38,6 +46,11 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
   const [aiSummary, setAiSummary] = useState<BillSummaryType | null>(null);
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
   const [aiSummaryError, setAiSummaryError] = useState<string | null>(null);
+  const [district, setDistrict] = useState<string | null>(null);
+  const [districtImpact, setDistrictImpact] = useState<DistrictImpactType | null>(null);
+  const [districtImpactLoading, setDistrictImpactLoading] = useState(false);
+  const [districtImpactError, setDistrictImpactError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     async function fetchBill() {
@@ -71,6 +84,51 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
 
     fetchBill();
   }, [billId]);
+
+  // Initialize district from URL param or localStorage
+  useEffect(() => {
+    const urlDistrict = searchParams.get('district');
+    if (urlDistrict && /^[A-Z]{2}-\d{1,2}$/i.test(urlDistrict)) {
+      setDistrict(urlDistrict.toUpperCase());
+      return;
+    }
+    try {
+      const stored = localStorage.getItem('civiq-district');
+      if (stored && /^[A-Z]{2}-\d{1,2}$/i.test(stored)) {
+        setDistrict(stored.toUpperCase());
+      }
+    } catch {
+      // localStorage may be unavailable
+    }
+  }, [searchParams]);
+
+  // Fetch district impact when district is set and bill is loaded
+  useEffect(() => {
+    if (!bill || !district) return;
+    let cancelled = false;
+
+    async function fetchDistrictImpact() {
+      try {
+        setDistrictImpactLoading(true);
+        setDistrictImpactError(null);
+        const response = await fetch(`/api/bill/${billId}/district-impact/${district}`);
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!cancelled && data.impact) {
+          setDistrictImpact(data.impact);
+        }
+      } catch {
+        if (!cancelled) setDistrictImpactError('District impact analysis unavailable');
+      } finally {
+        if (!cancelled) setDistrictImpactLoading(false);
+      }
+    }
+
+    fetchDistrictImpact();
+    return () => {
+      cancelled = true;
+    };
+  }, [bill, billId, district]);
 
   useEffect(() => {
     if (!bill) return;
@@ -239,6 +297,33 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           {aiSummaryLoading && <BillSummarySkeleton />}
           {aiSummaryError && !aiSummaryLoading && <BillSummaryError error={aiSummaryError} />}
           {aiSummary && !aiSummaryLoading && <BillSummaryDisplay summary={aiSummary} />}
+
+          {/* District Impact Analysis */}
+          <DistrictSelector
+            currentDistrict={district}
+            onDistrictChange={newDistrict => {
+              setDistrict(newDistrict);
+              setDistrictImpact(null);
+              setDistrictImpactError(null);
+            }}
+          />
+          {district && districtImpactLoading && <DistrictImpactSkeleton />}
+          {district && districtImpactError && !districtImpactLoading && (
+            <DistrictImpactError
+              error={districtImpactError}
+              onRetry={() => {
+                setDistrictImpactError(null);
+                setDistrictImpact(null);
+                // Trigger re-fetch by toggling district
+                const d = district;
+                setDistrict(null);
+                setTimeout(() => setDistrict(d), 0);
+              }}
+            />
+          )}
+          {district && districtImpact && !districtImpactLoading && (
+            <DistrictImpactDisplay impact={districtImpact} />
+          )}
 
           {/* Policy Area & Subjects */}
           {(bill.policyArea || (bill.subjects && bill.subjects.length > 0)) && (
