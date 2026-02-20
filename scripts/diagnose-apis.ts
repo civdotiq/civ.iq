@@ -363,6 +363,38 @@ Temporary fixes:
   }
 }
 
+async function testFollowTheMoneyApi() {
+  log('\n=== FollowTheMoney API Tests ===\n', 'cyan');
+
+  const apiKey = process.env.FOLLOWTHEMONEY_API_KEY;
+  if (!apiKey) {
+    log('⚠️  FOLLOWTHEMONEY_API_KEY not set (optional - state campaign finance)', 'yellow');
+    return true;
+  }
+
+  const tests: ApiTest[] = [
+    {
+      name: 'FTM Candidate Search',
+      url: `http://api.followthemoney.org/BreakdownAPI/api/SearchAA.php?APIKey=${apiKey}&mode=json&s=MI&c-t-eid=A`,
+      requiresAuth: true,
+      expectedStatus: 200,
+      critical: false,
+    },
+  ];
+
+  let passed = 0;
+  let failed = 0;
+
+  for (const test of tests) {
+    const success = await testApi(test);
+    if (success) passed++;
+    else failed++;
+  }
+
+  log(`\nFTM Results: ${passed} passed, ${failed} failed`, passed > 0 ? 'green' : 'red');
+  return failed === 0;
+}
+
 async function main() {
   log('=================================', 'cyan');
   log('   CIV.IQ API Diagnostic Tool   ', 'cyan');
@@ -378,6 +410,7 @@ async function main() {
   await testCongressApi();
   await testFECApi();
   await testGDELTApi();
+  await testFollowTheMoneyApi();
 
   // Test local endpoints
   log('\n--- Testing Local Endpoints ---', 'cyan');

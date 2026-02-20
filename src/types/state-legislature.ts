@@ -1108,3 +1108,216 @@ export interface NetworkAnalysisResponse {
   network: CoSponsorshipNetwork;
   error?: string;
 }
+
+// ============================================================================
+// Vote Enrichment Types
+// ============================================================================
+
+/**
+ * Party-line alignment breakdown
+ */
+export interface PartyBreakdown {
+  withParty: number;
+  againstParty: number;
+  total: number;
+  alignmentPercentage: number; // 0-100
+  noPartyData: number;
+}
+
+/**
+ * Vote category breakdown entry
+ */
+export interface VoteCategoryBreakdown {
+  category: string;
+  totalVotes: number;
+  yesVotes: number;
+  noVotes: number;
+  otherVotes: number;
+  percentage: number; // percentage of total votes in this category
+}
+
+/**
+ * A key vote (close margin or party defection)
+ */
+export interface EnrichedKeyVote {
+  voteId: string;
+  billIdentifier: string;
+  billTitle: string | null;
+  date: string;
+  legislatorPosition: 'yes' | 'no';
+  result: 'passed' | 'failed';
+  yesCount: number;
+  noCount: number;
+  marginPercent: number;
+  isCloseVote: boolean;
+  votedAgainstMajority: boolean;
+  category: string;
+}
+
+/**
+ * Complete vote enrichment result
+ */
+export interface VoteEnrichmentResult {
+  state: string;
+  legislatorId: string;
+  totalVotesAnalyzed: number;
+  partyBreakdown: PartyBreakdown;
+  categoryBreakdown: VoteCategoryBreakdown[];
+  keyVotes: EnrichedKeyVote[];
+  attendance: {
+    totalVotes: number;
+    present: number;
+    absent: number;
+    attendanceRate: number; // 0-100
+  };
+  lastUpdated: string;
+}
+
+// ============================================================================
+// State Bill Text Types
+// ============================================================================
+
+/**
+ * Parsed bill text from OpenStates version URLs
+ */
+export interface StateBillText {
+  billId: string;
+  identifier: string;
+  state: string;
+  versions: Array<{
+    note: string;
+    date?: string;
+    format: 'html' | 'pdf-link' | 'text';
+    content?: string; // parsed text content (for html/text)
+    url: string; // original URL
+    truncated?: boolean;
+    charCount?: number;
+  }>;
+  lastUpdated: string;
+}
+
+// ============================================================================
+// AI Summary Types for State Data
+// ============================================================================
+
+/**
+ * AI-generated plain language bill summary
+ */
+export interface StateBillAISummary {
+  billId: string;
+  state: string;
+  identifier: string;
+  summary: string;
+  keyPoints: string[];
+  whoItAffects: string;
+  whatItDoes: string;
+  currentStatus: string;
+  confidence: number;
+  lastUpdated: string;
+  source: 'ai-generated' | 'fallback';
+  plainLanguage: {
+    name: string;
+    url: string;
+    description: string;
+  };
+}
+
+/**
+ * AI-generated voting pattern summary for a state legislator
+ */
+export interface StateVotePatternSummary {
+  legislatorId: string;
+  state: string;
+  summary: string;
+  topIssueAreas: string[];
+  partyAlignmentSummary: string;
+  keyVoteSummary: string;
+  attendanceSummary: string;
+  confidence: number;
+  lastUpdated: string;
+  source: 'ai-generated' | 'fallback';
+  plainLanguage: {
+    name: string;
+    url: string;
+    description: string;
+  };
+}
+
+// ============================================================================
+// State District Profile Types
+// ============================================================================
+
+/**
+ * GeoJSON boundary from TIGERweb
+ */
+export interface DistrictBoundary {
+  type: 'Feature';
+  geometry: {
+    type: string;
+    coordinates: unknown;
+  };
+  properties: Record<string, unknown>;
+}
+
+/**
+ * State district profile combining demographics, legislators, and boundary
+ */
+export interface StateDistrictProfile {
+  state: string;
+  chamber: StateChamber;
+  district: string;
+  demographics: {
+    population: number;
+    medianIncome: number;
+    medianAge: number;
+    diversityIndex: number;
+    urbanPercentage: number;
+    white_percent: number;
+    black_percent: number;
+    hispanic_percent: number;
+    asian_percent: number;
+    poverty_rate: number;
+    bachelor_degree_percent: number;
+  } | null;
+  legislators: StateLegislatorSummary[];
+  boundary: DistrictBoundary | null;
+  lastUpdated: string;
+}
+
+// ============================================================================
+// State Campaign Finance Types
+// ============================================================================
+
+/**
+ * State legislator campaign finance data
+ */
+export interface StateLegislatorFinance {
+  legislatorId: string;
+  state: string;
+  entityId?: string; // FollowTheMoney entity ID
+  totalContributions?: number;
+  totalExpenditures?: number;
+  contributionsByType?: Array<{
+    type: string;
+    amount: number;
+    count: number;
+  }>;
+  topContributors?: Array<{
+    name: string;
+    amount: number;
+    type: string;
+  }>;
+  topIndustries?: Array<{
+    industry: string;
+    amount: number;
+    count: number;
+  }>;
+  electionCycles?: Array<{
+    year: number;
+    raised: number;
+    spent: number;
+    office: string;
+  }>;
+  lastUpdated: string;
+  source: 'followthemoney' | 'unavailable';
+}

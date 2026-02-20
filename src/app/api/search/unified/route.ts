@@ -121,11 +121,32 @@ interface Committee {
   type?: string;
 }
 
+interface StateBillResult {
+  id: string;
+  identifier: string;
+  title: string;
+  chamber: string;
+  state: string;
+  primary_sponsor?: string;
+  latest_action?: string;
+  latest_action_date?: string;
+}
+
+interface StateCommitteeResult {
+  id: string;
+  name: string;
+  chamber: string;
+  state: string;
+  classification?: string;
+}
+
 interface UnifiedSearchResult {
   representatives: Representative[];
   stateLegislators: StateLegislator[];
   bills: Bill[];
   committees: Committee[];
+  stateBills: StateBillResult[];
+  stateCommittees: StateCommitteeResult[];
   query: string;
   stateFilter?: string;
   totalResults: number;
@@ -382,6 +403,81 @@ function searchCommittees(query: string, limit: number): Committee[] {
     .slice(0, limit);
 }
 
+/**
+ * Search state bills using OpenStates (when state prefix detected)
+ */
+async function searchStateBills(
+  stateCode: string,
+  query: string,
+  limit: number
+): Promise<StateBillResult[]> {
+  try {
+    const bills = await StateLegislatureCoreService.getStateBills(stateCode);
+
+    if (!bills || bills.length === 0) {
+      return [];
+    }
+
+    const q = query.toLowerCase();
+
+    const filtered = bills.filter(bill => {
+      const searchText = [bill.identifier, bill.title, bill.primary_sponsor]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return searchText.includes(q);
+    });
+
+    return filtered.slice(0, limit).map(bill => ({
+      id: bill.id,
+      identifier: bill.identifier,
+      title: bill.title,
+      chamber: bill.chamber,
+      state: stateCode,
+      primary_sponsor: bill.primary_sponsor,
+      latest_action: bill.latest_action,
+      latest_action_date: bill.latest_action_date,
+    }));
+  } catch (error) {
+    logger.error('Error searching state bills', error as Error, { stateCode, query });
+    return [];
+  }
+}
+
+/**
+ * Search state committees using OpenStates (when state prefix detected)
+ */
+async function searchStateCommittees(
+  stateCode: string,
+  query: string,
+  limit: number
+): Promise<StateCommitteeResult[]> {
+  try {
+    const { openStatesAPI } = await import('@/lib/openstates-api');
+    const committees = await openStatesAPI.getCommittees(stateCode, undefined, undefined, false);
+
+    if (!committees || committees.length === 0) {
+      return [];
+    }
+
+    const q = query.toLowerCase();
+
+    const filtered = committees.filter(committee => committee.name.toLowerCase().includes(q));
+
+    return filtered.slice(0, limit).map(committee => ({
+      id: committee.id,
+      name: committee.name,
+      chamber: committee.chamber ?? 'unknown',
+      state: stateCode,
+      classification: committee.classification,
+    }));
+  } catch (error) {
+    logger.error('Error searching state committees', error as Error, { stateCode, query });
+    return [];
+  }
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get('q') ?? '';
@@ -394,6 +490,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       stateLegislators: [],
       bills: [],
       committees: [],
+      stateBills: [],
+      stateCommittees: [],
       query,
       totalResults: 0,
     });
@@ -424,9 +522,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     searchBills(effectiveQuery, limit),
   ];
 
-  // Add state legislator search if state prefix provided
+  // Add state-specific searches if state prefix provided
   if (stateCode) {
     searchPromises.push(searchStateLegislators(stateCode, effectiveQuery, limit));
+    searchPromises.push(searchStateBills(stateCode, effectiveQuery, limit));
+    searchPromises.push(searchStateCommittees(stateCode, effectiveQuery, limit));
   }
 
   const results = await Promise.all(searchPromises);
@@ -434,6 +534,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const representatives = results[0] as Representative[];
   const bills = results[1] as Bill[];
   const stateLegislators = stateCode ? (results[2] as StateLegislator[]) : [];
+  const stateBills = stateCode ? (results[3] as StateBillResult[]) : [];
+  const stateCommittees = stateCode ? (results[4] as StateCommitteeResult[]) : [];
 
   // Committees search is synchronous (static data)
   const committees = searchCommittees(effectiveQuery, limit);
@@ -443,10 +545,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     stateLegislators,
     bills,
     committees,
+    stateBills,
+    stateCommittees,
     query,
     ...(stateCode && { stateFilter: stateCode }),
     totalResults:
-      representatives.length + stateLegislators.length + bills.length + committees.length,
+      representatives.length +
+      stateLegislators.length +
+      bills.length +
+      committees.length +
+      stateBills.length +
+      stateCommittees.length,
   };
 
   return NextResponse.json(result, {

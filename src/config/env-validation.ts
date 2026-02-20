@@ -50,6 +50,12 @@ const ENV_VARS: EnvVarConfig[] = [
     requiredInProduction: true,
     description: 'Admin API key for administrative endpoints',
   },
+  {
+    name: 'FOLLOWTHEMONEY_API_KEY',
+    required: false,
+    requiredInProduction: false,
+    description: 'FollowTheMoney.org API key for state campaign finance data (optional)',
+  },
 ];
 
 interface ValidationResult {

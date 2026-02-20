@@ -19,6 +19,7 @@ interface SimpleHealthCheck {
     fec: boolean;
     census: boolean;
     openstates: boolean;
+    followthemoney: boolean;
   };
 }
 
@@ -37,6 +38,7 @@ export async function GET(_request: NextRequest) {
         fec: !!process.env.FEC_API_KEY,
         census: !!process.env.CENSUS_API_KEY,
         openstates: !!process.env.OPENSTATES_API_KEY,
+        followthemoney: !!process.env.FOLLOWTHEMONEY_API_KEY,
       },
     };
 
@@ -53,6 +55,7 @@ export async function GET(_request: NextRequest) {
         fec: false,
         census: false,
         openstates: false,
+        followthemoney: false,
       },
     };
 
