@@ -7,6 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateAtomFeed, createRepresentativeFeedConfig } from '@/lib/feeds/atom-generator';
 import type { AtomEntry } from '@/lib/feeds/atom-generator';
 import { getEnhancedRepresentative } from '@/features/representatives/services/congress.service';
+import { getVotesByMember } from '@/features/representatives/services/congress-api';
+import { getComprehensiveBillsByMember } from '@/services/congress/optimized-congress.service';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -90,6 +92,59 @@ export async function GET(
           categories: [{ term: 'leadership', label: 'Leadership' }],
         });
       }
+    }
+
+    // Recent votes (graceful degradation — empty votes = feed still works)
+    try {
+      const chamber = rep.chamber as 'House' | 'Senate';
+      const votes = await getVotesByMember(bioguideId, undefined, chamber);
+      const recentVotes = (
+        votes as Array<{
+          voteId?: string;
+          question?: string;
+          result?: string;
+          date?: string;
+          position?: string;
+          rollNumber?: number;
+        }>
+      ).slice(0, 10);
+
+      for (const vote of recentVotes) {
+        const voteDate = vote.date ? new Date(vote.date) : now;
+        const voteIdStr = vote.voteId || `vote-${vote.rollNumber || 'unknown'}`;
+        entries.push({
+          id: `${baseUrl}/representative/${bioguideId}#vote-${voteIdStr}`,
+          title: vote.question || 'Roll Call Vote',
+          link: `${baseUrl}/representative/${bioguideId}`,
+          updated: voteDate,
+          summary: `${rep.name} voted ${vote.position || 'Unknown'}. Result: ${vote.result || 'Pending'}.`,
+          categories: [{ term: 'vote', label: 'Vote' }],
+        });
+      }
+    } catch {
+      // Votes unavailable — feed continues with profile-only entries
+    }
+
+    // Sponsored bills (graceful degradation)
+    try {
+      const billsResponse = await getComprehensiveBillsByMember({
+        bioguideId,
+        limit: 10,
+      });
+
+      for (const bill of billsResponse.bills) {
+        const billDate = bill.introducedDate ? new Date(bill.introducedDate) : now;
+        entries.push({
+          id: `${baseUrl}/bill/${bill.type?.toLowerCase() || 'hr'}${bill.number}-${bill.congress}`,
+          title: `Sponsored: ${bill.title}`,
+          link: `${baseUrl}/bill/${bill.type?.toLowerCase() || 'hr'}${bill.number}-${bill.congress}`,
+          updated: billDate,
+          summary: `${bill.title}. Latest action: ${bill.lastAction || 'Introduced'}.`,
+          categories: [{ term: 'sponsored-bill', label: 'Sponsored Bill' }],
+        });
+      }
+    } catch {
+      // Bills unavailable — feed continues with profile-only entries
     }
 
     // Sort entries by date (newest first)

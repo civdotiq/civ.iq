@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
+import { incrementRequestCounter } from '@/lib/analytics/request-counter';
 
 // Simple logging for edge runtime (console is allowed in edge runtime)
 const logger = {
@@ -297,6 +298,11 @@ export async function middleware(request: NextRequest) {
         duration: duration,
         ip: clientInfo.ip,
       });
+    }
+
+    // Fire-and-forget request analytics (never blocks response)
+    if (request.nextUrl.pathname.startsWith('/api/')) {
+      incrementRequestCounter(request.nextUrl.pathname, request.method, response.status);
     }
 
     return response;

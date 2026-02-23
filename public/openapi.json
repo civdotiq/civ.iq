@@ -1,0 +1,819 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CIV.IQ Public API",
+    "description": "Open REST API for normalized U.S. government data. No API key required.",
+    "version": "1.0.0",
+    "license": {
+      "name": "MIT",
+      "url": "https://github.com/civdotiq/civic-intel-hub/blob/main/LICENSE"
+    },
+    "contact": {
+      "name": "CIV.IQ",
+      "url": "https://civ.iq"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://civ.iq/api/v1",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "API Index",
+        "description": "Lists all available v1 endpoints with descriptions.",
+        "operationId": "getIndex",
+        "tags": ["Index"],
+        "responses": {
+          "200": {
+            "description": "API index with endpoint listing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndexResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/representatives": {
+      "get": {
+        "summary": "List representatives",
+        "description": "List all current members of Congress with optional filtering.",
+        "operationId": "listRepresentatives",
+        "tags": ["Representatives"],
+        "parameters": [
+          {
+            "name": "chamber",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["house", "senate"] },
+            "description": "Filter by chamber"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": { "type": "string", "pattern": "^[A-Z]{2}$" },
+            "description": "Two-letter state code (e.g., MI)"
+          },
+          {
+            "name": "party",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["D", "R", "I"] },
+            "description": "Filter by party"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 100, "maximum": 535 },
+            "description": "Results per page"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": { "type": "integer", "default": 0 },
+            "description": "Pagination offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of representatives",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepresentativeListResponse"
+                }
+              }
+            }
+          },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/representatives/{bioguideId}": {
+      "get": {
+        "summary": "Get representative detail",
+        "description": "Get detailed info for a specific member of Congress.",
+        "operationId": "getRepresentative",
+        "tags": ["Representatives"],
+        "parameters": [
+          {
+            "name": "bioguideId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^[A-Z]\\d{6}$" },
+            "description": "Bioguide ID (e.g., P000197)",
+            "example": "P000197"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Representative detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepresentativeDetailResponse"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/bills": {
+      "get": {
+        "summary": "List bills",
+        "description": "List latest bills from Congress.",
+        "operationId": "listBills",
+        "tags": ["Bills"],
+        "parameters": [
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "updateDate+desc",
+              "enum": [
+                "updateDate+desc",
+                "updateDate+asc",
+                "number+desc",
+                "number+asc"
+              ]
+            },
+            "description": "Sort order"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 50, "maximum": 250 },
+            "description": "Results per page"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": { "type": "integer", "default": 0 },
+            "description": "Pagination offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of bills",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillListResponse"
+                }
+              }
+            }
+          },
+          "502": { "$ref": "#/components/responses/BadGateway" }
+        }
+      }
+    },
+    "/bills/{billId}": {
+      "get": {
+        "summary": "Get bill detail",
+        "description": "Get bill detail from Congress.gov.",
+        "operationId": "getBill",
+        "tags": ["Bills"],
+        "parameters": [
+          {
+            "name": "billId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Bill ID in format: {congress}-{type}-{number}",
+            "example": "119-hr-1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bill detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillDetailResponse"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "502": { "$ref": "#/components/responses/BadGateway" }
+        }
+      }
+    },
+    "/bills/{billId}/summary": {
+      "get": {
+        "summary": "Get bill summary",
+        "description": "Get cached AI-generated plain-language summary. Does not trigger live generation.",
+        "operationId": "getBillSummary",
+        "tags": ["Bills"],
+        "parameters": [
+          {
+            "name": "billId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Bill ID in format: {congress}-{type}-{number}",
+            "example": "119-hr-1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bill summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillSummaryResponse"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/votes/{voteId}": {
+      "get": {
+        "summary": "Get vote detail",
+        "description": "Get roll-call vote details including individual member positions.",
+        "operationId": "getVote",
+        "tags": ["Votes"],
+        "parameters": [
+          {
+            "name": "voteId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Vote ID in format: {chamber}-{congress}-{rollNumber}",
+            "example": "house-119-116"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vote detail with positions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoteDetailResponse"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "502": { "$ref": "#/components/responses/BadGateway" }
+        }
+      }
+    },
+    "/districts/{districtId}": {
+      "get": {
+        "summary": "Get district detail",
+        "description": "Get district info and its representatives.",
+        "operationId": "getDistrict",
+        "tags": ["Districts"],
+        "parameters": [
+          {
+            "name": "districtId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}-(\\d{1,2}|AL)$"
+            },
+            "description": "District ID in format: {state}-{district}",
+            "example": "MI-12"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "District detail with representatives",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DistrictDetailResponse"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/committees": {
+      "get": {
+        "summary": "List committees",
+        "description": "List congressional committees.",
+        "operationId": "listCommittees",
+        "tags": ["Committees"],
+        "parameters": [
+          {
+            "name": "chamber",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by chamber"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 100, "maximum": 250 },
+            "description": "Results per page"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": { "type": "integer", "default": 0 },
+            "description": "Pagination offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of committees",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitteeListResponse"
+                }
+              }
+            }
+          },
+          "502": { "$ref": "#/components/responses/BadGateway" }
+        }
+      }
+    },
+    "/committees/{committeeId}": {
+      "get": {
+        "summary": "Get committee detail",
+        "description": "Get committee detail with members and subcommittees.",
+        "operationId": "getCommittee",
+        "tags": ["Committees"],
+        "parameters": [
+          {
+            "name": "committeeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Committee system code",
+            "example": "HSJU"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Committee detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitteeDetailResponse"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/changelog": {
+      "get": {
+        "summary": "API changelog",
+        "description": "Version history with change descriptions.",
+        "operationId": "getChangelog",
+        "tags": ["Index"],
+        "responses": {
+          "200": {
+            "description": "Changelog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangelogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Meta": {
+        "type": "object",
+        "properties": {
+          "apiVersion": { "type": "string", "example": "v1" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "source": { "type": "string" },
+          "license": { "type": "string", "example": "MIT" },
+          "documentation": { "type": "string", "format": "uri" }
+        },
+        "required": ["apiVersion", "timestamp"]
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "total": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "offset": { "type": "integer" },
+          "hasMore": { "type": "boolean" }
+        },
+        "required": ["total", "limit", "offset", "hasMore"]
+      },
+      "V1Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "integer" },
+              "message": { "type": "string" },
+              "details": { "type": "string" }
+            },
+            "required": ["code", "message"]
+          },
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      },
+      "RepresentativeSummary": {
+        "type": "object",
+        "properties": {
+          "bioguideId": { "type": "string", "example": "P000197" },
+          "name": { "type": "string", "example": "Nancy Pelosi" },
+          "party": { "type": "string", "enum": ["D", "R", "I"] },
+          "state": { "type": "string", "example": "CA" },
+          "district": { "type": "string", "nullable": true },
+          "chamber": { "type": "string", "enum": ["House", "Senate"] },
+          "title": { "type": "string" },
+          "phone": { "type": "string", "nullable": true },
+          "website": { "type": "string", "nullable": true },
+          "yearsInOffice": { "type": "number", "nullable": true },
+          "nextElection": { "type": "string", "nullable": true }
+        },
+        "required": ["bioguideId", "name", "party", "state", "chamber", "title"]
+      },
+      "RepresentativeDetail": {
+        "type": "object",
+        "properties": {
+          "bioguideId": { "type": "string" },
+          "name": { "type": "string" },
+          "party": { "type": "string" },
+          "state": { "type": "string" },
+          "district": { "type": "string", "nullable": true },
+          "chamber": { "type": "string" },
+          "title": { "type": "string" },
+          "isHistorical": { "type": "boolean" },
+          "votingMember": { "type": "boolean" },
+          "role": { "type": "string" },
+          "bio": { "type": "string", "nullable": true },
+          "currentTerm": { "type": "object", "nullable": true },
+          "socialMedia": { "type": "object", "nullable": true },
+          "contact": { "type": "object", "nullable": true },
+          "committees": { "type": "array", "items": { "type": "object" } },
+          "leadershipRoles": { "type": "array", "items": { "type": "object" } },
+          "yearsInOffice": { "type": "number", "nullable": true },
+          "nextElection": { "type": "string", "nullable": true }
+        },
+        "required": ["bioguideId", "name", "party", "state", "chamber"]
+      },
+      "BillSummary": {
+        "type": "object",
+        "properties": {
+          "congress": { "type": "integer" },
+          "number": { "type": "string" },
+          "type": { "type": "string", "nullable": true },
+          "title": { "type": "string", "nullable": true },
+          "originChamber": { "type": "string", "nullable": true },
+          "updateDate": { "type": "string", "nullable": true },
+          "latestAction": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "actionDate": { "type": "string" },
+              "text": { "type": "string" }
+            }
+          },
+          "url": { "type": "string" }
+        },
+        "required": ["congress", "number", "url"]
+      },
+      "BillDetail": {
+        "type": "object",
+        "properties": {
+          "billId": { "type": "string" },
+          "congress": { "type": "integer" },
+          "type": { "type": "string" },
+          "number": { "type": "string" },
+          "title": { "type": "string" },
+          "shortTitle": { "type": "string", "nullable": true },
+          "originChamber": { "type": "string" },
+          "introducedDate": { "type": "string" },
+          "updateDate": { "type": "string", "nullable": true },
+          "latestAction": { "type": "object", "nullable": true },
+          "policyArea": { "type": "string", "nullable": true },
+          "sponsors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "bioguideId": { "type": "string" },
+                "fullName": { "type": "string" },
+                "party": { "type": "string" },
+                "state": { "type": "string" }
+              }
+            }
+          },
+          "cosponsorsCount": { "type": "integer" },
+          "committeesCount": { "type": "integer" },
+          "actionsCount": { "type": "integer" },
+          "textVersionsCount": { "type": "integer" },
+          "url": { "type": "string" }
+        },
+        "required": ["billId", "congress", "type", "number", "title"]
+      },
+      "BillAISummary": {
+        "type": "object",
+        "properties": {
+          "billId": { "type": "string" },
+          "title": { "type": "string" },
+          "summary": { "type": "string" },
+          "whatItDoes": { "type": "string" },
+          "whyItMatters": { "type": "string" },
+          "keyPoints": { "type": "array", "items": { "type": "string" } },
+          "whoItAffects": { "type": "array", "items": { "type": "string" } },
+          "readingLevel": { "type": "string" },
+          "confidence": { "type": "number" },
+          "lastUpdated": { "type": "string", "format": "date-time" },
+          "source": { "type": "string" }
+        },
+        "required": ["billId", "title", "summary"]
+      },
+      "VoteDetail": {
+        "type": "object",
+        "properties": {
+          "voteId": { "type": "string" },
+          "chamber": { "type": "string" },
+          "congress": { "type": "integer" },
+          "rollNumber": { "type": "integer" },
+          "question": { "type": "string", "nullable": true },
+          "description": { "type": "string", "nullable": true },
+          "result": { "type": "string", "nullable": true },
+          "date": { "type": "string", "nullable": true },
+          "time": { "type": "string", "nullable": true },
+          "totals": {
+            "type": "object",
+            "properties": {
+              "yea": { "type": "integer" },
+              "nay": { "type": "integer" },
+              "present": { "type": "integer" },
+              "notVoting": { "type": "integer" }
+            }
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "party": { "type": "string" },
+                "state": { "type": "string" },
+                "vote": { "type": "string" },
+                "bioguideId": { "type": "string" }
+              }
+            }
+          },
+          "url": { "type": "string" }
+        },
+        "required": ["voteId", "chamber", "congress", "rollNumber"]
+      },
+      "DistrictDetail": {
+        "type": "object",
+        "properties": {
+          "districtId": { "type": "string", "example": "MI-12" },
+          "state": { "type": "string" },
+          "district": { "type": "string" },
+          "label": { "type": "string" },
+          "representatives": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RepresentativeSummary" }
+          }
+        },
+        "required": ["districtId", "state", "district", "representatives"]
+      },
+      "CommitteeSummary": {
+        "type": "object",
+        "properties": {
+          "systemCode": { "type": "string" },
+          "name": { "type": "string" },
+          "chamber": { "type": "string" },
+          "type": { "type": "string", "nullable": true },
+          "url": { "type": "string" }
+        },
+        "required": ["systemCode", "name", "chamber"]
+      },
+      "CommitteeDetail": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "chamber": { "type": "string" },
+          "type": { "type": "string", "nullable": true },
+          "jurisdiction": { "type": "string", "nullable": true },
+          "url": { "type": "string", "nullable": true },
+          "chair": { "type": "object", "nullable": true },
+          "rankingMember": { "type": "object", "nullable": true },
+          "members": { "type": "array", "items": { "type": "object" } },
+          "subcommittees": { "type": "array", "items": { "type": "object" } },
+          "lastUpdated": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "name", "chamber"]
+      },
+      "IndexResponse": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "description": { "type": "string" },
+          "endpoints": { "type": "object" },
+          "feeds": { "type": "object" },
+          "rateLimit": { "type": "object" },
+          "links": { "type": "object" },
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      },
+      "RepresentativeListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RepresentativeSummary" }
+          },
+          "pagination": { "$ref": "#/components/schemas/Pagination" },
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      },
+      "RepresentativeDetailResponse": {
+        "type": "object",
+        "properties": {
+          "data": { "$ref": "#/components/schemas/RepresentativeDetail" },
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      },
+      "BillListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BillSummary" }
+          },
+          "pagination": { "$ref": "#/components/schemas/Pagination" },
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      },
+      "BillDetailResponse": {
+        "type": "object",
+        "properties": {
+          "data": { "$ref": "#/components/schemas/BillDetail" },
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      },
+      "BillSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "data": { "$ref": "#/components/schemas/BillAISummary" },
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      },
+      "VoteDetailResponse": {
+        "type": "object",
+        "properties": {
+          "data": { "$ref": "#/components/schemas/VoteDetail" },
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      },
+      "DistrictDetailResponse": {
+        "type": "object",
+        "properties": {
+          "data": { "$ref": "#/components/schemas/DistrictDetail" },
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      },
+      "CommitteeListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CommitteeSummary" }
+          },
+          "pagination": { "$ref": "#/components/schemas/Pagination" },
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      },
+      "CommitteeDetailResponse": {
+        "type": "object",
+        "properties": {
+          "data": { "$ref": "#/components/schemas/CommitteeDetail" },
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      },
+      "ChangelogResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "currentVersion": { "type": "string" },
+              "versions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "version": { "type": "string" },
+                    "date": { "type": "string", "format": "date" },
+                    "changes": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid request parameters",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/V1Error" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/V1Error" }
+          }
+        }
+      },
+      "BadGateway": {
+        "description": "Upstream data source error",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/V1Error" }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "Service temporarily unavailable",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/V1Error" }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "Rate limit exceeded",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "schema": { "type": "integer" },
+            "description": "Maximum requests per window"
+          },
+          "X-RateLimit-Remaining": {
+            "schema": { "type": "integer" },
+            "description": "Remaining requests in current window"
+          },
+          "X-RateLimit-Reset": {
+            "schema": { "type": "integer" },
+            "description": "Unix timestamp when window resets"
+          },
+          "Retry-After": {
+            "schema": { "type": "integer" },
+            "description": "Seconds until rate limit resets"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/V1Error" }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "Index", "description": "API discovery and versioning" },
+    { "name": "Representatives", "description": "Members of Congress" },
+    { "name": "Bills", "description": "Legislation and AI summaries" },
+    { "name": "Votes", "description": "Roll-call votes" },
+    { "name": "Districts", "description": "Congressional districts" },
+    { "name": "Committees", "description": "Congressional committees" }
+  ]
+}

@@ -83,9 +83,11 @@ export async function GET(
       title: `${committee.name} — CIV.IQ`,
       subtitle: `Activity and membership for the ${committee.name}`,
       link: `${baseUrl}/committee/${committeeId}`,
+      selfLink: `${baseUrl}/api/feed/committee/${committeeId}`,
       updated: entries.length > 0 && entries[0] ? entries[0].updated : now,
       author: { name: 'CIV.IQ', uri: baseUrl },
       icon: `${baseUrl}/favicon.ico`,
+      rights: 'Data sourced from Congress.gov. MIT License.',
     };
 
     const xml = generateAtomFeed(feedConfig, entries);

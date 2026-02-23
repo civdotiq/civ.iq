@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateAtomFeed } from '@/lib/feeds/atom-generator';
 import type { AtomFeedConfig, AtomEntry } from '@/lib/feeds/atom-generator';
 import { getAllEnhancedRepresentatives } from '@/features/representatives/services/congress.service';
+import { getCachedDistrictImpactEntries } from '@/lib/feeds/district-impact-feed-helper';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -82,6 +83,14 @@ export async function GET(
       }
     }
 
+    // District impact entries (read-only from cache, never triggers AI)
+    try {
+      const impactEntries = await getCachedDistrictImpactEntries(districtId.toUpperCase(), baseUrl);
+      entries.push(...impactEntries);
+    } catch {
+      // Impacts unavailable — feed continues without them
+    }
+
     // Sort by date newest first
     entries.sort((a, b) => b.updated.getTime() - a.updated.getTime());
 
@@ -90,9 +99,11 @@ export async function GET(
       title: `${state} ${districtLabel} — CIV.IQ`,
       subtitle: `Congressional representatives and activity for ${state} ${districtLabel}`,
       link: `${baseUrl}/districts/${districtId}`,
+      selfLink: `${baseUrl}/api/feed/district/${districtId}`,
       updated: entries.length > 0 && entries[0] ? entries[0].updated : now,
       author: { name: 'CIV.IQ', uri: baseUrl },
       icon: `${baseUrl}/favicon.ico`,
+      rights: 'Data sourced from Congress.gov. MIT License.',
     };
 
     const xml = generateAtomFeed(feedConfig, entries);

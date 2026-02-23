@@ -112,9 +112,11 @@ export async function GET(
       title: `${billTitle} — CIV.IQ`,
       subtitle: `Status updates and actions for ${type.toUpperCase()} ${billNumber}`,
       link: `${baseUrl}/bill/${billId}`,
+      selfLink: `${baseUrl}/api/feed/bill/${billId}`,
       updated: entries.length > 0 && entries[0] ? entries[0].updated : now,
       author: { name: 'CIV.IQ', uri: baseUrl },
       icon: `${baseUrl}/favicon.ico`,
+      rights: 'Data sourced from Congress.gov. MIT License.',
     };
 
     const xml = generateAtomFeed(feedConfig, entries);

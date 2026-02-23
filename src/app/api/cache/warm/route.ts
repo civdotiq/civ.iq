@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 30; // Cache warming can take time
+export const maxDuration = 60; // Cache warming can take time
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -35,43 +35,73 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const results: { endpoint: string; success: boolean; duration: number; error?: string }[] = [];
 
-    // Warm districts/all cache
-    const districtStart = Date.now();
-    try {
-      const response = await fetch(`${baseUrl}/api/districts/all?bust=true`, {
-        headers: {
-          'User-Agent': 'CacheWarmer/1.0',
-        },
-      });
+    // Endpoints to warm — ordered by priority
+    const endpoints = [
+      '/api/districts/all?bust=true',
+      '/api/v1/representatives',
+      '/api/v1/committees',
+      '/api/v1/bills?limit=50',
+      '/api/feed/bills/latest',
+    ];
 
-      if (response.ok) {
-        results.push({
-          endpoint: '/api/districts/all',
-          success: true,
-          duration: Date.now() - districtStart,
+    // Top congressional leaders — warm their member feeds to pre-cache votes + bills
+    const leaderBioguideIds = [
+      'J000307', // Mike Johnson (Speaker)
+      'J000174', // Hakeem Jeffries (Minority Leader)
+      'T000278', // John Thune (Senate Majority Leader)
+      'S000148', // Chuck Schumer (Senate Minority Leader)
+      'S001172', // Steve Scalise (Majority Leader)
+      'C000880', // Mike Crapo (Senate Pro Tempore)
+      'D000197', // Diana DeGette (Senior Whip)
+      'D000399', // Lloyd Doggett
+      'C001075', // Tom Cotton
+      'G000386', // Chuck Grassley
+      'P000197', // Nancy Pelosi
+      'M000355', // Mitch McConnell
+      'W000437', // Roger Wicker
+      'M001111', // Patty Murray
+      'K000367', // Amy Klobuchar
+      'C001056', // John Cornyn
+      'D000618', // Steve Daines
+      'C001098', // Ted Cruz
+      'W000817', // Elizabeth Warren
+      'S000033', // Bernie Sanders
+    ];
+
+    for (const bioguideId of leaderBioguideIds) {
+      endpoints.push(`/api/feed/member/${bioguideId}`);
+    }
+
+    // Warm each endpoint sequentially to avoid overwhelming upstream APIs
+    for (const endpoint of endpoints) {
+      const epStart = Date.now();
+      try {
+        const response = await fetch(`${baseUrl}${endpoint}`, {
+          headers: { 'User-Agent': 'CacheWarmer/1.0' },
         });
-        logger.info('Cache warmed successfully', {
-          endpoint: '/api/districts/all',
-          duration: Date.now() - districtStart,
-        });
-      } else {
+
         results.push({
-          endpoint: '/api/districts/all',
+          endpoint,
+          success: response.ok,
+          duration: Date.now() - epStart,
+          ...(response.ok ? {} : { error: `HTTP ${response.status}` }),
+        });
+
+        if (response.ok) {
+          logger.info('Cache warmed successfully', {
+            endpoint,
+            duration: Date.now() - epStart,
+          });
+        }
+      } catch (error) {
+        results.push({
+          endpoint,
           success: false,
-          duration: Date.now() - districtStart,
-          error: `HTTP ${response.status}`,
+          duration: Date.now() - epStart,
+          error: (error as Error).message,
         });
+        logger.error('Failed to warm cache', error as Error, { endpoint });
       }
-    } catch (error) {
-      results.push({
-        endpoint: '/api/districts/all',
-        success: false,
-        duration: Date.now() - districtStart,
-        error: (error as Error).message,
-      });
-      logger.error('Failed to warm cache', error as Error, {
-        endpoint: '/api/districts/all',
-      });
     }
 
     const totalDuration = Date.now() - startTime;

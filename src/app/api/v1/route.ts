@@ -143,6 +143,11 @@ export async function GET(): Promise<NextResponse> {
         'X-RateLimit-Reset': 'Unix timestamp when window resets',
       },
     },
+    links: {
+      documentation: 'https://civ.iq/docs/api',
+      openapi: 'https://civ.iq/openapi.json',
+      changelog: `${baseUrl}/changelog`,
+    },
     meta: {
       apiVersion: 'v1',
       timestamp: new Date().toISOString(),

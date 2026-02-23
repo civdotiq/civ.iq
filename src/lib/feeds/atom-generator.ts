@@ -17,6 +17,7 @@ export interface AtomFeedConfig {
   title: string;
   subtitle?: string;
   link: string;
+  selfLink?: string;
   updated: Date;
   author?: {
     name: string;
@@ -83,7 +84,7 @@ function generateFeedHeader(config: AtomFeedConfig): string {
     `  <title>${escapeXml(config.title)}</title>`,
     `  <updated>${formatAtomDate(config.updated)}</updated>`,
     `  <link href="${escapeXml(config.link)}" rel="alternate" type="text/html"/>`,
-    `  <link href="${escapeXml(config.link)}" rel="self" type="application/atom+xml"/>`,
+    `  <link href="${escapeXml(config.selfLink || config.link)}" rel="self" type="application/atom+xml"/>`,
   ];
 
   if (config.subtitle) {
@@ -205,6 +206,7 @@ export function createRepresentativeFeedConfig(
     title: `${name} (${party}-${state}) - Activity Feed | CIV.IQ`,
     subtitle: `Legislative activity, votes, and news for ${name}`,
     link: `${baseUrl}/representative/${bioguideId}`,
+    selfLink: `${baseUrl}/api/feed/member/${bioguideId}`,
     updated: new Date(),
     author: {
       name: 'CIV.IQ',
@@ -212,7 +214,7 @@ export function createRepresentativeFeedConfig(
     },
     icon: `${baseUrl}/favicon.ico`,
     logo: `${baseUrl}/images/civiq-logo.png`,
-    rights: `Data sourced from Congress.gov, FEC, and other government APIs`,
+    rights: 'Data sourced from Congress.gov, FEC, and other government APIs. MIT License.',
   };
 }
 
@@ -227,6 +229,7 @@ export function createBillsFeedConfig(): AtomFeedConfig {
     title: 'Latest Bills | CIV.IQ',
     subtitle: 'Recently introduced and updated legislation in Congress',
     link: `${baseUrl}/bills`,
+    selfLink: `${baseUrl}/api/feed/bills/latest`,
     updated: new Date(),
     author: {
       name: 'CIV.IQ',
@@ -234,7 +237,7 @@ export function createBillsFeedConfig(): AtomFeedConfig {
     },
     icon: `${baseUrl}/favicon.ico`,
     logo: `${baseUrl}/images/civiq-logo.png`,
-    rights: 'Data sourced from Congress.gov',
+    rights: 'Data sourced from Congress.gov. MIT License.',
   };
 }
 
@@ -249,6 +252,7 @@ export function createFloorFeedConfig(): AtomFeedConfig {
     title: 'Congressional Floor Activity | CIV.IQ',
     subtitle: 'House and Senate floor schedule and votes',
     link: `${baseUrl}/floor`,
+    selfLink: `${baseUrl}/api/feed/floor`,
     updated: new Date(),
     author: {
       name: 'CIV.IQ',
@@ -256,6 +260,6 @@ export function createFloorFeedConfig(): AtomFeedConfig {
     },
     icon: `${baseUrl}/favicon.ico`,
     logo: `${baseUrl}/images/civiq-logo.png`,
-    rights: 'Data sourced from Congress.gov',
+    rights: 'Data sourced from Congress.gov. MIT License.',
   };
 }
