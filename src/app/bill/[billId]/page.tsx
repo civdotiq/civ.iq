@@ -35,6 +35,11 @@ export async function generateMetadata({ params }: BillPageProps): Promise<Metad
   return {
     title: `${title} | CIV.IQ`,
     description,
+    alternates: {
+      types: {
+        'application/atom+xml': `/api/feed/bill/${billId}`,
+      },
+    },
     openGraph: {
       title,
       description,

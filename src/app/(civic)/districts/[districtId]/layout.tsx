@@ -47,9 +47,17 @@ export async function generateMetadata({
   const title = `${stateName} ${districtLabel} | Congressional District | CIV.IQ`;
   const description = `Explore ${stateName}'s ${districtLabel} congressional district. View demographics, current representative, voting history, and campaign finance data.`;
 
+  // Build canonical feed URL for hyphenated format
+  const feedDistrictId = `${parsed.state}-${parsed.district}`;
+
   return {
     title,
     description,
+    alternates: {
+      types: {
+        'application/atom+xml': `/api/feed/district/${feedDistrictId}`,
+      },
+    },
     openGraph: {
       title,
       description,

@@ -59,6 +59,26 @@ function getRatelimiters(): Map<string, Ratelimit> | null {
 
   try {
     ratelimiters = new Map([
+      // Public API v1: 60 requests per minute (open endpoints, stricter limit)
+      [
+        '/api/v1/',
+        new Ratelimit({
+          redis: redisInstance,
+          limiter: Ratelimit.slidingWindow(60, '1 m'),
+          prefix: 'ratelimit:v1',
+          analytics: true,
+        }),
+      ],
+      // Public feeds: 60 requests per minute
+      [
+        '/api/feed/',
+        new Ratelimit({
+          redis: redisInstance,
+          limiter: Ratelimit.slidingWindow(60, '1 m'),
+          prefix: 'ratelimit:feed',
+          analytics: true,
+        }),
+      ],
       // API routes: 100 requests per minute (sliding window)
       [
         '/api/',
@@ -160,6 +180,8 @@ interface RateLimitConfig {
 }
 
 const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
+  '/api/v1/': { requests: 60, windowMs: 60000 },
+  '/api/feed/': { requests: 60, windowMs: 60000 },
   '/api/': { requests: 100, windowMs: 60000 },
   '/api/representatives': { requests: 60, windowMs: 60000 },
   '/api/district-map': { requests: 30, windowMs: 60000 },
@@ -200,6 +222,23 @@ export async function middleware(request: NextRequest) {
       );
     }
 
+    // Handle CORS preflight for public endpoints (/api/v1/ and /api/feed/)
+    const isPublicEndpoint =
+      request.nextUrl.pathname.startsWith('/api/v1/') ||
+      request.nextUrl.pathname.startsWith('/api/feed/');
+
+    if (isPublicEndpoint && request.method === 'OPTIONS') {
+      return new NextResponse(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Accept',
+          'Access-Control-Max-Age': '86400',
+        },
+      });
+    }
+
     // Apply rate limiting (now async with Upstash)
     const rateLimitResult = await checkRateLimit(request, clientInfo.ip);
     if (!rateLimitResult.allowed) {
@@ -229,6 +268,12 @@ export async function middleware(request: NextRequest) {
     Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
+
+    // Add CORS headers for public endpoints
+    if (isPublicEndpoint) {
+      response.headers.set('Access-Control-Allow-Origin', '*');
+      response.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    }
 
     // Add rate limit headers
     response.headers.set('X-RateLimit-Limit', rateLimitResult.limit.toString());
@@ -364,7 +409,13 @@ async function checkRateLimit(
   let ratelimiterKey = 'default';
   let configKey = 'default';
 
-  for (const path of ['/api/district-map', '/api/representatives', '/api/']) {
+  for (const path of [
+    '/api/v1/',
+    '/api/feed/',
+    '/api/district-map',
+    '/api/representatives',
+    '/api/',
+  ]) {
     if (url.pathname.startsWith(path)) {
       ratelimiterKey = path;
       configKey = path;

@@ -271,6 +271,11 @@ export async function generateMetadata({ params }: { params: Promise<{ bioguideI
     return {
       title,
       description,
+      alternates: {
+        types: {
+          'application/atom+xml': `/api/feed/member/${bioguideId}`,
+        },
+      },
       openGraph: {
         title: `${representative.name} - Federal ${representative.role}`,
         description,
