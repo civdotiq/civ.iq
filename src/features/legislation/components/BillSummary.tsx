@@ -272,6 +272,47 @@ export function BillSummarySkeleton({ className = '' }: BillSummarySkeletonProps
   );
 }
 
+interface BillSummaryStreamingProps {
+  streamingText: string;
+  className?: string;
+}
+
+export function BillSummaryStreaming({ streamingText, className = '' }: BillSummaryStreamingProps) {
+  return (
+    <div className={`bg-white border border-gray-200 border-2 border-black ${className}`}>
+      {/* Header */}
+      <div className="p-4 border-b border-gray-100">
+        <div className="flex items-center gap-2 mb-2">
+          <Brain className="h-5 w-5 text-blue-600" />
+          <span className="text-sm font-medium text-blue-600">AI-Generated Summary</span>
+          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 text-xs font-medium">
+            Generating...
+          </span>
+        </div>
+      </div>
+
+      {/* Streaming text */}
+      <div className="p-4">
+        <div className="bg-blue-50 p-4">
+          <h4 className="text-sm font-medium text-blue-900 mb-2">What This Bill Does</h4>
+          <p className="text-blue-800 leading-relaxed whitespace-pre-wrap">
+            {streamingText}
+            <span className="inline-block w-1.5 h-4 bg-blue-600 ml-0.5 animate-pulse align-text-bottom" />
+          </p>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="px-4 py-3 bg-white border-t border-gray-100">
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <AlertCircle className="h-3 w-3" />
+          <span>AI-generated summary in progress</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface BillSummaryErrorProps {
   error: string;
   onRetry?: () => void;

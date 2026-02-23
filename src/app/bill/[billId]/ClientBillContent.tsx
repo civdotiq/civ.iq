@@ -22,10 +22,10 @@ import RepresentativePhoto from '@/features/representatives/components/Represent
 import { BillJourneyTimeline } from '@/features/legislation/components/BillJourneyTimeline';
 import {
   BillSummary as BillSummaryDisplay,
-  BillSummarySkeleton,
+  BillSummaryStreaming,
   BillSummaryError,
 } from '@/features/legislation/components/BillSummary';
-import type { BillSummary as BillSummaryType } from '@/features/legislation/services/ai/bill-summarizer';
+import { useBillSummaryStream } from '@/features/legislation/hooks/useBillSummaryStream';
 import {
   DistrictImpactDisplay,
   DistrictImpactSkeleton,
@@ -43,14 +43,19 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
   const [bill, setBill] = useState<Bill | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [aiSummary, setAiSummary] = useState<BillSummaryType | null>(null);
-  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
-  const [aiSummaryError, setAiSummaryError] = useState<string | null>(null);
   const [district, setDistrict] = useState<string | null>(null);
   const [districtImpact, setDistrictImpact] = useState<DistrictImpactType | null>(null);
   const [districtImpactLoading, setDistrictImpactLoading] = useState(false);
   const [districtImpactError, setDistrictImpactError] = useState<string | null>(null);
   const searchParams = useSearchParams();
+
+  // Streaming AI summary hook — only enabled after bill loads
+  const {
+    summary: aiSummary,
+    streamingText: aiStreamingText,
+    isStreaming: aiIsStreaming,
+    error: aiSummaryError,
+  } = useBillSummaryStream(billId, !!bill);
 
   useEffect(() => {
     async function fetchBill() {
@@ -129,33 +134,6 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
       cancelled = true;
     };
   }, [bill, billId, district]);
-
-  useEffect(() => {
-    if (!bill) return;
-    let cancelled = false;
-
-    async function fetchAISummary() {
-      try {
-        setAiSummaryLoading(true);
-        setAiSummaryError(null);
-        const response = await fetch(`/api/bill/${billId}/summary`);
-        if (!response.ok) return;
-        const data = await response.json();
-        if (!cancelled && data.summary) {
-          setAiSummary(data.summary);
-        }
-      } catch {
-        if (!cancelled) setAiSummaryError('AI summary unavailable');
-      } finally {
-        if (!cancelled) setAiSummaryLoading(false);
-      }
-    }
-
-    fetchAISummary();
-    return () => {
-      cancelled = true;
-    };
-  }, [bill, billId]);
 
   if (loading) {
     return (
@@ -294,9 +272,11 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           </div>
 
           {/* AI-Generated Plain English Summary */}
-          {aiSummaryLoading && <BillSummarySkeleton />}
-          {aiSummaryError && !aiSummaryLoading && <BillSummaryError error={aiSummaryError} />}
-          {aiSummary && !aiSummaryLoading && <BillSummaryDisplay summary={aiSummary} />}
+          {aiIsStreaming && aiStreamingText && (
+            <BillSummaryStreaming streamingText={aiStreamingText} />
+          )}
+          {aiSummaryError && !aiIsStreaming && <BillSummaryError error={aiSummaryError} />}
+          {aiSummary && !aiIsStreaming && <BillSummaryDisplay summary={aiSummary} />}
 
           {/* District Impact Analysis */}
           <DistrictSelector

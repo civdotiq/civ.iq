@@ -15,7 +15,7 @@
  *   if (process.env.OLLAMA_BASE_URL) return ollama(modelId);
  */
 
-import { generateText, type LanguageModel } from 'ai';
+import { generateText, streamText, type LanguageModel } from 'ai';
 import { google } from '@ai-sdk/google';
 import logger from '@/lib/logging/simple-logger';
 
@@ -67,4 +67,28 @@ export async function generateAIText(
   });
 
   return result.text;
+}
+
+export function streamAIText(
+  systemPrompt: string,
+  userPrompt: string,
+  options: GenerateAITextOptions = {}
+) {
+  const { temperature = 0.3, maxTokens = 1000 } = options;
+
+  const model = getModel();
+
+  logger.info('AI text stream started', {
+    provider: process.env.GOOGLE_GENERATIVE_AI_API_KEY ? 'google' : 'unknown',
+    model: process.env.AI_MODEL || 'gemini-2.0-flash',
+    operation: 'ai_stream_text',
+  });
+
+  return streamText({
+    model,
+    system: systemPrompt,
+    prompt: userPrompt,
+    temperature,
+    maxOutputTokens: maxTokens,
+  });
 }

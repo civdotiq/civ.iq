@@ -248,6 +248,55 @@ ${PLAIN_LANGUAGE_RULES}
   }
 
   /**
+   * Build a plain-text streaming summary prompt (no JSON output).
+   * Used by the streaming route to produce token-by-token text.
+   */
+  static buildStreamingSummaryPrompt(
+    billText: string,
+    billMetadata: { number: string; title: string; congress: number; chamber: string }
+  ): { system: string; user: string } {
+    return {
+      system: `You summarize U.S. legislation for CIV.IQ. ${PLAIN_LANGUAGE_SYSTEM_PROMPT.replace('Output valid JSON only.', 'Output plain text only. Do not output JSON.')}`,
+      user: `BILL: ${billMetadata.number} - ${billMetadata.title}
+
+BILL TEXT:
+${billText}
+
+Write a clear, simple summary of this bill in 2-4 paragraphs (300 words max). Explain what the bill does and why it matters.
+
+${PLAIN_LANGUAGE_RULES}`,
+    };
+  }
+
+  /**
+   * Build a structured extraction prompt that returns JSON fields.
+   * Used in parallel with streaming to get keyPoints, whoItAffects, etc.
+   */
+  static buildStructuredExtractionPrompt(
+    billText: string,
+    billMetadata: { number: string; title: string; congress: number; chamber: string }
+  ): { system: string; user: string } {
+    return {
+      system: `You summarize U.S. legislation for CIV.IQ. ${PLAIN_LANGUAGE_SYSTEM_PROMPT}`,
+      user: `BILL: ${billMetadata.number} - ${billMetadata.title}
+
+BILL TEXT:
+${billText}
+
+Extract structured data about this bill. Respond with ONLY this JSON (no markdown, no extra text):
+{
+  "keyPoints": ["3-5 key points in simple language"],
+  "whoItAffects": ["Who this bill affects - regular people, businesses, students, etc."],
+  "whatItDoes": "One sentence explaining the main action",
+  "whyItMatters": "Why regular people should care about this bill",
+  "confidence": 0.95
+}
+
+${PLAIN_LANGUAGE_RULES}`,
+    };
+  }
+
+  /**
    * Call AI provider for summarization (Google Gemini via Vercel AI SDK)
    */
   private static async callAIProvider(prompt: string): Promise<string> {
