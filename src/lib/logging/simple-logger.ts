@@ -36,7 +36,18 @@ function formatLogLine(level: string, message: unknown, rest: unknown[]): string
     }
   }
 
-  return JSON.stringify(entry);
+  try {
+    return JSON.stringify(entry);
+  } catch {
+    const seen = new WeakSet();
+    return JSON.stringify(entry, (_key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) return '[Circular]';
+        seen.add(value);
+      }
+      return value;
+    });
+  }
 }
 
 const logger = {

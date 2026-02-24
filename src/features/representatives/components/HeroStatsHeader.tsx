@@ -148,6 +148,13 @@ export function HeroStatsHeader({
 
   return (
     <div className={`bg-white border-2 border-black relative ${getAccentBarClass()}`}>
+      {representative.isHistorical && (
+        <div className="bg-gray-100 border-b-2 border-black px-4 py-3 text-center">
+          <p className="text-sm font-medium text-gray-700">
+            Former Member of Congress — No longer serving
+          </p>
+        </div>
+      )}
       <div className="p-4 sm:p-6 md:p-8">
         {/* Top Section: Photo and Name */}
         <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] items-center gap-4 sm:gap-6 md:gap-8 mb-6">
