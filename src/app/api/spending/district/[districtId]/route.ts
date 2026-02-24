@@ -232,7 +232,7 @@ export async function GET(
           state,
           districtNumber: district,
           fiscalYear,
-          totalSpending: result.aggregate?.total ?? 0,
+          totalSpending: result.aggregate?.total ?? result.contractTotal + result.grantTotal,
           contractSpending: result.contractTotal,
           grantSpending: result.grantTotal,
           loanSpending: 0, // Would need separate query
