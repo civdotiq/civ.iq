@@ -682,6 +682,17 @@ export function getAgenciesForCommittees(committeeNames: string[]): AgencyInfo[]
 }
 
 /**
+ * Get committees that oversee a given agency (reverse lookup).
+ * Searches ALL_COMMITTEE_MAPPINGS for entries whose agencies array
+ * contains the given slug.
+ */
+export function getCommitteesForAgency(agencySlug: string): CommitteeMapping[] {
+  return ALL_COMMITTEE_MAPPINGS.filter(mapping =>
+    mapping.agencies.some(agency => agency.slug === agencySlug)
+  );
+}
+
+/**
  * Get all topics for multiple committees
  */
 export function getTopicsForCommittees(committeeNames: string[]): string[] {
