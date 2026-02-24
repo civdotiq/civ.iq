@@ -1061,6 +1061,422 @@ Advanced search across representatives, bills, and committees.
 }
 ```
 
+### Cross-Domain Join Endpoints
+
+Join endpoints connect CIV.IQ's isolated data domains — bills, spending, votes, committees, campaign finance, regulations, and hearings — into a linked civic intelligence graph.
+
+All join responses include a standard `metadata` envelope:
+
+```json
+{
+  "metadata": {
+    "generatedAt": "2026-02-23T12:00:00.000Z",
+    "dataSources": ["congress.gov", "usaspending.gov"],
+    "joinType": "bill-spending",
+    "dataQuality": "complete|partial|degraded"
+  }
+}
+```
+
+#### GET /api/bill/[billId]/votes
+
+Get enriched vote data for a bill including pass/fail summary.
+
+**Parameters:**
+
+- `billId` (path): Bill identifier (e.g., `119-hr-1`)
+
+**Cache:** 24h (historical bills: 1 year)
+
+**Response:**
+
+```json
+{
+  "billId": "string",
+  "billTitle": "string",
+  "votes": [
+    {
+      "date": "string",
+      "chamber": "House|Senate",
+      "rollNumber": "number",
+      "question": "string",
+      "result": "string",
+      "url": "string"
+    }
+  ],
+  "summary": {
+    "totalVotes": "number",
+    "passedCount": "number",
+    "failedCount": "number"
+  },
+  "metadata": {}
+}
+```
+
+#### GET /api/bill/[billId]/spending
+
+Connect a bill to related federal spending via its policyArea and committee assignments.
+
+**Parameters:**
+
+- `billId` (path): Bill identifier (e.g., `119-hr-1`)
+- `limit` (query, optional): Max awards to return (default: 20, max: 50)
+
+**Cache:** 6h
+
+**Connection Logic:**
+
+1. Fetch bill → extract `policyArea` + `committees[]`
+2. Map policyArea → agency slugs (via policy-area-map)
+3. Map committees → agency slugs (via committee-agency-map)
+4. Query USAspending for awards from those agencies
+
+**Response:**
+
+```json
+{
+  "billId": "string",
+  "billTitle": "string",
+  "policyArea": "string|null",
+  "relatedAgencies": ["department-of-defense (direct)", "department-of-energy (inferred)"],
+  "spending": {
+    "awards": [
+      {
+        "id": "string",
+        "recipientName": "string",
+        "amount": "number",
+        "type": "contract|grant",
+        "agency": "string",
+        "startDate": "string",
+        "description": "string",
+        "url": "string"
+      }
+    ],
+    "totalAmount": "number",
+    "awardCount": "number"
+  },
+  "metadata": {}
+}
+```
+
+#### GET /api/spending/agency/[agencySlug]/bills
+
+Reverse of bill→spending. Find recent bills related to a USAspending agency.
+
+**Parameters:**
+
+- `agencySlug` (path): USAspending agency slug (e.g., `department-of-defense`)
+- `limit` (query, optional): Max bills (default: 10, max: 30)
+
+**Cache:** 2h
+
+**Connection Logic:**
+
+1. Look up oversight committees for this agency
+2. Find policyAreas that reference this agency
+3. Fetch recent bills from Congress.gov, post-filter by matching policyArea
+4. Fall back to topic-keyword title matching for `inferred` connections
+
+**Response:**
+
+```json
+{
+  "agencySlug": "string",
+  "oversightCommittees": [{ "code": "HSAS", "name": "Armed Services", "chamber": "House" }],
+  "relatedPolicyAreas": ["Armed Forces and National Security"],
+  "bills": [
+    {
+      "id": "119-hr-1234",
+      "title": "string",
+      "type": "HR",
+      "number": "1234",
+      "congress": 119,
+      "policyArea": "string|null",
+      "introducedDate": "string",
+      "latestActionDate": "string",
+      "latestActionText": "string",
+      "connectionStrength": "direct|inferred",
+      "url": "string"
+    }
+  ],
+  "metadata": {}
+}
+```
+
+#### GET /api/representative/[bioguideId]/finance-jurisdiction
+
+The "money and power" join. Shows where a representative's campaign donors overlap with their committee jurisdiction.
+
+**Parameters:**
+
+- `bioguideId` (path): Congress bioguide identifier
+
+**Cache:** 12h
+
+**Connection Logic:**
+
+1. Get rep's committees → map to topics → map to IndustrySector values
+2. Get rep's FEC contributions → categorize by IndustrySector
+3. Cross-reference: which donor sectors overlap with committee jurisdiction?
+
+**Response:**
+
+```json
+{
+  "committeeCode": "string",
+  "committeeName": "string",
+  "jurisdictionTopics": ["energy", "health", "environment"],
+  "industrySectors": ["ENERGY_NATURAL_RESOURCES", "HEALTH"],
+  "members": [
+    {
+      "bioguideId": "string",
+      "name": "string",
+      "party": "string",
+      "topSectors": [{ "sector": "HEALTH", "amount": 200000 }]
+    }
+  ],
+  "metadata": {}
+}
+```
+
+#### GET /api/committee/[committeeId]/regulations
+
+Find Federal Register documents related to a committee's oversight domain.
+
+**Parameters:**
+
+- `committeeId` (path): Committee code (e.g., `HSIF`, `SSEG`)
+- `limit` (query, optional): Max items per category (default: 10, max: 30)
+
+**Cache:** 3h
+
+**Connection Logic:**
+
+1. Look up committee in committee-agency-map → agencies + topics
+2. For each agency, fetch proposed rules, final rules, and open comment periods
+3. Filter by topic keywords for relevance
+4. Group into three categories sorted by urgency
+
+**Response:**
+
+```json
+{
+  "committeeCode": "HSIF",
+  "committeeName": "Energy and Commerce",
+  "chamber": "House",
+  "oversightAgencies": [
+    { "name": "Department of Energy", "slug": "department-of-energy", "abbreviation": "DOE" }
+  ],
+  "activeRulemakings": [],
+  "openCommentPeriods": [],
+  "recentFinalRules": [],
+  "summary": {
+    "totalDocuments": "number",
+    "openComments": "number",
+    "urgentComments": "number"
+  },
+  "metadata": {}
+}
+```
+
+#### GET /api/govinfo/hearings/connections
+
+Connect congressional hearings to committees, bills, or policy areas via keyword matching.
+
+**Query Parameters (at least one required):**
+
+- `committeeId` (optional): Committee code (e.g., `HSAS`)
+- `billId` (optional): Bill identifier (e.g., `119-hr-1`)
+- `policyArea` (optional): Congress.gov policy area string
+- `limit` (optional): Max results (default: 20, max: 50)
+
+**Cache:** 2h
+
+**Response:**
+
+```json
+{
+  "filter": {
+    "committeeId": "string|undefined",
+    "billId": "string|undefined",
+    "policyArea": "string|undefined"
+  },
+  "hearings": [
+    {
+      "id": "string",
+      "title": "string",
+      "type": "hearing",
+      "congress": 119,
+      "chamber": "House|Senate|Joint",
+      "dateIssued": "string",
+      "relevanceScore": "number",
+      "matchedTopics": ["defense", "military"],
+      "connectionType": "committee|bill|policy-area",
+      "detailsUrl": "string",
+      "pdfUrl": "string"
+    }
+  ],
+  "summary": {
+    "totalMatches": "number",
+    "topTopics": ["string"]
+  },
+  "metadata": {}
+}
+```
+
+#### GET /api/search/policy-area
+
+Cross-domain search by Congress.gov policyArea. Returns related items from four domains in parallel.
+
+**Query Parameters:**
+
+- `policyArea` (required): Congress.gov policy area string (e.g., `Health`)
+- `limit` (optional): Max items per domain (default: 10, max: 30)
+
+**Cache:** 2h
+
+**Response:**
+
+```json
+{
+  "policyArea": "Health",
+  "bills": [
+    {
+      "id": "119-hr-1234",
+      "title": "string",
+      "status": "introduced|referred|reported|passed_house|passed_senate|enacted|...",
+      "introducedDate": "string"
+    }
+  ],
+  "regulations": [],
+  "spending": {
+    "totalAmount": "number",
+    "topAgencies": [{ "name": "string", "amount": "number" }]
+  },
+  "committees": [{ "code": "HSIF", "name": "Energy and Commerce", "chamber": "House" }],
+  "metadata": {}
+}
+```
+
+#### GET /api/search/policy-area/list
+
+List all known Congress.gov policyArea values.
+
+**Cache:** 24h
+
+**Response:**
+
+```json
+{
+  "policyAreas": ["Agriculture and Food", "Armed Forces and National Security", "..."],
+  "count": 32,
+  "metadata": {
+    "generatedAt": "string",
+    "dataSource": "congress.gov"
+  }
+}
+```
+
+#### GET /api/bills/lifecycle
+
+Track recent bills filtered by lifecycle status and date range.
+
+**Query Parameters:**
+
+- `status` (optional): BillStatus value (`introduced`, `referred`, `reported`, `passed_house`, `passed_senate`, `passed_both`, `failed`, `enacted`, `vetoed`)
+- `since` (optional): ISO date or relative (`7d`, `30d`, `90d`) — default `7d`
+- `until` (optional): ISO date — default now
+- `chamber` (optional): `house` or `senate`
+- `limit` (optional): Max results (default: 20, max: 50)
+
+**Cache:** 1h
+
+**Response:**
+
+```json
+{
+  "filters": {
+    "status": "string|null",
+    "since": "2026-02-16",
+    "until": "2026-02-23",
+    "chamber": "string|null"
+  },
+  "bills": [
+    {
+      "id": "119-hr-1234",
+      "title": "string",
+      "type": "HR",
+      "number": "1234",
+      "congress": 119,
+      "chamber": "House",
+      "status": "passed_house",
+      "introducedDate": "string",
+      "latestActionDate": "string",
+      "latestActionText": "string",
+      "policyArea": "string|null",
+      "url": "string"
+    }
+  ],
+  "statusCounts": {
+    "introduced": 45,
+    "referred": 30,
+    "passed_house": 5
+  },
+  "metadata": {}
+}
+```
+
+#### GET /api/district/[districtId]/bills
+
+Find bills relevant to a congressional district by cross-referencing spending, committees, and policy areas.
+
+**Parameters:**
+
+- `districtId` (path): District identifier (e.g., `MI-05`, `CA-12`, `AK-AL`)
+- `limit` (query, optional): Max results (default: 15, max: 30)
+
+**Cache:** 6h
+
+**Relevance Scoring:**
+
+- **+3**: Bill's policyArea maps to an agency with district spending
+- **+2**: Bill title matches representative's committee topics
+- **+1**: Bill title matches district spending topics
+
+**Response:**
+
+```json
+{
+  "districtId": "MI-05",
+  "state": "MI",
+  "district": "05",
+  "representativeName": "string|null",
+  "topAgencies": ["Department of Defense", "Department of Health and Human Services"],
+  "relevantPolicyAreas": ["Armed Forces and National Security", "Health"],
+  "bills": [
+    {
+      "id": "119-hr-1234",
+      "title": "string",
+      "type": "HR",
+      "number": "1234",
+      "congress": 119,
+      "status": "introduced",
+      "policyArea": "string|null",
+      "introducedDate": "string",
+      "latestActionDate": "string",
+      "latestActionText": "string",
+      "relevanceScore": 5,
+      "relevanceReasons": [
+        "Policy area \"Health\" linked to district spending",
+        "Matches representative's committee topics"
+      ],
+      "url": "string"
+    }
+  ],
+  "metadata": {}
+}
+```
+
 ### System
 
 #### GET /api/health
@@ -1271,6 +1687,17 @@ Responses are cached with appropriate TTLs:
 - News: 5 minutes
 - District data: 24 hours
 - Committee info: 6 hours
+- Join endpoints: 1-24 hours (varies by data volatility)
+  - Bill votes: 24h (historical: 1 year)
+  - Bill spending: 6h
+  - Agency bills: 2h
+  - Finance jurisdiction: 12h
+  - Committee regulations: 3h
+  - Hearings connections: 2h
+  - Policy area search: 2h
+  - Bill lifecycle: 1h
+  - District bills: 6h
+  - Policy area list: 24h
 
 ## Error Responses
 
@@ -1300,8 +1727,11 @@ Common error codes:
 
 All data comes from official government sources:
 
-- **Congress.gov** - Legislation, votes, members (119th Congress)
+- **Congress.gov** - Legislation, votes, members, committees (119th Congress)
 - **FEC.gov** - Campaign finance data
+- **USAspending.gov** - Federal contracts, grants, spending by agency/district
+- **Federal Register** - Proposed rules, final rules, open comment periods
+- **GovInfo.gov** - Congressional hearings and reports
 - **Census.gov** - Demographics, 2023+ district boundaries (TIGER/Line)
 - **Senate.gov** - Senate roll call votes
 - **GDELT** - News aggregation
