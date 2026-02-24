@@ -257,29 +257,29 @@ async function getServicesHealthProfile(districtId: string): Promise<ServicesHea
     const educationEstimates = getEducationEstimatesData();
     const healthcareEstimates = getHealthcareData();
 
-    // Combine all data sources
+    // Combine all data sources — use 0 when APIs fail (no fake data)
     const servicesProfile: ServicesHealthProfile = {
       education: {
         schoolDistrictPerformance:
           educationApiData.schoolDistrictPerformance ||
           educationEstimates.schoolDistrictPerformance ||
-          75,
-        graduationRate: educationApiData.graduationRate || educationEstimates.graduationRate || 80,
+          0,
+        graduationRate: educationApiData.graduationRate || educationEstimates.graduationRate || 0,
         collegeEnrollmentRate:
-          educationApiData.collegeEnrollmentRate || educationEstimates.collegeEnrollmentRate || 65,
+          educationApiData.collegeEnrollmentRate || educationEstimates.collegeEnrollmentRate || 0,
         federalEducationFunding:
           educationApiData.federalEducationFunding ||
           educationEstimates.federalEducationFunding ||
-          4000000,
+          0,
         teacherToStudentRatio:
-          educationApiData.teacherToStudentRatio || educationEstimates.teacherToStudentRatio || 16,
+          educationApiData.teacherToStudentRatio || educationEstimates.teacherToStudentRatio || 0,
       },
       healthcare: healthcareEstimates,
       publicHealth: {
-        preventableDiseaseRate: cdcData.preventableDiseaseRate || 250,
-        mentalHealthProviderRatio: cdcData.mentalHealthProviderRatio || 1.2,
-        substanceAbusePrograms: cdcData.substanceAbusePrograms || 15,
-        preventiveCareCoverage: cdcData.preventiveCareCoverage || 75,
+        preventableDiseaseRate: cdcData.preventableDiseaseRate || 0,
+        mentalHealthProviderRatio: cdcData.mentalHealthProviderRatio || 0,
+        substanceAbusePrograms: cdcData.substanceAbusePrograms || 0,
+        preventiveCareCoverage: cdcData.preventiveCareCoverage || 0,
       },
     };
 

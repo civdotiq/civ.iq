@@ -247,45 +247,19 @@ async function getGovernmentServicesProfile(
     const socialServicesData = getSocialServicesData();
     const federalFacilitiesData = getFederalFacilitiesData();
 
-    // Combine all data sources
+    // Combine all data sources — use 0/[] when APIs fail (no fake data)
     const servicesProfile: GovernmentServicesProfile = {
       federalInvestment: {
-        totalAnnualSpending: spendingData.totalAnnualSpending || 150000000,
-        contractsAndGrants: spendingData.contractsAndGrants || 125,
-        majorProjects: spendingData.majorProjects || [
-          {
-            title: 'Infrastructure Investment',
-            amount: 25000000,
-            agency: 'Department of Transportation',
-            description: 'Highway and bridge improvements',
-          },
-          {
-            title: 'Education Grants',
-            amount: 15000000,
-            agency: 'Department of Education',
-            description: 'Title I school funding',
-          },
-        ],
-        infrastructureInvestment: spendingData.infrastructureInvestment || 45000000,
+        totalAnnualSpending: spendingData.totalAnnualSpending || 0,
+        contractsAndGrants: spendingData.contractsAndGrants || 0,
+        majorProjects: spendingData.majorProjects || [],
+        infrastructureInvestment: spendingData.infrastructureInvestment || 0,
       },
       socialServices: socialServicesData,
       representation: {
-        billsAffectingDistrict: billsData.billsAffectingDistrict || [
-          {
-            billNumber: 'H.R. 1234',
-            title: 'Infrastructure Investment and Jobs Act',
-            status: 'Enacted',
-            impactLevel: 'High',
-          },
-          {
-            billNumber: 'S. 567',
-            title: 'Education Funding Authorization',
-            status: 'Committee Review',
-            impactLevel: 'Medium',
-          },
-        ],
+        billsAffectingDistrict: billsData.billsAffectingDistrict || [],
         federalFacilities: federalFacilitiesData,
-        appropriationsSecured: billsData.appropriationsSecured || 75000000,
+        appropriationsSecured: billsData.appropriationsSecured || 0,
       },
     };
 

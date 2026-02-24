@@ -220,14 +220,14 @@ async function getEconomicProfile(districtId: string): Promise<EconomicProfile> 
     // Get infrastructure data (returns zeros as no real API available)
     const infrastructureData = getInfrastructureData();
 
-    // Combine all data sources
+    // Combine all data sources — use 0/[] when APIs fail (no fake data)
     const economicProfile: EconomicProfile = {
       employment: {
-        unemploymentRate: blsData.unemploymentRate || 5.0,
-        laborForceParticipation: blsData.laborForceParticipation || 63.0,
-        jobGrowthRate: blsData.jobGrowthRate || 1.5,
-        majorIndustries: blsData.majorIndustries || ['Services', 'Manufacturing', 'Government'],
-        averageWage: blsData.averageWage || 50000,
+        unemploymentRate: blsData.unemploymentRate || 0,
+        laborForceParticipation: blsData.laborForceParticipation || 0,
+        jobGrowthRate: blsData.jobGrowthRate || 0,
+        majorIndustries: blsData.majorIndustries || [],
+        averageWage: blsData.averageWage || 0,
       },
       infrastructure: {
         ...infrastructureData,
@@ -235,10 +235,10 @@ async function getEconomicProfile(districtId: string): Promise<EconomicProfile> 
           fccData.digitalDivideIndex || infrastructureData.broadbandAvailability,
       },
       connectivity: {
-        fiberAvailability: fccData.fiberAvailability || 45,
-        averageDownloadSpeed: fccData.averageDownloadSpeed || 50,
-        averageUploadSpeed: fccData.averageUploadSpeed || 5,
-        digitalDivideIndex: fccData.digitalDivideIndex || 65,
+        fiberAvailability: fccData.fiberAvailability || 0,
+        averageDownloadSpeed: fccData.averageDownloadSpeed || 0,
+        averageUploadSpeed: fccData.averageUploadSpeed || 0,
+        digitalDivideIndex: fccData.digitalDivideIndex || 0,
       },
     };
 
