@@ -47,6 +47,11 @@ const BillsTab = dynamic(() => import('./BillsTab').then(mod => ({ default: mod.
   ssr: false,
 });
 
+const CivicAlignmentTab = dynamic(
+  () => import('./CivicAlignmentTab').then(mod => ({ default: mod.CivicAlignmentTab })),
+  { loading: TabLoadingSpinner, ssr: false }
+);
+
 interface SimpleRepresentativeProfileProps {
   representative: EnhancedRepresentative;
 }
@@ -141,6 +146,8 @@ function getDataSourcesForTab(tabId: string): Array<{
       return [fec];
     case 'news':
       return [googleNews];
+    case 'alignment':
+      return [congress, fec, legislators];
     default:
       return [congress, fec, legislators];
   }
@@ -345,6 +352,12 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
           icon: <NewsIcon className="w-4 h-4" />,
           description: 'Recent media coverage',
         },
+        {
+          id: 'alignment',
+          label: 'Civic Alignment',
+          icon: <StatisticsIcon className="w-4 h-4" />,
+          description: 'Cross-reference of donor sectors, votes, and district needs',
+        },
       ];
     }, [summaryData, batchData]);
 
@@ -394,6 +407,8 @@ export const SimpleRepresentativeProfile = React.memo<SimpleRepresentativeProfil
               className="-mx-6 -my-6 p-6"
             />
           );
+        case 'alignment':
+          return <CivicAlignmentTab bioguideId={representative.bioguideId} />;
         default:
           return <ContactInfoTab representative={representative} />;
       }

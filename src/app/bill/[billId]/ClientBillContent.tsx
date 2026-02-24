@@ -34,6 +34,7 @@ import {
 import { DistrictSelector } from '@/features/legislation/components/DistrictSelector';
 import type { DistrictImpact as DistrictImpactType } from '@/types/district-impact';
 import { useSearchParams } from 'next/navigation';
+import { BillSpendingSection } from '@/features/legislation/components/BillSpendingSection';
 
 interface ClientBillContentProps {
   billId: string;
@@ -526,6 +527,9 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
               </div>
             )}
           </div>
+
+          {/* Related Federal Spending */}
+          <BillSpendingSection billId={billId} />
 
           {/* Sponsor and Cosponsors */}
           <div className="bg-white border-2 border-black p-6">
