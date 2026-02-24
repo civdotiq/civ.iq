@@ -10,16 +10,14 @@ import {
   PieChart,
   Pie,
   Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
   BarChart,
   Bar,
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  Legend,
-  LineChart,
-  Line,
-  ResponsiveContainer,
 } from 'recharts';
 
 interface DistrictChartsProps {
@@ -35,6 +33,9 @@ interface DistrictChartsProps {
       poverty_rate: number;
       bachelor_degree_percent: number;
       urbanPercentage: number;
+      ageDistribution?: Array<{ bracket: string; count: number }>;
+      incomeDistribution?: Array<{ bracket: string; count: number }>;
+      employmentByIndustry?: Array<{ industry: string; count: number }>;
     };
     political: {
       cookPVI: string;
@@ -46,155 +47,100 @@ interface DistrictChartsProps {
   };
 }
 
-// Generate realistic age distribution data
-const generateAgeDistribution = (medianAge: number) => {
-  const baseDistribution = [
-    { age: '18-24', percent: 12 },
-    { age: '25-34', percent: 18 },
-    { age: '35-44', percent: 16 },
-    { age: '45-54', percent: 15 },
-    { age: '55-64', percent: 14 },
-    { age: '65+', percent: 25 },
-  ];
-
-  // Adjust based on median age
-  if (medianAge < 35) {
-    return [
-      { age: '18-24', percent: 16 },
-      { age: '25-34', percent: 22 },
-      { age: '35-44', percent: 19 },
-      { age: '45-54', percent: 16 },
-      { age: '55-64', percent: 13 },
-      { age: '65+', percent: 14 },
-    ];
-  } else if (medianAge > 45) {
-    return [
-      { age: '18-24', percent: 8 },
-      { age: '25-34', percent: 12 },
-      { age: '35-44', percent: 14 },
-      { age: '45-54', percent: 18 },
-      { age: '55-64', percent: 22 },
-      { age: '65+', percent: 26 },
-    ];
+export function AgeDistributionChart({
+  medianAge,
+  ageDistribution,
+}: {
+  medianAge: number;
+  ageDistribution?: Array<{ bracket: string; count: number }>;
+}) {
+  if (!ageDistribution || ageDistribution.length === 0) {
+    return (
+      <div className="bg-white border-2 border-black p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Age Distribution</h3>
+        <div className="flex items-center justify-center h-48 text-center">
+          <div>
+            <p className="text-gray-600">Data unavailable</p>
+            <p className="text-sm text-gray-500 mt-1">Census ACS age data not returned</p>
+          </div>
+        </div>
+        <p className="text-sm text-gray-600 mt-2">
+          Median age: <strong>{medianAge.toFixed(1)} years</strong>
+        </p>
+      </div>
+    );
   }
-
-  return baseDistribution;
-};
-
-// Generate income distribution data
-const generateIncomeDistribution = (medianIncome: number) => {
-  const _brackets = ['<$25k', '$25k-$50k', '$50k-$75k', '$75k-$100k', '$100k-$150k', '$150k+'];
-
-  if (medianIncome < 50000) {
-    return [
-      { bracket: '<$25k', percent: 28, households: 4200 },
-      { bracket: '$25k-$50k', percent: 32, households: 4800 },
-      { bracket: '$50k-$75k', percent: 20, households: 3000 },
-      { bracket: '$75k-$100k', percent: 12, households: 1800 },
-      { bracket: '$100k-$150k', percent: 6, households: 900 },
-      { bracket: '$150k+', percent: 2, households: 300 },
-    ];
-  } else if (medianIncome > 80000) {
-    return [
-      { bracket: '<$25k', percent: 12, households: 1800 },
-      { bracket: '$25k-$50k', percent: 18, households: 2700 },
-      { bracket: '$50k-$75k', percent: 22, households: 3300 },
-      { bracket: '$75k-$100k', percent: 20, households: 3000 },
-      { bracket: '$100k-$150k', percent: 18, households: 2700 },
-      { bracket: '$150k+', percent: 10, households: 1500 },
-    ];
-  }
-
-  return [
-    { bracket: '<$25k', percent: 18, households: 2700 },
-    { bracket: '$25k-$50k', percent: 25, households: 3750 },
-    { bracket: '$50k-$75k', percent: 24, households: 3600 },
-    { bracket: '$75k-$100k', percent: 16, households: 2400 },
-    { bracket: '$100k-$150k', percent: 12, households: 1800 },
-    { bracket: '$150k+', percent: 5, households: 750 },
-  ];
-};
-
-// Generate election history
-const generateElectionHistory = (_currentPVI: string, _currentMargin: number) => {
-  // Election data unavailable - would require real election results from state/federal sources
-  // Returning empty array until real election data is available
-  return [];
-};
-
-// Generate employment by industry
-const generateEmploymentData = () => {
-  return [
-    { industry: 'Healthcare', percent: 18, employees: 27000 },
-    { industry: 'Retail Trade', percent: 14, employees: 21000 },
-    { industry: 'Manufacturing', percent: 12, employees: 18000 },
-    { industry: 'Education', percent: 11, employees: 16500 },
-    { industry: 'Professional Services', percent: 10, employees: 15000 },
-    { industry: 'Government', percent: 9, employees: 13500 },
-    { industry: 'Transportation', percent: 8, employees: 12000 },
-    { industry: 'Construction', percent: 7, employees: 10500 },
-    { industry: 'Finance & Insurance', percent: 6, employees: 9000 },
-    { industry: 'Other', percent: 5, employees: 7500 },
-  ];
-};
-
-const COLORS = [
-  '#e11d07',
-  '#0b983c',
-  '#3ea2d4',
-  '#f59e0b',
-  '#8b5cf6',
-  '#ef4444',
-  '#10b981',
-  '#f97316',
-  '#3b82f6',
-  '#6366f1',
-];
-
-export function AgeDistributionChart({ medianAge }: { medianAge: number }) {
-  const data = useMemo(() => generateAgeDistribution(medianAge), [medianAge]);
 
   return (
     <div className="bg-white border-2 border-black p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Age Distribution</h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="age" />
-          <YAxis />
-          <Tooltip formatter={value => [`${value}%`, 'Population']} />
-          <Bar dataKey="percent" fill="#3b82f6" />
+      <ResponsiveContainer width="100%" height={240}>
+        <BarChart data={ageDistribution} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis dataKey="bracket" tick={{ fontSize: 11 }} />
+          <YAxis
+            tick={{ fontSize: 11 }}
+            tickFormatter={v => (v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v)}
+          />
+          <Tooltip formatter={(value: number) => value.toLocaleString()} />
+          <Bar dataKey="count" fill="#3ea2d4" name="Population" />
         </BarChart>
       </ResponsiveContainer>
       <p className="text-sm text-gray-600 mt-2">
-        Median age: <strong>{medianAge.toFixed(1)} years</strong>
+        Median age: <strong>{medianAge.toFixed(1)} years</strong> | Source: Census ACS 5-Year
       </p>
     </div>
   );
 }
 
-export function IncomeDistributionChart({ medianIncome }: { medianIncome: number }) {
-  const data = useMemo(() => generateIncomeDistribution(medianIncome), [medianIncome]);
+export function IncomeDistributionChart({
+  medianIncome,
+  incomeDistribution,
+}: {
+  medianIncome: number;
+  incomeDistribution?: Array<{ bracket: string; count: number }>;
+}) {
+  if (!incomeDistribution || incomeDistribution.length === 0) {
+    return (
+      <div className="bg-white border-2 border-black p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Household Income Distribution</h3>
+        <div className="flex items-center justify-center h-48 text-center">
+          <div>
+            <p className="text-gray-600">Data unavailable</p>
+            <p className="text-sm text-gray-500 mt-1">Census ACS income data not returned</p>
+          </div>
+        </div>
+        <p className="text-sm text-gray-600 mt-2">
+          Median household income: <strong>${medianIncome.toLocaleString()}</strong>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white border-2 border-black p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Household Income Distribution</h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="bracket" />
-          <YAxis />
-          <Tooltip
-            formatter={(value, name) => [
-              name === 'percent' ? `${value}%` : `${value.toLocaleString()} households`,
-              name === 'percent' ? 'Population' : 'Households',
-            ]}
+      <ResponsiveContainer width="100%" height={240}>
+        <BarChart data={incomeDistribution} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis
+            dataKey="bracket"
+            tick={{ fontSize: 9 }}
+            angle={-45}
+            textAnchor="end"
+            height={60}
           />
-          <Bar dataKey="percent" fill="#0b983c" />
+          <YAxis
+            tick={{ fontSize: 11 }}
+            tickFormatter={v => (v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v)}
+          />
+          <Tooltip formatter={(value: number) => value.toLocaleString()} />
+          <Bar dataKey="count" fill="#0a9338" name="Households" />
         </BarChart>
       </ResponsiveContainer>
       <p className="text-sm text-gray-600 mt-2">
-        Median household income: <strong>${medianIncome.toLocaleString()}</strong>
+        Median household income: <strong>${medianIncome.toLocaleString()}</strong> | Source: Census
+        ACS 5-Year
       </p>
     </div>
   );
@@ -268,12 +214,6 @@ export function ElectionHistoryChart({
   currentPVI: string;
   currentMargin: number;
 }) {
-  const data = useMemo(
-    () => generateElectionHistory(currentPVI, currentMargin),
-    [currentPVI, currentMargin]
-  );
-
-  // Derive likely winner from PVI
   const pviMatch = currentPVI?.match(/^([DR])\+/);
   const likelyWinner =
     pviMatch?.[1] === 'D' ? 'Democratic' : pviMatch?.[1] === 'R' ? 'Republican' : null;
@@ -281,46 +221,14 @@ export function ElectionHistoryChart({
   return (
     <div className="bg-white border-2 border-black p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Election Results History</h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="year" />
-          <YAxis domain={[0, 80]} />
-          <Tooltip
-            formatter={(value, name) => [
-              `${Number(value).toFixed(1)}%`,
-              name === 'democratic'
-                ? 'Democratic'
-                : name === 'republican'
-                  ? 'Republican'
-                  : 'Turnout',
-            ]}
-          />
-          <Legend />
-          <Line
-            type="monotone"
-            dataKey="democratic"
-            stroke="#3b82f6"
-            strokeWidth={3}
-            name="Democratic"
-          />
-          <Line
-            type="monotone"
-            dataKey="republican"
-            stroke="#ef4444"
-            strokeWidth={3}
-            name="Republican"
-          />
-          <Line
-            type="monotone"
-            dataKey="turnout"
-            stroke="#10b981"
-            strokeWidth={2}
-            strokeDasharray="5 5"
-            name="Turnout"
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      <div className="flex items-center justify-center h-48 text-center">
+        <div>
+          <p className="text-gray-600">Data unavailable</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Historical election results require state/federal election data APIs
+          </p>
+        </div>
+      </div>
       <p className="text-sm text-gray-600 mt-2">
         Last election:{' '}
         {likelyWinner ? (
@@ -335,39 +243,48 @@ export function ElectionHistoryChart({
   );
 }
 
-export function EmploymentByIndustryChart() {
-  const data = useMemo(() => generateEmploymentData(), []);
+export function EmploymentByIndustryChart({
+  employmentByIndustry,
+}: {
+  employmentByIndustry?: Array<{ industry: string; count: number }>;
+}) {
+  if (!employmentByIndustry || employmentByIndustry.length === 0) {
+    return (
+      <div className="bg-white border-2 border-black p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Employment by Occupation</h3>
+        <div className="flex items-center justify-center h-48 text-center">
+          <div>
+            <p className="text-gray-600">Data unavailable</p>
+            <p className="text-sm text-gray-500 mt-1">Census ACS occupation data not returned</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white border-2 border-black p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Employment by Industry</h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={120}
-            paddingAngle={1}
-            dataKey="percent"
-          >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-            ))}
-          </Pie>
-          <Tooltip
-            formatter={(value, name, props) => [
-              `${value}% (${props.payload.employees.toLocaleString()} jobs)`,
-              'Employment',
-            ]}
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Employment by Occupation</h3>
+      <ResponsiveContainer width="100%" height={240}>
+        <BarChart
+          data={employmentByIndustry}
+          layout="vertical"
+          margin={{ top: 5, right: 20, left: 120, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis
+            type="number"
+            tick={{ fontSize: 11 }}
+            tickFormatter={v => (v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v)}
           />
-          <Legend />
-        </PieChart>
+          <YAxis type="category" dataKey="industry" tick={{ fontSize: 10 }} width={110} />
+          <Tooltip formatter={(value: number) => value.toLocaleString()} />
+          <Bar dataKey="count" fill="#e11d07" name="Workers" />
+        </BarChart>
       </ResponsiveContainer>
-      <div className="mt-4 text-sm text-gray-600">
-        <p>Top employers and industry breakdown for economic analysis</p>
-      </div>
+      <p className="text-sm text-gray-600 mt-2">
+        Civilian employed population 16+ | Source: Census ACS 5-Year
+      </p>
     </div>
   );
 }
@@ -384,8 +301,14 @@ export function DistrictCharts({ districtData }: DistrictChartsProps) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <AgeDistributionChart medianAge={districtData.demographics.medianAge} />
-        <IncomeDistributionChart medianIncome={districtData.demographics.medianIncome} />
+        <AgeDistributionChart
+          medianAge={districtData.demographics.medianAge}
+          ageDistribution={districtData.demographics.ageDistribution}
+        />
+        <IncomeDistributionChart
+          medianIncome={districtData.demographics.medianIncome}
+          incomeDistribution={districtData.demographics.incomeDistribution}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -396,7 +319,9 @@ export function DistrictCharts({ districtData }: DistrictChartsProps) {
         />
       </div>
 
-      <EmploymentByIndustryChart />
+      <EmploymentByIndustryChart
+        employmentByIndustry={districtData.demographics.employmentByIndustry}
+      />
     </div>
   );
 }

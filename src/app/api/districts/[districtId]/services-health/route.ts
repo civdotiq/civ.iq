@@ -119,10 +119,11 @@ async function fetchEducationData(
       if (validDistricts > 0) {
         return {
           graduationRate: totalGradRate / validDistricts,
-          collegeEnrollmentRate: Math.min(95, (totalEnrollment / totalStudents) * 100) || 65,
-          federalEducationFunding: totalStudents * 1200, // Estimate based on per-pupil funding
-          teacherToStudentRatio: totalTeachers > 0 ? totalStudents / totalTeachers : 16,
-          schoolDistrictPerformance: Math.min(100, 50 + totalGradRate / validDistricts / 2),
+          collegeEnrollmentRate:
+            totalStudents > 0 ? Math.min(95, (totalEnrollment / totalStudents) * 100) : 0,
+          federalEducationFunding: 0, // Per-pupil funding data requires ED budget API
+          teacherToStudentRatio: totalTeachers > 0 ? totalStudents / totalTeachers : 0,
+          schoolDistrictPerformance: 0, // Composite score requires real performance framework
         };
       }
     }
@@ -192,7 +193,7 @@ async function fetchCDCHealthData(
           preventableDiseaseRate: preventableDisease / validRecords,
           mentalHealthProviderRatio: Math.max(1, mentalHealthAccess / 100),
           preventiveCareCoverage: Math.min(100, preventiveCare / validRecords),
-          substanceAbusePrograms: Math.floor(validRecords / 3), // Estimate based on data availability
+          substanceAbusePrograms: 0, // Requires SAMHSA treatment locator API
         };
       }
     }
@@ -215,6 +216,55 @@ function getHealthcareData(): ServicesHealthProfile['healthcare'] {
     medicareProviderCount: 0,
     healthcareCostIndex: 0,
   };
+}
+
+async function fetchCensusEducationFunding(
+  stateCode: string
+): Promise<{ perPupilExpenditure: number; totalFederalRevenue: number; enrollment: number }> {
+  try {
+    const stateFips = STATE_FIPS[stateCode];
+    if (!stateFips) {
+      throw new Error(`Invalid state code: ${stateCode}`);
+    }
+
+    const apiKey = process.env.CENSUS_API_KEY || '';
+    const keyParam = apiKey && !apiKey.startsWith('your_') ? `&key=${apiKey}` : '';
+    const url = `https://api.census.gov/data/2022/asfin?get=PPEXPGN,TFEDREV,ENROLLM&for=state:${stateFips}${keyParam}`;
+
+    logger.info('Fetching Census ASFIN education funding', { stateCode, stateFips });
+
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Census ASFIN API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data && data.length > 1) {
+      const [, values] = data;
+      const perPupilExpenditure = parseInt(values[0]) || 0;
+      const totalFederalRevenue = parseInt(values[1]) || 0;
+      const enrollment = parseInt(values[2]) || 0;
+
+      logger.info('Census ASFIN data received', {
+        stateCode,
+        perPupilExpenditure,
+        totalFederalRevenue,
+        enrollment,
+      });
+
+      return { perPupilExpenditure, totalFederalRevenue, enrollment };
+    }
+
+    logger.warn('Census ASFIN API returned no data', { stateCode });
+    return { perPupilExpenditure: 0, totalFederalRevenue: 0, enrollment: 0 };
+  } catch (error) {
+    logger.error('Error fetching Census ASFIN data', error as Error, { stateCode });
+    return { perPupilExpenditure: 0, totalFederalRevenue: 0, enrollment: 0 };
+  }
 }
 
 function getEducationEstimatesData(): Partial<ServicesHealthProfile['education']> {
@@ -248,9 +298,10 @@ async function getServicesHealthProfile(districtId: string): Promise<ServicesHea
     logger.info('Fetching services health profile for district', { districtId, stateCode });
 
     // Fetch data from multiple sources in parallel
-    const [educationApiData, cdcData] = await Promise.all([
+    const [educationApiData, cdcData, censusEducation] = await Promise.all([
       fetchEducationData(stateCode),
       fetchCDCHealthData(stateCode),
+      fetchCensusEducationFunding(stateCode),
     ]);
 
     // Get fallback data (returns zeros as no real APIs available)
@@ -268,6 +319,7 @@ async function getServicesHealthProfile(districtId: string): Promise<ServicesHea
         collegeEnrollmentRate:
           educationApiData.collegeEnrollmentRate || educationEstimates.collegeEnrollmentRate || 0,
         federalEducationFunding:
+          censusEducation.perPupilExpenditure ||
           educationApiData.federalEducationFunding ||
           educationEstimates.federalEducationFunding ||
           0,
@@ -345,11 +397,14 @@ export async function GET(
           timestamp: new Date().toISOString(),
           dataSources: {
             education: 'Department of Education - https://api.ed.gov/',
+            censusAsfin:
+              'Census Annual Survey of School System Finances - https://api.census.gov/data/2022/asfin',
             cdc: 'Centers for Disease Control - https://data.cdc.gov/',
             healthcare: 'Data unavailable - no real API source',
           },
           notes: [
             'Education data from Department of Education API when available',
+            'Per-pupil expenditure from Census ASFIN survey',
             'Health outcomes from CDC PLACES dataset',
             'Healthcare data unavailable - real government APIs needed',
             'Data cached for 30 minutes for performance',

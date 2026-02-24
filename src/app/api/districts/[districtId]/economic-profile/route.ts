@@ -79,49 +79,115 @@ async function fetchBLSData(stateCode: string): Promise<Partial<EconomicProfile[
       throw new Error(`Invalid state code: ${stateCode}`);
     }
 
-    // BLS API for state-level unemployment data (public API, no key required)
-    const blsUrl = `https://api.bls.gov/publicAPI/v2/timeseries/data/LAUST${stateFips}0000000000003`;
+    // Fetch unemployment (003) and labor force participation (006) in parallel
+    const [unemploymentRes, laborForceRes] = await Promise.all([
+      fetch(`https://api.bls.gov/publicAPI/v2/timeseries/data/LAUST${stateFips}0000000000003`, {
+        signal: AbortSignal.timeout(10000),
+      }),
+      fetch(`https://api.bls.gov/publicAPI/v2/timeseries/data/LAUST${stateFips}0000000000006`, {
+        signal: AbortSignal.timeout(10000),
+      }),
+    ]);
 
-    logger.info('Fetching BLS employment data', {
+    logger.info('Fetching BLS employment data (unemployment + labor force)', {
       stateCode,
       stateFips,
-      url: blsUrl,
     });
 
-    const response = await fetch(blsUrl, {
-      signal: AbortSignal.timeout(10000),
-    });
+    let unemploymentRate = 0;
+    let laborForceParticipation = 0;
 
-    if (!response.ok) {
-      throw new Error(`BLS API error: ${response.status}`);
+    if (unemploymentRes.ok) {
+      const data = await unemploymentRes.json();
+      if (data.status === 'REQUEST_SUCCEEDED' && data.Results?.series?.[0]?.data?.length > 0) {
+        unemploymentRate = parseFloat(data.Results.series[0].data[0].value) || 0;
+      }
     }
 
-    const data = await response.json();
-
-    if (data.status === 'REQUEST_SUCCEEDED' && data.Results?.series?.[0]?.data?.length > 0) {
-      const latestData = data.Results.series[0].data[0];
-      const unemploymentRate = parseFloat(latestData.value) || 0;
-
-      // Calculate derived metrics (estimates based on national patterns)
-      const laborForceParticipation = Math.max(50, 70 - unemploymentRate * 2);
-      const jobGrowthRate = Math.max(-5, 3 - unemploymentRate);
-      const averageWage = 45000 + (70 - unemploymentRate) * 500; // Rough correlation
-
-      return {
-        unemploymentRate,
-        laborForceParticipation,
-        jobGrowthRate,
-        averageWage,
-        majorIndustries: [], // Would need additional API calls for this
-      };
+    if (laborForceRes.ok) {
+      const data = await laborForceRes.json();
+      if (data.status === 'REQUEST_SUCCEEDED' && data.Results?.series?.[0]?.data?.length > 0) {
+        laborForceParticipation = parseFloat(data.Results.series[0].data[0].value) || 0;
+      }
     }
 
-    logger.warn('BLS API returned no data', { stateCode, response: data });
-    return {};
+    logger.info('BLS data received', { stateCode, unemploymentRate, laborForceParticipation });
+
+    return {
+      unemploymentRate,
+      laborForceParticipation,
+      jobGrowthRate: 0,
+      averageWage: 0,
+      majorIndustries: [],
+    };
   } catch (error) {
     logger.error('Error fetching BLS data', error as Error, { stateCode });
     return {};
   }
+}
+
+async function fetchBLSWageData(stateCode: string): Promise<number> {
+  try {
+    const stateFips = STATE_FIPS[stateCode];
+    if (!stateFips) return 0;
+
+    // BLS QCEW annual averages — CSV endpoint for total all industries (industry code 10)
+    const year = new Date().getFullYear() - 1; // Use previous year for complete data
+    const url = `https://data.bls.gov/cew/data/api/${year}/a/area/ST${stateFips}000/industry/10.csv`;
+
+    logger.info('Fetching BLS QCEW wage data', { stateCode, stateFips, url });
+
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!response.ok) {
+      // Try year before if current year-1 isn't available yet
+      const fallbackUrl = `https://data.bls.gov/cew/data/api/${year - 1}/a/area/ST${stateFips}000/industry/10.csv`;
+      const fallbackResponse = await fetch(fallbackUrl, {
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!fallbackResponse.ok) {
+        throw new Error(`BLS QCEW API error: ${response.status}`);
+      }
+      const csvText = await fallbackResponse.text();
+      return parseQCEWCsv(csvText, stateCode);
+    }
+
+    const csvText = await response.text();
+    return parseQCEWCsv(csvText, stateCode);
+  } catch (error) {
+    logger.error('Error fetching BLS QCEW wage data', error as Error, { stateCode });
+    return 0;
+  }
+}
+
+function parseQCEWCsv(csvText: string, stateCode: string): number {
+  const lines = csvText.split('\n');
+  if (lines.length < 2) return 0;
+
+  // Parse CSV header to find avg_wkly_wage column index
+  const headers = lines[0]?.split(',').map(h => h.trim().replace(/"/g, '')) || [];
+  const wageIndex = headers.indexOf('avg_wkly_wage');
+  if (wageIndex === -1) {
+    logger.warn('avg_wkly_wage column not found in QCEW CSV', {
+      stateCode,
+      headers: headers.slice(0, 10),
+    });
+    return 0;
+  }
+
+  // Parse first data row (total, all industries)
+  const dataRow = lines[1]?.split(',').map(v => v.trim().replace(/"/g, '')) || [];
+  const avgWeeklyWage = parseInt(dataRow[wageIndex] || '0') || 0;
+
+  if (avgWeeklyWage > 0) {
+    const annualWage = avgWeeklyWage * 52;
+    logger.info('BLS QCEW wage data parsed', { stateCode, avgWeeklyWage, annualWage });
+    return annualWage;
+  }
+
+  return 0;
 }
 
 async function fetchFCCBroadbandData(
@@ -212,9 +278,10 @@ async function getEconomicProfile(districtId: string): Promise<EconomicProfile> 
     logger.info('Fetching economic profile for district', { districtId, stateCode });
 
     // Fetch data from multiple sources in parallel
-    const [blsData, fccData] = await Promise.all([
+    const [blsData, fccData, averageWage] = await Promise.all([
       fetchBLSData(stateCode),
       fetchFCCBroadbandData(stateCode),
+      fetchBLSWageData(stateCode),
     ]);
 
     // Get infrastructure data (returns zeros as no real API available)
@@ -227,7 +294,7 @@ async function getEconomicProfile(districtId: string): Promise<EconomicProfile> 
         laborForceParticipation: blsData.laborForceParticipation || 0,
         jobGrowthRate: blsData.jobGrowthRate || 0,
         majorIndustries: blsData.majorIndustries || [],
-        averageWage: blsData.averageWage || 0,
+        averageWage: averageWage || blsData.averageWage || 0,
       },
       infrastructure: {
         ...infrastructureData,
@@ -303,11 +370,13 @@ export async function GET(
           timestamp: new Date().toISOString(),
           dataSources: {
             bls: 'Bureau of Labor Statistics - https://api.bls.gov/',
+            blsQcew: 'BLS Quarterly Census of Employment and Wages - https://data.bls.gov/cew/',
             fcc: 'Federal Communications Commission - https://opendata.fcc.gov/',
             infrastructure: 'Data unavailable - no real API source',
           },
           notes: [
-            'Employment data from BLS public API',
+            'Unemployment rate and labor force participation from BLS LAUS series',
+            'Average annual wage from BLS QCEW data',
             'Broadband data from FCC Fixed Broadband Deployment',
             'Infrastructure data unavailable - real government APIs needed',
             'Data cached for 30 minutes for performance',

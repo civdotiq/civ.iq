@@ -101,7 +101,7 @@ export async function GET(
         );
 
         // In production, this would integrate with various local government APIs
-        const locationInfo = parseLocation(location);
+        const locationInfo = await parseLocation(location);
         const officials: LocalOfficial[] = []; // Real local government API integration needed
 
         // Group by jurisdiction
@@ -185,13 +185,19 @@ export async function GET(
   }
 }
 
-function parseLocation(location: string): LocationInfo {
+async function parseLocation(location: string): Promise<LocationInfo> {
   // Parse location format: "city-state" or "county-state" or zip code
   const parts = location.split('-');
 
   if (parts.length >= 2) {
     const cityName = parts.slice(0, -1).join(' ').replace(/_/g, ' ');
     const state = parts[parts.length - 1]?.toUpperCase() || 'ST';
+
+    // Try Census Geocoder first, fall back to static mapping
+    let county = await lookupCountyViaCensusGeocoder(cityName, state);
+    if (!county) {
+      county = generateCountyName(cityName, state);
+    }
 
     return {
       city: cityName,
@@ -200,7 +206,7 @@ function parseLocation(location: string): LocationInfo {
         .split(' ')
         .map(w => w.charAt(0).toUpperCase() + w.slice(1))
         .join(' ')}, ${state}`,
-      county: generateCountyName(cityName, state),
+      county,
     };
   }
 
@@ -231,7 +237,46 @@ function getEmptyLocationResponse(zip: string): LocationInfo {
   };
 }
 
+async function lookupCountyViaCensusGeocoder(city: string, state: string): Promise<string> {
+  try {
+    // Use Census Geocoder onelineaddress mode — works for city-level geocoding
+    const address = encodeURIComponent(`${city}, ${state}`);
+    const url = `https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?address=${address}&benchmark=Public_AR_Current&vintage=Current_Current&format=json`;
+
+    logger.info('Census Geocoder county lookup', { city, state, url });
+
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(10000),
+      headers: { 'User-Agent': 'CivIQ-Hub/2.0' },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Census Geocoder error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const matches = data?.result?.addressMatches;
+
+    if (matches && matches.length > 0) {
+      const geographies = matches[0].geographies;
+      const countyGeo = geographies?.['Counties']?.[0];
+      if (countyGeo?.NAME) {
+        const countyName = `${countyGeo.NAME} County`;
+        logger.info('Census Geocoder found county', { city, state, county: countyName });
+        return countyName;
+      }
+    }
+
+    logger.warn('Census Geocoder returned no county match', { city, state });
+    return '';
+  } catch (error) {
+    logger.error('Census Geocoder county lookup failed', error as Error, { city, state });
+    return '';
+  }
+}
+
 function generateCountyName(city: string, state: string): string {
+  // Static fallback — only used if async geocoder cannot be called
   const countyMappings: Record<string, Record<string, string>> = {
     CA: {
       'los angeles': 'Los Angeles County',
@@ -256,7 +301,7 @@ function generateCountyName(city: string, state: string): string {
     if (countyName) return countyName;
   }
 
-  return `${city} County`;
+  return '';
 }
 
 function generateNextElections(_locationInfo: unknown) {

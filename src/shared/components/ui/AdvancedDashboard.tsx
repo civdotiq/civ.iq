@@ -32,31 +32,13 @@ import {
 export function CivicEngagementDashboard() {
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
 
-  const engagementMetrics = {
-    week: {
-      searches: 12450,
-      profileViews: 8320,
-      contactsInitiated: 342,
-      billsTracked: 1203,
-      trend: 15.2,
-    },
-    month: {
-      searches: 48920,
-      profileViews: 32100,
-      contactsInitiated: 1420,
-      billsTracked: 5102,
-      trend: 8.7,
-    },
-    year: {
-      searches: 523400,
-      profileViews: 412300,
-      contactsInitiated: 18200,
-      billsTracked: 62300,
-      trend: 42.3,
-    },
+  const metrics = {
+    searches: 0,
+    profileViews: 0,
+    contactsInitiated: 0,
+    billsTracked: 0,
+    trend: 0,
   };
-
-  const metrics = engagementMetrics[timeRange];
 
   return (
     <div className="bg-white border-2 border-black p-6">
@@ -477,36 +459,115 @@ export function LegislativeActivityMonitor() {
   );
 }
 
+// Donor stats from FEC contributions-by-size endpoint
+interface DonorSizeData {
+  summary: {
+    totalAmount: number;
+    totalCount: number;
+    smallDonorPercent: number;
+    averageContribution: number;
+  } | null;
+  buckets: Array<{ size: number; total: number; count: number }>;
+}
+
 // Campaign Finance Overview Widget
-export function CampaignFinanceOverview() {
+export function CampaignFinanceOverview({ candidateId }: { candidateId?: string }) {
   const [selectedCycle, setSelectedCycle] = useState('2024');
+  const [donorData, setDonorData] = useState<DonorSizeData | null>(null);
+  const [donorLoading, setDonorLoading] = useState(false);
+
+  useEffect(() => {
+    if (!candidateId) return;
+
+    let cancelled = false;
+    setDonorLoading(true);
+
+    fetch(`/api/fec/contributions-by-size?candidateId=${candidateId}&cycle=${selectedCycle}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!cancelled) {
+          setDonorData({ summary: data.summary || null, buckets: data.buckets || [] });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setDonorData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setDonorLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [candidateId, selectedCycle]);
 
   useEffect(() => {
     const container = select('#finance-donut');
     container.selectAll('*').remove();
 
-    // Show loading message instead of fake campaign finance data
-    const svg = container.append('svg').attr('width', 300).attr('height', 300);
+    if (donorData?.buckets && donorData.buckets.length > 0) {
+      // Render size distribution as simple bar visualization
+      const svg = container.append('svg').attr('width', 300).attr('height', 300);
+      const buckets = donorData.buckets;
+      const maxTotal = Math.max(...buckets.map(b => b.total || 0));
+      const barHeight = 36;
+      const startY = 20;
 
-    svg
-      .append('text')
-      .attr('x', 150)
-      .attr('y', 140)
-      .attr('text-anchor', 'middle')
-      .attr('class', 'text-sm text-gray-600')
-      .text('Loading from FEC.gov...');
+      const sizeLabels: Record<number, string> = {
+        200: '$200 & under',
+        500: '$200-$500',
+        1000: '$500-$1K',
+        2000: '$1K-$2K',
+      };
 
-    svg
-      .append('text')
-      .attr('x', 150)
-      .attr('y', 160)
-      .attr('text-anchor', 'middle')
-      .attr('class', 'text-xs text-gray-500')
-      .text('Campaign finance data unavailable');
+      buckets.forEach((bucket, i) => {
+        const y = startY + i * (barHeight + 8);
+        const barWidth = maxTotal > 0 ? (bucket.total / maxTotal) * 200 : 0;
 
-    // REMOVED: All unreachable fake data visualization code
-    // Previously contained hardcoded $45M individual, $25M PAC, $15M party, $10M self-funded amounts
-  }, [selectedCycle]);
+        svg
+          .append('text')
+          .attr('x', 0)
+          .attr('y', y + 14)
+          .attr('font-size', '11')
+          .attr('fill', '#6b7280')
+          .text(sizeLabels[bucket.size] || `$${bucket.size}+`);
+
+        svg
+          .append('rect')
+          .attr('x', 0)
+          .attr('y', y + 20)
+          .attr('width', Math.max(2, barWidth))
+          .attr('height', 10)
+          .attr('fill', '#3ea2d4');
+
+        svg
+          .append('text')
+          .attr('x', Math.max(2, barWidth) + 6)
+          .attr('y', y + 29)
+          .attr('font-size', '10')
+          .attr('fill', '#9ca3af')
+          .text(`$${(bucket.total / 1000000).toFixed(1)}M`);
+      });
+    } else if (!donorLoading) {
+      const svg = container.append('svg').attr('width', 300).attr('height', 300);
+      svg
+        .append('text')
+        .attr('x', 150)
+        .attr('y', 140)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '14')
+        .attr('fill', '#6b7280')
+        .text(candidateId ? 'No size data for this cycle' : 'Select a representative');
+      svg
+        .append('text')
+        .attr('x', 150)
+        .attr('y', 160)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '12')
+        .attr('fill', '#9ca3af')
+        .text('Campaign finance data from FEC.gov');
+    }
+  }, [donorData, donorLoading, candidateId, selectedCycle]);
 
   return (
     <div className="bg-white border-2 border-black p-6">
@@ -531,30 +592,47 @@ export function CampaignFinanceOverview() {
           <h3 className="font-semibold text-gray-900">Top Contributors</h3>
           <div className="text-center py-8">
             <p className="text-gray-600">Loading contributor data from FEC.gov...</p>
-            <p className="text-sm text-gray-500 mt-2">Campaign finance data unavailable</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Contributor detail requires FEC Schedule A data
+            </p>
           </div>
-          {/* REMOVED: Fake PAC contributors including:
-       - Americans for Progress PAC ($5M)
-       - Healthcare Workers United ($3.5M)
-       - Tech Innovation Fund ($2.8M)
-       - Environmental Action Committee ($2.2M)
-       - Small Business Alliance ($1.8M) */}
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="text-center p-4 bg-white">
-          <p className="text-2xl font-bold text-gray-900">78%</p>
-          <p className="text-sm text-gray-600">Small Donors</p>
-        </div>
-        <div className="text-center p-4 bg-white">
-          <p className="text-2xl font-bold text-gray-900">$285</p>
-          <p className="text-sm text-gray-600">Avg. Contribution</p>
-        </div>
-        <div className="text-center p-4 bg-white">
-          <p className="text-2xl font-bold text-gray-900">342K</p>
-          <p className="text-sm text-gray-600">Total Donors</p>
-        </div>
+      <div className="mt-6 p-4 bg-gray-50">
+        {donorLoading ? (
+          <p className="text-sm text-gray-600 text-center">Loading donor statistics from FEC...</p>
+        ) : donorData?.summary ? (
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-lg font-bold text-gray-900">
+                {donorData.summary.smallDonorPercent}%
+              </p>
+              <p className="text-xs text-gray-600">Small Donors</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-gray-900">
+                ${donorData.summary.averageContribution.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-600">Avg. Contribution</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-gray-900">
+                {donorData.summary.totalCount >= 1000
+                  ? `${(donorData.summary.totalCount / 1000).toFixed(1)}K`
+                  : donorData.summary.totalCount.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-600">Total Donors</p>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Donor statistics unavailable</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {candidateId ? 'No FEC size data for this cycle' : 'Requires FEC candidate ID'}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -667,22 +745,9 @@ export function DistrictPerformanceDashboard() {
         </table>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-50 p-4">
-          <h3 className="font-semibold text-blue-900 mb-2">Democratic Performance</h3>
-          <p className="text-2xl font-bold text-blue-900">52.3%</p>
-          <p className="text-sm text-blue-700">Average vote share</p>
-        </div>
-        <div className="bg-red-50 p-4">
-          <h3 className="font-semibold text-red-900 mb-2">Republican Performance</h3>
-          <p className="text-2xl font-bold text-red-900">47.7%</p>
-          <p className="text-sm text-red-700">Average vote share</p>
-        </div>
-        <div className="bg-purple-50 p-4">
-          <h3 className="font-semibold text-purple-900 mb-2">Competitive Districts</h3>
-          <p className="text-2xl font-bold text-purple-900">23</p>
-          <p className="text-sm text-purple-700">Within 5% margin</p>
-        </div>
+      <div className="mt-6 p-4 bg-gray-50 text-center">
+        <p className="text-sm text-gray-600">District performance statistics unavailable</p>
+        <p className="text-xs text-gray-500 mt-1">Requires state election results APIs</p>
       </div>
     </div>
   );
@@ -692,13 +757,7 @@ export function DistrictPerformanceDashboard() {
 export function NewsSentimentTracker() {
   const [selectedTopic, setSelectedTopic] = useState('all');
 
-  const topics = [
-    { id: 'all', name: 'All Topics', positive: 42, neutral: 38, negative: 20 },
-    { id: 'healthcare', name: 'Healthcare', positive: 58, neutral: 32, negative: 10 },
-    { id: 'economy', name: 'Economy', positive: 35, neutral: 40, negative: 25 },
-    { id: 'climate', name: 'Climate', positive: 48, neutral: 35, negative: 17 },
-    { id: 'immigration', name: 'Immigration', positive: 28, neutral: 42, negative: 30 },
-  ];
+  const topics = [{ id: 'all', name: 'All Topics', positive: 0, neutral: 0, negative: 0 }];
 
   const selectedData = topics.find(t => t.id === selectedTopic) ?? topics[0]!;
 
@@ -722,7 +781,7 @@ export function NewsSentimentTracker() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-gray-700">Sentiment Distribution</h3>
-          <span className="text-sm text-gray-600">Based on 1,234 articles</span>
+          <span className="text-sm text-gray-600">No data available</span>
         </div>
         <div className="relative h-12 bg-gray-200 rounded-full overflow-hidden">
           <div
@@ -747,57 +806,10 @@ export function NewsSentimentTracker() {
 
       <div className="space-y-3">
         <h3 className="font-semibold text-gray-700">Recent Headlines</h3>
-        {[
-          {
-            title: 'Congress Passes Bipartisan Infrastructure Bill',
-            sentiment: 'positive',
-            source: 'AP News',
-            time: '2 hours ago',
-          },
-          {
-            title: 'Debate Continues Over Healthcare Reform Proposal',
-            sentiment: 'neutral',
-            source: 'Reuters',
-            time: '4 hours ago',
-          },
-          {
-            title: 'Economic Concerns Rise Amid Inflation Data',
-            sentiment: 'negative',
-            source: 'Bloomberg',
-            time: '6 hours ago',
-          },
-          {
-            title: 'New Climate Initiative Gains Support in Senate',
-            sentiment: 'positive',
-            source: 'CNN',
-            time: '8 hours ago',
-          },
-        ].map((article, index) => (
-          <div
-            key={index}
-            className="p-3 bg-white hover:bg-white border-2 border-gray-300 cursor-pointer"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h4 className="font-medium text-gray-900">{article.title}</h4>
-                <div className="flex items-center gap-3 mt-1 text-sm text-gray-600">
-                  <span>{article.source}</span>
-                  <span>•</span>
-                  <span>{article.time}</span>
-                </div>
-              </div>
-              <div
-                className={`ml-3 w-2 h-2 rounded-full mt-2 ${
-                  article.sentiment === 'positive'
-                    ? 'bg-green-500'
-                    : article.sentiment === 'negative'
-                      ? 'bg-red-500'
-                      : 'bg-gray-400'
-                }`}
-              />
-            </div>
-          </div>
-        ))}
+        <div className="text-center py-8 text-gray-500">
+          <p className="font-medium">News data unavailable</p>
+          <p className="text-sm mt-1">Requires news API integration for real-time headlines</p>
+        </div>
       </div>
     </div>
   );

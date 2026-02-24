@@ -15,6 +15,7 @@ import UnifiedDemographicsDisplay from '@/components/districts/shared/UnifiedDem
 import NeighboringDistricts from '@/features/districts/components/NeighboringDistricts';
 import FederalSpendingProfile from '@/features/spending/components/FederalSpendingProfile';
 import { DistrictRelevantBills } from '@/features/districts/components/DistrictRelevantBills';
+import { DistrictCharts } from '@/features/districts/components/DistrictCharts';
 import logger from '@/lib/logging/simple-logger';
 import { SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
@@ -58,6 +59,9 @@ interface DistrictDetails {
     asian_percent: number;
     poverty_rate: number;
     bachelor_degree_percent: number;
+    ageDistribution?: Array<{ bracket: string; count: number }>;
+    incomeDistribution?: Array<{ bracket: string; count: number }>;
+    employmentByIndustry?: Array<{ industry: string; count: number }>;
   };
   political: {
     cookPVI: string;
@@ -197,6 +201,16 @@ export default function DistrictPage() {
 
             {/* Demographics */}
             <UnifiedDemographicsDisplay demographics={district.demographics} />
+
+            {/* Demographic Charts */}
+            {district.demographics && (
+              <DistrictCharts
+                districtData={{
+                  demographics: district.demographics,
+                  political: district.political,
+                }}
+              />
+            )}
 
             {/* Federal Spending */}
             <FederalSpendingProfile districtId={districtId} />

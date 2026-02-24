@@ -59,6 +59,9 @@ interface DistrictDetails {
     asian_percent: number;
     poverty_rate: number;
     bachelor_degree_percent: number;
+    ageDistribution?: Array<{ bracket: string; count: number }>;
+    incomeDistribution?: Array<{ bracket: string; count: number }>;
+    employmentByIndustry?: Array<{ industry: string; count: number }>;
   };
   political: {
     cookPVI: string;
@@ -193,6 +196,214 @@ function _calculateJobGrowthPotential(
 
   // Weighted average: education 50%, age 30%, remote work 20%
   return educationScore * 0.5 + ageScore * 0.3 + remoteScore * 0.2;
+}
+
+/**
+ * Build Census ACS geographic parameters for a district query
+ */
+function buildCensusGeoParams(
+  state: string,
+  district: string,
+  apiKey: string,
+  isStatewideQuery: boolean
+): URLSearchParams {
+  const params = new URLSearchParams();
+  if (isStatewideQuery) {
+    params.append('for', `state:${getStateFipsCode(state)}`);
+  } else {
+    params.append('for', `congressional district:${district.padStart(2, '0')}`);
+    params.append('in', `state:${getStateFipsCode(state)}`);
+  }
+  if (apiKey && !apiKey.startsWith('your_')) {
+    params.append('key', apiKey);
+  }
+  return params;
+}
+
+/**
+ * Fetch age distribution from Census ACS B01001 table
+ * Returns aggregated age brackets combining male + female counts
+ */
+async function fetchAgeDistribution(
+  state: string,
+  district: string,
+  apiKey: string,
+  isStatewideQuery: boolean
+): Promise<Array<{ bracket: string; count: number }>> {
+  try {
+    // Male age brackets: B01001_003E through B01001_025E (23 vars)
+    // Female age brackets: B01001_027E through B01001_049E (23 vars)
+    // Total = 46 variables (within 50-variable limit)
+    const maleVars: string[] = [];
+    for (let i = 3; i <= 25; i++) {
+      maleVars.push(`B01001_${String(i).padStart(3, '0')}E`);
+    }
+    const femaleVars: string[] = [];
+    for (let i = 27; i <= 49; i++) {
+      femaleVars.push(`B01001_${String(i).padStart(3, '0')}E`);
+    }
+    const variables = [...maleVars, ...femaleVars].join(',');
+
+    const geoParams = buildCensusGeoParams(state, district, apiKey, isStatewideQuery);
+    const url = `https://api.census.gov/data/2022/acs/acs5?get=${variables}&${geoParams}`;
+
+    const response = await fetch(url, { signal: AbortSignal.timeout(30000) });
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    if (!data || data.length < 2) return [];
+
+    const [, values] = data;
+    const parse = (idx: number) => parseInt(values[idx]) || 0;
+
+    // Aggregate male (indices 0-22) + female (indices 23-45) into wide brackets
+    // Male indices: 0=Under5, 1=5-9, 2=10-14, 3=15-17, 4=18-19, 5=20, 6=21, 7=22-24,
+    //               8=25-29, 9=30-34, 10=35-39, 11=40-44, 12=45-49, 13=50-54,
+    //               14=55-59, 15=60-61, 16=62-64, 17=65-66, 18=67-69, 19=70-74,
+    //               20=75-79, 21=80-84, 22=85+
+    const f = 23; // female offset
+    return [
+      {
+        bracket: 'Under 18',
+        count:
+          parse(0) +
+          parse(1) +
+          parse(2) +
+          parse(3) +
+          parse(f) +
+          parse(f + 1) +
+          parse(f + 2) +
+          parse(f + 3),
+      },
+      {
+        bracket: '18-24',
+        count:
+          parse(4) +
+          parse(5) +
+          parse(6) +
+          parse(7) +
+          parse(f + 4) +
+          parse(f + 5) +
+          parse(f + 6) +
+          parse(f + 7),
+      },
+      { bracket: '25-34', count: parse(8) + parse(9) + parse(f + 8) + parse(f + 9) },
+      { bracket: '35-44', count: parse(10) + parse(11) + parse(f + 10) + parse(f + 11) },
+      { bracket: '45-54', count: parse(12) + parse(13) + parse(f + 12) + parse(f + 13) },
+      {
+        bracket: '55-64',
+        count: parse(14) + parse(15) + parse(16) + parse(f + 14) + parse(f + 15) + parse(f + 16),
+      },
+      {
+        bracket: '65-74',
+        count: parse(17) + parse(18) + parse(19) + parse(f + 17) + parse(f + 18) + parse(f + 19),
+      },
+      {
+        bracket: '75+',
+        count: parse(20) + parse(21) + parse(22) + parse(f + 20) + parse(f + 21) + parse(f + 22),
+      },
+    ];
+  } catch (error) {
+    logger.error('Error fetching Census age distribution', error as Error, { state, district });
+    return [];
+  }
+}
+
+/**
+ * Fetch income distribution (B19001) and employment by industry (C24010) from Census ACS
+ */
+async function fetchIncomeAndEmployment(
+  state: string,
+  district: string,
+  apiKey: string,
+  isStatewideQuery: boolean
+): Promise<{
+  income: Array<{ bracket: string; count: number }>;
+  employment: Array<{ industry: string; count: number }>;
+}> {
+  try {
+    // B19001_002E through B19001_017E = 16 income bracket variables
+    // C24010_003E through C24010_014E = 12 occupation/industry variables (male)
+    // C24010_039E through C24010_050E = 12 occupation/industry variables (female)
+    // Total = 40 variables (within 50-variable limit)
+    const incomeVars: string[] = [];
+    for (let i = 2; i <= 17; i++) {
+      incomeVars.push(`B19001_${String(i).padStart(3, '0')}E`);
+    }
+
+    // C24010 male occupation groups (top-level categories)
+    const maleOccVars = [
+      'C24010_003E', // Management, business, science, arts
+      'C24010_019E', // Service
+      'C24010_027E', // Sales and office
+      'C24010_033E', // Natural resources, construction, maintenance
+      'C24010_037E', // Production, transportation, material moving
+    ];
+    // C24010 female occupation groups
+    const femaleOccVars = [
+      'C24010_039E', // Management, business, science, arts
+      'C24010_055E', // Service
+      'C24010_063E', // Sales and office
+      'C24010_069E', // Natural resources, construction, maintenance
+      'C24010_073E', // Production, transportation, material moving
+    ];
+
+    const variables = [...incomeVars, ...maleOccVars, ...femaleOccVars].join(',');
+
+    const geoParams = buildCensusGeoParams(state, district, apiKey, isStatewideQuery);
+    const url = `https://api.census.gov/data/2022/acs/acs5?get=${variables}&${geoParams}`;
+
+    const response = await fetch(url, { signal: AbortSignal.timeout(30000) });
+    if (!response.ok) return { income: [], employment: [] };
+
+    const data = await response.json();
+    if (!data || data.length < 2) return { income: [], employment: [] };
+
+    const [, values] = data;
+    const parse = (idx: number) => parseInt(values[idx]) || 0;
+
+    // Income brackets (indices 0-15 map to B19001_002E through B19001_017E)
+    const incomeBrackets = [
+      'Under $10K',
+      '$10K-$15K',
+      '$15K-$20K',
+      '$20K-$25K',
+      '$25K-$30K',
+      '$30K-$35K',
+      '$35K-$40K',
+      '$40K-$45K',
+      '$45K-$50K',
+      '$50K-$60K',
+      '$60K-$75K',
+      '$75K-$100K',
+      '$100K-$125K',
+      '$125K-$150K',
+      '$150K-$200K',
+      '$200K+',
+    ];
+    const income = incomeBrackets.map((bracket, i) => ({
+      bracket,
+      count: parse(i),
+    }));
+
+    // Occupation/industry (indices 16-20 = male, 21-25 = female)
+    const occupationLabels = [
+      'Management & Professional',
+      'Service',
+      'Sales & Office',
+      'Construction & Maintenance',
+      'Production & Transportation',
+    ];
+    const employment = occupationLabels.map((industry, i) => ({
+      industry,
+      count: parse(16 + i) + parse(21 + i), // male + female
+    }));
+
+    return { income, employment };
+  } catch (error) {
+    logger.error('Error fetching Census income/employment', error as Error, { state, district });
+    return { income: [], employment: [] };
+  }
 }
 
 /**
@@ -431,6 +642,12 @@ async function getDistrictDemographics(
               )
             : 50;
 
+        // Fetch age, income, and employment data in parallel (separate requests due to variable limits)
+        const [ageData, incomeEmploymentData] = await Promise.all([
+          fetchAgeDistribution(state, district, apiKey, isStatewideQuery),
+          fetchIncomeAndEmployment(state, district, apiKey, isStatewideQuery),
+        ]);
+
         return {
           population: totalPop,
           medianIncome,
@@ -444,6 +661,9 @@ async function getDistrictDemographics(
           poverty_rate: totalPovertyUniverse > 0 ? (belowPoverty / totalPovertyUniverse) * 100 : 0,
           bachelor_degree_percent:
             totalEducationUniverse > 0 ? (bachelors / totalEducationUniverse) * 100 : 0,
+          ageDistribution: ageData,
+          incomeDistribution: incomeEmploymentData.income,
+          employmentByIndustry: incomeEmploymentData.employment,
 
           // Additional comprehensive demographics - temporarily disabled for MVP
           // economic: {

@@ -1097,6 +1097,33 @@ export class FECApiService {
   }
 
   /**
+   * Get contribution totals grouped by size bucket
+   * Returns: $200 and under, $200.01-$499.99, $500-$999.99, $1000-$1999.99, $2000+
+   */
+  async getContributionsBySize(
+    candidateId: string,
+    cycle: number
+  ): Promise<Array<{ size: number; total: number; count: number }>> {
+    try {
+      logger.info(`[FEC API] Fetching contributions by size for ${candidateId} cycle ${cycle}`);
+
+      const response = await this.makeRequest<
+        FECApiResponse<{ size: number; total: number; count: number }>
+      >(`/schedules/schedule_a/by_size/?candidate_id=${candidateId}&cycle=${cycle}&per_page=20`);
+
+      if (response.results && response.results.length > 0) {
+        logger.info(`[FEC API] Found ${response.results.length} size buckets for ${candidateId}`);
+        return response.results;
+      }
+
+      return [];
+    } catch (error) {
+      logger.error(`[FEC API] Failed to get contributions by size for ${candidateId}:`, error);
+      return [];
+    }
+  }
+
+  /**
    * Get PAC contributions (Schedule A) to a candidate
    * Filters for non-individual contributions (PACs, parties, etc.)
    */
