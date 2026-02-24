@@ -79,7 +79,10 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
       const initializeMap = async () => {
         try {
           // Step 2: Add diagnostic logging
-          logger.info('🗺️ Map container element:', mapContainer.current);
+          logger.info('🗺️ Map container ready:', {
+            tagName: mapContainer.current?.tagName,
+            id: mapContainer.current?.id,
+          });
           logger.info('⏳ Attempting to initialize MapLibre map...');
 
           // Dynamic import MapLibre GL
@@ -139,7 +142,10 @@ export default function DistrictMap({ state, district }: DistrictMapProps) {
           });
 
           mapRef.current = map;
-          logger.info('✅ MapLibre map successfully initialized:', map);
+          logger.info('✅ MapLibre map successfully initialized:', {
+            center: map.getCenter(),
+            zoom: map.getZoom(),
+          });
 
           // Add navigation controls
           map.addControl(new maplibregl.NavigationControl(), 'top-right');

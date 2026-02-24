@@ -39,14 +39,23 @@ function formatLogLine(level: string, message: unknown, rest: unknown[]): string
   try {
     return JSON.stringify(entry);
   } catch {
-    const seen = new WeakSet();
-    return JSON.stringify(entry, (_key, value) => {
-      if (typeof value === 'object' && value !== null) {
-        if (seen.has(value)) return '[Circular]';
-        seen.add(value);
-      }
-      return value;
-    });
+    try {
+      const seen = new WeakSet();
+      return JSON.stringify(entry, (_key, value) => {
+        if (typeof value === 'object' && value !== null) {
+          if (seen.has(value)) return '[Circular]';
+          seen.add(value);
+        }
+        return value;
+      });
+    } catch {
+      return JSON.stringify({
+        level: entry.level,
+        timestamp: entry.timestamp,
+        message: entry.message,
+        data: '[Unserializable]',
+      });
+    }
   }
 }
 
