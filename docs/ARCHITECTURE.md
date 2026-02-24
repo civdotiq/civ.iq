@@ -26,12 +26,19 @@ CIV.IQ is a Progressive Web Application built with Next.js 15, utilizing the App
 
 ### Data Sources
 
-- **Congress.gov API**: Legislative data
-- **FEC API**: Campaign finance
-- **Census API**: Demographics & boundaries
+- **Congress.gov API v3**: Bills, representatives, committees, votes
+- **FEC API**: Campaign finance (contributions, expenditures, donors)
+- **USAspending.gov API v2**: Federal spending (contracts, grants, awards)
+- **Federal Register API**: Regulations (proposed rules, final rules, comment periods)
+- **GovInfo API**: Congressional hearings, government documents
+- **Census API**: Demographics, boundaries, geocoding
 - **GDELT V2 DOC API**: News aggregation
 - **Senate.gov XML**: Senate voting records
 - **congress-legislators**: Enhanced member data
+
+### Cross-Domain Join Layer
+
+10 join endpoints connect the 8 data domains above into a linked civic intelligence graph. See [DATA_NETWORK.md](./DATA_NETWORK.md) for the full network map, connection logic, and shared infrastructure.
 
 ### Infrastructure
 
