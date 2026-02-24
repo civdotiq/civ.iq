@@ -70,6 +70,10 @@
     {
       "path": "/api/cron/bill-summarizer",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/nostr-publisher",
+      "schedule": "0 10 * * *"
     }
   ],
   "headers": [

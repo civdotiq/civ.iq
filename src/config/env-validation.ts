@@ -56,6 +56,18 @@ const ENV_VARS: EnvVarConfig[] = [
     requiredInProduction: false,
     description: 'FollowTheMoney.org API key for state campaign finance data (optional)',
   },
+  {
+    name: 'NOSTR_PRIVATE_KEY',
+    required: false,
+    requiredInProduction: false,
+    description: 'Nostr private key (64-char hex) for signing civic events',
+  },
+  {
+    name: 'NOSTR_RELAYS',
+    required: false,
+    requiredInProduction: false,
+    description: 'Comma-separated Nostr relay URLs (defaults to public relays)',
+  },
 ];
 
 interface ValidationResult {
