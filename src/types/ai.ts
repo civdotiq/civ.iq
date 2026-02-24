@@ -61,3 +61,67 @@ export interface VotePatternSummary {
   lastUpdated: string;
   source: 'ai-generated' | 'fallback';
 }
+
+// ── Feature 4: Civic Alignment Analysis ──────────────────────────────
+
+export interface CivicAlignmentInput {
+  legislator: {
+    bioguideId: string;
+    name: string;
+    party: string;
+    state: string;
+    district: string;
+    chamber: 'House' | 'Senate';
+    committees: Array<{ name: string; role: string }>;
+  };
+  votes: Array<{
+    billNumber: string;
+    title: string;
+    vote: 'Yea' | 'Nay' | 'Not Voting';
+    date: string;
+    subjects: string[];
+  }>;
+  finance: {
+    totalRaised: number;
+    topSectors: Array<{ sector: string; amount: number; percentage: number }>;
+    topContributors: Array<{ name: string; amount: number; employer: string }>;
+    smallDonorPercentage: number;
+    inDistrictPercentage: number;
+  };
+  district: {
+    population: number;
+    medianIncome: number;
+    unemploymentRate: number;
+    povertyRate: number;
+    uninsuredRate: number;
+    broadbandAvailability: number;
+    topFederalSpendingAgencies: string[];
+    topIndustries: string[];
+  };
+}
+
+export interface CivicAlignmentReport {
+  districtNeeds: Array<{
+    category: string;
+    metric: string;
+    severity: 'high' | 'moderate' | 'low';
+  }>;
+  votingActivity: Array<{
+    category: string;
+    totalVotes: number;
+    yeaVotes: number;
+    nayVotes: number;
+  }>;
+  donorProfile: Array<{
+    sector: string;
+    amount: number;
+    percentage: number;
+    relatedCategories: string[];
+  }>;
+  gaps: Array<{
+    observation: string;
+  }>;
+  confidence: number;
+  lastUpdated: string;
+  source: 'ai-generated' | 'fallback';
+}
