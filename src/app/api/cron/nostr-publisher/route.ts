@@ -29,6 +29,7 @@ import type {
 import type { FederalRegisterAPIResponse } from '@/types/federal-register';
 import type { GovInfoCollectionResponse } from '@/types/govinfo';
 import { detectStateEvents } from '@/lib/nostr/state-event-detector';
+import { civicEventToNote, wrapInCreate, addToOutbox } from '@/lib/activitypub/outbox';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -615,6 +616,7 @@ export async function POST(request: NextRequest) {
     const relayResults: RelayPublishResult[] = [];
     let eventsPublished = 0;
     let eventsFailed = 0;
+    let activityPubAdded = 0;
 
     logger.info(`Detected ${events.length} new civic events`, {
       operation: 'nostr_publisher',
@@ -636,6 +638,19 @@ export async function POST(request: NextRequest) {
             nostrConfig.dedupTTL
           );
           eventsPublished++;
+
+          // Also add to ActivityPub outbox (same event, different serialization)
+          try {
+            const note = civicEventToNote(event);
+            const activity = wrapInCreate(note);
+            await addToOutbox(activity);
+            activityPubAdded++;
+          } catch (apError) {
+            logger.error('Failed to add event to ActivityPub outbox', apError as Error, {
+              eventId: event.id,
+              operation: 'nostr_publisher',
+            });
+          }
 
           logger.info(`Published civic event to Nostr`, {
             eventType: event.type,
@@ -669,6 +684,7 @@ export async function POST(request: NextRequest) {
       eventsPublished,
       eventsSkipped: 0,
       eventsFailed,
+      activityPubAdded,
       relayResults,
       totalTime,
     };
