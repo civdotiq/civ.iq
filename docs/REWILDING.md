@@ -50,6 +50,20 @@ CIV.IQ can go offline entirely and the records survive.
 - **Daily, not real-time.** Cron job runs once per day.
 - **Audience gap.** The data is available; most citizens don't use Nostr clients yet.
 
+## Verification
+
+`GET /api/nostr/verify` — read-back endpoint that queries all relays for CIV.IQ-signed events and compares against publishing records.
+
+| Field               | Description                          |
+| ------------------- | ------------------------------------ |
+| `status`            | `healthy` / `degraded` / `unhealthy` |
+| `published`         | Events in Redis dedup cache          |
+| `confirmedOnRelays` | Unique events found across relays    |
+| `relayHealth[]`     | Per-relay status, event count        |
+| `discrepancies[]`   | Events published but not confirmed   |
+
+This closes the write-only gap. The system can now prove its records survive independently, not just assert it.
+
 ## Success Metrics
 
 1. Third-party consumers fetching events from relays

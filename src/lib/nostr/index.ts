@@ -6,3 +6,4 @@
 export { getNostrKeypair, generateNostrKeypair } from './keys';
 export { createSignedCivicEvent } from './events';
 export { publishToRelays } from './relay-pool';
+export { queryRelays } from './relay-reader';
