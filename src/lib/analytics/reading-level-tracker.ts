@@ -121,69 +121,78 @@ export async function getReadingLevelStats(
 
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const date = d.toISOString().slice(0, 10);
-    const distribution: Record<number, number> = {};
-    let total = 0;
-    let weightedSum = 0;
-    let passCount = 0;
 
-    // Scan grade levels 1-16
-    const gradeKeys = Array.from(
-      { length: 16 },
-      (_, i) => `analytics:reading-level:${date}:${i + 1}`
-    );
+    try {
+      const distribution: Record<number, number> = {};
+      let total = 0;
+      let weightedSum = 0;
+      let passCount = 0;
 
-    // Scan Flesch ease buckets 0-100 (step 10)
-    const fleschBuckets = Array.from({ length: 11 }, (_, i) => i * 10);
-    const fleschKeys = fleschBuckets.map(b => `analytics:flesch-ease:${date}:${b}`);
+      // Scan grade levels 1-16
+      const gradeKeys = Array.from(
+        { length: 16 },
+        (_, i) => `analytics:reading-level:${date}:${i + 1}`
+      );
 
-    const pipeline = client.pipeline();
-    for (const key of gradeKeys) {
-      pipeline.get(key);
-    }
-    for (const key of fleschKeys) {
-      pipeline.get(key);
-    }
+      // Scan Flesch ease buckets 0-100 (step 10)
+      const fleschKeys = Array.from(
+        { length: 11 },
+        (_, i) => `analytics:flesch-ease:${date}:${i * 10}`
+      );
 
-    const values = await pipeline.exec();
-
-    // Parse grade level results (first 16 values)
-    for (let i = 0; i < 16; i++) {
-      const count = parseInt(String(values[i] ?? 0)) || 0;
-      if (count > 0) {
-        const grade = i + 1;
-        distribution[grade] = count;
-        total += count;
-        weightedSum += grade * count;
-        if (grade <= 8) passCount += count;
+      const pipeline = client.pipeline();
+      for (const key of gradeKeys) {
+        pipeline.get(key);
       }
-    }
-
-    // Parse Flesch ease results (next 11 values)
-    let fleschTotal = 0;
-    let fleschWeightedSum = 0;
-    let fleschPassCount = 0;
-
-    for (let i = 0; i < 11; i++) {
-      const count = parseInt(String(values[16 + i] ?? 0)) || 0;
-      if (count > 0) {
-        const bucket = i * 10; // 0, 10, 20, ... 100
-        fleschTotal += count;
-        fleschWeightedSum += (bucket + 5) * count; // midpoint of bucket
-        if (bucket >= 60) fleschPassCount += count;
+      for (const key of fleschKeys) {
+        pipeline.get(key);
       }
-    }
 
-    if (total > 0) {
-      results.push({
-        date,
-        distribution,
-        total,
-        avgGrade: Math.round((weightedSum / total) * 10) / 10,
-        passRate: Math.round((passCount / total) * 100),
-        avgFleschEase:
-          fleschTotal > 0 ? Math.round((fleschWeightedSum / fleschTotal) * 10) / 10 : 0,
-        fleschEasePassRate: fleschTotal > 0 ? Math.round((fleschPassCount / fleschTotal) * 100) : 0,
-      });
+      const values = await pipeline.exec();
+
+      // Parse grade level results (first 16 values)
+      for (let i = 0; i < 16; i++) {
+        const count = parseInt(String(values[i] ?? 0)) || 0;
+        if (count > 0) {
+          const grade = i + 1;
+          distribution[grade] = count;
+          total += count;
+          weightedSum += grade * count;
+          if (grade <= 8) passCount += count;
+        }
+      }
+
+      // Parse Flesch ease results (next 11 values)
+      let fleschTotal = 0;
+      let fleschWeightedSum = 0;
+      let fleschPassCount = 0;
+
+      for (let i = 0; i < 11; i++) {
+        const count = parseInt(String(values[16 + i] ?? 0)) || 0;
+        if (count > 0) {
+          const bucket = i * 10; // 0, 10, 20, ... 100
+          fleschTotal += count;
+          fleschWeightedSum += (bucket + 5) * count; // midpoint of bucket
+          if (bucket >= 60) fleschPassCount += count;
+        }
+      }
+
+      if (total > 0) {
+        results.push({
+          date,
+          distribution,
+          total,
+          avgGrade: Math.round((weightedSum / total) * 10) / 10,
+          passRate: Math.round((passCount / total) * 100),
+          avgFleschEase:
+            fleschTotal > 0 ? Math.round((fleschWeightedSum / fleschTotal) * 10) / 10 : 0,
+          fleschEasePassRate:
+            fleschTotal > 0 ? Math.round((fleschPassCount / fleschTotal) * 100) : 0,
+        });
+      }
+    } catch {
+      // Skip dates with Redis errors
+      continue;
     }
   }
 
