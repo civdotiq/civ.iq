@@ -23,6 +23,9 @@ interface ReadingLevelData {
     avgGradeLevel: number;
     passRate: number;
     targetGrade: number;
+    avgFleschEase: number;
+    fleschEasePassRate: number;
+    fleschEaseTarget: number;
   };
 }
 
@@ -83,12 +86,30 @@ export default function ReadingLevelDashboard() {
     <div className="max-w-4xl mx-auto p-8">
       <h1 className="text-2xl font-bold mb-2">Reading Level Compliance</h1>
       <p className="text-sm text-gray-600 mb-8">
-        CIV.IQ commits to generating summaries at an 8th-grade reading level or below. This
-        dashboard tracks actual Flesch-Kincaid grade levels across all AI-generated bill summaries.
+        CIV.IQ commits to generating summaries at an 8th-grade reading level or below, following the{' '}
+        <a
+          href="https://www.plainlanguage.gov"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#3ea2d4' }}
+        >
+          Federal Plain Language Guidelines
+        </a>{' '}
+        and the{' '}
+        <a
+          href="https://www.govinfo.gov/content/pkg/PLAW-111publ274/pdf/PLAW-111publ274.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#3ea2d4' }}
+        >
+          Plain Writing Act of 2010
+        </a>
+        . This dashboard tracks actual Flesch-Kincaid grade levels across all AI-generated bill
+        summaries.
       </p>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-4 gap-4 mb-8">
         <div className="border-2 border-black p-4">
           <p className="text-xs text-gray-500 uppercase tracking-wide">Total Summaries</p>
           <p className="text-3xl font-bold mt-1">{aggregate.totalSummaries}</p>
@@ -108,6 +129,19 @@ export default function ReadingLevelDashboard() {
             {aggregate.passRate}%
           </p>
           <p className="text-xs text-gray-500">&le; Grade 8</p>
+        </div>
+        <div className="border-2 border-black p-4">
+          <p className="text-xs text-gray-500 uppercase tracking-wide">Flesch Reading Ease</p>
+          <p
+            className={`text-3xl font-bold mt-1 ${
+              aggregate.avgFleschEase >= aggregate.fleschEaseTarget
+                ? 'text-green-700'
+                : 'text-red-700'
+            }`}
+          >
+            {aggregate.avgFleschEase}
+          </p>
+          <p className="text-xs text-gray-500">Target: &ge; {aggregate.fleschEaseTarget}</p>
         </div>
       </div>
 
@@ -175,7 +209,16 @@ export default function ReadingLevelDashboard() {
 
       {/* Footer */}
       <p className="text-xs text-gray-500 mt-4">
-        Measured using Flesch-Kincaid Grade Level formula. Data retained for 30 days.
+        Measured using Flesch-Kincaid Grade Level formula. Compliance per the{' '}
+        <a
+          href="https://www.plainlanguage.gov"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#3ea2d4' }}
+        >
+          Plain Writing Act of 2010
+        </a>{' '}
+        (Public Law 111-274). Data retained for 30 days.
       </p>
     </div>
   );

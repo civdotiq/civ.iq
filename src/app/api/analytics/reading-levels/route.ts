@@ -30,11 +30,19 @@ export async function GET(request: NextRequest) {
   let totalSummaries = 0;
   let totalPassCount = 0;
   let weightedGradeSum = 0;
+  let fleschEaseSum = 0;
+  let fleschEaseDays = 0;
+  let fleschPassSum = 0;
 
   for (const day of stats) {
     totalSummaries += day.total;
     totalPassCount += Math.round((day.passRate / 100) * day.total);
     weightedGradeSum += day.avgGrade * day.total;
+    if (day.avgFleschEase > 0) {
+      fleschEaseSum += day.avgFleschEase * day.total;
+      fleschEaseDays += day.total;
+      fleschPassSum += Math.round((day.fleschEasePassRate / 100) * day.total);
+    }
   }
 
   return NextResponse.json({
@@ -46,6 +54,11 @@ export async function GET(request: NextRequest) {
         totalSummaries > 0 ? Math.round((weightedGradeSum / totalSummaries) * 10) / 10 : 0,
       passRate: totalSummaries > 0 ? Math.round((totalPassCount / totalSummaries) * 100) : 0,
       targetGrade: 8,
+      avgFleschEase:
+        fleschEaseDays > 0 ? Math.round((fleschEaseSum / fleschEaseDays) * 10) / 10 : 0,
+      fleschEasePassRate:
+        fleschEaseDays > 0 ? Math.round((fleschPassSum / fleschEaseDays) * 100) : 0,
+      fleschEaseTarget: 60,
     },
     metadata: {
       endpoint: '/api/analytics/reading-levels',

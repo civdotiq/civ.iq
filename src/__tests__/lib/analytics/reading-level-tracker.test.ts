@@ -11,7 +11,7 @@ const mockRpush = jest.fn().mockResolvedValue(1);
 const mockGet = jest.fn().mockResolvedValue(null);
 const mockPipeline = jest.fn().mockReturnValue({
   get: jest.fn(),
-  exec: jest.fn().mockResolvedValue(Array(16).fill(null)),
+  exec: jest.fn().mockResolvedValue(Array(27).fill(null)), // 16 grade + 11 flesch buckets
 });
 
 jest.mock('@upstash/redis', () => ({
@@ -81,8 +81,35 @@ describe('Reading Level Tracker', () => {
     expect(true).toBe(true); // Just verify no error thrown
   });
 
-  test('getReadingLevelStats returns distribution data', async () => {
-    const pipelineExec = jest.fn().mockResolvedValue([
+  test('trackReadingLevel tracks Flesch ease when provided', async () => {
+    const { trackReadingLevel } = require('@/lib/analytics/reading-level-tracker');
+    trackReadingLevel(7.2, 'test-bill', 72.5);
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // Should have 2 incr calls: grade level + flesch ease bucket
+    expect(mockIncr).toHaveBeenCalledTimes(2);
+    const fleschKey = mockIncr.mock.calls[1][0];
+    expect(fleschKey).toMatch(/^analytics:flesch-ease:\d{4}-\d{2}-\d{2}:70$/);
+  });
+
+  test('trackReadingLevel includes fleschReadingEase in raw record', async () => {
+    const { trackReadingLevel } = require('@/lib/analytics/reading-level-tracker');
+    trackReadingLevel(7.2, 'test-bill', 72.5);
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    expect(mockRpush).toHaveBeenCalled();
+    const rawRecord = JSON.parse(mockRpush.mock.calls[0][1]);
+    expect(rawRecord.fleschReadingEase).toBe(72.5);
+    expect(rawRecord.grade).toBe(7.2);
+    expect(rawRecord.billId).toBe('test-bill');
+  });
+
+  test('getReadingLevelStats returns distribution data with Flesch ease', async () => {
+    // 16 grade values + 11 flesch bucket values
+    const pipelineValues = [
+      // Grade levels 1-16
       null,
       null,
       null,
@@ -99,7 +126,21 @@ describe('Reading Level Tracker', () => {
       null,
       null,
       null,
-    ]);
+      // Flesch ease buckets 0-100 (step 10)
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      8, // bucket 60: 8 summaries
+      7, // bucket 70: 7 summaries
+      3, // bucket 80: 3 summaries
+      null,
+      null,
+    ];
+
+    const pipelineExec = jest.fn().mockResolvedValue(pipelineValues);
 
     mockPipeline.mockReturnValue({
       get: jest.fn(),
@@ -113,5 +154,7 @@ describe('Reading Level Tracker', () => {
     expect(stats).toHaveLength(1);
     expect(stats[0].total).toBe(18);
     expect(stats[0].passRate).toBe(83); // 15/18 = 83%
+    expect(stats[0].avgFleschEase).toBeGreaterThan(0);
+    expect(stats[0].fleschEasePassRate).toBe(100); // All flesch samples are >= 60
   });
 });

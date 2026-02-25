@@ -12,6 +12,7 @@
 
 import logger from '@/lib/logging/simple-logger';
 import type { BillSummary } from './bill-summarizer';
+import { ReadingLevelValidator } from './reading-level-validator';
 
 export interface FallbackOptions {
   useCongressionalSummary?: boolean;
@@ -179,6 +180,8 @@ export class BillSummaryFallbacks {
       // Clean and simplify the extracted summary
       const cleanSummary = this.simplifySummaryText(extractedSummary);
 
+      const analysis = ReadingLevelValidator.analyzeReadingLevel(cleanSummary, { targetGrade: 8 });
+
       return {
         billId: `${billMetadata.number}-${billMetadata.congress}`,
         title: billMetadata.title,
@@ -187,7 +190,7 @@ export class BillSummaryFallbacks {
         whoItAffects: ['American citizens', 'Government agencies'],
         whatItDoes: this.extractMainAction(cleanSummary),
         whyItMatters: 'This legislation could affect current laws and policies',
-        readingLevel: 8,
+        readingLevel: analysis.gradeLevel,
         confidence: 0.7,
         lastUpdated: new Date().toISOString(),
         source: 'congressional-summary',
@@ -242,6 +245,10 @@ export class BillSummaryFallbacks {
 
       const simplifiedSummary = this.simplifySummaryText(summary);
 
+      const analysis = ReadingLevelValidator.analyzeReadingLevel(simplifiedSummary, {
+        targetGrade: 8,
+      });
+
       return {
         billId: `${billMetadata.number}-${billMetadata.congress}`,
         title: billMetadata.title,
@@ -250,7 +257,7 @@ export class BillSummaryFallbacks {
         whoItAffects: this.identifyAffectedGroups(billText),
         whatItDoes: mainAction || 'has provisions affecting various areas',
         whyItMatters: 'This legislation could change current laws and affect various groups',
-        readingLevel: 8,
+        readingLevel: analysis.gradeLevel,
         confidence: 0.6,
         lastUpdated: new Date().toISOString(),
         source: 'ai-generated',
@@ -288,6 +295,10 @@ export class BillSummaryFallbacks {
       const extractedText = paragraphs.slice(0, 3).join(' ').substring(0, 500);
       const simplifiedSummary = this.simplifySummaryText(extractedText);
 
+      const analysis = ReadingLevelValidator.analyzeReadingLevel(simplifiedSummary, {
+        targetGrade: 8,
+      });
+
       return {
         billId: `${billMetadata.number}-${billMetadata.congress}`,
         title: billMetadata.title,
@@ -300,7 +311,7 @@ export class BillSummaryFallbacks {
         whoItAffects: ['American citizens'],
         whatItDoes: 'Changes or creates laws',
         whyItMatters: 'Laws affect how our government and society work',
-        readingLevel: 8,
+        readingLevel: analysis.gradeLevel,
         confidence: 0.5,
         lastUpdated: new Date().toISOString(),
         source: 'ai-generated',
@@ -325,10 +336,13 @@ export class BillSummaryFallbacks {
   }): BillSummary {
     const chamber = billMetadata.chamber.toLowerCase();
 
+    const summaryText = `This is ${billMetadata.number}, titled "${billMetadata.title}". This bill is being considered by the ${chamber}. You can read the full text to learn more about what it does.`;
+    const analysis = ReadingLevelValidator.analyzeReadingLevel(summaryText, { targetGrade: 8 });
+
     return {
       billId: `${billMetadata.number}-${billMetadata.congress}`,
       title: billMetadata.title,
-      summary: `This is ${billMetadata.number}, titled "${billMetadata.title}". This bill is being considered by the ${chamber}. You can read the full text to learn more about what it does.`,
+      summary: summaryText,
       keyPoints: [
         `This bill is being considered by the ${chamber}`,
         'The title gives you an idea of what it covers',
@@ -337,7 +351,7 @@ export class BillSummaryFallbacks {
       whoItAffects: ['To be determined'],
       whatItDoes: 'Changes or creates laws',
       whyItMatters: 'All laws can affect citizens',
-      readingLevel: 8,
+      readingLevel: analysis.gradeLevel,
       confidence: 0.3,
       lastUpdated: new Date().toISOString(),
       source: 'ai-generated',
@@ -375,7 +389,7 @@ export class BillSummaryFallbacks {
     simplified = simplified
       .replace(/;\s+/g, '. ') // Replace semicolons with periods
       .replace(/,\s+which\s+/gi, '. This ') // Simplify relative clauses
-      .replace(/\s+shall\s+/gi, ' will ') // Replace "shall" with "will"
+      .replace(/\s+shall\s+/gi, ' must ') // Replace "shall" with "must" per PlainLanguage.gov
       .replace(/\s+may\s+/gi, ' can ') // Replace "may" with "can"
       .replace(/pursuant to/gi, 'according to') // Simplify legal phrases
       .replace(/in accordance with/gi, 'following');

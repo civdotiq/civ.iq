@@ -26,6 +26,8 @@ describe('GET /api/analytics/reading-levels', () => {
     expect(response.status).toBe(200);
     expect(data.aggregate.totalSummaries).toBe(0);
     expect(data.aggregate.targetGrade).toBe(8);
+    expect(data.aggregate.avgFleschEase).toBe(0);
+    expect(data.aggregate.fleschEaseTarget).toBe(60);
     expect(data.metadata.endpoint).toBe('/api/analytics/reading-levels');
   });
 
@@ -38,6 +40,8 @@ describe('GET /api/analytics/reading-levels', () => {
         total: 18,
         avgGrade: 7.9,
         passRate: 83,
+        avgFleschEase: 68.5,
+        fleschEasePassRate: 90,
       },
     ]);
 
@@ -49,6 +53,8 @@ describe('GET /api/analytics/reading-levels', () => {
     expect(data.daily).toHaveLength(1);
     expect(data.aggregate.totalSummaries).toBe(18);
     expect(data.aggregate.avgGradeLevel).toBe(7.9);
+    expect(data.aggregate.avgFleschEase).toBeGreaterThan(0);
+    expect(data.aggregate.fleschEaseTarget).toBe(60);
   });
 
   test('respects custom date range', async () => {

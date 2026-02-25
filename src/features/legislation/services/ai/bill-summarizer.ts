@@ -88,8 +88,9 @@ export class BillSummarizer {
       // Validate reading level
       const readingLevel = await this.calculateReadingLevel(summary.summary);
 
-      // If reading level is too high, regenerate with simpler language
-      if (readingLevel > opts.targetReadingLevel + 1) {
+      // If reading level exceeds target, regenerate with simpler language
+      // Per PlainLanguage.gov: target grade 8 maximum, no tolerance
+      if (readingLevel > opts.targetReadingLevel) {
         logger.warn('Summary reading level too high, regenerating', {
           billNumber: billMetadata.number,
           readingLevel,
@@ -111,7 +112,12 @@ export class BillSummarizer {
       }
 
       // Track reading level for transparency dashboard (fire-and-forget)
-      trackReadingLevel(summary.readingLevel, `${billMetadata.congress}-${billMetadata.number}`);
+      const metrics = this.calculateReadingMetrics(summary.summary);
+      trackReadingLevel(
+        summary.readingLevel,
+        `${billMetadata.congress}-${billMetadata.number}`,
+        metrics.fleschReadingEase
+      );
 
       // Cache the result
       if (opts.useCache) {
@@ -394,22 +400,44 @@ Format as JSON:
   }
 
   /**
-   * Calculate reading level using Flesch-Kincaid formula
+   * Calculate both Flesch-Kincaid Grade Level and Flesch Reading Ease
    */
-  private static async calculateReadingLevel(text: string): Promise<number> {
-    // Simple implementation of Flesch-Kincaid Grade Level
+  static calculateReadingMetrics(text: string): {
+    gradeLevel: number;
+    fleschReadingEase: number;
+  } {
     const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
     const words = text.split(/\s+/).filter(w => w.length > 0).length;
     const syllables = this.countSyllables(text);
 
-    if (sentences === 0 || words === 0) return 12; // Default to high if can't calculate
+    if (sentences === 0 || words === 0) {
+      return { gradeLevel: 13, fleschReadingEase: 0 };
+    }
 
     const avgWordsPerSentence = words / sentences;
     const avgSyllablesPerWord = syllables / words;
 
-    const gradeLevel = 0.39 * avgWordsPerSentence + 11.8 * avgSyllablesPerWord - 15.59;
+    const gradeLevel = Math.max(
+      1,
+      Math.round((0.39 * avgWordsPerSentence + 11.8 * avgSyllablesPerWord - 15.59) * 10) / 10
+    );
 
-    return Math.max(1, Math.round(gradeLevel * 10) / 10); // Round to 1 decimal place, min 1
+    const fleschReadingEase = Math.max(
+      0,
+      Math.min(
+        100,
+        Math.round((206.835 - 1.015 * avgWordsPerSentence - 84.6 * avgSyllablesPerWord) * 10) / 10
+      )
+    );
+
+    return { gradeLevel, fleschReadingEase };
+  }
+
+  /**
+   * Calculate reading level using Flesch-Kincaid formula
+   */
+  private static async calculateReadingLevel(text: string): Promise<number> {
+    return this.calculateReadingMetrics(text).gradeLevel;
   }
 
   /**
@@ -443,18 +471,20 @@ Format as JSON:
   /**
    * Generate rule-based summary as fallback
    */
-  private static generateRuleBasedSummary(
+  private static async generateRuleBasedSummary(
     billText: string,
     billMetadata: { number: string; title: string; congress: number; chamber: string },
     _options: Required<BillSummarizationOptions>
-  ): BillSummary {
+  ): Promise<BillSummary> {
     // Extract key phrases and create simple summary
     const keyPhrases = this.extractKeyPhrases(billText);
+    const summaryText = `This bill, called ${billMetadata.title}, makes changes to current laws. ${keyPhrases.slice(0, 2).join(' ')}`;
+    const readingLevel = await this.calculateReadingLevel(summaryText);
 
     return {
       billId: `${billMetadata.number}-${billMetadata.congress}`,
       title: billMetadata.title,
-      summary: `This bill, called ${billMetadata.title}, makes changes to current laws. ${keyPhrases.slice(0, 2).join(' ')}`,
+      summary: summaryText,
       keyPoints: [
         'This is new legislation being considered by Congress',
         'It would change current laws or create new ones',
@@ -463,7 +493,7 @@ Format as JSON:
       whoItAffects: ['American citizens', 'Government agencies'],
       whatItDoes: 'Changes or creates laws',
       whyItMatters: 'Laws affect how our government and society work',
-      readingLevel: 8,
+      readingLevel,
       confidence: 0.6,
       lastUpdated: new Date().toISOString(),
       source: 'ai-generated',
@@ -498,16 +528,19 @@ Format as JSON:
   /**
    * Generate fallback summary when all else fails
    */
-  private static generateFallbackSummary(billMetadata: {
+  private static async generateFallbackSummary(billMetadata: {
     number: string;
     title: string;
     congress: number;
     chamber: string;
-  }): BillSummary {
+  }): Promise<BillSummary> {
+    const summaryText = `This is ${billMetadata.number}, titled "${billMetadata.title}". This bill is being considered by Congress. You can read the full text to learn more about what it does.`;
+    const readingLevel = await this.calculateReadingLevel(summaryText);
+
     return {
       billId: `${billMetadata.number}-${billMetadata.congress}`,
       title: billMetadata.title,
-      summary: `This is ${billMetadata.number}, titled "${billMetadata.title}". This bill is being considered by Congress. You can read the full text to learn more about what it does.`,
+      summary: summaryText,
       keyPoints: [
         'This bill is being considered by Congress',
         'The title gives you an idea of what it covers',
@@ -516,7 +549,7 @@ Format as JSON:
       whoItAffects: ['To be determined'],
       whatItDoes: 'Changes or creates laws',
       whyItMatters: 'All laws can affect citizens',
-      readingLevel: 8,
+      readingLevel,
       confidence: 0.3,
       lastUpdated: new Date().toISOString(),
       source: 'ai-generated',

@@ -8,7 +8,10 @@
  *
  * Shared constants for all AI-generated content in CIV.IQ.
  * All AI output follows the federal Plain Language Guidelines (plainlanguage.gov)
- * to ensure civic information is accessible to every reader.
+ * and the Plain Writing Act of 2010 (Public Law 111-274) to ensure civic
+ * information is accessible to every reader.
+ *
+ * Target: Flesch-Kincaid Grade Level <= 8, Flesch Reading Ease >= 60
  */
 
 /**
@@ -54,13 +57,17 @@ export const PLAIN_LANGUAGE_SYSTEM_PROMPT =
  * - "No figurative language" → No analogies/metaphors (CIV.IQ addition)
  * - "Use real numbers" → Specific dates, dollars, counts
  */
-export const PLAIN_LANGUAGE_RULES = `Follow the federal Plain Language Guidelines (plainlanguage.gov):
+export const PLAIN_LANGUAGE_RULES = `Follow the federal Plain Language Guidelines (plainlanguage.gov) and the Plain Writing Act of 2010:
 - Write for the reader. Use "you" and "your" to address them directly.
 - State the major point first, then provide details.
-- Write in active voice. Make it clear who does what.
-- Keep sentences under 20 words. One idea per sentence.
-- Use everyday words. If you must use a technical or legal term, explain it immediately.
+- Write in active voice. Make it clear who does what. Avoid passive voice.
+- Keep sentences under 20 words. Average 15 words per sentence. One idea per sentence.
+- Use everyday words. If you must use a technical or legal term, explain it immediately in parentheses.
+- Use "must" instead of "shall". Use "may" instead of "is authorized to".
+- Avoid nominalizations: use verbs instead of noun forms (say "decide" not "make a determination", "require" not "impose a requirement").
+- Replace jargon: "commence" → "begin", "utilize" → "use", "in order to" → "to", "prior to" → "before", "subsequent to" → "after", "notwithstanding" → "despite", "promulgate" → "issue".
 - Omit unneeded words. Be direct and concise.
 - Be strictly nonpartisan. State facts, not opinions.
 - Do not use analogies, metaphors, or hypothetical scenarios.
-- Use specific numbers, dates, and dollar amounts from the data when available.`;
+- Use specific numbers, dates, and dollar amounts from the data when available.
+- Use short paragraphs. One topic per paragraph.`;
