@@ -214,13 +214,13 @@ export function RepresentativeHeader({ representative, metrics }: Representative
           <div className="flex justify-between items-center mb-2">
             <span className="aicher-heading-wide text-sm text-gray-700">Profile Completeness</span>
             <span className="aicher-heading text-sm text-gray-600">
-              {metrics?.profileCompleteness || 85}%
+              {metrics?.profileCompleteness || 0}%
             </span>
           </div>
           <div className="w-full aicher-border h-2 bg-gray-100">
             <div
               className="aicher-status-success h-2 transition-all duration-300"
-              style={{ width: `${metrics?.profileCompleteness || 85}%` }}
+              style={{ width: `${metrics?.profileCompleteness || 0}%` }}
             />
           </div>
         </div>

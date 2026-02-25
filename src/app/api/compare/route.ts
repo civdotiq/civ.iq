@@ -71,14 +71,8 @@ async function getRealVotingRecord(
     const votes = votingResult.votes;
     const totalVotes = votes.length;
 
-    // Calculate party loyalty - simplified analysis
-    const partyVotes = votes.filter(vote => vote.position === 'Yea' || vote.position === 'Nay');
-
-    // For a more accurate party loyalty calculation, we'd need party line data
-    // For now, use a simplified approach based on key votes
-    const estimatedPartyAlignment = Math.floor(partyVotes.length * 0.85); // Estimated
-    const partyLoyaltyScore =
-      partyVotes.length > 0 ? Math.round((estimatedPartyAlignment / partyVotes.length) * 100) : 0;
+    // Party loyalty requires party-line vote data which is not available
+    const partyLoyaltyScore = 0;
 
     const keyVotes = votes
       .filter(vote => vote.isKeyVote || vote.category !== 'Other')
@@ -103,7 +97,7 @@ async function getRealVotingRecord(
 
     return {
       totalVotes,
-      votesWithParty: estimatedPartyAlignment,
+      votesWithParty: 0, // Requires party-line vote data
       partyLoyaltyScore,
       keyVotes,
     };

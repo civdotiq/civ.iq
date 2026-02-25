@@ -516,7 +516,7 @@ export function handleMultiDistrictZip(
     state: d.state,
     district: d.district,
     isPrimary: d.primary || false,
-    populationPercentage: d.primary ? 60 : Math.round(40 / (districts.length - 1)) || 20,
+    populationPercentage: 0, // Real population split requires Census block-level data
   }));
 
   const primaryDistrict = districtInfo.find(d => d.isPrimary);

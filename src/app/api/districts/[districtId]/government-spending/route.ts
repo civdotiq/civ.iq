@@ -188,7 +188,7 @@ async function fetchCongressionalBillsData(
 
       return {
         billsAffectingDistrict,
-        appropriationsSecured: data.length * 250000, // Estimate based on bill count
+        appropriationsSecured: 0, // Requires CBO appropriations data
       };
     }
 

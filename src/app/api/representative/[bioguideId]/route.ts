@@ -443,34 +443,6 @@ async function getHandler(
     // FALLBACK DATA: This section should NEVER fail - always return something
     logger.info('Using fallback representative data', { bioguideId });
 
-    // Ensure we always have valid fallback data
-    const _commonReps: { [key: string]: Partial<EnhancedRepresentative> } = {
-      P000595: {
-        name: 'Gary Peters',
-        firstName: 'Gary',
-        lastName: 'Peters',
-        party: 'Democratic',
-        state: 'MI',
-        chamber: 'Senate',
-        title: 'U.S. Senator',
-        bio: { gender: 'M' },
-        socialMedia: {
-          twitter: 'SenGaryPeters',
-          facebook: 'SenatorGaryPeters',
-        },
-      },
-      S000770: {
-        name: 'Debbie Stabenow',
-        firstName: 'Debbie',
-        lastName: 'Stabenow',
-        party: 'Democratic',
-        state: 'MI',
-        chamber: 'Senate',
-        title: 'U.S. Senator',
-        bio: { gender: 'F' },
-      },
-    };
-
     // EMERGENCY FIX: Never return fake representative data
     // Previously returned fake representative with fake bioguideId, phone, email, committees
     // This could seriously mislead citizens about their actual representation

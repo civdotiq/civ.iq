@@ -55,47 +55,6 @@ export function AdvancedSearch() {
   const [showFilters, setShowFilters] = useState(false);
   const [resultCount, setResultCount] = useState(0);
 
-  // Mock data for demonstration (unused but kept for reference)
-  const _mockResults: Representative[] = [
-    {
-      bioguideId: 'P000595',
-      name: 'Gary Peters',
-      party: 'D',
-      state: 'MI',
-      chamber: 'Senate',
-      yearsInOffice: 12,
-      committees: ['Armed Services', 'Commerce', 'Homeland Security'],
-      billsSponsored: 145,
-      votingScore: 72.5,
-      fundraisingTotal: 8500000,
-    },
-    {
-      bioguideId: 'S000770',
-      name: 'Debbie Stabenow',
-      party: 'D',
-      state: 'MI',
-      chamber: 'Senate',
-      yearsInOffice: 24,
-      committees: ['Agriculture', 'Budget', 'Finance'],
-      billsSponsored: 234,
-      votingScore: 78.2,
-      fundraisingTotal: 12300000,
-    },
-    {
-      bioguideId: 'L000263',
-      name: 'Sander Levin',
-      party: 'D',
-      state: 'MI',
-      district: '9',
-      chamber: 'House',
-      yearsInOffice: 18,
-      committees: ['Ways and Means', 'Joint Economic'],
-      billsSponsored: 89,
-      votingScore: 85.1,
-      fundraisingTotal: 3200000,
-    },
-  ];
-
   const states = [
     'AL',
     'AK',

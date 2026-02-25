@@ -615,16 +615,12 @@ export async function getBillsSummary(bioguideId: string): Promise<BillsSummaryR
       congress: 119,
     });
 
-    // For total career count, we'd need to query metadata endpoint
-    // For now, estimate based on current congress
-    const estimatedTotal = currentData.pagination.total * 3; // Rough estimate
-
     const result = {
       currentCongress: {
         count: currentData.pagination.total,
         congress: 119,
       },
-      totalCareer: estimatedTotal,
+      totalCareer: currentData.pagination.total, // Only current congress data available
       recentBills: currentData.bills.slice(0, 5).map(bill => ({
         title: bill.title,
         date: bill.introducedDate,
