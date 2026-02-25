@@ -67,6 +67,13 @@ export function SiteFooter({ variant = 'light', className = '' }: SiteFooterProp
           >
             Disclaimer
           </Link>
+          <span className={isDark ? 'text-gray-600' : 'text-gray-400'}>•</span>
+          <Link
+            href="/transparency/reading-levels"
+            className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-civiq-blue'} transition-colors underline`}
+          >
+            Reading Level Compliance
+          </Link>
         </div>
 
         {/* Copyright */}
