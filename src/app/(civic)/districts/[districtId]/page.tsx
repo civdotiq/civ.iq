@@ -17,6 +17,7 @@ import FederalSpendingProfile from '@/features/spending/components/FederalSpendi
 import { DistrictRelevantBills } from '@/features/districts/components/DistrictRelevantBills';
 import { DistrictCharts } from '@/features/districts/components/DistrictCharts';
 import logger from '@/lib/logging/simple-logger';
+import { DistrictExportButton } from '@/shared/components/ui/DistrictExportButton';
 import { SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import type { FAQItem } from '@/components/seo/WikipediaStyleSEO';
@@ -175,12 +176,15 @@ export default function DistrictPage() {
         <SimpleBreadcrumb />
 
         {/* Page Title */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{district.name}</h1>
-          <p className="text-gray-600">
-            Congressional District in {district.state} • {district.geography.counties.length}{' '}
-            Counties
-          </p>
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{district.name}</h1>
+            <p className="text-gray-600">
+              Congressional District in {district.state} • {district.geography.counties.length}{' '}
+              Counties
+            </p>
+          </div>
+          <DistrictExportButton districtId={districtId} />
         </div>
 
         {/* Content Grid */}
