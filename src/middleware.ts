@@ -226,15 +226,20 @@ export async function middleware(request: NextRequest) {
     // Handle CORS preflight for public endpoints (/api/v1/ and /api/feed/)
     const isPublicEndpoint =
       request.nextUrl.pathname.startsWith('/api/v1/') ||
-      request.nextUrl.pathname.startsWith('/api/feed/');
+      request.nextUrl.pathname.startsWith('/api/feed/') ||
+      request.nextUrl.pathname.startsWith('/api/activitypub/') ||
+      request.nextUrl.pathname.startsWith('/.well-known/');
 
     if (isPublicEndpoint && request.method === 'OPTIONS') {
+      const isActivityPubInbox = request.nextUrl.pathname === '/api/activitypub/inbox';
       return new NextResponse(null, {
         status: 204,
         headers: {
           'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Accept',
+          'Access-Control-Allow-Methods': isActivityPubInbox
+            ? 'GET, POST, OPTIONS'
+            : 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Accept, Signature, Date, Digest',
           'Access-Control-Max-Age': '86400',
         },
       });

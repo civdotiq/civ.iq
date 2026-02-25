@@ -85,6 +85,28 @@ This closes the write-only gap. The system can now prove its records survive ind
 
 None require CIV.IQ's permission or continued operation.
 
+## Federation: ActivityPub
+
+Nostr reaches individuals. ActivityPub reaches institutions — libraries, newsrooms, civic organizations, and any Mastodon/fediverse instance. CIV.IQ publishes as a `Service` actor that fediverse instances can follow.
+
+### How It Works
+
+1. **Discovery**: `/.well-known/webfinger?resource=acct:civiq@civ.iq`
+2. **Actor**: `/api/activitypub/actor` returns the JSON-LD actor document
+3. **Follow**: Remote servers POST Follow activities to `/api/activitypub/inbox`
+4. **Delivery**: New civic events are delivered to all follower inboxes via HTTP Signature-authenticated POST
+5. **Outbox**: `/api/activitypub/outbox` provides a paginated OrderedCollection of all published activities
+
+### What Gets Published
+
+Same 9 civic event types as Nostr: bill actions, bill introductions, vote records, executive orders, comment periods, hearings, and state legislature events. Each becomes an ActivityPub `Note` with hashtags, source links, and plain-text fallback.
+
+### Authentication
+
+- **Outgoing**: RSA-SHA256 HTTP Signatures (draft-cavage-http-signatures, Mastodon standard)
+- **Incoming**: Signature verification by fetching the remote actor's public key
+- **Keys**: RSA 2048-bit keypair stored in environment variables
+
 ---
 
 _References:_

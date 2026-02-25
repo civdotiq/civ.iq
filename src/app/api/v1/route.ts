@@ -144,6 +144,24 @@ export async function GET(): Promise<NextResponse> {
         },
       },
     },
+    federation: {
+      description:
+        'ActivityPub federation for fediverse interoperability. Follow @civiq@civ.iq from Mastodon.',
+      endpoints: {
+        webfinger: {
+          url: 'https://civ.iq/.well-known/webfinger?resource=acct:civiq@civ.iq',
+          description: 'WebFinger discovery (RFC 7033)',
+        },
+        actor: {
+          url: 'https://civ.iq/api/activitypub/actor',
+          description: 'ActivityPub Service actor document',
+        },
+        outbox: {
+          url: 'https://civ.iq/api/activitypub/outbox',
+          description: 'Civic events as ActivityPub activities',
+        },
+      },
+    },
     rateLimit: {
       requests: 60,
       window: '1 minute',
