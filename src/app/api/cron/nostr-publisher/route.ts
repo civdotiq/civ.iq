@@ -6,8 +6,8 @@
 /**
  * Nostr Publisher Cron Job
  *
- * Detects new civic events (bill actions, introductions) from Congress.gov,
- * signs them as Nostr events, and publishes to multiple relays.
+ * Detects new civic events from government APIs (Congress.gov, Federal Register,
+ * GovInfo), signs them as Nostr events, and publishes to multiple relays.
  * Runs daily at 10am UTC via Vercel Cron (after bill-summarizer and rss-aggregator).
  */
 
@@ -19,9 +19,15 @@ import type {
   CivicEvent,
   BillActionEvent,
   BillIntroducedEvent,
+  VoteRecordEvent,
+  ExecutiveOrderEvent,
+  CommentPeriodEvent,
+  HearingEvent,
   RelayPublishResult,
   NostrPublishRun,
 } from '@/types/nostr';
+import type { FederalRegisterAPIResponse } from '@/types/federal-register';
+import type { GovInfoCollectionResponse } from '@/types/govinfo';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -42,6 +48,29 @@ interface CongressBill {
 interface CongressApiResponse {
   bills?: CongressBill[];
 }
+
+interface CongressVote {
+  congress: number;
+  chamber: string;
+  number: number;
+  date: string;
+  question: string;
+  result: string;
+  url: string;
+  total?: {
+    yea: number;
+    nay: number;
+    not_voting: number;
+    present: number;
+  };
+}
+
+interface CongressVoteApiResponse {
+  votes?: CongressVote[];
+}
+
+const FEDERAL_REGISTER_API = 'https://www.federalregister.gov/api/v1';
+const GOVINFO_API = 'https://api.govinfo.gov';
 
 /**
  * Parse bill number string into type and number
@@ -147,49 +176,400 @@ function buildBillIntroducedEvent(
   };
 }
 
-/** Detect new civic events by comparing bills against Redis dedup cache */
-async function detectNewEvents(): Promise<CivicEvent[]> {
+/** Detect new bill events from Congress.gov API */
+async function detectBillEvents(): Promise<CivicEvent[]> {
   const congress = process.env.CURRENT_CONGRESS || '119';
-  const bills = await fetchRecentBills(congress);
   const cache = getRedisCache();
   const events: CivicEvent[] = [];
 
-  logger.info(`Fetched ${bills.length} recent bills for Nostr publishing`, {
-    congress,
-    operation: 'nostr_publisher',
-  });
+  try {
+    const bills = await fetchRecentBills(congress);
 
-  for (const bill of bills) {
-    const parsed = parseBillNumber(bill.number);
-    if (!parsed) continue;
+    logger.info(`Fetched ${bills.length} recent bills for Nostr publishing`, {
+      congress,
+      operation: 'nostr_publisher',
+    });
 
-    const { billType, billNum } = parsed;
-    const billId = `${billType}${billNum}-${bill.congress}`;
+    for (const bill of bills) {
+      const parsed = parseBillNumber(bill.number);
+      if (!parsed) continue;
 
-    // Check for new bill action
-    if (bill.latestAction?.actionDate && bill.latestAction?.text) {
-      const actionDedupKey = `${nostrConfig.dedupPrefix}${billId}-action-${bill.latestAction.actionDate}`;
-      const actionAlreadyPublished = await cache.exists(actionDedupKey);
+      const { billType, billNum } = parsed;
+      const billId = `${billType}${billNum}-${bill.congress}`;
 
-      if (!actionAlreadyPublished) {
-        // Check if this is an introduction action
-        const actionText = bill.latestAction.text.toLowerCase();
-        if (actionText.includes('introduced') || actionText.includes('referred to')) {
-          // Also check if the bill-introduced event was already published
-          const introDedupKey = `${nostrConfig.dedupPrefix}${billId}-introduced`;
-          const introAlreadyPublished = await cache.exists(introDedupKey);
+      if (bill.latestAction?.actionDate && bill.latestAction?.text) {
+        const actionDedupKey = `${nostrConfig.dedupPrefix}${billId}-action-${bill.latestAction.actionDate}`;
+        const actionAlreadyPublished = await cache.exists(actionDedupKey);
 
-          if (!introAlreadyPublished) {
-            events.push(buildBillIntroducedEvent(bill, billType, billNum));
+        if (!actionAlreadyPublished) {
+          const actionText = bill.latestAction.text.toLowerCase();
+          if (actionText.includes('introduced') || actionText.includes('referred to')) {
+            const introDedupKey = `${nostrConfig.dedupPrefix}${billId}-introduced`;
+            const introAlreadyPublished = await cache.exists(introDedupKey);
+
+            if (!introAlreadyPublished) {
+              events.push(buildBillIntroducedEvent(bill, billType, billNum));
+            }
           }
-        }
 
-        events.push(buildBillActionEvent(bill, billType, billNum));
+          events.push(buildBillActionEvent(bill, billType, billNum));
+        }
       }
     }
+  } catch (error) {
+    logger.error('Failed to detect bill events', error as Error, {
+      operation: 'nostr_publisher',
+    });
   }
 
   return events;
+}
+
+/** Detect new vote events from Congress.gov API */
+async function detectVoteEvents(): Promise<CivicEvent[]> {
+  const congressApiKey = process.env.CONGRESS_API_KEY;
+  if (!congressApiKey) return [];
+
+  const cache = getRedisCache();
+  const events: CivicEvent[] = [];
+
+  try {
+    const url = 'https://api.congress.gov/v3/vote?limit=20&sort=date+desc&format=json';
+    const response = await fetch(url, {
+      headers: { 'X-API-Key': congressApiKey },
+    });
+
+    if (!response.ok) {
+      logger.error('Congress Vote API error', new Error(`HTTP ${response.status}`), {
+        operation: 'nostr_publisher',
+      });
+      return [];
+    }
+
+    const data = (await response.json()) as CongressVoteApiResponse;
+    const votes = data.votes || [];
+
+    logger.info(`Fetched ${votes.length} recent votes for Nostr publishing`, {
+      operation: 'nostr_publisher',
+    });
+
+    for (const vote of votes) {
+      const chamber = vote.chamber === 'Senate' ? 'Senate' : 'House';
+      const dedupKey = `${nostrConfig.dedupPrefix}vote-${chamber.toLowerCase()}-${vote.congress}-${vote.number}`;
+      const alreadyPublished = await cache.exists(dedupKey);
+
+      if (!alreadyPublished) {
+        const voteData: VoteRecordEvent = {
+          voteId: `${chamber.toLowerCase()}-${vote.congress}-${vote.number}`,
+          chamber: chamber as 'House' | 'Senate',
+          rollNumber: vote.number,
+          question: vote.question,
+          result: vote.result,
+          date: vote.date,
+          yeas: vote.total?.yea ?? 0,
+          nays: vote.total?.nay ?? 0,
+          notVoting: vote.total?.not_voting ?? 0,
+        };
+
+        events.push({
+          type: 'vote-record',
+          id: `vote-${chamber.toLowerCase()}-${vote.congress}-${vote.number}`,
+          timestamp: Math.floor(new Date(vote.date).getTime() / 1000),
+          title: `${chamber} Vote #${vote.number}: ${vote.question}`,
+          summary: `${chamber} Roll Call #${vote.number} — ${vote.question}. Result: ${vote.result}`,
+          tags: ['vote', chamber.toLowerCase()],
+          source: {
+            url:
+              vote.url ||
+              `https://www.congress.gov/roll-call-vote/${vote.congress}/${chamber.toLowerCase()}/${vote.number}`,
+            api: 'congress.gov',
+          },
+          data: voteData,
+        });
+      }
+    }
+  } catch (error) {
+    logger.error('Failed to detect vote events', error as Error, {
+      operation: 'nostr_publisher',
+    });
+  }
+
+  return events;
+}
+
+/** Detect new executive order events from Federal Register API */
+async function detectExecutiveOrderEvents(): Promise<CivicEvent[]> {
+  const cache = getRedisCache();
+  const events: CivicEvent[] = [];
+
+  try {
+    const params = new URLSearchParams();
+    params.set('conditions[presidential_document_type]', 'executive_order');
+    params.set('per_page', '10');
+    params.set('order', 'newest');
+    [
+      'document_number',
+      'title',
+      'abstract',
+      'publication_date',
+      'html_url',
+      'agencies',
+      'executive_order_number',
+      'signing_date',
+    ].forEach(f => params.append('fields[]', f));
+
+    const url = `${FEDERAL_REGISTER_API}/documents.json?${params.toString()}`;
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
+      },
+    });
+
+    if (!response.ok) {
+      logger.error('Federal Register EO API error', new Error(`HTTP ${response.status}`), {
+        operation: 'nostr_publisher',
+      });
+      return [];
+    }
+
+    const data: FederalRegisterAPIResponse = await response.json();
+
+    logger.info(`Fetched ${data.results.length} executive orders for Nostr publishing`, {
+      operation: 'nostr_publisher',
+    });
+
+    for (const doc of data.results) {
+      const dedupKey = `${nostrConfig.dedupPrefix}eo-${doc.document_number}`;
+      const alreadyPublished = await cache.exists(dedupKey);
+
+      if (!alreadyPublished) {
+        const primaryAgency = doc.agencies?.[0];
+        const eoData: ExecutiveOrderEvent = {
+          documentNumber: doc.document_number,
+          title: doc.title,
+          summary: doc.abstract,
+          eoNumber: doc.executive_order_number ?? undefined,
+          signingDate: doc.signing_date ?? undefined,
+          agency: primaryAgency?.name ?? 'Executive Office of the President',
+          url: doc.html_url,
+        };
+
+        events.push({
+          type: 'executive-order',
+          id: `eo-${doc.document_number}`,
+          timestamp: Math.floor(new Date(doc.publication_date).getTime() / 1000),
+          title: doc.executive_order_number
+            ? `Executive Order ${doc.executive_order_number}: ${doc.title}`
+            : `Executive Order: ${doc.title}`,
+          summary: doc.abstract || doc.title,
+          tags: ['executive-order', 'presidential'],
+          source: {
+            url: doc.html_url,
+            api: 'federalregister.gov',
+          },
+          data: eoData,
+        });
+      }
+    }
+  } catch (error) {
+    logger.error('Failed to detect executive order events', error as Error, {
+      operation: 'nostr_publisher',
+    });
+  }
+
+  return events;
+}
+
+/** Detect new open comment period events from Federal Register API */
+async function detectCommentPeriodEvents(): Promise<CivicEvent[]> {
+  const cache = getRedisCache();
+  const events: CivicEvent[] = [];
+
+  try {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0] ?? '';
+
+    const params = new URLSearchParams();
+    params.set('conditions[type]', 'PRORULE');
+    params.set('conditions[comment_date][gte]', todayStr);
+    params.set('per_page', '20');
+    params.set('order', 'newest');
+    [
+      'document_number',
+      'title',
+      'abstract',
+      'publication_date',
+      'html_url',
+      'agencies',
+      'comment_url',
+      'comments_close_on',
+    ].forEach(f => params.append('fields[]', f));
+
+    const url = `${FEDERAL_REGISTER_API}/documents.json?${params.toString()}`;
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
+      },
+    });
+
+    if (!response.ok) {
+      logger.error(
+        'Federal Register comment period API error',
+        new Error(`HTTP ${response.status}`),
+        {
+          operation: 'nostr_publisher',
+        }
+      );
+      return [];
+    }
+
+    const data: FederalRegisterAPIResponse = await response.json();
+
+    logger.info(`Fetched ${data.results.length} comment periods for Nostr publishing`, {
+      operation: 'nostr_publisher',
+    });
+
+    for (const doc of data.results) {
+      const dedupKey = `${nostrConfig.dedupPrefix}comment-${doc.document_number}`;
+      const alreadyPublished = await cache.exists(dedupKey);
+
+      if (!alreadyPublished) {
+        const primaryAgency = doc.agencies?.[0];
+        let daysUntilClose: number | undefined;
+        if (doc.comments_close_on) {
+          const closeDate = new Date(doc.comments_close_on);
+          const diffTime = closeDate.getTime() - today.getTime();
+          daysUntilClose = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        const commentData: CommentPeriodEvent = {
+          documentNumber: doc.document_number,
+          title: doc.title,
+          summary: doc.abstract,
+          agency: primaryAgency?.name ?? 'Unknown Agency',
+          commentUrl: doc.comment_url ?? undefined,
+          commentsCloseOn: doc.comments_close_on ?? undefined,
+          daysUntilClose,
+          url: doc.html_url,
+        };
+
+        const closingNote =
+          daysUntilClose !== undefined ? ` (${daysUntilClose} days remaining)` : '';
+        events.push({
+          type: 'comment-period',
+          id: `comment-${doc.document_number}`,
+          timestamp: Math.floor(new Date(doc.publication_date).getTime() / 1000),
+          title: `Open for Comment: ${doc.title}`,
+          summary: `${primaryAgency?.name ?? 'Agency'} — ${doc.abstract || doc.title}${closingNote}`,
+          tags: ['comment-period', 'regulation', primaryAgency?.slug ?? 'federal'],
+          source: {
+            url: doc.html_url,
+            api: 'federalregister.gov',
+          },
+          data: commentData,
+        });
+      }
+    }
+  } catch (error) {
+    logger.error('Failed to detect comment period events', error as Error, {
+      operation: 'nostr_publisher',
+    });
+  }
+
+  return events;
+}
+
+/** Detect new hearing events from GovInfo API */
+async function detectHearingEvents(): Promise<CivicEvent[]> {
+  const govInfoApiKey = process.env.GOVINFO_API_KEY ?? 'DEMO_KEY';
+  const cache = getRedisCache();
+  const events: CivicEvent[] = [];
+
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    const startDateStr = startDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
+
+    const url = `${GOVINFO_API}/collections/CHRG/${startDateStr}?pageSize=20`;
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'CIV.IQ/1.0 (Civic Intelligence Platform)',
+        'X-API-Key': govInfoApiKey,
+      },
+    });
+
+    if (!response.ok) {
+      logger.error('GovInfo hearings API error', new Error(`HTTP ${response.status}`), {
+        operation: 'nostr_publisher',
+      });
+      return [];
+    }
+
+    const data: GovInfoCollectionResponse = await response.json();
+
+    logger.info(`Fetched ${data.packages.length} hearings for Nostr publishing`, {
+      operation: 'nostr_publisher',
+    });
+
+    for (const pkg of data.packages) {
+      const dedupKey = `${nostrConfig.dedupPrefix}hearing-${pkg.packageId}`;
+      const alreadyPublished = await cache.exists(dedupKey);
+
+      if (!alreadyPublished) {
+        const chamber = parseChamberFromDocClass(pkg.docClass);
+        const hearingData: HearingEvent = {
+          packageId: pkg.packageId,
+          title: pkg.title,
+          congress: parseInt(pkg.congress) || 119,
+          chamber,
+          dateIssued: pkg.dateIssued,
+          url: `https://www.govinfo.gov/app/details/${pkg.packageId}`,
+        };
+
+        events.push({
+          type: 'hearing',
+          id: `hearing-${pkg.packageId}`,
+          timestamp: Math.floor(new Date(pkg.dateIssued).getTime() / 1000),
+          title: `Hearing: ${pkg.title}`,
+          summary: `${chamber} hearing — ${pkg.title}`,
+          tags: ['hearing', chamber.toLowerCase()],
+          source: {
+            url: `https://www.govinfo.gov/app/details/${pkg.packageId}`,
+            api: 'govinfo.gov',
+          },
+          data: hearingData,
+        });
+      }
+    }
+  } catch (error) {
+    logger.error('Failed to detect hearing events', error as Error, {
+      operation: 'nostr_publisher',
+    });
+  }
+
+  return events;
+}
+
+/** Parse chamber from GovInfo document class */
+function parseChamberFromDocClass(docClass: string): 'House' | 'Senate' | 'Joint' {
+  if (docClass.startsWith('H')) return 'House';
+  if (docClass.startsWith('S')) return 'Senate';
+  return 'Joint';
+}
+
+/** Detect all new civic events from government APIs */
+async function detectNewEvents(): Promise<CivicEvent[]> {
+  const [billEvents, voteEvents, eoEvents, commentEvents, hearingEvents] = await Promise.all([
+    detectBillEvents(),
+    detectVoteEvents(),
+    detectExecutiveOrderEvents(),
+    detectCommentPeriodEvents(),
+    detectHearingEvents(),
+  ]);
+  return [...billEvents, ...voteEvents, ...eoEvents, ...commentEvents, ...hearingEvents];
 }
 
 export async function POST(request: NextRequest) {
