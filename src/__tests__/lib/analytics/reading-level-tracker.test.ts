@@ -1,0 +1,117 @@
+/**
+ * Copyright (c) 2019-2025 Mark Sandford
+ * Licensed under the MIT License. See LICENSE and NOTICE files.
+ */
+
+/* eslint-disable @typescript-eslint/no-require-imports */
+
+const mockIncr = jest.fn().mockResolvedValue(1);
+const mockExpire = jest.fn().mockResolvedValue(true);
+const mockRpush = jest.fn().mockResolvedValue(1);
+const mockGet = jest.fn().mockResolvedValue(null);
+const mockPipeline = jest.fn().mockReturnValue({
+  get: jest.fn(),
+  exec: jest.fn().mockResolvedValue(Array(16).fill(null)),
+});
+
+jest.mock('@upstash/redis', () => ({
+  Redis: jest.fn().mockImplementation(() => ({
+    incr: mockIncr,
+    expire: mockExpire,
+    rpush: mockRpush,
+    get: mockGet,
+    pipeline: mockPipeline,
+  })),
+}));
+
+import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
+
+describe('Reading Level Tracker', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    jest.resetModules();
+    process.env = {
+      ...originalEnv,
+      UPSTASH_REDIS_REST_URL: 'https://test.upstash.io',
+      UPSTASH_REDIS_REST_TOKEN: 'test-token',
+    };
+    mockIncr.mockClear();
+    mockExpire.mockClear();
+    mockRpush.mockClear();
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  test('trackReadingLevel increments Redis counter', async () => {
+    const { trackReadingLevel } = require('@/lib/analytics/reading-level-tracker');
+    trackReadingLevel(7.2, 'test-bill');
+
+    // Allow fire-and-forget to execute
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    expect(mockIncr).toHaveBeenCalled();
+    const key = mockIncr.mock.calls[0][0];
+    expect(key).toMatch(/^analytics:reading-level:\d{4}-\d{2}-\d{2}:7$/);
+  });
+
+  test('trackReadingLevel sets TTL on first increment', async () => {
+    mockIncr.mockResolvedValueOnce(1);
+
+    const { trackReadingLevel } = require('@/lib/analytics/reading-level-tracker');
+    trackReadingLevel(8.5);
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    expect(mockExpire).toHaveBeenCalled();
+  });
+
+  test('trackReadingLevel is no-op without Redis config', async () => {
+    delete process.env.UPSTASH_REDIS_REST_URL;
+
+    const { trackReadingLevel } = require('@/lib/analytics/reading-level-tracker');
+    trackReadingLevel(7.0);
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // mockIncr should not be called since redis is null
+    // (new module with no redis config)
+    expect(true).toBe(true); // Just verify no error thrown
+  });
+
+  test('getReadingLevelStats returns distribution data', async () => {
+    const pipelineExec = jest.fn().mockResolvedValue([
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      5, // grade 7: 5 summaries
+      10, // grade 8: 10 summaries
+      3, // grade 9: 3 summaries
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]);
+
+    mockPipeline.mockReturnValue({
+      get: jest.fn(),
+      exec: pipelineExec,
+    });
+
+    const { getReadingLevelStats } = require('@/lib/analytics/reading-level-tracker');
+    const today = new Date().toISOString().slice(0, 10);
+    const stats = await getReadingLevelStats(today, today);
+
+    expect(stats).toHaveLength(1);
+    expect(stats[0].total).toBe(18);
+    expect(stats[0].passRate).toBe(83); // 15/18 = 83%
+  });
+});

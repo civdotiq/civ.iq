@@ -13,6 +13,7 @@
 import logger from '@/lib/logging/simple-logger';
 import { getRedisCache } from '@/lib/cache/redis-client';
 import { generateAIText } from '@/lib/ai/provider';
+import { trackReadingLevel } from '@/lib/analytics/reading-level-tracker';
 import { PLAIN_LANGUAGE_RULES, PLAIN_LANGUAGE_SYSTEM_PROMPT } from '@/lib/ai/plain-language';
 import { BillSummaryFallbacks } from './bill-summary-fallbacks';
 
@@ -108,6 +109,9 @@ export class BillSummarizer {
       } else {
         summary.readingLevel = readingLevel;
       }
+
+      // Track reading level for transparency dashboard (fire-and-forget)
+      trackReadingLevel(summary.readingLevel, `${billMetadata.congress}-${billMetadata.number}`);
 
       // Cache the result
       if (opts.useCache) {
