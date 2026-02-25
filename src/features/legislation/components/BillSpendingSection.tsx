@@ -3,6 +3,7 @@
 import useSWR from 'swr';
 import { DollarSign, ExternalLink, AlertCircle, RefreshCw } from 'lucide-react';
 import type { BillSpendingConnection } from '@/types/joins';
+import { DataProvenance } from '@/shared/components/ui/DataProvenance';
 
 interface BillSpendingSectionProps {
   billId: string;
@@ -168,13 +169,18 @@ export function BillSpendingSection({ billId }: BillSpendingSectionProps) {
         ))}
       </div>
 
-      {/* Data Source Attribution */}
-      <div className="mt-4 pt-3 border-t border-gray-200">
-        <p className="text-xs text-gray-500">
-          Spending data from USASpending.gov. Connections derived from bill policy areas and
-          committee assignments.
-        </p>
-      </div>
+      {/* Data Provenance */}
+      <DataProvenance
+        sources={
+          data?.metadata?.dataSources?.map((name: string) => ({
+            name,
+            status: 'available' as const,
+          })) ?? [{ name: 'USASpending.gov', status: 'available' as const }]
+        }
+        generatedAt={data?.metadata?.generatedAt}
+        quality={data?.metadata?.dataQuality}
+        className="mt-4"
+      />
     </div>
   );
 }

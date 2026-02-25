@@ -3,6 +3,8 @@
 import useSWR from 'swr';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import type { CivicAlignmentReport } from '@/types/ai';
+import { DataProvenance } from '@/shared/components/ui/DataProvenance';
+import type { DataSource } from '@/shared/components/ui/DataProvenance';
 
 interface CivicAlignmentTabProps {
   bioguideId: string;
@@ -235,26 +237,23 @@ export function CivicAlignmentTab({ bioguideId }: CivicAlignmentTabProps) {
       <VotingActivitySection activity={alignment.votingActivity} />
       <DonorProfileSection donors={alignment.donorProfile} />
 
-      {/* Data Quality Note */}
-      {data.metadata?.dataQuality === 'partial' && (
-        <div className="p-3 bg-yellow-50 border border-yellow-200">
-          <p className="text-xs text-yellow-800">
-            Some data sources were unavailable. Analysis is based on partial data.
-          </p>
-        </div>
-      )}
-
-      {/* Attribution */}
-      <div className="pt-3 border-t border-gray-200">
-        <p className="text-xs text-gray-500">
-          {alignment.source === 'fallback' ? 'Heuristic analysis' : 'AI-generated analysis'} using{' '}
-          {data.metadata?.dataSources?.join(', ') || 'government sources'}. Generated{' '}
-          {data.metadata?.generatedAt
-            ? new Date(data.metadata.generatedAt).toLocaleDateString()
-            : 'recently'}
-          .
-        </p>
-      </div>
+      {/* Data Provenance */}
+      <DataProvenance
+        sources={buildProvenanceSources(data.metadata?.dataSources, data.metadata?.dataQuality)}
+        generatedAt={data.metadata?.generatedAt}
+        quality={data.metadata?.dataQuality}
+      />
     </div>
   );
+}
+
+function buildProvenanceSources(
+  dataSources?: string[],
+  quality?: 'complete' | 'partial' | 'degraded'
+): DataSource[] {
+  const sources = dataSources ?? ['government sources'];
+  return sources.map(name => ({
+    name,
+    status: quality === 'degraded' ? ('unavailable' as const) : ('available' as const),
+  }));
 }

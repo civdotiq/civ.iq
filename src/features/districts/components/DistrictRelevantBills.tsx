@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import useSWR from 'swr';
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { DataProvenance } from '@/shared/components/ui/DataProvenance';
 
 interface DistrictRelevantBillsProps {
   districtId: string;
@@ -165,13 +166,15 @@ export function DistrictRelevantBills({ districtId }: DistrictRelevantBillsProps
         ))}
       </div>
 
-      {/* Source Attribution */}
-      <div className="mt-4 pt-3 border-t border-gray-200">
-        <p className="text-xs text-gray-500">
-          Relevance based on district spending patterns (USASpending.gov) and representative
-          committee assignments (Congress.gov).
-        </p>
-      </div>
+      {/* Data Provenance */}
+      <DataProvenance
+        sources={[
+          { name: 'USASpending.gov', status: 'available' },
+          { name: 'Congress.gov', status: 'available' },
+        ]}
+        quality="complete"
+        className="mt-4"
+      />
     </div>
   );
 }
