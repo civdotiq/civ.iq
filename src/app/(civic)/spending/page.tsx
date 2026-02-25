@@ -8,6 +8,7 @@ import SpendingSearch from '@/features/spending/components/SpendingSearch';
 import SpendingSummaryCards from '@/features/spending/components/SpendingSummaryCards';
 import SpendingBreakdownChart from '@/features/spending/components/SpendingBreakdownChart';
 import AwardList from '@/features/spending/components/AwardList';
+import { EnablingLegislation } from '@/features/spending/components/EnablingLegislation';
 
 function SpendingPageContent() {
   const searchParams = useSearchParams();
@@ -131,6 +132,15 @@ function SpendingPageContent() {
               <AwardList awards={data.recentContracts} title="Top Contracts" maxItems={10} />
               <AwardList awards={data.recentGrants} title="Top Grants" maxItems={10} />
             </div>
+
+            <EnablingLegislation
+              agencySlugs={[
+                ...new Set([
+                  ...data.recentContracts.map(a => a.agencySlug),
+                  ...data.recentGrants.map(a => a.agencySlug),
+                ]),
+              ].filter(Boolean)}
+            />
 
             {/* Source attribution */}
             <p className="text-xs text-gray-400 dark:text-gray-500 border-t border-gray-200 dark:border-gray-700 pt-4">
