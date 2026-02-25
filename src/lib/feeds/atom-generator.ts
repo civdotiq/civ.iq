@@ -263,3 +263,53 @@ export function createFloorFeedConfig(): AtomFeedConfig {
     rights: 'Data sourced from Congress.gov. MIT License.',
   };
 }
+
+/**
+ * Helper: Create a state bills feed config
+ */
+export function createStateBillsFeedConfig(state: string, stateName: string): AtomFeedConfig {
+  const baseUrl = 'https://civdotiq.org';
+
+  return {
+    id: `${baseUrl}/feeds/state/${state}/bills`,
+    title: `${stateName} Legislature Bills | CIV.IQ`,
+    subtitle: `Recent bills in the ${stateName} state legislature`,
+    link: `${baseUrl}/state-bills/${state}`,
+    selfLink: `${baseUrl}/api/feed/state/${state}/bills`,
+    updated: new Date(),
+    author: {
+      name: 'CIV.IQ',
+      uri: baseUrl,
+    },
+    icon: `${baseUrl}/favicon.ico`,
+    logo: `${baseUrl}/images/civiq-logo.png`,
+    rights: 'Data sourced from OpenStates.org. MIT License.',
+  };
+}
+
+/**
+ * Helper: Create a state legislator feed config
+ */
+export function createStateLegislatorFeedConfig(
+  state: string,
+  legislatorId: string,
+  name: string
+): AtomFeedConfig {
+  const baseUrl = 'https://civdotiq.org';
+
+  return {
+    id: `${baseUrl}/feeds/state/${state}/legislator/${legislatorId}`,
+    title: `${name} — ${state.toUpperCase()} Legislature Activity | CIV.IQ`,
+    subtitle: `Legislative activity for ${name}`,
+    link: `${baseUrl}/state-legislature/${state}`,
+    selfLink: `${baseUrl}/api/feed/state/${state}/legislator/${legislatorId}`,
+    updated: new Date(),
+    author: {
+      name: 'CIV.IQ',
+      uri: baseUrl,
+    },
+    icon: `${baseUrl}/favicon.ico`,
+    logo: `${baseUrl}/images/civiq-logo.png`,
+    rights: 'Data sourced from OpenStates.org. MIT License.',
+  };
+}

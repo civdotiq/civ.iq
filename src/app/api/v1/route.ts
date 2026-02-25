@@ -132,6 +132,16 @@ export async function GET(): Promise<NextResponse> {
           description: 'Activity feed for a committee',
           example: 'https://civ.iq/api/feed/committee/HSJU',
         },
+        stateBills: {
+          url: 'https://civ.iq/api/feed/state/{state}/bills',
+          description: 'Recent state legislature bills via OpenStates',
+          example: 'https://civ.iq/api/feed/state/CA/bills',
+        },
+        stateLegislator: {
+          url: 'https://civ.iq/api/feed/state/{state}/legislator/{id}',
+          description: 'State legislator sponsored bills',
+          example: 'https://civ.iq/api/feed/state/NY/legislator/ocd-person/abc123',
+        },
       },
     },
     rateLimit: {
