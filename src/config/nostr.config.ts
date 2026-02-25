@@ -36,4 +36,7 @@ export const nostrConfig = {
   // Redis dedup key prefix and TTL
   dedupPrefix: 'nostr:published:',
   dedupTTL: 30 * 24 * 60 * 60,
+
+  // State legislature event detection (most reliable OpenStates coverage)
+  enabledStates: ['ca', 'ny', 'tx', 'il', 'fl'] as string[],
 } as const;

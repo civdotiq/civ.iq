@@ -43,6 +43,18 @@ CIV.IQ can go offline entirely and the records survive.
 
 **Kind 30023:** Universal client support. Rich structure (title, summary, tags, JSON body). Addressable via `d` tag. The `civiq:` namespace creates a civic data schema within the existing standard.
 
+## State Events
+
+State legislature events are higher-leverage rewilding than federal — more invisible, less covered, closer to citizens. The publisher detects state bill introductions, actions, and votes via OpenStates API and publishes them to the same relay network.
+
+| Event Type              | d-tag Pattern                                                         | Source     |
+| ----------------------- | --------------------------------------------------------------------- | ---------- |
+| `state-bill-introduced` | `civiq:state-bill-introduced:state-bill-intro-{state}-{id}-{session}` | OpenStates |
+| `state-bill-action`     | `civiq:state-bill-action:state-bill-action-{state}-{id}-{date}`       | OpenStates |
+| `state-vote`            | `civiq:state-vote:state-vote-{state}-{voteId}`                        | OpenStates |
+
+**Enabled states**: CA, NY, TX, IL, FL (configurable via `nostrConfig.enabledStates`).
+
 ## Limits
 
 - **Does not replace government APIs.** If Congress.gov stops publishing, we stop detecting. Nostr preserves what was detected, not what was never published.

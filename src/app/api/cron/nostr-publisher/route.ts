@@ -28,6 +28,7 @@ import type {
 } from '@/types/nostr';
 import type { FederalRegisterAPIResponse } from '@/types/federal-register';
 import type { GovInfoCollectionResponse } from '@/types/govinfo';
+import { detectStateEvents } from '@/lib/nostr/state-event-detector';
 import logger from '@/lib/logging/simple-logger';
 
 export const dynamic = 'force-dynamic';
@@ -562,14 +563,23 @@ function parseChamberFromDocClass(docClass: string): 'House' | 'Senate' | 'Joint
 
 /** Detect all new civic events from government APIs */
 async function detectNewEvents(): Promise<CivicEvent[]> {
-  const [billEvents, voteEvents, eoEvents, commentEvents, hearingEvents] = await Promise.all([
-    detectBillEvents(),
-    detectVoteEvents(),
-    detectExecutiveOrderEvents(),
-    detectCommentPeriodEvents(),
-    detectHearingEvents(),
-  ]);
-  return [...billEvents, ...voteEvents, ...eoEvents, ...commentEvents, ...hearingEvents];
+  const [billEvents, voteEvents, eoEvents, commentEvents, hearingEvents, stateEvents] =
+    await Promise.all([
+      detectBillEvents(),
+      detectVoteEvents(),
+      detectExecutiveOrderEvents(),
+      detectCommentPeriodEvents(),
+      detectHearingEvents(),
+      detectStateEvents(),
+    ]);
+  return [
+    ...billEvents,
+    ...voteEvents,
+    ...eoEvents,
+    ...commentEvents,
+    ...hearingEvents,
+    ...stateEvents,
+  ];
 }
 
 export async function POST(request: NextRequest) {

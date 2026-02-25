@@ -38,7 +38,10 @@ export async function GET() {
           const suffix = key.replace(nostrConfig.dedupPrefix, '');
           let eventType = 'unknown';
 
-          if (suffix.startsWith('vote-')) eventType = 'vote-record';
+          if (suffix.startsWith('state-vote-')) eventType = 'state-vote';
+          else if (suffix.startsWith('state-bill-intro-')) eventType = 'state-bill-introduced';
+          else if (suffix.startsWith('state-bill-action-')) eventType = 'state-bill-action';
+          else if (suffix.startsWith('vote-')) eventType = 'vote-record';
           else if (suffix.startsWith('eo-')) eventType = 'executive-order';
           else if (suffix.startsWith('comment-')) eventType = 'comment-period';
           else if (suffix.startsWith('hearing-')) eventType = 'hearing';
@@ -74,6 +77,9 @@ export async function GET() {
         'executive-order',
         'comment-period',
         'hearing',
+        'state-bill-introduced',
+        'state-bill-action',
+        'state-vote',
       ],
       metadata: {
         endpoint: '/api/nostr/status',

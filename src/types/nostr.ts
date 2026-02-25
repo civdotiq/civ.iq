@@ -15,7 +15,10 @@ export type CivicEventType =
   | 'vote-record'
   | 'executive-order'
   | 'comment-period'
-  | 'hearing';
+  | 'hearing'
+  | 'state-bill-introduced'
+  | 'state-bill-action'
+  | 'state-vote';
 
 /** Input to the Nostr event builder */
 export interface CivicEvent {
@@ -35,7 +38,10 @@ export interface CivicEvent {
     | VoteRecordEvent
     | ExecutiveOrderEvent
     | CommentPeriodEvent
-    | HearingEvent;
+    | HearingEvent
+    | StateBillIntroducedEvent
+    | StateBillActionEvent
+    | StateVoteEvent;
 }
 
 export interface BillActionEvent {
@@ -100,6 +106,40 @@ export interface HearingEvent {
   committee?: string;
   dateIssued: string;
   url: string;
+}
+
+export interface StateBillIntroducedEvent {
+  billId: string;
+  identifier: string;
+  state: string;
+  title: string;
+  chamber: 'upper' | 'lower';
+  session: string;
+  sponsor: string;
+  introducedDate: string;
+  openstatesUrl: string;
+}
+
+export interface StateBillActionEvent {
+  billId: string;
+  identifier: string;
+  state: string;
+  actionText: string;
+  actionDate: string;
+  chamber: 'upper' | 'lower';
+  classification: string[];
+}
+
+export interface StateVoteEvent {
+  voteId: string;
+  state: string;
+  chamber: 'upper' | 'lower';
+  billIdentifier: string;
+  motionText: string;
+  result: string;
+  date: string;
+  yeas: number;
+  nays: number;
 }
 
 /** Relay publishing result */
