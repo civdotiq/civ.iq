@@ -15,7 +15,7 @@ import { activitypubConfig } from '@/config/activitypub.config';
 export const metadata: Metadata = {
   title: 'Open Data | CIV.IQ',
   description:
-    'CIV.IQ publishes civic data through open protocols: REST API, Atom feeds, Nostr, and ActivityPub. All data from official government sources, MIT licensed.',
+    'CIV.IQ publishes civic data through open protocols: REST API, Atom feeds, Nostr, and ActivityPub. No API key required. MIT licensed.',
 };
 
 const BASE = 'https://civ.iq/api/v1';
@@ -159,12 +159,106 @@ export default function OpenDataPage() {
           </div>
         </div>
 
+        {/* Quick Start */}
+        <section className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Quick Start</h2>
+          <p className="text-gray-600 mb-grid-3">
+            No API key, no registration. Paste this into a terminal:
+          </p>
+
+          <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mb-grid-3">
+            curl {BASE}/representatives?state=MI&amp;chamber=house
+          </pre>
+
+          <div className="mb-grid-3">
+            <span className="text-sm text-gray-500 uppercase tracking-wider">Response</span>
+            <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mt-1">
+              {JSON.stringify(
+                {
+                  data: [
+                    {
+                      bioguideId: 'S000770',
+                      name: 'Debbie Stabenow',
+                      party: 'D',
+                      state: 'MI',
+                      chamber: 'house',
+                      district: '...',
+                    },
+                  ],
+                  pagination: { total: 13, limit: 100, offset: 0, hasMore: false },
+                  meta: {
+                    apiVersion: 'v1',
+                    timestamp: '2026-02-26T12:00:00.000Z',
+                    source: 'congress.gov',
+                    license: 'MIT',
+                    documentation: 'https://civ.iq/docs/api',
+                  },
+                },
+                null,
+                2
+              )}
+            </pre>
+          </div>
+
+          <div className="border-2 border-gray-200 overflow-x-auto mb-grid-3">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                  <th className="text-left p-grid-2 font-semibold">Detail</th>
+                  <th className="text-left p-grid-2 font-semibold">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2">Authentication</td>
+                  <td className="p-grid-2 text-gray-600">None required</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2">Rate limit</td>
+                  <td className="p-grid-2 text-gray-600">
+                    60 requests/min per IP. Headers:{' '}
+                    <code className="text-xs">X-RateLimit-Remaining</code>,{' '}
+                    <code className="text-xs">X-RateLimit-Reset</code>
+                  </td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2">Response format</td>
+                  <td className="p-grid-2 text-gray-600">
+                    JSON with <code className="text-xs">data</code>,{' '}
+                    <code className="text-xs">pagination</code>,{' '}
+                    <code className="text-xs">meta</code> envelope
+                  </td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2">CORS</td>
+                  <td className="p-grid-2 text-gray-600">
+                    <code className="text-xs">Access-Control-Allow-Origin: *</code> on all endpoints
+                  </td>
+                </tr>
+                <tr>
+                  <td className="p-grid-2">Freshness</td>
+                  <td className="p-grid-2 text-gray-600">
+                    Legislative data cached 1&ndash;24 hours depending on endpoint. Historical data
+                    cached longer. Cache headers included in every response.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p className="text-gray-600 text-sm">
+            JavaScript:{' '}
+            <code className="text-xs bg-gray-50 px-1 py-0.5">
+              fetch(&apos;https://civ.iq/api/v1/bills?limit=5&apos;).then(r =&gt; r.json())
+            </code>
+          </p>
+        </section>
+
         {/* REST API */}
         <section className="mb-grid-8">
           <h2 className="text-2xl font-bold mb-grid-2">REST API</h2>
           <p className="text-gray-600 mb-grid-2">
-            Normalized U.S. government data via open REST endpoints. JSON responses, CORS enabled,
-            rate limited to 60 requests per minute.
+            10 endpoints covering representatives, bills, votes, districts, and committees.
           </p>
           <div className="mb-grid-2">
             <span className="text-sm text-gray-500 uppercase tracking-wider">Base URL</span>
