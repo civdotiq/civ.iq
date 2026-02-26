@@ -14,7 +14,7 @@ vercel-deploy.log
 **/*.spec.tsx
 
 # Documentation
-docs/
+/docs/
 *.md
 !README.md
 
