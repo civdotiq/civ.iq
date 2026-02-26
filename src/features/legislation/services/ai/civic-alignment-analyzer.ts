@@ -110,7 +110,7 @@ export class CivicAlignmentAnalyzer {
 CHAMBER: ${legislator.chamber}
 COMMITTEES: ${legislator.committees.map(c => `${c.name} (${c.role})`).join(', ') || 'None listed'}
 
-DISTRICT DATA:
+CONSTITUENCY DATA (${legislator.district ? `Congressional District ${districtLabel}` : `State of ${legislator.state}`}, source: U.S. Census Bureau ACS 5-Year Estimates 2022):
 - Population: ${district.population > 0 ? district.population.toLocaleString() : 'Unknown'}
 - Median Income: ${district.medianIncome > 0 ? '$' + district.medianIncome.toLocaleString() : 'Unknown'}
 - Unemployment Rate: ${district.unemploymentRate > 0 ? district.unemploymentRate + '%' : 'Unknown'}
@@ -136,7 +136,7 @@ Given the data above, identify gaps where these three datasets do not align.
 Respond in JSON:
 {
   "districtNeeds": [
-    { "category": "Category Name", "metric": "Specific metric with number", "severity": "high|moderate|low" }
+    { "category": "Category Name", "metric": "Specific metric with number", "severity": "high|moderate|low", "source": "Official data source name and year" }
   ],
   "votingActivity": [
     { "category": "Category Name", "totalVotes": 0, "yeaVotes": 0, "nayVotes": 0 }
@@ -245,71 +245,81 @@ ${PLAIN_LANGUAGE_RULES}
 
     if (district.unemploymentRate > 6) {
       needs.push({
-        category: 'Employment',
-        metric: `Unemployment rate: ${district.unemploymentRate}%`,
+        category: 'Economic Security',
+        metric: `Unemployment Rate: ${district.unemploymentRate}%`,
         severity: 'high',
+        source: 'U.S. Census Bureau, ACS 5-Year Estimates (2022)',
       });
     } else if (district.unemploymentRate > 4) {
       needs.push({
-        category: 'Employment',
-        metric: `Unemployment rate: ${district.unemploymentRate}%`,
+        category: 'Economic Security',
+        metric: `Unemployment Rate: ${district.unemploymentRate}%`,
         severity: 'moderate',
+        source: 'U.S. Census Bureau, ACS 5-Year Estimates (2022)',
       });
     }
 
     if (district.povertyRate > 15) {
       needs.push({
-        category: 'Poverty',
-        metric: `Poverty rate: ${district.povertyRate}%`,
+        category: 'Economic Security',
+        metric: `Poverty Rate: ${district.povertyRate}%`,
         severity: 'high',
+        source: 'U.S. Census Bureau, ACS 5-Year Estimates (2022)',
       });
     } else if (district.povertyRate > 10) {
       needs.push({
-        category: 'Poverty',
-        metric: `Poverty rate: ${district.povertyRate}%`,
+        category: 'Economic Security',
+        metric: `Poverty Rate: ${district.povertyRate}%`,
         severity: 'moderate',
+        source: 'U.S. Census Bureau, ACS 5-Year Estimates (2022)',
       });
     }
 
     if (district.uninsuredRate > 12) {
       needs.push({
-        category: 'Healthcare',
-        metric: `Uninsured rate: ${district.uninsuredRate}%`,
+        category: 'Health',
+        metric: `Uninsured Rate: ${district.uninsuredRate}%`,
         severity: 'high',
+        source: 'U.S. Census Bureau, ACS 5-Year Estimates (2022)',
       });
     } else if (district.uninsuredRate > 8) {
       needs.push({
-        category: 'Healthcare',
-        metric: `Uninsured rate: ${district.uninsuredRate}%`,
+        category: 'Health',
+        metric: `Uninsured Rate: ${district.uninsuredRate}%`,
         severity: 'moderate',
+        source: 'U.S. Census Bureau, ACS 5-Year Estimates (2022)',
       });
     }
 
     if (district.broadbandAvailability > 0 && district.broadbandAvailability < 70) {
       needs.push({
-        category: 'Infrastructure',
-        metric: `Broadband availability: ${district.broadbandAvailability}%`,
+        category: 'Broadband Access',
+        metric: `Broadband Availability: ${district.broadbandAvailability}%`,
         severity: 'high',
+        source: 'FCC, Broadband Data Collection',
       });
     } else if (district.broadbandAvailability > 0 && district.broadbandAvailability < 85) {
       needs.push({
-        category: 'Infrastructure',
-        metric: `Broadband availability: ${district.broadbandAvailability}%`,
+        category: 'Broadband Access',
+        metric: `Broadband Availability: ${district.broadbandAvailability}%`,
         severity: 'moderate',
+        source: 'FCC, Broadband Data Collection',
       });
     }
 
     if (district.medianIncome > 0 && district.medianIncome < 40000) {
       needs.push({
-        category: 'Income',
-        metric: `Median income: $${district.medianIncome.toLocaleString()}`,
+        category: 'Economic Security',
+        metric: `Median Income: $${district.medianIncome.toLocaleString()}`,
         severity: 'high',
+        source: 'U.S. Census Bureau, ACS 5-Year Estimates (2022)',
       });
     } else if (district.medianIncome > 0 && district.medianIncome < 55000) {
       needs.push({
-        category: 'Income',
-        metric: `Median income: $${district.medianIncome.toLocaleString()}`,
+        category: 'Economic Security',
+        metric: `Median Income: $${district.medianIncome.toLocaleString()}`,
         severity: 'moderate',
+        source: 'U.S. Census Bureau, ACS 5-Year Estimates (2022)',
       });
     }
 
@@ -414,6 +424,9 @@ ${PLAIN_LANGUAGE_RULES}
    */
   private static mapNeedToVoteCategories(needCategory: string): string[] {
     const needMap: Record<string, string[]> = {
+      'Economic Security': ['Employment', 'Poverty', 'Taxation'],
+      Health: ['Healthcare'],
+      'Broadband Access': ['Infrastructure'],
       Employment: ['Employment'],
       Healthcare: ['Healthcare'],
       Poverty: ['Poverty', 'Employment'],

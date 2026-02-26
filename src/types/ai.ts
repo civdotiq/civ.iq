@@ -105,6 +105,7 @@ export interface CivicAlignmentReport {
     category: string;
     metric: string;
     severity: 'high' | 'moderate' | 'low';
+    source?: string;
   }>;
   votingActivity: Array<{
     category: string;

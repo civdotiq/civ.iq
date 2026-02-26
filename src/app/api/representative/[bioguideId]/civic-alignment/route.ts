@@ -94,7 +94,11 @@ export async function GET(
         const [votesRaw, financeData, districtData] = await Promise.all([
           fetchVotes(bioguideId),
           fetchFinanceProfile(bioguideId),
-          fetchDistrictProfile(representative.state),
+          fetchDistrictProfile(
+            representative.state,
+            representative.district || '',
+            (representative.chamber as 'House' | 'Senate') || 'House'
+          ),
         ]);
 
         // 3. Transform votes into analyzer input format
@@ -135,12 +139,11 @@ export async function GET(
         const dataSources: string[] = ['congress.gov'];
         if (votesRaw.length > 0) dataSources.push('congress.gov/votes');
         if (financeData.totalRaised > 0) dataSources.push('fec.gov');
-        if (districtData.unemploymentRate > 0) dataSources.push('bls.gov');
-        if (districtData.medianIncome > 0) dataSources.push('census.gov');
+        if (districtData.population > 0) dataSources.push('census.gov (ACS 5-Year 2022)');
 
         const hasVotes = votesRaw.length > 0;
         const hasFinance = financeData.totalRaised > 0;
-        const hasDistrict = districtData.unemploymentRate > 0 || districtData.medianIncome > 0;
+        const hasDistrict = districtData.population > 0;
         const dataQuality: 'complete' | 'partial' | 'degraded' =
           hasVotes && hasFinance && hasDistrict
             ? 'complete'
@@ -328,9 +331,19 @@ async function fetchFinanceProfile(bioguideId: string): Promise<CivicAlignmentIn
 }
 
 /**
- * Fetch district profile from BLS + Census ACS
+ * Fetch district/state profile from Census ACS 5-Year Data Profile.
+ * House members: congressional district-level data (falls back to state if unavailable).
+ * Senators: state-level data (the state IS their constituency).
+ *
+ * Census ACS 2022 uses 118th Congress district boundaries.
+ * Variables: DP05_0001E=population, DP03_0062E=median income, DP03_0005PE=unemployment,
+ * DP03_0128PE=poverty, DP03_0099PE=uninsured (no health insurance coverage)
  */
-async function fetchDistrictProfile(stateCode: string): Promise<CivicAlignmentInput['district']> {
+async function fetchDistrictProfile(
+  stateCode: string,
+  district: string,
+  chamber: 'House' | 'Senate'
+): Promise<CivicAlignmentInput['district']> {
   const emptyDistrict: CivicAlignmentInput['district'] = {
     population: 0,
     medianIncome: 0,
@@ -348,74 +361,56 @@ async function fetchDistrictProfile(stateCode: string): Promise<CivicAlignmentIn
     return emptyDistrict;
   }
 
-  // Fetch BLS unemployment and Census ACS data in parallel
-  const [blsData, censusData] = await Promise.all([
-    fetchBLSUnemployment(stateFips),
-    fetchCensusACS(stateFips),
-  ]);
-
-  return {
-    population: censusData.population,
-    medianIncome: censusData.medianIncome,
-    unemploymentRate: blsData.unemploymentRate,
-    povertyRate: censusData.povertyRate,
-    uninsuredRate: censusData.uninsuredRate,
-    broadbandAvailability: 0, // FCC data not critical for alignment analysis
-    topFederalSpendingAgencies: [],
-    topIndustries: blsData.majorIndustries,
-  };
-}
-
-/**
- * Fetch unemployment rate from BLS (same as economic-profile route)
- */
-async function fetchBLSUnemployment(
-  stateFips: string
-): Promise<{ unemploymentRate: number; majorIndustries: string[] }> {
-  try {
-    const response = await fetch(
-      `https://api.bls.gov/publicAPI/v2/timeseries/data/LAUST${stateFips}0000000000003`,
-      { signal: AbortSignal.timeout(10000) }
-    );
-
-    if (!response.ok) {
-      throw new Error(`BLS API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    if (data.status === 'REQUEST_SUCCEEDED' && data.Results?.series?.[0]?.data?.length > 0) {
-      const latestData = data.Results.series[0].data[0];
-      return {
-        unemploymentRate: parseFloat(latestData.value) || 0,
-        majorIndustries: [],
-      };
-    }
-
-    return { unemploymentRate: 0, majorIndustries: [] };
-  } catch (error) {
-    logger.warn('BLS fetch failed for civic alignment', {
-      stateFips,
-      error: (error as Error).message,
-    });
-    return { unemploymentRate: 0, majorIndustries: [] };
+  // Senators represent the whole state — state-level is the correct geography
+  if (chamber === 'Senate') {
+    return fetchCensusACS(stateFips, null);
   }
+
+  // House members: try district-level first, fall back to state
+  const districtNum = district.padStart(2, '0');
+  const districtData = await fetchCensusACS(stateFips, districtNum);
+  if (districtData.population > 0) {
+    return districtData;
+  }
+
+  logger.info('District-level Census data unavailable, using state-level', {
+    stateCode,
+    district: districtNum,
+  });
+  return fetchCensusACS(stateFips, null);
 }
 
 /**
- * Fetch key metrics from Census ACS 5-year estimates
+ * Fetch all metrics from a single Census ACS 5-Year Data Profile query.
+ * When districtNum is provided, queries at congressional district level.
+ * When null, queries at state level (correct for Senators).
  */
-async function fetchCensusACS(stateFips: string): Promise<{
-  population: number;
-  medianIncome: number;
-  povertyRate: number;
-  uninsuredRate: number;
-}> {
+async function fetchCensusACS(
+  stateFips: string,
+  districtNum: string | null
+): Promise<CivicAlignmentInput['district']> {
+  const empty: CivicAlignmentInput['district'] = {
+    population: 0,
+    medianIncome: 0,
+    unemploymentRate: 0,
+    povertyRate: 0,
+    uninsuredRate: 0,
+    broadbandAvailability: 0,
+    topFederalSpendingAgencies: [],
+    topIndustries: [],
+  };
+
   try {
-    // Census ACS Data Profile: DP03_0062E=median income, DP03_0128PE=poverty rate,
-    // DP03_0096PE=no health insurance, DP05_0001E=total population
     const censusKey = process.env.CENSUS_API_KEY;
     const keyParam = censusKey ? `&key=${censusKey}` : '';
-    const url = `https://api.census.gov/data/2022/acs/acs5/profile?get=DP05_0001E,DP03_0062E,DP03_0128PE,DP03_0096PE&for=state:${stateFips}${keyParam}`;
+    const variables = 'DP05_0001E,DP03_0062E,DP03_0005PE,DP03_0128PE,DP03_0099PE';
+
+    const geography =
+      districtNum !== null
+        ? `for=congressional%20district:${districtNum}&in=state:${stateFips}`
+        : `for=state:${stateFips}`;
+
+    const url = `https://api.census.gov/data/2022/acs/acs5/profile?get=${variables}&${geography}${keyParam}`;
 
     const response = await fetch(url, {
       signal: AbortSignal.timeout(10000),
@@ -426,23 +421,28 @@ async function fetchCensusACS(stateFips: string): Promise<{
     }
 
     const data = await response.json();
-    // Census returns array of arrays: [headers, ...data]
+    // Census returns [[headers], [row1], ...]
     if (Array.isArray(data) && data.length >= 2) {
       const row = data[1];
       return {
         population: parseInt(row[0]) || 0,
         medianIncome: parseInt(row[1]) || 0,
-        povertyRate: parseFloat(row[2]) || 0,
-        uninsuredRate: parseFloat(row[3]) || 0,
+        unemploymentRate: parseFloat(row[2]) || 0,
+        povertyRate: parseFloat(row[3]) || 0,
+        uninsuredRate: parseFloat(row[4]) || 0,
+        broadbandAvailability: 0,
+        topFederalSpendingAgencies: [],
+        topIndustries: [],
       };
     }
 
-    return { population: 0, medianIncome: 0, povertyRate: 0, uninsuredRate: 0 };
+    return empty;
   } catch (error) {
     logger.warn('Census ACS fetch failed for civic alignment', {
       stateFips,
+      district: districtNum,
       error: (error as Error).message,
     });
-    return { population: 0, medianIncome: 0, povertyRate: 0, uninsuredRate: 0 };
+    return empty;
   }
 }

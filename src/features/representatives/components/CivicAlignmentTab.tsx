@@ -75,6 +75,7 @@ function DistrictNeedsSection({ needs }: { needs: CivicAlignmentReport['district
             <div className="flex-1">
               <span className="text-sm font-medium text-gray-900">{need.category}</span>
               <span className="text-sm text-gray-500 ml-2">{need.metric}</span>
+              {need.source && <span className="text-xs text-gray-400 ml-2">({need.source})</span>}
             </div>
             <span className={`px-2 py-0.5 text-xs font-medium ${severityStyles[need.severity]}`}>
               {need.severity}
