@@ -167,28 +167,21 @@ export default function OpenDataPage() {
           </p>
 
           <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mb-grid-3">
-            curl {BASE}/representatives?state=MI&amp;chamber=house
+            curl {BASE}/bills?limit=5
           </pre>
 
           <div className="mb-grid-3">
-            <span className="text-sm text-gray-500 uppercase tracking-wider">Response</span>
+            <span className="text-sm text-gray-500 uppercase tracking-wider">
+              Response envelope
+            </span>
             <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mt-1">
               {JSON.stringify(
                 {
-                  data: [
-                    {
-                      bioguideId: 'S000770',
-                      name: 'Debbie Stabenow',
-                      party: 'D',
-                      state: 'MI',
-                      chamber: 'house',
-                      district: '...',
-                    },
-                  ],
-                  pagination: { total: 13, limit: 100, offset: 0, hasMore: false },
+                  data: '[ ... ]',
+                  pagination: { total: '...', limit: 5, offset: 0, hasMore: '...' },
                   meta: {
                     apiVersion: 'v1',
-                    timestamp: '2026-02-26T12:00:00.000Z',
+                    timestamp: '...',
                     source: 'congress.gov',
                     license: 'MIT',
                     documentation: 'https://civ.iq/docs/api',
@@ -198,6 +191,10 @@ export default function OpenDataPage() {
                 2
               )}
             </pre>
+            <p className="text-xs text-gray-500 mt-grid-1">
+              Every response includes <code>data</code>, optional <code>pagination</code>, and{' '}
+              <code>meta</code> with source attribution. Try the URL above to see live data.
+            </p>
           </div>
 
           <div className="border-2 border-gray-200 overflow-x-auto mb-grid-3">
