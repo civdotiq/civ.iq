@@ -65,6 +65,89 @@ const NOSTR_EVENT_TYPES: { type: string; description: string }[] = [
   { type: 'state-vote', description: 'State legislature votes' },
 ];
 
+const ENDPOINTS: {
+  method: string;
+  path: string;
+  description: string;
+  params?: string;
+  example?: string;
+}[] = [
+  {
+    method: 'GET',
+    path: '/representatives',
+    description: 'List all current members of Congress',
+    params: 'chamber, state, party, limit, offset',
+    example: '/representatives?state=MI&chamber=house',
+  },
+  {
+    method: 'GET',
+    path: '/representatives/{bioguideId}',
+    description: 'Detailed info for one member',
+    example: '/representatives/P000197',
+  },
+  {
+    method: 'GET',
+    path: '/bills',
+    description: 'Latest bills from Congress',
+    params: 'sort, limit, offset',
+    example: '/bills?limit=10&sort=updateDate+desc',
+  },
+  {
+    method: 'GET',
+    path: '/bills/{billId}',
+    description: 'Bill detail from Congress.gov',
+    example: '/bills/119-hr-1',
+  },
+  {
+    method: 'GET',
+    path: '/bills/{billId}/summary',
+    description: 'Cached plain-language bill summary',
+    example: '/bills/119-hr-1/summary',
+  },
+  {
+    method: 'GET',
+    path: '/votes/{voteId}',
+    description: 'Roll-call vote details',
+    example: '/votes/house-119-116',
+  },
+  {
+    method: 'GET',
+    path: '/districts/{districtId}',
+    description: 'District info and representatives',
+    example: '/districts/MI-12',
+  },
+  {
+    method: 'GET',
+    path: '/committees',
+    description: 'List congressional committees',
+    params: 'chamber, limit, offset',
+  },
+  {
+    method: 'GET',
+    path: '/committees/{committeeId}',
+    description: 'Committee detail with members',
+    example: '/committees/HSJU',
+  },
+  {
+    method: 'GET',
+    path: '/changelog',
+    description: 'API version history',
+  },
+];
+
+const FRESHNESS: { endpoint: string; cache: string; stale: string }[] = [
+  { endpoint: 'Bills list', cache: '1 hour', stale: '2 hours' },
+  { endpoint: 'Bill detail (active)', cache: '24 hours', stale: '1 hour' },
+  { endpoint: 'Bill detail (historical)', cache: '1 year', stale: '24 hours' },
+  { endpoint: 'Bill summary', cache: '1 hour', stale: '2 hours' },
+  { endpoint: 'Representatives list', cache: '1 hour', stale: '24 hours' },
+  { endpoint: 'Representative detail', cache: '1 hour', stale: '2 hours' },
+  { endpoint: 'Vote detail', cache: '1 hour', stale: '2 hours' },
+  { endpoint: 'District detail', cache: '24 hours', stale: '48 hours' },
+  { endpoint: 'Committees list', cache: '24 hours', stale: '48 hours' },
+  { endpoint: 'Committee detail', cache: '1 hour', stale: '2 hours' },
+];
+
 const DATA_SOURCES: { name: string; url: string; description: string }[] = [
   {
     name: 'Congress.gov API',
@@ -254,15 +337,54 @@ export default function OpenDataPage() {
         {/* REST API */}
         <section className="mb-grid-8">
           <h2 className="text-2xl font-bold mb-grid-2">REST API</h2>
-          <p className="text-gray-600 mb-grid-2">
+          <p className="text-gray-600 mb-grid-3">
             10 endpoints covering representatives, bills, votes, districts, and committees.
           </p>
-          <div className="mb-grid-2">
+          <div className="mb-grid-3">
             <span className="text-sm text-gray-500 uppercase tracking-wider">Base URL</span>
             <code className="block bg-gray-50 border-2 border-gray-200 p-grid-2 text-sm font-mono mt-1">
               {BASE}
             </code>
           </div>
+
+          <div className="border-2 border-gray-200 overflow-x-auto mb-grid-3">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                  <th className="text-left p-grid-2 font-semibold">Method</th>
+                  <th className="text-left p-grid-2 font-semibold">Path</th>
+                  <th className="text-left p-grid-2 font-semibold">Description</th>
+                  <th className="text-left p-grid-2 font-semibold">Parameters</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ENDPOINTS.map(ep => (
+                  <tr key={ep.path} className="border-b border-gray-100">
+                    <td className="p-grid-2 font-mono text-xs">{ep.method}</td>
+                    <td className="p-grid-2 font-mono text-xs whitespace-nowrap">
+                      {ep.example ? (
+                        <a
+                          href={`${BASE}${ep.example}`}
+                          className="text-civiq-blue underline hover:no-underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {ep.path}
+                        </a>
+                      ) : (
+                        ep.path
+                      )}
+                    </td>
+                    <td className="p-grid-2 text-gray-600">{ep.description}</td>
+                    <td className="p-grid-2 text-gray-500 text-xs font-mono">
+                      {ep.params || '\u2014'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
           <p className="text-gray-600 text-sm">
             <a href="/openapi.json" className="text-civiq-blue underline hover:no-underline">
               OpenAPI 3.0 specification
@@ -270,8 +392,204 @@ export default function OpenDataPage() {
             &middot;{' '}
             <a href="/docs/api" className="text-civiq-blue underline hover:no-underline">
               Full API reference
+            </a>{' '}
+            &middot;{' '}
+            <a href={`${BASE}`} className="text-civiq-blue underline hover:no-underline">
+              Self-describing index
             </a>
           </p>
+        </section>
+
+        {/* Pagination */}
+        <section className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Pagination</h2>
+          <p className="text-gray-600 mb-grid-3">
+            List endpoints use offset-based pagination. The response{' '}
+            <code className="text-sm">pagination</code> object tells you where you are.
+          </p>
+
+          <div className="border-2 border-gray-200 overflow-x-auto mb-grid-3">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                  <th className="text-left p-grid-2 font-semibold">Parameter</th>
+                  <th className="text-left p-grid-2 font-semibold">Type</th>
+                  <th className="text-left p-grid-2 font-semibold">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-mono text-xs">limit</td>
+                  <td className="p-grid-2 text-gray-600">integer</td>
+                  <td className="p-grid-2 text-gray-600">
+                    Results per page. Default varies by endpoint (50&ndash;100). Max 250&ndash;535.
+                  </td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-mono text-xs">offset</td>
+                  <td className="p-grid-2 text-gray-600">integer</td>
+                  <td className="p-grid-2 text-gray-600">Number of results to skip. Default 0.</td>
+                </tr>
+                <tr>
+                  <td className="p-grid-2 font-mono text-xs">hasMore</td>
+                  <td className="p-grid-2 text-gray-600">boolean</td>
+                  <td className="p-grid-2 text-gray-600">
+                    Returned in response. <code className="text-xs">true</code> when{' '}
+                    <code className="text-xs">offset + limit &lt; total</code>.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <span className="text-sm text-gray-500 uppercase tracking-wider">
+            Paginate through all results
+          </span>
+          <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mt-1">{`# Fetch page by page until hasMore is false
+offset=0
+while true; do
+  resp=$(curl -s "${BASE}/bills?limit=50&offset=$offset")
+  echo "$resp" | jq '.data | length'
+  has_more=$(echo "$resp" | jq '.pagination.hasMore')
+  [ "$has_more" = "false" ] && break
+  offset=$((offset + 50))
+done`}</pre>
+        </section>
+
+        {/* Error Responses */}
+        <section className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Error Responses</h2>
+          <p className="text-gray-600 mb-grid-3">
+            Errors use the same envelope with an <code className="text-sm">error</code> object
+            instead of <code className="text-sm">data</code>.
+          </p>
+
+          <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mb-grid-3">
+            {JSON.stringify(
+              {
+                error: {
+                  code: 404,
+                  message: 'Bill not found',
+                  details: 'No bill matching ID "119-hr-99999"',
+                },
+                meta: {
+                  apiVersion: 'v1',
+                  timestamp: '...',
+                  source: 'error',
+                  license: 'MIT',
+                  documentation: 'https://civ.iq/docs/api',
+                },
+              },
+              null,
+              2
+            )}
+          </pre>
+
+          <div className="border-2 border-gray-200 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                  <th className="text-left p-grid-2 font-semibold">Code</th>
+                  <th className="text-left p-grid-2 font-semibold">Meaning</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-mono">400</td>
+                  <td className="p-grid-2 text-gray-600">Invalid request parameters</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-mono">404</td>
+                  <td className="p-grid-2 text-gray-600">Resource not found</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-mono">429</td>
+                  <td className="p-grid-2 text-gray-600">
+                    Rate limited. Check <code className="text-xs">X-RateLimit-Reset</code> header.
+                  </td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="p-grid-2 font-mono">500</td>
+                  <td className="p-grid-2 text-gray-600">Internal error</td>
+                </tr>
+                <tr>
+                  <td className="p-grid-2 font-mono">503</td>
+                  <td className="p-grid-2 text-gray-600">
+                    Upstream data source temporarily unavailable
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Code Examples */}
+        <section className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Code Examples</h2>
+
+          <div className="mb-grid-4">
+            <span className="text-sm text-gray-500 uppercase tracking-wider">
+              Python &mdash; fetch all senators from a state
+            </span>
+            <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mt-1">{`import requests
+
+resp = requests.get("${BASE}/representatives", params={
+    "chamber": "senate",
+    "state": "MI"
+})
+data = resp.json()
+
+for member in data["data"]:
+    print(f'{member["name"]} ({member["party"]})')
+
+print(f'Source: {data["meta"]["source"]}')`}</pre>
+          </div>
+
+          <div className="mb-grid-4">
+            <span className="text-sm text-gray-500 uppercase tracking-wider">
+              JavaScript &mdash; paginate all bills
+            </span>
+            <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mt-1">{`async function fetchAllBills() {
+  const bills = [];
+  let offset = 0;
+
+  while (true) {
+    const url = \`${BASE}/bills?limit=250&offset=\${offset}\`;
+    const { data, pagination } = await fetch(url).then(r => r.json());
+    bills.push(...data);
+    if (!pagination.hasMore) break;
+    offset += 250;
+  }
+
+  return bills;
+}`}</pre>
+          </div>
+
+          <div className="mb-grid-4">
+            <span className="text-sm text-gray-500 uppercase tracking-wider">
+              Python &mdash; subscribe to an Atom feed
+            </span>
+            <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mt-1">{`import feedparser
+
+feed = feedparser.parse("${FEED_BASE}/member/P000197")
+
+for entry in feed.entries:
+    print(f'{entry.updated}: {entry.title}')
+    print(f'  {entry.link}')`}</pre>
+          </div>
+
+          <div>
+            <span className="text-sm text-gray-500 uppercase tracking-wider">
+              curl &mdash; compare two representatives
+            </span>
+            <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mt-1">{`# Fetch two members in parallel
+curl -s "${BASE}/representatives/P000197" > rep1.json &
+curl -s "${BASE}/representatives/S000148" > rep2.json &
+wait
+
+# Compare with jq
+jq -s '.[0].data.name, .[1].data.name' rep1.json rep2.json`}</pre>
+          </div>
         </section>
 
         {/* Atom Feeds */}
@@ -341,7 +659,7 @@ export default function OpenDataPage() {
             </div>
           </div>
 
-          <div>
+          <div className="mb-grid-4">
             <span className="text-sm text-gray-500 uppercase tracking-wider">Event Types</span>
             <div className="border-2 border-gray-200 overflow-x-auto mt-1">
               <table className="w-full text-sm">
@@ -361,6 +679,59 @@ export default function OpenDataPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <div className="mb-grid-3">
+            <span className="text-sm text-gray-500 uppercase tracking-wider">Event structure</span>
+            <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mt-1">
+              {JSON.stringify(
+                {
+                  kind: nostrConfig.eventKind,
+                  content: 'Long-form markdown content...',
+                  tags: [
+                    ['d', 'bill-action:119-hr-1:2025-01-15'],
+                    ['t', 'bill-action'],
+                    ['title', 'HR 1 passed in House'],
+                    ['published_at', '1705276800'],
+                    ['L', 'civic-event'],
+                    ['l', 'bill-action', 'civic-event'],
+                  ],
+                  pubkey: '<civiq public key>',
+                  sig: '<schnorr signature>',
+                },
+                null,
+                2
+              )}
+            </pre>
+            <p className="text-xs text-gray-500 mt-grid-1">
+              Filter by <code>t</code> tag to subscribe to specific event types. The <code>d</code>{' '}
+              tag is the unique event identifier.
+            </p>
+          </div>
+
+          <div>
+            <span className="text-sm text-gray-500 uppercase tracking-wider">
+              Subscribe with nostr-tools
+            </span>
+            <pre className="bg-gray-50 border-2 border-gray-200 p-grid-3 text-sm overflow-x-auto mt-1">{`import { SimplePool } from 'nostr-tools/pool';
+
+const pool = new SimplePool();
+const relays = ${JSON.stringify(nostrConfig.relays.slice(0, 3), null, 2).replace(/\n/g, '\n')};
+
+// Subscribe to all CIV.IQ civic events
+const sub = pool.subscribeMany(relays, [{
+  kinds: [${nostrConfig.eventKind}],
+  '#L': ['civic-event'],
+  // Optional: filter by type
+  // '#t': ['bill-action', 'vote-record'],
+}], {
+  onevent(event) {
+    const title = event.tags.find(t => t[0] === 'title')?.[1];
+    const type = event.tags.find(t => t[0] === 't')?.[1];
+    console.log(\`[\${type}] \${title}\`);
+    console.log(event.content.slice(0, 200));
+  }
+});`}</pre>
           </div>
         </section>
 
@@ -451,6 +822,39 @@ export default function OpenDataPage() {
                     </a>
                   </td>
                 </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Data Freshness */}
+        <section className="mb-grid-8">
+          <h2 className="text-2xl font-bold mb-grid-2">Data Freshness</h2>
+          <p className="text-gray-600 mb-grid-3">
+            Cache durations per endpoint. Every response includes{' '}
+            <code className="text-sm">Cache-Control</code> headers so your HTTP client can cache
+            automatically. <code className="text-sm">s-maxage</code> is the CDN cache time;{' '}
+            <code className="text-sm">stale-while-revalidate</code> allows serving stale data while
+            refreshing in the background.
+          </p>
+
+          <div className="border-2 border-gray-200 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                  <th className="text-left p-grid-2 font-semibold">Endpoint</th>
+                  <th className="text-left p-grid-2 font-semibold">Cache (s-maxage)</th>
+                  <th className="text-left p-grid-2 font-semibold">Stale-while-revalidate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {FRESHNESS.map(row => (
+                  <tr key={row.endpoint} className="border-b border-gray-100">
+                    <td className="p-grid-2">{row.endpoint}</td>
+                    <td className="p-grid-2 text-gray-600 font-mono text-xs">{row.cache}</td>
+                    <td className="p-grid-2 text-gray-600 font-mono text-xs">{row.stale}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
