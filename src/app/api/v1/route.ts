@@ -146,10 +146,10 @@ export async function GET(): Promise<NextResponse> {
     },
     federation: {
       description:
-        'ActivityPub federation for fediverse interoperability. Follow @civiq@civ.iq from Mastodon.',
+        'ActivityPub federation for fediverse interoperability. Follow @civ.iq from Mastodon.',
       endpoints: {
         webfinger: {
-          url: 'https://civ.iq/.well-known/webfinger?resource=acct:civiq@civ.iq',
+          url: 'https://civ.iq/.well-known/webfinger?resource=acct:_@civ.iq',
           description: 'WebFinger discovery (RFC 7033)',
         },
         actor: {

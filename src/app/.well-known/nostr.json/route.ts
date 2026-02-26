@@ -6,9 +6,9 @@
 /**
  * NIP-05 Verification Endpoint
  *
- * Returns the Nostr public key for the civiq identity.
- * Allows Nostr clients to verify civiq@civ.iq via
- * GET /.well-known/nostr.json?name=civiq
+ * Returns the Nostr public key for the civ.iq identity.
+ * Allows Nostr clients to verify civ.iq via
+ * GET /.well-known/nostr.json?name=_
  */
 
 import { NextResponse } from 'next/server';
@@ -26,7 +26,7 @@ export async function GET() {
 
   const nip05 = {
     names: {
-      civiq: keypair.publicKey,
+      _: keypair.publicKey,
     },
     relays: {
       [keypair.publicKey]: nostrConfig.relays,

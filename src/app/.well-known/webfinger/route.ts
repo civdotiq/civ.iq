@@ -9,7 +9,7 @@
  * Allows Mastodon/fediverse instances to discover the CIV.IQ
  * ActivityPub actor via standard WebFinger lookup.
  *
- * Example: GET /.well-known/webfinger?resource=acct:civiq@civ.iq
+ * Example: GET /.well-known/webfinger?resource=acct:_@civ.iq
  */
 
 import { NextRequest, NextResponse } from 'next/server';
