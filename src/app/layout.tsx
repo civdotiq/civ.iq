@@ -74,6 +74,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: 'https://civdotiq.org',
+    types: {
+      'application/atom+xml': '/feeds/bills',
+    },
   },
   metadataBase: new URL('https://civdotiq.org'),
   category: 'government',
