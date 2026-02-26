@@ -153,7 +153,6 @@ export const CODE_SPLITTING_CONFIG = {
     'CampaignFinanceVisualizer',
     'InteractiveVotingAnalysis',
     'RealDistrictMapContainer',
-    'AdvancedDashboard',
   ],
 
   // Routes that should use code splitting

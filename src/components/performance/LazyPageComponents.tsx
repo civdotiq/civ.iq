@@ -39,12 +39,6 @@ export const LazyInteractiveDistrictMap = lazy(() =>
   }))
 );
 
-export const LazyCivicEngagementDashboard = lazy(() =>
-  import('@/shared/components/ui/AdvancedDashboard').then(module => ({
-    default: module.CivicEngagementDashboard,
-  }))
-);
-
 export const LazyBillsTracker = lazy(() =>
   import('@/features/legislation/components/BillsTracker').then(module => ({
     default: module.BillsTracker,
@@ -79,12 +73,6 @@ interface VotingTabWrapperProps {
 export const DistrictMapWithSuspense = ({ zipCode, className }: DistrictMapWrapperProps) => (
   <Suspense fallback={<SimpleLoader height="500px" />}>
     <LazyInteractiveDistrictMap zipCode={zipCode} className={className} />
-  </Suspense>
-);
-
-export const DashboardWithSuspense = () => (
-  <Suspense fallback={<ChartLoader />}>
-    <LazyCivicEngagementDashboard />
   </Suspense>
 );
 
