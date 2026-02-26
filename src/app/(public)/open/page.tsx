@@ -65,6 +65,68 @@ const NOSTR_EVENT_TYPES: { type: string; description: string }[] = [
   { type: 'state-vote', description: 'State legislature votes' },
 ];
 
+const DATA_SOURCES: { name: string; url: string; description: string }[] = [
+  {
+    name: 'Congress.gov API',
+    url: 'https://api.congress.gov',
+    description: 'Members, bills, votes, committees',
+  },
+  { name: 'House Clerk', url: 'https://clerk.house.gov', description: 'House floor votes' },
+  {
+    name: 'Senate.gov',
+    url: 'https://www.senate.gov',
+    description: 'Senate floor schedule, roll-call votes',
+  },
+  {
+    name: 'GovInfo',
+    url: 'https://api.govinfo.gov',
+    description: 'Bill text, legislative documents',
+  },
+  {
+    name: 'Federal Register',
+    url: 'https://www.federalregister.gov/developers',
+    description: 'Regulations, federal documents',
+  },
+  {
+    name: 'FEC',
+    url: 'https://api.open.fec.gov',
+    description: 'Campaign finance, contributions, committees',
+  },
+  {
+    name: 'USASpending.gov',
+    url: 'https://api.usaspending.gov',
+    description: 'Federal spending, contracts, grants',
+  },
+  { name: 'Senate LDA', url: 'https://lda.senate.gov/api', description: 'Lobbying disclosures' },
+  {
+    name: 'U.S. Census Bureau',
+    url: 'https://www.census.gov/data/developers.html',
+    description: 'Demographics, geocoding, district boundaries',
+  },
+  {
+    name: 'Bureau of Labor Statistics',
+    url: 'https://www.bls.gov/developers',
+    description: 'Employment, economic indicators',
+  },
+  { name: 'CDC Open Data', url: 'https://data.cdc.gov', description: 'Public health statistics' },
+  { name: 'Dept. of Education', url: 'https://api.ed.gov', description: 'School district data' },
+  { name: 'FCC Open Data', url: 'https://opendata.fcc.gov', description: 'Broadband deployment' },
+  { name: 'OpenStates', url: 'https://openstates.org', description: 'State legislature data' },
+  {
+    name: 'Wikipedia',
+    url: 'https://en.wikipedia.org/w/api.php',
+    description: 'Reference information',
+  },
+  { name: 'Wikidata', url: 'https://www.wikidata.org', description: 'Structured reference data' },
+  {
+    name: 'GDELT Project',
+    url: 'https://www.gdeltproject.org',
+    description: 'News events, trends',
+  },
+  { name: 'NewsAPI', url: 'https://newsapi.org', description: 'News aggregation' },
+  { name: 'Radar.io', url: 'https://radar.com', description: 'Address search, geolocation' },
+];
+
 export default function OpenDataPage() {
   return (
     <div className="min-h-screen bg-white">
@@ -312,7 +374,7 @@ export default function OpenDataPage() {
         {/* Data Sources */}
         <section className="mb-grid-6">
           <h2 className="text-2xl font-bold mb-grid-2">Data Sources</h2>
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-grid-3">
             Making publicly accessible data easier to understand. Licensed under{' '}
             <a
               href="https://opensource.org/licenses/MIT"
@@ -324,6 +386,34 @@ export default function OpenDataPage() {
             </a>
             .
           </p>
+
+          <div className="border-2 border-gray-200 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                  <th className="text-left p-grid-2 font-semibold">Source</th>
+                  <th className="text-left p-grid-2 font-semibold">Data</th>
+                </tr>
+              </thead>
+              <tbody>
+                {DATA_SOURCES.map(src => (
+                  <tr key={src.url} className="border-b border-gray-100">
+                    <td className="p-grid-2">
+                      <a
+                        href={src.url}
+                        className="text-civiq-blue underline hover:no-underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {src.name}
+                      </a>
+                    </td>
+                    <td className="p-grid-2 text-gray-600">{src.description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       </div>
     </div>

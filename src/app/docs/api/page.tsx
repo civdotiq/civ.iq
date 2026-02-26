@@ -398,11 +398,11 @@ export default function ApiDocsPage() {
         {/* Data sources */}
         <section className="mb-grid-6">
           <h2 className="text-2xl font-bold mb-grid-2">Data Sources</h2>
-          <p className="text-gray-600">
-            All data is sourced from official U.S. government APIs:{' '}
+          <p className="text-gray-600 mb-grid-3">
+            Data served by these API endpoints comes from:{' '}
             <a
               href="https://api.congress.gov"
-              className="text-civiq-blue underline"
+              className="text-civiq-blue underline hover:no-underline"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -411,22 +411,53 @@ export default function ApiDocsPage() {
             ,{' '}
             <a
               href="https://clerk.house.gov"
-              className="text-civiq-blue underline"
+              className="text-civiq-blue underline hover:no-underline"
               target="_blank"
               rel="noopener noreferrer"
             >
               House Clerk
             </a>
-            , and{' '}
+            ,{' '}
             <a
               href="https://www.senate.gov"
-              className="text-civiq-blue underline"
+              className="text-civiq-blue underline hover:no-underline"
               target="_blank"
               rel="noopener noreferrer"
             >
               Senate.gov
             </a>
-            . No mock data is ever served. Licensed under MIT.
+            ,{' '}
+            <a
+              href="https://api.govinfo.gov"
+              className="text-civiq-blue underline hover:no-underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GovInfo
+            </a>
+            ,{' '}
+            <a
+              href="https://api.open.fec.gov"
+              className="text-civiq-blue underline hover:no-underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              FEC
+            </a>
+            , and{' '}
+            <a
+              href="https://api.usaspending.gov"
+              className="text-civiq-blue underline hover:no-underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              USASpending.gov
+            </a>
+            . See the full list on the{' '}
+            <a href="/open" className="text-civiq-blue underline hover:no-underline">
+              Open Data
+            </a>{' '}
+            page.
           </p>
         </section>
       </div>
