@@ -118,13 +118,7 @@ const DATA_SOURCES: { name: string; url: string; description: string }[] = [
     description: 'Reference information',
   },
   { name: 'Wikidata', url: 'https://www.wikidata.org', description: 'Structured reference data' },
-  {
-    name: 'GDELT Project',
-    url: 'https://www.gdeltproject.org',
-    description: 'News events, trends',
-  },
   { name: 'NewsAPI', url: 'https://newsapi.org', description: 'News aggregation' },
-  { name: 'Radar.io', url: 'https://radar.com', description: 'Address search, geolocation' },
 ];
 
 export default function OpenDataPage() {
