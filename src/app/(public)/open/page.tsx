@@ -313,8 +313,7 @@ export default function OpenDataPage() {
         <section className="mb-grid-6">
           <h2 className="text-2xl font-bold mb-grid-2">Data Sources</h2>
           <p className="text-gray-600">
-            All data is sourced from official U.S. government APIs. No mock data is ever served.
-            Licensed under{' '}
+            Making publicly accessible data easier to understand. Licensed under{' '}
             <a
               href="https://opensource.org/licenses/MIT"
               className="text-civiq-blue underline hover:no-underline"
