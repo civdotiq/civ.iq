@@ -13,7 +13,7 @@ export default function GlossaryPage() {
   return (
     <>
       {/* Main Content */}
-      <main className="min-h-screen px-4 pb-16 bg-white">
+      <main className="min-h-screen px-4 pt-8 pb-16 bg-white">
         <div className="max-w-4xl mx-auto">
           {/* Breadcrumb Navigation */}
           <nav className="text-sm text-gray-500 mb-6">

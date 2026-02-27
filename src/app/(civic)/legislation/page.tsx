@@ -151,7 +151,7 @@ export default function LegislationPage() {
   return (
     <>
       {/* Main Content */}
-      <main className="min-h-screen px-4 pb-16 bg-white">
+      <main className="min-h-screen px-4 pt-8 pb-16 bg-white">
         <div className="max-w-7xl mx-auto">
           <BreadcrumbNav />
           <h1 className="text-2xl sm:text-4xl font-bold text-center mb-4">Recent Legislation</h1>

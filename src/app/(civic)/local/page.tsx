@@ -11,7 +11,7 @@ export default function LocalPage() {
   return (
     <>
       {/* Main Content */}
-      <main className="min-h-screen px-4 pb-16">
+      <main className="min-h-screen px-4 pt-8 pb-16">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb Navigation */}
           <nav className="text-sm text-gray-500 mb-6">
