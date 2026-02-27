@@ -23,7 +23,7 @@ export const activitypubConfig = {
   /** Actor configuration */
   actor: {
     id: `${baseUrl}/api/activitypub/actor`,
-    username: '_',
+    username: 'civiq',
     name: 'CIV.IQ Civic Intelligence',
     summary:
       'Open civic intelligence infrastructure. Bills, votes, spending, committees — real government data, published as public record.',
