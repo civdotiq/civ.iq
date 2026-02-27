@@ -15,9 +15,9 @@ import { ExploreFooter } from '@/components/seo/ExploreFooter';
 import { BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'U.S. States - Congressional Delegations & State Legislatures | CIV.IQ',
+  title: 'U.S. States - State Legislatures & Congressional Delegations | CIV.IQ',
   description:
-    'Complete guide to all 50 U.S. states. Find federal congressional delegations, state legislators, governors, and state government information. Real government data.',
+    'Complete guide to all 50 U.S. state legislatures and federal congressional delegations. Find state legislators, senators, representatives, and government information. Real government data.',
   keywords: [
     'US states',
     'state delegations',
@@ -28,9 +28,9 @@ export const metadata: Metadata = {
     'governors',
   ],
   openGraph: {
-    title: 'U.S. States - Congressional Delegations & State Legislatures',
+    title: 'U.S. States - State Legislatures & Congressional Delegations',
     description:
-      'Complete guide to all 50 U.S. states. Find federal and state representatives, governors, and government information.',
+      'Complete guide to all 50 U.S. state legislatures and federal congressional delegations. Find state legislators, senators, representatives, and government information.',
     type: 'website',
   },
 };
@@ -102,8 +102,8 @@ const TERRITORIES = [
 // Table of Contents
 const tocItems = [
   { id: 'overview', title: 'Overview', level: 1 as const },
-  { id: 'federal-delegations', title: 'Federal Congressional Delegations', level: 1 as const },
   { id: 'state-legislatures', title: 'State Legislatures', level: 1 as const },
+  { id: 'federal-delegations', title: 'Federal Congressional Delegations', level: 1 as const },
   { id: 'territories', title: 'U.S. Territories', level: 1 as const },
   { id: 'by-region', title: 'States by Region', level: 1 as const },
   { id: 'faq', title: 'Frequently Asked Questions', level: 1 as const },
@@ -170,7 +170,7 @@ export default function StatesHubPage() {
         {/* Page Header */}
         <h1 className="text-3xl font-bold text-gray-900 mb-2">United States - All 50 States</h1>
         <p className="text-gray-600 mb-4">
-          Congressional delegations, state legislatures, and government information for every U.S.
+          State legislatures, congressional delegations, and government information for every U.S.
           state
         </p>
 
@@ -201,6 +201,10 @@ export default function StatesHubPage() {
                 <dd className="text-2xl font-bold text-gray-900">50</dd>
               </div>
               <div>
+                <dt className="text-gray-500">State Legislators</dt>
+                <dd className="text-2xl font-bold text-gray-900">7,383</dd>
+              </div>
+              <div>
                 <dt className="text-gray-500">U.S. Senators</dt>
                 <dd className="text-2xl font-bold text-gray-900">100</dd>
               </div>
@@ -208,11 +212,34 @@ export default function StatesHubPage() {
                 <dt className="text-gray-500">U.S. Representatives</dt>
                 <dd className="text-2xl font-bold text-gray-900">435</dd>
               </div>
-              <div>
-                <dt className="text-gray-500">State Legislators</dt>
-                <dd className="text-2xl font-bold text-gray-900">7,383</dd>
-              </div>
             </dl>
+          </div>
+        </section>
+
+        {/* State Legislatures Section */}
+        <section id="state-legislatures" className="mb-10">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">
+            State Legislatures
+          </h2>
+          <p className="text-gray-700 mb-4">
+            Each state has its own legislature that creates laws for that state. Most states have a
+            bicameral legislature (Senate and House/Assembly), except Nebraska which has a
+            unicameral system.
+          </p>
+
+          {/* State Legislature Grid - Creates 50 internal links */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+            {STATES.map(state => (
+              <Link
+                key={state.code}
+                href={`/state-legislature/${state.code.toLowerCase()}`}
+                className="block p-3 bg-white border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 text-center transition-colors"
+              >
+                <span className="text-lg font-bold text-gray-800">{state.code}</span>
+                <span className="block text-xs text-gray-500 truncate">{state.name}</span>
+                <span className="block text-xs text-green-600">Legislature →</span>
+              </Link>
+            ))}
           </div>
         </section>
 
@@ -237,33 +264,6 @@ export default function StatesHubPage() {
                 <span className="text-lg font-bold text-gray-800">{state.code}</span>
                 <span className="block text-xs text-gray-500 truncate">{state.name}</span>
                 <span className="block text-xs text-blue-600">{state.reps + 2} members</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* State Legislatures Section */}
-        <section id="state-legislatures" className="mb-10">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">
-            State Legislatures
-          </h2>
-          <p className="text-gray-700 mb-4">
-            Each state has its own legislature that creates laws for that state. Most states have a
-            bicameral legislature (Senate and House/Assembly), except Nebraska which has a
-            unicameral system.
-          </p>
-
-          {/* State Legislature Grid - Creates 50 more internal links */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-            {STATES.map(state => (
-              <Link
-                key={state.code}
-                href={`/state-legislature/${state.code.toLowerCase()}`}
-                className="block p-3 bg-white border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 text-center transition-colors"
-              >
-                <span className="text-lg font-bold text-gray-800">{state.code}</span>
-                <span className="block text-xs text-gray-500 truncate">{state.name}</span>
-                <span className="block text-xs text-green-600">Legislature →</span>
               </Link>
             ))}
           </div>
