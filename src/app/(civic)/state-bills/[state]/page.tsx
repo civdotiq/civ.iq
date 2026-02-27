@@ -393,6 +393,22 @@ export default function StateBillsPage() {
   return (
     <div className="min-h-screen bg-white">
       <main className="container mx-auto px-4 py-8">
+        <nav className="text-sm text-gray-500 mb-6">
+          <Link href="/" className="hover:text-blue-600">
+            Home
+          </Link>
+          <span className="mx-2">&rsaquo;</span>
+          <Link href="/states" className="hover:text-blue-600">
+            States
+          </Link>
+          <span className="mx-2">&rsaquo;</span>
+          <Link href={`/state-bills/${state.toUpperCase()}`} className="hover:text-blue-600">
+            State Bills
+          </Link>
+          <span className="mx-2">&rsaquo;</span>
+          <span className="font-medium text-gray-900">{billsData.stateName}</span>
+        </nav>
+
         {/* Page header */}
         <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-8 mb-8">
           <div className="flex items-center gap-6">

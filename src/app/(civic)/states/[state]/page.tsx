@@ -13,6 +13,7 @@ import { select } from 'd3-selection';
 import { scaleBand, scaleLinear } from 'd3-scale';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { lineRadial, curveLinearClosed } from 'd3-shape';
+import Link from 'next/link';
 
 // Types
 interface StateData {
@@ -617,6 +618,18 @@ export default function StateOverviewPage() {
   return (
     <div className="min-h-screen bg-white">
       <main className="container mx-auto px-4 py-8">
+        <nav className="text-sm text-gray-500 mb-6">
+          <Link href="/" className="hover:text-blue-600">
+            Home
+          </Link>
+          <span className="mx-2">&rsaquo;</span>
+          <Link href="/states" className="hover:text-blue-600">
+            States
+          </Link>
+          <span className="mx-2">&rsaquo;</span>
+          <span className="font-medium text-gray-900">{stateData.name}</span>
+        </nav>
+
         {/* State header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 mb-8">
           <div className="flex items-center gap-6">

@@ -209,11 +209,12 @@ export default function OpenDataPage() {
     <div className="min-h-screen bg-white">
       <div className="max-w-5xl mx-auto px-grid-3 py-grid-6">
         {/* Breadcrumb */}
-        <nav className="text-sm text-gray-500 mb-grid-4">
-          <a href="/" className="hover:text-civiq-blue">
+        <nav className="text-sm text-gray-500 mb-6">
+          <a href="/" className="hover:text-blue-600">
             Home
-          </a>{' '}
-          / Open Data
+          </a>
+          <span className="mx-2">›</span>
+          <span className="font-medium text-gray-900">Open Data</span>
         </nav>
 
         {/* Header */}

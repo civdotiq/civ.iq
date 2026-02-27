@@ -10,7 +10,7 @@ import { notFound } from 'next/navigation';
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
-import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
+import Link from 'next/link';
 import { StateVoteDetailView } from '@/features/state-legislature/components/StateVoteDetailView';
 
 interface PageProps {
@@ -84,23 +84,26 @@ export default async function StateVotePage({ params }: PageProps) {
     notFound();
   }
 
-  // Create breadcrumb items
-  const breadcrumbItems = [
-    { label: 'Home', href: '/' },
-    { label: 'State Legislature', href: '/state-legislature' },
-    {
-      label: state.toUpperCase(),
-      href: `/state-legislature/${state}`,
-    },
-    {
-      label: vote.motion_text.substring(0, 50) + (vote.motion_text.length > 50 ? '...' : ''),
-      href: '',
-    },
-  ];
+  const motionLabel =
+    vote.motion_text.substring(0, 50) + (vote.motion_text.length > 50 ? '...' : '');
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <BreadcrumbsWithContext items={breadcrumbItems} className="mb-6" />
+      <nav className="text-sm text-gray-500 mb-6">
+        <Link href="/" className="hover:text-blue-600">
+          Home
+        </Link>
+        <span className="mx-2">›</span>
+        <Link href="/states" className="hover:text-blue-600">
+          States
+        </Link>
+        <span className="mx-2">›</span>
+        <Link href={`/state-legislature/${state}`} className="hover:text-blue-600">
+          {state.toUpperCase()}
+        </Link>
+        <span className="mx-2">›</span>
+        <span className="font-medium text-gray-900">{motionLabel}</span>
+      </nav>
 
       <StateVoteDetailView vote={vote} state={state} />
     </div>

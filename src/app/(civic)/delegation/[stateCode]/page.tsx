@@ -180,22 +180,16 @@ export default async function StateDelegationPage({ params }: PageProps) {
       <div className="bg-white border-b-2 border-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Breadcrumb */}
-          <nav className="mb-4 text-sm">
-            <ol className="flex items-center gap-2">
-              <li>
-                <Link href="/" className="text-gray-500 hover:text-civiq-blue">
-                  Home
-                </Link>
-              </li>
-              <li className="text-gray-400">/</li>
-              <li>
-                <Link href="/states" className="text-gray-500 hover:text-civiq-blue">
-                  States
-                </Link>
-              </li>
-              <li className="text-gray-400">/</li>
-              <li className="font-medium text-gray-900">{stateName} Delegation</li>
-            </ol>
+          <nav className="text-sm text-gray-500 mb-6">
+            <Link href="/" className="hover:text-blue-600">
+              Home
+            </Link>
+            <span className="mx-2">›</span>
+            <Link href="/states" className="hover:text-blue-600">
+              States
+            </Link>
+            <span className="mx-2">›</span>
+            <span className="font-medium text-gray-900">{stateName} Delegation</span>
           </nav>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

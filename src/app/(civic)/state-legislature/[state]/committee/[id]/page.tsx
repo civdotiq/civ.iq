@@ -118,28 +118,24 @@ export default async function StateCommitteePage({ params }: PageProps) {
   return (
     <main className="container mx-auto px-4 py-8">
       {/* Breadcrumb */}
-      <nav className="mb-6 text-sm">
-        <ol className="flex items-center gap-2 text-gray-600">
-          <li>
-            <Link href="/" className="hover:text-civiq-blue">
-              Home
-            </Link>
-          </li>
-          <li>/</li>
-          <li>
-            <Link href={`/state-legislature/${state}`} className="hover:text-civiq-blue">
-              {state.toUpperCase()} Legislature
-            </Link>
-          </li>
-          <li>/</li>
-          <li>
-            <Link href={`/state-legislature/${state}/committees`} className="hover:text-civiq-blue">
-              Committees
-            </Link>
-          </li>
-          <li>/</li>
-          <li className="font-semibold text-gray-900">{committee.name}</li>
-        </ol>
+      <nav className="text-sm text-gray-500 mb-6">
+        <Link href="/" className="hover:text-blue-600">
+          Home
+        </Link>
+        <span className="mx-2">›</span>
+        <Link href="/states" className="hover:text-blue-600">
+          States
+        </Link>
+        <span className="mx-2">›</span>
+        <Link href={`/state-legislature/${state}`} className="hover:text-blue-600">
+          {state.toUpperCase()} Legislature
+        </Link>
+        <span className="mx-2">›</span>
+        <Link href={`/state-legislature/${state}/committees`} className="hover:text-blue-600">
+          Committees
+        </Link>
+        <span className="mx-2">›</span>
+        <span className="font-medium text-gray-900">{committee.name}</span>
       </nav>
 
       <StateCommitteeProfile committee={committee} state={state} />

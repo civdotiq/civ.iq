@@ -48,6 +48,13 @@ export default function ReadingLevelDashboard() {
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto p-8">
+        <nav className="text-sm text-gray-500 mb-6">
+          <a href="/" className="hover:text-blue-600">
+            Home
+          </a>
+          <span className="mx-2">&rsaquo;</span>
+          <span className="font-medium text-gray-900">Reading Level Compliance</span>
+        </nav>
         <h1 className="text-2xl font-bold mb-4">Reading Level Compliance</h1>
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 w-1/3" />
@@ -60,6 +67,13 @@ export default function ReadingLevelDashboard() {
   if (error) {
     return (
       <div className="max-w-4xl mx-auto p-8">
+        <nav className="text-sm text-gray-500 mb-6">
+          <a href="/" className="hover:text-blue-600">
+            Home
+          </a>
+          <span className="mx-2">&rsaquo;</span>
+          <span className="font-medium text-gray-900">Reading Level Compliance</span>
+        </nav>
         <h1 className="text-2xl font-bold mb-4">Reading Level Compliance</h1>
         <p className="text-red-700">Failed to load data: {error}</p>
       </div>
@@ -84,6 +98,13 @@ export default function ReadingLevelDashboard() {
 
   return (
     <div className="max-w-4xl mx-auto p-8">
+      <nav className="text-sm text-gray-500 mb-6">
+        <a href="/" className="hover:text-blue-600">
+          Home
+        </a>
+        <span className="mx-2">&rsaquo;</span>
+        <span className="font-medium text-gray-900">Reading Level Compliance</span>
+      </nav>
       <h1 className="text-2xl font-bold mb-2">Reading Level Compliance</h1>
       <p className="text-sm text-gray-600 mb-8">
         CIV.IQ commits to generating summaries at an 8th-grade reading level or below, following the{' '}

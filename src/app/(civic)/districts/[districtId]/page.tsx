@@ -18,7 +18,6 @@ import { DistrictRelevantBills } from '@/features/districts/components/DistrictR
 import { DistrictCharts } from '@/features/districts/components/DistrictCharts';
 import logger from '@/lib/logging/simple-logger';
 import { DistrictExportButton } from '@/shared/components/ui/DistrictExportButton';
-import { SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import type { FAQItem } from '@/components/seo/WikipediaStyleSEO';
 import { DistrictFooter } from '@/components/seo/DistrictFooter';
@@ -173,7 +172,17 @@ export default function DistrictPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}
-        <SimpleBreadcrumb />
+        <nav className="text-sm text-gray-500 mb-6">
+          <Link href="/" className="hover:text-blue-600">
+            Home
+          </Link>
+          <span className="mx-2">›</span>
+          <Link href="/districts" className="hover:text-blue-600">
+            Districts
+          </Link>
+          <span className="mx-2">›</span>
+          <span className="font-medium text-gray-900">{districtId}</span>
+        </nav>
 
         {/* Page Title */}
         <div className="mb-8 flex items-start justify-between gap-4">

@@ -189,11 +189,12 @@ export default function ApiDocsPage() {
     <div className="min-h-screen bg-white">
       <div className="max-w-5xl mx-auto px-grid-3 py-grid-6">
         {/* Header */}
-        <nav className="text-sm text-gray-500 mb-grid-4">
-          <a href="/" className="hover:text-civiq-blue">
+        <nav className="text-sm text-gray-500 mb-6">
+          <a href="/" className="hover:text-blue-600">
             Home
-          </a>{' '}
-          / API Reference
+          </a>
+          <span className="mx-2">›</span>
+          <span className="font-medium text-gray-900">API Reference</span>
         </nav>
 
         <h1 className="text-4xl font-bold text-gray-900 mb-grid-2">API Reference</h1>

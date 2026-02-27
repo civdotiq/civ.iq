@@ -5,6 +5,14 @@ export default function TermsPage() {
   return (
     <div className="min-h-screen aicher-background">
       <div className="max-w-4xl mx-auto px-grid-2 sm:px-grid-4 py-grid-4 sm:py-grid-8">
+        <nav className="text-sm text-gray-500 mb-6">
+          <Link href="/" className="hover:text-blue-600">
+            Home
+          </Link>
+          <span className="mx-2">&rsaquo;</span>
+          <span className="font-medium text-gray-900">Terms of Service</span>
+        </nav>
+
         {/* Logo */}
         <div className="flex flex-col items-center mb-grid-4 sm:mb-grid-6">
           <Link href="/" className="flex flex-col items-center hover:opacity-80 transition-opacity">

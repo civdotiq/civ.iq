@@ -112,15 +112,21 @@ export default async function StateLegislatorProfilePage({
     <>
       <main id="main-content">
         <div className="container mx-auto px-grid-2 md:px-grid-4 py-grid-3">
-          <div className="flex justify-between items-center mb-grid-3">
-            <div></div>
-            <Link
-              href="/"
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm"
-            >
-              ← Back to Search
+          <nav className="text-sm text-gray-500 mb-6">
+            <Link href="/" className="hover:text-blue-600">
+              Home
             </Link>
-          </div>
+            <span className="mx-2">&rsaquo;</span>
+            <Link href="/states" className="hover:text-blue-600">
+              States
+            </Link>
+            <span className="mx-2">&rsaquo;</span>
+            <Link href={`/state-legislature/${state}`} className="hover:text-blue-600">
+              {state.toUpperCase()} Legislature
+            </Link>
+            <span className="mx-2">&rsaquo;</span>
+            <span className="font-medium text-gray-900">{legislator.name}</span>
+          </nav>
         </div>
 
         <ChunkLoadErrorBoundary>
