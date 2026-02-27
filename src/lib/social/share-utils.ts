@@ -208,11 +208,54 @@ export function generateTweetText(data: ShareData): string {
 }
 
 /**
- * Generate X.com (Twitter) share URL
+ * Generate a short title for platforms that need a separate title field (Reddit, Email, Native Share)
+ */
+export function generateShareTitle(data: ShareData): string {
+  const repTitle = formatRepTitle(data.representative);
+  const sectionName = getSectionDisplayName(data.section);
+  return `${repTitle} — ${sectionName} | CIV.IQ`;
+}
+
+/**
+ * Generate X.com share URL
  */
 export function generateTwitterShareUrl(text: string): string {
   const encodedText = encodeURIComponent(text);
-  return `https://twitter.com/intent/tweet?text=${encodedText}`;
+  return `https://x.com/intent/post?text=${encodedText}`;
+}
+
+/**
+ * Generate Bluesky share URL
+ */
+export function generateBlueskyShareUrl(text: string): string {
+  const encodedText = encodeURIComponent(text);
+  return `https://bsky.app/intent/compose?text=${encodedText}`;
+}
+
+/**
+ * Generate Facebook share URL
+ */
+export function generateFacebookShareUrl(url: string): string {
+  const encodedUrl = encodeURIComponent(url);
+  return `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+}
+
+/**
+ * Generate Reddit share URL
+ */
+export function generateRedditShareUrl(url: string, title: string): string {
+  const encodedUrl = encodeURIComponent(url);
+  const encodedTitle = encodeURIComponent(title);
+  return `https://reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`;
+}
+
+/**
+ * Generate email share URL (mailto:)
+ */
+export function generateEmailShareUrl(subject: string, body: string): string {
+  const encodedSubject = encodeURIComponent(subject);
+  const encodedBody = encodeURIComponent(body);
+  return `mailto:?subject=${encodedSubject}&body=${encodedBody}`;
 }
 
 /**
