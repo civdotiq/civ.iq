@@ -21,6 +21,7 @@ import { DistrictExportButton } from '@/shared/components/ui/DistrictExportButto
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import type { FAQItem } from '@/components/seo/WikipediaStyleSEO';
 import { DistrictFooter } from '@/components/seo/DistrictFooter';
+import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 
 // Dynamic import of the map component to avoid SSR issues
 const DistrictMap = dynamic(() => import('@/features/districts/components/DistrictMap'), {
@@ -347,6 +348,12 @@ export default function DistrictPage() {
             population={district.demographics?.population}
             cookPVI={district.political?.cookPVI}
             lastUpdated={new Date()}
+          />
+          <OpenDataStrip
+            feedUrl={`/api/feed/district/${districtId}`}
+            feedLabel="District Feed"
+            apiUrl={`/api/v1/districts/${districtId}`}
+            exportUrl={`/api/district/${districtId}/export`}
           />
         </div>
       </main>

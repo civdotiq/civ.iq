@@ -219,8 +219,13 @@ export default function OpenDataPage() {
 
         {/* Header */}
         <h1 className="text-4xl font-bold text-gray-900 mb-grid-2">Open Data</h1>
-        <p className="text-lg text-gray-600 mb-grid-6">
+        <p className="text-lg text-gray-600 mb-grid-3">
           This platform publishes civic data through open protocols. No API key required.
+        </p>
+        <p className="text-sm text-gray-600 max-w-3xl mb-grid-6">
+          Every piece of data on CIV.IQ is available through open protocols. No account. No API key.
+          No tracking. We pull from official government sources and publish to decentralized
+          networks so these records exist independently of this website.
         </p>
 
         {/* Stat cards */}

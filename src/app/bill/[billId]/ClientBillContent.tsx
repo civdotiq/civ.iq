@@ -35,6 +35,7 @@ import { DistrictSelector } from '@/features/legislation/components/DistrictSele
 import type { DistrictImpact as DistrictImpactType } from '@/types/district-impact';
 import { useSearchParams } from 'next/navigation';
 import { BillSpendingSection } from '@/features/legislation/components/BillSpendingSection';
+import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 
 interface ClientBillContentProps {
   billId: string;
@@ -904,6 +905,14 @@ export function ClientBillContent({ billId }: ClientBillContentProps) {
           </div>
         </div>
       </div>
+
+      {/* Open Data Strip */}
+      <OpenDataStrip
+        feedUrl={`/api/feed/bill/${billId}`}
+        feedLabel="Bill Feed"
+        apiUrl={`/api/v1/bills/${billId}`}
+        congressUrl={bill.url}
+      />
     </div>
   );
 }

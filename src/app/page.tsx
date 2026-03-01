@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import SearchForm from '@/components/SearchForm';
 import FeatureGrid from '@/components/landing/FeatureGrid';
 import QuickStartPaths from '@/components/landing/QuickStartPaths';
@@ -52,6 +53,13 @@ export default function HomePage() {
             <p className="text-xs sm:text-sm text-gray-500 px-grid-2">
               Federal data from Congress.gov, FEC, and Census Bureau. State legislature data from
               Open States.
+            </p>
+            <p className="text-xs text-gray-400 mt-grid-1">
+              All data available via{' '}
+              <Link href="/open" className="text-civiq-blue hover:underline">
+                open API, RSS, Nostr, and the Fediverse
+              </Link>
+              . No account required.
             </p>
           </div>
         </div>

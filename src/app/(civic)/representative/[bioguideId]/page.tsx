@@ -11,6 +11,7 @@ import { getEnhancedRepresentative } from '@/features/representatives/services/c
 import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
 import { PersonSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { ContextualFooter, type CommitteeLink } from '@/components/seo/ContextualFooter';
+import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -249,6 +250,11 @@ export default async function RepresentativeProfilePage({
             totalCommittees={representative.committees?.length}
             lastUpdated={new Date()}
             dataSource="Congress.gov API"
+          />
+          <OpenDataStrip
+            feedUrl={`/api/feed/member/${bioguideId}`}
+            feedLabel="Member Feed"
+            apiUrl={`/api/v1/representatives/${bioguideId}`}
           />
         </div>
       </main>

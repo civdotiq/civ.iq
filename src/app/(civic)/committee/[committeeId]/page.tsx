@@ -16,6 +16,7 @@ import { getCommitteeDataService } from '@/lib/services/committee.service';
 import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { CommitteeFooter } from '@/components/seo/CommitteeFooter';
+import { OpenDataStrip } from '@/components/shared/ui/OpenDataStrip';
 
 // Dynamically import client components
 const SubcommitteeCard = dynamic(
@@ -82,24 +83,20 @@ export async function generateMetadata({ params }: CommitteePageProps): Promise<
   return {
     title: `${title} | CIV.IQ`,
     description,
+    alternates: {
+      types: {
+        'application/atom+xml': `/api/feed/committee/${committeeId}`,
+      },
+    },
     openGraph: {
       title,
       description,
       type: 'website',
-      images: [
-        {
-          url: `/api/og/committee/${committeeId}`,
-          width: 1200,
-          height: 630,
-          alt: `${title} - CIV.IQ`,
-        },
-      ],
     },
     twitter: {
-      card: 'summary_large_image',
+      card: 'summary',
       title,
       description,
-      images: [`/api/og/committee/${committeeId}`],
     },
   };
 }
@@ -427,6 +424,11 @@ async function CommitteeContent({
           rankingMemberName={committee.leadership.rankingMember?.representative.name}
           rankingMemberBioguideId={committee.leadership.rankingMember?.representative.bioguideId}
           lastUpdated={new Date()}
+        />
+        <OpenDataStrip
+          feedUrl={`/api/feed/committee/${committeeId}`}
+          feedLabel="Committee Feed"
+          apiUrl={`/api/v1/committees/${committeeId}`}
         />
       </div>
     </div>
