@@ -71,11 +71,37 @@ async function fetchReportsData(committeeId: string) {
   }
 }
 
-function createTimelineFromBills(bills: unknown[]): TimelineItem[] {
+interface CommitteeBill {
+  billId: string;
+  billNumber: string;
+  title: string;
+  introducedDate: string;
+  sponsor: { name: string };
+  committeeStatus?: string;
+  committeeActions?: CommitteeAction[];
+}
+
+interface CommitteeAction {
+  actionType: string;
+  date: string;
+  text: string;
+  voteResult?: { yeas: number; nays: number };
+  committeeId?: string;
+}
+
+interface CommitteeReport {
+  reportId: string;
+  reportNumber: string;
+  title: string;
+  publishedDate: string;
+  reportType?: string;
+  url?: string;
+}
+
+function createTimelineFromBills(bills: CommitteeBill[]): TimelineItem[] {
   const timelineItems: TimelineItem[] = [];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  bills.forEach((bill: any) => {
+  bills.forEach(bill => {
     // Add bill introduction
     timelineItems.push({
       id: `bill-intro-${bill.billId}`,
@@ -93,8 +119,7 @@ function createTimelineFromBills(bills: unknown[]): TimelineItem[] {
 
     // Add committee actions
     if (bill.committeeActions) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      bill.committeeActions.forEach((action: any, idx: number) => {
+      bill.committeeActions.forEach((action: CommitteeAction, idx: number) => {
         let type: TimelineItem['type'] = 'bill';
         let importance: TimelineItem['importance'] = 'low';
 
@@ -138,9 +163,8 @@ function createTimelineFromBills(bills: unknown[]): TimelineItem[] {
   return timelineItems;
 }
 
-function createTimelineFromReports(reports: unknown[]): TimelineItem[] {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return reports.map((report: any) => ({
+function createTimelineFromReports(reports: CommitteeReport[]): TimelineItem[] {
+  return reports.map(report => ({
     id: `report-${report.reportId}`,
     type: 'report' as const,
     date: report.publishedDate,

@@ -311,15 +311,13 @@ async function getHandler(
           website: member.url,
           imageUrl: member.depiction?.imageUrl,
           terms:
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            member.terms?.map((term: any) => ({
+            member.terms?.map((term: { congress: number; startYear: number; endYear: number }) => ({
               congress: term.congress,
               startYear: term.startYear,
               endYear: term.endYear,
             })) || [],
           committees:
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            member.leadership?.map((role: any) => ({
+            member.leadership?.map((role: { name: string; type: string }) => ({
               name: role.name,
               role: role.type,
             })) || [],

@@ -49,6 +49,30 @@ interface EnhancedVoteData {
   };
 }
 
+interface RawHouseVote {
+  rollCallNumber?: string;
+  number?: string;
+  date?: string;
+  voteDate?: string;
+  question?: string;
+  voteQuestion?: string;
+  result?: string;
+  voteResult?: string;
+  url?: string;
+  bill?: {
+    type?: string;
+    number?: string | number;
+    title?: string;
+    url?: string;
+  };
+  totals?: {
+    yea?: number;
+    nay?: number;
+    present?: number;
+    notVoting?: number;
+  };
+}
+
 export class EnhancedCongressDataService {
   private static instance: EnhancedCongressDataService;
   private apiKey: string | undefined;
@@ -228,12 +252,18 @@ export class EnhancedCongressDataService {
   /**
    * Parse House API response into standardized format
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private parseHouseAPIResponse(data: any, congress: number, session: number): EnhancedVoteData[] {
+  private parseHouseAPIResponse(
+    data: Record<string, unknown>,
+    congress: number,
+    session: number
+  ): EnhancedVoteData[] {
     const votes: EnhancedVoteData[] = [];
 
     // Handle different response structures
-    const voteList = data.rollCallVotes || data.houseRollCallVotes || data.votes || [];
+    const voteList = (data.rollCallVotes ||
+      data.houseRollCallVotes ||
+      data.votes ||
+      []) as RawHouseVote[];
 
     for (const vote of voteList) {
       try {
@@ -501,8 +531,13 @@ export class EnhancedCongressDataService {
         : undefined;
 
       // Parse member votes using regex
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const memberVotes: any[] = [];
+      const memberVotes: Array<{
+        bioguideId: string;
+        name: string;
+        party: string;
+        state: string;
+        position: 'Yea' | 'Nay' | 'Present' | 'Not Voting';
+      }> = [];
       const memberMatches = xmlText.matchAll(/<member>[\s\S]*?<\/member>/g);
 
       logger.debug('Parsing member votes from Senate XML', {
@@ -645,8 +680,13 @@ export class EnhancedCongressDataService {
       question: string;
       position: string;
       result: string;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      bill?: any;
+      bill?: {
+        congress: number;
+        type: string;
+        number: string;
+        title: string;
+        url: string;
+      };
     }>
   > {
     const votes =

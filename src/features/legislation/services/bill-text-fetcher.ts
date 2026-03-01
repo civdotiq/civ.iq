@@ -126,8 +126,9 @@ async function fetchFullBillText(
     }
 
     const latestVersion = textVersions[0];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fullTextUrl = latestVersion.formats?.find((f: any) => f.type === 'Formatted Text')?.url;
+    const fullTextUrl = latestVersion.formats?.find(
+      (f: { type: string; url?: string }) => f.type === 'Formatted Text'
+    )?.url;
 
     if (!fullTextUrl) {
       return null;

@@ -250,8 +250,13 @@ function LegislatorCard({
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ChamberOverview({ chamber, data }: { chamber: 'upper' | 'lower'; data: any }) {
+function ChamberOverview({
+  chamber,
+  data,
+}: {
+  chamber: 'upper' | 'lower';
+  data: StateLegislatureData;
+}) {
   const chamberData = data.chambers[chamber];
   const totalSeats = chamberData.totalSeats;
   const demPercentage = (chamberData.democraticSeats / totalSeats) * 100;

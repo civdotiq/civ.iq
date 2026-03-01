@@ -297,11 +297,13 @@ export async function GET(request: NextRequest) {
                       }
 
                       // Calculate member counts
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      const partyBreakdown = members.reduce((acc: any, member: any) => {
-                        acc[member.party] = (acc[member.party] || 0) + 1;
-                        return acc;
-                      }, {});
+                      const partyBreakdown = members.reduce(
+                        (acc: Record<string, number>, member: CommitteeMember) => {
+                          acc[member.party] = (acc[member.party] || 0) + 1;
+                          return acc;
+                        },
+                        {}
+                      );
 
                       const partyCounts = Object.values(partyBreakdown) as number[];
                       committeeInfo.memberCount = {
@@ -418,20 +420,27 @@ export async function GET(request: NextRequest) {
               const jointData = await jointResponse.json();
 
               if (jointData.committees) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                jointData.committees.forEach((committee: any) => {
-                  committees.push({
-                    code: committee.systemCode || committee.code || '',
-                    name: committee.name,
-                    chamber: 'Joint',
-                    type: 'joint',
-                    jurisdiction: getJurisdiction(committee.name),
-                    establishedDate: committee.establishedDate,
-                    website: committee.url,
-                    isSubcommittee: false,
-                    subcommittees: [],
-                  });
-                });
+                jointData.committees.forEach(
+                  (committee: {
+                    systemCode?: string;
+                    code?: string;
+                    name: string;
+                    establishedDate?: string;
+                    url?: string;
+                  }) => {
+                    committees.push({
+                      code: committee.systemCode || committee.code || '',
+                      name: committee.name,
+                      chamber: 'Joint',
+                      type: 'joint',
+                      jurisdiction: getJurisdiction(committee.name),
+                      establishedDate: committee.establishedDate,
+                      website: committee.url,
+                      isSubcommittee: false,
+                      subcommittees: [],
+                    });
+                  }
+                );
               }
             }
           } catch (error) {

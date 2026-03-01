@@ -1,0 +1,380 @@
+/**
+ * CIV.IQ District Civic Pack — Print Stylesheet
+ * Optimized for letter-size paper (8.5" x 11")
+ *
+ * Usage: Imported by the /districts/[districtId]/print page.
+ * Designed for browser print dialog → PDF export.
+ */
+
+@media print {
+  @page {
+    size: letter;
+    margin: 0.5in 0.6in;
+  }
+
+  /* ===== RESET ===== */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 10pt;
+    line-height: 1.4;
+    color: #000;
+  }
+
+  /* ===== HIDE NON-PRINT ELEMENTS ===== */
+  .civic-pack-no-print,
+  header,
+  footer,
+  nav {
+    display: none !important;
+  }
+
+  /* ===== LAYOUT ===== */
+  .civic-pack {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* ===== PAGE BREAKS ===== */
+  .civic-pack-page-break {
+    page-break-before: always;
+  }
+
+  .civic-pack-keep-together {
+    page-break-inside: avoid;
+  }
+
+  /* ===== HEADER ===== */
+  .civic-pack-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 12pt;
+    border-bottom: 2pt solid #000;
+    margin-bottom: 16pt;
+  }
+
+  .civic-pack-header h1 {
+    font-size: 20pt;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .civic-pack-header .subtitle {
+    font-size: 10pt;
+    color: #555;
+    margin-top: 2pt;
+  }
+
+  /* ===== QR CODE ===== */
+  .civic-pack-qr {
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .civic-pack-qr svg {
+    width: 72pt !important;
+    height: 72pt !important;
+  }
+
+  .civic-pack-qr-label {
+    font-size: 7pt;
+    color: #888;
+    margin-top: 2pt;
+  }
+
+  /* ===== REPRESENTATIVE CARDS ===== */
+  .civic-pack-rep {
+    display: flex;
+    gap: 10pt;
+    padding: 10pt;
+    border: 1pt solid #000;
+    margin-bottom: 8pt;
+    page-break-inside: avoid;
+  }
+
+  .civic-pack-rep img {
+    width: 56pt;
+    height: 56pt;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .civic-pack-rep-name {
+    font-size: 12pt;
+    font-weight: 700;
+  }
+
+  .civic-pack-rep-detail {
+    font-size: 9pt;
+    color: #333;
+    line-height: 1.5;
+  }
+
+  .civic-pack-party-d {
+    color: #0a9338;
+  }
+  .civic-pack-party-r {
+    color: #e11d07;
+  }
+  .civic-pack-party-i {
+    color: #6b7280;
+  }
+
+  /* ===== SECTION HEADINGS ===== */
+  .civic-pack-section {
+    margin-top: 14pt;
+    margin-bottom: 8pt;
+    font-size: 11pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1pt solid #000;
+    padding-bottom: 4pt;
+  }
+
+  /* ===== DATA TABLE ===== */
+  .civic-pack-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8pt;
+    font-size: 9pt;
+  }
+
+  .civic-pack-table th {
+    background: #000 !important;
+    color: #fff !important;
+    padding: 4pt 6pt;
+    text-align: left;
+    font-weight: 600;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .civic-pack-table td {
+    padding: 4pt 6pt;
+    border-bottom: 0.5pt solid #ccc;
+  }
+
+  .civic-pack-table tr:last-child td {
+    border-bottom: 1pt solid #000;
+  }
+
+  /* ===== STATS GRID ===== */
+  .civic-pack-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8pt;
+    margin-bottom: 12pt;
+  }
+
+  .civic-pack-stat {
+    text-align: center;
+    padding: 8pt;
+    border: 1pt solid #ccc;
+  }
+
+  .civic-pack-stat-value {
+    font-size: 14pt;
+    font-weight: 700;
+  }
+
+  .civic-pack-stat-label {
+    font-size: 7pt;
+    text-transform: uppercase;
+    color: #666;
+    letter-spacing: 0.05em;
+  }
+
+  /* ===== FOOTER ===== */
+  .civic-pack-footer {
+    margin-top: 16pt;
+    padding-top: 8pt;
+    border-top: 1pt solid #000;
+    font-size: 7pt;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+/* ===== SCREEN STYLES (for preview before printing) ===== */
+@media screen {
+  .civic-pack {
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 0.5in 0.6in;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
+    font-size: 10pt;
+    line-height: 1.4;
+    color: #000;
+    background: white;
+  }
+
+  .civic-pack-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 12pt;
+    border-bottom: 2pt solid #000;
+    margin-bottom: 16pt;
+  }
+
+  .civic-pack-header h1 {
+    font-size: 20pt;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .civic-pack-header .subtitle {
+    font-size: 10pt;
+    color: #555;
+    margin-top: 2pt;
+  }
+
+  .civic-pack-qr {
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .civic-pack-qr-label {
+    font-size: 7pt;
+    color: #888;
+    margin-top: 2pt;
+  }
+
+  .civic-pack-section {
+    margin-top: 14pt;
+    margin-bottom: 8pt;
+    font-size: 11pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1pt solid #000;
+    padding-bottom: 4pt;
+  }
+
+  .civic-pack-rep {
+    display: flex;
+    gap: 10pt;
+    padding: 10pt;
+    border: 1pt solid #000;
+    margin-bottom: 8pt;
+  }
+
+  .civic-pack-rep img {
+    width: 56pt;
+    height: 56pt;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .civic-pack-rep-name {
+    font-size: 12pt;
+    font-weight: 700;
+  }
+
+  .civic-pack-rep-detail {
+    font-size: 9pt;
+    color: #333;
+    line-height: 1.5;
+  }
+
+  .civic-pack-party-d {
+    color: #0a9338;
+  }
+  .civic-pack-party-r {
+    color: #e11d07;
+  }
+  .civic-pack-party-i {
+    color: #6b7280;
+  }
+
+  .civic-pack-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8pt;
+    margin-bottom: 12pt;
+  }
+
+  .civic-pack-stat {
+    text-align: center;
+    padding: 8pt;
+    border: 1pt solid #ccc;
+  }
+
+  .civic-pack-stat-value {
+    font-size: 14pt;
+    font-weight: 700;
+  }
+
+  .civic-pack-stat-label {
+    font-size: 7pt;
+    text-transform: uppercase;
+    color: #666;
+    letter-spacing: 0.05em;
+  }
+
+  .civic-pack-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8pt;
+    font-size: 9pt;
+  }
+
+  .civic-pack-table th {
+    background: #000;
+    color: #fff;
+    padding: 4pt 6pt;
+    text-align: left;
+    font-weight: 600;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .civic-pack-table td {
+    padding: 4pt 6pt;
+    border-bottom: 0.5pt solid #ccc;
+  }
+
+  .civic-pack-table tr:last-child td {
+    border-bottom: 1pt solid #000;
+  }
+
+  .civic-pack-footer {
+    margin-top: 16pt;
+    padding-top: 8pt;
+    border-top: 1pt solid #000;
+    font-size: 7pt;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .civic-pack-page-break {
+    border-top: 2px dashed #ccc;
+    margin-top: 24pt;
+    padding-top: 16pt;
+  }
+
+  .civic-pack-no-print {
+    /* Visible on screen for print button */
+  }
+}

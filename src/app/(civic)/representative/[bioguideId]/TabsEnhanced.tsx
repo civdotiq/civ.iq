@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -17,6 +16,33 @@ import {
 import { SimpleNewsSection } from '@/features/news/components/SimpleNewsSection';
 import { EnhancedRepresentative } from '@/types/representative';
 import { RepresentativeContactForm } from '@/features/representatives/components/RepresentativeContactForm';
+
+interface CongressBill {
+  type?: string;
+  number?: string;
+  congress?: number;
+  title?: string;
+  introducedDate?: string;
+  latestAction?: { actionDate?: string; text?: string };
+  url?: string;
+}
+
+interface CongressVote {
+  position?: string;
+  chamber?: string;
+  rollNumber?: number;
+  question?: string;
+  description?: string;
+  date?: string;
+  result?: string;
+}
+
+interface Contributor {
+  name?: string;
+  employer?: string;
+  total_amount?: number;
+  total?: number;
+}
 
 interface TabsEnhancedProps {
   bioguideId: string;
@@ -118,13 +144,13 @@ function ProfileContent({
 // Enhanced component for Bills tab
 function BillsContent({ data }: { data: Record<string, any> }) {
   // Handle different data structures from API
-  let bills: unknown[] = [];
+  let bills: CongressBill[] = [];
   if (data?.sponsoredLegislation && Array.isArray(data.sponsoredLegislation)) {
-    bills = data.sponsoredLegislation;
+    bills = data.sponsoredLegislation as CongressBill[];
   } else if (data?.bills && Array.isArray(data.bills)) {
-    bills = data.bills;
+    bills = data.bills as CongressBill[];
   } else if (Array.isArray(data)) {
-    bills = data;
+    bills = data as CongressBill[];
   }
 
   if (!bills || bills.length === 0) {
@@ -141,7 +167,7 @@ function BillsContent({ data }: { data: Record<string, any> }) {
       </div>
 
       <div className="space-y-3">
-        {bills.slice(0, 10).map((bill: any, index: number) => (
+        {bills.slice(0, 10).map((bill: CongressBill, index: number) => (
           <div key={index} className="border p-4 hover:bg-white transition-colors">
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -191,7 +217,7 @@ function BillsContent({ data }: { data: Record<string, any> }) {
 
 // Enhanced component for Votes tab
 function VotesContent({ data }: { data: Record<string, any> }) {
-  const votes = data?.votes as unknown[];
+  const votes = data?.votes as CongressVote[] | undefined;
   const votingPattern = data?.votingPattern as Record<string, unknown>;
 
   if (!votes || votes.length === 0) {
@@ -236,7 +262,7 @@ function VotesContent({ data }: { data: Record<string, any> }) {
         </h4>
 
         <div className="space-y-3">
-          {votes.slice(0, 10).map((vote: any, index: number) => (
+          {votes.slice(0, 10).map((vote: CongressVote, index: number) => (
             <div
               key={index}
               className="border-2 border-gray-300 p-4 hover:border-civiq-blue transition-colors"
@@ -265,7 +291,7 @@ function VotesContent({ data }: { data: Record<string, any> }) {
                   <div className="flex items-center gap-4 text-sm text-gray-600">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      {new Date(vote.date).toLocaleDateString()}
+                      {new Date(vote.date || '').toLocaleDateString()}
                     </span>
                     <span>Result: {vote.result}</span>
                   </div>
@@ -331,7 +357,7 @@ function FinanceContent({ data }: { data: Record<string, any> }) {
         <div className="mt-6">
           <h5 className="font-medium text-gray-900 mb-3">Top Contributors</h5>
           <div className="space-y-2">
-            {topContributors.slice(0, 5).map((contributor: any, index: number) => (
+            {topContributors.slice(0, 5).map((contributor: Contributor, index: number) => (
               <div key={index} className="flex justify-between items-center p-3 bg-white rounded">
                 <div>
                   <div className="text-gray-700 font-medium">{contributor.name}</div>

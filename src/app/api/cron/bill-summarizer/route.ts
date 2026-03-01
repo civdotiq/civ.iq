@@ -87,9 +87,8 @@ async function fetchBillText(
 
       if (textVersions.length > 0) {
         const latestVersion = textVersions[0];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const fullTextUrl = latestVersion.formats?.find(
-          (f: any) => f.type === 'Formatted Text'
+          (f: { type?: string }) => f.type === 'Formatted Text'
         )?.url;
 
         if (fullTextUrl) {

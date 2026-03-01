@@ -11,12 +11,12 @@ import { incrementRequestCounter } from '@/lib/analytics/request-counter';
 
 // Simple logging for edge runtime (console is allowed in edge runtime)
 const logger = {
-  // eslint-disable-next-line no-console, @typescript-eslint/no-explicit-any
-  http: (message: string, data?: any) => console.log(`[HTTP] ${message}`, data),
-  // eslint-disable-next-line no-console, @typescript-eslint/no-explicit-any
-  warn: (message: string, data?: any) => console.warn(`[WARN] ${message}`, data),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  error: (message: string, error?: Error, data?: any) =>
+  // eslint-disable-next-line no-console
+  http: (message: string, data?: Record<string, unknown>) => console.log(`[HTTP] ${message}`, data),
+  // eslint-disable-next-line no-console
+  warn: (message: string, data?: Record<string, unknown>) =>
+    console.warn(`[WARN] ${message}`, data),
+  error: (message: string, error?: Error, data?: Record<string, unknown>) =>
     // eslint-disable-next-line no-console
     console.error(`[ERROR] ${message}`, error, data),
 };
@@ -272,6 +272,9 @@ export async function middleware(request: NextRequest) {
       request.nextUrl.searchParams.get('lite') === '1' ||
       request.nextUrl.pathname.startsWith('/lite/');
 
+    // Detect embed routes (allow iframing)
+    const isEmbedRoute = request.nextUrl.pathname.startsWith('/embed/');
+
     // Create response with security headers
     const response = NextResponse.next();
 
@@ -279,6 +282,15 @@ export async function middleware(request: NextRequest) {
     Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
+
+    // Override frame restrictions for embed routes
+    if (isEmbedRoute) {
+      response.headers.set('X-Frame-Options', 'ALLOWALL');
+      // Replace CSP with embed-safe version (frame-ancestors *)
+      const currentCsp = response.headers.get('Content-Security-Policy') || '';
+      const embedCsp = currentCsp.replace(/frame-ancestors\s+'none'/, 'frame-ancestors *');
+      response.headers.set('Content-Security-Policy', embedCsp);
+    }
 
     // Add lite mode header when active
     if (isLiteMode) {

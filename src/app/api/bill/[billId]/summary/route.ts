@@ -185,8 +185,7 @@ export async function GET(
     const responseTime = Date.now() - startTime;
 
     // Build response based on format
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response: any = {
+    const response: Record<string, unknown> = {
       summary,
       metadata: {
         cached: false,

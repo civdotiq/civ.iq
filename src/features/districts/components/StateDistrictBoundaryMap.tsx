@@ -29,6 +29,36 @@ import { isSlowConnection } from '@/lib/utils/mobile-detection';
 // Module-level flag to track if PMTiles protocol is registered (shared across all map instances)
 let pmtilesProtocolRegistered = false;
 
+// MapLibre GL types for dynamically imported map instance
+// Using a minimal interface that matches the methods we actually call
+interface MapLayerEvent {
+  features?: Array<{ properties?: Record<string, string> }>;
+}
+
+interface MapErrorEvent {
+  error: Error;
+}
+
+// We use Record<string, unknown> as the base type for the dynamically imported map
+// since maplibre-gl types are not available at compile time for the ref
+type MapRef = Record<string, unknown> & {
+  remove: () => void;
+  on: (
+    event: string,
+    layerOrCb: string | ((e: MapLayerEvent | MapErrorEvent) => void),
+    cb?: (e: MapLayerEvent) => void
+  ) => void;
+  once: (event: string, cb: () => void) => void;
+  addSource: (id: string, source: Record<string, unknown>) => void;
+  addLayer: (layer: Record<string, unknown>) => void;
+  flyTo: (options: Record<string, unknown>) => void;
+  getCanvas: () => HTMLCanvasElement;
+  querySourceFeatures: (
+    source: string,
+    options: Record<string, unknown>
+  ) => Array<{ properties?: { id?: string } }>;
+};
+
 interface StateDistrictBoundaryMapProps {
   stateCode: string; // e.g., "CA"
   chamber: 'upper' | 'lower';
@@ -54,8 +84,7 @@ export default function StateDistrictBoundaryMap({
   className = '',
 }: StateDistrictBoundaryMapProps) {
   const [mapContainer, setMapContainer] = useState<HTMLDivElement | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const map = useRef<any>(null); // Using any because maplibre-gl is dynamically imported
+  const map = useRef<MapRef | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -160,7 +189,7 @@ export default function StateDistrictBoundaryMap({
           },
           center: [-98.5795, 39.8283], // US center default
           zoom: 4,
-        });
+        }) as unknown as MapRef;
         logger.info('[StateDistrictBoundaryMap] Map instance created, waiting for load event...');
 
         map.current.on('load', () => {
@@ -260,21 +289,24 @@ export default function StateDistrictBoundaryMap({
             }
 
             // Add click handler for neighboring districts
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            map.current.on('click', 'neighboring-districts', (e: any) => {
-              if (!e.features || e.features.length === 0) return;
+            map.current.on(
+              'click',
+              'neighboring-districts',
+              (e: { features?: Array<{ properties?: Record<string, string> }> }) => {
+                if (!e.features || e.features.length === 0) return;
 
-              const feature = e.features[0];
-              if (!feature) return;
+                const feature = e.features[0];
+                if (!feature) return;
 
-              const neighborId = feature.properties?.id;
+                const neighborId = feature.properties?.id;
 
-              if (neighborId) {
-                // Navigate to neighboring district
-                const [neighborState, neighborChamber, neighborDistrict] = neighborId.split('-');
-                window.location.href = `/state-districts/${neighborState}/${neighborDistrict}?chamber=${neighborChamber}`;
+                if (neighborId) {
+                  // Navigate to neighboring district
+                  const [neighborState, neighborChamber, neighborDistrict] = neighborId.split('-');
+                  window.location.href = `/state-districts/${neighborState}/${neighborDistrict}?chamber=${neighborChamber}`;
+                }
               }
-            });
+            );
 
             // Change cursor on hover
             map.current.on('mouseenter', 'neighboring-districts', () => {
@@ -363,12 +395,11 @@ export default function StateDistrictBoundaryMap({
           }
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        map.current.on('error', (e: any) => {
+        map.current.on('error', ((e: MapErrorEvent) => {
           logger.error('Map error', e.error);
           setError('Failed to load map');
           setLoading(false);
-        });
+        }) as (e: MapLayerEvent | MapErrorEvent) => void);
       } catch (err) {
         logger.error('Map initialization error', err as Error);
         setError('Failed to initialize map');

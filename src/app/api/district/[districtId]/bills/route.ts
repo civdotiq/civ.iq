@@ -265,7 +265,7 @@ export async function GET(
             reasons.push("Matches representative's committee topics");
           }
 
-          // +1: any spending topic match
+          // +1 for spending topic match
           const hasSpendingTopicMatch = [...spendingTopics].some(t => titleLower.includes(t));
           if (hasSpendingTopicMatch && !hasRepTopicMatch) {
             score += 1;

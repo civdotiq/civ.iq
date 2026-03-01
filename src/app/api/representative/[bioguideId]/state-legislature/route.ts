@@ -54,6 +54,55 @@ interface StateSession {
   end_date: string;
 }
 
+interface OpenStatesJurisdiction {
+  name: string;
+  abbreviation: string;
+  classification: string;
+  chambers: Array<{
+    name: string;
+    classification: string;
+  }>;
+  current_session?: StateSession;
+}
+
+interface OpenStatesPerson {
+  id: string;
+  name: string;
+  current_role?: {
+    party?: string;
+    org_classification?: string;
+    district?: string;
+  };
+  image?: string;
+  email?: string;
+  phone?: string;
+  links?: Array<{ note?: string; url?: string }>;
+  offices?: Array<{
+    name?: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+  }>;
+}
+
+interface OpenStatesBill {
+  id: string;
+  identifier: string;
+  title: string;
+  subject?: string[];
+  abstract?: string;
+  latest_action_date: string;
+  latest_action_description: string;
+  classification?: string[];
+  sponsorships?: Array<{
+    name: string;
+    classification: string;
+  }>;
+  session: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface StateLegislatureData {
   jurisdiction: {
     name: string;
@@ -151,8 +200,7 @@ function getStateDistrictsForArea(
   return { senate: [], house: [] };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchStateJurisdiction(stateAbbrev: string): Promise<any> {
+async function fetchStateJurisdiction(stateAbbrev: string): Promise<OpenStatesJurisdiction | null> {
   const startTime = Date.now();
   try {
     const response = await fetch(`https://v3.openstates.org/jurisdictions/${stateAbbrev}`, {
@@ -255,8 +303,7 @@ async function fetchStateLegislators(
         if (response.ok) {
           const data = await response.json();
           const districtLegislators =
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            data.results?.map((person: any) => ({
+            data.results?.map((person: OpenStatesPerson) => ({
               id: person.id,
               name: person.name,
               party: person.current_role?.party || 'Unknown',
@@ -265,15 +312,17 @@ async function fetchStateLegislators(
               image: person.image,
               email: person.email,
               phone: person.phone,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              website: person.links?.find((link: any) => link.note === 'website')?.url,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              offices: person.offices?.map((office: any) => ({
-                name: office.name || 'Office',
-                address: office.address,
-                phone: office.phone,
-                email: office.email,
-              })),
+              website: person.links?.find(
+                (link: { note?: string; url?: string }) => link.note === 'website'
+              )?.url,
+              offices: person.offices?.map(
+                (office: { name?: string; address?: string; phone?: string; email?: string }) => ({
+                  name: office.name || 'Office',
+                  address: office.address,
+                  phone: office.phone,
+                  email: office.email,
+                })
+              ),
             })) || [];
 
           legislators.push(...districtLegislators);
@@ -314,8 +363,7 @@ async function fetchStateLegislators(
       if (response.ok) {
         const data = await response.json();
         const allLegislators =
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data.results?.slice(0, 15).map((person: any) => ({
+          data.results?.slice(0, 15).map((person: OpenStatesPerson) => ({
             id: person.id,
             name: person.name,
             party: person.current_role?.party || 'Unknown',
@@ -324,15 +372,17 @@ async function fetchStateLegislators(
             image: person.image,
             email: person.email,
             phone: person.phone,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            website: person.links?.find((link: any) => link.note === 'website')?.url,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            offices: person.offices?.map((office: any) => ({
-              name: office.name || 'Office',
-              address: office.address,
-              phone: office.phone,
-              email: office.email,
-            })),
+            website: person.links?.find(
+              (link: { note?: string; url?: string }) => link.note === 'website'
+            )?.url,
+            offices: person.offices?.map(
+              (office: { name?: string; address?: string; phone?: string; email?: string }) => ({
+                name: office.name || 'Office',
+                address: office.address,
+                phone: office.phone,
+                email: office.email,
+              })
+            ),
           })) || [];
 
         legislators.push(...allLegislators);
@@ -386,8 +436,7 @@ async function fetchRecentStateBills(stateAbbrev: string): Promise<StateBill[]> 
     const data = await response.json();
 
     return (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data.results?.map((bill: any) => ({
+      data.results?.map((bill: OpenStatesBill) => ({
         id: bill.id,
         identifier: bill.identifier,
         title: bill.title,
@@ -397,8 +446,7 @@ async function fetchRecentStateBills(stateAbbrev: string): Promise<StateBill[]> 
         latest_action_description: bill.latest_action_description,
         classification: bill.classification || [],
         sponsors:
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          bill.sponsorships?.map((sponsor: any) => ({
+          bill.sponsorships?.map((sponsor: { name: string; classification: string }) => ({
             name: sponsor.name,
             classification: sponsor.classification,
           })) || [],
