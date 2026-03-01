@@ -256,8 +256,17 @@ export default async function RepresentativeProfilePage({
   );
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ bioguideId: string }> }) {
+const VALID_CARD_TYPES = ['profile', 'money', 'vote', 'alignment', 'legislation'] as const;
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ bioguideId: string }>;
+  searchParams: Promise<{ card?: string; billId?: string }>;
+}) {
   const { bioguideId } = await params;
+  const resolvedSearchParams = await searchParams;
 
   try {
     // Fetch representative data for rich metadata
@@ -266,7 +275,19 @@ export async function generateMetadata({ params }: { params: Promise<{ bioguideI
     const title = `${representative.name} (${representative.party}-${representative.state}) | CIV.IQ`;
     const description = `Campaign finance, voting records, and legislative activity for ${representative.name}. Real government data from official sources.`;
     const url = `https://civdotiq.org/representative/${bioguideId}`;
-    const ogImageUrl = `/api/og/representative/${bioguideId}?type=overview`;
+
+    // Build OG image URL - use trading card image when ?card= param present
+    const cardType = resolvedSearchParams.card;
+    const isValidCard =
+      cardType && VALID_CARD_TYPES.includes(cardType as (typeof VALID_CARD_TYPES)[number]);
+    let ogImageUrl: string | undefined;
+
+    if (isValidCard) {
+      ogImageUrl = `https://civdotiq.org/api/card/${bioguideId}?type=${cardType}`;
+      if (cardType === 'vote' && resolvedSearchParams.billId) {
+        ogImageUrl += `&billId=${encodeURIComponent(resolvedSearchParams.billId)}`;
+      }
+    }
 
     return {
       title,
@@ -282,21 +303,18 @@ export async function generateMetadata({ params }: { params: Promise<{ bioguideI
         url,
         siteName: 'CIV.IQ',
         type: 'profile',
-        images: [
-          {
-            url: ogImageUrl,
-            width: 1200,
-            height: 630,
-            alt: `${representative.name} profile data`,
-          },
-        ],
+        ...(ogImageUrl && {
+          images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+        }),
       },
       twitter: {
-        card: 'summary_large_image',
+        card: isValidCard ? ('summary_large_image' as const) : ('summary' as const),
         title,
         description,
-        images: [ogImageUrl],
         site: '@civdotiq',
+        ...(ogImageUrl && {
+          images: [ogImageUrl],
+        }),
       },
     };
   } catch {

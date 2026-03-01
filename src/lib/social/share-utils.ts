@@ -17,7 +17,12 @@ export type ShareSection =
   | 'legislation'
   | 'committees'
   | 'alignment'
-  | 'district';
+  | 'district'
+  | 'card-profile'
+  | 'card-money'
+  | 'card-vote'
+  | 'card-alignment'
+  | 'card-legislation';
 
 export interface ShareData {
   representative: {
@@ -61,8 +66,22 @@ export function generateShareUrl(bioguideId: string, section: ShareSection): str
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://civdotiq.org';
   const path = `/representative/${bioguideId}`;
 
+  // Card sections use ?card= query param instead of anchor
+  const cardTypeMap: Partial<Record<ShareSection, string>> = {
+    'card-profile': 'profile',
+    'card-money': 'money',
+    'card-vote': 'vote',
+    'card-alignment': 'alignment',
+    'card-legislation': 'legislation',
+  };
+
+  const cardType = cardTypeMap[section];
+  if (cardType) {
+    return `${baseUrl}${path}?card=${cardType}`;
+  }
+
   // Map sections to anchor IDs
-  const sectionAnchors: Record<ShareSection, string> = {
+  const sectionAnchors: Record<string, string> = {
     overview: '',
     finance: '#campaign-finance',
     voting: '#voting-record',
@@ -72,7 +91,7 @@ export function generateShareUrl(bioguideId: string, section: ShareSection): str
     district: '#district',
   };
 
-  return `${baseUrl}${path}${sectionAnchors[section]}`;
+  return `${baseUrl}${path}${sectionAnchors[section] || ''}`;
 }
 
 /**
@@ -199,6 +218,35 @@ export function generateTweetText(data: ShareData): string {
       return parts.join('\n');
     }
 
+    case 'card-profile': {
+      return `${repTitle} trading card\n\nCampaign finance, voting records, and legislative activity from official sources\n\n${url}`;
+    }
+
+    case 'card-money': {
+      if (!stats?.totalRaised) {
+        return `${repTitle} campaign finance card\n\nReal government data via @civdotiq\n${url}`;
+      }
+      return `${repTitle} campaign finance card:\n\n${formatCurrency(stats.totalRaised)} raised${stats.individualPercent !== undefined ? ` (${stats.individualPercent}% from individuals)` : ''}\n\nReal government data via @civdotiq\n${url}`;
+    }
+
+    case 'card-vote': {
+      return `${repTitle} vote card\n\nSee how they voted on key legislation\n\n${url}`;
+    }
+
+    case 'card-alignment': {
+      if (!stats?.partyAlignment) {
+        return `${repTitle} party alignment card\n\nReal government data via @civdotiq\n${url}`;
+      }
+      return `${repTitle} party alignment card:\n\n${stats.partyAlignment}% party alignment\n\nReal government data via @civdotiq\n${url}`;
+    }
+
+    case 'card-legislation': {
+      if (!stats?.billsSponsored) {
+        return `${repTitle} legislation card\n\nReal government data via @civdotiq\n${url}`;
+      }
+      return `${repTitle} legislation card:\n\n${stats.billsSponsored} bills sponsored\n\nReal government data via @civdotiq\n${url}`;
+    }
+
     case 'overview':
     case 'district':
     default: {
@@ -282,6 +330,11 @@ export function getSectionDisplayName(section: ShareSection): string {
     committees: 'Committees',
     alignment: 'Party Alignment',
     district: 'District',
+    'card-profile': 'Profile Card',
+    'card-money': 'Finance Card',
+    'card-vote': 'Vote Card',
+    'card-alignment': 'Alignment Card',
+    'card-legislation': 'Legislation Card',
   };
 
   return names[section];
