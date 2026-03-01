@@ -9,7 +9,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { TableOfContents, FAQSection } from '@/components/seo';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
-import { OrganizationSchema } from '@/components/seo/JsonLd';
+import { GovernmentOrganizationSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'United States Congress | Senators, Representatives & Committees',
@@ -123,11 +123,18 @@ const faqItems = [
 export default function CongressHubPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Schema */}
-      <OrganizationSchema
+      {/* Structured Data */}
+      <GovernmentOrganizationSchema
         name="United States Congress"
         url="https://congress.gov"
         description="The legislative branch of the United States federal government, composed of the Senate and House of Representatives."
+        parentOrganization="United States Federal Government"
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Congress', url: 'https://civdotiq.org/congress' },
+        ]}
       />
 
       <main className="max-w-5xl mx-auto px-4 py-8">

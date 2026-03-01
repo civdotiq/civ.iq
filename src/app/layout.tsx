@@ -3,6 +3,7 @@ import Script from 'next/script';
 import './globals.css';
 import { Header } from '@/shared/components/navigation/Header';
 import { SiteFooter } from '@/components/shared/layout/SiteFooter';
+import { LiteModeProvider } from '@/lib/lite-mode/context';
 
 // Google Analytics Measurement ID
 const GA_MEASUREMENT_ID = 'G-F98819F2NC';
@@ -41,23 +42,14 @@ export const metadata: Metadata = {
       'Find your federal, state, and local representatives. Track bills, votes, campaign finance, and more with real government data.',
     url: 'https://civdotiq.org',
     siteName: 'CIV.IQ',
-    images: [
-      {
-        url: '/images/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'CIV.IQ - Civic Intelligence Hub',
-      },
-    ],
     locale: 'en_US',
     type: 'website',
   },
   twitter: {
-    card: 'summary_large_image',
+    card: 'summary',
     title: 'CIV.IQ: Who Represents You?',
     description:
       'Find your federal, state, and local representatives. Track bills, votes, campaign finance, and more.',
-    images: ['/images/og-image.png'],
     site: '@civdotiq',
     creator: '@civdotiq',
   },
@@ -100,6 +92,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(t==null&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
           }}
         />
+        {/* Lite mode detection - runs before paint, no flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){if(window.location.search.indexOf('lite=1')!==-1){document.documentElement.setAttribute('data-lite','1')}})()`,
+          }}
+        />
         {/* Preload critical font weights to prevent FOUT */}
         <link
           rel="preload"
@@ -137,13 +135,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to main content
         </a>
-        <div className="min-h-screen flex flex-col">
-          <Header />
-          <main id="main-content" className="flex-grow pt-14">
-            {children}
-          </main>
-          <SiteFooter />
-        </div>
+        <LiteModeProvider>
+          <div className="min-h-screen flex flex-col">
+            <Header />
+            <main id="main-content" className="flex-grow pt-14">
+              {children}
+            </main>
+            <SiteFooter />
+          </div>
+        </LiteModeProvider>
       </body>
     </html>
   );

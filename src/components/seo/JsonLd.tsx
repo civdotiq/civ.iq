@@ -1,9 +1,19 @@
 /**
  * JSON-LD Structured Data Components for SEO
  * Implements Schema.org vocabulary for rich search results
+ *
+ * Uses plain <script> tags (NOT next/script) so JSON-LD is present
+ * in the initial SSR HTML for crawlers. next/script defers injection
+ * until after hydration, which crawlers may not execute.
  */
 
-import Script from 'next/script';
+/**
+ * Safely serialize JSON-LD, escaping </script> injection vectors.
+ * Replaces < with unicode escape to prevent XSS via data fields.
+ */
+function safeJsonLd(data: Record<string, unknown>): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
 
 interface OrganizationSchemaProps {
   name?: string;
@@ -40,11 +50,7 @@ export function OrganizationSchema({
   };
 
   return (
-    <Script
-      id="organization-schema"
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
   );
 }
 
@@ -79,11 +85,7 @@ export function WebSiteSchema({
   };
 
   return (
-    <Script
-      id="website-schema"
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
   );
 }
 
@@ -104,6 +106,8 @@ interface PersonSchemaProps {
   sameAs?: string[];
   affiliation?: string;
   birthDate?: string;
+  knowsAbout?: string[];
+  nationality?: string;
 }
 
 /**
@@ -121,6 +125,8 @@ export function PersonSchema({
   sameAs,
   affiliation,
   birthDate,
+  knowsAbout,
+  nationality = 'United States of America',
 }: PersonSchemaProps) {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -133,7 +139,20 @@ export function PersonSchema({
   if (image) schema.image = image;
   if (url) schema.url = url;
   if (birthDate) schema.birthDate = birthDate;
-  if (affiliation) schema.affiliation = affiliation;
+
+  if (nationality) {
+    schema.nationality = {
+      '@type': 'Country',
+      name: nationality,
+    };
+  }
+
+  if (affiliation) {
+    schema.affiliation = {
+      '@type': 'Organization',
+      name: affiliation,
+    };
+  }
 
   if (worksFor) {
     schema.worksFor = {
@@ -155,12 +174,12 @@ export function PersonSchema({
     schema.sameAs = sameAs;
   }
 
+  if (knowsAbout && knowsAbout.length > 0) {
+    schema.knowsAbout = knowsAbout;
+  }
+
   return (
-    <Script
-      id="person-schema"
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
   );
 }
 
@@ -170,6 +189,15 @@ interface GovernmentOrganizationSchemaProps {
   url?: string;
   parentOrganization?: string;
   areaServed?: string;
+  member?: Array<{
+    name: string;
+    url?: string;
+    role?: string;
+  }>;
+  subOrganization?: Array<{
+    name: string;
+    url?: string;
+  }>;
 }
 
 /**
@@ -181,6 +209,8 @@ export function GovernmentOrganizationSchema({
   url,
   parentOrganization = 'United States Congress',
   areaServed = 'United States',
+  member,
+  subOrganization,
 }: GovernmentOrganizationSchemaProps) {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -199,12 +229,28 @@ export function GovernmentOrganizationSchema({
   if (description) schema.description = description;
   if (url) schema.url = url;
 
+  if (member && member.length > 0) {
+    schema.member = member.map(m => ({
+      '@type': 'OrganizationRole',
+      member: {
+        '@type': 'Person',
+        name: m.name,
+        ...(m.url && { url: m.url }),
+      },
+      ...(m.role && { roleName: m.role }),
+    }));
+  }
+
+  if (subOrganization && subOrganization.length > 0) {
+    schema.subOrganization = subOrganization.map(sub => ({
+      '@type': 'GovernmentOrganization',
+      name: sub.name,
+      ...(sub.url && { url: sub.url }),
+    }));
+  }
+
   return (
-    <Script
-      id="gov-org-schema"
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
   );
 }
 
@@ -232,11 +278,7 @@ export function BreadcrumbSchema({ items }: BreadcrumbSchemaProps) {
   };
 
   return (
-    <Script
-      id="breadcrumb-schema"
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
   );
 }
 
@@ -265,11 +307,7 @@ export function FAQSchema({ questions }: FAQSchemaProps) {
   };
 
   return (
-    <Script
-      id="faq-schema"
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
   );
 }
 
@@ -321,10 +359,170 @@ export function LegislativeEventSchema({
   if (url) schema.url = url;
 
   return (
-    <Script
-      id="event-schema"
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
+interface LegislationSchemaProps {
+  name: string;
+  legislationIdentifier: string;
+  description?: string;
+  datePublished?: string;
+  legislationDate?: string;
+  legislationPassedBy?: string;
+  sponsor?: {
+    name: string;
+    url?: string;
+  };
+  legislationType?: string;
+  url?: string;
+}
+
+/**
+ * Legislation schema for bill pages
+ * Uses schema.org Legislation type with legislationJurisdiction
+ */
+export function LegislationSchema({
+  name,
+  legislationIdentifier,
+  description,
+  datePublished,
+  legislationDate,
+  legislationPassedBy,
+  sponsor,
+  legislationType,
+  url,
+}: LegislationSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Legislation',
+    name,
+    legislationIdentifier,
+    legislationJurisdiction: {
+      '@type': 'Country',
+      name: 'United States of America',
+    },
+  };
+
+  if (description) schema.description = description;
+  if (datePublished) schema.datePublished = datePublished;
+  if (legislationDate) schema.legislationDate = legislationDate;
+  if (url) schema.url = url;
+  if (legislationType) schema.legislationType = legislationType;
+
+  if (legislationPassedBy) {
+    schema.legislationPassedBy = {
+      '@type': 'GovernmentOrganization',
+      name: legislationPassedBy,
+    };
+  }
+
+  if (sponsor) {
+    schema.sponsor = {
+      '@type': 'Person',
+      name: sponsor.name,
+      ...(sponsor.url && { url: sponsor.url }),
+    };
+  }
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
+interface AdministrativeAreaSchemaProps {
+  name: string;
+  description?: string;
+  url?: string;
+  containedInPlace?: string;
+  geo?: {
+    latitude: number;
+    longitude: number;
+  };
+  population?: number;
+}
+
+/**
+ * AdministrativeArea schema for congressional district pages
+ */
+export function AdministrativeAreaSchema({
+  name,
+  description,
+  url,
+  containedInPlace,
+  geo,
+  population,
+}: AdministrativeAreaSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'AdministrativeArea',
+    name,
+  };
+
+  if (description) schema.description = description;
+  if (url) schema.url = url;
+
+  if (containedInPlace) {
+    schema.containedInPlace = {
+      '@type': 'State',
+      name: containedInPlace,
+    };
+  }
+
+  if (geo) {
+    schema.geo = {
+      '@type': 'GeoCoordinates',
+      latitude: geo.latitude,
+      longitude: geo.longitude,
+    };
+  }
+
+  if (population) {
+    schema.additionalProperty = {
+      '@type': 'PropertyValue',
+      name: 'population',
+      value: population,
+    };
+  }
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
+  );
+}
+
+interface DefinedTermSchemaProps {
+  name: string;
+  description: string;
+  url?: string;
+  termSet?: {
+    name: string;
+    url?: string;
+  };
+}
+
+/**
+ * DefinedTerm schema for glossary term pages
+ * Enables rich results for definition queries
+ */
+export function DefinedTermSchema({ name, description, url, termSet }: DefinedTermSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTerm',
+    name,
+    description,
+  };
+
+  if (url) schema.url = url;
+
+  if (termSet) {
+    schema.inDefinedTermSet = {
+      '@type': 'DefinedTermSet',
+      name: termSet.name,
+      ...(termSet.url && { url: termSet.url }),
+    };
+  }
+
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }} />
   );
 }

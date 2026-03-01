@@ -13,7 +13,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { FAQSection } from '@/components/seo/WikipediaStyleSEO';
 import { ExploreFooter } from '@/components/seo/ExploreFooter';
-import { BreadcrumbSchema, FAQSchema } from '@/components/seo/JsonLd';
+import { BreadcrumbSchema, DefinedTermSchema } from '@/components/seo/JsonLd';
 import { CIVIC_GLOSSARY, GLOSSARY_CATEGORIES, type GlossaryTerm } from '@/lib/data/civic-glossary';
 
 // Generate static params for all glossary terms
@@ -122,7 +122,15 @@ export default async function GlossaryTermPage({ params }: PageProps) {
           },
         ]}
       />
-      <FAQSchema questions={faqItems} />
+      <DefinedTermSchema
+        name={glossaryTerm.term}
+        description={glossaryTerm.definition}
+        url={`https://civdotiq.org/glossary/${termToSlug(glossaryTerm.term)}`}
+        termSet={{
+          name: 'CIV.IQ Civic Glossary',
+          url: 'https://civdotiq.org/glossary',
+        }}
+      />
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Breadcrumb Navigation */}

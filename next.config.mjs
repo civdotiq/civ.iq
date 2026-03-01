@@ -170,6 +170,15 @@ const nextConfig = {
     // Optimize package imports for better tree-shaking
     optimizePackageImports: ['d3', 'recharts', 'lucide-react', 'date-fns'],
   },
+  // Rewrites for clean URL aliases
+  async rewrites() {
+    return [
+      {
+        source: '/lite/:path*',
+        destination: '/:path*?lite=1',
+      },
+    ];
+  },
   // Headers for security and performance
   async headers() {
     return [

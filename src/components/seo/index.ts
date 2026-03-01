@@ -9,6 +9,9 @@ export {
   BreadcrumbSchema,
   FAQSchema,
   LegislativeEventSchema,
+  LegislationSchema,
+  AdministrativeAreaSchema,
+  DefinedTermSchema,
 } from './JsonLd';
 
 /**

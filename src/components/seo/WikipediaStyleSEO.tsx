@@ -6,7 +6,7 @@
  * 2. FAQ sections with schema
  */
 
-import Script from 'next/script';
+// Note: Uses plain <script> (not next/script) so JSON-LD is in initial SSR HTML for crawlers
 
 // ============================================
 // TABLE OF CONTENTS - Wikipedia's signature feature
@@ -78,10 +78,9 @@ export function FAQSection({ faqs, title = 'Frequently Asked Questions' }: FAQSe
 
   return (
     <section className="mt-8 pt-6 border-t-2 border-gray-200">
-      <Script
-        id="faq-schema"
+      <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema).replace(/</g, '\\u003c') }}
       />
       <h2 className="text-lg font-bold text-gray-800 mb-4">{title}</h2>
       <dl className="space-y-4">

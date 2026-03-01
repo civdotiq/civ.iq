@@ -219,6 +219,7 @@ export default async function RepresentativeProfilePage({
         sameAs={sameAs.length > 0 ? sameAs : undefined}
         affiliation={representative.party}
         birthDate={representative.bio?.birthday}
+        knowsAbout={representative.committees?.map(c => c.name)}
       />
       <BreadcrumbSchema
         items={[

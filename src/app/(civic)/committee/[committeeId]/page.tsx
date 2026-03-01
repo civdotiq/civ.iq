@@ -369,6 +369,15 @@ async function CommitteeContent({
               ? 'United States Senate'
               : 'United States House of Representatives'
           }
+          member={committee.members?.map(m => ({
+            name: m.representative.name,
+            url: `https://civdotiq.org/representative/${m.representative.bioguideId}`,
+            role: m.role,
+          }))}
+          subOrganization={committee.subcommittees.map(sub => ({
+            name: sub.name,
+            url: `https://civdotiq.org/committee/${sub.id}`,
+          }))}
         />
         <BreadcrumbSchema
           items={[

@@ -267,6 +267,11 @@ export async function middleware(request: NextRequest) {
       });
     }
 
+    // Detect lite mode
+    const isLiteMode =
+      request.nextUrl.searchParams.get('lite') === '1' ||
+      request.nextUrl.pathname.startsWith('/lite/');
+
     // Create response with security headers
     const response = NextResponse.next();
 
@@ -274,6 +279,11 @@ export async function middleware(request: NextRequest) {
     Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
+
+    // Add lite mode header when active
+    if (isLiteMode) {
+      response.headers.set('X-Lite-Mode', '1');
+    }
 
     // Add CORS headers for public endpoints
     if (isPublicEndpoint) {

@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { ReactNode } from 'react';
 import { getStateName } from '@/lib/data/us-states';
+import { AdministrativeAreaSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 // Parse district ID - supports multiple formats:
 // - Hyphenated: "MI-12", "CA-04", "AK-AL" (canonical format)
@@ -63,24 +64,50 @@ export async function generateMetadata({
       description,
       type: 'website',
       url: `https://civdotiq.org/districts/${districtId}`,
-      images: [
-        {
-          url: `/api/og/district/${districtId}`,
-          width: 1200,
-          height: 630,
-          alt: `${stateName} ${districtLabel} - CIV.IQ`,
-        },
-      ],
     },
     twitter: {
-      card: 'summary_large_image',
+      card: 'summary',
       title,
       description,
-      images: [`/api/og/district/${districtId}`],
     },
   };
 }
 
-export default function DistrictLayout({ children }: { children: ReactNode }) {
-  return <>{children}</>;
+export default async function DistrictLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ districtId: string }>;
+}) {
+  const { districtId } = await params;
+  const parsed = parseDistrictId(districtId);
+
+  if (!parsed) {
+    return <>{children}</>;
+  }
+
+  const stateName = getStateName(parsed.state) || parsed.state;
+  const districtLabel = parsed.district === 'AL' ? 'At-Large' : `District ${parsed.district}`;
+  const areaName = `${stateName} ${districtLabel} Congressional District`;
+  const feedDistrictId = `${parsed.state}-${parsed.district}`;
+
+  return (
+    <>
+      <AdministrativeAreaSchema
+        name={areaName}
+        description={`${districtLabel} congressional district in ${stateName}. View current representative, demographics, voting history, and federal spending data.`}
+        url={`https://civdotiq.org/districts/${feedDistrictId}`}
+        containedInPlace={stateName}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Districts', url: 'https://civdotiq.org/districts' },
+          { name: areaName, url: `https://civdotiq.org/districts/${feedDistrictId}` },
+        ]}
+      />
+      {children}
+    </>
+  );
 }

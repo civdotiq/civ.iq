@@ -12,6 +12,8 @@ import { StateLegislatureCoreService } from '@/services/core/state-legislature-c
 import logger from '@/lib/logging/simple-logger';
 import { decodeBase64Url } from '@/lib/url-encoding';
 import { BreadcrumbsWithContext } from '@/components/shared/navigation/BreadcrumbsWithContext';
+import { PersonSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
+import { getStateName } from '@/lib/data/us-states';
 
 interface PageProps {
   params: Promise<{
@@ -114,8 +116,33 @@ export default async function StateLegislatorPage({ params, searchParams }: Page
     { label: legislator.name, href: '#' },
   ];
 
+  const chamber = legislator.chamber === 'upper' ? 'State Senator' : 'State Representative';
+  const stateName = getStateName(state.toUpperCase()) || state.toUpperCase();
+
   return (
     <div className="min-h-screen bg-white">
+      {/* Structured Data for SEO */}
+      <PersonSchema
+        name={legislator.name}
+        jobTitle={`${chamber} - ${stateName} District ${legislator.district}`}
+        description={`${legislator.party} ${chamber} representing District ${legislator.district} in ${stateName}`}
+        image={legislator.photo_url ?? undefined}
+        url={`https://civdotiq.org/state-legislature/${state}/legislator/${id}`}
+        worksFor={{
+          name: `${stateName} State Legislature`,
+        }}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: stateName, url: `https://civdotiq.org/state-legislature/${state}` },
+          {
+            name: legislator.name,
+            url: `https://civdotiq.org/state-legislature/${state}/legislator/${id}`,
+          },
+        ]}
+      />
+
       {/* Header with Breadcrumbs */}
       <div className="bg-gray-50 border-b-2 border-black py-6">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -26,6 +26,7 @@ import logger from '@/lib/logging/simple-logger';
 import { findBioguideId } from '@/lib/data/senate-member-mappings';
 import { Breadcrumb, SimpleBreadcrumb } from '@/components/shared/ui/Breadcrumb';
 import { getVoteDetailsService } from '@/lib/services/vote.service';
+import { LegislativeEventSchema, BreadcrumbSchema } from '@/components/seo/JsonLd';
 
 // Types for the vote detail data
 interface VoteDetail {
@@ -168,6 +169,29 @@ export default async function VoteDetailPage({ params, searchParams }: VoteDetai
 
   return (
     <div className="min-h-screen aicher-background density-detailed py-8">
+      {/* Structured Data for SEO */}
+      <LegislativeEventSchema
+        name={`${voteDetail.chamber} Roll Call #${voteDetail.rollNumber}: ${voteDetail.title}`}
+        description={`${voteDetail.question} — Result: ${voteDetail.result}. Yeas: ${voteDetail.yeas}, Nays: ${voteDetail.nays}.`}
+        startDate={voteDetail.date}
+        url={`https://civdotiq.org/vote/${voteId}`}
+        organizer={
+          voteDetail.chamber === 'Senate'
+            ? 'United States Senate'
+            : 'United States House of Representatives'
+        }
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://civdotiq.org' },
+          { name: 'Votes', url: 'https://civdotiq.org/legislation' },
+          {
+            name: `Roll Call #${voteDetail.rollNumber}`,
+            url: `https://civdotiq.org/vote/${voteId}`,
+          },
+        ]}
+      />
+
       <div className="max-w-6xl mx-auto px-4">
         {/* Breadcrumb navigation */}
         {fromBioguideId && fromRepName ? (
