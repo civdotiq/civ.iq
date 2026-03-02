@@ -74,6 +74,10 @@
     {
       "path": "/api/cron/nostr-publisher",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/stock-trade-parser",
+      "schedule": "0 12 * * *"
     }
   ],
   "headers": [

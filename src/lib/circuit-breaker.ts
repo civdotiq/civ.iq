@@ -165,6 +165,14 @@ export const circuitBreakers = {
     monitoringWindow: 300000, // 5 minutes
     successThreshold: 3,
   }),
+
+  houseClerk: new CircuitBreaker({
+    name: 'House Clerk Disclosure',
+    failureThreshold: 3,
+    recoveryTimeout: 60000, // 1 minute
+    monitoringWindow: 300000, // 5 minutes
+    successThreshold: 2,
+  }),
 };
 
 // Utility function to get all circuit breaker stats

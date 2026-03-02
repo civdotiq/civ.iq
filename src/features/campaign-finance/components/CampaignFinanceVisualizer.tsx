@@ -26,6 +26,7 @@ import { TopIndustries } from './TopIndustries';
 import { TopContributors } from './TopContributors';
 import { useResponsiveChartHeight } from '../../../hooks/useResponsiveChartHeight';
 import { CHART_COLORS } from '../../../lib/constants/chart-colors';
+import { StockTradesSection } from './StockTradesSection';
 
 // Chart colors - using centralized brand palette
 const COLORS = CHART_COLORS;
@@ -193,7 +194,13 @@ export function CampaignFinanceVisualizer({
   bioguideId: _bioguideId,
 }: CampaignFinanceVisualizerProps) {
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'charts' | 'interest-groups' | 'lobbying' | 'expenditures' | 'contributions'
+    | 'overview'
+    | 'charts'
+    | 'interest-groups'
+    | 'lobbying'
+    | 'stock-trades'
+    | 'expenditures'
+    | 'contributions'
   >('overview');
   const [lobbyingData, setLobbyingData] = useState<LobbyingData | null>(null);
   const [isLoadingLobbying, setIsLoadingLobbying] = useState(false);
@@ -344,6 +351,7 @@ export function CampaignFinanceVisualizer({
       charts: 'Charts',
       'interest-groups': 'Interest Groups',
       lobbying: 'Lobbying',
+      'stock-trades': 'Stock Trades',
       expenditures: 'Expenditures',
       contributions: 'Contributions',
     };
@@ -353,11 +361,32 @@ export function CampaignFinanceVisualizer({
   // Keyboard navigation handler for tabs
   const handleTabKeyDown = (
     e: React.KeyboardEvent,
-    tabId: 'overview' | 'charts' | 'interest-groups' | 'lobbying' | 'expenditures' | 'contributions'
+    tabId:
+      | 'overview'
+      | 'charts'
+      | 'interest-groups'
+      | 'lobbying'
+      | 'stock-trades'
+      | 'expenditures'
+      | 'contributions'
   ) => {
     const tabs: Array<
-      'overview' | 'charts' | 'interest-groups' | 'lobbying' | 'expenditures' | 'contributions'
-    > = ['overview', 'charts', 'interest-groups', 'lobbying', 'expenditures', 'contributions'];
+      | 'overview'
+      | 'charts'
+      | 'interest-groups'
+      | 'lobbying'
+      | 'stock-trades'
+      | 'expenditures'
+      | 'contributions'
+    > = [
+      'overview',
+      'charts',
+      'interest-groups',
+      'lobbying',
+      'stock-trades',
+      'expenditures',
+      'contributions',
+    ];
     const currentIndex = tabs.indexOf(tabId);
 
     let newTab: typeof tabId | undefined;
@@ -449,6 +478,7 @@ export function CampaignFinanceVisualizer({
               { id: 'charts', name: 'Charts' },
               { id: 'interest-groups', name: 'Interest Groups' },
               { id: 'lobbying', name: 'Lobbying' },
+              { id: 'stock-trades', name: 'Stock Trades' },
               { id: 'expenditures', name: 'Expenditures' },
               { id: 'contributions', name: 'Contributors' },
             ].map(tab => (
@@ -1399,6 +1429,14 @@ export function CampaignFinanceVisualizer({
                   </p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Stock Trades Tab - STOCK Act Disclosures */}
+          {activeTab === 'stock-trades' && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-900">STOCK Act Disclosures</h3>
+              <StockTradesSection bioguideId={_bioguideId} />
             </div>
           )}
 

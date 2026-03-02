@@ -89,6 +89,11 @@ export const DATA_SOURCES = {
     reliability: 'medium' as const,
     disclaimer: 'Wikipedia is collaboratively maintained and may contain inaccuracies.',
   },
+  HOUSE_CLERK: {
+    sourceName: 'U.S. House Office of the Clerk',
+    sourceUrl: 'https://disclosures-clerk.house.gov/',
+    reliability: 'high' as const,
+  },
 } as const;
 
 export function DataSourceAttribution({
@@ -248,4 +253,10 @@ export function WikipediaAttribution(
   >
 ) {
   return <DataSourceAttribution {...DATA_SOURCES.WIKIPEDIA} {...props} />;
+}
+
+export function HouseClerkAttribution(
+  props: Omit<DataSourceAttributionProps, 'sourceName' | 'sourceUrl' | 'reliability'>
+) {
+  return <DataSourceAttribution {...DATA_SOURCES.HOUSE_CLERK} {...props} />;
 }
