@@ -79,7 +79,7 @@ export default function ExecutiveOrdersPage() {
           <div className="text-center py-16">
             <div className="text-red-600 mb-2">Failed to load executive orders</div>
             <button
-              onClick={() => setPage(page)}
+              onClick={() => window.location.reload()}
               className="px-4 py-2 text-sm font-medium text-white bg-[#3ea2d4] hover:bg-[#3592c0]"
             >
               Try Again

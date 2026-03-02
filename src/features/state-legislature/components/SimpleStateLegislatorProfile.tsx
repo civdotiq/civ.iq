@@ -111,7 +111,7 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
 
   // Get full title with state
   const getFullTitle = () => {
-    const stateName = legislator.state || legislator.state.toUpperCase();
+    const stateName = (legislator.state || '').toUpperCase();
     if (legislator.chamber === 'upper') {
       return `State Senator from ${stateName}`;
     }

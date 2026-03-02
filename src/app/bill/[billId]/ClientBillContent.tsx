@@ -1142,18 +1142,19 @@ function VoteBar({ vote }: { vote: BillVote }) {
   const total = vote.votes.yea + vote.votes.nay + vote.votes.present + vote.votes.notVoting;
   if (total === 0) return null;
 
-  // Build segments: D-Yea, R-Yea, I-Yea, D-Nay, R-Nay, I-Nay, Not Voting
+  // Segments use party colors: D=green, R=red, I=gray (matching design system)
+  // Yea = solid party color, Nay = lighter shade
   const segments: { label: string; count: number; color: string }[] = [
     { label: 'D Yea', count: vote.breakdown.democratic.yea, color: '#0a9338' },
-    { label: 'R Yea', count: vote.breakdown.republican.yea, color: '#22c55e' },
-    { label: 'I Yea', count: vote.breakdown.independent.yea, color: '#86efac' },
-    { label: 'D Nay', count: vote.breakdown.democratic.nay, color: '#e11d07' },
-    { label: 'R Nay', count: vote.breakdown.republican.nay, color: '#f87171' },
-    { label: 'I Nay', count: vote.breakdown.independent.nay, color: '#fca5a5' },
+    { label: 'R Yea', count: vote.breakdown.republican.yea, color: '#e11d07' },
+    { label: 'I Yea', count: vote.breakdown.independent.yea, color: '#6b7280' },
+    { label: 'D Nay', count: vote.breakdown.democratic.nay, color: '#86efac' },
+    { label: 'R Nay', count: vote.breakdown.republican.nay, color: '#fca5a5' },
+    { label: 'I Nay', count: vote.breakdown.independent.nay, color: '#d1d5db' },
     {
       label: 'Not Voting',
       count: vote.votes.notVoting + vote.votes.present,
-      color: '#d1d5db',
+      color: '#e5e7eb',
     },
   ].filter(s => s.count > 0);
 
@@ -1172,17 +1173,21 @@ function VoteBar({ vote }: { vote: BillVote }) {
           />
         ))}
       </div>
-      <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-        <span className="flex items-center gap-1 text-xs text-gray-600">
-          <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#0a9338' }} />
-          Yea
+      <div className="flex items-center gap-4 mt-1.5 flex-wrap text-xs text-gray-600">
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#0a9338' }} />D Yea
         </span>
-        <span className="flex items-center gap-1 text-xs text-gray-600">
-          <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#e11d07' }} />
-          Nay
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#e11d07' }} />R Yea
         </span>
-        <span className="flex items-center gap-1 text-xs text-gray-600">
-          <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#d1d5db' }} />
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#86efac' }} />D Nay
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#fca5a5' }} />R Nay
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-2.5 h-2.5" style={{ backgroundColor: '#e5e7eb' }} />
           Not Voting
         </span>
       </div>
