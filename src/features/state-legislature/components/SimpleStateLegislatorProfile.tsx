@@ -7,6 +7,7 @@
 
 import React, { useState, Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import useSWR from 'swr';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { EnhancedStateLegislator } from '@/types/state-legislature';
@@ -29,6 +30,7 @@ import {
   Clock,
   Building,
   AlertCircle,
+  DollarSign,
 } from 'lucide-react';
 import { encodeBase64Url } from '@/lib/url-encoding';
 import { TabLoadingSpinner } from '@/lib/utils/code-splitting';
@@ -67,6 +69,18 @@ const stateLegislatorTabs = [
     label: 'Sponsored Bills',
     icon: <FileText className="w-4 h-4" />,
     description: 'Bills sponsored and co-sponsored',
+  },
+  {
+    id: 'finance',
+    label: 'Finance',
+    icon: <DollarSign className="w-4 h-4" />,
+    description: 'Campaign finance data',
+  },
+  {
+    id: 'network',
+    label: 'Network',
+    icon: <Users className="w-4 h-4" />,
+    description: 'Co-sponsorship and bipartisan collaboration',
   },
   {
     id: 'news',
@@ -137,6 +151,39 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
     billsCosponsored: legislator.legislation?.cosponsored || 0,
     committees: legislator.committees?.length || 0,
     totalVotes: legislator.votingRecord?.totalVotes || 0,
+  };
+
+  const base64Id = encodeBase64Url(legislator.id);
+
+  // Fetch finance data
+  const { data: financeData, isLoading: financeLoading } = useSWR(
+    activeTab === 'finance'
+      ? `/api/state-legislature/${legislator.state}/legislator/${base64Id}/finance`
+      : null,
+    (url: string) => fetch(url).then(r => r.json()),
+    { revalidateOnFocus: false, dedupingInterval: 300000 }
+  );
+
+  // Fetch network data
+  const { data: networkData, isLoading: networkLoading } = useSWR(
+    activeTab === 'network'
+      ? `/api/state-legislature/${legislator.state}/legislator/${base64Id}/network`
+      : null,
+    (url: string) => fetch(url).then(r => r.json()),
+    { revalidateOnFocus: false, dedupingInterval: 300000 }
+  );
+
+  // Fetch calendar data for overview
+  const { data: calendarData } = useSWR(
+    `/api/state-legislature/${legislator.state}/calendar?limit=5`,
+    (url: string) => fetch(url).then(r => r.json()),
+    { revalidateOnFocus: false, dedupingInterval: 300000 }
+  );
+
+  const formatCurrency = (amount: number): string => {
+    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
+    return `$${amount.toLocaleString()}`;
   };
 
   // Render sidebar content (for overview tab)
@@ -506,6 +553,54 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
               </div>
             )}
 
+            {/* Upcoming Schedule */}
+            <div>
+              <h3
+                className="aicher-heading text-lg text-civiq-red mb-4 flex items-center gap-2"
+                style={{ marginBottom: 'calc(var(--grid) * 3)' }}
+              >
+                <span className="aicher-border border-civiq-red bg-civiq-red w-4 h-4"></span>
+                Upcoming Schedule
+              </h3>
+              {calendarData?.events && calendarData.events.length > 0 ? (
+                <div className="space-y-3">
+                  {calendarData.events.slice(0, 5).map(
+                    (
+                      event: {
+                        id: string;
+                        name: string;
+                        start_date: string;
+                        location?: { name?: string };
+                      },
+                      index: number
+                    ) => (
+                      <div key={event.id || index} className="bg-gray-50 aicher-border p-4">
+                        <div className="flex items-start gap-3">
+                          <Calendar className="w-4 h-4 text-civiq-blue mt-1 flex-shrink-0" />
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{event.name}</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {new Date(event.start_date).toLocaleDateString('en-US', {
+                                weekday: 'short',
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })}
+                              {event.location?.name && ` · ${event.location.name}`}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              ) : (
+                <div className="bg-gray-50 aicher-border p-4">
+                  <p className="text-gray-600 text-sm">No upcoming events scheduled</p>
+                </div>
+              )}
+            </div>
+
             {/* Need Help Section */}
             <div
               className="bg-red-50 aicher-border border-civiq-red"
@@ -558,6 +653,210 @@ export const SimpleStateLegislatorProfile: React.FC<SimpleStateLegislatorProfile
               legislatorName={legislator.name}
             />
           </Suspense>
+        );
+
+      case 'finance':
+        if (financeLoading) {
+          return (
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-200 w-1/3"></div>
+              <div className="h-32 bg-gray-100 border-2 border-gray-300"></div>
+            </div>
+          );
+        }
+        if (!financeData?.success || !financeData?.finance) {
+          return (
+            <div className="text-center py-8">
+              <div className="text-gray-600 mb-2">Campaign finance data not available</div>
+              <div className="text-sm text-gray-400">
+                FollowTheMoney coverage varies by state. Finance data may not be available for this
+                legislator.
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div className="space-y-6">
+            {/* Total Contributions */}
+            {financeData.finance.totalContributions != null &&
+              financeData.finance.totalContributions > 0 && (
+                <div className="border-2 border-black p-4 sm:p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Contributions</h3>
+                  <div className="text-3xl font-bold text-gray-900">
+                    {formatCurrency(financeData.finance.totalContributions)}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Source: {financeData.finance.source || 'FollowTheMoney'}
+                  </div>
+                </div>
+              )}
+
+            {/* Top Industries */}
+            {financeData.finance.topIndustries && financeData.finance.topIndustries.length > 0 && (
+              <div className="border-2 border-black p-4 sm:p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Industries</h3>
+                <div className="space-y-2 font-mono text-sm">
+                  {financeData.finance.topIndustries.map(
+                    (ind: { industry: string; amount: number; count: number }) => (
+                      <div key={ind.industry} className="flex justify-between">
+                        <span className="text-gray-700 truncate mr-3">{ind.industry}</span>
+                        <span className="font-semibold flex-shrink-0">
+                          {formatCurrency(ind.amount)}
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Election Cycles */}
+            {financeData.finance.electionCycles &&
+              financeData.finance.electionCycles.length > 0 && (
+                <div className="border-2 border-black p-4 sm:p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Election Cycles</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {financeData.finance.electionCycles.map(
+                      (cycle: { year: number; raised: number; spent: number; office: string }) => (
+                        <div
+                          key={cycle.year}
+                          className="border-2 border-gray-300 px-3 py-2 text-sm"
+                        >
+                          <div className="font-bold">{cycle.year}</div>
+                          <div className="text-xs text-gray-500">
+                            Raised: {formatCurrency(cycle.raised)}
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+          </div>
+        );
+
+      case 'network':
+        if (networkLoading) {
+          return (
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-200 w-1/3"></div>
+              <div className="h-32 bg-gray-100 border-2 border-gray-300"></div>
+            </div>
+          );
+        }
+        if (!networkData?.success || !networkData?.network) {
+          return (
+            <div className="text-center py-8">
+              <div className="text-gray-600 mb-2">Network data not available</div>
+              <div className="text-sm text-gray-400">
+                Co-sponsorship analysis data may not be available for this legislator.
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div className="space-y-6">
+            {/* Bipartisan Score */}
+            <div className="border-2 border-black p-4 sm:p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Bipartisan Score</h3>
+              <div className="flex items-center gap-4 mb-3">
+                <div className="text-3xl font-bold text-gray-900">
+                  {networkData.network.summary.bipartisanScore}%
+                </div>
+                <div className="flex-1">
+                  <div className="h-4 flex overflow-hidden border-2 border-gray-300">
+                    <div
+                      className="h-full bg-[#e11d07]"
+                      style={{
+                        width: `${100 - networkData.network.summary.bipartisanScore}%`,
+                      }}
+                    />
+                    <div
+                      className="h-full bg-[#3ea2d4]"
+                      style={{
+                        width: `${networkData.network.summary.bipartisanScore}%`,
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>Partisan</span>
+                    <span>Bipartisan</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-sm text-gray-600">
+                {networkData.network.summary.bipartisanCollaborations} bipartisan collaborations out
+                of {networkData.network.summary.uniqueCollaborators} unique collaborators
+              </div>
+            </div>
+
+            {/* Frequent Collaborators */}
+            {networkData.network.frequentCollaborators?.length > 0 && (
+              <div className="border-2 border-black p-4 sm:p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Frequent Collaborators</h3>
+                <div className="space-y-2">
+                  {networkData.network.frequentCollaborators.map(
+                    (collab: {
+                      legislatorId: string;
+                      legislatorName: string;
+                      party: string;
+                      collaborationCount: number;
+                      bipartisan: boolean;
+                    }) => (
+                      <div
+                        key={collab.legislatorId}
+                        className="flex items-center justify-between py-2 border-b border-gray-200 last:border-0"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-2 h-2 flex-shrink-0 ${
+                              collab.party === 'Democratic'
+                                ? 'bg-[#3ea2d4]'
+                                : collab.party === 'Republican'
+                                  ? 'bg-[#e11d07]'
+                                  : 'bg-gray-400'
+                            }`}
+                          />
+                          <span className="text-sm text-gray-900">{collab.legislatorName}</span>
+                          <span className="text-xs text-gray-500">({collab.party})</span>
+                          {collab.bipartisan && (
+                            <span className="text-xs font-bold border-2 border-yellow-500 bg-yellow-50 text-yellow-800 px-1">
+                              Bipartisan
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-sm font-medium text-gray-700">
+                          {collab.collaborationCount} bills
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Collaboration by Party */}
+            {networkData.network.collaborationByParty && (
+              <div className="border-2 border-black p-4 sm:p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Collaboration by Party</h3>
+                <div className="space-y-2 font-mono text-sm">
+                  {Object.entries(
+                    networkData.network.collaborationByParty as Record<
+                      string,
+                      { count: number; legislators: string[] }
+                    >
+                  ).map(([party, data]) => (
+                    <div key={party} className="flex justify-between">
+                      <span className="text-gray-700">{party}</span>
+                      <span className="font-semibold">
+                        {data.count} collaboration{data.count !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         );
 
       case 'news':

@@ -67,6 +67,17 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
 
   const base64Id = encodeBase64Url(legislatorId);
 
+  // Fetch vote enrichment data
+  const { data: enrichmentData } = useSWR(
+    `/api/state-legislature/${state}/legislator/${base64Id}/vote-enrichment`,
+    async (url: string) => {
+      const response = await fetch(url);
+      if (!response.ok) return null;
+      return await response.json();
+    },
+    { revalidateOnFocus: false, dedupingInterval: 300000 }
+  );
+
   // Fetch votes from API
   const { data, error, isLoading } = useSWR<VotesApiResponse>(
     `/api/state-legislature/${state}/legislator/${base64Id}/votes?page=1&per_page=100`,
@@ -248,6 +259,57 @@ export const StateLegislatorVotingRecord: React.FC<StateLegislatorVotingRecordPr
 
   return (
     <div data-testid="voting-record">
+      {/* Vote Enrichment Summary */}
+      {enrichmentData?.success && enrichmentData.enrichment && (
+        <div className="mb-6 border-2 border-black p-4 sm:p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Voting Analysis</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">
+                {enrichmentData.enrichment.partyBreakdown.alignmentPercentage}%
+              </div>
+              <div className="text-xs text-gray-500 uppercase">Party-Line Alignment</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">
+                {enrichmentData.enrichment.attendance.attendanceRate}%
+              </div>
+              <div className="text-xs text-gray-500 uppercase">Attendance Rate</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">
+                {enrichmentData.enrichment.totalVotesAnalyzed}
+              </div>
+              <div className="text-xs text-gray-500 uppercase">Votes Analyzed</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">
+                {enrichmentData.enrichment.keyVotes?.length || 0}
+              </div>
+              <div className="text-xs text-gray-500 uppercase">Key Votes</div>
+            </div>
+          </div>
+          {/* Topic Breakdown */}
+          {enrichmentData.enrichment.categoryBreakdown?.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Topic Breakdown</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                {enrichmentData.enrichment.categoryBreakdown
+                  .slice(0, 6)
+                  .map((cat: { category: string; totalVotes: number; percentage: number }) => (
+                    <div key={cat.category} className="flex justify-between">
+                      <span className="text-gray-600 truncate mr-2">{cat.category}</span>
+                      <span className="font-medium text-gray-900 flex-shrink-0">
+                        {cat.totalVotes}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Header with Filter Toggle (matching federal pattern) */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">Interactive Voting Analysis</h2>
