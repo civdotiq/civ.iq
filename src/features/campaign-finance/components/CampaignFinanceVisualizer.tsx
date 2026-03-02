@@ -1339,7 +1339,16 @@ export function CampaignFinanceVisualizer({
                                 key={`company-${company.name}-${company.totalSpending}`}
                                 className="hover:bg-white"
                               >
-                                <td className="px-4 py-2 text-sm text-gray-900">{company.name}</td>
+                                <td className="px-4 py-2 text-sm text-gray-900">
+                                  <a
+                                    href={`https://lda.senate.gov/filings/public/filing/search/?client_name=${encodeURIComponent(company.name)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[#3ea2d4] hover:underline"
+                                  >
+                                    {company.name}
+                                  </a>
+                                </td>
                                 <td className="px-4 py-2 text-sm text-gray-900">
                                   {formatCurrency(company.totalSpending)}
                                 </td>
