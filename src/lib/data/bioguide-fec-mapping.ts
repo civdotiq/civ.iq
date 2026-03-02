@@ -47,6 +47,27 @@ export function addFECMapping(bioguideId: string, mapping: FECMapping): void {
   bioguideToFECMapping[bioguideId] = mapping;
 }
 
+// Reverse mapping: FEC Candidate ID -> Bioguide ID (computed once at module load)
+const fecToBioguideMapping: Record<string, string> = Object.fromEntries(
+  Object.entries(bioguideToFECMapping).map(([bioguideId, mapping]) => [mapping.fecId, bioguideId])
+);
+
+// Reverse lookup: get bioguideId from FEC candidate ID
+export function getBioguideFromFEC(fecCandidateId: string): string | null {
+  return fecToBioguideMapping[fecCandidateId] ?? null;
+}
+
+// Get the full mapping entry by FEC candidate ID
+export function getMappingByFEC(
+  fecCandidateId: string
+): (FECMapping & { bioguideId: string }) | null {
+  const bioguideId = fecToBioguideMapping[fecCandidateId];
+  if (!bioguideId) return null;
+  const mapping = bioguideToFECMapping[bioguideId];
+  if (!mapping) return null;
+  return { ...mapping, bioguideId };
+}
+
 // Get mapping statistics
 export function getMappingStats(): {
   totalMappings: number;

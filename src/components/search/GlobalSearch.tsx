@@ -7,7 +7,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, User, FileText, Users, X, Building2 } from 'lucide-react';
+import { Search, User, FileText, Users, X, Building2, DollarSign } from 'lucide-react';
 
 interface Representative {
   bioguideId: string;
@@ -43,17 +43,26 @@ interface Committee {
   chamber: 'House' | 'Senate' | 'Joint';
 }
 
+interface FECCommitteeResult {
+  committee_id: string;
+  name: string;
+  committee_type: string;
+  designation: string;
+  total_disbursements: number;
+}
+
 interface SearchResults {
   representatives: Representative[];
   stateLegislators: StateLegislator[];
   bills: Bill[];
   committees: Committee[];
+  fecCommittees: FECCommitteeResult[];
   query: string;
   stateFilter?: string;
   totalResults: number;
 }
 
-type SearchItem = Representative | StateLegislator | Bill | Committee;
+type SearchItem = Representative | StateLegislator | Bill | Committee | FECCommitteeResult;
 
 function debounce<T extends (...args: Parameters<T>) => void>(
   func: T,
@@ -89,6 +98,7 @@ export function GlobalSearch() {
     (results.stateLegislators || []).forEach(s => allResults.push({ type: 'state-leg', item: s }));
     results.bills.forEach(b => allResults.push({ type: 'bill', item: b }));
     results.committees.forEach(c => allResults.push({ type: 'committee', item: c }));
+    (results.fecCommittees || []).forEach(f => allResults.push({ type: 'fec-committee', item: f }));
   }
 
   const fetchResults = useCallback(async (searchQuery: string) => {
@@ -148,6 +158,9 @@ export function GlobalSearch() {
     } else if (result.type === 'committee') {
       const committee = result.item as Committee;
       router.push(`/committee/${committee.id}`);
+    } else if (result.type === 'fec-committee') {
+      const fecCommittee = result.item as FECCommitteeResult;
+      router.push(`/influence/${fecCommittee.committee_id}`);
     }
   };
 
@@ -190,6 +203,7 @@ export function GlobalSearch() {
   const stateLegOffset = results?.representatives.length || 0;
   const billsOffset = stateLegOffset + (results?.stateLegislators?.length || 0);
   const committeesOffset = billsOffset + (results?.bills.length || 0);
+  const fecCommitteesOffset = committeesOffset + (results?.committees.length || 0);
 
   return (
     <div ref={containerRef} className="relative">
@@ -359,6 +373,37 @@ export function GlobalSearch() {
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm truncate">{committee.name}</div>
                           <div className="text-xs text-gray-500">{committee.chamber}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* PACs & Committees (FEC) */}
+              {results.fecCommittees && results.fecCommittees.length > 0 && (
+                <div>
+                  <div className="px-3 py-2 bg-gray-50 text-xs font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                    PACs &amp; Committees
+                  </div>
+                  {results.fecCommittees.map((fecCommittee, index) => {
+                    const resultIndex = fecCommitteesOffset + index;
+                    return (
+                      <button
+                        key={fecCommittee.committee_id}
+                        onClick={() =>
+                          navigateToResult({ type: 'fec-committee', item: fecCommittee })
+                        }
+                        className={`w-full px-3 py-2 flex items-center gap-3 text-left hover:bg-gray-50 border-b border-gray-100 ${
+                          selectedIndex === resultIndex ? 'bg-civiq-blue/10' : ''
+                        }`}
+                        role="option"
+                        aria-selected={selectedIndex === resultIndex}
+                      >
+                        <DollarSign className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">{fecCommittee.name}</div>
+                          <div className="text-xs text-gray-500">{fecCommittee.committee_id}</div>
                         </div>
                       </button>
                     );

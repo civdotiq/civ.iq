@@ -82,6 +82,64 @@ export interface FECApiResponse<T> {
   results: T[];
 }
 
+// Committee search result (returned by /committees/?q= search)
+export interface FECCommitteeSearchResult {
+  committee_id: string;
+  name: string;
+  committee_type: string;
+  committee_type_full: string;
+  designation: string;
+  designation_full: string;
+  party: string;
+  state: string;
+  treasurer_name: string;
+  cycles: number[];
+  candidate_ids: string[];
+  total_disbursements: number;
+  total_receipts: number;
+}
+
+// Committee financial totals (returned by /committee/{id}/totals/)
+export interface FECCommitteeTotals {
+  cycle: number;
+  receipts: number;
+  disbursements: number;
+  last_cash_on_hand_end_period: number;
+  individual_contributions: number;
+  other_political_committee_contributions: number;
+  independent_expenditures: number;
+  contributions: number;
+  coverage_start_date: string;
+  coverage_end_date: string;
+}
+
+// Aggregated disbursement by recipient (returned by /schedules/schedule_b/by_recipient_id/)
+export interface FECDisbursementByRecipient {
+  recipient_id: string;
+  recipient_name: string;
+  total: number;
+  count: number;
+  committee_id: string;
+  cycle: number;
+  memo_total: number;
+  memo_count: number;
+}
+
+// Individual disbursement record (returned by /schedules/schedule_b/)
+export interface FECDisbursementRecord {
+  recipient_name: string;
+  disbursement_amount: number;
+  disbursement_date: string;
+  candidate_office: string;
+  candidate_office_state: string;
+  candidate_office_district: string;
+  recipient_committee_id: string;
+  recipient_state: string;
+  disbursement_description: string;
+  memo_text: string;
+  line_number: string;
+}
+
 // New interfaces for committee endpoint responses
 export interface FECCommitteeResponse {
   committee_id: string;
@@ -90,8 +148,10 @@ export interface FECCommitteeResponse {
   cycles: number[];
   candidate_ids: string[];
   party: string;
+  state: string;
   committee_type: string;
   committee_type_full: string;
+  treasurer_name?: string;
   sponsor_candidate_ids?: string[];
 }
 
@@ -1120,6 +1180,156 @@ export class FECApiService {
     } catch (error) {
       logger.error(`[FEC API] Failed to get contributions by size for ${candidateId}:`, error);
       return [];
+    }
+  }
+
+  /**
+   * Search committees by name
+   * Uses 5-minute cache for search results
+   */
+  async searchCommittees(
+    query: string,
+    page: number = 1,
+    perPage: number = 20,
+    committeeType?: string[]
+  ): Promise<FECPaginatedResponse<FECCommitteeSearchResult>> {
+    const cacheKey = `fec:committee-search:${query}:${page}:${perPage}:${committeeType?.join(',') ?? 'all'}`;
+
+    const cached = await govCache.get<FECPaginatedResponse<FECCommitteeSearchResult>>(cacheKey);
+    if (cached) {
+      logger.debug(`[FEC API] Committee search cache hit: ${query}`);
+      return cached;
+    }
+
+    try {
+      let endpoint = `/committees/?q=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}&sort=-receipts`;
+      if (committeeType && committeeType.length > 0) {
+        endpoint += committeeType.map(t => `&committee_type=${t}`).join('');
+      }
+
+      const response = await this.makeRequest<FECApiResponse<FECCommitteeSearchResult>>(endpoint);
+
+      const result: FECPaginatedResponse<FECCommitteeSearchResult> = {
+        results: response.results ?? [],
+        pagination: response.pagination,
+      };
+
+      await govCache.set(cacheKey, result, {
+        ttl: 5 * 60 * 1000, // 5 minutes
+        source: 'fec-committee-search',
+        dataType: 'committees',
+      });
+
+      return result;
+    } catch (error) {
+      logger.error(`[FEC API] Failed to search committees for "${query}":`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get committee financial totals for a specific cycle
+   * Uses 6-hour cache
+   */
+  async getCommitteeTotals(committeeId: string, cycle: number): Promise<FECCommitteeTotals | null> {
+    const cacheKey = `fec:committee-totals:${committeeId}:${cycle}`;
+
+    const cached = await govCache.get<FECCommitteeTotals>(cacheKey);
+    if (cached) {
+      logger.debug(`[FEC API] Committee totals cache hit: ${committeeId}`);
+      return cached;
+    }
+
+    try {
+      const response = await this.makeRequest<FECApiResponse<FECCommitteeTotals>>(
+        `/committee/${committeeId}/totals/?cycle=${cycle}`
+      );
+
+      const result = response.results?.[0] ?? null;
+
+      if (result) {
+        await govCache.set(cacheKey, result, {
+          ttl: 6 * 60 * 60 * 1000, // 6 hours
+          source: 'fec-committee-totals',
+          dataType: 'finance',
+        });
+      }
+
+      return result;
+    } catch (error) {
+      logger.error(`[FEC API] Failed to get committee totals for ${committeeId}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Get committee disbursements aggregated by recipient
+   * Returns one row per recipient (not individual transactions)
+   * Uses 6-hour cache
+   */
+  async getCommitteeDisbursementsByRecipient(
+    committeeId: string,
+    cycle: number,
+    page: number = 1,
+    perPage: number = 100
+  ): Promise<FECPaginatedResponse<FECDisbursementByRecipient>> {
+    const cacheKey = `fec:committee-disb-by-recipient:${committeeId}:${cycle}:${page}:${perPage}`;
+
+    const cached = await govCache.get<FECPaginatedResponse<FECDisbursementByRecipient>>(cacheKey);
+    if (cached) {
+      logger.debug(`[FEC API] Disbursements by recipient cache hit: ${committeeId} page ${page}`);
+      return cached;
+    }
+
+    try {
+      const response = await this.makeRequest<FECApiResponse<FECDisbursementByRecipient>>(
+        `/schedules/schedule_b/by_recipient_id/?committee_id=${committeeId}&cycle=${cycle}&page=${page}&per_page=${perPage}&sort=-total`
+      );
+
+      const result: FECPaginatedResponse<FECDisbursementByRecipient> = {
+        results: response.results ?? [],
+        pagination: response.pagination,
+      };
+
+      await govCache.set(cacheKey, result, {
+        ttl: 6 * 60 * 60 * 1000, // 6 hours
+        source: 'fec-disbursements-by-recipient',
+        dataType: 'finance',
+      });
+
+      return result;
+    } catch (error) {
+      logger.error(`[FEC API] Failed to get disbursements by recipient for ${committeeId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get individual committee disbursement records (Schedule B)
+   * For drill-down into specific recipient transactions
+   */
+  async getCommitteeDisbursements(
+    committeeId: string,
+    cycle: number,
+    recipientCommitteeId?: string,
+    page: number = 1,
+    perPage: number = 100
+  ): Promise<FECPaginatedResponse<FECDisbursementRecord>> {
+    try {
+      let endpoint = `/schedules/schedule_b/?committee_id=${committeeId}&two_year_transaction_period=${cycle}&page=${page}&per_page=${perPage}&sort=-disbursement_amount`;
+      if (recipientCommitteeId) {
+        endpoint += `&recipient_committee_id=${recipientCommitteeId}`;
+      }
+
+      const response = await this.makeRequest<FECApiResponse<FECDisbursementRecord>>(endpoint);
+
+      return {
+        results: response.results ?? [],
+        pagination: response.pagination,
+      };
+    } catch (error) {
+      logger.error(`[FEC API] Failed to get disbursements for ${committeeId}:`, error);
+      throw error;
     }
   }
 

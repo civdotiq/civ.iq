@@ -20,6 +20,7 @@ import { getAllEnhancedRepresentatives } from '@/features/representatives/servic
 import { StateLegislatureCoreService } from '@/services/core/state-legislature-core.service';
 import { COMMITTEE_INFO } from '@/lib/data/committee-names';
 import { cachedFetch } from '@/lib/cache';
+import { fecApiService } from '@/lib/fec/fec-api-service';
 import logger from '@/lib/logging/simple-logger';
 
 // ISR: Revalidate every 5 minutes
@@ -140,11 +141,20 @@ interface StateCommitteeResult {
   classification?: string;
 }
 
+interface FECCommitteeResult {
+  committee_id: string;
+  name: string;
+  committee_type: string;
+  designation: string;
+  total_disbursements: number;
+}
+
 interface UnifiedSearchResult {
   representatives: Representative[];
   stateLegislators: StateLegislator[];
   bills: Bill[];
   committees: Committee[];
+  fecCommittees: FECCommitteeResult[];
   stateBills: StateBillResult[];
   stateCommittees: StateCommitteeResult[];
   query: string;
@@ -404,6 +414,25 @@ function searchCommittees(query: string, limit: number): Committee[] {
 }
 
 /**
+ * Search FEC committees/PACs by name
+ */
+async function searchFECCommittees(query: string, limit: number): Promise<FECCommitteeResult[]> {
+  try {
+    const response = await fecApiService.searchCommittees(query, 1, limit);
+    return response.results.map(c => ({
+      committee_id: c.committee_id,
+      name: c.name,
+      committee_type: c.committee_type,
+      designation: c.designation,
+      total_disbursements: c.total_disbursements,
+    }));
+  } catch (error) {
+    logger.error('Error searching FEC committees', error as Error);
+    return [];
+  }
+}
+
+/**
  * Search state bills using OpenStates (when state prefix detected)
  */
 async function searchStateBills(
@@ -490,6 +519,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       stateLegislators: [],
       bills: [],
       committees: [],
+      fecCommittees: [],
       stateBills: [],
       stateCommittees: [],
       query,
@@ -507,6 +537,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       stateLegislators: [],
       bills: [],
       committees: [],
+      fecCommittees: [],
       query,
       stateFilter: stateCode,
       totalResults: 0,
@@ -520,6 +551,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const searchPromises: Promise<unknown>[] = [
     searchRepresentatives(effectiveQuery, limit),
     searchBills(effectiveQuery, limit),
+    searchFECCommittees(effectiveQuery, limit),
   ];
 
   // Add state-specific searches if state prefix provided
@@ -533,9 +565,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const representatives = results[0] as Representative[];
   const bills = results[1] as Bill[];
-  const stateLegislators = stateCode ? (results[2] as StateLegislator[]) : [];
-  const stateBills = stateCode ? (results[3] as StateBillResult[]) : [];
-  const stateCommittees = stateCode ? (results[4] as StateCommitteeResult[]) : [];
+  const fecCommittees = results[2] as FECCommitteeResult[];
+  const stateLegislators = stateCode ? (results[3] as StateLegislator[]) : [];
+  const stateBills = stateCode ? (results[4] as StateBillResult[]) : [];
+  const stateCommittees = stateCode ? (results[5] as StateCommitteeResult[]) : [];
 
   // Committees search is synchronous (static data)
   const committees = searchCommittees(effectiveQuery, limit);
@@ -545,6 +578,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     stateLegislators,
     bills,
     committees,
+    fecCommittees,
     stateBills,
     stateCommittees,
     query,
@@ -554,6 +588,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       stateLegislators.length +
       bills.length +
       committees.length +
+      fecCommittees.length +
       stateBills.length +
       stateCommittees.length,
   };
