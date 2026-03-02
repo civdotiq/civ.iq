@@ -767,6 +767,7 @@ export function CampaignFinanceVisualizer({
               {topContributorsData.length > 0 && (
                 <div className="bg-white p-6">
                   <h4 className="text-md font-semibold text-gray-900 mb-4">Top Contributors</h4>
+                  <p className="text-xs text-gray-500 mb-2">Click a bar to view on FEC.gov</p>
                   <ResponsiveContainer width="100%" height={chartHeight400}>
                     <BarChart
                       data={topContributorsData}
@@ -790,7 +791,29 @@ export function CampaignFinanceVisualizer({
                           return entry?.fullName || label;
                         }}
                       />
-                      <Bar dataKey="amount" fill={COLORS[0]} />
+                      <Bar
+                        dataKey="amount"
+                        fill={COLORS[0]}
+                        cursor="pointer"
+                        onClick={(_data, _index, e) => {
+                          const payload = _data as unknown as { fullName?: string };
+                          const name = payload?.fullName;
+                          if (name) {
+                            e?.stopPropagation?.();
+                            const params = new URLSearchParams({ contributor_name: name });
+                            if (currentCycleData?.cycle)
+                              params.set(
+                                'two_year_transaction_period',
+                                String(currentCycleData.cycle)
+                              );
+                            window.open(
+                              `https://www.fec.gov/data/receipts/individual-contributions/?${params.toString()}`,
+                              '_blank',
+                              'noopener,noreferrer'
+                            );
+                          }
+                        }}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
