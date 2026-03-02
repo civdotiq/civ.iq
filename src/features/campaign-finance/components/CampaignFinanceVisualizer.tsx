@@ -95,6 +95,7 @@ interface CampaignFinanceData {
     pacName: string;
     pacType: 'superPac' | 'traditional' | 'leadership' | 'hybrid' | 'unknown';
     description: string;
+    committeeId?: string;
   }>;
   opposingExpenditures?: Array<{
     amount: number;
@@ -102,6 +103,7 @@ interface CampaignFinanceData {
     pacName: string;
     pacType: 'superPac' | 'traditional' | 'leadership' | 'hybrid' | 'unknown';
     description: string;
+    committeeId?: string;
   }>;
 
   // Phase 5 fields
@@ -1382,7 +1384,20 @@ export function CampaignFinanceVisualizer({
                           {financeData.supportingExpenditures.slice(0, 10).map((exp, idx) => (
                             <tr key={idx} className="border-b">
                               <td className="py-2">{exp.date}</td>
-                              <td className="py-2">{exp.pacName}</td>
+                              <td className="py-2">
+                                {exp.committeeId ? (
+                                  <a
+                                    href={`https://www.fec.gov/data/committee/${exp.committeeId}/`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[#3ea2d4] hover:underline"
+                                  >
+                                    {exp.pacName}
+                                  </a>
+                                ) : (
+                                  exp.pacName
+                                )}
+                              </td>
                               <td className="py-2">
                                 <PACTypeBadge type={exp.pacType} />
                               </td>
@@ -1421,7 +1436,20 @@ export function CampaignFinanceVisualizer({
                           {financeData.opposingExpenditures.slice(0, 10).map((exp, idx) => (
                             <tr key={idx} className="border-b">
                               <td className="py-2">{exp.date}</td>
-                              <td className="py-2">{exp.pacName}</td>
+                              <td className="py-2">
+                                {exp.committeeId ? (
+                                  <a
+                                    href={`https://www.fec.gov/data/committee/${exp.committeeId}/`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[#3ea2d4] hover:underline"
+                                  >
+                                    {exp.pacName}
+                                  </a>
+                                ) : (
+                                  exp.pacName
+                                )}
+                              </td>
                               <td className="py-2">
                                 <PACTypeBadge type={exp.pacType} />
                               </td>

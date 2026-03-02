@@ -562,6 +562,7 @@ export async function GET(
       pacName: string;
       pacType: string;
       description: string;
+      committeeId: string;
     }> = [];
     const opposingExpenditures: Array<{
       amount: number;
@@ -569,6 +570,7 @@ export async function GET(
       pacName: string;
       pacType: string;
       description: string;
+      committeeId: string;
     }> = [];
 
     for (const expenditure of independentExpenditures) {
@@ -584,6 +586,7 @@ export async function GET(
         pacName: expenditure.committee_name || '',
         pacType,
         description: expenditure.expenditure_description || '',
+        committeeId: expenditure.committee_id || '',
       };
 
       if (expenditure.support_oppose_indicator === 'S') {
