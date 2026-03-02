@@ -1271,7 +1271,15 @@ export function CampaignFinanceVisualizer({
                                     <ul className="list-disc list-inside">
                                       {basket.topCategories.slice(0, 2).map((cat, idx) => (
                                         <li key={idx}>
-                                          {cat.category} ({formatCurrency(cat.amount)})
+                                          <a
+                                            href={`https://www.fec.gov/data/receipts/individual-contributions/?contributor_employer=${encodeURIComponent(cat.category)}&two_year_transaction_period=${currentCycleData?.cycle || 2024}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-[#3ea2d4] hover:underline"
+                                          >
+                                            {cat.category}
+                                          </a>{' '}
+                                          ({formatCurrency(cat.amount)})
                                         </li>
                                       ))}
                                     </ul>
